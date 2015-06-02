@@ -4,7 +4,7 @@
  *
  * @package     WPSTG
  * @subpackage  Admin/Settings
- * @copyright   Copyright (c) 2014, René Hermenau
+ * @copyright   Copyright (c) 2015, René Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
 */
@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 /* Returns list elements for jQuery tab navigation 
  * based on header callback
  * 
- * @since 2.1.2
+ * @since 1.0.0
  * @todo Use sprintf to sanitize  $field['id'] instead using str_replace() Should be much faster? 
  * @return string
  */
@@ -134,10 +134,10 @@ function wpstg_options_page() {
             <div class="about-text" style="font-weight: 400;line-height: 1.6em;font-size: 19px;">
                 <?php echo __('Thank you for updating to the latest version!', 'wpstg');?>
                 <br>
-                <?php echo __('WP-Staging is ready to increase your Shares!', 'wpstg'); ?>
+                <?php echo __('WP-Staging is ready to create a staging website for you!', 'wpstg'); ?>
                 <?php if (!function_exists('curl_init')){ echo '<br><span style="color:red;">' . __('php_curl is not working on your server. </span><a href="http://us.informatiweb.net/programmation/32--enable-curl-extension-of-php-on-windows.html" target="_blank">Please enable it.</a>'); } ?>
                 <br>
-                <iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2Fwp-staging.net&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:400px; height:25px;" allowTransparency="true"></iframe>
+                <iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2Fwp-staging.com&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:400px; height:25px;" allowTransparency="true"></iframe>
             </div>
 		<h2 class="nav-tab-wrapper">
 			<?php

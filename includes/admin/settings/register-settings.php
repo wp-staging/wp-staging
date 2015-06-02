@@ -42,15 +42,14 @@ function wpstg_get_settings() {
         
 	if( empty( $settings ) ) {
 		// Update old settings with new single option
-
 		$general_settings = is_array( get_option( 'wpstg_settings_general' ) )    ? get_option( 'wpstg_settings_general' )  	: array();
-                $visual_settings = is_array( get_option( 'wpstg_settings_visual' ) )   ? get_option( 'wpstg_settings_visual' )   : array();
-                $networks = is_array( get_option( 'wpstg_settings_networks' ) )   ? get_option( 'wpstg_settings_networks' )   : array();
-		$ext_settings     = is_array( get_option( 'wpstg_settings_extensions' ) ) ? get_option( 'wpstg_settings_extensions' )	: array();
-		$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
-                $addons_settings = is_array( get_option( 'wpstg_settings_addons' ) )   ? get_option( 'wpstg_settings_addons' )   : array();
+                $misc_settings = is_array( get_option( 'wpstg_settings_misc' ) )   ? get_option( 'wpstg_settings_misc' )   : array();
+                //$networks = is_array( get_option( 'wpstg_settings_networks' ) )   ? get_option( 'wpstg_settings_networks' )   : array();
+		//$ext_settings     = is_array( get_option( 'wpstg_settings_extensions' ) ) ? get_option( 'wpstg_settings_extensions' )	: array();
+		//$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
+                //$addons_settings = is_array( get_option( 'wpstg_settings_addons' ) )   ? get_option( 'wpstg_settings_addons' )   : array();
                 
-		$settings = array_merge( $general_settings, $visual_settings, $networks, $ext_settings, $license_settings, $addons_settings);
+		$settings = array_merge( $general_settings, $misc_settings, $networks, $ext_settings, $license_settings, $addons_settings);
 
 		update_option( 'wpstg_settings', $settings);
 	}
@@ -124,399 +123,117 @@ function wpstg_get_registered_settings() {
 	$wpstg_settings = array(
 		/** General Settings */
 		'general' => apply_filters( 'wpstg_settings_general',
-			array(
-                                'general_header' => array(
-					'id' => 'general_header',
-					'name' => '<strong>' . __( 'General settings', 'wpstg' ) . '</strong>',
-					'desc' => __( ' ', 'wpstg' ),
-					'type' => 'header'
-				),
-                                'wpstg_sharemethod' => array(
-					'id' => 'wpstg_sharemethod',
-					'name' =>  __( 'Share counts', 'wpstg' ),
-					'desc' => __('<i>MashEngine</i> collects shares by calling directly social networks from your server. All shares are cached and stored in your database. <p> If you notice performance issues choose the classical <i>Sharedcount.com</i>. This needs an API key and is limited to 10.000 free requests daily but it is a little bit faster on requesting. After caching there is no performance advantage to MashEngine! <p> <strong>MashEngine collects: </strong> Facebook, Twitter, LinkedIn, Google+, Pinterest, Stumbleupon, Buffer, VK. <strong>Default:</strong> MashEngine', 'wpstg'),
-					'type' => 'select',
-					'options' => array(
-                                            'mashengine' => 'MashEngine',
-                                            'sharedcount' => 'Sharedcount.com'
-                                        )
-     
-				),
-				
-				'wp-staging_apikey' => array(
-					'id' => 'wp-staging_apikey',
-					'name' => __( 'Sharedcount.com API Key', 'wpstg' ),
-					'desc' => __( 'Get it at <a href="https://www.sharedcount.com" target="_blank">SharedCount.com</a> for 10.000 free daily requests.', 'wpstg' ),
-					'type' => 'text',
-					'size' => 'medium'
-				),
-				'wp-staging_sharecount_domain' => array(
-					'id' => 'wp-staging_sharecount_domain',
-					'name' => __( 'Sharedcount.com endpint', 'wpstg' ),
-					'desc' => __( 'The SharedCount Domain your API key is configured to query. For example, free.sharedcount.com. This may update automatically if configured incorrectly.', 'wpstg' ),
-					'type' => 'text',
-					'size' => 'medium',
-					'std'  => 'free.sharedcount.com'
-				),
-                                'wp-staging_cache' => array(
-					'id' => 'wp-staging_cache',
-					'name' =>  __( 'Cache expiration', 'wpstg' ),
-					'desc' => __('Shares are counted for every post after this time. Notice that Sharedcount.com uses his own cache (30 - 60min) so share count does not update immediately. Make sure to increase this value especially when you use MashEngine! Otherwise it could happen that some networks block your requests due to hammering their rate limits. <p><strong>Default: </strong>5 min. <strong>Recommended: </strong>30min and more', 'wpstg'),
-					'type' => 'select',
-					'options' => wpstg_get_expiretimes()
-				),
-                                'disable_sharecount' => array(
-					'id' => 'disable_sharecount',
-					'name' => __( 'Disable Sharecount', 'wpstg' ),
-					'desc' => __( 'Use this when curl() is not supported on your server or share counts should not counted. This mode does not call the database and no SQL queries are generated. (Only less performance advantage. All db requests are cached) Default: false', 'wpstg' ),
-					'type' => 'checkbox'
-				),
-                                'hide_sharecount' => array(
-					'id' => 'hide_sharecount',
-					'name' => __( 'Hide Sharecount', 'wpstg' ),
-					'desc' => __( '<strong>Optional:</strong> If you fill in any number here, the shares for a specific post are not shown until the share count of this number is reached.', 'wpstg' ),
-					'type' => 'text',
-                                        'size' => 'small'
-				),
-                                'excluded_from' => array(
-					'id' => 'excluded_from',
-					'name' => __( 'Exclude from', 'wpstg' ),
-					'desc' => __( 'Exclude share buttons from a list of specific posts and pages. Put in the page id separated by a comma, e.g. 23, 63, 114 ', 'wpstg' ),
-					'type' => 'text',
-                                        'size' => 'medium'
-				),
-                                'execution_order' => array(
-					'id' => 'execution_order',
-					'name' => __( 'Execution Order', 'wpstg' ),
-					'desc' => __( 'If you use other content plugins you can define here the execution order. Lower numbers mean earlier execution. E.g. Say "0" and WP-Staging is executed before any other plugin (When the other plugin is not overwriting our execution order). Default is "1000"', 'wpstg' ),
-					'type' => 'text',
-					'size' => 'small',
-                                        'std'  => 1000
-				),
-                                'fake_count' => array(
-					'id' => 'fake_count',
-					'name' => __( 'Fake Share counts', 'wpstg' ),
-					'desc' => __( 'This number will be aggregated to all your share counts and is multiplied with a post specific factor. (Number of post title words divided with 10).', 'wpstg' ),
-					'type' => 'text',
-                                        'size' => 'medium'
-				),
-                                'load_scripts_footer' => array(
-					'id' => 'load_scripts_footer',
-					'name' => __( 'JS Load Order', 'wpstg' ),
-					'desc' => __( 'Enable this to load all *.js files into footer. Make sure your theme uses the wp_footer() template tag in the appropriate place. Default: Disabled', 'wpstg' ),
-					'type' => 'checkbox'
-				),
-                                'facebook_count' => array(
-					'id' => 'facebook_count_mode',
-					'name' => __( 'Facebook Count', 'wpstg' ),
-					'desc' => __( 'Get the Facebook total count including "likes" and "shares" or get only the pure share count', 'wpstg' ),
-					'type' => 'select',
-                                        'options' => array(
-                                            'shares' => 'Shares',
-                                            'likes' => 'Likes',
-                                            'total' => 'Total: likes + shares + comments'
-                                            
-                                        )
-				),
-                                'uninstall_on_delete' => array(
-					'id' => 'uninstall_on_delete',
-					'name' => __( 'Remove Data on Uninstall?', 'wpstg' ),
-					'desc' => __( 'Check this box if you would like WP-Staging to completely remove all of its data when the plugin is deleted.', 'wpstg' ),
-					'type' => 'checkbox'
-				),
-                                'debug_header' => array(
-					'id' => 'debug_header',
-					'name' => '<strong>' . __( 'Debug', 'wpstg' ) . '</strong>',
-					'desc' => __( ' ', 'wpstg' ),
-					'type' => 'header'
-				),
+                    array(
+                            array(
+                                    'id' => 'wpstg_header',
+                                    'name' => '<strong>' . __( 'General', 'wpstg' ) . '</strong>',
+                                    'desc' => '',
+                                    'type' => 'header',
+                                    'size' => 'regular'
+                            ),
+                            array(
+                                    'id' => 'wpstg_textfield',
+                                    'name' => __( 'Text Field', 'wpstg' ),
+                                    'desc' => __( 'This is a text field', 'wpstg' ),
+                                    'type' => 'text',
+                                    'size' => 'large',
+                                    'std' => 'This is a large textfield'
+                            ),
+                            array(
+                                    'id' => 'wpstg_number',
+                                    'name' => __( 'Number field', 'wpstg' ),
+                                    'desc' => __( 'This is a number field', 'wpstg' ),
+                                    'type' => 'number',
+                                    'size' => 'normal'
+                            ),  
+                            array(
+                                    'id' => 'wpstg_custom_field',
+                                    'name' => __( 'Custom field', 'wpstg' ),
+                                    'desc' => __( 'This is a custom field created with the callback function mashsb_custom_field_callback', 'wpstg' ),
+                                    'type' => 'custom_field',
+                                    'size' => 'small',
+                                    'std' => 0.8
+                            ), 
+                            array(
+                                    'id' => 'wpstg_options',
+                                    'name' => __( 'Options field', 'wpstg' ),
+                                    'desc' => __( 'This is an options field', 'wpstg' ),
+                                    'type' => 'select',
+                                                    'options' => array(
+                                                            'value1' => __( 'Value 1', 'wpstg' ),
+                                                            'value2' => __( 'Value 2', 'wpstg' )
+                                                    )
+                            ),
+                            array(
+                                    'id' => 'wpstg_checkbox',
+                                    'name' => __( 'Checkbox', 'wpstg' ),
+                                    'desc' => __( 'You already guessed it: This is a Checkbox', 'wpstg' ),
+                                    'type' => 'checkbox'
+                            ),
                                 array(
-					'id' => 'disable_cache',
-					'name' => __( 'Disable Cache', 'wpstg' ),
-					'desc' => __( '<strong>Note: </strong>Use this only for testing to see if shares are counted! Your page loading performance will drop. Works only when sharecount is enabled.<br>' . wpstg_cache_status(), 'wpstg' ),
-					'type' => 'checkbox'
+					'id' => 'debug_header',
+					'name' => '<strong>' . __( 'Debug', 'mashsb' ) . '</strong>',
+					'desc' => __( ' ', 'mashsb' ),
+					'type' => 'header'
 				),
-                                'delete_cache_objects' => array(
-					'id' => 'delete_cache_objects',
-					'name' => __( 'Purge DB Cache', 'wpstg' ),
-					'desc' => __( '<strong>Note: </strong>Use this with caution when you think your share counts are wrong. Checking this and using the save button will delete all stored wp-staging post_meta objects.<br>' . wpstg_delete_cache_objects(), 'wpstg' ),
-					'type' => 'checkbox'
-				),
-                                
                                 'debug_mode' => array(
 					'id' => 'debug_mode',
-					'name' => __( 'Debug mode', 'wpstg' ),
-					'desc' => __( '<strong>Note: </strong> Check this box before you get in contact with our support team. This allows us to check publically hidden debug messages on your website. Do not forget to disable it thereafter! Enable this also to write daily sorted log files of requested share counts to folder <strong>/wp-content/plugins/wp-staging/logs</strong>. Please send us this files when you notice a wrong share count.' . wpstg_log_permissions(), 'wpstg' ),
+					'name' => __( 'Debug mode', 'mashsb' ),
+					'desc' => __( '<strong>Note: </strong> Check this box before you get in contact with our support team. This allows us to check publically hidden debug messages on your website. Do not forget to disable it thereafter! Enable this also to write daily sorted log files of requested share counts to folder <strong>/wp-content/plugins/mashsharer/logs</strong>. Please send us this files when you notice a wrong share count.' . wpstg_log_permissions(), 'wpstg' ),
 					'type' => 'checkbox'
 				)
-                                
 			)
 		),
-                'visual' => apply_filters('wpstg_settings_visual',
+                'misc' => apply_filters('wpstg_settings_misc',
 			array(
-                            'style_header' => array(
-					'id' => 'style_header',
-					'name' => '<strong>' . __( 'Customize', 'wpstg' ) . '</strong>',
-					'desc' => __( ' ', 'wpstg' ),
-					'type' => 'header'
-                                ),
-				'wp-staging_round' => array(
-					'id' => 'wp-staging_round',
-					'name' => __( 'Round Shares', 'wpstg' ),
-					'desc' => __( 'Share counts greater than 1.000 will be shown as 1k. Greater than 1 Million as 1M', 'wpstg' ),
-					'type' => 'checkbox'
-				),
-                                'animate_shares' => array(
-					'id' => 'animate_shares',
-					'name' => __( 'Animate Shares', 'wpstg' ),
-					'desc' => __( 'Count up the shares on page loading with a nice looking animation effect. This only works on singular pages and not with shortcodes generated buttons.', 'wpstg' ),
-					'type' => 'checkbox'
-				),
-                                'sharecount_title' => array(
-					'id' => 'sharecount_title',
-					'name' => __( 'Share count title', 'wpstg' ),
-					'desc' => __( 'Change the text of the Share count title. <strong>Default:</strong> SHARES', 'wpstg' ),
-					'type' => 'text',
-					'size' => 'medium',
-                                        'std' => 'SHARES'
-				),
-				'wp-staging_hashtag' => array(
-					'id' => 'wp-staging_hashtag',
-					'name' => __( 'Twitter handle', 'wpstg' ),
-					'desc' => __( '<strong>Optional:</strong> Using your twitter username, e.g. \'WP-Staging\' results in via @WP-Staging', 'wpstg' ),
-					'type' => 'text',
-					'size' => 'medium'
-				),
-                                /*'share_color' => array(
-					'id' => 'share_color',
-					'name' => __( 'Share count color', 'wpstg' ),
-					'desc' => __( 'Choose color of the share number in hex format, e.g. #7FC04C: ', 'wpstg' ),
-					'type' => 'text',
-					'size' => 'medium',
-                                        'std' => '#cccccc'
-				),*/
-                                'share_color' => array(
-					'id' => 'share_color',
-					'name' => __( 'Share count color', 'wpstg' ),
-					'desc' => __( 'Choose color of the share number in hex format, e.g. #7FC04C: ', 'wpstg' ),
-					'type' => 'text',
-					'size' => 'medium',
-                                        'std' => '#cccccc'
-				),
-                                'border_radius' => array(
-					'id' => 'border_radius',
-					'name' => __( 'Border Radius', 'wpstg' ),
-					'desc' => __( 'Specify the border radius of all buttons in pixel. A border radius of 20px results in circle buttons. Default value is zero.', 'wpstg' ),
-					'type' => 'select',
-                                        'options' => array(
-                                                0 => 0,
-						1 => 1,
-						2 => 2,
-                                                3 => 3,
-						4 => 4,
-                                                5 => 5,
-						6 => 6,
-                                                7 => 7,
-                                                8 => 8,
-						9 => 9,
-                                                10 => 10,
-						11 => 11,
-                                                12 => 12,
-						13 => 13,
-                                                14 => 14,
-                                                15 => 15,
-						16 => 16,
-                                                17 => 17,
-						18 => 18,
-                                                19 => 19,
-						20 => 20,
-                                                'default' => 'default'
-					),
-                                        'std' => 'default'
-					
-				),
-                                array(
-                                        'id' => 'button_width',
-                                        'name' => __( 'Button width', 'mashpv' ),
-                                        'desc' => __( 'Minimum with of the large share buttons in pixels', 'mashpv' ),
-                                        'type' => 'number',
-                                        'size' => 'normal',
-                                        'std' => '177'
-                                ), 
-                                'mash_style' => array(
-					'id' => 'mash_style',
-					'name' => __( 'Share button style', 'wpstg' ),
-					'desc' => __( 'Change visual appearance of the share buttons.', 'wpstg' ),
-					'type' => 'select',
-                                        'options' => array(
-						'shadow' => 'Shadowed buttons',
-                                                'gradiant' => 'Gradient colored buttons',
-                                                'default' => 'Clean buttons - no effects'
-					),
-                                        'std' => 'default'
-					
-				),
-                                'small_buttons' => array(
-					'id' => 'small_buttons',
-					'name' => __( 'Use small buttons', 'wpstg' ),
-					'desc' => __( 'All buttons will be shown as pure small icons without any text on desktop and mobile devices all the time.<br><strong>Note:</strong> Disable this when you use the <a href="https://www.wp-staging.net/downloads/wp-staging-responsive/" target="_blank">responsive Add-On</a>', 'wpstg' ),
-					'type' => 'checkbox'
-				),
-                                'subscribe_behavior' => array(
-					'id' => 'subscribe_behavior',
-					'name' => __( 'Subscribe button', 'wpstg' ),
-					'desc' => __( 'Specify if the subscribe button is opening a content box below the button or if the button is linked to the "subscribe url" below.', 'wpstg' ),
-					'type' => 'select',
-                                        'options' => array(
-						'content' => 'Open content box',
-                                                'link' => 'Open Subscribe Link'
-					),
-                                        'std' => 'content'
-					
-				),
-                                'subscribe_link' => array(
-					'id' => 'subscribe_link',
-					'name' => __( 'Subscribe URL', 'wpstg' ),
-					'desc' => __( 'Link the Subscribe button to this URL. This can be the url to your subscribe page, facebook fanpage, RSS feed etc. e.g. http://yoursite.com/subscribe', 'wpstg' ),
-					'type' => 'text',
-					'size' => 'regular',
-                                        'std' => ''
-				),
-                                /*'subscribe_content' => array(
-					'id' => 'subscribe_content',
-					'name' => __( 'Subscribe content', 'wpstg' ),
-					'desc' => __( '<br>Define the content of the opening toggle subscribe window here. Use formulars, like button, links or any other text. Shortcodes are supported, e.g.: [contact-form-7]', 'wpstg' ),
-					'type' => 'textarea',
-					'textarea_rows' => '3',
-                                        'size' => 15
-				),*/
-                                'additional_content' => array(
-					'id' => 'additional_content',
-					'name' => __( 'Additional Content', 'wpstg' ),
-					'desc' => __( '', 'wpstg' ),
-					'type' => 'add_content',
-                                        'options' => array(
-                                            'box1' => array(
-                                                'id' => 'content_above',
-                                                'name' => __( 'Content Above', 'wpstg' ),
-                                                'desc' => __( 'Content appearing above share buttons. Use HTML, formulars, like button, links or any other text. Shortcodes are supported, e.g.: [contact-form-7]', 'wpstg' ),
-                                                'type' => 'textarea',
-                                                'textarea_rows' => '3',
-                                                'size' => 15
-                                                ),
-                                            'box2' => array(
-                                                'id' => 'content_below',
-                                                'name' => __( 'Content Below', 'wpstg' ),
-                                                'desc' => __( 'Content appearing below share buttons.  Use HTML, formulars, like button, links or any other text. Shortcodes are supported, e.g.: [contact-form-7]', 'wpstg' ),
-                                                'type' => 'textarea',
-                                                'textarea_rows' => '3',
-                                                'size' => 15
-                                                ),
-                                            'box3' => array(
-                                                'id' => 'subscribe_content',
-                                                'name' => __( 'Subscribe content', 'wpstg' ),
-                                                'desc' => __( 'Define the content of the opening toggle subscribe window here. Use formulars, like button, links or any other text. Shortcodes are supported, e.g.: [contact-form-7]', 'wpstg' ),
-                                                'type' => 'textarea',
-                                                'textarea_rows' => '3',
-                                                'size' => 15
-                                                )
-                                        )
-				),                   
-                                'custom_css' => array(
-					'id' => 'custom_css',
-					'name' => __( 'Custom CSS', 'wpstg' ),
-					'desc' => __( '<br>Use WP-Staging custom styles here', 'wpstg' ),
-					'type' => 'textarea',
-					'size' => 15
-                                        
-				),
-                                'location_header' => array(
-					'id' => 'location_header',
-					'name' => '<strong>' . __( 'Location & Position', 'wpstg' ) . '</strong>',
-					'desc' => __( ' ', 'wpstg' ),
-					'type' => 'header'
-                                ),
-                                'wp-staging_position' => array(
-					'id' => 'wp-staging_position',
-					'name' => __( 'Position', 'wpstg' ),
-					'desc' => __( 'Location of Share Buttons. Set to <i>manual</i> if you do not want to use the automatic embeding. Use the shortcode function to place WP-Staging directly into your theme template files: <strong>&lt;?php echo do_shortcode("[wp-staging]"); ?&gt;</strong> or the content shortcode: [wp-staging] for posts and pages. See all <a href="https://www.wp-staging.net/faq/#Is_there_a_shortcode_for_pages_and_posts" target="_blank">available shortcodes</a> here.', 'wpstg' ),
-					'type' => 'select',
-                                        'options' => array(
-						'before' => __( 'Top', 'wpstg' ),
-						'after' => __( 'Bottom', 'wpstg' ),
-                                                'both' => __( 'Top and Bottom', 'wpstg' ),
-						'manual' => __( 'Manual', 'wpstg' )
-					)
-					
-				),
-                                'post_types' => array(
-					'id' => 'post_types',
-					'name' => __( 'Post Types', 'wpstg' ),
-					'desc' => __( 'Select on which post_types the share buttons appear. This values will be ignored when position is specified "manual".', 'wpstg' ),
-					'type' => 'posttypes'
-				),
-                                'singular' => array(
-					'id' => 'singular',
-					'name' => __( 'Categories', 'wpstg' ),
-					'desc' => __('Enable this checkbox to enable WP-Staging on categories with multiple blogposts. <strong>Note: </strong> Post_types: "Post" must be enabled.','wpstg'),
-					'type' => 'checkbox',
-                                        'std' => '0'
-				),
-				'frontpage' => array(
-					'id' => 'frontpage',
-					'name' => __( 'Frontpage', 'wpstg' ),
-					'desc' => __('Enable share buttons on frontpage','wpstg'),
-					'type' => 'checkbox'
-				),
-                                /*'current_url' => array(
-					'id' => 'current_url',
-					'name' => __( 'Current Page URL', 'wpstg' ),
-					'desc' => __('Force sharing the current page on non singular pages like categories with multiple blogposts','wpstg'),
-					'type' => 'checkbox'
-				),*/
-                                'twitter_popup' => array(
-					'id' => 'twitter_popup',
-					'name' => __( 'Twitter Popup disable', 'wpstg' ),
-					'desc' => __('Check this box if your twitter popup is openening twice. This happens when you are using any third party twitter instance on your website.','wpstg'),
-					'type' => 'checkbox',
-                                        'std' => '0'
-                                    
-				),
-                                /*'wpstg_shortcode_info' => array(
-					'id' => 'wpstg_shortcode_info',
-					'name' => __( 'Note:', 'wpstg' ),
-					'desc' => __('Using the shortcode <strong>[wp-staging]</strong> forces loading of dependacy scripts and styles on specific pages. It is overwriting any other location setting.','wpstg'),
-					'type' => 'note',
-                                        'label_for' => 'test'
-                                    
-				),*/
-                                
-                        )
+                            array(
+                                    'id' => 'wpstg_header',
+                                    'name' => '<strong>' . __( 'WP-Staging', 'wpstg' ) . '</strong>',
+                                    'desc' => '',
+                                    'type' => 'header',
+                                    'size' => 'regular'
+                            ),
+                            array(
+                                    'id' => 'wpstg_textfield',
+                                    'name' => __( 'Text Field', 'wpstg' ),
+                                    'desc' => __( 'This is a text field', 'wpstg' ),
+                                    'type' => 'text',
+                                    'size' => 'large',
+                                    'std' => 'This is a large textfield'
+                            ),
+                            array(
+                                    'id' => 'wpstg_number',
+                                    'name' => __( 'Number field', 'wpstg' ),
+                                    'desc' => __( 'This is a number field', 'wpstg' ),
+                                    'type' => 'number',
+                                    'size' => 'normal'
+                            ),  
+                            array(
+                                    'id' => 'wpstg_custom_field',
+                                    'name' => __( 'Custom field', 'wpstg' ),
+                                    'desc' => __( 'This is a custom field created with the callback function mashsb_custom_field_callback', 'wpstg' ),
+                                    'type' => 'custom_field',
+                                    'size' => 'small',
+                                    'std' => 0.8
+                            ), 
+                            array(
+                                    'id' => 'wpstg_options',
+                                    'name' => __( 'Options field', 'wpstg' ),
+                                    'desc' => __( 'This is an options field', 'wpstg' ),
+                                    'type' => 'select',
+                                                    'options' => array(
+                                                            'value1' => __( 'Value 1', 'wpstg' ),
+                                                            'value2' => __( 'Value 2', 'wpstg' )
+                                                    )
+                            ),
+                            array(
+                                    'id' => 'wpstg_checkbox',
+                                    'name' => __( 'Checkbox', 'wpstg' ),
+                                    'desc' => __( 'You already guessed it: This is a Checkbox', 'wpstg' ),
+                                    'type' => 'checkbox'
+                            ),     
+			)
 		),
-                 'networks' => apply_filters( 'wpstg_settings_networks',
-                         array(
-                                'services_header' => array(
-					'id' => 'services_header',
-					'name' => __( 'Select available networks', 'wpstg' ),
-					'desc' => '',
-					'type' => 'header'
-				),
-                                'visible_services' => array(
-					'id' => 'visible_services',
-					'name' => __( 'Large Buttons', 'wpstg' ),
-					'desc' => __( 'Specify how many services and social networks are visible before the "Plus" Button is shown. This buttons turn into large prominent buttons.', 'wpstg' ),
-					'type' => 'select',
-                                        'options' => wpstg_numberServices()
-				),
-                                'networks' => array(
-					'id' => 'networks',
-					'name' => '<strong>' . __( 'Services', 'wpstg' ) . '</strong>',
-					'desc' => __('Drag and drop the Share Buttons to sort them and specify which ones should be enabled. If you enable more services than the specified value "Large Buttons", the plus sign is automatically added to the last visible big share button.<br><strong>No Share Services visible after update?</strong> Disable and enable the WP-Staging Plugin solves this. ','wpstg'),
-					'type' => 'networks',
-                                        'options' => wpstg_get_networks_list()
-                                 )
-                         )
-                ),
 		'licenses' => apply_filters('wpstg_settings_licenses',
 			array('licenses_header' => array(
 					'id' => 'licenses_header',
@@ -536,7 +253,6 @@ function wpstg_get_registered_settings() {
 					'desc' => __( '', 'wpstg' ),
 					'type' => 'addons'
 				)
-                            //wpstg_addons_callback()
                         )
 		)
 	);
@@ -611,33 +327,6 @@ function wpstg_settings_sanitize( $input = array() ) {
 	return $output;
 }
 
-/**
- * DEPRECATED Misc Settings Sanitization
- *
- * @since 1.0
- * @param array $input The value inputted in the field
- * @return string $input Sanitizied value
- */
-/*function wpstg_settings_sanitize_misc( $input ) {
-
-	global $wpstg_options;*/
-
-	/*if( wpstg_get_file_download_method() != $input['download_method'] || ! wpstg_htaccess_exists() ) {
-		// Force the .htaccess files to be updated if the Download method was changed.
-		wpstg_create_protection_files( true, $input['download_method'] );
-	}*/
-
-	/*if( ! empty( $input['enable_sequential'] ) && ! wpstg_get_option( 'enable_sequential' ) ) {
-
-		// Shows an admin notice about upgrading previous order numbers
-		WPSTG()->session->set( 'upgrade_sequential', '1' );
-
-	}*/
-
-	/*return $input;
-}
-add_filter( 'wpstg_settings_misc_sanitize', 'wpstg_settings_sanitize_misc' );
-         * */
 
 /**
  * Sanitize text fields
@@ -665,22 +354,22 @@ function wpstg_get_settings_tabs() {
 	$tabs             = array();
 	$tabs['general']  = __( 'General', 'wpstg' );
 
-        if( ! empty( $settings['visual'] ) ) {
-		$tabs['visual'] = __( 'Visual', 'wpstg' );
+        if( ! empty( $settings['misc'] ) ) {
+		$tabs['misc'] = __( 'Misc', 'wpstg' );
 	} 
         
         if( ! empty( $settings['networks'] ) ) {
-		$tabs['networks'] = __( 'Social Networks', 'wpstg' );
+		//$tabs['networks'] = __( 'Social Networks', 'wpstg' );
 	}  
         
 	if( ! empty( $settings['extensions'] ) ) {
-		$tabs['extensions'] = __( 'Extensions', 'wpstg' );
+		//$tabs['extensions'] = __( 'Extensions', 'wpstg' );
 	}
 	
 	if( ! empty( $settings['licenses'] ) ) {
-		$tabs['licenses'] = __( 'Licenses', 'wpstg' );
+		//$tabs['licenses'] = __( 'Licenses', 'wpstg' );
 	}
-        $tabs['addons'] = __( 'Add-Ons', 'wpstg' );
+        //$tabs['addons'] = __( 'Add-Ons', 'wpstg' );
 
 	//$tabs['misc']      = __( 'Misc', 'wpstg' );
 
