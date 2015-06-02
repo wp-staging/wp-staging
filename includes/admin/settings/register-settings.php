@@ -506,7 +506,7 @@ function wpstg_get_registered_settings() {
 					'name' => __( 'Large Buttons', 'wpstg' ),
 					'desc' => __( 'Specify how many services and social networks are visible before the "Plus" Button is shown. This buttons turn into large prominent buttons.', 'wpstg' ),
 					'type' => 'select',
-                                        'options' => numberServices()
+                                        'options' => wpstg_numberServices()
 				),
                                 'networks' => array(
 					'id' => 'networks',
@@ -1382,7 +1382,7 @@ add_filter( 'option_page_capability_wpstg_settings', 'wpstg_set_settings_cap' );
  * @return array
  */
 
-function numberServices(){
+function wpstg_numberServices(){
     $number = 1;
     $array = array();
     while ($number <= count(wpstg_get_networks_list())){

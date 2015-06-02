@@ -1,22 +1,5 @@
 jQuery(document).ready(function ($) {
     
-/* Fade in sharedcount settings if needed */
-$('#wpstg_settings\\[wpstg_sharemethod\\]').change(function(){
-    if($('#wpstg_settings\\[wpstg_sharemethod\\]').val() === "sharedcount")
-    {
-        $('#wpstg_settingsgeneral_header .row:nth-child(3), #wpstg_settingsgeneral_header .row:nth-child(4)').fadeIn(500);
-    }
-    else 
-    {
-        $('#wpstg_settingsgeneral_header .row:nth-child(3), #wpstg_settingsgeneral_header .row:nth-child(4)').fadeOut(500);
-    }
-});
-
-/*make visible when sharedcount.com is used*/
-if($('#wpstg_settings\\[wpstg_sharemethod\\]').val() === "sharedcount")
-    {
-        $('#wpstg_settingsgeneral_header .row:nth-child(3), #wpstg_settingsgeneral_header .row:nth-child(4)').fadeIn(500);
-    }
       
 // Start easytabs()
 if ( $( ".wpstg-tabs" ).length ) {
@@ -29,22 +12,7 @@ if ( $( ".mashtab" ).length ) {
 $('#mashtabcontainer').easytabs({
     animate:true
 });
-}
-
-// Drag n drop social networks
-	$('#wpstg_network_list').sortable({
-                items: '.wpstg_list_item',
-                opacity: 0.6,
-                cursor: 'move',
-                axis: 'y',
-                update: function(){
-                    var order = $(this).sortable('serialize') + '&action=wpstg_update_order';
-                    $.post(ajaxurl, order, function(response){
-                        //alert(response);
-                        
-                    });
-                }
-        });          
+}        
 });
 
 /*

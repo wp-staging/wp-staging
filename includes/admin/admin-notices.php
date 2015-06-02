@@ -120,7 +120,7 @@ add_action( 'wpstg_dismiss_notices', 'wpstg_dismiss_notices' );
  * 
  */
 
-function in_plugin_update_message( $args ) {
+function wpstg_plugin_update_message( $args ) {
     $transient_name = 'wpstg_upgrade_notice_' . $args['Version'];
 
     if ( false === ( $upgrade_notice = get_transient( $transient_name ) ) ) {
@@ -156,4 +156,4 @@ function in_plugin_update_message( $args ) {
 
     echo wp_kses_post( $upgrade_notice );
   }
- add_action ( "in_plugin_update_message-wp-staging/wp-staging.php", 'in_plugin_update_message'  );
+ add_action ( "in_plugin_update_message-wp-staging/wp-staging.php", 'wpstg_plugin_update_message'  );

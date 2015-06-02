@@ -169,12 +169,12 @@ if (!class_exists('wpstaging')) :
             require_once WPSTG_PLUGIN_DIR . 'includes/template-functions.php';
             require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-license-handler.php';
             require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-html-elements.php';
-            require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/MashDebug.interface.php';
-            require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/MashDebug.class.php';
+            require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.interface.php';
+            require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.class.php';
             require_once WPSTG_PLUGIN_DIR . 'includes/logger.php';
 
             if (is_admin() || ( defined('WP_CLI') && WP_CLI )) {
-                require_once WPSTG_PLUGIN_DIR . 'includes/admin/add-ons.php';
+                //require_once WPSTG_PLUGIN_DIR . 'includes/admin/add-ons.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-actions.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-notices.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-footer.php';
