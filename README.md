@@ -1,5 +1,3 @@
-# This is a good start
-
 ### Welcome to the WP-Staging repository
 
 ## Note ##
