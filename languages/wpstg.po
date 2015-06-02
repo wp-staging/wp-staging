@@ -1,0 +1,489 @@
+# Copyright (C) 2014 
+# This file is distributed under the same license as the  package.
+msgid ""
+msgstr ""
+"Project-Id-Version:  \n"
+"Report-Msgid-Bugs-To: http://wordpress.org/tag/wp-staging\n"
+"POT-Creation-Date: 2014-10-27 14:22:51+00:00\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"PO-Revision-Date: 2014-MO-DA HO:MI+ZONE\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language-Team: LANGUAGE <LL@li.org>\n"
+
+#: includes/admin/add-ons.php:27
+msgid "Add Ons for WP-Staging"
+msgstr ""
+
+#: includes/admin/add-ons.php:28
+msgid "Visit Website"
+msgstr ""
+
+#: includes/admin/add-ons.php:28
+msgid "See Details"
+msgstr ""
+
+#: includes/admin/add-ons.php:30
+msgid "These add-ons extend the functionality of WP-Staging."
+msgstr ""
+
+#: includes/admin/add-ons.php:54
+msgid ""
+"There was an error retrieving the WP-Staging addon list from the server. "
+"Please try again later."
+msgstr ""
+
+#: includes/admin/admin-footer.php:27
+msgid ""
+"Thank you for using <a href=\"%1$s\" target=\"_blank\">WP-Staging</a>! Please "
+"<a href=\"%2$s\" target=\"_blank\">rate us</a> on <a href=\"%2$s\" target="
+"\"_blank\">WordPress.org</a> and help to support this project."
+msgstr ""
+
+#: includes/admin/admin-notices.php:46
+msgid ""
+"There seems to be an issue with the server. Please try again in a few "
+"minutes."
+msgstr ""
+
+#: includes/admin/admin-pages.php:33
+msgid "WP-Staging"
+msgstr ""
+
+#: includes/admin/admin-pages.php:34
+msgid "WP-Staging Settings"
+msgstr ""
+
+#: includes/admin/admin-pages.php:34
+msgid "Settings"
+msgstr ""
+
+#: includes/admin/admin-pages.php:35
+msgid "WP-Staging Add Ons"
+msgstr ""
+
+#: includes/admin/admin-pages.php:35 includes/admin/plugins.php:51
+msgid "Add Ons"
+msgstr ""
+
+#: includes/admin/plugins.php:27
+msgid "General Settings"
+msgstr ""
+
+#: includes/admin/plugins.php:50
+msgid "Getting Started"
+msgstr ""
+
+#: includes/admin/settings/contextual-help.php:29
+msgid "For more information:"
+msgstr ""
+
+#: includes/admin/settings/contextual-help.php:30
+msgid "Visit the <a href=\"%s\">documentation</a> on the Mashare website."
+msgstr ""
+
+#: includes/admin/settings/contextual-help.php:32
+msgid ""
+"<a href=\"%s\">Post an issue</a> on <a href=\"%s\">Mashare</a>. View <a href="
+"\"%s\">extensions</a>."
+msgstr ""
+
+#: includes/admin/settings/contextual-help.php:41
+#: includes/admin/settings/register-settings.php:498
+msgid "General"
+msgstr ""
+
+#: includes/admin/settings/contextual-help.php:42
+msgid "This screen provides the most basic settings for configuring WP-Staging."
+msgstr ""
+
+#: includes/admin/settings/display-settings.php:32
+msgid "Welcome to WP-Staging "
+msgstr ""
+
+#: includes/admin/settings/display-settings.php:34
+msgid "Thank you for updating to the latest version!"
+msgstr ""
+
+#: includes/admin/settings/display-settings.php:36
+msgid "WP-Staging is ready to increase your Shares!"
+msgstr ""
+
+#: includes/admin/settings/display-settings.php:37
+msgid ""
+"php_curl is not working on your server. </span><a href=\"http://us."
+"informatiweb.net/programmation/32--enable-curl-extension-of-php-on-windows."
+"html\" target=\"_blank\">Please enable it.</a>"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:130
+msgid "Cache expire"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:131
+msgid ""
+"The amount of shares are updated after time of \"cache expire\". Notice that "
+"Sharedcount.com uses his own cache (30 - 60min) so it does not update "
+"immediately when expire time is very low, e.g. 5 minutes."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:137
+msgid "API Key - Important"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:138
+msgid ""
+"Get it FREE at <a href=\"https://admin.sharedcount.com/admin/signup.php\" "
+"target=\"_blank\">SharedCount.com</a> for 10.000 free daily requests. It´s "
+"essential for accurate function of this plugin. Make sure Curl is working on "
+"your server."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:144
+msgid "Disable Sharecount"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:145
+msgid ""
+"Use this when you can not enable curl_exec and share counts stays zero on "
+"your site. In this mode the plugin do not calls the database and no SQL "
+"queries are done. (Gives just a very little performance boost because all "
+"database requests are cached in any case.)"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:150
+msgid "Hide Sharecount"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:151
+msgid ""
+"Optional: If you fill in any number here, the shares for a specific post are "
+"not shown until the share count of this number is reached."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:157
+msgid "Exclude from"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:158
+msgid ""
+"Exclude share buttons from a list of specific posts and pages. Put in the "
+"page id seperated by a comma, e.g. 23, 63, 114 "
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:164
+msgid "Execution Order"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:165
+msgid ""
+"If you use other content plugins you can define here the execution order. "
+"Lower numbers mean earlier execution. E.g. Say \"0\" and WP-Staging is "
+"executed before any other plugin (When the other plugin is not overwriting "
+"our execution order). Default is \"1000\""
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:172
+msgid "Disable Transient Cache"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:178
+msgid "Delete DB Cache"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:184
+msgid "Debug mode"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:185
+msgid ""
+"<strong>Note: </strong> Check this box this before you get in contact with "
+"our support team. This allows us to check publically hidden debug messages "
+"on your website. Do not forget to disable it thereafter!"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:190
+msgid "Fake Share counts"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:191
+msgid ""
+"This number will be aggregated to all your share counts multiplied with a "
+"post specific factor based on title word count divided 10."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:197
+msgid "Remove Data on Uninstall?"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:198
+msgid ""
+"Check this box if you would like WP-Staging to completely remove all of its "
+"data when the plugin is deleted."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:207
+msgid "Position"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:208
+msgid ""
+"Choose where you would like the social icons to appear, before or after the "
+"main content. If set to Manual, you can use this code to place your Social "
+"links anywhere you like in your templates files: <strong>&lt;?php do_action"
+"(\"wp-staging\"); ?&gt;</strong> or use the shortcode: [wp-staging] in your "
+"posts. Optional: <strong>[wp-staging shares=\"off\"]</strong> if you like to "
+"disable the share number."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:211
+msgid "Top"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:212
+msgid "Bottom"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:213
+msgid "Top and Bottom"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:214
+msgid "Manual"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:220
+msgid "Post Types"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:221
+msgid ""
+"Select on which post_types the share buttons appear. This values will be "
+"ignored when position is specified \"manual\"."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:226
+msgid "Frontpage"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:227
+msgid "Enable share buttons on frontpage"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:232
+msgid "Round Shares"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:233
+msgid "Share counts more than 1000 are shown as 1k. More than 1 Million as 1M"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:238
+msgid "Animate Shares"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:239
+msgid ""
+"Count up the shares on page loading with a nice looking and fast jQuery "
+"animation. This only works on singular pages and not with shortcodes "
+"generated buttons."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:244
+msgid "Twitter Handle"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:245
+msgid ""
+"Optional: Using your twitter username, e.g. 'WP-Staging' results in via "
+"@WP-Staging"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:251
+msgid "Share color"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:252
+msgid "Choose color of the share number in hex format, e.g. #7FC04C: "
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:259
+msgid "Border Radius"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:260
+msgid ""
+"Specify the border radius of all buttons in pixel. A border radius of 20px "
+"results in circle buttons. Default value is zero."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:291
+msgid "Style"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:292
+msgid ""
+"Load another style to change visual appearance of the share buttons. <br>if "
+"you created a custom style and you want to make it available for the "
+"community here, <a href=\"https://www.wp-staging.net/contact-support/\" "
+"target=\"_blank\"> get in contact with me.</a>"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:304
+msgid "Subscribe behavior"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:305
+msgid ""
+"Specify behavior of the subscribe button and decide if you like to link the "
+"button directly to any content or to have a toggled content slider below the "
+"button."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:316
+msgid "Subscribe Link"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:317
+msgid "The link to any place on your site, e.g. http://yoursite.com/subscribe"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:324
+msgid "Subscribe content"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:325
+msgid ""
+"Define your subscribe content here. Forms, like button, links or any other "
+"text. Shortcodes are also supported, e.g.: [contact-form-7]"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:332
+msgid "Custom CSS"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:333
+msgid "Put in some custom styles here"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:344
+msgid "Large Buttons"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:345
+msgid ""
+"Specify how many services and social networks are visible before the \"Plus"
+"\" Button is shown. This buttons turn into large prominent buttons."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:351
+msgid "Services"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:352
+msgid ""
+"Drag and drop the Share Buttons to sort them and specify which ones should "
+"be enabled. If you enable more services than the specified value \"Large "
+"Buttons\", the plus sign is automatically added to the last visible big "
+"share button.<br><strong>No Share Services visible after update?</strong> "
+"Disable and enable the WP-Staging Plugin solves this. "
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:368
+#: includes/admin/settings/register-settings.php:515
+msgid "Add-Ons"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:369
+msgid "All WP-Staging Add-Ons at a glance"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:441
+msgid "Settings updated."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:501
+msgid "Visual"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:505
+#: includes/admin/settings/register-settings.php:1042
+msgid "Social Networks"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:509
+msgid "Extensions"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:513
+msgid "Licenses"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:807
+msgid ""
+"The callback function used for the <strong>%s</strong> setting is missing."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:938
+msgid "Upload File"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:994
+msgid "Deactivate License"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:1043
+msgid "Enable"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:1044
+msgid "Custom name"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:1097
+msgid "Select Image"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:1170
+msgid "All Services"
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:1187
+msgid ""
+"DB cache deleted. Do not forget to uncheck this box for performance increase."
+msgstr ""
+
+#: includes/admin/settings/register-settings.php:1200
+msgid "Transient Cache disabled! Enable it for performance increase."
+msgstr ""
+
+#: includes/class-wpstg-html-elements.php:43
+msgctxt "all dropdown items"
+msgid "All"
+msgstr ""
+
+#: includes/class-wpstg-html-elements.php:44
+msgctxt "no dropdown items"
+msgid "None"
+msgstr ""
+
+#: includes/class-wpstg-html-elements.php:232
+msgid "Enter username"
+msgstr ""
+
+#: includes/class-wpstg-license-handler.php:133
+msgid "%1$s License Key"
+msgstr ""
+
+#: includes/template-functions.php:210
+msgid "Subscribe"
+msgstr ""
+
+#: includes/template-functions.php:393 includes/template-functions.php:448
+msgid "SHARES"
+msgstr ""
+
+#: wp-staging.php:99 wp-staging.php:111
+msgid "Cheatin&#8217; huh?"
+msgstr ""
