@@ -27,18 +27,17 @@ function wpstg_tools_page() {
 	$active_tab = isset( $_GET['tab'] ) ? $_GET['tab'] : 'import_export';
 ?>
 	<div class="wrap">
-		<?php screen_icon(); ?>
 		<h2 class="nav-tab-wrapper">
 			<?php
 			foreach( wpstg_get_tools_tabs() as $tab_id => $tab_name ) {
 
-				$tab_url = esc_url(add_query_arg( array(
+				$tab_url = add_query_arg( array(
 					'tab' => $tab_id
-				) ) );
+				) );
 
-				$tab_url = esc_url(remove_query_arg( array(
+				$tab_url = remove_query_arg( array(
 					'wpstg-message'
-				), $tab_url ));
+				), $tab_url );
 
 				$active = $active_tab == $tab_id ? ' nav-tab-active' : '';
 				echo '<a href="' . esc_url( $tab_url ) . '" title="' . esc_attr( $tab_name ) . '" class="nav-tab' . $active . '">' . esc_html( $tab_name ) . '</a>';
@@ -92,7 +91,7 @@ function wpstg_tools_import_export_display() {
 		<div class="inside">
 			<p><?php _e( 'Export the WP-Staging settings for this site as a .json file. This allows you to easily import the configuration into another site.', 'wpstg' ); ?></p>
 			
-			<form method="post" action="<?php echo admin_url( 'admin.php?page=wpstg-tools&tab=import_export' ); ?>">
+			<form method="post" action="<?php echo admin_url( 'admin.php?page=wpstg-tools&amp;tab=import_export' ); ?>">
 				<p><input type="hidden" name="wpstg-action" value="export_settings" /></p>
 				<p>
 					<?php wp_nonce_field( 'wpstg_export_nonce', 'wpstg_export_nonce' ); ?>
@@ -106,7 +105,7 @@ function wpstg_tools_import_export_display() {
 		<h3><span><?php _e( 'Import Settings', 'wpstg' ); ?></span></h3>
 		<div class="inside">
 			<p><?php _e( 'Import the WP-Staging settings from a .json file. This file can be obtained by exporting the settings on another site using the form above.', 'wpstg' ); ?></p>
-			<form method="post" enctype="multipart/form-data" action="<?php echo admin_url( 'admin.php?page=wpstg-tools&tab=import_export' ); ?>">
+			<form method="post" enctype="multipart/form-data" action="<?php echo admin_url( 'admin.php?page=wpstg-tools&amp;tab=import_export' ); ?>">
 				<p>
 					<input type="file" name="import_file"/>
 				</p>
@@ -229,7 +228,7 @@ function wpstg_tools_import_export_process_import() {
 
 	update_option( 'wpstg_settings', $settings );
 
-	wp_safe_redirect( admin_url( 'admin.php?page=wpstg-tools&wpstg-message=settings-imported' ) ); exit;
+	wp_safe_redirect( admin_url( 'admin.php?page=wpstg-tools&amp;wpstg-message=settings-imported' ) ); exit;
 
 }
 add_action( 'wpstg_import_settings', 'wpstg_tools_import_export_process_import' );
@@ -249,7 +248,7 @@ function wpstg_tools_sysinfo_display() {
 	}
         
 ?>
-	<form action="<?php echo esc_url( admin_url( 'admin.php?page=wpstg-tools&tab=system_info' ) ); ?>" method="post" dir="ltr">
+	<form action="<?php echo esc_url( admin_url( 'admin.php?page=wpstg-tools&amp;tab=system_info' ) ); ?>" method="post" dir="ltr">
 		<textarea readonly="readonly" onclick="this.focus(); this.select()" id="system-info-textarea" name="wpstg-sysinfo" title="To copy the system info, click below then press Ctrl + C (PC) or Cmd + C (Mac)."><?php echo wpstg_tools_sysinfo_get(); ?></textarea>
 		<p class="submit">
 			<input type="hidden" name="wpstg-action" value="download_sysinfo" />
