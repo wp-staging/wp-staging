@@ -149,7 +149,7 @@ function wpstg_get_registered_settings() {
                             array(
                                     'id' => 'wpstg_custom_field',
                                     'name' => __( 'Custom field', 'wpstg' ),
-                                    'desc' => __( 'This is a custom field created with the callback function mashsb_custom_field_callback', 'wpstg' ),
+                                    'desc' => __( 'This is a custom field created with the callback function wpstg_custom_field_callback', 'wpstg' ),
                                     'type' => 'custom_field',
                                     'size' => 'small',
                                     'std' => 0.8
@@ -172,13 +172,13 @@ function wpstg_get_registered_settings() {
                             ),
                                 array(
 					'id' => 'debug_header',
-					'name' => '<strong>' . __( 'Debug', 'mashsb' ) . '</strong>',
-					'desc' => __( ' ', 'mashsb' ),
+					'name' => '<strong>' . __( 'Debug', 'wpstg' ) . '</strong>',
+					'desc' => __( ' ', 'wpstg' ),
 					'type' => 'header'
 				),
                                 'debug_mode' => array(
 					'id' => 'debug_mode',
-					'name' => __( 'Debug mode', 'mashsb' ),
+					'name' => __( 'Debug mode', 'wpstg' ),
 					'desc' => __( '<strong>Note: </strong> Check this box before you get in contact with our support team. This allows us to check publically hidden debug messages on your website. Do not forget to disable it thereafter! Enable this also to write daily sorted log files of requested share counts to folder <strong>/wp-content/plugins/mashsharer/logs</strong>. Please send us this files when you notice a wrong share count.' . wpstg_log_permissions(), 'wpstg' ),
 					'type' => 'checkbox'
 				)
@@ -211,7 +211,7 @@ function wpstg_get_registered_settings() {
                             array(
                                     'id' => 'wpstg_custom_field',
                                     'name' => __( 'Custom field', 'wpstg' ),
-                                    'desc' => __( 'This is a custom field created with the callback function mashsb_custom_field_callback', 'wpstg' ),
+                                    'desc' => __( 'This is a custom field created with the callback function wpstg_custom_field_callback', 'wpstg' ),
                                     'type' => 'custom_field',
                                     'size' => 'small',
                                     'std' => 0.8
@@ -375,44 +375,8 @@ function wpstg_get_settings_tabs() {
 
 	return apply_filters( 'wpstg_settings_tabs', $tabs );
 }
-
-       /*
-	* Retrieve a list of possible expire cache times
-	*
-	* @since  2.0.0
-	* @change 
-	*
-	* @param  array  $methods  Array mit verfügbaren Arten
-	*/
-
-        function wpstg_get_expiretimes()
-	{
-		/* Defaults */
-        $times = array(
-        '300' => 'in 5 minutes',
-        '600' => 'in 10 minutes',
-        '1800' => 'in 30 minutes',
-        '3600' => 'in 1 hour',
-        '21600' => 'in 6 hours',
-        '43200' => 'in 12 hours',
-        '86400' => 'in 24 hours'
-        );
-            return $times;
-	}
    
 
-/**
- * Retrieve array of  social networks Facebook / Twitter / Subscribe
- *
- * @since 2.0.0
- * 
- * @return array Defined social networks
- */
-function wpstg_get_networks_list() {
-
-        $networks = get_option('wpstg_networks');
-	return apply_filters( 'wpstg_get_networks_list', $networks );
-}
 
 /**
  * Header Callback
@@ -498,54 +462,6 @@ function wpstg_radio_callback( $args ) {
 	endforeach;
 
 	echo '<p class="description wpstg_hidden">' . $args['desc'] . '</p>';
-}
-
-/**
- * Gateways Callback
- *
- * Renders gateways fields.
- *
- * @since 1.0
- * @param array $args Arguments passed by the setting
- * @global $wpstg_options Array of all the WPSTG Options
- * @return void
- */
-function wpstg_gateways_callback( $args ) {
-	global $wpstg_options;
-
-	foreach ( $args['options'] as $key => $option ) :
-		if ( isset( $wpstg_options['gateways'][ $key ] ) )
-			$enabled = '1';
-		else
-			$enabled = null;
-
-		echo '<input name="wpstg_settings[' . $args['id'] . '][' . $key . ']"" id="wpstg_settings[' . $args['id'] . '][' . $key . ']" type="checkbox" value="1" ' . checked('1', $enabled, false) . '/>&nbsp;';
-		echo '<label for="wpstg_settings[' . $args['id'] . '][' . $key . ']">' . $option['admin_label'] . '</label><br/>';
-	endforeach;
-}
-
-/**
- * Dropdown Callback (drop down)
- *
- * Renders gateways select menu
- *
- * @since 1.5
- * @param array $args Arguments passed by the setting
- * @global $wpstg_options Array of all the WPSTG Options
- * @return void
- */
-function wpstg_gateway_select_callback($args) {
-	global $wpstg_options;
-
-	echo '<select name="wpstg_settings[' . $args['id'] . ']"" id="wpstg_settings[' . $args['id'] . ']">';
-
-	foreach ( $args['options'] as $key => $option ) :
-		$selected = isset( $wpstg_options[ $args['id'] ] ) ? selected( $key, $wpstg_options[$args['id']], false ) : '';
-		echo '<option value="' . esc_attr( $key ) . '"' . $selected . '>' . esc_html( $option['admin_label'] ) . '</option>';
-	endforeach;
-
-	echo '</select>';
-	echo '<label for="wpstg_settings[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';
 }
 
 /**
@@ -706,26 +622,7 @@ function wpstg_select_callback($args) {
  * @global $wpstg_options Array of all the WPSTG Options
  * @return void
  */
-/*function wpstg_color_select_callback( $args ) {
-	global $wpstg_options;
 
-	if ( isset( $wpstg_options[ $args['id'] ] ) )
-		$value = $wpstg_options[ $args['id'] ];
-	else
-		$value = isset( $args['std'] ) ? $args['std'] : '';
-
-	$html = '<select id="wpstg_settings[' . $args['id'] . ']" name="wpstg_settings[' . $args['id'] . ']"/>';
-
-	foreach ( $args['options'] as $option => $color ) :
-		$selected = selected( $option, $value, false );
-		$html .= '<option value="' . $option . '" ' . $selected . '>' . $color['label'] . '</option>';
-	endforeach;
-
-	$html .= '</select>';
-	$html .= '<label for="wpstg_settings[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';
-
-	echo $html;
-}*/
 
 function wpstg_color_select_callback( $args ) {
 	global $wpstg_options;
@@ -801,34 +698,6 @@ function wpstg_upload_callback( $args ) {
 
 
 /**
- * Color picker Callback
- *
- * Renders color picker fields.
- *
- * @since 1.6
- * @param array $args Arguments passed by the setting
- * @global $wpstg_options Array of all the WPSTG Options
- * @return void
- */
-function wpstg_color_callback( $args ) {
-	global $wpstg_options;
-
-	if ( isset( $wpstg_options[ $args['id'] ] ) )
-		$value = $wpstg_options[ $args['id'] ];
-	else
-		$value = isset( $args['std'] ) ? $args['std'] : '';
-
-	$default = isset( $args['std'] ) ? $args['std'] : '';
-
-	$size = ( isset( $args['size'] ) && ! is_null( $args['size'] ) ) ? $args['size'] : 'regular';
-	$html = '<input type="text" class="wpstg-color-picker" id="wpstg_settings[' . $args['id'] . ']" name="wpstg_settings[' . $args['id'] . ']" value="' . esc_attr( $value ) . '" data-default-color="' . esc_attr( $default ) . '" />';
-	$html .= '<label class="wpstg_hidden" for="wpstg_settings[' . $args['id'] . ']"> '  . $args['desc'] . '</label>';
-
-	echo $html;
-}
-
-
-/**
  * Registers the license field callback for Software Licensing
  *
  * @since 1.5
@@ -863,68 +732,6 @@ if ( ! function_exists( 'wpstg_license_key_callback' ) ) {
 }
 
 
-/**
- * Networks Callback / Facebook, Twitter and Subscribe default
- *
- * Renders network order table. Uses separate option field 'wpstg_networks 
- *
- * @since 2.0.0
- * @param array $args Arguments passed by the setting
- * @global $wpstg_options Array of all the wpstg Options
- * @return void
- */
-
-function wpstg_networks_callback( $args ) {
-	global $wpstg_options;
-       /* Array in $wpstg_option['networks']
-        * 
-        *                                   array(
-                                                0 => array (
-                                                    'status' => '1',
-                                                    'name' => 'Share on Facebook',
-                                                    'name2' => 'Share'
-                                                ), 
-                                                1 => array (
-                                                    'status' => '1',
-                                                    'name' => 'Tweet on Twitter',
-                                                    'name2' => 'Twitter'
-                                                ),
-                                                2 => array (
-                                                    'status' => '1',
-                                                    'name' => 'Subscribe to us',
-                                                    'name2' => 'Subscribe'
-                                                )
-                                            )
-        */
-
-       ob_start();
-        ?>
-        <p class="description"><?php echo $args['desc']; ?></p>
-        <table id="wpstg_network_list" class="wp-list-table fixed posts">
-		<thead>
-			<tr>
-				<th scope="col" style="padding: 15px 10px;"><?php _e( 'Social Networks', 'wpstg' ); ?></th>
-                                <th scope="col" style="padding: 15px 10px;"><?php _e( 'Enable', 'wpstg' ); ?></th>
-                                <th scope="col" style="padding: 15px 10px;"><?php _e( 'Custom name', 'wpstg' ); ?></th>
-			</tr>
-		</thead>        
-        <?php
-
-	if ( ! empty( $args['options'] ) ) {
-		foreach( $args['options'] as $key => $option ):
-                        echo '<tr id="wpstg_list_' . $key . '" class="wpstg_list_item">';
-			if( isset( $wpstg_options[$args['id']][$key]['status'] ) ) { $enabled = 1; } else { $enabled = NULL; }
-                        if( isset( $wpstg_options[$args['id']][$key]['name'] ) ) { $name = $wpstg_options[$args['id']][$key]['name']; } else { $name = NULL; }
-
-                        echo '<td class="mashicon-' . strtolower($option) . '"><span class="icon"></span><span class="text">' . $option . '</span></td>
-                        <td><input type="hidden" name="wpstg_settings[' . $args['id'] . '][' . $key . '][id]" id="wpstg_settings[' . $args['id'] . '][' . $key . '][id]" value="' . strtolower($option) .'"><input name="wpstg_settings[' . $args['id'] . '][' . $key . '][status]" id="wpstg_settings[' . $args['id'] . '][' . $key . '][status]" type="checkbox" value="1" ' . checked(1, $enabled, false) . '/><td>
-                        <input type="text" class="medium-text" id="wpstg_settings[' . $args['id'] . '][' . $key . '][name]" name="wpstg_settings[' . $args['id'] . '][' . $key . '][name]" value="' . $name .'"/>
-                        </tr>';
-                endforeach;
-	}
-        echo '</table>';
-        echo ob_get_clean();
-}
 
 /**
  * Registers the Add-Ons field callback for WP-Staging Add-Ons
@@ -964,81 +771,9 @@ function wpstg_addons_callback( $args ) {
 
 		echo $html;
 	}
-        
-        
-/* 
- * Post Types Callback
- * 
- * Adds a multiple choice drop box
- * for selecting where WP-Staging should be enabled
- * 
- * @since 2.0.9
- * @param array $args Arguments passed by the setting
- * @return void
- * 
- */
 
-function wpstg_posttypes_callback ($args){
-  global $wpstg_options;
-  $posttypes = get_post_types();
 
-  //if ( ! empty( $args['options'] ) ) {
-  if ( ! empty( $posttypes ) ) {
-		//foreach( $args['options'] as $key => $option ):
-                foreach( $posttypes as $key => $option ):
-			if( isset( $wpstg_options[$args['id']][$key] ) ) { $enabled = $option; } else { $enabled = NULL; }
-			echo '<input name="wpstg_settings[' . $args['id'] . '][' . $key . ']" id="wpstg_settings[' . $args['id'] . '][' . $key . ']" type="checkbox" value="' . $option . '" ' . checked($option, $enabled, false) . '/>&nbsp;';
-			echo '<label for="wpstg_settings[' . $args['id'] . '][' . $key . ']">' . $option . '</label><br/>';
-		endforeach;
-		echo '<p class="description wpstg_hidden">' . $args['desc'] . '</p>';
-	}
-}
 
-/* 
- * Note Callback
- * 
- * Show a note
- * 
- * @since 2.2.8
- * @param array $args Arguments passed by the setting
- * @return void
- * 
- */
-
-function wpstg_note_callback ($args){
-  global $wpstg_options;
-  //$html = !empty($args['desc']) ? $args['desc'] : '';
-  $html = '';
-  echo $html;
-}
-
-/**
- * Additional content Callback 
- * Adds several content text boxes selectable via jQuery easytabs() 
- *
- * @param array $args
- * @return string $html
- * @scince 2.3.2
- */
-
-function wpstg_add_content_callback($args){
-    	global $wpstg_options;
-
-        $html = '<div id="mashtabcontainer" class="tabcontent_container"><ul class="mashtabs" style="width:99%;max-width:500px;">';
-            foreach ( $args['options'] as $option => $name ) :
-                    $html .= '<li class="mashtab" style="float:left;margin-right:4px;"><a href="#'.$name['id'].'">'.$name['name'].'</a></li>';
-            endforeach;
-        $html .= '</ul>';
-        $html .= '<div class="mashtab-container">';
-            foreach ( $args['options'] as $option => $name ) :
-                    $value = isset($wpstg_options[$name['id']]) ? $wpstg_options[ $name['id']] : '';
-                    $textarea = '<textarea class="large-text wpstg-textarea" cols="50" rows="15" id="wpstg_settings['. $name['id'] .']" name="wpstg_settings['.$name['id'].']">' . esc_textarea( stripslashes( $value ) ) . '</textarea>';
-                    $html .= '<div id="'.$name['id'].'" style="max-width:500px;"><span style="padding-top:60px;display:block;">' . $name['desc'] . ':</span><br>' . $textarea . '</div>';
-            endforeach;
-        $html .= '</div>';
-        $html .= '</div>';
-	echo $html;
-}
 
         
 /**
@@ -1066,54 +801,7 @@ function wpstg_set_settings_cap() {
 add_filter( 'option_page_capability_wpstg_settings', 'wpstg_set_settings_cap' );
 
 
-/* returns array with amount of available services
- * @since 2.0
- * @return array
- */
 
-function wpstg_numberServices(){
-    $number = 1;
-    $array = array();
-    while ($number <= count(wpstg_get_networks_list())){
-        $array[] = $number++; 
-
-    }
-    $array['all'] = __('All Services');
-    return apply_filters('wpstg_return_services', $array);
-}
-
-/* Purge the WP-Staging 
- * database WPSTG_TABLE
- * 
- * @since 2.0.4
- * @return string
- */
-
-function wpstg_delete_cache_objects(){
-    global $wpstg_options, $wpdb;
-    if (isset($wpstg_options['delete_cache_objects'])){
-        //$sql = "TRUNCATE TABLE " . WPSTG_TABLE;
-        //require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
-        //$wpdb->query($sql);
-        delete_post_meta_by_key( 'wpstg_timestamp' );
-        delete_post_meta_by_key( 'wpstg_shares' ); 
-        delete_post_meta_by_key( 'wpstg_jsonshares' );
-        return ' <strong style="color:red;">' . __('DB cache deleted! Do not forget to uncheck this box for performance increase after doing the job.', 'wpstg') . '</strong> ';
-    }
-}
-
-/* returns Cache Status if enabled or disabled
- *
- * @since 2.0.4
- * @return string
- */
-
-function wpstg_cache_status(){
-    global $wpstg_options;
-    if (isset($wpstg_options['disable_cache'])){
-        return ' <strong style="color:red;">' . __('Transient Cache disabled! Enable it for performance increase.' , 'wpstg') . '</strong> ';
-    }
-}
 
 /* Permission check if logfile is writable
  *

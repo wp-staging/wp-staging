@@ -83,7 +83,7 @@ if (!class_exists('wpstaging')) :
          * @return The one true wp-staging
          */
         public static function instance() {
-            if (!isset(self::$instance) && !( self::$instance instanceof WP-Staging )) {
+            if (!isset(self::$instance) && !( self::$instance instanceof wpstaging )) {
                 self::$instance = new wpstaging;
                 self::$instance->setup_constants();
                 self::$instance->includes();
