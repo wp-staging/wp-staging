@@ -225,7 +225,7 @@ if (!class_exists('wpstaging')) :
     endif; // End if class_exists check
 
 /**
- * The main function responsible for returning the one true WP-Staging
+ * The main function responsible for returning the one true wpstaging
  * Instance to functions everywhere.
  *
  * Use this function like you would a global variable, except without needing
@@ -234,7 +234,7 @@ if (!class_exists('wpstaging')) :
  * Example: <?php $WPSTG = WPSTG(); ?>
  *
  * @since 1.0.0
- * @return object The one true WP-Staging Instance
+ * @return object The one true wpstaging Instance
  */
 function WPSTG() {
     return wpstaging::instance();
