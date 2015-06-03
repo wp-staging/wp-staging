@@ -1,5 +1,4 @@
 jQuery(document).ready(function ($) {
-    
       
 // Start easytabs()
 if ( $( ".wpstg-tabs" ).length ) {
@@ -557,6 +556,20 @@ For usage and examples: colpick.com/plugin
 			hexToHsb: hexToHsb,
 			hexToRgb: hexToRgb
 		}
+	});
+})(jQuery);
+
+(function ($) {
+	$(document).ready(function () {
+		$('#wpstg-clone-db').click(function (e) {
+			e.preventDefault();
+			var data = {
+				action: 'wpstg_clonedb'
+			};
+			$.post(ajaxurl, data, function (resp) {
+				console.log(resp);
+			});
+		});
 	});
 })(jQuery);
 

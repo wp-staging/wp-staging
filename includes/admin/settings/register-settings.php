@@ -49,7 +49,7 @@ function wpstg_get_settings() {
 		//$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
                 //$addons_settings = is_array( get_option( 'wpstg_settings_addons' ) )   ? get_option( 'wpstg_settings_addons' )   : array();
                 
-		$settings = array_merge( $general_settings, $misc_settings, $networks, $ext_settings, $license_settings, $addons_settings);
+		$settings = array_merge( $general_settings, $misc_settings);//, $networks, $ext_settings, $license_settings, $addons_settings);
 
 		update_option( 'wpstg_settings', $settings);
 	}
