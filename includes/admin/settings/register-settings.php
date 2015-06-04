@@ -131,57 +131,26 @@ function wpstg_get_registered_settings() {
                                     'type' => 'header',
                                     'size' => 'regular'
                             ),
-                            array(
-                                    'id' => 'wpstg_textfield',
-                                    'name' => __( 'Text Field', 'wpstg' ),
-                                    'desc' => __( 'This is a text field', 'wpstg' ),
-                                    'type' => 'text',
-                                    'size' => 'large',
-                                    'std' => 'This is a large textfield'
-                            ),
-                            array(
-                                    'id' => 'wpstg_number',
-                                    'name' => __( 'Number field', 'wpstg' ),
-                                    'desc' => __( 'This is a number field', 'wpstg' ),
-                                    'type' => 'number',
-                                    'size' => 'normal'
-                            ),  
-                            array(
-                                    'id' => 'wpstg_custom_field',
-                                    'name' => __( 'Custom field', 'wpstg' ),
-                                    'desc' => __( 'This is a custom field created with the callback function wpstg_custom_field_callback', 'wpstg' ),
-                                    'type' => 'custom_field',
-                                    'size' => 'small',
-                                    'std' => 0.8
-                            ), 
-                            array(
-                                    'id' => 'wpstg_options',
-                                    'name' => __( 'Options field', 'wpstg' ),
-                                    'desc' => __( 'This is an options field', 'wpstg' ),
-                                    'type' => 'select',
-                                                    'options' => array(
-                                                            'value1' => __( 'Value 1', 'wpstg' ),
-                                                            'value2' => __( 'Value 2', 'wpstg' )
-                                                    )
-                            ),
-                            array(
-                                    'id' => 'wpstg_checkbox',
-                                    'name' => __( 'Checkbox', 'wpstg' ),
-                                    'desc' => __( 'You already guessed it: This is a Checkbox', 'wpstg' ),
-                                    'type' => 'checkbox'
-                            ),
-                                array(
-					'id' => 'debug_header',
-					'name' => '<strong>' . __( 'Debug', 'wpstg' ) . '</strong>',
-					'desc' => __( ' ', 'wpstg' ),
-					'type' => 'header'
-				),
-                                'debug_mode' => array(
-					'id' => 'debug_mode',
-					'name' => __( 'Debug mode', 'wpstg' ),
-					'desc' => __( '<strong>Note: </strong> Check this box before you get in contact with our support team. This allows us to check publically hidden debug messages on your website. Do not forget to disable it thereafter! Enable this also to write daily sorted log files of requested share counts to folder <strong>/wp-content/plugins/mashsharer/logs</strong>. Please send us this files when you notice a wrong share count.' . wpstg_log_permissions(), 'wpstg' ),
-					'type' => 'checkbox'
-				)
+							array(
+								'id' => 'wpstg_query_limit',
+								'name' => __('DB Query Limit', 'wpstg'),
+								'desc' => __('Number of rows, that will be cloned at the time.'),
+								'type' => 'text',
+								'size' => 'small',
+								'std' => 100,
+							),
+							array(
+								'id' => 'debug_header',
+								'name' => '<strong>' . __( 'Debug', 'wpstg' ) . '</strong>',
+								'desc' => __( ' ', 'wpstg' ),
+								'type' => 'header'
+							),
+							'debug_mode' => array(
+								'id' => 'debug_mode',
+								'name' => __( 'Debug mode', 'wpstg' ),
+								'desc' => __( '<strong>Note: </strong> Check this box before you get in contact with our support team. This allows us to check publically hidden debug messages on your website. Do not forget to disable it thereafter! Enable this also to write daily sorted log files of requested share counts to folder <strong>/wp-content/plugins/mashsharer/logs</strong>. Please send us this files when you notice a wrong share count.' . wpstg_log_permissions(), 'wpstg' ),
+								'type' => 'checkbox'
+							)
 			)
 		),
                 'misc' => apply_filters('wpstg_settings_misc',
