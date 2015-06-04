@@ -1,5 +1,4 @@
 jQuery(document).ready(function ($) {
-    
       
 // Start easytabs()
 if ( $( ".wpstg-tabs" ).length ) {
@@ -557,6 +556,44 @@ For usage and examples: colpick.com/plugin
 			hexToHsb: hexToHsb,
 			hexToRgb: hexToRgb
 		}
+	});
+})(jQuery);
+
+//Clone DB
+(function ($) {
+	$(document).ready(function () {
+		$('#wpstg_clone_link').click(function (e) {
+			e.preventDefault();
+			var cloneId = $('#wpstg_clone_id').val() || new Date().getTime();
+			$('#wpstg_cloning_status').text('Cloning...');
+			var data = {
+				action: 'wpstg_clone_db',
+				wpstg_clone_id: cloneId
+			};
+			$.post(ajaxurl, data, function (resp) {
+				$('#wpstg_cloning_status').text('Done');
+				switch (resp) {
+					case '0':
+						console.log(cloneId + ' has been added.');
+						break;
+					default :
+						console.log(resp);
+				}
+			});
+		});
+
+		$('#wpstg_copy_dir').click(function (e) {
+			e.preventDefault();
+			var cloneId = $('#wpstg_clone_id').val() || new Date().getTime();
+			$('#wpstg_coping_status').text('Coping...');
+			var data = {
+				action: 'copy_dir',
+				wpstg_clone_id: cloneId
+			};
+			$.post(ajaxurl, data, function(resp) {
+				$('#wpstg_coping_status').text('Done');
+			});
+		});
 	});
 })(jQuery);
 

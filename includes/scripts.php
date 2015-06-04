@@ -34,7 +34,7 @@ function wpstg_load_admin_scripts( $hook ) {
 	$css_dir = WPSTG_PLUGIN_URL . 'assets/css/';
 
 	// Use minified libraries if SCRIPT_DEBUG is turned off
-	$suffix  = ( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
+	$suffix  = '';//( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
         //echo $css_dir . 'wpstg-admin' . $suffix . '.css', WPSTG_VERSION;
 	// These have to be global
 	wp_enqueue_script( 'wpstg-admin-scripts', $js_dir . 'wpstg-admin' . $suffix . '.js', array( 'jquery' ), WPSTG_VERSION, false );
