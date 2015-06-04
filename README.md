@@ -6,11 +6,11 @@ This is the latest developer version of WP-Staging for WordPress.
 
 ## Installation ##
 
-1. You can clone the GitHub repository: `https://github.com/mashshare/Mashshare.git`
-2. Or download it directly as a ZIP file: `https://github.com/mashshare/Mashshare/archive/master.zip`
+1. You can clone the GitHub repository: `https://github.com/wp-staging/wp-staging.git`
+2. Or download it directly as a ZIP file: `https://github.com/wp-staging/wp-staging/archive/master.zip`
 3. Upload it via WordPress->Plugin->AddNew
 
-This will download the latest developer copy of Mashshare.
+This will download the latest developer copy of WP-Staging.
 
 ## Bugs ##
 If you find an issue, let us know [here](https://github.com/wp-staging/wp-staging/issues?state=open)!
