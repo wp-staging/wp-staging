@@ -27,6 +27,9 @@ function wpstg_clone_page() {
 
 function wpstg_clone_db() {
 	global $wpdb, $wpstg_options;
+        
+        check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
+        
 	$clone_id = $_POST['wpstg_clone_id'];
 	$query_limit = isset($wpstg_options['wpstg_query_limit']) ? $wpstg_options['wpstg_query_limit'] : 2;
 	//check clone id
@@ -62,6 +65,8 @@ add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
 function wpstg_check_clone_id($clone_id) {
 	global $wpstg_options;
 
+        check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
+        
 	if (empty($wpstg_options['exists_clones']) || !in_array($clone_id, $wpstg_options['exists_clones'])) {
 		$wpstg_options['exists_clones'][] = $clone_id;
 		update_option('wpstg_settings', $wpstg_options);

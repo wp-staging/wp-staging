@@ -568,13 +568,14 @@ For usage and examples: colpick.com/plugin
 			$('#wpstg_cloning_status').text('Cloning...');
 			var data = {
 				action: 'wpstg_clone_db',
-				wpstg_clone_id: cloneId
+				wpstg_clone_id: cloneId,
+                                nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
 				$('#wpstg_cloning_status').text('Done');
 				switch (resp) {
 					case '0':
-						console.log(cloneId + ' has been added.');
+						console.log(cloneId + ' has been added. ');
 						break;
 					default :
 						console.log(resp);
@@ -588,7 +589,8 @@ For usage and examples: colpick.com/plugin
 			$('#wpstg_coping_status').text('Coping...');
 			var data = {
 				action: 'copy_dir',
-				wpstg_clone_id: cloneId
+				wpstg_clone_id: cloneId,
+                                nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
 				$('#wpstg_coping_status').text('Done');
