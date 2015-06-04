@@ -17,7 +17,7 @@ function wpstg_clone_page() {
 	?>
 	<div id="wpstg_clonepage_wrapper">
 		<input type="text" id="wpstg_clone_id">
-		<a href="#" id="wpstg_clone_link">GOGO POWER RANGERS!</a>
+		<a href="#" id="wpstg_clone_link">WE ALL LIKE POWER RANGERS!</a>
 		<span id="wpstg_cloning_status"></span><br>
 		<a href="#" id="wpstg_copy_dir">COPY DIR (test)</a>
 		<span id="wpstg_coping_status"></span>
