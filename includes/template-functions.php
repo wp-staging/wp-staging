@@ -35,7 +35,7 @@ function wpstg_clone_db() {
 		wp_die($msg);
 	}
 
-	$tables = $wpdb->get_col("show tables like 'wp_%'");
+	$tables = $wpdb->get_col("show tables like '" . $wpdb->prefix . "_%'");
 	foreach ($tables as $table) {
 		$new_table = $clone_id . '_' . $table;
 		$table_status = $wpdb->query('create table ' . $new_table . ' like ' . $table);
