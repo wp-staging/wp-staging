@@ -14,10 +14,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 //Clone Page
 function wpstg_clone_page() {
+	global $wpstg_options;
+	$clone = isset($wpstg_options['current_clone']) ? $wpstg_options['current_clone'] : null;
 	?>
 	<div id="wpstg_clonepage_wrapper">
-		<input type="text" id="wpstg_clone_id"><br>
-		<a href="#" id="wpstg_clone_link">Clone DB ;)</a>
+		<input type="text" id="wpstg_clone_id" value="<?= $clone; ?>"><br>
+		<a href="#" id="wpstg_clone_link"><?= $clone === null ? 'Clone DB ;)' : 'Continue cloning...';?></a>
 		<span id="wpstg_cloning_status"></span><br>
 		<a href="#" id="wpstg_copy_dir">Copy files (better don't click)</a>
 		<span id="wpstg_coping_status"></span>
@@ -30,8 +32,9 @@ function wpstg_clone_db() {
 
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 
-	$clone_id = $_POST['wpstg_clone_id'];
-	$limit = isset($wpstg_options['query_limit']) ? $wpstg_options['query_limit'] : 2; //change to normal value (100)
+	if (!isset($wpstg_options['current_clone']))
+		$wpstg_options['current_clone'] = $_POST['wpstg_clone_id'];
+	$limit = isset($wpstg_options['query_limit']) ? $wpstg_options['query_limit'] : 100; //change to normal value (100)
 	$table = isset($wpstg_options['current_table']) ? $wpstg_options['current_table'] : null;
 	$is_new = false;
 
@@ -45,6 +48,7 @@ function wpstg_clone_db() {
 		if (empty($tables)) { //exit condition
 			unset($wpstg_options['cloned_tables']);
 			unset($wpstg_options['offsets']);
+			unset($wpstg_options['current_clone']);
 			update_option('wpstg_settings', $wpstg_options);
 			wp_die(1);
 		}
@@ -52,7 +56,7 @@ function wpstg_clone_db() {
 		$is_new = true;
 	}
 
-	$new_table = $clone_id . '_' . $table;
+	$new_table = $wpstg_options['current_clone'] . '_' . $table;
 	$offset = isset($wpstg_options['offsets'][$table]) ? $wpstg_options['offsets'][$table] : 0;
 	$is_cloned = true;
 	if ($is_new) {
@@ -80,23 +84,30 @@ add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
 
 //tmp
 function wpstg_copy_dir() {
+	global $wpstg_options, $folders;
 	$home = get_home_path();
-	$dest = $home . $_POST['wpstg_clone_id'];
-	copy_r($home, $dest);
+	$cur_dir = isset($wpstg_options['current_dir']) ? $wpstg_options['current_dir'] : ($home . 'wp-includes/css');
+	if ($cur_dir !== null) {
+		$tmp = substr($cur_dir, strlen($home));
+		$folders = explode(DIRECTORY_SEPARATOR, $tmp);
+	}
+	my_copy_func($home, $home . 'TEST');
 
 	wp_die();
 }
 add_action('wp_ajax_copy_dir', 'wpstg_copy_dir');
 
+function my_copy_func($src, $dest) {
+	//continue in monday
+}
+
 function copy_r($source, $dest)
 {
-	if (is_file($source)) {
+	if (is_file($source))
 		return copy($source, $dest);
-	}
 
-	if (!is_dir($dest)) {
+	if (!is_dir($dest))
 		mkdir($dest);
-	}
 
 	$tmp = explode('/', $dest);
 	$dir_name = array_pop($tmp);
@@ -110,7 +121,6 @@ function copy_r($source, $dest)
 		// Deep copy directories
 		copy_r("$source/$entry", "$dest/$entry");
 	}
-
 	$dir->close();
 	return true;
 }

@@ -63,6 +63,7 @@ $('#mashtabcontainer').easytabs({
 						break;
 					case '1':
 						$('#wpstg_cloning_status').text('Done. ' + cloneId + ' has been added successfully :D');
+						$('#wpstg_clone_id').val('');
 						$('#wpstg_clone_link').text('Clone DB ;)').show();
 						break;
 					default :
@@ -80,10 +81,11 @@ $('#mashtabcontainer').easytabs({
 			var data = {
 				action: 'copy_dir',
 				wpstg_clone_id: cloneId,
-                                nonce: wpstg.nonce
+				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
 				$('#wpstg_coping_status').text('Done');
+				console.log(resp);
 			});
 		});
 	});
