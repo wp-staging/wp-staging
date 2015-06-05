@@ -40,8 +40,8 @@ function wpstg_load_admin_scripts( $hook ) {
 	// These have to be global
 	wp_enqueue_script( 'wpstg-admin-script', $js_dir . 'wpstg-admin' . $suffix . '.js', array( 'jquery' ), WPSTG_VERSION, false );
 	wp_enqueue_style( 'wpstg-admin', $css_dir . 'wpstg-admin' . $suffix . '.css', WPSTG_VERSION );
-        wp_localize_script( 'wpstg-admin-script', 'wpstg', array(
-			'nonce' => wp_create_nonce( 'wpstg_ajax_nonce' )
-                    ));
+	wp_localize_script( 'wpstg-admin-script', 'wpstg', array(
+		'nonce' => wp_create_nonce( 'wpstg_ajax_nonce' )
+	));
 }
 add_action( 'admin_enqueue_scripts', 'wpstg_load_admin_scripts', 100 );

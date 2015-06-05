@@ -79,7 +79,7 @@ function wpstg_install() {
     
     // Bail if activating from network, or bulk
 	if ( is_network_admin() || isset( $_GET['activate-multi'] ) ) {
-		return;	
+		return;
         }
         
         // Add the transient to redirect / not for multisites

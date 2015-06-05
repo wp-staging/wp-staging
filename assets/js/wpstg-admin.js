@@ -40,27 +40,38 @@ $('#mashtabcontainer').easytabs({
 
 //Clone DB
 (function ($) {
+	var cloneId;
 	$(document).ready(function () {
 		$('#wpstg_clone_link').click(function (e) {
 			e.preventDefault();
-			var cloneId = $('#wpstg_clone_id').val() || new Date().getTime();
+			cloneId = $('#wpstg_clone_id').val() || new Date().getTime();
 			$('#wpstg_cloning_status').text('Cloning...');
+			$(this).hide();
+			clone_db(); //recursive function
+		});
+
+		function clone_db() {
 			var data = {
 				action: 'wpstg_clone_db',
 				wpstg_clone_id: cloneId,
-                                nonce: wpstg.nonce
+				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
-				$('#wpstg_cloning_status').text('Done');
 				switch (resp) {
 					case '0':
-						console.log(cloneId + ' has been added. ');
+						clone_db();
+						break;
+					case '1':
+						$('#wpstg_cloning_status').text('Done. ' + cloneId + ' has been added successfully :D');
+						$('#wpstg_clone_link').text('Clone DB ;)').show();
 						break;
 					default :
 						console.log(resp);
+						$('#wpstg_cloning_status').text('Fail :(');
+						$('#wpstg_clone_link').text('Continue cloning.');
 				}
 			});
-		});
+		}
 
 		$('#wpstg_copy_dir').click(function (e) {
 			e.preventDefault();

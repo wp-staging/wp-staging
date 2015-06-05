@@ -123,21 +123,29 @@ function wpstg_get_registered_settings() {
 	$wpstg_settings = array(
 		/** General Settings */
 		'general' => apply_filters( 'wpstg_settings_general',
-                    array(
-                            array(
-                                    'id' => 'wpstg_header',
-                                    'name' => '<strong>' . __( 'General', 'wpstg' ) . '</strong>',
-                                    'desc' => '',
-                                    'type' => 'header',
-                                    'size' => 'regular'
-                            ),
+				array(
+						array(
+								'id' => 'wpstg_header',
+								'name' => '<strong>' . __( 'General', 'wpstg' ) . '</strong>',
+								'desc' => '',
+								'type' => 'header',
+								'size' => 'regular'
+						),
 							array(
 								'id' => 'wpstg_query_limit',
 								'name' => __('DB Query Limit', 'wpstg'),
-								'desc' => __('Number of rows, that will be cloned at the time.'),
+								'desc' => __('Number of DB rows, that will be cloned at the time.'),
 								'type' => 'text',
 								'size' => 'small',
 								'std' => 100,
+							),
+							array(
+								'id' => 'wpstg_batch_size',
+								'name' => __('Bathc Size', 'wpstg'),
+								'desc' => __('Size of one batch of files (in Mb)', 'wpstg'),
+								'type' => 'text',
+								'size' => 'small',
+								'std' => '20',
 							),
 							array(
 								'id' => 'debug_header',
