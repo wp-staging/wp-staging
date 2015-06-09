@@ -16,13 +16,16 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function wpstg_clone_page() {
 	global $wpstg_options;
 	$clone = isset($wpstg_options['current_clone']) ? $wpstg_options['current_clone'] : null;
+	$crushed_file = isset($wpstg_options['current_file']) ? $wpstg_options['current_file'] : null;
 	?>
 	<div id="wpstg_clonepage_wrapper">
 		<input type="text" id="wpstg_clone_id" value="<?= $clone; ?>"><br>
-		<a href="#" id="wpstg_clone_link"><?= $clone === null ? 'Clone DB ;)' : 'Continue cloning...';?></a>
+		<a href="#" id="wpstg_clone_link">1) <?= $clone === null ? 'Clone DB ;)' : 'Continue cloning...';?></a>
 		<span id="wpstg_cloning_status"></span><br>
-		<a href="#" id="wpstg_copy_dir">Copy files (better don't click)</a>
+		<a href="#" id="wpstg_copy_dir">2) <?= $crushed_file === null ? 'Copy files' : 'Continue coping...';?></a>
 		<span id="wpstg_coping_status"></span>
+		<hr>
+		<a href="#" id="wpstg_replace">3) Replace DB entries and table prefix</a>
 	</div> <!-- #wpstg_clonepage_wrapper -->
 <?php
 }
@@ -84,38 +87,40 @@ add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
 
 //tmp
 function wpstg_copy_dir() {
-	global $wpstg_options, $folders, $copied_size;
-	$home = trim(get_home_path(), '/');
+	global $wpstg_options, $skip, $copied_size;
+	$home = rtrim(get_home_path(), '/');
 	$copied_size = 0;
 	$cur_file = isset($wpstg_options['current_file']) ? $wpstg_options['current_file'] : null;
 	if ($cur_file !== null) {
-		//wp_die($cur_file);
 		$tmp = substr($cur_file, strlen($home));
-		$folders = explode('/', $tmp);
+		$skip = explode('/', trim($tmp, '/'));
 	}
 
-	copy_r($home, $home . '/TEST');
+	$clone = $home . '/' . $_POST['wpstg_clone_id'];
+	copy_r($home, $clone);
 
+	unset($wpstg_options['current_file']);
+	update_option('wpstg_settings', $wpstg_options);
 	wp_die(1);
 }
 add_action('wp_ajax_copy_dir', 'wpstg_copy_dir');
 
 function copy_r($source, $dest)
 {
-	global $folders, $copied_size, $wpstg_options;
-	//$wpstg_options = get_option('wpstg_settings');
+	global $skip, $copied_size, $wpstg_options, $out;
+	clearstatcache();
 	$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
 	$batch_size *= 1024*1024;
 
 	//Skip already copied files and folders
-	if (!empty($folders)) {
+	if (!empty($skip)) {
 		if (is_dir($source)) {
 			$dir = dir($source);
 			while (false !== $entry = $dir->read())
-				if ($entry == $folders[0]) {
-					array_shift($folders);
+				if ($entry == $skip[0]) {
+					array_shift($skip);
 					copy_r("$source/$entry", "$dest/$entry");
-					return;
+					break;
 				}
 		}
 	}
@@ -137,7 +142,7 @@ function copy_r($source, $dest)
 
 	$tmp = explode('/', $dest);
 	$dir_name = array_pop($tmp);
-	$dir = dir($source);
+	$dir = isset($dir) ? $dir : dir($source);
 	while (false !== $entry = $dir->read()) {
 		// Skip pointers
 		if ($entry == '.' || $entry == '..' || $entry == $dir_name) {
@@ -150,3 +155,21 @@ function copy_r($source, $dest)
 	$dir->close();
 	return true;
 }
+
+function wpstg_replace_links() {
+	global $wpdb;
+	$new_prefix = $_POST['wpstg_clone_id'] . '_' . $wpdb->prefix;
+	//replace site url in options
+	$wpdb->query('update ' . $new_prefix . 'options set option_value = \'' . get_home_url() . '/' . $_POST['wpstg_clone_id'] . '\' where option_name = \'siteurl\' or option_name = \'home\'');
+
+	//replace table prefix in meta keys
+	$wpdb->query('update ' . $new_prefix . 'usermeta set meta_key = replace(meta_key, \'' . $wpdb->prefix . '\', \'' . $new_prefix . '\') where meta_key like \'' . $wpdb->prefix . '_%\'');
+	$wpdb->query('update ' . $new_prefix . 'options set option_name = replace(option_name, \'' . $wpdb->prefix . '\', \'' . $new_prefix . '\') where option_name like \'' . $wpdb->prefix . '_%\'');
+
+	//replace $table_prefix in wp-config.php
+	$config = file_get_contents(get_home_path() . '/' . $_POST['wpstg_clone_id'] . '/wp-config.php');
+	$config = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . 's\';//', $config);
+	file_put_contents(get_home_path() . '/' . $_POST['wpstg_clone_id'] . '/wp-config.php', $config);
+	wp_die();
+}
+add_action('wp_ajax_replace_links', 'wpstg_replace_links');

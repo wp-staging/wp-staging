@@ -63,7 +63,6 @@ jQuery(document).ready(function ($) {
 						break;
 					case '1':
 						$('#wpstg_cloning_status').text('Done. ' + cloneId + ' has been added successfully :D');
-						$('#wpstg_clone_id').val('');
 						$('#wpstg_clone_link').text('Clone DB ;)').show();
 						break;
 					default :
@@ -91,7 +90,6 @@ jQuery(document).ready(function ($) {
 			$.post(ajaxurl, data, function(resp) {
 				switch (resp) {
 					case '0':
-						console.log(1);
 						copy_files();
 						break;
 					case '1':
@@ -103,5 +101,16 @@ jQuery(document).ready(function ($) {
 				}
 			});
 		}
+
+		$('#wpstg_replace').click(function (e) {
+			e.preventDefault();
+			var data = {
+				action: 'replace_links',
+				wpstg_clone_id: cloneId
+			};
+			$.post(ajaxurl, data, function(resp) {
+				console.log(resp);
+			});
+		});
 	});
 })(jQuery);
