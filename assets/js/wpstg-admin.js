@@ -1,17 +1,17 @@
 jQuery(document).ready(function ($) {
-      
-// Start easytabs()
-if ( $( ".wpstg-tabs" ).length ) {
-$('#tab_container').easytabs({
-    animate:true
-});
-}
 
-if ( $( ".mashtab" ).length ) {
-$('#mashtabcontainer').easytabs({
-    animate:true
-});
-}        
+// Start easytabs()
+	if ( $( ".wpstg-tabs" ).length ) {
+		$('#tab_container').easytabs({
+			animate:true
+		});
+	}
+
+	if ( $( ".mashtab" ).length ) {
+		$('#mashtabcontainer').easytabs({
+			animate:true
+		});
+	}
 });
 
 /*
@@ -76,18 +76,32 @@ $('#mashtabcontainer').easytabs({
 
 		$('#wpstg_copy_dir').click(function (e) {
 			e.preventDefault();
-			var cloneId = $('#wpstg_clone_id').val() || new Date().getTime();
+			cloneId = $('#wpstg_clone_id').val() || new Date().getTime();
 			$('#wpstg_coping_status').text('Coping...');
+			$(this).hide();
+			copy_files();
+		});
+
+		function copy_files() {
 			var data = {
 				action: 'copy_dir',
 				wpstg_clone_id: cloneId,
 				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
-				$('#wpstg_coping_status').text('Done');
-				console.log(resp);
+				switch (resp) {
+					case '0':
+						console.log(1);
+						copy_files();
+						break;
+					case '1':
+						$('#wpstg_coping_status').text('Done');
+						break;
+					default:
+						console.log(resp);
+						$('#wpstg_coping_status').text('Fail :(');
+				}
 			});
-		});
+		}
 	});
 })(jQuery);
-

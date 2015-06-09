@@ -24,7 +24,7 @@ function wpstg_clone_page() {
 		<a href="#" id="wpstg_copy_dir">Copy files (better don't click)</a>
 		<span id="wpstg_coping_status"></span>
 	</div> <!-- #wpstg_clonepage_wrapper -->
-	<?php
+<?php
 }
 
 function wpstg_clone_db() {
@@ -84,27 +84,53 @@ add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
 
 //tmp
 function wpstg_copy_dir() {
-	global $wpstg_options, $folders;
-	$home = get_home_path();
-	$cur_dir = isset($wpstg_options['current_dir']) ? $wpstg_options['current_dir'] : ($home . 'wp-includes/css');
-	if ($cur_dir !== null) {
-		$tmp = substr($cur_dir, strlen($home));
-		$folders = explode(DIRECTORY_SEPARATOR, $tmp);
+	global $wpstg_options, $folders, $copied_size;
+	$home = trim(get_home_path(), '/');
+	$copied_size = 0;
+	$cur_file = isset($wpstg_options['current_file']) ? $wpstg_options['current_file'] : null;
+	if ($cur_file !== null) {
+		//wp_die($cur_file);
+		$tmp = substr($cur_file, strlen($home));
+		$folders = explode('/', $tmp);
 	}
-	my_copy_func($home, $home . 'TEST');
 
-	wp_die();
+	copy_r($home, $home . '/TEST');
+
+	wp_die(1);
 }
 add_action('wp_ajax_copy_dir', 'wpstg_copy_dir');
 
-function my_copy_func($src, $dest) {
-	//continue in monday
-}
-
 function copy_r($source, $dest)
 {
-	if (is_file($source))
-		return copy($source, $dest);
+	global $folders, $copied_size, $wpstg_options;
+	//$wpstg_options = get_option('wpstg_settings');
+	$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
+	$batch_size *= 1024*1024;
+
+	//Skip already copied files and folders
+	if (!empty($folders)) {
+		if (is_dir($source)) {
+			$dir = dir($source);
+			while (false !== $entry = $dir->read())
+				if ($entry == $folders[0]) {
+					array_shift($folders);
+					copy_r("$source/$entry", "$dest/$entry");
+					return;
+				}
+		}
+	}
+
+	if (is_file($source)) {
+		$size = filesize($source);
+		if ($batch_size > $copied_size + $size) {
+			$copied_size += $size;
+			return copy($source, $dest);
+		} else {
+			$wpstg_options['current_file'] = $source;
+			update_option('wpstg_settings', $wpstg_options);
+			wp_die(0);
+		}
+	}
 
 	if (!is_dir($dest))
 		mkdir($dest);
