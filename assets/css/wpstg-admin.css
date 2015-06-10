@@ -868,3 +868,13 @@ color:#777777;
 #mashtabcontainer .mashtab-container {
       border: 0px solid #ececec;
 }
+
+/* Cloning workflow */
+.wpstg-current-step {
+	font-weight: bold;
+}
+
+.wpstg-next-step-link[disabled] {
+	color: #777;
+	pointer-events: none;
+}
