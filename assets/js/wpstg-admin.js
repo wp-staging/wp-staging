@@ -77,7 +77,7 @@ jQuery(document).ready(function ($) {
 		function wpstg_additional_data(data) {
 			switch (data.action) {
 				case 'cloning':
-					data.cloneID = $('#wpstg-new-clone').val();
+					data.cloneID = $('#wpstg-new-clone').val() || new Date().getTime();
 					data.uncheckedTables = [];
 					$('.wpstg-db-table input:not(:checked)').each(function () {
 						data.uncheckedTables.push($(this).data('table'));
@@ -87,24 +87,24 @@ jQuery(document).ready(function ($) {
 		}
 
 /*----------------------------- old -----------------------------*/
+		var needCheck;
 		function clone_db() {
 			var data = {
 				action: 'wpstg_clone_db',
 				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
-				switch (resp) {
-					case '0':
-						clone_db();
-						break;
-					case '1':
-						$('#wpstg-db-progress').text('');
-						$('#wpstg-files-progress').text('...');
-						copy_files();
-						break;
-					default :
-						console.log(resp);
-						$('#wpstg-db-progress').text('Fail');
+				if (resp < 1) {
+					$('#wpstg-db-progress').text(resp);
+					clone_db();
+				} else if(resp >= 1) {
+					$('#wpstg-db-progress').text('');
+					$('#wpstg-files-progress').text('...');
+					needCheck = setInterval(check_files_progress, 1000);
+					copy_files();
+				} else {
+					console.log(resp);
+					$('#wpstg-db-progress').text('Fail');
 				}
 			});
 		}
@@ -121,6 +121,7 @@ jQuery(document).ready(function ($) {
 						break;
 					case '1':
 						$('#wpstg-files-progress').text('');
+						clearInterval(needCheck);
 						$('#wpstg-links-progress').text('...');
 						replace_links();
 						break;
@@ -140,5 +141,15 @@ jQuery(document).ready(function ($) {
 				console.log(resp);
 			});
 		};
+
+		var check_files_progress = function() {
+			var data = {
+				action: 'check_files_progress'
+			};
+			$.post(ajaxurl, data, function (resp) {
+				console.log(resp);
+				$('#wpstg-files-progress').text(resp);
+			});
+		}
 	});
 })(jQuery);

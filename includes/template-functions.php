@@ -14,6 +14,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 function wpstg_clone_page() {
 	global $wpstg_options;
+	$wpstg_options['total_wp_size'] = get_wp_size(get_home_path());
+	update_option('wpstg_settings', $wpstg_options);
 	?>
 	<div id="wpstg-clonepage-wrapper">
 		<ul id="wpstg-steps">
@@ -48,12 +50,15 @@ add_action('wp_ajax_overview', 'wpstg_overview');
 
 // 2nd step: Scanning
 function wpstg_scanning() {
-	global $wpdb;
+	global $wpdb, $wpstg_options;
 	$tables = $wpdb->get_results("show table status like '" . $wpdb->prefix . "_%'");
+	$out = '';
+	if (isset($wpstg_options['current_clone']))
+		$out = 'value="' . $wpstg_options['current_clone'] . '" disabled';
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
 		Clone ID
-		<input type="text" id="wpstg-new-clone">
+		<input type="text" id="wpstg-new-clone" <?= $out; ?>>
 	</label>
 	<div id="wpstg-scanning-db">
 		<h3>DB</h3>
@@ -88,18 +93,19 @@ add_action('wp_ajax_check_clone', 'wpstg_check_clone');
 function wpstg_cloning() {
 	global $wpstg_options;
 	//check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
-	$wpstg_options['current_clone'] = $_POST['cloneID'];
+	$wpstg_options['current_clone'] = isset($wpstg_options['current_clone']) ? $wpstg_options['current_clone'] : $_POST['cloneID'];
 	update_option('wpstg_settings', $wpstg_options);
 	$db_progress = isset($wpstg_options['db_progress']) ? $wpstg_options['db_progress'] : 0;
+	$files_progress = isset($wpstg_options['files_progress']) ? $wpstg_options['files_progress'] : 0;
 	?>
 	<div class="wpstg-cloning-section">DB
 		<div class="progress-bar">
-			<div class="progress" id="wpstg-db-progress" style="width: <?= 100 * $db_progress; ?>%;"></div>
+			<div class="progress" id="wpstg-db-progress" style="width: <?= 100 * $db_progress; ?>%;"><?= 100 * $db_progress; ?></div>
 		</div>
 	</div>
 	<div class="wpstg-cloning-section">Files
 		<div class="progress-bar">
-			<div class="progress" id="wpstg-files-progress"></div>
+			<div class="progress" id="wpstg-files-progress" style="width: <?= 100 * $files_progress; ?>%;"><?= 100 * $files_progress; ?></div>
 		</div>
 	</div>
 	<div class="wpstg-cloning-section">Links
@@ -108,7 +114,6 @@ function wpstg_cloning() {
 		</div>
 	</div>
 	<?php
-	//wpstg_clone_db();
 	wp_die();
 }
 add_action('wp_ajax_cloning', 'wpstg_cloning');
@@ -120,10 +125,11 @@ function wpstg_clone_db() {
 	$table = isset($wpstg_options['current_table']) ? $wpstg_options['current_table'] : null;
 	$is_new = false;
 
-	$msg = 0;//delete
+	$msg = isset($wpstg_options['db_progress']) ? $wpstg_options['db_progress'] : 0;
 
 	if ($table === null) {
 		$tables = $wpdb->get_col("show tables like '" . $wpdb->prefix . "%'");
+		$wpstg_options['all_tables'] = count($tables);
 		$cloned_tables = empty($wpstg_options['cloned_tables']) ? array() : $wpstg_options['cloned_tables']; //already cloned tables
 		$tables = array_diff($tables, $cloned_tables);
 		if (empty($tables)) { //exit condition
@@ -150,6 +156,8 @@ function wpstg_clone_db() {
 			if ($inserted_rows < $limit) {
 				$wpstg_options['cloned_tables'][] = $table;
 				unset($wpstg_options['current_table']);
+				$wpstg_options['db_progress'] = round(count($wpstg_options['cloned_tables']) / $wpstg_options['all_tables'], 2);
+				$msg = $wpstg_options['db_progress'];
 			}
 		} else {
 			$msg = 'Error: Table ' . $table . ' has been crushed. Offset: ' . $offset;
@@ -257,3 +265,18 @@ function wpstg_replace_links() {
 	wp_die();
 }
 add_action('wp_ajax_replace_links', 'wpstg_replace_links');
+
+function get_wp_size($path) {
+	if (! file_exists($path)) return 0;
+	if ( is_file($path)) return filesize($path);
+	$size = 0;
+	foreach(glob($path . '/*') as $fn)
+		$size += get_wp_size($fn);
+	return $size;
+}
+
+function wpstg_check_files_progress() {
+	global $wpstg_options;
+	$clone_size = get_wp_size(get_home_path() . $wpstg_options['current_clone']);
+	wp_die(round($clone_size / $wpstg_options['total_wp_size']), 2);
+}
