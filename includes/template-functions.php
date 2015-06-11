@@ -57,7 +57,9 @@ function wpstg_overview() {
 // 2nd step: Scanning
 function wpstg_scanning() {
 	global $wpdb, $wpstg_options;
+	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$tables = $wpdb->get_results("show table status like '" . $wpdb->prefix . "_%'");
+	$cloned_tables = isset($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array();
 	$out = '';
 	if (isset($wpstg_options['current_clone']))
 		$out = 'value="' . $wpstg_options['current_clone'] . '" disabled';
@@ -65,16 +67,17 @@ function wpstg_scanning() {
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
 		Clone ID
 		<input type="text" id="wpstg-new-clone" <?= $out; ?>>
+		<span class="wpstg-error-msg"></span>
 	</label>
 	<div id="wpstg-scanning-db">
 		<h3>DB</h3>
 		<?php foreach ($tables as $table) : ?>
 			<div class="wpstg-db-table">
 				<label>
-					<input type="checkbox" checked data-table="<?= $table->Name; ?>">
+					<input type="checkbox" checked data-table="<?= $table->Name; ?>" <?= in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
 					<?= $table->Name; ?>
 				</label>
-				<span class="wpstg-table-info" style="color: #999;">
+				<span class="wpstg-table-info">
 					Size: <?= $table->Data_length + $table->Index_length; ?> bytes
 				</span>
 			</div>
@@ -98,7 +101,7 @@ add_action('wp_ajax_check_clone', 'wpstg_check_clone');
 //3rd step: Cloning
 function wpstg_cloning() {
 	global $wpstg_options;
-	//check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
+	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$wpstg_options['current_clone'] = isset($wpstg_options['current_clone']) ? $wpstg_options['current_clone'] : $_POST['cloneID'];
 	$wpstg_options['cloned_tables'] = isset($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array();
 

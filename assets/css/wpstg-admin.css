@@ -892,3 +892,15 @@ color:#777777;
 	height: 100%;
 	transition: width 1s;
 }
+
+#wpstg-new-clone.wpstg-error {
+	border: 1px solid #ff4235;
+}
+
+.wpstg-error-msg {
+	color: #ff4235;
+}
+
+.wpstg-table-info {
+	color: #999;
+}
