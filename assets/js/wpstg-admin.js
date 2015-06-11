@@ -68,7 +68,6 @@ jQuery(document).ready(function ($) {
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
 				if (data.action == 'cloning') {
-					$('#wpstg-db-progress').text('...');
 					clone_db();
 				}
 			});
@@ -86,7 +85,19 @@ jQuery(document).ready(function ($) {
 			}
 		}
 
-/*----------------------------- old -----------------------------*/
+		$('.wpstg-remove-clone').click(function (e) {
+			e.preventDefault();
+			var data = {
+				action: 'delete_clone',
+				cloneID: $(this).data('clone')
+			};
+			$(this).text('removing...');
+			$.post(ajaxurl, data, function (resp) {
+				if (resp == 0)
+					$(e.target).parent('.wpstg-clone').remove();
+			});
+		});
+
 		var needCheck;
 		function clone_db() {
 			var data = {
@@ -95,16 +106,16 @@ jQuery(document).ready(function ($) {
 			};
 			$.post(ajaxurl, data, function (resp) {
 				if (resp < 1) {
-					$('#wpstg-db-progress').text(resp);
+					$('#wpstg-db-progress').text(resp).css('width', (100 * resp) + '%');
 					clone_db();
 				} else if(resp >= 1) {
 					$('#wpstg-db-progress').text('');
-					$('#wpstg-files-progress').text('...');
+					$('#wpstg-db-progress').css('width', '100%');
 					needCheck = setInterval(check_files_progress, 1000);
 					copy_files();
 				} else {
 					console.log(resp);
-					$('#wpstg-db-progress').text('Fail');
+					$('#wpstg-cloning-result').text('Fail');
 				}
 			});
 		}
@@ -120,14 +131,14 @@ jQuery(document).ready(function ($) {
 						copy_files();
 						break;
 					case '1':
-						$('#wpstg-files-progress').text('');
 						clearInterval(needCheck);
-						$('#wpstg-links-progress').text('...');
+						$('#wpstg-files-progress').text('');
+						$('#wpstg-files-progress').css('width', '100%');
 						replace_links();
 						break;
 					default:
 						console.log(resp);
-						$('#wpstg-files-progress').text('Fail')
+						$('#wpstg-cloning-result').text('Fail');
 				}
 			});
 		}
@@ -137,8 +148,10 @@ jQuery(document).ready(function ($) {
 				action: 'replace_links'
 			};
 			$.post(ajaxurl, data, function(resp) {
-				$('#wpstg-links-progress').text('');
-				console.log(resp);
+				$('#wpstg-links-progress').text('').css('width', '100%');
+				setTimeout(function() {
+					$('#wpstg-cloning-result').text('Done');
+				}, 1200);
 			});
 		};
 
@@ -147,8 +160,7 @@ jQuery(document).ready(function ($) {
 				action: 'check_files_progress'
 			};
 			$.post(ajaxurl, data, function (resp) {
-				console.log(resp);
-				$('#wpstg-files-progress').text(resp);
+				$('#wpstg-files-progress').text(resp).css('width', (100 * resp) + '%');
 			});
 		}
 	});

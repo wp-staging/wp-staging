@@ -878,3 +878,17 @@ color:#777777;
 	color: #777;
 	pointer-events: none;
 }
+
+.wpstg-progress-bar {
+	border: 1px solid #555;
+	width: 300px;
+	height: 20px;
+	padding: 3px;
+}
+
+.wpstg-progress {
+	background: #b1d032;
+	width: 0;
+	height: 100%;
+	transition: width 1s;
+}
