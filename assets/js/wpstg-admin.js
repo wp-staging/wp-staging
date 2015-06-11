@@ -88,6 +88,8 @@ jQuery(document).ready(function ($) {
 
 		$('.wpstg-remove-clone').click(function (e) {
 			e.preventDefault();
+			if (! confirm('Are you sure?'))
+				return false;
 			var data = {
 				action: 'delete_clone',
 				cloneID: $(this).data('clone')
