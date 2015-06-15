@@ -98,6 +98,7 @@ jQuery(document).ready(function ($) {
 			$.post(ajaxurl, data, function (resp) {
 				if (resp == 0)
 					$(e.target).parent('.wpstg-clone').remove();
+				console.log(resp);
 			});
 		});
 
@@ -107,17 +108,16 @@ jQuery(document).ready(function ($) {
 				action: 'wpstg_clone_db'
 			};
 			$.post(ajaxurl, data, function (resp) {
-				if (resp < 1) {
+				if (resp < 0) { //Fail
+					$('#wpstg-cloning-result').text('Fail');
+				} else if(resp < 1) { //Continue cloning
 					$('#wpstg-db-progress').text(resp).css('width', (100 * resp) + '%');
 					clone_db();
-				} else if(resp >= 1) {
+				} else if (resp >= 1) { //Success cloning
 					$('#wpstg-db-progress').text('');
 					$('#wpstg-db-progress').css('width', '100%');
 					needCheck = setInterval(check_files_progress, 1000);
 					copy_files();
-				} else {
-					console.log(resp);
-					$('#wpstg-cloning-result').text('Fail');
 				}
 			});
 		}
