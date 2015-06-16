@@ -98,7 +98,6 @@ jQuery(document).ready(function ($) {
 			$.post(ajaxurl, data, function (resp) {
 				if (resp == 0)
 					$(e.target).parent('.wpstg-clone').remove();
-				console.log(resp);
 			});
 		});
 
@@ -133,8 +132,7 @@ jQuery(document).ready(function ($) {
 						break;
 					case '1':
 						clearInterval(needCheck);
-						$('#wpstg-files-progress').text('');
-						$('#wpstg-files-progress').css('width', '100%');
+						$('#wpstg-files-progress').text('').css('width', '100%');
 						replace_links();
 						break;
 					default:
