@@ -14,9 +14,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 function wpstg_clone_page() {
 	//tmp: show file structure
-	$directory = rtrim(get_home_path(), '/');
-	$result = getDirStructure($directory);
-	showDirStructure($result);
+//	$directory = rtrim(get_home_path(), '/');
+//	$result = getDirStructure($directory);
+//	showDirStructure($result);
 	?>
 	<div id="wpstg-clonepage-wrapper">
 		<ul id="wpstg-steps">
@@ -178,11 +178,15 @@ function wpstg_clone_db() {
 	$offset = isset($wpstg_options['offsets'][$table]) ? $wpstg_options['offsets'][$table] : 0;
 	$is_cloned = true;
 	if ($is_new) {
-		$is_cloned = $wpdb->query("create table $new_table like $table");
+		$is_cloned = $wpdb->query(
+				"create table $new_table like $table"
+		);
 		$wpstg_options['current_table'] = $table;
 	}
 	if ($is_cloned) {
-		$inserted_rows = $wpdb->query("insert $new_table select * from  $table limit $offset, $limit");
+		$inserted_rows = $wpdb->query(
+				"insert $new_table select * from $table limit $offset, $limit"
+		);
 		if ($inserted_rows !== false) {
 			$wpstg_options['offsets'][$table] = $offset + $limit;
 			if ($inserted_rows < $limit) {
@@ -307,13 +311,32 @@ function wpstg_replace_links() {
 	global $wpdb, $wpstg_options;
 	$new_prefix = $wpstg_options['current_clone'] . '_' . $wpdb->prefix;
 	//replace site url in options
-	$result = $wpdb->query('update ' . $new_prefix . 'options set option_value = \'' . get_home_url() . '/' . $wpstg_options['current_clone'] . '\' where option_name = \'siteurl\' or option_name = \'home\'');
+	$result = $wpdb->query(
+		$wpdb->prepare(
+			'update ' . $new_prefix . 'options set option_value = %s where option_name = \'siteurl\' or option_name = \'home\'',
+			get_home_url() . '/' . $wpstg_options['current_clone']
+		)
+	);
 	if (! $result)
 		WPSTG()->logger->info('Replacing site url has been failed.');
 
 	//replace table prefix in meta keys
-	$result_options = $wpdb->query('update ' . $new_prefix . 'usermeta set meta_key = replace(meta_key, \'' . $wpdb->prefix . '\', \'' . $new_prefix . '\') where meta_key like \'' . $wpdb->prefix . '_%\'');
-	$result_usermeta = $wpdb->query('update ' . $new_prefix . 'options set option_name = replace(option_name, \'' . $wpdb->prefix . '\', \'' . $new_prefix . '\') where option_name like \'' . $wpdb->prefix . '_%\'');
+	$result_options = $wpdb->query(
+		$wpdb->prepare(
+			'update ' . $new_prefix . 'usermeta set meta_key = replace(meta_key, %s, %s) where meta_key like %s',
+			$wpdb->prefix,
+			$new_prefix,
+			$wpdb->prefix . '_%'
+		)
+	);
+	$result_usermeta = $wpdb->query(
+		$wpdb->prepare(
+			'update ' . $new_prefix . 'options set option_name = replace(option_name, %s, %s) where option_name like %s',
+			$wpdb->prefix,
+			$new_prefix,
+			$wpdb->prefix . '_%'
+		)
+	);
 	if (! $result_options || ! $result_usermeta)
 		WPSTG()->logger->info('Replacing table prefix has been failed.');
 
