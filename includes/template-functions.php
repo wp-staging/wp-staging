@@ -57,7 +57,7 @@ function wpstg_scanning() {
 	$home_path = rtrim(get_home_path(), '/');
 
 	$wpstg_options['big_files'] = array();
-	$wpstg_options['total_wp_size'] = get_wp_size($home_path);
+	$wpstg_options['total_wp_size'] = get_wp_size($home_path, true);
 	update_option('wpstg_settings', $wpstg_options);
 
 	$out = '';
@@ -231,22 +231,19 @@ function wpstg_copy_dir() {
 	$clone = $home . '/' . $wpstg_options['current_clone'];
 	copy_r($home, $clone);
 
-	unset($wpstg_options['current_file']);
-	update_option('wpstg_settings', $wpstg_options);
 	WPSTG()->logger->info('Coping files has been completed successfully.');
 	wp_die(1);
 }
 add_action('wp_ajax_copy_dir', 'wpstg_copy_dir');
 
-function copy_r($source, $dest)
-{
+function copy_r($source, $dest) {
 	global $skip, $copied_size, $wpstg_options;
 	clearstatcache();
 	$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
 	$batch_size *= 1024*1024;
 
 	//Skip already copied files and folders
-	if (!empty($skip)) {
+	if (! empty($skip)) {
 		if (is_dir($source)) {
 			$dir = dir($source);
 			while (false !== $entry = $dir->read())
@@ -260,11 +257,12 @@ function copy_r($source, $dest)
 	if (is_file($source)) {
 		$size = filesize($source);
 		if ($size > $batch_size) {
+			WPSTG()->logger->info('START coping large file: ' . $source);
 			$fin = fopen($source, 'rb');
 			$fout = fopen($dest, 'w');
 			while (! feof($fin))
-				if (! fwrite($fout, fread($fin, $batch_size))) {
-					WPSTG()->logger->info('Coping large file failed: ' . $source);
+				if (false === fwrite($fout, fread($fin, $batch_size))) {
+					WPSTG()->logger->info('Coping large file FAILED: ' . $source);
 					$wpstg_options['current_file'] = $source;
 					update_option('wpstg_settings', $wpstg_options);
 					wp_die(0);
@@ -272,6 +270,7 @@ function copy_r($source, $dest)
 			fclose($fin);
 			fclose($fout);
 			$copied_size += $size;
+			WPSTG()->logger->info('Large file has been COPIED: ' . $source);
 			return true;
 		}
 		if ($batch_size > $copied_size + $size) {
@@ -287,7 +286,7 @@ function copy_r($source, $dest)
 		} else {
 			$wpstg_options['current_file'] = $source;
 			update_option('wpstg_settings', $wpstg_options);
-			WPSTG()->logger->info('Batch complete: ' . $copied_size . '; Curent File: ' . $source);
+			WPSTG()->logger->info('Batch complete: ' . $copied_size . '; Current File: ' . $source);
 			wp_die(0);
 		}
 	}
@@ -303,9 +302,8 @@ function copy_r($source, $dest)
 	$dir = isset($dir) ? $dir : dir($source);
 	while (false !== $entry = $dir->read()) {
 		// Skip pointers
-		if (in_array($entry, $skip_dirs)) {
+		if (in_array($entry, $skip_dirs))
 			continue;
-		}
 
 		// Deep copy directories
 		copy_r("$source/$entry", "$dest/$entry");
@@ -373,16 +371,18 @@ function wpstg_clear_options() {
 	update_option('wpstg_settings', $wpstg_options);
 }
 
-function get_wp_size($path) {
+function get_wp_size($path, $is_root = false) {
 	global $wpstg_options;
 	if (! file_exists($path)) return 0;
 	if (is_file($path)) {
 		$fsize = filesize($path);
-		$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
-		$batch_size *= 1024*1024;
-		if ($fsize > $batch_size) {
-			$wpstg_options['big_files'][] = $path;
-			update_option('wpstg_settings', $wpstg_options);
+		if ($is_root) {
+			$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
+			$batch_size *= 1024 * 1024;
+			if ($fsize > $batch_size) {
+				$wpstg_options['big_files'][] = $path;
+				update_option('wpstg_settings', $wpstg_options);
+			}
 		}
 		return $fsize;
 	}
@@ -392,7 +392,7 @@ function get_wp_size($path) {
 		$check = explode('/', $fn);
 		if (in_array(array_pop($check), $skip_dirs))
 			continue;
-		$size += get_wp_size($fn);
+		$size += get_wp_size($fn, $is_root);
 	}
 	return $size;
 }

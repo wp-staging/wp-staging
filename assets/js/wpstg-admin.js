@@ -97,7 +97,7 @@ jQuery(document).ready(function ($) {
 			}
 		}
 
-		$('.wpstg-remove-clone').click(function (e) {
+		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
 			e.preventDefault();
 			if (! confirm('Are you sure?'))
 				return false;
