@@ -904,3 +904,100 @@ color:#777777;
 .wpstg-table-info {
 	color: #999;
 }
+
+#wpstg-start-cloning {
+	display: inline-block;
+	margin-left: 10px;
+	font-size: 15px;
+}
+
+/* Tabs */
+.wpstg-tabs-wrapper {
+	margin: 10px;
+	width: 50%;
+}
+
+.wpstg-tab-section {
+	background: #fff;
+	border: 1px solid #aaa;
+	display: none;
+	padding: 20px;
+	position: relative;
+	z-index: 10;
+}
+
+.wpstg-tab-section:first-of-type {
+	display: block;
+}
+
+.wpstg-tab-header {
+	background: #ddd;
+	border: 1px solid #aaa;
+	border-bottom: none;
+	display: inline-block;
+	padding: 10px;
+	position: relative;
+	top: 1px;
+	text-decoration: none;
+	z-index: 5;
+}
+
+.wpstg-tab-header.active {
+	background: #fff;
+	z-index: 15;
+}
+
+.wpstg-tab-header:focus {
+	outline: none;
+	box-shadow: none;
+}
+
+.wpstg-fs-subsection {
+	display: inline-block;
+	width: 50%;
+}
+
+#wpstg-fs-big-files {
+	border: 3px dashed #aaa;
+	padding: 10px;
+	position: absolute;
+	top: 20px;
+	right: 20px;
+}
+
+.wpstg-big-files-header {
+	display: block;
+	font-size: 17px;
+	font-weight: bolder;
+}
+
+.wpstg-big-file {
+	margin: 5px;
+}
+
+/* tmp */
+.wpstg-folder-name {
+	font-weight: bolder;
+}
+
+.wpstg-expand-folder {
+	color: #0073aa;
+	font-size: 15px;
+	text-decoration: none;
+}
+
+.wpstg-expand-folder:focus {
+	border: none;
+	color: #0073aa;
+	outline: none;
+	box-shadow: none;
+}
+
+.wpstg-fs-children {
+	display: none;
+	margin-left: 20px;
+}
+
+.wpstg-fs-file {
+	display: block;
+}

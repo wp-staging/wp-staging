@@ -13,10 +13,6 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 function wpstg_clone_page() {
-	//tmp: show file structure
-//	$directory = rtrim(get_home_path(), '/');
-//	$result = getDirStructure($directory);
-//	showDirStructure($result);
 	?>
 	<div id="wpstg-clonepage-wrapper">
 		<ul id="wpstg-steps">
@@ -48,7 +44,9 @@ function wpstg_overview() {
 		<?php endif; ?>
 	</div> <!-- #wpstg-existing-clones -->
 	<?php
+	wp_die();
 }
+add_action('wp_ajax_overview', 'wpstg_overview');
 
 // 2nd step: Scanning
 function wpstg_scanning() {
@@ -56,9 +54,10 @@ function wpstg_scanning() {
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$tables = $wpdb->get_results("show table status like '" . $wpdb->prefix . "_%'");
 	$cloned_tables = isset($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array();
+	$home_path = rtrim(get_home_path(), '/');
 
 	$wpstg_options['big_files'] = array();
-	$wpstg_options['total_wp_size'] = get_wp_size(get_home_path());
+	$wpstg_options['total_wp_size'] = get_wp_size($home_path);
 	update_option('wpstg_settings', $wpstg_options);
 
 	$out = '';
@@ -70,34 +69,42 @@ function wpstg_scanning() {
 		<input type="text" id="wpstg-new-clone" <?= $out; ?>>
 		<span class="wpstg-error-msg"></span>
 	</label>
-	<div id="wpstg-scanning-db">
-		<h3>DB</h3>
-		<?php foreach ($tables as $table) : ?>
-			<div class="wpstg-db-table">
-				<label>
-					<input type="checkbox" checked data-table="<?= $table->Name; ?>" <?= in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
-					<?= $table->Name; ?>
-				</label>
-				<span class="wpstg-table-info">
-					Size: <?= $table->Data_length + $table->Index_length; ?> bytes
-				</span>
-			</div>
-		<?php endforeach; ?>
-	</div> <!-- #wpstg-scanning-db -->
-	<div id="wpstg-scanning-files">
-		<h3>Files</h3>
-		<?php if (isset($wpstg_options['big_files']) && !empty($wpstg_options['big_files'])) : ?>
-			<h4>Big Files:</h4>
-			<?php foreach ($wpstg_options['big_files'] as $file) : ?>
-				<div class="wpstg-big-file">
-					<?= $file; ?>
+	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link" data-action="cloning">Start Cloning</a>
+
+	<div class="wpstg-tabs-wrapper">
+		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">DB</a>
+		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">Files</a>
+		<div class="wpstg-tab-section" id="wpstg-scanning-db">
+			<?php foreach ($tables as $table) : ?>
+				<div class="wpstg-db-table">
+					<label>
+						<input type="checkbox" checked data-table="<?= $table->Name; ?>" <?= in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
+						<?= $table->Name; ?>
+					</label>
+					<span class="wpstg-table-info">
+						Size: <?= $table->Data_length + $table->Index_length; ?> bytes
+					</span>
 				</div>
 			<?php endforeach; ?>
-		<?php else: ?>
-			<h4>Success</h4>
-		<?php endif; ?>
-	</div> <!-- #wpstg-scanning-files -->
-	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link" data-action="cloning">Start Cloning</a>
+		</div> <!-- #wpstg-scanning-db -->
+		<div class="wpstg-tab-section" id="wpstg-scanning-files">
+			<div class="wpstg-fs-subsection">
+				<?php $result = getDirStructure($home_path);
+				showDirStructure($result); ?>
+			</div> <!-- #wpstg-fs-files -->
+			<?php if (isset($wpstg_options['big_files']) && !empty($wpstg_options['big_files'])) : ?>
+				<div class="wpstg-fs-subsection" id="wpstg-fs-big-files">
+					<span class="wpstg-big-files-header">Big Files:</span>
+					<?php foreach ($wpstg_options['big_files'] as $file) : ?>
+						<div class="wpstg-big-file">
+							<?= $file; ?>
+						</div>
+					<?php endforeach; ?>
+				</div> <!-- #wpstg-fs-big-files -->
+			<?php endif; ?>
+		</div> <!-- #wpstg-scanning-files -->
+	</div>
+	<a href="#" class="wpstg-prev-step-link">Back</a>
 	<?php
 	wp_die();
 }
@@ -443,11 +450,15 @@ add_action('wp_ajax_delete_clone', 'wpstg_delete_clone');
 
 //tmp
 function getDirStructure($directory, &$array = array()) {
+	global $wpstg_options;
+	$clone_dirs = isset($wpstg_options['existing_clones']) ? $wpstg_options['existing_clones'] : array();
+	$clone_dirs[] = '.';
+	$clone_dirs[] = '..';
 	if (is_file($directory))
 		return true;
 	$dir = dir($directory);
 	while (false !== $entry = $dir->read()) {
-		if ($entry == '.' || $entry == '..')
+		if (in_array($entry, $clone_dirs))
 			continue;
 		if (is_file("$directory/$entry")) {
 			$array[] = $entry;
@@ -460,11 +471,18 @@ function getDirStructure($directory, &$array = array()) {
 
 function showDirStructure($structure) {
 	foreach ($structure as $folder => $children) {
-		if (is_array($children)) {
-			echo '<ul style="margin-left: 20px;"><strong style="text-decoration: underline;">' . $folder . '</strong>';
-			showDirStructure($children);
-		} else
-			echo '<li style="margin-left: 20px;">' . $children . '</li>';
+		if (is_array($children)) : ?>
+			<div class="wpstg-fs-folder">
+				<a href="#" class="wpstg-expand-folder">
+					<span class="wpstg-plus-minus">+</span>
+					<?= $folder; ?>
+				</a>
+				<div class="wpstg-fs-children">
+					<?php showDirStructure($children); ?>
+				</div>
+			</div> <!-- .wpstg-fs-folder -->
+		<?php else : ?>
+			<span class="wpstg-fs-file"><?= $children; ?></span>
+		<?php endif;
 	}
-	echo '</ul>';
 }
