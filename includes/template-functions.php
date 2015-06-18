@@ -21,7 +21,7 @@ function wpstg_clone_page() {
 			<li><span class="wpstg-step-num">3</span>Cloning</li>
 		</ul> <!-- #wpstg-steps -->
 		<div id="wpstg-workflow">
-			<?= wpstg_overview(); ?>
+			<?php echo wpstg_overview(); ?>
 		</div> <!-- #wpstg-workflow -->
 	</div> <!-- #wpstg-clonepage-wrapper -->
 	<?php
@@ -36,9 +36,9 @@ function wpstg_overview() {
 		<?php if (!empty($existing_clones)) : ?>
 			<h3>Exsiting clones:</h3>
 			<?php foreach ($existing_clones as $clone) : ?>
-				<div class="wpstg-clone" id="<?= $clone; ?>">
-					<?= $clone; ?>
-					<a href="#" class="wpstg-remove-clone" data-clone="<?= $clone; ?>">remove</a>
+				<div class="wpstg-clone" id="<?php echo $clone; ?>">
+					<?php echo $clone; ?>
+					<a href="#" class="wpstg-remove-clone" data-clone="<?php echo $clone; ?>">remove</a>
 				</div> <!-- .wpstg-clone -->
 			<?php endforeach; ?>
 		<?php endif; ?>
@@ -66,7 +66,7 @@ function wpstg_scanning() {
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
 		Clone ID
-		<input type="text" id="wpstg-new-clone" <?= $out; ?>>
+		<input type="text" id="wpstg-new-clone" <?php echo $out; ?>>
 		<span class="wpstg-error-msg"></span>
 	</label>
 	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link" data-action="cloning">Start Cloning</a>
@@ -78,11 +78,11 @@ function wpstg_scanning() {
 			<?php foreach ($tables as $table) : ?>
 				<div class="wpstg-db-table">
 					<label>
-						<input type="checkbox" checked data-table="<?= $table->Name; ?>" <?= in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
-						<?= $table->Name; ?>
+						<input type="checkbox" checked data-table="<?php echo $table->Name; ?>" <?php echo in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
+						<?php echo $table->Name; ?>
 					</label>
 					<span class="wpstg-table-info">
-						Size: <?= $table->Data_length + $table->Index_length; ?> bytes
+						Size: <?php echo $table->Data_length + $table->Index_length; ?> bytes
 					</span>
 				</div>
 			<?php endforeach; ?>
@@ -97,7 +97,7 @@ function wpstg_scanning() {
 					<span class="wpstg-big-files-header">Big Files:</span>
 					<?php foreach ($wpstg_options['big_files'] as $file) : ?>
 						<div class="wpstg-big-file">
-							<?= $file; ?>
+							<?php echo $file; ?>
 						</div>
 					<?php endforeach; ?>
 				</div> <!-- #wpstg-fs-big-files -->
@@ -136,17 +136,17 @@ function wpstg_cloning() {
 	?>
 	<div class="wpstg-cloning-section">DB
 		<div class="wpstg-progress-bar">
-			<div class="wpstg-progress" id="wpstg-db-progress" style="width: <?= 100 * $db_progress; ?>%;"></div>
+			<div class="wpstg-progress" id="wpstg-db-progress" style="width: <?php echo 100 * $db_progress; ?>%;"></div>
 		</div>
 	</div>
 	<div class="wpstg-cloning-section">Files
 		<div class="wpstg-progress-bar">
-			<div class="wpstg-progress" id="wpstg-files-progress" style="width: <?= 100 * $files_progress; ?>%;"></div>
+			<div class="wpstg-progress" id="wpstg-files-progress" style="width: <?php echo 100 * $files_progress; ?>%;"></div>
 		</div>
 	</div>
 	<div class="wpstg-cloning-section">Links
 		<div class="wpstg-progress-bar">
-			<div class="wpstg-progress" id="wpstg-links-progress" style="width: <?= $links_progress; ?>%"></div>
+			<div class="wpstg-progress" id="wpstg-links-progress" style="width: <?php echo $links_progress; ?>%"></div>
 		</div>
 	</div>
 	<span id="wpstg-cloning-result"></span>
@@ -217,7 +217,6 @@ function wpstg_clone_db() {
 }
 add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
 
-//tmp
 function wpstg_copy_dir() {
 	global $wpstg_options, $skip, $copied_size;
 	if (isset($wpstg_options['files_progress']) && $wpstg_options['files_progress'] == 1)
@@ -271,6 +270,8 @@ function copy_r($source, $dest) {
 					WPSTG()->logger->info('Coping large file FAILED: ' . $source);
 					$wpstg_options['current_file'] = $source;
 					update_option('wpstg_settings', $wpstg_options);
+					fclose($fin);
+					fclose($fout);
 					wp_die(0);
 				}
 			fclose($fin);
@@ -407,10 +408,8 @@ function get_wp_size($path, $is_root = false) {
 		if ($is_root) {
 			$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
 			$batch_size *= 1024 * 1024;
-			if ($fsize > $batch_size) {
+			if ($fsize > $batch_size)
 				$wpstg_options['big_files'][] = $path;
-				update_option('wpstg_settings', $wpstg_options);
-			}
 		}
 		return $fsize;
 	}
@@ -503,14 +502,14 @@ function showDirStructure($structure) {
 			<div class="wpstg-fs-folder">
 				<a href="#" class="wpstg-expand-folder">
 					<span class="wpstg-plus-minus">+</span>
-					<?= $folder; ?>
+					<?php echo $folder; ?>
 				</a>
 				<div class="wpstg-fs-children">
 					<?php showDirStructure($children); ?>
 				</div>
 			</div> <!-- .wpstg-fs-folder -->
 		<?php else : ?>
-			<span class="wpstg-fs-file"><?= $children; ?></span>
+			<span class="wpstg-fs-file"><?php echo $children; ?></span>
 		<?php endif;
 	}
 }

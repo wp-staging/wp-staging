@@ -894,9 +894,48 @@ color:#777777;
 	color: #eee;
 }
 
+.wpstg-next-step-link,
+.wpstg-prev-step-link {
+	background: #45a1c9;
+	color: #fff;
+	display: inline-block;
+	padding: 5px 10px;
+	text-decoration: none;
+	transition: background .2s ease-in-out;
+}
+
+.wpstg-next-step-link:hover,
+.wpstg-next-step-link:focus,
+.wpstg-prev-step-link:hover,
+.wpstg-prev-step-link:focus {
+	background: #51bfea;
+	color: #fff;
+	outline: none;
+	box-shadow: none;
+}
+
 .wpstg-next-step-link[disabled] {
 	color: #777;
 	pointer-events: none;
+}
+
+#wpstg-workflow {
+	position: relative;
+}
+
+#wpstg-workflow.loading::after {
+	background: rgba(255, 255, 255, .7);
+	content: 'LOADING';
+	display: block;
+	width: 100%;
+	height: 100%;
+	font-size: 20px;
+	padding-top: 100px;
+	text-align: center;
+	position: absolute;
+	top: 0;
+	left: 0;
+	z-index: 99;
 }
 
 .wpstg-progress-bar {

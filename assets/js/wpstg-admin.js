@@ -60,12 +60,14 @@ jQuery(document).ready(function ($) {
 
 		$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
 			e.preventDefault();
+			$('#wpstg-workflow').addClass('loading');
 			var data = {
 				action: $(this).data('action'),
 				nonce: wpstg.nonce
 			};
 			wpstg_additional_data(data);
 			$('#wpstg-workflow').load(ajaxurl, data, function () {
+				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
 				if (data.action == 'cloning') {
@@ -76,10 +78,12 @@ jQuery(document).ready(function ($) {
 
 		$('#wpstg-workflow').on('click', '.wpstg-prev-step-link', function (e) {
 			e.preventDefault();
+			$('#wpstg-workflow').addClass('loading');
 			var data = {
 				action: 'overview'
 			};
 			$('#wpstg-workflow').load(ajaxurl, data, function () {
+				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.prev('li').addClass('wpstg-current-step');
 			});
@@ -157,7 +161,6 @@ jQuery(document).ready(function ($) {
 				action: 'replace_links'
 			};
 			$.post(ajaxurl, data, function(resp) {
-				console.log(resp);
 				if (resp == 0) {
 					$('#wpstg-links-progress').text('').css('width', '100%');
 					setTimeout(function () {
