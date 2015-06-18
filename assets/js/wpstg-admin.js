@@ -157,10 +157,20 @@ jQuery(document).ready(function ($) {
 				action: 'replace_links'
 			};
 			$.post(ajaxurl, data, function(resp) {
-				$('#wpstg-links-progress').text('').css('width', '100%');
-				setTimeout(function() {
-					$('#wpstg-cloning-result').text('Done');
-				}, 1200);
+				console.log(resp);
+				if (resp == 0) {
+					$('#wpstg-links-progress').text('').css('width', '100%');
+					setTimeout(function () {
+						$('#wpstg-cloning-result').text('Done');
+					}, 1200);
+				} else {
+					if (isNaN(resp))
+						resp = Math.random() * 100;
+					$('#wpstg-links-progress').text('').css('width', resp + '%');
+					setTimeout(function () {
+						$('#wpstg-cloning-result').text('Fail');
+					}, 1200);
+				}
 			});
 		};
 
