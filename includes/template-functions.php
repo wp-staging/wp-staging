@@ -29,12 +29,13 @@ function wpstg_clone_page() {
 // 1st step: Overview
 function wpstg_overview() {
 	global $wpstg_options;
+
 	$existing_clones = isset($wpstg_options['existing_clones']) ? $wpstg_options['existing_clones'] : array();
 	?>
 	<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link" data-action="scanning">New Clone</a>
 	<div id="wpstg-existing-clones">
 		<?php if (!empty($existing_clones)) : ?>
-			<h3>Exsiting clones:</h3>
+			<h3>Existing clones:</h3>
 			<?php foreach ($existing_clones as $clone) : ?>
 				<div class="wpstg-clone" id="<?php echo $clone; ?>">
 					<?php echo $clone; ?>
@@ -50,23 +51,26 @@ add_action('wp_ajax_overview', 'wpstg_overview');
 
 // 2nd step: Scanning
 function wpstg_scanning() {
-	global $wpdb, $wpstg_options;
+	global $wpdb, $wpstg_options, $all_files;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
+
+	//Scan DB
 	$tables = $wpdb->get_results("show table status like '" . $wpdb->prefix . "_%'");
-	$cloned_tables = isset($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array();
-	$home_path = rtrim(get_home_path(), '/');
+	$wpstg_options['all_tables'] = $wpdb->get_col("show tables like '" . $wpdb->prefix . "%'");
 
-	$wpstg_options['big_files'] = array();
-	$wpstg_options['total_wp_size'] = get_wp_size($home_path, true);
+	//Scan Files
+	$folders = wpstg_scan_files(get_home_path());
+	$path = __DIR__ . '/remaining_files.json';
+	file_put_contents($path, json_encode($all_files));
+
 	update_option('wpstg_settings', $wpstg_options);
-
-	$out = '';
+	$clone_id = '';
 	if (isset($wpstg_options['current_clone']))
-		$out = 'value="' . $wpstg_options['current_clone'] . '" disabled';
+		$clone_id = 'value="' . $wpstg_options['current_clone'] . '" disabled';
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
 		Clone ID
-		<input type="text" id="wpstg-new-clone" <?php echo $out; ?>>
+		<input type="text" id="wpstg-new-clone" <?php echo $clone_id; ?>>
 		<span class="wpstg-error-msg"></span>
 	</label>
 	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link" data-action="cloning">Start Cloning</a>
@@ -75,33 +79,10 @@ function wpstg_scanning() {
 		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">DB</a>
 		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">Files</a>
 		<div class="wpstg-tab-section" id="wpstg-scanning-db">
-			<?php foreach ($tables as $table) : ?>
-				<div class="wpstg-db-table">
-					<label>
-						<input type="checkbox" checked data-table="<?php echo $table->Name; ?>" <?php echo in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
-						<?php echo $table->Name; ?>
-					</label>
-					<span class="wpstg-table-info">
-						Size: <?php echo $table->Data_length + $table->Index_length; ?> bytes
-					</span>
-				</div>
-			<?php endforeach; ?>
+			<?php wpstg_show_tables($tables); ?>
 		</div> <!-- #wpstg-scanning-db -->
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
-			<div class="wpstg-fs-subsection">
-				<?php $result = getDirStructure($home_path);
-				showDirStructure($result); ?>
-			</div> <!-- #wpstg-fs-files -->
-			<?php if (isset($wpstg_options['big_files']) && !empty($wpstg_options['big_files'])) : ?>
-				<div class="wpstg-fs-subsection" id="wpstg-fs-big-files">
-					<span class="wpstg-big-files-header">Big Files:</span>
-					<?php foreach ($wpstg_options['big_files'] as $file) : ?>
-						<div class="wpstg-big-file">
-							<?php echo $file; ?>
-						</div>
-					<?php endforeach; ?>
-				</div> <!-- #wpstg-fs-big-files -->
-			<?php endif; ?>
+			<?php wpstg_directory_strucrure($folders); ?>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>
 	<a href="#" class="wpstg-prev-step-link">Back</a>
@@ -110,7 +91,61 @@ function wpstg_scanning() {
 }
 add_action('wp_ajax_scanning', 'wpstg_scanning');
 
-//check cloneID
+//Display db tables
+function wpstg_show_tables($tables) {
+	global $wpstg_options;
+	$cloned_tables = isset($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array();
+
+	foreach ($tables as $table) { ?>
+		<div class="wpstg-db-table">
+			<label>
+				<input type="checkbox" checked name="<?php echo $table->Name; ?>" <?php echo in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
+				<?php echo $table->Name; ?>
+			</label>
+			<span class="wpstg-table-info">
+				Size: <?php echo $table->Data_length + $table->Index_length; ?> bytes
+			</span>
+		</div>
+	<?php }
+}
+
+//Scan all files and shape directory structure
+function wpstg_scan_files($path, &$folders = array()) {
+	global $all_files;
+
+	if (is_dir($path)) {
+		$dir = dir($path);
+		while (false !== $entry = $dir->read()) {
+			if ($entry == '.' || $entry == '..')
+				continue;
+			if (is_file("$path/$entry")) {
+				$all_files[] = "$path/$entry";
+				continue;
+			}
+			wpstg_scan_files("$path/$entry", $folders[$entry]);
+		}
+	}
+	return $folders;
+}
+
+//Display directory structure
+function wpstg_directory_strucrure($folders, $path = null) {
+	$path = $path === null ? rtrim(get_home_path(), '/') : $path;
+	foreach ($folders as $name => $folder) { ?>
+		<div class="wpstg-dir">
+			<input type="checkbox" class="wpstg-check-dir" checked name="<?php echo "$path/$name"; ?>">
+			<a href="#" class="wpstg-expand-dirs"><?php echo $name;?></a>
+			<div class="wpstg-dir wpstg-subdir">
+				<?php
+					if (!empty ($folder))
+						wpstg_directory_strucrure($folder, "$path/$name");
+				?>
+			</div>
+		</div>
+	<?php }
+}
+
+//Check cloneID
 function wpstg_check_clone() {
 	global $wpstg_options;
 	$existing_clones = isset($wpstg_options['existing_clones']) ? $wpstg_options['existing_clones'] : array();
@@ -124,29 +159,45 @@ function wpstg_cloning() {
 	global $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$wpstg_options['current_clone'] = isset($wpstg_options['current_clone']) ? $wpstg_options['current_clone'] : $_POST['cloneID'];
-	$wpstg_options['cloned_tables'] = isset($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array();
 
+	$wpstg_options['cloned_tables'] = isset($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array();
 	if (isset($_POST['uncheckedTables']))
 		$wpstg_options['cloned_tables'] = array_merge($wpstg_options['cloned_tables'], $_POST['uncheckedTables']);
 
+	$wpstg_options['excluded_folders'] = isset($wpstg_options['excluded_folders']) ? $wpstg_options['excluded_folders'] : array();
+	if (isset($_POST['excludedFolders'])) {
+		$path = __DIR__ . '/remaining_files.json';
+		$all_files = json_decode(file_get_contents($path));
+		$excluded_files = array();
+		foreach ($wpstg_options['excluded_folders'] as $folder) {
+			$dir = dir($folder);
+			while (false !== $entry = $dir->read())
+				$excluded_files[] = $folder . '/' . $entry;
+		}
+		$remaining_files = array_dif($all_files, $excluded_files);
+		file_put_contents($path, json_encode($remaining_files));
+	}
+
+
+	$wpstg_options['db_progress'] = isset($wpstg_options['db_progress']) ? $wpstg_options['db_progress'] : 0;
+	$wpstg_options['files_progress'] = isset($wpstg_options['files_progress']) ? $wpstg_options['files_progress'] : 0;
+	$wpstg_options['links_progress'] = isset($wpstg_options['links_progress']) ? $wpstg_options['links_progress'] : 0;
+
 	update_option('wpstg_settings', $wpstg_options);
-	$db_progress = isset($wpstg_options['db_progress']) ? $wpstg_options['db_progress'] : 0;
-	$files_progress = isset($wpstg_options['files_progress']) ? $wpstg_options['files_progress'] : 0;
-	$links_progress = isset($wpstg_options['links_progress']) ? $wpstg_options['links_progress'] : 0;
 	?>
 	<div class="wpstg-cloning-section">DB
 		<div class="wpstg-progress-bar">
-			<div class="wpstg-progress" id="wpstg-db-progress" style="width: <?php echo 100 * $db_progress; ?>%;"></div>
+			<div class="wpstg-progress" id="wpstg-db-progress" style="width: <?php echo 100 * $wpstg_options['db_progress']; ?>%;"></div>
 		</div>
 	</div>
 	<div class="wpstg-cloning-section">Files
 		<div class="wpstg-progress-bar">
-			<div class="wpstg-progress" id="wpstg-files-progress" style="width: <?php echo 100 * $files_progress; ?>%;"></div>
+			<div class="wpstg-progress" id="wpstg-files-progress" style="width: <?php echo 100 * $wpstg_options['files_progress']; ?>%;"></div>
 		</div>
 	</div>
 	<div class="wpstg-cloning-section">Links
 		<div class="wpstg-progress-bar">
-			<div class="wpstg-progress" id="wpstg-links-progress" style="width: <?php echo $links_progress; ?>%"></div>
+			<div class="wpstg-progress" id="wpstg-links-progress" style="width: <?php echo 100 * $wpstg_options['links_progress']; ?>%"></div>
 		</div>
 	</div>
 	<span id="wpstg-cloning-result"></span>
@@ -157,26 +208,21 @@ add_action('wp_ajax_cloning', 'wpstg_cloning');
 
 function wpstg_clone_db() {
 	global $wpdb, $wpstg_options;
-	if (isset($wpstg_options['db_progress']) && $wpstg_options['db_progress'] == 1)
+
+	$progress = isset($wpstg_options['db_progress']) ? $wpstg_options['db_progress'] : 0;
+	if ($progress >= 1)
 		wp_die(1);
 
-	$limit = isset($wpstg_options['wpstg_query_limit']) ? $wpstg_options['wpstg_query_limit'] : 100;
+	$limit = isset($wpstg_options['wpstg_query_limit']) ? $wpstg_options['wpstg_query_limit'] : 1000;
 	$table = isset($wpstg_options['current_table']) ? $wpstg_options['current_table'] : null;
 	$is_new = false;
 
-	$result = isset($wpstg_options['db_progress']) ? $wpstg_options['db_progress'] : 0;
-
 	if ($table === null) {
-		$tables = $wpdb->get_col("show tables like '" . $wpdb->prefix . "%'");
-		$wpstg_options['all_tables'] = count($tables);
-		$cloned_tables = empty($wpstg_options['cloned_tables']) ? array() : $wpstg_options['cloned_tables']; //already cloned tables
+		$tables = $wpstg_options['all_tables'];
+		$cloned_tables = !empty($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array(); //already cloned tables
 		$tables = array_diff($tables, $cloned_tables);
-		if (empty($tables)) { //exit condition
-			unset($wpstg_options['offsets']);
-			update_option('wpstg_settings', $wpstg_options);
-			WPSTG()->logger->info('Cloning db has been completed successfully.');
+		if (empty($tables)) //exit condition
 			wp_die(1);
-		}
 		$table = reset($tables);
 		$is_new = true;
 		WPSTG()->logger->info('Start cloning table ' . $table);
@@ -186,23 +232,27 @@ function wpstg_clone_db() {
 	$new_table = $wpstg_options['current_clone'] . '_' . $table;
 	$offset = isset($wpstg_options['offsets'][$table]) ? $wpstg_options['offsets'][$table] : 0;
 	$is_cloned = true;
+
 	if ($is_new) {
 		$is_cloned = $wpdb->query(
-				"create table $new_table like $table"
+			"create table $new_table like $table"
 		);
 		$wpstg_options['current_table'] = $table;
 	}
 	if ($is_cloned) {
 		$inserted_rows = $wpdb->query(
-				"insert $new_table select * from $table limit $offset, $limit"
+			"insert $new_table select * from $table limit $offset, $limit"
 		);
 		if ($inserted_rows !== false) {
 			$wpstg_options['offsets'][$table] = $offset + $limit;
 			if ($inserted_rows < $limit) {
 				$wpstg_options['cloned_tables'][] = $table;
 				unset($wpstg_options['current_table']);
-				$wpstg_options['db_progress'] = round(count($wpstg_options['cloned_tables']) / $wpstg_options['all_tables'], 2);
-				$result = $wpstg_options['db_progress'];
+
+				$all_tables_count = count($wpstg_options['all_tables']);
+				$cloned_tables_count = count($wpstg_options['cloned_tables']);
+				$wpstg_options['db_progress'] = round($cloned_tables_count / $all_tables_count, 2);
+				$progress = $wpstg_options['db_progress'];
 			}
 		} else {
 			WPSTG()->logger->info('Table ' . $table . ' has beed created, BUT inserting rows falied. Offset: ' . $offset);
@@ -213,17 +263,46 @@ function wpstg_clone_db() {
 		wp_die(-1);
 	}
 	update_option('wpstg_settings', $wpstg_options);
-	wp_die($result);
+	wp_die($progress);
 }
 add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
 
+function wpstg_copy_files() {
+	global $wpstg_options;
+
+	if (isset($wpstg_options['files_progress']) && $wpstg_options['files_progress'] >= 1)
+		wp_die(1);
+
+	$clone = get_home_path() . $wpstg_options['current_clone'];
+	$path = __DIR__ . '/remaining_files.json';
+	$files = json_decode(file_get_contents($path));
+	$start_index = isset($wpstg_options['file_index']) ? $wpstg_options['file_index'] : 0;
+	$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
+	$batch_size *= 1024*1024;
+
+	if (!is_dir($clone))
+		mkdir($clone);
+
+	for ($i = $start_index; $i < count($files); $i++) {
+		$size = filesize($files[$i]);
+		if ($size > $batch_size) {
+
+		}
+	}
+}
+//add_action('wp_ajax_copy_files', 'wpstg_copy_files');
+
+
 function wpstg_copy_dir() {
 	global $wpstg_options, $skip, $copied_size;
-	if (isset($wpstg_options['files_progress']) && $wpstg_options['files_progress'] == 1)
+
+	if (isset($wpstg_options['files_progress']) && $wpstg_options['files_progress'] >= 1)
 		wp_die(1);
+
 	$home = rtrim(get_home_path(), '/');
 	$copied_size = 0;
 	$cur_file = isset($wpstg_options['current_file']) ? $wpstg_options['current_file'] : null;
+
 	if ($cur_file !== null) {
 		$tmp = substr($cur_file, strlen($home));
 		$skip = explode('/', trim($tmp, '/'));
@@ -242,8 +321,9 @@ function wpstg_copy_dir() {
 add_action('wp_ajax_copy_dir', 'wpstg_copy_dir');
 
 function copy_r($source, $dest) {
-	global $skip, $copied_size, $wpstg_options;
+	global $wpstg_options, $skip, $copied_size;
 	clearstatcache();
+
 	$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
 	$batch_size *= 1024*1024;
 
@@ -391,6 +471,7 @@ function wpstg_clear_options() {
 	global $wpstg_options;
 
 	unset($wpstg_options['current_clone']);
+	unset($wpstg_options['all_tables']);
 	unset($wpstg_options['cloned_tables']);
 	unset($wpstg_options['offsets']);
 	unset($wpstg_options['db_progress']);

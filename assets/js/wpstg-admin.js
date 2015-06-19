@@ -41,7 +41,7 @@ jQuery(document).ready(function ($) {
 // Cloning workflow
 (function ($) {
 	$(document).ready(function () {
-		//check cloneID
+		//Check cloneID
 		$('#wpstg-workflow').on('blur', '#wpstg-new-clone', function (e) {
 			var data = {
 				action: 'check_clone',
@@ -65,7 +65,9 @@ jQuery(document).ready(function ($) {
 				action: $(this).data('action'),
 				nonce: wpstg.nonce
 			};
-			wpstg_additional_data(data);
+			if (data.action == 'cloning')
+				wpstg_additional_data(data);
+
 			$('#wpstg-workflow').load(ajaxurl, data, function () {
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
@@ -90,15 +92,15 @@ jQuery(document).ready(function ($) {
 		});
 
 		function wpstg_additional_data(data) {
-			switch (data.action) {
-				case 'cloning':
-					data.cloneID = $('#wpstg-new-clone').val() || new Date().getTime();
-					data.uncheckedTables = [];
-					$('.wpstg-db-table input:not(:checked)').each(function () {
-						data.uncheckedTables.push($(this).data('table'));
-					});
-					break;
-			}
+			data.cloneID = $('#wpstg-new-clone').val() || new Date().getTime();
+			data.uncheckedTables = [];
+			$('.wpstg-db-table input:not(:checked)').each(function () {
+				data.uncheckedTables.push(this.name);
+			});
+			data.excludedFolders = [];
+			$('.wpstg-dir input:not(:checked)').each(function () {
+				data.excludedFolders.push(this.name);
+			});
 		}
 
 		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
@@ -131,13 +133,14 @@ jQuery(document).ready(function ($) {
 					$('#wpstg-db-progress').text('').css('width', '100%');
 					needCheck = setInterval(check_files_progress, 1000);
 					copy_files();
-				}
+				} else
+				console.log(resp);
 			});
 		}
 
 		function copy_files() {
 			var data = {
-				action: 'copy_dir'
+				action: 'copy_files'
 			};
 			$.post(ajaxurl, data, function(resp) {
 				switch (resp) {
@@ -196,14 +199,17 @@ jQuery(document).ready(function ($) {
 		});
 
 		//tmp
-		$('#wpstg-workflow').on('click', '.wpstg-expand-folder', function (e) {
+		$('#wpstg-workflow').on('click', '.wpstg-expand-dirs', function (e) {
 			e.preventDefault();
-			$(this).siblings('.wpstg-fs-children').slideToggle();
-			var sign = $(this).children('.wpstg-plus-minus');
-			if (sign.text() == '+')
-				sign.text('-');
+			$(this).siblings('.wpstg-subdir').slideToggle();
+		});
+
+		$('#wpstg-workflow').on('change', '.wpstg-check-dir', function () {
+			var dir = $(this).parent('.wpstg-dir');
+			if (this.checked)
+				dir.parents('.wpstg-dir').children('.wpstg-check-dir').attr('checked', 'checked');
 			else
-				sign.text('+');
+				dir.find('.wpstg-dir .wpstg-check-dir').removeAttr('checked');
 		});
 	});
 })(jQuery);

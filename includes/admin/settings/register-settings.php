@@ -137,7 +137,7 @@ function wpstg_get_registered_settings() {
 								'desc' => __('Number of DB rows, that will be cloned at the time.'),
 								'type' => 'text',
 								'size' => 'small',
-								'std' => 100,
+								'std' => 1000,
 							),
 							array(
 								'id' => 'wpstg_batch_size',
