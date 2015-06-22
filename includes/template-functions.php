@@ -65,7 +65,7 @@ function wpstg_scanning() {
 	$total_size = 0;
 	$folders = wpstg_scan_files(rtrim(get_home_path(), '/'));
 	$path = __DIR__ . '/remaining_files.json';
-	file_put_contents($path, json_encode($all_files));
+	file_put_contents($path, json_encode($all_files)); 
 	$wpstg_options['total_size'] = $total_size;
 
 	update_option('wpstg_settings', $wpstg_options);
@@ -190,7 +190,7 @@ function wpstg_cloning() {
 
 	if (isset($_POST['excludedFolders'])) {
 		$path = __DIR__ . '/remaining_files.json';
-		$all_files = json_decode(file_get_contents($path), true);
+		$all_files = json_decode(wpstg_get_contents($path), true);
 		$excluded_files = array();
 		foreach ($_POST['excludedFolders'] as $folder)
 			$excluded_files = array_merge($excluded_files, wpstg_get_files($folder));
@@ -295,7 +295,7 @@ function wpstg_copy_files() {
 
 	$clone = get_home_path() . $wpstg_options['current_clone'];
 	$path = __DIR__ . '/remaining_files.json';
-	$files = json_decode(file_get_contents($path), true);
+	$files = json_decode(wpstg_get_contents($path), true);
 	$start_index = isset($wpstg_options['file_index']) ? $wpstg_options['file_index'] : 0;
 	$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
 	$batch_size *= 1024*1024;
@@ -524,7 +524,7 @@ function wpstg_replace_links() {
 
 	//replace $table_prefix in wp-config.php
 	if ($wpstg_options['links_progress'] < 100) {
-		$config = file_get_contents(get_home_path() . '/' . $wpstg_options['current_clone'] . '/wp-config.php');
+		$config = wpstg_get_contents(get_home_path() . '/' . $wpstg_options['current_clone'] . '/wp-config.php');
 		if ($config) {
 			$config = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $config);
 			file_put_contents(get_home_path() . '/' . $wpstg_options['current_clone'] . '/wp-config.php', $config);
@@ -660,4 +660,31 @@ function showDirStructure($structure) {
 			<span class="wpstg-fs-file"><?php echo $children; ?></span>
 		<?php endif;
 	}
+}
+
+/* Get file content
+ * 
+ * @param string absolute path of file
+ * @return string content of the file
+ * @scince 1.0
+ */
+
+function wpstg_get_contents($file){
+    if (function_exists('curl_version'))
+    {
+        $curl = curl_init();
+        curl_setopt($curl, CURLOPT_URL, $file);
+        curl_setopt($curl, CURLOPT_RETURNTRANSFER, 1);
+        $content = curl_exec($curl);
+        curl_close($curl);
+        return $content;
+    }
+    else if (file_get_contents(__FILE__) && ini_get('allow_url_fopen'))
+    {
+        return file_get_contents($file);
+    }
+    else
+    {
+        return false;
+    }
 }
