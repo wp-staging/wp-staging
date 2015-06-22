@@ -1018,3 +1018,8 @@ color:#777777;
 	display: none;
 	margin-left: 20px;
 }
+
+.wpstg-expand-dirs.disabled {
+	color: #888;
+	cursor: default;
+}
