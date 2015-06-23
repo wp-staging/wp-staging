@@ -46,7 +46,7 @@ jQuery(document).ready(function ($) {
 			var data = {
 				action: 'check_clone',
 				cloneID: this.value,
-                                nonce: wpstg.nonce
+				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
 				if (resp) {
@@ -59,7 +59,6 @@ jQuery(document).ready(function ($) {
 			});
 		});
 
-		var tmp;
 		$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
 			e.preventDefault();
 			$('#wpstg-workflow').addClass('loading');
@@ -74,11 +73,8 @@ jQuery(document).ready(function ($) {
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
-				if (data.action == 'cloning') {
-					tmp = new Date().getTime();
-					console.log(tmp);
+				if (data.action == 'cloning')
 					clone_db();
-				}
 			});
 		});
 
@@ -87,7 +83,7 @@ jQuery(document).ready(function ($) {
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
 				action: 'overview',
-                                nonce: wpstg.nonce
+				nonce: wpstg.nonce
 			};
 			$('#wpstg-workflow').load(ajaxurl, data, function () {
 				$('#wpstg-workflow').removeClass('loading');
@@ -96,6 +92,7 @@ jQuery(document).ready(function ($) {
 			});
 		});
 
+		var cloneID;
 		function wpstg_additional_data(data) {
 			data.cloneID = $('#wpstg-new-clone').val() || new Date().getTime();
 			data.uncheckedTables = [];
@@ -107,6 +104,8 @@ jQuery(document).ready(function ($) {
 				if (! $(this).parent('.wpstg-dir').parents('.wpstg-dir').children('.wpstg-expand-dirs').hasClass('disabled'))
 					data.excludedFolders.push(this.name);
 			});
+
+			cloneID = data.cloneID;
 		}
 
 		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
@@ -116,7 +115,7 @@ jQuery(document).ready(function ($) {
 			var data = {
 				action: 'delete_clone',
 				cloneID: $(this).data('clone'),
-                                nonce: wpstg.nonce
+				nonce: wpstg.nonce
 			};
 			$(this).text('removing...');
 			$.post(ajaxurl, data, function (resp) {
@@ -127,11 +126,9 @@ jQuery(document).ready(function ($) {
 
 		var needCheck;
 		function clone_db() {
-			copy_files();return; //tmp
-
 			var data = {
 				action: 'wpstg_clone_db',
-                                nonce: wpstg.nonce
+				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
 				if (resp < 0) { //Fail
@@ -150,7 +147,7 @@ jQuery(document).ready(function ($) {
 		function copy_files() {
 			var data = {
 				action: 'copy_files',
-                                nonce: wpstg.nonce
+				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
 				switch (resp) {
@@ -164,9 +161,7 @@ jQuery(document).ready(function ($) {
 						break;
 					default:
 						clearInterval(needCheck);
-						var a = new Date().getTime();
-						console.log(a);
-						console.log(a - tmp);
+						console.log(resp);
 						$('#wpstg-cloning-result').text('Fail');
 				}
 			});
@@ -175,18 +170,21 @@ jQuery(document).ready(function ($) {
 		function replace_links() {
 			var data = {
 				action: 'replace_links',
-                                nonce: wpstg.nonce
+				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
-				if (resp == 0) {
+				if (resp == 1) {
 					$('#wpstg-links-progress').text('').css('width', '100%');
 					setTimeout(function () {
 						$('#wpstg-cloning-result').text('Done');
+						var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-admin';
+						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
 					}, 1200);
 				} else {
+					console.log(resp);
 					if (isNaN(resp))
-						resp = Math.random() * 100;
-					$('#wpstg-links-progress').text('').css('width', resp + '%');
+						resp = Math.random();
+					$('#wpstg-links-progress').text('').css('width', (100 * resp) + '%');
 					setTimeout(function () {
 						$('#wpstg-cloning-result').text('Fail');
 					}, 1200);
@@ -196,8 +194,7 @@ jQuery(document).ready(function ($) {
 
 		var check_files_progress = function() {
 			var data = {
-				action: 'check_files_progress',
-                                nonce: wpstg.nonce
+				action: 'check_files_progress'
 			};
 			$.post(ajaxurl, data, function (resp) {
 				$('#wpstg-files-progress').css('width', (100 * resp) + '%');
@@ -213,7 +210,6 @@ jQuery(document).ready(function ($) {
 			$(section).show();
 		});
 
-		//tmp
 		$('#wpstg-workflow').on('click', '.wpstg-expand-dirs', function (e) {
 			e.preventDefault();
 			if (! $(this).hasClass('disabled'))
