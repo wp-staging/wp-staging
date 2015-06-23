@@ -45,7 +45,8 @@ jQuery(document).ready(function ($) {
 		$('#wpstg-workflow').on('blur', '#wpstg-new-clone', function (e) {
 			var data = {
 				action: 'check_clone',
-				cloneID: this.value
+				cloneID: this.value,
+                                nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
 				if (resp) {
@@ -85,7 +86,8 @@ jQuery(document).ready(function ($) {
 			e.preventDefault();
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
-				action: 'overview'
+				action: 'overview',
+                                nonce: wpstg.nonce
 			};
 			$('#wpstg-workflow').load(ajaxurl, data, function () {
 				$('#wpstg-workflow').removeClass('loading');
@@ -113,7 +115,8 @@ jQuery(document).ready(function ($) {
 				return false;
 			var data = {
 				action: 'delete_clone',
-				cloneID: $(this).data('clone')
+				cloneID: $(this).data('clone'),
+                                nonce: wpstg.nonce
 			};
 			$(this).text('removing...');
 			$.post(ajaxurl, data, function (resp) {
@@ -127,7 +130,8 @@ jQuery(document).ready(function ($) {
 			copy_files();return; //tmp
 
 			var data = {
-				action: 'wpstg_clone_db'
+				action: 'wpstg_clone_db',
+                                nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
 				if (resp < 0) { //Fail
@@ -145,7 +149,8 @@ jQuery(document).ready(function ($) {
 
 		function copy_files() {
 			var data = {
-				action: 'copy_files'
+				action: 'copy_files',
+                                nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
 				switch (resp) {
@@ -169,7 +174,8 @@ jQuery(document).ready(function ($) {
 
 		function replace_links() {
 			var data = {
-				action: 'replace_links'
+				action: 'replace_links',
+                                nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
 				if (resp == 0) {
@@ -190,7 +196,8 @@ jQuery(document).ready(function ($) {
 
 		var check_files_progress = function() {
 			var data = {
-				action: 'check_files_progress'
+				action: 'check_files_progress',
+                                nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
 				$('#wpstg-files-progress').css('width', (100 * resp) + '%');
