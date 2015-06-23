@@ -92,6 +92,7 @@ jQuery(document).ready(function ($) {
 			});
 		});
 
+		var cloneID;
 		function wpstg_additional_data(data) {
 			data.cloneID = $('#wpstg-new-clone').val() || new Date().getTime();
 			data.uncheckedTables = [];
@@ -103,6 +104,8 @@ jQuery(document).ready(function ($) {
 				if (! $(this).parent('.wpstg-dir').parents('.wpstg-dir').children('.wpstg-expand-dirs').hasClass('disabled'))
 					data.excludedFolders.push(this.name);
 			});
+
+			cloneID = data.cloneID;
 		}
 
 		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
@@ -121,7 +124,7 @@ jQuery(document).ready(function ($) {
 			});
 		});
 
-		var needCheck, tmp;
+		var needCheck;
 		function clone_db() {
 			var data = {
 				action: 'wpstg_clone_db',
@@ -134,7 +137,6 @@ jQuery(document).ready(function ($) {
 					$('#wpstg-db-progress').text(resp).css('width', (100 * resp) + '%');
 					clone_db();
 				} else if (resp >= 1) { //Success cloning
-					tmp = new Date().getTime();
 					$('#wpstg-db-progress').text('').css('width', '100%');
 					needCheck = setInterval(check_files_progress, 1000);
 					copy_files();
@@ -153,7 +155,6 @@ jQuery(document).ready(function ($) {
 						copy_files();
 						break;
 					case '1':
-						console.log(new Date().getTime() - tmp);
 						clearInterval(needCheck);
 						$('#wpstg-files-progress').text('').css('width', '100%');
 						replace_links();
@@ -172,16 +173,18 @@ jQuery(document).ready(function ($) {
 				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
-				if (resp == 0) {
+				if (resp == 1) {
 					$('#wpstg-links-progress').text('').css('width', '100%');
 					setTimeout(function () {
 						$('#wpstg-cloning-result').text('Done');
+						var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-admin';
+						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
 					}, 1200);
 				} else {
 					console.log(resp);
 					if (isNaN(resp))
-						resp = Math.random() * 100;
-					$('#wpstg-links-progress').text('').css('width', resp + '%');
+						resp = Math.random();
+					$('#wpstg-links-progress').text('').css('width', (100 * resp) + '%');
 					setTimeout(function () {
 						$('#wpstg-cloning-result').text('Fail');
 					}, 1200);

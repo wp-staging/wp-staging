@@ -223,13 +223,14 @@ function wpstg_cloning() {
 		</div>
 	</div>
 	<span id="wpstg-cloning-result"></span>
+	<a href="<?php echo get_home_url();?>" id="wpstg-clone-url" target="_blank"></a>
 	<?php
 	wp_die();
 }
 add_action('wp_ajax_cloning', 'wpstg_cloning');
 
 function wpstg_clone_db() {
-	global $wpdb, $wpstg_options;
+	global $wpdb, $wpstg_options, $rows_count;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 
 	$progress = isset($wpstg_options['db_progress']) ? $wpstg_options['db_progress'] : 0;
@@ -237,54 +238,62 @@ function wpstg_clone_db() {
 		wp_die(1);
 
 	$limit = isset($wpstg_options['wpstg_query_limit']) ? $wpstg_options['wpstg_query_limit'] : 1000;
-	$table = isset($wpstg_options['current_table']) ? $wpstg_options['current_table'] : null;
-	$is_new = false;
+	$rows_count = 0;
 
-	if ($table === null) {
-		$tables = $wpstg_options['all_tables'];
-		$cloned_tables = !empty($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array(); //already cloned tables
-		$tables = array_diff($tables, $cloned_tables);
-		if (empty($tables)) //exit condition
-			wp_die(1);
-		$table = reset($tables);
-		$is_new = true;
-		WPSTG()->logger->info('Start cloning table ' . $table);
-	} else
-		WPSTG()->logger->info('Continue cloning table ' . $table);
+	while (true) {
+		$table = isset($wpstg_options['current_table']) ? $wpstg_options['current_table'] : null;
+		$is_new = false;
 
-	$new_table = $wpstg_options['current_clone'] . '_' . $table;
-	$offset = isset($wpstg_options['offsets'][$table]) ? $wpstg_options['offsets'][$table] : 0;
-	$is_cloned = true;
+		if ($table === null) {
+			$tables = $wpstg_options['all_tables'];
+			$cloned_tables = !empty($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array(); //already cloned tables
+			$tables = array_diff($tables, $cloned_tables);
+			if (empty($tables)) //exit condition
+				wp_die(1);
+			$table = reset($tables);
+			$is_new = true;
+			WPSTG()->logger->info('Start cloning table ' . $table);
+		} else
+			WPSTG()->logger->info('Continue cloning table ' . $table);
 
-	if ($is_new) {
-		$is_cloned = $wpdb->query(
-			"create table $new_table like $table"
-		);
-		$wpstg_options['current_table'] = $table;
-	}
-	if ($is_cloned) {
-		$inserted_rows = $wpdb->query(
-			"insert $new_table select * from $table limit $offset, $limit"
-		);
-		if ($inserted_rows !== false) {
-			$wpstg_options['offsets'][$table] = $offset + $limit;
-			if ($inserted_rows < $limit) {
-				$wpstg_options['cloned_tables'][] = $table;
-				unset($wpstg_options['current_table']);
+		$new_table = $wpstg_options['current_clone'] . '_' . $table;
+		$offset = isset($wpstg_options['offsets'][$table]) ? $wpstg_options['offsets'][$table] : 0;
+		$is_cloned = true;
 
-				$all_tables_count = count($wpstg_options['all_tables']);
-				$cloned_tables_count = count($wpstg_options['cloned_tables']);
-				$wpstg_options['db_progress'] = round($cloned_tables_count / $all_tables_count, 2);
-				$progress = $wpstg_options['db_progress'];
+		if ($is_new) {
+			$is_cloned = $wpdb->query(
+				"create table $new_table like $table"
+			);
+			$wpstg_options['current_table'] = $table;
+		}
+		if ($is_cloned) {
+			$limit -= $rows_count;
+			$inserted_rows = $wpdb->query(
+				"insert $new_table select * from $table limit $offset, $limit"
+			);
+			if ($inserted_rows !== false) {
+				$wpstg_options['offsets'][$table] = $offset + $inserted_rows;
+				$rows_count += $inserted_rows;
+				if ($rows_count < $limit) {
+					$wpstg_options['cloned_tables'][] = $table;
+					unset($wpstg_options['current_table']);
+				} else {
+					$all_tables_count = count($wpstg_options['all_tables']);
+					$cloned_tables_count = count($wpstg_options['cloned_tables']);
+					$wpstg_options['db_progress'] = round($cloned_tables_count / $all_tables_count, 2);
+					update_option('wpstg_settings', $wpstg_options);
+					WPSTG()->logger->info('HEY PACHUCO!');
+					wp_die($wpstg_options['db_progress']);
+				}
+			} else {
+				WPSTG()->logger->info('Table ' . $new_table . ' has been created, BUT inserting rows failed. Offset: ' . $offset);
+				wp_die(-1);
 			}
 		} else {
-			WPSTG()->logger->info('Table ' . $table . ' has beed created, BUT inserting rows falied. Offset: ' . $offset);
+			WPSTG()->logger->info('Creating table ' . $table . ' has been failed.');
 			wp_die(-1);
 		}
-	} else {
-		WPSTG()->logger->info('Creating table ' . $table . ' has been failed.');
-		wp_die(-1);
-	}
+	} //end while
 	update_option('wpstg_settings', $wpstg_options);
 	wp_die($progress);
 }
@@ -379,7 +388,7 @@ function wpstg_replace_links() {
 	$new_prefix = $wpstg_options['current_clone'] . '_' . $wpdb->prefix;
 	$wpstg_options['links_progress'] = isset($wpstg_options['links_progress']) ? $wpstg_options['links_progress'] : 0;
 	//replace site url in options
-	if ($wpstg_options['links_progress'] < 1) {
+	if ($wpstg_options['links_progress'] < .1) {
 		$result = $wpdb->query(
 			$wpdb->prepare(
 				'update ' . $new_prefix . 'options set option_value = %s where option_name = \'siteurl\' or option_name = \'home\'',
@@ -388,15 +397,15 @@ function wpstg_replace_links() {
 		);
 		if (!$result) {
 			WPSTG()->logger->info('Replacing site url has been failed.');
-			wp_die(1);
+			wp_die(-1);
 		} else {
-			$wpstg_options['links_progress'] = 33;
+			$wpstg_options['links_progress'] = .33;
 			update_option('wpstg_settings', $wpstg_options);
 		}
 	}
 
 	//replace table prefix in meta keys
-	if ($wpstg_options['links_progress'] < 50) {
+	if ($wpstg_options['links_progress'] < .5) {
 		$result_options = $wpdb->query(
 			$wpdb->prepare(
 				'update ' . $new_prefix . 'usermeta set meta_key = replace(meta_key, %s, %s) where meta_key like %s',
@@ -415,29 +424,29 @@ function wpstg_replace_links() {
 		);
 		if (!$result_options || !$result_usermeta) {
 			WPSTG()->logger->info('Replacing table prefix has been failed.');
-			wp_die(33);
+			wp_die(.33);
 		} else {
-			$wpstg_options['links_progress'] = 66;
+			$wpstg_options['links_progress'] = .66;
 			update_option('wpstg_settings', $wpstg_options);
 		}
 	}
 
 	//replace $table_prefix in wp-config.php
-	if ($wpstg_options['links_progress'] < 100) {
+	if ($wpstg_options['links_progress'] < 1) {
 		$config = file_get_contents(get_home_path() . '/' . $wpstg_options['current_clone'] . '/wp-config.php');
 		if ($config) {
 			$config = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $config);
 			file_put_contents(get_home_path() . '/' . $wpstg_options['current_clone'] . '/wp-config.php', $config);
 		} else {
 			WPSTG()->logger->info('Editing wp-config.php has been failed.');
-			wp_die(66);
+			wp_die(.66);
 		}
 	}
 
 	$wpstg_options['existing_clones'][] = $wpstg_options['current_clone'];
 	wpstg_clear_options();
 
-	wp_die(0);
+	wp_die(1);
 }
 add_action('wp_ajax_replace_links', 'wpstg_replace_links');
 
@@ -447,6 +456,7 @@ function wpstg_clear_options() {
 	unset($wpstg_options['current_clone']);
 	unset($wpstg_options['all_tables']);
 	unset($wpstg_options['cloned_tables']);
+	unset($wpstg_options['current_table']);
 	unset($wpstg_options['offsets']);
 	unset($wpstg_options['db_progress']);
 	unset($wpstg_options['current_file']);
@@ -514,7 +524,8 @@ function wpstg_delete_clone() {
 	//drop clone tables
 	$tables = $wpdb->get_col( $wpdb->prepare('show tables like %s', $clone . '_%'));
 	foreach ($tables as $table) {
-		$result = $wpdb->query('drop table ' . $table);
+		if (! wpstg_is_root_table($table, $wpdb->prefix))
+			$result = $wpdb->query('drop table ' . $table);
 		if (! $result)
 			WPSTG()->logger->info('Droping table ' . $table . ' has been failed.');
 	}
@@ -578,6 +589,5 @@ function showDirStructure($structure) {
  */
 
 function wpstg_is_root_table($haystack, $needle) {
-    // search backwards starting from haystack length characters from the end
-    return $needle === "" || strrpos($haystack, $needle, -strlen($haystack)) !== FALSE;
+    return strpos($haystack, $needle) === 0;
 }
