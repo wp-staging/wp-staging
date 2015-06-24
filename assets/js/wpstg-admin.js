@@ -131,6 +131,7 @@ jQuery(document).ready(function ($) {
 				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function (resp) {
+				console.log(resp);
 				if (resp < 0) { //Fail
 					$('#wpstg-cloning-result').text('Fail');
 				} else if(resp < 1) { //Continue cloning
@@ -167,6 +168,15 @@ jQuery(document).ready(function ($) {
 			});
 		}
 
+		var check_files_progress = function() {
+			var data = {
+				action: 'check_files_progress'
+			};
+			$.post(ajaxurl, data, function (resp) {
+				$('#wpstg-files-progress').css('width', (100 * resp) + '%');
+			});
+		};
+
 		function replace_links() {
 			var data = {
 				action: 'replace_links',
@@ -181,7 +191,6 @@ jQuery(document).ready(function ($) {
 						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
 					}, 1200);
 				} else {
-					console.log(resp);
 					if (isNaN(resp))
 						resp = Math.random();
 					$('#wpstg-links-progress').text('').css('width', (100 * resp) + '%');
@@ -192,15 +201,12 @@ jQuery(document).ready(function ($) {
 			});
 		};
 
-		var check_files_progress = function() {
-			var data = {
-				action: 'check_files_progress'
-			};
-			$.post(ajaxurl, data, function (resp) {
-				$('#wpstg-files-progress').css('width', (100 * resp) + '%');
-			});
-		};
+		$('#wpstg-workflow').on('click', '#wpstg-cancel-cloning', function (e) {
+			e.preventDefault();
+			window.location.search += '&canceled=true';
+		});
 
+		//Tabs
 		$('#wpstg-workflow').on('click', '.wpstg-tab-header', function (e) {
 			e.preventDefault();
 			$('.wpstg-tab-header').not(this).removeClass('active');
@@ -210,6 +216,7 @@ jQuery(document).ready(function ($) {
 			$(section).show();
 		});
 
+		//Directory stricture
 		$('#wpstg-workflow').on('click', '.wpstg-expand-dirs', function (e) {
 			e.preventDefault();
 			if (! $(this).hasClass('disabled'))
@@ -220,11 +227,34 @@ jQuery(document).ready(function ($) {
 			var dir = $(this).parent('.wpstg-dir');
 			if (this.checked) {
 				dir.parents('.wpstg-dir').children('.wpstg-check-dir').attr('checked', 'checked');
-				dir.children('.wpstg-expand-dirs').removeClass('disabled');
+				dir.children('.wpstg-expand-dirs, .wpstg-check-subdirs').removeClass('disabled');
 			} else {
 				dir.find('.wpstg-dir .wpstg-check-dir').removeAttr('checked');
-				dir.find('.wpstg-expand-dirs').addClass('disabled');
+				dir.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
+				dir.find('.wpstg-check-subdirs').data('action', 'check').text('check');
 				dir.children('.wpstg-subdir').slideUp();
+			}
+		});
+
+		$('#wpstg-workflow').on('click', '.wpstg-check-subdirs', function (e) {
+			e.preventDefault();
+			if ($(this).hasClass('disabled'))
+				return false;
+			if ($(this).data('action') == 'check') {
+				$(this).siblings('.wpstg-subdir')
+					.find('.wpstg-check-dir')
+					.attr('checked', 'checked')
+					.siblings('.wpstg-expand-dirs')
+					.removeClass('disabled');
+				$(this).siblings('.wpstg-check-dir:not(:checked)').attr('checked', 'checked');
+				$(this).data('action', 'uncheck').text('uncheck');
+			} else {
+				$(this).siblings('.wpstg-subdir')
+					.find('.wpstg-check-dir')
+					.removeAttr('checked')
+					.siblings('.wpstg-expand-dirs')
+					.addClass('disabled');
+				$(this).data('action', 'check').text('check');
 			}
 		});
 	});
