@@ -254,34 +254,13 @@ jQuery(document).ready(function ($) {
 			var dir = $(this).parent('.wpstg-dir');
 			if (this.checked) {
 				dir.parents('.wpstg-dir').children('.wpstg-check-dir').attr('checked', 'checked');
-				dir.children('.wpstg-expand-dirs, .wpstg-check-subdirs').removeClass('disabled');
+				dir.find('.wpstg-expand-dirs').removeClass('disabled');
+				dir.find('.wpstg-subdir .wpstg-check-dir').attr('checked', 'checked');
 			} else {
 				dir.find('.wpstg-dir .wpstg-check-dir').removeAttr('checked');
 				dir.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
 				dir.find('.wpstg-check-subdirs').data('action', 'check').text('check');
 				dir.children('.wpstg-subdir').slideUp();
-			}
-		});
-
-		$('#wpstg-workflow').on('click', '.wpstg-check-subdirs', function (e) {
-			e.preventDefault();
-			if ($(this).hasClass('disabled'))
-				return false;
-			if ($(this).data('action') == 'check') {
-				$(this).siblings('.wpstg-subdir')
-					.find('.wpstg-check-dir')
-					.attr('checked', 'checked')
-					.siblings('.wpstg-expand-dirs')
-					.removeClass('disabled');
-				$(this).siblings('.wpstg-check-dir:not(:checked)').attr('checked', 'checked');
-				$(this).data('action', 'uncheck').text('uncheck');
-			} else {
-				$(this).siblings('.wpstg-subdir')
-					.find('.wpstg-check-dir')
-					.removeAttr('checked')
-					.siblings('.wpstg-expand-dirs')
-					.addClass('disabled');
-				$(this).data('action', 'check').text('check');
 			}
 		});
 	});

@@ -168,7 +168,6 @@ function wpstg_directory_structure($folders, $path = null, $not_checked = false)
 			<input type="checkbox" class="wpstg-check-dir" <?php echo $tmp ? '' : 'checked'; ?> name="<?php echo "$path/$name"; ?>">
 			<a href="#" class="wpstg-expand-dirs <?php echo $tmp ? 'disabled' : ''; ?>"><?php echo $name;?></a>
 				<?php if (!empty ($folder)) : ?>
-					<a href="#" class="wpstg-check-subdirs <?php echo $tmp ? 'disabled' : ''; ?>" data-action="check">check</a>
 					<div class="wpstg-dir wpstg-subdir">
 						<?php wpstg_directory_structure($folder, "$path/$name", $tmp); ?>
 					</div>
