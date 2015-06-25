@@ -32,7 +32,13 @@ function wpstg_overview() {
 
 	$existing_clones = isset($wpstg_options['existing_clones']) ? $wpstg_options['existing_clones'] : array();
 	?>
-	<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">New Clone</a>
+	<?php if (isset($wpstg_options['current_clone'])) : ?>
+		Current clone: <?php echo $wpstg_options['current_clone']; ?>
+		<a href="#" id="wpstg-reset-clone" class="wpstg-next-step-link wpstg-link-btn" data-clone="<?php echo $wpstg_options['current_clone']; ?>">Reset</a>
+		<a href="#" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">Continue</a>
+	<?php else : ?>
+		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">New Clone</a>
+	<?php endif; ?>
 	<div id="wpstg-existing-clones">
 		<?php if (!empty($existing_clones)) : ?>
 			<h3>Existing clones:</h3>
@@ -293,9 +299,21 @@ function wpstg_clone_db() {
 		$is_cloned = true;
 
 		if ($is_new) {
-			$is_cloned = $wpdb->query(
-				"create table $new_table like $table"
+			$existing_table = $wpdb->get_var(
+				$wpdb->prepare(
+					'show tables like %s',
+					$new_table
+				)
 			);
+			if ($existing_table == $new_table) {
+				$is_cloned = $wpdb->query(
+					"truncate table $new_table"
+				);
+			} else {
+				$is_cloned = $wpdb->query(
+					"create table $new_table like $table"
+				);
+			}
 			$wpstg_options['current_table'] = $table;
 		}
 		if ($is_cloned) {
@@ -420,6 +438,25 @@ function wpstg_copy_large_file($src, $dst, $batch) {
 	return true;
 }
 
+function wpstg_check_files_progress() {
+	global $wpstg_options;
+
+	$clone_size = get_wp_size(get_home_path() . $wpstg_options['current_clone']);
+	wp_die(round($clone_size / $wpstg_options['total_size'], 2));
+}
+add_action('wp_ajax_check_files_progress', 'wpstg_check_files_progress');
+
+function get_wp_size($path) {
+	if (! file_exists($path)) return 0;
+	if (is_file($path))
+		return filesize($path);
+
+	$size = 0;
+	foreach(glob($path . '/*') as $fn)
+		$size += get_wp_size($fn);
+	return $size;
+}
+
 function wpstg_replace_links() {
 	global $wpdb, $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
@@ -509,17 +546,6 @@ function wpstg_clear_options() {
 	update_option('wpstg_settings', $wpstg_options);
 }
 
-function get_wp_size($path) {
-	if (! file_exists($path)) return 0;
-	if (is_file($path))
-		return filesize($path);
-
-	$size = 0;
-	foreach(glob($path . '/*') as $fn)
-		$size += get_wp_size($fn);
-	return $size;
-}
-
 function deleteDirectory($dir) {
 	if (!file_exists($dir))
 		return true;
@@ -537,14 +563,6 @@ function deleteDirectory($dir) {
 
 	return rmdir($dir);
 }
-
-function wpstg_check_files_progress() {
-	global $wpstg_options;
-
-	$clone_size = get_wp_size(get_home_path() . $wpstg_options['current_clone']);
-	wp_die(round($clone_size / $wpstg_options['total_size'], 2));
-}
-add_action('wp_ajax_check_files_progress', 'wpstg_check_files_progress');
 
 function wpstg_delete_clone($isAjax = true) {
 	global $wpdb, $wpstg_options;
@@ -596,44 +614,6 @@ function wpstg_cancel_cloning() {
 	wp_die(0);
 }
 add_action('wp_ajax_cancel_cloning', 'wpstg_cancel_cloning');
-
-function getDirStructure($directory, &$array = array()) {
-	global $wpstg_options;
-	$clone_dirs = isset($wpstg_options['existing_clones']) ? $wpstg_options['existing_clones'] : array();
-	$clone_dirs[] = '.';
-	$clone_dirs[] = '..';
-	if (is_file($directory))
-		return true;
-	$dir = dir($directory);
-	while (false !== $entry = $dir->read()) {
-		if (in_array($entry, $clone_dirs))
-			continue;
-		if (is_file("$directory/$entry")) {
-			$array[] = $entry;
-			getDirStructure("$directory/$entry", $array);
-		} else
-			getDirStructure("$directory/$entry", $array[$entry]);
-	}
-	return $array;
-}
-
-function showDirStructure($structure) {
-	foreach ($structure as $folder => $children) {
-		if (is_array($children)) : ?>
-			<div class="wpstg-fs-folder">
-				<a href="#" class="wpstg-expand-folder">
-					<span class="wpstg-plus-minus">+</span>
-					<?php echo $folder; ?>
-				</a>
-				<div class="wpstg-fs-children">
-					<?php showDirStructure($children); ?>
-				</div>
-			</div> <!-- .wpstg-fs-folder -->
-		<?php else : ?>
-			<span class="wpstg-fs-file"><?php echo $children; ?></span>
-		<?php endif;
-	}
-}
 
 /* Check if table name starts with prefix which belongs to the wordpress root table
  * 

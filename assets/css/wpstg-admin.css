@@ -900,7 +900,7 @@ color:#777777;
 	display: inline-block;
 	padding: 5px 10px;
 	text-decoration: none;
-	transition: opacity .2s ease-in-out;
+	transition: all .2s ease-in-out;
 }
 
 .wpstg-link-btn:hover,
@@ -912,13 +912,17 @@ color:#777777;
 }
 
 .wpstg-link-btn[disabled] {
-	color: #777;
+	background: #777 !important;
 	pointer-events: none;
 }
 
 #wpstg-cancel-cloning {
 	background: #ff3428;
 	margin-top: 5px;
+}
+
+#wpstg-cancel-cloning.success {
+	background: #64dd58;
 }
 
 #wpstg-workflow {

@@ -61,6 +61,8 @@ jQuery(document).ready(function ($) {
 
 		$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
 			e.preventDefault();
+			if ($(this).is('#wpstg-reset-clone'))
+				return false;
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
 				action: $(this).data('action'),
@@ -127,13 +129,12 @@ jQuery(document).ready(function ($) {
 
 		var needCheck;
 		var isCanceled = false;
-		var activeRequest;
 		function clone_db() {
 			var data = {
 				action: 'wpstg_clone_db',
 				nonce: wpstg.nonce
 			};
-			activeRequest = $.post(ajaxurl, data, function (resp) {
+			$.post(ajaxurl, data, function (resp) {
 				if (isCanceled) {
 					cancelCloning();
 					return false;
@@ -157,7 +158,7 @@ jQuery(document).ready(function ($) {
 				action: 'copy_files',
 				nonce: wpstg.nonce
 			};
-			activeRequest = $.post(ajaxurl, data, function(resp) {
+			$.post(ajaxurl, data, function(resp) {
 				if (isCanceled) {
 					cancelCloning();
 					return false;
@@ -193,7 +194,12 @@ jQuery(document).ready(function ($) {
 				action: 'replace_links',
 				nonce: wpstg.nonce
 			};
-			activeRequest = $.post(ajaxurl, data, function(resp) {
+			$.post(ajaxurl, data, function(resp) {
+				if (isCanceled) {
+					cancelCloning();
+					return false;
+				}
+
 				if (resp == 1) {
 					$('#wpstg-links-progress').text('').css('width', '100%');
 					setTimeout(function () {
@@ -216,9 +222,16 @@ jQuery(document).ready(function ($) {
 			e.preventDefault();
 			if (! confirm('Are you sure?'))
 				return false;
+			$(this).attr('disabled', 'disabled');
 			isCanceled = true;
 			clearInterval(needCheck);
-			$('#wpstg-cloning-result').text('Wait please...');
+			$('#wpstg-cloning-result').text('Please wait...');
+		});
+
+		$('#wpstg-workflow').on('click', '#wpstg-reset-clone', function (e) {
+			e.preventDefault();
+			cloneID = $(this).data('clone');
+			cancelCloning();
 		});
 
 		function cancelCloning() {
@@ -228,8 +241,11 @@ jQuery(document).ready(function ($) {
 				cloneID: cloneID
 			};
 			$.post(ajaxurl, data, function (resp) {
-				if (resp == 0)
+				if (resp == 0) {
+					$('#wpstg-cloning-result').text('');
+					$('#wpstg-cancel-cloning').text('Success').addClass('success').removeAttr('disabled');
 					location.reload();
+				}
 			});
 		}
 
