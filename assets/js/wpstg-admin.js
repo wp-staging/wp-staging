@@ -119,19 +119,26 @@ jQuery(document).ready(function ($) {
 			};
 			$(this).text('removing...');
 			$.post(ajaxurl, data, function (resp) {
+				console.log(resp);
 				if (resp == 0)
 					$(e.target).parent('.wpstg-clone').remove();
 			});
 		});
 
 		var needCheck;
+		var isCanceled = false;
+		var activeRequest;
 		function clone_db() {
 			var data = {
 				action: 'wpstg_clone_db',
 				nonce: wpstg.nonce
 			};
-			$.post(ajaxurl, data, function (resp) {
-				console.log(resp);
+			activeRequest = $.post(ajaxurl, data, function (resp) {
+				if (isCanceled) {
+					cancelCloning();
+					return false;
+				}
+
 				if (resp < 0) { //Fail
 					$('#wpstg-cloning-result').text('Fail');
 				} else if(resp < 1) { //Continue cloning
@@ -150,7 +157,12 @@ jQuery(document).ready(function ($) {
 				action: 'copy_files',
 				nonce: wpstg.nonce
 			};
-			$.post(ajaxurl, data, function(resp) {
+			activeRequest = $.post(ajaxurl, data, function(resp) {
+				if (isCanceled) {
+					cancelCloning();
+					return false;
+				}
+
 				switch (resp) {
 					case '0':
 						copy_files();
@@ -162,7 +174,6 @@ jQuery(document).ready(function ($) {
 						break;
 					default:
 						clearInterval(needCheck);
-						console.log(resp);
 						$('#wpstg-cloning-result').text('Fail');
 				}
 			});
@@ -182,7 +193,7 @@ jQuery(document).ready(function ($) {
 				action: 'replace_links',
 				nonce: wpstg.nonce
 			};
-			$.post(ajaxurl, data, function(resp) {
+			activeRequest = $.post(ajaxurl, data, function(resp) {
 				if (resp == 1) {
 					$('#wpstg-links-progress').text('').css('width', '100%');
 					setTimeout(function () {
@@ -203,8 +214,24 @@ jQuery(document).ready(function ($) {
 
 		$('#wpstg-workflow').on('click', '#wpstg-cancel-cloning', function (e) {
 			e.preventDefault();
-			window.location.search += '&canceled=true';
+			if (! confirm('Are you sure?'))
+				return false;
+			isCanceled = true;
+			clearInterval(needCheck);
+			$('#wpstg-cloning-result').text('Wait please...');
 		});
+
+		function cancelCloning() {
+			var data = {
+				action: 'cancel_cloning',
+				nonce: wpstg.nonce,
+				cloneID: cloneID
+			};
+			$.post(ajaxurl, data, function (resp) {
+				if (resp == 0)
+					location.reload();
+			});
+		}
 
 		//Tabs
 		$('#wpstg-workflow').on('click', '.wpstg-tab-header', function (e) {
