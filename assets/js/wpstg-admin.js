@@ -61,6 +61,8 @@ jQuery(document).ready(function ($) {
 
 		$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
 			e.preventDefault();
+			if ($(this).is('#wpstg-reset-clone'))
+				return false;
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
 				action: $(this).data('action'),
@@ -127,13 +129,12 @@ jQuery(document).ready(function ($) {
 
 		var needCheck;
 		var isCanceled = false;
-		var activeRequest;
 		function clone_db() {
 			var data = {
 				action: 'wpstg_clone_db',
 				nonce: wpstg.nonce
 			};
-			activeRequest = $.post(ajaxurl, data, function (resp) {
+			$.post(ajaxurl, data, function (resp) {
 				if (isCanceled) {
 					cancelCloning();
 					return false;
@@ -157,7 +158,7 @@ jQuery(document).ready(function ($) {
 				action: 'copy_files',
 				nonce: wpstg.nonce
 			};
-			activeRequest = $.post(ajaxurl, data, function(resp) {
+			$.post(ajaxurl, data, function(resp) {
 				if (isCanceled) {
 					cancelCloning();
 					return false;
@@ -193,7 +194,12 @@ jQuery(document).ready(function ($) {
 				action: 'replace_links',
 				nonce: wpstg.nonce
 			};
-			activeRequest = $.post(ajaxurl, data, function(resp) {
+			$.post(ajaxurl, data, function(resp) {
+				if (isCanceled) {
+					cancelCloning();
+					return false;
+				}
+
 				if (resp == 1) {
 					$('#wpstg-links-progress').text('').css('width', '100%');
 					setTimeout(function () {
@@ -216,9 +222,16 @@ jQuery(document).ready(function ($) {
 			e.preventDefault();
 			if (! confirm('Are you sure?'))
 				return false;
+			$(this).attr('disabled', 'disabled');
 			isCanceled = true;
 			clearInterval(needCheck);
-			$('#wpstg-cloning-result').text('Wait please...');
+			$('#wpstg-cloning-result').text('Please wait...');
+		});
+
+		$('#wpstg-workflow').on('click', '#wpstg-reset-clone', function (e) {
+			e.preventDefault();
+			cloneID = $(this).data('clone');
+			cancelCloning();
 		});
 
 		function cancelCloning() {
@@ -228,8 +241,11 @@ jQuery(document).ready(function ($) {
 				cloneID: cloneID
 			};
 			$.post(ajaxurl, data, function (resp) {
-				if (resp == 0)
+				if (resp == 0) {
+					$('#wpstg-cloning-result').text('');
+					$('#wpstg-cancel-cloning').text('Success').addClass('success').removeAttr('disabled');
 					location.reload();
+				}
 			});
 		}
 
@@ -254,34 +270,13 @@ jQuery(document).ready(function ($) {
 			var dir = $(this).parent('.wpstg-dir');
 			if (this.checked) {
 				dir.parents('.wpstg-dir').children('.wpstg-check-dir').attr('checked', 'checked');
-				dir.children('.wpstg-expand-dirs, .wpstg-check-subdirs').removeClass('disabled');
+				dir.find('.wpstg-expand-dirs').removeClass('disabled');
+				dir.find('.wpstg-subdir .wpstg-check-dir').attr('checked', 'checked');
 			} else {
 				dir.find('.wpstg-dir .wpstg-check-dir').removeAttr('checked');
 				dir.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
 				dir.find('.wpstg-check-subdirs').data('action', 'check').text('check');
 				dir.children('.wpstg-subdir').slideUp();
-			}
-		});
-
-		$('#wpstg-workflow').on('click', '.wpstg-check-subdirs', function (e) {
-			e.preventDefault();
-			if ($(this).hasClass('disabled'))
-				return false;
-			if ($(this).data('action') == 'check') {
-				$(this).siblings('.wpstg-subdir')
-					.find('.wpstg-check-dir')
-					.attr('checked', 'checked')
-					.siblings('.wpstg-expand-dirs')
-					.removeClass('disabled');
-				$(this).siblings('.wpstg-check-dir:not(:checked)').attr('checked', 'checked');
-				$(this).data('action', 'uncheck').text('uncheck');
-			} else {
-				$(this).siblings('.wpstg-subdir')
-					.find('.wpstg-check-dir')
-					.removeAttr('checked')
-					.siblings('.wpstg-expand-dirs')
-					.addClass('disabled');
-				$(this).data('action', 'check').text('check');
 			}
 		});
 	});
