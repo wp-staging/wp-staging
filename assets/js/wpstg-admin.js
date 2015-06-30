@@ -41,24 +41,6 @@ jQuery(document).ready(function ($) {
 // Cloning workflow
 (function ($) {
 	$(document).ready(function () {
-		//Check cloneID
-		$('#wpstg-workflow').on('blur', '#wpstg-new-clone', function (e) {
-			var data = {
-				action: 'check_clone',
-				cloneID: this.value,
-				nonce: wpstg.nonce
-			};
-			$.post(ajaxurl, data, function (resp) {
-				if (resp) {
-					$(e.target).removeClass('wpstg-error').next('.wpstg-error-msg').text('');
-					$('.wpstg-next-step-link').removeAttr('disabled');
-				} else {
-					$(e.target).addClass('wpstg-error').next('.wpstg-error-msg').text('This clone is already exists.');
-					$('.wpstg-next-step-link').attr('disabled', 'disabled');
-				}
-			});
-		});
-
 		$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
 			e.preventDefault();
 			if ($(this).is('#wpstg-reset-clone'))
@@ -68,16 +50,24 @@ jQuery(document).ready(function ($) {
 				action: $(this).data('action'),
 				nonce: wpstg.nonce
 			};
-			if (data.action == 'cloning')
+			if (data.action == 'cloning') {
+				data.cloneID = $('#wpstg-new-clone').val() || new Date().getTime();
 				wpstg_additional_data(data);
+			}
 
-			$('#wpstg-workflow').load(ajaxurl, data, function () {
+			$('#wpstg-workflow').load(ajaxurl, data, function (resp, status) {
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
 				if (data.action == 'cloning')
 					clone_db();
 			});
+		});
+
+		$('#wpstg-workflow').on('change', '#wpstg-new-clone.wpstg-clone-exists', function () {
+			$('.wpstg-error-msg').remove();
+			$('.wpstg-next-step-link').removeAttr('disabled');
+			$(this).removeClass('wpstg-clone-exists');
 		});
 
 		$('#wpstg-workflow').on('click', '.wpstg-prev-step-link', function (e) {
@@ -96,7 +86,6 @@ jQuery(document).ready(function ($) {
 
 		var cloneID;
 		function wpstg_additional_data(data) {
-			data.cloneID = $('#wpstg-new-clone').val() || new Date().getTime();
 			data.uncheckedTables = [];
 			$('.wpstg-db-table input:not(:checked)').each(function () {
 				data.uncheckedTables.push(this.name);
@@ -112,18 +101,38 @@ jQuery(document).ready(function ($) {
 
 		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
 			e.preventDefault();
-			if (! confirm('Are you sure?'))
-				return false;
+
 			var data = {
-				action: 'delete_clone',
-				cloneID: $(this).data('clone'),
+				action: 'preremove',
+				cloneID: $(this).data('clone')
+			};
+			$('#wpstg-removing-clone').load(ajaxurl, data);
+		});
+
+		$('#wpstg-workflow').on('click', '#wpstg-cancel-removing', function (e) {
+			e.preventDefault();
+			$('#wpstg-removing-clone').html('');
+		});
+
+		$('#wpstg-workflow').on('click', '#wpstg-remove-clone', function (e) {
+			e.preventDefault();
+			$('#wpstg-removing-clone').addClass('loading');
+			var cloneID = $(this).data('clone');
+			var data = {
+				action: 'remove_clone',
+				cloneID: cloneID,
 				nonce: wpstg.nonce
 			};
-			$(this).text('removing...');
+
+			wpstg_additional_data(data);
+
 			$.post(ajaxurl, data, function (resp) {
 				console.log(resp);
-				if (resp == 0)
-					$(e.target).parent('.wpstg-clone').remove();
+				if (resp == 0) {
+					$('#wpstg-removing-clone').html('');
+					$('.wpstg-clone#' + cloneID).remove();
+					$('#wpstg-removing-clone').removeClass('loading');
+				}
 			});
 		});
 
@@ -174,6 +183,7 @@ jQuery(document).ready(function ($) {
 						replace_links();
 						break;
 					default:
+						console.log(resp);
 						clearInterval(needCheck);
 						$('#wpstg-cloning-result').text('Fail');
 				}

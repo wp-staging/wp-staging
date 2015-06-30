@@ -929,7 +929,8 @@ color:#777777;
 	position: relative;
 }
 
-#wpstg-workflow.loading::after {
+#wpstg-workflow.loading::after,
+#wpstg-removing-clone.loading::after {
 	background: rgba(255, 255, 255, .7);
 	content: 'LOADING';
 	display: block;
@@ -942,6 +943,14 @@ color:#777777;
 	top: 0;
 	left: 0;
 	z-index: 99;
+}
+
+#wpstg-removing-clone.loading::after {
+	content: 'REMOVING' !important;
+}
+
+#wpstg-removing-clone {
+	position: relative;
 }
 
 .wpstg-progress-bar {
@@ -958,7 +967,7 @@ color:#777777;
 	transition: width 1s;
 }
 
-#wpstg-new-clone.wpstg-error {
+#wpstg-new-clone.wpstg-clone-exists {
 	border: 1px solid #ff4235;
 }
 
