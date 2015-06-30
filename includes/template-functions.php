@@ -120,6 +120,7 @@ function wpstg_show_tables($tables) {
 
 //Scan all files and shape directory structure
 function wpstg_scan_files($path, &$folders = array()) {
+    
 	global $all_files,$wpstg_options;
 
 	$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 20;
