@@ -41,33 +41,46 @@ jQuery(document).ready(function ($) {
 // Cloning workflow
 (function ($) {
 	$(document).ready(function () {
+		$('#wpstg-workflow').on('keyup', '#wpstg-new-clone-id', function () {
+			var data = {
+				action: 'check_clone',
+				cloneID: this.value
+			};
+			$.post(ajaxurl, data, function (resp) {
+				if (resp) {
+					$('#wpstg-new-clone-id').removeClass('wpstg-clone-exists');
+					$('#wpstg-start-cloning').removeAttr('disabled')
+						.next('.wpstg-error-msg').text('');
+				} else {
+					$('#wpstg-new-clone-id').addClass('wpstg-clone-exists');
+					$('#wpstg-start-cloning').attr('disabled', 'disabled')
+						.next('.wpstg-error-msg').text('Clone with the save ID is already exists.');
+				}
+			})
+		});
+
 		$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
 			e.preventDefault();
-			if ($(this).is('#wpstg-reset-clone'))
+			if ($(this).attr('disabled'))
 				return false;
+
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
 				action: $(this).data('action'),
 				nonce: wpstg.nonce
 			};
 			if (data.action == 'cloning') {
-				data.cloneID = $('#wpstg-new-clone').val() || new Date().getTime();
+				data.cloneID = $('#wpstg-new-clone-id').val() || new Date().getTime();
 				wpstg_additional_data(data);
 			}
 
-			$('#wpstg-workflow').load(ajaxurl, data, function (resp, status) {
+			$('#wpstg-workflow').load(ajaxurl, data, function () {
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
 				if (data.action == 'cloning')
 					clone_db();
 			});
-		});
-
-		$('#wpstg-workflow').on('change', '#wpstg-new-clone.wpstg-clone-exists', function () {
-			$('.wpstg-error-msg').remove();
-			$('.wpstg-next-step-link').removeAttr('disabled');
-			$(this).removeClass('wpstg-clone-exists');
 		});
 
 		$('#wpstg-workflow').on('click', '.wpstg-prev-step-link', function (e) {
@@ -138,6 +151,7 @@ jQuery(document).ready(function ($) {
 
 		var needCheck;
 		var isCanceled = false;
+		var tmp;
 		function clone_db() {
 			var data = {
 				action: 'wpstg_clone_db',
@@ -156,7 +170,8 @@ jQuery(document).ready(function ($) {
 					clone_db();
 				} else if (resp >= 1) { //Success cloning
 					$('#wpstg-db-progress').text('').css('width', '100%');
-					needCheck = setInterval(check_files_progress, 5000);
+					needCheck = setInterval(check_files_progress, 1000);
+					tmp = new Date().getTime();
 					copy_files();
 				}
 			});
@@ -178,6 +193,7 @@ jQuery(document).ready(function ($) {
 						copy_files();
 						break;
 					case '1':
+						console.log(new Date().getTime() - tmp);
 						clearInterval(needCheck);
 						$('#wpstg-files-progress').text('').css('width', '100%');
 						replace_links();

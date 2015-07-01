@@ -34,11 +34,12 @@ function wpstg_overview() {
 	?>
 	<?php if (isset($wpstg_options['current_clone'])) : ?>
 		Current clone: <?php echo $wpstg_options['current_clone']; ?>
-		<a href="#" id="wpstg-reset-clone" class="wpstg-next-step-link wpstg-link-btn" data-clone="<?php echo $wpstg_options['current_clone']; ?>">Reset</a>
+		<a href="#" id="wpstg-reset-clone" class="wpstg-link-btn" data-clone="<?php echo $wpstg_options['current_clone']; ?>">Reset</a>
 		<a href="#" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">Continue</a>
 	<?php else : ?>
 		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">New Clone</a>
 	<?php endif; ?>
+	<br>
 	<div id="wpstg-existing-clones">
 		<?php if (!empty($existing_clones)) : ?>
 			<h3>Existing clones:</h3>
@@ -59,7 +60,7 @@ function wpstg_overview() {
 add_action('wp_ajax_overview', 'wpstg_overview');
 
 // 2nd step: Scanning //////////////////////////////////////////////////////////////////////////////////////////////////
-function wpstg_scanning($existing_clone = null) {
+function wpstg_scanning() {
 	global $wpdb, $wpstg_options, $all_files;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 
@@ -78,18 +79,13 @@ function wpstg_scanning($existing_clone = null) {
 	$clone_id = '';
 	if (isset($wpstg_options['current_clone']))
 		$clone_id = 'value="' . $wpstg_options['current_clone'] . '" disabled';
-	else if ($existing_clone)
-		$clone_id = 'value="' . $existing_clone . '" class="wpstg-clone-exists"';
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
 		Clone ID
-		<input type="text" id="wpstg-new-clone" <?php echo $clone_id; ?>>
+		<input type="text" id="wpstg-new-clone-id" <?php echo $clone_id; ?>>
 	</label>
-	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn" <?php echo $existing_clone ? 'disabled' : ''; ?> data-action="cloning">Start Cloning</a>
-	<?php if ($existing_clone) : ?>
-		<br>
-		<span class="wpstg-error-msg">Clone with the same name is already exists</span>
-	<?php endif; ?>
+	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn" data-action="cloning">Start Cloning</a>
+	<span class="wpstg-error-msg"></span>
 
 	<div class="wpstg-tabs-wrapper">
 		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">DB</a>
@@ -209,22 +205,27 @@ function wpstg_show_large_files() {
 }
 
 //Check cloneID
-function wpstg_check_clone($cloneID) {
+function wpstg_check_clone() {
 	global $wpstg_options;
 
+	$cur_clone = preg_replace('/[^A-Za-z0-9]/', '', $_POST['cloneID']);
+
 	$existing_clones = isset($wpstg_options['existing_clones']) ? $wpstg_options['existing_clones'] : array();
-	return !in_array($cloneID, $existing_clones);
+	wp_die(!in_array($cur_clone, $existing_clones));
 }
+add_action('wp_ajax_check_clone', 'wpstg_check_clone');
 
 //3rd step: Cloning ////////////////////////////////////////////////////////////////////////////////////////////////////
 function wpstg_cloning() {
 	global $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 
-	if (! wpstg_check_clone($_POST['cloneID']))
-		wpstg_scanning($_POST['cloneID']);
+	$clone = preg_replace('/[^A-Za-z0-9]/', '', $_POST['cloneID']);
 
-	$wpstg_options['current_clone'] = isset($wpstg_options['current_clone']) ? $wpstg_options['current_clone'] : $_POST['cloneID'];
+//	if (! wpstg_check_clone($clone))
+//		wpstg_scanning($clone);
+
+	$wpstg_options['current_clone'] = isset($wpstg_options['current_clone']) ? $wpstg_options['current_clone'] : $clone;
 
 	$wpstg_options['cloned_tables'] = isset($wpstg_options['cloned_tables']) ? $wpstg_options['cloned_tables'] : array();
 	if (isset($_POST['uncheckedTables']))
@@ -590,7 +591,7 @@ function wpstg_check_removing_files($path, &$folders = array()) {
 	return $folders;
 }
 
-function wpstg_remove_clone() {
+function wpstg_remove_clone($isAjax = true) {
 	global $wpdb, $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 
@@ -628,8 +629,10 @@ function wpstg_remove_clone() {
 		update_option('wpstg_settings', $wpstg_options);
 	}
 
-	WPSTG()->logger->info('Clone( ' . $clone . ' ) has been removed successfully.');
-	wp_die(0);
+	if ($isAjax) {
+		WPSTG()->logger->info('Clone( ' . $clone . ' ) has been removed successfully.');
+		wp_die(0);
+	}
 }
 add_action('wp_ajax_remove_clone', 'wpstg_remove_clone');
 
@@ -659,7 +662,7 @@ function deleteDirectory($dir, $excluded_dirs) {
 }
 
 function wpstg_cancel_cloning() {
-	wpstg_remove_clone();
+	wpstg_remove_clone(false);
 	wpstg_clear_options();
 	wp_die(0);
 }

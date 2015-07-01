@@ -949,6 +949,7 @@ color:#777777;
 	content: 'REMOVING' !important;
 }
 
+#wpstg-existing-clones,
 #wpstg-removing-clone {
 	position: relative;
 }
@@ -967,12 +968,18 @@ color:#777777;
 	transition: width 1s;
 }
 
-#wpstg-new-clone.wpstg-clone-exists {
+#wpstg-new-clone-id.wpstg-clone-exists {
 	border: 1px solid #ff4235;
+	box-shadow: 0 0 2px rgba(255, 66, 53, .8);
 }
 
 .wpstg-error-msg {
 	color: #ff4235;
+}
+
+#wpstg-start-cloning + .wpstg-error-msg {
+	display: block;
+	margin-top: 5px;
 }
 
 .wpstg-table-info {
