@@ -156,7 +156,7 @@ jQuery(document).ready(function ($) {
 					clone_db();
 				} else if (resp >= 1) { //Success cloning
 					$('#wpstg-db-progress').text('').css('width', '100%');
-					needCheck = setInterval(check_files_progress, 1000);
+					needCheck = setInterval(check_files_progress, 5000);
 					copy_files();
 				}
 			});
