@@ -949,6 +949,7 @@ color:#777777;
 	content: 'REMOVING' !important;
 }
 
+#wpstg-existing-clones,
 #wpstg-removing-clone {
 	position: relative;
 }

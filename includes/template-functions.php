@@ -39,6 +39,7 @@ function wpstg_overview() {
 	<?php else : ?>
 		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">New Clone</a>
 	<?php endif; ?>
+	<br>
 	<div id="wpstg-existing-clones">
 		<?php if (!empty($existing_clones)) : ?>
 			<h3>Existing clones:</h3>
@@ -589,7 +590,7 @@ function wpstg_check_removing_files($path, &$folders = array()) {
 	return $folders;
 }
 
-function wpstg_remove_clone() {
+function wpstg_remove_clone($isAjax = true) {
 	global $wpdb, $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 
@@ -627,8 +628,10 @@ function wpstg_remove_clone() {
 		update_option('wpstg_settings', $wpstg_options);
 	}
 
-	WPSTG()->logger->info('Clone( ' . $clone . ' ) has been removed successfully.');
-	wp_die(0);
+	if ($isAjax) {
+		WPSTG()->logger->info('Clone( ' . $clone . ' ) has been removed successfully.');
+		wp_die(0);
+	}
 }
 add_action('wp_ajax_remove_clone', 'wpstg_remove_clone');
 
@@ -658,7 +661,7 @@ function deleteDirectory($dir, $excluded_dirs) {
 }
 
 function wpstg_cancel_cloning() {
-	wpstg_remove_clone();
+	wpstg_remove_clone(false);
 	wpstg_clear_options();
 	wp_die(0);
 }
