@@ -230,6 +230,7 @@ jQuery(document).ready(function ($) {
 					$('#wpstg-links-progress').text('').css('width', '100%');
 					setTimeout(function () {
 						$('#wpstg-cloning-result').text('Done');
+						cloneID = cloneID.replace(/[^A-Za-z0-9]/g, '');
 						var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-admin';
 						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
 					}, 1200);
