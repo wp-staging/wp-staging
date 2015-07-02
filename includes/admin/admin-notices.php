@@ -64,7 +64,7 @@ function wpstg_admin_messages() {
     ';
     }
 }
-add_action( 'admin_notices', 'wpstg_admin_messages' );
+//add_action( 'admin_notices', 'wpstg_admin_messages' );
 
 /* Hide the rating div
  * 
