@@ -230,6 +230,7 @@ jQuery(document).ready(function ($) {
 						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
 						$('#wpstg-cancel-cloning').text('Remove');
 						isFinished = true;
+						$('#wpstg-home-link').show();
 					}, 1200);
 				} else {
 					if (isNaN(resp))
@@ -274,6 +275,11 @@ jQuery(document).ready(function ($) {
 				}
 			});
 		}
+
+		$('#wpstg-workflow').on('click', '#wpstg-home-link', function (e) {
+			e.preventDefault();
+			location.reload();
+		});
 
 		//Tabs
 		$('#wpstg-workflow').on('click', '.wpstg-tab-header', function (e) {

@@ -74,7 +74,7 @@ function wpstg_scanning() {
 	$wpstg_clone_details['total_size'] = 0;
 	unset($wpstg_clone_details['large_files']);
 	$folders = wpstg_scan_files(rtrim(get_home_path(), '/'));
-	$path = __DIR__ . '/remaining_files.json';
+	$path = get_home_path() . 'wp-content/plugins/wp-staging/temp/remaining_files.json';
 	file_put_contents($path, json_encode($all_files));
 
 	wpstg_save_options();
@@ -82,13 +82,18 @@ function wpstg_scanning() {
 	$clone_id = '';
 	if (isset($wpstg_clone_details['current_clone']))
 		$clone_id = 'value="' . $wpstg_clone_details['current_clone'] . '" disabled';
+
+	$free_space = disk_free_space(get_home_path());
+	$overflow = $free_space < $wpstg_clone_details['total_size'] ? true : false;
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
 		Name of site:
 		<input type="text" id="wpstg-new-clone-id" <?php echo $clone_id; ?>>
 	</label>
 	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn" data-action="cloning">Start Cloning</a>
-	<span class="wpstg-error-msg"></span>
+	<span class="wpstg-error-msg">
+		<?php echo $overflow ? 'Not enough free disk space.' : ''; ?>
+	</span>
 
 	<div class="wpstg-tabs-wrapper">
 		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">DB</a>
@@ -230,7 +235,7 @@ function wpstg_cloning() {
 	if (isset($_POST['uncheckedTables']))
 		$wpstg_clone_details['cloned_tables'] = array_merge($wpstg_clone_details['cloned_tables'], $_POST['uncheckedTables']);
 	if (isset($_POST['excludedFolders'])) {
-		$path = __DIR__ . '/remaining_files.json';
+		$path = get_home_path() . 'wp-content/plugins/wp-staging/temp/remaining_files.json';
 		$all_files = json_decode(file_get_contents($path), true);
 
 		$excluded_files = array();
@@ -266,7 +271,8 @@ function wpstg_cloning() {
 	</div>
 	<span id="wpstg-cloning-result"></span>
 	<a href="<?php echo get_home_url();?>" id="wpstg-clone-url" target="_blank"></a>
-	<a href="" id="wpstg-cancel-cloning" class="wpstg-link-btn">Cancel</a>
+	<a href="#" id="wpstg-cancel-cloning" class="wpstg-link-btn">Cancel</a>
+	<a href="#" id="wpstg-home-link" class="wpstg-link-btn">Home</a>
 	<?php
 	wp_die();
 }
@@ -370,7 +376,7 @@ function wpstg_copy_files() {
 		wp_die(1);
 
 	$clone = get_home_path() . $wpstg_clone_details['current_clone'];
-	$path = __DIR__ . '/remaining_files.json';
+	$path = get_home_path() . 'wp-content/plugins/wp-staging/temp/remaining_files.json';
 	$files = json_decode(file_get_contents($path), true);
 	$start_index = isset($wpstg_clone_details['file_index']) ? $wpstg_clone_details['file_index'] : 0;
 	$wpstg_clone_details['files_progress'] = isset($wpstg_clone_details['files_progress']) ? $wpstg_clone_details['files_progress'] : 0;
@@ -533,6 +539,9 @@ function wpstg_replace_links() {
 	$wpstg_clone_details['existing_clones'][] = $wpstg_clone_details['current_clone'];
 	wpstg_clear_options();
 
+	$path = get_home_path() . 'wp-content/plugins/wp-staging/temp/remaining_files.json';
+	file_put_contents($path, '');
+
 	wp_die(1);
 }
 add_action('wp_ajax_replace_links', 'wpstg_replace_links');
@@ -566,7 +575,7 @@ function wpstg_preremove_clone() {
 	$tables = $wpdb->get_results("show table status like '" . $prefix . "_%'");
 
 	$path = get_home_path() . $clone;
-	$folders = wpstg_check_removing_files($path);
+	$folders[$clone] = wpstg_check_removing_files($path);
 	?>
 	<h3><?php echo $clone; ?></h3>
 	<div class="wpstg-tabs-wrapper">
@@ -689,7 +698,7 @@ function wpstg_is_root_table($haystack, $needle) {
 }
 
 function wpstg_get_options() {
-	$path = __DIR__ . '/clone_details.json';
+	$path = get_home_path() . 'wp-content/plugins/wp-staging/temp/clone_details.json';
 	$content = file_get_contents($path);
 	return json_decode($content, true);
 }
@@ -697,6 +706,6 @@ function wpstg_get_options() {
 function wpstg_save_options() {
 	global $wpstg_clone_details;
 
-	$path = __DIR__ . '/clone_details.json';
+	$path = get_home_path() . 'wp-content/plugins/wp-staging/temp/clone_details.json';
 	file_put_contents($path, json_encode($wpstg_clone_details));
 }
