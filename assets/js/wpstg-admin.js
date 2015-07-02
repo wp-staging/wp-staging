@@ -164,8 +164,10 @@ jQuery(document).ready(function ($) {
 
 				if (resp < 0) { //Fail
 					$('#wpstg-cloning-result').text('Fail');
+                                        $('#wpstg-loader').hide();
 				} else if(resp < 1) { //Continue cloning
 					$('#wpstg-db-progress').text(resp).css('width', (100 * resp) + '%');
+                                        $('#wpstg-loader').show();
 					clone_db();
 				} else if (resp >= 1) { //Success cloning
 					$('#wpstg-db-progress').text('').css('width', '100%');
@@ -190,8 +192,10 @@ jQuery(document).ready(function ($) {
 					console.log(resp);
 					clearInterval(needCheck);
 					$('#wpstg-cloning-result').text('Fail');
+                                        $('#wpstg-loader').hide();
 				} else if (resp < 1) { //Continue coping
 					$('#wpstg-files-progress').text(resp).css('width', (100 * resp) + '%');
+                                        $('#wpstg-loader').show();
 					copy_files();
 				} else if (resp >= 1) { //Success coping
 					clearInterval(needCheck);
@@ -224,6 +228,7 @@ jQuery(document).ready(function ($) {
 
 				if (resp == 1) {
 					$('#wpstg-links-progress').text('').css('width', '100%');
+                                        $('#wpstg-loader').hide();
 					setTimeout(function () {
 						$('#wpstg-cloning-result').text('Done');
 						cloneID = cloneID.replace(/[^A-Za-z0-9]/g, '');
@@ -234,6 +239,7 @@ jQuery(document).ready(function ($) {
 						$('#wpstg-home-link').show();
 					}, 1200);
 				} else {
+                                        $('#wpstg-loader').show();
 					if (isNaN(resp))
 						resp = Math.random();
 					$('#wpstg-links-progress').text('').css('width', (100 * resp) + '%');
@@ -251,7 +257,7 @@ jQuery(document).ready(function ($) {
 			$(this).attr('disabled', 'disabled');
 			isCanceled = true;
 			clearInterval(needCheck);
-			$('#wpstg-cloning-result').text('Please wait...');
+			$('#wpstg-cloning-result').text('Please wait...we have to clean up first');
 			if (isFinished)
 				cancelCloning();
 		});
@@ -292,7 +298,7 @@ jQuery(document).ready(function ($) {
 			$(section).show();
 		});
 
-		//Directory stricture
+		//Directory structure
 		$('#wpstg-workflow').on('click', '.wpstg-expand-dirs', function (e) {
 			e.preventDefault();
 			if (! $(this).hasClass('disabled'))
