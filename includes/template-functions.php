@@ -175,18 +175,20 @@ function wpstg_get_files($folder, &$files = array(), &$total_size) {
 }
 
 //Display directory structure
-function wpstg_directory_structure($folders, $path = null, $not_checked = false, $clone = null) {
+function wpstg_directory_structure($folders, $path = null, $not_checked = false, $is_removing = false) {
 	$existing_clones = get_option('wpstg_existing_clones', array());
-	$existing_clones = array_diff($existing_clones, array($clone));
 	$path = $path === null ? rtrim(get_home_path(), '/') : $path;
 	foreach ($folders as $name => $folder) {
-		$tmp = $not_checked ? $not_checked : in_array($name, $existing_clones); ?>
+		if ($is_removing)
+			$tmp = false;
+		else
+			$tmp = $not_checked ? $not_checked : in_array($name, $existing_clones); ?>
 		<div class="wpstg-dir">
 			<input type="checkbox" class="wpstg-check-dir" <?php echo $tmp ? '' : 'checked'; ?> name="<?php echo "$path/$name"; ?>">
 			<a href="#" class="wpstg-expand-dirs <?php echo $tmp ? 'disabled' : ''; ?>"><?php echo $name;?></a>
 				<?php if (!empty ($folder)) : ?>
 					<div class="wpstg-dir wpstg-subdir">
-						<?php wpstg_directory_structure($folder, "$path/$name", $tmp, $clone); ?>
+						<?php wpstg_directory_structure($folder, "$path/$name", $tmp, $is_removing); ?>
 					</div>
 				<?php endif; ?>
 		</div>
@@ -572,7 +574,7 @@ function wpstg_preremove_clone() {
 			<?php wpstg_show_tables($tables); ?>
 		</div> <!-- #wpstg-scanning-db -->
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
-			<?php wpstg_directory_structure($folders, $path, false, $clone); ?>
+			<?php wpstg_directory_structure($folders, $path, false, true); ?>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>
 	<a href="#" class="wpstg-link-btn" id="wpstg-cancel-removing">Cancel</a>
