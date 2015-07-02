@@ -12,12 +12,16 @@
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
 
-/* Initial page loader
- * 
- * @return HTML
- */
-
+/**
+ * Main Page
+ *
+ * Renders the main WP-Staging page contents.
+ *
+ * @since 1.0
+ * @return void
+*/
 function wpstg_clone_page() {
+    ob_start();
 	?>
 	<div id="wpstg-clonepage-wrapper">
             <h1 class="wp-staginglogo"> <?php echo __('Welcome to WP-Staging ', 'wpstg') . WPSTG_VERSION; ?></h1>
@@ -44,6 +48,7 @@ function wpstg_clone_page() {
 		</div> <!-- #wpstg-workflow -->
 	</div> <!-- #wpstg-clonepage-wrapper -->
 	<?php
+        echo ob_get_clean();
 }
 // 1st step: Overview //////////////////////////////////////////////////////////////////////////////////////////////////
 function wpstg_overview() {
@@ -75,7 +80,9 @@ function wpstg_overview() {
 
 	</div> <!-- #wpstg-removing-clone -->
 	<?php
-	wp_die();
+        // If wp_die() is defined here wordpress is only rendered partly.E.g admin_footer is missing. This could lead to unexpected issues. 
+        // But it is said that wp_ajax needs wp_die() so this must be tested more! 
+	//wp_die();
 }
 add_action('wp_ajax_overview', 'wpstg_overview');
 

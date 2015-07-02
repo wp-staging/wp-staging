@@ -4,7 +4,7 @@
  *
  * @package     WPSTG
  * @subpackage  Admin/Footer
- * @copyright   Copyright (c) 2014, René Hermenau
+ * @copyright   Copyright (c) 2015, René Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
  */
@@ -15,8 +15,8 @@ if( !defined( 'ABSPATH' ) ) exit;
 /**
  * Add rating links to the admin dashboard
  *
- * @since	    1.0.0
- * @global		string $typenow
+ * @since	1.0.0
+ * @global	string $typenow
  * @param       string $footer_text The existing footer text
  * @return      string
  */
@@ -24,6 +24,7 @@ function wpstg_admin_rate_us( $footer_text ) {
 	global $typenow;
 
 	if ( wpstg_is_admin_page() ) {
+
 		$rate_text = sprintf( __( 'Thank you for using <a href="%1$s" target="_blank">WP-Staging</a>! Please <a href="%2$s" target="_blank">rate us</a> on <a href="%2$s" target="_blank">WordPress.org</a> and help to support this project.<br>Something not working as expected or need help for customizing WP-Staging? Read our <a href="https://www.wp-staging.net/faq/" target="blank">FAQ</a> and visit the WP-Staging <a href="https://wp-staging.net/support" target="blank">Support Forum</a>', 'wpstg' ),
 			'https://www.wp-staging.net',
 			'http://wordpress.org/support/view/plugin-reviews/wp-staging?filter=5#postform'

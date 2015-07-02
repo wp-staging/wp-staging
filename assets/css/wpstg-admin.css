@@ -280,17 +280,20 @@ color:#777777;
 }
 
 .wpstg-progress-bar {
-	border: 1px solid #555;
 	width: 500px;
 	height: 25px;
 	padding: 2px;
+        padding: 2px;
+        background-color: #d6d8d7;
 }
 
 .wpstg-progress {
-	background: #b1d032;
+	background: #1d94cf;
 	width: 0;
 	height: 100%;
 	transition: width 1s;
+        color:white;
+        line-height:25px;
 }
 
 #wpstg-new-clone-id.wpstg-clone-exists {
