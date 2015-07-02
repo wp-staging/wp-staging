@@ -54,7 +54,7 @@ jQuery(document).ready(function ($) {
 				} else {
 					$('#wpstg-new-clone-id').addClass('wpstg-clone-exists');
 					$('#wpstg-start-cloning').attr('disabled', 'disabled')
-						.next('.wpstg-error-msg').text('Clone with the save ID is already exists.');
+						.next('.wpstg-error-msg').text('There is already a staging site with this name!');
 				}
 			})
 		});

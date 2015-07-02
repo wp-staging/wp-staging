@@ -134,7 +134,7 @@ function wpstg_get_registered_settings() {
 							array(
 								'id' => 'wpstg_query_limit',
 								'name' => __('DB Copy Query Limit', 'wpstg'),
-								'desc' => __('Number of DB rows, that will be copied within one ajax request. The higher the value the faster the database copying process will be. Try a higher value like 10.000 or 20.000 and decrease it until you get no more errors during copying process <strong> Default: 1000 </strong>'),
+								'desc' => __('Number of DB rows, that will be copied within one ajax request. The higher the value the faster will be the database copying process. Try a higher value like 10.000 or 20.000 and decrease it until you get no more errors during copying process. If your database does not contain much data the default value is fine. <strong> Default: 1000 </strong>'),
 								'type' => 'number',
 								'size' => 'medium',
 								'std' => 1000,

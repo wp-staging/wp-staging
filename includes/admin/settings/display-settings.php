@@ -157,7 +157,7 @@ function wpstg_options_page() {
 			?>
 		</h2>
 		<div id="tab_container" class="tab_container">
-                        <?php wpstg_getTabHeader( 'wpstg_settings_' . $active_tab, 'wpstg_settings_' . $active_tab ); ?>   
+                        <?php //wpstg_getTabHeader( 'wpstg_settings_' . $active_tab, 'wpstg_settings_' . $active_tab ); ?>   
                     <div class="panel-container"> <!-- new //-->
 			<form method="post" action="options.php">
 				<?php

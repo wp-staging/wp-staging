@@ -363,11 +363,12 @@ color:#777777;
 }
 
 #wpstg-large-files {
-	border: 3px dashed #ccc;
+	border: 1px dashed #ccc;
 	float: right;
-	padding: 20px 10px 10px;
+	padding: 10px 10px 10px;
+        margin-top:20px;
 	position: relative;
-        display:none;
+        font-size:12px;
 }
 
 #wpstg-large-files h3 {
@@ -395,9 +396,16 @@ color:#777777;
 	margin-left: 10px;
 }
 
-.wpstg-notice{
+.wpstg-notice-alert{
     background-color:#FFD0D0;
     padding:20px;
     border: 1px solid #fff;
     max-width: 600px;
+}
+
+.wpstg-header{
+    font-weight: 400;
+    line-height: 1.6em;
+    font-size: 19px;
+    border-bottom: 1px solid#555;
 }
