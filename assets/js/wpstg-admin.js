@@ -109,7 +109,7 @@ jQuery(document).ready(function ($) {
 					data.excludedFolders.push(this.name);
 			});
 
-			cloneID = data.cloneID;
+			cloneID = data.cloneID.toString();
 		}
 
 		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
@@ -140,7 +140,6 @@ jQuery(document).ready(function ($) {
 			wpstg_additional_data(data);
 
 			$.post(ajaxurl, data, function (resp) {
-				console.log(resp);
 				if (resp == 0) {
 					$('#wpstg-removing-clone').html('');
 					$('.wpstg-clone#' + cloneID).remove();
@@ -170,8 +169,7 @@ jQuery(document).ready(function ($) {
 					clone_db();
 				} else if (resp >= 1) { //Success cloning
 					$('#wpstg-db-progress').text('').css('width', '100%');
-					needCheck = setInterval(check_files_progress, 1000);
-					tmp = new Date().getTime();
+					//needCheck = setInterval(check_files_progress, 1000);
 					copy_files();
 				}
 			});
@@ -188,20 +186,17 @@ jQuery(document).ready(function ($) {
 					return false;
 				}
 
-				switch (resp) {
-					case '0':
-						copy_files();
-						break;
-					case '1':
-						console.log(new Date().getTime() - tmp);
-						clearInterval(needCheck);
-						$('#wpstg-files-progress').text('').css('width', '100%');
-						replace_links();
-						break;
-					default:
-						console.log(resp);
-						clearInterval(needCheck);
-						$('#wpstg-cloning-result').text('Fail');
+				if (resp < 0) { //Fail
+					console.log(resp);
+					clearInterval(needCheck);
+					$('#wpstg-cloning-result').text('Fail');
+				} else if (resp < 1) { //Continue coping
+					$('#wpstg-files-progress').text(resp).css('width', (100 * resp) + '%');
+					copy_files();
+				} else if (resp >= 1) { //Success coping
+					clearInterval(needCheck);
+					$('#wpstg-files-progress').text('').css('width', '100%');
+					replace_links();
 				}
 			});
 		}
@@ -215,6 +210,7 @@ jQuery(document).ready(function ($) {
 			});
 		};
 
+		var isFinished = false;
 		function replace_links() {
 			var data = {
 				action: 'replace_links',
@@ -233,6 +229,8 @@ jQuery(document).ready(function ($) {
 						cloneID = cloneID.replace(/[^A-Za-z0-9]/g, '');
 						var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-admin';
 						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
+						$('#wpstg-cancel-cloning').text('Remove');
+						isFinished = true;
 					}, 1200);
 				} else {
 					if (isNaN(resp))
@@ -253,6 +251,8 @@ jQuery(document).ready(function ($) {
 			isCanceled = true;
 			clearInterval(needCheck);
 			$('#wpstg-cloning-result').text('Please wait...');
+			if (isFinished)
+				cancelCloning();
 		});
 
 		$('#wpstg-workflow').on('click', '#wpstg-reset-clone', function (e) {
