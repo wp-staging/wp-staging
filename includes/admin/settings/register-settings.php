@@ -147,18 +147,12 @@ function wpstg_get_registered_settings() {
 								'size' => 'small',
 								'std' => '20',
 							),
-							array(
-								'id' => 'debug_header',
-								'name' => '<strong>' . __( 'Debug', 'wpstg' ) . '</strong>',
-								'desc' => __( ' ', 'wpstg' ),
-								'type' => 'header'
-							),
-							'debug_mode' => array(
+							/*'debug_mode' => array(
 								'id' => 'debug_mode',
 								'name' => __( 'Debug mode', 'wpstg' ),
 								'desc' => __( '<strong>Note: </strong> Check this box before you get in contact with our support team. This allows us to check publically hidden debug messages on your website. Do not forget to disable it thereafter! Enable this also to write daily sorted log files of requested share counts to folder <strong>/wp-content/plugins/mashsharer/logs</strong>. Please send us this files when you notice a wrong share count.' . wpstg_log_permissions(), 'wpstg' ),
 								'type' => 'checkbox'
-							)
+							)*/
 			)
 		),
                 'misc' => apply_filters('wpstg_settings_misc',

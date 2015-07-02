@@ -63,13 +63,13 @@ class wpstgLogger {
 	  return $this->level < $level;
 	}
 	
-        /* Log - Only when wp-staging debug mode is enabled
+        /* Start logging
          */
 	private function log($string)
 	{
           global $wpstg_options;  
-          $enabled = isset($wpstg_options['debug_mode']) ? $wpstg_options['debug_mode'] : false;
-          if ($enabled)
+          //$enabled = isset($wpstg_options['debug_mode']) ? $wpstg_options['debug_mode'] : false;
+          //if ($enabled)
 	  $this->write("[". date('l jS F Y : h:i:sa') . "] ". $string . "\r\n");
           
           return false;
