@@ -257,7 +257,7 @@ jQuery(document).ready(function ($) {
 			$(this).attr('disabled', 'disabled');
 			isCanceled = true;
 			clearInterval(needCheck);
-			$('#wpstg-cloning-result').text('Please wait...we have to clean up first');
+			$('#wpstg-cloning-result').text('Please wait...we have to clean up');
 			if (isFinished)
 				cancelCloning();
 		});
