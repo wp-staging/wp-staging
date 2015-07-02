@@ -24,8 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @return array $links
  */
 function wpstg_plugin_action_links( $links, $file ) {
-	$settings_link = '<a href="' . admin_url( 'options-general.php?page=wpstg-settings' ) . '">' . esc_html__( 'General Settings', 'wpstg' ) . '</a>';
-	if ( $file == 'staging/staging.php' )
+	$settings_link = '<a href="' . admin_url( 'admin.php?page=wpstg-settings' ) . '">' . esc_html__( 'General Settings', 'wpstg' ) . '</a>';
+	if ( $file == 'wp-staging/wp-staging.php' )
 		array_unshift( $links, $settings_link );
 
 	return $links;
@@ -52,7 +52,7 @@ function wpstg_plugin_row_meta( $input, $file ) {
 	);*/
         
         $links = array(
-		'<a href="' . admin_url( 'options-general.php?page=wpstg-settings' ) . '">' . esc_html__( 'Getting Started', 'wpstg' ) . '</a>',
+		'<a href="' . admin_url( 'admin.php?page=wpstg-settings' ) . '">' . esc_html__( 'Getting Started', 'wpstg' ) . '</a>',
 	);
 
 	$input = array_merge( $input, $links );

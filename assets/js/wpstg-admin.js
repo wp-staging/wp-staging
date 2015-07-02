@@ -78,8 +78,9 @@ jQuery(document).ready(function ($) {
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
-				if (data.action == 'cloning')
+				if (data.action == 'cloning'){
 					clone_db();
+                                    }
 			});
 		});
 
@@ -152,6 +153,7 @@ jQuery(document).ready(function ($) {
 		var isCanceled = false;
 		var tmp;
 		function clone_db() {
+                    $('#wpstg-loader').show();
 			var data = {
 				action: 'wpstg_clone_db',
 				nonce: wpstg.nonce
@@ -167,7 +169,6 @@ jQuery(document).ready(function ($) {
                                         $('#wpstg-loader').hide();
 				} else if(resp < 1) { //Continue cloning
 					$('#wpstg-db-progress').text(resp).css('width', (100 * resp) + '%');
-                                        $('#wpstg-loader').show();
 					clone_db();
 				} else if (resp >= 1) { //Success cloning
 					$('#wpstg-db-progress').text('').css('width', '100%');
@@ -304,6 +305,7 @@ jQuery(document).ready(function ($) {
 			if (! $(this).hasClass('disabled'))
 				$(this).siblings('.wpstg-subdir').slideToggle();
 		});
+                
 
 		$('#wpstg-workflow').on('change', '.wpstg-check-dir', function () {
 			var dir = $(this).parent('.wpstg-dir');
@@ -320,3 +322,20 @@ jQuery(document).ready(function ($) {
 		});
 	});
 })(jQuery);
+
+window.twttr = (function(d, s, id) {
+  var js, fjs = d.getElementsByTagName(s)[0],
+    t = window.twttr || {};
+  if (d.getElementById(id)) return t;
+  js = d.createElement(s);
+  js.id = id;
+  js.src = "https://platform.twitter.com/widgets.js";
+  fjs.parentNode.insertBefore(js, fjs);
+ 
+  t._e = [];
+  t.ready = function(f) {
+    t._e.push(f);
+  };
+ 
+  return t;
+}(document, "script", "twitter-wjs"));

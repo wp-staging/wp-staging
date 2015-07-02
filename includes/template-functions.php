@@ -12,6 +12,11 @@
 // Exit if accessed directly
 if ( ! defined( 'ABSPATH' ) ) exit;
 
+/* Initial page loader
+ * 
+ * @return HTML
+ */
+
 function wpstg_clone_page() {
 	?>
 	<div id="wpstg-clonepage-wrapper">
@@ -20,14 +25,18 @@ function wpstg_clone_page() {
                 <?php echo __('Thank you for updating to the latest version!', 'wpstg');?>
                 <br>
                 <?php echo __('WP-Staging is ready to create a staging website for you!', 'wpstg'); ?>
-                <?php if (!function_exists('curl_init')){ echo '<br><span style="color:red;">' . __('php_curl is not working on your server. </span><a href="http://us.informatiweb.net/programmation/32--enable-curl-extension-of-php-on-windows.html" target="_blank">Please enable it.</a>'); } ?>
                 <br>
-                <iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2Fwp-staging.com&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:400px; height:25px;" allowTransparency="true"></iframe>
+                <iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2Fwp-staging.com&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:300px; height:20px;" allowTransparency="true"></iframe>
+                <a class="twitter-follow-button" href="https://twitter.com/wp_staging" data-size="small" id="twitter-wjs">Follow @wp_staging</a>
             </div>
+            <?php if (is_multisite()) {
+                echo '<span class="wpstg-notice-alert" style="margin-top:20px;">' . __('Multisite is currently not supported! <a href="https://wp-staging.com/contact">Get in contact with us</a> and ask for it.', 'wpstg') . '</span>'; 
+                exit;
+            }?>
 		<ul id="wpstg-steps">
-			<li class="wpstg-current-step"><span class="wpstg-step-num">1</span>Overview</li>
-			<li><span class="wpstg-step-num">2</span>Scanning</li>
-			<li><span class="wpstg-step-num">3</span>Cloning</li>
+			<li class="wpstg-current-step"><span class="wpstg-step-num">1</span><?php echo __('Overview', 'wpstg');?></li>
+			<li><span class="wpstg-step-num">2</span><?php echo __('Scanning', 'wpstg');?></li>
+			<li><span class="wpstg-step-num">3</span><?php echo __('Cloning', 'wpstg');?></li>
                         <li><span href="#" id="wpstg-loader" style="display:none;"></span></li>
 		</ul> <!-- #wpstg-steps -->
 		<div id="wpstg-workflow">
@@ -53,7 +62,7 @@ function wpstg_overview() {
 	<br>
 	<div id="wpstg-existing-clones">
 		<?php if (!empty($existing_clones)) : ?>
-			<h3>Existing Staging & Development Sites:</h3>
+			<h3>Available Staging Sites:</h3>
 			<?php foreach ($existing_clones as $clone) : ?>
 				<div class="wpstg-clone" id="<?php echo $clone; ?>">
 					<a href="<?php echo get_home_url() . "/$clone/wp-admin"; ?>" target="_blank"><?php echo $clone; ?></a>
@@ -97,10 +106,10 @@ function wpstg_scanning() {
 	$overflow = $free_space < $wpstg_clone_details['total_size'] ? true : false;
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
-                <?php echo __('Name of new Staging Site:', 'wpstg');?>
+                <?php echo __('Name your new Staging Site:', 'wpstg');?>
 		<input type="text" id="wpstg-new-clone-id" <?php echo $clone_id; ?>>
 	</label>
-	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn" data-action="cloning"><?php echo __('Start cloning', 'wpstg');?></a>
+	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn" data-action="cloning"><?php echo __('Start Cloning', 'wpstg');?></a>
 	<span class="wpstg-error-msg">
 		<?php echo $overflow ? __('Not enough free disk space to create a staging site', 'wpstg') : ''; ?>
 	</span>
@@ -110,13 +119,13 @@ function wpstg_scanning() {
 		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files"><?php echo __('Files', 'wpstg'); ?></a></a>
 		<div class="wpstg-tab-section" id="wpstg-scanning-db">
 			<?php 
-                        echo '<h4 style="margin:0px;">' . __('Select the tables which are to be copied:', 'wpstg') . '<h4>';
+                        echo '<h4 style="margin:0px;">' . __('Select the tables to be copied. Greyed out tables are already copied in previous steps and the copying will continous from this step:', 'wpstg') . '<h4>';
                         wpstg_show_tables($tables); ?>
 		</div> <!-- #wpstg-scanning-db -->
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
                     
 			<?php
-                        echo '<h4 style="margin:0px;">' . __('Select the folders which are to be copied:', 'wpstg') . '<h4>';
+                        echo '<h4 style="margin:0px;">' . __('Select the folders to be copied:', 'wpstg') . '<h4>';
                         wpstg_directory_structure($folders);
                         wpstg_show_large_files();
                         ?>
@@ -598,7 +607,7 @@ function wpstg_preremove_clone() {
 		</div> <!-- #wpstg-scanning-db -->
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
 			<?php 
-                        echo '<h4 style="margin:0px;">' . __('Unselect the folders to be excluded from removing:', 'wpstg') . '<h4>';
+                        echo '<h4 style="margin:0px;">' . __('Unselect the folders to be excluded from removing. Click on the folder name to expand it:', 'wpstg') . '<h4>';
                         wpstg_directory_structure($folders, $path, false, true); ?>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>

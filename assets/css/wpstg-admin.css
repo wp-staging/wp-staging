@@ -175,12 +175,18 @@ color:#777777;
 }
 
 /* Cloning workflow */
+
+#wpstg-steps {
+    margin-top:30px;
+}
+
 #wpstg-steps li {
 	color: #444;
 	line-height: 20px;
         padding-right:10px;
         float:left;
 }
+
 
 .wpstg-step-num {
 	border: 1px solid #444;
@@ -245,7 +251,7 @@ color:#777777;
 #wpstg-workflow {
 	position: relative;
         clear:both;
-        padding-top:30px;
+        padding-top:20px;
 }
 
 #wpstg-workflow.loading::after,
@@ -275,9 +281,9 @@ color:#777777;
 
 .wpstg-progress-bar {
 	border: 1px solid #555;
-	width: 300px;
-	height: 20px;
-	padding: 3px;
+	width: 500px;
+	height: 25px;
+	padding: 2px;
 }
 
 .wpstg-progress {
@@ -310,7 +316,7 @@ color:#777777;
 #wpstg-start-cloning {
 	display: inline-block;
 	margin-left: 10px;
-	font-size: 15px;
+	font-size: 14px;
         vertical-align: middle;
 }
 
@@ -397,6 +403,7 @@ color:#777777;
 }
 
 .wpstg-notice-alert{
+    display:block;
     background-color:#FFD0D0;
     padding:20px;
     border: 1px solid #fff;
@@ -408,4 +415,9 @@ color:#777777;
     line-height: 1.6em;
     font-size: 19px;
     border-bottom: 1px solid#555;
+}
+
+#wpstg-clone-label{
+    font-size: 14px;
+    font-weight: bold;
 }

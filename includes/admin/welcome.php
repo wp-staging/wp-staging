@@ -42,7 +42,7 @@ class WPSTG_Welcome {
 	 * time WPSTG is upgraded to a new version
 	 *
 	 * @access public
-	 * @since 1.0.1
+	 * @since 1.0.0
 	 * @global $wpstg_options Array of all the WPSTG Options
 	 * @return void
 	 */
@@ -64,9 +64,9 @@ class WPSTG_Welcome {
                 
                 //@since 1.0.0
 		if( ! $upgrade ) { // First time install
-			wp_safe_redirect( admin_url( 'options-general.php?page=wpstg-settings&tab=networks' ) ); exit;
+			wp_safe_redirect( admin_url( 'admin.php?page=wpstg_clone_page' ) ); exit;
 		} else { // Update
-			wp_safe_redirect( admin_url( 'options-general.php?page=wpstg-settings&tab=networks' ) ); exit;
+			wp_safe_redirect( admin_url( 'admin.php?page=wpstg_clone_page' ) ); exit;
 		}
 	}
 }
