@@ -141,7 +141,7 @@ function wpstg_get_registered_settings() {
 							),
 							array(
 								'id' => 'wpstg_batch_size',
-								'name' => __('Bathc Size', 'wpstg'),
+								'name' => __('Batch Size', 'wpstg'),
 								'desc' => __('Size of one batch of files (in Mb)', 'wpstg'),
 								'type' => 'text',
 								'size' => 'small',
