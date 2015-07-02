@@ -311,12 +311,14 @@ color:#777777;
 	display: inline-block;
 	margin-left: 10px;
 	font-size: 15px;
+        vertical-align: middle;
 }
 
 /* Tabs */
 .wpstg-tabs-wrapper {
-	margin: 10px;
-	width: 50%;
+	//width: 50%;
+        max-width: 640px;
+        margin-bottom:20px;
 }
 
 .wpstg-tab-section {
@@ -365,6 +367,7 @@ color:#777777;
 	float: right;
 	padding: 20px 10px 10px;
 	position: relative;
+        display:none;
 }
 
 #wpstg-large-files h3 {
@@ -390,4 +393,11 @@ color:#777777;
 .wpstg-check-subdirs {
 	display: inline-block;
 	margin-left: 10px;
+}
+
+.wpstg-notice{
+    background-color:#FFD0D0;
+    padding:20px;
+    border: 1px solid #fff;
+    max-width: 600px;
 }
