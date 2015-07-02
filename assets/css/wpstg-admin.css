@@ -925,6 +925,10 @@ color:#777777;
 	background: #64dd58;
 }
 
+#wpstg-home-link {
+	display: none;
+}
+
 #wpstg-workflow {
 	position: relative;
 }
