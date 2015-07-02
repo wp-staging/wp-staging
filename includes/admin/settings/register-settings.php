@@ -43,7 +43,7 @@ function wpstg_get_settings() {
 	if( empty( $settings ) ) {
 		// Update old settings with new single option
 		$general_settings = is_array( get_option( 'wpstg_settings_general' ) )    ? get_option( 'wpstg_settings_general' )  	: array();
-                $misc_settings = is_array( get_option( 'wpstg_settings_misc' ) )   ? get_option( 'wpstg_settings_misc' )   : array();
+                //$misc_settings = is_array( get_option( 'wpstg_settings_misc' ) )   ? get_option( 'wpstg_settings_misc' )   : array();
                 //$networks = is_array( get_option( 'wpstg_settings_networks' ) )   ? get_option( 'wpstg_settings_networks' )   : array();
 		//$ext_settings     = is_array( get_option( 'wpstg_settings_extensions' ) ) ? get_option( 'wpstg_settings_extensions' )	: array();
 		//$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
@@ -133,18 +133,18 @@ function wpstg_get_registered_settings() {
 						),
 							array(
 								'id' => 'wpstg_query_limit',
-								'name' => __('DB Query Limit', 'wpstg'),
-								'desc' => __('Number of DB rows, that will be cloned at the time.'),
-								'type' => 'text',
-								'size' => 'small',
+								'name' => __('DB Copy Query Limit', 'wpstg'),
+								'desc' => __('Number of DB rows, that will be copied within one ajax request. The higher the value the faster the database copying process will be. Try a higher value like 10.000 or 20.000 and decrease it until you get no more errors during copying process <strong> Default: 1000 </strong>'),
+								'type' => 'number',
+								'size' => 'medium',
 								'std' => 1000,
 							),
 							array(
 								'id' => 'wpstg_batch_size',
-								'name' => __('Batch Size', 'wpstg'),
-								'desc' => __('Size of one batch of files (in Mb)', 'wpstg'),
-								'type' => 'text',
-								'size' => 'small',
+								'name' => __('File Copy Batch Size', 'wpstg'),
+								'desc' => __('Batch Size for files (in Mb) during copy process. The higher the value the faster the file copying process will be. Try a higher value and lower it until you get no errors during copying process <strong>Default:</strong> 20 ', 'wpstg'),
+								'type' => 'number',
+								'size' => 'medium',
 								'std' => '20',
 							),
 							/*'debug_mode' => array(
@@ -153,56 +153,6 @@ function wpstg_get_registered_settings() {
 								'desc' => __( '<strong>Note: </strong> Check this box before you get in contact with our support team. This allows us to check publically hidden debug messages on your website. Do not forget to disable it thereafter! Enable this also to write daily sorted log files of requested share counts to folder <strong>/wp-content/plugins/mashsharer/logs</strong>. Please send us this files when you notice a wrong share count.' . wpstg_log_permissions(), 'wpstg' ),
 								'type' => 'checkbox'
 							)*/
-			)
-		),
-                'misc' => apply_filters('wpstg_settings_misc',
-			array(
-                            array(
-                                    'id' => 'wpstg_header',
-                                    'name' => '<strong>' . __( 'WP-Staging', 'wpstg' ) . '</strong>',
-                                    'desc' => '',
-                                    'type' => 'header',
-                                    'size' => 'regular'
-                            ),
-                            array(
-                                    'id' => 'wpstg_textfield',
-                                    'name' => __( 'Text Field', 'wpstg' ),
-                                    'desc' => __( 'This is a text field', 'wpstg' ),
-                                    'type' => 'text',
-                                    'size' => 'large',
-                                    'std' => 'This is a large textfield'
-                            ),
-                            array(
-                                    'id' => 'wpstg_number',
-                                    'name' => __( 'Number field', 'wpstg' ),
-                                    'desc' => __( 'This is a number field', 'wpstg' ),
-                                    'type' => 'number',
-                                    'size' => 'normal'
-                            ),  
-                            array(
-                                    'id' => 'wpstg_custom_field',
-                                    'name' => __( 'Custom field', 'wpstg' ),
-                                    'desc' => __( 'This is a custom field created with the callback function wpstg_custom_field_callback', 'wpstg' ),
-                                    'type' => 'custom_field',
-                                    'size' => 'small',
-                                    'std' => 0.8
-                            ), 
-                            array(
-                                    'id' => 'wpstg_options',
-                                    'name' => __( 'Options field', 'wpstg' ),
-                                    'desc' => __( 'This is an options field', 'wpstg' ),
-                                    'type' => 'select',
-                                                    'options' => array(
-                                                            'value1' => __( 'Value 1', 'wpstg' ),
-                                                            'value2' => __( 'Value 2', 'wpstg' )
-                                                    )
-                            ),
-                            array(
-                                    'id' => 'wpstg_checkbox',
-                                    'name' => __( 'Checkbox', 'wpstg' ),
-                                    'desc' => __( 'You already guessed it: This is a Checkbox', 'wpstg' ),
-                                    'type' => 'checkbox'
-                            ),     
 			)
 		),
 		'licenses' => apply_filters('wpstg_settings_licenses',
