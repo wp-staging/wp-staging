@@ -19,6 +19,7 @@ function wpstg_clone_page() {
 			<li class="wpstg-current-step"><span class="wpstg-step-num">1</span>Overview</li>
 			<li><span class="wpstg-step-num">2</span>Scanning</li>
 			<li><span class="wpstg-step-num">3</span>Cloning</li>
+                        <li><span href="#" id="wpstg-loader" style="display:none;"></span></li>
 		</ul> <!-- #wpstg-steps -->
 		<div id="wpstg-workflow">
 			<?php echo wpstg_overview(); ?>
@@ -38,12 +39,12 @@ function wpstg_overview() {
 		<a href="#" id="wpstg-reset-clone" class="wpstg-link-btn" data-clone="<?php echo $wpstg_clone_details['current_clone']; ?>">Reset</a>
 		<a href="#" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">Continue</a>
 	<?php else : ?>
-		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">New Clone</a>
+		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">New Staging Site</a>
 	<?php endif; ?>
 	<br>
 	<div id="wpstg-existing-clones">
 		<?php if (!empty($existing_clones)) : ?>
-			<h3>Existing clones:</h3>
+			<h3>Existing Staging & Development Sites:</h3>
 			<?php foreach ($existing_clones as $clone) : ?>
 				<div class="wpstg-clone" id="<?php echo $clone; ?>">
 					<a href="<?php echo get_home_url() . "/$clone/wp-admin"; ?>" target="_blank"><?php echo $clone; ?></a>
@@ -87,7 +88,7 @@ function wpstg_scanning() {
 	$overflow = $free_space < $wpstg_clone_details['total_size'] ? true : false;
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
-		Name of site:
+		Name of new Staging Site:
 		<input type="text" id="wpstg-new-clone-id" <?php echo $clone_id; ?>>
 	</label>
 	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn" data-action="cloning">Start Cloning</a>
@@ -630,9 +631,12 @@ function wpstg_remove_clone($isAjax = true) {
 		wp_die(-1);
 	}
 
-	$existing_clones = get_option('wpstg_existing_clones', array());
+	//$existing_clones = get_option('wpstg_existing_clones', array());
+        $existing_clones = get_option('wpstg_existing_clones');
 	$key = array_search($clone, $existing_clones);
-	if ($key !== false) {
+        
+	if ($key !== false && $key !== NULL) {
+            var_dump($key);
 		unset($existing_clones[$key]);
 		update_option('wpstg_existing_clones', $existing_clones);
 	}
