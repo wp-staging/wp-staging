@@ -241,7 +241,8 @@ color:#777777;
 	background: #64dd58;
 }
 
-#wpstg-home-link {
+#wpstg-home-link,
+#wpstg-try-again {
 	display: none;
 }
 

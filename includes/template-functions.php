@@ -333,6 +333,7 @@ function wpstg_cloning() {
 	<a href="<?php echo get_home_url();?>" id="wpstg-clone-url" target="_blank"></a>
 	<a href="#" id="wpstg-cancel-cloning" class="wpstg-link-btn"><?php echo __('Cancel', 'wpstg');?></a>
 	<a href="#" id="wpstg-home-link" class="wpstg-link-btn"><?php echo __('Home', 'wpstg');?></a>
+	<a href="#" id="wpstg-try-again" class="wpstg-link-btn"><?php echo __('Try Again', 'wpstg');?></a>
 	<?php
 	wp_die();
 }
