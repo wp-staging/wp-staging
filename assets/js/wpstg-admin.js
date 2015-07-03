@@ -78,9 +78,9 @@ jQuery(document).ready(function ($) {
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
-				if (data.action == 'cloning'){
+				if (data.action == 'cloning') {
 					clone_db();
-                                    }
+				 }
 			});
 		});
 
@@ -149,9 +149,7 @@ jQuery(document).ready(function ($) {
 			});
 		});
 
-		var needCheck;
 		var isCanceled = false;
-		var tmp;
 		function clone_db() {
                     $('#wpstg-loader').show();
 			var data = {
@@ -164,15 +162,23 @@ jQuery(document).ready(function ($) {
 					return false;
 				}
 
-				if (resp < 0) { //Fail
+				if (isNaN(resp)) { //Unknown error
 					$('#wpstg-cloning-result').text('Fail');
-                                        $('#wpstg-loader').hide();
+					$('#wpstg-loader').hide();
+					console.log(resp);
+					var data = {
+						action: 'error_processing',
+						wpstg_error_msg: resp
+					};
+					$.post(ajaxurl, data);
+				} else if (resp < 0) { //Fail
+					$('#wpstg-cloning-result').text('Fail');
+					$('#wpstg-loader').hide();
 				} else if(resp < 1) { //Continue cloning
 					$('#wpstg-db-progress').text(resp).css('width', (100 * resp) + '%');
 					clone_db();
-				} else if (resp >= 1) { //Success cloning
+				} else { //Success cloning
 					$('#wpstg-db-progress').text('').css('width', '100%');
-					//needCheck = setInterval(check_files_progress, 1000);
 					copy_files();
 				}
 			});
@@ -189,31 +195,28 @@ jQuery(document).ready(function ($) {
 					return false;
 				}
 
-				if (resp < 0) { //Fail
-					console.log(resp);
-					clearInterval(needCheck);
+				if (isNaN(resp)) { //Unknown error
 					$('#wpstg-cloning-result').text('Fail');
-                                        $('#wpstg-loader').hide();
+					$('#wpstg-loader').hide();
+					console.log(resp);
+					var data = {
+						action: 'error_processing',
+						wpstg_error_msg: resp
+					};
+					$.post(ajaxurl, data);
+				} else if (resp < 0) { //Fail
+					$('#wpstg-cloning-result').text('Fail');
+					$('#wpstg-loader').hide();
 				} else if (resp < 1) { //Continue coping
 					$('#wpstg-files-progress').text(resp).css('width', (100 * resp) + '%');
-                                        $('#wpstg-loader').show();
+					$('#wpstg-loader').show();
 					copy_files();
-				} else if (resp >= 1) { //Success coping
-					clearInterval(needCheck);
+				} else { //Success coping
 					$('#wpstg-files-progress').text('').css('width', '100%');
 					replace_links();
 				}
 			});
 		}
-
-		var check_files_progress = function() {
-			var data = {
-				action: 'check_files_progress'
-			};
-			$.post(ajaxurl, data, function (resp) {
-				$('#wpstg-files-progress').css('width', (100 * resp) + '%');
-			});
-		};
 
 		var isFinished = false;
 		function replace_links() {
@@ -227,25 +230,32 @@ jQuery(document).ready(function ($) {
 					return false;
 				}
 
-				if (resp == 1) {
+				if (isNaN(resp)) { //Unknown error
+					$('#wpstg-cloning-result').text('Fail');
+					$('#wpstg-loader').hide();
+					console.log(resp);
+					var data = {
+						action: 'error_processing',
+						wpstg_error_msg: resp
+					};
+					$.post(ajaxurl, data);
+				} else if (resp < 1) { //Fail
+					$('#wpstg-loader').show();
+					$('#wpstg-links-progress').text('').css('width', (100 * resp) + '%');
+					setTimeout(function () {
+						$('#wpstg-cloning-result').text('Fail');
+					}, 1200);
+				} else { //Success
 					$('#wpstg-links-progress').text('').css('width', '100%');
-                                        $('#wpstg-loader').hide();
+					$('#wpstg-loader').hide();
+					cloneID = cloneID.replace(/[^A-Za-z0-9]/g, '');
+					var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-admin';
 					setTimeout(function () {
 						$('#wpstg-cloning-result').text('Done');
-						cloneID = cloneID.replace(/[^A-Za-z0-9]/g, '');
-						var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-admin';
 						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
 						$('#wpstg-cancel-cloning').text('Remove');
 						isFinished = true;
 						$('#wpstg-home-link').show();
-					}, 1200);
-				} else {
-                                        $('#wpstg-loader').show();
-					if (isNaN(resp))
-						resp = Math.random();
-					$('#wpstg-links-progress').text('').css('width', (100 * resp) + '%');
-					setTimeout(function () {
-						$('#wpstg-cloning-result').text('Fail');
 					}, 1200);
 				}
 			});
@@ -257,7 +267,6 @@ jQuery(document).ready(function ($) {
 				return false;
 			$(this).attr('disabled', 'disabled');
 			isCanceled = true;
-			clearInterval(needCheck);
 			$('#wpstg-cloning-result').text('Please wait...we have to clean up');
 			if (isFinished)
 				cancelCloning();
