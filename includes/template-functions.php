@@ -99,7 +99,7 @@ function wpstg_scanning() {
 	$wpstg_clone_details['total_size'] = 0;
 	unset($wpstg_clone_details['large_files']);
 	$folders = wpstg_scan_files(rtrim(get_home_path(), '/'));
-	$path = WPSTG_PLUGIN_DIR . '/temp/remaining_files.json';
+	$path = WPSTG_PLUGIN_DIR . 'remaining_files.json';
 	file_put_contents($path, json_encode($all_files));
 
 	wpstg_save_options();
@@ -287,7 +287,7 @@ function wpstg_cloning() {
 	if (isset($_POST['uncheckedTables']))
 		$wpstg_clone_details['cloned_tables'] = array_merge($wpstg_clone_details['cloned_tables'], $_POST['uncheckedTables']);
 	if (isset($_POST['excludedFolders'])) {
-		$path = WPSTG_PLUGIN_DIR . 'temp/remaining_files.json';
+		$path = WPSTG_PLUGIN_DIR . 'remaining_files.json';
 		$all_files = json_decode(file_get_contents($path), true);
 
 		$excluded_files = array();
@@ -429,7 +429,7 @@ function wpstg_copy_files() {
 		wp_die(1);
 
 	$clone = get_home_path() . $wpstg_clone_details['current_clone'];
-	$path = WPSTG_PLUGIN_DIR . 'temp/remaining_files.json';
+	$path = WPSTG_PLUGIN_DIR . 'remaining_files.json';
 	$files = json_decode(file_get_contents($path), true);
 	$start_index = isset($wpstg_clone_details['file_index']) ? $wpstg_clone_details['file_index'] : 0;
 	$wpstg_clone_details['files_progress'] = isset($wpstg_clone_details['files_progress']) ? $wpstg_clone_details['files_progress'] : 0;
@@ -575,7 +575,7 @@ function wpstg_replace_links() {
 
 	wpstg_clear_options();
 
-	$path = WPSTG_PLUGIN_DIR . 'temp/remaining_files.json';
+	$path = WPSTG_PLUGIN_DIR . 'remaining_files.json';
 	file_put_contents($path, '');
 
 	wp_die(1);
@@ -583,7 +583,7 @@ function wpstg_replace_links() {
 add_action('wp_ajax_replace_links', 'wpstg_replace_links');
 
 function wpstg_clear_options() {
-	$path = WPSTG_PLUGIN_DIR . 'temp/clone_details.json';
+	$path = WPSTG_PLUGIN_DIR . 'clone_details.json';
 	file_put_contents($path, '');
 }
 
@@ -727,7 +727,7 @@ function wpstg_is_root_table($haystack, $needle) {
 }
 
 function wpstg_get_options() {
-	$path = WPSTG_PLUGIN_DIR . 'temp/clone_details.json';
+	$path = WPSTG_PLUGIN_DIR . 'clone_details.json';
 	$content = file_get_contents($path);
 	return json_decode($content, true);
 }
@@ -735,7 +735,7 @@ function wpstg_get_options() {
 function wpstg_save_options() {
 	global $wpstg_clone_details;
 
-	$path = WPSTG_PLUGIN_DIR . 'temp/clone_details.json';
+	$path = WPSTG_PLUGIN_DIR . 'clone_details.json';
 	file_put_contents($path, json_encode($wpstg_clone_details));
 }
 

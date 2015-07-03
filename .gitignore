@@ -2,5 +2,5 @@
 /node_modules/
 /nbproject/
 /logs/
-/temp/remaining_files.json
-/temp/clone_details.json
+/remaining_files.json
+/clone_details.json
