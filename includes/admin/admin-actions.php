@@ -4,7 +4,7 @@
  *
  * @package     WPSTG
  * @subpackage  Admin/Actions
- * @copyright   Copyright (c) 2014, René Hermenau
+ * @copyright   Copyright (c) 2015, René Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
  * @since       1.0
  */
@@ -29,27 +29,3 @@ function wpstg_process_actions() {
 	}
 }
 add_action( 'admin_init', 'wpstg_process_actions' );
-
-
-
-function wpstg_save_order(){
-        global $wpstg_options;
-        // Get all settings
-        
-        $current_list = get_option('wpstg_networks');
-        $new_order = $_POST['wpstg_list'];
-        $new_list = array();
-   
-        /* First write the sort order */
-        foreach ($new_order as $n){
-            if (isset($current_list[$n])){
-                $new_list[$n] = $current_list[$n];
-                
-            }
-        }
-        //print_r($_POST);
-        /* Update sort order of networks */
-        update_option('wpstg_networks', $new_list);
-        die();
-}
-add_action ('wp_ajax_wpstg_update_order', 'wpstg_save_order');

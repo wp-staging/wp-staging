@@ -66,6 +66,8 @@ if (!class_exists('wpstaging')) :
          * 
          */
         public $logger;
+        
+        public $wpstg_notifications;
 
         /**
          * Main WP-Staging Instance
@@ -185,6 +187,7 @@ if (!class_exists('wpstaging')) :
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/settings/contextual-help.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/install.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/tools.php';
+                require_once WPSTG_PLUGIN_DIR . 'includes/admin/upload-functions.php';
             }
         }
 

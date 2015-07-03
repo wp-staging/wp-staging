@@ -20,6 +20,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @since 1.0
  * @return void
 */
+
 function wpstg_clone_page() {
     ob_start();
 	?>
@@ -33,6 +34,7 @@ function wpstg_clone_page() {
                 <iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2Fwp-staging.com&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:300px; height:20px;" allowTransparency="true"></iframe>
                 <a class="twitter-follow-button" href="https://twitter.com/wp_staging" data-size="small" id="twitter-wjs">Follow @wp_staging</a>
             </div>
+            <?php do_action('wpstg_notifications');?>
             <?php if (is_multisite()) {
                 echo '<span class="wpstg-notice-alert" style="margin-top:20px;">' . __('Multisite is currently not supported! <a href="https://wp-staging.com/contact">Get in contact with us</a> and ask for it.', 'wpstg') . '</span>'; 
                 exit;
@@ -50,7 +52,13 @@ function wpstg_clone_page() {
 	<?php
         echo ob_get_clean();
 }
-// 1st step: Overview //////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * 1st step: Overview
+ * Renders the overview page content
+ * 
+ * @global type $wpstg_clone_details
+ */
 function wpstg_overview() {
 	global $wpstg_clone_details;
 	$wpstg_clone_details = wpstg_get_options();
@@ -85,7 +93,15 @@ function wpstg_overview() {
 }
 add_action('wp_ajax_overview', 'wpstg_overview');
 
-// 2nd step: Scanning //////////////////////////////////////////////////////////////////////////////////////////////////
+
+/**
+ * 2nd step: Scanning
+ * Collect database and file data for clong
+ * 
+ * @global type $wpdb
+ * @global type $wpstg_clone_details
+ * @global type $all_files
+ */
 function wpstg_scanning() {
 	global $wpdb, $wpstg_clone_details, $all_files;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
@@ -99,7 +115,7 @@ function wpstg_scanning() {
 	$wpstg_clone_details['total_size'] = 0;
 	unset($wpstg_clone_details['large_files']);
 	$folders = wpstg_scan_files(rtrim(get_home_path(), '/'));
-	$path = get_home_path() . '/wp-content/uploads/wp-staging/remaining_files.json';
+	$path = get_home_path() . 'wp-content/uploads/wp-staging/remaining_files.json';
 	file_put_contents($path, json_encode($all_files));
 
 	wpstg_save_options();
@@ -143,7 +159,12 @@ function wpstg_scanning() {
 }
 add_action('wp_ajax_scanning', 'wpstg_scanning');
 
-//Display db tables
+/**
+ * Display db tables
+ * 
+ * @global type $wpstg_clone_details
+ * @param type $tables
+ */
 function wpstg_show_tables($tables) {
 	global $wpstg_clone_details;
 
@@ -162,7 +183,17 @@ function wpstg_show_tables($tables) {
 	<?php }
 }
 
-//Scan all files and shape directory structure
+
+/**
+ * Scan all files and create directory structure
+ * 
+ * @global type $all_files
+ * @global type $wpstg_clone_details
+ * @global $wpstg_options $wpstg_options
+ * @param type $path
+ * @param type $folders
+ * @return type
+ */
 function wpstg_scan_files($path, &$folders = array()) {
 	global $all_files, $wpstg_clone_details, $wpstg_options;
 
@@ -193,6 +224,15 @@ function wpstg_scan_files($path, &$folders = array()) {
 	return $folders;
 }
 
+/**
+ * Get a list of all files which will be copied
+ * 
+ * @param string $folder
+ * @param array $files
+ * @param string $total_size
+ * @return array files
+ */
+
 function wpstg_get_files($folder, &$files = array(), &$total_size) {
 	if (! is_dir($folder))
 		return array();
@@ -206,7 +246,6 @@ function wpstg_get_files($folder, &$files = array(), &$total_size) {
 		} else
 			wpstg_get_files("$folder/$entry", $files, $total_size);
 	}
-
 	return $files;
 }
 
@@ -287,7 +326,7 @@ function wpstg_cloning() {
 	if (isset($_POST['uncheckedTables']))
 		$wpstg_clone_details['cloned_tables'] = array_merge($wpstg_clone_details['cloned_tables'], $_POST['uncheckedTables']);
 	if (isset($_POST['excludedFolders'])) {
-		$path = get_home_path() . '/wp-content/uploads/wp-staging/remaining_files.json';
+		$path = wpstg_get_upload_dir() . '/remaining_files.json';
 		$all_files = json_decode(file_get_contents($path), true);
 
 		$excluded_files = array();
@@ -420,6 +459,13 @@ function wpstg_clone_db() {
 }
 add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
 
+/**
+ * Copy all wordpress files into staging subfolder
+ * 
+ * @global $wpstg_clone_details
+ * @global $wpstg_options
+ * @global $batch
+ */
 function wpstg_copy_files() {
 	global $wpstg_clone_details, $wpstg_options, $batch;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
@@ -429,7 +475,7 @@ function wpstg_copy_files() {
 		wp_die(1);
 
 	$clone = get_home_path() . $wpstg_clone_details['current_clone'];
-	$path = get_home_path() . '/wp-content/uploads/wp-staging/remaining_files.json';
+	$path = wpstg_get_upload_dir() . '/remaining_files.json';
 	$files = json_decode(file_get_contents($path), true);
 	$start_index = isset($wpstg_clone_details['file_index']) ? $wpstg_clone_details['file_index'] : 0;
 	$wpstg_clone_details['files_progress'] = isset($wpstg_clone_details['files_progress']) ? $wpstg_clone_details['files_progress'] : 0;
@@ -506,6 +552,13 @@ function wpstg_copy_large_file($src, $dst, $batch) {
 	return true;
 }
 
+/**
+ * Replace all urls in data
+ * 
+ * @global type $wpdb
+ * @global type $wpstg_clone_details
+ */
+
 function wpstg_replace_links() {
 	global $wpdb, $wpstg_clone_details;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
@@ -559,12 +612,16 @@ function wpstg_replace_links() {
 
 	//replace $table_prefix in wp-config.php
 	if ($wpstg_clone_details['links_progress'] < 1) {
-		$config = file_get_contents(get_home_path() . '/' . $wpstg_clone_details['current_clone'] . '/wp-config.php');
-		if ($config) {
-			$config = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $config);
-			file_put_contents(get_home_path() . '/' . $wpstg_clone_details['current_clone'] . '/wp-config.php', $config);
+                $path = get_home_path() . '/' . $wpstg_clone_details['current_clone'] . '/wp-config.php';
+		$content = file_get_contents($path);
+		if ($content) {
+			$content = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $content);
+			if (FALSE === file_put_contents($path, $content) ){
+                            WPSTG()->logger->info($path . 'wp-config.php is not writeable');
+                            wp_die(.66);
+                        }
 		} else {
-			WPSTG()->logger->info('Editing wp-config.php has been failed.');
+			WPSTG()->logger->info($path . 'is not readable.');
 			wp_die(.66);
 		}
 	}
@@ -575,19 +632,37 @@ function wpstg_replace_links() {
 
 	wpstg_clear_options();
 
-	$path = get_home_path() . '/wp-content/uploads/wp-staging/remaining_files.json';
-	file_put_contents($path, '');
+	//$path = wpstg_get_upload_dir() . '/remaining_files.json';
+	//file_put_contents($path, '');
 
 	wp_die(1);
 }
 add_action('wp_ajax_replace_links', 'wpstg_replace_links');
 
+/**
+ * Clear all task related data in *.json files
+ * 
+ * @return void
+ */
 function wpstg_clear_options() {
-	$path = get_home_path() . '/wp-content/uploads/wp-staging/clone_details.json';
-	file_put_contents($path, '');
+	$path = wpstg_get_upload_dir() . '/clone_details.json';
+        if (wp_is_writable($path)) {
+            file_put_contents($path, '');
+        }
+        WPSTG()->logger->info(wpstg_get_upload_dir() . '/clone_details.json has been removed successfully');
+        
+        $path = wpstg_get_upload_dir() . '/remaining_files.json';
+        if (wp_is_writable($path)) {
+            file_put_contents($path, '');
+        }
+        WPSTG()->logger->info(wpstg_get_upload_dir() . '/remaining_files.json has been removed successfully');
 }
 
-// Remove clone ////////////////////////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////////////////////////
+/** Check the files before removing
+ * 
+ * @global type $wpdb
+ */
 function wpstg_preremove_clone() {
 	global $wpdb;
 
@@ -621,6 +696,13 @@ function wpstg_preremove_clone() {
 }
 add_action('wp_ajax_preremove', 'wpstg_preremove_clone');
 
+/**
+ * Check which folders will be removed
+ * 
+ * @param type $path
+ * @param type $folders
+ * @return type array of folder for removing
+ */
 function wpstg_check_removing_files($path, &$folders = array()) {
 	if (is_dir($path)) {
 		$dir = dir($path);
@@ -634,6 +716,13 @@ function wpstg_check_removing_files($path, &$folders = array()) {
 	return $folders;
 }
 
+/**
+ * Removes current clone
+ * 
+ * @global type $wpdb
+ * @global type $wpstg_clone_details
+ * @param type $isAjax
+ */
 function wpstg_remove_clone($isAjax = true) {
 	global $wpdb, $wpstg_clone_details;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
@@ -657,16 +746,17 @@ function wpstg_remove_clone($isAjax = true) {
 			WPSTG()->logger->info('Droping table ' . $table . ' has been failed.');
 			wp_die(-1);
 		}
+                WPSTG()->logger->info('Droping table ' . $table . ' was successfull');
 	}
 
 	//remove clone folder
 	$excluded_folders = isset($_POST['excludedFolders']) ? $_POST['excludedFolders'] : array();
 	$result = deleteDirectory(get_home_path() . $clone, $excluded_folders);
 	if (! $result) {
-		WPSTG()->logger->info('Removing clone folder has been failed.');
+		WPSTG()->logger->info('Removing clone folder '.get_home_path() . $clone.' has been failed.');
 		wp_die(-1);
 	}
-
+        WPSTG()->logger->info('Clone folder '.get_home_path() . $clone.' has been removed successfully.');
 	//$existing_clones = get_option('wpstg_existing_clones', array());
         $existing_clones = get_option('wpstg_existing_clones');
 	$key = array_search($clone, $existing_clones);
@@ -683,6 +773,15 @@ function wpstg_remove_clone($isAjax = true) {
 }
 add_action('wp_ajax_remove_clone', 'wpstg_remove_clone');
 
+
+
+/**
+ * Delete a specific directory
+ * 
+ * @param type $dir
+ * @param type $excluded_dirs
+ * @return boolean
+ */
 function deleteDirectory($dir, $excluded_dirs) {
 	if (!file_exists($dir))
 		return true;
@@ -708,6 +807,12 @@ function deleteDirectory($dir, $excluded_dirs) {
 	return $need_rm ? rmdir($dir) : true;
 }
 
+/* Cancel cloning process
+ * Remove current clone and purge json files containing task related data
+ * 
+ * @return void
+ */
+
 function wpstg_cancel_cloning() {
 	wpstg_remove_clone(false);
 	wpstg_clear_options();
@@ -715,29 +820,41 @@ function wpstg_cancel_cloning() {
 }
 add_action('wp_ajax_cancel_cloning', 'wpstg_cancel_cloning');
 
-/* Check if table name starts with prefix which belongs to the wordpress root table
+
+/**
+ * Check if table name starts with prefix which belongs to the wordpress root table
  * 
- * @param1 string haystack
- * @param1 string needle
+ * @param string $haystack
+ * @param string $needle
  * @return bool true if table name starts with prefix of the root table
  */
-
 function wpstg_is_root_table($haystack, $needle) {
     return strpos($haystack, $needle) === 0;
 }
 
+/* Get global clone details options
+ * 
+ * @return string JSON that includes the cloning relevant data
+ */
 function wpstg_get_options() {
-	$path = get_home_path() . '/wp-content/uploads/wp-staging/clone_details.json';
-	$content = file_get_contents($path);
-	return json_decode($content, true);
+    $path = wpstg_get_upload_dir() . '/clone_details.json';
+    $content = file_get_contents($path);
+    return json_decode($content, true);
+
 }
 
+/* Save global clone details options
+ * 
+ * @return void
+ */
 function wpstg_save_options() {
 	global $wpstg_clone_details;
-
-	$path = get_home_path() . '/wp-content/uploads/wp-staging/clone_details.json';
-	file_put_contents($path, json_encode($wpstg_clone_details));
+        $path = wpstg_get_upload_dir() . '/clone_details.json';
+        if (wp_is_writable($path)) {
+            file_put_contents($path, json_encode($wpstg_clone_details));
+        }
 }
+
 
 function wpstg_error_processing() {
 	$msg = sanitize_text_field($_POST['wpstg_error_msg']);

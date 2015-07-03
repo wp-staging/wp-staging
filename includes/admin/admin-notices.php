@@ -21,8 +21,25 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function wpstg_admin_messages() {
 	global $wpstg_options;
+
+        if ( !wp_is_writable( wpstg_get_upload_dir() ) ){
+            echo '<div class="error">';
+			echo '<p><strong>WP-Staging File Permission error: </strong>' . wpstg_get_upload_dir() . ' is not writable. <br> Check if the folder '.wpstg_get_upload_dir().' exists! File permissions should be chmod 777.</p>';
+		echo '</div>';
+        }
+        /*if( ! wpstg_htaccess_exists() && ! get_user_meta( get_current_user_id(), '_wpstg_htaccess_missing_dismissed', true ) && current_user_can( 'manage_options' ) ) {
+        if( ! stristr( $_SERVER['SERVER_SOFTWARE'], 'apache' ) )
+            //return; // Bail if we aren't using Apache... nginx doesn't use htaccess!
+
+		echo '<div class="error">';
+			echo '<p>' . sprintf( __( 'The WP-Staging .htaccess file is missing from <strong>%s</strong>!', 'wpstg' ), wpstg_get_upload_dir() ) . '</p>';
+			echo '<p>' . sprintf( __( 'First, please resave the WP-Staging settings tab a few times. If this warning continues to appear, create a file called ".htaccess" in the <strong>%s</strong> directory, and copy the following into it:', 'wpstg' ), wpstg_get_upload_dir() ) . '</p>';
+			echo '<p><pre>' . wpstg_get_htaccess_rules() . '</pre>';
+			echo '<p><a href="' . add_query_arg( array( 'wpstg_action' => 'dismiss_notices', 'wpstg_notice' => 'htaccess_missing' ) ) . '">' . __( 'Dismiss Notice', 'wpstg' ) . '</a></p>';
+		echo '</div>';
+	}*/
         
-        $install_date = get_option('wpstg_installDate');
+        /*$install_date = get_option('wpstg_installDate');
         $display_date = date('Y-m-d h:i:s');
 	$datetime1 = new DateTime($install_date);
 	$datetime2 = new DateTime($display_date);
@@ -62,9 +79,9 @@ function wpstg_admin_messages() {
     });
     </script>
     ';
-    }
+    }*/
 }
-//add_action( 'admin_notices', 'wpstg_admin_messages' );
+add_action( 'admin_notices', 'wpstg_admin_messages' );
 
 /* Hide the rating div
  * 
@@ -102,16 +119,21 @@ function wpstg_admin_addons_notices() {
 */
 function wpstg_dismiss_notices() {
 
+	if( ! is_user_logged_in() ) {
+		return;
+	}
+
 	$notice = isset( $_GET['wpstg_notice'] ) ? $_GET['wpstg_notice'] : false;
+
 	if( ! $notice )
 		return; // No notice, so get out of here
 
 	update_user_meta( get_current_user_id(), '_wpstg_' . $notice . '_dismissed', 1 );
-      
-	wp_redirect( esc_url(remove_query_arg( array( 'wpstg_action', 'wpstg_notice' ) ) ) ); exit;
+	wp_redirect( remove_query_arg( array( 'wpstg_action', 'wpstg_notice' ) ) ); exit;
 
 }
 add_action( 'wpstg_dismiss_notices', 'wpstg_dismiss_notices' );
+
 
 /*
  * Show big colored update information below the official update notification in /wp-admin/plugins
