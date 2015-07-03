@@ -191,7 +191,7 @@ function wpstg_show_tables($tables) {
  * @global type $wpstg_clone_details
  * @global $wpstg_options $wpstg_options
  * @param type $path
- * @param type $folders
+ * @param array $folders
  * @return type
  */
 function wpstg_scan_files($path, &$folders = array()) {
@@ -249,11 +249,23 @@ function wpstg_get_files($folder, &$files = array(), &$total_size) {
 	return $files;
 }
 
-//Display directory structure
+/**
+ * Display directory structure with checkboxes
+ * 
+ * @param array $folders list of folder names
+ * @param string $path base path for the directory structure
+ * @param string $not_checked checkbox value
+ * @param string $is_removing
+ */
 function wpstg_directory_structure($folders, $path = null, $not_checked = false, $is_removing = false) {
 	$existing_clones = get_option('wpstg_existing_clones', array());
 	$path = $path === null ? rtrim(get_home_path(), '/') : $path;
-	$size = array_pop($folders);
+        /* Bug: array pop is taking and removing the last element from the array so the array gets empty and returns NULL. Can be seen on pre removal files tab
+         * Took me an hour to find this bug:-)
+           @todo This must be tested and fixed. Maybe you can use $size = end(array_values($folders));
+         */
+	//$size = array_pop($folders);
+
 	foreach ($folders as $name => $folder) {
 		if ($is_removing)
 			$tmp = false;
@@ -272,6 +284,12 @@ function wpstg_directory_structure($folders, $path = null, $not_checked = false,
 	<?php }
 }
 
+/**
+ * Convert byte into human readable numbers
+ * 
+ * @param integer $size
+ * @return string
+ */
 function wpstg_shot_size($size) {
 	if (1 < $out = $size / 1000000000)
 		return round($out, 2) . ' Gb';
@@ -672,6 +690,7 @@ function wpstg_preremove_clone() {
 
 	$path = get_home_path() . $clone;
 	$folders[$clone] = wpstg_check_removing_files($path);
+        //$folders = wpstg_scan_files(rtrim(get_home_path(), '/'));
 	?>
 	<h4 class="wpstg-notice-alert"><?php echo __('Attention: Check carefully if this DB tables and files are safe to delete for the staging site <span style="background-color:#575757;color:#fff;">','wpstg') . $clone . '</span> Usually the preselected data can be deleted without any risk, but in case something goes wrong you better check it.'; ?> 
         </h4>
@@ -685,8 +704,9 @@ function wpstg_preremove_clone() {
 		</div> <!-- #wpstg-scanning-db -->
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
 			<?php 
-                        echo '<h4 style="margin:0px;">' . __('Unselect the folders to be excluded from removing. Click on the folder name to expand it:', 'wpstg') . '<h4>';
-                        wpstg_directory_structure($folders, $path, false, true); ?>
+                        echo '<h4 style="margin:0px;">' . __('Unselect the folders to exclude them from removing. You can click on a folder name to expand it:', 'wpstg') . '<h4>';
+                        wpstg_directory_structure($folders, $path, false, true); 
+                        ?>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>
 	<a href="#" class="wpstg-link-btn" id="wpstg-cancel-removing">Cancel</a>
@@ -697,20 +717,21 @@ function wpstg_preremove_clone() {
 add_action('wp_ajax_preremove', 'wpstg_preremove_clone');
 
 /**
- * Check which folders will be removed
+ * Check the folders for removing
  * 
- * @param type $path
- * @param type $folders
+ * @param string $path
+ * @param array $folders
  * @return type array of folder for removing
  */
 function wpstg_check_removing_files($path, &$folders = array()) {
 	if (is_dir($path)) {
 		$dir = dir($path);
 		while (false !== $entry = $dir->read()) {
-			if ($entry == '.' || $entry == '..' || is_file("$path/$entry"))
+			if ($entry == '.' || $entry == '..' || is_file($path . '/' . $entry))
 				continue;
-
-			wpstg_check_removing_files("$path/$entry", $folders[$entry]);
+   
+			wpstg_check_removing_files($path . '/' . $entry, $folders[$entry]);
+                                                                 
 		}
 	}
 	return $folders;
@@ -721,7 +742,7 @@ function wpstg_check_removing_files($path, &$folders = array()) {
  * 
  * @global type $wpdb
  * @global type $wpstg_clone_details
- * @param type $isAjax
+ * @param string $isAjax
  */
 function wpstg_remove_clone($isAjax = true) {
 	global $wpdb, $wpstg_clone_details;
@@ -778,8 +799,8 @@ add_action('wp_ajax_remove_clone', 'wpstg_remove_clone');
 /**
  * Delete a specific directory
  * 
- * @param type $dir
- * @param type $excluded_dirs
+ * @param array $dir
+ * @param array $excluded_dirs
  * @return boolean
  */
 function deleteDirectory($dir, $excluded_dirs) {
