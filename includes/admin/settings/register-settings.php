@@ -45,11 +45,11 @@ function wpstg_get_settings() {
 		$general_settings = is_array( get_option( 'wpstg_settings_general' ) )    ? get_option( 'wpstg_settings_general' )  	: array();
                 //$misc_settings = is_array( get_option( 'wpstg_settings_misc' ) )   ? get_option( 'wpstg_settings_misc' )   : array();
                 //$networks = is_array( get_option( 'wpstg_settings_networks' ) )   ? get_option( 'wpstg_settings_networks' )   : array();
-		//$ext_settings     = is_array( get_option( 'wpstg_settings_extensions' ) ) ? get_option( 'wpstg_settings_extensions' )	: array();
-		//$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
+		$ext_settings     = is_array( get_option( 'wpstg_settings_extensions' ) ) ? get_option( 'wpstg_settings_extensions' )	: array();
+		$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
                 //$addons_settings = is_array( get_option( 'wpstg_settings_addons' ) )   ? get_option( 'wpstg_settings_addons' )   : array();
                 
-		$settings = array_merge( $general_settings, $misc_settings);//, $networks, $ext_settings, $license_settings, $addons_settings);
+		$settings = array_merge( $general_settings, $ext_settings, $license_settings);//, $networks, $ext_settings, $license_settings, $addons_settings);
 
 		update_option( 'wpstg_settings', $settings);
 	}
@@ -284,11 +284,11 @@ function wpstg_get_settings_tabs() {
 	}  
         
 	if( ! empty( $settings['extensions'] ) ) {
-		//$tabs['extensions'] = __( 'Extensions', 'wpstg' );
+		$tabs['extensions'] = __( 'Extensions', 'wpstg' );
 	}
 	
 	if( ! empty( $settings['licenses'] ) ) {
-		//$tabs['licenses'] = __( 'Licenses', 'wpstg' );
+		$tabs['licenses'] = __( 'Licenses', 'wpstg' );
 	}
         //$tabs['addons'] = __( 'Add-Ons', 'wpstg' );
 

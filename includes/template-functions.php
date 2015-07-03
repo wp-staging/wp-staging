@@ -44,7 +44,10 @@ function wpstg_clone_page() {
                         <li><span href="#" id="wpstg-loader" style="display:none;"></span></li>
 		</ul> <!-- #wpstg-steps -->
 		<div id="wpstg-workflow">
-			<?php echo wpstg_overview(); ?>
+			<?php 
+                        echo wpstg_overview(); 
+                        
+                        ?>
 		</div> <!-- #wpstg-workflow -->
 	</div> <!-- #wpstg-clonepage-wrapper -->
 	<?php
