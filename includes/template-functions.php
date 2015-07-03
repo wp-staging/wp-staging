@@ -125,16 +125,16 @@ function wpstg_scanning() {
 		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files"><?php echo __('Files', 'wpstg'); ?></a></a>
 		<div class="wpstg-tab-section" id="wpstg-scanning-db">
 			<?php 
-                        echo '<h4 style="margin:0px;">' . __('Select the tables to be copied. Greyed out tables are already copied in previous steps and the copying will continous from this step:', 'wpstg') . '<h4>';
-                        wpstg_show_tables($tables); ?>
+				echo '<h4 style="margin:0px;">' . __('Select the tables to be copied. Greyed out tables are already copied in previous steps and the copying will continous from this step:', 'wpstg') . '<h4>';
+				wpstg_show_tables($tables); ?>
 		</div> <!-- #wpstg-scanning-db -->
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
-                    
+
 			<?php
-                        echo '<h4 style="margin:0px;">' . __('Select the folders to be copied:', 'wpstg') . '<h4>';
-                        wpstg_directory_structure($folders);
-                        wpstg_show_large_files();
-                        ?>
+				echo '<h4 style="margin:0px;">' . __('Select the folders to be copied:', 'wpstg') . '<h4>';
+				wpstg_directory_structure($folders);
+				wpstg_show_large_files();
+			?>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>
 	<a href="#" class="wpstg-prev-step-link wpstg-link-btn">Back</a>
@@ -173,18 +173,22 @@ function wpstg_scan_files($path, &$folders = array()) {
 
 	if (is_dir($path)) {
 		$dir = dir($path);
+		$dirsize = 0;
 		while (false !== $entry = $dir->read()) {
 			if ($entry == '.' || $entry == '..' || $entry == $clone)
 				continue;
 			if (is_file("$path/$entry")) {
 				$all_files[] = "$path/$entry";
+				$dirsize += filesize("$path/$entry");
 				if ($batch_size < $size = filesize("$path/$entry"))
 					$wpstg_clone_details['large_files'][] = "$path/$entry";
 				$wpstg_clone_details['total_size'] += $size;
 				continue;
 			}
-			wpstg_scan_files("$path/$entry", $folders[$entry]);
+			$tmp = wpstg_scan_files("$path/$entry", $folders[$entry]);
+			$dirsize += $tmp['size'];
 		}
+		$folders['size'] = $dirsize;
 	}
 	return $folders;
 }
@@ -210,8 +214,8 @@ function wpstg_get_files($folder, &$files = array(), &$total_size) {
 function wpstg_directory_structure($folders, $path = null, $not_checked = false, $is_removing = false) {
 	$existing_clones = get_option('wpstg_existing_clones', array());
 	$path = $path === null ? rtrim(get_home_path(), '/') : $path;
+	$size = array_pop($folders);
 	foreach ($folders as $name => $folder) {
-		$dir_size = wpstg_dir_size("$path/$name");
 		if ($is_removing)
 			$tmp = false;
 		else
@@ -219,26 +223,14 @@ function wpstg_directory_structure($folders, $path = null, $not_checked = false,
 		<div class="wpstg-dir">
 			<input type="checkbox" class="wpstg-check-dir" <?php echo $tmp ? '' : 'checked'; ?> name="<?php echo "$path/$name"; ?>">
 			<a href="#" class="wpstg-expand-dirs <?php echo $tmp ? 'disabled' : ''; ?>"><?php echo $name;?></a>
-			<span class="wpstg-size-info"><?php echo wpstg_shot_size($dir_size); ?></span>
-				<?php if (!empty ($folder)) : ?>
+			<span class="wpstg-size-info"><?php echo wpstg_shot_size($size); ?></span>
+				<?php if (!empty($folder)) : ?>
 					<div class="wpstg-dir wpstg-subdir">
 						<?php wpstg_directory_structure($folder, "$path/$name", $tmp, $is_removing); ?>
 					</div>
 				<?php endif; ?>
 		</div>
 	<?php }
-}
-
-//Get direstory size
-function wpstg_dir_size($path) {
-	if (! file_exists($path)) return 0;
-	if (is_file($path))
-		return filesize($path);
-
-	$size = 0;
-	foreach(glob($path . '/*') as $fn)
-		$size += wpstg_dir_size($fn);
-	return $size;
 }
 
 function wpstg_shot_size($size) {
