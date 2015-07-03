@@ -210,6 +210,22 @@ color:#777777;
 	color: #eee;
 }
 
+.wpstg-clone {
+	border: 3px solid #ccc;
+	margin-bottom: 5px;
+	padding: 5px 10px;
+	width: 300px;
+	position: relative;
+}
+
+.wpstg-remove-clone {
+	color: #bbb;
+	font-size: 26px;
+	font-weight: bold;
+	float: right;
+	text-decoration: none;
+}
+
 .wpstg-link-btn {
 	background: #45a1c9;
 	color: #fff;

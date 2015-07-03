@@ -71,7 +71,7 @@ function wpstg_overview() {
 			<?php foreach ($existing_clones as $clone) : ?>
 				<div class="wpstg-clone" id="<?php echo $clone; ?>">
 					<a href="<?php echo get_home_url() . "/$clone/wp-admin"; ?>" target="_blank"><?php echo $clone; ?></a>
-					<a href="#" class="wpstg-remove-clone" data-clone="<?php echo $clone; ?>">remove</a>
+					<a href="#" class="wpstg-remove-clone" data-clone="<?php echo $clone; ?>">&times;</a>
 				</div> <!-- .wpstg-clone -->
 			<?php endforeach; ?>
 		<?php endif; ?>
