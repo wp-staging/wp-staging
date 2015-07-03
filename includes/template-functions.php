@@ -44,10 +44,7 @@ function wpstg_clone_page() {
                         <li><span href="#" id="wpstg-loader" style="display:none;"></span></li>
 		</ul> <!-- #wpstg-steps -->
 		<div id="wpstg-workflow">
-			<?php 
-                        echo wpstg_overview(); 
-                        
-                        ?>
+			<?php echo wpstg_overview(false); ?>
 		</div> <!-- #wpstg-workflow -->
 	</div> <!-- #wpstg-clonepage-wrapper -->
 	<?php
@@ -83,9 +80,8 @@ function wpstg_overview() {
 
 	</div> <!-- #wpstg-removing-clone -->
 	<?php
-        // If wp_die() is defined here wordpress is only rendered partly.E.g admin_footer is missing. This could lead to unexpected issues. 
-        // But it is said that wp_ajax needs wp_die() so this must be tested more! 
-	//wp_die();
+	if (check_ajax_referer('wpstg_ajax_nonce', 'nonce', false))
+		wp_die();
 }
 add_action('wp_ajax_overview', 'wpstg_overview');
 
@@ -159,8 +155,8 @@ function wpstg_show_tables($tables) {
 				<input type="checkbox" checked name="<?php echo $table->Name; ?>" <?php echo in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
 				<?php echo $table->Name; ?>
 			</label>
-			<span class="wpstg-table-info">
-				Size: <?php echo $table->Data_length + $table->Index_length; ?> bytes
+			<span class="wpstg-size-info">
+				<?php echo wpstg_shot_size($table->Data_length + $table->Index_length); ?>
 			</span>
 		</div>
 	<?php }
@@ -215,6 +211,7 @@ function wpstg_directory_structure($folders, $path = null, $not_checked = false,
 	$existing_clones = get_option('wpstg_existing_clones', array());
 	$path = $path === null ? rtrim(get_home_path(), '/') : $path;
 	foreach ($folders as $name => $folder) {
+		$dir_size = wpstg_dir_size("$path/$name");
 		if ($is_removing)
 			$tmp = false;
 		else
@@ -222,6 +219,7 @@ function wpstg_directory_structure($folders, $path = null, $not_checked = false,
 		<div class="wpstg-dir">
 			<input type="checkbox" class="wpstg-check-dir" <?php echo $tmp ? '' : 'checked'; ?> name="<?php echo "$path/$name"; ?>">
 			<a href="#" class="wpstg-expand-dirs <?php echo $tmp ? 'disabled' : ''; ?>"><?php echo $name;?></a>
+			<span class="wpstg-size-info"><?php echo wpstg_shot_size($dir_size); ?></span>
 				<?php if (!empty ($folder)) : ?>
 					<div class="wpstg-dir wpstg-subdir">
 						<?php wpstg_directory_structure($folder, "$path/$name", $tmp, $is_removing); ?>
@@ -229,6 +227,28 @@ function wpstg_directory_structure($folders, $path = null, $not_checked = false,
 				<?php endif; ?>
 		</div>
 	<?php }
+}
+
+//Get direstory size
+function wpstg_dir_size($path) {
+	if (! file_exists($path)) return 0;
+	if (is_file($path))
+		return filesize($path);
+
+	$size = 0;
+	foreach(glob($path . '/*') as $fn)
+		$size += wpstg_dir_size($fn);
+	return $size;
+}
+
+function wpstg_shot_size($size) {
+	if (1 < $out = $size / 1000000000)
+		return round($out, 2) . ' Gb';
+	else if (1 < $out = $size / 1000000)
+		return round($out, 2) . ' Mb';
+	else if (1 < $out = $size / 1000)
+		return round($out, 2) . ' Kb';
+	return $size . ' bytes';
 }
 
 //Display list of large files
@@ -313,6 +333,7 @@ function wpstg_cloning() {
 	<a href="<?php echo get_home_url();?>" id="wpstg-clone-url" target="_blank"></a>
 	<a href="#" id="wpstg-cancel-cloning" class="wpstg-link-btn"><?php echo __('Cancel', 'wpstg');?></a>
 	<a href="#" id="wpstg-home-link" class="wpstg-link-btn"><?php echo __('Home', 'wpstg');?></a>
+	<a href="#" id="wpstg-try-again" class="wpstg-link-btn"><?php echo __('Try Again', 'wpstg');?></a>
 	<?php
 	wp_die();
 }
@@ -491,26 +512,6 @@ function wpstg_copy_large_file($src, $dst, $batch) {
 	fclose($fout);
 
 	return true;
-}
-
-function wpstg_check_files_progress() {
-	global $wpstg_clone_details;
-	$wpstg_clone_details = wpstg_get_options();
-
-	$clone_size = get_wp_size(get_home_path() . $wpstg_clone_details['current_clone']);
-	wp_die(round($clone_size / $wpstg_clone_details['total_size'], 2));
-}
-add_action('wp_ajax_check_files_progress', 'wpstg_check_files_progress');
-
-function get_wp_size($path) {
-	if (! file_exists($path)) return 0;
-	if (is_file($path))
-		return filesize($path);
-
-	$size = 0;
-	foreach(glob($path . '/*') as $fn)
-		$size += get_wp_size($fn);
-	return $size;
 }
 
 function wpstg_replace_links() {
@@ -745,3 +746,10 @@ function wpstg_save_options() {
 	$path = WPSTG_PLUGIN_DIR . 'temp/clone_details.json';
 	file_put_contents($path, json_encode($wpstg_clone_details));
 }
+
+function wpstg_error_processing() {
+	$msg = sanitize_text_field($_POST['wpstg_error_msg']);
+	WPSTG()->logger->info($msg);
+	wp_die();
+}
+add_action('wp_ajax_error_processing', 'wpstg_error_processing');
