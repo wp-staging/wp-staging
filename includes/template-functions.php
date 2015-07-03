@@ -753,3 +753,4 @@ function wpstg_error_processing() {
 	wp_die();
 }
 add_action('wp_ajax_error_processing', 'wpstg_error_processing');
+add_action('wp_ajax_error_processing', 'wpstg_error_processing');
