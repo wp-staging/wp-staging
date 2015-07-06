@@ -20,8 +20,8 @@ class wpstgLogger {
 	{
 		$this->file = $file;
 		$this->level = $level;
-		$this->path = WPSTG_PLUGIN_DIR . "logs/$this->file";
-                $this->folder = WPSTG_PLUGIN_DIR . "logs";
+		$this->path = str_replace('\\', '/', WPSTG_PLUGIN_DIR . "logs/$this->file");
+                $this->folder = str_replace('\\', '/', WPSTG_PLUGIN_DIR . "logs");
 		$this->start();
 	}
 	
@@ -87,8 +87,8 @@ class wpstgLogger {
 	private function start()
 	{
           global $wpstg_options;  
-          $enabled = isset($wpstg_options['debug_mode']) ? $wpstg_options['debug_mode'] : false;
-          if ($enabled)
+          //$enabled = isset($wpstg_options['debug_mode']) ? $wpstg_options['debug_mode'] : false;
+          //if ($enabled)
             return $this->open();
           
           return false;
