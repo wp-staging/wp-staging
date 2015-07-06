@@ -117,8 +117,9 @@ function wpstg_scanning() {
 	$folders = wpstg_scan_files(rtrim(get_home_path(), '/'));
 	array_pop($folders);
 
-	$path = get_home_path() . 'wp-content/uploads/wp-staging/remaining_files.json';
-	file_put_contents($path, json_encode($all_files));
+	$path = wpstg_get_upload_dir() . '/remaining_files.json';
+	//file_put_contents($path, json_encode($all_files, JSON_FORCE_OBJECT));
+        file_put_contents($path, json_encode($all_files));
 
 	wpstg_save_options();
 
@@ -348,10 +349,11 @@ function wpstg_cloning() {
 		$excluded_files = array();
 		foreach ($_POST['excludedFolders'] as $folder) {
 			$tmp_array = array();
-			$excluded_files = array_merge($excluded_files, wpstg_get_files($folder, $tmp_array, $wpstg_clone_details['total_size']));
+			$excluded_files = array_merge($excluded_files, wpstg_get_files($folder, $tmp_array, $wpstg_clone_details['total_size']));    
 		}
 		$remaining_files = array_diff($all_files, $excluded_files);
 		file_put_contents($path, json_encode(array_values($remaining_files)));
+                
 	}
 
 
@@ -503,24 +505,26 @@ function wpstg_copy_files() {
 		mkdir($clone);
 
 	for ($i = $start_index; $i < count($files); $i++) {
-		$new_file = wpstg_create_directories($files[$i], get_home_path(), $clone);
+                $new_file = wpstg_create_directories($files[$i], get_home_path(), $clone);
 		$size = filesize($files[$i]);
-
 		if ($size > $batch_size) {
-			if (wpstg_copy_large_file($files[$i], $new_file, $batch_size)) {
+                            if (wpstg_copy_large_file($files[$i], $new_file, $batch_size)) {
 				$wpstg_clone_details['file_index'] = ++$i;
 				$part = ($batch + $size) / $wpstg_clone_details['total_size'];
 				$wpstg_clone_details['files_progress'] += round($part, 2);
 				wpstg_save_options();
 				wp_die($wpstg_clone_details['files_progress']);
 			} else {
-				WPSTG()->logger->info('Coping LARGE file has been failed: ' . $files[$i]);
+				WPSTG()->logger->info('Coping LARGE file has been failed: ' . $files[$i]);                               
 				wp_die(-1);
 			}
 		}
 		if ($batch_size > $batch + $size) {
 			if (copy($files[$i], $new_file)) {
 				$batch += $size;
+                                if ($i > 2100){
+                                WPSTG()->logger->info('Copy file line ' . $i . ': ' . $files[$i]);
+                                }
 			} else {
 				WPSTG()->logger->info('Coping file has been failed: ' . $files[$i]);
 				wp_die(-1);
@@ -541,6 +545,18 @@ function wpstg_copy_files() {
 }
 add_action('wp_ajax_copy_files', 'wpstg_copy_files');
 
+
+/**
+ * Create target directory for copy process and returns path to the copied file
+ * 
+ * @param string $file Source file including full path e.g. var/www/htdocs/mainsite/index.php
+ * @param string $home Root path of the main wordpress installation e.g. var/www/htdocs/mainsite/
+ * @param string $clone path of the clone e.g. var/www/htdocs/mainsite/myclone/
+ * 
+ * @return string full target path e.g. var/www/htdocs/mainsite/myclone/wp-content/
+ * 
+ * 
+ */
 function wpstg_create_directories($file, $home, $clone) {
 	$path = substr($file, strlen($home));
 	$folders = explode('/', $path);
@@ -628,15 +644,15 @@ function wpstg_replace_links() {
 
 	//replace $table_prefix in wp-config.php
 	if ($wpstg_clone_details['links_progress'] < 1) {
-				$path = get_home_path() . '/' . $wpstg_clone_details['current_clone'] . '/wp-config.php';
+	        $path = get_home_path() . '/' . $wpstg_clone_details['current_clone'] . '/wp-config.php';
 		$content = file_get_contents($path);
 		if ($content) {
 			$content = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $content);
-			if (FALSE === file_put_contents($path, $content) ){
-							WPSTG()->logger->info($path . 'wp-config.php is not writeable');
-							wp_die(.66);
-						}
-		} else {
+			if (FALSE === file_put_contents($path, $content)) {
+                            WPSTG()->logger->info($path . 'wp-config.php is not writeable');
+                            wp_die(.66);
+                        }
+        } else {
 			WPSTG()->logger->info($path . 'is not readable.');
 			wp_die(.66);
 		}
@@ -648,8 +664,6 @@ function wpstg_replace_links() {
 
 	wpstg_clear_options();
 
-	//$path = wpstg_get_upload_dir() . '/remaining_files.json';
-	//file_put_contents($path, '');
 
 	wp_die(1);
 }
@@ -665,13 +679,13 @@ function wpstg_clear_options() {
 		if (wp_is_writable($path)) {
 			file_put_contents($path, '');
 		}
-		WPSTG()->logger->info(wpstg_get_upload_dir() . '/clone_details.json has been removed successfully');
+		WPSTG()->logger->info(wpstg_get_upload_dir() . '/clone_details.json has been purged successfully');
 		
 		$path = wpstg_get_upload_dir() . '/remaining_files.json';
 		if (wp_is_writable($path)) {
 			file_put_contents($path, '');
 		}
-		WPSTG()->logger->info(wpstg_get_upload_dir() . '/remaining_files.json has been removed successfully');
+		WPSTG()->logger->info(wpstg_get_upload_dir() . '/remaining_files.json has been purged successfully');
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
