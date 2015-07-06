@@ -23,10 +23,6 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 function wpstg_clone_page() {
 	ob_start();
-
-	echo '<pre>';
-	print_r(WPSTG()->logger);
-	echo '</pre>';
 	?>
 	<div id="wpstg-clonepage-wrapper">
 			<h1 class="wp-staginglogo"> <?php echo __('Welcome to WP-Staging ', 'wpstg') . WPSTG_VERSION; ?></h1>
@@ -699,14 +695,15 @@ function wpstg_preremove_clone() {
 		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db"><?php echo __('DB tables to remove', 'wpstg');?></a>
 		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files"><?php echo __('Files to remove', 'wpstg');?></a>
 		<div class="wpstg-tab-section" id="wpstg-scanning-db">
-					<?php  echo '<h4 style="margin:0px;">' . __('Unselect the tables for not beeing copied:', 'wpstg') . '<h4>';
-							wpstg_show_tables($tables);
-					?>
+			<?php
+				echo '<h4 style="margin:0px;">' . __('Unselect the tables for not beeing copied:', 'wpstg') . '<h4>';
+				wpstg_show_tables($tables);
+			?>
 		</div> <!-- #wpstg-scanning-db -->
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
-			<?php 
+			<?php
 				echo '<h4 style="margin:0px;">' . __('Unselect the folders to exclude them from removing. You can click on a folder name to expand it:', 'wpstg') . '<h4>';
-				wpstg_directory_structure($folders, $path, false, true); 
+				wpstg_directory_structure($folders, null, false, true); 
 			?>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>
