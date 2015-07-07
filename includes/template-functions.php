@@ -447,14 +447,14 @@ function wpstg_clone_db() {
 					$wpstg_clone_details['cloned_tables'][] = $table;
 					$all_tables_count = count($wpstg_clone_details['all_tables']);
 					$cloned_tables_count = count($wpstg_clone_details['cloned_tables']);
-					$wpstg_clone_details['db_progress'] = round($cloned_tables_count / $all_tables_count, 2);
+					$wpstg_clone_details['db_progress'] = $cloned_tables_count / $all_tables_count;
 					unset($wpstg_clone_details['current_table']);
 					wpstg_save_options();
 				}
 				if ($rows_count > $limit) {
 					$all_tables_count = count($wpstg_clone_details['all_tables']);
 					$cloned_tables_count = count($wpstg_clone_details['cloned_tables']);
-					$wpstg_clone_details['db_progress'] = round($cloned_tables_count / $all_tables_count, 2);
+					$wpstg_clone_details['db_progress'] = $cloned_tables_count / $all_tables_count;
 					wpstg_save_options();
 					WPSTG()->logger->info('Query limit is exceeded. Current Table: ' . $table);
 					wp_die($wpstg_clone_details['db_progress']);
@@ -487,9 +487,6 @@ function wpstg_copy_files() {
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$wpstg_clone_details = wpstg_get_options();
 
-//	if (isset($wpstg_clone_details['files_progress']) && $wpstg_clone_details['files_progress'] >= 1)
-//		wp_die(1);
-
 	$clone = get_home_path() . $wpstg_clone_details['current_clone'];
 	$path = wpstg_get_upload_dir() . '/remaining_files.json';
 	$files = json_decode(file_get_contents($path), true);
@@ -507,7 +504,7 @@ function wpstg_copy_files() {
 		$size = filesize($files[$i]);
 		if ($size > $batch_size) {
 			if (wpstg_copy_large_file($files[$i], $new_file, $batch_size)) {
-				WPSTG()->logger->info('Start index: ' . $start_index . '. Current index: ' . $i . '. Copy LARGE file: ' . $files[$i] . '.Batch size: ' . ($batch + $size));
+				WPSTG()->logger->info('Copy LARGE file: ' . $files[$i] . '. Batch size: ' . wpstg_short_size($batch + $size) . ' (' . ($batch + $size) . ' bytes)');
 				$wpstg_clone_details['file_index'] = $i + 1;
 				$part = ($batch + $size) / $wpstg_clone_details['total_size'];
 				$wpstg_clone_details['files_progress'] += $part;
@@ -534,7 +531,7 @@ function wpstg_copy_files() {
 				wp_die(-1);
 			}
 		} else {
-			WPSTG()->logger->info('Start index: ' . $start_index . '. Current index: ' . $i . '. Batch size: ' . $batch . '. Current File: ' . $files[$i]);
+			WPSTG()->logger->info('Batch size: ' . wpstg_short_size($batch) . ' (' . $batch . ' bytes)' . '. Current File: ' . $files[$i]);
 			$wpstg_clone_details['file_index'] = $i;
 			$part = $batch / $wpstg_clone_details['total_size'];
 			$wpstg_clone_details['files_progress'] += $part;
