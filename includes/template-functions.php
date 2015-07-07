@@ -504,6 +504,9 @@ function wpstg_copy_files() {
 	if (!is_dir($clone))
 		mkdir($clone);
 
+            /*var_dump($files);
+            echo "count files: " . count($files);
+            wp_die();*/
 	for ($i = $start_index; $i < count($files); $i++) {
                 $new_file = wpstg_create_directories($files[$i], get_home_path(), $clone);
 		$size = filesize($files[$i]);
@@ -522,9 +525,9 @@ function wpstg_copy_files() {
 		if ($batch_size > $batch + $size) {
 			if (copy($files[$i], $new_file)) {
 				$batch += $size;
-                                if ($i > 2100){
+                                //if ($i > 2100){
                                 WPSTG()->logger->info('Copy file line ' . $i . ': ' . $files[$i]);
-                                }
+                                //}
 			} else {
 				WPSTG()->logger->info('Coping file has been failed: ' . $files[$i]);
 				wp_die(-1);
