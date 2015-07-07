@@ -181,10 +181,11 @@ jQuery(document).ready(function ($) {
 					$('#wpstg-loader').hide();
 					isFinished = true;
 				} else if(resp < 1) { //Continue cloning
-					$('#wpstg-db-progress').css('width', (100 * resp) + '%');
+					var complete = Math.floor(resp * 100) + '%';
+					$('#wpstg-db-progress').text(complete).css('width', complete);
 					clone_db();
 				} else { //Success cloning
-					$('#wpstg-db-progress').css('width', '100%');
+					$('#wpstg-db-progress').text('').css('width', '100%');
 					copy_files();
 				}
 			});
@@ -220,11 +221,12 @@ jQuery(document).ready(function ($) {
 					$('#wpstg-loader').hide();
 					isFinished = true;
 				} else if (resp < 1) { //Continue coping
-					$('#wpstg-files-progress').css('width', (100 * resp) + '%');
+					var complete = Math.floor(resp * 100) + '%';
+					$('#wpstg-files-progress').text(complete).css('width', complete);
 					$('#wpstg-loader').show();
 					copy_files();
 				} else { //Success coping
-					$('#wpstg-files-progress').css('width', '100%');
+					$('#wpstg-files-progress').text('').css('width', '100%');
 					replace_links();
 				}
 			});

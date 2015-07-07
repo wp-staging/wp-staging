@@ -180,7 +180,7 @@ function wpstg_show_tables($tables) {
 				<?php echo $table->Name; ?>
 			</label>
 			<span class="wpstg-size-info">
-				<?php echo wpstg_shot_size($table->Data_length + $table->Index_length); ?>
+				<?php echo wpstg_short_size($table->Data_length + $table->Index_length); ?>
 			</span>
 		</div>
 	<?php }
@@ -273,7 +273,7 @@ function wpstg_directory_structure($folders, $path = null, $not_checked = false,
 		<div class="wpstg-dir">
 			<input type="checkbox" class="wpstg-check-dir" <?php echo $tmp ? '' : 'checked'; ?> name="<?php echo "$path/$name"; ?>">
 			<a href="#" class="wpstg-expand-dirs <?php echo $tmp ? 'disabled' : ''; ?>"><?php echo $name;?></a>
-			<span class="wpstg-size-info"><?php echo wpstg_shot_size($size); ?></span>
+			<span class="wpstg-size-info"><?php echo wpstg_short_size($size); ?></span>
 				<?php if (!empty($folder)) : ?>
 					<div class="wpstg-dir wpstg-subdir">
 						<?php wpstg_directory_structure($folder, "$path/$name", $tmp, $is_removing); ?>
@@ -289,7 +289,7 @@ function wpstg_directory_structure($folders, $path = null, $not_checked = false,
  * @param integer $size
  * @return string
  */
-function wpstg_shot_size($size) {
+function wpstg_short_size($size) {
 	if (1 < $out = $size / 1000000000)
 		return round($out, 2) . ' Gb';
 	else if (1 < $out = $size / 1000000)
@@ -511,7 +511,7 @@ function wpstg_copy_files() {
 				wpstg_save_options();
 				wp_die($wpstg_clone_details['files_progress']);
 			} else {
-				WPSTG()->logger->info('Coping LARGE file has been failed: ' . $files[$i]);
+				WPSTG()->logger->info('Copying LARGE file has been failed: ' . $files[$i]);
 				$wpstg_clone_details['file_index'] = $i;
 				$part = $batch / $wpstg_clone_details['total_size'];
 				$wpstg_clone_details['files_progress'] += $part;
@@ -523,7 +523,7 @@ function wpstg_copy_files() {
 			if (copy($files[$i], $new_file)) {
 				$batch += $size;
 			} else {
-				WPSTG()->logger->info('Coping file has been failed: ' . $files[$i]);
+				WPSTG()->logger->info('Copying file has been failed: ' . $files[$i]);
 				$wpstg_clone_details['file_index'] = $i;
 				$part = $batch / $wpstg_clone_details['total_size'];
 				$wpstg_clone_details['files_progress'] += $part;
