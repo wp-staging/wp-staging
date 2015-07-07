@@ -119,7 +119,7 @@ function wpstg_scanning() {
 
 	$path = wpstg_get_upload_dir() . '/remaining_files.json';
 	//file_put_contents($path, json_encode($all_files, JSON_FORCE_OBJECT));
-        file_put_contents($path, json_encode($all_files));
+	file_put_contents($path, json_encode($all_files));
 
 	wpstg_save_options();
 
@@ -353,9 +353,7 @@ function wpstg_cloning() {
 		}
 		$remaining_files = array_diff($all_files, $excluded_files);
 		file_put_contents($path, json_encode(array_values($remaining_files)));
-                
 	}
-
 
 	$wpstg_clone_details['db_progress'] = isset($wpstg_clone_details['db_progress']) ? $wpstg_clone_details['db_progress'] : 0;
 	$wpstg_clone_details['files_progress'] = isset($wpstg_clone_details['files_progress']) ? $wpstg_clone_details['files_progress'] : 0;
@@ -489,8 +487,8 @@ function wpstg_copy_files() {
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$wpstg_clone_details = wpstg_get_options();
 
-	if (isset($wpstg_clone_details['files_progress']) && $wpstg_clone_details['files_progress'] >= 1)
-		wp_die(1);
+//	if (isset($wpstg_clone_details['files_progress']) && $wpstg_clone_details['files_progress'] >= 1)
+//		wp_die(1);
 
 	$clone = get_home_path() . $wpstg_clone_details['current_clone'];
 	$path = wpstg_get_upload_dir() . '/remaining_files.json';
@@ -505,35 +503,41 @@ function wpstg_copy_files() {
 		mkdir($clone);
 
 	for ($i = $start_index; $i < count($files); $i++) {
-                $new_file = wpstg_create_directories($files[$i], get_home_path(), $clone);
+		$new_file = wpstg_create_directories($files[$i], get_home_path(), $clone);
 		$size = filesize($files[$i]);
 		if ($size > $batch_size) {
-                            if (wpstg_copy_large_file($files[$i], $new_file, $batch_size)) {
-				$wpstg_clone_details['file_index'] = ++$i;
+			if (wpstg_copy_large_file($files[$i], $new_file, $batch_size)) {
+				WPSTG()->logger->info('Start index: ' . $start_index . '. Current index: ' . $i . '. Copy LARGE file: ' . $files[$i] . '.Batch size: ' . ($batch + $size));
+				$wpstg_clone_details['file_index'] = $i + 1;
 				$part = ($batch + $size) / $wpstg_clone_details['total_size'];
-				$wpstg_clone_details['files_progress'] += round($part, 2);
+				$wpstg_clone_details['files_progress'] += $part;
 				wpstg_save_options();
 				wp_die($wpstg_clone_details['files_progress']);
 			} else {
-				WPSTG()->logger->info('Coping LARGE file has been failed: ' . $files[$i]);                               
+				WPSTG()->logger->info('Coping LARGE file has been failed: ' . $files[$i]);
+				$wpstg_clone_details['file_index'] = $i;
+				$part = $batch / $wpstg_clone_details['total_size'];
+				$wpstg_clone_details['files_progress'] += $part;
+				wpstg_save_options();
 				wp_die(-1);
 			}
 		}
 		if ($batch_size > $batch + $size) {
 			if (copy($files[$i], $new_file)) {
 				$batch += $size;
-                                if ($i > 2100){
-                                WPSTG()->logger->info('Copy file line ' . $i . ': ' . $files[$i]);
-                                }
 			} else {
 				WPSTG()->logger->info('Coping file has been failed: ' . $files[$i]);
+				$wpstg_clone_details['file_index'] = $i;
+				$part = $batch / $wpstg_clone_details['total_size'];
+				$wpstg_clone_details['files_progress'] += $part;
+				wpstg_save_options();
 				wp_die(-1);
 			}
 		} else {
-			WPSTG()->logger->info('Batch complete: ' . $batch . '. Current File: ' . $files[$i]);
+			WPSTG()->logger->info('Start index: ' . $start_index . '. Current index: ' . $i . '. Batch size: ' . $batch . '. Current File: ' . $files[$i]);
 			$wpstg_clone_details['file_index'] = $i;
-			$part = ($batch + $size) / $wpstg_clone_details['total_size'];
-			$wpstg_clone_details['files_progress'] += round($part, 2);
+			$part = $batch / $wpstg_clone_details['total_size'];
+			$wpstg_clone_details['files_progress'] += $part;
 			wpstg_save_options();
 			wp_die($wpstg_clone_details['files_progress']);
 		}
@@ -887,10 +891,10 @@ function wpstg_get_options() {
  */
 function wpstg_save_options() {
 	global $wpstg_clone_details;
-		$path = wpstg_get_upload_dir() . '/clone_details.json';
-		if (wp_is_writable($path)) {
-			file_put_contents($path, json_encode($wpstg_clone_details));
-		}
+	$path = wpstg_get_upload_dir() . '/clone_details.json';
+	if (wp_is_writable($path)) {
+		file_put_contents($path, json_encode($wpstg_clone_details));
+	}
 }
 
 
