@@ -181,7 +181,8 @@ jQuery(document).ready(function ($) {
 					$('#wpstg-loader').hide();
 					isFinished = true;
 				} else if(resp < 1) { //Continue cloning
-					$('#wpstg-db-progress').text(resp).css('width', (100 * resp) + '%');
+					var complete = Math.floor(resp * 100) + '%';
+					$('#wpstg-db-progress').text(complete).css('width', complete);
 					clone_db();
 				} else { //Success cloning
 					$('#wpstg-db-progress').text('').css('width', '100%');
@@ -220,7 +221,8 @@ jQuery(document).ready(function ($) {
 					$('#wpstg-loader').hide();
 					isFinished = true;
 				} else if (resp < 1) { //Continue coping
-					$('#wpstg-files-progress').text(resp).css('width', (100 * resp) + '%');
+					var complete = Math.floor(resp * 100) + '%';
+					$('#wpstg-files-progress').text(complete).css('width', complete);
 					$('#wpstg-loader').show();
 					copy_files();
 				} else { //Success coping
