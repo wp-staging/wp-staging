@@ -60,14 +60,14 @@ if (!class_exists('wpstaging')) :
          * @var object
          * @since 2.0.0
          */
-        public $html;
+        //public $html;
         
         /* WPSTG LOGGER Class
          * 
          */
         public $logger;
         
-        public $wpstg_notifications;
+        
 
         /**
          * Main WP-Staging Instance
@@ -90,7 +90,7 @@ if (!class_exists('wpstaging')) :
                 self::$instance->setup_constants();
                 self::$instance->includes();
                 self::$instance->load_textdomain();
-                self::$instance->html = new WPSTG_HTML_Elements();
+                //self::$instance->html = new WPSTG_HTML_Elements();
                 self::$instance->logger = new wpstgLogger("wpstglog_" . date("Y-m-d") . ".log", wpstgLogger::INFO);
             }
             return self::$instance;
@@ -164,18 +164,11 @@ if (!class_exists('wpstaging')) :
          */
         private function includes() {
             global $wpstg_options;
-
-            require_once WPSTG_PLUGIN_DIR . 'includes/admin/settings/register-settings.php';
-            $wpstg_options = wpstg_get_settings();
-            require_once WPSTG_PLUGIN_DIR . 'includes/scripts.php';
-            require_once WPSTG_PLUGIN_DIR . 'includes/template-functions.php';
-            require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-license-handler.php';
-            require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-html-elements.php';
-            require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.interface.php';
-            require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.class.php';
-            require_once WPSTG_PLUGIN_DIR . 'includes/logger.php';
-
+                require_once WPSTG_PLUGIN_DIR . 'includes/logger.php';
             if (is_admin() || ( defined('WP_CLI') && WP_CLI )) {
+                require_once WPSTG_PLUGIN_DIR . 'includes/admin/settings/register-settings.php';
+                $wpstg_options = wpstg_get_settings();
+                
                 //require_once WPSTG_PLUGIN_DIR . 'includes/admin/add-ons.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-actions.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-notices.php';
@@ -188,6 +181,13 @@ if (!class_exists('wpstaging')) :
                 require_once WPSTG_PLUGIN_DIR . 'includes/install.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/tools.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/upload-functions.php';
+                require_once WPSTG_PLUGIN_DIR . 'includes/scripts.php';
+                require_once WPSTG_PLUGIN_DIR . 'includes/template-functions.php';
+                require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-license-handler.php';
+                //require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-html-elements.php';
+                require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.interface.php';
+                require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.class.php';
+
             }
         }
 
