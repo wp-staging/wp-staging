@@ -275,7 +275,8 @@ jQuery(document).ready(function ($) {
 						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
 						$('#wpstg-cancel-cloning').text('Remove');
 						isFinished = true;
-						$('#wpstg-home-link').show();
+						//$('#wpstg-home-link').show();
+                                                $('#wpstg-home-link').css('display', 'inline-block');
 					}, 1200);
 				}
 			});
