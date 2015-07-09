@@ -67,10 +67,10 @@ function wpstg_overview() {
 	?>
 	<?php if (isset($wpstg_clone_details['current_clone'])) : ?>
 		Current clone: <?php echo $wpstg_clone_details['current_clone']; ?>
-		<a href="#" id="wpstg-reset-clone" class="wpstg-link-btn" data-clone="<?php echo $wpstg_clone_details['current_clone']; ?>">Reset</a>
-		<a href="#" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">Continue</a>
+		<a href="#" id="wpstg-reset-clone" class="wpstg-link-btn button-primary" data-clone="<?php echo $wpstg_clone_details['current_clone']; ?>">Reset</a>
+		<a href="#" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="scanning">Continue</a>
 	<?php else : ?>
-		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn" data-action="scanning">New Staging Site</a>
+		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="scanning">New Staging Site</a>
 	<?php endif; ?>
 	<br>
 	<div id="wpstg-existing-clones">
@@ -134,7 +134,7 @@ function wpstg_scanning() {
 				<?php echo __('Name your new Staging Site:', 'wpstg');?>
 		<input type="text" id="wpstg-new-clone-id" <?php echo $clone_id; ?>>
 	</label>
-	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn" data-action="cloning"><?php echo __('Start Cloning', 'wpstg');?></a>
+	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="cloning"><?php echo __('Start Cloning', 'wpstg');?></a>
 	<span class="wpstg-error-msg">
 		<?php echo $overflow ? __('Not enough free disk space to create a staging site', 'wpstg') : ''; ?>
 	</span>
@@ -157,7 +157,7 @@ function wpstg_scanning() {
 			?>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>
-	<a href="#" class="wpstg-prev-step-link wpstg-link-btn">Back</a>
+	<a href="#" class="wpstg-prev-step-link wpstg-link-btn button-primary">Back</a>
 	<?php
 	wp_die();
 }
@@ -380,9 +380,9 @@ function wpstg_cloning() {
 	</div>
 	<span id="wpstg-cloning-result"></span>
 	<a href="<?php echo get_home_url();?>" id="wpstg-clone-url" target="_blank"></a>
-	<a href="#" id="wpstg-cancel-cloning" class="wpstg-link-btn"><?php echo __('Cancel', 'wpstg');?></a>
-	<a href="#" id="wpstg-home-link" class="wpstg-link-btn"><?php echo __('Home', 'wpstg');?></a>
-	<a href="#" id="wpstg-try-again" class="wpstg-link-btn"><?php echo __('Try Again', 'wpstg');?></a>
+	<a href="#" id="wpstg-cancel-cloning" class="wpstg-link-btn button-primary"><?php echo __('Cancel', 'wpstg');?></a>
+	<a href="#" id="wpstg-home-link" class="wpstg-link-btn button-primary"><?php echo __('Home', 'wpstg');?></a>
+	<a href="#" id="wpstg-try-again" class="wpstg-link-btn button-primary"><?php echo __('Try Again', 'wpstg');?></a>
 	<?php
 	wp_die();
 }
@@ -843,8 +843,8 @@ function wpstg_preremove_clone() {
 			?>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>
-	<a href="#" class="wpstg-link-btn" id="wpstg-cancel-removing">Cancel</a>
-	<a href="#" class="wpstg-link-btn" id="wpstg-remove-clone" data-clone="<?php echo $clone; ?>"><?php echo __('Remove', 'wpstg');?></a>
+	<a href="#" class="wpstg-link-btn button-primary" id="wpstg-cancel-removing">Cancel</a>
+	<a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="<?php echo $clone; ?>"><?php echo __('Remove', 'wpstg');?></a>
 	<?php
 	wp_die();
 }
