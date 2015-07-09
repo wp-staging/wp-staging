@@ -361,6 +361,7 @@ function wpstg_cloning() {
 	$wpstg_clone_details['links_progress'] = isset($wpstg_clone_details['links_progress']) ? $wpstg_clone_details['links_progress'] : 0;
 
 	wpstg_save_options();
+	do_action('wpstg_start_cloning', $clone);
 	?>
 	<div class="wpstg-cloning-section"> <?php echo __('Copy DB tables', 'wpstg');?>
 		<div class="wpstg-progress-bar">
@@ -388,11 +389,12 @@ function wpstg_cloning() {
 add_action('wp_ajax_cloning', 'wpstg_cloning');
 
 function wpstg_clone_db() {
-	global $wpdb;
+	global $wpdb, $wpstg_clone_details;
+	$wpstg_clone_details = wpstg_get_options();
 
-	$db_helper = apply_filters('wpstg_db_helper', $wpdb);
+	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
 	if ($db_helper->dbname != $wpdb->dbname)
-		wpstg_clone_db_slow();
+		wpstg_clone_db_slow($db_helper);
 	else
 		wpstg_clone_db_fast();
 }
@@ -428,8 +430,7 @@ function wpstg_clone_db_fast() {
 			$is_new = true;
 		}
 
-		$db_prefix = apply_filters('wpstg_get_db', $wpdb->dbname, $wpstg_clone_details['current_clone']);
-		$new_table = $db_prefix . '.' . $wpstg_clone_details['current_clone'] . '_' . $table;
+		$new_table = $wpstg_clone_details['current_clone'] . '_' . $table;
 		$offset = isset($wpstg_clone_details['offsets'][$table]) ? $wpstg_clone_details['offsets'][$table] : 0;
 		$is_cloned = true;
 
@@ -487,10 +488,9 @@ function wpstg_clone_db_fast() {
 	wp_die($progress);
 }
 
-function wpstg_clone_db_slow() {
+function wpstg_clone_db_slow($db_helper) {
 	global $wpdb, $wpstg_clone_details, $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
-	$wpstg_clone_details = wpstg_get_options();
 	$one = 1;
 
 	$progress = isset($wpstg_clone_details['db_progress']) ? $wpstg_clone_details['db_progress'] : 0;
@@ -518,7 +518,6 @@ function wpstg_clone_db_slow() {
 			$is_new = true;
 		}
 
-		$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
 		$new_table = $wpstg_clone_details['current_clone'] . '_' . $table;
 		$offset = isset($wpstg_clone_details['offsets'][$table]) ? $wpstg_clone_details['offsets'][$table] : 0;
 		$is_cloned = true;
