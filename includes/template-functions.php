@@ -332,6 +332,11 @@ function wpstg_check_clone() {
 add_action('wp_ajax_check_clone', 'wpstg_check_clone');
 
 //3rd step: Cloning ////////////////////////////////////////////////////////////////////////////////////////////////////
+/**
+ * Clone into internal database
+ * 
+ * @global array $wpstg_clone_details clone related data
+ */
 function wpstg_cloning() {
 	global $wpstg_clone_details;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
@@ -388,19 +393,33 @@ function wpstg_cloning() {
 }
 add_action('wp_ajax_cloning', 'wpstg_cloning');
 
+/**
+ * Helper function to get database object for cloning into external database
+ * 
+ * @global object $wpdb database object
+ * @global array $wpstg_clone_details clone related settings
+ */
 function wpstg_clone_db() {
 	global $wpdb, $wpstg_clone_details;
 	$wpstg_clone_details = wpstg_get_options();
 
 	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
 	if ($db_helper->dbname != $wpdb->dbname)
-		wpstg_clone_db_slow($db_helper);
+		wpstg_clone_db_external($db_helper);
 	else
-		wpstg_clone_db_fast();
+		wpstg_clone_db_internal();
 }
 add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
 
-function wpstg_clone_db_fast() {
+
+/**
+ * Clone into internal database
+ * 
+ * @global object $wpdb database object
+ * @global array $wpstg_clone_details clone data
+ * @global array $wpstg_options global options
+ */
+function wpstg_clone_db_internal() {
 	global $wpdb, $wpstg_clone_details, $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$wpstg_clone_details = wpstg_get_options();
@@ -487,11 +506,21 @@ function wpstg_clone_db_fast() {
 	wpstg_save_options();
 	wp_die($progress);
 }
-
-function wpstg_clone_db_slow($db_helper) {
+/**
+ * 
+ * Clone into separate database
+ * 
+ * @global object $wpdb database object
+ * @global array $wpstg_clone_details clone related data
+ * @global array $wpstg_options global settings
+ * 
+ * @param object $db_helper new database object
+ */
+function wpstg_clone_db_external($db_helper) {
 	global $wpdb, $wpstg_clone_details, $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$one = 1;
+        
 
 	$progress = isset($wpstg_clone_details['db_progress']) ? $wpstg_clone_details['db_progress'] : 0;
 	if ($progress >= 1)
@@ -609,9 +638,6 @@ function wpstg_copy_files() {
 	if (!is_dir($clone))
 		mkdir($clone);
 
-            /*var_dump($files);
-            echo "count files: " . count($files);
-            wp_die();*/
 	for ($i = $start_index; $i < count($files); $i++) {
 		$new_file = wpstg_create_directories($files[$i], get_home_path(), $clone);
 		$size = filesize($files[$i]);
