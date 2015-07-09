@@ -356,8 +356,8 @@ color:#777777;
 }
 
 .wpstg-tab-section {
-	background: #fff;
-	border: 1px solid #aaa;
+	background: #F7F7F7;
+	border: 1px solid #ccc;
 	display: none;
 	padding: 20px;
 	position: relative;
@@ -375,8 +375,8 @@ color:#777777;
 }
 
 .wpstg-tab-header {
-	background: #ddd;
-	border: 1px solid #aaa;
+	background: #F7F7F7;
+	border: 1px solid #ccc;
 	border-bottom: none;
 	display: inline-block;
 	padding: 10px;
