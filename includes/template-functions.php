@@ -388,6 +388,17 @@ function wpstg_cloning() {
 add_action('wp_ajax_cloning', 'wpstg_cloning');
 
 function wpstg_clone_db() {
+	global $wpdb;
+
+	$db_helper = apply_filters('wpstg_db_helper', $wpdb);
+	if ($db_helper->dbname != $wpdb->dbname)
+		wpstg_clone_db_slow();
+	else
+		wpstg_clone_db_fast();
+}
+add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
+
+function wpstg_clone_db_fast() {
 	global $wpdb, $wpstg_clone_details, $wpstg_options;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$wpstg_clone_details = wpstg_get_options();
@@ -475,7 +486,105 @@ function wpstg_clone_db() {
 	wpstg_save_options();
 	wp_die($progress);
 }
-add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
+
+function wpstg_clone_db_slow() {
+	global $wpdb, $wpstg_clone_details, $wpstg_options;
+	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
+	$wpstg_clone_details = wpstg_get_options();
+	$one = 1;
+
+	$progress = isset($wpstg_clone_details['db_progress']) ? $wpstg_clone_details['db_progress'] : 0;
+	if ($progress >= 1)
+		wp_die(1);
+
+	$limit = isset($wpstg_options['wpstg_query_limit']) ? $wpstg_options['wpstg_query_limit'] : 1000;
+	$rows_count = 0;
+
+	while (true) {
+		$table = isset($wpstg_clone_details['current_table']) ? $wpstg_clone_details['current_table'] : null;
+		$is_new = false;
+
+		if ($table === null) {
+			$tables = $wpstg_clone_details['all_tables'];
+			$cloned_tables = !empty($wpstg_clone_details['cloned_tables']) ? $wpstg_clone_details['cloned_tables'] : array(); //already cloned tables
+			$tables = array_diff($tables, $cloned_tables);
+			if (empty($tables)) { //exit condition
+				$wpstg_clone_details['db_progress'] = 1;
+				wpstg_save_options();
+				WPSTG()->logger->info('DB has been cloned successfully');
+				wp_die(1);
+			}
+			$table = reset($tables);
+			$is_new = true;
+		}
+
+		$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
+		$new_table = $wpstg_clone_details['current_clone'] . '_' . $table;
+		$offset = isset($wpstg_clone_details['offsets'][$table]) ? $wpstg_clone_details['offsets'][$table] : 0;
+		$is_cloned = true;
+
+		if ($is_new) {
+			$existing_table = $db_helper->get_var(
+				$db_helper->prepare(
+					'show tables like %s',
+					$new_table
+				)
+			);
+			if ($existing_table == $new_table)
+				$db_helper->query("drop table $new_table");
+
+			$tmp_result = $wpdb->get_row("show create table $table", ARRAY_N);
+			$create_sql = str_replace($tmp_result[0], $new_table, $tmp_result[1], $one);
+			$is_cloned = $db_helper->query($create_sql);
+			$wpstg_clone_details['current_table'] = $table;
+		}
+		if ($is_cloned) {
+			$limit -= $rows_count;
+			if ($limit < 1)
+				break;
+
+			$selected_rows = $wpdb->get_results("select * from $table limit $offset, $limit", ARRAY_N);
+			$inserted_rows = 0;
+			foreach ($selected_rows as $row) {
+				$row = esc_sql($row);
+				$values = implode("', '", $row);
+				$query = "insert into $new_table values('$values')";
+				$inserted_rows += $db_helper->query($query);
+			}
+
+			if ($inserted_rows !== false) {
+				$wpstg_clone_details['offsets'][$table] = $offset + $inserted_rows;
+				$rows_count += $inserted_rows;
+				if ($inserted_rows < $limit) {
+					$wpstg_clone_details['cloned_tables'][] = $table;
+					$all_tables_count = count($wpstg_clone_details['all_tables']);
+					$cloned_tables_count = count($wpstg_clone_details['cloned_tables']);
+					$wpstg_clone_details['db_progress'] = $cloned_tables_count / $all_tables_count;
+					unset($wpstg_clone_details['current_table']);
+					wpstg_save_options();
+				}
+				if ($rows_count > $limit) {
+					$all_tables_count = count($wpstg_clone_details['all_tables']);
+					$cloned_tables_count = count($wpstg_clone_details['cloned_tables']);
+					$wpstg_clone_details['db_progress'] = $cloned_tables_count / $all_tables_count;
+					wpstg_save_options();
+					WPSTG()->logger->info('Query limit is exceeded. Current Table: ' . $table);
+					wp_die($wpstg_clone_details['db_progress']);
+				}
+			} else {
+				WPSTG()->logger->info('Table ' . $new_table . ' has been created, BUT inserting rows failed. Offset: ' . $offset);
+				wpstg_save_options();
+				wp_die(-1);
+			}
+		} else {
+			WPSTG()->logger->info('Creating table ' . $table . ' has been failed.');
+			wpstg_save_options();
+			wp_die(-1);
+		}
+	} //end while
+	wpstg_save_options();
+	wp_die($progress);
+}
 
 /**
  * Copy all wordpress files into staging subfolder
@@ -602,14 +711,14 @@ function wpstg_replace_links() {
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$wpstg_clone_details = wpstg_get_options();
 
-	$db_prefix = apply_filters('wpstg_get_db', $wpdb->dbname, $wpstg_clone_details['current_clone']);
+	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
 	$new_prefix = $wpstg_clone_details['current_clone'] . '_' . $wpdb->prefix;
 	$wpstg_clone_details['links_progress'] = isset($wpstg_clone_details['links_progress']) ? $wpstg_clone_details['links_progress'] : 0;
 	//replace site url in options
 	if ($wpstg_clone_details['links_progress'] < .1) {
-		$result = $wpdb->query(
-			$wpdb->prepare(
-				'update ' . $db_prefix . '.' . $new_prefix . 'options set option_value = %s where option_name = \'siteurl\' or option_name = \'home\'',
+		$result = $db_helper->query(
+			$db_helper->prepare(
+				'update ' . $new_prefix . 'options set option_value = %s where option_name = \'siteurl\' or option_name = \'home\'',
 				get_home_url() . '/' . $wpstg_clone_details['current_clone']
 			)
 		);
@@ -624,17 +733,17 @@ function wpstg_replace_links() {
 
 	//replace table prefix in meta keys
 	if ($wpstg_clone_details['links_progress'] < .5) {
-		$result_options = $wpdb->query(
-			$wpdb->prepare(
-				'update ' . $db_prefix . '.' . $new_prefix . 'usermeta set meta_key = replace(meta_key, %s, %s) where meta_key like %s',
+		$result_options = $db_helper->query(
+			$db_helper->prepare(
+				'update ' . $new_prefix . 'usermeta set meta_key = replace(meta_key, %s, %s) where meta_key like %s',
 				$wpdb->prefix,
 				$new_prefix,
 				$wpdb->prefix . '_%'
 			)
 		);
-		$result_usermeta = $wpdb->query(
-			$wpdb->prepare(
-				'update ' . $db_prefix . '.' . $new_prefix . 'options set option_name = replace(option_name, %s, %s) where option_name like %s',
+		$result_usermeta = $db_helper->query(
+			$db_helper->prepare(
+				'update ' . $new_prefix . 'options set option_name = replace(option_name, %s, %s) where option_name like %s',
 				$wpdb->prefix,
 				$new_prefix,
 				$wpdb->prefix . '_%'
@@ -655,13 +764,17 @@ function wpstg_replace_links() {
 		$content = file_get_contents($path);
 		if ($content) {
 			$content = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $content);
-			if ($db_prefix != $wpdb->dbname)
-				$content = str_replace('define(\'DB_NAME\'', 'define(\'DB_NAME\', \'' . $db_prefix . '\');//', $content);
+			if ($db_helper->dbname != $wpdb->dbname) {
+				$content = str_replace('define(\'DB_NAME\'', 'define(\'DB_NAME\', \'' . $db_helper->dbname . '\');//', $content);
+				$content = str_replace('define(\'DB_USER\'', 'define(\'DB_USER\', \'' . $db_helper->dbuser . '\');//', $content);
+				$content = str_replace('define(\'DB_PASSWORD\'', 'define(\'DB_PASSWORD\', \'' . $db_helper->dbpassword . '\');//', $content);
+				$content = str_replace('define(\'DB_HOST\'', 'define(\'DB_HOST\', \'' . $db_helper->dbhost . '\');//', $content);
+			}
 			if (FALSE === file_put_contents($path, $content)) {
 				WPSTG()->logger->info($path . 'wp-config.php is not writable');
 				wp_die(.66);
 			}
-        } else {
+		} else {
 			WPSTG()->logger->info($path . 'is not readable.');
 			wp_die(.66);
 		}
@@ -707,8 +820,8 @@ function wpstg_preremove_clone() {
 
 	$clone = $_POST['cloneID'];
 	$prefix = $clone . '_' . $wpdb->prefix;
-	$db_prefix = apply_filters('wpstg_get_db', $wpdb->dbname, $clone);
-	$tables = $wpdb->get_results("show table status in $db_prefix like '" . $prefix . "_%'");
+	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $clone);
+	$tables = $db_helper->get_results("show table status like '" . $prefix . "_%'");
 
 	$path = get_home_path() . $clone;
 	$folders[$clone] = wpstg_check_removing_files($path);
@@ -785,13 +898,13 @@ function wpstg_remove_clone($isAjax = true) {
 	}
 
 	//drop clone tables
-	$db_prefix = apply_filters('wpstg_get_db', $wpdb->dbname, $clone);
-	$tables = $wpdb->get_col( $wpdb->prepare('show tables in ' . $db_prefix . ' like %s', $clone . '_%'));
+	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $clone);
+	$tables = $db_helper->get_col( $wpdb->prepare('show tables like %s', $clone . '_%'));
 	$unchecked_tables = isset($_POST['uncheckedTables']) ? $_POST['uncheckedTables'] : array();
 	$tables = array_diff($tables, $unchecked_tables);
 	foreach ($tables as $table) {
 		if (! wpstg_is_root_table($table, $wpdb->prefix))
-			$result = $wpdb->query('drop table ' . $db_prefix . '.' . $table);
+			$result = $db_helper->query("drop table $table");
 		if (! $result) {
 			WPSTG()->logger->info('Droping table ' . $table . ' has been failed.');
 			wp_die(-1);
@@ -905,7 +1018,6 @@ function wpstg_save_options() {
 	}
 }
 
-
 function wpstg_error_processing() {
 	$msg = sanitize_text_field($_POST['wpstg_error_msg']);
 	if (! empty($msg))
@@ -913,3 +1025,26 @@ function wpstg_error_processing() {
 	wp_die();
 }
 add_action('wp_ajax_error_processing', 'wpstg_error_processing');
+
+function process_chunk( $chunk ) {
+	// prepare db
+	global $wpdb;
+	$this->set_time_limit();
+	$queries = array_filter( explode( ";\n", $chunk ) );
+	array_unshift( $queries, "SET sql_mode='NO_AUTO_VALUE_ON_ZERO';" );
+	ob_start();
+	$wpdb->show_errors();
+	if( empty( $wpdb->charset ) ) {
+		$charset = ( defined( 'DB_CHARSET' ) ? DB_CHARSET : 'utf8' );
+		$wpdb->charset = $charset;
+		$wpdb->set_charset( $wpdb->dbh, $wpdb->charset );
+	}
+	foreach( $queries as $query ) {
+		if( false === $wpdb->query( $query ) ) {
+			$return = ob_get_clean();
+			$result = $this->end_ajax( $return );
+			return $result;
+		}
+	}
+	return true;
+}
