@@ -375,7 +375,7 @@ color:#777777;
 }
 
 .wpstg-tab-header {
-	background: #F7F7F7;
+	background: #e4e4e4;
 	border: 1px solid #ccc;
 	border-bottom: none;
 	display: inline-block;
@@ -387,7 +387,7 @@ color:#777777;
 }
 
 .wpstg-tab-header.active {
-	background: #fff;
+	background: #f7f7f7;
 	z-index: 15;
 }
 
