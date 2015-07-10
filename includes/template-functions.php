@@ -96,7 +96,7 @@ add_action('wp_ajax_overview', 'wpstg_overview');
 
 /**
  * 2nd step: Scanning
- * Collect database and file data for clong
+ * Collect database and file data for clone
  * 
  * @global type $wpdb
  * @global type $wpstg_clone_details
@@ -300,7 +300,9 @@ function wpstg_short_size($size) {
 	return $size . ' bytes';
 }
 
-//Display list of large files
+/**
+ * Display list of large files
+ */
 function wpstg_show_large_files() {
 	global $wpstg_clone_details;
 
@@ -320,7 +322,9 @@ function wpstg_show_large_files() {
 	<?php endif;
 }
 
-//Check cloneID
+/**
+ * Check if clone with the same name already exists
+ */
 function wpstg_check_clone() {
 	global $wpstg_clone_details;
 	$wpstg_clone_details = wpstg_get_options();
@@ -331,9 +335,8 @@ function wpstg_check_clone() {
 }
 add_action('wp_ajax_check_clone', 'wpstg_check_clone');
 
-//3rd step: Cloning ////////////////////////////////////////////////////////////////////////////////////////////////////
 /**
- * Clone into internal database
+ * 3rd step: Cloning
  * 
  * @global array $wpstg_clone_details clone related data
  */
@@ -835,7 +838,6 @@ function wpstg_clear_options() {
 		WPSTG()->logger->info(wpstg_get_upload_dir() . '/remaining_files.json has been purged successfully');
 }
 
-/////////////////////////////////////////////////////////////////////////////////////////////////////////
 /** Check the files before removing
  * 
  * @global type $wpdb
@@ -995,12 +997,11 @@ function deleteDirectory($dir, $excluded_dirs) {
 	return $need_rm ? rmdir($dir) : true;
 }
 
-/* Cancel cloning process
+/** Cancel cloning process
  * Remove current clone and purge json files containing task related data
  * 
  * @return void
  */
-
 function wpstg_cancel_cloning() {
 	wpstg_remove_clone(false);
 	wpstg_clear_options();
@@ -1020,7 +1021,7 @@ function wpstg_is_root_table($haystack, $needle) {
 	return strpos($haystack, $needle) === 0;
 }
 
-/* Get global clone details options
+/** Get global clone details options
  * 
  * @return string JSON that includes the cloning relevant data
  */
@@ -1028,10 +1029,9 @@ function wpstg_get_options() {
 	$path = wpstg_get_upload_dir() . '/clone_details.json';
 	$content = file_get_contents($path);
 	return json_decode($content, true);
-
 }
 
-/* Save global clone details options
+/** Save global clone details options
  * 
  * @return void
  */
@@ -1043,6 +1043,9 @@ function wpstg_save_options() {
 	}
 }
 
+/**
+ * Write unexpected errors into the log file
+ */
 function wpstg_error_processing() {
 	$msg = sanitize_text_field($_POST['wpstg_error_msg']);
 	if (! empty($msg))
