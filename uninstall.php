@@ -13,15 +13,21 @@
 if ( ! defined( 'WP_UNINSTALL_PLUGIN' ) ) exit;
 
 // Load WPSTG file
-include_once( 'staging.php' );
+include_once( 'wp-staging.php' );
 
 global $wpdb, $wpstg_options;
 
-if( wpstg_get_option( 'uninstall_on_delete' ) ) {
-	/** Delete all the Plugin Options */
+/** 
+ * Delete all the Plugin Options 
+ * 
+ * @todo must be tested
+ */
+/*if( wpstg_get_option( 'uninstall_on_delete' ) ) {
+
 	delete_option( 'wpstg_settings' );
         delete_option( 'wpstg_install_date');
         delete_option( 'wpstg_rating_div');
         delete_option( 'wpstg_version');
         delete_option( 'wpstg_version_upgraded_from');
 }
+*/
