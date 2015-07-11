@@ -1,4 +1,4 @@
-=== Staging - Clone website with one click === 
+=== WP Staging - Create a complete staging website with one click === 
 
 Author URL: https://www.wp-staging.net
 Plugin URL: https://www.wp-staging.net
@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, development, cloning, admin, page, content, plugin, media, backup, test, testing, sandbox
 Requires at least: 3.6+
 Tested up to: 4.2.2
-Stable tag: 2.3.5 
+Stable tag: 0.5 
 
 Creates a completely independent staging site that is only available to administrators.
 
