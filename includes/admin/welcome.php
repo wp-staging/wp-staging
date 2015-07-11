@@ -64,9 +64,9 @@ class WPSTG_Welcome {
                 
                 //@since 1.0.0
 		if( ! $upgrade ) { // First time install
-			wp_safe_redirect( admin_url( 'admin.php?page=wpstg_clone_page' ) ); exit;
+			wp_safe_redirect( admin_url( 'admin.php?page=wpstg_clone' ) ); exit;
 		} else { // Update
-			wp_safe_redirect( admin_url( 'admin.php?page=wpstg_clone_page' ) ); exit;
+			wp_safe_redirect( admin_url( 'admin.php?page=wpstg_clone' ) ); exit;
 		}
 	}
 }
