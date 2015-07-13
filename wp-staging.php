@@ -165,6 +165,7 @@ if (!class_exists('wpstaging')) :
         private function includes() {
             global $wpstg_options;
                 require_once WPSTG_PLUGIN_DIR . 'includes/logger.php';
+                require_once WPSTG_PLUGIN_DIR . 'includes/staging-functions.php';
             if (is_admin() || ( defined('WP_CLI') && WP_CLI )) {
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/settings/register-settings.php';
                 $wpstg_options = wpstg_get_settings();
