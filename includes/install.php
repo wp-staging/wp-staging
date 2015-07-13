@@ -58,6 +58,7 @@ function wpstg_install_multisite($networkwide) {
 
 function wpstg_install() {
 	global $wpdb, $wpstg_options, $wp_version;
+        
 
 	// Add Upgraded From Option
 	$current_version = get_option( 'wpstg_version' );
@@ -70,6 +71,8 @@ function wpstg_install() {
         // Add plugin installation date and variable for rating div
         add_option('wpstg_installDate',date('Y-m-d h:i:s'));
         add_option('wpstg_RatingDiv','no');
+        
+
 	
                 
     /* Setup some default options
@@ -101,6 +104,10 @@ function wpstg_after_install() {
 	if ( ! is_admin() ) {
 		return;
 	}
+        
+        // Create empty config files in /wp-content/uploads/wp-staging
+        wpstg_save_options();
+        wpstg_create_remaining_files();
 
 	$activation_pages = get_transient( '_wpstg_activation_pages' );
 
@@ -115,3 +122,19 @@ function wpstg_after_install() {
 	do_action( 'wpstg_after_install', $activation_pages );
 }
 add_action( 'admin_init', 'wpstg_after_install' );
+
+
+/** 
+ * Create json remaining_files.json after activation of the plugin
+ * 
+ * @return bool
+ */
+function wpstg_create_remaining_files() { 
+        $path = wpstg_get_upload_dir();
+	if (wp_is_writable($path)) {
+                $file = 'remaining_files.json';
+		file_put_contents($path . '/' . $file, null);
+        }else {
+            WPSTG()->logger->info($path . '/' . $file . ' is not writeable! ');
+        }
+}
