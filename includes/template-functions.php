@@ -741,7 +741,8 @@ function wpstg_replace_links() {
 	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
 	$new_prefix = $wpstg_clone_details['current_clone'] . '_' . $wpdb->prefix;
 	$wpstg_clone_details['links_progress'] = isset($wpstg_clone_details['links_progress']) ? $wpstg_clone_details['links_progress'] : 0;
-	//replace site url in options
+        
+	//Update siteurl in clone options table
 	if ($wpstg_clone_details['links_progress'] < .1) {
 		$result = $db_helper->query(
 			$db_helper->prepare(
@@ -750,15 +751,33 @@ function wpstg_replace_links() {
 			)
 		);
 		if (!$result) {
-			WPSTG()->logger->info('Replacing site url has been failed.');
+			WPSTG()->logger->info('Replacing siteurl has been failed.');
 			wp_die(-1);
 		} else {
 			$wpstg_clone_details['links_progress'] = .33;
+                        WPSTG()->logger->info('Replacing siteurl has been done succesfully');
+			wpstg_save_options();
+		}
+	}
+        //Update wpstg_is_staging_site in clone options table
+	if ($wpstg_clone_details['links_progress'] < .34) {
+		$result = $db_helper->query(
+			$db_helper->prepare(
+				'update ' . $new_prefix . 'options set option_value = %s where option_name = \'wpstg_is_staging_site\'',
+				'true'
+			)
+		);
+		if (!$result) {
+			WPSTG()->logger->info('Updating option[wpstg_is_staging_site] has been failed');
+			wp_die(-1);
+		} else {
+			$wpstg_clone_details['links_progress'] = .43;
+                        WPSTG()->logger->info('Updating option [wpstg_is_staging_site] has been done succesfully');
 			wpstg_save_options();
 		}
 	}
 
-	//replace table prefix in meta keys
+	//replace table prefix in meta_keys
 	if ($wpstg_clone_details['links_progress'] < .5) {
 		$result_options = $db_helper->query(
 			$db_helper->prepare(
@@ -777,10 +796,11 @@ function wpstg_replace_links() {
 			)
 		);
 		if (!$result_options || !$result_usermeta) {
-			WPSTG()->logger->info('Replacing table prefix has been failed.');
-			wp_die(.33);
+			WPSTG()->logger->error('Replacing table prefix has been failed.');
+			wp_die(.5);
 		} else {
 			$wpstg_clone_details['links_progress'] = .66;
+                        WPSTG()->logger->error('Replacing table prefix has been done succesfully.');
 			wpstg_save_options();
 		}
 	}
