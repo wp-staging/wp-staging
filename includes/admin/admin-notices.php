@@ -24,9 +24,22 @@ function wpstg_admin_messages() {
 
         if ( !wp_is_writable( wpstg_get_upload_dir() ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP-Staging File Permission error: </strong>' . wpstg_get_upload_dir() . ' is not writable. <br> Check if the folder '.wpstg_get_upload_dir().' exists! File permissions should be chmod 777.</p>';
+			echo '<p><strong>WP-Staging File Permission error: </strong>' . wpstg_get_upload_dir() . ' is not write and/or readable. <br> Check if the folder '.wpstg_get_upload_dir().' exists! File permissions should be chmod 755 or 777.</p>';
 		echo '</div>';
         }
+        $path = wpstg_get_upload_dir() . '/clone_details.json';
+        if ( !wpstg_clonedetailsjson_exists() || !is_readable( $path ) ){
+            echo '<div class="error">';
+			echo '<p><strong>WP-Staging File Permission error: </strong>' . $path . ' is not write and/or readable. <br> Check if the file '.$path.' exists! File permissions should be chmod 644 or 777.</p>';
+		echo '</div>';
+        }
+         $path = wpstg_get_upload_dir() . '/remaining_files.json';
+         if ( !wpstg_remainingjson_exists() || !is_readable( $path ) ){
+            echo '<div class="error">';
+			echo '<p><strong>WP-Staging File Permission error: </strong>' . $path . ' is not write and/or readable . <br> Check if the file '.$path.' exists! File permissions should be chmod 644 or 777.</p>';
+		echo '</div>';
+        }
+        
         /*if( ! wpstg_htaccess_exists() && ! get_user_meta( get_current_user_id(), '_wpstg_htaccess_missing_dismissed', true ) && current_user_can( 'manage_options' ) ) {
         if( ! stristr( $_SERVER['SERVER_SOFTWARE'], 'apache' ) )
             //return; // Bail if we aren't using Apache... nginx doesn't use htaccess!
