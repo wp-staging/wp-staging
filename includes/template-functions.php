@@ -118,7 +118,6 @@ function wpstg_scanning() {
 	array_pop($folders);
 
 	$path = wpstg_get_upload_dir() . '/remaining_files.json';
-	//file_put_contents($path, json_encode($all_files, JSON_FORCE_OBJECT));
 	file_put_contents($path, json_encode($all_files));
 
 	wpstg_save_options();
@@ -1021,7 +1020,8 @@ function wpstg_is_root_table($haystack, $needle) {
 	return strpos($haystack, $needle) === 0;
 }
 
-/** Get global clone details options
+/** 
+ * Get global clone details options
  * 
  * @return string JSON that includes the cloning relevant data
  */
@@ -1031,17 +1031,24 @@ function wpstg_get_options() {
 	return json_decode($content, true);
 }
 
-/** Save global clone details options
+/** 
+ * Save global clone details options
+ * and create clone_details.json
  * 
  * @return void
  */
 function wpstg_save_options() {
 	global $wpstg_clone_details;
-	$path = wpstg_get_upload_dir() . '/clone_details.json';
+        $path = wpstg_get_upload_dir();
+        
 	if (wp_is_writable($path)) {
-		file_put_contents($path, json_encode($wpstg_clone_details));
-	}
+                $file = 'clone_details.json';
+		file_put_contents($path . '/' . $file, json_encode($wpstg_clone_details));
+        }else {
+            WPSTG()->logger->info($path . '/' . $file . ' is not writeable! ');
+        }
 }
+
 
 /**
  * Write unexpected errors into the log file
