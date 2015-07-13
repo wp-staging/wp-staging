@@ -26,7 +26,7 @@ function wpstg_get_upload_dir() {
 }
 
 /**
- * Checks if the .htaccess file exists in wp-content/uploads/wpstg
+ * Checks if the .htaccess file exists in wp-content/uploads/wp-staging
  *
  * @since 1.0.0
  * @return bool
@@ -38,7 +38,31 @@ function wpstg_htaccess_exists() {
 }
 
 /**
- * Retrieve the .htaccess rules to wp-content/uploads/wpstg/
+ * Checks if the remaining_files.json file exists in wp-content/uploads/wp-staging
+ *
+ * @since 1.0.0
+ * @return bool
+ */
+function wpstg_remainingjson_exists() {
+	$upload_path = wpstg_get_upload_dir();
+
+	return file_exists( $upload_path . '/remaining_files.json' );
+}
+
+/**
+ * Checks if the clone_details.json file exists in wp-content/uploads/wp-staging
+ *
+ * @since 1.0.0
+ * @return bool
+ */
+function wpstg_clonedetailsjson_exists() {
+	$upload_path = wpstg_get_upload_dir();
+
+	return file_exists( $upload_path . '/clone_details.json' );
+}
+
+/**
+ * Retrieve the .htaccess rules to wp-content/uploads/wp-staging/
  *
  * @since 1.0.0
  *
