@@ -71,7 +71,13 @@ function wpstg_install() {
         // Add plugin installation date and variable for rating div
         add_option('wpstg_installDate',date('Y-m-d h:i:s'));
         add_option('wpstg_RatingDiv','no');
-        
+        // Add First-time variables
+        add_option('wpstg_firsttime','true');
+        add_option('wpstg_is_staging_site','false');
+                
+        // Create empty config files in /wp-content/uploads/wp-staging
+        wpstg_create_remaining_files();
+        wpstg_create_clonedetails_files();
 
 	
                 
@@ -104,10 +110,7 @@ function wpstg_after_install() {
 	if ( ! is_admin() ) {
 		return;
 	}
-        
-        // Create empty config files in /wp-content/uploads/wp-staging
-        wpstg_save_options();
-        wpstg_create_remaining_files();
+
 
 	$activation_pages = get_transient( '_wpstg_activation_pages' );
 
@@ -133,6 +136,21 @@ function wpstg_create_remaining_files() {
         $path = wpstg_get_upload_dir();
 	if (wp_is_writable($path)) {
                 $file = 'remaining_files.json';
+		file_put_contents($path . '/' . $file, null);
+        }else {
+            WPSTG()->logger->info($path . '/' . $file . ' is not writeable! ');
+        }
+}
+
+/** 
+ * Create json cloning_details.json after activation of the plugin
+ * 
+ * @return bool
+ */
+function wpstg_create_clonedetails_files() { 
+        $path = wpstg_get_upload_dir();
+	if (wp_is_writable($path)) {
+                $file = 'clone_details.json';
 		file_put_contents($path . '/' . $file, null);
         }else {
             WPSTG()->logger->info($path . '/' . $file . ' is not writeable! ');
