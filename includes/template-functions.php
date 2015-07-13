@@ -1060,26 +1060,3 @@ function wpstg_error_processing() {
 	wp_die();
 }
 add_action('wp_ajax_error_processing', 'wpstg_error_processing');
-
-function process_chunk( $chunk ) {
-	// prepare db
-	global $wpdb;
-	$this->set_time_limit();
-	$queries = array_filter( explode( ";\n", $chunk ) );
-	array_unshift( $queries, "SET sql_mode='NO_AUTO_VALUE_ON_ZERO';" );
-	ob_start();
-	$wpdb->show_errors();
-	if( empty( $wpdb->charset ) ) {
-		$charset = ( defined( 'DB_CHARSET' ) ? DB_CHARSET : 'utf8' );
-		$wpdb->charset = $charset;
-		$wpdb->set_charset( $wpdb->dbh, $wpdb->charset );
-	}
-	foreach( $queries as $query ) {
-		if( false === $wpdb->query( $query ) ) {
-			$return = ob_get_clean();
-			$result = $this->end_ajax( $return );
-			return $result;
-		}
-	}
-	return true;
-}
