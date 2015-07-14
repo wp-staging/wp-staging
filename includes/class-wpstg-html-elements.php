@@ -8,7 +8,7 @@
  * @subpackage  Classes/HTML
  * @copyright   Copyright (c) 2015, René Hermenau, Pippin Williamsen
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0.0
+ * @since       0.9.0
  */
 
 // Exit if accessed directly
@@ -25,7 +25,7 @@ class WPSTG_HTML_Elements {
 	/**
 	 * Renders an HTML Dropdown
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param array $args
 	 *
@@ -176,7 +176,7 @@ class WPSTG_HTML_Elements {
 	/**
 	 * Renders an HTML textarea
 	 *
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 *
 	 * @param string $name Name attribute of the textarea
 	 * @param string $value The value to prepopulate the field with

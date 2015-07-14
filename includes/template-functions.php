@@ -6,7 +6,7 @@
  * @subpackage  Functions/Templates
  * @copyright   Copyright (c) 2015, René Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0.0
+ * @since       0.9.0
  */
 
 // Exit if accessed directly
@@ -740,6 +740,7 @@ function wpstg_replace_links() {
 
 	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
 	$new_prefix = $wpstg_clone_details['current_clone'] . '_' . $wpdb->prefix;
+
 	$wpstg_clone_details['links_progress'] = isset($wpstg_clone_details['links_progress']) ? $wpstg_clone_details['links_progress'] : 0;
         
 	//Update siteurl in clone options table
@@ -776,9 +777,27 @@ function wpstg_replace_links() {
 			wpstg_save_options();
 		}
 	}
+        
+        //Update rewrite_rules in clone options table
+	if ($wpstg_clone_details['links_progress'] < .44) {
+		$result = $db_helper->query(
+			$db_helper->prepare(
+				'update ' . $new_prefix . 'options set option_value = %s where option_name = \'rewrite_rules\'',
+				''
+			)
+		);
+		if (!$result) {
+			WPSTG()->logger->info('Updating option[rewrite_rules] has been failed');
+			wp_die(-1);
+		} else {
+			$wpstg_clone_details['links_progress'] = .45;
+                        WPSTG()->logger->info('Updating option [rewrite_rules] has been done succesfully');
+			wpstg_save_options();
+		}
+	}
 
 	//replace table prefix in meta_keys
-	if ($wpstg_clone_details['links_progress'] < .5) {
+	if ($wpstg_clone_details['links_progress'] < .50) {
 		$result_options = $db_helper->query(
 			$db_helper->prepare(
 				'update ' . $new_prefix . 'usermeta set meta_key = replace(meta_key, %s, %s) where meta_key like %s',

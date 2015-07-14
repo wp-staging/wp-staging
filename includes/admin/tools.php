@@ -19,7 +19,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * Shows the tools panel which contains WPSTG-specific tools including the
  * built-in import/export system.
  *
- * @since       1.0.0
+ * @since       0.9.0
  * @author      Daniel J Griffiths
  * @return      void
  */

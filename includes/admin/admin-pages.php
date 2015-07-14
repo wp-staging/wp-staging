@@ -6,7 +6,7 @@
  * @subpackage  Admin/Pages
  * @copyright   Copyright (c) 2015, René Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0.0
+ * @since       0.9.0
  */
 
 // Exit if accessed directly
@@ -38,7 +38,7 @@ add_action( 'admin_menu', 'wpstg_add_options_link', 10 );
  *  Only works after the `wp_loaded` hook, & most effective 
  *  starting on `admin_menu` hook.
  *  
- *  @since 1.0.0
+ *  @since 0.9.0
  *  @return bool True if WPSTG admin page.
  */
 function wpstg_is_admin_page() {

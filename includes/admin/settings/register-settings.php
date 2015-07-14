@@ -18,7 +18,7 @@ if ( !defined( 'ABSPATH' ) ) exit;
  *
  * Looks to see if the specified setting exists, returns default if not
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return mixed
  */
 function wpstg_get_option( $key = '', $default = false ) {
@@ -187,7 +187,7 @@ function wpstg_get_registered_settings() {
  * Adds a settings error (for the updated message)
  * At some point this will validate input
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @param array $input The value input in the field
  *

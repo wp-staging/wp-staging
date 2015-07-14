@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 /* Returns list elements for jQuery tab navigation 
  * based on header callback
  * 
- * @since 1.0.0
+ * @since 0.9.0
  * @todo Use sprintf to sanitize  $field['id'] instead using str_replace() Should be much faster? 
  * @return string
  */

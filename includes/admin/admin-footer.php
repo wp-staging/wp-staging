@@ -15,7 +15,7 @@ if( !defined( 'ABSPATH' ) ) exit;
 /**
  * Add rating links to the admin dashboard
  *
- * @since	1.0.0
+ * @since	0.9.0
  * @global	string $typenow
  * @param       string $footer_text The existing footer text
  * @return      string

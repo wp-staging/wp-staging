@@ -14,7 +14,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 /* Install Multisite
  * check first if multisite is enabled
- * @since 1.0.0
+ * @since 0.9.0
  * 
  */
 
@@ -47,7 +47,7 @@ function wpstg_install_multisite($networkwide) {
  * pages. After successful install, the user is redirected to the WPSTG Welcome
  * screen.
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @global $wpdb
  * @global $wpstg_options
  * @global $wp_version

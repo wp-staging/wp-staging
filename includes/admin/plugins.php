@@ -18,7 +18,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * Plugins row action links
  *
  * @author Michael Cannon <mc@aihr.us>
- * @since 1.0.0
+ * @since 0.9.0
  * @param array $links already defined action links
  * @param string $file plugin file path and name being processed
  * @return array $links

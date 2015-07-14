@@ -42,7 +42,7 @@ class WPSTG_Welcome {
 	 * time WPSTG is upgraded to a new version
 	 *
 	 * @access public
-	 * @since 1.0.0
+	 * @since 0.9.0
 	 * @global $wpstg_options Array of all the WPSTG Options
 	 * @return void
 	 */
@@ -62,7 +62,7 @@ class WPSTG_Welcome {
 
 		$upgrade = get_option( 'wpstg_version_upgraded_from' );
                 
-                //@since 1.0.0
+                //@since 0.9.0
 		if( ! $upgrade ) { // First time install
 			wp_safe_redirect( admin_url( 'admin.php?page=wpstg_clone' ) ); exit;
 		} else { // Update

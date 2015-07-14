@@ -15,7 +15,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Admin Messages
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @global $wpstg_options Array of all the WPSTG Options
  * @return void
  */
@@ -101,7 +101,7 @@ add_action( 'admin_notices', 'wpstg_admin_messages' );
  * @subpackage  Admin/Notices
  * @copyright   Copyright (c) 2015, René Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0.0
+ * @since       0.9.0
  * 
  * @return json string
  * 
@@ -116,7 +116,7 @@ add_action('wp_ajax_hideRating','wpstg_HideRatingDiv');
 /**
  * Admin Add-ons Notices
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return void
 */
 function wpstg_admin_addons_notices() {
@@ -127,7 +127,7 @@ function wpstg_admin_addons_notices() {
 /**
  * Dismisses admin notices when Dismiss links are clicked
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return void
 */
 function wpstg_dismiss_notices() {
@@ -150,7 +150,7 @@ add_action( 'wpstg_dismiss_notices', 'wpstg_dismiss_notices' );
 
 /*
  * Show big colored update information below the official update notification in /wp-admin/plugins
- * @since 1.0.0
+ * @since 0.9.0
  * @return void
  * 
  */

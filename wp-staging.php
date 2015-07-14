@@ -6,7 +6,7 @@
  * Description: Staging - Create a staging and clone website with two clicks
  * Author: René Hermenau
  * Author URI: https://www.wp-staging.com
- * Version: 1.0.0
+ * Version: 0.9.0
  * Text Domain: wpstg
  * Domain Path: languages
 
@@ -27,7 +27,7 @@
  * @package WPSTG
  * @category Core
  * @author René Hermenau
- * @version 1.0.0
+ * @version 0.9.0
  */
 // Exit if accessed directly
 if (!defined('ABSPATH'))
@@ -35,7 +35,7 @@ if (!defined('ABSPATH'))
 
 // Plugin version
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '1.0.0');
+    define('WPSTG_VERSION', '0.9.0');
 }
 
 if (!class_exists('wpstaging')) :
@@ -43,7 +43,7 @@ if (!class_exists('wpstaging')) :
     /**
      * Main wpstg Class
      *
-     * @since 1.0.0
+     * @since 0.9.0
      */
     final class wpstaging {
         /** Singleton ************************************************************ */
@@ -237,7 +237,7 @@ if (!class_exists('wpstaging')) :
  *
  * Example: <?php $WPSTG = WPSTG(); ?>
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return object The one true wpstaging Instance
  */
 function WPSTG() {

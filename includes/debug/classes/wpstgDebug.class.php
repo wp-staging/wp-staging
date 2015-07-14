@@ -9,7 +9,7 @@
  * @subpackage  Classes/debug
  * @copyright   Copyright (c) 2015, René Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0.0
+ * @since       0.9.0
  * @author MZAWeb
  * @author Rene Hermenau
  * 

@@ -7,14 +7,14 @@
  * @subpackage  Admin/Upload
  * @copyright   Copyright (c) 2015, Pippin Williamson, René Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.0.0
+ * @since       0.9.0
  */
 
 
 /**
  * Retrieve the absolute path to the file upload directory without the trailing slash
  *
- * @since  1.0.0
+ * @since  0.9.0
  * @return string $path Absolute path to the WPSTG upload directory
  */
 function wpstg_get_upload_dir() {
@@ -28,7 +28,7 @@ function wpstg_get_upload_dir() {
 /**
  * Checks if the .htaccess file exists in wp-content/uploads/wp-staging
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return bool
  */
 function wpstg_htaccess_exists() {
@@ -40,7 +40,7 @@ function wpstg_htaccess_exists() {
 /**
  * Checks if the remaining_files.json file exists in wp-content/uploads/wp-staging
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return bool
  */
 function wpstg_remainingjson_exists() {
@@ -52,7 +52,7 @@ function wpstg_remainingjson_exists() {
 /**
  * Checks if the clone_details.json file exists in wp-content/uploads/wp-staging
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return bool
  */
 function wpstg_clonedetailsjson_exists() {
@@ -64,7 +64,7 @@ function wpstg_clonedetailsjson_exists() {
 /**
  * Retrieve the .htaccess rules to wp-content/uploads/wp-staging/
  *
- * @since 1.0.0
+ * @since 0.9.0
  *
  * @param bool $method
  * @return mixed|void The htaccess rules
@@ -143,7 +143,7 @@ add_action( 'admin_init', 'wpstg_create_protection_files' );
 /**
  * Scans all folders inside of /uploads/wpstg
  *
- * @since 1.0.0
+ * @since 0.9.0
  * @return array $return List of files inside directory
  */
 function wpstg_scan_upload_folders( $path = '', $return = array() ) {
