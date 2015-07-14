@@ -6,7 +6,7 @@
  * @subpackage  includes/staging-functions
  * @copyright   Copyright (c) 2015, Rene Hermenau
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
- * @since       1.1.0
+ * @since       0.9.0
  */
 
 // Exit if accessed directly
@@ -20,10 +20,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @return string wp_die()
  */
 function wpstg_staging_permissions(){
-    if ( !wpstg_is_staging_site() ){
+    if ( wpstg_is_staging_site() ){
         if ( !current_user_can( 'administrator' ) && !wpstg_is_login_page() && !is_admin() )
          wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), './wp-admin/' ) );
-    }
+	      
+    wpstg_reset_permalinks();
+	}
 }
 add_action( 'init', 'wpstg_staging_permissions' );
 
@@ -55,22 +57,16 @@ add_action( 'init', 'wpstg_staging_permissions' );
  */
 function wpstg_change_adminbar_name() {
     global $wp_admin_bar;
-    if (!wpstg_is_staging_site()) {
+    if (wpstg_is_staging_site()) {
         // Main Title
         $wp_admin_bar->add_menu(array(
             'id' => 'site-name',
             'title' => is_admin() ? ('STAGING - ' . get_bloginfo( 'name' ) ) : ( 'STAGING ' . get_bloginfo( 'name' ) . ' Dashboard' ),
             'href' => is_admin() ? home_url('/') : admin_url(),
         ));
-        //Add a link called 'My Link'...
-	/*$wp_admin_bar->add_node(array(
-		'id'    => 'my-link',
-		'title' => 'My Link',
-		'href'  => admin_url()
-	));*/
     }
 }
-add_filter('wp_before_admin_bar_render', 'wpstg_dashboard_sitename');
+add_filter('wp_before_admin_bar_render', 'wpstg_change_adminbar_name');
 
 /**
  * Check if current wordpress instance is the main site or a clone
@@ -79,21 +75,26 @@ add_filter('wp_before_admin_bar_render', 'wpstg_dashboard_sitename');
  * @return bool true if current website is a staging website
  */
 function wpstg_is_staging_site(){
-    global $wpstg_options;
-    $is_staging_site = isset($wpstg_options['wpstg_is_staging_site']) ? $wpstg_options['wpstg_is_staging_site'] : 'false';
-    
+    $is_staging_site = get_option('wpstg_is_staging_site') ? get_option('wpstg_is_staging_site') : 'false';
     if ($is_staging_site === 'true'){
-        return;
+        return true;
     }
 }
 
 /**
- * Change permalink structure of the clone
- * 
+ * Reset permalink structure of the clone to default index.php/p=123
+ * This is used once
  * @global array $wpstg_options options
  */
-function wpstg_change_permalinks(){
-    global $wpstg_options;
+function wpstg_reset_permalinks(){
+    global $wp_rewrite;
+    $permalink_structure = null;
+    $already_executed = get_option('wpstg_rmpermalinks_executed') ? get_option('wpstg_rmpermalinks_executed') : 'false';
+    if (wpstg_is_staging_site() && $already_executed !== 'true' ){ 
+        $wp_rewrite->set_permalink_structure( $permalink_structure );
+        flush_rewrite_rules();
+        update_option('wpstg_rmpermalinks_executed', 'true');
+    }
 }
 
 /**
