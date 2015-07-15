@@ -1,4 +1,4 @@
-=== WP Staging - Create a staging site can be easy === 
+=== WP Staging - Site cloning and staging creation simplified === 
 
 Author URL: https://www.wp-staging.net
 Plugin URL: https://www.wp-staging.net
@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, development, cloning, admin, page, content, plugin, media, backup, test, testing, sandbox
 Requires at least: 3.6+
 Tested up to: 4.2.2
-Stable tag: 0.9
+Stable tag: 0.9.0
 
 WP Staging creates independent staging and development sites that are only available to administrators.
 
@@ -30,10 +30,10 @@ WP Staging can prevent your website from beeing broken or unavailable because of
 
 Change your workflow to the following:
 
-<li> 1. Create a staging website with all your latest production data</li>
+<li> 1. Use WP Staging to create a clone of your website with latest production data</li>
 <li> 2. Update or install your plugins</li>
-<li> 3. Test them carefully</li>
-<li> 4. If they are working without issues you are save to install these tested plugins in your live website</li>
+<li> 3. Test them</li>
+<li> 4. Everything working? You are save to install these tested plugins on your live site</li>
 
 
 <h3> Why should you use a staging website? </h3>
