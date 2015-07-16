@@ -21,6 +21,12 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * @return void
 */
 
+/* Global vars
+ *
+ */
+
+$state_data = ''; 
+
 function wpstg_clone_page() {
 	ob_start();
 	?>
@@ -68,9 +74,9 @@ function wpstg_overview() {
 	<?php if (isset($wpstg_clone_details['current_clone'])) : ?>
 		Current clone: <?php echo $wpstg_clone_details['current_clone']; ?>
 		<a href="#" id="wpstg-reset-clone" class="wpstg-link-btn button-primary" data-clone="<?php echo $wpstg_clone_details['current_clone']; ?>">Reset</a>
-		<a href="#" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="scanning">Continue</a>
+		<a href="#" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_scanning">Continue</a>
 	<?php else : ?>
-		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="scanning">New Staging Site</a>
+		<a href="#" id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_scanning"><?php echo __('Create New Staging Site', 'wpstg'); ?></a>
 	<?php endif; ?>
 	<br>
 	<div id="wpstg-existing-clones">
@@ -91,7 +97,7 @@ function wpstg_overview() {
 	if (check_ajax_referer('wpstg_ajax_nonce', 'nonce', false))
 		wp_die();
 }
-add_action('wp_ajax_overview', 'wpstg_overview');
+add_action('wp_ajax_wpstg_overview', 'wpstg_overview');
 
 
 /**
@@ -133,7 +139,7 @@ function wpstg_scanning() {
 				<?php echo __('Name your new Staging Site:', 'wpstg');?>
 		<input type="text" id="wpstg-new-clone-id" <?php echo $clone_id; ?>>
 	</label>
-	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="cloning"><?php echo __('Start Cloning', 'wpstg');?></a>
+	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_cloning"><?php echo __('Start Cloning', 'wpstg');?></a>
 	<span class="wpstg-error-msg">
 		<?php echo $overflow ? __('Not enough free disk space to create a staging site', 'wpstg') : ''; ?>
 	</span>
@@ -160,7 +166,7 @@ function wpstg_scanning() {
 	<?php
 	wp_die();
 }
-add_action('wp_ajax_scanning', 'wpstg_scanning');
+add_action('wp_ajax_wpstg_scanning', 'wpstg_scanning');
 
 /**
  * Display db tables
@@ -332,7 +338,7 @@ function wpstg_check_clone() {
 	$existing_clones = get_option('wpstg_existing_clones', array());
 	wp_die(!in_array($cur_clone, $existing_clones));
 }
-add_action('wp_ajax_check_clone', 'wpstg_check_clone');
+add_action('wp_ajax_wpstg_check_clone', 'wpstg_check_clone');
 
 /**
  * 3rd step: Cloning
@@ -393,7 +399,7 @@ function wpstg_cloning() {
 	<?php
 	wp_die();
 }
-add_action('wp_ajax_cloning', 'wpstg_cloning');
+add_action('wp_ajax_wpstg_cloning', 'wpstg_cloning');
 
 /**
  * Helper function to get database object for cloning into external database
@@ -685,7 +691,7 @@ function wpstg_copy_files() {
 	wpstg_save_options();
 	wp_die(1);
 }
-add_action('wp_ajax_copy_files', 'wpstg_copy_files');
+add_action('wp_ajax_wpstg_copy_files', 'wpstg_copy_files');
 
 
 /**
@@ -855,7 +861,7 @@ function wpstg_replace_links() {
 
 	wp_die(1);
 }
-add_action('wp_ajax_replace_links', 'wpstg_replace_links');
+add_action('wp_ajax_wpstg_replace_links', 'wpstg_replace_links');
 
 /**
  * Clear all task related data in *.json files
@@ -914,7 +920,7 @@ function wpstg_preremove_clone() {
 	<?php
 	wp_die();
 }
-add_action('wp_ajax_preremove', 'wpstg_preremove_clone');
+add_action('wp_ajax_wpstg_preremove', 'wpstg_preremove_clone');
 
 /**
  * Check the folders for removing
@@ -999,7 +1005,7 @@ function wpstg_remove_clone($isAjax = true) {
 		wp_die(0);
 	}
 }
-add_action('wp_ajax_remove_clone', 'wpstg_remove_clone');
+add_action('wp_ajax_wpstg_remove_clone', 'wpstg_remove_clone');
 
 
 
@@ -1045,7 +1051,7 @@ function wpstg_cancel_cloning() {
 	wpstg_clear_options();
 	wp_die(0);
 }
-add_action('wp_ajax_cancel_cloning', 'wpstg_cancel_cloning');
+add_action('wp_ajax_wpstg_cancel_cloning', 'wpstg_cancel_cloning');
 
 
 /**
@@ -1089,13 +1095,121 @@ function wpstg_save_options() {
 }
 
 
-/**
- * Write unexpected errors into the log file
+    /**
+     * Write unexpected errors into the log file
+     */
+    function wpstg_error_processing() {
+            $msg = sanitize_text_field($_POST['wpstg_error_msg']);
+            if (! empty($msg))
+                    WPSTG()->logger->info($msg);
+            wp_die();
+    }
+    add_action('wp_ajax_wpstg_error_processing', 'wpstg_error_processing');
+
+
+	/**
+ * Install must-use plugin that disables other plugins when wp staging ajax requests are made.
+ * 
+ * @return void;
  */
-function wpstg_error_processing() {
-	$msg = sanitize_text_field($_POST['wpstg_error_msg']);
-	if (! empty($msg))
-		WPSTG()->logger->info($msg);
-	wp_die();
+function wpstg_ajax_muplugin_install() {
+    global $state_data;
+
+    $key_rules = array(
+        'action' => 'key',
+        'install' => 'numeric',
+    );
+    wpstg_set_post_data($key_rules);
+
+    $mu_dir = ( defined('WPMU_PLUGIN_DIR') && defined('WPMU_PLUGIN_URL') ) ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
+    $source = trailingslashit(WPSTG_PLUGIN_DIR) . 'optimizer/wp-staging-optimizer.php';
+    $dest = trailingslashit($mu_dir) . 'wp-staging-optimizer.php';
+
+    if ('1' === trim($state_data['install'])) { // install MU plugin
+        if (!wp_mkdir_p($mu_dir)) {
+            printf(esc_html__('The following directory could not be created: %s', 'wpstg'), $mu_dir);
+            exit;
+        }
+
+        if (!copy($source, $dest)) {
+            printf(esc_html__('Could not copy the compatibility plugin from %1$s to %2$s', 'wpstg'), $source, $dest);
+            exit;
+        }
+    } else { // uninstall MU plugin
+        // TODO: Use WP_Filesystem API.
+        if (file_exists($dest) && !unlink($dest)) {
+            printf(esc_html__('Could not remove the compatibility plugin from %s', 'wpstg'), $dest);
+            exit;
+        }
+    }
+    exit;
 }
-add_action('wp_ajax_error_processing', 'wpstg_error_processing');
+
+add_action('wp_ajax_wpstg_muplugin_install', 'wpstg_ajax_muplugin_install');
+
+/**
+ * Handler for updating the plugins that are not to be loaded during a request (Compatibility Mode).
+ */
+function wpstg_ajax_disable_plugins() {
+    global $state_data, $wpstg_options;
+
+    $key_rules = array(
+        'action' => 'key',
+        'blacklist_plugins' => 'array',
+        'batch_size' => 'int',
+        'query_limit' => 'int'
+        
+    );
+    wpstg_set_post_data($key_rules);
+
+    $wpstg_options['blacklist_plugins'] = (array) $state_data['blacklist_plugins'];
+    $wpstg_options['wpstg_batch_size'] = (int) $state_data['batch_size'];
+    $wpstg_options['wpstg_query_limit'] = (int) $state_data['query_limit'];
+
+    update_option('wpstg_settings', $wpstg_options);
+    exit;
+}
+add_action('wp_ajax_wpstg_disable_plugins', 'wpstg_ajax_disable_plugins');
+
+/**
+ * Sets $state_data from $_POST, potentially un-slashed and sanitized.
+ *
+ * @param array $key_rules An optional associative array of expected keys and their sanitization rule(s).
+ * @param string $context The method that is specifying the sanitization rules. Defaults to calling method.
+ */
+function wpstg_set_post_data($key_rules = array(), $context = '') {
+    global $state_data;
+
+    if (is_null($state_data)) {
+        $state_data = wp_unslash($_POST);
+    } else {
+        return;
+    }
+
+    // Sanitize the new state data.
+    if (!empty($key_rules)) {
+        $context = empty($context) ? wpstg_get_caller_function() : trim($context);
+        $state_data = WPSTG_Sanitize::sanitize_data($state_data, $key_rules, $context);
+
+        if (false === $state_data) {
+            exit;
+        }
+    }
+}
+
+/**
+ * Returns the function name that called the function using this function.
+ *
+ * @return string function name
+ */
+function wpstg_get_caller_function() {
+    list(,, $caller ) = debug_backtrace(false);
+
+    if (!empty($caller['function'])) {
+        $caller = $caller['function'];
+    } else {
+        $caller = '';
+    }
+
+    return $caller;
+}
