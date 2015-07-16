@@ -1,5 +1,4 @@
 jQuery(document).ready(function ($) {
-
 // Start easytabs()
 	if ( $( ".wpstg-tabs" ).length ) {
 		$('#tab_container').easytabs({
@@ -41,9 +40,22 @@ jQuery(document).ready(function ($) {
 // Cloning workflow
 (function ($) {
 	$(document).ready(function () {
+        
+        // Ajax loading spinner    
+        var admin_url = ajaxurl.replace('/admin-ajax.php', '');
+        var spinner_url = admin_url + '/images/spinner';
+        if (2 < window.devicePixelRatio) {
+            spinner_url += '-2x';
+        }
+        spinner_url += '.gif';
+        var ajax_spinner = '<img src="' + spinner_url + '" alt="" class="ajax-spinner general-spinner" />';
+        
+        var doing_plugin_compatibility_ajax = false;
+        
+        // Basic functions
 		$('#wpstg-workflow').on('keyup', '#wpstg-new-clone-id', function () {
 			var data = {
-				action: 'check_clone',
+				action: 'wpstg_check_clone',
 				cloneID: this.value
 			};
 			$.post(ajaxurl, data, function (resp) {
@@ -69,7 +81,7 @@ jQuery(document).ready(function ($) {
 				action: $(this).data('action'),
 				nonce: wpstg.nonce
 			};
-			if (data.action == 'cloning') {
+			if (data.action == 'wpstg_cloning') {
 				data.cloneID = $('#wpstg-new-clone-id').val() || new Date().getTime();
 				wpstg_additional_data(data);
 			}
@@ -78,7 +90,7 @@ jQuery(document).ready(function ($) {
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
-				if (data.action == 'cloning') {
+				if (data.action == 'wpstg_cloning') {
 					clone_db();
 				 }
 			});
@@ -88,7 +100,7 @@ jQuery(document).ready(function ($) {
 			e.preventDefault();
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
-				action: 'overview',
+				action: 'wpstg_overview',
 				nonce: wpstg.nonce
 			};
 			$('#wpstg-workflow').load(ajaxurl, data, function () {
@@ -115,12 +127,17 @@ jQuery(document).ready(function ($) {
 
 		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
 			e.preventDefault();
-
+                        $( '#wpstg-existing-clones' ).append( ajax_spinner );
 			var data = {
-				action: 'preremove',
+				action: 'wpstg_preremove',
 				cloneID: $(this).data('clone')
 			};
-			$('#wpstg-removing-clone').load(ajaxurl, data);
+			$('#wpstg-removing-clone').load(ajaxurl, data, function (response, status, xhr){
+                            if (status === 'success'){
+                                $('#wpstg-existing-clones').children("img").remove();
+                            }
+                        });
+
 		});
 
 		$('#wpstg-workflow').on('click', '#wpstg-cancel-removing', function (e) {
@@ -133,7 +150,7 @@ jQuery(document).ready(function ($) {
 			$('#wpstg-removing-clone').addClass('loading');
 			var cloneID = $(this).data('clone');
 			var data = {
-				action: 'remove_clone',
+				action: 'wpstg_remove_clone',
 				cloneID: cloneID,
 				nonce: wpstg.nonce
 			};
@@ -170,7 +187,7 @@ jQuery(document).ready(function ($) {
 					isFinished = true;
 					console.log(resp);
 					var data = {
-						action: 'error_processing',
+						action: 'wpstg_error_processing',
 						wpstg_error_msg: resp
 					};
 					$.post(ajaxurl, data);
@@ -193,7 +210,7 @@ jQuery(document).ready(function ($) {
 
 		function copy_files() {
 			var data = {
-				action: 'copy_files',
+				action: 'wpstg_copy_files',
 				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
@@ -210,7 +227,7 @@ jQuery(document).ready(function ($) {
 					isFinished = true;
 					console.log(resp);
 					var data = {
-						action: 'error_processing',
+						action: 'wpstg_error_processing',
 						wpstg_error_msg: resp
 					};
 					$.post(ajaxurl, data);
@@ -235,7 +252,7 @@ jQuery(document).ready(function ($) {
 		var isFinished = false;
 		function replace_links() {
 			var data = {
-				action: 'replace_links',
+				action: 'wpstg_replace_links',
 				nonce: wpstg.nonce
 			};
 			$.post(ajaxurl, data, function(resp) {
@@ -252,7 +269,7 @@ jQuery(document).ready(function ($) {
 					isFinished = true;
 					console.log(resp);
 					var data = {
-						action: 'error_processing',
+						action: 'wpstg_error_processing',
 						wpstg_error_msg: resp
 					};
 					$.post(ajaxurl, data);
@@ -289,7 +306,9 @@ jQuery(document).ready(function ($) {
 			$('#wpstg-try-again').hide();
 			$(this).attr('disabled', 'disabled');
 			isCanceled = true;
-			$('#wpstg-cloning-result').text('Please wait...we have to clean up');
+			$('#wpstg-cloning-result').text('Please wait...this can take up to a minute');
+                        $('#wpstg-loader').hide();
+                        $( this ).parent().append( ajax_spinner );
 			if (isFinished)
 				cancelCloning();
 		});
@@ -298,7 +317,7 @@ jQuery(document).ready(function ($) {
 			e.preventDefault();
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
-				action: 'scanning',
+				action: 'wpstg_scanning',
 				nonce: wpstg.nonce
 			};
 			$('#wpstg-workflow').load(ajaxurl, data, function () {
@@ -316,7 +335,7 @@ jQuery(document).ready(function ($) {
 
 		function cancelCloning() {
 			var data = {
-				action: 'cancel_cloning',
+				action: 'wpstg_cancel_cloning',
 				nonce: wpstg.nonce,
 				cloneID: cloneID
 			};
@@ -365,9 +384,134 @@ jQuery(document).ready(function ($) {
 				dir.children('.wpstg-subdir').slideUp();
 			}
 		});
+                // install must-use plugin
+                $( '#plugin-compatibility' ).change( function( e ) {
+			var install = '1';
+			if ( $( this ).is( ':checked' ) ) {
+				var answer = confirm( wpstg.mu_plugin_confirmation );
+
+				if ( !answer ) {
+					$( this ).prop( 'checked', false );
+					return;
+				}
+			} else {
+				install = '0';
+			}
+
+			$( '.plugin-compatibility-wrap' ).toggle();
+
+			$( this ).parent().append( ajax_spinner );
+			$( '#plugin-compatibility' ).attr( 'disabled', 'disabled' );
+			$( '.plugin-compatibility' ).addClass( 'disabled' );
+
+			$.ajax( {
+				url: ajaxurl,
+				type: 'POST',
+				dataType: 'text',
+				cache: false,
+				data: {
+					action: 'wpstg_muplugin_install',
+					install: install
+				},
+				error: function( jqXHR, textStatus, errorThrown ) {
+					alert( "Error: " + wpstg.plugin_compatibility_settings_problem + '\r\n\r\n' + wpstg.status + ' ' + jqXHR.status + ' ' + jqXHR.statusText + '\r\n\r\n' + wpstg.response + '\r\n' + jqXHR.responseText );
+					$( '.ajax-spinner' ).remove();
+					$( '#plugin-compatibility' ).removeAttr( 'disabled' );
+					$( '.plugin-compatibility' ).removeClass( 'disabled' );
+				},
+				success: function( data ) {
+					if ( '' !== $.trim( data ) ) {
+						alert( data );
+					} else {
+						$( '.plugin-compatibility' ).append( '<span class="ajax-success-msg">' + wpstg.saved + '</span>' );
+						$( '.ajax-success-msg' ).fadeOut( 2000, function() {
+							$( this ).remove();
+						} );
+					}
+					$( '.ajax-spinner' ).remove();
+					$( '#plugin-compatibility' ).removeAttr( 'disabled' );
+					$( '.plugin-compatibility' ).removeClass( 'disabled' );
+				}
+			} );
+
+		});
+
+		if ( $( '#plugin-compatibility' ).is( ':checked' ) ) {
+			$( '.plugin-compatibility-wrap' ).show();
+		}
+                $( '.plugin-compatibility-save' ).click( function() {
+			if ( doing_plugin_compatibility_ajax ) {
+				return;
+			}
+			$( this ).addClass( 'disabled' );
+			var select_element = $( '#selected-plugins' );
+			$( select_element ).attr( 'disabled', 'disabled' );
+                        var query_limit = $( '#wpstg_settings\\[wpstg_query_limit\\]' );
+                        var batch_size = $( '#wpstg_settings\\[wpstg_batch_size\\]' );
+
+			doing_plugin_compatibility_ajax = true;
+			$( this ).after( '<img src="' + spinner_url + '" alt="" class="plugin-compatibility-spinner general-spinner" />' );
+
+			$.ajax( {
+				url: ajaxurl,
+				type: 'POST',
+				dataType: 'text',
+				cache: false,
+				data: {
+					action: 'wpstg_disable_plugins',
+					blacklist_plugins: $( select_element ).val(),
+                                        query_limit: $( query_limit ).val(),
+                                        batch_size: $( batch_size ).val(),
+                                        
+				},
+				error: function( jqXHR, textStatus, errorThrown ) {
+					alert( wpstg.blacklist_problem + '\r\n\r\n' + wpstg.status + ' ' + jqXHR.status + ' ' + jqXHR.statusText + '\r\n\r\n' + wpstg.response + '\r\n' + jqXHR.responseText );
+					$( select_element ).removeAttr( 'disabled' );
+					$( '.plugin-compatibility-save' ).removeClass( 'disabled' );
+					doing_plugin_compatibility_ajax = false;
+					$( '.plugin-compatibility-spinner' ).remove();
+					$( '.plugin-compatibility-success-msg' ).show().fadeOut( 2000 );
+				},
+				success: function( data ) {
+					if ( '' !== $.trim( data ) ) {
+						alert( data );
+					}
+					$( select_element ).removeAttr( 'disabled' );
+					$( '.plugin-compatibility-save' ).removeClass( 'disabled' );
+					doing_plugin_compatibility_ajax = false;
+					$( '.plugin-compatibility-spinner' ).remove();
+					$( '.plugin-compatibility-success-msg' ).show().fadeOut( 2000 );
+				}
+			} );
+		} );
+                
+                // select all tables
+		$( '.multiselect-select-all' ).click( function() {
+			var multiselect = $( this ).parents( '.select-wrap' ).children( '.multiselect' );
+			$( 'option', multiselect ).attr( 'selected', 1 );
+			$( multiselect ).focus().trigger( 'change' );
+		} );
+
+		// deselect all tables
+		$( '.multiselect-deselect-all' ).click( function() {
+			var multiselect = $( this ).parents( '.select-wrap' ).children( '.multiselect' );
+			$( 'option', multiselect ).removeAttr( 'selected' );
+			$( multiselect ).focus().trigger( 'change' );
+		} );
+
+		// invert table selection
+		$( '.multiselect-invert-selection' ).click( function() {
+			var multiselect = $( this ).parents( '.select-wrap' ).children( '.multiselect' );
+			$( 'option', multiselect ).each( function() {
+				$( this ).attr( 'selected', !$( this ).attr( 'selected' ) );
+			} );
+			$( multiselect ).focus().trigger( 'change' );
+		} );
+                
 	});
 })(jQuery);
 
+// Load twitter button async
 window.twttr = (function(d, s, id) {
   var js, fjs = d.getElementsByTagName(s)[0],
     t = window.twttr || {};
