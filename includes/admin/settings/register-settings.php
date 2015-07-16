@@ -147,6 +147,16 @@ function wpstg_get_registered_settings() {
 								'size' => 'medium',
 								'std' => '20',
 							),
+                                                        array(
+								'id' => 'wpstg_disabled_plugins',
+								'name' => __('Disable plugins', 'wpstg'),
+								'desc' => __('Select the plugins that should be disabled during build process of the staging site. Some plugins slow down the copy process and add overhead to each request, requiring extra CPU and memory consumption. Some of them can interfere with cloning process and cause them to fail, so we recommend to disable all plugins that are not directly related to WP Staging.', 'wpstg'),
+								'type' => 'install_muplugin',
+								'size' => 'medium',
+								'std' => '20',
+							),
+                                    
+                                    
 							/*'debug_mode' => array(
 								'id' => 'debug_mode',
 								'name' => __( 'Debug mode', 'wpstg' ),
@@ -735,4 +745,54 @@ function wpstg_log_permissions(){
     if (!WPSTG()->logger->checkDir() ){
         return '<br><strong style="color:red;">' . __('Log file directory not writable! Set FTP permission to 755 or 777 for /wp-content/plugins/wp-staging/logs/', 'wpstg') . '</strong> <br> Read here more about <a href="http://codex.wordpress.org/Changing_File_Permissions" target="_blank">file permissions</a> ';
     }
+}
+
+/**
+ * Render template for installing a must-use plugin (MU Plugin) 
+ */
+function wpstg_install_muplugin_callback(){
+    $plugin_compatibility_checked = isset( $GLOBALS['wpstg_optimizer'] ) ? ' checked="checked"' : '';
+    ob_start();
+    ?>
+<div class="option-section plugin-compatibility-section">
+	<label for="plugin-compatibility" class="plugin-compatibility bubble" style="float:left;">
+		<input id="plugin-compatibility" type="checkbox" name="plugin_compatibility"<?php echo $plugin_compatibility_checked; ?> autocomplete="off"<?php echo $plugin_compatibility_checked; ?> />
+		<?php __( 'Improve performance and reliability by not loading the following plugins for migration requests', 'wpstg' ); ?>
+	</label>
+	<a href="#" class="general-helper plugin-compatibility-helper js-action-link"></a>
+
+	<div class="plugin-compatibility-message helper-message bottom">
+		<?php echo __( 'Select the plugins you wish to disable during clone process', 'wpstg' ); ?></br>
+	</div>
+
+	<div class="indent-wrap expandable-content plugin-compatibility-wrap select-wrap" style="display:none;">
+		<select autocomplete="off" class="multiselect" id="selected-plugins" name="selected_plugins[]" multiple="multiple" style="min-height:400px;">
+			<?php
+                        global $wpstg_options;
+			$blacklist = array_flip( (array) $wpstg_options['blacklist_plugins'] );
+			foreach ( get_plugins() as $key => $plugin ) {
+				if ( 0 === strpos( $key, 'wp-staging' ) ) {
+					continue;
+				}
+				$selected = ( isset( $blacklist[ $key ] ) ) ? ' selected' : '';
+				printf( '<option value="%s"%s>%s</option>', $key, $selected, $plugin['Name'] );
+			}
+			?>
+		</select>
+		<br>
+		<a class="multiselect-select-all js-action-link" href="#"><?php _e( 'Select All', 'wpstg' ); ?></a>
+		<span class="select-deselect-divider">/</span>
+		<a class="multiselect-deselect-all js-action-link" href="#"><?php _e( 'Deselect All', 'wpstg' ); ?></a>
+		<span class="select-deselect-divider">/</span>
+		<a class="multiselect-invert-selection js-action-link" href="#"><?php _e( 'Invert Selection', 'wpstg' ); ?></a>
+                <p>
+			<span class="button plugin-compatibility-save"><?php _e( 'Save Changes', 'wpstg' ); ?></span>
+			<span class="plugin-compatibility-success-msg"><?php _ex( 'Saved', 'The settings were saved successfully', 'wpstg' ); ?></span>
+		</p>
+	</div>
+</div>
+<?php
+$html = ob_get_contents();
+ob_end_clean();
+echo $html;
 }
