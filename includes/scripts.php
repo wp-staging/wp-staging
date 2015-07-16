@@ -41,7 +41,14 @@ function wpstg_load_admin_scripts( $hook ) {
 	wp_enqueue_script( 'wpstg-admin-script', $js_dir . 'wpstg-admin' . $suffix . '.js', array( 'jquery' ), WPSTG_VERSION, false );
 	wp_enqueue_style( 'wpstg-admin', $css_dir . 'wpstg-admin' . $suffix . '.css', WPSTG_VERSION );
 	wp_localize_script( 'wpstg-admin-script', 'wpstg', array(
-		'nonce' => wp_create_nonce( 'wpstg_ajax_nonce' )
+		'nonce'                                 => wp_create_nonce( 'wpstg_ajax_nonce' ),
+                'mu_plugin_confirmation'                => __( "If confirmed we will install an additional WordPress 'Must Use' plugin. This plugin will allow us to control which plugins are loaded during WP Staging specific operations. Do you wish to continue?", 'wpstg' ),
+                'plugin_compatibility_settings_problem' => __( 'A problem occurred when trying to change the plugin compatibility setting.', 'wpstg' ),
+                'saved'                                 => __( 'Saved', 'The settings were saved successfully', 'wpstg' ),
+                'status'                                => __( 'Status', 'Current request status', 'wpstg' ),
+                'response'                              => __( 'Response', 'The message the server responded with', 'wpstg' ),
+            	'blacklist_problem'                     => __( 'A problem occurred when trying to add plugins to backlist.', 'wpstg' ),
+
 	));
 }
 add_action( 'admin_enqueue_scripts', 'wpstg_load_admin_scripts', 100 );
