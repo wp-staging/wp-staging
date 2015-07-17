@@ -132,8 +132,6 @@ function wpstg_options_page() {
 	<div class="wrap wpstg_admin">
              <h1 class="wp-staginglogo"> <?php echo __('Welcome to WP-Staging ', 'wpstg') . WPSTG_VERSION; ?></h1>
             <div class="about-text" style="font-weight: 400;line-height: 1.6em;font-size: 19px;">
-                <?php echo __('Thank you for updating to the latest version!', 'wpstg');?>
-                <br>
                 <?php echo __('WP-Staging is ready to create a staging website for you!', 'wpstg'); ?>
                 <?php if (!function_exists('curl_init')){ echo '<br><span style="color:red;">' . __('php_curl is not working on your server. </span><a href="http://us.informatiweb.net/programmation/32--enable-curl-extension-of-php-on-windows.html" target="_blank">Please enable it.</a>'); } ?>
                 <br>

@@ -81,11 +81,14 @@ function wpstg_overview() {
 	<br>
 	<div id="wpstg-existing-clones">
 		<?php if (!empty($existing_clones)) : ?>
-			<h3>Available Staging Sites:</h3>
+			<h3><?php _e('Available Staging Sites:', 'wpstg'); ?></h3>
 			<?php foreach ($existing_clones as $clone) : ?>
 				<div class="wpstg-clone" id="<?php echo $clone; ?>">
-					<a href="<?php echo get_home_url() . "/$clone/wp-admin"; ?>" target="_blank"><?php echo $clone; ?></a>
-					<a href="#" class="wpstg-remove-clone" data-clone="<?php echo $clone; ?>">&times;</a>
+					<a href="<?php echo get_home_url() . "/$clone/wp-admin"; ?>" class="wpstg-clone-title" target="_blank"><?php echo $clone; ?></a>
+					<a href="<?php echo get_home_url() . "/$clone/wp-admin"; ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank"><?php _e('Open', 'wpstg'); ?></a>
+					<a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $clone; ?>"><?php _e('Run', 'wpstg'); ?></a>
+					<a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo $clone; ?>"><?php _e('Delete', 'wpstg'); ?></a>
+					<a href="#" class="wpstg-edit-clone wpstg-clone-action" data-clone="<?php echo $clone; ?>"><?php _e('Edit', 'wpstg'); ?></a>
 				</div> <!-- .wpstg-clone -->
 			<?php endforeach; ?>
 		<?php endif; ?>
@@ -104,14 +107,29 @@ add_action('wp_ajax_wpstg_overview', 'wpstg_overview');
  * 2nd step: Scanning
  * Collect database and file data for clone
  * 
- * @global type $wpdb
- * @global type $wpstg_clone_details
- * @global type $all_files
+ * @global object $wpdb
+ * @global array $wpstg_clone_details
+ * @global array $all_files
  */
 function wpstg_scanning() {
 	global $wpdb, $wpstg_clone_details, $all_files;
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$wpstg_clone_details = wpstg_get_options();
+        
+        $unchecked_tables = array();
+	$excluded_folders = array();
+	$clone_path = 'value="' . get_home_path() . '"';
+
+	$disabled = isset($wpstg_clone_details['current_clone']) ? 'disabled' : false;
+	$clone = isset($_POST['clone']) ? $_POST['clone']
+		: (isset($wpstg_clone_details['current_clone']) ? $wpstg_clone_details['current_clone'] : false);
+	if ($clone) {
+		//$wpstg_profile = wpstg_get_profile($clone);
+		//$unchecked_tables = $wpstg_profile['unchecked_tables'];
+		//$excluded_folders = $wpstg_profile['excluded_folders'];
+		//$excluded_folders[] = get_home_path() . $wpstg_profile['name'];
+		//$clone_path = 'value = "' . $wpstg_profile['path'] . '"';
+	}
 
 	//Scan DB
 	$tables = $wpdb->get_results("show table status like '" . $wpdb->prefix . "_%'");
@@ -137,32 +155,47 @@ function wpstg_scanning() {
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
 				<?php echo __('Name your new Staging Site:', 'wpstg');?>
-		<input type="text" id="wpstg-new-clone-id" <?php echo $clone_id; ?>>
+		<input type="text" id="wpstg-new-clone-id" value="<?php echo $clone; ?>" <?php echo $disabled; ?>>
 	</label>
-	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_cloning"><?php echo __('Start Cloning', 'wpstg');?></a>
-	<span class="wpstg-error-msg">
+	<span class="wpstg-error-msg" id="wpstg-clone-id-error">
 		<?php echo $overflow ? __('Not enough free disk space to create a staging site', 'wpstg') : ''; ?>
 	</span>
 
 	<div class="wpstg-tabs-wrapper">
-		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db"><?php echo __('Database', 'wpstg'); ?></a>
-		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files"><?php echo __('Files', 'wpstg'); ?></a></a>
+		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
+			<span class="wpstg-tab-triangle">&#9658;</span>
+			<?php echo __('DB Tables', 'wpstg'); ?>
+		</a>
 		<div class="wpstg-tab-section" id="wpstg-scanning-db">
 			<?php
 				do_action('wpstg_scanning_db');
 				echo '<h4 style="margin:0px;">' . __('Select the tables to be copied. Greyed out tables are already copied in previous steps and the copying will continous from this step:', 'wpstg') . '<h4>';
-				wpstg_show_tables($tables); ?>
+				wpstg_show_tables($tables, $unchecked_tables); ?>
 		</div> <!-- #wpstg-scanning-db -->
+
+		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
+			<span class="wpstg-tab-triangle">&#9658;</span>
+			<?php echo __('Files', 'wpstg'); ?>
+		</a>
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
 
 			<?php
 				echo '<h4 style="margin:0px;">' . __('Select the folders to be copied:', 'wpstg') . '<h4>';
-				wpstg_directory_structure($folders);
+				wpstg_directory_structure($folders, null, false, false, $excluded_folders);
 				wpstg_show_large_files();
 			?>
 		</div> <!-- #wpstg-scanning-files -->
+
+		<a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
+			<span class="wpstg-tab-triangle">&#9658;</span>
+			<?php echo __('Advanced Options', 'wpstg'); ?>
+		</a>
+		<div class="wpstg-tab-section" id="wpstg-advanced-settings">
+			<?php echo wpstg_advanced_settings(); ?>
+		</div> <!-- #wpstg-advanced-settings -->
 	</div>
-	<a href="#" class="wpstg-prev-step-link wpstg-link-btn button-primary">Back</a>
+	<a href="#" class="wpstg-prev-step-link wpstg-link-btn button-primary"><?php _e('Back', 'wpstg'); ?></a>
+	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_cloning"><?php echo __('Start Cloning', 'wpstg');?></a>
 	<?php
 	wp_die();
 }
@@ -171,18 +204,22 @@ add_action('wp_ajax_wpstg_scanning', 'wpstg_scanning');
 /**
  * Display db tables
  * 
- * @global type $wpstg_clone_details
- * @param type $tables
+ * @param array $tables
+ * @param array $unchecked_tables
+ * @global array $wpstg_clone_details
  */
-function wpstg_show_tables($tables) {
+function wpstg_show_tables($tables, $unchecked_tables = array()) {
 	global $wpstg_clone_details;
 
 	$cloned_tables = isset($wpstg_clone_details['cloned_tables']) ? $wpstg_clone_details['cloned_tables'] : array();
-		
 	foreach ($tables as $table) { ?>
 		<div class="wpstg-db-table">
 			<label>
-				<input type="checkbox" checked name="<?php echo $table->Name; ?>" <?php echo in_array($table->Name, $cloned_tables) ? 'disabled' : ''; ?>>
+				<?php
+				$attributes = in_array($table->Name, $unchecked_tables) ? '' : 'checked';
+				$attributes .= in_array($table->Name, $cloned_tables) ? ' disabled' : '';
+				?>
+				<input type="checkbox" name="<?php echo $table->Name; ?>" <?php echo $attributes; ?>>
 				<?php echo $table->Name; ?>
 			</label>
 			<span class="wpstg-size-info">
@@ -196,12 +233,12 @@ function wpstg_show_tables($tables) {
 /**
  * Scan all files and create directory structure
  * 
- * @global type $all_files
- * @global type $wpstg_clone_details
+ * @global array $all_files
+ * @global array $wpstg_clone_details
  * @global $wpstg_options $wpstg_options
- * @param type $path
+ * @param string $path
  * @param array $folders
- * @return type
+ * @return array
  */
 function wpstg_scan_files($path, &$folders = array()) {
 	global $all_files, $wpstg_clone_details, $wpstg_options;
@@ -263,22 +300,29 @@ function wpstg_get_files($folder, &$files = array(), &$total_size) {
  * 
  * @param array $folders list of folder names
  * @param string $path base path for the directory structure
- * @param string $not_checked checkbox value
- * @param string $is_removing
+ * @param bool $not_checked checkbox value
+ * @param bool $is_removing
+ * @param array $excluded_folders
  */
-function wpstg_directory_structure($folders, $path = null, $not_checked = false, $is_removing = false) {
+function wpstg_directory_structure($folders, $path = null, $not_checked = false, $is_removing = false, $excluded_folders = array()) {
+	/** @var array $existing_clones */
 	$existing_clones = get_option('wpstg_existing_clones', array());
 	$path = $path === null ? rtrim(get_home_path(), '/') : $path;
 
 	foreach ($folders as $name => $folder) {
 		$size = array_pop($folder);
-		if ($is_removing)
-			$tmp = false;
+		if ($is_removing) {
+			$not_checked_tmp = false;
+		} else {
+			if (empty ($excluded_folders))
+				$not_checked_tmp = $not_checked ? $not_checked : in_array($name, $existing_clones);
 		else
-			$tmp = $not_checked ? $not_checked : in_array($name, $existing_clones); ?>
+				$not_checked_tmp = in_array("$path/$name", $excluded_folders);
+		}
+	?>
 		<div class="wpstg-dir">
-			<input type="checkbox" class="wpstg-check-dir" <?php echo $tmp ? '' : 'checked'; ?> name="<?php echo "$path/$name"; ?>">
-			<a href="#" class="wpstg-expand-dirs <?php echo $tmp ? 'disabled' : ''; ?>"><?php echo $name;?></a>
+			<input type="checkbox" class="wpstg-check-dir" <?php echo $not_checked_tmp ? '' : 'checked'; ?> name="<?php echo "$path/$name"; ?>">
+			<a href="#" class="wpstg-expand-dirs <?php echo $not_checked_tmp ? 'disabled' : ''; ?>"><?php echo $name;?></a>
 			<span class="wpstg-size-info"><?php echo wpstg_short_size($size); ?></span>
 				<?php if (!empty($folder)) : ?>
 					<div class="wpstg-dir wpstg-subdir">
@@ -328,7 +372,16 @@ function wpstg_show_large_files() {
 }
 
 /**
- * Check if clone with the same name already exists
+ * Display advanced settings
+ */
+function wpstg_advanced_settings() {
+	?>
+	Comming soon
+	<?php
+}
+
+/**
+ * Check if clone with the same name is already exists
  */
 function wpstg_check_clone() {
 	global $wpstg_clone_details;
@@ -374,6 +427,12 @@ function wpstg_cloning() {
 	$wpstg_clone_details['links_progress'] = isset($wpstg_clone_details['links_progress']) ? $wpstg_clone_details['links_progress'] : 0;
 
 	wpstg_save_options();
+
+	$unchecked_tables = isset($_POST['uncheckedTables']) ? $_POST['uncheckedTables'] : array();
+	$excluded_folders = isset($_POST['excludedFolders']) ? $_POST['excludedFolders'] : array();
+	//$clone_path = isset($_POST['path']) ? $_POST['path'] : get_home_path();
+
+	//wpstg_initiate_profile($clone, $unchecked_tables, $excluded_folders, $clone_path);
 	do_action('wpstg_start_cloning', $clone);
 	?>
 	<div class="wpstg-cloning-section"> <?php echo __('Copy DB tables', 'wpstg');?>
@@ -391,15 +450,46 @@ function wpstg_cloning() {
 			<div class="wpstg-progress" id="wpstg-links-progress" style="width: <?php echo 100 * $wpstg_clone_details['links_progress']; ?>%"></div>
 		</div>
 	</div>
-	<span id="wpstg-cloning-result"></span>
 	<a href="<?php echo get_home_url();?>" id="wpstg-clone-url" target="_blank"></a>
 	<a href="#" id="wpstg-cancel-cloning" class="wpstg-link-btn button-primary"><?php echo __('Cancel', 'wpstg');?></a>
 	<a href="#" id="wpstg-home-link" class="wpstg-link-btn button-primary"><?php echo __('Home', 'wpstg');?></a>
 	<a href="#" id="wpstg-try-again" class="wpstg-link-btn button-primary"><?php echo __('Try Again', 'wpstg');?></a>
+	<div id="wpstg-error-wrapper">
+		<span id="wpstg-cloning-result"></span>
+		<a href="#" id="wpstg-show-error-details">Show Details</a>
+		<div id="wpstg-error-details"></div>
+	</div>
 	<?php
 	wp_die();
 }
 add_action('wp_ajax_wpstg_cloning', 'wpstg_cloning');
+
+/**
+ * Create a clone profile with start settings
+ *
+ * @param $clone
+ * @param $unchecked_tables
+ * @param $excluded_folders
+ */
+function wpstg_initiate_profile($clone, $unchecked_tables, $excluded_folders, $path) {
+	$wpstg_profiles = get_option('wpstg_profiles', array());
+
+	$profile = array(
+		'name' => $clone,
+		'unchecked_tables' => $unchecked_tables,
+		'excluded_folders' => $excluded_folders,
+		'path' => $path,
+	);
+	$wpstg_profiles[$clone] = $profile;
+
+	update_option('wpstg_profiles', $wpstg_profiles);
+}
+
+function wpstg_get_profile($clone) {
+	$wpstg_profiles = get_option('wpstg_profiles', array());
+
+	return isset($wpstg_profiles[$clone]) ? $wpstg_profiles[$clone] : false;
+}
 
 /**
  * Helper function to get database object for cloning into external database
@@ -411,6 +501,8 @@ function wpstg_clone_db() {
 	global $wpdb, $wpstg_clone_details;
 	$wpstg_clone_details = wpstg_get_options();
 
+	// $clone = $profile = wpstg_get_profile
+
 	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
 	if ($db_helper->dbname != $wpdb->dbname)
 		wpstg_clone_db_external($db_helper);
@@ -418,7 +510,6 @@ function wpstg_clone_db() {
 		wpstg_clone_db_internal();
 }
 add_action('wp_ajax_wpstg_clone_db', 'wpstg_clone_db');
-
 
 /**
  * Clone into internal database
@@ -529,7 +620,6 @@ function wpstg_clone_db_external($db_helper) {
 	check_ajax_referer( 'wpstg_ajax_nonce', 'nonce' );
 	$one = 1;
         
-
 	$progress = isset($wpstg_clone_details['db_progress']) ? $wpstg_clone_details['db_progress'] : 0;
 	if ($progress >= 1)
 		wp_die(1);
@@ -735,8 +825,8 @@ function wpstg_copy_large_file($src, $dst, $batch) {
 /**
  * Replace all urls in data
  * 
- * @global type $wpdb
- * @global type $wpstg_clone_details
+ * @global object $wpdb
+ * @global array $wpstg_clone_details
  */
 
 function wpstg_replace_links() {
@@ -746,10 +836,8 @@ function wpstg_replace_links() {
 
 	$db_helper = apply_filters('wpstg_db_helper', $wpdb, $wpstg_clone_details['current_clone']);
 	$new_prefix = $wpstg_clone_details['current_clone'] . '_' . $wpdb->prefix;
-
 	$wpstg_clone_details['links_progress'] = isset($wpstg_clone_details['links_progress']) ? $wpstg_clone_details['links_progress'] : 0;
-        
-	//Update siteurl in clone options table
+	//replace site url in options
 	if ($wpstg_clone_details['links_progress'] < .1) {
 		$result = $db_helper->query(
 			$db_helper->prepare(
@@ -758,8 +846,8 @@ function wpstg_replace_links() {
 			)
 		);
 		if (!$result) {
-			WPSTG()->logger->info('Replacing siteurl has been failed.');
-			wp_die(-1);
+			WPSTG()->logger->info('Replacing site url has been failed. ' . $db_helper->dbh->error);
+			wp_die($db_helper->dbh->error);
 		} else {
 			$wpstg_clone_details['links_progress'] = .33;
                         WPSTG()->logger->info('Replacing siteurl has been done succesfully');
@@ -793,8 +881,9 @@ function wpstg_replace_links() {
 			)
 		);
 		if (!$result) {
-			WPSTG()->logger->info('Updating option[rewrite_rules] has been failed');
-			wp_die(-1);
+                        WPSTG()->logger->info('Updating option[rewrite_rules] not successfull, probably because the main site is not using permalinks');
+                        // Do not die here. This option is not available on sites with permalinks enabled
+			//wp_die(-1);
 		} else {
 			$wpstg_clone_details['links_progress'] = .45;
                         WPSTG()->logger->info('Updating option [rewrite_rules] has been done succesfully');
@@ -853,8 +942,10 @@ function wpstg_replace_links() {
 	}
 
 	$existing_clones = get_option('wpstg_existing_clones', array());
+	if (false === array_search($wpstg_clone_details['current_clone'], $existing_clones)) {
 	$existing_clones[] = $wpstg_clone_details['current_clone'];
 	update_option('wpstg_existing_clones', $existing_clones);
+	}
 
 	wpstg_clear_options();
 
@@ -884,7 +975,7 @@ function wpstg_clear_options() {
 
 /** Check the files before removing
  * 
- * @global type $wpdb
+ * @global object $wpdb
  */
 function wpstg_preremove_clone() {
 	global $wpdb;
@@ -897,25 +988,39 @@ function wpstg_preremove_clone() {
 	$path = get_home_path() . $clone;
 	$folders[$clone] = wpstg_check_removing_files($path);
 	?>
-	<h4 class="wpstg-notice-alert"><?php echo __('Attention: Check carefully if this DB tables and files are safe to delete for the staging site <span style="background-color:#575757;color:#fff;">','wpstg') . $clone . '</span> Usually the preselected data can be deleted without any risk, but in case something goes wrong you better check it.'; ?> 
+	<h4 class="wpstg-notice-alert">
+		<?php _e('Attention: Check carefully if this DB tables and files are safe to delete for the staging site','wpstg'); ?>
+		<span style="background-color:#575757;color:#fff;"><?php echo $clone; ?></span>
+		<?php _e('Usually the preselected data can be deleted without any risk, but in case something goes wrong you better check it.','wpstg'); ?> 
 		</h4>
 	<div class="wpstg-tabs-wrapper">
-		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db"><?php echo __('DB tables to remove', 'wpstg');?></a>
-		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files"><?php echo __('Files to remove', 'wpstg');?></a>
+		<a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
+			<span class="wpstg-tab-triangle">&#9658;</span>
+			<?php echo __('DB tables to remove', 'wpstg');?>
+		</a>
 		<div class="wpstg-tab-section" id="wpstg-scanning-db">
+			<h4 style="margin:0px;">
 			<?php
-				echo '<h4 style="margin:0px;">' . __('Unselect the tables for not beeing copied:', 'wpstg') . '<h4>';
+				_e('Unselect the tables for not beeing copied:', 'wpstg');
 				wpstg_show_tables($tables);
 			?>
+			<h4>
 		</div> <!-- #wpstg-scanning-db -->
+
+		<a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
+			<span class="wpstg-tab-triangle">&#9658;</span>
+			<?php echo __('Files to remove', 'wpstg');?>
+		</a>
 		<div class="wpstg-tab-section" id="wpstg-scanning-files">
+			<h4 style="margin:0px;">
 			<?php
-				echo '<h4 style="margin:0px;">' . __('Unselect the folders to exclude them from removing. You can click on a folder name to expand it:', 'wpstg') . '<h4>';
+				_e('Unselect the folders to exclude them from removing. You can click on a folder name to expand it:', 'wpstg');
 				wpstg_directory_structure($folders, null, false, true); 
 			?>
+			<h4>
 		</div> <!-- #wpstg-scanning-files -->
 	</div>
-	<a href="#" class="wpstg-link-btn button-primary" id="wpstg-cancel-removing">Cancel</a>
+	<a href="#" class="wpstg-link-btn button-primary" id="wpstg-cancel-removing"><?php _e('Cancel', 'wpstg');?></a>
 	<a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="<?php echo $clone; ?>"><?php echo __('Remove', 'wpstg');?></a>
 	<?php
 	wp_die();
@@ -927,7 +1032,8 @@ add_action('wp_ajax_wpstg_preremove', 'wpstg_preremove_clone');
  * 
  * @param string $path
  * @param array $folders
- * @return type array of folder for removing
+ *
+ * @return array
  */
 function wpstg_check_removing_files($path, &$folders = array()) {
 	if (is_dir($path)) {
@@ -952,9 +1058,9 @@ function wpstg_check_removing_files($path, &$folders = array()) {
 /**
  * Removes current clone
  * 
- * @global type $wpdb
- * @global type $wpstg_clone_details
- * @param string $isAjax
+ * @global object $wpdb
+ * @global array $wpstg_clone_details
+ * @param bool $isAjax
  */
 function wpstg_remove_clone($isAjax = true) {
 	global $wpdb, $wpstg_clone_details;
@@ -1046,6 +1152,7 @@ function deleteDirectory($dir, $excluded_dirs) {
  * 
  * @return void
  */
+
 function wpstg_cancel_cloning() {
 	wpstg_remove_clone(false);
 	wpstg_clear_options();
@@ -1065,8 +1172,7 @@ function wpstg_is_root_table($haystack, $needle) {
 	return strpos($haystack, $needle) === 0;
 }
 
-/** 
- * Get global clone details options
+/** Get global clone details options
  * 
  * @return string JSON that includes the cloning relevant data
  */
@@ -1094,9 +1200,8 @@ function wpstg_save_options() {
         }
 }
 
-
     /**
-     * Write unexpected errors into the log file
+ * Write unexpected errors into the logs file
      */
     function wpstg_error_processing() {
             $msg = sanitize_text_field($_POST['wpstg_error_msg']);

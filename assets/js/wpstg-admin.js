@@ -1,4 +1,5 @@
 jQuery(document).ready(function ($) {
+
 // Start easytabs()
 	if ( $( ".wpstg-tabs" ).length ) {
 		$('#tab_container').easytabs({
@@ -60,15 +61,73 @@ jQuery(document).ready(function ($) {
 			};
 			$.post(ajaxurl, data, function (resp) {
 				if (resp) {
-					$('#wpstg-new-clone-id').removeClass('wpstg-clone-exists');
-					$('#wpstg-start-cloning').removeAttr('disabled')
-						.next('.wpstg-error-msg').text('');
+					$('#wpstg-new-clone-id').removeClass('wpstg-error-input');
+					$('#wpstg-start-cloning').removeAttr('disabled');
+					$('#wpstg-clone-id-error').text('');
 				} else {
-					$('#wpstg-new-clone-id').addClass('wpstg-clone-exists');
-					$('#wpstg-start-cloning').attr('disabled', 'disabled')
-						.next('.wpstg-error-msg').text('There is already a staging site with this name!');
+					$('#wpstg-new-clone-id').addClass('wpstg-error-input');
+					$('#wpstg-start-cloning').attr('disabled', 'disabled');
+					$('#wpstg-clone-id-error').text('There is already a staging site with this name!');
 				}
 			})
+		});
+
+		$('#wpstg-workflow').on('keyup', '#wpstg-clone-path', function () {
+			var path = this.value;
+			if (path.length < 1)  {
+				$('#wpstg-clone-path').removeClass('wpstg-error-input');
+				$('#wpstg-start-cloning').removeAttr('disabled');
+				$('#wpstg-path-error').text('');
+				return true;
+			}
+
+			var data = {
+				action: 'wpstg_check_path',
+				path: path
+			};
+
+			$.post(ajaxurl, data, function (resp) {
+				if (resp) {
+					$('#wpstg-clone-path').removeClass('wpstg-error-input');
+					$('#wpstg-start-cloning').removeAttr('disabled');
+					$('#wpstg-path-error').text('');
+				} else {
+					$('#wpstg-clone-path').addClass('wpstg-error-input');
+					$('#wpstg-start-cloning').attr('disabled', 'disabled');
+					$('#wpstg-path-error').text('This folder is not exists or not writable.');
+				}
+			});
+		});
+
+		$('#wpstg-workflow').on('click', '.wpstg-edit-clone', function (e) {
+			e.preventDefault();
+
+			var data = {
+				action: 'wpstg_edit_profile',
+				clone: $(this).data('clone'),
+				nonce: wpstg.nonce
+			};
+			$('#wpstg-workflow').load(ajaxurl, data);
+		});
+
+		$('#wpstg-workflow').on('click', '#wpstg-save-profile', function (e) {
+			e.preventDefault();
+
+			var data = {
+				action: 'wpstg_save_profile',
+				cloneID: $(this).data('clone'),
+				nonce: wpstg.nonce,
+				dbCredentials: {
+					dbname: $('#wpstgdb-name').val(),
+					dbuser: $('#wpstgdb-user').val(),
+					dbpassword: $('#wpstgdb-password').val(),
+					dbhost: $('#wpstgdb-host').val()
+				}
+			};
+			wpstg_additional_data(data, false);
+			$.post(ajaxurl, data, function (resp) {
+				location.reload();
+			});
 		});
 
 		$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
@@ -83,7 +142,7 @@ jQuery(document).ready(function ($) {
 			};
 			if (data.action == 'wpstg_cloning') {
 				data.cloneID = $('#wpstg-new-clone-id').val() || new Date().getTime();
-				wpstg_additional_data(data);
+				wpstg_additional_data(data, false);
 			}
 
 			$('#wpstg-workflow').load(ajaxurl, data, function () {
@@ -111,7 +170,7 @@ jQuery(document).ready(function ($) {
 		});
 
 		var cloneID;
-		function wpstg_additional_data(data) {
+		function wpstg_additional_data(data, isRemoving) {
 			data.uncheckedTables = [];
 			$('.wpstg-db-table input:not(:checked)').each(function () {
 				data.uncheckedTables.push(this.name);
@@ -125,8 +184,26 @@ jQuery(document).ready(function ($) {
 			cloneID = data.cloneID.toString();
 		}
 
+		$('#wpstg-workflow').on('click', '.wpstg-execute-clone', function (e) {
+			e.preventDefault();
+
+			$('#wpstg-workflow').addClass('loading');
+			var data = {
+				action: 'wpstg_scanning',
+				clone: $(this).data('clone'),
+				nonce: wpstg.nonce
+			};
+
+			$('#wpstg-workflow').load(ajaxurl, data, function () {
+				$('#wpstg-workflow').removeClass('loading');
+				$('.wpstg-current-step').removeClass('wpstg-current-step')
+					.next('li').addClass('wpstg-current-step');
+			});
+		});
+
 		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
 			e.preventDefault();
+			$('.wpstg-clone').removeClass('active');
                         $( '#wpstg-existing-clones' ).append( ajax_spinner );
 			var data = {
 				action: 'wpstg_preremove',
@@ -137,11 +214,11 @@ jQuery(document).ready(function ($) {
                                 $('#wpstg-existing-clones').children("img").remove();
                             }
                         });
-
 		});
 
 		$('#wpstg-workflow').on('click', '#wpstg-cancel-removing', function (e) {
 			e.preventDefault();
+			$('.wpstg-clone').removeClass('active');
 			$('#wpstg-removing-clone').html('');
 		});
 
@@ -155,13 +232,16 @@ jQuery(document).ready(function ($) {
 				nonce: wpstg.nonce
 			};
 
-			wpstg_additional_data(data);
+			wpstg_additional_data(data, true);
 
 			$.post(ajaxurl, data, function (resp) {
 				if (resp == 0) {
 					$('#wpstg-removing-clone').html('');
 					$('.wpstg-clone#' + cloneID).remove();
 					$('#wpstg-removing-clone').removeClass('loading');
+					var remaining_clones = $('.wpstg-clone');
+					if (remaining_clones.length < 1)
+						$('#wpstg-existing-clones h3').text('');
 				}
 			});
 		});
@@ -180,9 +260,11 @@ jQuery(document).ready(function ($) {
 				}
 
 				if (isNaN(resp)) { //Unknown error
-					$('#wpstg-try-again').show();
+					$('#wpstg-try-again').css('display', 'inline-block');
 					$('#wpstg-cancel-cloning').text('Reset');
-					$('#wpstg-cloning-result').text('Fail');
+					$('#wpstg-cloning-result').text('Fali.');
+					$('#wpstg-error-wrapper').show();
+					$('#wpstg-error-details').html(resp);
 					$('#wpstg-loader').hide();
 					isFinished = true;
 					console.log(resp);
@@ -192,9 +274,9 @@ jQuery(document).ready(function ($) {
 					};
 					$.post(ajaxurl, data);
 				} else if (resp < 0) { //Fail
-					$('#wpstg-try-again').show();
+					$('#wpstg-try-again').css('display', 'inline-block');
 					$('#wpstg-cancel-cloning').text('Reset');
-					$('#wpstg-cloning-result').text('Fail');
+					$('#wpstg-cloning-result').text('Fail.');
 					$('#wpstg-loader').hide();
 					isFinished = true;
 				} else if(resp < 1) { //Continue cloning
@@ -219,10 +301,21 @@ jQuery(document).ready(function ($) {
 					return false;
 				}
 
-				if (isNaN(resp)) { //Unknown error
-					$('#wpstg-try-again').show();
+				if (resp == 'not writable') {
+					$('#wpstg-try-again').css('display', 'inline-block');
 					$('#wpstg-cancel-cloning').text('Reset');
-					$('#wpstg-cloning-result').text('Fail');
+					$('#wpstg-cloning-result').text('This folder is not exists or not writable');
+					$('#wpstg-loader').hide();
+					isFinished = true;
+					return;
+				}
+
+				if (isNaN(resp)) { //Unknown error
+					$('#wpstg-try-again').css('display', 'inline-block');
+					$('#wpstg-cancel-cloning').text('Reset');
+					$('#wpstg-cloning-result').text('Fail.');
+					$('#wpstg-error-wrapper').show();
+					$('#wpstg-error-details').html(resp);
 					$('#wpstg-loader').hide();
 					isFinished = true;
 					console.log(resp);
@@ -232,9 +325,9 @@ jQuery(document).ready(function ($) {
 					};
 					$.post(ajaxurl, data);
 				} else if (resp < 0) { //Fail
-					$('#wpstg-try-again').show();
+					$('#wpstg-try-again').css('display', 'inline-block');
 					$('#wpstg-cancel-cloning').text('Reset');
-					$('#wpstg-cloning-result').text('Fail');
+					$('#wpstg-cloning-result').text('Fail.');
 					$('#wpstg-loader').hide();
 					isFinished = true;
 				} else if (resp < 1) { //Continue coping
@@ -262,9 +355,11 @@ jQuery(document).ready(function ($) {
 				}
 
 				if (isNaN(resp)) { //Unknown error
-					$('#wpstg-try-again').show();
+					$('#wpstg-try-again').css('display', 'inline-block');
 					$('#wpstg-cancel-cloning').text('Reset');
-					$('#wpstg-cloning-result').text('Fail');
+					$('#wpstg-cloning-result').text('Fail.');
+					$('#wpstg-error-wrapper').show();
+					$('#wpstg-error-details').html(resp);
 					$('#wpstg-loader').hide();
 					isFinished = true;
 					console.log(resp);
@@ -274,13 +369,13 @@ jQuery(document).ready(function ($) {
 					};
 					$.post(ajaxurl, data);
 				} else if (resp < 1) { //Fail
-					$('#wpstg-try-again').show();
+					$('#wpstg-try-again').css('display', 'inline-block');
 					$('#wpstg-cancel-cloning').text('Reset');
 					$('#wpstg-loader').hide();
 					isFinished = true;
 					$('#wpstg-links-progress').text('').css('width', (100 * resp) + '%');
 					setTimeout(function () {
-						$('#wpstg-cloning-result').text('Fail');
+						$('#wpstg-cloning-result').text('Fail.');
 					}, 1200);
 				} else { //Success
 					$('#wpstg-links-progress').text('').css('width', '100%');
@@ -292,18 +387,22 @@ jQuery(document).ready(function ($) {
 						$('#wpstg-clone-url').text(cloneID).attr('href', cloneURL);
 						$('#wpstg-cancel-cloning').text('Remove');
 						isFinished = true;
-						//$('#wpstg-home-link').show();
                                                 $('#wpstg-home-link').css('display', 'inline-block');
 					}, 1200);
 				}
 			});
 		};
 
+		$('#wpstg-workflow').on('click', '#wpstg-show-error-details', function (e) {
+			e.preventDefault();
+			$('#wpstg-error-details').show();
+		});
+
 		$('#wpstg-workflow').on('click', '#wpstg-cancel-cloning', function (e) {
 			e.preventDefault();
 			if (! confirm('Are you sure?'))
 				return false;
-			$('#wpstg-try-again').hide();
+			$('#wpstg-try-again, #wpstg-home-link').hide();
 			$(this).attr('disabled', 'disabled');
 			isCanceled = true;
 			$('#wpstg-cloning-result').text('Please wait...this can take up to a minute');
@@ -329,6 +428,9 @@ jQuery(document).ready(function ($) {
 
 		$('#wpstg-workflow').on('click', '#wpstg-reset-clone', function (e) {
 			e.preventDefault();
+			$(this).attr('disabled', 'disabled')
+				.next('.wpstg-next-step-link').hide();
+			$('#wpstg-loader').show();
 			cloneID = $(this).data('clone');
 			cancelCloning();
 		});
@@ -356,11 +458,14 @@ jQuery(document).ready(function ($) {
 		//Tabs
 		$('#wpstg-workflow').on('click', '.wpstg-tab-header', function (e) {
 			e.preventDefault();
-			$('.wpstg-tab-header').not(this).removeClass('active');
-			$(this).addClass('active');
 			var section = $(this).data('id');
-			$('.wpstg-tab-section').not(section).hide();
-			$(section).show();
+			$(this).toggleClass('expand');
+			$(section).slideToggle();
+			if ($(this).hasClass('expand'))
+				$(this).find('.wpstg-tab-triangle').html('&#9660;');
+			else
+				$(this).find('.wpstg-tab-triangle').html('&#9658;');
+
 		});
 
 		//Directory structure

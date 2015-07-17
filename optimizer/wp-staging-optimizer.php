@@ -63,7 +63,7 @@ function wpmdbc_exclude_plugins( $plugins ) {
 	}
 
 	$blacklist_plugins = wpmdbc_get_blacklist_plugins();
-        var_dump($blacklist_plugins);
+
 	if ( ! empty( $blacklist_plugins ) ) {
 		foreach ( $plugins as $key => $plugin ) {
 			if ( false !== strpos( $plugin, 'wp-staging' ) || ! isset( $blacklist_plugins[ $plugin ] ) ) {
