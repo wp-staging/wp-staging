@@ -60,7 +60,7 @@ function wpstg_install() {
 	global $wpdb, $wpstg_options, $wp_version;
         
 
-	// Add Upgraded From Option
+	// Add Upgraded from Option
 	$current_version = get_option( 'wpstg_version' );
 	if ( $current_version ) {
 		update_option( 'wpstg_version_upgraded_from', $current_version );
@@ -74,6 +74,8 @@ function wpstg_install() {
         // Add First-time variables
         add_option('wpstg_firsttime','true');
         add_option('wpstg_is_staging_site','false');
+        // Show beta notice
+        add_option('wpstg_hide_beta','no');
                 
         // Create empty config files in /wp-content/uploads/wp-staging
         wpstg_create_remaining_files();

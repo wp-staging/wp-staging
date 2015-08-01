@@ -24,8 +24,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function wpstg_add_options_link() {
 	global $wpstg_parent_page, $wpstg_add_ons_page, $wpstg_add_ons_page2, $wpstg_settings_page, $wpstg_tools_page, $wpstg_clone_page;
-        $wpstg_parent_page   = add_menu_page( 'WP-Staging', __( 'WP-Staging', 'wpstg' ), 'manage_options', 'wpstg_clone', 'wpstg_clone_page', 'dashicons-hammer' );
-	$wpstg_clone_page = add_submenu_page('wpstg_clone', __('WP-Staging Jobs', 'wpstg'), __('Jobs', 'wpstg'), 'manage_options', 'wpstg_clone', 'wpstg_clone_page');
+        $wpstg_parent_page   = add_menu_page( 'WP-Staging', __( 'WP Staging', 'wpstg' ), 'manage_options', 'wpstg_clone', 'wpstg_clone_page', 'dashicons-hammer' );
+	$wpstg_clone_page = add_submenu_page('wpstg_clone', __('WP Staging Jobs', 'wpstg'), __('Jobs & Sites', 'wpstg'), 'manage_options', 'wpstg_clone', 'wpstg_clone_page');
         $wpstg_settings_page = add_submenu_page( 'wpstg_clone', __( 'WP-Staging Settings', 'wpstg' ), __( 'Settings', 'wpstg' ), 'manage_options', 'wpstg-settings', 'wpstg_options_page' );
         $wpstg_tools_page = add_submenu_page( 'wpstg_clone', __( 'WP-Staging Tools', 'wpstg' ), __( 'Tools', 'wpstg' ), 'manage_options', 'wpstg-tools', 'wpstg_tools_page' );
 

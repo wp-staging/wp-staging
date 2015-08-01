@@ -20,14 +20,14 @@ global $wpdb, $wpstg_options;
 /** 
  * Delete all the Plugin Options 
  * 
- * @todo must be tested
  */
-/*if( wpstg_get_option( 'uninstall_on_delete' ) ) {
-
-	delete_option( 'wpstg_settings' );
-        delete_option( 'wpstg_install_date');
-        delete_option( 'wpstg_rating_div');
-        delete_option( 'wpstg_version');
-        delete_option( 'wpstg_version_upgraded_from');
+if( wpstg_get_option( 'uninstall_on_delete' ) ) {
+	delete_option('wpstg_version_upgraded_from');
+        delete_option('wpstg_version');
+        delete_option('wpstg_installDate');
+        delete_option('wpstg_RatingDiv');
+        delete_option('wpstg_firsttime');
+        delete_option('wpstg_is_staging_site');
+        delete_option('wpstg_hide_beta');
 }
-*/
+

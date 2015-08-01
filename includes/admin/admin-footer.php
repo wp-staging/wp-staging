@@ -25,8 +25,11 @@ function wpstg_admin_rate_us( $footer_text ) {
 
 	if ( wpstg_is_admin_page() ) {
 
-		$rate_text = sprintf( __( 'Thank you for using <a href="%1$s" target="_blank">WP-Staging</a>! Please <a href="%2$s" target="_blank">rate us</a> on <a href="%2$s" target="_blank">WordPress.org</a> and help to support this project.<br>Something not working as expected or need help for customizing WP-Staging? Read our <a href="https://www.wp-staging.net/faq/" target="blank">FAQ</a> and visit the WP-Staging <a href="https://wp-staging.net/support" target="blank">Support Forum</a>', 'wpstg' ),
+		/*$rate_text = sprintf( __( 'Thank you for using <a href="%1$s" target="_blank">WP Staging</a>! Please <a href="%2$s" target="_blank">rate WP Staging</a> on <a href="%2$s" target="_blank">WordPress.org</a> and help to support this project.<br>Something not working as expected with WP Staging? Read the <a href="https://www.wp-staging.net/faq/" target="blank">FAQ</a> and visit the WP-Staging <a href="https://wp-staging.net/support" target="blank">Support Forum</a>', 'wpstg' ),
 			'https://www.wp-staging.net',
+			'http://wordpress.org/support/view/plugin-reviews/wp-staging?filter=5#postform'
+		);*/
+                $rate_text = sprintf( __( 'Please <a href="%1$s" target="_blank">rate WP Staging</a> and help to support this project.<br>Something not working as expected? Visit the WP Staging <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">Support Forum</a>', 'wpstg' ),
 			'http://wordpress.org/support/view/plugin-reviews/wp-staging?filter=5#postform'
 		);
 

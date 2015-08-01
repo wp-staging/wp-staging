@@ -1,9 +1,9 @@
 <?php
 
 /**
- * Plugin Name: WP-Staging - Create a staging and clone website with two clicks
+ * Plugin Name: WP-Staging - Create a staging clone site for testing & developing
  * Plugin URI: https://www.wp-staging.com
- * Description: Staging - Create a staging and clone website with two clicks
+ * Description: WP-Staging - Create a staging clone site for testing & developing
  * Author: René Hermenau
  * Author URI: https://www.wp-staging.com
  * Version: 0.9.0
@@ -36,6 +36,10 @@ if (!defined('ABSPATH'))
 // Plugin version
 if (!defined('WPSTG_VERSION')) {
     define('WPSTG_VERSION', '0.9.0');
+}
+// Plugin version
+if (!defined('WPSTG_WP_COMPATIBLE')) {
+    define('WPSTG_WP_COMPATIBLE', '4.2.3');
 }
 
 if (!class_exists('wpstaging')) :
@@ -169,8 +173,6 @@ if (!class_exists('wpstaging')) :
             if (is_admin() || ( defined('WP_CLI') && WP_CLI )) {
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/settings/register-settings.php';
                 $wpstg_options = wpstg_get_settings();
-                
-                //require_once WPSTG_PLUGIN_DIR . 'includes/admin/add-ons.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-actions.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-notices.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-footer.php';
@@ -183,13 +185,11 @@ if (!class_exists('wpstaging')) :
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/tools.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/upload-functions.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/scripts.php';
-                require_once WPSTG_PLUGIN_DIR . 'includes/template-functions.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-license-handler.php';
-                //require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-html-elements.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.interface.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.class.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/wpstg-sanitize.php';
-
+                require_once WPSTG_PLUGIN_DIR . 'includes/template-functions.php';
             }
         }
 

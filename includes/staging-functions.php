@@ -15,16 +15,17 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 /**
  * Check if website is a clone or not. 
  * If it' s a clone website we allow access to the frontend only for administrators.
- * Most of WP is loaded at this stage, and the user is authenticated. 
+ * 
+ * At init() stage most of WP is loaded, and the user is authenticated. 
  * 
  * @return string wp_die()
  */
 function wpstg_staging_permissions(){
     if ( wpstg_is_staging_site() ){
         if ( !current_user_can( 'administrator' ) && !wpstg_is_login_page() && !is_admin() )
-         wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), './wp-admin/' ) );
-	      
-    wpstg_reset_permalinks();
+        //wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), './wp-admin/' ) );
+        wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), wp_login_url() ) ); 
+        wpstg_reset_permalinks();
 	}
 }
 add_action( 'init', 'wpstg_staging_permissions' );

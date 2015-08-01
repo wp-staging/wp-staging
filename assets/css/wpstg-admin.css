@@ -130,11 +130,23 @@ background-color: #e5e5e5;
 color:#777777;
 }
 
-.wpstg_admin .wp-staginglogo{
-    color:#0097DF;
+
+.wp-staginglogo{
+    display: block;
+    font-size:16px;
+    padding-top:20px;
 }
+
+.wp-staginglogo .wpstg-version{
+    display: block;
+    position:absolute;
+    top: 27px;
+    left: 220px; 
+}
+
+
 .wpstg_admin .nav-tab {
-    color: #0097DF;
+    color: #3C3C3C;
 }
 
 
@@ -302,13 +314,13 @@ color:#777777;
 #wpstg-error-details {
 	display: none;
 	margin-top: 10px;
-	font-size: 15px;
+	font-size: 13px;
 }
 
 #wpstg-show-error-details {
 	display: inline-block;
 	margin-left: 5px;
-	color: #aaa;
+	color: #555;
 	text-decoration: none;
 	transition: color .2s ease-in-out;
 }
@@ -338,6 +350,7 @@ color:#777777;
 	position: relative;
 	clear:both;
 	padding-top:20px;
+        margin-right:20px;
 }
 
 #wpstg-workflow.loading::after,
@@ -366,10 +379,9 @@ color:#777777;
 }
 
 .wpstg-progress-bar {
-	width: 500px;
-	height: 25px;
-	padding: 2px;
-	padding: 2px;
+	max-width: 900px;
+	height: 27px;
+	padding: 0px;
 	background-color: #d6d8d7;
 }
 
@@ -380,6 +392,7 @@ color:#777777;
 	transition: width 1s;
         color:white;
         line-height:25px;
+        text-align:center;
 }
 
 #wpstg-new-clone-id.wpstg-error-input,
@@ -528,4 +541,34 @@ color:#777777;
 #wpstg-clone-label{
     font-size: 14px;
     font-weight: bold;
+}
+
+#wpstg-log-details{
+    display:none;
+    height: 300px;
+    overflow: scroll;
+    max-width: 500px;
+    font-size: 11px;
+    border: 1px solid #FFF;
+    background-color: black;
+    color: white;
+    padding:10px;
+}
+
+#wpstg-finished-result {
+    display:none;
+}
+
+#wpstg-remove-cloning {
+	background: #ff3428;
+	border-color: #e72f24;
+	margin-top: 5px;
+}
+
+#wpstg-success-notice{
+    padding: 10px;
+    background-color: white;
+    max-width: 900px;
+    border: 1px solid #ccc;
+    margin-top: 20px;
 }

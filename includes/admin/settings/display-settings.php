@@ -16,7 +16,7 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * based on header callback
  * 
  * @since 0.9.0
- * @todo Use sprintf to sanitize  $field['id'] instead using str_replace() Should be much faster? 
+ * @todo Use sprintf to sanitize  $field['id'] instead using str_replace() Should be faster? 
  * @return string
  */
 
@@ -129,14 +129,17 @@ function wpstg_options_page() {
 
 	ob_start();
 	?>
-	<div class="wrap wpstg_admin">
-             <h1 class="wp-staginglogo"> <?php echo __('Welcome to WP-Staging ', 'wpstg') . WPSTG_VERSION; ?></h1>
-            <div class="about-text" style="font-weight: 400;line-height: 1.6em;font-size: 19px;">
-                <?php echo __('WP-Staging is ready to create a staging website for you!', 'wpstg'); ?>
-                <?php if (!function_exists('curl_init')){ echo '<br><span style="color:red;">' . __('php_curl is not working on your server. </span><a href="http://us.informatiweb.net/programmation/32--enable-curl-extension-of-php-on-windows.html" target="_blank">Please enable it.</a>'); } ?>
-                <br>
-                <iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwww.facebook.com%2Fwp-staging.com&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:400px; height:25px;" allowTransparency="true"></iframe>
-            </div>
+	<div class="wpstg_admin">
+             <span class="wp-staginglogo"><img src="<?php echo WPSTG_PLUGIN_URL . 'assets/images/logo_clean_small_212_25.png';?>">&nbsp;<span class="wpstg-version"><?php echo WPSTG_VERSION . ' / beta'; ?></span></span>
+			<div class="wpstg-header">
+				<?php echo __('Thank you for using WP Staging', 'wpstg');?>
+				<br>
+				<?php echo __('WP Staging is ready to create a staging site!', 'wpstg'); ?>
+				<br>
+				<iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwordpress.org%2Fplugins%2Fwp-staging&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:170px; height:20px;" allowTransparency="true"></iframe>
+				<a class="twitter-follow-button" href="https://twitter.com/wp_staging" data-size="small" id="twitter-wjs">Follow @wp_staging</a>
+                                <a class="twitter-share-button"  href="https://twitter.com/intent/tweet?text=Created%20my%20first%20WordPress%20staging%20site%20with%20WP%20Staging.%20Just%20awesome!&url=https://wordpress.org/plugins/wp-staging">Tweet</a>
+			</div>
 		<h2 class="nav-tab-wrapper">
 			<?php
 			foreach( wpstg_get_settings_tabs() as $tab_id => $tab_name ) {

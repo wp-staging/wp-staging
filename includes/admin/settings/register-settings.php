@@ -13,6 +13,7 @@
 if ( !defined( 'ABSPATH' ) ) exit;
 
 
+
 /**
  * Get an option
  *
@@ -45,8 +46,8 @@ function wpstg_get_settings() {
 		$general_settings = is_array( get_option( 'wpstg_settings_general' ) )    ? get_option( 'wpstg_settings_general' )  	: array();
                 //$misc_settings = is_array( get_option( 'wpstg_settings_misc' ) )   ? get_option( 'wpstg_settings_misc' )   : array();
                 //$networks = is_array( get_option( 'wpstg_settings_networks' ) )   ? get_option( 'wpstg_settings_networks' )   : array();
-		$ext_settings     = is_array( get_option( 'wpstg_settings_extensions' ) ) ? get_option( 'wpstg_settings_extensions' )	: array();
-		$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
+		//$ext_settings     = is_array( get_option( 'wpstg_settings_extensions' ) ) ? get_option( 'wpstg_settings_extensions' )	: array();
+		//$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
                 //$addons_settings = is_array( get_option( 'wpstg_settings_addons' ) )   ? get_option( 'wpstg_settings_addons' )   : array();
                 
 		$settings = array_merge( $general_settings, $ext_settings, $license_settings);//, $networks, $ext_settings, $license_settings, $addons_settings);
@@ -134,18 +135,18 @@ function wpstg_get_registered_settings() {
 							array(
 								'id' => 'wpstg_query_limit',
 								'name' => __('DB Copy Query Limit', 'wpstg'),
-								'desc' => __('Number of DB rows, that will be copied within one ajax request. The higher the value the faster will be the database copying process. Try a higher value like 10.000 or 20.000 and decrease it until you get no more errors during copying process. If your database does not contain much data the default value is fine. <strong> Default: 1000 </strong>'),
+								'desc' => __('Number of DB rows, that will be copied within one ajax request. The higher the value the faster the database copy process. To find out the highest possible values try a high value like 1.000 or more and decrease it until you get no more errors during copy process. <strong> Default: 100 </strong>'),
 								'type' => 'number',
 								'size' => 'medium',
-								'std' => 1000,
+								'std' => 100,
 							),
 							array(
 								'id' => 'wpstg_batch_size',
 								'name' => __('File Copy Batch Size', 'wpstg'),
-								'desc' => __('Batch Size for files (in Mb) during copy process. The higher the value the faster the file copying process will be. Try a higher value and lower it until you get no errors during copying process <strong>Default:</strong> 20 ', 'wpstg'),
+								'desc' => __('Buffer size for the file copy process in megabyte. The higher the value the faster large files will be copied. To find out the highest possible values try a high one and lower it until you get no errors during file copy process. Usually this value correlates directly with the memory consumption of php so make sure that it does not exceed any php.ini max_memory limits. <strong>Default:</strong> 2 ', 'wpstg'),
 								'type' => 'number',
 								'size' => 'medium',
-								'std' => '20',
+								'std' => '2',
 							),
                                                         array(
 								'id' => 'wpstg_disabled_plugins',
@@ -155,7 +156,12 @@ function wpstg_get_registered_settings() {
 								'size' => 'medium',
 								'std' => '20',
 							),
-                                    
+                                                        'uninstall_on_delete' => array(
+                                                        'id' => 'uninstall_on_delete',
+                                                        'name' => __( 'Remove Data on Uninstall?', 'mashsb' ),
+                                                        'desc' => __( 'Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted.', 'mashsb' ),
+                                                        'type' => 'checkbox'
+                                                        ),
                                     
 							/*'debug_mode' => array(
 								'id' => 'debug_mode',
@@ -298,7 +304,7 @@ function wpstg_get_settings_tabs() {
 	}
 	
 	if( ! empty( $settings['licenses'] ) ) {
-		$tabs['licenses'] = __( 'Licenses', 'wpstg' );
+		//$tabs['licenses'] = __( 'Licenses', 'wpstg' );
 	}
         //$tabs['addons'] = __( 'Add-Ons', 'wpstg' );
 
