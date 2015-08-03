@@ -17,16 +17,20 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * If it' s a clone website we allow access to the frontend only for administrators.
  * 
  * At init() stage most of WP is loaded, and the user is authenticated. 
+ * Get the wpstg_options via get_option because our global $wpstg_option is only available on admin pages
  * 
  * @return string wp_die()
  */
 function wpstg_staging_permissions(){
-    if ( wpstg_is_staging_site() ){
+    $wpstg_options = get_option( 'wpstg_settings' );
+    $wpstg_disable_admin_login = isset($wpstg_options['disable_admin_login']) ? $wpstg_options['disable_admin_login'] : "0";
+
+    if ( wpstg_is_staging_site() && $wpstg_disable_admin_login === "0"){
         if ( !current_user_can( 'administrator' ) && !wpstg_is_login_page() && !is_admin() )
         //wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), './wp-admin/' ) );
-        wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), wp_login_url() ) ); 
-        wpstg_reset_permalinks();
+        wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), wp_login_url()  ) ); 
 	}
+    wpstg_reset_permalinks();
 }
 add_action( 'init', 'wpstg_staging_permissions' );
 
@@ -104,5 +108,7 @@ function wpstg_reset_permalinks(){
  * @return bool true if page is login page
  */
 function wpstg_is_login_page() {
-    return in_array($GLOBALS['pagenow'], array('wp-login.php', 'wp-register.php'));
+    global $wpstg_options;
+    //$wpstg_login_page = isset($wpstg_options['admin_login_page']) ? $wpstg_options['admin_login_page'] : '';
+      return in_array( $GLOBALS['pagenow'], array('wp-login.php') );
 }

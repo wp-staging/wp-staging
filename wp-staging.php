@@ -1,11 +1,10 @@
 <?php
-
 /**
- * Plugin Name: WP-Staging - Create a staging clone site for testing & developing
- * Plugin URI: https://www.wp-staging.com
+ * Plugin Name: WP Staging - Create a staging clone site for testing & developing
+ * Plugin URI: wordpress.org/plugins/wp-staging
  * Description: WP-Staging - Create a staging clone site for testing & developing
  * Author: René Hermenau
- * Author URI: https://www.wp-staging.com
+ * Author URI: wordpress.org/plugins/wp-staging
  * Version: 0.9.0
  * Text Domain: wpstg
  * Domain Path: languages
@@ -172,7 +171,7 @@ if (!class_exists('wpstaging')) :
                 require_once WPSTG_PLUGIN_DIR . 'includes/staging-functions.php';
             if (is_admin() || ( defined('WP_CLI') && WP_CLI )) {
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/settings/register-settings.php';
-                $wpstg_options = wpstg_get_settings();
+                $wpstg_options = wpstg_get_settings(); // Load it on top of all
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-actions.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-notices.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/admin-footer.php';

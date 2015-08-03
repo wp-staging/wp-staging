@@ -44,13 +44,9 @@ function wpstg_get_settings() {
 	if( empty( $settings ) ) {
 		// Update old settings with new single option
 		$general_settings = is_array( get_option( 'wpstg_settings_general' ) )    ? get_option( 'wpstg_settings_general' )  	: array();
-                //$misc_settings = is_array( get_option( 'wpstg_settings_misc' ) )   ? get_option( 'wpstg_settings_misc' )   : array();
-                //$networks = is_array( get_option( 'wpstg_settings_networks' ) )   ? get_option( 'wpstg_settings_networks' )   : array();
-		//$ext_settings     = is_array( get_option( 'wpstg_settings_extensions' ) ) ? get_option( 'wpstg_settings_extensions' )	: array();
-		//$license_settings = is_array( get_option( 'wpstg_settings_licenses' ) )   ? get_option( 'wpstg_settings_licenses' )   : array();
-                //$addons_settings = is_array( get_option( 'wpstg_settings_addons' ) )   ? get_option( 'wpstg_settings_addons' )   : array();
                 
-		$settings = array_merge( $general_settings, $ext_settings, $license_settings);//, $networks, $ext_settings, $license_settings, $addons_settings);
+		//$settings = array_merge( $general_settings, $ext_settings, $license_settings);//, $networks, $ext_settings, $license_settings, $addons_settings);
+                $settings = $general_settings;
 
 		update_option( 'wpstg_settings', $settings);
 	}
@@ -150,17 +146,30 @@ function wpstg_get_registered_settings() {
 							),
                                                         array(
 								'id' => 'wpstg_disabled_plugins',
-								'name' => __('Disable plugins', 'wpstg'),
+								'name' => __('Optimizer', 'wpstg'),
 								'desc' => __('Select the plugins that should be disabled during build process of the staging site. Some plugins slow down the copy process and add overhead to each request, requiring extra CPU and memory consumption. Some of them can interfere with cloning process and cause them to fail, so we recommend to disable all plugins that are not directly related to WP Staging.', 'wpstg'),
 								'type' => 'install_muplugin',
 								'size' => 'medium',
 								'std' => '20',
 							),
+                                                        'disable_admin_login' => array(
+                                                            'id' => 'disable_admin_login',
+                                                            'name' => __( 'Don´t force admin login', 'mashsb' ),
+                                                            'desc' => __( 'Use this option only if you are using a custom login page and not the default login.php. If you enable this option you are allowing everyone including searchengines to see your staging site, so you have to create a custom authentication like using .htaccess', 'mashsb' ),
+                                                            'type' => 'checkbox'
+                                                        ),
+                                                        /*'admin_login_page' => array(
+                                                            'id' => 'admin_login_page',
+                                                            'name' => __( 'Login page', 'mashsb' ),
+                                                            'desc' => __( ' This is necessary if you are using a custom login page and not the default login.php. Fill in the page id of your custom login page, otherwise you will not be able to login to your staging website.', 'mashsb' ),
+                                                            'type' => 'text',
+                                                            'size' => 'medium'
+                                                        ),*/
                                                         'uninstall_on_delete' => array(
-                                                        'id' => 'uninstall_on_delete',
-                                                        'name' => __( 'Remove Data on Uninstall?', 'mashsb' ),
-                                                        'desc' => __( 'Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted.', 'mashsb' ),
-                                                        'type' => 'checkbox'
+                                                            'id' => 'uninstall_on_delete',
+                                                            'name' => __( 'Remove Data on Uninstall?', 'mashsb' ),
+                                                            'desc' => __( 'Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted.', 'mashsb' ),
+                                                            'type' => 'checkbox'
                                                         ),
                                     
 							/*'debug_mode' => array(

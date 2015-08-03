@@ -88,7 +88,7 @@
 				action: 'wpstg_check_clone',
 				cloneID: this.value
 			};
-			$.post(ajaxurl, data, function (resp) {
+			$.post(ajaxurl, data, function (resp, status, xhr) {
 				if (resp) {
 					$('#wpstg-new-clone-id').removeClass('wpstg-error-input');
 					$('#wpstg-start-cloning').removeAttr('disabled');
@@ -98,7 +98,10 @@
 					$('#wpstg-start-cloning').attr('disabled', 'disabled');
 					$('#wpstg-clone-id-error').text('A staging site with the same name already exists!');
 				}
-			})
+			}).fail(function(xhr) { // Will be executed when $.post() fails
+                            wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                            console.log(xhr.statusText);
+                        });
 		});
 
                 /**
@@ -118,7 +121,7 @@
 				path: path
 			};
 
-			$.post(ajaxurl, data, function (resp) {
+			$.post(ajaxurl, data, function (resp, status, xhr) {
 				if (resp) {
 					$('#wpstg-clone-path').removeClass('wpstg-error-input');
 					$('#wpstg-start-cloning').removeAttr('disabled');
@@ -128,7 +131,10 @@
 					$('#wpstg-start-cloning').attr('disabled', 'disabled');
 					$('#wpstg-path-error').text('Folder does not exist or is not writable!');
 				}
-			});
+			}).fail(function(xhr) { // Will be executed when $.post() fails
+                            wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                            console.log(xhr.statusText);
+                        });
 		});
 
                 /**
@@ -163,15 +169,18 @@
 				}
 			};
 			wpstg_additional_data(data, false);
-			$.post(ajaxurl, data, function (resp) {
+			$.post(ajaxurl, data, function (resp, status, xhr) {
 				location.reload();
-			});
+			}).fail(function(xhr) { // Will be executed when $.post() fails
+                            wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                            console.log(xhr.statusText);
+                        });
 		});
 
                 /**
                  * Next step
                  */
-		$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
+		/*$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
 			e.preventDefault();
 			if ($(this).attr('disabled'))
 				return false;
@@ -194,6 +203,34 @@
 					clone_db();
 				 }
 			});
+		});*/
+                $('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
+			e.preventDefault();
+			if ($(this).attr('disabled'))
+				return false;
+
+			$('#wpstg-workflow').addClass('loading');
+			var data = {
+				action: $(this).data('action'),
+				nonce: wpstg.nonce
+			};
+			if (data.action == 'wpstg_cloning') {
+				data.cloneID = $('#wpstg-new-clone-id').val() || new Date().getTime();
+				wpstg_additional_data(data, false);
+			}
+
+			$('#wpstg-workflow').load(ajaxurl, data, function (response, status, xhr) {
+                                if ( status == 'error') { //Unknown error
+                                        console.log(xhr.status + ' ' + xhr.statusText);
+                                        wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this: ' + xhr.status + ' ' + xhr.statusText);
+                                }
+				$('#wpstg-workflow').removeClass('loading');
+				$('.wpstg-current-step').removeClass('wpstg-current-step')
+					.next('li').addClass('wpstg-current-step');
+				if (data.action == 'wpstg_cloning') {
+					clone_db();
+				 }
+			});
 		});
 
                 /**
@@ -206,7 +243,11 @@
 				action: 'wpstg_overview',
 				nonce: wpstg.nonce
 			};
-			$('#wpstg-workflow').load(ajaxurl, data, function () {
+			$('#wpstg-workflow').load(ajaxurl, data, function (response, status, xhr) {
+                                if ( status == 'error') { //Unknown error
+                                        console.log(xhr.status + ' ' + xhr.statusText);
+                                        wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this: ' + xhr.status + ' ' + xhr.statusText);
+                                }
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.prev('li').addClass('wpstg-current-step');
@@ -233,7 +274,6 @@
                  */
 		$('#wpstg-workflow').on('click', '.wpstg-execute-clone', function (e) {
 			e.preventDefault();
-
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
 				action: 'wpstg_scanning',
@@ -241,13 +281,15 @@
 				nonce: wpstg.nonce
 			};
 
-			$('#wpstg-workflow').load(ajaxurl, data, function () {
+			$('#wpstg-workflow').load(ajaxurl, data, function (response, status, xhr) {
+                                if ( status == 'error') { //Unknown error
+                                        console.log(xhr.status + ' ' + xhr.statusText);
+                                        wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' + xhr.status + ' ' + xhr.statusText);
+                                }
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.next('li').addClass('wpstg-current-step');
-			}).fail(function(error) { // Will be executed when $.post() fails
-                            wpstg_show_error_die(error.responseText);
-                        });
+			});
 		});
 
 		$('#wpstg-workflow').on('click', '.wpstg-remove-clone', function (e) {
@@ -258,7 +300,11 @@
 				action: 'wpstg_preremove',
 				cloneID: $(this).data('clone')
 			};
-			$('#wpstg-removing-clone').load(ajaxurl, data, function (response, status, xhr){
+			$('#wpstg-removing-clone').load(ajaxurl, data, function (resp, status, xhr){
+                            if ( status == 'error') { //Unknown error
+                                        console.log(xhr.status + ' ' + xhr.statusText);
+                                        wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                                }
                             if (status === 'success'){
                                 $('#wpstg-existing-clones').children("img").remove();
                             }
@@ -282,8 +328,13 @@
 			};
 
 			wpstg_additional_data(data, true);
-
-			$.post(ajaxurl, data, function (resp) {
+                        console.log('test');
+			$.post(ajaxurl, data, function (resp, status, xhr) {
+                            console.log(xhr.status + ' ' + xhr.statusText);
+                                if ( status == 'error') { //Unknown error
+                                        console.log(xhr.status + ' ' + xhr.statusText);
+                                        wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                                }
 				if (resp == 0) {
 					$('#wpstg-removing-clone').html('');
 					$('.wpstg-clone#' + cloneID).remove();
@@ -292,7 +343,10 @@
 					if (remaining_clones.length < 1)
 						$('#wpstg-existing-clones h3').text('');
 				}
-			});
+			}).fail(function(xhr) { // Will be executed when $.post() fails
+                            wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                            console.log(xhr.statusText);
+                        });
 		});
                 
                 /**
@@ -332,15 +386,17 @@
 				action: 'wpstg_clone_db',
 				nonce: wpstg.nonce    
 			};
-			$.post(ajaxurl, data, function (resp) {
+			$.post(ajaxurl, data, function (resp, status, xhr) {
 				if (isCanceled) {
 					cancelCloning();
 					return false;
 				}
-                                if (!wpstgIsJsonObj(resp)) { //Unknown error
-                                        wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a>');
+                                if ( status == "error" ) { //Unknown error
+                                        wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
+				} else if (!wpstgIsJsonObj(resp)) { //Unknown error
+                                        wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
 				} else if (resp.percent < 0) { //Fail
-					wpstg_show_error_die('Fatal Error: This should never happen. Please try again! <br>If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a>');
+					wpstg_show_error_die('Fatal Error: This should never happen. Please try again! <br>If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
 				} else if(resp.percent < 1) { //Continue cloning
 					var complete = Math.floor(resp.percent * 100) + '%';
 					$('#wpstg-db-progress').text(complete).css('width', complete);
@@ -357,17 +413,21 @@
 					copy_files();
 				}
 			})
-                        .fail(function(error) { // Will be executed when $.post() fails
-                            wpstg_show_error_die(error.responseText);
-                        });                                                            
+                        .fail(function(xhr) { // Will be executed when $.post() fails
+                            wpstg_show_error_die(xhr.statusText);
+                            console.log('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                        });                                                           
 		}
+                
+
+
 
 		function copy_files() {
 			var data = {
 				action: 'wpstg_copy_files',
 				nonce: wpstg.nonce
 			};
-			$.post(ajaxurl, data, function(resp) {
+			$.post(ajaxurl, data, function(resp, status, xhr) {
 				if (isCanceled) {
 					cancelCloning();
 					return false;
@@ -383,9 +443,9 @@
 				}*/
 
 				if (!wpstgIsJsonObj(resp)) { //Unknown error
-					wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a>');
+					wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
 				} else if (resp.percent < 0) { //Fail
-					wpstg_show_error_die('Fatal Error: This should never happen. Please try again! <br>If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a>');
+					wpstg_show_error_die('Fatal Error: This should never happen. Please try again! <br>If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> '. xhr.statusText);
 				} else if (resp.percent < 1) { //Continue copying
 					var complete = Math.floor(resp.percent * 100) + '%';
 					$('#wpstg-files-progress').text(complete).css('width', complete);
@@ -399,9 +459,10 @@
                                         wpstg_logscroll_bottom();
 					replace_links();
 				}
-			}).fail(function(error) { // Will be executed when $.post() fails
-                            wpstg_show_error_die(error.responseText);
-                        }); 
+			}).fail(function(xhr) { // Will be executed when $.post() fails
+                            wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                            console.log(xhr.statusText);
+                        });
 		}
 
 		var isFinished = false;
@@ -410,13 +471,47 @@
 				action: 'wpstg_replace_links',
 				nonce: wpstg.nonce
 			};
-			$.post(ajaxurl, data, function(resp) {
+			$.post(ajaxurl, data, function(resp, status, xhr) {
 				if (isCanceled) {
 					cancelCloning();
 					return false;
 				}
+                                
+                                if (!wpstgIsJsonObj(resp)) { //Unknown error
+					wpstg_show_error_die('Fatal Error code: 1001. This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
+				} else if (resp.percent < 0) { //Fail
+					wpstg_show_error_die('Fatal Error code: 1002. This should never happen. Please try again! <br>If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
+				} else if (resp.percent < 1) { //Continue replacing string
+                                        var complete = Math.floor(resp.percent * 100) + '%';
+                                        $('#wpstg-links-progress').text('').css('width', complete);
+                                        $('#wpstg-loader').show();
+                                        if (resp.message !== '')
+                                            $('#wpstg-log-details').append(resp.message + '<br>');
+                                        wpstg_logscroll_bottom();
+                                        replace_links();
+                                } else { //Success
+					$('#wpstg-links-progress').text('').css('width', '100%');
+					$('#wpstg-loader').hide();
+                                        wpstg_logscroll_bottom();
+					cloneID = cloneID.replace(/[^A-Za-z0-9]/g, '');
+					//var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-login.php';
+                                        var redirectURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/';
+					setTimeout(function () {
+						//$('#wpstg-cloning-result').text('Done');
+                                                $('#wpstg-finished-result').show();
+						//$('#wpstg-clone-url').text('Visit staging site <span style="font-size: 10px;">(login with your admin credentials)</span>' . cloneID).attr('href', cloneURL + '?redirect_to=' + encodeURIComponent( redirectURL ) );
+                                                $('#wpstg-clone-url').text('Visit staging site <span style="font-size: 10px;">(login with your admin credentials)</span>' . cloneID).attr('href', redirectURL );
+                                                $('#wpstg_staging_name').text(cloneID);
+                                                $('#wpstg-cancel-cloning').hide();
+                                                $('#wpstg-home-link').css('display', 'inline-block');
+						isFinished = true;
+					}, 1200);
+                                        if (resp.message !== '')
+                                            $('#wpstg-log-details').append(resp.message + '<br>');
+                                        wpstg_logscroll_bottom();
+				}
 
-				if (isNaN(resp)) { //Unknown error
+				/*if (isNaN(resp)) { //Unknown error
 					$('#wpstg-try-again').css('display', 'inline-block');
 					$('#wpstg-cancel-cloning').text('Reset');
 					$('#wpstg-cloning-result').text('Fail.');
@@ -455,8 +550,11 @@
                                                 $('#wpstg-home-link').css('display', 'inline-block');
 						isFinished = true;
 					}, 1200);
-				}
-			});
+				}*/
+			}).fail(function(xhr) { // Will be executed when $.post() fails
+                            wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                            console.log(xhr.statusText);
+                        });
 		};
 
                 /**
@@ -467,7 +565,7 @@
 			$('#wpstg-log-details').toggle();
                         $('html, body').animate({
                             scrollTop: $("#wpstg-log-details").offset().top
-                        }, 2000);
+                        }, 400);
 		});
                 
                 /**
@@ -524,12 +622,17 @@
                  */
 		$('#wpstg-workflow').on('click', '#wpstg-try-again', function (e) {
 			e.preventDefault();
+                        console.log('test');
 			$('#wpstg-workflow').addClass('loading');
 			var data = {
 				action: 'wpstg_scanning',
 				nonce: wpstg.nonce
 			};
-			$('#wpstg-workflow').load(ajaxurl, data, function () {
+			$('#wpstg-workflow').load(ajaxurl, data, function (response, status, xhr) {
+                                if ( status == 'error') { //Unknown error
+                                        console.log(xhr.status + ' ' + xhr.statusText);
+                                        wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                                }
 				$('#wpstg-workflow').removeClass('loading');
 				$('.wpstg-current-step').removeClass('wpstg-current-step')
 					.prev('li').addClass('wpstg-current-step');
@@ -559,13 +662,16 @@
 				nonce: wpstg.nonce,
 				cloneID: cloneID
 			};
-			$.post(ajaxurl, data, function (resp) {
+			$.post(ajaxurl, data, function (resp, status, xhr) {
 				if (resp == 0) {
 					$('#wpstg-cloning-result').text('');
 					$('#wpstg-cancel-cloning').text('Success').addClass('success').removeAttr('disabled');
 					location.reload();
 				}
-			});
+			}).fail(function(xhr) { // Will be executed when $.post() fails
+                            wpstg_show_error_die(xhr.statusText);
+                            console.log('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                        });
 		}
 
 		$('#wpstg-workflow').on('click', '#wpstg-home-link', function (e) {
@@ -679,6 +785,10 @@
 			$( select_element ).attr( 'disabled', 'disabled' );
                         var query_limit = $( '#wpstg_settings\\[wpstg_query_limit\\]' );
                         var batch_size = $( '#wpstg_settings\\[wpstg_batch_size\\]' );
+                        var disable_admin_login = $( '#wpstg_settings\\[disable_admin_login\\]' );
+                        var uninstall_on_delete = $( '#wpstg_settings\\[uninstall_on_delete\\]' );
+                        disable_admin_login = $( disable_admin_login ).prop('checked') ? '1' : '0';
+                        uninstall_on_delete = $( uninstall_on_delete ).prop('checked') ? '1' : '0';
 
 			doing_plugin_compatibility_ajax = true;
 			$( this ).after( '<img src="' + spinner_url + '" alt="" class="plugin-compatibility-spinner general-spinner" />' );
@@ -693,6 +803,8 @@
 					blacklist_plugins: $( select_element ).val(),
                                         query_limit: $( query_limit ).val(),
                                         batch_size: $( batch_size ).val(),
+                                        disable_admin_login: disable_admin_login,
+                                        uninstall_on_delete: uninstall_on_delete,
                                         
 				},
 				error: function( jqXHR, textStatus, errorThrown ) {

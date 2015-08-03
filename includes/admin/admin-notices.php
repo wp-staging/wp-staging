@@ -210,7 +210,7 @@ function wpstg_plugin_update_message( $args ) {
   */
  function wpstg_show_beta_message(){
      	 $notice = '<div class="wpstg_beta_notice error" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
-    	<p>This software is beta and work in progress! <br>WP Staging is well tested and we did our best to catch every possible error we can imagine but we can not handle all possible constellations of server, plugins and themes. <br><strong>BEFORE</strong> you create your first staging site it´s highly recommended <strong>to make a full backup of your website</strong> first!
+    	<p>This software is beta and work in progress! <br>WP Staging is well tested and we did our best to catch every possible error we can forecast but we can not handle all possible combinations of different server, plugins and themes. <br><strong>BEFORE</strong> you create your first staging site it´s highly recommended <strong>to make a full backup of your website</strong> first!
         <p><strong>This is no joke! </strong>WP Staging is using crucial database and system close functions which have the power to break your website or even to delete your entire database! WP-Staging has neever caused any errors like data loose on any of the sites we are using for testing, so in most cases everything will be running fine, but we have 
         to give out this warning until WP Staging is not in beta status any longer.
       <p>
@@ -241,7 +241,7 @@ function wpstg_plugin_update_message( $args ) {
     </script>
     ';
    
-    if(get_option('wpstg_hide_beta') === "no")
+    if( get_option('wpstg_hide_beta') === "no" && wpstg_is_admin_page() )
          return $notice;     
  }
  

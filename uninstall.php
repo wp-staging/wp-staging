@@ -29,5 +29,6 @@ if( wpstg_get_option( 'uninstall_on_delete' ) ) {
         delete_option('wpstg_firsttime');
         delete_option('wpstg_is_staging_site');
         delete_option('wpstg_hide_beta');
+        delete_option('wpstg_settings');
 }
 

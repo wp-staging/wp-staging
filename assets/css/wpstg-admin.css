@@ -135,13 +135,13 @@ color:#777777;
     display: block;
     font-size:16px;
     padding-top:20px;
+    width:220px;
+    float:left;
 }
 
-.wp-staginglogo .wpstg-version{
+.wpstg-version{
     display: block;
-    position:absolute;
-    top: 27px;
-    left: 220px; 
+    padding-top:29px
 }
 
 
@@ -536,6 +536,7 @@ color:#777777;
     line-height: 1.6em;
     font-size: 19px;
     border-bottom: 1px solid#555;
+    clear:both;
 }
 
 #wpstg-clone-label{
@@ -571,4 +572,8 @@ color:#777777;
     max-width: 900px;
     border: 1px solid #ccc;
     margin-top: 20px;
+}
+
+.wpstg_beta_notice {
+    margin-bottom:20px;
 }
