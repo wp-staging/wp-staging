@@ -19,16 +19,17 @@ WP Staging creates independent staging and development sites that are only avail
 If you find a bug please open a ticket in the [support request](https://wordpress.org/support/plugin/wp-staging/ "support forum") so i am able to fix it!
 </strong>
 
-> #### WP Staging
-> This plugin allows you to create an staging or development environment in seconds* <br />
-> It creates a clone of your website into a subfolder of your current WordPress installation with an entire copy of your database. 
-> This sounds pretty simple and yes it is! All the hard time consumpting database and file copy stuff including url replacements is done in the background.
->
-> I created this plugin because all other solutions are way too complex, overloaded with dozens of options or having server requirements which are not available on most shared hosting solutions.
-> All these reasons prevent user from testing new plugins and updates first before installing them on their live website, so its time to release a plugin which has the potential to be merged into everyone´s wordpress workflow.
->
-><p><small><em>* Time of creation depends on size of your database and file size</em></small></p>
->
+<blockquote>
+<h4> WP Staging</h4>
+This plugin allows you to create an staging or development environment in seconds* <br />
+It creates a clone of your website into a subfolder of your current WordPress installation with an entire copy of your database. 
+This sounds pretty simple and yes it is! All the hard time consumpting database and file copy stuff including url replacements is done in the background.
+
+I created this plugin because all other solutions are way too complex, overloaded with dozens of options or having server requirements which are not available on most shared hosting solutions.
+All these reasons prevent user from testing new plugins and updates first before installing them on their live website, so its time to release a plugin which has the potential to be merged into everyone´s wordpress workflow.
+
+<p><small><em>* Time of creation depends on size of your database and file size</em></small></p>
+</blockquote>
 
 WP Staging can prevent your website from being broken or unavailable because of installing untested plugin updates! 
 
@@ -42,7 +43,7 @@ Change your workflow of updating themes and plugins data:
 
 <h3> Why should i use a staging website? </h3>
 
-Plugin updates and theme customizations should be tested on a staging platform first. Its recommended to have the staging platforme on the same server where the production website is located.
+Plugin updates and theme customizations should be tested on a staging platform first. Its recommended to have the staging platform on the same server where the production website is located.
 When you run a plugin update or plan to install a new one, it is a necessary task to check first the modifications on a clone of your production website.
 This makes sure that any modifications is  working on your website without throwing unexpected errors or preventing your site from loading. (Better known as the wordpress blank page error)
 
@@ -109,7 +110,10 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Screenshots ==
 
-1. Create a staging website
+1. Step 1. Create new staging site
+2. Step 2. Scanning your website for files and database tables
+3. Step 3. Staging site creation in progress
+4. Finish!
 
 
 == Changelog ==
