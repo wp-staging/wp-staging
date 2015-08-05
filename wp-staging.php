@@ -26,7 +26,7 @@
  * @package WPSTG
  * @category Core
  * @author René Hermenau
- * @version 0.9.0
+ * @version 0.9.1
  */
 // Exit if accessed directly
 if (!defined('ABSPATH'))
@@ -34,11 +34,11 @@ if (!defined('ABSPATH'))
 
 // Plugin version
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '0.9.0');
+    define('WPSTG_VERSION', '0.9.1');
 }
 // Plugin version
 if (!defined('WPSTG_WP_COMPATIBLE')) {
-    define('WPSTG_WP_COMPATIBLE', '4.2.3');
+    define('WPSTG_WP_COMPATIBLE', '4.2.4');
 }
 
 if (!class_exists('wpstaging')) :

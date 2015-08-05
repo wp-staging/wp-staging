@@ -23,9 +23,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function wpstg_staging_permissions(){
     $wpstg_options = get_option( 'wpstg_settings' );
-    $wpstg_disable_admin_login = isset($wpstg_options['disable_admin_login']) ? $wpstg_options['disable_admin_login'] : "0";
+    $wpstg_disable_admin_login = isset($wpstg_options['disable_admin_login']) ? $wpstg_options['disable_admin_login'] : 0;
 
-    if ( wpstg_is_staging_site() && $wpstg_disable_admin_login === "0"){
+    if ( wpstg_is_staging_site() && $wpstg_disable_admin_login === 0){
         if ( !current_user_can( 'administrator' ) && !wpstg_is_login_page() && !is_admin() )
         //wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), './wp-admin/' ) );
         wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), wp_login_url()  ) ); 

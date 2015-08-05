@@ -2,7 +2,7 @@
 
 ## Note ##
 
-This is the latest developer version of WP-Staging for WordPress. Test
+This is the latest developer version of WP-Staging for WordPress. 
 
 ## Installation ##
 

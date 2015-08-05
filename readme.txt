@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, development, cloning, admin, page, content, plugin, media, backup, test, testing, sandbox
 Requires at least: 3.6+
-Tested up to: 4.2.2
-Stable tag: 0.9.0
+Tested up to: 4.2.4
+Stable tag: 0.9.1
 
 WP Staging creates independent staging and development sites that are only available to administrators.
 
@@ -32,15 +32,15 @@ If you find a bug please open a ticket in the [support request](https://wordpres
 
 WP Staging can prevent your website from being broken or unavailable because of installing untested plugin updates! 
 
-Change your workflow to the following:
+Change your workflow of updating themes and plugins data:
 
-<li> 1. Use WP Staging to create a clone of your website with latest production data</li>
-<li> 2. Update or install your plugins</li>
-<li> 3. Test them carefully</li>
-<li> 4. Everything working? You are save to install these tested plugins and code modifications on your live site</li>
+<li> 1. Use WP Staging to create a clone of your website with all your latest production data</li>
+<li> 2. Customize theme, configuration and plugins or install new ones</li>
+<li> 3. Test everything on your staging site firstz</li>
+<li> 4. Everything running as expected? You are on the save side to do all these modifications on your production site!</li>
 
 
-<h3> Why should you use a staging website? </h3>
+<h3> Why should i use a staging website? </h3>
 
 Plugin updates and theme customizations should be tested on a staging platform first. Its recommended to have the staging platforme on the same server where the production website is located.
 When you run a plugin update or plan to install a new one, it is a necessary task to check first the modifications on a clone of your production website.
@@ -113,6 +113,9 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 
 == Changelog ==
+
+= 0.9.1 =
+* Fix: Change search and replace function for table wp_options. This prevented on some sites the moving of serialized theme data
 
 = 0.9 =
 * New: Release

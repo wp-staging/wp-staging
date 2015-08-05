@@ -836,10 +836,10 @@ function wpstg_copy_files() {
 			}
 		}
 		if ($batch_size > $batch + $size) {
-                                WPSTG()->logger->info('Try to copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file);
+                                //WPSTG()->logger->info('Try to copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file);
 			if (copy($files[$i], $new_file)) {
 				$batch += $size;
-                                WPSTG()->logger->info('Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file);    
+                                //WPSTG()->logger->info('Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file);    
 			} else {
 				WPSTG()->logger->info('Copying file has been failed and will be skipped: ' . $files[$i]);
 				$wpstg_clone_details['file_index'] = $i + 1; //increment it because we want to skip this file when it can not be copied successfully
