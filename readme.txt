@@ -1,4 +1,4 @@
-=== WP Staging - Site cloning and staging site creation simplified === 
+=== WP Staging === 
 
 Author URL: https://wordpress.org/plugins/wp-staging
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -6,7 +6,7 @@ Contributors: ReneHermi
 Donate link: https://wordpress.org/plugins/wp-staging
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: staging, development, cloning, admin, page, content, plugin, media, backup, test, testing, sandbox
+Tags: staging, development, cloning, admin, page, content, plugin, media, backup, test, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google
 Requires at least: 3.6+
 Tested up to: 4.2.4
 Stable tag: 0.9.1
@@ -15,30 +15,43 @@ WP Staging creates independent staging and development sites that are only avail
 
 == Description == 
 
-<strong>This software is beta and work in progress! <br>
-If you find a bug please open a ticket in the [support request](https://wordpress.org/support/plugin/wp-staging/ "support forum") so i am able to fix it!
+<strong>This software is brandnew, well tested but still beta and work in progress! <br>
+If you find a bug please open a ticket in the [support request](https://wordpress.org/support/plugin/wp-staging/ "support forum"). Every issue will be fixed asap!
 </strong>
 
 <blockquote>
-<h4> WP Staging</h4>
-This plugin allows you to create an staging or development environment in seconds* <br />
+<h4> WP Staging </h4>
+This plugin allows you to create an staging or development environment in seconds* <br /> <br />
 It creates a clone of your website into a subfolder of your current WordPress installation with an entire copy of your database. 
-This sounds pretty simple and yes it is! All the hard time consumpting database and file copy stuff including url replacements is done in the background.
-
+This sounds pretty simple and yes it is! All the hard time consumptive database and file copy stuff including url replacements is done in the background.
+ <br /> <br />
 I created this plugin because all other solutions are way too complex, overloaded with dozens of options or having server requirements which are not available on most shared hosting solutions.
 All these reasons prevent user from testing new plugins and updates first before installing them on their live website, so its time to release a plugin which has the potential to be merged into everyone´s wordpress workflow.
-
+ <br /> <br />
 <p><small><em>* Time of creation depends on size of your database and file size</em></small></p>
 </blockquote>
 
 WP Staging can prevent your website from being broken or unavailable because of installing untested plugin updates! 
 
-Change your workflow of updating themes and plugins data:
+= Main Features =
 
-<li> 1. Use WP Staging to create a clone of your website with all your latest production data</li>
-<li> 2. Customize theme, configuration and plugins or install new ones</li>
-<li> 3. Test everything on your staging site firstz</li>
-<li> 4. Everything running as expected? You are on the save side to do all these modifications on your production site!</li>
+* Creates a staging website with a few clicks
+* Access to the staging site will be granted only for administrators
+* Admin bar reflects that you are working on a staging site
+* No access to staging site for search engines
+* Extensive logging if things goes wrong.
+
+= What does not work or is not tested? =
+
+* Staging of wordpress multisites (not tested)
+* Staging on windows server (not tested but will probably work)
+
+<strong>Change your workflow of updating themes and plugins data:</strong>
+
+1. Use WP Staging to create a clone of your website with latest production data
+2. Customize theme, configuration and plugins or install new ones
+3. Test everything on your staging site first
+4. Everything running as expected? You are on the save side to migrate all these modifications on your production site!
 
 
 <h3> Why should i use a staging website? </h3>
@@ -47,7 +60,7 @@ Plugin updates and theme customizations should be tested on a staging platform f
 When you run a plugin update or plan to install a new one, it is a necessary task to check first the modifications on a clone of your production website.
 This makes sure that any modifications is  working on your website without throwing unexpected errors or preventing your site from loading. (Better known as the wordpress blank page error)
 
-Unfortunately, testing a plugin update before installing it in live environment isn´t done very often by most user because existing staging solutions are too complex and need a lot of time to create a 
+Testing a plugin update before installing it in live environment isn´t done very often by most user because existing staging solutions are too complex and need a lot of time to create a 
 up-to-date copy of your website.
 
 Some people are also afraid of installing plugins updates because they follow the rule "never touch a running system" with having in mind that untested updates are increasing the risk of breaking their site.
@@ -65,18 +78,11 @@ There are dozens of other possible cause of failure which can not be handled wel
 
 This is were WP Staging steps in... Site cloning and staging site creation simplified!
 
-= Main Features =
+<h3>I just want to migrate the database from one installation to another</h3>
+If you want to migrate your local database to a already existing production site you can use a tool like WP Migrate DB.
+WP Staging is only for creating a staging site with latest data from your production site. So it goes the opposite way of WP Migrate DB.
+Both tools are excellent cooperating eachother.
 
-* Creates a staging website with a few clicks
-* Access to the staging site will be granted only for administrators
-* Admin bar reflects that you are working on a staging site
-* No access to staging site for search engines
-* Extensive logging if things goes wrong. (Find them in wp-content/wp-staging/logs)
-
-= What does not work or is not tested? =
-
-* Staging of wordpress multisites (not tested)
-* Staging on windows server (not tested but will probably work)
 
 = I need you feedback =
 This plugin has been done in hundreds of hours to work on even the smallest shared webhosting package but i am limited in testing this only on a handful of different server so i need your help:
