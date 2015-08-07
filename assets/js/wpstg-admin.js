@@ -81,7 +81,8 @@
         }
         
                 /**
-                 * Check if clone name already exists
+                 * Do some checks first for the clone name. 
+                 * Check the max length of string and if clone name already exists
                  */
 		$('#wpstg-workflow').on('keyup', '#wpstg-new-clone-id', function () {
 			var data = {
@@ -89,17 +90,28 @@
 				cloneID: this.value
 			};
 			$.post(ajaxurl, data, function (resp, status, xhr) {
-				if (resp) {
+				/*if (resp) {
 					$('#wpstg-new-clone-id').removeClass('wpstg-error-input');
 					$('#wpstg-start-cloning').removeAttr('disabled');
-					$('#wpstg-clone-id-error').text('');
+					$('#wpstg-clone-id-error').text(resp.message);
 				} else {
 					$('#wpstg-new-clone-id').addClass('wpstg-error-input');
 					$('#wpstg-start-cloning').attr('disabled', 'disabled');
-					$('#wpstg-clone-id-error').text('A staging site with the same name already exists!');
+					//$('#wpstg-clone-id-error').text('A staging site with the same name already exists!');
+                                        $('#wpstg-clone-id-error').text(resp.message);
+				}*/
+                                if (resp.status !== "fail") {
+					$('#wpstg-new-clone-id').removeClass('wpstg-error-input');
+					$('#wpstg-start-cloning').removeAttr('disabled');
+					$('#wpstg-clone-id-error').text(resp.message);
+				} else {
+					$('#wpstg-new-clone-id').addClass('wpstg-error-input');
+					$('#wpstg-start-cloning').attr('disabled', 'disabled');
+					//$('#wpstg-clone-id-error').text('A staging site with the same name already exists!');
+                                        $('#wpstg-clone-id-error').text(resp.message);
 				}
 			}).fail(function(xhr) { // Will be executed when $.post() fails
-                            wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                            wpstg_show_error_die('Fatal Error: This should not happen but is often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
                             console.log(xhr.statusText);
                         });
 		});
