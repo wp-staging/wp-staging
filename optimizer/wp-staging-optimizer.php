@@ -16,7 +16,7 @@ $GLOBALS['wpstg_optimizer'] = true;
  *
  * This is to stop excluded plugins being deactivated after a migration, when a theme uses TGMPA to require a plugin to be always active.
  */
-function wpmdbc_tgmpa_compatibility() {
+function wpstg_tgmpa_compatibility() {
 	$remove_function = false;
 
 	// run on wpstg page
@@ -44,7 +44,7 @@ function wpmdbc_tgmpa_compatibility() {
 	}
 }
 
-add_action( 'admin_init', 'wpmdbc_tgmpa_compatibility', 1 );
+add_action( 'admin_init', 'wpstg_tgmpa_compatibility', 1 );
 
 /**
  * remove blog-active plugins
@@ -53,16 +53,16 @@ add_action( 'admin_init', 'wpmdbc_tgmpa_compatibility', 1 );
  *
  * @return array
  */
-function wpmdbc_exclude_plugins( $plugins ) {
+function wpstg_exclude_plugins( $plugins ) {
 	if ( ! is_array( $plugins ) || empty( $plugins ) ) {
 		return $plugins;
 	}
 
-	if ( ! wpmdbc_is_compatibility_mode_request() ) {
+	if ( ! wpstg_is_compatibility_mode_request() ) {
 		return $plugins;
 	}
 
-	$blacklist_plugins = wpmdbc_get_blacklist_plugins();
+	$blacklist_plugins = wpstg_get_blacklist_plugins();
 
 	if ( ! empty( $blacklist_plugins ) ) {
 		foreach ( $plugins as $key => $plugin ) {
@@ -77,7 +77,7 @@ function wpmdbc_exclude_plugins( $plugins ) {
         
 }
 
-add_filter( 'option_active_plugins', 'wpmdbc_exclude_plugins' );
+add_filter( 'option_active_plugins', 'wpstg_exclude_plugins' );
 
 /**
  * remove network-active plugins
@@ -86,16 +86,16 @@ add_filter( 'option_active_plugins', 'wpmdbc_exclude_plugins' );
  *
  * @return array
  */
-function wpmdbc_exclude_site_plugins( $plugins ) {
+function wpstg_exclude_site_plugins( $plugins ) {
 	if ( ! is_array( $plugins ) || empty( $plugins ) ) {
 		return $plugins;
 	}
 
-	if ( ! wpmdbc_is_compatibility_mode_request() ) {
+	if ( ! wpstg_is_compatibility_mode_request() ) {
 		return $plugins;
 	}
 
-	$blacklist_plugins = wpmdbc_get_blacklist_plugins();
+	$blacklist_plugins = wpstg_get_blacklist_plugins();
 
 	if ( ! empty( $blacklist_plugins ) ) {
 		foreach ( array_keys( $plugins ) as $plugin ) {
@@ -109,14 +109,14 @@ function wpmdbc_exclude_site_plugins( $plugins ) {
 	return $plugins;
 }
 
-add_filter( 'site_option_active_sitewide_plugins', 'wpmdbc_exclude_site_plugins' );
+add_filter( 'site_option_active_sitewide_plugins', 'wpstg_exclude_site_plugins' );
 
 /**
  * Should the current request be processed by Compatibility Mode?
  *
  * @return bool
  */
-function wpmdbc_is_compatibility_mode_request() {
+function wpstg_is_compatibility_mode_request() {
 	if ( ! defined( 'DOING_AJAX' ) ||
 	     ! DOING_AJAX ||
 	     ! isset( $_POST['action'] ) ||
@@ -132,7 +132,7 @@ function wpmdbc_is_compatibility_mode_request() {
  *
  * @return array 
  */
-function wpmdbc_get_blacklist_plugins() {
+function wpstg_get_blacklist_plugins() {
 	$blacklist_plugins = array();
         
         //@todo use this later for multisites
