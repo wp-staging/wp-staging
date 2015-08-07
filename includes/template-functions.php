@@ -43,7 +43,7 @@ function wpstg_clone_page() {
 				<br>
 				<iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwordpress.org%2Fplugins%2Fwp-staging&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:170px; height:20px;" allowTransparency="true"></iframe>
 				<a class="twitter-follow-button" href="https://twitter.com/wp_staging" data-size="small" id="twitter-wjs">Follow @wp_staging</a>
-                                <a class="twitter-share-button"  href="https://twitter.com/intent/tweet?text=Created%20my%20first%20WordPress%20staging%20site%20with%20WP%20Staging.%20Just%20awesome!&url=https://wordpress.org/plugins/wp-staging">Tweet</a>
+                                <a class="twitter-share-button"  href="https://twitter.com/intent/tweet?text=Created%20my%20first%20WordPress%20staging%20site%20with%20WP%20Staging.%20Just%20awesome!&url=https://wordpress.org/plugins/wp-staging&hashtags=wpstaging&via=wp_staging">Tweet</a>
 			</div>
 			<?php do_action('wpstg_notifications');?>
 			<?php if (is_multisite()) {
@@ -411,7 +411,13 @@ function wpstg_sanitize_key($key){
 }
 
 /**
- * Check if clone with the same name is already existing 
+ * Check the staging name input
+ * 
+ * - Check if name does not contain more than 17 characters
+ * - Check is staging name does not already exists
+ * - Sanitize staging name
+ * 
+ * @return json message | name | percent | running time | status
  */
 function wpstg_check_clone() {
 	global $wpstg_clone_details;
@@ -419,7 +425,16 @@ function wpstg_check_clone() {
 	//$cur_clone = preg_replace('/[^A-Za-z0-9]/', '', $_POST['cloneID']);
         $cur_clone = wpstg_sanitize_key($_POST['cloneID']);
 	$existing_clones = get_option('wpstg_existing_clones', array());
-	wp_die(!in_array($cur_clone, $existing_clones));
+        strlen($_POST['cloneID']) >= 17 ? $max_length = true : $max_length = false;
+	//wp_die(!in_array($cur_clone, $existing_clones));
+        if ( $max_length )
+            wpstg_return_json('wpstg_check_clone', 'fail', 'Clone name must not be longer than 16 characters', 1, wpstg_get_runtime());
+        
+        if ( in_array($cur_clone, $existing_clones) )
+            wpstg_return_json('wpstg_check_clone', 'fail', 'Clone with same name already exists', 1, wpstg_get_runtime());
+       
+        if ( !in_array($cur_clone, $existing_clones ) && $max_length !== true )
+            wpstg_return_json('wpstg_check_clone', 'success', '', 1, wpstg_get_runtime());  
 }
 add_action('wp_ajax_wpstg_check_clone', 'wpstg_check_clone');
 
@@ -1530,7 +1545,7 @@ function wpstg_get_log_data($progress){
             if ($progress === 0) {
      return $log_data_header =  '###########################################<br>'
                               . '&nbsp;&nbsp;&nbsp; WP Staging working log              <br>'
-                              . '&nbsp;&nbsp;&nbsp; You find all log files in:                   <br>'
+                              . '&nbsp;&nbsp;&nbsp; You find all log files in:          <br>'
                               . '&nbsp;&nbsp;&nbsp; wp-content/plugins/wp-staging/logs  <br>'
                               . '###########################################<br>';
             } else {
@@ -1573,6 +1588,6 @@ function wpstg_check_diskspace($clone_size){
 
         if (function_exists('disk_free_space') ) {
               return $overflow ? __('Probably not enough free disk space to create a staging site. You can continue but its likely that the copying process will fail.', 'wpstg') : '';
-        }  
-			   //return __('Can not check if there is enough disk space left for the staging website. This is not really a bad thing so you can still continue.', 'wpstg');        
+        }
+        //return __('Can not check if there is enough disk space left for the staging website. This is not really a bad thing so you can still continue.', 'wpstg');        
 }
