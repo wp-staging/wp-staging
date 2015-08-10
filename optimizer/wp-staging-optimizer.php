@@ -6,7 +6,7 @@ Description: Prevents 3rd party plugins from being loaded during WP Staging spec
 Author: René Hermenau
 Version: 1.0
 Author URI: https://wp-staging.com
-Credit: Original version is made by Delicious Brains (WP Migrate DB)
+Credit: Original version is made by Delicious Brains (WP Migrate DB). Thank you guys!
 */
 
 $GLOBALS['wpstg_optimizer'] = true;

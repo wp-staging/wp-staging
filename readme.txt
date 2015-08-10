@@ -1,4 +1,4 @@
-=== WP Staging === 
+=== WP Staging - DB & File Migration === 
 
 Author URL: https://wordpress.org/plugins/wp-staging
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, development, cloning, admin, page, content, plugin, media, backup, test, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google
 Requires at least: 3.6+
 Tested up to: 4.2.4
-Stable tag: 0.9.1
+Stable tag: 0.9.2
 
 WP Staging creates independent staging and development sites that are only available to administrators.
 
@@ -123,6 +123,10 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 
 == Changelog ==
+
+= 0.9.2 =
+* Fix: A conflict with the plugin WP Migrate DB (Pro)
+* Fix: Limit the staging name to maximum of 16 characters
 
 = 0.9.1 =
 * Fix: Change search and replace function for table wp_options. This prevented on some sites the moving of serialized theme data

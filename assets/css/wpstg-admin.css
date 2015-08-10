@@ -189,7 +189,29 @@ color:#777777;
 /* Cloning workflow */
 #wpstg-clonepage-wrapper {
 	margin-bottom: 20px;
+        width: 690px;      
 }
+
+@media screen and (min-width:1090px){
+    #wpstg-clonepage-wrapper {
+        float: left;
+	margin-bottom: 20px;
+        width: 690px;      
+    }
+    .wpstg-sidebar{
+        display: none;
+        margin-left: 700px;
+        margin-top: 138px;
+    }
+}
+
+.wpstg-sidebar{
+        display: none;
+        padding: 10px;
+        border: 1px solid #DFDFDF;
+        max-width: 250px;
+        height: 250px;
+    }
 
 #wpstg-steps {
     margin-top:30px;
@@ -223,13 +245,14 @@ color:#777777;
 }
 
 .wpstg-clone {
-	border: 3px solid #ccc;
-	margin-bottom: 5px;
-	padding: 5px 10px;
-	width: 300px;
-	position: relative;
-	overflow: hidden;
-	transition: border-color .2s ease-in-out;
+    border: 3px solid #ffffff;
+    margin-bottom: 5px;
+    padding: 5px 10px;
+    width: 300px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s ease-in-out;
+    background-color: #DDDDDD;
 }
 
 .wpstg-clone.active {
@@ -241,10 +264,12 @@ color:#777777;
 	font-size: 15px;
 	max-width: 130px;
 	text-decoration: none;
+        font-weight: bold;
+        color:#0285AE;
 }
 
 .wpstg-clone-action {
-	background: #f1f1f1;
+	background: #ffffff;
 	border-left: 1px solid #ccc;
 	color: #bbb;
 	display: none;
@@ -356,7 +381,7 @@ color:#777777;
 #wpstg-workflow.loading::after,
 #wpstg-removing-clone.loading::after {
 	background: rgba(255, 255, 255, .7);
-	content: 'LOADING ... may take longer for huge sites ';
+	content: 'LOADING May take little bit longer for large sites... ';
 	display: block;
 	width: 100%;
 	height: 100%;
@@ -535,9 +560,10 @@ color:#777777;
     font-weight: 400;
     line-height: 1.6em;
     font-size: 19px;
-    border-bottom: 1px solid#555;
+    border-bottom: 1px solid #DFDFDF;
     clear:both;
 }
+
 
 #wpstg-clone-label{
     font-size: 14px;
