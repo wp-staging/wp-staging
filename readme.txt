@@ -1,4 +1,4 @@
-=== WP Staging - DB & File Migration === 
+=== WP Staging - DB & File WordPress Migration === 
 
 Author URL: https://wordpress.org/plugins/wp-staging
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -6,7 +6,7 @@ Contributors: ReneHermi
 Donate link: https://wordpress.org/plugins/wp-staging
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: staging, development, cloning, admin, page, content, plugin, media, backup, test, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google
+Tags: staging, migration, development, migrate, cloning, admin, page, content, plugin, media, backup, test, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google
 Requires at least: 3.6+
 Tested up to: 4.2.4
 Stable tag: 0.9.2
@@ -20,7 +20,7 @@ If you find a bug please open a ticket in the [support request](https://wordpres
 </strong>
 
 <blockquote>
-<h4> WP Staging </h4>
+<h4> WP Staging for WordPress Migration </h4>
 This plugin allows you to create an staging or development environment in seconds* <br /> <br />
 It creates a clone of your website into a subfolder of your current WordPress installation with an entire copy of your database. 
 This sounds pretty simple and yes it is! All the hard time consumptive database and file copy stuff including url replacements is done in the background.
@@ -35,23 +35,27 @@ WP Staging can prevent your website from being broken or unavailable because of 
 
 = Main Features =
 
-* Creates a staging website with a few clicks
-* Access to the staging site will be granted only for administrators
+* <strong>Easy: </strong> Staging migration possible for everyone. No configuration needed!
+* <strong>Fast: </strong> Migration takes only a few seconds or minutes, depending on the size.
+* <strong>Search Engine Friendly: </strong> Access to the staging site will be granted only for administrators
+<br /><br />
+<strong>Safe</strong> 
+<br>
 * Admin bar reflects that you are working on a staging site
-* No access to staging site for search engines
-* Extensive logging if things goes wrong.
+* No access to staging site for search engines and other user
+* Extensive logging if migration goes wrong.
 
-= What does not work or is not tested? =
+= What does not work or is not tested when running wordpress migration? =
 
-* Staging of wordpress multisites (not tested)
-* Staging on windows server (not tested but will probably work)
+* Wordpress migration of wordpress multisites (not tested)
+* WordPress migration process on windows server (not tested but will probably work)
 
 <strong>Change your workflow of updating themes and plugins data:</strong>
 
-1. Use WP Staging to create a clone of your website with latest production data
-2. Customize theme, configuration and plugins or install new ones
+1. Use WP Staging for migration of a production website to a clone site for staging purposes
+2. Customize theme, configuration and plugins or install new plugins
 3. Test everything on your staging site first
-4. Everything running as expected? You are on the save side to migrate all these modifications on your production site!
+4. Everything running as expected? You are on the save side for migration of all these modifications to your production site!
 
 
 <h3> Why should i use a staging website? </h3>
@@ -66,7 +70,7 @@ up-to-date copy of your website.
 Some people are also afraid of installing plugins updates because they follow the rule "never touch a running system" with having in mind that untested updates are increasing the risk of breaking their site.
 I totally understand this and i am guilty as well here, but unfortunately this leads to one of the main reasons why WordPress installations are often outdated, not updated at all and unsecure due to this non-update behavior.
 
-<strong> I think its time to change this, so i created "WP Staging" </strong>
+<strong> I think its time to change this, so i created "WP Staging" for WordPress migration of staging sites</strong>
 
 <h3> Can´t i just use my local wordpress development copy for testing like xampp / lampp? </h3>
 
@@ -126,10 +130,10 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 = 0.9.2 =
 * Fix: A conflict with the plugin WP Migrate DB (Pro)
-* Fix: Limit the staging name to maximum of 16 characters
+* Fix: Limit the staging name to maximum of 16 characters for migration process
 
 = 0.9.1 =
-* Fix: Change search and replace function for table wp_options. This prevented on some sites the moving of serialized theme data
+* Fix: Change search and replace function for table wp_options when running migration. This prevented on some sites the moving of serialized theme data
 
 = 0.9 =
 * New: Release
