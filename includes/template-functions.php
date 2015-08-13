@@ -511,11 +511,13 @@ function wpstg_cloning() {
 	<!--<a href="#" id="wpstg-home-link" class="wpstg-link-btn button-primary"><?php //echo __('Home', 'wpstg');?></a>
 	<a href="#" id="wpstg-try-again" class="wpstg-link-btn button-primary"><?php //echo __('Try Again', 'wpstg');?></a>-->
 
-        <span><a href="#" id="wpstg-show-log-button"><?php _e('Display working log','wpstg'); ?></a></span>
+        <a href="#" id="wpstg-show-log-button" class="button" style="margin-top: 5px;"><?php _e('Display working log','wpstg'); ?></a>
         <div><span id="wpstg-cloning-result"></span></div>
         <div id="wpstg-finished-result"><h3>Congratulations: </h3>
-            WP Staging succesfully created a staging site in a subfolder of your main site in: <strong><?php echo get_home_url();?>/<span id="wpstg_staging_name"></span></strong><br>
-            Now, you have several options:<br>
+            <?php echo __('WP Staging succesfully created a staging site in a subfolder of your main site in: <strong> ', 'wpstg') . get_home_url(); ?><span id="wpstg_staging_name"></span></strong>
+            <br><br>
+            <?php echo __('Now, you have several options: ', 'wpstg'); ?>
+            <br>
             <a href="<?php echo get_home_url();?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">Open staging site <span style="font-size: 10px;">(login with your admin credentials)</span></a>
             <a href="" class="wpstg-link-btn button-primary" id="wpstg-remove-cloning"><?php echo __('Remove', 'wpstg');?></a>
             <a href="" class="wpstg-link-btn button-primary" id="wpstg-home-link"><?php echo __('Start again', 'wpstg');?></a>
@@ -1095,7 +1097,8 @@ function wpstg_replace_links() {
 
 	//replace $table_prefix in wp-config.php
 	if ($wpstg_clone_details['links_progress'] < 0.67) {
-		$path = get_home_path() . '/' . $wpstg_clone_details['current_clone'] . '/wp-config.php';
+		//$path = get_home_path() . '/' . $wpstg_clone_details['current_clone'] . '/wp-config.php';
+                $path = get_home_path() . $wpstg_clone_details['current_clone'] . '/wp-config.php';
 		$content = file_get_contents($path);
 		if ($content) {
 			$content = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $content);
@@ -1116,7 +1119,7 @@ function wpstg_replace_links() {
                                 wpstg_return_json('wpstg_replace_links', 'success', '[' . date('d-m-Y H:i:s') . '] ' . $path . ' has been successfully modified!', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
                         }
 		} else {
-			WPSTG()->logger->info($path . 'is not readable.');
+			WPSTG()->logger->info($path . ' is not readable.');
                         $wpstg_clone_details['links_progress'] = 0.67;
                         wpstg_save_options();
                         wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span>' . $path . ' is not writable', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
