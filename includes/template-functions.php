@@ -1123,7 +1123,7 @@ function wpstg_replace_links() {
 			$wpstg_clone_details['links_progress'] = 0.66;
                         WPSTG()->logger->error('Updating db prefix "' . $wpdb->prefix . '" to  "' . $new_prefix . '" has been done succesfully.');
                         wpstg_save_options();
-                        wpstg_return_json('wpstg_replace_links', 'success', '[' . date('d-m-Y H:i:s') . '] Updating prefix name' . $wpdb->prefix . ' to  ' . $new_prefix . ' has been done succesfully.', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
+                        wpstg_return_json('wpstg_replace_links', 'success', '[' . date('d-m-Y H:i:s') . '] Updating prefix name ' . $wpdb->prefix . ' to  ' . $new_prefix . ' has been done succesfully.', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
 		}
 	}
 
@@ -1195,9 +1195,12 @@ function wpstg_reset_index_php($progress){
         
         if ($content) {
 
-            $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);/";
-            $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' );";
-            $content = preg_replace($pattern, $replace, $content);
+            $pattern = "/(require(.*)wp-blog-header.php' \);)/";
+            preg_match($pattern, $content, $matches);
+            
+            $pattern2 = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);/";
+            $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0] . " // Changed by WP-Staging";
+            $content = preg_replace($pattern2, $replace, $content);
 
             if (FALSE === file_put_contents($path, $content)) {
                 wpstg_save_options(); //  we should throw fatal error here to die @todo create function()

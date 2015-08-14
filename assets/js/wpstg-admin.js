@@ -444,7 +444,7 @@
 				}*/
 
 				if (!wpstgIsJsonObj(resp)) { //Unknown error
-					wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
+					wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ');
 				} else if (resp.percent < 0) { //Fail
 					wpstg_show_error_die('Fatal Error: This should never happen. Please try again! <br>If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> '. xhr.statusText);
 				} else if (resp.percent < 1) { //Continue copying
@@ -479,7 +479,7 @@
 				}
                                 
                                 if (!wpstgIsJsonObj(resp)) { //Unknown error
-					wpstg_show_error_die('Fatal Error code: 1001. This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
+					wpstg_show_error_die('Fatal Error code: 1001. This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ');
 				} else if (resp.percent < 0) { //Fail
 					wpstg_show_error_die('Fatal Error code: 1002. This should never happen. Please try again! <br>If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ' . xhr.statusText);
 				} else if (resp.percent < 1) { //Continue replacing string

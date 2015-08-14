@@ -2,14 +2,14 @@
 
 Author URL: https://wordpress.org/plugins/wp-staging
 Plugin URL: https://wordpress.org/plugins/wp-staging
-Contributors: ReneHermi
+Contributors: ReneHermi, WP-Staging
 Donate link: https://wordpress.org/plugins/wp-staging
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, migration, development, migrate, cloning, clone, admin, page, content, plugin, media, backup, test, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google
 Requires at least: 3.6+
 Tested up to: 4.2.4
-Stable tag: 0.9.3
+Stable tag: 0.9.4
 
 Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
@@ -134,7 +134,7 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 * Fix: Large files are copied partly
 * New: Option for cloning sites which are moved into a subdirectory. Read more: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
 * New: Create an alternative copy method for large files
-* Tweak: Change some error notices 
+* New: Add new author WP-Staging to the readme.txt and to the wordpress repository
 
 = 0.9.3 =
 * Fix: Rating container is not shown because of wrong wordpress option name
@@ -152,5 +152,5 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Upgrade Notice ==
 
-= 0.9.3 =
-0.9.3 <strong> Some minor changes</strong>
+= 0.9.4 =
+0.9.4 <strong> Important update!</strong>
