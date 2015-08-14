@@ -158,6 +158,12 @@ function wpstg_get_registered_settings() {
                                                             'desc' => __( 'Use this option only if you are using a custom login page and not the default login.php. If you enable this option you are allowing everyone including searchengines to see your staging site, so you have to create a custom authentication like using .htaccess', 'mashsb' ),
                                                             'type' => 'checkbox'
                                                         ),
+                                                        'disable_admin_login' => array(
+                                                            'id' => 'disable_admin_login',
+                                                            'name' => __( 'Disable admin authorization', 'mashsb' ),
+                                                            'desc' => __( 'Use this option only if you are using a custom login page and not the default login.php. If you enable this option you are allowing everyone including searchengines to see your staging site, so you have to create a custom authentication like using .htaccess', 'mashsb' ),
+                                                            'type' => 'checkbox'
+                                                        ),
                                                         /*'admin_login_page' => array(
                                                             'id' => 'admin_login_page',
                                                             'name' => __( 'Login page', 'mashsb' ),
