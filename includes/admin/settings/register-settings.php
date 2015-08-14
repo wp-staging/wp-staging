@@ -154,14 +154,14 @@ function wpstg_get_registered_settings() {
 							),
                                                         'disable_admin_login' => array(
                                                             'id' => 'disable_admin_login',
-                                                            'name' => __( 'Don´t force admin login', 'mashsb' ),
+                                                            'name' => __( 'Disable admin authorization', 'mashsb' ),
                                                             'desc' => __( 'Use this option only if you are using a custom login page and not the default login.php. If you enable this option you are allowing everyone including searchengines to see your staging site, so you have to create a custom authentication like using .htaccess', 'mashsb' ),
                                                             'type' => 'checkbox'
                                                         ),
-                                                        'disable_admin_login' => array(
-                                                            'id' => 'disable_admin_login',
-                                                            'name' => __( 'Disable admin authorization', 'mashsb' ),
-                                                            'desc' => __( 'Use this option only if you are using a custom login page and not the default login.php. If you enable this option you are allowing everyone including searchengines to see your staging site, so you have to create a custom authentication like using .htaccess', 'mashsb' ),
+                                                        'wordpress_subdirectory' => array(
+                                                            'id' => 'wordpress_subdirectory',
+                                                            'name' => __( 'Wordpress in subdirectory', 'mashsb' ),
+                                                            'desc' => __( 'Use this option when you gave wordpress its own subdirectory. Look here for more: <a href="See: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">', 'mashsb' ),
                                                             'type' => 'checkbox'
                                                         ),
                                                         /*'admin_login_page' => array(
