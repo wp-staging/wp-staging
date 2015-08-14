@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, migration, development, migrate, cloning, clone, admin, page, content, plugin, media, backup, test, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google
 Requires at least: 3.6+
 Tested up to: 4.2.4
-Stable tag: 0.9.2
+Stable tag: 0.9.3
 
 Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
@@ -130,6 +130,16 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Changelog ==
 
+= 0.9.4 =
+* Fix: Large files are copied partly
+* New: Option for cloning sites which are moved into a subdirectory. Read more: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
+* New: Create an alternative copy method for large files
+* Tweak: Change some error notices 
+
+= 0.9.3 =
+* Fix: Rating container is not shown because of wrong wordpress option name
+* Tweak: Change color of the rating links
+
 = 0.9.2 =
 * Fix: A conflict with the plugin WP Migrate DB (Pro)
 * Fix: Limit the staging name to maximum of 16 characters for migration process
@@ -142,5 +152,5 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Upgrade Notice ==
 
-= 0.9 =
-0.9 <strong> Initial release</strong>
+= 0.9.3 =
+0.9.3 <strong> Some minor changes</strong>
