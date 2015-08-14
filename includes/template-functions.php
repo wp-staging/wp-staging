@@ -514,7 +514,7 @@ function wpstg_cloning() {
         <a href="#" id="wpstg-show-log-button" class="button" style="margin-top: 5px;"><?php _e('Display working log','wpstg'); ?></a>
         <div><span id="wpstg-cloning-result"></span></div>
         <div id="wpstg-finished-result"><h3>Congratulations: </h3>
-            <?php echo __('WP Staging succesfully created a staging site in a subfolder of your main site in: <strong> ', 'wpstg') . get_home_url(); ?><span id="wpstg_staging_name"></span></strong>
+            <?php echo __('WP Staging succesfully created a staging site in a subfolder of your main site in: <strong> ', 'wpstg') . get_home_url(); ?>/<span id="wpstg_staging_name"></span></strong>
             <br><br>
             <?php echo __('Now, you have several options: ', 'wpstg'); ?>
             <br>
@@ -923,6 +923,43 @@ function wpstg_create_directories($file, $home, $clone) {
 	return "$clone/$path";
 }
 
+
+
+/**
+ * 
+ * Copy large files in chunks
+ * Set return value to true, no matter if copying has been successfull or not. 
+ * Unsuccessfull copying will be skipped for large files.
+ * 
+ * @param string $src source path
+ * @param string $dst destination path
+ * @param integer $buffersize // Not used at the moment
+ * @return boolean 
+ */
+function wpstg_copy_large_file($src, $dst, $buffersize) {
+    $src = fopen($src, 'r');
+    $dest = fopen($dst, 'w');
+    
+        // Try first method:
+        while (! feof($src)){
+                    if (false === fwrite($dest, fread($src, $buffersize))){
+                        $error = true;
+                    }                 
+        }
+        // Try second method if first one failed
+        if ($error){
+            while(!feof($src)){
+                stream_copy_to_stream($src, $dest, 1024 );
+            }
+            fclose($src);
+            fclose($dest);
+            return true;
+        }
+        fclose($src);
+        fclose($dest);
+        return true;
+}
+
 /**
  * Copy large files
  * 
@@ -952,16 +989,17 @@ function wpstg_create_directories($file, $home, $clone) {
  * @param string $dst destination file
  * @param type $buffersize buffer size of copy
  * @return boolean
+ * @deprecated since version 0.9.3
  */
 function wpstg_copy_large_file_old($src, $dst, $buffersize) {
 
     # 1 meg at a time, you can adjust this.
-    $buffer_size = 1048576; 
+    //$buffer_size = 1048576; 
 
     $fin = fopen($src, "rb");
     $fout = fopen($dst, "w");
     while(!feof($fin)) {
-        if (false === fwrite($fout, fread($fin, $buffer_size))){
+        if (false === fwrite($fout, fread($fin, $buffersize))){
 			return false;
 		}
     }
@@ -972,12 +1010,52 @@ function wpstg_copy_large_file_old($src, $dst, $buffersize) {
     return true;
 }
 
-function wpstg_copy_large_file($src, $dst, $buffersize) {
+/*function wpstg_copy_large_file_old1($src, $dst, $buffersize) {
     
     $src = fopen($src, 'r');
-$dest1 = fopen($dst, 'w');
-stream_copy_to_stream($src, $dest1, 1024);
-return true;
+    $dest = fopen($dst, 'w');
+    stream_copy_to_stream($src, $dest, 1024);
+    return true;
+}*/
+
+/**
+ * Check if main wordpress is used in subfolder and index.php in parent directory
+ * See: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
+ * 
+ * Return JSON
+ */
+function wpstg_wp_in_subdirectory($progress){
+    global $wpstg_clone_details;
+    
+    if ( isset( $wpstg_clone_details['wordpress_subdirectory'] ) ) {
+        $path = get_home_path() . $wpstg_clone_details['current_clone'] . '/index.php';
+	$content = file_get_contents($path);
+        
+        if ($content) {
+            $content = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $content);
+            if ($db_helper->dbname != $wpdb->dbname) {
+                $content = str_replace('define(\'DB_NAME\'', 'define(\'DB_NAME\', \'' . $db_helper->dbname . '\');//', $content);
+                $content = str_replace('define(\'DB_USER\'', 'define(\'DB_USER\', \'' . $db_helper->dbuser . '\');//', $content);
+                $content = str_replace('define(\'DB_PASSWORD\'', 'define(\'DB_PASSWORD\', \'' . $db_helper->dbpassword . '\');//', $content);
+                $content = str_replace('define(\'DB_HOST\'', 'define(\'DB_HOST\', \'' . $db_helper->dbhost . '\');//', $content);
+            }
+            if (TRUE === file_put_contents($path, $content)) {
+                $wpstg_clone_details['links_progress'] = 0.67; //  we have to die hier @to do write function
+                wpstg_save_options();
+                WPSTG()->logger->info($path . ' is not writable');
+                wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fatal error: </span>Can not modify ' . $path . ' !', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
+            } else {
+                $wpstg_clone_details['links_progress'] = 0.67;
+                wpstg_save_options();
+                wpstg_return_json('wpstg_replace_links', 'success', '[' . date('d-m-Y H:i:s') . '] ' . $path . ' has been successfully modified!', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
+            }
+        } else {
+            WPSTG()->logger->info($path . ' is not readable.');
+            $wpstg_clone_details['links_progress'] = 0.67;
+            wpstg_save_options();
+            wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span>' . $path . ' is not writable', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
+        }
+    }
 }
 
 /**
@@ -1125,6 +1203,7 @@ function wpstg_replace_links() {
                         wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span>' . $path . ' is not writable', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
 		}
 	}
+        
 
 	$existing_clones = get_option('wpstg_existing_clones', array());
 	if (false === array_search($wpstg_clone_details['current_clone'], $existing_clones)) {
