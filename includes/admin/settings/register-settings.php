@@ -161,7 +161,7 @@ function wpstg_get_registered_settings() {
                                                         'wordpress_subdirectory' => array(
                                                             'id' => 'wordpress_subdirectory',
                                                             'name' => __( 'Wordpress in subdirectory', 'mashsb' ),
-                                                            'desc' => __( 'Use this option when you gave wordpress its own subdirectory. Look here for more: <a href="See: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">', 'mashsb' ),
+                                                            'desc' => __( 'Use this option when you gave wordpress its own subdirectory.<br> <a href="https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">Read more in the WordPress Codex</a>', 'mashsb' ),
                                                             'type' => 'checkbox'
                                                         ),
                                                         /*'admin_login_page' => array(
