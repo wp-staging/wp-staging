@@ -58,15 +58,16 @@ function wpstg_admin_messages() {
 	$datetime1 = new DateTime($install_date);
 	$datetime2 = new DateTime($display_date);
 	$diff_intrval = round(($datetime2->format('U') - $datetime1->format('U')) / (60*60*24));
-        if($diff_intrval >= 7 && get_option('wpstg_rating_div')=="no")
+
+        if($diff_intrval >= 7 && get_option('wpstg_RatingDiv')=="no")
     {
 	 echo '<div class="wpstg_fivestar updated" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
     	<p>Awesome, you\'ve been using <strong>WP Staging </strong> for more than 1 week. May we ask you to give it a <strong>5-star</strong> rating on Wordpress? 
         <p><strong>Regards,<br>Your friends of WP Staging</strong>
         <ul>
-        	<li><a href="https://wordpress.org/support/view/plugin-reviews/wp-staging" class="thankyou" target="_new" title="Ok, you deserved it" style="font-weight:bold;color:#00a0d2;">Ok, you deserved it</a></li>
-            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:bold;color:#00a0d2;">I already did</a></li>
-            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:bold;color:#00a0d2;">No, not good enough</a></li>
+        	<li><a href="https://wordpress.org/support/view/plugin-reviews/wp-staging" class="thankyou" target="_new" title="Ok, you deserved it" style="font-weight:bold;color:#52BC03;">Ok, you deserved it</a></li>
+            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:bold;color:#52BC03;">I already did</a></li>
+            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:bold;color:#52BC03;">No, not good enough</a></li>
         </ul>
     </div>
     <script>
@@ -120,7 +121,7 @@ add_action( 'admin_notices', 'wpstg_admin_messages' );
  */
 
 function wpstg_hide_rating_div(){
-    update_option('wpstg_rating_div','yes');
+    update_option('wpstg_RatingDiv','yes');
     echo json_encode(array("success")); exit;
 }
 add_action('wp_ajax_wpstg_hide_rating','wpstg_hide_rating_div');
