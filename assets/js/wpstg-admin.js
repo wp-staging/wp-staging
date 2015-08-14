@@ -512,48 +512,8 @@
                                         wpstg_logscroll_bottom();
 				}
 
-				/*if (isNaN(resp)) { //Unknown error
-					$('#wpstg-try-again').css('display', 'inline-block');
-					$('#wpstg-cancel-cloning').text('Reset');
-					$('#wpstg-cloning-result').text('Fail.');
-					$('#wpstg-error-wrapper').show();
-					$('#wpstg-error-details').html(resp);
-					$('#wpstg-loader').hide();
-					isFinished = true;
-					console.log(resp);
-					var data = {
-						action: 'wpstg_error_processing',
-						wpstg_error_msg: resp
-					};
-					$.post(ajaxurl, data);
-				} else if (resp < 1) { //Fail
-					$('#wpstg-try-again').css('display', 'inline-block');
-					$('#wpstg-cancel-cloning').text('Reset');
-                                        $('#wpstg-error-wrapper').show();
-					$('#wpstg-error-details').html(resp);
-					$('#wpstg-loader').hide();
-					isFinished = true;
-					$('#wpstg-links-progress').text('').css('width', (100 * resp) + '%');
-					setTimeout(function () {
-						$('#wpstg-cloning-result').text('Fail.');
-					}, 1200);
-				} else { //Success
-					$('#wpstg-links-progress').text('').css('width', '100%');
-					$('#wpstg-loader').hide();
-					cloneID = cloneID.replace(/[^A-Za-z0-9]/g, '');
-					var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-admin';
-					setTimeout(function () {
-						//$('#wpstg-cloning-result').text('Done');
-                                                $('#wpstg-finished-result').show();
-						$('#wpstg-clone-url').text('Visit staging site <span style="font-size: 10px;">(login with your admin credentials)</span>' . cloneID).attr('href', cloneURL);
-                                                //$('#wpstg-cancel-cloning').text('Remove new site');
-                                                $('#wpstg-cancel-cloning').hide();
-                                                $('#wpstg-home-link').css('display', 'inline-block');
-						isFinished = true;
-					}, 1200);
-				}*/
 			}).fail(function(xhr) { // Will be executed when $.post() fails
-                            wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                            wpstg_show_error_die('Fatal Error: This should not happen but is sometimes caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
                             console.log(xhr.statusText);
                         });
 		};
