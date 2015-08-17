@@ -385,7 +385,11 @@ function wpstg_show_large_files() {
 
 	$large_files = isset($wpstg_clone_details['large_files']) ? $wpstg_clone_details['large_files'] : array();
 	if (! empty($large_files)) : ?>
-
+        <br>
+        <span style="font-weight:bold;">That might require your attention:</span>
+        <br>
+        <span id="wpstg-show-large-files"><a href="#">Show large files</a></span>
+        
 	<div id="wpstg-large-files">
 			<h4 style="margin-top: 0px;">
 				<?php echo __('We have detected the following large files which could neeed some investigation. Often this files are backup files or other temporary files which must not necessarily copied for creating a staging site:','wpstg');?>
@@ -1444,8 +1448,12 @@ function wpstg_is_root_table($haystack, $needle) {
  */
 function wpstg_get_options() {
 	$path = wpstg_get_upload_dir() . '/clone_details.json';
-	$content = file_get_contents($path);
-	return json_decode($content, true);
+	$content = @file_get_contents($path);
+        if ($content) {
+            return json_decode($content, true);
+        }else{
+            return json_decode('', true);
+        }
 }
 
 /** 

@@ -132,6 +132,7 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 = 0.9.4 =
 * Fix: Large files are copied partly
+* Fix: js error xhr.statusText not defined
 * New: Option for cloning sites which are moved into a subdirectory. Read more: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
 * New: Create an alternative copy method for large files
 * New: Add new author WP-Staging to the readme.txt and to the wordpress repository
