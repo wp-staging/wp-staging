@@ -160,7 +160,8 @@ function wpstg_scanning() {
 	$wpstg_clone_details['total_size'] = 0;
 	unset($wpstg_clone_details['large_files']);
 	//$folders = wpstg_scan_files(rtrim(get_home_path(), '/'));
-        $folders = wpstg_scan_files(get_home_path());
+        //$folders = wpstg_scan_files(get_home_path());
+        $folders = wpstg_scan_files(wpstg_get_clone_root_path());
         
 	array_pop($folders);
 
@@ -208,6 +209,8 @@ function wpstg_scanning() {
 				echo '<h4 style="margin:0px;">' . __('Select the folders to copy:', 'wpstg') . '<h4>';
 				wpstg_directory_structure($folders, null, false, false, $excluded_folders);
 				wpstg_show_large_files();
+                                echo '<p><span id=wpstg-file-summary>' . __('Files will be copied into subfolder of: ','wpstg') . wpstg_get_clone_root_path() . '</span>';
+                                echo '<p>Main WordPress path' . wpstg_get_clone_root_path();
 			?>
 		</div> <!-- #wpstg-scanning-files -->
 
@@ -218,6 +221,8 @@ function wpstg_scanning() {
 		<div class="wpstg-tab-section" id="wpstg-advanced-settings">
 			<?php echo wpstg_advanced_settings(); ?>
 		</div> <!-- #wpstg-advanced-settings -->
+                
+                
 	</div>
 	<a href="#" class="wpstg-prev-step-link wpstg-link-btn button-primary"><?php _e('Back', 'wpstg'); ?></a>
 	<a href="#" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_cloning"><?php  echo wpstg_return_button_title();?></a>
@@ -816,6 +821,19 @@ function wpstg_clone_db_external($db_helper) {
 }
 
 /**
+ * Get clone root path. Thats the absolute path to wordpress,
+ * no matter if wordpress is installed in a subdirectory or not.
+ * This path is everytime the same and is used to determine the clone destination
+ * 
+ * @global $wpstg_options global settings
+ * @return string clone root path
+ */
+function wpstg_get_clone_root_path() {
+    $home_path = ABSPATH;
+    return str_replace('\\', '/', $home_path);
+}
+
+/**
  * Copy all wordpress files into staging subfolder
  * 
  * @global $wpstg_clone_details
@@ -833,9 +851,10 @@ function wpstg_copy_files() {
         // Use only for debugging
         //usleep(40000000); 
 
-	$clone = get_home_path() . $wpstg_clone_details['current_clone'];
-	$path = wpstg_get_upload_dir() . '/remaining_files.json';
-	$files = json_decode(file_get_contents($path), true);
+	$clone_root_path = get_home_path() . $wpstg_clone_details['current_clone'];
+        //$clone_root_path = wpstg_get_clone_root_path() . $wpstg_clone_details['current_clone'];
+	$sourcepath = wpstg_get_upload_dir() . '/remaining_files.json';
+	$files = json_decode(file_get_contents($sourcepath), true);
 	$start_index = isset($wpstg_clone_details['file_index']) ? $wpstg_clone_details['file_index'] : 0;
 	$wpstg_clone_details['files_progress'] = isset($wpstg_clone_details['files_progress']) ? $wpstg_clone_details['files_progress'] : 0;
 	$batch_size = isset($wpstg_options['wpstg_batch_size']) ? $wpstg_options['wpstg_batch_size'] : 2;
@@ -843,11 +862,12 @@ function wpstg_copy_files() {
 	$batch = 0;
         $log_data = '';
         
-	if (!is_dir($clone))
-		mkdir($clone);
+	if (!is_dir($clone_root_path))
+		mkdir($clone_root_path);
 
 	for ($i = $start_index; $i < count($files); $i++) {
-		$new_file = wpstg_create_directories($files[$i], get_home_path(), $clone);
+                //$new_file = wpstg_create_directories($files[$i], get_home_path(), $clone_root_path);
+                $new_file = wpstg_create_directories($files[$i], wpstg_get_clone_root_path(), $clone_root_path);
 		$size = filesize($files[$i]);
 		if ($size > $batch_size) {
 			if (wpstg_copy_large_file($files[$i], $new_file, $batch_size)) {
@@ -871,7 +891,8 @@ function wpstg_copy_files() {
                                 //WPSTG()->logger->info('Try to copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file);
 			if (copy($files[$i], $new_file)) {
 				$batch += $size;
-                                //WPSTG()->logger->info('Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file);    
+                                //WPSTG()->logger->info('Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file); 
+                                //wpstg_return_json('wpstg_copy_files', 'success', '[' . date('d-m-Y H:i:s') . '] Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file, $wpstg_clone_details['files_progress'], wpstg_get_runtime());
 			} else {
 				WPSTG()->logger->info('Copying file has been failed and will be skipped: ' . $files[$i]);
 				$wpstg_clone_details['file_index'] = $i + 1; //increment it because we want to skip this file when it can not be copied successfully
@@ -888,7 +909,7 @@ function wpstg_copy_files() {
 			$part = $batch / $wpstg_clone_details['total_size'];
 			$wpstg_clone_details['files_progress'] += $part;
 			wpstg_save_options();
-			//wp_die($wpstg_clone_details['files_progress']);
+
                         wpstg_return_json('wpstg_copy_files', 'success', '[' . date('d-m-Y H:i:s') . '] File copy in progress... ' . round($wpstg_clone_details['files_progress'] * 100, 1) . '%', $wpstg_clone_details['files_progress'], wpstg_get_runtime());
 		}
 	} // for loop
@@ -902,29 +923,33 @@ add_action('wp_ajax_wpstg_copy_files', 'wpstg_copy_files');
 
 
 /**
- * Create target directory for copy process and returns path to the copied file
+ * Create target directory during copy process and returns path to the copied file
  * 
- * @param string $file Source file including full path e.g. var/www/htdocs/mainsite/index.php
- * @param string $home Root path of the main wordpress installation e.g. var/www/htdocs/mainsite/
- * @param string $clone path of the clone e.g. var/www/htdocs/mainsite/myclone/
+ * @param string $source Source file including full path e.g. var/www/htdocs/mainsite/index.php
+ * @param string $home_root_path path of the main wordpress installation e.g. var/www/htdocs/mainsite/
+ * @param string $clone_root_path main path of the clone e.g. var/www/htdocs/mainsite/myclone/
  * 
- * @return string full target path e.g. var/www/htdocs/mainsite/myclone/wp-content/
+ * @return string full target path e.g. var/www/htdocs/mainsite/myclone/index.php
  * 
  * 
  */
-function wpstg_create_directories($file, $home, $clone) {
-	$path = substr($file, strlen($home));
-	$folders = explode('/', $path);
-	array_pop($folders);
-	$new_folder = $clone;
+function wpstg_create_directories($source, $home_root_path, $clone_root_path) {
+	$path = substr($source, strlen($home_root_path)); // remove the source part from home_root_path
+	$folders = explode('/', $path); // convert path into array
+	array_pop($folders); // remove the file
 
+        
+	$new_folder = $clone_root_path;
+        //$new_folder = wpstg_get_clone_root_path();
 	foreach ($folders as $folder) {
 		$new_folder .= '/' . $folder;
 		if (!is_dir($new_folder))
 			mkdir($new_folder);
 	}
 
-	return "$clone/$path";
+        $destination = $clone_root_path . "/" . $path;
+        //$destination = $new_folder . "/" . $path;
+	return $destination;
 }
 
 
@@ -1185,7 +1210,7 @@ add_action('wp_ajax_wpstg_replace_links', 'wpstg_replace_links');
  *
  * See: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
  * 
- * @param $integer decimal smaller than 1
+ * @param $progress decimal value as progress indicatior. 1 = 100% | 0.9 = 90% and so on
  * 
  * Return JSON
  */
@@ -1200,7 +1225,8 @@ function wpstg_reset_index_php($progress){
         if ($content) {
 
             $pattern = "/(require(.*)wp-blog-header.php' \);)/";
-            preg_match($pattern, $content, $matches);
+            if ( !preg_match($pattern, $content, $matches) )
+                wpstg_return_json('wpstg_wp_in_subdirectory', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fatal error: </span>wp-blog-header.php not included in ' . $path . ' !', $progress, wpstg_get_runtime());
             
             $pattern2 = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);/";
             $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0] . " // Changed by WP-Staging";

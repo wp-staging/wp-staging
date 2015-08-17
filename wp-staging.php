@@ -5,7 +5,7 @@
  * Description: WP-Staging - Create a staging clone site for testing & developing
  * Author: René Hermenau
  * Author URI: wordpress.org/plugins/wp-staging
- * Version: 0.9.4
+ * Version: 0.9.5
  * Text Domain: wpstg
  * Domain Path: languages
 
@@ -34,11 +34,11 @@ if (!defined('ABSPATH'))
 
 // Plugin version
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '0.9.4');
+    define('WPSTG_VERSION', '0.9.5');
 }
 // Plugin version
 if (!defined('WPSTG_WP_COMPATIBLE')) {
-    define('WPSTG_WP_COMPATIBLE', '4.2.4');
+    define('WPSTG_WP_COMPATIBLE', '4.3');
 }
 
 if (!class_exists('wpstaging')) :
