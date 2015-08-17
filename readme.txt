@@ -6,10 +6,10 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wordpress.org/plugins/wp-staging
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: staging, migration, development, migrate, cloning, clone, admin, page, content, plugin, media, backup, test, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google
+Tags: staging, migration, wordpress migration, development, migrate, cloning, clone, database export, database find replace, database serialization, db backup, file backup, backup, db migration, db restore, website backup, website staging, website deploy, staging, admin, page, content, plugin, media, backup, test, test site, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google, administration, ajax, api, authentication, blog, code, comments, contact, dashboard, multisite, theme
 Requires at least: 3.6+
 Tested up to: 4.3
-Stable tag: 0.9.4
+Stable tag: 0.9.5
 
 Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
