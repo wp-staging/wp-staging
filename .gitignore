@@ -4,3 +4,5 @@
 /logs/
 /remaining_files.json
 /clone_details.json
+Gruntfile.js
+package.json
