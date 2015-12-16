@@ -39,13 +39,13 @@ function wpstg_admin_messages() {
 			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable . <br> Check if the file '.$path.' exists! File permissions should be chmod 644 or 777.</p>';
 		echo '</div>';
         }
-        if ( wpstg_is_admin_page() && version_compare( WPSTG_WP_COMPATIBLE, get_bloginfo('version'), '<' ) ){
+        if ( wpstg_is_admin_page() && version_compare( WPSTG_WP_COMPATIBLE, get_bloginfo('version'), '>' ) ){
         echo '<div class="error"><p>';
         echo sprintf( __('You are using an outdated version of WP Staging which has not been tested with your WordPress version %2$s.<br> 
             As WP Staging is using crucial db and file functions it\'s important that you are using a WP Staging version<br> 
             which has been verified to be working with your WordPress version. You risk unexpected results up to data lose if you do not so.
             <p>Please look at <a href="%1$s" target="_blank">%s</a> for the latest WP Staging version.', 'wpstg') ,
-                'https://wp-staging.com',
+                'https://wordpress.org/plugins/wp-staging/',
                 get_bloginfo('version')
                 );
         echo '</p></div>';
@@ -63,11 +63,11 @@ function wpstg_admin_messages() {
     {
 	 echo '<div class="wpstg_fivestar updated" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
     	<p>Awesome, you\'ve been using <strong>WP Staging </strong> for more than 1 week. May we ask you to give it a <strong>5-star</strong> rating on Wordpress? 
-        <p><strong>Regards,<br>Your friends of WP Staging</strong>
+        <p><strong>Regards,<br>René Hermenau</strong>
         <ul>
-        	<li><a href="https://wordpress.org/support/view/plugin-reviews/wp-staging" class="thankyou" target="_new" title="Ok, you deserved it" style="font-weight:bold;color:#52BC03;">Ok, you deserved it</a></li>
-            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:bold;color:#52BC03;">I already did</a></li>
-            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:bold;color:#52BC03;">No, not good enough</a></li>
+            <li><a href="https://wordpress.org/support/view/plugin-reviews/wp-staging" class="thankyou" target="_new" title="Ok, you deserved it" style="font-weight:bold;">Ok, you deserved it</a></li>
+            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:bold;">I already did</a></li>
+            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:bold;">No, not good enough</a></li>
         </ul>
     </div>
     <script>

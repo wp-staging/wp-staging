@@ -10,7 +10,7 @@ msgstr ""
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "PO-Revision-Date: 2015-08-05 11:55+0100\n"
-"Last-Translator: Rene Hermenau <info@mashshare.net>\n"
+"Last-Translator: Rene Hermenau <support@wp-staging.com>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "X-Generator: Poedit 1.5.6\n"
 

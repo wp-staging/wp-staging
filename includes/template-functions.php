@@ -42,8 +42,8 @@ function wpstg_clone_page() {
 				<?php echo __('WP Staging is ready to create a staging site!', 'wpstg'); ?>
 				<br>
 				<iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwordpress.org%2Fplugins%2Fwp-staging%2F&amp;width=100&amp;layout=button&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:91px; height:20px;" allowTransparency="true"></iframe>
-				<a class="twitter-follow-button" href="https://twitter.com/wp_staging" data-size="small" id="twitter-wjs">Follow @wp_staging</a>
-                                <a class="twitter-share-button"  href="https://twitter.com/intent/tweet?text=Created%20my%20first%20WordPress%20staging%20site%20with%20WP%20Staging.%20Just%20awesome!&url=https://wordpress.org/plugins/wp-staging&hashtags=wpstaging&via=wp_staging">Tweet</a>
+				<a class="twitter-follow-button" href="https://twitter.com/wp_staging" data-size="small" id="twitter-wjs" style="display: none;">Follow @wp_staging</a>
+                                <a class="twitter-share-button"  href="https://twitter.com/intent/tweet?text=Check%20this%20WordPress%20Staging%20plugin%20&url=https://wordpress.org/plugins/wp-staging&hashtags=wpstaging&via=wp_staging">Tweet</a>
 			</div>
 			<?php do_action('wpstg_notifications');?>
 			<?php if (is_multisite()) {
@@ -183,8 +183,7 @@ function wpstg_scanning() {
 	</label>
 	<span class="wpstg-error-msg" id="wpstg-clone-id-error">
 		<?php 
-                        wpstg_check_diskspace($wpstg_clone_details['total_size']);
-                //echo $overflow ? __('Probably not enough free disk space to create a staging site. You can continue but its likely that the copying process will fail. (Sometime check is not working 100% on all server)', 'wpstg') : ''; 
+                        echo wpstg_check_diskspace($wpstg_clone_details['total_size']);
                 ?>
 	</span>
 	<div class="wpstg-tabs-wrapper">
@@ -210,7 +209,6 @@ function wpstg_scanning() {
 				wpstg_directory_structure($folders, null, false, false, $excluded_folders);
 				wpstg_show_large_files();
                                 echo '<p><span id=wpstg-file-summary>' . __('Files will be copied into subfolder of: ','wpstg') . wpstg_get_clone_root_path() . '</span>';
-                                echo '<p>Main WordPress path' . wpstg_get_clone_root_path();
 			?>
 		</div> <!-- #wpstg-scanning-files -->
 
@@ -281,10 +279,11 @@ function wpstg_scan_files($path, &$folders = array()) {
 	if (is_dir($path)) {
 		$dir = dir($path);
 		$dirsize = 0;
-		while ( method_exists($dir,'read') && false !== ($entry = $dir->read()) ) {
+                    while ( method_exists($dir,'read') && false !== ($entry = $dir->read()) ) { // works
 			if ($entry == '.' || $entry == '..' || $entry == $clone)
 				continue;
-			if (is_file($path . $entry)) {
+			//if (is_file($path . $entry) && !is_null($path) ) {
+                        if (is_file($path . $entry) ) {
 				$all_files[] = $path . $entry;
 				$dirsize += filesize( $path . $entry);
 				if ($batch_size < $size = filesize($path . $entry ))
@@ -316,7 +315,8 @@ function wpstg_get_files($folder, &$files = array(), &$total_size) {
 	if (! is_dir($folder))
 		return array();
 	$dir = dir($folder);
-	while (false !== $entry = $dir->read()) {
+
+        while (false !== $entry = $dir->read()) {
 		if ($entry == '.' || $entry == '..')
 			continue;
 		if (is_file("$folder/$entry")) {
@@ -324,6 +324,7 @@ function wpstg_get_files($folder, &$files = array(), &$total_size) {
 			$total_size -= filesize("$folder/$entry");
 		} else
 			wpstg_get_files("$folder/$entry", $files, $total_size);
+                
 	}
 	return $files;
 }
@@ -479,6 +480,7 @@ function wpstg_cloning() {
 		$all_files = json_decode(file_get_contents($path), true);
 
 		$excluded_files = array();
+                //$excluded_files = array (null, 'null'); //rhe 25.09.2015
 		foreach ($_POST['excludedFolders'] as $folder) {
 			$tmp_array = array();
 			$excluded_files = array_merge($excluded_files, wpstg_get_files($folder, $tmp_array, $wpstg_clone_details['total_size']));    
@@ -667,12 +669,13 @@ function wpstg_clone_db_internal() {
 			$wpstg_clone_details['current_table'] = $table;
 		}
 		if ($is_cloned) {
-			$limit -= $rows_count;
+			/*$limit -= $rows_count;
 			if ($limit < 1)
-				break;
+				break; rhe */
 			$inserted_rows = $wpdb->query(
 				"insert $new_table select * from $table limit $offset, $limit"
 			);
+                        wpstg_debug_log("Debug QUERY: insert $new_table select * from $table limit $offset, $limit");
 			if ($inserted_rows !== false) {                          
 				$wpstg_clone_details['offsets'][$table] = $offset + $inserted_rows;
 				$rows_count += $inserted_rows;
@@ -696,9 +699,9 @@ function wpstg_clone_db_internal() {
                                         wpstg_return_json('wpstg_clone_db_internal', 'success', wpstg_get_log_data($progress) . $log_data, $wpstg_clone_details['db_progress'], wpstg_get_runtime());
 				}
 			} else {
-				WPSTG()->logger->info('Table ' . $new_table . ' has been created, BUT inserting rows failed. Offset: ' . $offset);
+				WPSTG()->logger->info('Table ' . $new_table . ' has been created, BUT inserting rows failed. This happens sometimes when a table had been updated during staging process. Exclude this table from copying and try again. Offset: ' . $offset);
 				wpstg_save_options();
-                                wpstg_return_json('wpstg_clone_db_internal', 'fail', 'Table ' . $new_table . ' has been created, BUT inserting rows failed. Offset: ' . $offset, $wpstg_clone_details['db_progress'], wpstg_get_runtime());
+                                wpstg_return_json('wpstg_clone_db_internal', 'fail', 'Table ' . $new_table . ' has been created, BUT inserting rows failed. This happens sometimes when a table had been updated during staging process. Exclude this table from copying and try again. Offset: ' . $offset, $wpstg_clone_details['db_progress'], wpstg_get_runtime());
 
 			}
 		} else {
@@ -868,8 +871,9 @@ function wpstg_copy_files() {
 	for ($i = $start_index; $i < count($files); $i++) {
                 //$new_file = wpstg_create_directories($files[$i], get_home_path(), $clone_root_path);
                 $new_file = wpstg_create_directories($files[$i], wpstg_get_clone_root_path(), $clone_root_path);
-		$size = filesize($files[$i]);
-		if ($size > $batch_size) {
+                if ( file_exists($files[$i]) )
+                    $size = filesize($files[$i]);
+		if (file_exists($files[$i]) && $size > $batch_size) {
 			if (wpstg_copy_large_file($files[$i], $new_file, $batch_size)) {
 				WPSTG()->logger->info('Copy LARGE file: ' . $files[$i] . '. Batch size: ' . wpstg_short_size($batch + $size) . ' (' . ($batch + $size) . ' bytes)');
 				$wpstg_clone_details['file_index'] = $i + 1;
@@ -976,7 +980,7 @@ function wpstg_copy_large_file($src, $dst, $buffersize) {
                     }                 
         }
         // Try second method if first one failed
-        if ($error){
+        if (isset($error) && ($error === true)){
             while(!feof($src)){
                 stream_copy_to_stream($src, $dest, 1024 );
             }
@@ -1387,7 +1391,7 @@ function wpstg_remove_clone($isAjax = true) {
 
 	//remove clone folder
 	$excluded_folders = isset($_POST['excludedFolders']) ? $_POST['excludedFolders'] : array();
-	$result = deleteDirectory(get_home_path() . $clone, $excluded_folders);
+	$result = wpstgDeleteDirectory(get_home_path() . $clone, $excluded_folders);
 	if (! $result) {
 		WPSTG()->logger->info('Removing clone folder '.get_home_path() . $clone.' has been failed.');
 		wp_die(-1);
@@ -1418,7 +1422,7 @@ add_action('wp_ajax_wpstg_remove_clone', 'wpstg_remove_clone');
  * @param array $excluded_dirs
  * @return boolean
  */
-function deleteDirectory($dir, $excluded_dirs) {
+function wpstgDeleteDirectory($dir, $excluded_dirs) {
 	if (!file_exists($dir))
 		return true;
 
@@ -1429,7 +1433,7 @@ function deleteDirectory($dir, $excluded_dirs) {
 		if ($item == '.' || $item == '..' || in_array("$dir/$item", $excluded_dirs))
 			continue;
 
-		if (!deleteDirectory("$dir/$item", $excluded_dirs))
+		if (!wpstgDeleteDirectory("$dir/$item", $excluded_dirs))
 			return false;
 	}
 
@@ -1708,7 +1712,7 @@ function wpstg_return_button_title(){
  * 
  * @return string
  */
-function wpstg_check_diskspace($clone_size){
+/*function wpstg_check_diskspace_($clone_size){
         $free_space = function_exists('disk_free_space') ? disk_free_space(get_home_path()) : 'undefined';
 		$overflow = $free_space < $clone_size ? true : false;
 
@@ -1716,4 +1720,28 @@ function wpstg_check_diskspace($clone_size){
               return $overflow ? __('Probably not enough free disk space to create a staging site. You can continue but its likely that the copying process will fail.', 'wpstg') : '';
         }
         //return __('Can not check if there is enough disk space left for the staging website. This is not really a bad thing so you can still continue.', 'wpstg');        
+}*/
+
+function wpstg_check_diskspace($clone_size) {
+                if ( !function_exists('disk_free_space') )
+                    return '';
+                
+		$overflow = @disk_free_space(get_home_path());
+		if ( $overflow == false)                
+                    return '';
+                
+                $overflow = $overflow < $clone_size ? true : false; 
+                return $overflow ? '<br>' . __('Probably not enough free disk space to create a staging site. <br> You can continue but its likely that the copying process will fail.', 'wpstg') : '';
+}
+
+/**
+ * Write extended debug messsages into logfiles
+ * 
+ * @param string $error
+ */
+function wpstg_debug_log($error){
+    global $wpstg_options;
+    
+    if ( isset($wpstg_options['debug_mode']) )
+        WPSTG()->logger->info($error);
 }

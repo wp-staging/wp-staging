@@ -164,6 +164,12 @@ function wpstg_get_registered_settings() {
                                                             'desc' => __( 'Use this option when you gave wordpress its own subdirectory. if you enable this, WP Staging will reset the index.php of the clone site to the originally one. <br> <a href="https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">Read more in the WordPress Codex</a>', 'mashsb' ),
                                                             'type' => 'checkbox'
                                                         ),
+                                                        /*'link_images' => array(
+                                                            'id' => 'link_images',
+                                                            'name' => __( 'Link images. Change upload ', 'mashsb' ),
+                                                            'desc' => __( 'Enable this if you want WP Staging to link images. if you enable this, WP Staging will reset the index.php of the clone site to the originally one. <br> <a href="https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">Read more in the WordPress Codex</a>', 'mashsb' ),
+                                                            'type' => 'checkbox'
+                                                        ),*/
                                                         /*'admin_login_page' => array(
                                                             'id' => 'admin_login_page',
                                                             'name' => __( 'Login page', 'mashsb' ),
@@ -171,19 +177,19 @@ function wpstg_get_registered_settings() {
                                                             'type' => 'text',
                                                             'size' => 'medium'
                                                         ),*/
+                                                        'debug_mode' => array(
+                                                            'id' => 'debug_mode',
+                                                            'name' => __( 'Debug Mode', 'mashsb' ),
+                                                            'desc' => __( 'This will enable an extended debug mode which creates additional entries in <strong>wp-content/wp-staging/logs</strong>. Please enable this when we ask you to do so.', 'mashsb' ),
+                                                            'type' => 'checkbox'
+                                                        ),
                                                         'uninstall_on_delete' => array(
                                                             'id' => 'uninstall_on_delete',
                                                             'name' => __( 'Remove Data on Uninstall?', 'mashsb' ),
                                                             'desc' => __( 'Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted.', 'mashsb' ),
                                                             'type' => 'checkbox'
                                                         ),
-                                    
-							/*'debug_mode' => array(
-								'id' => 'debug_mode',
-								'name' => __( 'Debug mode', 'wpstg' ),
-								'desc' => __( '<strong>Note: </strong> Check this box before you get in contact with our support team. This allows us to check publically hidden debug messages on your website. Do not forget to disable it thereafter! Enable this also to write daily sorted log files of requested share counts to folder <strong>/wp-content/plugins/mashsharer/logs</strong>. Please send us this files when you notice a wrong share count.' . wpstg_log_permissions(), 'wpstg' ),
-								'type' => 'checkbox'
-							)*/
+                                   
 			)
 		),
 		'licenses' => apply_filters('wpstg_settings_licenses',

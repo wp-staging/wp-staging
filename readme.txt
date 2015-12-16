@@ -1,4 +1,4 @@
-=== WP Staging - DB & File WordPress Migration === 
+=== WP Staging - DB & file duplicator & migration  === 
 
 Author URL: https://wordpress.org/plugins/wp-staging
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -6,23 +6,29 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wordpress.org/plugins/wp-staging
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: staging, migration, wordpress migration, development, migrate, cloning, clone, database export, database find replace, database serialization, db backup, file backup, backup, db migration, db restore, website backup, website staging, website deploy, staging, admin, page, content, plugin, media, backup, test, test site, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google, administration, ajax, api, authentication, blog, code, comments, contact, dashboard, multisite, theme
+Tags: staging, migration, wordpress migration, wordpress staging, development, migrate, cloning, clone, database export, database find replace, database serialization, duplication, duplicator, duplicate, site duplicate, duplicate posts, db backup, file backup, backup, db migration, db restore, website backup, website staging, website deploy, staging, admin, page, content, plugin, media, backup, test, test site, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google, administration, ajax, api, authentication, blog, code, comments, contact, dashboard, multisite, theme
 Requires at least: 3.6+
-Tested up to: 4.3
-Stable tag: 0.9.5
+Tested up to: 4.4
+Stable tag: 0.9.8
 
-Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
+A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
 == Description == 
 
-<strong>This software is brandnew, well tested but still beta and work in progress! <br>
+<strong>This cloning and staging plugin is brandnew, well tested but still beta and work in progress! <br>
 If you find a bug please open a ticket in the [support request](https://wordpress.org/support/plugin/wp-staging/ "support forum"). Every issue will be fixed asap!
 </strong>
+<br /> <br />
+WP Staging is working very stable so i the stable 1.0 will be released very soon.
+<br /><br />
+<strong>Note: </strong> This plugin is not able to push back your changes to the live site at the moment! This is a feature i am already working on.
+<br /> <br />
+
 
 <blockquote>
 <h4> WP Staging for WordPress Migration </h4>
-This plugin allows you to create an staging or development environment in seconds* <br /> <br />
-It creates a clone of your website into a subfolder of your current WordPress installation with an entire copy of your database. 
+This duplicator plugin allows you to create an staging or development environment in seconds* <br /> <br />
+It creates a file clone of your website into a subfolder of your current WordPress installation with an entire copy of your database. 
 This sounds pretty simple and yes it is! All the hard time consumptive database and file copy stuff including url replacements is done in the background.
  <br /> <br />
 I created this plugin because all other solutions are way too complex, overloaded with dozens of options or having server requirements which are not available on most shared hosting solutions.
@@ -31,25 +37,24 @@ All these reasons prevent user from testing new plugins and updates first before
 <p><small><em>* Time of creation depends on size of your database and file size</em></small></p>
 </blockquote>
 
-WP Staging can prevent your website from being broken or unavailable because of installing untested plugin updates! 
+WP Staging helps you to prevent your website from being broken or unavailable because of installing untested plugin updates! 
 
 = Main Features =
 
-* <strong>Easy: </strong> Staging migration possible for everyone. No configuration needed!
-* <strong>Fast: </strong> Migration takes only a few seconds or minutes, depending on the size.
-* <strong>Search Engine Friendly: </strong> Access to the staging site will be granted only for administrators
+* <strong>Easy: </strong> Staging migration applicable for everyone. No configuration needed!
+* <strong>Fast: </strong> Migration process lasts only a few seconds or minutes, depending on the site's size and server I/O power
+* <strong>Safe: </strong> Access to staging site is granted for administrators only.
 <br /><br />
-<strong>Safe</strong> 
+<strong>More safe:</strong> 
 <br>
 * Admin bar reflects that you are working on a staging site
-* No access to staging site for search engines and other user
-* Extensive logging if migration goes wrong.
+* Extensive logging if duplication and migration process fails.
 
 = What does not work or is not tested when running wordpress migration? =
 
 * Wordpress migration of wordpress multisites (not tested)
-* WordPress migration process on windows server (not tested but will probably work) 
-Edit: Migration on windows server seems to be working well: [Read more](https://wordpress.org/support/topic/wont-copy-files?replies=5 "Read more") 
+* WordPress duplicating process on windows server (not tested but will probably work) 
+Edit: Duplication on windows server seems to be working well: [Read more](https://wordpress.org/support/topic/wont-copy-files?replies=5 "Read more") 
 
 
 <strong>Change your workflow of updating themes and plugins data:</strong>
@@ -89,6 +94,13 @@ If you want to migrate your local database to a already existing production site
 WP Staging is only for creating a staging site with latest data from your production site. So it goes the opposite way of WP Migrate DB.
 Both tools are excellent cooperating eachother.
 
+<h3>What are the benefits compared to a plugin like Duplicator?</h3>
+At first, i love the [Duplicator plugin](https://wordpress.org/plugins/duplicator/ "Duplicator plugin"). Duplicator is a great tool for migrating from development site to production one or from production site to development one. 
+The downside is that Duplicator needs adjustments, manually interventions and prerequirements for this. Duplicator also needs some skills to be able to create a development / staging site, where WP Staging does not need more than a click from you.
+However, Duplicator is best placed to be a tool for first-time creation of your production site. This is something where it is very handy and powerful.
+
+So, if you have created a local or webhosted development site and you need to migrate this site the first time to your production domain than you are doing nothing wrong with using
+the Duplicator plugin! If you need all you latest production data like posts, updated plugins, theme data and styles in a testing environment than i recommend to use WP Staging instead!
 
 = I need you feedback =
 This plugin has been done in hundreds of hours to work on even the smallest shared webhosting package but i am limited in testing this only on a handful of different server so i need your help:
@@ -122,13 +134,27 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Screenshots ==
 
-1. Step 1. Create new staging site
+1. Step 1. Create new WordPress staging site
 2. Step 2. Scanning your website for files and database tables
-3. Step 3. Staging site creation in progress
+3. Step 3. Wordpress Staging site creation in progress
 4. Finish!
 
-
 == Changelog ==
+
+= 0.9.8 = 
+* New: Tested up to WP 4.4
+* New: New debug mode in settings
+
+= 0.9.7 =
+* Fix: Change backend link to https://wordpress.org/plugins/wp-staging/ when using an outdated version of the plugin
+* New: Tested up to WP 4.3.1
+
+= 0.9.6 =
+* New: Show notice when there is not enough disk space for a clone
+* Fix: PHP Error on 32bit systems: "disk_free_space(): Value too large for defined data type"
+* Fix: Copying process of larges files gets interupted sometimes due undefined variable
+* Fix: Define width and height for the system info export formular
+* Fix: Cannot redeclare deleteDirectory()
 
 = 0.9.5 =
 * Fix: Option for cloning sites which are moved into a subdirectory was not working on several systems
@@ -157,5 +183,5 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Upgrade Notice ==
 
-= 0.9.4 =
-0.9.4 <strong> Important update!</strong>
+= 0.9.7 =
+0.9.7 <strong> * New: Tested up to wp 4.3.1</strong>
