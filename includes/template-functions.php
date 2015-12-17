@@ -1163,11 +1163,11 @@ function wpstg_replace_links() {
 	//replace $table_prefix in wp-config.php
 	if ($wpstg_clone_details['links_progress'] < 0.67) {
                 $wpstg_clone_details['links_progress'] = 0.67;
-		//$path = get_home_path() . '/' . $wpstg_clone_details['current_clone'] . '/wp-config.php';
                 $path = get_home_path() . $wpstg_clone_details['current_clone'] . '/wp-config.php';
 		$content = file_get_contents($path);
 		if ($content) {
-			$content = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $content);
+			$content = str_replace('$table_prefix', '$table_prefix = \'' . $new_prefix . '\';//', $content); // replace table prefix
+                        $content = str_replace(get_home_url(), wpstg_get_staging_url(), $content); // replace any url 
 			if ($db_helper->dbname != $wpdb->dbname) {
 				$content = str_replace('define(\'DB_NAME\'', 'define(\'DB_NAME\', \'' . $db_helper->dbname . '\');//', $content);
 				$content = str_replace('define(\'DB_USER\'', 'define(\'DB_USER\', \'' . $db_helper->dbuser . '\');//', $content);
@@ -1175,18 +1175,15 @@ function wpstg_replace_links() {
 				$content = str_replace('define(\'DB_HOST\'', 'define(\'DB_HOST\', \'' . $db_helper->dbhost . '\');//', $content);
 			}
 			if (FALSE === file_put_contents($path, $content)) {
-                                //$wpstg_clone_details['links_progress'] = 0.67; 
                                 wpstg_save_options(); //  we have to die hier @to do write function
 				WPSTG()->logger->info($path . ' is not writable');
                                 wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fatal error: </span>Can not modify ' . $path . ' !', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
                         }else{  
-                                //$wpstg_clone_details['links_progress'] = 0.67;
                                 wpstg_save_options();
                                 wpstg_return_json('wpstg_replace_links', 'success', '[' . date('d-m-Y H:i:s') . '] ' . $path . ' has been successfully modified!', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
                         }
 		} else {
 			WPSTG()->logger->info($path . ' is not readable.');
-                        //$wpstg_clone_details['links_progress'] = 0.67;
                         wpstg_save_options();
                         wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span>' . $path . ' is not writable', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
 		}
@@ -1744,4 +1741,19 @@ function wpstg_debug_log($error){
     
     if ( isset($wpstg_options['debug_mode']) )
         WPSTG()->logger->info($error);
+}
+
+/**
+ * Get URL of staging site
+ * 
+ * @global type $wpstg_clone_details
+ * @return mixed bool | string false when there is not staging url defined
+ */
+function wpstg_get_staging_url(){
+    global $wpstg_clone_details;
+    
+    if ( !empty($wpstg_clone_details['current_clone']))
+        return get_home_url() . '/' . $wpstg_clone_details['current_clone'];
+    
+    return false;
 }

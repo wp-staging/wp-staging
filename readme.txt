@@ -144,6 +144,7 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 = 0.9.8 = 
 * New: Tested up to WP 4.4
 * New: New debug mode in settings
+* New: Check if url's in staging's wp-config.php needs a replacement and do so.
 
 = 0.9.7 =
 * Fix: Change backend link to https://wordpress.org/plugins/wp-staging/ when using an outdated version of the plugin
