@@ -178,7 +178,7 @@ function wpstg_scanning() {
 	//$overflow = $free_space < $wpstg_clone_details['total_size'] ? true : false;
 	?>
 	<label id="wpstg-clone-label" for="wpstg-new-clone">
-				<?php echo __('Name your new site, e.g. staging, development:', 'wpstg');?>
+				<?php echo __('Name your new site, e.g. staging, dev (keep it short):', 'wpstg');?>
 		<input type="text" id="wpstg-new-clone-id" value="<?php echo $clone; ?>" <?php echo $disabled; ?>>
 	</label>
 	<span class="wpstg-error-msg" id="wpstg-clone-id-error">
@@ -893,7 +893,8 @@ function wpstg_copy_files() {
 		}
 		if ($batch_size > $batch + $size) {
                                 //WPSTG()->logger->info('Try to copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file);
-			if (copy($files[$i], $new_file)) {
+            
+			if ( is_readable( $files[$i] ) && copy($files[$i], $new_file)) {
 				$batch += $size;
                                 //WPSTG()->logger->info('Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file); 
                                 //wpstg_return_json('wpstg_copy_files', 'success', '[' . date('d-m-Y H:i:s') . '] Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file, $wpstg_clone_details['files_progress'], wpstg_get_runtime());

@@ -144,6 +144,20 @@ function wpstg_get_registered_settings() {
 								'size' => 'medium',
 								'std' => '2',
 							),
+							array(
+								'id' => 'wpstg_cpu_load',
+								'name' => __('CPU load priority', 'wpstg'),
+								'desc' => __('Using high will result in fast as possible processing but the cpu load increases and it\'s also possible that staging process gets interupted because of too many ajax requests (e.g. <strong>authorization error</strong>). Using a lower value results in lower cpu load on your server but also slower staging site creation. <strong>Default: </strong> Medium ', 'wpstg'),
+								'type' => 'select',
+								'size' => 'medium',
+								'options' => array(
+                                                                    'default' => 'Default',
+                                                                    'high' => 'High (fast)',
+                                                                    'medium' => 'Medium (average)',
+                                                                    'low' => 'Low (slow)'
+
+                                                              )
+							),
                                                         array(
 								'id' => 'wpstg_disabled_plugins',
 								'name' => __('Optimizer', 'wpstg'),

@@ -13,6 +13,27 @@
 if ( ! defined( 'ABSPATH' ) ) exit;
 
 
+function wpstg_get_cpu_load_sett(){
+    global $wpstg_options;
+    
+    $get_cpu_load = isset($wpstg_options['wpstg_cpu_load']) ? $wpstg_options['wpstg_cpu_load'] : 'default';
+    
+    if ($get_cpu_load === 'default')
+        $cpu_load = 1000;
+    
+    if ($get_cpu_load === 'high')
+        $cpu_load = 0;
+    
+    if ($get_cpu_load === 'medium')
+        $cpu_load = 1000;
+    
+    if ($get_cpu_load === 'low')
+        $cpu_load = 3000;
+    
+    return $cpu_load;
+    
+}
+
 /**
  * Load Admin Scripts
  *
@@ -28,15 +49,18 @@ function wpstg_load_admin_scripts( $hook ) {
 	if ( ! apply_filters( 'wpstg_load_admin_scripts', wpstg_is_admin_page(), $hook ) ) {
 		return;
 	}
-	global $wp_version;
+	global $wp_version, $wpstg_options;
         
 
 	$js_dir  = WPSTG_PLUGIN_URL . 'assets/js/';
 	$css_dir = WPSTG_PLUGIN_URL . 'assets/css/';
 
 	// Use minified libraries if SCRIPT_DEBUG is turned off
-	$suffix  = '';//( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
-        //echo $css_dir . 'wpstg-admin' . $suffix . '.css', WPSTG_VERSION;
+	//$suffix  = '';//( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
+        $suffix = isset($wpstg_options['debug_mode']) ? '' : '.min'; 
+       
+            
+        
 	// These have to be global
 	wp_enqueue_script( 'wpstg-admin-script', $js_dir . 'wpstg-admin' . $suffix . '.js', array( 'jquery' ), WPSTG_VERSION, false );
 	wp_enqueue_style( 'wpstg-admin', $css_dir . 'wpstg-admin' . $suffix . '.css', WPSTG_VERSION );
@@ -48,6 +72,7 @@ function wpstg_load_admin_scripts( $hook ) {
                 'status'                                => __( 'Status', 'Current request status', 'wpstg' ),
                 'response'                              => __( 'Response', 'The message the server responded with', 'wpstg' ),
             	'blacklist_problem'                     => __( 'A problem occurred when trying to add plugins to backlist.', 'wpstg' ),
+                'cpu_load'                              => wpstg_get_cpu_load_sett(),
 
 	));
 }

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, migration, wordpress migration, wordpress staging, development, migrate, cloning, clone, database export, database find replace, database serialization, duplication, duplicator, duplicate, site duplicate, duplicate posts, db backup, file backup, backup, db migration, db restore, website backup, website staging, website deploy, staging, admin, page, content, plugin, media, backup, test, test site, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google, administration, ajax, api, authentication, blog, code, comments, contact, dashboard, multisite, theme
 Requires at least: 3.6+
 Tested up to: 4.4
-Stable tag: 0.9.8
+Stable tag: 0.9.9
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
@@ -141,10 +141,15 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Changelog ==
 
+= 0.9.9 =
+* New: Load option to reduce cpu load and to lower the risk of killed ajax calls because of security flooding mechanism (Prevent 405 errors: not allowed)
+* Tweak: Load non minified js file when WPSTG debug mode is enabled
+
 = 0.9.8 = 
 * New: Tested up to WP 4.4
 * New: New debug mode in settings
-* New: Check if url's in staging's wp-config.php needs a replacement and do so.
+* Tweak: Check if url's in staging's wp-config.php needs a replacement and do so.
+* Fix: Prevent fatal error and end of copying process. Make sure files are writable before trying to copy them  
 
 = 0.9.7 =
 * Fix: Change backend link to https://wordpress.org/plugins/wp-staging/ when using an outdated version of the plugin

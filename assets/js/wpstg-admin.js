@@ -338,9 +338,10 @@
                     $('#wpstg-loader').hide();
                     isFinished = true; // die cloning process
                     console.log(error);
+                    var add_error = ' Fatal Error: This should not happen! Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not fix it enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out what is causing this.';
                     var data = {
                         action: 'wpstg_error_processing',
-                        wpstg_error_msg: error
+                        wpstg_error_msg: error + add_error
                     };
                     $.post(ajaxurl, data);
                 }
@@ -353,6 +354,8 @@
                  */
 		var isCanceled = false;
 		function clone_db() {
+                    
+                    setTimeout(function(){ // timeout of x sec - prevent security blocks and cpu overload                 
                     $('#wpstg-loader').show();
 			var data = {
 				action: 'wpstg_clone_db',
@@ -387,14 +390,16 @@
 			})
                         .fail(function(xhr) { // Will be executed when $.post() fails
                             wpstg_show_error_die(xhr.statusText);
-                            console.log('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
-                        });                                                           
+                            console.log('Fatal Error: This should not happen but is often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+                        });  
+                    },wpstg.cpu_load); // timeout of x sec - prevent security blocks and cpu overload
 		}
                 
 
 
 
 		function copy_files() {
+                    setTimeout(function(){ // timeout of x sec - prevent security blocks and cpu overload
 			var data = {
 				action: 'wpstg_copy_files',
 				nonce: wpstg.nonce
@@ -404,15 +409,6 @@
 					cancelCloning();
 					return false;
 				}
-
-				/*if (resp == 'not writable') {
-					$('#wpstg-try-again').css('display', 'inline-block');
-					$('#wpstg-cancel-cloning').text('Reset');
-					$('#wpstg-cloning-result').text('This folder does not exist or is not writable');
-					$('#wpstg-loader').hide();
-					isFinished = true;
-					return;
-				}*/
 
 				if (!wpstgIsJsonObj(resp)) { //Unknown error
 					wpstg_show_error_die('Fatal Error: This should not happen. Please try again! <br> If restarting does not work <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">get in contact with us</a> ');
@@ -435,6 +431,7 @@
                             wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
                             console.log(xhr.statusText);
                         });
+                    },wpstg.cpu_load); // timeout of x sec - prevent security blocks and cpu overload
 		}
 
 		var isFinished = false;
@@ -466,12 +463,9 @@
 					$('#wpstg-loader').hide();
                                         wpstg_logscroll_bottom();
 					cloneID = cloneID.replace(/[^A-Za-z0-9]/g, '');
-					//var cloneURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/wp-login.php';
                                         var redirectURL = $('#wpstg-clone-url').attr('href') + '/' + cloneID + '/';
 					setTimeout(function () {
-						//$('#wpstg-cloning-result').text('Done');
                                                 $('#wpstg-finished-result').show();
-						//$('#wpstg-clone-url').text('Visit staging site <span style="font-size: 10px;">(login with your admin credentials)</span>' . cloneID).attr('href', cloneURL + '?redirect_to=' + encodeURIComponent( redirectURL ) );
                                                 $('#wpstg-clone-url').text('Visit staging site <span style="font-size: 10px;">(login with your admin credentials)</span>' . cloneID).attr('href', redirectURL );
                                                 $('#wpstg_staging_name').text(cloneID);
                                                 $('#wpstg-cancel-cloning').hide();
