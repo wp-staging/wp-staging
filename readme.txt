@@ -142,6 +142,7 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 == Changelog ==
 
 = 0.9.9 =
+* Fix: Use back ticks for table names to prevent copy errors when table names are containing hyphens or similar special characters
 * New: Load option to reduce cpu load and to lower the risk of killed ajax calls because of security flooding mechanism (Prevent 405 errors: not allowed)
 * Tweak: Load non minified js file when WPSTG debug mode is enabled
 

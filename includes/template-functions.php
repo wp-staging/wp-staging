@@ -665,7 +665,8 @@ function wpstg_clone_db_internal() {
 			if ($existing_table == $new_table)
 				$wpdb->query("drop table $new_table");
 
-			$is_cloned = $wpdb->query("create table $new_table like $table");
+			$is_cloned = $wpdb->query("create table `$new_table` like `$table`");
+                        wpstg_debug_log("Debug QUERY: create table $new_table like $table");
 			$wpstg_clone_details['current_table'] = $table;
 		}
 		if ($is_cloned) {
@@ -673,7 +674,7 @@ function wpstg_clone_db_internal() {
 			if ($limit < 1)
 				break; rhe */
 			$inserted_rows = $wpdb->query(
-				"insert $new_table select * from $table limit $offset, $limit"
+				"insert `$new_table` select * from `$table` limit $offset, $limit"
 			);
                         wpstg_debug_log("Debug QUERY: insert $new_table select * from $table limit $offset, $limit");
 			if ($inserted_rows !== false) {                          
@@ -699,9 +700,9 @@ function wpstg_clone_db_internal() {
                                         wpstg_return_json('wpstg_clone_db_internal', 'success', wpstg_get_log_data($progress) . $log_data, $wpstg_clone_details['db_progress'], wpstg_get_runtime());
 				}
 			} else {
-				WPSTG()->logger->info('Table ' . $new_table . ' has been created, BUT inserting rows failed. This happens sometimes when a table had been updated during staging process. Exclude this table from copying and try again. Offset: ' . $offset);
+				WPSTG()->logger->info('Table ' . $new_table . ' has been created, BUT inserting rows failed. This happens sometimes when a table had been updated during staging process. Exclude this table from copying and try again. Offset: ' . $offset . '');
 				wpstg_save_options();
-                                wpstg_return_json('wpstg_clone_db_internal', 'fail', 'Table ' . $new_table . ' has been created, BUT inserting rows failed. This happens sometimes when a table had been updated during staging process. Exclude this table from copying and try again. Offset: ' . $offset, $wpstg_clone_details['db_progress'], wpstg_get_runtime());
+                                wpstg_return_json('wpstg_clone_db_internal', 'fail', 'Table ' . $new_table . ' has been created, BUT inserting rows failed. This happens sometimes when a table had been updated during staging process. Exclude this table from copying and try again. Offset: ' . $offset, $wpstg_clone_details['db_progress'] . ' ', wpstg_get_runtime());
 
 			}
 		} else {
@@ -1378,7 +1379,7 @@ function wpstg_remove_clone($isAjax = true) {
 	$tables = array_diff($tables, $unchecked_tables);
 	foreach ($tables as $table) {
 		if (! wpstg_is_root_table($table, $wpdb->prefix))
-			$result = $db_helper->query("drop table $table");
+			$result = $db_helper->query("drop table `$table`");
 		if (! $result) {
 			WPSTG()->logger->info('Droping table ' . $table . ' has been failed.');
 			//wp_die(-1);

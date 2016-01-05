@@ -136,7 +136,7 @@ function wpstg_options_page() {
 				<br>
 				<?php echo __('WP Staging is ready to create a staging site!', 'wpstg'); ?>
 				<br>
-				<iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwordpress.org%2Fplugins%2Fwp-staging%2F&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:91px; height:20px;" allowTransparency="true"></iframe>
+				<iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwordpress.org%2Fplugins%2Fwp-staging%2F&amp;width=100&amp;layout=standard&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:96px; height:20px;" allowTransparency="true"></iframe>
 				<a class="twitter-follow-button" href="https://twitter.com/wp_staging" data-size="small" id="twitter-wjs" style="display: none;">Follow @wp_staging</a>
                                 <a class="twitter-share-button"  href="https://twitter.com/intent/tweet?text=Check%20this%20WordPress%20Staging%20plugin%20&url=https://wordpress.org/plugins/wp-staging&hashtags=wpstaging&via=wp_staging">Tweet</a>
 			</div>
