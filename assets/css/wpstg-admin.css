@@ -516,7 +516,7 @@ color:#777777;
 #wpstg-large-files {
         display:none;       
 	border: 1px dashed #ccc;
-	float: right;
+	/*float: right;*/
 	padding: 10px 10px 10px;
         margin-top:20px;
 	position: relative;
