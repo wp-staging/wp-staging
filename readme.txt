@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, migration, wordpress migration, wordpress staging, development, migrate, cloning, clone, database export, database find replace, database serialization, duplication, duplicator, duplicate, site duplicate, duplicate posts, db backup, file backup, backup, db migration, db restore, website backup, website staging, website deploy, staging, admin, page, content, plugin, media, backup, test, test site, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google, administration, ajax, api, authentication, blog, code, comments, contact, dashboard, multisite, theme
 Requires at least: 3.6+
-Tested up to: 4.4
-Stable tag: 0.9.9
+Tested up to: 4.4.1
+Stable tag: 1.0.0
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
@@ -38,6 +38,8 @@ All these reasons prevent user from testing new plugins and updates first before
 </blockquote>
 
 WP Staging helps you to prevent your website from being broken or unavailable because of installing untested plugin updates! 
+
+[youtube https://www.youtube.com/watch?v=Ye3fC6cdB3A]
 
 = Main Features =
 
@@ -140,6 +142,15 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 4. Finish!
 
 == Changelog ==
+
+= 1.0.0 not released yet =
+* Fix: Do not follow symlinks during file copy process
+* Fix: css error
+* Fix: Show "not-compatible" notice only when blog version is higher than plugin tested version.
+* Fix: undefined var $size
+* Fix: Check if $path is null before writing to remaining_files.json
+* Fix: $db_helper undefined message
+* Fix: Skip non utf8 encoded files during copying process
 
 = 0.9.9 =
 * Fix: Use back ticks for table names to prevent copy errors when table names are containing hyphens or similar special characters

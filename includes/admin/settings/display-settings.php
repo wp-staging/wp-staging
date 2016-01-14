@@ -130,9 +130,9 @@ function wpstg_options_page() {
 	ob_start();
 	?>
 	<div class="wpstg_admin">
-             <span class="wp-staginglogo"><img src="<?php echo WPSTG_PLUGIN_URL . 'assets/images/logo_clean_small_212_25.png';?>">&nbsp;<span class="wpstg-version"><?php echo WPSTG_VERSION . ' / beta'; ?></span></span>
+             <span class="wp-staginglogo"><img src="<?php echo WPSTG_PLUGIN_URL . 'assets/images/logo_clean_small_212_25.png';?>"></span><span class="wpstg-version"><?php echo WPSTG_VERSION . ' / beta'; ?></span>
 			<div class="wpstg-header">
-				<?php echo __('Thank you for using WP Staging', 'wpstg');?>
+				<?php echo __('Thank you for using WP Staging.', 'wpstg');?>
 				<br>
 				<?php echo __('WP Staging is ready to create a staging site!', 'wpstg'); ?>
 				<br>

@@ -38,7 +38,7 @@ if (!defined('WPSTG_VERSION')) {
 }
 // Plugin version
 if (!defined('WPSTG_WP_COMPATIBLE')) {
-    define('WPSTG_WP_COMPATIBLE', '4.3.1');
+    define('WPSTG_WP_COMPATIBLE', '4.4.1');
 }
 
 if (!class_exists('wpstaging')) :

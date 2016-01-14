@@ -12,6 +12,21 @@
 // Cloning workflow
 (function ($) {
 	$(document).ready(function () {
+            
+        // Unselect/select all db tables    
+        var ischecked = true;
+        $('#wpstg-workflow').on("click", ".wpstg-button-unselect", function (e) {
+            e.preventDefault();
+            if (ischecked == false) {
+                $(".wpstg-db-table-checkboxes").attr("checked", "checked");
+                $(".wpstg-button-unselect").html("Uncheck All");
+                ischecked = true;
+            } else {
+                $(".wpstg-db-table-checkboxes").removeAttr("checked");
+                $(".wpstg-button-unselect").html("Check All");
+                ischecked = false;
+            }
+        });
         
         // Ajax loading spinner    
         var admin_url = ajaxurl.replace('/admin-ajax.php', '');
@@ -152,30 +167,6 @@
                 /**
                  * Next step
                  */
-		/*$('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
-			e.preventDefault();
-			if ($(this).attr('disabled'))
-				return false;
-
-			$('#wpstg-workflow').addClass('loading');
-			var data = {
-				action: $(this).data('action'),
-				nonce: wpstg.nonce
-			};
-			if (data.action == 'wpstg_cloning') {
-				data.cloneID = $('#wpstg-new-clone-id').val() || new Date().getTime();
-				wpstg_additional_data(data, false);
-			}
-
-			$('#wpstg-workflow').load(ajaxurl, data, function () {
-				$('#wpstg-workflow').removeClass('loading');
-				$('.wpstg-current-step').removeClass('wpstg-current-step')
-					.next('li').addClass('wpstg-current-step');
-				if (data.action == 'wpstg_cloning') {
-					clone_db();
-				 }
-			});
-		});*/
                 $('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
 			e.preventDefault();
 			if ($(this).attr('disabled'))
@@ -300,7 +291,6 @@
 			};
 
 			wpstg_additional_data(data, true);
-                        console.log('test');
 			$.post(ajaxurl, data, function (resp, status, xhr) {
                             console.log(xhr.status + ' ' + xhr.statusText);
                                 if ( status == 'error') { //Unknown error

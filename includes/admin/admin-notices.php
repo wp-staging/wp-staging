@@ -44,9 +44,9 @@ function wpstg_admin_messages() {
 			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable . <br> Check if the file '.$path.' exists! File permissions should be chmod 644 or 777.</p>';
 		echo '</div>';
         }
-        if ( wpstg_is_admin_page() && version_compare( WPSTG_WP_COMPATIBLE, get_bloginfo('version'), '>' ) ){
+             if ( wpstg_is_admin_page() && version_compare( WPSTG_WP_COMPATIBLE, get_bloginfo('version'), '<' )){
         echo '<div class="error"><p>';
-        echo sprintf( __('You are using an outdated version of WP Staging which has not been tested with your WordPress version %2$s.<br> 
+        echo sprintf( __('You are using a version of WP Staging which has not been tested with your WordPress version %2$s.<br> 
             As WP Staging is using crucial db and file functions it\'s important that you are using a WP Staging version<br> 
             which has been verified to be working with your WordPress version. You risk unexpected results up to data lose if you do not so.
             <p>Please look at <a href="%1$s" target="_blank">%s</a> for the latest WP Staging version.', 'wpstg') ,

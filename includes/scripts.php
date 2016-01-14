@@ -57,7 +57,7 @@ function wpstg_load_admin_scripts( $hook ) {
 
 	// Use minified libraries if SCRIPT_DEBUG is turned off
 	//$suffix  = '';//( defined( 'SCRIPT_DEBUG' ) && SCRIPT_DEBUG ) ? '' : '.min';
-        $suffix = isset($wpstg_options['debug_mode']) ? '' : '.min'; 
+        $suffix = isset($wpstg_options['debug_mode']) ? '.min' : ''; 
        
             
         

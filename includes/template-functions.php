@@ -247,14 +247,16 @@ function wpstg_show_tables($tables, $unchecked_tables = array()) {
 				$attributes = in_array($table->Name, $unchecked_tables) ? '' : 'checked';
 				$attributes .= in_array($table->Name, $cloned_tables) ? ' disabled' : '';
 				?>
-				<input type="checkbox" name="<?php echo $table->Name; ?>" <?php echo $attributes; ?>>
+				<input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->Name; ?>" <?php echo $attributes; ?>>
 				<?php echo $table->Name; ?>
 			</label>
 			<span class="wpstg-size-info">
 				<?php echo wpstg_short_size($table->Data_length + $table->Index_length); ?>
 			</span>
 		</div>
-	<?php }
+	<?php } ?>
+        <div><a href="#" class="wpstg-button-unselect">Unselect all tables</a></div>
+        <?php
 }
 
 
@@ -282,9 +284,12 @@ function wpstg_scan_files($path, &$folders = array()) {
                     while ( method_exists($dir,'read') && false !== ($entry = $dir->read()) ) { // works
 			if ($entry == '.' || $entry == '..' || $entry == $clone)
 				continue;
-			//if (is_file($path . $entry) && !is_null($path) ) {
-                        if (is_file($path . $entry) ) {
-				$all_files[] = $path . $entry;
+			//if ( is_file($path . $entry) && !is_null($path) && !empty($path) && !is_null($path) ) {
+                        //if (is_file($path . $entry) && is_readable($path . $entry) && !is_null($path) && $path != 'null' && $path != '' && !empty($path)) {
+                        if (is_file($path . $entry) && is_readable($path . $entry)) {
+				$all_files[] = utf8_encode($path . $entry);
+                                //$all_files[] = $path . $entry;
+                                //$all_files[] = $path . $entry;
 				$dirsize += filesize( $path . $entry);
 				if ($batch_size < $size = filesize($path . $entry ))
 					$wpstg_clone_details['large_files'][] = $path . $entry;
@@ -483,8 +488,10 @@ function wpstg_cloning() {
                 //$excluded_files = array (null, 'null'); //rhe 25.09.2015
 		foreach ($_POST['excludedFolders'] as $folder) {
 			$tmp_array = array();
+
 			$excluded_files = array_merge($excluded_files, wpstg_get_files($folder, $tmp_array, $wpstg_clone_details['total_size']));    
 		}
+                $excluded_files = array_map("utf8_encode", $excluded_files ); // convert to utf 8 because $all_files is also utf8
 		$remaining_files = array_diff($all_files, $excluded_files);
 		file_put_contents($path, json_encode(array_values($remaining_files)));
 	}
@@ -838,7 +845,7 @@ function wpstg_get_clone_root_path() {
 }
 
 /**
- * Copy all wordpress files into staging subfolder
+ * Copy selected files files into staging subfolder
  * 
  * @global $wpstg_clone_details
  * @global $wpstg_options
@@ -865,18 +872,22 @@ function wpstg_copy_files() {
 	$batch_size *= 1024*1024;
 	$batch = 0;
         $log_data = '';
+        $size = 0;
         
 	if (!is_dir($clone_root_path))
 		mkdir($clone_root_path);
 
 	for ($i = $start_index; $i < count($files); $i++) {
-                //$new_file = wpstg_create_directories($files[$i], get_home_path(), $clone_root_path);
                 $new_file = wpstg_create_directories($files[$i], wpstg_get_clone_root_path(), $clone_root_path);
-                if ( file_exists($files[$i]) )
+                
+                if ( file_exists($files[$i] ) ){
                     $size = filesize($files[$i]);
-		if (file_exists($files[$i]) && $size > $batch_size) {
+                }
+                
+		if ( is_file($files[$i]) && file_exists($files[$i]) && $size > $batch_size )  { // is_file() checks if its a symlink or real file
+                //if ( is_file($files[$i] && file_exists($files[$i] && $size > $batch_size) ) ) { // is_file() checks if its a symlink or real file
 			if (wpstg_copy_large_file($files[$i], $new_file, $batch_size)) {
-				WPSTG()->logger->info('Copy LARGE file: ' . $files[$i] . '. Batch size: ' . wpstg_short_size($batch + $size) . ' (' . ($batch + $size) . ' bytes)');
+				//WPSTG()->logger->info('Copy LARGE file: ' . $files[$i] . '. Batch size: ' . wpstg_short_size($batch + $size) . ' (' . ($batch + $size) . ' bytes)');
 				$wpstg_clone_details['file_index'] = $i + 1;
 				//$part = ($batch + $size) / $wpstg_clone_details['total_size'];
                                 $part = $batch / $wpstg_clone_details['total_size'];
@@ -892,12 +903,11 @@ function wpstg_copy_files() {
                                 wpstg_return_json('wpstg_copy_files', 'fail', '<br> [' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span> Copying LARGE file has been failed and will be skipped: ' . $files[$i], $wpstg_clone_details['files_progress'], wpstg_get_runtime());
 			}
 		}
-		if ($batch_size > $batch + $size) {
-                                //WPSTG()->logger->info('Try to copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file);
-            
+		if ( $batch_size > $batch + $size ) {
+			//if ( is_readable( $files[$i] ) && is_file($files[$i]) && copy($files[$i], $new_file)) {
 			if ( is_readable( $files[$i] ) && copy($files[$i], $new_file)) {
 				$batch += $size;
-                                //WPSTG()->logger->info('Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file); 
+                                WPSTG()->logger->info('Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file); 
                                 //wpstg_return_json('wpstg_copy_files', 'success', '[' . date('d-m-Y H:i:s') . '] Copy file no: ' . $i . ' Total files:' . count($files) .' File: ' . $files[$i] . ' to ' . $new_file, $wpstg_clone_details['files_progress'], wpstg_get_runtime());
 			} else {
 				WPSTG()->logger->info('Copying file has been failed and will be skipped: ' . $files[$i]);
@@ -995,56 +1005,6 @@ function wpstg_copy_large_file($src, $dst, $buffersize) {
         return true;
 }
 
-/**
- * Copy large files
- * 
- * @deprecated since version 0.9
- * 
- * @param string $src source file
- * @param string $dst destination file
- * @param integer $batch maximum batch size in byte
- * @return boolean
- */
-/*function wpstg_copy_large_file($src, $dst, $batch) {
-	$fin = fopen($src, 'rb');
-	$fout = fopen($dst, 'w');
-	while (! feof($fin))
-		if (false === fwrite($fout, fread($fin, $batch)))
-			return false;
-	fclose($fin);
-	fclose($fout);
-
-	return true;
-}*/
-
-/**
- * Copy large files in chunks
- * 
- * @param string $src source file
- * @param string $dst destination file
- * @param type $buffersize buffer size of copy
- * @return boolean
- * @deprecated since version 0.9.3
- */
-/*function wpstg_copy_large_file_old($src, $dst, $buffersize) {
-
-    # 1 meg at a time, you can adjust this.
-    //$buffer_size = 1048576; 
-
-    $fin = fopen($src, "rb");
-    $fout = fopen($dst, "w");
-    while(!feof($fin)) {
-        if (false === fwrite($fout, fread($fin, $buffersize))){
-			return false;
-		}
-    }
-    fclose($fin);
-    fclose($fout);
-    //return $ret; # return number of bytes written
-    
-    return true;
-}*/
-
 
 
 /**
@@ -1072,10 +1032,11 @@ function wpstg_replace_links() {
 		);
 		if (!$result) {
                         $wpstg_clone_details['links_progress'] = 0.33;
-			WPSTG()->logger->info('Replacing site url has been failed. ' . $db_helper->dbh->error);
+                        $error = isset($db_helper->dbh->error) ? $db_helper->dbh->error : '';
+			WPSTG()->logger->info('Replacing site url has been failed. ' . $error);
 			//wp_die($db_helper->dbh->error);
                         wpstg_save_options();
-                        wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span>Replacing site url has been failed. DB Error: ' . $db_helper->dbh->error, $wpstg_clone_details['links_progress'], wpstg_get_runtime());
+                        wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span>Replacing site url has been failed. DB Error: ' . $error, $wpstg_clone_details['links_progress'], wpstg_get_runtime());
 		} else {
 			$wpstg_clone_details['links_progress'] = 0.33;
                         WPSTG()->logger->info('Replacing siteurl has been done succesfully');
