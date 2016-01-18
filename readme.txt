@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, migration, wordpress migration, wordpress staging, development, migrate, cloning, clone, database export, database find replace, database serialization, duplication, duplicator, duplicate, site duplicate, duplicate posts, db backup, file backup, backup, db migration, db restore, website backup, website staging, website deploy, staging, admin, page, content, plugin, media, backup, test, test site, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google, administration, ajax, api, authentication, blog, code, comments, contact, dashboard, multisite, theme
 Requires at least: 3.6+
 Tested up to: 4.4.1
-Stable tag: 1.0.0
+Stable tag: 1.0.1
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
@@ -140,6 +140,10 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 4. Finish!
 
 == Changelog ==
+
+= 1.0.1 =
+* New: Orange colored admin bar on staging site for better visualization and comparision between production live site and staging site
+* Tweak: Remove contact link on multisite notification
 
 = 1.0.0 =
 * Fix: Do not follow symlinks during file copy process

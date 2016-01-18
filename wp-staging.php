@@ -5,7 +5,7 @@
  * Description: WP-Staging - Create a staging clone site for testing & developing
  * Author: WP-Staging, René Hermenau
  * Author URI: https://wordpress.org/plugins/wp-staging
- * Version: 0.9.9
+ * Version: 1.0.1
  * Text Domain: wpstg
  * Domain Path: languages
 
@@ -34,7 +34,7 @@ if (!defined('ABSPATH'))
 
 // Plugin version
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '0.9.9');
+    define('WPSTG_VERSION', '1.0.1');
 }
 // Plugin version
 if (!defined('WPSTG_WP_COMPATIBLE')) {
@@ -169,6 +169,7 @@ if (!class_exists('wpstaging')) :
             global $wpstg_options;
                 require_once WPSTG_PLUGIN_DIR . 'includes/logger.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/staging-functions.php';
+                require_once WPSTG_PLUGIN_DIR . 'includes/scripts.php';
             if (is_admin() || ( defined('WP_CLI') && WP_CLI )) {
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/settings/register-settings.php';
                 $wpstg_options = wpstg_get_settings(); // Load it on top of all
@@ -183,7 +184,6 @@ if (!class_exists('wpstaging')) :
                 require_once WPSTG_PLUGIN_DIR . 'includes/install.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/tools.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/admin/upload-functions.php';
-                require_once WPSTG_PLUGIN_DIR . 'includes/scripts.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-license-handler.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.interface.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/debug/classes/wpstgDebug.class.php';

@@ -34,25 +34,6 @@ function wpstg_staging_permissions(){
 }
 add_action( 'init', 'wpstg_staging_permissions' );
 
-/**
- * Inject custom header for staging website
- * 
- * @deprecated since version 0.2
- */
-/*function wpstg_inject_header(){
-    if ( !wpstg_is_staging_site() ) {
-        ?>
-        <script type="text/javascript">
-            jQuery(document).ready( function($) {
-            var struct='<div id="wpstg_staging_header" style="display:block;position:fixed;background-color:#c12161;color:#fff;height:32px;top:0;left:0;width:100%;">Staging website!</div>';
-            function 
-            jQuery('body').append(struct);
-        })
-        </script>
-            <?php
-    }
-}*/
-//add_action('wp_head','wpstg_inject_header');
 
 /**
  * Change admin_bar site_name

@@ -47,7 +47,7 @@ function wpstg_clone_page() {
 			</div>
 			<?php do_action('wpstg_notifications');?>
 			<?php if (is_multisite()) {
-				echo '<span class="wpstg-notice-alert" style="margin-top:20px;">' . __('WordPress Multisite is currently not supported! <a href="https://wp-staging.com/contact">Get in contact with us</a> and ask for it.', 'wpstg') . '</span>'; 
+				echo '<span class="wpstg-notice-alert" style="margin-top:20px;">' . __('WordPress Multisite is currently not supported!', 'wpstg') . '</span>'; 
 				exit;
 			}?>
 		<ul id="wpstg-steps">

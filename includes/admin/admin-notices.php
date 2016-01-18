@@ -24,24 +24,24 @@ function wpstg_admin_messages() {
 
         if ( wpstg_is_admin_page() && !wp_is_writable( wpstg_get_upload_dir() ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP Staging File Permission error: </strong>' . wpstg_get_upload_dir() . ' is not write and/or readable. <br> Check if the folder '.wpstg_get_upload_dir().' exists! File permissions should be chmod 755 or 777.</p>';
+			echo '<p><strong>WP Staging File Permission error: </strong>' . wpstg_get_upload_dir() . ' is not write and/or readable. <br> Check if the folder <strong>'.wpstg_get_upload_dir().'</strong> exists! File permissions should be chmod 755 or 777.</p>';
 		echo '</div>';
         }
         if ( wpstg_is_admin_page() && !wp_is_writable( WPSTG_PLUGIN_DIR . 'logs' ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP Staging File Permission error: </strong>' . WPSTG_PLUGIN_DIR . 'logs' . ' is not write and/or readable. <br> Check if the folder '.WPSTG_PLUGIN_DIR . 'logs'.' exists! File permissions should be chmod 755 or 777.</p>';
+			echo '<p><strong>WP Staging File Permission error: </strong>' . WPSTG_PLUGIN_DIR . 'logs' . ' is not write and/or readable. <br> Check if the folder <strong>'.WPSTG_PLUGIN_DIR . 'logs'.'</strong> exists! File permissions should be chmod 755 or 777.</p>';
 		echo '</div>';
         }
         $path = wpstg_get_upload_dir() . '/clone_details.json';
         if ( wpstg_is_admin_page() && !wpstg_clonedetailsjson_exists() || !is_readable( $path ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable. <br> Check if the file '.$path.' exists! File permissions should be chmod 644 or 777.</p>';
+			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable. <br> Check if the file <strong>'.$path.'</strong> exists! File permissions should be chmod 644 or 777.</p>';
 		echo '</div>';
         }
          $path = wpstg_get_upload_dir() . '/remaining_files.json';
          if ( wpstg_is_admin_page() && !wpstg_remainingjson_exists() || !is_readable( $path ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable . <br> Check if the file '.$path.' exists! File permissions should be chmod 644 or 777.</p>';
+			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable . <br> Check if the file <strong>'.$path.'</strong> exists! File permissions should be chmod 644 or 777.</p>';
 		echo '</div>';
         }
              if ( wpstg_is_admin_page() && version_compare( WPSTG_WP_COMPATIBLE, get_bloginfo('version'), '<' )){
