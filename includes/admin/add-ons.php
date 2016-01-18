@@ -25,7 +25,7 @@ function wpstg_add_ons_page() {
 	<div class="wrap" id="wpstg-add-ons">
 		<h2>
 			<?php _e( 'Add Ons for WP-Staging', 'wpstg' ); ?>
-			&nbsp;&mdash;&nbsp;<a href="https://www.wp-staging.net" class="button-primary" title="<?php _e( 'Visit Website', 'wpstg' ); ?>" target="_blank"><?php _e( 'See Details', 'wpstg' ); ?></a>
+			&nbsp;&mdash;&nbsp;<a href="https://www.wp-staging.com" class="button-primary" title="<?php _e( 'Visit Website', 'wpstg' ); ?>" target="_blank"><?php _e( 'See Details', 'wpstg' ); ?></a>
 		</h2>
 		<p><?php _e( 'These add-ons extend the functionality of WP-Staging.', 'wpstg' ); ?></p>
 		<?php echo wpstg_add_ons_get_feed(); ?>

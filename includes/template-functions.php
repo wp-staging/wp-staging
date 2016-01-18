@@ -35,7 +35,7 @@ function wpstg_clone_page() {
 	ob_start();
 	?>
 	<div id="wpstg-clonepage-wrapper">
-            <span class="wp-staginglogo"><img src="<?php echo WPSTG_PLUGIN_URL . 'assets/images/logo_clean_small_212_25.png';?>"></span><span class="wpstg-version"><?php echo WPSTG_VERSION . ' / beta'; ?></span>
+            <span class="wp-staginglogo"><img src="<?php echo WPSTG_PLUGIN_URL . 'assets/images/logo_clean_small_212_25.png';?>"></span><span class="wpstg-version"><?php echo WPSTG_VERSION . ''; ?></span>
 			<div class="wpstg-header">
 				<?php echo __('Thank you for using WP Staging', 'wpstg');?>
 				<br>

@@ -15,11 +15,9 @@ A duplicator plugin! Clone, duplicate and migrate live sites to independent stag
 
 == Description == 
 
-<strong>This cloning and staging plugin is brandnew, well tested but still beta and work in progress! <br>
+<strong>This cloning and staging plugin is well tested but still work in progress! <br>
 If you find a bug please open a ticket in the [support request](https://wordpress.org/support/plugin/wp-staging/ "support forum"). Every issue will be fixed asap!
 </strong>
-<br /> <br />
-WP Staging is working very stable so i the stable 1.0 will be released very soon.
 <br /><br />
 <strong>Note: </strong> This plugin is not able to push back your changes to the live site at the moment! This is a feature i am already working on.
 <br /> <br />
