@@ -143,7 +143,7 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Changelog ==
 
-= 1.0.0 not released yet =
+= 1.0.0 =
 * Fix: Do not follow symlinks during file copy process
 * Fix: css error
 * Fix: Show "not-compatible" notice only when blog version is higher than plugin tested version.
