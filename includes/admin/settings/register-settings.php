@@ -200,7 +200,7 @@ function wpstg_get_registered_settings() {
                                                         'uninstall_on_delete' => array(
                                                             'id' => 'uninstall_on_delete',
                                                             'name' => __( 'Remove Data on Uninstall?', 'mashsb' ),
-                                                            'desc' => __( 'Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted.', 'mashsb' ),
+                                                            'desc' => __( 'Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted. This will not remove staging sites files or database tables.', 'mashsb' ),
                                                             'type' => 'checkbox'
                                                         ),
                                    
@@ -810,7 +810,7 @@ function wpstg_install_muplugin_callback(){
 		<select autocomplete="off" class="multiselect" id="selected-plugins" name="selected_plugins[]" multiple="multiple" style="min-height:400px;">
 			<?php
                         global $wpstg_options;
-			$blacklist = array_flip( (array) $wpstg_options['blacklist_plugins'] );
+			$blacklist = isset($wpstg_options['blacklist_plugins']) ? array_flip( (array) $wpstg_options['blacklist_plugins'] ) : array();
 			foreach ( get_plugins() as $key => $plugin ) {
 				if ( 0 === strpos( $key, 'wp-staging' ) ) {
 					continue;
