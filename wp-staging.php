@@ -142,7 +142,6 @@ if ( !class_exists('wpstaging') ) :
                 require_once WPSTG_PLUGIN_DIR . 'includes/wpstg-sanitize.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/template-functions.php';
                 require_once WPSTG_PLUGIN_DIR . 'includes/error-handling.php';
-                require_once WPSTG_PLUGIN_DIR . 'includes/class-wpstg-file-sync.php';
             }
         }
 

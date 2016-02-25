@@ -40,10 +40,8 @@ module.exports = function(grunt) {
                             '!wp-staging-pro.php', 
                             '!views/view-sync-settings.php'],                
                         dest: '<%= paths.base %>'
-                   }
-                ],
-                files: [
-                    {
+                   },
+                   {
                         expand: true, 
                         src: ['**', 
                             '!node_modules/**', 
