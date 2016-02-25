@@ -37,6 +37,10 @@ text-decoration: none;
     padding-bottom:12px;
 }
 
+#wpstg-tools .nav-tab-wrapper{
+    padding:0px;
+}
+
 
 #tab_container .row label strong, #tab_container .row strong {
 font-weight: bold;

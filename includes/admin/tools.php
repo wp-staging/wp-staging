@@ -26,8 +26,8 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 function wpstg_tools_page() {
 	$active_tab = isset( $_GET['tab'] ) ? $_GET['tab'] : 'import_export';
 ?>
-	<div class="wrap">
-		<h2 class="nav-tab-wrapper">
+	<div class="wrap" id="wpstg-tools">
+		<h2 class="wpstg nav-tab-wrapper">
 			<?php
 			foreach( wpstg_get_tools_tabs() as $tab_id => $tab_name ) {
 
@@ -455,6 +455,6 @@ function wpstg_tools_sysinfo_download() {
 	header( 'Content-Disposition: attachment; filename="wpstg-system-info.txt"' );
 
 	echo wp_strip_all_tags( $_POST['wpstg-sysinfo'] );
-	wp_die();
+        die();
 }
 add_action( 'wpstg_download_sysinfo', 'wpstg_tools_sysinfo_download' );

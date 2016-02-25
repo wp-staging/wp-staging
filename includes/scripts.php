@@ -74,7 +74,7 @@ function wpstg_load_staging_styles() {
 	$url = $css_dir . 'wpstg-admin-bar' . $suffix . '.css';
 
         if(wpstg_is_staging_site()) { // Load it on all pages
-            wp_register_style( 'wpstg-admin-bar', $url, array(), MASHFS_VERSION, 'all' );
+            wp_register_style( 'wpstg-admin-bar', $url, array(), WPSTG_VERSION, 'all' );
             wp_enqueue_style( 'wpstg-admin-bar' );
         }
 }

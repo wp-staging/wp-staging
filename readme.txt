@@ -6,10 +6,10 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wordpress.org/plugins/wp-staging
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: staging, migration, wordpress migration, wordpress staging, development, migrate, cloning, clone, database export, database find replace, database serialization, duplication, duplicator, duplicate, site duplicate, duplicate posts, db backup, file backup, backup, db migration, db restore, website backup, website staging, website deploy, staging, admin, page, content, plugin, media, backup, test, test site, testing, sandbox, widget, post, plugin, admin, posts, sidebar, shortcode, google, administration, ajax, api, authentication, blog, code, comments, contact, dashboard, multisite, theme
+Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
-Tested up to: 4.4.1
-Stable tag: 1.0.1
+Tested up to: 4.4.2
+Stable tag: {{ version }}
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
@@ -141,6 +141,24 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Changelog ==
 
+= {{ version }} =
+* Fix: Download system log not working
+* Fix: Click on Optimizer "Select all | none | invert" links leads to jumping
+* Tweak: Make clear that unselecting a checkbox will exlude table or file from copy process
+* Tweak: Remove unnecessary text
+* Tweak: Remove beta notice in dashboard. WP Staging is stable
+* Tweak: Change twitter handle to @wpstg
+
+= 1.0.3 =
+* Fix: Missing const MASHFS_VERSION
+* Fix: Remove error "table XY has been created, BUT inserting rows failed."
+* Fix: Not tested up to 4.4.2 message shown although it's tested up to WP 4.4.2
+* New: Disable either free or pro version and does not allow to have both version enabled at the same time
+
+= 1.0.2 =
+* Tweak: Change setting description of uninstall option
+* Tweak: Lower tags in readme.txt
+
 = 1.0.1 =
 * New: Orange colored admin bar on staging site for better visualization and comparision between production live site and staging site
 * Tweak: Remove contact link on multisite notification
@@ -203,5 +221,5 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Upgrade Notice ==
 
-= 0.9.7 =
-0.9.7 <strong> * New: Tested up to wp 4.3.1</strong>
+= 1.0.3 =
+1.0.3 <strong>Compatible up to WP 4.4.2</strong>

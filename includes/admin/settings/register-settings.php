@@ -161,7 +161,7 @@ function wpstg_get_registered_settings() {
                                                         array(
 								'id' => 'wpstg_disabled_plugins',
 								'name' => __('Optimizer', 'wpstg'),
-								'desc' => __('Select the plugins that should be disabled during build process of the staging site. Some plugins slow down the copy process and add overhead to each request, requiring extra CPU and memory consumption. Some of them can interfere with cloning process and cause them to fail, so we recommend to disable all plugins that are not directly related to WP Staging.', 'wpstg'),
+								'desc' => __('Select the plugins that should be disabled during build process of the staging site. Some plugins slow down the copy process and add overhead to each request, requiring extra CPU and memory consumption. Some of them can interfere with cloning process and cause them to fail, so we recommend to select all plugins here.<p></p><strong>Note:</strong> This does not disable plugins on your staging site. You have to disable them there separately.', 'wpstg'),
 								'type' => 'install_muplugin',
 								'size' => 'medium',
 								'std' => '20',

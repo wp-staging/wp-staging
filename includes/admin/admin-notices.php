@@ -21,8 +21,9 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function wpstg_admin_messages() {
 	global $wpstg_options;
+       
 
-        if ( wpstg_is_admin_page() && !wp_is_writable( wpstg_get_upload_dir() ) ){
+    if ( wpstg_is_admin_page() && !wp_is_writable( wpstg_get_upload_dir() ) ){
             echo '<div class="error">';
 			echo '<p><strong>WP Staging File Permission error: </strong>' . wpstg_get_upload_dir() . ' is not write and/or readable. <br> Check if the folder <strong>'.wpstg_get_upload_dir().'</strong> exists! File permissions should be chmod 755 or 777.</p>';
 		echo '</div>';
@@ -55,8 +56,9 @@ function wpstg_admin_messages() {
                 );
         echo '</p></div>';
         }
-        
-        echo wpstg_show_beta_message();
+        // No longer beta, so remove this message
+        //echo wpstg_show_beta_message();
+        wpstg_plugin_deactivated_notice();
         
         $install_date = get_option('wpstg_installDate');
         $display_date = date('Y-m-d h:i:s');
@@ -67,7 +69,7 @@ function wpstg_admin_messages() {
         if($diff_intrval >= 7 && get_option('wpstg_RatingDiv')=="no")
     {
 	 echo '<div class="wpstg_fivestar updated" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
-    	<p>Awesome, you\'ve been using <strong>WP Staging </strong> for more than 1 week. May we ask you to give it a <strong>5-star</strong> rating on Wordpress? 
+    	<p>Awesome, you\'ve been using <strong>WP Staging </strong> for more than 1 week. May i ask you to give it a <strong>5-star</strong> rating on Wordpress? 
         <p><strong>Regards,<br>René Hermenau</strong>
         <ul>
             <li><a href="https://wordpress.org/support/view/plugin-reviews/wp-staging" class="thankyou" target="_new" title="Ok, you deserved it" style="font-weight:bold;">Ok, you deserved it</a></li>
@@ -113,6 +115,27 @@ function wpstg_admin_messages() {
     }
 }
 add_action( 'admin_notices', 'wpstg_admin_messages' );
+
+
+/**
+ * Show a message when pro or free plugin become disabled
+ * 
+ * @return void
+ */
+function wpstg_plugin_deactivated_notice() {
+    if (false !== ( $deactivated_notice_id = get_transient('wp_staging_deactivated_notice_id') )) {
+        if ('1' === $deactivated_notice_id) {
+            $message = __("WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging.", 'wpstg');
+        } else {
+            $message = __("WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging Pro.", 'wpstg');
+        }
+?>
+        <div class="updated notice is-dismissible" style="border-left: 4px solid #ffba00;">
+                <p><?php echo esc_html($message); ?></p>
+        </div> <?php
+        delete_transient('wp_staging_deactivated_notice_id');
+    }
+}
 
 /* Hide the rating div
  * 
@@ -216,7 +239,7 @@ function wpstg_plugin_update_message( $args ) {
   */
  function wpstg_show_beta_message(){
      	 $notice = '<div class="wpstg_beta_notice error" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
-    	<p>This software is beta and work in progress! <br>WP Staging is well tested and we did our best to catch every possible error we can forecast but we can not handle all possible combinations of different server, plugins and themes. <br><strong>BEFORE</strong> you create your first staging site it´s highly recommended <strong>to make a full backup of your website</strong> first!
+    	<p>This software is beta and work in progress! <br>WP Staging is well tested and i did my best to catch every possible error i can forecast but i can not handle all possible combinations of different server, plugins and themes. <br><strong>BEFORE</strong> you create your first staging site it´s highly recommended <strong>to make a full backup of your website</strong> first!
         <p><strong>This is no joke! </strong>WP Staging is using crucial database and system close functions which have the power to break your website or even to delete your entire database! WP-Staging has neever caused any errors like data loose on any of the sites we are using for testing, so in most cases everything will be running fine, but we have 
         to give out this warning until WP Staging is not in beta status any longer.
       <p>

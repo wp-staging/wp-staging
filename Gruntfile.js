@@ -15,22 +15,6 @@ module.exports = function(grunt) {
             basezip: '../../wordpress-svn/wp-staging/' 
         },
 
-        // Tasks here
-        // Bump version numbers
-        version: {
-            css: {
-                options: {
-                    prefix: 'Version\\:\\s'
-                },
-                src: [ 'style.css' ]
-            },
-            php: {
-                options: {
-                        prefix: '\@version\\s+'
-                },
-                src: [ 'functions.php', '<%= pkg.name %>.php' ]
-            }
-        },
         // minify js
         uglify: {
             build: { 
@@ -44,14 +28,55 @@ module.exports = function(grunt) {
         copy: {
             build: {             
                 files: [
-                    {expand: true, src: ['**', '!node_modules/**', '!Gruntfile.js', '!package.json', '!nbproject/**', '!grunt/**'],                
-                     dest: '<%= paths.base %>'},
-                 
-                    {expand: true, src: ['**', '!node_modules/**', '!Gruntfile.js', '!package.json', '!nbproject/**', '!grunt/**'],
-                    dest: '<%= paths.basetrunk %>'},
-                ]                
+                    {
+                        expand: true, 
+                        src: ['**', 
+                            '!node_modules/**', 
+                            '!Gruntfile.js', 
+                            '!package.json', 
+                            '!nbproject/**', 
+                            '!grunt/**', 
+                            '!includes/class-wpstg-file-sync.php', 
+                            '!wp-staging-pro.php', 
+                            '!views/view-sync-settings.php'],                
+                        dest: '<%= paths.base %>'
+                   }
+                ],
+                files: [
+                    {
+                        expand: true, 
+                        src: ['**', 
+                            '!node_modules/**', 
+                            '!Gruntfile.js', 
+                            '!package.json', 
+                            '!nbproject/**', 
+                            '!grunt/**', 
+                            '!includes/class-wpstg-file-sync.php', 
+                            '!wp-staging-pro.php', 
+                            '!views/view-sync-settings.php'],                
+                        dest: '<%= paths.basetrunk %>'
+                   }
+                ]
             },
         },
+       
+        
+        'string-replace': {
+                        version: {
+                            files: {
+                                '<%= paths.basetrunk %>wp-staging.php' : 'wp-staging.php',
+                                '<%= paths.base %>/wp-staging.php' : 'wp-staging.php',
+                                '<%= paths.base %>/readme.txt' : 'readme.txt',
+                                 '<%= paths.basetrunk %>readme.txt' : 'readme.txt',
+                            },
+                            options: {
+                                replacements: [{
+                                        pattern: /{{ version }}/g,
+                                        replacement: '<%= pkg.version %>'
+                                    }]
+                            }
+                        }
+                    },
 
         // Clean the build folder
         clean: {
@@ -81,7 +106,7 @@ module.exports = function(grunt) {
                 options: {
                     archive: '<%= paths.basezip %>/<%= pkg.name %>.zip'
                 },
-                cwd: '<%= paths.base %>',
+                cwd: '<%= paths.basetrunk %>',
                 src: ['**/*']
                 //dest: '../../',
                 //expand: true
@@ -92,8 +117,6 @@ module.exports = function(grunt) {
     });
 
     // Load all grunt plugins here
-    // [...]
-    //require('load-grunt-config')(grunt);
     require('load-grunt-tasks')(grunt);
     
     // Display task timing
@@ -101,5 +124,6 @@ module.exports = function(grunt) {
 
     // Build task
     //grunt.registerTask( 'build', [ 'compress:build' ]);
-    grunt.registerTask( 'build', [ 'clean:build', 'uglify:build', 'cssmin:build', 'copy:build', 'compress:build' ]);
+    grunt.registerTask( 'build', [ 'clean:build', 'uglify:build', 'copy:build', 'string-replace:version', 'compress:build' ]);
+    //grunt.registerTask('build', [ 'string-replace:version' ]);
 };

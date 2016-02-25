@@ -4,3 +4,6 @@
 /logs/
 /remaining_files.json
 /clone_details.json
+/wp-staging-pro.php
+/views/view-sync-settings.php
+/includes/class-wpstg-file-sync.php
