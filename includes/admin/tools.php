@@ -252,7 +252,7 @@ function wpstg_tools_sysinfo_display() {
 		<textarea class="wpstg-sysinfo" readonly="readonly" onclick="this.focus(); this.select()" id="system-info-textarea" name="wpstg-sysinfo" title="To copy the system info, click below then press Ctrl + C (PC) or Cmd + C (Mac)."><?php echo wpstg_tools_sysinfo_get(); ?></textarea>
 		<p class="submit">
 			<input type="hidden" name="wpstg-action" value="download_sysinfo" />
-			<?php submit_button( 'Download System Info File', 'primary', 'wpstg-download-sysinfo', false ); ?>
+			<?php submit_button( __( 'Download System Info File', 'wpstg' ), 'primary', 'wpstg-download-sysinfo', false ); ?>
 		</p>
 	</form>
 <?php

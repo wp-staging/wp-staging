@@ -252,7 +252,7 @@ function wpstg_show_tables($tables, $unchecked_tables = array()) {
 			</span>
 		</div>
 	<?php } ?>
-        <div><a href="#" class="wpstg-button-unselect">Unselect all tables</a></div>
+        <div><a href="#" class="wpstg-button-unselect"><?php _e( 'Unselect all tables', 'wpstg' );?></a></div>
         <?php
 }
 
@@ -394,9 +394,9 @@ function wpstg_show_large_files() {
 	$large_files = isset($wpstg_clone_details['large_files']) ? $wpstg_clone_details['large_files'] : array();
 	if (! empty($large_files)) : ?>
         <br>
-        <span style="font-weight:bold;">That might require your attention:</span>
+        <span style="font-weight:bold;"><?php echo __( 'That might require your attention:', 'wpstg' );?></span>
         <br>
-        <span id="wpstg-show-large-files"><a href="#">Show large files</a></span>
+        <span id="wpstg-show-large-files"><a href="#"><?php echo __( 'Show large files', 'wpstg' );?></a></span>
         
 	<div id="wpstg-large-files">
 			<h4 style="margin-top: 0px;">
@@ -416,7 +416,7 @@ function wpstg_show_large_files() {
  */
 function wpstg_advanced_settings() {
 	?>
-	Comming soon
+	<?php echo __( 'Comming soon', 'wpstg' );?>
 	<?php
 }
 
