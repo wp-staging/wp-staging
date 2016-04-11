@@ -174,7 +174,7 @@ function wpstg_get_registered_settings() {
                                                         ),
                                                         'wordpress_subdirectory' => array(
                                                             'id' => 'wordpress_subdirectory',
-                                                            'name' => __( 'Wordpress in subdirectory', 'mashsb' ),
+                                                            'name' => __( 'WordPress in subdirectory', 'mashsb' ),
                                                             'desc' => __( 'Use this option when you gave wordpress its own subdirectory. if you enable this, WP Staging will reset the index.php of the clone site to the originally one. <br> <a href="https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">Read more in the WordPress Codex</a>', 'mashsb' ),
                                                             'type' => 'checkbox'
                                                         ),
