@@ -69,12 +69,12 @@ function wpstg_admin_messages() {
         if($diff_intrval >= 7 && get_option('wpstg_RatingDiv')=="no")
     {
 	 echo '<div class="wpstg_fivestar updated" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
-    	<p>Awesome, you\'ve been using <strong>WP Staging </strong> for more than 1 week. May i ask you to give it a <strong>5-star</strong> rating on Wordpress? 
-        <p><strong>Regards,<br>René Hermenau</strong>
+    	<p>'.__('Awesome, you\'ve been using <strong>WP Staging </strong> for more than 1 week. May I ask you to give it a <strong>5-star</strong> rating on WordPress?','wpstg').' 
+        <p><strong>'.__('Regards,<br>René Hermenau','wpstg').'</strong>
         <ul>
-            <li><a href="https://wordpress.org/support/view/plugin-reviews/wp-staging" class="thankyou" target="_new" title="Ok, you deserved it" style="font-weight:bold;">Ok, you deserved it</a></li>
-            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:bold;">I already did</a></li>
-            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:bold;">No, not good enough</a></li>
+            <li><a href="https://wordpress.org/support/view/plugin-reviews/wp-staging" class="thankyou" target="_new" title="'.__('Ok, you deserved it','wpstg').'" style="font-weight:bold;">'.__('Ok, you deserved it','wpstg').'</a></li>
+            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="'.__('I already did', 'wpstg').'" style="font-weight:bold;">'.__('I already did', 'wpstg').'</a></li>
+            <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="'.__('No, not good enough', 'wpstg').'" style="font-weight:bold;">'.__('No, not good enough', 'wpstg').'</a></li>
         </ul>
     </div>
     <script>
