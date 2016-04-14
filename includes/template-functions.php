@@ -205,7 +205,7 @@ function wpstg_scanning() {
 				echo '<h4 style="margin:0px;">' . __('Uncheck the folders you do not want to copy. Click on them for expanding!', 'wpstg') . '<h4>';
 				wpstg_directory_structure($folders, null, false, false, $excluded_folders);
 				wpstg_show_large_files();
-                                echo '<p><span id=wpstg-file-summary>' . __('Files will be copied into subfolder of: ','wpstg') . wpstg_get_clone_root_path() . '</span>';
+                                echo '<p><span id=wpstg-file-summary>' . __('Files will be copied into subfolder of:','wpstg') . ' ' . wpstg_get_clone_root_path() . '</span>';
 			?>
 		</div> <!-- #wpstg-scanning-files -->
 
@@ -529,9 +529,9 @@ function wpstg_cloning() {
         <a href="#" id="wpstg-show-log-button" class="button" style="margin-top: 5px;"><?php _e('Display working log','wpstg'); ?></a>
         <div><span id="wpstg-cloning-result"></span></div>
         <div id="wpstg-finished-result"><h3>Congratulations: </h3>
-            <?php echo __('WP Staging succesfully created a staging site in a subfolder of your main site in: <strong> ', 'wpstg') . get_home_url(); ?>/<span id="wpstg_staging_name"></span></strong>
+            <?php echo __('WP Staging succesfully created a staging site in a subfolder of your main site in:', 'wpstg') . '<strong> '.get_home_url(); ?>/<span id="wpstg_staging_name"></span></strong>
             <br><br>
-            <?php echo __('Now, you have several options: ', 'wpstg'); ?>
+            <?php echo __('Now, you have several options:', 'wpstg'); ?> 
             <br>
             <a href="<?php echo get_home_url();?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">Open staging site <span style="font-size: 10px;">(login with your admin credentials)</span></a>
             <a href="" class="wpstg-link-btn button-primary" id="wpstg-remove-cloning"><?php echo __('Remove', 'wpstg');?></a>
