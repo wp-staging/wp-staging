@@ -47,12 +47,11 @@ function wpstg_admin_messages() {
         }
              if ( wpstg_is_admin_page() && version_compare( WPSTG_WP_COMPATIBLE, get_bloginfo('version'), '<' )){
         echo '<div class="error"><p>';
-        echo sprintf( __('You are using a version of WP Staging which has not been tested with your WordPress version %2$s.<br> 
-            As WP Staging is using crucial db and file functions it\'s important that you are using a WP Staging version<br> 
-            which has been verified to be working with your WordPress version. You risk unexpected results up to data lose if you do not so.
-            <p>Please look at <a href="%1$s" target="_blank">%s</a> for the latest WP Staging version.', 'wpstg') ,
+        echo sprintf( __('You are using a version of WP Staging which has not been tested with your WordPress version %s.','wpstg'), get_bloginfo('version') .'<br>'
+            .__('As WP Staging is using crucial db and file functions it\'s important that you are using a WP Staging version<br>which has been verified to be working with your WordPress version.', 'wpstg').' '.__('You risk unexpected results up to data lose if you do not so.', 'wpstg').'
+            <p>'.sprintf( __('Please look at <a href="%s" target="_blank">%s</a> for the latest WP Staging version.', 'wpstg') ,
                 'https://wordpress.org/plugins/wp-staging/',
-                get_bloginfo('version')
+                'https://wordpress.org/plugins/wp-staging/')
                 );
         echo '</p></div>';
         }
@@ -239,14 +238,14 @@ function wpstg_plugin_update_message( $args ) {
   */
  function wpstg_show_beta_message(){
      	 $notice = '<div class="wpstg_beta_notice error" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
-    	<p>This software is beta and work in progress! <br>WP Staging is well tested and i did my best to catch every possible error i can forecast but i can not handle all possible combinations of different server, plugins and themes. <br><strong>BEFORE</strong> you create your first staging site it´s highly recommended <strong>to make a full backup of your website</strong> first!
-        <p><strong>This is no joke! </strong>WP Staging is using crucial database and system close functions which have the power to break your website or even to delete your entire database! WP-Staging has neever caused any errors like data loose on any of the sites we are using for testing, so in most cases everything will be running fine, but we have 
-        to give out this warning until WP Staging is not in beta status any longer.
+    	<p>'.__('This software is beta and work in progress!', 'wpstg').' <br>'.__('WP Staging is well tested and I did my best to catch every possible error I can forecast but I can not handle all possible combinations of different server, plugins and themes.', 'wpstg').' <br>'.__('<strong>BEFORE</strong> you create your first staging site it´s highly recommended <strong>to make a full backup of your website</strong> first!', 'wpstg').'
+        <p><strong>'.__('This is no joke!', 'wpstg').'</strong> '.__('WP Staging is using crucial database and system close functions which have the power to break your website or even to delete your entire database!', 'wpstg').' '.__('WP-Staging has neever caused any errors like data loose on any of the sites we are using for testing, so in most cases everything will be running fine, but we have 
+        to give out this warning until WP Staging is not in beta status any longer.', 'wpstg').'
       <p>
-        One of the best free plugins for an entire wordpress backup is the free one <a href="https://wordpress.org/plugins/backwpup/" target="_blank">BackWPup</a> 
-        <p>To be more clear: <p>We are not responsible for any damages this plugin will cause to your site. <br>Do a full backup first!</p>
+        '.sprintf( __('One of the best free plugins for an entire WordPress backup is the free one <a href="%s" target="_blank">BackWPup</a>.', 'wpstg'), 'https://wordpress.org/plugins/backwpup/').'
+        <p>'.__('To be more clear:', 'wpstg').' <p>'.__('We are not responsible for any damages this plugin will cause to your site.', 'wpstg').' <br>'.__('Do a full backup first!', 'wpstg').'</p>
         <ul>
-            <li><a href="javascript:void(0);" class="wpstg_hide_beta" title="I understand" style="font-weight:bold;color:#00a0d2;">I understand! (Do not show this again)</a></li>
+            <li><a href="javascript:void(0);" class="wpstg_hide_beta" title="'.__('I understand', 'wpstg').'" style="font-weight:bold;color:#00a0d2;">'.__('I understand! (Do not show this again)', 'wpstg').'</a></li>
         </ul>
     </div>
     <script>
