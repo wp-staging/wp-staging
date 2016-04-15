@@ -52,7 +52,7 @@ WP Staging helps you to prevent your website from being broken or unavailable be
 
 = What does not work or is not tested when running wordpress migration? =
 
-* Wordpress migration of wordpress multisites (not tested)
+* WordPress migration of wordpress multisites (not tested)
 * WordPress duplicating process on windows server (not tested but will probably work) 
 Edit: Duplication on windows server seems to be working well: [Read more](https://wordpress.org/support/topic/wont-copy-files?replies=5 "Read more") 
 
@@ -136,7 +136,7 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 1. Step 1. Create new WordPress staging site
 2. Step 2. Scanning your website for files and database tables
-3. Step 3. Wordpress Staging site creation in progress
+3. Step 3. WordPress Staging site creation in progress
 4. Finish!
 
 == Changelog ==

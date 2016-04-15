@@ -151,10 +151,10 @@ function wpstg_get_registered_settings() {
 								'type' => 'select',
 								'size' => 'medium',
 								'options' => array(
-                                                                    'default' => 'Default',
-                                                                    'high' => 'High (fast)',
-                                                                    'medium' => 'Medium (average)',
-                                                                    'low' => 'Low (slow)'
+                                                                    'default' => __('Default', 'wpstg'),
+                                                                    'high' => __('High (fast)', 'wpstg'),
+                                                                    'medium' => __('Medium (average)', 'wpstg'),
+                                                                    'low' => __('Low (slow)', 'wpstg')
 
                                                               )
 							),
@@ -168,39 +168,39 @@ function wpstg_get_registered_settings() {
 							),
                                                         'disable_admin_login' => array(
                                                             'id' => 'disable_admin_login',
-                                                            'name' => __( 'Disable admin authorization', 'mashsb' ),
-                                                            'desc' => __( 'Use this option only if you are using a custom login page and not the default login.php. If you enable this option you are allowing everyone including searchengines to see your staging site, so you have to create a custom authentication like using .htaccess', 'mashsb' ),
+                                                            'name' => __( 'Disable admin authorization', 'wpstg' ),
+                                                            'desc' => __( 'Use this option only if you are using a custom login page and not the default login.php. If you enable this option you are allowing everyone including searchengines to see your staging site, so you have to create a custom authentication like using .htaccess', 'wpstg' ),
                                                             'type' => 'checkbox'
                                                         ),
                                                         'wordpress_subdirectory' => array(
                                                             'id' => 'wordpress_subdirectory',
-                                                            'name' => __( 'Wordpress in subdirectory', 'mashsb' ),
-                                                            'desc' => __( 'Use this option when you gave wordpress its own subdirectory. if you enable this, WP Staging will reset the index.php of the clone site to the originally one. <br> <a href="https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">Read more in the WordPress Codex</a>', 'mashsb' ),
+                                                            'name' => __( 'WordPress in subdirectory', 'wpstg' ),
+                                                            'desc' => __( 'Use this option when you gave wordpress its own subdirectory. if you enable this, WP Staging will reset the index.php of the clone site to the originally one. <br> <a href="https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">Read more in the WordPress Codex</a>', 'wpstg' ),
                                                             'type' => 'checkbox'
                                                         ),
                                                         /*'link_images' => array(
                                                             'id' => 'link_images',
-                                                            'name' => __( 'Link images. Change upload ', 'mashsb' ),
-                                                            'desc' => __( 'Enable this if you want WP Staging to link images. if you enable this, WP Staging will reset the index.php of the clone site to the originally one. <br> <a href="https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">Read more in the WordPress Codex</a>', 'mashsb' ),
+                                                            'name' => __( 'Link images. Change upload ', 'wpstg' ),
+                                                            'desc' => __( 'Enable this if you want WP Staging to link images. if you enable this, WP Staging will reset the index.php of the clone site to the originally one. <br> <a href="https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory" target="_blank">Read more in the WordPress Codex</a>', 'wpstg' ),
                                                             'type' => 'checkbox'
                                                         ),*/
                                                         /*'admin_login_page' => array(
                                                             'id' => 'admin_login_page',
-                                                            'name' => __( 'Login page', 'mashsb' ),
-                                                            'desc' => __( ' This is necessary if you are using a custom login page and not the default login.php. Fill in the page id of your custom login page, otherwise you will not be able to login to your staging website.', 'mashsb' ),
+                                                            'name' => __( 'Login page', 'wpstg' ),
+                                                            'desc' => __( ' This is necessary if you are using a custom login page and not the default login.php. Fill in the page id of your custom login page, otherwise you will not be able to login to your staging website.', 'wpstg' ),
                                                             'type' => 'text',
                                                             'size' => 'medium'
                                                         ),*/
                                                         'debug_mode' => array(
                                                             'id' => 'debug_mode',
-                                                            'name' => __( 'Debug Mode', 'mashsb' ),
-                                                            'desc' => __( 'This will enable an extended debug mode which creates additional entries in <strong>wp-content/wp-staging/logs</strong>. Please enable this when we ask you to do so.', 'mashsb' ),
+                                                            'name' => __( 'Debug Mode', 'wpstg' ),
+                                                            'desc' => __( 'This will enable an extended debug mode which creates additional entries in <strong>wp-content/wp-staging/logs</strong>. Please enable this when we ask you to do so.', 'wpstg' ),
                                                             'type' => 'checkbox'
                                                         ),
                                                         'uninstall_on_delete' => array(
                                                             'id' => 'uninstall_on_delete',
-                                                            'name' => __( 'Remove Data on Uninstall?', 'mashsb' ),
-                                                            'desc' => __( 'Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted. This will not remove staging sites files or database tables.', 'mashsb' ),
+                                                            'name' => __( 'Remove Data on Uninstall?', 'wpstg' ),
+                                                            'desc' => __( 'Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted. This will not remove staging sites files or database tables.', 'wpstg' ),
                                                             'type' => 'checkbox'
                                                         ),
                                    
