@@ -18,11 +18,11 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  * 
  */
 
-register_activation_hook( WPSTG_PLUGIN_FILE, 'wpstg_install_multisite' );
-
-function wpstg_install_multisite($networkwide) {
+//register_activation_hook( WPSTG_PLUGIN_FILE, 'wpstg_install_multisite' );
+/*function wpstg_install_multisite($networkwide) {
     global $wpdb;
-                 
+             wp_die('fire');
+            
     if (function_exists('is_multisite') && is_multisite()) {
         // check if it is a network activation - if so, run the activation function for each blog id
         if ($networkwide) {
@@ -38,7 +38,7 @@ function wpstg_install_multisite($networkwide) {
         }   
     } 
     wpstg_install();      
-}
+}*/
 
 /**
  * Install
@@ -58,7 +58,6 @@ function wpstg_install_multisite($networkwide) {
 
 function wpstg_install() {
 	global $wpdb, $wpstg_options, $wp_version;
-        
 
 	// Add Upgraded from Option
 	$current_version = get_option( 'wpstg_version' );
@@ -71,6 +70,7 @@ function wpstg_install() {
         // Add plugin installation date and variable for rating div
         add_option('wpstg_installDate',date('Y-m-d h:i:s'));
         add_option('wpstg_RatingDiv','no');
+        add_option('wpstg_start_poll','yes');
         // Add First-time variables
         add_option('wpstg_firsttime','true');
         add_option('wpstg_is_staging_site','false');
@@ -128,6 +128,17 @@ function wpstg_after_install() {
 }
 add_action( 'admin_init', 'wpstg_after_install' );
 
+/**
+ * Get upload dir
+ * 
+ * @return string
+ */
+function wpstg_install_get_upload_dir() {
+	$wp_upload_dir = wp_upload_dir();
+	wp_mkdir_p( $wp_upload_dir['basedir'] . '/wp-staging' );
+	$path = $wp_upload_dir['basedir'] . '/wp-staging';
+        return $path;
+}
 
 /** 
  * Create json remaining_files.json after activation of the plugin
@@ -135,12 +146,12 @@ add_action( 'admin_init', 'wpstg_after_install' );
  * @return bool
  */
 function wpstg_create_remaining_files() { 
-        $path = wpstg_get_upload_dir();
+        $path = wpstg_install_get_upload_dir();
 	if (wp_is_writable($path)) {
                 $file = 'remaining_files.json';
 		file_put_contents($path . '/' . $file, null);
         }else {
-            WPSTG()->logger->info($path . '/' . $file . ' is not writeable! ');
+            wpstg_log($path . '/' . $file . ' is not writeable! ');
         }
 }
 
@@ -150,11 +161,11 @@ function wpstg_create_remaining_files() {
  * @return bool
  */
 function wpstg_create_clonedetails_files() { 
-        $path = wpstg_get_upload_dir();
+        $path = wpstg_install_get_upload_dir();
 	if (wp_is_writable($path)) {
                 $file = 'clone_details.json';
 		file_put_contents($path . '/' . $file, null);
         }else {
-            WPSTG()->logger->info($path . '/' . $file . ' is not writeable! ');
+            wpstg_log($path . '/' . $file . ' is not writeable! ');
         }
 }

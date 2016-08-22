@@ -1,4 +1,4 @@
-=== WP Staging - DB & file duplicator & migration  === 
+=== WP Staging - DB & File Duplicator & Migration  === 
 
 Author URL: https://wordpress.org/plugins/wp-staging
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -8,7 +8,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
-Tested up to: 4.4.2
+Tested up to: 4.6
 Stable tag: {{ version }}
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
@@ -19,7 +19,9 @@ A duplicator plugin! Clone, duplicate and migrate live sites to independent stag
 If you find a bug please open a ticket in the [support request](https://wordpress.org/support/plugin/wp-staging/ "support forum"). Every issue will be fixed asap!
 </strong>
 <br /><br />
-<strong>Note: </strong> This plugin is not able to push back your changes to the live site at the moment! This is a feature i am already working on.
+<strong>Note: </strong> This plugin is not able to push back your changes to the live site at the moment! 
+Please let us know your most requested feature and use our quick poll. It only takes one minute of your time:
+[Start the Poll](https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link "wp staging poll")
 <br /> <br />
 
 
@@ -141,12 +143,33 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Changelog ==
 
-= {{ version }} =
+= 1.1.0 =
+* New: Tested up to WP 4.6
+* New: Create a poll and ask what feature is most required
+
+= 1.0.9 =
+* Fix: Undefined WPSTG() warning
+* Fix: Change compatibility version to wp 4.5.3
+
+= 1.0.8 =
+* Tested up to WP 4.5.2
+
+= 1.0.7 =
+* Fix: Activation hook is not fired and staging site is not working properly
+* Performance: Increase default query copy limit to 1000
+
+= 1.0.6 =
+* Fix: Uninstalling plugin throwing error
+* Fix: Error permission admin notice although permission issues are correct
+
+
+=  1.0.5 =
+* New: Tested up to WP 4.5
 * Fix: Download system log not working
 * Fix: Click on Optimizer "Select all | none | invert" links leads to jumping
 * Tweak: Make clear that unselecting a checkbox will exlude table or file from copy process
 * Tweak: Remove unnecessary text
-* Tweak: Remove beta notice in dashboard. WP Staging is stable
+* Tweak: Change beta notice in dashboard. WP Staging is stable
 * Tweak: Change twitter handle to @wpstg
 
 = 1.0.3 =
@@ -221,5 +244,5 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Upgrade Notice ==
 
-= 1.0.3 =
-1.0.3 <strong>Compatible up to WP 4.4.2</strong>
+= 1.1.0 =
+1.1.0 <strong>Compatible up to WP 4.6</strong>

@@ -102,7 +102,7 @@ module.exports = function(grunt) {
         compress: {
             build: {
                 options: {
-                    archive: '<%= paths.basezip %>/<%= pkg.name %>.zip'
+                    archive: '<%= paths.basezip %>/<%= pkg.name %>.zip' //target
                 },
                 cwd: '<%= paths.basetrunk %>',
                 src: ['**/*']

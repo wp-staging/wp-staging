@@ -35,7 +35,7 @@ function wpstg_clone_page() {
 	ob_start();
 	?>
 	<div id="wpstg-clonepage-wrapper">
-            <span class="wp-staginglogo"><img src="<?php echo WPSTG_PLUGIN_URL . 'assets/images/logo_clean_small_212_25.png';?>"></span><span class="wpstg-version"><?php if (WPSTG_SLUG === 'wp-staging-pro') {echo 'Pro';} ?> Version<?php echo WPSTG_VERSION . ''; ?></span>
+            <span class="wp-staginglogo"><img src="<?php echo WPSTG_PLUGIN_URL . 'assets/images/logo_clean_small_212_25.png';?>"></span><span class="wpstg-version"><?php if (WPSTG_SLUG === 'wp-staging-pro') {echo 'Pro';} ?> Version <?php echo WPSTG_VERSION . ''; ?></span>
 			<div class="wpstg-header">
 				<iframe src="//www.facebook.com/plugins/like.php?href=https%3A%2F%2Fwordpress.org%2Fplugins%2Fwp-staging%2F&amp;width=100&amp;layout=button&amp;action=like&amp;show_faces=false&amp;share=true&amp;height=35&amp;appId=449277011881884" scrolling="no" frameborder="0" style="border:none; overflow:hidden; width:96px; height:20px;" allowTransparency="true"></iframe>
 				<a class="twitter-follow-button" href="https://twitter.com/wpstg" data-size="small" id="twitter-wjs" style="display: block;">Follow @wpstg</a>
@@ -633,7 +633,7 @@ function wpstg_clone_db_internal() {
                 wpstg_return_json('wpstg_clone_db_internal', 'success', 'DB successfull copied', 1, wpstg_get_runtime());
         
 
-	$limit = isset($wpstg_options['wpstg_query_limit']) ? $wpstg_options['wpstg_query_limit'] : 100;
+	$limit = isset($wpstg_options['wpstg_query_limit']) ? $wpstg_options['wpstg_query_limit'] : 1000;
 	$rows_count = 0;
         $log_data = '';
 
@@ -1055,7 +1055,7 @@ function wpstg_replace_links() {
 			//wp_die(-1);
                         //wp_die('Updating option[wpstg_is_staging_site] has been failed');
                         wpstg_save_options();
-                        wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span> Updating db' . $new_prefix . 'options where option_name = wpstg_is_staging_site has been failed', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
+                        wpstg_return_json('wpstg_replace_links', 'fail', '[' . date('d-m-Y H:i:s') . '] <span style="color:red;">Fail: </span> Updating db ' . $new_prefix . 'options where option_name = wpstg_is_staging_site has been failed', $wpstg_clone_details['links_progress'], wpstg_get_runtime());
 		} else {
 			$wpstg_clone_details['links_progress'] = 0.43;
                         wpstg_log('Updating option [wpstg_is_staging_site] has been done succesfully');

@@ -134,7 +134,7 @@ function wpstg_get_registered_settings() {
 								'desc' => __('Number of DB rows, that will be copied within one ajax request. The higher the value the faster the database copy process. To find out the highest possible values try a high value like 1.000 or more and decrease it until you get no more errors during copy process. <strong> Default: 100 </strong>'),
 								'type' => 'number',
 								'size' => 'medium',
-								'std' => 100,
+								'std' => 1000,
 							),
 							array(
 								'id' => 'wpstg_batch_size',

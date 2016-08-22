@@ -44,9 +44,20 @@ function wpstg_htaccess_exists() {
  * @return bool
  */
 function wpstg_remainingjson_exists() {
-	$upload_path = wpstg_get_upload_dir();
+    global $wp_filesystem;
+    $upload_path = wpstg_get_upload_dir();
+    //return file_exists( $upload_path . '/remaining_files.json' );
 
-	return file_exists( $upload_path . '/remaining_files.json' );
+    if (  is_readable( $upload_path . '/remaining_files.json' )){
+        return true;
+    }
+    
+    $writefile = fopen($upload_path . '/remaining_files.json', 'w');
+
+    if( $writefile ) {
+        fclose($writefile);
+        return true;
+    }
 }
 
 /**
@@ -57,8 +68,18 @@ function wpstg_remainingjson_exists() {
  */
 function wpstg_clonedetailsjson_exists() {
 	$upload_path = wpstg_get_upload_dir();
+	//return file_exists( $upload_path . '/clone_details.json' );
+        
+            if (  is_readable( $upload_path . '/clone_details.json' )){
+        return true;
+    }
+    
+    $writefile = fopen($upload_path . '/clone_details.json', 'w');
 
-	return file_exists( $upload_path . '/clone_details.json' );
+    if( $writefile ) {
+        fclose($writefile);
+        return true;
+    }
 }
 
 /**

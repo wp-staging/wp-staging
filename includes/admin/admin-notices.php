@@ -21,28 +21,34 @@ if ( ! defined( 'ABSPATH' ) ) exit;
  */
 function wpstg_admin_messages() {
 	global $wpstg_options;
-       
-
-    if ( wpstg_is_admin_page() && !wp_is_writable( wpstg_get_upload_dir() ) ){
+        
+        // show admin notices only to admins
+        if( !current_user_can( 'update_plugins' ) ) {
+            return;
+        }
+        
+        wpstg_start_poll();
+        
+        if ( wpstg_is_admin_page() && !wp_is_writable( wpstg_get_upload_dir() ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP Staging File Permission error: </strong>' . wpstg_get_upload_dir() . ' is not write and/or readable. <br> Check if the folder <strong>'.wpstg_get_upload_dir().'</strong> exists! File permissions should be chmod 755 or 777.</p>';
+			echo '<p><strong>WP Staging Folder Permission error: </strong>' . wpstg_get_upload_dir() . ' is not write and/or readable. <br> Check if the folder <strong>'.wpstg_get_upload_dir().'</strong> exists! File permissions should be chmod 755 or 777.</p>';
 		echo '</div>';
         }
         if ( wpstg_is_admin_page() && !wp_is_writable( WPSTG_PLUGIN_DIR . 'logs' ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP Staging File Permission error: </strong>' . WPSTG_PLUGIN_DIR . 'logs' . ' is not write and/or readable. <br> Check if the folder <strong>'.WPSTG_PLUGIN_DIR . 'logs'.'</strong> exists! File permissions should be chmod 755 or 777.</p>';
+			echo '<p><strong>WP Staging Folder Permission error: </strong>' . WPSTG_PLUGIN_DIR . 'logs' . ' is not write and/or readable. <br> Check if the folder <strong>'.WPSTG_PLUGIN_DIR . 'logs'.'</strong> exists! File permissions should be chmod 755 or 777.</p>';
 		echo '</div>';
         }
         $path = wpstg_get_upload_dir() . '/clone_details.json';
         if ( wpstg_is_admin_page() && !wpstg_clonedetailsjson_exists() || !is_readable( $path ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable. <br> Check if the file <strong>'.$path.'</strong> exists! File permissions should be chmod 644 or 777.</p>';
+			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable. <br> Check if the file <strong>'.$path.'</strong> exists! File permissions should be chmod 644.</p>';
 		echo '</div>';
         }
          $path = wpstg_get_upload_dir() . '/remaining_files.json';
          if ( wpstg_is_admin_page() && !wpstg_remainingjson_exists() || !is_readable( $path ) ){
             echo '<div class="error">';
-			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable . <br> Check if the file <strong>'.$path.'</strong> exists! File permissions should be chmod 644 or 777.</p>';
+			echo '<p><strong>WP Staging File Permission error: </strong>' . $path . ' is not write and/or readable . <br> Check if the file <strong>'.$path.'</strong> exists! File permissions should be chmod 644.</p>';
 		echo '</div>';
         }
              if ( wpstg_is_admin_page() && version_compare( WPSTG_WP_COMPATIBLE, get_bloginfo('version'), '<' )){
@@ -56,8 +62,8 @@ function wpstg_admin_messages() {
                 );
         echo '</p></div>';
         }
-        // No longer beta, so remove this message
-        //echo wpstg_show_beta_message();
+
+        echo wpstg_show_beta_message();
         wpstg_plugin_deactivated_notice();
         
         $install_date = get_option('wpstg_installDate');
@@ -89,7 +95,7 @@ function wpstg_admin_messages() {
                     async: !0,
                     success: function(e) {
                         if (e=="success") {
-                           jQuery(\'.wpstg_fivestar\').slideUp(\'slow\');
+                           jQuery(\'.wpstg_fivestar\').slideUp(\'fast\');
                         }
                     }
                 });
@@ -104,7 +110,7 @@ function wpstg_admin_messages() {
                     async: !0,
                     success: function(e) {
                         if (e=="success") {
-                           jQuery(\'.wpstg_beta_notice\').slideUp(\'slow\');
+                           jQuery(\'.wpstg_beta_notice\').slideUp(\'fast\');
                         }
                     }
                 });
@@ -115,6 +121,69 @@ function wpstg_admin_messages() {
     }
 }
 add_action( 'admin_notices', 'wpstg_admin_messages' );
+
+/**
+ * Ask for a doing a poll
+ */
+function wpstg_start_poll(){
+    
+        $install_date = get_option('wpstg_installDate');
+        $display_date = date('Y-m-d h:i:s');
+	$datetime1 = new DateTime($install_date);
+	$datetime2 = new DateTime($display_date);
+	$diff_intrval = round(($datetime2->format('U') - $datetime1->format('U')) / (60*60*24));
+   
+        if($diff_intrval >= 10 && get_option('wpstg_start_poll') == "yes")
+    {
+	 echo '<div class="wpstg_poll update-nag" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
+    	<p>Great, You are using <strong>WP Staging</strong> for a while. Hope you are happy with it.<br><br>Are you interested in copying changes from WPStaging staging site back to your live site?
+        <br><br>Clicking on the <a href="" target="_blank"><i>Yes, i am interested</i></a> Button opens a poll which only takes one (1) minute of your time - I promise!
+        <br><br>Cheers,<br>René
+        <ul>
+            <li class="float:left"><a href="https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link" class="thankyou button button-primary" target="_new" title=Yes, i am interested" style="color: #ffffff;font-weight: normal;margin-right:10px;float:left;">Yes, i am interested</a></li>
+            <li><a href="javascript:void(0);" class="wpstg_hide_poll" title="Close It" style="vertical-align:middle;">Do Not Ask Again</a></li>
+        </ul>
+    </div>
+    <script>
+    jQuery( document ).ready(function( $ ) {
+        jQuery(\'.wpstg_hide_poll\').click(function(){
+                 var data={\'action\':\'wpstg_hide_poll\'}
+                jQuery.ajax({
+                    url: "'.admin_url( 'admin-ajax.php' ).'",
+                    type: "post",
+                    data: data,
+                    dataType: "json",
+                    async: !0,
+                    success: function(e) {
+                        if (e=="success") {
+                           jQuery(\'.wpstg_poll\').slideUp(\'fast\');
+                        }
+                    }
+                });
+        })
+    });
+    </script>
+    ';
+    }
+}
+
+
+/* Hide the poll notice
+ * 
+ * @subpackage  Admin/Notices
+ * @copyright   Copyright (c) 2016, René Hermenau
+ * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
+ * @since       1.1.0
+ * 
+ * @return json string
+ * 
+ */
+
+function wpstg_hide_poll(){
+    update_option('wpstg_start_poll','no');
+    echo json_encode(array("success")); exit;
+}
+add_action('wp_ajax_wpstg_hide_poll','wpstg_hide_poll');
 
 
 /**
@@ -239,12 +308,10 @@ function wpstg_plugin_update_message( $args ) {
   */
  function wpstg_show_beta_message(){
      	 $notice = '<div class="wpstg_beta_notice error" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
-    	<p>This software is beta and work in progress! <br>WP Staging is well tested and i did my best to catch every possible error i can forecast but i can not handle all possible combinations of different server, plugins and themes. <br><strong>BEFORE</strong> you create your first staging site it´s highly recommended <strong>to make a full backup of your website</strong> first!
-        <p><strong>This is no joke! </strong>WP Staging is using crucial database and system close functions which have the power to break your website or even to delete your entire database! WP-Staging has neever caused any errors like data loose on any of the sites we are using for testing, so in most cases everything will be running fine, but we have 
-        to give out this warning until WP Staging is not in beta status any longer.
+    	<p>WP Staging is well tested and i did my best to catch every possible error i can forecast but i can not handle all possible combinations of different server, plugins and themes. <br><strong>BEFORE</strong> you create your first staging site it´s highly recommended <strong>to make a full backup of your website</strong> first!
       <p>
         One of the best free plugins for an entire wordpress backup is the free one <a href="https://wordpress.org/plugins/backwpup/" target="_blank">BackWPup</a> 
-        <p>To be more clear: <p>We are not responsible for any damages this plugin will cause to your site. <br>Do a full backup first!</p>
+        <p>I am not responsible for any damages this plugin will cause to your site. <br>Do a full backup first!</p>
         <ul>
             <li><a href="javascript:void(0);" class="wpstg_hide_beta" title="I understand" style="font-weight:bold;color:#00a0d2;">I understand! (Do not show this again)</a></li>
         </ul>
