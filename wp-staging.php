@@ -58,25 +58,25 @@ if( !class_exists( 'WPSTG_Utils' ) ) {
 
 // Installation & activation
 register_activation_hook( __FILE__, 'wpstg_activation' );
-function wpstg_activation($networkwide){
-		require_once WPSTG_PLUGIN_DIR .  '/includes/install.php';
+function wpstg_activation( $networkwide ) {
+    require_once WPSTG_PLUGIN_DIR . '/includes/install.php';
 
-	    if (function_exists('is_multisite') && is_multisite()) {
+    if( function_exists( 'is_multisite' ) && is_multisite() ) {
         // check if it is a network activation - if so, run the activation function for each blog id
-        if ($networkwide) {
+        if( $networkwide ) {
             $old_blog = $wpdb->blogid;
             // Get all blog ids
-            $blogids = $wpdb->get_col("SELECT blog_id FROM $wpdb->blogs");
-            foreach ($blogids as $blog_id) {
-                switch_to_blog($blog_id);
+            $blogids = $wpdb->get_col( "SELECT blog_id FROM $wpdb->blogs" );
+            foreach ( $blogids as $blog_id ) {
+                switch_to_blog( $blog_id );
                 wpstg_install();
             }
-            switch_to_blog($old_blog);
+            switch_to_blog( $old_blog );
             return;
-        }   
-    } 
+        }
+    }
 
-    wpstg_install(); 
+    wpstg_install();
 }
 
 /*

@@ -133,11 +133,11 @@ function wpstg_start_poll(){
 	$datetime2 = new DateTime($display_date);
 	$diff_intrval = round(($datetime2->format('U') - $datetime1->format('U')) / (60*60*24));
    
-        if($diff_intrval >= 10 && get_option('wpstg_start_poll') == "yes")
+        if($diff_intrval >= 10 && get_option('wpstg_start_poll') !== 'no')
     {
 	 echo '<div class="wpstg_poll update-nag" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
     	<p>Great, You are using <strong>WP Staging</strong> for a while. Hope you are happy with it.<br><br>Are you interested in copying changes from WPStaging staging site back to your live site?
-        <br><br>Clicking on the <a href="" target="_blank"><i>Yes, i am interested</i></a> Button opens a poll which only takes one (1) minute of your time - I promise!
+        <br><br>Click on the <a href="" target="_blank"><i>Yes, i am interested</i></a> Button and fill out the poll!<br>It only takes one (1) minute of your time - I promise!
         <br><br>Cheers,<br>René
         <ul>
             <li class="float:left"><a href="https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link" class="thankyou button button-primary" target="_new" title=Yes, i am interested" style="color: #ffffff;font-weight: normal;margin-right:10px;float:left;">Yes, i am interested</a></li>

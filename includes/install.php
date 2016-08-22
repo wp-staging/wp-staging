@@ -57,45 +57,43 @@ if ( ! defined( 'ABSPATH' ) ) exit;
 
 
 function wpstg_install() {
-	global $wpdb, $wpstg_options, $wp_version;
+    global $wpdb, $wpstg_options;
 
-	// Add Upgraded from Option
-	$current_version = get_option( 'wpstg_version' );
-	if ( $current_version ) {
-		update_option( 'wpstg_version_upgraded_from', $current_version );
-	}
+    // Add Upgraded from Option
+    $current_version = get_option( 'wpstg_version' );
+    if( $current_version ) {
+        update_option( 'wpstg_version_upgraded_from', $current_version );
+    }
 
-        // Update the current version
-        update_option( 'wpstg_version', WPSTG_VERSION );
-        // Add plugin installation date and variable for rating div
-        add_option('wpstg_installDate',date('Y-m-d h:i:s'));
-        add_option('wpstg_RatingDiv','no');
-        add_option('wpstg_start_poll','yes');
-        // Add First-time variables
-        add_option('wpstg_firsttime','true');
-        add_option('wpstg_is_staging_site','false');
-        // Show beta notice
-        add_option('wpstg_hide_beta','no');
-                
-        // Create empty config files in /wp-content/uploads/wp-staging
-        wpstg_create_remaining_files();
-        wpstg_create_clonedetails_files();
+    // Update the current version
+    update_option( 'wpstg_version', WPSTG_VERSION );
+    // Add plugin installation date and variable for rating div
+    add_option( 'wpstg_installDate', date( 'Y-m-d h:i:s' ) );
+    add_option( 'wpstg_RatingDiv', 'no' );
+    // Add First-time variables
+    add_option( 'wpstg_firsttime', 'true' );
+    add_option( 'wpstg_is_staging_site', 'false' );
+    // Show beta notice
+    add_option( 'wpstg_hide_beta', 'no' );
 
-	
-                
+    // Create empty config files in /wp-content/uploads/wp-staging
+    wpstg_create_remaining_files();
+    wpstg_create_clonedetails_files();
+
+
+
     /* Setup some default options
      * Store our initial social networks in separate option row.
      * For easier modification and to prevent some trouble
      */
-    
-    // Bail if activating from network, or bulk
-	if ( is_network_admin() || isset( $_GET['activate-multi'] ) ) {
-		return;
-        }
-        
-        // Add the transient to redirect / not for multisites
-	set_transient( '_wpstg_activation_redirect', true, 30 );
 
+    // Bail if activating from network, or bulk
+    if( is_network_admin() || isset( $_GET['activate-multi'] ) ) {
+        return;
+    }
+
+    // Add the transient to redirect / not for multisites
+    set_transient( '_wpstg_activation_redirect', true, 30 );
 }
 
 /**
