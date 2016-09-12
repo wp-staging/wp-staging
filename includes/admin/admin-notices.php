@@ -78,7 +78,7 @@ function wpstg_admin_messages() {
     	<p>Awesome, you\'ve been using <strong>WP Staging </strong> for more than 1 week. May i ask you to give it a <strong>5-star</strong> rating on Wordpress? 
         <p><strong>Regards,<br>René Hermenau</strong>
         <ul>
-            <li><a href="https://wordpress.org/support/view/plugin-reviews/wp-staging" class="thankyou" target="_new" title="Ok, you deserved it" style="font-weight:bold;">Ok, you deserved it</a></li>
+            <li><a href="https://wordpress.org/support/plugin/wp-staging/reviews/?filter=5#new-post" class="thankyou" target="_new" title="Ok, you deserved it" style="font-weight:bold;">Ok, you deserved it</a></li>
             <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:bold;">I already did</a></li>
             <li><a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:bold;">No, not good enough</a></li>
         </ul>

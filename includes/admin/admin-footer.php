@@ -30,7 +30,7 @@ function wpstg_admin_rate_us( $footer_text ) {
 			'http://wordpress.org/support/view/plugin-reviews/wp-staging?filter=5#postform'
 		);*/
                 $rate_text = sprintf( __( 'Please <a href="%1$s" target="_blank">rate WP Staging</a> and help to support this project.<br>Something not working as expected? Visit the WP Staging <a href="https://wordpress.org/support/plugin/wp-staging" target="blank">Support Forum</a>', 'wpstg' ),
-			'http://wordpress.org/support/view/plugin-reviews/wp-staging?filter=5#postform'
+			'https://wordpress.org/support/plugin/wp-staging/reviews/?filter=5#new-post'
 		);
 
 		return str_replace( '</span>', '', '' ) . $rate_text . '</span>';
