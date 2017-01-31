@@ -1,4 +1,5 @@
 <?php
+namespace WPStaging\Backend\Modules\Jobs\Interfaces;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -7,9 +8,10 @@ if (!defined("WPINC"))
 }
 
 /**
- * Interface WPStaging_ModuleInterface
+ * Interface JobInterface
+ * @package WPStaging\Backend\Modules\Jobs\Interfaces
  */
-interface WPStaging_ModuleInterface
+interface JobInterface
 {
     /**
      * Start Module

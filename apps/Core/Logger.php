@@ -1,4 +1,5 @@
 <?php
+namespace WPStaging;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -6,7 +7,11 @@ if (!defined("WPINC"))
     die;
 }
 
-class WPStaging_Logger
+/**
+ * Class Logger
+ * @package WPStaging
+ */
+class Logger
 {
     public function __construct()
     {

@@ -1,4 +1,5 @@
 <?php
+namespace WPStaging\Backend\Modules\Jobs;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -6,7 +7,13 @@ if (!defined("WPINC"))
     die;
 }
 
-class WPStaging_Database implements WPStaging_ModuleInterface
+use WPStaging\Backend\Modules\Jobs\Interfaces\JobInterface;
+
+/**
+ * Class Files
+ * @package WPStaging\Backend\Modules\Jobs
+ */
+class Files implements JobInterface
 {
 
     public function __construct()

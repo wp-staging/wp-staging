@@ -1,4 +1,5 @@
 <?php
+namespace WPStaging;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -7,9 +8,10 @@ if (!defined("WPINC"))
 }
 
 /**
- * Class WPStaging_Cache
+ * Class Cache
+ * @package WPStaging
  */
-class WPStaging_Cache
+class Cache
 {
     /**
      * Cache directory (full path)

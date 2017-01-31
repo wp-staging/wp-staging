@@ -35,6 +35,6 @@ if (!defined("WPINC"))
     die;
 }
 
-require_once plugin_dir_path(__FILE__) . "apps/core/WPStaging.php";
+require_once plugin_dir_path(__FILE__) . "apps/Core/WPStaging.php";
 
-WPStaging::getInstance();
+\WPStaging\WPStaging::getInstance()->run();

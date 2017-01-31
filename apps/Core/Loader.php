@@ -1,4 +1,5 @@
 <?php
+namespace WPStaging;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -7,9 +8,10 @@ if (!defined("WPINC"))
 }
 
 /**
- * Class WPStaging_Loader
+ * Class Loader
+ * @package WPStaging
  */
-final class WPStaging_Loader
+final class Loader
 {
     private $actions = [];
 

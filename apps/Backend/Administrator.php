@@ -1,4 +1,5 @@
 <?php
+namespace WPStaging\Backend;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -6,17 +7,27 @@ if (!defined("WPINC"))
     die;
 }
 
+use WPStaging\Backend\Modules\Jobs\Data;
+use WPStaging\Backend\Modules\Jobs\Database;
+use WPStaging\Backend\Modules\Jobs\Files;
+use WPStaging\DI\InjectionAware;
+use WPStaging\WPStaging;
+
 /**
- * Class WPStaging_Administrator
+ * Class Administrator
+ * @package WPStaging\Backend
  */
-class WPStaging_Administrator
+class Administrator extends InjectionAware
 {
+    /**
+     * @var string
+     */
     private $path;
 
     /**
-     * WPStaging_Administrator constructor.
+     * Initialize class
      */
-    public function __construct()
+    public function initialize()
     {
         $this->loadDependencies();
         $this->defineHooks();
@@ -30,22 +41,14 @@ class WPStaging_Administrator
      */
     private function loadDependencies()
     {
-        // Require necessary files
-        $basePath = plugin_dir_path(__FILE__) . "modules" . DIRECTORY_SEPARATOR;
-        require_once $basePath . "Data.php";
-        require_once $basePath . "Database.php";
-        require_once $basePath . "Files.php";
-
-        $WPStaging = WPStaging::getInstance();
-
         // Set loader
-        $WPStaging->set("data", new WPStaging_Data());
+        $this->di->set("data", new Data());
 
         // Set cache
-        $WPStaging->set("database", new WPStaging_Database());
+        $this->di->set("database", new Database());
 
         // Set logger
-        $WPStaging->set("files", new WPStaging_Files());
+        $this->di->set("files", new Files());
     }
 
     /**
@@ -54,7 +57,7 @@ class WPStaging_Administrator
     private function defineHooks()
     {
         // Get loader
-        $loader = WPStaging::getInstance()->get("loader");
+        $loader = $this->di->get("loader");
 
         $loader->addAction("admin_enqueue_scripts", $this, "enqueueElements");
         $loader->addAction("admin_menu", $this, "addMenu", 10);

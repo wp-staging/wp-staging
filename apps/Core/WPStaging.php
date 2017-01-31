@@ -1,4 +1,5 @@
 <?php
+namespace WPStaging;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -6,8 +7,14 @@ if (!defined("WPINC"))
     die;
 }
 
+// Ensure to include autoloader class
+require_once __DIR__ . DIRECTORY_SEPARATOR . "Autoloader.php";
+
+use WPStaging\Backend\Administrator;
+
 /**
  * Class WPStaging
+ * @package WPStaging
  */
 final class WPStaging
 {
@@ -43,8 +50,33 @@ final class WPStaging
      */
     private function __construct()
     {
+        $this->registerNamespaces();
         $this->loadDependencies();
-        $this->run();
+    }
+
+    /**
+     * Register used namespaces
+     */
+    private function registerNamespaces()
+    {
+        require_once __DIR__ . DIRECTORY_SEPARATOR . "Autoloader.php";
+
+        $autoloader = new Autoloader();
+        $this->set("autoloader", $autoloader);
+
+        // Base directory
+        $dir = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . "apps" . DIRECTORY_SEPARATOR;
+
+        // Autoloader
+        $autoloader->registerNamespaces(array(
+            "WPStaging" => array(
+                $dir,
+                $dir . "Core" . DIRECTORY_SEPARATOR
+            )
+        ));
+
+        // Register namespaces
+        $autoloader->register();
     }
 
     /**
@@ -80,24 +112,17 @@ final class WPStaging
      */
     private function loadDependencies()
     {
-        // Require necessary files
-        $basePath = plugin_dir_path(__FILE__);
-        require_once $basePath . "Loader.php";
-        require_once $basePath . "Cache.php";
-        require_once $basePath . "Logger.php";
-        require_once $basePath . "backend" . DIRECTORY_SEPARATOR . "Administrator.php";
-
         // Set loader
-        $this->set("loader", new WPStaging_Loader());
+        $this->set("loader", new Loader());
 
         // Set cache
-        $this->set("cache", new WPStaging_Cache());
+        $this->set("cache", new Cache());
 
         // Set logger
-        $this->set("logger", new WPStaging_Logger());
+        $this->set("logger", new Logger());
 
         // Set Administrator
-        (new WPStaging_Administrator);
+        new Administrator($this);
     }
 
     /**
