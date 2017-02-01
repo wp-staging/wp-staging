@@ -25,6 +25,11 @@ class Administrator extends InjectionAware
     private $path;
 
     /**
+     * @var string
+     */
+    private $url;
+
+    /**
      * Initialize class
      */
     public function initialize()
@@ -34,6 +39,7 @@ class Administrator extends InjectionAware
 
         // Path to backend
         $this->path = plugin_dir_path(__FILE__);
+        $this->url  = plugin_dir_url(__FILE__) . "public/";
     }
 
     /**
@@ -74,7 +80,7 @@ class Administrator extends InjectionAware
             __("WP Staging", "wpstg"),
             "manage_options",
             "wpstg_clone",
-            [$this, "getSettingsPage"],
+            [$this, "getClonePage"],
             "dashicons-hammer"
         );
 
@@ -95,7 +101,7 @@ class Administrator extends InjectionAware
             __("Settings", "wpstg"),
             "manage_options",
             "wpstg-settings",
-            "wpstg_options_page"
+            [$this, "getSettingsPage"]
         );
 
         // Page: Tools
@@ -105,7 +111,7 @@ class Administrator extends InjectionAware
             __("Tools", "wpstg"),
             "manage_options",
             "wpstg-tools",
-            "wpstg_tools_page"
+            [$this, "getToolsPage"]
         );
     }
 
@@ -115,6 +121,16 @@ class Administrator extends InjectionAware
     public function getSettingsPage()
     {
         require_once "{$this->path}views/settings/index.php";
+    }
+
+    public function getClonePage()
+    {
+        require_once "{$this->path}views/clone/index.php";
+    }
+
+    public function getToolsPage()
+    {
+        require_once "{$this->path}views/tools/index.php";
     }
 
     public function enqueueElements()
