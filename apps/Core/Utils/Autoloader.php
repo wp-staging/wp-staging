@@ -1,9 +1,9 @@
 <?php
-namespace WPStaging;
+namespace WPStaging\Utils;
 
 /**
  * Class Autoloader
- * @package WPStaging\Core
+ * @package WPStaging\Utils
  */
 class Autoloader
 {

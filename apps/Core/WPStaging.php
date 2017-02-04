@@ -8,9 +8,13 @@ if (!defined("WPINC"))
 }
 
 // Ensure to include autoloader class
-require_once __DIR__ . DIRECTORY_SEPARATOR . "Autoloader.php";
+require_once __DIR__ . DIRECTORY_SEPARATOR . "Utils" . DIRECTORY_SEPARATOR . "Autoloader.php";
 
 use WPStaging\Backend\Administrator;
+use WPStaging\Utils\Autoloader;
+use WPStaging\Utils\Cache;
+use WPStaging\Utils\Loader;
+use WPStaging\Utils\Logger;
 
 /**
  * Class WPStaging
@@ -59,8 +63,6 @@ final class WPStaging
      */
     private function registerNamespaces()
     {
-        require_once __DIR__ . DIRECTORY_SEPARATOR . "Autoloader.php";
-
         $autoloader = new Autoloader();
         $this->set("autoloader", $autoloader);
 
@@ -121,6 +123,9 @@ final class WPStaging
         // Set logger
         $this->set("logger", new Logger());
 
+        // Set options
+        $this->set("options", json_decode(get_option("wpstg_settings")));
+
         // Set Administrator
         new Administrator($this);
     }
@@ -155,6 +160,60 @@ final class WPStaging
     public function get($name)
     {
         return (isset($this->services[$name])) ? $this->services[$name] : null;
+    }
+
+    /**
+     * @return string
+     */
+    public function getVersion()
+    {
+        return self::VERSION;
+    }
+
+    /**
+     * @return string
+     */
+    public function getName()
+    {
+        return self::NAME;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSlug()
+    {
+        return self::SLUG;
+    }
+
+    /**
+     * @return array|mixed|object
+     */
+    public function getCPULoadSetting()
+    {
+        $options = $this->get("options");
+        $setting = (isset($options->cpuLoad)) ? $options->cpuLoad : "default";
+
+        switch ($setting)
+        {
+            case "high":
+                $cpuLoad = 0;
+                break;
+
+            case "medium":
+                $cpuLoad = 1000;
+                break;
+
+            case "low":
+                $cpuLoad = 3000;
+                break;
+
+            case "default":
+            default:
+                $cpuLoad = 1000;
+        }
+
+        return $cpuLoad;
     }
 
     // TODO load languages

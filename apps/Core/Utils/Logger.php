@@ -1,5 +1,5 @@
 <?php
-namespace WPStaging;
+namespace WPStaging\Utils;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -9,7 +9,7 @@ if (!defined("WPINC"))
 
 /**
  * Class Logger
- * @package WPStaging
+ * @package WPStaging\Utils
  */
 class Logger
 {

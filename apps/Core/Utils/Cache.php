@@ -1,5 +1,5 @@
 <?php
-namespace WPStaging;
+namespace WPStaging\Utils;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -7,9 +7,11 @@ if (!defined("WPINC"))
     die;
 }
 
+use WPStaging\WPStaging;
+
 /**
  * Class Cache
- * @package WPStaging
+ * @package WPStaging\Utils
  */
 class Cache
 {

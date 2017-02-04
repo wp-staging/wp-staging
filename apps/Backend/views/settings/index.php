@@ -14,7 +14,46 @@
         <a href="https://twitter.com/intent/tweet?button_hashtag=wpstaging&text=Check%20out%20this%20plugin%20for%20creating%20a%20one%20click%20WordPress%20testing%20site&via=wpstg" class="twitter-hashtag-button" data-size="small" data-related="ReneHermenau" data-url="https://wordpress.org/plugins/wp-staging/" data-dnt="true">Tweet #wpstaging</a>
     </div>
 
-    <h2 class="nav-tab-wrapper">
+    <ul class="nav-tab-wrapper">
+        <?php
+        $tabs       = $this->di->get("admin-tabs")->get();
+        $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "general";
 
-    </h2>
+        # Loop through tabs
+        foreach ($this->di->get("admin-tabs") as $id => $name):
+            $url = esc_url(add_query_arg(array(
+                "settings-updated"  => false,
+                "tab"               => $id
+            )));
 
+            $activeClass = ($activeTab === $id) ? " nav-tab-active" : '';
+        ?>
+            <li>
+                <a href="<?php echo $url?>" title="<?php echo esc_attr($name)?>" class="nav-tab<?php echo $activeClass?>">
+                    <?php echo esc_html($name)?>
+                </a>
+            </li>
+        <?php
+            unset($url, $activeClass);
+        endforeach;
+        unset($tabs);
+        ?>
+    </ul>
+
+
+    <div id="tab_container" class="tab_container">
+        <div class="panel-container">
+            <form method="post" action="options.php">
+                <?php
+                settings_fields("wpstg_settings");
+
+                // Show submit button any tab but add-ons
+                if ($activeTab !== "add-ons")
+                {
+                    submit_button();
+                }
+                ?>
+            </form>
+        </div>
+    </div>
+</div>

@@ -1,5 +1,5 @@
 <?php
-namespace WPStaging;
+namespace WPStaging\Utils;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -9,7 +9,7 @@ if (!defined("WPINC"))
 
 /**
  * Class Loader
- * @package WPStaging
+ * @package WPStaging\Utils
  */
 final class Loader
 {
