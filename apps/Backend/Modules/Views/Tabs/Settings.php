@@ -7,6 +7,7 @@ namespace WPStaging\Backend\Modules\Views\Tabs;
  */
 class Settings
 {
+
     /**
      * @var array
      */

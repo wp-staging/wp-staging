@@ -22,6 +22,7 @@ use WPStaging\Utils\Logger;
  */
 final class WPStaging
 {
+
     /**
      * Plugin version
      */

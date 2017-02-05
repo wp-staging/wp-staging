@@ -19,6 +19,7 @@ use WPStaging\DI\InjectionAware;
  */
 class Administrator extends InjectionAware
 {
+
     /**
      * @var string
      */

@@ -4,10 +4,10 @@ namespace WPStaging\Forms\Elements;
 use WPStaging\Forms\Elements;
 
 /**
- * Class Text
+ * Class Date
  * @package WPStaging\Forms\Elements
  */
-class Text extends Elements
+class DateTime extends Elements
 {
 
     /**
@@ -15,7 +15,7 @@ class Text extends Elements
      */
     protected function prepareOutput()
     {
-        return "<input id='{$this->getId()}' type='text' {$this->prepareAttributes()} value='{$this->default}' />";
+        return "<input id='{$this->getId()}' type='datetime' {$this->prepareAttributes()} value='{$this->default}' />";
     }
 
     /**

@@ -7,6 +7,7 @@ namespace WPStaging\Forms\Elements\Interfaces;
  */
 interface InterfaceElementWithOptions
 {
+
     /**
      * @param string $id
      * @param string $name

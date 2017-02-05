@@ -9,6 +9,7 @@ use WPStaging\WPStaging;
  */
 abstract class InjectionAware
 {
+
     /**
      * @var WPStaging
      */

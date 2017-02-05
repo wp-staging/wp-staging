@@ -11,10 +11,18 @@ class TextArea extends Elements
 {
 
     /**
-     * @return mixed
+     * @return string
+     */
+    protected function prepareOutput()
+    {
+        return "<textarea id='{$this->getId()}' {$this->prepareAttributes()}>{$this->default}</textarea>";
+    }
+
+    /**
+     * @return string
      */
     public function render()
     {
-        // TODO: Implement render() method.
+        return ($this->renderFile) ? @file_get_contents($this->renderFile) : $this->prepareOutput();
     }
 }

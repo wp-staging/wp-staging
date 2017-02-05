@@ -10,11 +10,52 @@ use WPStaging\Forms\ElementsWithOptions;
  */
 class Check extends ElementsWithOptions
 {
+
     /**
-     * @return mixed
+     * @return string
+     */
+    protected function prepareOutput()
+    {
+        $output = '';
+
+        foreach ($this->options as $id => $value)
+        {
+            $checked = ($this->isChecked($value)) ? " checked=''" : '';
+
+            $attributeId = $this->getId($id);
+
+            $output .= "<input type='checkbox' name='{$this->getId()}' id='{$attributeId}' value='{$id}' {$checked}/>";
+            $output .= "<label for='{$attributeId}'>{$value}</label>";
+        }
+
+        return $output;
+    }
+
+    /**
+     * @param string $value
+     * @return bool
+     */
+    private function isChecked($value)
+    {
+        if (
+            $this->default &&
+            (
+                (is_string($this->default) && $this->default === $value) ||
+                (is_array($this->default) && in_array($value, $this->default))
+            )
+        )
+        {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return string
      */
     public function render()
     {
-        // TODO: Implement render() method.
+        return ($this->renderFile) ? @file_get_contents($this->renderFile) : $this->prepareOutput();
     }
 }

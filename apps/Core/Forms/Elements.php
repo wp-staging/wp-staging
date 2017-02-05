@@ -9,25 +9,41 @@ use WPStaging\Forms\Elements\Interfaces\InterfaceElement;
  */
 abstract class Elements implements InterfaceElement
 {
-    /**
-     * @var null|string
-     */
-    private $name;
-
-    /**
-     * @var array
-     */
-    private $attributes = array();
 
     /**
      * @var null|string
      */
-    private $label;
+    protected $name;
 
     /**
      * @var array
      */
-    private $filters = array();
+    protected $attributes = array();
+
+    /**
+     * @var null|string
+     */
+    protected $label;
+
+    /**
+     * @var null|string|array
+     */
+    protected $default;
+
+    /**
+     * @var array
+     */
+    protected $filters = array();
+
+    /**
+     * @var array
+     */
+    protected $validations = array();
+
+    /**
+     * @var string
+     */
+    protected $renderFile;
 
     /**
      * Text constructor.
@@ -77,6 +93,20 @@ abstract class Elements implements InterfaceElement
     }
 
     /**
+     * @return string
+     */
+    public function prepareAttributes()
+    {
+        $attributes = '';
+        foreach ($this->attributes as $name => $value)
+        {
+            $attributes .= "{$name}='{$value}' ";
+        }
+
+        return rtrim($attributes, "' ");
+    }
+
+    /**
      * @return array
      */
     public function getAttributes()
@@ -98,6 +128,14 @@ abstract class Elements implements InterfaceElement
     public function getLabel()
     {
         return $this->label;
+    }
+
+    /**
+     * @return string
+     */
+    public function prepareLabel()
+    {
+        return "<label for='{$this->getId()}'>{$this->label}</label>";
     }
 
     /**
@@ -124,7 +162,90 @@ abstract class Elements implements InterfaceElement
     }
 
     /**
-     * @return mixed
+     * @param string|array $value
+     */
+    public function setDefault($value)
+    {
+        $this->default = $value;
+    }
+
+    /**
+     * @return null|string|array
+     */
+    public function getDefault()
+    {
+        return $this->default;
+    }
+
+    /**
+     * @param object $validation
+     */
+    public function addValidation($validation)
+    {
+        $this->validations[] = $validation;
+    }
+
+    /**
+     * @return array
+     */
+    public function getValidations()
+    {
+        return $this->validations;
+    }
+
+    /**
+     * @param string $file
+     */
+    public function setRenderFile($file)
+    {
+        if (file_exists($file) && is_readable($file))
+        {
+            $this->renderFile = $file;
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getRenderFile()
+    {
+        return $this->renderFile;
+    }
+
+    /**
+     * @return string
+     */
+    public function __toString()
+    {
+        return $this->render();
+    }
+
+    /**
+     * @param null|string $name
+     * @return string
+     */
+    public function getId($name = null)
+    {
+        if (null === $name)
+        {
+            $name = $this->name;
+        }
+
+        if (!$name)
+        {
+            return '';
+        }
+
+        return str_replace(' ', '_', strtolower($name));
+    }
+
+    /**
+     * @return string
+     */
+    abstract protected function prepareOutput();
+
+    /**
+     * @return string
      */
     abstract public function render();
 }

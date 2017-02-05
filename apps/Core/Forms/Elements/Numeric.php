@@ -1,7 +1,6 @@
 <?php
 namespace WPStaging\Forms\Elements;
 
-
 use WPStaging\Forms\Elements;
 
 /**
@@ -10,11 +9,20 @@ use WPStaging\Forms\Elements;
  */
 class Numeric extends Elements
 {
+
     /**
-     * @return mixed
+     * @return string
+     */
+    protected function prepareOutput()
+    {
+        return "<input id='{$this->getId()}' type='number' {$this->prepareAttributes()} value='{$this->default}' />";
+    }
+
+    /**
+     * @return string
      */
     public function render()
     {
-        // TODO: Implement render() method.
+        return ($this->renderFile) ? @file_get_contents($this->renderFile) : $this->prepareOutput();
     }
 }

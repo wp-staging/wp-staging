@@ -9,10 +9,11 @@ use WPStaging\Forms\Elements\Interfaces\InterfaceElementWithOptions;
  */
 abstract class ElementsWithOptions extends Elements implements InterfaceElementWithOptions
 {
+
     /**
      * @var array
      */
-    private $options = array();
+    protected $options = array();
 
     /**
      * Text constructor.

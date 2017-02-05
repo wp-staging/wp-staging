@@ -13,6 +13,7 @@ if (!defined("WPINC"))
  */
 interface JobInterface
 {
+
     /**
      * Start Module
      * @return mixed
