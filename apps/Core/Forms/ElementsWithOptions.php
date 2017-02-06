@@ -31,16 +31,18 @@ abstract class ElementsWithOptions extends Elements implements InterfaceElementW
     /**
      * @param string $id
      * @param string $name
-     * @return void
+     * @return $this
      */
     public function addOption($id, $name)
     {
         $this->options[$id] = $name;
+
+        return $this;
     }
 
     /**
      * @param string $id
-     * @return void
+     * @return $this
      */
     public function removeOption($id)
     {
@@ -48,11 +50,13 @@ abstract class ElementsWithOptions extends Elements implements InterfaceElementW
         {
             unset($this->options[$id]);
         }
+
+        return $this;
     }
 
     /**
      * @param array $options
-     * @return void
+     * @return $this
      */
     public function addOptions($options)
     {
@@ -60,6 +64,8 @@ abstract class ElementsWithOptions extends Elements implements InterfaceElementW
         {
             $this->addOption($id, $name);
         }
+
+        return $this;
     }
 
     /**

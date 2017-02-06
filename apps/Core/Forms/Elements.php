@@ -58,10 +58,13 @@ abstract class Elements implements InterfaceElement
 
     /**
      * @param string $name
+     * @return $this
      */
     public function setName($name)
     {
         $this->name = $name;
+
+        return $this;
     }
 
     /**
@@ -75,14 +78,18 @@ abstract class Elements implements InterfaceElement
     /**
      * @param string $name
      * @param string $value
+     * @return $this
      */
     public function setAttribute($name, $value)
     {
         $this->attributes[$name] = $value;
+
+        return $this;
     }
 
     /**
      * @param array $attributes
+     * @return $this
      */
     public function setAttributes($attributes)
     {
@@ -90,6 +97,8 @@ abstract class Elements implements InterfaceElement
         {
             $this->setAttribute($name, $value);
         }
+
+        return $this;
     }
 
     /**
@@ -116,10 +125,13 @@ abstract class Elements implements InterfaceElement
 
     /**
      * @param string $label
+     * @return $this
      */
     public function setLabel($label)
     {
         $this->label = $label;
+
+        return $this;
     }
 
     /**
@@ -140,6 +152,7 @@ abstract class Elements implements InterfaceElement
 
     /**
      * @param array|string $filters
+     * @return $this
      */
     public function setFilters($filters)
     {
@@ -151,6 +164,8 @@ abstract class Elements implements InterfaceElement
         {
             array_merge($this->filters, $filters);
         }
+
+        return $this;
     }
 
     /**
@@ -163,10 +178,13 @@ abstract class Elements implements InterfaceElement
 
     /**
      * @param string|array $value
+     * @return $this
      */
     public function setDefault($value)
     {
         $this->default = $value;
+
+        return $this;
     }
 
     /**
@@ -179,10 +197,13 @@ abstract class Elements implements InterfaceElement
 
     /**
      * @param object $validation
+     * @return $this
      */
     public function addValidation($validation)
     {
         $this->validations[] = $validation;
+
+        return $this;
     }
 
     /**
@@ -195,6 +216,7 @@ abstract class Elements implements InterfaceElement
 
     /**
      * @param string $file
+     * @return $this
      */
     public function setRenderFile($file)
     {
@@ -202,6 +224,8 @@ abstract class Elements implements InterfaceElement
         {
             $this->renderFile = $file;
         }
+
+        return $this;
     }
 
     /**

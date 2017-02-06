@@ -10,6 +10,7 @@ interface InterfaceElement
 
     /**
      * @param string $name
+     * return $this
      */
     public function setName($name);
 
@@ -21,11 +22,13 @@ interface InterfaceElement
     /**
      * @param string $name
      * @param string $value
+     * return $this
      */
     public function setAttribute($name, $value);
 
     /**
      * @param array $attributes
+     * return $this
      */
     public function setAttributes($attributes);
 
@@ -41,6 +44,7 @@ interface InterfaceElement
 
     /**
      * @param string $label
+     * return $this
      */
     public function setLabel($label);
 
@@ -56,6 +60,7 @@ interface InterfaceElement
 
     /**
      * @param array|string $filters
+     * return $this
      */
     public function setFilters($filters);
 
@@ -66,6 +71,7 @@ interface InterfaceElement
 
     /**
      * @param string $value
+     * return $this
      */
     public function setDefault($value);
 
@@ -76,6 +82,7 @@ interface InterfaceElement
 
     /**
      * @param object $validation
+     * return $this
      */
     public function addValidation($validation);
 
@@ -86,6 +93,7 @@ interface InterfaceElement
 
     /**
      * @param string $file
+     * return $this
      */
     public function setRenderFile($file);
 

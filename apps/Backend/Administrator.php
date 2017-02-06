@@ -12,6 +12,7 @@ use WPStaging\Backend\Modules\Jobs\Database;
 use WPStaging\Backend\Modules\Jobs\Files;
 use WPStaging\Backend\Modules\Views\Tabs\Settings;
 use WPStaging\DI\InjectionAware;
+use \WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 
 /**
  * Class Administrator
@@ -50,6 +51,9 @@ class Administrator extends InjectionAware
     {
         // Tabs
         $this->di->set("admin-tabs", new Settings());
+
+        // Forms
+        $this->di->set("general-forms", new FormSettings());
 
         // Set loader
         $this->di->set("data", new Data());
