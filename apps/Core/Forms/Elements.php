@@ -112,7 +112,7 @@ abstract class Elements implements InterfaceElement
             $attributes .= "{$name}='{$value}' ";
         }
 
-        return rtrim($attributes, "' ");
+        return rtrim($attributes, ' ');
     }
 
     /**

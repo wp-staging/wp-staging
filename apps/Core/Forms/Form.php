@@ -20,7 +20,7 @@ class Form
 
     public function add($element)
     {
-        if (!($element instanceof InterfaceElement) || !($element instanceof InterfaceElementWithOptions))
+        if (!($element instanceof InterfaceElement) && !($element instanceof InterfaceElementWithOptions))
         {
             return;
         }
@@ -45,6 +45,6 @@ class Form
             return false;
         }
 
-        return $this->elements[$name]->render();
+        return $this->elements[$name]->prepareLabel();
     }
 }

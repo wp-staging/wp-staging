@@ -50,10 +50,11 @@ class Administrator extends InjectionAware
     private function loadDependencies()
     {
         // Tabs
-        $this->di->set("admin-tabs", new Settings());
+        $tabs = new Settings();
+        $this->di->set("admin-tabs", $tabs);
 
         // Forms
-        $this->di->set("general-forms", new FormSettings());
+        $this->di->set("forms", new FormSettings($tabs));
 
         // Set loader
         $this->di->set("data", new Data());

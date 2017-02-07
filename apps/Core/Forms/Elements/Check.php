@@ -22,10 +22,14 @@ class Check extends ElementsWithOptions
         {
             $checked = ($this->isChecked($value)) ? " checked=''" : '';
 
-            $attributeId = $this->getId($id);
+            $attributeId = $this->getId() . '_' . $this->getId($id);
 
             $output .= "<input type='checkbox' name='{$this->getId()}' id='{$attributeId}' value='{$id}' {$checked}/>";
-            $output .= "<label for='{$attributeId}'>{$value}</label>";
+
+            if ($value)
+            {
+                $output .= "<label for='{$attributeId}'>{$value}</label>";
+            }
         }
 
         return $output;
