@@ -7,19 +7,12 @@ if (!defined("WPINC"))
     die;
 }
 
-use WPStaging\Backend\Modules\Jobs\Interfaces\JobInterface;
-
 /**
  * Class Files
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Files implements JobInterface
+class Files extends Job
 {
-
-    public function __construct()
-    {
-
-    }
 
     /**
      * Start Module
@@ -28,5 +21,35 @@ class Files implements JobInterface
     public function start()
     {
         // TODO: Implement start() method.
+
+        // TODO: check if we can use EXEC or not
+        // TODO: if we can use exec; WIN: exec("copy {$sourceFile} {$targetFile}"), LIN: exec("cp {$sourceFile} {$targetFile}")
+    }
+
+    /**
+     * Check OS
+     * @return string
+     */
+    private function checkOS()
+    {
+        return strtoupper(substr(PHP_OS, 0, 3)); // WIN, LIN
+    }
+
+    /**
+     * Checks whether we can use exec() or not
+     * @return bool
+     */
+    private function canUseExec()
+    {
+        // Exec doesn't exist
+        if (!function_exists("exec"))
+        {
+            return false;
+        }
+
+        // Check if it is disabled from INI
+        $disabledFunctions = explode(',', ini_get("disable_functions"));
+
+        return (!in_array("exec", $disabledFunctions));
     }
 }

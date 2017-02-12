@@ -91,7 +91,7 @@ class Cache
      * @param string $cacheFileName
      * @param mixed $value
      * @return bool
-     * @throws Exception
+     * @throws \Exception
      */
     public function save($cacheFileName, $value)
     {
@@ -100,7 +100,7 @@ class Cache
         // Attempt to delete cache file if it exists
         if (is_file($cacheFile) && !@unlink($cacheFile))
         {
-            throw new Exception("Can't delete existing cache file");
+            throw new \Exception("Can't delete existing cache file");
         }
 
         // Save it to file
@@ -113,13 +113,13 @@ class Cache
      * @param bool $deleteFileIfInvalid
      * @param null|int $lifetime
      * @return string|bool
-     * @throws Exception
+     * @throws \Exception
      */
     public function isValid($cacheFileName, $deleteFileIfInvalid = false, $lifetime = null)
     {
         // Lifetime
         $lifetime = (int) $lifetime;
-        if ($lifetime < 1)
+        if (-1 > $lifetime || 0 == $lifetime)
         {
             $lifetime = $this->lifetime;
         }
@@ -133,6 +133,12 @@ class Cache
             return false;
         }
 
+        // As long as file exists, don't check lifetime
+        if (-1 == $lifetime)
+        {
+            return $cacheFile;
+        }
+
         // Time is up, file is invalid
         if (time() - filemtime($cacheFile) >= $lifetime)
         {
@@ -140,7 +146,7 @@ class Cache
             // Attempt to delete the file
             if ($deleteFileIfInvalid === true && !@unlink($cacheFile))
             {
-                throw new Exception("Attempting to delete invalid cache file has failed!");
+                throw new \Exception("Attempting to delete invalid cache file has failed!");
             }
 
             // No need to delete the file, return
@@ -154,13 +160,13 @@ class Cache
      * Delete a cache file
      * @param string $cacheFileName
      * @return bool
-     * @throws Exception
+     * @throws \Exception
      */
     public function delete($cacheFileName)
     {
         if (false !== ($cacheFile = $this->isValid($cacheFileName, true)) && false === @unlink($cacheFile))
         {
-            throw new Exception("Couldn't delete cache: {$cacheFileName}. Full Path: {$cacheFile}");
+            throw new \Exception("Couldn't delete cache: {$cacheFileName}. Full Path: {$cacheFile}");
         }
 
         return true;

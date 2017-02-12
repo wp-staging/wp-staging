@@ -10,6 +10,7 @@ if (!defined("WPINC"))
 use WPStaging\Backend\Modules\Jobs\Data;
 use WPStaging\Backend\Modules\Jobs\Database;
 use WPStaging\Backend\Modules\Jobs\Files;
+use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\DI\InjectionAware;
@@ -71,6 +72,7 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_enqueue_scripts", $this, "enqueueElements", 100);
         $loader->addAction("admin_menu", $this, "addMenu", 10);
         $loader->addAction("admin_init", $this, "setOptionFormElements");
+        $loader->addAction("wp_ajax_wpstg_scanning", $this, "ajaxScan");
         $loader->addAction("wpstg_download_sysinfo", $this, "systemInfoDownload");
     }
 
@@ -126,7 +128,7 @@ class Administrator extends InjectionAware
             __("Start", "wpstg"),
             "manage_options",
             "wpstg_clone",
-            "wpstg_clone_page"
+            [$this, "getClonePage"]
         );
 
         // Page: Settings
@@ -300,8 +302,9 @@ class Administrator extends InjectionAware
 
     /**
      * Scripts and Styles
+     * @param string $hooke
      */
-    public function enqueueElements()
+    public function enqueueElements($hook)
     {
         //$suffix = isset($wpstg_options['debug_mode']) ? '.min' : '';
         $suffix = '';
@@ -341,5 +344,54 @@ class Administrator extends InjectionAware
             ),
             "cpu_load"                              => $this->di->getCPULoadSetting(),
         ));
+    }
+
+    /**
+     * Render a view file
+     * @param string $file
+     * @param array $vars
+     * @return string
+     */
+    public function render($file, $vars = array())
+    {
+        $fullPath = $this->path . "views" . DIRECTORY_SEPARATOR;
+        $fullPath = str_replace(array('/', "\\"), DIRECTORY_SEPARATOR, $fullPath . $file . ".php");
+
+        if (!file_exists($fullPath) || !is_readable($fullPath))
+        {
+            return "Can't render : {$fullPath} either file doesn't exist or can't read it";
+        }
+
+        $contents = @file_get_contents($fullPath);
+
+        // Variables are set
+        if (count($vars) > 0)
+        {
+            $vars = array_combine(
+                array_map(function ($key)
+                {
+                    return "{{" . $key . "}}";
+                },
+                    array_keys($vars)
+                ),
+                $vars
+            );
+
+            $contents = str_replace(array_keys($vars), array_values($vars), $contents);
+        }
+
+        return $contents;
+    }
+
+    public function ajaxScan()
+    {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
+
+        // Get Options
+        $options = (new Scan)
+            ->start()
+            ->getOptions();
+
+        wp_die();
     }
 }
