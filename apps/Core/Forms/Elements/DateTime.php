@@ -15,7 +15,7 @@ class DateTime extends Elements
      */
     protected function prepareOutput()
     {
-        return "<input id='{$this->getId()}' type='datetime' {$this->prepareAttributes()} value='{$this->default}' />";
+        return "<input id='{$this->getId()}' name='{$this->getName()}' type='datetime' {$this->prepareAttributes()} value='{$this->default}' />";
     }
 
     /**

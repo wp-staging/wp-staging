@@ -10,7 +10,8 @@ if (!defined("WPINC"))
 use WPStaging\Backend\Modules\Jobs\Data;
 use WPStaging\Backend\Modules\Jobs\Database;
 use WPStaging\Backend\Modules\Jobs\Files;
-use WPStaging\Backend\Modules\Views\Tabs\Settings;
+use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\DI\InjectionAware;
 use \WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 
@@ -49,21 +50,14 @@ class Administrator extends InjectionAware
      */
     private function loadDependencies()
     {
-        // Tabs
-        $tabs = new Settings();
-        $this->di->set("admin-tabs", $tabs);
-
-        // Forms
-        $this->di->set("forms", new FormSettings($tabs));
-
         // Set loader
-        $this->di->set("data", new Data());
-
-        // Set cache
-        $this->di->set("database", new Database());
-
-        // Set logger
-        $this->di->set("files", new Files());
+        $this->di
+            // Set loader
+            ->set("data", new Data())
+            // Set cache
+            ->set("database", new Database())
+            // Set logger
+            ->set("files", new Files());
     }
 
     /**
@@ -76,6 +70,38 @@ class Administrator extends InjectionAware
 
         $loader->addAction("admin_enqueue_scripts", $this, "enqueueElements", 100);
         $loader->addAction("admin_menu", $this, "addMenu", 10);
+        $loader->addAction("admin_init", $this, "setOptionFormElements");
+        $loader->addAction("wpstg_download_sysinfo", $this, "systemInfoDownload");
+    }
+
+    /**
+     * Register options form elements
+     */
+    public function setOptionFormElements()
+    {
+        register_setting("wpstg_settings", "wpstg_settings", [$this, "sanitizeOptions"]);
+    }
+
+    /**
+     * Sanitize options data and delete the cache
+     * @param array $data
+     * @return array
+     */
+    public function sanitizeOptions($data = array())
+    {
+        $sanitized = array();
+
+        foreach ($data as $key => $value)
+        {
+            $sanitized[$key] = htmlspecialchars($value);
+        }
+
+        // TODO sanitization!
+        add_settings_error("wpstg-notices", '', __("Settings updated.", "wpstg"), "updated");
+
+        // Return sanitized data
+        //return $sanitized;
+        return apply_filters("wpstg-settings", $sanitized, $data);
     }
 
     /**
@@ -129,6 +155,18 @@ class Administrator extends InjectionAware
      */
     public function getSettingsPage()
     {
+        // Tabs
+        $tabs = new Tabs(array(
+            "general" => __("General", "wpstg")
+        ));
+
+
+        $this->di
+            // Set tabs
+            ->set("tabs", $tabs)
+            // Forms
+            ->set("forms", new FormSettings($tabs));
+
         require_once "{$this->path}views/settings/index.php";
     }
 
@@ -145,7 +183,119 @@ class Administrator extends InjectionAware
      */
     public function getToolsPage()
     {
+        // Tabs
+        $tabs = new Tabs(array(
+            "import_export" => __("Import/Export", "wpstg"),
+            "system_info"   => __("System Info", "wpstg")
+        ));
+
+        $this->di->set("tabs", $tabs);
+
+        $this->di->set("systemInfo", new SystemInfo($this->di));
+
         require_once "{$this->path}views/tools/index.php";
+    }
+
+    // TODO connect??
+    /**
+     * System Information Download
+     */
+    public function systemInfoDownload()
+    {
+        if (!current_user_can("update_plugins"))
+        {
+            return;
+        }
+
+        nocache_headers();
+
+        header("Content-Type: text/plain");
+        header("Content-Disposition: attachment; filename='wpstg-system-info.txt'");
+
+        echo wp_strip_all_tags(new SystemInfo($this->di));
+    }
+
+    // TODO connect??
+    /**
+     * Import JSON settings file
+     */
+    public function import()
+    {
+        if (empty($_POST["wpstg_import_nonce"]))
+        {
+            return;
+        }
+
+        if (!wp_verify_nonce($_POST["wpstg_import_nonce"], "wpstg_import_nonce"))
+        {
+            return;
+        }
+
+        if (!current_user_can("update_plugins"))
+        {
+            return;
+        }
+
+        $fileExtension = explode('.', $_FILES["import_file"]["name"]);
+        $fileExtension = end($fileExtension);
+        if ("json" !== $fileExtension)
+        {
+            wp_die("Please upload a valid .json file", "wpstg");
+        }
+
+
+        $importFile = $_FILES["import_file"]["tmp_name"];
+
+        if (empty($importFile))
+        {
+            wp_die(__("Please upload a file to import", "wpstg"));
+        }
+
+        update_option("wpstg_settings", json_decode(file_get_contents($importFile, true)));
+
+        wp_safe_redirect(admin_url("admin.php?page=wpstg-tools&amp;wpstg-message=settings-imported"));
+
+        return;
+    }
+
+    // TODO connect??
+    /**
+     * Export settings to JSON file
+     */
+    public function export()
+    {
+        if (empty($_POST["wpstg_export_nonce"]))
+        {
+            return;
+        }
+
+        if (!wp_verify_nonce($_POST["wpstg_export_nonce"], "wpstg_export_nonce"))
+        {
+            return;
+        }
+
+        if (!current_user_can("manage_options"))
+        {
+            return;
+        }
+
+        $settings = get_option("wpstg_settings", array());
+
+        ignore_user_abort(true);
+
+        if (!in_array("set_time_limit", explode(',', ini_get("disable_functions"))) && !ini_get("safe_mode"))
+        {
+            set_time_limit(0);
+        }
+
+        $fileName = apply_filters("wpstg_settings_export_filename", "wpstg-settings-export-" . date("m-d-Y")) . ".json";
+
+        nocache_headers();
+        header("Content-Type: application/json; charset=utf-8");
+        header("Content-Disposition: attachment; filename={$fileName}");
+        header("Expires: 0");
+
+        echo json_encode($settings);
     }
 
     /**

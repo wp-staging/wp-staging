@@ -15,7 +15,7 @@ class Email extends Elements
      */
     protected function prepareOutput()
     {
-        return "<input id='{$this->getId()}' type='email' {$this->prepareAttributes()} value='{$this->default}' />";
+        return "<input id='{$this->getId()}' name='{$this->getName()}' type='email' {$this->prepareAttributes()} value='{$this->default}' />";
     }
 
     /**

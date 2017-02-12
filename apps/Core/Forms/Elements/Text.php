@@ -15,7 +15,7 @@ class Text extends Elements
      */
     protected function prepareOutput()
     {
-        return "<input id='{$this->getId()}' type='text' {$this->prepareAttributes()} value='{$this->default}' />";
+        return "<input id='{$this->getId()}' name='{$this->getName()}' type='text' {$this->prepareAttributes()} value='{$this->default}' />";
     }
 
     /**

@@ -15,7 +15,7 @@ class TextArea extends Elements
      */
     protected function prepareOutput()
     {
-        return "<textarea id='{$this->getId()}' {$this->prepareAttributes()}>{$this->default}</textarea>";
+        return "<textarea id='{$this->getId()}' name='{$this->getName()}' {$this->prepareAttributes()}>{$this->default}</textarea>";
     }
 
     /**

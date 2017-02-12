@@ -17,7 +17,6 @@ margin: 0;
 padding: 0;
 background: #f1f1f1;
 float: left;
-padding-top: 0px;
 /*list-style-type: square;*/
 }
 
@@ -38,7 +37,7 @@ text-decoration: none;
 }
 
 #wpstg-tools .nav-tab-wrapper{
-    padding:0px;
+    padding:0;
 }
 
 
@@ -65,8 +64,7 @@ font-weight: bold;
 
 #tab_container .panel-container {
 background: #FFF;
-padding:20px;
-padding-top:0px;
+padding:0 20px 20px 20px;
 overflow:auto;
 }
 
@@ -74,7 +72,6 @@ overflow:auto;
 vertical-align: top;
 text-align: left;
 padding: 20px 10px 20px 0;
-width: 200px;
 line-height: 1.3;
 font-weight: bold;
 font-size: 14px;
@@ -115,7 +112,7 @@ width: 30%;
 }
 
 #tab_container ul li {
-margin-bottom:0px;
+margin-bottom:0;
 }
 
 #tab_container ul li a {
@@ -187,7 +184,7 @@ color:#777777;
 }
 
 #mashtabcontainer .mashtab-container {
-      border: 0px solid #ececec;
+      border: 0 solid #ececec;
 }
 
 /* Cloning workflow */
@@ -410,7 +407,7 @@ color:#777777;
 .wpstg-progress-bar {
 	max-width: 900px;
 	height: 27px;
-	padding: 0px;
+	padding: 0;
 	background-color: #d6d8d7;
 }
 
@@ -612,4 +609,12 @@ color:#777777;
 .wpstg-sysinfo {
     width:400px;
     height: 500px;
+}
+
+.form-table .col-title label {
+	font-weight: 600;
+}
+
+.form-table td:first-child {
+	width:30%;
 }

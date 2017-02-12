@@ -125,7 +125,7 @@ final class WPStaging
         $this->set("logger", new Logger());
 
         // Set options
-        $this->set("options", json_decode(get_option("wpstg_settings")));
+        $this->set("options", get_option("wpstg_settings"));
 
         // Set Administrator
         new Administrator($this);
@@ -143,6 +143,7 @@ final class WPStaging
      * Set a variable to DI with given name
      * @param string $name
      * @param mixed $variable
+     * @return $this
      */
     public function set($name, $variable)
     {
@@ -151,6 +152,8 @@ final class WPStaging
 
         // Add it to services
         $this->services[$name] = $variable;
+
+        return $this;
     }
 
     /**

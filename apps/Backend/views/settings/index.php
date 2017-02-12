@@ -16,7 +16,7 @@
 
     <ul class="nav-tab-wrapper">
         <?php
-        $tabs       = $this->di->get("admin-tabs")->get();
+        $tabs       = $this->di->get("tabs")->get();
         $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "general";
 
         # Loop through tabs
@@ -38,6 +38,7 @@
         endforeach;
         ?>
     </ul>
+    <h2 class="nav-tab-wrapper"></h2>
 
     <div id="tab_container" class="tab_container">
         <div class="panel-container">
@@ -197,7 +198,7 @@
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
-                                            <?php echo $form->label("wpstg_settomgs[uninstall_on_delete]")?>
+                                            <?php echo $form->label("wpstg_settings[uninstall_on_delete]")?>
                                             <span class="description">
                                                 Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted.
                                                 This will not remove staging sites files or database tables.
@@ -205,7 +206,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settomgs[uninstall_on_delete]")?>
+                                        <?php echo $form->render("wpstg_settings[uninstall_on_delete]")?>
                                     </td>
                                 </tr>
                             </tbody>

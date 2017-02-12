@@ -15,7 +15,7 @@ class File extends Elements
      */
     protected function prepareOutput()
     {
-        return "<input id='{$this->getId()}' type='file' {$this->prepareAttributes()} value='{$this->default}' />";
+        return "<input id='{$this->getId()}' name='{$this->getName()}' type='file' {$this->prepareAttributes()} value='{$this->default}' />";
     }
 
     /**

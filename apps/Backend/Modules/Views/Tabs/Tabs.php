@@ -2,10 +2,10 @@
 namespace WPStaging\Backend\Modules\Views\Tabs;
 
 /**
- * Class Settings
+ * Class Tabs
  * @package WPStaging\Backend\Modules\Views\Tabs
  */
-class Settings
+class Tabs
 {
 
     /**
@@ -15,14 +15,13 @@ class Settings
 
     /**
      * Settings constructor.
+     * @param array $tabs
      */
-    public function __construct()
+    public function __construct($tabs)
     {
-        if (!self::$tabs)
+        if (is_array($tabs))
         {
-            self::$tabs = array(
-                "general" => __("General", 'wpstg')
-            );
+            self::$tabs = $tabs;
         }
     }
 
