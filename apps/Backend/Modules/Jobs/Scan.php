@@ -13,7 +13,7 @@ if (!defined("WPINC"))
  * Class Scan
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Scan extends Job
+class Scan extends JobExec
 {
 
     /**
@@ -35,13 +35,18 @@ class Scan extends Job
     public function start()
     {
         $uncheckedTables    = array();
-        $excludedFolders    = array();
+        $excludedDirectories= array();
 
         // Clone posted
         if (isset($_POST["clone"]))
         {
             $this->options->current = $_POST["clone"];
         }
+
+        // TODO; finish it up
+        $this->options->uncheckedTables     = $uncheckedTables;
+        $this->options->clonedTables        = array();
+        $this->options->excludedDirectories = $excludedDirectories;
 
         // Save options
         $this->saveOptions();
@@ -68,6 +73,9 @@ class Scan extends Job
         $this->options->tables = $wpDB->get_col($sql);
     }
 
+    /**
+     * Get list of main directory sizes
+     */
     private function directories()
     {
         $dirs = new \DirectoryIterator(ABSPATH);
@@ -77,20 +85,29 @@ class Scan extends Job
             return;
         }
 
-        $tmpDirs = array();
+        $tmpDirs                        = array();
+        $this->options->totalUsedSpace  = 0;
+
         foreach ($dirs as $dir)
         {
-            if ($dir->isDir() && !in_array($dir->getBasename(), array('.', "..")))
+            if (!$dir->isDir() || in_array($dir->getBasename(), array('.', "..")))
             {
-                $tmpDirs[] = array(
-                    "name"  => $dir->getBasename(),
-                    "size"  => $this->getDirectorySize($dir->getRealPath()),
-                    "huma"  => $this->formatSize($this->getDirectorySize($dir->getRealPath()))
-                );
+                continue;
             }
+
+            $size                           = $this->getDirectorySize($dir->getRealPath());
+            $this->options->totalUsedSpace += $size;
+
+            $tmpDirs[] = array(
+                "name"      => $dir->getBasename(),
+                "size"      => $size,
+                "humanSize" => $this->formatSize($size)
+            );
         }
 
         $this->options->directories = $tmpDirs;
+
+        $this->hasFreeDiskSpace();
     }
 
     /**
@@ -108,6 +125,12 @@ class Scan extends Job
         if (false === $path)
         {
             return $totalBytes;
+        }
+
+        // We can use exec(), you go dude!
+        if ($this->canUseExec())
+        {
+            return $this->getDirectorySizeWithExec($path);
         }
 
         // Iterator
@@ -131,12 +154,73 @@ class Scan extends Job
     }
 
     /**
+     * @param string $path
+     * @return int
+     */
+    private function getDirectorySizeWithExec($path)
+    {
+        $os = $this->checkOS();
+
+        // OS is not supported
+        if (!in_array($os, array("WIN", "LIN"), true))
+        {
+            return 0;
+        }
+
+
+        // WIN OS
+        if ("WIN" === $os)
+        {
+            return $this->getDirectorySizeForWin($path);
+        }
+
+        // *Nix OS
+        return $this->getDirectorySizeForNix($path);
+    }
+
+    /**
+     * @param string $path
+     * @return int
+     */
+    private function getDirectorySizeForNix($path)
+    {
+        exec("du -s {$path}", $output, $return);
+
+        $size = explode("\t", $output);
+
+        if (0 == $return && count($size) == 2)
+        {
+            return (int) $size[0];
+        }
+
+        return 0;
+    }
+
+    /**
+     * @param string $path
+     * @return int
+     */
+    private function getDirectorySizeForWin($path)
+    {
+        exec("diruse {$path}", $output, $return);
+
+        $size = explode("\t", $output);
+
+        if (0 == $return && count($size) >= 4)
+        {
+            return (int) $size[0];
+        }
+
+        return 0;
+    }
+
+    /**
      * Format bytes into human readable form
      * @param int $bytes
      * @param int $precision
      * @return string
      */
-    private function formatSize($bytes, $precision = 2)
+    public function formatSize($bytes, $precision = 2)
     {
         $units  = array('B', "KB", "MB", "GB", "TB");
 
@@ -144,5 +228,25 @@ class Scan extends Job
         $pow    = pow(1000, $base - floor($base)); // Same rule for 1000
 
         return round($pow, $precision) . ' ' . $units[(int) floor($base)];
+    }
+
+    /**
+     * Checks if there is enough free disk space to create staging site
+     */
+    private function hasFreeDiskSpace()
+    {
+        if (!function_exists("disk_free_space"))
+        {
+            return;
+        }
+
+        $freeSpace = @disk_free_space(ABSPATH);
+
+        if (false === $freeSpace)
+        {
+            return;
+        }
+
+        $this->options->hasEnoughDiskSpace = ($this->options->totalUsedSpace > $freeSpace);
     }
 }

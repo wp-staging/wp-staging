@@ -387,10 +387,11 @@ class Administrator extends InjectionAware
     {
         check_ajax_referer("wpstg_ajax_nonce", "nonce");
 
+        // Scan
+        $scan = (new Scan)->start();
+
         // Get Options
-        $options = (new Scan)
-            ->start()
-            ->getOptions();
+        $options = $scan->getOptions();
 
         wp_die();
     }
