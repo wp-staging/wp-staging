@@ -14,7 +14,7 @@ use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\DI\InjectionAware;
-use \WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
+use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 
 /**
  * Class Administrator
@@ -392,6 +392,8 @@ class Administrator extends InjectionAware
 
         // Get Options
         $options = $scan->getOptions();
+
+        require_once "{$this->path}views/clone/ajax/scan.php";
 
         wp_die();
     }

@@ -1,6 +1,6 @@
 <label id="wpstg-clone-label" for="wpstg-new-clone">
     <?php echo __("Name your new site, e.g. staging, dev (keep it short):", "wpstg")?>
-    <input type="text" id="wpstg-new-clone-id" value="<?php echo $clone; ?>" <?php echo $disabled; ?>>
+    <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if (true === $options->disableInputStageName) echo " disabled='disabled'"?>>
 </label>
 
 <?php if (false === $options->hasEnoughDiskSpace):?>
@@ -56,12 +56,19 @@
     </a>
 
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
-        <?php
-        echo '<h4 style="margin:0px;">' . __('Uncheck the folders you do not want to copy. Click on them for expanding!', 'wpstg') . '<h4>';
-        wpstg_directory_structure($folders, null, false, false, $excluded_folders);
-        wpstg_show_large_files();
-        echo '<p><span id=wpstg-file-summary>' . __('Files will be copied into subfolder of: ','wpstg') . wpstg_get_clone_root_path() . '</span>';
-        ?>
+        <h4 style="margin:0">
+            <?php echo __("Uncheck the folders you do not want to copy. Click on them for expanding!", "wpstg")?>
+        </h4>
+
+        <?php echo $scan->directoryListing()?>
+
+        <p>
+            <span>
+                <?php
+                echo __("Files will be copied into subfolder of: ", "wpstg") . $options->root
+                ?>
+            </span>
+        </p>
     </div>
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
@@ -70,7 +77,7 @@
     </a>
 
     <div class="wpstg-tab-section" id="wpstg-advanced-settings">
-        <?php echo wpstg_advanced_settings()?>
+        Coming Soon...
     </div>
 
 </div>
@@ -80,5 +87,14 @@
 </button>
 
 <button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_cloning">
-    <?php  echo wpstg_return_button_title();?>
+    <?php
+    if (true === $options->isInProgress)
+    {
+        echo __("Resume Cloning", "wpstg");
+    }
+    else
+    {
+        echo __("Start Cloning", "wpstg");
+    }
+    ?>
 </button>

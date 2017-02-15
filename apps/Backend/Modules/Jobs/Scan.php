@@ -17,10 +17,31 @@ class Scan extends JobExec
 {
 
     /**
+     * @var object
+     */
+    private $directoryStructure;
+
+    /**
+     * @var array
+     */
+    private $bigFiles = array();
+
+    private $maxFileSize;
+
+    /**
      * Upon class initialization
      */
     protected function initialize()
     {
+        $this->directoryStructure = new \stdClass();
+
+        $settings = get_option("wpstg_settings", array());
+
+        if (isset($settings["wpstg_batch_size"]) && (int) $settings["wpstg_batch_size"] > 0)
+        {
+            $this->maxFileSize = (int) $settings["wpstg_batch_size"] * 1000000;
+        }
+
         // Scan database
         $this->database();
 
@@ -34,19 +55,26 @@ class Scan extends JobExec
      */
     public function start()
     {
-        $uncheckedTables    = array();
-        $excludedDirectories= array();
+        $uncheckedTables                        = array();
+        $excludedDirectories                    = array();
+
+
+        $this->options->disableInputStageName   = false;
+        $this->options->isInProgress            = false;
+        $this->options->root                    = str_replace(array("\\", '/'), DIRECTORY_SEPARATOR, ABSPATH);
+        $this->options->existingClones          = get_option("wpstg_existing_clones", array());
 
         // Clone posted
         if (isset($_POST["clone"]))
         {
-            $this->options->current = $_POST["clone"];
+            $this->options->current                 = $_POST["clone"];
+            $this->options->disableInputStageName   = true;
         }
 
         // TODO; finish it up
-        $this->options->uncheckedTables     = $uncheckedTables;
-        $this->options->clonedTables        = array();
-        $this->options->excludedDirectories = $excludedDirectories;
+        $this->options->uncheckedTables         = $uncheckedTables;
+        $this->options->clonedTables            = array();
+        $this->options->excludedDirectories     = $excludedDirectories;
 
         // Save options
         $this->saveOptions();
@@ -63,30 +91,73 @@ class Scan extends JobExec
 
         if (strlen($wpDB->prefix) > 0)
         {
-            $sql = "SHOW TABLES LIKE '{$wpDB->prefix}%'";
+            $sql = "SHOW TABLE STATUS LIKE '{$wpDB->prefix}%'";
         }
         else
         {
-            $sql = "SHOW TABLES";
+            $sql = "SHOW TABLE STATUS";
         }
 
-        $this->options->tables = $wpDB->get_col($sql);
+        $this->options->tables = $wpDB->get_results($sql);
     }
 
     /**
      * Get list of main directory sizes
+     * @param null|string $path
      */
-    private function directories()
+    private function directories($path = null)
     {
-        $dirs = new \DirectoryIterator(ABSPATH);
+        if (null === $path)
+        {
+            $path = ABSPATH;
+        }
+
+        $dirs = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator(ABSPATH, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST,
+            \RecursiveIteratorIterator::CATCH_GET_CHILD
+        );
+
+        $tmpDirs                                    = array();
+        $this->directoryStructure->totalUsedSpace   = 0;
+        foreach($dirs as $dir)
+        {
+            if (!$dir->isDir() || in_array($dir->getBasename(), array('.', "..")))
+            {
+                continue;
+            }
+
+            $size                                      = $this->getDirectorySize($dir->getRealPath());
+            $this->directoryStructure->totalUsedSpace += $size;
+
+            if ($this->maxFileSize < $size)
+            {
+                $this->bigFiles = array(
+                    "name"      => $dir->getBasename(),
+                    "dir"       => $dir->getPath(),
+                    "humanSize" => $this->formatSize($size)
+                );
+            }
+
+            $tmpDirs[] = array(
+                "name"      => $dir->getBasename(),
+                "dir"       => $dir->getRealPath(),
+                "humanSize" => $this->formatSize($size)
+            );
+        }
+
+        $this->directoryStructure->directories = $tmpDirs;
+/*
+        $dirs                                   = new \DirectoryIterator($path);
+        $this->directoryStructure->directories  = array();
 
         if (!$dirs)
         {
             return;
         }
 
-        $tmpDirs                        = array();
-        $this->options->totalUsedSpace  = 0;
+        $tmpDirs                                    = array();
+        $this->directoryStructure->totalUsedSpace   = 0;
 
         foreach ($dirs as $dir)
         {
@@ -95,17 +166,27 @@ class Scan extends JobExec
                 continue;
             }
 
-            $size                           = $this->getDirectorySize($dir->getRealPath());
-            $this->options->totalUsedSpace += $size;
+            $size                                      = $this->getDirectorySize($dir->getRealPath());
+            $this->directoryStructure->totalUsedSpace += $size;
+
+            if ($this->maxFileSize < $size)
+            {
+                $this->bigFiles = array(
+                    "name"      => $dir->getBasename(),
+                    "dir"       => $dir->getPath(),
+                    "humanSize" => $this->formatSize($size)
+                );
+            }
 
             $tmpDirs[] = array(
                 "name"      => $dir->getBasename(),
-                "size"      => $size,
+                "dir"       => $dir->getRealPath(),
                 "humanSize" => $this->formatSize($size)
             );
         }
 
-        $this->options->directories = $tmpDirs;
+        $this->directoryStructure->directories = $tmpDirs;
+        */
 
         $this->hasFreeDiskSpace();
     }
@@ -186,7 +267,7 @@ class Scan extends JobExec
     {
         exec("du -s {$path}", $output, $return);
 
-        $size = explode("\t", $output);
+        $size = explode("\t", $output[0]);
 
         if (0 == $return && count($size) == 2)
         {
@@ -204,7 +285,7 @@ class Scan extends JobExec
     {
         exec("diruse {$path}", $output, $return);
 
-        $size = explode("\t", $output);
+        $size = explode("\t", $output[0]);
 
         if (0 == $return && count($size) >= 4)
         {
@@ -247,6 +328,50 @@ class Scan extends JobExec
             return;
         }
 
-        $this->options->hasEnoughDiskSpace = ($this->options->totalUsedSpace > $freeSpace);
+        $this->options->hasEnoughDiskSpace = ($freeSpace >= $this->directoryStructure->totalUsedSpace);
+    }
+
+    /**
+     * @param null|string $directories
+     * @return string
+     */
+    public function directoryListing($directories = null)
+    {
+        $this->directories($directories);
+
+        if (count($this->directoryStructure->directories) < 1)
+        {
+            return '';
+        }
+
+        $output = (null !== $directories) ? "<div class=\"wpstg-dir wpstg-subdir\">" : '';
+
+        foreach ($this->directoryStructure->directories as $directory)
+        {
+            $isChecked = !in_array($directory["dir"], $this->options->excludedDirectories);
+
+            $output .= "<div class='wpstg-dir'>";
+            $output .= "<input type='checkbox' class='wpstg-check-dir'";
+                if ($isChecked) $output .= " checked";
+            $output .= " name='selectedDirectories[]' value='{$directory["dir"]}'>";
+
+            $output .= "<a href='#' class='wpstg-expand-dirs";
+                if ($isChecked) $output .= " disabled";
+                $output .= "'>{$directory["name"]}";
+            $output .= "</a>";
+
+            $output .= "<span class='wpstg-size-info'>{$directory["humanSize"]}</span>";
+
+            $output .= $this->directoryListing($directory["dir"]);
+
+            $output .= "</div>";
+        }
+
+        if (null !== $directories)
+        {
+            $output .= "</div>";
+        }
+
+        return $output;
     }
 }
