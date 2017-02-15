@@ -38,27 +38,11 @@ class Administrator extends InjectionAware
      */
     public function initialize()
     {
-        $this->loadDependencies();
         $this->defineHooks();
 
         // Path to backend
         $this->path = plugin_dir_path(__FILE__);
         $this->url  = plugin_dir_url(__FILE__) . "public/";
-    }
-
-    /**
-     * Load Dependencies
-     */
-    private function loadDependencies()
-    {
-        // Set loader
-        $this->di
-            // Set loader
-            ->set("data", new Data())
-            // Set cache
-            ->set("database", new Database())
-            // Set logger
-            ->set("files", new Files());
     }
 
     /**

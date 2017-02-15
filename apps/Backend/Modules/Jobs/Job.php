@@ -29,6 +29,11 @@ abstract class Job implements JobInterface
     protected $options;
 
     /**
+     * @var object
+     */
+    protected $settings;
+
+    /**
      * Job constructor.
      */
     public function __construct()
@@ -38,9 +43,16 @@ abstract class Job implements JobInterface
 
         $this->options  = $this->cache->get("clone_options");
 
+        $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
+
         if (!$this->options)
         {
             $this->options = new \stdClass();
+        }
+
+        if (!$this->settings)
+        {
+            $this->settings = new \stdClass();
         }
 
         if (method_exists($this, "initialize"))

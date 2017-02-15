@@ -30,16 +30,16 @@
         </h4>
         <?php
         foreach ($options->tables as $table):
-            $attributes = in_array($table->Name, $options->uncheckedTables) ? '' : "checked";
-            $attributes .= in_array($table->Name, $options->clonedTables) ? " disabled" : '';
+            $attributes = in_array($table->name, $options->uncheckedTables) ? '' : "checked";
+            $attributes .= in_array($table->name, $options->clonedTables) ? " disabled" : '';
             ?>
             <div class="wpstg-db-table">
                 <label>
-                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->Name?>" <?php echo $attributes?>>
-                    <?php echo $table->Name?>
+                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->name?>" <?php echo $attributes?>>
+                    <?php echo $table->name?>
                 </label>
                 <span class="wpstg-size-info">
-				<?php echo $scan->formatSize($table->Data_length + $table->Index_length)?>
+				<?php echo $scan->formatSize($table->size)?>
 			</span>
             </div>
         <?php endforeach ?>
