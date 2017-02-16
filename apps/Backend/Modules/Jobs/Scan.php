@@ -28,7 +28,7 @@ class Scan extends Job
         $this->options->tables  = (new Database)->getTables();
 
         // Files
-        $this->files = new Files();
+        $this->files            = new Files();
     }
 
     /**

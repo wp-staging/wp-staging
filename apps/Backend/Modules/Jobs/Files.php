@@ -119,21 +119,38 @@ class Files extends Job
      */
     public function directories()
     {
-        $directories = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator(ABSPATH, \RecursiveDirectoryIterator::SKIP_DOTS),
-            \RecursiveIteratorIterator::SELF_FIRST,
-            \RecursiveIteratorIterator::CATCH_GET_CHILD
-        );
+        $directories = new \DirectoryIterator(ABSPATH);
 
         foreach($directories as $directory)
         {
-            // Files
-            if ($directory->isFile())
+            // Not a valid directory
+            if (false === ($path = $this->getPath($directory)))
             {
-                $this->handleFile($directory);
                 continue;
             }
 
+            $this->handleDirectory($path);
+
+            // Get Sub-directories
+            $this->getSubDirectories($directory->getRealPath());
+        }
+
+        // Gather Plugins
+        $this->getSubDirectories(WP_PLUGIN_DIR);
+
+        // Gather Themes
+        $this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "themes");
+    }
+
+    /**
+     * @param string $path
+     */
+    public function getSubDirectories($path)
+    {
+        $directories = new \DirectoryIterator($path);
+
+        foreach($directories as $directory)
+        {
             // Not a valid directory
             if (false === ($path = $this->getPath($directory)))
             {
