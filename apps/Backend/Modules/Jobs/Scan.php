@@ -25,7 +25,8 @@ class Scan extends Job
     protected function initialize()
     {
         // Database
-        $this->options->tables  = (new Database)->getTables();
+        $database               = new Database();
+        $this->options->tables  = $database->getTables();
 
         // Files
         $this->files            = new Files();
