@@ -266,7 +266,7 @@ class Files extends Job
     /**
      * Gets size of given directory
      * @param string $path
-     * @return int
+     * @return int|null
      */
     private function getDirectorySize($path)
     {
@@ -292,7 +292,8 @@ class Files extends Job
         }
 
         // Good, old PHP... slow but will get the job done
-        return $this->getDirectorySizeWithPHP($path);
+        //return $this->getDirectorySizeWithPHP($path);
+        return null;
     }
 
     private function getDirectorySizeWithPHP($path)

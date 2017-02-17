@@ -73,6 +73,11 @@ class Scan extends Job
      */
     public function formatSize($bytes, $precision = 2)
     {
+        if ((int) $bytes < 1)
+        {
+            return '';
+        }
+
         $units  = array('B', "KB", "MB", "GB", "TB");
 
         $bytes  = (int) $bytes;

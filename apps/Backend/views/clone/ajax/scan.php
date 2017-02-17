@@ -62,6 +62,15 @@
 
         <?php echo $scan->directoryListing()?>
 
+        <textarea id="wpstg_extraDirectories" name="wpstg_extraDirectories"></textarea>
+        <p>
+            <span>
+                <?php
+                echo __("Add additional extra directories you'd like to clone to your staging site", "wpstg")
+                ?>
+            </span>
+        </p>
+
         <p>
             <span>
                 <?php
