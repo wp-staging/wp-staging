@@ -101,7 +101,9 @@ class Scan extends Job
         $output = '';
         foreach ($directories as $name => $directory)
         {
-            $data = array_shift($directory);
+            // Need to preserve keys so no array_shift()
+            $data = reset($directory);
+            unset($directory[key($directory)]);
 
             $isChecked = !in_array($data["path"], $this->options->excludedDirectories);
 

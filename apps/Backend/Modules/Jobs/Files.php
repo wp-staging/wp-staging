@@ -51,11 +51,11 @@ class Files extends Job
      */
     public function initialize()
     {
-        $this->directories();
-        $this->hasFreeDiskSpace();
         $this->OS           = $this->getOS();
         $this->canUseExec   = $this->canUse("exec");
         $this->canUsePopen  = $this->canUsePopen();
+        $this->directories();
+        $this->hasFreeDiskSpace();
     }
 
     /**
@@ -140,6 +140,9 @@ class Files extends Job
 
         // Gather Themes
         $this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "themes");
+
+        // Gather Uploads
+        $this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "uploads");
     }
 
     /**
