@@ -38,6 +38,7 @@ class Cache
      * @param null|int $lifetime
      * @param null|string $cacheDir
      * @param null|string $cacheExtension
+     * @throws \Exception
      */
     public function __construct($lifetime = null, $cacheDir = null, $cacheExtension = null)
     {
@@ -65,6 +66,12 @@ class Cache
         if (!empty($cacheExtension))
         {
             $this->cacheExtension = $cacheExtension;
+        }
+
+        // If cache directory doesn't exists, create it
+        if (!is_dir($this->cacheDir) && !@mkdir($this->cacheDir, 0775, true))
+        {
+            throw new \Exception("Failed to create cache directory!");
         }
     }
 

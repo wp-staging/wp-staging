@@ -37,4 +37,11 @@ if (!defined("WPINC"))
 
 require_once plugin_dir_path(__FILE__) . "apps/Core/WPStaging.php";
 
-\WPStaging\WPStaging::getInstance()->set("wpdb", $wpdb)->run();
+$wpStaging = \WPStaging\WPStaging::getInstance();
+
+if (isset($wpdb))
+{
+    $wpStaging->set("wpdb", $wpdb);
+}
+
+$wpStaging->run();
