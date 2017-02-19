@@ -113,7 +113,7 @@ class Scan extends Job
             $output .= " name='selectedDirectories[]' value='{$data["path"]}'>";
 
             $output .= "<a href='#' class='wpstg-expand-dirs";
-                if ($isChecked) $output .= " disabled";
+                if (false === $isChecked) $output .= " disabled";
                 $output .= "'>{$name}";
             $output .= "</a>";
 

@@ -45,7 +45,7 @@
         <?php endforeach ?>
         <div>
             <a href="#" class="wpstg-button-unselect">
-                Unselect all tables
+                Un-check All
             </a>
         </div>
     </div>

@@ -14,19 +14,19 @@
     $(document).ready(function () {
 
         // Unselect/select all db tables    
-        var ischecked = true;
-        $('#wpstg-workflow').on("click", ".wpstg-button-unselect", function (e) {
-            e.preventDefault();
-            if (ischecked == false) {
-                $(".wpstg-db-table-checkboxes").attr("checked", "checked");
-                $(".wpstg-button-unselect").html("Uncheck All");
-                ischecked = true;
-            } else {
-                $(".wpstg-db-table-checkboxes").removeAttr("checked");
-                $(".wpstg-button-unselect").html("Check All");
-                ischecked = false;
-            }
-        });
+        // var ischecked = true;
+        // $('#wpstg-workflow').on("click", ".wpstg-button-unselect", function (e) {
+        //     e.preventDefault();
+        //     if (ischecked == false) {
+        //         $(".wpstg-db-table-checkboxes").attr("checked", "checked");
+        //         $(".wpstg-button-unselect").html("Uncheck All");
+        //         ischecked = true;
+        //     } else {
+        //         $(".wpstg-db-table-checkboxes").removeAttr("checked");
+        //         $(".wpstg-button-unselect").html("Check All");
+        //         ischecked = false;
+        //     }
+        // });
 
         // Ajax loading spinner    
         var admin_url = ajaxurl.replace('/admin-ajax.php', '');
@@ -66,78 +66,78 @@
                     !isNaN(parseInt(value, 10));
         }
 
-        /**
-         * Do some checks first for the clone name. 
-         * Check the max length of string and if clone name already exists
-         */
-        $('#wpstg-workflow').on('keyup', '#wpstg-new-clone-id', function () {
-            var data = {
-                action: 'wpstg_check_clone',
-                cloneID: this.value
-            };
-            $.post(ajaxurl, data, function (resp, status, xhr) {
-                if (resp.status !== "fail") {
-                    $('#wpstg-new-clone-id').removeClass('wpstg-error-input');
-                    $('#wpstg-start-cloning').removeAttr('disabled');
-                    $('#wpstg-clone-id-error').text(resp.message);
-                } else {
-                    $('#wpstg-new-clone-id').addClass('wpstg-error-input');
-                    $('#wpstg-start-cloning').attr('disabled', 'disabled');
-                    $('#wpstg-clone-id-error').text(resp.message);
-                }
-            }).fail(function (xhr) { // Will be executed when $.post() fails
-                wpstg_show_error_die('Fatal Error: This should not happen but is often caused by other plugins. Enable first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
-                console.log(xhr.statusText);
-            });
-        });
+        // /**
+        //  * Do some checks first for the clone name.
+        //  * Check the max length of string and if clone name already exists
+        //  */
+        // $('#wpstg-workflow').on('keyup', '#wpstg-new-clone-id', function () {
+        //     var data = {
+        //         action: 'wpstg_check_clone',
+        //         cloneID: this.value
+        //     };
+        //     $.post(ajaxurl, data, function (resp, status, xhr) {
+        //         if (resp.status !== "fail") {
+        //             $('#wpstg-new-clone-id').removeClass('wpstg-error-input');
+        //             $('#wpstg-start-cloning').removeAttr('disabled');
+        //             $('#wpstg-clone-id-error').text(resp.message);
+        //         } else {
+        //             $('#wpstg-new-clone-id').addClass('wpstg-error-input');
+        //             $('#wpstg-start-cloning').attr('disabled', 'disabled');
+        //             $('#wpstg-clone-id-error').text(resp.message);
+        //         }
+        //     }).fail(function (xhr) { // Will be executed when $.post() fails
+        //         wpstg_show_error_die('Fatal Error: This should not happen but is often caused by other plugins. Enable first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+        //         console.log(xhr.statusText);
+        //     });
+        // });
 
-        /*
-         * Opens the Sync Data settings (pro version only)
-         */
-        $('#wpstg-workflow').on('click', '.wpstg-sync-settings', function (e) {
-            e.preventDefault();
+        // /*
+        //  * Opens the Sync Data settings (pro version only)
+        //  */
+        // $('#wpstg-workflow').on('click', '.wpstg-sync-settings', function (e) {
+        //     e.preventDefault();
+        //
+        //     var data = {
+        //         action: 'render_settings_page',
+        //         clone: $(this).data('clone'),
+        //         nonce: wpstg.nonce
+        //     };
+        //     $('#wpstg-workflow').load(ajaxurl, data);
+        // })
 
-            var data = {
-                action: 'render_settings_page',
-                clone: $(this).data('clone'),
-                nonce: wpstg.nonce
-            };
-            $('#wpstg-workflow').load(ajaxurl, data);
-        })
 
-
-        /**
-         * Check cloning path
-         */
-        $('#wpstg-workflow').on('keyup', '#wpstg-clone-path', function () {
-            var path = this.value;
-            if (path.length < 1) {
-                $('#wpstg-clone-path').removeClass('wpstg-error-input');
-                $('#wpstg-start-cloning').removeAttr('disabled');
-                $('#wpstg-path-error').text('');
-                return true;
-            }
-
-            var data = {
-                action: 'wpstg_check_path',
-                path: path
-            };
-
-            $.post(ajaxurl, data, function (resp, status, xhr) {
-                if (resp) {
-                    $('#wpstg-clone-path').removeClass('wpstg-error-input');
-                    $('#wpstg-start-cloning').removeAttr('disabled');
-                    $('#wpstg-path-error').text('');
-                } else {
-                    $('#wpstg-clone-path').addClass('wpstg-error-input');
-                    $('#wpstg-start-cloning').attr('disabled', 'disabled');
-                    $('#wpstg-path-error').text('Folder does not exist or is not writable!');
-                }
-            }).fail(function (xhr) { // Will be executed when $.post() fails
-                wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
-                console.log(xhr.statusText);
-            });
-        });
+        // /**
+        //  * Check cloning path
+        //  */
+        // $('#wpstg-workflow').on('keyup', '#wpstg-clone-path', function () {
+        //     var path = this.value;
+        //     if (path.length < 1) {
+        //         $('#wpstg-clone-path').removeClass('wpstg-error-input');
+        //         $('#wpstg-start-cloning').removeAttr('disabled');
+        //         $('#wpstg-path-error').text('');
+        //         return true;
+        //     }
+        //
+        //     var data = {
+        //         action: 'wpstg_check_path',
+        //         path: path
+        //     };
+        //
+        //     $.post(ajaxurl, data, function (resp, status, xhr) {
+        //         if (resp) {
+        //             $('#wpstg-clone-path').removeClass('wpstg-error-input');
+        //             $('#wpstg-start-cloning').removeAttr('disabled');
+        //             $('#wpstg-path-error').text('');
+        //         } else {
+        //             $('#wpstg-clone-path').addClass('wpstg-error-input');
+        //             $('#wpstg-start-cloning').attr('disabled', 'disabled');
+        //             $('#wpstg-path-error').text('Folder does not exist or is not writable!');
+        //         }
+        //     }).fail(function (xhr) { // Will be executed when $.post() fails
+        //         wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this:<br> ' + xhr.status + ' ' + xhr.statusText);
+        //         console.log(xhr.statusText);
+        //     });
+        // });
 
         /**
          * Edit profile
@@ -179,37 +179,37 @@
             });
         });
 
-        /**
-         * Next step
-         */
-        $('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
-            e.preventDefault();
-            if ($(this).attr('disabled'))
-                return false;
-
-            $('#wpstg-workflow').addClass('loading');
-            var data = {
-                action: $(this).data('action'),
-                nonce: wpstg.nonce
-            };
-            if (data.action == 'wpstg_cloning') {
-                data.cloneID = $('#wpstg-new-clone-id').val() || new Date().getTime();
-                wpstg_additional_data(data, false);
-            }
-
-            $('#wpstg-workflow').load(ajaxurl, data, function (response, status, xhr) {
-                if (status == 'error') { //Unknown error
-                    console.log(xhr.status + ' ' + xhr.statusText);
-                    wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this: ' + xhr.status + ' ' + xhr.statusText);
-                }
-                $('#wpstg-workflow').removeClass('loading');
-                $('.wpstg-current-step').removeClass('wpstg-current-step')
-                        .next('li').addClass('wpstg-current-step');
-                if (data.action == 'wpstg_cloning') {
-                    clone_db();
-                }
-            });
-        });
+        // /**
+        //  * Next step
+        //  */
+        // $('#wpstg-workflow').on('click', '.wpstg-next-step-link', function (e) {
+        //     e.preventDefault();
+        //     if ($(this).attr('disabled'))
+        //         return false;
+        //
+        //     $('#wpstg-workflow').addClass('loading');
+        //     var data = {
+        //         action: $(this).data('action'),
+        //         nonce: wpstg.nonce
+        //     };
+        //     if (data.action == 'wpstg_cloning') {
+        //         data.cloneID = $('#wpstg-new-clone-id').val() || new Date().getTime();
+        //         wpstg_additional_data(data, false);
+        //     }
+        //
+        //     $('#wpstg-workflow').load(ajaxurl, data, function (response, status, xhr) {
+        //         if (status == 'error') { //Unknown error
+        //             console.log(xhr.status + ' ' + xhr.statusText);
+        //             wpstg_show_error_die('Fatal Error: This should not happen but is most often caused by other plugins. Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not help, enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out which plugin is causing this: ' + xhr.status + ' ' + xhr.statusText);
+        //         }
+        //         $('#wpstg-workflow').removeClass('loading');
+        //         $('.wpstg-current-step').removeClass('wpstg-current-step')
+        //                 .next('li').addClass('wpstg-current-step');
+        //         if (data.action == 'wpstg_cloning') {
+        //             clone_db();
+        //         }
+        //     });
+        // });
 
         /**
          * Previous step
@@ -326,30 +326,30 @@
             });
         });
 
-        /**
-         * Show error message and die()
-         * Writes error message into log file
-         * 
-         * @param {string} $error notice
-         * @returns void
-         */
-        function wpstg_show_error_die(error) {
-            $('#wpstg-try-again').css('display', 'inline-block');
-            $('#wpstg-cancel-cloning').text('Reset');
-            $('#wpstg-cloning-result').text('Fail');
-            $('#wpstg-error-wrapper').show();
-            $('#wpstg-error-details').show();
-            $('#wpstg-error-details').html(error);
-            $('#wpstg-loader').hide();
-            isFinished = true; // die cloning process
-            console.log(error);
-            var add_error = ' Fatal Error: This should not happen! Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not fix it enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out what is causing this.';
-            var data = {
-                action: 'wpstg_error_processing',
-                wpstg_error_msg: error + add_error
-            };
-            $.post(ajaxurl, data);
-        }
+        // /**
+        //  * Show error message and die()
+        //  * Writes error message into log file
+        //  *
+        //  * @param {string} $error notice
+        //  * @returns void
+        //  */
+        // function wpstg_show_error_die(error) {
+        //     $('#wpstg-try-again').css('display', 'inline-block');
+        //     $('#wpstg-cancel-cloning').text('Reset');
+        //     $('#wpstg-cloning-result').text('Fail');
+        //     $('#wpstg-error-wrapper').show();
+        //     $('#wpstg-error-details').show();
+        //     $('#wpstg-error-details').html(error);
+        //     $('#wpstg-loader').hide();
+        //     isFinished = true; // die cloning process
+        //     console.log(error);
+        //     var add_error = ' Fatal Error: This should not happen! Try first the option "Optimizer" in WP Staging->Settings and try again. If this does not fix it enable <a href="https://codex.wordpress.org/Debugging_in_WordPress" target="_blank">wordpress debug mode</a> to find out what is causing this.';
+        //     var data = {
+        //         action: 'wpstg_error_processing',
+        //         wpstg_error_msg: error + add_error
+        //     };
+        //     $.post(ajaxurl, data);
+        // }
 
 
         /**
@@ -611,44 +611,44 @@
             location.reload();
         });
 
-        /**
-         * Tabs
-         */
-        $('#wpstg-workflow').on('click', '.wpstg-tab-header', function (e) {
-            e.preventDefault();
-            var section = $(this).data('id');
-            $(this).toggleClass('expand');
-            $(section).slideToggle();
-            if ($(this).hasClass('expand'))
-                $(this).find('.wpstg-tab-triangle').html('&#9660;');
-            else
-                $(this).find('.wpstg-tab-triangle').html('&#9658;');
+        // /**
+        //  * Tabs
+        //  */
+        // $('#wpstg-workflow').on('click', '.wpstg-tab-header', function (e) {
+        //     e.preventDefault();
+        //     var section = $(this).data('id');
+        //     $(this).toggleClass('expand');
+        //     $(section).slideToggle();
+        //     if ($(this).hasClass('expand'))
+        //         $(this).find('.wpstg-tab-triangle').html('&#9660;');
+        //     else
+        //         $(this).find('.wpstg-tab-triangle').html('&#9658;');
+        //
+        // });
 
-        });
-
-        /**
-         * Directory structure
-         */
-        $('#wpstg-workflow').on('click', '.wpstg-expand-dirs', function (e) {
-            e.preventDefault();
-            if (!$(this).hasClass('disabled'))
-                $(this).siblings('.wpstg-subdir').slideToggle();
-        });
-
-
-        $('#wpstg-workflow').on('change', '.wpstg-check-dir', function () {
-            var dir = $(this).parent('.wpstg-dir');
-            if (this.checked) {
-                dir.parents('.wpstg-dir').children('.wpstg-check-dir').attr('checked', 'checked');
-                dir.find('.wpstg-expand-dirs').removeClass('disabled');
-                dir.find('.wpstg-subdir .wpstg-check-dir').attr('checked', 'checked');
-            } else {
-                dir.find('.wpstg-dir .wpstg-check-dir').removeAttr('checked');
-                dir.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
-                dir.find('.wpstg-check-subdirs').data('action', 'check').text('check');
-                dir.children('.wpstg-subdir').slideUp();
-            }
-        });
+        // /**
+        //  * Directory structure
+        //  */
+        // $('#wpstg-workflow').on('click', '.wpstg-expand-dirs', function (e) {
+        //     e.preventDefault();
+        //     if (!$(this).hasClass('disabled'))
+        //         $(this).siblings('.wpstg-subdir').slideToggle();
+        // });
+        //
+        //
+        // $('#wpstg-workflow').on('change', '.wpstg-check-dir', function () {
+        //     var dir = $(this).parent('.wpstg-dir');
+        //     if (this.checked) {
+        //         dir.parents('.wpstg-dir').children('.wpstg-check-dir').attr('checked', 'checked');
+        //         dir.find('.wpstg-expand-dirs').removeClass('disabled');
+        //         dir.find('.wpstg-subdir .wpstg-check-dir').attr('checked', 'checked');
+        //     } else {
+        //         dir.find('.wpstg-dir .wpstg-check-dir').removeAttr('checked');
+        //         dir.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
+        //         dir.find('.wpstg-check-subdirs').data('action', 'check').text('check');
+        //         dir.children('.wpstg-subdir').slideUp();
+        //     }
+        // });
 
         /**
          * install must-use plugin
@@ -799,21 +799,21 @@
     });
 })(jQuery);
 
-// Load twitter button async
-window.twttr = (function (d, s, id) {
-    var js, fjs = d.getElementsByTagName(s)[0],
-            t = window.twttr || {};
-    if (d.getElementById(id))
-        return t;
-    js = d.createElement(s);
-    js.id = id;
-    js.src = "https://platform.twitter.com/widgets.js";
-    fjs.parentNode.insertBefore(js, fjs);
-
-    t._e = [];
-    t.ready = function (f) {
-        t._e.push(f);
-    };
-
-    return t;
-}(document, "script", "twitter-wjs"));
+// // Load twitter button async
+// window.twttr = (function (d, s, id) {
+//     var js, fjs = d.getElementsByTagName(s)[0],
+//             t = window.twttr || {};
+//     if (d.getElementById(id))
+//         return t;
+//     js = d.createElement(s);
+//     js.id = id;
+//     js.src = "https://platform.twitter.com/widgets.js";
+//     fjs.parentNode.insertBefore(js, fjs);
+//
+//     t._e = [];
+//     t.ready = function (f) {
+//         t._e.push(f);
+//     };
+//
+//     return t;
+// }(document, "script", "twitter-wjs"));

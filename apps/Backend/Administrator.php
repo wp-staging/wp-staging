@@ -302,7 +302,7 @@ class Administrator extends InjectionAware
         );
 
         wp_enqueue_style(
-            'wpstg-admin',
+            "wpstg-admin",
             $this->url . "css/wpstg-admin" . $suffix . ".css",
             $this->di->getVersion()
         );
@@ -327,6 +327,7 @@ class Administrator extends InjectionAware
                 "wpstg"
             ),
             "cpu_load"                              => $this->di->getCPULoadSetting(),
+            "settings"                              => (object) array() // TODO add settings?
         ));
     }
 
