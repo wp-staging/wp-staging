@@ -72,7 +72,7 @@ var WPStaging = (function($)
         var $workFlow       = cache.get("#wpstg-workflow"),
             isAllChecked    = true,
             urlSpinner      = ajaxurl.replace("/admin-ajax.php", '') + "/images/spinner",
-            ajaxSpinner;
+            timer, ajaxSpinner;
 
         if (2 < window.devicePixelRatio)
         {
@@ -86,21 +86,21 @@ var WPStaging = (function($)
         $workFlow
             // Check / Un-check Database Tables
             .on("click", ".wpstg-button-unselect", function (e) {
-            e.preventDefault();
+                e.preventDefault();
 
-            if (false === isAllChecked)
-            {
-                cache.get(".wpstg-db-table-checkboxes").prop("checked", true);
-                cache.get(".wpstg-button-unselect").text("Un-check All");
-                isAllChecked = true;
-            }
-            else
-            {
-                cache.get(".wpstg-db-table-checkboxes").prop("checked", false);
-                cache.get(".wpstg-button-unselect").text("Check All");
-                isAllChecked = false;
-            }
-        })
+                if (false === isAllChecked)
+                {
+                    cache.get(".wpstg-db-table-checkboxes").prop("checked", true);
+                    cache.get(".wpstg-button-unselect").text("Un-check All");
+                    isAllChecked = true;
+                }
+                else
+                {
+                    cache.get(".wpstg-db-table-checkboxes").prop("checked", false);
+                    cache.get(".wpstg-button-unselect").text("Check All");
+                    isAllChecked = false;
+                }
+            })
             // Expand Directories
             .on("click", ".wpstg-expand-dirs", function (e) {
                 e.preventDefault();
@@ -129,57 +129,88 @@ var WPStaging = (function($)
                     $directory.find(".wpstg-check-subdirs").data("action", "check").text("check");
                     $directory.children(".wpstg-subdir").slideUp();
                 }
-        })
+            })
             // Check the max length of the clone name and if the clone name already exists
-            .on('keyup', '#wpstg-new-clone-id', function () {
+            .on("keyup", "#wpstg-new-clone-id", function () {
+
+                // This request was already sent, clear it up!
+                if ("number" === typeof(timer))
+                {
+                    clearInterval(timer);
+                }
 
                 var cloneID = this.value;
 
-                $.ajax({
-                    url     : ajaxurl,
-                    type    : "POST",
-                    dataType: "json",
-                    cache   : false,
-                    data    : {
-                        action  : "wpstg_check_clone",
-                        cloneID : cloneID
-                    },
-                    error       : function(xhr, textStatus, errorThrown) {
-                        console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
-                        console.log(textStatus);
-
-                        showError(
-                            "Fatal Error: This should not happen but is most often caused by other plugins. " +
-                            "Try first the option 'Optimizer' in WP Staging->Settings and try again. " +
-                            "If this does not help, enable " +
-                            "<a href='https://codex.wordpress.org/Debugging_in_WordPress' target='_blank'>wordpress debug mode</a> " +
-                            "to find out which plugin is causing this."
+                timer = setTimeout(
+                    function() {
+                        ajax(
+                            {
+                                action  : "wpstg_check_clone",
+                                cloneID : cloneID
+                            },
+                            function(response)
+                            {
+                                if (response.status === "success")
+                                {
+                                    cache.get("#wpstg-new-clone-id").removeClass("wpstg-error-input");
+                                    cache.get("#wpstg-start-cloning").removeAttr("disabled");
+                                    cache.get("#wpstg-clone-id-error").text('');
+                                }
+                                else
+                                {
+                                    cache.get("#wpstg-new-clone-id").addClass("wpstg-error-input");
+                                    cache.get("#wpstg-start-cloning").prop("disabled", true);
+                                    cache.get("#wpstg-clone-id-error").text(response.message);
+                                }
+                            },
+                            "json"
                         );
                     },
-                    success     : function(data) {
-                        if (data.status === "success")
-                        {
-                            cache.get("#wpstg-new-clone-id").removeClass("wpstg-error-input");
-                            cache.get("#wpstg-start-cloning").removeAttr("disabled");
-                            cache.get("#wpstg-clone-id-error").text(data.message);
-                        }
-                        else
-                        {
-                            cache.get("#wpstg-new-clone-id").addClass("wpstg-error-input");
-                            cache.get("#wpstg-start-cloning").prop("disabled", true);
-                            cache.get("#wpstg-clone-id-error").text(data.message);
-                        }
-                    },
-                    statusCode  : {
-                        404: function() {
-                            showError("Something went wrong; can't find ajax request URL!");
-                        },
-                        500: function() {
-                            showError("Something went wrong; internal server error while processing the request!");
-                        }
-                    }
-                });
+                    500
+                );
             });
+    };
+
+    var ajax    = function(data, callback, dataType)
+    {
+        if ("undefined" === typeof(dataType))
+        {
+            dataType = "HTML";
+        }
+
+        $.ajax({
+            url         : ajaxurl,
+            type        : "POST",
+            dataType    : dataType,
+            cache       : false,
+            data        : data,
+            error       : function(xhr, textStatus, errorThrown) {
+                console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
+                console.log(textStatus);
+
+                showError(
+                    "Fatal Error: This should not happen but is most often caused by other plugins. " +
+                    "Try first the option 'Optimizer' in WP Staging->Settings and try again. " +
+                    "If this does not help, enable " +
+                    "<a href='https://codex.wordpress.org/Debugging_in_WordPress' target='_blank'>wordpress debug mode</a> " +
+                    "to find out which plugin is causing this."
+                );
+            },
+            success     : function(data) {
+                if ("function" === typeof(callback))
+                {
+                    callback(data);
+                }
+            },
+            statusCode  : {
+                404: function() {
+                    showError("Something went wrong; can't find ajax request URL!");
+                },
+                500: function() {
+                    showError("Something went wrong; internal server error while processing the request!");
+                }
+            }
+        });
     };
 
     /**
@@ -214,30 +245,14 @@ var WPStaging = (function($)
 
             console.log(that.data);
 
-            // Send the ajax request
-            $.ajax({
-                url         : ajaxurl,
-                type        : "POST",
-                dataType    : "HTML",
-                cache       : false,
-                data        : that.data,
-                error       : function(xhr, textStatus, errorThrown) {
-                    console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
-                    console.log(textStatus);
-
-                    showError(
-                        "Fatal Error: This should not happen but is most often caused by other plugins. " +
-                        "Try first the option 'Optimizer' in WP Staging->Settings and try again. " +
-                        "If this does not help, enable " +
-                        "<a href='https://codex.wordpress.org/Debugging_in_WordPress' target='_blank'>wordpress debug mode</a> " +
-                        "to find out which plugin is causing this."
-                    );
-                },
-                success     : function(data) {
+            // Send ajax request
+            ajax(
+                that.data,
+                function(response) {
                     var $currentStep = cache.get(".wpstg-current-step");
 
                     // Styling of elements
-                    $workFlow.removeClass("loading").html(data);
+                    $workFlow.removeClass("loading").html(response);
 
                     $currentStep
                         .removeClass("wpstg-current-step")
@@ -246,16 +261,8 @@ var WPStaging = (function($)
 
                     // Start cloning
                     that.startCloning();
-                },
-                statusCode  : {
-                    404: function() {
-                        showError("Something went wrong; can't find ajax request URL!");
-                    },
-                    500: function() {
-                        showError("Something went wrong; internal server error while processing the request!");
-                    }
                 }
-            });
+            );
         });
 
         /**

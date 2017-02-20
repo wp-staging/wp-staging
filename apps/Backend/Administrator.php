@@ -57,6 +57,7 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_menu", $this, "addMenu", 10);
         $loader->addAction("admin_init", $this, "setOptionFormElements");
         $loader->addAction("wp_ajax_wpstg_scanning", $this, "ajaxScan");
+        $loader->addAction("wp_ajax_wpstg_check_clone", $this, "ajaxcheckCloneName");
         $loader->addAction("wpstg_download_sysinfo", $this, "systemInfoDownload");
     }
 
@@ -65,7 +66,7 @@ class Administrator extends InjectionAware
      */
     public function setOptionFormElements()
     {
-        register_setting("wpstg_settings", "wpstg_settings", [$this, "sanitizeOptions"]);
+        register_setting("wpstg_settings", "wpstg_settings", array($this, "sanitizeOptions"));
     }
 
     /**
@@ -101,7 +102,7 @@ class Administrator extends InjectionAware
             __("WP Staging", "wpstg"),
             "manage_options",
             "wpstg_clone",
-            [$this, "getClonePage"],
+            array($this, "getClonePage"),
             "dashicons-hammer"
         );
 
@@ -112,7 +113,7 @@ class Administrator extends InjectionAware
             __("Start", "wpstg"),
             "manage_options",
             "wpstg_clone",
-            [$this, "getClonePage"]
+            array($this, "getClonePage")
         );
 
         // Page: Settings
@@ -122,7 +123,7 @@ class Administrator extends InjectionAware
             __("Settings", "wpstg"),
             "manage_options",
             "wpstg-settings",
-            [$this, "getSettingsPage"]
+            array($this, "getSettingsPage")
         );
 
         // Page: Tools
@@ -132,7 +133,7 @@ class Administrator extends InjectionAware
             __("Tools", "wpstg"),
             "manage_options",
             "wpstg-tools",
-            [$this, "getToolsPage"]
+            array($this, "getToolsPage")
         );
     }
 
@@ -286,7 +287,7 @@ class Administrator extends InjectionAware
 
     /**
      * Scripts and Styles
-     * @param string $hooke
+     * @param string $hook
      */
     public function enqueueElements($hook)
     {
@@ -368,6 +369,9 @@ class Administrator extends InjectionAware
         return $contents;
     }
 
+    /**
+     * Ajax Scan
+     */
     public function ajaxScan()
     {
         check_ajax_referer("wpstg_ajax_nonce", "nonce");
@@ -382,5 +386,33 @@ class Administrator extends InjectionAware
         require_once "{$this->path}views/clone/ajax/scan.php";
 
         wp_die();
+    }
+
+    /**
+     * Ajax Check Clone Name
+     */
+    public function ajaxCheckCloneName()
+    {
+        $cloneName          = sanitize_key($_POST["cloneID"]);
+        $cloneNameLength    = strlen($cloneName);
+        $clones             = get_option("wpstg_existing_clones", array());
+
+        // Check clone name length
+        if ($cloneNameLength < 1 || $cloneNameLength > 16)
+        {
+            echo wp_send_json(array(
+                "status"    => "failed",
+                "message"   => "Clone name must be between 1 - 16 characters"
+            ));
+        }
+        elseif (in_array($cloneName, $clones))
+        {
+            echo wp_send_json(array(
+                "status"    => "failed",
+                "message"   => "Clone name is already in use, please choose an another clone name"
+            ));
+        }
+
+        echo wp_send_json(array("status" => "success"));
     }
 }
