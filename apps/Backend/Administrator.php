@@ -415,4 +415,9 @@ class Administrator extends InjectionAware
 
         echo wp_send_json(array("status" => "success"));
     }
+
+    public function ajaxStartClone()
+    {
+
+    }
 }
