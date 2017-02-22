@@ -7,6 +7,7 @@ if (!defined("WPINC"))
     die;
 }
 
+use WPStaging\Backend\Modules\Jobs\Cloning;
 use WPStaging\Backend\Modules\Jobs\Data;
 use WPStaging\Backend\Modules\Jobs\Database;
 use WPStaging\Backend\Modules\Jobs\Files;
@@ -58,6 +59,7 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_init", $this, "setOptionFormElements");
         $loader->addAction("wp_ajax_wpstg_scanning", $this, "ajaxScan");
         $loader->addAction("wp_ajax_wpstg_check_clone", $this, "ajaxcheckCloneName");
+        $loader->addAction("wp_ajax_wpstg_cloning", $this, "ajaxStartClone");
         $loader->addAction("wpstg_download_sysinfo", $this, "systemInfoDownload");
     }
 
@@ -418,6 +420,11 @@ class Administrator extends InjectionAware
 
     public function ajaxStartClone()
     {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
 
+        $cloning = new Cloning();
+        $cloning->start();
+
+        require_once "{$this->path}views/clone/ajax/start.php";
     }
 }

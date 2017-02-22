@@ -70,6 +70,11 @@ class Files extends Job
         // TODO: if we can use exec; WIN: exec("copy {$sourceFile} {$targetFile}"), LIN: exec("cp {$sourceFile} {$targetFile}")
     }
 
+    public function next()
+    {
+        // TODO: Implement next() method.
+    }
+
     /**
      * Get OS
      * @return string

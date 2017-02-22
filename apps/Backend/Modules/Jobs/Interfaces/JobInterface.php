@@ -16,7 +16,13 @@ interface JobInterface
 
     /**
      * Start Module
-     * @return mixed
+     * @return bool
      */
     public function start();
+
+    /**
+     * Next Step of the Job
+     * @return void
+     */
+    public function next();
 }

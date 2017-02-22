@@ -65,6 +65,11 @@ class Scan extends Job
         return $this;
     }
 
+    public function next()
+    {
+        // TODO: Implement next() method.
+    }
+
     /**
      * Format bytes into human readable form
      * @param int $bytes

@@ -23,6 +23,11 @@ class Database implements JobInterface
     private $tables = array();
 
     /**
+     * @var int
+     */
+    private $step = 0;
+
+    /**
      * Initialize object
      */
     public function __construct()
@@ -36,9 +41,23 @@ class Database implements JobInterface
      */
     public function start()
     {
-        // TODO: Implement start() method.
+        if (!isset($this->tables[$this->position]))
+        {
+            return true;
+        }
+
+        $this->copyTable($this->tables[$this->position]);
+
+        return false;
     }
 
+    /**
+     * Next part of the job
+     */
+    public function next()
+    {
+        ++$this->step;
+    }
 
     /**
      * Get tables status
@@ -75,5 +94,24 @@ class Database implements JobInterface
     public function getTables()
     {
         return $this->tables;
+    }
+
+    /**
+     * No worries, SQL queries don't eat from PHP execution time!
+     * @param string $tableName
+     * @return mixed
+     */
+    private function copyTable($tableName)
+    {
+        $wpDB = WPStaging::getInstance()->get("wpdb");
+
+        $newTableName = "wpstg1_" . str_replace($wpDB->prefix, null, $tableName);
+
+        $wpDB->query(
+            $wpDB->prepare(
+                "CREATE TABLE {$newTableName} LIKE {$tableName}; ".
+                "INSERT {$newTableName} SELECT * FROM {$tableName}"
+            )
+        );
     }
 }

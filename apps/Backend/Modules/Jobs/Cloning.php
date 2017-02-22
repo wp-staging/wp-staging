@@ -55,6 +55,15 @@ class Cloning extends Job
     }
 
     /**
+     * Next Step of the Job
+     * @return void
+     */
+    public function next()
+    {
+        // TODO: Implement next() method.
+    }
+
+    /**
      * @param string $memory
      * @return int
      */
@@ -178,7 +187,7 @@ class Cloning extends Job
     private function resetTime()
     {
         // Attempt to reset timeout
-        if (!@set_time_limit(300))
+        if (!@set_time_limit($this->maxExecutionTime))
         {
             return false;
         }

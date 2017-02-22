@@ -171,7 +171,46 @@ var WPStaging = (function($)
             });
     };
 
-    var ajax    = function(data, callback, dataType)
+    var clonening   = function()
+    {
+        var $workFlow       = cache.get("#wpstg-workflow"),
+            isCancelled     = false,
+            isFinished      = false;
+
+
+        // Cancel cloning
+        $workFlow.on("click", "#wpstg-cancel-cloning", function() {
+            if (!confirm("Are you sure you want to cancel cloning process?"))
+            {
+                return false;
+            }
+
+            var $this = $(this);
+
+            $("#wpstg-try-again, #wpstg-home-link").hide();
+            $this.prop("disabled", true);
+
+            isCancelled = true;
+
+            $("#wpstg-cloning-result").text("Please wait...this can take up to a minute");
+            $("#wpstg-loader, ##wpstg-show-log-button").hide();
+
+            $this.parent().append(ajaxSpinner);
+
+            if (isFinished)
+            {
+                cancelCloning();
+            }
+        });
+
+        // Cancel Cloning
+        function cancelCloning()
+        {
+
+        }
+    };
+
+    var ajax        = function(data, callback, dataType)
     {
         if ("undefined" === typeof(dataType))
         {

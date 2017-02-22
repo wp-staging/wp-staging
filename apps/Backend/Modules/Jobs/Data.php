@@ -23,10 +23,15 @@ class Data implements JobInterface
 
     /**
      * Start Module
-     * @return mixed
+     * @return bool
      */
     public function start()
     {
         // TODO: Implement start() method.
+    }
+
+    public function next()
+    {
+        // TODO: Implement next() method.
     }
 }
