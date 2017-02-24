@@ -57,10 +57,15 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_enqueue_scripts", $this, "enqueueElements", 100);
         $loader->addAction("admin_menu", $this, "addMenu", 10);
         $loader->addAction("admin_init", $this, "setOptionFormElements");
+        $loader->addAction("wpstg_download_sysinfo", $this, "systemInfoDownload");
+
+        // Ajax Requests
         $loader->addAction("wp_ajax_wpstg_scanning", $this, "ajaxScan");
         $loader->addAction("wp_ajax_wpstg_check_clone", $this, "ajaxcheckCloneName");
         $loader->addAction("wp_ajax_wpstg_cloning", $this, "ajaxStartClone");
-        $loader->addAction("wpstg_download_sysinfo", $this, "systemInfoDownload");
+        $loader->addAction("wp_ajax_wpstg_clone_database", $this, "ajaxCloneDatabase");
+        $loader->addAction("wp_ajax_wpstg_clone_files", $this, "ajaxCopyFiles");
+        $loader->addAction("wp_ajax_wpstg_clone_replace_data", $this, "ajaxReplaceData");
     }
 
     /**
@@ -418,13 +423,44 @@ class Administrator extends InjectionAware
         echo wp_send_json(array("status" => "success"));
     }
 
+    /**
+     * Ajax Start Clone (Basically just layout and saving data)
+     */
     public function ajaxStartClone()
     {
         check_ajax_referer("wpstg_ajax_nonce", "nonce");
 
         $cloning = new Cloning();
-        $cloning->start();
+
+        if (!$cloning->save())
+        {
+            wp_die();
+        }
 
         require_once "{$this->path}views/clone/ajax/start.php";
+
+        wp_die();
+    }
+
+    /**
+     * Ajax Clone Database
+     */
+    public function ajaxCloneDatabase()
+    {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
+
+        $cloning = new Cloning();
+
+        wp_send_json($cloning->start());
+    }
+
+    public function ajaxCopyFiles()
+    {
+
+    }
+
+    public function ajaxReplaceData()
+    {
+
     }
 }

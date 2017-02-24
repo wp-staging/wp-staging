@@ -26,6 +26,7 @@ class Scan extends Job
     {
         // Database
         $database               = new Database();
+        $database->getStatus();
         $this->options->tables  = $database->getTables();
 
         // Files
@@ -38,36 +39,22 @@ class Scan extends Job
      */
     public function start()
     {
-        $uncheckedTables                        = array();
-        $excludedDirectories                    = array();
-
-
-        $this->options->disableInputStageName   = false;
-        $this->options->isInProgress            = false;
+        // Basic Options
         $this->options->root                    = str_replace(array("\\", '/'), DIRECTORY_SEPARATOR, ABSPATH);
         $this->options->existingClones          = get_option("wpstg_existing_clones", array());
 
-        // Clone posted
-        if (isset($_POST["clone"]))
-        {
-            $this->options->current                 = $_POST["clone"];
-            $this->options->disableInputStageName   = true;
-        }
+        $this->options->excludedTables          = array();
+        $this->options->excludedDirectories     = array();
+        $this->options->extraDirectories        = array();
 
-        // TODO; finish it up
-        $this->options->uncheckedTables         = $uncheckedTables;
-        $this->options->clonedTables            = array();
-        $this->options->excludedDirectories     = $excludedDirectories;
+        $this->options->currentJob              = "database";
+        $this->options->currentStep             = 0;
+        $this->options->totalSteps              = 0;
 
         // Save options
         $this->saveOptions();
 
         return $this;
-    }
-
-    public function next()
-    {
-        // TODO: Implement next() method.
     }
 
     /**

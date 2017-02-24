@@ -3,7 +3,8 @@
 var WPStaging = (function($)
 {
     var that        = {},
-        cache       = {elements : []};
+        cache       = {elements : []},
+        ajaxSpinner;
 
     /**
      * Get / Set Cache for Selector
@@ -72,7 +73,7 @@ var WPStaging = (function($)
         var $workFlow       = cache.get("#wpstg-workflow"),
             isAllChecked    = true,
             urlSpinner      = ajaxurl.replace("/admin-ajax.php", '') + "/images/spinner",
-            timer, ajaxSpinner;
+            timer;
 
         if (2 < window.devicePixelRatio)
         {
@@ -162,8 +163,7 @@ var WPStaging = (function($)
                                     cache.get("#wpstg-start-cloning").prop("disabled", true);
                                     cache.get("#wpstg-clone-id-error").text(response.message);
                                 }
-                            },
-                            "json"
+                            }
                         );
                     },
                     500
@@ -171,37 +171,37 @@ var WPStaging = (function($)
             });
     };
 
-    var clonening   = function()
+    var cloning  = function()
     {
         var $workFlow       = cache.get("#wpstg-workflow"),
             isCancelled     = false,
             isFinished      = false;
 
+        $workFlow
+            // Cancel cloning
+            .on("click", "#wpstg-cancel-cloning", function() {
+                if (!confirm("Are you sure you want to cancel cloning process?"))
+                {
+                    return false;
+                }
 
-        // Cancel cloning
-        $workFlow.on("click", "#wpstg-cancel-cloning", function() {
-            if (!confirm("Are you sure you want to cancel cloning process?"))
-            {
-                return false;
-            }
+                var $this = $(this);
 
-            var $this = $(this);
+                $("#wpstg-try-again, #wpstg-home-link").hide();
+                $this.prop("disabled", true);
 
-            $("#wpstg-try-again, #wpstg-home-link").hide();
-            $this.prop("disabled", true);
+                isCancelled = true;
 
-            isCancelled = true;
+                $("#wpstg-cloning-result").text("Please wait...this can take up to a minute");
+                $("#wpstg-loader, ##wpstg-show-log-button").hide();
 
-            $("#wpstg-cloning-result").text("Please wait...this can take up to a minute");
-            $("#wpstg-loader, ##wpstg-show-log-button").hide();
+                $this.parent().append(ajaxSpinner);
 
-            $this.parent().append(ajaxSpinner);
-
-            if (isFinished)
-            {
-                cancelCloning();
-            }
-        });
+                if (isFinished)
+                {
+                    cancelCloning();
+                }
+            });
 
         // Cancel Cloning
         function cancelCloning()
@@ -214,7 +214,7 @@ var WPStaging = (function($)
     {
         if ("undefined" === typeof(dataType))
         {
-            dataType = "HTML";
+            dataType = "json";
         }
 
         $.ajax({
@@ -282,12 +282,16 @@ var WPStaging = (function($)
             // Cloning data
             getCloningData();
 
-            console.log(that.data);
-
             // Send ajax request
             ajax(
                 that.data,
                 function(response) {
+
+                    if (response.length < 1)
+                    {
+                        showError("Something went wrong, please try again");
+                    }
+
                     var $currentStep = cache.get(".wpstg-current-step");
 
                     // Styling of elements
@@ -300,7 +304,8 @@ var WPStaging = (function($)
 
                     // Start cloning
                     that.startCloning();
-                }
+                },
+                "HTML"
             );
         });
 
@@ -337,7 +342,6 @@ var WPStaging = (function($)
 
         /**
          * Get Cloning Step Data
-         * @param {Object} data
          */
         var getCloningData = function()
         {
@@ -384,7 +388,108 @@ var WPStaging = (function($)
      * @type {Function}
      */
     that.startCloning = (function() {
-        console.log("Staring cloning process...");
+        if ("wpstg_cloning" !== that.data.action)
+        {
+            return;
+        }
+
+        console.log(that.data);
+
+        // Start the process
+        start();
+
+        // Functions
+        // Start
+        function start()
+        {
+            console.log("Staring cloning process...");
+
+            // Clone Database
+            cloneDatabase();
+        }
+
+        // Step 1: Clone Database
+        function cloneDatabase()
+        {
+            setTimeout(
+                function() {
+                    ajax(
+                        {
+                            action  : "wpstg_clone_database",
+                            nonce   : wpstg.nonce
+                        },
+                        function(response) {
+                            // Add percentage
+                            cache.get("#wpstg-db-progress").width(response.percentage + '%');
+
+                            if (false === response.status)
+                            {
+                                cloneDatabase();
+                            }
+                            else if (true === response.status)
+                            {
+                                cloneFiles();
+                            }
+                        }
+                    );
+                },
+                500
+            );
+        }
+
+        // Step 2: Clone Files
+        function cloneFiles()
+        {
+            ajax(
+                {
+                    action          : "wpstg_clone_files",
+                    nonce           : wpstg.nonce
+                },
+                function(response) {
+                    // Add percentage
+                    cache.get("wpstg-files-progress").width(response.percentage);
+
+                    if (false === response.status)
+                    {
+                        cloneFiles();
+                    }
+                    else if (true === response.status)
+                    {
+                        replaceData();
+                    }
+                }
+            );
+        }
+
+        // Step 3: Replace Data
+        function replaceData()
+        {
+            ajax(
+                {
+                    action  : "wpstg_clone_replace_data",
+                    nonce   : wpstg.nonce
+                },
+                function(response) {
+                    // Add percentage
+                    cache.get("wpstg-links-progress").width(response.percentage);
+
+                    if (false === response.status)
+                    {
+                        cloneFiles();
+                    }
+                    else if (true === response.status)
+                    {
+                        finish();
+                    }
+                }
+            );
+        }
+
+        // Finish
+        function finish()
+        {
+            console.log("Cloning process finished");
+        }
     });
 
     /**

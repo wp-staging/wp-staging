@@ -19,10 +19,4 @@ interface JobInterface
      * @return bool
      */
     public function start();
-
-    /**
-     * Next Step of the Job
-     * @return void
-     */
-    public function next();
 }

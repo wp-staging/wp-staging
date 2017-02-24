@@ -47,20 +47,90 @@ class Cloning extends Job
     }
 
     /**
+     * @return bool
+     */
+    public function save()
+    {
+        if (!isset($_POST) || !isset($_POST["cloneID"]))
+        {
+            return false;
+        }
+
+        // Generate Options
+        $this->options->clone = $_POST["cloneID"];
+
+        // Excluded Tables
+        if (isset($_POST["excludedTables"]) && is_array($_POST["excludedTables"]))
+        {
+            $this->options->excludedTables = $_POST["excludedTables"];
+        }
+
+        // Excluded Directories
+        if (isset($_POST["excludedDirectories"]) && is_array($_POST["excludedDirectories"]))
+        {
+            $this->options->excludedDirectories = $_POST["excludedDirectories"];
+        }
+
+        // Extra Directories
+        if (isset($_POST["extraDirectories"]) && strlen($_POST["extraDirectories"]) > 0)
+        {
+            $this->options->extraDirectories = $_POST["extraDirectories"];
+        }
+
+        return $this->saveOptions();
+    }
+
+    /**
      * Start the cloning job
      */
     public function start()
     {
-        // TODO: Implement start() method.
+        if (!$this->options->currentJob)
+        {
+            throw new \Exception("Job is not set");
+        }
+
+        $methodName = "job" . ucwords($this->options->currentJob);
+
+        if (!method_exists($this, $methodName))
+        {
+            throw new \Exception("Job method doesn't exist : " . $this->options->currentJob);
+        }
+
+        // Call the job
+        return $this->{$methodName}();
     }
 
     /**
-     * Next Step of the Job
-     * @return void
+     * @return array
      */
-    public function next()
+    public function jobDatabase()
     {
-        // TODO: Implement next() method.
+        $database = new Database(count($this->options->existingClones));
+
+        $database->setTables($this->options->tables);
+        $database->setStep($this->options->currentStep);
+
+        $response = $database->start();
+
+        // Job is done
+        if (true === $response["status"])
+        {
+            $this->options->currentJob              = "files";
+            $this->options->currentStep             = 0;
+            $this->options->totalSteps              = 0;
+        }
+        // Job is not done
+        else
+        {
+            $this->options->currentStep             = $response["step"];
+            $this->options->totalSteps              = $response["total"];
+        }
+
+        // Save options
+        $this->saveOptions();
+
+        return $response;
     }
 
     /**

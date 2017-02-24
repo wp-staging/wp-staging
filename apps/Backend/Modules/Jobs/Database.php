@@ -8,6 +8,7 @@ if (!defined("WPINC"))
 }
 
 use WPStaging\Backend\Modules\Jobs\Interfaces\JobInterface;
+use WPStaging\Backend\Modules\Jobs\Interfaces\ThresholdAwareInterface;
 use WPStaging\WPStaging;
 
 /**
@@ -28,11 +29,38 @@ class Database implements JobInterface
     private $step = 0;
 
     /**
-     * Initialize object
+     * @var array
      */
-    public function __construct()
+    private $excludes = array();
+
+    /**
+     * @var int
+     */
+    private $cloneNumber = 1;
+
+    /**
+     * Initialize object
+     * @param int $cloneNumber
+     */
+    public function __construct($cloneNumber = 1)
     {
-        $this->getStatus();
+        $this->cloneNumber = 1;
+    }
+
+    /**
+     * @param array $excludes
+     */
+    public function setExcludes($excludes)
+    {
+        $this->excludes = $excludes;
+    }
+
+    /**
+     * @param int $step
+     */
+    public function setStep($step)
+    {
+        $this->step = $step;
     }
 
     /**
@@ -41,28 +69,46 @@ class Database implements JobInterface
      */
     public function start()
     {
-        if (!isset($this->tables[$this->position]))
+        $total = count($this->tables);
+
+        // No more steps, finished
+        if ($this->step > $total || !isset($this->tables[$this->step]))
         {
-            return true;
+            return array(
+                "status"        => true,
+                "percentage"    => round(($this->step / $total) * 100),
+                "total"         => $total,
+                "step"          => $this->step + 1
+            );
         }
 
-        $this->copyTable($this->tables[$this->position]);
+        // Table is excluded
+        if (in_array($this->tables[$this->step]->name, $this->excludes))
+        {
+            return array(
+                "status"        => false,
+                "percentage"    => round(($this->step / $total) * 100),
+                "total"         => $total,
+                "step"          => $this->step + 1
+            );
+        }
 
-        return false;
-    }
+        // Copy table
+        $this->copyTable($this->tables[$this->step]->name);
 
-    /**
-     * Next part of the job
-     */
-    public function next()
-    {
-        ++$this->step;
+        // Not finished
+        return array(
+            "status"        => false,
+            "percentage"    => round(($this->step / $total) * 100),
+            "total"         => $total,
+            "step"          => $this->step + 1
+        );
     }
 
     /**
      * Get tables status
      */
-    protected function getStatus()
+    public function getStatus()
     {
         $wpDB = WPStaging::getInstance()->get("wpdb");
 
@@ -97,6 +143,14 @@ class Database implements JobInterface
     }
 
     /**
+     * @param object $tables
+     */
+    public function setTables($tables)
+    {
+        $this->tables = $tables;
+    }
+
+    /**
      * No worries, SQL queries don't eat from PHP execution time!
      * @param string $tableName
      * @return mixed
@@ -105,13 +159,21 @@ class Database implements JobInterface
     {
         $wpDB = WPStaging::getInstance()->get("wpdb");
 
-        $newTableName = "wpstg1_" . str_replace($wpDB->prefix, null, $tableName);
+        $newTableName = "wpstg{$this->cloneNumber}_" . str_replace($wpDB->prefix, null, $tableName);
+
+        // Drop table if necessary
+        $currentNewTable = $wpDB->get_var(
+            $wpDB->prepare("SHOW TABLES LIKE {$tableName}")
+        );
+
+        if ($currentNewTable === $newTableName)
+        {
+            $wpDB->query("DROP TABLE {$newTableName}");
+        }
 
         $wpDB->query(
-            $wpDB->prepare(
-                "CREATE TABLE {$newTableName} LIKE {$tableName}; ".
-                "INSERT {$newTableName} SELECT * FROM {$tableName}"
-            )
+            //"CREATE TABLE {$newTableName} LIKE {$tableName}; INSERT {$newTableName} SELECT * FROM {$tableName}"
+            "CREATE TABLE {$newTableName} SELECT * FROM {$tableName}"
         );
     }
 }
