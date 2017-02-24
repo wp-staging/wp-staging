@@ -30,7 +30,7 @@
         </h4>
         <?php
         foreach ($options->tables as $table):
-            $attributes = in_array($table->name, $options->uncheckedTables) ? '' : "checked";
+            $attributes = in_array($table->name, $options->excludedTables) ? '' : "checked";
             $attributes .= in_array($table->name, $options->clonedTables) ? " disabled" : '';
             ?>
             <div class="wpstg-db-table">

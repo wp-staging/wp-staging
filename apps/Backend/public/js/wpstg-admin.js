@@ -282,6 +282,10 @@ var WPStaging = (function($)
             // Cloning data
             getCloningData();
 
+            console.log(that.data);
+
+            //if (that.data.action === "wpstg_cloning") return false;
+
             // Send ajax request
             ajax(
                 that.data,
@@ -325,19 +329,22 @@ var WPStaging = (function($)
         };
 
         /**
-         * Get Excluded Directories
+         * Get Included Directories
          * @returns {Array}
          */
-        var getExcludedDirectories = function()
+        var getIncludedDirectories = function()
         {
-            var excludedDirectories = [];
+            var includedDirectories = [];
 
-            $('.wpstg-dir input:not(:checked)').each(function () {
-                if (!$(this).parent('.wpstg-dir').parents('.wpstg-dir').children('.wpstg-expand-dirs').hasClass('disabled'))
-                    excludedDirectories.push(this.name);
+            $(".wpstg-dir input:checked").each(function () {
+                var $this = $(this);
+                if (!$this.parent(".wpstg-dir").parents(".wpstg-dir").children(".wpstg-expand-dirs").hasClass("disabled"))
+                {
+                    includedDirectories.push($this.val());
+                }
             });
 
-            return excludedDirectories;
+            return includedDirectories;
         };
 
         /**
@@ -352,7 +359,7 @@ var WPStaging = (function($)
 
             that.data.cloneID               = $("#wpstg-new-clone-id").val() || new Date().getTime().toString();
             that.data.excludedTables        = getExcludedTables();
-            that.data.excludedDirectories   = getExcludedDirectories();
+            that.data.includedDirectories   = getIncludedDirectories();
             that.data.extraDirectories      = $("#wpstg_extraDirectories").val() || null;
         };
     };
@@ -420,11 +427,46 @@ var WPStaging = (function($)
                         },
                         function(response) {
                             // Add percentage
-                            cache.get("#wpstg-db-progress").width(response.percentage + '%');
+                            if ("undefined" !== typeof(response.percentage))
+                            {
+                                cache.get("#wpstg-db-progress").width(response.percentage + '%');
+                            }
 
                             if (false === response.status)
                             {
                                 cloneDatabase();
+                            }
+                            else if (true === response.status)
+                            {
+                                prepareDirectories();
+                            }
+                        }
+                    );
+                },
+                500
+            );
+        }
+
+        // Step 2: Prepare Directories
+        function prepareDirectories()
+        {
+            setTimeout(
+                function() {
+                    ajax(
+                        {
+                            action  : "wpstg_clone_prepare_directories",
+                            nonce   : wpstg.nonce
+                        },
+                        function(response) {
+                            // Add percentage
+                            if ("undefined" !== typeof(response.percentage))
+                            {
+                                cache.get("#wpstg-directories-progress").width(response.percentage + '%');
+                            }
+
+                            if (false === response.status)
+                            {
+                                prepareDirectories();
                             }
                             else if (true === response.status)
                             {
@@ -437,7 +479,7 @@ var WPStaging = (function($)
             );
         }
 
-        // Step 2: Clone Files
+        // Step 3: Clone Files
         function cloneFiles()
         {
             ajax(
@@ -447,7 +489,10 @@ var WPStaging = (function($)
                 },
                 function(response) {
                     // Add percentage
-                    cache.get("wpstg-files-progress").width(response.percentage);
+                    if ("undefined" !== typeof(response.percentage))
+                    {
+                        cache.get("wpstg-files-progress").width(response.percentage);
+                    }
 
                     if (false === response.status)
                     {
@@ -461,7 +506,7 @@ var WPStaging = (function($)
             );
         }
 
-        // Step 3: Replace Data
+        // Step 4: Replace Data
         function replaceData()
         {
             ajax(
@@ -471,11 +516,14 @@ var WPStaging = (function($)
                 },
                 function(response) {
                     // Add percentage
-                    cache.get("wpstg-links-progress").width(response.percentage);
+                    if ("undefined" !== typeof(response.percentage))
+                    {
+                        cache.get("wpstg-links-progress").width(response.percentage);
+                    }
 
                     if (false === response.status)
                     {
-                        cloneFiles();
+                        replaceData();
                     }
                     else if (true === response.status)
                     {

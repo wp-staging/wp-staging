@@ -78,7 +78,7 @@ class Database implements JobInterface
                 "status"        => true,
                 "percentage"    => round(($this->step / $total) * 100),
                 "total"         => $total,
-                "step"          => $this->step + 1
+                "step"          => $this->step
             );
         }
 
@@ -125,6 +125,11 @@ class Database implements JobInterface
 
         foreach ($tables as $table)
         {
+            if (0 === strpos($table->Name, "wpstg"))
+            {
+                continue;
+            }
+
             $this->tables[] = array(
                 "name"  => $table->Name,
                 "size"  => ($table->Data_length + $table->Index_length)
@@ -163,7 +168,7 @@ class Database implements JobInterface
 
         // Drop table if necessary
         $currentNewTable = $wpDB->get_var(
-            $wpDB->prepare("SHOW TABLES LIKE {$tableName}")
+            $wpDB->prepare("SHOW TABLES LIKE %s", $newTableName)
         );
 
         if ($currentNewTable === $newTableName)

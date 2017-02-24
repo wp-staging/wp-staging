@@ -47,6 +47,11 @@ class Files extends Job
     private $OS;
 
     /**
+     * @var int
+     */
+    private $step = 0;
+
+    /**
      * Initialization
      */
     public function initialize()
@@ -70,9 +75,28 @@ class Files extends Job
         // TODO: if we can use exec; WIN: exec("copy {$sourceFile} {$targetFile}"), LIN: exec("cp {$sourceFile} {$targetFile}")
     }
 
+    public function getAllFilesToCopy()
+    {
+        if (empty($this->options->includedDirectories))
+        {
+            // TODO log
+            return false;
+        }
+
+
+    }
+
     public function next()
     {
         // TODO: Implement next() method.
+    }
+
+    /**
+    * @param int $step
+    */
+    public function setStep($step)
+    {
+        $this->step = $step;
     }
 
     /**

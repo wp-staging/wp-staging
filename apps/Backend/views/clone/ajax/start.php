@@ -1,21 +1,28 @@
 <div class=successfullying-section">
     <?php echo __("Copy Database Tables", "wpstg")?>
     <div class="wpstg-progress-bar">
-        <div class="wpstg-progress" id="wpstg-db-progress" style="width: <?php echo 100 * $wpstg_clone_details['db_progress']; ?>%;"></div>
+        <div class="wpstg-progress" id="wpstg-db-progress" style="width:0"></div>
+    </div>
+</div>
+
+<div class="wpstg-cloning-section">
+    <?php echo __("Prepare Directories", "wpstg")?>
+    <div class="wpstg-progress-bar">
+        <div class="wpstg-progress" id="wpstg-directories-progress" style="width:0"></div>
     </div>
 </div>
 
 <div class="wpstg-cloning-section">
     <?php echo __("Copy Files", "wpstg")?>
     <div class="wpstg-progress-bar">
-        <div class="wpstg-progress" id="wpstg-files-progress" style="width: <?php echo 100 * $wpstg_clone_details['files_progress']; ?>%;"></div>
+        <div class="wpstg-progress" id="wpstg-files-progress" style="width:0"></div>
     </div>
 </div>
 
 <div class="wpstg-cloning-section">
     <?php echo __("Replace Data", "wpstg")?>
     <div class="wpstg-progress-bar">
-        <div class="wpstg-progress" id="wpstg-links-progress" style="width: <?php echo 100 * $wpstg_clone_details['links_progress']; ?>%"></div>
+        <div class="wpstg-progress" id="wpstg-links-progress" style="width:0"></div>
     </div>
 </div>
 

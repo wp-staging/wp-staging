@@ -64,6 +64,7 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_check_clone", $this, "ajaxcheckCloneName");
         $loader->addAction("wp_ajax_wpstg_cloning", $this, "ajaxStartClone");
         $loader->addAction("wp_ajax_wpstg_clone_database", $this, "ajaxCloneDatabase");
+        $loader->addAction("wp_ajax_wpstg_clone_prepare_directories", $this, "ajaxPrepareDirectories");
         $loader->addAction("wp_ajax_wpstg_clone_files", $this, "ajaxCopyFiles");
         $loader->addAction("wp_ajax_wpstg_clone_replace_data", $this, "ajaxReplaceData");
     }
@@ -454,9 +455,25 @@ class Administrator extends InjectionAware
         wp_send_json($cloning->start());
     }
 
+    /**
+     * Ajax Prepare Directories (get listing of files)
+     */
+    public function ajaxPrepareDirectories()
+    {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
+
+        $cloning = new Cloning();
+
+        wp_send_json($cloning->start());
+    }
+
     public function ajaxCopyFiles()
     {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
 
+        $cloning = new Cloning();
+
+        wp_send_json($cloning->start());
     }
 
     public function ajaxReplaceData()

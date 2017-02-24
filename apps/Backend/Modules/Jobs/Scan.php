@@ -44,8 +44,13 @@ class Scan extends Job
         $this->options->existingClones          = get_option("wpstg_existing_clones", array());
 
         $this->options->excludedTables          = array();
-        $this->options->excludedDirectories     = array();
+        $this->options->clonedTables            = array();
+
+        $this->options->includedDirectories     = array();
         $this->options->extraDirectories        = array();
+        $this->options->directoriesToCopy       = array();
+        $this->options->scannedDirectories      = array();
+        $this->options->lastScannedDirectory    = array();
 
         $this->options->currentJob              = "database";
         $this->options->currentStep             = 0;
@@ -97,7 +102,10 @@ class Scan extends Job
             $data = reset($directory);
             unset($directory[key($directory)]);
 
-            $isChecked = !in_array($data["path"], $this->options->excludedDirectories);
+            $isChecked = (
+                empty($this->options->includedDirectories) ||
+                in_array($data["path"], $this->options->includedDirectories)
+            );
 
             $output .= "<div class='wpstg-dir'>";
             $output .= "<input type='checkbox' class='wpstg-check-dir'";
