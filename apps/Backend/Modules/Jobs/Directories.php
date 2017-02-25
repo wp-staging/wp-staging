@@ -48,7 +48,7 @@ class Directories extends Job
 
     /**
      * @param $path
-     * @return array
+     * @return array|bool
      */
     public function getFilesFromSubDirectories($path)
     {
@@ -56,12 +56,7 @@ class Directories extends Job
         {
             $this->saveProgress();
 
-            return array(
-                "status"        => false,
-                "percentage"    => round(($this->step / $this->total) * 100),
-                "total"         => $this->total,
-                "step"          => $this->step
-            );
+            return false;
         }
 
         $directories = new \DirectoryIterator($path);
@@ -85,14 +80,16 @@ class Directories extends Job
             $this->getFilesFromDirectory($dir);
 
             // Add scanned directory listing
-            $this->options->lastScannedDirectory[] = $dir;
+            $this->options->scannedDirectories[] = $dir;
         }
+
+        $this->saveOptions();
 
         return array(
             "status"        => false,
             "percentage"    => round(($this->step / $this->total) * 100),
             "total"         => $this->total,
-            "step"          => $this->step + 1
+            "step"          => $this->step
         );
     }
 
@@ -114,7 +111,7 @@ class Directories extends Job
                 continue;
             }
 
-            if (!is_file($fullPath))
+            if (!is_file($fullPath) || in_array($fullPath, $this->files))
             {
                 continue;
             }
@@ -155,6 +152,11 @@ class Directories extends Job
 
         $files  = implode(PHP_EOL, $this->files);
 
+        if (strlen($files) > 0)
+        {
+            $files .= PHP_EOL;
+        }
+
         return (false !== @file_put_contents($dir . "files_to_copy.cache", $files, FILE_APPEND));
     }
 
@@ -174,19 +176,68 @@ class Directories extends Job
             );
         }
 
+        $result = array(
+            "status"    => false,
+            "percentage"=> 0,
+            "total"     => 0,
+            "step"      => 0
+        );
+
+
+        $total = $this->total - 1;
+        for ($i = 0; $i <= $total; $i++)
+        {
+            $directory = $this->options->directoriesToCopy[$this->step];
+
+            // Get files recursively
+            if (false === ($result = $this->getFilesFromSubDirectories($directory)))
+            {
+                $result = array(
+                    "status"        => false,
+                    "percentage"    => round(($this->step / $total) * 100),
+                    "total"         => $total,
+                    "step"          => $this->step
+                );
+
+                break;
+            }
+
+            $this->options->scannedDirectories[] = $directory;
+
+            $this->step = $i;
+        }
+
+        // Completed
+        $result["status"]       = true;
+        $result["percentage"]   = 100;
+
+        $this->saveProgress();
+
+        return $result;
+
         // Save last scanned directory
         //$this->options->lastScannedDirectory = array($this->options->directoriesToCopy[$this->step]);
 
-        $directory = $this->options->directoriesToCopy[$this->step];
-
-        // Get files recursively
-        $result = $this->getFilesFromSubDirectories($directory);
-
-        $this->options->scannedDirectories[] = $directory;
-
-        $this->saveOptions();
-
-        return $result;
+        //        $directory = $this->options->directoriesToCopy[$this->step];
+        //
+        //        // Get files recursively
+        //        $result = $this->getFilesFromSubDirectories($directory);
+        //
+        //        if (false === $result)
+        //        {
+        //            $result = array(
+        //                "status"        => false,
+        //                "percentage"    => round(($this->step / $this->total) * 100),
+        //                "total"         => $this->total,
+        //                "step"          => $this->step
+        //            );
+        //        }
+        //
+        //        $this->options->scannedDirectories[] = $directory;
+        //
+        //        $this->saveOptions();
+        //
+        //        return $result;
     }
 
     /**

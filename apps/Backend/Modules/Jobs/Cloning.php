@@ -152,4 +152,9 @@ class Cloning extends Job
 
         return $response;
     }
+
+    public function jobFiles()
+    {
+        die("weee");
+    }
 }
