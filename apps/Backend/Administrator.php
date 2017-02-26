@@ -414,7 +414,7 @@ class Administrator extends InjectionAware
                 "message"   => "Clone name must be between 1 - 16 characters"
             ));
         }
-        elseif (in_array($cloneName, $clones))
+        elseif (array_key_exists($cloneName, $clones))
         {
             echo wp_send_json(array(
                 "status"    => "failed",
