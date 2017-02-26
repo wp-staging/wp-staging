@@ -23,12 +23,12 @@ class Cloning extends Job
 
         // Clone
         $this->options->clone               = $_POST["cloneID"];
-        $this->options->cloneUrlFriendlyName= preg_replace("#\W+#", '-', strtolower($this->options->clone));
+        $this->options->cloneDirectoryName  = preg_replace("#\W+#", '-', strtolower($this->options->clone));
         $this->options->cloneNumber         = 1;
 
-        if (isset($this->options->existingClones->{$this->options->clone}))
+        if (isset($this->options->existingClones[$this->options->clone]))
         {
-            $this->options->cloneNumber = $this->options->existingClones->{$this->options->clone}->number;
+            $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;
         }
 
         // Excluded Tables
@@ -71,6 +71,9 @@ class Cloning extends Job
         if (null === $this->options->currentJob)
         {
             // TODO log for finish?
+
+            $this->finish();
+
             return true;
         }
 
@@ -147,6 +150,42 @@ class Cloning extends Job
     public function jobData()
     {
         $data = new Data();
-        return $this->handleJobResponse($data->start(), null);
+        return $this->handleJobResponse($data->start(), "finish");
+    }
+
+    /**
+     * Save Clone Data
+     * @return bool
+     */
+    public function jobFinish()
+    {
+        // Clean cache files
+        $this->cache->delete("clone_options");
+        $this->cache->delete("files_to_copy");
+
+        // Check if clones still exist
+        foreach ($this->options->existingClones as $name => $clone)
+        {
+            if (!is_dir($clone["path"]))
+            {
+                unset($this->options->existingClones[$name]);
+            }
+        }
+
+        // Clone data already exists
+        if (isset($this->options->existingClones[$this->options->clone]))
+        {
+            return true;
+        }
+
+        // Save new clone data
+        $this->options->existingClones[$this->options->clone] = array(
+            "directoryName"     => $this->options->cloneDirectoryName,
+            "path"              => ABSPATH . $this->options->cloneDirectoryName,
+            "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
+            "number"            => $this->options->cloneNumber
+        );
+
+        return (update_option("wpstg_existing_clones", $this->options->existingClones));
     }
 }

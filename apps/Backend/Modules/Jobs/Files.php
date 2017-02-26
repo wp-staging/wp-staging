@@ -34,7 +34,7 @@ class Files extends JobExecutableWithCommandLine
      */
     public function initialize()
     {
-        $this->destination = ABSPATH . $this->options->cloneUrlFriendlyName . DIRECTORY_SEPARATOR;
+        $this->destination = ABSPATH . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR;
 
         $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 

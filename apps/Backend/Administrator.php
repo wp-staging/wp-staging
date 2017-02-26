@@ -67,6 +67,7 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_clone_prepare_directories", $this, "ajaxPrepareDirectories");
         $loader->addAction("wp_ajax_wpstg_clone_files", $this, "ajaxCopyFiles");
         $loader->addAction("wp_ajax_wpstg_clone_replace_data", $this, "ajaxReplaceData");
+        $loader->addAction("wp_ajax_wpstg_clone_finish", $this, "ajaxFinish");
     }
 
     /**
@@ -467,6 +468,9 @@ class Administrator extends InjectionAware
         wp_send_json($cloning->start());
     }
 
+    /**
+     * Ajax Clone Files
+     */
     public function ajaxCopyFiles()
     {
         check_ajax_referer("wpstg_ajax_nonce", "nonce");
@@ -476,7 +480,22 @@ class Administrator extends InjectionAware
         wp_send_json($cloning->start());
     }
 
+    /**
+     * Ajax Replace Data
+     */
     public function ajaxReplaceData()
+    {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
+
+        $cloning = new Cloning();
+
+        wp_send_json($cloning->start());
+    }
+
+    /**
+     * Ajax Finish
+     */
+    public function ajaxFinish()
     {
         check_ajax_referer("wpstg_ajax_nonce", "nonce");
 

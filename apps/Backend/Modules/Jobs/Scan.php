@@ -41,9 +41,7 @@ class Scan extends JobWithCommandLine
     {
         // Basic Options
         $this->options->root                    = str_replace(array("\\", '/'), DIRECTORY_SEPARATOR, ABSPATH);
-        $this->options->existingClones          = json_decode(
-            json_encode(get_option("wpstg_existing_clones", array())))
-        ;
+        $this->options->existingClones          = get_option("wpstg_existing_clones", array());
 
         // Tables
         $this->options->excludedTables          = array();
@@ -58,7 +56,7 @@ class Scan extends JobWithCommandLine
         $this->options->extraDirectories        = array();
         $this->options->directoriesToCopy       = array();
         $this->options->scannedDirectories      = array();
-        $this->options->lastScannedDirectory    = array();
+        //$this->options->lastScannedDirectory    = array();
 
         // Job
         $this->options->currentJob              = "database";
@@ -95,9 +93,10 @@ class Scan extends JobWithCommandLine
 
     /**
      * @param null|string $directories
+     * @param bool $forceDisabled
      * @return string
      */
-    public function directoryListing($directories = null)
+    public function directoryListing($directories = null, $forceDisabled = false)
     {
         if (null == $directories)
         {
@@ -116,13 +115,18 @@ class Scan extends JobWithCommandLine
                 in_array($data["path"], $this->options->includedDirectories)
             );
 
+            $isDisabled = ($this->options->existingClones && isset($this->options->existingClones[$name]));
+
             $output .= "<div class='wpstg-dir'>";
             $output .= "<input type='checkbox' class='wpstg-check-dir'";
-            if ($isChecked) $output .= " checked";
+
+            if ($isChecked && !$isDisabled && !$forceDisabled) $output .= " checked";
+            if ($forceDisabled || $isDisabled) $output .= " disabled";
+
             $output .= " name='selectedDirectories[]' value='{$data["path"]}'>";
 
             $output .= "<a href='#' class='wpstg-expand-dirs";
-            if (false === $isChecked) $output .= " disabled";
+            if (!$isChecked || $isDisabled) $output .= " disabled";
             $output .= "'>{$name}";
             $output .= "</a>";
 
@@ -131,7 +135,7 @@ class Scan extends JobWithCommandLine
             if (!empty($directory))
             {
                 $output .= "<div class='wpstg-dir wpstg-subdir'>";
-                $output .= $this->directoryListing($directory);
+                $output .= $this->directoryListing($directory, $isDisabled);
                 $output .= "</div>";
             }
 

@@ -34,6 +34,12 @@ class Data extends JobExecutable
         $this->db       = WPStaging::getInstance()->get("wpdb");
 
         $this->prefix   = "wpstg{$this->options->cloneNumber}_";
+
+        // Fix current step
+        if (0 == $this->options->currentStep)
+        {
+            $this->options->currentStep = 1;
+        }
     }
 
     /**
@@ -56,9 +62,6 @@ class Data extends JobExecutable
 
         // Save option, progress
         $this->saveOptions();
-
-        // Finish it
-        $this->finish();
 
         // Prepare response
         $this->response = array(
@@ -130,7 +133,7 @@ class Data extends JobExecutable
         $result = $this->db->query(
             $this->db->prepare(
                 "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'",
-                get_home_url() . '/' . $this->options->cloneUrlFriendlyName
+                get_home_url() . '/' . $this->options->cloneDirectoryName
             )
         );
 
@@ -156,6 +159,17 @@ class Data extends JobExecutable
                 "true"
             )
         );
+
+        // No errors but no option name such as wpstg_is_staging_site
+        if ('' === $this->db->last_error && 0 == $result)
+        {
+            $result = $this->db->query(
+                $this->db->prepare(
+                    "INSERT INTO {$this->prefix}options (option_name,option_value) VALUES ('wpstg_is_staging_site',%s)",
+                    "true"
+                )
+            );
+        }
 
         // All good
         if ($result)
@@ -236,7 +250,7 @@ class Data extends JobExecutable
      */
     protected function step5()
     {
-        $path = get_home_path() . $this->options->cloneUrlFriendlyName . "/wp-config.php";
+        $path = get_home_path() . $this->options->cloneDirectoryName . "/wp-config.php";
 
         if (false === ($content = file_get_contents($path)))
         {
@@ -248,7 +262,7 @@ class Data extends JobExecutable
         $content = str_replace('$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content);
 
         // Replace URLs
-        $content = str_replace(get_home_url(), get_home_url() . $this->options->cloneUrlFriendlyName, $content);
+        $content = str_replace(get_home_url(), get_home_url() . $this->options->cloneDirectoryName, $content);
 
         if (false === @file_put_contents($path, $content))
         {
@@ -273,7 +287,7 @@ class Data extends JobExecutable
             return true;
         }
 
-        $path = get_home_path() . $this->options->cloneUrlFriendlyName . "/index.php";
+        $path = get_home_path() . $this->options->cloneDirectoryName . "/index.php";
 
         if (false === ($content = file_get_contents($path)))
         {
@@ -306,42 +320,5 @@ class Data extends JobExecutable
         }
 
         return true;
-    }
-
-    /**
-     * Save Clone Data
-     * @return bool
-     */
-    protected function finish()
-    {
-        // Clean up
-        $this->cleanUp();
-
-        // Clone data already exists
-        if (isset($this->options->existingClones->{$this->options->clone}))
-        {
-            return true;
-        }
-
-        // Save new clone data
-        $clones = json_decode(json_encode($this->options->existingClones), true);
-
-        $clones[$this->options->clone] = array(
-            "seoFriendlyName"   => $this->options->cloneUrlFriendlyName,
-            "path"              => ABSPATH . $this->options->cloneUrlFriendlyName,
-            "url"               => get_site_url() . '/' . $this->options->cloneUrlFriendlyName,
-            "number"            => $this->options->cloneNumber
-        );
-
-        return (update_option("wpstg_existing_clones", $clones));
-    }
-
-    /**
-     * Clean Up Cache Files
-     * @return bool
-     */
-    protected function cleanUp()
-    {
-        return ($this->cache->delete("clone_options") && $this->cache->delete("files_to_copy"));
     }
 }

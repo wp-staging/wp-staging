@@ -86,6 +86,11 @@ abstract class Job implements JobInterface
 
         $this->options  = $this->cache->get("clone_options");
 
+        if (isset($this->options->existingClones) && is_object($this->options->existingClones))
+        {
+            $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
+        }
+
         $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
 
         if (!$this->options)

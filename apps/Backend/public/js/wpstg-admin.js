@@ -536,7 +536,22 @@ var WPStaging = (function($)
         // Finish
         function finish()
         {
-            console.log("Cloning process finished");
+            ajax(
+                {
+                    action  : "wpstg_clone_finish",
+                    nonce   : wpstg.nonce
+                },
+                function(response) {
+                    if (false === response.status)
+                    {
+                        finish();
+                    }
+                    else if (true === response.status)
+                    {
+                        console.log("Cloning process finished");
+                    }
+                }
+            );
         }
     });
 
