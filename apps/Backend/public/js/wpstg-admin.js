@@ -11,7 +11,7 @@ var WPStaging = (function($)
      * @param {String} selector
      * @returns {*}
      */
-    cache.get   = function(selector)
+    cache.get           = function(selector)
     {
         // It is already cached!
         if ($.inArray(selector, cache.elements) !== -1)
@@ -29,7 +29,7 @@ var WPStaging = (function($)
      * Refreshes given cache
      * @param {String} selector
      */
-    cache.refresh = function(selector)
+    cache.refresh       = function(selector)
     {
         selector.elements[selector] = jQuery(selector);
     };
@@ -38,7 +38,7 @@ var WPStaging = (function($)
      * Show and Log Error Message
      * @param {String} message
      */
-    var showError = function(message)
+    var showError       = function(message)
     {
         cache.get("#wpstg-try-again").css("display", "inline-block");
         cache.get("#wpstg-cancel-cloning").text("Reset");
@@ -68,7 +68,7 @@ var WPStaging = (function($)
     /**
      * Common Elements
      */
-    var elements = function()
+    var elements        = function()
     {
         var $workFlow       = cache.get("#wpstg-workflow"),
             isAllChecked    = true,
@@ -171,7 +171,7 @@ var WPStaging = (function($)
             });
     };
 
-    var cloning  = function()
+    var cloning         = function()
     {
         var $workFlow       = cache.get("#wpstg-workflow"),
             isCancelled     = false,
@@ -210,7 +210,7 @@ var WPStaging = (function($)
         }
     };
 
-    var ajax        = function(data, callback, dataType)
+    var ajax            = function(data, callback, dataType)
     {
         if ("undefined" === typeof(dataType))
         {
@@ -253,65 +253,70 @@ var WPStaging = (function($)
     };
 
     /**
-     * Next Step Clicks to Navigate Through Staging Job
+     * Next / Previous Step Clicks to Navigate Through Staging Job
      */
-    var nextStep = function()
+    var stepButtons     = function()
     {
         var $workFlow = cache.get("#wpstg-workflow");
 
-        $workFlow.on("click", ".wpstg-next-step-link", function(e) {
-            e.preventDefault();
+        $workFlow
+            // Next Button
+            .on("click", ".wpstg-next-step-link", function(e) {
+                e.preventDefault();
 
-            var $this = $(this);
+                var $this = $(this);
 
-            // Button is disabled
-            if ($this.attr("disabled"))
-            {
-                return false;
-            }
+                // Button is disabled
+                if ($this.attr("disabled"))
+                {
+                    return false;
+                }
 
-            // Add loading overlay
-            $workFlow.addClass("loading");
+                // Add loading overlay
+                $workFlow.addClass("loading");
 
-            // Prepare data
-            that.data = {
-                action  : $this.data("action"),
-                nonce   : wpstg.nonce
-            };
+                // Prepare data
+                that.data = {
+                    action  : $this.data("action"),
+                    nonce   : wpstg.nonce
+                };
 
-            // Cloning data
-            getCloningData();
+                // Cloning data
+                getCloningData();
 
-            console.log(that.data);
+                console.log(that.data);
 
-            //if (that.data.action === "wpstg_cloning") return false;
+                // Send ajax request
+                ajax(
+                    that.data,
+                    function(response) {
 
-            // Send ajax request
-            ajax(
-                that.data,
-                function(response) {
+                        if (response.length < 1)
+                        {
+                            showError("Something went wrong, please try again");
+                        }
 
-                    if (response.length < 1)
-                    {
-                        showError("Something went wrong, please try again");
-                    }
+                        var $currentStep = cache.get(".wpstg-current-step");
 
-                    var $currentStep = cache.get(".wpstg-current-step");
+                        // Styling of elements
+                        $workFlow.removeClass("loading").html(response);
 
-                    // Styling of elements
-                    $workFlow.removeClass("loading").html(response);
+                        $currentStep
+                            .removeClass("wpstg-current-step")
+                            .next("li")
+                            .addClass("wpstg-current-step");
 
-                    $currentStep
-                        .removeClass("wpstg-current-step")
-                        .next("li")
-                        .addClass("wpstg-current-step");
-
-                    // Start cloning
-                    that.startCloning();
-                },
-                "HTML"
-            );
-        });
+                        // Start cloning
+                        that.startCloning();
+                    },
+                    "HTML"
+                );
+            })
+            // Previous Button
+            .on("click", ".wpstg-prev-step-link", function(e) {
+                e.preventDefault();
+                loadOverview();
+            });
 
         /**
          * Get Excluded (Unchecked) Database Tables
@@ -365,9 +370,44 @@ var WPStaging = (function($)
     };
 
     /**
+     * Loads Overview (first step) of Staging Job
+     */
+    var loadOverview    = function()
+    {
+        var $workFlow = cache.get("#wpstg-workflow");
+
+        $workFlow.addClass("loading");
+
+        ajax(
+            {
+                action  : "wpstg_overview",
+                nonce   : wpstg.nonce
+            },
+            function(response) {
+
+                if (response.length < 1)
+                {
+                    showError("Something went wrong, please try again");
+                }
+
+                var $currentStep = cache.get(".wpstg-current-step");
+
+                // Styling of elements
+                $workFlow.removeClass("loading").html(response);
+
+                $currentStep
+                    .removeClass("wpstg-current-step")
+                    .next("li")
+                    .addClass("wpstg-current-step");
+            },
+            "HTML"
+        );
+    };
+
+    /**
      * Tabs
      */
-    var tabs = function()
+    var tabs            = function()
     {
         cache.get("#wpstg-workflow").on("click", ".wpstg-tab-header", function(e) {
             e.preventDefault();
@@ -394,7 +434,7 @@ var WPStaging = (function($)
      * Start Cloning Process
      * @type {Function}
      */
-    that.startCloning = (function() {
+    that.startCloning   = (function() {
         if ("wpstg_cloning" !== that.data.action)
         {
             return;
@@ -559,10 +599,11 @@ var WPStaging = (function($)
      * Initiation
      * @type {Function}
      */
-    that.init = (function() {
+    that.init           = (function() {
         console.log("Initiating WPStaging...");
+        loadOverview();
         elements();
-        nextStep();
+        stepButtons();
         tabs();
     });
 

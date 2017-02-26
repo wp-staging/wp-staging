@@ -16,12 +16,4 @@
     </li>
 </ul>
 
-<div id="wpstg-workflow">
-
-    <div id="wpstg-step-1">
-        <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_scanning">
-            <?php echo __("Create new staging site", "wpstg")?>
-        </button>
-    </div>
-
-</div>
+<div id="wpstg-workflow"></div>
