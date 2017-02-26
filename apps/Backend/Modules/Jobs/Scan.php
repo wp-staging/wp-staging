@@ -366,11 +366,14 @@ class Scan extends JobWithCommandLine
         // Loop & add file size
         foreach ($iterator as $file)
         {
-            try {
+            try
+            {
                 $totalBytes += $file->getSize();
-            } // Some invalid symbolik links can cause issues in *nix systems
-            catch(\Exception $e) {
-                // TODO log
+            }
+            // Some invalid symbolik links can cause issues in *nix systems
+            catch(\Exception $e)
+            {
+                $this->log("{$file} is a symbolic link or for some reason its size is invalid");
             }
         }
 

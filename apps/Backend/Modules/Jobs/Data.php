@@ -7,6 +7,7 @@ if (!defined("WPINC"))
     die;
 }
 
+use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 
 /**
@@ -143,7 +144,7 @@ class Data extends JobExecutable
             return true;
         }
 
-        // TODO log $this->db->last_error
+        $this->log("Failed to update siteurl and homeurl; {$this->db->last_error}", Logger::TYPE_ERROR);
         return false;
     }
 
@@ -177,7 +178,7 @@ class Data extends JobExecutable
             return true;
         }
 
-        // TODO log $this->db->last_error
+        $this->log("Failed to update wpstg_is_staging_site; {$this->db->last_error}", Logger::TYPE_ERROR);
         return false;
     }
 
@@ -200,7 +201,7 @@ class Data extends JobExecutable
             return true;
         }
 
-        // TODO log $this->db->last_error
+        $this->log("Failed to update rewrite_rules; {$this->db->last_error}", Logger::TYPE_ERROR);
         return false;
     }
 
@@ -221,13 +222,16 @@ class Data extends JobExecutable
 
         if (!$resultOptions)
         {
-            // TODO log $this->db->last_error
+            $this->log(
+                "Failed to update usermeta meta_key database table prefixes; {$this->db->last_error}",
+                Logger::TYPE_ERROR
+            );
             return false;
         }
 
         $resultUserMeta = $this->db->query(
             $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_name =replace(option_name, %s, %s) WHERE option_name LIKE %s",
+                "UPDATE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s",
                 $this->db->prefix,
                 $this->prefix,
                 $this->db->prefix . "_%"
@@ -236,10 +240,12 @@ class Data extends JobExecutable
 
         if (!$resultUserMeta)
         {
-            // TODO log $this->db->last_error
+            $this->log(
+                "Failed to update options, option_name database table prefixes; {$this->db->last_error}",
+                Logger::TYPE_ERROR
+            );
             return false;
         }
-
 
         return true;
     }
@@ -254,7 +260,7 @@ class Data extends JobExecutable
 
         if (false === ($content = file_get_contents($path)))
         {
-            // TODO log
+            $this->log("Failed to update \$table_prefix in wp-config; can't read contents", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -266,7 +272,7 @@ class Data extends JobExecutable
 
         if (false === @file_put_contents($path, $content))
         {
-            // TODO log
+            $this->log("Failed to update \$table_prefix in wp-config; can't save contents", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -284,6 +290,7 @@ class Data extends JobExecutable
         // No settings, all good
         if (!isset($this->settings->wpSubDirectory) || "1" !== $this->settings->wpSubDirectory)
         {
+            $this->log("WP installation is not in a subdirectory! All good, skipping this step");
             return true;
         }
 
@@ -291,14 +298,17 @@ class Data extends JobExecutable
 
         if (false === ($content = file_get_contents($path)))
         {
-            // TODO log
+            $this->log("Failed to reset index.php for sub directory; can't read contents", Logger::TYPE_ERROR);
             return false;
         }
 
 
         if (!preg_match("/(require(.*)wp-blog-header.php' \);)/", $content, $matches))
         {
-            // TODO log
+            $this->log(
+                "Failed to reset index.php for sub directory; wp-blog-header.php is missing",
+                Logger::TYPE_ERROR
+            );
             return false;
         }
 
@@ -309,13 +319,13 @@ class Data extends JobExecutable
 
         if (null === preg_replace($pattern, $replace, $content))
         {
-            // TODO log
+            $this->log("Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
             return false;
         }
 
         if (false === @file_put_contents($path, $content))
         {
-            // TODO log
+            $this->log("Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
             return false;
         }
 

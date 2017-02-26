@@ -8,6 +8,7 @@ if (!defined("WPINC"))
 }
 
 use WPStaging\Backend\Modules\Jobs\Interfaces\JobInterface;
+use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 use WPStaging\Utils\Cache;
 
@@ -26,6 +27,16 @@ abstract class Job implements JobInterface
      * @var Cache
      */
     protected $cache;
+
+    /**
+     * @var Logger
+     */
+    protected $logger;
+
+    /**
+     * @var bool
+     */
+    protected $hasLoggedFileNameSet = false;
 
     /**
      * @var object
@@ -81,21 +92,22 @@ abstract class Job implements JobInterface
         $this->memoryLimit      = $this->maxMemoryLimit * self::MAX_MEMORY_RATIO;
         $this->executionLimit   = $this->maxExecutionTime * self::EXECUTION_TIME_RATIO;
 
-        // Vars directory
+        // Services
         $this->cache    = new Cache(-1);
+        $this->logger   = WPStaging::getInstance()->get("logger");
 
+        // Settings and Options
         $this->options  = $this->cache->get("clone_options");
-
-        if (isset($this->options->existingClones) && is_object($this->options->existingClones))
-        {
-            $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
-        }
-
         $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
 
         if (!$this->options)
         {
             $this->options = new \stdClass();
+        }
+
+        if (isset($this->options->existingClones) && is_object($this->options->existingClones))
+        {
+            $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
         }
 
         if (!$this->settings)
@@ -107,6 +119,15 @@ abstract class Job implements JobInterface
         {
             $this->initialize();
         }
+    }
+
+    /**
+     * Job destructor
+     */
+    public function __destruct()
+    {
+        // Commit logs
+        $this->logger->commit();
     }
 
     /**
@@ -291,5 +312,20 @@ abstract class Job implements JobInterface
         }
 
         return true;
+    }
+
+    /**
+     * @param string $msg
+     * @param string $type
+     */
+    protected function log($msg, $type = Logger::TYPE_INFO)
+    {
+        if (false === $this->hasLoggedFileNameSet && 0 < strlen($this->options->clone))
+        {
+            $this->logger->setFileName($this->options->clone);
+            $this->hasLoggedFileNameSet = true;
+        }
+
+        $this->logger->add($msg, $type);
     }
 }

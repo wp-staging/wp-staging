@@ -2,6 +2,8 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 // No Direct Access
+use WPStaging\Utils\Logger;
+
 if (!defined("WPINC"))
 {
     die;
@@ -42,6 +44,28 @@ class Files extends JobExecutableWithCommandLine
         {
             $this->file = new \SplFileObject($filePath, 'r');
         }
+
+        // Informational logs
+        if (0 == $this->options->currentStep)
+        {
+            $this->log("Copying files...");
+
+            // We can use exec
+            if (true === $this->canUseExec)
+            {
+                $this->log("Files will be copied using EXEC, platform : {$this->OS}");
+            }
+            // We'll use popen
+            elseif (true === $this->canUsePopen)
+            {
+                $this->log("Files will be copied using POPEN, platform : {$this->OS}");
+            }
+            // PHP
+            else
+            {
+                $this->log("Files will be copied using PHP, platform : {$this->OS}");
+            }
+        }
     }
 
     /**
@@ -63,6 +87,7 @@ class Files extends JobExecutableWithCommandLine
         // Finished
         if ($this->isFinished())
         {
+            $this->log("Copying files finished");
             $this->prepareResponse(true, false);
             return false;
         }
@@ -115,6 +140,9 @@ class Files extends JobExecutableWithCommandLine
 
             $this->copyFile($this->file->fgets());
         }
+
+        $totalFiles = $this->maxFilesPerRun + $this->options->copiedFiles;
+        $this->log("Total {$totalFiles} files processed");
 
         return true;
     }
@@ -186,7 +214,7 @@ class Files extends JobExecutableWithCommandLine
 
         if (!is_dir($destinationDirectory) && @mkdir($destinationDirectory, 0775, true))
         {
-            // TODO log
+            $this->log("Destination directory doesn't exist; {$destinationDirectory}", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -213,7 +241,7 @@ class Files extends JobExecutableWithCommandLine
         // Attempt to copy
         if (!@copy($file, $destination))
         {
-            // TODO log
+            $this->log("Failed to copy file to destination; {$file} -> {$destination}", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -231,6 +259,8 @@ class Files extends JobExecutableWithCommandLine
         $bytes      = 0;
         $fileInput  = new \SplFileObject($file, "rb");
         $fileOutput = new \SplFileObject($destination, 'w');
+
+        $this->log("Copying big file; {$file} -> {$destination}");
 
         while (!$fileInput->eof())
         {

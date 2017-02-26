@@ -34,7 +34,7 @@ class Cache
     private $lifetime = 2592000; // 30 days
 
     /**
-     * WPStaging_Cache constructor.
+     * Cache constructor.
      * @param null|int $lifetime
      * @param null|string $cacheDir
      * @param null|string $cacheExtension

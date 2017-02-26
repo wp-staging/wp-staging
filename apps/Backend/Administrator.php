@@ -522,4 +522,9 @@ class Administrator extends InjectionAware
 
         wp_send_json($cloning->start());
     }
+
+    public function ajaxDeleteConfirmation()
+    {
+
+    }
 }

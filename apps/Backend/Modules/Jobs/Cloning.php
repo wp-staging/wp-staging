@@ -1,6 +1,8 @@
 <?php
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
+
 /**
  * Class Cloning
  * @package WPStaging\Backend\Modules\Jobs
@@ -70,10 +72,7 @@ class Cloning extends Job
     {
         if (null === $this->options->currentJob)
         {
-            // TODO log for finish?
-
-            $this->finish();
-
+            $this->log("Cloning job for {$this->options->clone} finished");
             return true;
         }
 
@@ -81,11 +80,10 @@ class Cloning extends Job
 
         if (!method_exists($this, $methodName))
         {
-            // TODO log
-            throw new \Exception("Job method doesn't exist : " . $this->options->currentJob);
+            $this->log("Can't execute job; Job's method {$methodName} is not found");
+            throw new JobNotFoundException($methodName);
         }
 
-        // TODO execute directly without calling job* method
         // Call the job
         return $this->{$methodName}();
     }
@@ -159,11 +157,16 @@ class Cloning extends Job
      */
     public function jobFinish()
     {
+        $this->log("Deleting clone job's cache files...");
+
         // Clean cache files
         $this->cache->delete("clone_options");
         $this->cache->delete("files_to_copy");
 
+        $this->log("Clone job's cache files have been deleted!");
+
         // Check if clones still exist
+        $this->log("Verifying existing clones...");
         foreach ($this->options->existingClones as $name => $clone)
         {
             if (!is_dir($clone["path"]))
@@ -171,14 +174,17 @@ class Cloning extends Job
                 unset($this->options->existingClones[$name]);
             }
         }
+        $this->log("Existing clones verified!");
 
         // Clone data already exists
         if (isset($this->options->existingClones[$this->options->clone]))
         {
+            $this->log("Clone data already exists, no need to update, the job finished");
             return true;
         }
 
         // Save new clone data
+        $this->log("{$this->options->clone}'s clone job's data is not in database, generating data");
         $this->options->existingClones[$this->options->clone] = array(
             "directoryName"     => $this->options->cloneDirectoryName,
             "path"              => ABSPATH . $this->options->cloneDirectoryName,
@@ -186,6 +192,14 @@ class Cloning extends Job
             "number"            => $this->options->cloneNumber
         );
 
-        return (update_option("wpstg_existing_clones", $this->options->existingClones));
+        if (false === ($response = update_option("wpstg_existing_clones", $this->options->existingClones)))
+        {
+            $this->log("Failed to save {$this->options->clone}'s clone job data to database'");
+        }
+
+        $this->log("Successfully saved {$this->options->clone}'s clone job data to database'");
+        $this->log("Cloning job has finished!");
+
+        return $response;
     }
 }

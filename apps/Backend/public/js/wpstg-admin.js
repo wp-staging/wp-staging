@@ -595,6 +595,40 @@ var WPStaging = (function($)
         }
     });
 
+    that.deleteClone    = (function(clone) {
+        if ("undefined" === typeof(clone))
+        {
+            alert("Couldn't detect clone to delete");
+            return false;
+        }
+
+        ajax(
+            {
+                action  : "wpstg_delete_clone",
+                nonce   : wpstg.nonce,
+                data    : {clone: clone}
+            },
+            function(response) {
+
+                if (response.length < 1)
+                {
+                    showError("Something went wrong, please try again");
+                }
+
+                var $currentStep = cache.get(".wpstg-current-step");
+
+                // Styling of elements
+                $workFlow.removeClass("loading").html(response);
+
+                $currentStep
+                    .removeClass("wpstg-current-step")
+                    .next("li")
+                    .addClass("wpstg-current-step");
+            },
+            "HTML"
+        );
+    });
+
     /**
      * Initiation
      * @type {Function}

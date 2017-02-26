@@ -1,5 +1,4 @@
 nbproject
-.gitignore
 .idea/
 vars/
 !vars/languages
