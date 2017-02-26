@@ -7,152 +7,76 @@ if (!defined("WPINC"))
     die;
 }
 
-use WPStaging\Backend\Modules\Jobs\Interfaces\JobInterface;
-use WPStaging\Backend\Modules\Jobs\Interfaces\ThresholdAwareInterface;
 use WPStaging\WPStaging;
 
 /**
  * Class Database
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Database implements JobInterface
+class Database extends JobExecutable
 {
 
     /**
-     * @var array
-     */
-    private $tables = array();
-
-    /**
      * @var int
      */
-    private $step = 0;
+    private $total = 0;
 
     /**
-     * @var array
+     * Initialize
      */
-    private $excludes = array();
-
-    /**
-     * @var int
-     */
-    private $cloneNumber = 1;
-
-    /**
-     * Initialize object
-     * @param int $cloneNumber
-     */
-    public function __construct($cloneNumber = 1)
+    public function initialize()
     {
-        $this->cloneNumber = 1;
+        // Variables
+        $this->total                = count($this->options->tables);
     }
 
     /**
-     * @param array $excludes
+     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
+     * @return void
      */
-    public function setExcludes($excludes)
+    protected function calculateTotalSteps()
     {
-        $this->excludes = $excludes;
+        $this->options->totalSteps  = $this->total;
     }
 
     /**
-     * @param int $step
+     * Execute the Current Step
+     * Returns false when over threshold limits are hit or when the job is done, true otherwise
+     * @return bool
      */
-    public function setStep($step)
+    protected function execute()
     {
-        $this->step = $step;
-    }
-
-    /**
-     * Start Module
-     * @return mixed
-     */
-    public function start()
-    {
-        $total = count($this->tables);
+        // Over limits threshold
+        if ($this->isOverThreshold())
+        {
+            // Prepare response and save current progress
+            $this->prepareResponse(false, false);
+            $this->saveOptions();
+            return false;
+        }
 
         // No more steps, finished
-        if ($this->step > $total || !isset($this->tables[$this->step]))
+        if ($this->options->currentStep > $this->total || !isset($this->options->tables[$this->options->currentStep]))
         {
-            return array(
-                "status"        => true,
-                "percentage"    => round(($this->step / $total) * 100),
-                "total"         => $total,
-                "step"          => $this->step
-            );
+            $this->prepareResponse(true, false);
+            return false;
         }
 
         // Table is excluded
-        if (in_array($this->tables[$this->step]->name, $this->excludes))
+        if (in_array($this->options->tables[$this->options->currentStep]->name, $this->options->excludedTables))
         {
-            return array(
-                "status"        => false,
-                "percentage"    => round(($this->step / $total) * 100),
-                "total"         => $total,
-                "step"          => $this->step + 1
-            );
+            $this->prepareResponse();
+            return true;
         }
 
         // Copy table
-        $this->copyTable($this->tables[$this->step]->name);
+        $this->copyTable($this->options->tables[$this->options->currentStep]->name);
+
+        // Prepare Response
+        $this->prepareResponse();
 
         // Not finished
-        return array(
-            "status"        => false,
-            "percentage"    => round(($this->step / $total) * 100),
-            "total"         => $total,
-            "step"          => $this->step + 1
-        );
-    }
-
-    /**
-     * Get tables status
-     */
-    public function getStatus()
-    {
-        $wpDB = WPStaging::getInstance()->get("wpdb");
-
-        if (strlen($wpDB->prefix) > 0)
-        {
-            $sql = "SHOW TABLE STATUS LIKE '{$wpDB->prefix}%'";
-        }
-        else
-        {
-            $sql = "SHOW TABLE STATUS";
-        }
-
-        $tables = $wpDB->get_results($sql);
-
-        foreach ($tables as $table)
-        {
-            if (0 === strpos($table->Name, "wpstg"))
-            {
-                continue;
-            }
-
-            $this->tables[] = array(
-                "name"  => $table->Name,
-                "size"  => ($table->Data_length + $table->Index_length)
-            );
-        }
-
-        $this->tables = json_decode(json_encode($this->tables));
-    }
-
-    /**
-     * @return array
-     */
-    public function getTables()
-    {
-        return $this->tables;
-    }
-
-    /**
-     * @param object $tables
-     */
-    public function setTables($tables)
-    {
-        $this->tables = $tables;
+        return true;
     }
 
     /**
@@ -164,7 +88,7 @@ class Database implements JobInterface
     {
         $wpDB = WPStaging::getInstance()->get("wpdb");
 
-        $newTableName = "wpstg{$this->cloneNumber}_" . str_replace($wpDB->prefix, null, $tableName);
+        $newTableName = "wpstg{$this->options->cloneNumber}_" . str_replace($wpDB->prefix, null, $tableName);
 
         // Drop table if necessary
         $currentNewTable = $wpDB->get_var(
@@ -177,8 +101,11 @@ class Database implements JobInterface
         }
 
         $wpDB->query(
-            //"CREATE TABLE {$newTableName} LIKE {$tableName}; INSERT {$newTableName} SELECT * FROM {$tableName}"
+        //"CREATE TABLE {$newTableName} LIKE {$tableName}; INSERT {$newTableName} SELECT * FROM {$tableName}"
             "CREATE TABLE {$newTableName} SELECT * FROM {$tableName}"
         );
+
+        // Add it to cloned tables listing
+        $this->options->clonedTables[] = $this->options->tables[$this->options->currentStep];
     }
 }

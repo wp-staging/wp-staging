@@ -491,7 +491,7 @@ var WPStaging = (function($)
                     // Add percentage
                     if ("undefined" !== typeof(response.percentage))
                     {
-                        cache.get("wpstg-files-progress").width(response.percentage);
+                        cache.get("#wpstg-files-progress").width(response.percentage + '%');
                     }
 
                     if (false === response.status)
@@ -518,7 +518,7 @@ var WPStaging = (function($)
                     // Add percentage
                     if ("undefined" !== typeof(response.percentage))
                     {
-                        cache.get("wpstg-links-progress").width(response.percentage);
+                        cache.get("#wpstg-links-progress").width(response.percentage + '%');
                     }
 
                     if (false === response.status)

@@ -7,31 +7,341 @@ if (!defined("WPINC"))
     die;
 }
 
-use WPStaging\Backend\Modules\Jobs\Interfaces\JobInterface;
+use WPStaging\WPStaging;
 
 /**
  * Class Data
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Data implements JobInterface
+class Data extends JobExecutable
 {
 
-    public function __construct()
-    {
+    /**
+     * @var \wpdb
+     */
+    private $db;
 
+    /**
+     * @var string
+     */
+    private $prefix;
+
+    /**
+     * Initialize
+     */
+    public function initialize()
+    {
+        $this->db       = WPStaging::getInstance()->get("wpdb");
+
+        $this->prefix   = "wpstg{$this->options->cloneNumber}_";
+    }
+
+    /**
+     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
+     * @return void
+     */
+    protected function calculateTotalSteps()
+    {
+        $this->options->totalSteps = 6;
     }
 
     /**
      * Start Module
-     * @return bool
+     * @return object
      */
     public function start()
     {
-        // TODO: Implement start() method.
+        // Execute steps
+        $this->run();
+
+        // Save option, progress
+        $this->saveOptions();
+
+        // Finish it
+        $this->finish();
+
+        // Prepare response
+        $this->response = array(
+            "status"        => true,
+            "percentage"    => 100,
+            "total"         => $this->options->totalSteps,
+            "step"          => $this->options->totalSteps
+        );
+
+        return (object) $this->response;
     }
 
-    public function next()
+    /**
+     * Execute the Current Step
+     * Returns false when over threshold limits are hit or when the job is done, true otherwise
+     * @return bool
+     */
+    protected function execute()
     {
-        // TODO: Implement next() method.
+        // Over limits threshold
+        if ($this->isOverThreshold())
+        {
+            // Prepare response and save current progress
+            $this->prepareResponse(false, false);
+            $this->saveOptions();
+            return false;
+        }
+
+        // No more steps, finished
+        if ($this->isFinished())
+        {
+            $this->prepareResponse(true, false);
+            return false;
+        }
+
+        // Execute step
+        $stepMethodName = "step" . $this->options->currentStep;
+        if (!$this->{$stepMethodName}())
+        {
+            $this->prepareResponse(false, false);
+            return false;
+        }
+
+        // Prepare Response
+        $this->prepareResponse();
+
+        // Not finished
+        return true;
+    }
+
+    /**
+     * Checks Whether There is Any Job to Execute or Not
+     * @return bool
+     */
+    private function isFinished()
+    {
+        return (
+            $this->options->currentStep > $this->options->totalSteps ||
+            !method_exists($this, "step" . $this->options->currentStep)
+        );
+    }
+
+    /**
+     * Replace "siteurl"
+     * @return bool
+     */
+    protected function step1()
+    {
+        $result = $this->db->query(
+            $this->db->prepare(
+                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'",
+                get_home_url() . '/' . $this->options->cloneUrlFriendlyName
+            )
+        );
+
+        // All good
+        if ($result)
+        {
+            return true;
+        }
+
+        // TODO log $this->db->last_error
+        return false;
+    }
+
+    /**
+     * Update "wpstg_is_staging_site"
+     * @return bool
+     */
+    protected function step2()
+    {
+        $result = $this->db->query(
+            $this->db->prepare(
+                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'",
+                "true"
+            )
+        );
+
+        // All good
+        if ($result)
+        {
+            return true;
+        }
+
+        // TODO log $this->db->last_error
+        return false;
+    }
+
+    /**
+     * Update rewrite_rules
+     * @return bool
+     */
+    protected function step3()
+    {
+        $result = $this->db->query(
+            $this->db->prepare(
+                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'rewrite_rules'",
+                ''
+            )
+        );
+
+        // All good
+        if ($result)
+        {
+            return true;
+        }
+
+        // TODO log $this->db->last_error
+        return false;
+    }
+
+    /**
+     * Update Table Prefix in meta_keys
+     * @return bool
+     */
+    protected function step4()
+    {
+        $resultOptions = $this->db->query(
+            $this->db->prepare(
+                "UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s",
+                $this->db->prefix,
+                $this->prefix,
+                $this->db->prefix . "_%"
+            )
+        );
+
+        if (!$resultOptions)
+        {
+            // TODO log $this->db->last_error
+            return false;
+        }
+
+        $resultUserMeta = $this->db->query(
+            $this->db->prepare(
+                "UPDATE {$this->prefix}options SET option_name =replace(option_name, %s, %s) WHERE option_name LIKE %s",
+                $this->db->prefix,
+                $this->prefix,
+                $this->db->prefix . "_%"
+            )
+        );
+
+        if (!$resultUserMeta)
+        {
+            // TODO log $this->db->last_error
+            return false;
+        }
+
+
+        return true;
+    }
+
+    /**
+     * Update $table_prefix in wp-config.php
+     * @return bool
+     */
+    protected function step5()
+    {
+        $path = get_home_path() . $this->options->cloneUrlFriendlyName . "/wp-config.php";
+
+        if (false === ($content = file_get_contents($path)))
+        {
+            // TODO log
+            return false;
+        }
+
+        // Replace table prefix
+        $content = str_replace('$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content);
+
+        // Replace URLs
+        $content = str_replace(get_home_url(), get_home_url() . $this->options->cloneUrlFriendlyName, $content);
+
+        if (false === @file_put_contents($path, $content))
+        {
+            // TODO log
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Reset index.php to original file
+     * Check first if main wordpress is used in subfolder and index.php in parent directory
+     * @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
+     * @return bool
+     */
+    protected function step6()
+    {
+        // No settings, all good
+        if (!isset($this->settings->wpSubDirectory) || "1" !== $this->settings->wpSubDirectory)
+        {
+            return true;
+        }
+
+        $path = get_home_path() . $this->options->cloneUrlFriendlyName . "/index.php";
+
+        if (false === ($content = file_get_contents($path)))
+        {
+            // TODO log
+            return false;
+        }
+
+
+        if (!preg_match("/(require(.*)wp-blog-header.php' \);)/", $content, $matches))
+        {
+            // TODO log
+            return false;
+        }
+
+        $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);/";
+
+        $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0];
+        $replace.= " // Changed by WP-Staging";
+
+        if (null === preg_replace($pattern, $replace, $content))
+        {
+            // TODO log
+            return false;
+        }
+
+        if (false === @file_put_contents($path, $content))
+        {
+            // TODO log
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Save Clone Data
+     * @return bool
+     */
+    protected function finish()
+    {
+        // Clean up
+        $this->cleanUp();
+
+        // Clone data already exists
+        if (isset($this->options->existingClones->{$this->options->clone}))
+        {
+            return true;
+        }
+
+        // Save new clone data
+        $clones = json_decode(json_encode($this->options->existingClones), true);
+
+        $clones[$this->options->clone] = array(
+            "seoFriendlyName"   => $this->options->cloneUrlFriendlyName,
+            "path"              => ABSPATH . $this->options->cloneUrlFriendlyName,
+            "url"               => get_site_url() . '/' . $this->options->cloneUrlFriendlyName,
+            "number"            => $this->options->cloneNumber
+        );
+
+        return (update_option("wpstg_existing_clones", $clones));
+    }
+
+    /**
+     * Clean Up Cache Files
+     * @return bool
+     */
+    protected function cleanUp()
+    {
+        return ($this->cache->delete("clone_options") && $this->cache->delete("files_to_copy"));
     }
 }

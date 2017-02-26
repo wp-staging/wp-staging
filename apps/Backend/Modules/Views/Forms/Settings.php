@@ -17,7 +17,7 @@ class Settings
     /**
      * @var array
      */
-    private $form = [];
+    private $form = array();
 
     private $tabs;
 
@@ -45,103 +45,101 @@ class Settings
         $this->form["general"] = new Form();
 
         // DB Copy Query Limit
-        $this->form["general"]->add(
-            (new Numeric(
-                "wpstg_settings[wpstg_query_limit]",
-                array(
+        $element = new Numeric(
+            "wpstg_settings[queryLimit]",
+            array(
                 "class" => "medium-text",
                 "step"  => 1,
                 "max"   => 999999,
                 "min"   => 0
             )
-            ))
-            ->setLabel("DB Copy Query Limit")
+        );
+
+        $this->form["general"]->add(
+            $element->setLabel("DB Copy Query Limit")
             ->setDefault(1000)
         );
 
         // File Copy Batch Size
-        $this->form["general"]->add(
-            (new Numeric(
-                "wpstg_settings[wpstg_batch_size]",
-                array(
+        $element = new Numeric(
+            "wpstg_settings[batchSize]",
+            array(
                 "class" => "medium-text",
                 "step"  => 1,
                 "max"   => 999999,
                 "min"   => 0
             )
-            ))
-            ->setLabel("File Copy Batch Size")
+        );
+
+        $this->form["general"]->add(
+            $element->setLabel("File Copy Batch Size")
             ->setDefault(2)
         );
 
         // CPU load priority
-        $this->form["general"]->add(
-            (new Select(
-                "wpstg_settings[wpstg_cpu_load]",
-                array(
+        $element = new Select(
+            "wpstg_settings[cpuLoad]",
+            array(
                 "default"   => "Default",
                 "high"      => "High (fast)",
                 "medium"    => "Medium (average)",
                 "low"       => "Low (slow)"
             )
-            ))
-            ->setLabel("CPU load priority")
+        );
+
+        $this->form["general"]->add(
+            $element->setLabel("CPU load priority")
             ->setDefault("default")
         );
 
         // Optimizer
+        $element = new Check(
+            "wpstg_settings[optimizer]",
+            array('1' => "Select the plugins you wish to disable during clone process")
+        );
+
         $this->form["general"]->add(
-            (new Check(
-                "wpstg_settings[optimizer]",
-                array(
-                '1' => "Select the plugins you wish to disable during clone process"
-            )
-            ))
-            ->setLabel("Optimizer")
+            $element->setLabel("Optimizer")
         );
 
         // Disable admin authorization
+        $element = new Check(
+            "wpstg_settings[disableAdminLogin]",
+            array('1' => '')
+        );
+
         $this->form["general"]->add(
-            (new Check(
-                "wpstg_settings[disable_admin_login]",
-                array(
-                '1' => ''
-            )
-            ))
-            ->setLabel("Disable admin authorization")
+            $element->setLabel("Disable admin authorization")
         );
 
         // WordPress in subdirectory
+        $element = new Check(
+            "wpstg_settings[wpSubDirectory]",
+            array('1' => '')
+        );
+
         $this->form["general"]->add(
-            (new Check(
-                "wpstg_settings[wordpress_subdirectory]",
-                array(
-                '1' => ''
-            )
-            ))
-            ->setLabel("Wordpress in subdirectory")
+            $element->setLabel("Wordpress in subdirectory")
         );
 
         // Debug Mode
+        $element = new Check(
+            "wpstg_settings[debugMode]",
+            array('1' => '')
+        );
+
         $this->form["general"]->add(
-            (new Check(
-                "wpstg_settings[debug_mode]",
-                array(
-                '1' => ''
-            )
-            ))
-            ->setLabel("Debug Mode")
+            $element->setLabel("Debug Mode")
         );
 
         // Remove Data on Uninstall?
+        $element = new Check(
+            "wpstg_settomgs[unInstallOnDelete]",
+            array('1' => '')
+        );
+
         $this->form["general"]->add(
-            (new Check(
-                "wpstg_settomgs[uninstall_on_delete]",
-                array(
-                '1' => ''
-            )
-            ))
-            ->setLabel("Remove Data on Uninstall?")
+            $element->setLabel("Remove Data on Uninstall?")
         );
     }
 

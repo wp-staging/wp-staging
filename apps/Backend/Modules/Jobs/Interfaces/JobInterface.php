@@ -16,7 +16,7 @@ interface JobInterface
 
     /**
      * Start Module
-     * @return bool
+     * @return object
      */
     public function start();
 }

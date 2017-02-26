@@ -478,6 +478,10 @@ class Administrator extends InjectionAware
 
     public function ajaxReplaceData()
     {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
 
+        $cloning = new Cloning();
+
+        wp_send_json($cloning->start());
     }
 }

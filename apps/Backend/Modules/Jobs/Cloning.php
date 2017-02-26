@@ -9,6 +9,7 @@ class Cloning extends Job
 {
 
     /**
+     * Save Chosen Cloning Settings
      * @return bool
      */
     public function save()
@@ -19,7 +20,16 @@ class Cloning extends Job
         }
 
         // Generate Options
-        $this->options->clone = $_POST["cloneID"];
+
+        // Clone
+        $this->options->clone               = $_POST["cloneID"];
+        $this->options->cloneUrlFriendlyName= preg_replace("#\W+#", '-', strtolower($this->options->clone));
+        $this->options->cloneNumber         = 1;
+
+        if (isset($this->options->existingClones->{$this->options->clone}))
+        {
+            $this->options->cloneNumber = $this->options->existingClones->{$this->options->clone}->number;
+        }
 
         // Excluded Tables
         if (isset($_POST["excludedTables"]) && is_array($_POST["excludedTables"]))
@@ -45,6 +55,11 @@ class Cloning extends Job
             $this->options->extraDirectories
         );
 
+        array_unshift($this->options->directoriesToCopy, ABSPATH);
+
+        // Delete files to copy listing
+        $this->cache->delete("files_to_copy");
+
         return $this->saveOptions();
     }
 
@@ -53,65 +68,41 @@ class Cloning extends Job
      */
     public function start()
     {
-        if (!$this->options->currentJob)
+        if (null === $this->options->currentJob)
         {
-            throw new \Exception("Job is not set");
+            // TODO log for finish?
+            return true;
         }
 
         $methodName = "job" . ucwords($this->options->currentJob);
 
         if (!method_exists($this, $methodName))
         {
+            // TODO log
             throw new \Exception("Job method doesn't exist : " . $this->options->currentJob);
         }
 
+        // TODO execute directly without calling job* method
         // Call the job
         return $this->{$methodName}();
     }
 
     /**
-     * @return array
+     * @param object $response
+     * @param string $nextJob
+     * @return object
      */
-    public function jobDatabase()
+    private function handleJobResponse($response, $nextJob)
     {
-        $this->options->currentJob              = "directories";
+        // Job is not done
+        if (true !== $response->status)
+        {
+            return $response;
+        }
+
+        $this->options->currentJob              = $nextJob;
         $this->options->currentStep             = 0;
         $this->options->totalSteps              = 0;
-
-        $this->saveOptions();
-
-        return array(
-            "status"        => true,
-            "percentage"    => 100,
-            "total"         => 10,
-            "step"          => 10
-        );
-
-        $database = new Database(count($this->options->existingClones));
-
-        $database->setTables($this->options->tables);
-        $database->setStep($this->options->currentStep);
-
-        $response = $database->start();
-
-        // Job is done
-        if (true === $response["status"])
-        {
-            $this->options->currentJob              = "directories";
-            $this->options->currentStep             = 0;
-            $this->options->totalSteps              = 0;
-        }
-        // Job is not done
-        else
-        {
-            if (isset($this->options->tables[$this->options->currentStep]))
-            {
-                $this->options->clonedTables[] = $this->options->tables[$this->options->currentStep];
-            }
-
-            $this->options->currentStep             = $response["step"];
-            $this->options->totalSteps              = $response["total"];
-        }
 
         // Save options
         $this->saveOptions();
@@ -120,41 +111,42 @@ class Cloning extends Job
     }
 
     /**
-     * @return array
+     * Clone Database
+     * @return object
+     */
+    public function jobDatabase()
+    {
+        $database = new Database();
+        return $this->handleJobResponse($database->start(), "directories");
+    }
+
+    /**
+     * Get All Files From Selected Directories Recursively Into a File
+     * @return object
      */
     public function jobDirectories()
     {
         $directories = new Directories();
-
-        $directories->setStep($this->options->currentStep);
-
-        $response = $directories->start();
-
-        // Refresh options
-        $this->options  = $directories->getOptions();
-
-        // Job is done
-        if (true === $response["status"])
-        {
-            $this->options->currentJob              = "files";
-            $this->options->currentStep             = 0;
-            $this->options->totalSteps              = 0;
-        }
-        // Job is not done
-        else
-        {
-            $this->options->currentStep             = $response["step"];
-            $this->options->totalSteps              = $response["total"];
-        }
-
-        // Save options
-        $this->saveOptions();
-
-        return $response;
+        return $this->handleJobResponse($directories->start(), "files");
     }
 
+    /**
+     * Copy Files
+     * @return object
+     */
     public function jobFiles()
     {
-        die("weee");
+        $files = new Files();
+        return $this->handleJobResponse($files->start(), "data");
+    }
+
+    /**
+     * Replace Data
+     * @return object
+     */
+    public function jobData()
+    {
+        $data = new Data();
+        return $this->handleJobResponse($data->start(), null);
     }
 }

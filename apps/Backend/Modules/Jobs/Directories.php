@@ -2,28 +2,23 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 // No Direct Access
-use WPStaging\WPStaging;
-
 if (!defined("WPINC"))
 {
     die;
 }
 
+use WPStaging\WPStaging;
+
 /**
  * Class Files
  * @package WPStaging\Backend\Modules\Directories
  */
-class Directories extends Job
+class Directories extends JobExecutable
 {
     /**
      * @var array
      */
     private $files = array();
-
-    /**
-     * @var int
-     */
-    private $step = 0;
 
     /**
      * @var int
@@ -39,18 +34,97 @@ class Directories extends Job
     }
 
     /**
-     * @param int $step
+     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
+     * @return void
      */
-    public function setStep($step)
+    protected function calculateTotalSteps()
     {
-        $this->step = $step;
+        $this->options->totalSteps = $this->total;
+    }
+
+    /**
+     * Get Root Files
+     */
+    protected function getRootFiles()
+    {
+        if (1 < $this->options->totalFiles)
+        {
+            return;
+        }
+
+        $this->getFilesFromDirectory(ABSPATH);
+    }
+
+    /**
+     * Start Module
+     * @return object
+     */
+    public function start()
+    {
+        // Root files
+        $this->getRootFiles();
+
+        // Execute steps
+        $this->run();
+
+        // Save option, progress
+        $this->saveProgress();
+
+        return (object) $this->response;
+    }
+
+    /**
+     * Execute the Current Step
+     * Returns false when over threshold limits are hit or when the job is done, true otherwise
+     * @return bool
+     */
+    protected function execute()
+    {
+        // No job left to execute
+        if ($this->isFinished())
+        {
+            $this->prepareResponse(true, false);
+            return false;
+        }
+
+        // Get current directory
+        $directory = $this->options->directoriesToCopy[$this->options->currentStep];
+
+        // Get files recursively
+        if (!$this->getFilesFromSubDirectories($directory))
+        {
+            $this->prepareResponse(false, false);
+            return false;
+        }
+
+        // Add directory to scanned directories listing
+        $this->options->scannedDirectories[] = $directory;
+
+        // Prepare response
+        $this->prepareResponse();
+
+        // Not finished
+        return true;
+    }
+
+    /**
+     * Checks Whether There is Any Job to Execute or Not
+     * @return bool
+     */
+    private function isFinished()
+    {
+        return (
+            $this->options->currentStep > $this->total ||
+            empty($this->options->directoriesToCopy) ||
+            !isset($this->options->directoriesToCopy[$this->options->currentStep])
+        );
     }
 
     /**
      * @param $path
-     * @return array|bool
+     * @return bool
      */
-    public function getFilesFromSubDirectories($path)
+    protected function getFilesFromSubDirectories($path)
     {
         if ($this->isOverThreshold())
         {
@@ -85,18 +159,14 @@ class Directories extends Job
 
         $this->saveOptions();
 
-        return array(
-            "status"        => false,
-            "percentage"    => round(($this->step / $this->total) * 100),
-            "total"         => $this->total,
-            "step"          => $this->step
-        );
+        // Not finished
+        return true;
     }
 
     /**
      * @param string $directory
      */
-    public function getFilesFromDirectory($directory)
+    protected function getFilesFromDirectory($directory)
     {
         // Save all files
         $files = array_diff(scandir($directory), array('.', ".."));
@@ -116,6 +186,8 @@ class Directories extends Job
                 continue;
             }
 
+            $this->options->totalFiles++;
+
             $this->files[] = $fullPath;
         }
     }
@@ -125,7 +197,7 @@ class Directories extends Job
      * @param \SplFileInfo $directory
      * @return string|false
      */
-    private function getPath($directory)
+    protected function getPath($directory)
     {
         $path = str_replace(ABSPATH, null, $directory->getRealPath());
 
@@ -146,106 +218,14 @@ class Directories extends Job
     {
         $this->saveOptions();
 
-        $ds     = DIRECTORY_SEPARATOR;
-
-        $dir    = WP_PLUGIN_DIR . $ds . WPStaging::SLUG . $ds . "vars" . $ds . "cache" . $ds;
-
-        $files  = implode(PHP_EOL, $this->files);
+        $fileName   = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
+        $files      = implode(PHP_EOL, $this->files);
 
         if (strlen($files) > 0)
         {
             $files .= PHP_EOL;
         }
 
-        return (false !== @file_put_contents($dir . "files_to_copy.cache", $files, FILE_APPEND));
-    }
-
-    /**
-     * Start Module
-     * @return array
-     */
-    public function start()
-    {
-        if (empty($this->options->directoriesToCopy) || !isset($this->options->directoriesToCopy[$this->step]))
-        {
-            return array(
-                "status"        => true,
-                "percentage"    => 100,
-                "total"         => 0,
-                "step"          => $this->step
-            );
-        }
-
-        $result = array(
-            "status"    => false,
-            "percentage"=> 0,
-            "total"     => 0,
-            "step"      => 0
-        );
-
-
-        $total = $this->total - 1;
-        for ($i = 0; $i <= $total; $i++)
-        {
-            $directory = $this->options->directoriesToCopy[$this->step];
-
-            // Get files recursively
-            if (false === ($result = $this->getFilesFromSubDirectories($directory)))
-            {
-                $result = array(
-                    "status"        => false,
-                    "percentage"    => round(($this->step / $total) * 100),
-                    "total"         => $total,
-                    "step"          => $this->step
-                );
-
-                break;
-            }
-
-            $this->options->scannedDirectories[] = $directory;
-
-            $this->step = $i;
-        }
-
-        // Completed
-        $result["status"]       = true;
-        $result["percentage"]   = 100;
-
-        $this->saveProgress();
-
-        return $result;
-
-        // Save last scanned directory
-        //$this->options->lastScannedDirectory = array($this->options->directoriesToCopy[$this->step]);
-
-        //        $directory = $this->options->directoriesToCopy[$this->step];
-        //
-        //        // Get files recursively
-        //        $result = $this->getFilesFromSubDirectories($directory);
-        //
-        //        if (false === $result)
-        //        {
-        //            $result = array(
-        //                "status"        => false,
-        //                "percentage"    => round(($this->step / $this->total) * 100),
-        //                "total"         => $this->total,
-        //                "step"          => $this->step
-        //            );
-        //        }
-        //
-        //        $this->options->scannedDirectories[] = $directory;
-        //
-        //        $this->saveOptions();
-        //
-        //        return $result;
-    }
-
-    /**
-     * Next Step of the Job
-     * @return void
-     */
-    public function next()
-    {
-        // TODO: Implement next() method.
+        return (false !== @file_put_contents($fileName, $files, FILE_APPEND));
     }
 }

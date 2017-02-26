@@ -178,4 +178,20 @@ class Cache
 
         return true;
     }
+
+    /**
+     * @return string
+     */
+    public function getCacheDir()
+    {
+        return $this->cacheDir;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCacheExtension()
+    {
+        return $this->cacheExtension;
+    }
 }

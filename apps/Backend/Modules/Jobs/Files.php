@@ -11,351 +11,289 @@ if (!defined("WPINC"))
  * Class Files
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Files extends Job
+class Files extends JobExecutableWithCommandLine
 {
 
     /**
-     * Directories
-     * @var array
+     * @var \SplFileObject
      */
-    private $directories = array();
-
-    /**
-     * @var array
-     */
-    private $bigFiles = array();
-
-    /**
-     * @var bool
-     */
-    private $canUseExec;
-
-    /**
-     * @var bool
-     */
-    private $canUsePopen;
-
-    /**
-     * @var bool
-     */
-    private $isEnoughDiskSpace = true;
-
-    /**
-     * Operating System
-     * @var string
-     */
-    private $OS;
+    private $file;
 
     /**
      * @var int
      */
-    private $step = 0;
+    private $maxFilesPerRun = 1000;
+
+    /**
+     * @var string
+     */
+    private $destination;
 
     /**
      * Initialization
      */
     public function initialize()
     {
-        $this->OS           = $this->getOS();
-        $this->canUseExec   = $this->canUse("exec");
-        $this->canUsePopen  = $this->canUsePopen();
-        $this->directories();
-        $this->hasFreeDiskSpace();
+        $this->destination = ABSPATH . $this->options->cloneUrlFriendlyName . DIRECTORY_SEPARATOR;
+
+        $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
+
+        if (is_file($filePath))
+        {
+            $this->file = new \SplFileObject($filePath, 'r');
+        }
     }
 
     /**
-     * Start Module
-     * @return mixed
+     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
+     * @return void
      */
-    public function start()
+    protected function calculateTotalSteps()
     {
-        // TODO: Implement start() method.
-
-        // TODO: check if we can use EXEC or not
-        // TODO: if we can use exec; WIN: exec("copy {$sourceFile} {$targetFile}"), LIN: exec("cp {$sourceFile} {$targetFile}")
+        $this->options->totalSteps = ceil($this->options->totalFiles / $this->maxFilesPerRun);
     }
 
-    public function getAllFilesToCopy()
+    /**
+     * Execute the Current Step
+     * Returns false when over threshold limits are hit or when the job is done, true otherwise
+     * @return bool
+     */
+    protected function execute()
     {
-        if (empty($this->options->includedDirectories))
+        // Finished
+        if ($this->isFinished())
+        {
+            $this->prepareResponse(true, false);
+            return false;
+        }
+
+        // Get files and copy'em
+        if (!$this->getFilesAndCopy())
+        {
+            $this->prepareResponse(false, false);
+            return false;
+        }
+
+        // Prepare response
+        $this->prepareResponse();
+
+        // Not finished
+        return true;
+    }
+
+    /**
+     * Get files and copy
+     * @return bool
+     */
+    private function getFilesAndCopy()
+    {
+        // Over limits threshold
+        if ($this->isOverThreshold())
+        {
+            // Prepare response and save current progress
+            $this->prepareResponse(false, false);
+            $this->saveOptions();
+            return false;
+        }
+
+        // Skip processed ones
+        if ($this->options->copiedFiles != 0)
+        {
+            $this->file->seek($this->options->copiedFiles);
+        }
+
+        $this->file->setFlags(\SplFileObject::SKIP_EMPTY | \SplFileObject::READ_AHEAD);
+
+        // One thousand files at a time
+        for ($i = 0; $i <= $this->maxFilesPerRun; $i++)
+        {
+            // End of file
+            if ($this->file->eof())
+            {
+                break;
+            }
+
+            $this->copyFile($this->file->fgets());
+        }
+
+        return true;
+    }
+
+    /**
+     * Checks Whether There is Any Job to Execute or Not
+     * @return bool
+     */
+    private function isFinished()
+    {
+        return (
+            $this->options->currentStep > $this->options->totalSteps ||
+            $this->options->copiedFiles >= $this->options->totalFiles
+        );
+    }
+
+    /**
+     * @param string $file
+     * @return bool
+     */
+    private function copyFile($file)
+    {
+        $file = trim($file);
+
+        // Increment copied files whatever the result is
+        // This way we don't get stuck in the same step / files
+        $this->options->copiedFiles++;
+
+        // Invalid file, skipping it as if succeeded
+        if (!is_file($file) || !is_readable($file))
+        {
+            return true;
+        }
+
+        // Failed to get destination
+        if (false === ($destination = $this->getDestination($file)))
+        {
+            return false;
+        }
+
+
+        // We can use exec
+        if (true === $this->canUseExec)
+        {
+            return $this->copyFileWithExec($file, $destination);
+        }
+
+        // We can use popen
+        if (true === $this->canUsePopen)
+        {
+            return $this->copyFileWithPopen($file, $destination);
+        }
+
+        // Good old PHP
+        return $this->copyFileWithPHP($file, $destination);
+    }
+
+    /**
+     * Gets destination file and checks if the directory exists, if it does not attempts to create it.
+     * If creating destination directory fails, it returns false, gives destination full path otherwise
+     * @param string $file
+     * @return bool|string
+     */
+    private function getDestination($file)
+    {
+        $relativePath           = str_replace(ABSPATH, null, $file);
+        $destinationPath        = $this->destination . $relativePath;
+        $destinationDirectory   = dirname($destinationPath);
+
+        if (!is_dir($destinationDirectory) && @mkdir($destinationDirectory, 0775, true))
         {
             // TODO log
             return false;
         }
 
-
-    }
-
-    public function next()
-    {
-        // TODO: Implement next() method.
+        return $destinationPath;
     }
 
     /**
-    * @param int $step
-    */
-    public function setStep($step)
-    {
-        $this->step = $step;
-    }
-
-    /**
-     * Get OS
-     * @return string
-     */
-    protected function getOS()
-    {
-        return strtoupper(substr(PHP_OS, 0, 3)); // WIN, LIN..
-    }
-
-    /**
-     * Checks whether we can use given function or not
-     * @param string $functionName
+     * Copy File using PHP
+     * @param string $file
+     * @param string $destination
      * @return bool
      */
-    protected function canUse($functionName)
+    private function copyFileWithPHP($file, $destination)
     {
-        // Exec doesn't exist
-        if (!function_exists($functionName))
+        // Get file size
+        $fileSize = filesize($file);
+
+        // File is over batch size
+        if ($fileSize >= $this->settings->batchSize)
+        {
+            return $this->copyBigFileWithPHP($file, $destination);
+        }
+
+        // Attempt to copy
+        if (!@copy($file, $destination))
+        {
+            // TODO log
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Copy bigger files than $this->settings->batchSize
+     * @param string $file
+     * @param string $destination
+     * @return bool
+     */
+    private function copyBigFileWithPHP($file, $destination)
+    {
+        $bytes      = 0;
+        $fileInput  = new \SplFileObject($file, "rb");
+        $fileOutput = new \SplFileObject($destination, 'w');
+
+        while (!$fileInput->eof())
+        {
+            $bytes += $fileOutput->fwrite($fileInput->fread($this->settings->batchSize));
+        }
+
+        $fileInput = null;
+        $fileOutput= null;
+
+        return ($bytes > 0);
+    }
+
+    /**
+     * @param string $file
+     * @param string $destination
+     * @return bool
+     */
+    private function copyFileWithExec($file, $destination)
+    {
+        // OS is not supported
+        if (!in_array($this->OS, array("WIN", "LIN"), true))
         {
             return false;
         }
 
-        // Check if it is disabled from INI
-        $disabledFunctions = explode(',', ini_get("disable_functions"));
-
-        return (!in_array($functionName, $disabledFunctions));
-    }
-
-    /**
-     * Checks whether we can use popen() / \COM class (for WIN) or not
-     * @return bool
-     */
-    protected function canUsePopen()
-    {
-        // Windows
+        // WIN OS
         if ("WIN" === $this->OS)
         {
-            return class_exists("\\COM");
+            return $this->copyFileWithExecForWin($file, $destination);
         }
 
-        // This should cover rest OS for servers
-        return $this->canUse("popen");
+        // *Nix OS
+        return $this->copyFileWithExecForNix($file, $destination);
     }
 
     /**
-     * Get directories and main meta data about'em recursively
+     * @param string $file
+     * @param string $destination
+     * @return bool
      */
-    public function directories()
+    private function copyFileWithExecForWin($file, $destination)
     {
-        $directories = new \DirectoryIterator(ABSPATH);
-
-        foreach($directories as $directory)
-        {
-            // Not a valid directory
-            if (false === ($path = $this->getPath($directory)))
-            {
-                continue;
-            }
-
-            $this->handleDirectory($path);
-
-            // Get Sub-directories
-            $this->getSubDirectories($directory->getRealPath());
-        }
-
-        // Gather Plugins
-        $this->getSubDirectories(WP_PLUGIN_DIR);
-
-        // Gather Themes
-        $this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "themes");
-
-        // Gather Uploads
-        $this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "uploads");
+        @exec("copy {$file} {$destination}");
+        return true;
     }
 
     /**
-     * @param string $path
+     * @param string $file
+     * @param string $destination
+     * @return bool
      */
-    public function getSubDirectories($path)
+    private function copyFileWithExecForNix($file, $destination)
     {
-        $directories = new \DirectoryIterator($path);
-
-        foreach($directories as $directory)
-        {
-            // Not a valid directory
-            if (false === ($path = $this->getPath($directory)))
-            {
-                continue;
-            }
-
-            $this->handleDirectory($path);
-        }
+        @exec("cp {$file} {$destination} > /dev/null &");
+        return true;
     }
 
     /**
-     * Get Path from $directory
-     * @param \SplFileInfo $directory
-     * @return string|false
-     */
-    private function getPath($directory)
-    {
-        $path = str_replace(ABSPATH, null, $directory->getRealPath());
-
-        // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
-        if (!$directory->isDir() || strlen($path) < 1 || strpos($directory->getRealPath(), ABSPATH) !== 0)
-        {
-            return false;
-        }
-
-        return $path;
-    }
-
-    /**
-     * Organizes $this->directories
-     * @param string $path
-     */
-    private function handleDirectory($path)
-    {
-        $directoryArray = explode(DIRECTORY_SEPARATOR, $path);
-        $total          = count($directoryArray);
-
-        if (count($total) < 1)
-        {
-            return;
-        }
-
-        $total          = $total - 1;
-        $currentArray   = &$this->directories;
-
-        for ($i = 0; $i <= $total; $i++)
-        {
-            if (!isset($currentArray[$directoryArray[$i]]))
-            {
-                $currentArray[$directoryArray[$i]] = array();
-            }
-
-            $currentArray = &$currentArray[$directoryArray[$i]];
-
-            // Attach meta data to the end
-            if ($i < $total)
-            {
-                continue;
-            }
-
-            $fullPath   = ABSPATH . $path;
-            $size       = $this->getDirectorySize($fullPath);
-
-            $currentArray["metaData"] = array(
-                "size"      => $size,
-                "path"      => ABSPATH . $path,
-            );
-        }
-    }
-
-    /**
-     * Checks and organizes big files
-     * @param \SplFileInfo $file
-     */
-    private function handleFile($file)
-    {
-        if (
-            !isset($this->options->maxFileBatch) ||
-            (int) $this->options->maxFileBatch < 1 ||
-            $this->options->maxFileBatch > $file->getSize()
-        )
-        {
-            return;
-        }
-
-        $this->bigFiles[] = array(
-            "name"  => $file->getBasename(),
-            "size"  => $file->getSize(),
-            "path"  => $file->getRealPath()
-        );
-    }
-
-    /**
-     * Checks if there is enough free disk space to create staging site
-     */
-    private function hasFreeDiskSpace()
-    {
-        if (!function_exists("disk_free_space"))
-        {
-            return;
-        }
-
-        $freeSpace = @disk_free_space(ABSPATH);
-
-        if (false === $freeSpace)
-        {
-            return;
-        }
-
-        $this->isEnoughDiskSpace = ($freeSpace >= $this->getDirectorySize(ABSPATH));
-    }
-
-    /**
-     * Gets size of given directory
-     * @param string $path
-     * @return int|null
-     */
-    private function getDirectorySize($path)
-    {
-        // Basics
-        $path       = realpath($path);
-
-        // Invalid path
-        if (false === $path)
-        {
-            return 0;
-        }
-
-        // We can use exec(), you go dude!
-        if (true === $this->canUseExec)
-        {
-            return $this->getDirectorySizeWithExec($path);
-        }
-
-        // Well, exec failed try popen()
-        if (true === $this->canUsePopen)
-        {
-            return $this->getDirectorySizeWithPopen($path);
-        }
-
-        // Good, old PHP... slow but will get the job done
-        //return $this->getDirectorySizeWithPHP($path);
-        return null;
-    }
-
-    private function getDirectorySizeWithPHP($path)
-    {
-        // Iterator
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS)
-        );
-
-        $totalBytes = 0;
-
-        // Loop & add file size
-        foreach ($iterator as $file)
-        {
-            try {
-                $totalBytes += $file->getSize();
-            } // Some invalid symbolik links can cause issues in *nix systems
-            catch(\Exception $e) {
-                // TODO log the issue???
-            }
-        }
-
-        return $totalBytes;
-    }
-
-    /**
-     * @param string $path
+     * @param string $file
+     * @param string $destination
      * @return int
      */
-    private function getDirectorySizeWithExec($path)
+    private function copyFileWithPopen($file, $destination)
     {
         // OS is not supported
         if (!in_array($this->OS, array("WIN", "LIN"), true))
@@ -366,126 +304,34 @@ class Files extends Job
         // WIN OS
         if ("WIN" === $this->OS)
         {
-            return $this->getDirectorySizeForWinWithExec($path);
+            return $this->copyFileWithPopenForWin($file, $destination);
         }
 
         // *Nix OS
-        return $this->getDirectorySizeForNixWithExec($path);
+        return $this->copyFileWithPopenForNix($file, $destination);
     }
 
     /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeForNixWithExec($path)
-    {
-        exec("du -s {$path}", $output, $return);
-
-        $size = explode("\t", $output[0]);
-
-        if (0 == $return && count($size) == 2)
-        {
-            return (int) $size[0];
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeForWinWithExec($path)
-    {
-        exec("diruse {$path}", $output, $return);
-
-        $size = explode("\t", $output[0]);
-
-        if (0 == $return && count($size) >= 4)
-        {
-            return (int) $size[0];
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeWithPopen($path)
-    {
-        // OS is not supported
-        if (!in_array($this->OS, array("WIN", "LIN"), true))
-        {
-            return 0;
-        }
-
-        // WIN OS
-        if ("WIN" === $this->OS)
-        {
-            return $this->getDirectorySizeForWinWithCOM($path);
-        }
-
-        // *Nix OS
-        return $this->getDirectorySizeForNixWithPopen($path);
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeForNixWithPopen($path)
-    {
-        $filePointer= popen("/usr/bin/du -sk {$path}", 'r');
-
-        $size       = fgets($filePointer, 4096);
-        $size       = (int) substr($size, 0, strpos($size, "\t"));
-
-        pclose($filePointer);
-
-        return $size;
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeForWinWithCOM($path)
-    {
-        $com = new \COM ("scripting.filesystemobject");
-
-        if (is_object($com))
-        {
-            $directory = $com->getfolder($path);
-
-            return (int) $directory->size;
-        }
-
-        return 0;
-    }
-
-    /**
-     * @return array
-     */
-    public function getDirectories()
-    {
-        return $this->directories;
-    }
-
-    /**
-     * @return array
-     */
-    public function getBigFiles()
-    {
-        return $this->bigFiles;
-    }
-
-    /**
+     * @param string $file
+     * @param string $destination
      * @return bool
      */
-    public function isEnoughDiskSpace()
+    private function copyFileWithPopenForWin($file, $destination)
     {
-        return $this->isEnoughDiskSpace;
+        $handle = @popen("/usr/bin/copy {$file} {$destination}", "w+");
+        pclose($handle);
+        return true;
+    }
+
+    /**
+     * @param string $file
+     * @param string $destination
+     * @return bool
+     */
+    private function copyFileWithPopenForNix($file, $destination)
+    {
+        $handle = @popen("/usr/bin/cp {$file} {$destination} > /dev/null &", "w+");
+        pclose($handle);
+        return true;
     }
 }
