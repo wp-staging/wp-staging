@@ -174,6 +174,9 @@ var WPStaging = (function($)
         cloneActions();
     };
 
+    /**
+     * Clone actions
+     */
     var cloneActions    = function()
     {
         var $workFlow       = cache.get("#wpstg-workflow"),
@@ -280,6 +283,12 @@ var WPStaging = (function($)
         }
     };
 
+    /**
+     * Ajax Requests
+     * @param data
+     * @param callback
+     * @param dataType
+     */
     var ajax            = function(data, callback, dataType)
     {
         if ("undefined" === typeof(dataType))
