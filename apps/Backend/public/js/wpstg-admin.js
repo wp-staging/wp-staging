@@ -169,9 +169,12 @@ var WPStaging = (function($)
                     500
                 );
             });
+
+
+        cloneActions();
     };
 
-    var cloning         = function()
+    var cloneActions    = function()
     {
         var $workFlow       = cache.get("#wpstg-workflow"),
             isCancelled     = false,
@@ -201,6 +204,44 @@ var WPStaging = (function($)
                 {
                     cancelCloning();
                 }
+            })
+            // Delete clone - confirmation
+            .on("click", ".wpstg-remove-clone[data-clone]", function(e) {
+                e.preventDefault();
+
+                var $existingClones = cache.get("#wpstg-existing-clones");
+
+                $workFlow.removeClass('active');
+                $existingClones.append(ajaxSpinner);
+
+                ajax(
+                    {
+                        action  : "wpstg_confirm_delete_clone",
+                        nonce   : wpstg.nonce,
+                        clone   : $(this).data("clone")
+                    },
+                    function(response)
+                    {
+                        cache.get("#wpstg-removing-clone").html(response);
+
+                        $existingClones.children("img").remove();
+                    },
+                    "HTML"
+                );
+            })
+            // Delete clone - confirmed
+            .on("click", "#wpstg-remove-clone", function (e) {
+                e.preventDefault();
+
+                cache.get("#wpstg-removing-clone").addClass("loading");
+
+                deleteClone($(this).data("clone"));
+            })
+            // Cancel deleting clone
+            .on("click", "#wpstg-cancel-removing", function (e) {
+                e.preventDefault();
+                $(".wpstg-clone").removeClass("active");
+                cache.get("#wpstg-removing-clone").html('');
             });
 
         // Cancel Cloning
@@ -317,56 +358,56 @@ var WPStaging = (function($)
                 e.preventDefault();
                 loadOverview();
             });
+    };
 
-        /**
-         * Get Excluded (Unchecked) Database Tables
-         * @returns {Array}
-         */
-        var getExcludedTables = function()
-        {
-            var excludedTables = [];
+    /**
+     * Get Excluded (Unchecked) Database Tables
+     * @returns {Array}
+     */
+    var getExcludedTables = function()
+    {
+        var excludedTables = [];
 
-            $(".wpstg-db-table input:not(:checked)").each(function () {
-                excludedTables.push(this.name);
-            });
+        $(".wpstg-db-table input:not(:checked)").each(function () {
+            excludedTables.push(this.name);
+        });
 
-            return excludedTables;
-        };
+        return excludedTables;
+    };
 
-        /**
-         * Get Included Directories
-         * @returns {Array}
-         */
-        var getIncludedDirectories = function()
-        {
-            var includedDirectories = [];
+    /**
+     * Get Included Directories
+     * @returns {Array}
+     */
+    var getIncludedDirectories = function()
+    {
+        var includedDirectories = [];
 
-            $(".wpstg-dir input:checked").each(function () {
-                var $this = $(this);
-                if (!$this.parent(".wpstg-dir").parents(".wpstg-dir").children(".wpstg-expand-dirs").hasClass("disabled"))
-                {
-                    includedDirectories.push($this.val());
-                }
-            });
-
-            return includedDirectories;
-        };
-
-        /**
-         * Get Cloning Step Data
-         */
-        var getCloningData = function()
-        {
-            if ("wpstg_cloning" !== that.data.action)
+        $(".wpstg-dir input:checked").each(function () {
+            var $this = $(this);
+            if (!$this.parent(".wpstg-dir").parents(".wpstg-dir").children(".wpstg-expand-dirs").hasClass("disabled"))
             {
-                return;
+                includedDirectories.push($this.val());
             }
+        });
 
-            that.data.cloneID               = $("#wpstg-new-clone-id").val() || new Date().getTime().toString();
-            that.data.excludedTables        = getExcludedTables();
-            that.data.includedDirectories   = getIncludedDirectories();
-            that.data.extraDirectories      = $("#wpstg_extraDirectories").val() || null;
-        };
+        return includedDirectories;
+    };
+
+    /**
+     * Get Cloning Step Data
+     */
+    var getCloningData = function()
+    {
+        if ("wpstg_cloning" !== that.data.action)
+        {
+            return;
+        }
+
+        that.data.cloneID               = $("#wpstg-new-clone-id").val() || new Date().getTime().toString();
+        that.data.excludedTables        = getExcludedTables();
+        that.data.includedDirectories   = getIncludedDirectories();
+        that.data.extraDirectories      = $("#wpstg_extraDirectories").val() || null;
     };
 
     /**
@@ -428,6 +469,39 @@ var WPStaging = (function($)
                 $this.find(".wpstg-tab-triangle").html("&#9658;");
             }
         });
+    };
+
+    /**
+     * Delete Clone
+     * @param {String} clone
+     */
+    var deleteClone     = function(clone)
+    {
+        ajax(
+            {
+                action          : "wpstg_delete_clone",
+                clone           : clone,
+                nonce           : wpstg.nonce,
+                excludedTables  : getExcludedTables(),
+                deleteDir       : $("#deleteDirectory:checked").val()
+            },
+            function(response)
+            {
+                if (true !== response)
+                {
+                    deleteClone(clone);
+                    return;
+                }
+
+                cache.get("#wpstg-removing-clone").removeClass("loading").html('');
+                $(".wpstg-clone#" + clone).remove();
+
+                if ($(".wpstg-clone").length < 1)
+                {
+                    cache.get("#wpstg-existing-clones").find("h3").text('');
+                }
+            }
+        );
     };
 
     /**
@@ -595,39 +669,39 @@ var WPStaging = (function($)
         }
     });
 
-    that.deleteClone    = (function(clone) {
-        if ("undefined" === typeof(clone))
-        {
-            alert("Couldn't detect clone to delete");
-            return false;
-        }
-
-        ajax(
-            {
-                action  : "wpstg_delete_clone",
-                nonce   : wpstg.nonce,
-                data    : {clone: clone}
-            },
-            function(response) {
-
-                if (response.length < 1)
-                {
-                    showError("Something went wrong, please try again");
-                }
-
-                var $currentStep = cache.get(".wpstg-current-step");
-
-                // Styling of elements
-                $workFlow.removeClass("loading").html(response);
-
-                $currentStep
-                    .removeClass("wpstg-current-step")
-                    .next("li")
-                    .addClass("wpstg-current-step");
-            },
-            "HTML"
-        );
-    });
+    // that.deleteClone    = (function(clone) {
+    //     if ("undefined" === typeof(clone))
+    //     {
+    //         alert("Couldn't detect clone to delete");
+    //         return false;
+    //     }
+    //
+    //     ajax(
+    //         {
+    //             action  : "wpstg_delete_clone",
+    //             nonce   : wpstg.nonce,
+    //             data    : {clone: clone}
+    //         },
+    //         function(response) {
+    //
+    //             if (response.length < 1)
+    //             {
+    //                 showError("Something went wrong, please try again");
+    //             }
+    //
+    //             var $currentStep = cache.get(".wpstg-current-step");
+    //
+    //             // Styling of elements
+    //             cache.get("#wpstg-workflow").removeClass("loading").html(response);
+    //
+    //             $currentStep
+    //                 .removeClass("wpstg-current-step")
+    //                 .next("li")
+    //                 .addClass("wpstg-current-step");
+    //         },
+    //         "HTML"
+    //     );
+    // });
 
     /**
      * Initiation

@@ -70,7 +70,8 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_clone_files", $this, "ajaxCopyFiles");
         $loader->addAction("wp_ajax_wpstg_clone_replace_data", $this, "ajaxReplaceData");
         $loader->addAction("wp_ajax_wpstg_clone_finish", $this, "ajaxFinish");
-        $loader->addAction("wp_ajax_wpstg_delete_clone", $this, "ajaxDeleteConfirmation");
+        $loader->addAction("wp_ajax_wpstg_confirm_delete_clone", $this, "ajaxDeleteConfirmation");
+        $loader->addAction("wp_ajax_wpstg_delete_clone", $this, "ajaxDeleteClone");
     }
 
     /**
@@ -532,10 +533,21 @@ class Administrator extends InjectionAware
         check_ajax_referer("wpstg_ajax_nonce", "nonce");
 
         $delete = new Delete();
+        $clone  = $delete->getClone();
 
-
-        require_once "{$this->path}views/clone/ajax/single-overview.php";
+        require_once "{$this->path}views/clone/ajax/delete-confirmation.php";
 
         wp_die();
+    }
+
+    /**
+     * Delete clone
+     */
+    public function ajaxDeleteClone()
+    {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
+
+        $delete = new Delete();
+        wp_send_json($delete->start());
     }
 }

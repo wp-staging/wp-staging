@@ -197,6 +197,9 @@ class Cloning extends Job
             $this->log("Failed to save {$this->options->clone}'s clone job data to database'");
         }
 
+        // Save scanned directories for delete job
+        $this->cache->save("delete_directories_" . $this->options->clone, $this->options->scannedDirectories);
+
         $this->log("Successfully saved {$this->options->clone}'s clone job data to database'");
         $this->log("Cloning job has finished!");
 

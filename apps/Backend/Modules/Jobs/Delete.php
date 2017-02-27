@@ -1,7 +1,6 @@
 <?php
 namespace WPStaging\Backend\Modules\Jobs;
 
-
 use WPStaging\Backend\Modules\Jobs\Exceptions\CloneNotFoundException;
 use WPStaging\Utils\Directories;
 use WPStaging\Utils\Logger;
@@ -25,12 +24,17 @@ class Delete extends Job
     private $tables = null;
 
     /**
+     * @var object|null
+     */
+    private $job = null;
+
+    /**
      * Initialize
      */
     public function initialize()
     {
         $this->getCloneRecords();
-        $this->getTables();
+        $this->getTableRecords();
 
         $this->clone = (object) $this->clone;
     }
@@ -55,7 +59,7 @@ class Delete extends Job
 
         $clones = get_option("wpstg_existing_clones", array());
 
-        if (!empty($clones) || !isset($clones[$name]))
+        if (empty($clones) || !isset($clones[$name]))
         {
             $this->log("Couldn't find clone name {$name} or no existing clone", Logger::TYPE_FATAL);
             throw new CloneNotFoundException();
@@ -63,11 +67,12 @@ class Delete extends Job
 
         $this->clone            = $clones[$name];
         $this->clone["name"]    = $name;
+        $this->clone["size"]    = null;
 
         if (isset($this->settings->countDirectorySize) || '1' === $this->settings->countDirectorySize)
         {
             $directories = new Directories();
-            $this->clone["size"] = $directories->size($this->clone);
+            $this->clone["size"] = $this->formatSize($directories->size($this->clone));
             unset($directories);
         }
 
@@ -79,9 +84,8 @@ class Delete extends Job
      */
     private function getTableRecords()
     {
-        $wpDB = WPStaging::getInstance()->get("wpdb");
-
-        $tables = $wpDB->get_results("SHOW TABLE STATUS LIKE 'wpstg{$this->clone["number"]}_%'");
+        $wpdb   = WPStaging::getInstance()->get("wpdb");
+        $tables = $wpdb->get_results("SHOW TABLE STATUS LIKE 'wpstg{$this->clone["number"]}_%'");
 
         $this->tables = array();
 
@@ -89,7 +93,7 @@ class Delete extends Job
         {
             $this->tables[] = array(
                 "name"  => $table->Name,
-                "size"  => ($table->Data_length + $table->Index_length)
+                "size"  => $this->formatSize(($table->Data_length + $table->Index_length))
             );
         }
 
@@ -136,10 +140,192 @@ class Delete extends Job
 
     /**
      * Start Module
-     * @return object
+     * @return bool
      */
     public function start()
     {
-        // TODO: Implement start() method.
+        // Get the job first
+        $this->getJob();
+
+        $method = "delete" . ucwords($this->job->current);
+        return $this->{$method}();
+    }
+
+    /**
+     * Get job data
+     */
+    private function getJob()
+    {
+        $this->job = $this->cache->get("delete_job_{$this->clone->name}");
+
+        if (null !== $this->job)
+        {
+            return;
+        }
+
+        // Generate JOB
+        $this->job = (object) array(
+            "current"               => "tables",
+            "nextDirectoryToDelete" => $this->clone->path
+        );
+
+        $this->cache->save("delete_job_{$this->clone->name}", $this->job);
+    }
+
+    /**
+     * @return bool
+     */
+    private function updateJob()
+    {
+        $this->job->nextDirectoryToDelete = trim($this->job->nextDirectoryToDelete);
+        return $this->cache->save("delete_job_{$this->clone->name}", $this->job);
+    }
+
+    /**
+     * @return array
+     */
+    private function getTablesToRemove()
+    {
+        $tables = $this->getTableNames();
+
+        if (!isset($_POST["excludedTables"]) || !is_array($_POST["excludedTables"]) || empty($_POST["excludedTables"]))
+        {
+            return $tables;
+        }
+
+        return array_diff($tables, $_POST["excludedTables"]);
+    }
+
+    /**
+     * @return array
+     */
+    private function getTableNames()
+    {
+        return (!is_array($this->tables)) ? array() : array_map(function($value) {
+            return ($value->name);
+        }, $this->tables);
+    }
+
+    /**
+     * Delete Tables
+     */
+    public function deleteTables()
+    {
+        if ($this->isOverThreshold())
+        {
+            return;
+        }
+
+        $wpdb = WPStaging::getInstance()->get("wpdb");
+
+        foreach ($this->getTablesToRemove() as $table)
+        {
+            $wpdb->query("DROP TABLE {$table}");
+        }
+
+        // Move on to the next
+        $this->job->current = "directory";
+        $this->updateJob();
+    }
+
+    /**
+     * Delete Directories
+     */
+    public function deleteDirectory()
+    {
+        // No deleting directories or root of this clone is deleted
+        if ($this->isDirectoryDeletingFinished())
+        {
+            $this->job->current = "finish";
+            $this->updateJob();
+            return;
+        }
+
+        $this->processDirectory($this->job->nextDirectoryToDelete);
+
+        return;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDirectoryDeletingFinished()
+    {
+        return (
+            !isset($_POST["deleteDir"]) || '1' !== $_POST["deleteDir"] ||
+            !is_dir($this->clone->path) || ABSPATH === $this->job->nextDirectoryToDelete
+        );
+    }
+
+    /**
+     * Delete contents of the directory if there are no directories in it and then delete itself
+     * @param string $path
+     * @return mixed
+     */
+    private function processDirectory($path)
+    {
+        // We hit the limit, stop
+        if ($this->isOverThreshold() || !is_dir($path))
+        {
+            $this->updateJob();
+            return false;
+        }
+
+        $contents = new \DirectoryIterator($path);
+
+        foreach ($contents as $content)
+        {
+            // Skip dots
+            if ($content->isDot())
+            {
+                continue;
+            }
+
+            // Get into the directory
+            if (!$content->isLink() && $content->isDir())
+            {
+                return $this->processDirectory($content->getRealPath());
+            }
+
+            // Delete file
+            if ($content->isFile())
+            {
+                @unlink($content->getRealPath());
+            }
+        }
+
+        // Delete directory
+        $this->job->lastDeletedDirectory = realpath($path . "/..");
+        @rmdir($path);
+        $this->updateJob();
+    }
+
+    /**
+     * Finish / Update Existing Clones
+     */
+    public function deleteFinish()
+    {
+        $existingClones = get_option("wpstg_existing_clones", array());
+
+        // Check if clones still exist
+        $this->log("Verifying existing clones...");
+        foreach ($existingClones as $name => $clone)
+        {
+            if (!is_dir($clone["path"]))
+            {
+                unset($existingClones[$name]);
+            }
+        }
+        $this->log("Existing clones verified!");
+
+        if (false === update_option("wpstg_existing_clones", $existingClones))
+        {
+            $this->log("Failed to save {$this->options->clone}'s clone job data to database'");
+        }
+
+        // Delete cached file
+        $this->cache->delete("delete_job_{$this->clone->name}");
+
+        return true;
     }
 }

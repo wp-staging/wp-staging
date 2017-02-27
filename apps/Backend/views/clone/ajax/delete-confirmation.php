@@ -1,5 +1,5 @@
 <div class="wpstg-notice-alert">
-    <h4>
+    <h4 style="margin:0">
         <?php
         _e("Attention: Check carefully if this DB tables and files are safe to delete for the staging site", "wpstg")
         ?>
@@ -7,7 +7,7 @@
 
     <p>
         Clone name: <span style="background-color:#575757;color:#fff;">
-        <?php echo $this->clone->name; ?>
+        <?php echo $clone->name; ?>
     </span>
     </p>
 
@@ -35,14 +35,14 @@
             <?php _e("Select the tables for removal:", "wpstg")?>
         </h4>
 
-        <?php foreach ($this->tables as $table):?>
+        <?php foreach ($delete->getTables() as $table):?>
             <div class="wpstg-db-table">
                 <label>
                     <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->name?>" checked>
                     <?php echo $table->name?>
                 </label>
                 <span class="wpstg-size-info">
-				<?php echo $this->formatSize($table->size)?>
+				<?php echo $table->size?>
 			</span>
             </div>
         <?php endforeach ?>
@@ -67,9 +67,9 @@
 
         <div class="wpstg-dir">
             <label>
-                <input type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1">
-                <?php echo $this->clone->name?>
-                <span class="wpstg-size-info"><?php echo $this->clone->size?></span>
+                <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1" checked>
+                <?php echo $clone->name?>
+                <span class="wpstg-size-info"><?php echo $clone->size?></span>
             </label>
         </div>
     </div>
@@ -80,6 +80,6 @@
     <?php _e("Cancel", "wpstg")?>
 </a>
 
-<a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="<?php echo $this->clone->name?>">
+<a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="<?php echo $clone->name?>">
     <?php echo __("Remove", "wpstg")?>
 </a>
