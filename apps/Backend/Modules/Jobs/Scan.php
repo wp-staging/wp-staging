@@ -7,6 +7,7 @@ if (!defined("WPINC"))
     die;
 }
 
+use WPStaging\Utils\Directories;
 use WPStaging\WPStaging;
 
 /**
@@ -22,6 +23,11 @@ class Scan extends JobWithCommandLine
     private $directories = array();
 
     /**
+     * @var Directories
+     */
+    private $objDirectories;
+
+    /**
      * Upon class initialization
      */
     protected function initialize()
@@ -31,6 +37,8 @@ class Scan extends JobWithCommandLine
 
         // Get directories
         $this->directories();
+
+        $this->objDirectories = new Directories();
     }
 
     /**
@@ -321,176 +329,11 @@ class Scan extends JobWithCommandLine
      */
     protected function getDirectorySize($path)
     {
-        // TODO check if user allowed it from settings
-
-        // Basics
-        $path       = realpath($path);
-
-        // Invalid path
-        if (false === $path)
+        if (!isset($this->settings->countDirectorySize) || '1' !== $this->settings->countDirectorySize)
         {
             return null;
         }
 
-        // We can use exec(), you go dude!
-        if (true === $this->canUseExec)
-        {
-            return $this->getDirectorySizeWithExec($path);
-        }
-
-        // Well, exec failed try popen()
-        if (true === $this->canUsePopen)
-        {
-            return $this->getDirectorySizeWithPopen($path);
-        }
-
-        // Good, old PHP... slow but will get the job done
-        return $this->getDirectorySizeWithPHP($path);
-    }
-
-    /**
-     * Get given directory size using PHP
-     * WARNING! This function might cause memory / timeout issues
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeWithPHP($path)
-    {
-        // Iterator
-        $iterator = new \RecursiveIteratorIterator(
-            new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS)
-        );
-
-        $totalBytes = 0;
-
-        // Loop & add file size
-        foreach ($iterator as $file)
-        {
-            try
-            {
-                $totalBytes += $file->getSize();
-            }
-            // Some invalid symbolik links can cause issues in *nix systems
-            catch(\Exception $e)
-            {
-                $this->log("{$file} is a symbolic link or for some reason its size is invalid");
-            }
-        }
-
-        return $totalBytes;
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeWithExec($path)
-    {
-        // OS is not supported
-        if (!in_array($this->OS, array("WIN", "LIN"), true))
-        {
-            return 0;
-        }
-
-        // WIN OS
-        if ("WIN" === $this->OS)
-        {
-            return $this->getDirectorySizeForWinWithExec($path);
-        }
-
-        // *Nix OS
-        return $this->getDirectorySizeForNixWithExec($path);
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeForNixWithExec($path)
-    {
-        exec("du -s {$path}", $output, $return);
-
-        $size = explode("\t", $output[0]);
-
-        if (0 == $return && count($size) == 2)
-        {
-            return (int) $size[0];
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeForWinWithExec($path)
-    {
-        exec("diruse {$path}", $output, $return);
-
-        $size = explode("\t", $output[0]);
-
-        if (0 == $return && count($size) >= 4)
-        {
-            return (int) $size[0];
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeWithPopen($path)
-    {
-        // OS is not supported
-        if (!in_array($this->OS, array("WIN", "LIN"), true))
-        {
-            return 0;
-        }
-
-        // WIN OS
-        if ("WIN" === $this->OS)
-        {
-            return $this->getDirectorySizeForWinWithCOM($path);
-        }
-
-        // *Nix OS
-        return $this->getDirectorySizeForNixWithPopen($path);
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeForNixWithPopen($path)
-    {
-        $filePointer= popen("/usr/bin/du -sk {$path}", 'r');
-
-        $size       = fgets($filePointer, 4096);
-        $size       = (int) substr($size, 0, strpos($size, "\t"));
-
-        pclose($filePointer);
-
-        return $size;
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     */
-    private function getDirectorySizeForWinWithCOM($path)
-    {
-        if (!class_exists("\\COM"))
-        {
-            return 0;
-        }
-
-        $com = new \COM("scripting.filesystemobject");
-
-        $directory = $com->getfolder($path);
-
-        return (int) $directory->size;
+        return $this->objDirectories->size($path);
     }
 }

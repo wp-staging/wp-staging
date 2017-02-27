@@ -2,6 +2,8 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 // No Direct Access
+use WPStaging\Utils\Info;
+
 if (!defined("WPINC"))
 {
     die;
@@ -38,52 +40,18 @@ abstract class JobWithCommandLine extends Job
     {
         parent::__construct();
 
-        $this->OS           = $this->getOS();
-        $this->canUseExec   = $this->canUse("exec");
-        $this->canUsePopen  = $this->canUsePopen();
-    }
+        $info               = new Info();
 
-    /**
-     * Get OS
-     * @return string
-     */
-    protected function getOS()
-    {
-        return strtoupper(substr(PHP_OS, 0, 3)); // WIN, LIN..
-    }
+        $this->OS           = $info->getOS();
+        $this->canUseExec   = $info->canUse("exec");
+        $this->canUsePopen  = $info->canUse("popen");
 
-    /**
-     * Checks whether we can use given function or not
-     * @param string $functionName
-     * @return bool
-     */
-    protected function canUse($functionName)
-    {
-        // Exec doesn't exist
-        if (!function_exists($functionName))
+        // Windows Fix for Popen
+        if ("WIN" === $this->OS && true === $this->canUsePopen)
         {
-            return false;
+            $this->canUsePopen = class_exists("\\COM");
         }
 
-        // Check if it is disabled from INI
-        $disabledFunctions = explode(',', ini_get("disable_functions"));
-
-        return (!in_array($functionName, $disabledFunctions));
-    }
-
-    /**
-     * Checks whether we can use popen() / \COM class (for WIN) or not
-     * @return bool
-     */
-    protected function canUsePopen()
-    {
-        // Windows
-        if ("WIN" === $this->OS)
-        {
-            return class_exists("\\COM");
-        }
-
-        // This should cover rest OS for servers
-        return $this->canUse("popen");
+        unset($info);
     }
 }

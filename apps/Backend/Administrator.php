@@ -10,6 +10,7 @@ if (!defined("WPINC"))
 use WPStaging\Backend\Modules\Jobs\Cloning;
 use WPStaging\Backend\Modules\Jobs\Data;
 use WPStaging\Backend\Modules\Jobs\Database;
+use WPStaging\Backend\Modules\Jobs\Delete;
 use WPStaging\Backend\Modules\Jobs\Files;
 use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Backend\Modules\SystemInfo;
@@ -69,6 +70,7 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_clone_files", $this, "ajaxCopyFiles");
         $loader->addAction("wp_ajax_wpstg_clone_replace_data", $this, "ajaxReplaceData");
         $loader->addAction("wp_ajax_wpstg_clone_finish", $this, "ajaxFinish");
+        $loader->addAction("wp_ajax_wpstg_delete_clone", $this, "ajaxDeleteConfirmation");
     }
 
     /**
@@ -93,7 +95,6 @@ class Administrator extends InjectionAware
             $sanitized[$key] = htmlspecialchars($value);
         }
 
-        // TODO sanitization!
         add_settings_error("wpstg-notices", '', __("Settings updated.", "wpstg"), "updated");
 
         // Return sanitized data
@@ -523,8 +524,18 @@ class Administrator extends InjectionAware
         wp_send_json($cloning->start());
     }
 
+    /**
+     * Ajax Delete Confirmation
+     */
     public function ajaxDeleteConfirmation()
     {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
 
+        $delete = new Delete();
+
+
+        require_once "{$this->path}views/clone/ajax/single-overview.php";
+
+        wp_die();
     }
 }

@@ -7,7 +7,7 @@
 
     <p>
         Clone name: <span style="background-color:#575757;color:#fff;">
-        <?php echo $name; ?>
+        <?php echo $this->clone->name; ?>
     </span>
     </p>
 
@@ -34,7 +34,23 @@
         <h4 style="margin:0;">
             <?php _e("Select the tables for removal:", "wpstg")?>
         </h4>
-        <?php ?>
+
+        <?php foreach ($this->tables as $table):?>
+            <div class="wpstg-db-table">
+                <label>
+                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->name?>" checked>
+                    <?php echo $table->name?>
+                </label>
+                <span class="wpstg-size-info">
+				<?php echo $this->formatSize($table->size)?>
+			</span>
+            </div>
+        <?php endforeach ?>
+        <div>
+            <a href="#" class="wpstg-button-unselect">
+                Un-check All
+            </a>
+        </div>
     </div>
     <!-- /Database -->
 
@@ -46,9 +62,16 @@
     <!-- Files -->
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
         <h4 style="margin:0;">
-            <?php _e("Select the folders for removal. Click on a folder name to expand it:", "wpstg") ?>
+            <?php _e("De-select If You Don't Want to Delete the Directory", "wpstg") ?>
         </h4>
-        <?php ?>
+
+        <div class="wpstg-dir">
+            <label>
+                <input type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1">
+                <?php echo $this->clone->name?>
+                <span class="wpstg-size-info"><?php echo $this->clone->size?></span>
+            </label>
+        </div>
     </div>
     <!-- /Files -->
 </div>
@@ -57,6 +80,6 @@
     <?php _e("Cancel", "wpstg")?>
 </a>
 
-<a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="<?php echo $name?>">
+<a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="<?php echo $this->clone->name?>">
     <?php echo __("Remove", "wpstg")?>
 </a>
