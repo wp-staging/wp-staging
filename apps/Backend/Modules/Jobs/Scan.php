@@ -50,6 +50,12 @@ class Scan extends JobWithCommandLine
         // Basic Options
         $this->options->root                    = str_replace(array("\\", '/'), DIRECTORY_SEPARATOR, ABSPATH);
         $this->options->existingClones          = get_option("wpstg_existing_clones", array());
+        $this->options->current                 = null;
+
+        if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $this->options->existingClones))
+        {
+            $this->options->current = $_POST["clone"];
+        }
 
         // Tables
         $this->options->excludedTables          = array();

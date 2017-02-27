@@ -1,6 +1,6 @@
 <label id="wpstg-clone-label" for="wpstg-new-clone">
     <?php echo __("Name your new site, e.g. staging, dev (keep it short):", "wpstg")?>
-    <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if (true === $options->disableInputStageName) echo " disabled='disabled'"?>>
+    <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if (null !== $options->current) echo " disabled='disabled'"?>>
 </label>
 
 <?php if (false === $options->hasEnoughDiskSpace):?>

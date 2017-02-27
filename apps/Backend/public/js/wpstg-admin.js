@@ -242,6 +242,35 @@ var WPStaging = (function($)
                 e.preventDefault();
                 $(".wpstg-clone").removeClass("active");
                 cache.get("#wpstg-removing-clone").html('');
+            })
+            // Edit
+            .on("click", ".wpstg-execute-clone", function (e) {
+                e.preventDefault();
+
+                $workFlow.addClass("loading");
+
+                ajax(
+                    {
+                        action  : "wpstg_scanning",
+                        clone   : $(this).data("clone"),
+                        nonce   : wpstg.nonce
+                    },
+                    function(response)
+                    {
+                        if (response.length < 1)
+                        {
+                            showError("Something went wrong, please try again");
+                        }
+
+                        $workFlow.removeClass("loading").html(response);
+
+                        cache.get(".wpstg-current-step")
+                            .removeClass("wpstg-current-step")
+                            .next("li")
+                            .addClass("wpstg-current-step");
+                    },
+                    "HTML"
+                );
             });
 
         // Cancel Cloning
@@ -337,12 +366,10 @@ var WPStaging = (function($)
                             showError("Something went wrong, please try again");
                         }
 
-                        var $currentStep = cache.get(".wpstg-current-step");
-
                         // Styling of elements
                         $workFlow.removeClass("loading").html(response);
 
-                        $currentStep
+                        cache.get(".wpstg-current-step")
                             .removeClass("wpstg-current-step")
                             .next("li")
                             .addClass("wpstg-current-step");
