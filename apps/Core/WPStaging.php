@@ -56,6 +56,7 @@ final class WPStaging
     private function __construct()
     {
         $this->registerNamespaces();
+        $this->loadLanguages();
         $this->loadDependencies();
     }
 
@@ -220,9 +221,39 @@ final class WPStaging
         return $cpuLoad;
     }
 
-    // TODO load languages
+    /**
+     * Load language file
+     */
     public function loadLanguages()
     {
+        $languagesDirectory = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR;
+        $languagesDirectory.= "vars" . DIRECTORY_SEPARATOR . "languages" . DIRECTORY_SEPARATOR;
 
+        // Set filter for plugins languages directory
+        $languagesDirectory = apply_filters("wpstg_languages_directory", $languagesDirectory);
+
+        // Traditional WP plugin locale filter
+        $locale             = apply_filters("plugin_locale", get_locale(), "wpstg");
+        $moFile             = sprintf('%1$s-%2$s.mo', "wpstg", $locale);
+
+        // Setup paths to current locale file
+        $moFileLocal        = $languagesDirectory . $moFile;
+        $moFileGlobal       = WP_LANG_DIR . DIRECTORY_SEPARATOR . "wpstg" . DIRECTORY_SEPARATOR . $moFile;
+
+        // Global file (/wp-content/languages/WPSTG)
+        if (file_exists($moFileGlobal))
+        {
+            load_textdomain("wpstg", $moFileGlobal);
+        }
+        // Local file (/wp-content/plugins/wp-staging/languages/)
+        elseif (file_exists($moFileLocal))
+        {
+            load_textdomain("wpstg", $moFileGlobal);
+        }
+        // Default file
+        else
+        {
+            load_plugin_textdomain("wpstg", false, $languagesDirectory);
+        }
     }
 }

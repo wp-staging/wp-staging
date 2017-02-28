@@ -8,7 +8,7 @@
  * Author URI: https://wordpress.org/plugins/wp-staging
  * Version: 2.0.0
  * Text Domain: wpstg
- * Domain Path: languages
+ * Domain Path: /vars/languages/
 
  *
  * WP-Staging is free software: you can redistribute it and/or modify
