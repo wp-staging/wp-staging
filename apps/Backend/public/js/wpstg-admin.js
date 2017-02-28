@@ -250,12 +250,14 @@ var WPStaging = (function($)
             .on("click", ".wpstg-execute-clone", function (e) {
                 e.preventDefault();
 
+                var clone = $(this).data("clone");
+
                 $workFlow.addClass("loading");
 
                 ajax(
                     {
                         action  : "wpstg_scanning",
-                        clone   : $(this).data("clone"),
+                        clone   : clone,
                         nonce   : wpstg.nonce
                     },
                     function(response)
@@ -691,15 +693,30 @@ var WPStaging = (function($)
                     action  : "wpstg_clone_finish",
                     nonce   : wpstg.nonce
                 },
-                function(response) {
-                    if (false === response.status)
+                function(response)
+                {
+                    // Invalid response
+                    if ("object" !== typeof(response))
                     {
-                        finish();
+                        showError(
+                            "Couldn't finish the cloning process properly. " +
+                            "Your clone has been copied but failed to do clean up and " +
+                            "saving its records to the database." +
+                            "Please contact support and provide your logs"
+                        );
+
+                        return;
                     }
-                    else if (true === response.status)
-                    {
-                        console.log("Cloning process finished");
-                    }
+
+                    console.log("Cloning process finished");
+
+                    var $link = cache.get("#wpstg-clone-url");
+
+                    cache.get("#wpstg_staging_name").html(that.data.cloneID);
+                    cache.get("#wpstg-finished-result").show();
+                    cache.get("#wpstg-cancel-cloning").prop("disabled", true);
+                    $link.attr("href", $link.attr("href") + '/' + response.directoryName);
+                    cache.get("#wpstg-remove-clone").data("clone", that.data.cloneID);
                 }
             );
         }

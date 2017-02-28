@@ -153,7 +153,7 @@ class Cloning extends Job
 
     /**
      * Save Clone Data
-     * @return bool
+     * @return object
      */
     public function jobFinish()
     {
@@ -180,7 +180,7 @@ class Cloning extends Job
         if (isset($this->options->existingClones[$this->options->clone]))
         {
             $this->log("Clone data already exists, no need to update, the job finished");
-            return true;
+            return (object) $this->options->existingClones[$this->options->clone];
         }
 
         // Save new clone data
@@ -192,9 +192,10 @@ class Cloning extends Job
             "number"            => $this->options->cloneNumber
         );
 
-        if (false === ($response = update_option("wpstg_existing_clones", $this->options->existingClones)))
+        if (false === update_option("wpstg_existing_clones", $this->options->existingClones))
         {
             $this->log("Failed to save {$this->options->clone}'s clone job data to database'");
+            return (object) $this->options->existingClones[$this->options->clone];
         }
 
         // Save scanned directories for delete job
@@ -203,6 +204,6 @@ class Cloning extends Job
         $this->log("Successfully saved {$this->options->clone}'s clone job data to database'");
         $this->log("Cloning job has finished!");
 
-        return $response;
+        return (object) $this->options->existingClones[$this->options->clone];
     }
 }

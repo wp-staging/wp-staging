@@ -41,7 +41,7 @@
     <!-- /Existing Clones -->
 <?php endif?>
 
-<div id="wpstg-finished-result">
+<div id="wpstg-finished-result" style="display:none">
     <h3>Congratulations:</h3>
 
     <?php
@@ -64,7 +64,7 @@
         </span>
     </a>
 
-    <a href="" class="wpstg-link-btn button-primary" id="wpstg-remove-cloning">
+    <a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="">
         <?php echo __("Remove", "wpstg")?>
     </a>
 

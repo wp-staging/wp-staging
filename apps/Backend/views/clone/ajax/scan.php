@@ -106,9 +106,9 @@
 
 <button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_cloning">
     <?php
-    if (true === $options->isInProgress)
+    if (null !== $options->current)
     {
-        echo __("Resume Cloning", "wpstg");
+        echo __("Update Clone", "wpstg");
     }
     else
     {
