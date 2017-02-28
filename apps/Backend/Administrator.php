@@ -308,6 +308,16 @@ class Administrator extends InjectionAware
      */
     public function enqueueElements($hook)
     {
+        $availablePages = array(
+            "toplevel_page_wpstg_clone",
+            "wp-staging_page_wpstg-settings",
+            "wp-staging_page_wpstg-tools"
+        );
+
+        if (!in_array($hook, $availablePages))
+        {
+            return;
+        }
         //$suffix = isset($wpstg_options['debug_mode']) ? '.min' : '';
         $suffix = '';
 
