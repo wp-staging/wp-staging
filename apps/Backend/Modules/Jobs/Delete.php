@@ -29,14 +29,27 @@ class Delete extends Job
     private $job = null;
 
     /**
-     * Initialize
+     * @var bool
      */
-    public function initialize()
-    {
-        $this->getCloneRecords();
-        $this->getTableRecords();
+    private $forceDeleteDirectories = false;
 
-        $this->clone = (object) $this->clone;
+    /**
+     * Sets Clone and Table Records
+     * @param null|array $clone
+     */
+    public function setData($clone = null)
+    {
+        if (!is_array($clone))
+        {
+            $this->getCloneRecords();
+        }
+        else
+        {
+            $this->clone                    = (object) $clone;
+            $this->forceDeleteDirectories   = true;
+        }
+
+        $this->getTableRecords();
     }
 
     /**
@@ -76,6 +89,8 @@ class Delete extends Job
             unset($directories);
         }
 
+        $this->clone = (object) $this->clone;
+
         unset($clones);
     }
 
@@ -85,7 +100,7 @@ class Delete extends Job
     private function getTableRecords()
     {
         $wpdb   = WPStaging::getInstance()->get("wpdb");
-        $tables = $wpdb->get_results("SHOW TABLE STATUS LIKE 'wpstg{$this->clone["number"]}_%'");
+        $tables = $wpdb->get_results("SHOW TABLE STATUS LIKE 'wpstg{$this->clone->number}_%'");
 
         $this->tables = array();
 
@@ -140,10 +155,14 @@ class Delete extends Job
 
     /**
      * Start Module
+     * @param null|array $clone
      * @return bool
      */
-    public function start()
+    public function start($clone = null)
     {
+        // Set data
+        $this->setData($clone);
+
         // Get the job first
         $this->getJob();
 
@@ -252,7 +271,7 @@ class Delete extends Job
     public function isDirectoryDeletingFinished()
     {
         return (
-            !isset($_POST["deleteDir"]) || '1' !== $_POST["deleteDir"] ||
+            (false === $this->forceDeleteDirectories && (!isset($_POST["deleteDir"]) || '1' !== $_POST["deleteDir"])) ||
             !is_dir($this->clone->path) || ABSPATH === $this->job->nextDirectoryToDelete
         );
     }

@@ -32,6 +32,10 @@ class Cloning extends Job
         {
             $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;
         }
+        elseif (!empty($this->options->existingClones))
+        {
+            $this->options->cloneNumber =  count($this->options->existingClones);
+        }
 
         // Excluded Tables
         if (isset($_POST["excludedTables"]) && is_array($_POST["excludedTables"]))
