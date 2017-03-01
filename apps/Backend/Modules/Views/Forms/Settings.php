@@ -134,12 +134,22 @@ class Settings
 
         // Remove Data on Uninstall?
         $element = new Check(
-            "wpstg_settomgs[unInstallOnDelete]",
+            "wpstg_settings[unInstallOnDelete]",
             array('1' => '')
         );
 
         $this->form["general"]->add(
             $element->setLabel("Remove Data on Uninstall?")
+        );
+
+        // Check Directory Sizes
+        $element = new Check(
+            "wpstg_settings[checkDirectorySize]",
+            array('1' => '')
+        );
+
+        $this->form["general"]->add(
+            $element->setLabel("Check Directory Size")
         );
     }
 

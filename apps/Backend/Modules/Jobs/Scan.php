@@ -335,7 +335,7 @@ class Scan extends JobWithCommandLine
      */
     protected function getDirectorySize($path)
     {
-        if (!isset($this->settings->countDirectorySize) || '1' !== $this->settings->countDirectorySize)
+        if (!isset($this->settings->checkDirectorySize) || '1' !== $this->settings->checkDirectorySize)
         {
             return null;
         }

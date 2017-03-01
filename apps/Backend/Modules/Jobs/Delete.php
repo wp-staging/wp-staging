@@ -82,7 +82,7 @@ class Delete extends Job
         $this->clone["name"]    = $name;
         $this->clone["size"]    = null;
 
-        if (isset($this->settings->countDirectorySize) || '1' === $this->settings->countDirectorySize)
+        if (isset($this->settings->checkDirectorySize) || '1' === $this->settings->checkDirectorySize)
         {
             $directories = new Directories();
             $this->clone["size"] = $this->formatSize($directories->size($this->clone));

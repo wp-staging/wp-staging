@@ -71,7 +71,9 @@
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
-                                            <?php echo $form->label("wpstg_settings[wpstg_query_limit]")?>
+                                            <?php
+                                            echo $form->label("wpstg_settings[queryLimit]")
+                                            ?>
                                             <span class="description">
                                                 Number of DB rows, that will be copied within one ajax request.
                                                 The higher the value the faster the database copy process.
@@ -83,14 +85,14 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settings[wpstg_query_limit]")?>
+                                        <?php echo $form->render("wpstg_settings[queryLimit]")?>
                                     </td>
                                 </tr>
 
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
-                                            <?php echo $form->label("wpstg_settings[wpstg_batch_size]")?>
+                                            <?php echo $form->label("wpstg_settings[batchSize]")?>
                                             <span class="description">
                                                 Buffer size for the file copy process in megabyte.
                                                 The higher the value the faster large files will be copied.
@@ -104,14 +106,14 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settings[wpstg_batch_size]")?>
+                                        <?php echo $form->render("wpstg_settings[batchSize]")?>
                                     </td>
                                 </tr>
 
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
-                                            <?php echo $form->label("wpstg_settings[wpstg_cpu_load]")?>
+                                            <?php echo $form->label("wpstg_settings[cpuLoad]")?>
                                             <span class="description">
                                                 Using high will result in fast as possible processing but the cpu load
                                                 increases and it's also possible that staging process gets interrupted because of too many ajax requests
@@ -123,7 +125,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settings[wpstg_cpu_load]")?>
+                                        <?php echo $form->render("wpstg_settings[cpuLoad]")?>
                                     </td>
                                 </tr>
 
@@ -149,7 +151,7 @@
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
-                                            <?php echo $form->label("wpstg_settings[disable_admin_login]")?>
+                                            <?php echo $form->label("wpstg_settings[disableAdminLogin]")?>
                                             <span class="description">
                                                 Use this option only if you are using a custom login page and not the default login.php.
                                                 If you enable this option you are allowing everyone including search engines
@@ -158,14 +160,14 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settings[disable_admin_login]")?>
+                                        <?php echo $form->render("wpstg_settings[disableAdminLogin]")?>
                                     </td>
                                 </tr>
 
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
-                                            <?php echo $form->label("wpstg_settings[wordpress_subdirectory]")?>
+                                            <?php echo $form->label("wpstg_settings[wpSubDirectory]")?>
                                             <span class="description">
                                                 Use this option when you gave wordpress its own subdirectory.
                                                 if you enable this, WP Staging will reset the index.php of the clone site to the originally one.
@@ -175,14 +177,14 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settings[wordpress_subdirectory]")?>
+                                        <?php echo $form->render("wpstg_settings[wpSubDirectory]")?>
                                     </td>
                                 </tr>
 
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
-                                            <?php echo $form->label("wpstg_settings[debug_mode]")?>
+                                            <?php echo $form->label("wpstg_settings[debugMode]")?>
                                             <span class="description">
                                                 This will enable an extended debug mode which creates additional entries
                                                 in <strong>wp-content/wp-staging/logs</strong>.
@@ -191,14 +193,14 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settings[debug_mode]")?>
+                                        <?php echo $form->render("wpstg_settings[debugMode]")?>
                                     </td>
                                 </tr>
 
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
-                                            <?php echo $form->label("wpstg_settings[uninstall_on_delete]")?>
+                                            <?php echo $form->label("wpstg_settings[unInstallOnDelete]")?>
                                             <span class="description">
                                                 Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted.
                                                 This will not remove staging sites files or database tables.
@@ -206,7 +208,23 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settings[uninstall_on_delete]")?>
+                                        <?php echo $form->render("wpstg_settings[unInstallOnDelete]")?>
+                                    </td>
+                                </tr>
+
+                                <tr class="row">
+                                    <td class="row th">
+                                        <div class="col-title">
+                                            <?php echo $form->label("wpstg_settings[checkDirectorySize]")?>
+                                            <span class="description">
+                                                Check this box if you like WP Staging to check sizes of each directory on scanning process.
+                                                <br>
+                                                Warning this might cause timeout problems in big directory / file structures.
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?php echo $form->render("wpstg_settings[checkDirectorySize]")?>
                                     </td>
                                 </tr>
                             </tbody>
