@@ -61,7 +61,9 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_enqueue_scripts", $this, "enqueueElements", 100);
         $loader->addAction("admin_menu", $this, "addMenu", 10);
         $loader->addAction("admin_init", $this, "setOptionFormElements");
-        $loader->addAction("wpstg_download_sysinfo", $this, "systemInfoDownload");
+        $loader->addAction("admin_post_wpstg_download_sysinfo", $this, "systemInfoDownload");
+        $loader->addAction("admin_post_wpstg_export", $this, "export");
+        $loader->addAction("admin_post_wpstg_import_settings", $this, "import");
         $loader->addAction("admin_notices", $this, "messages");
 
         // Ajax Requests
@@ -207,7 +209,6 @@ class Administrator extends InjectionAware
         require_once "{$this->path}views/tools/index.php";
     }
 
-    // TODO connect??
     /**
      * System Information Download
      */
@@ -219,14 +220,11 @@ class Administrator extends InjectionAware
         }
 
         nocache_headers();
-
         header("Content-Type: text/plain");
         header("Content-Disposition: attachment; filename='wpstg-system-info.txt'");
-
         echo wp_strip_all_tags(new SystemInfo($this->di));
     }
 
-    // TODO connect??
     /**
      * Import JSON settings file
      */
@@ -269,7 +267,6 @@ class Administrator extends InjectionAware
         return;
     }
 
-    // TODO connect??
     /**
      * Export settings to JSON file
      */

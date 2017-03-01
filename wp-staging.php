@@ -45,3 +45,7 @@ if (isset($wpdb))
 }
 
 $wpStaging->run();
+//echo "<pre>";
+//print_r($wp_filter);
+//echo "</pre>";
+//wp_die();

@@ -134,7 +134,10 @@ final class WPStaging
         $this->set("options", get_option("wpstg_settings"));
 
         // Set Administrator
-        new Administrator($this);
+        if (is_admin())
+        {
+            new Administrator($this);
+        }
     }
 
     /**

@@ -13,9 +13,9 @@ if (!defined("WPINC"))
  */
 final class Loader
 {
-    private $actions = [];
+    private $actions = array();
 
-    private $filters = [];
+    private $filters = array();
 
     public function addAction($hook, $component, $callback, $priority = 10, $acceptedArgs = 1)
     {
@@ -29,13 +29,13 @@ final class Loader
 
     private function add($hooks, $hook, $component, $callback, $priority = 10, $acceptedArgs = 1)
     {
-        $hooks[] = [
+        $hooks[] = array(
             "hook"          => $hook,
             "component"     => $component,
             "callback"      => $callback,
             "priority"      => $priority,
             "acceptedArgs"  => $acceptedArgs
-        ];
+        );
 
         return $hooks;
     }
@@ -46,7 +46,7 @@ final class Loader
         foreach ($this->filters as $key => $hook)
         {
             add_filter(
-                $hook["hook"], [$hook["component"]], $hook["callback"], $hook["priority"], $hook["acceptedArgs"]
+                $hook["hook"], array($hook["component"]), $hook["callback"], $hook["priority"], $hook["acceptedArgs"]
             );
 
             if (true === $emptyAfterRun)
@@ -59,7 +59,7 @@ final class Loader
         foreach ($this->actions as $key => $hook)
         {
             add_action(
-                $hook["hook"], [$hook["component"], $hook["callback"]], $hook["priority"], $hook["acceptedArgs"]
+                $hook["hook"], array($hook["component"], $hook["callback"]), $hook["priority"], $hook["acceptedArgs"]
             );
 
             if (true === $emptyAfterRun)
