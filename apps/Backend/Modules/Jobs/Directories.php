@@ -133,6 +133,8 @@ class Directories extends JobExecutable
             return false;
         }
 
+        $this->log("Scanning {$path} for its sub-directories and files");
+
         $directories = new \DirectoryIterator($path);
 
         foreach($directories as $directory)

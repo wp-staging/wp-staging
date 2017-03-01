@@ -30,7 +30,7 @@
     <?php echo __("Cancel", "wpstg")?>
 </button>
 
-<button type="button" id="wpstg-show-log-button" class="button" style="margin-top: 5px;">
+<button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;">
     <?php _e("Display working log", "wpstg")?>
 </button>
 
@@ -38,7 +38,8 @@
     <span id="wpstg-cloning-result"></span>
 </div>
 
-<div id="wpstg-finished-result"><h3>Congratulations: </h3>
+<div id="wpstg-finished-result">
+    <h3>Congratulations: </h3>
     <?php
     echo __("WP Staging succesfully created a staging site in a sub-directory of your main site in: <strong> ", "wpstg")
         . get_home_url()

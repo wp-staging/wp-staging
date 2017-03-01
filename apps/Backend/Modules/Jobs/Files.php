@@ -212,7 +212,7 @@ class Files extends JobExecutableWithCommandLine
         $destinationPath        = $this->destination . $relativePath;
         $destinationDirectory   = dirname($destinationPath);
 
-        if (!is_dir($destinationDirectory) && @mkdir($destinationDirectory, 0775, true))
+        if (!is_dir($destinationDirectory) && !@mkdir($destinationDirectory, 0775, true))
         {
             $this->log("Destination directory doesn't exist; {$destinationDirectory}", Logger::TYPE_ERROR);
             return false;

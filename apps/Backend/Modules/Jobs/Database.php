@@ -97,8 +97,11 @@ class Database extends JobExecutable
 
         if ($currentNewTable === $newTableName)
         {
+            $this->log("{$newTableName} already exists, dropping it first");
             $wpDB->query("DROP TABLE {$newTableName}");
         }
+
+        $this->log("Copying {$tableName} as {$newTableName}");
 
         $wpDB->query(
         //"CREATE TABLE {$newTableName} LIKE {$tableName}; INSERT {$newTableName} SELECT * FROM {$tableName}"

@@ -14,6 +14,7 @@ use WPStaging\Backend\Modules\Jobs\Database;
 use WPStaging\Backend\Modules\Jobs\Delete;
 use WPStaging\Backend\Modules\Jobs\Files;
 use WPStaging\Backend\Modules\Jobs\Scan;
+use WPStaging\Backend\Modules\Jobs\Logs;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\DI\InjectionAware;
@@ -79,6 +80,7 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_hide_poll", $this, "ajaxHidePoll");
         $loader->addAction("wp_ajax_wpstg_hide_rating", $this, "ajaxHideRating");
         $loader->addAction("wp_ajax_wpstg_hide_beta", $this, "ajaxHideBeta");
+        $loader->addAction("wp_ajax_wpstg_logs", $this, "ajaxLogs");
     }
 
     /**
@@ -699,5 +701,16 @@ class Administrator extends InjectionAware
     public function ajaxHideBeta()
     {
         wp_send_json(update_option("wpstg_hide_beta", "yes"));
+    }
+
+    /**
+     * Clone logs
+     */
+    public function ajaxLogs()
+    {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
+
+        $logs = new Logs();
+        wp_send_json($logs->start());
     }
 }
