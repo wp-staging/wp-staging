@@ -39,6 +39,11 @@ final class WPStaging
     const SLUG      = "wp-staging";
 
     /**
+     * Compatible WP Version
+     */
+    const WP_COMPATIBLE = "4.7";
+
+    /**
      * Services
      * @var array
      */

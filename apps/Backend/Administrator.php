@@ -18,6 +18,7 @@ use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\DI\InjectionAware;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
+use WPStaging\WPStaging;
 
 /**
  * Class Administrator
@@ -60,6 +61,7 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_menu", $this, "addMenu", 10);
         $loader->addAction("admin_init", $this, "setOptionFormElements");
         $loader->addAction("wpstg_download_sysinfo", $this, "systemInfoDownload");
+        $loader->addAction("admin_notices", $this, "messages");
 
         // Ajax Requests
         $loader->addAction("wp_ajax_wpstg_overview", $this, "ajaxOverview");
@@ -74,6 +76,9 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_confirm_delete_clone", $this, "ajaxDeleteConfirmation");
         $loader->addAction("wp_ajax_wpstg_delete_clone", $this, "ajaxDeleteClone");
         $loader->addAction("wp_ajax_wpstg_cancel_clone", $this, "ajaxCancelClone");
+        $loader->addAction("wp_ajax_wpstg_hide_poll", $this, "ajaxHidePoll");
+        $loader->addAction("wp_ajax_wpstg_hide_rating", $this, "ajaxHideRating");
+        $loader->addAction("wp_ajax_wpstg_hide_beta", $this, "ajaxHideBeta");
     }
 
     /**
@@ -574,5 +579,125 @@ class Administrator extends InjectionAware
 
         $cancel = new Cancel();
         wp_send_json($cancel->start());
+    }
+
+    /**
+     * Admin Messages / Notifications
+     */
+    public function messages()
+    {
+        // Display messages to only admins, only on admin panel
+        if (!current_user_can("update_plugins") || !$this->isAdminPage())
+        {
+            return;
+        }
+
+        $messagesDirectory  = "{$this->path}views/_includes/messages/";
+        $ds                 = DIRECTORY_SEPARATOR;
+        $varsDirectory      = WP_PLUGIN_DIR . $ds . WPStaging::SLUG . $ds . "vars" . $ds;
+
+        // Poll
+        if ($this->canShow("wpstg_start_poll"))
+        {
+            require_once "{$messagesDirectory}poll.php";
+        }
+
+        // Cache directory is not writable
+        if (!wp_is_writable("{$varsDirectory}cache"))
+        {
+            require_once "{$messagesDirectory}/cache-directory-permission-problem.php";
+        }
+
+        // Logs directory is not writable
+        if (!wp_is_writable("{$varsDirectory}logs"))
+        {
+            require_once "{$messagesDirectory}/logs-directory-permission-problem.php";
+        }
+
+        // Version Control
+        if (version_compare(WPStaging::WP_COMPATIBLE, get_bloginfo("version"), "<"))
+        {
+            require_once "{$messagesDirectory}wp-version-compatible-message.php";
+        }
+
+        // Beta
+        if ("no" === get_option("wpstg_hide_beta"))
+        {
+            require_once "{$messagesDirectory}beta.php";
+        }
+
+        // Transient
+        if (false !== ( $deactivatedNoticeID = get_transient("wp_staging_deactivated_notice_id") ))
+        {
+            require_once "{$messagesDirectory}transient.php";
+            delete_transient("wp_staging_deactivated_notice_id");
+        }
+
+        if ($this->canShow("wpstg_installDate", 7))
+        {
+            require_once "{$messagesDirectory}rating.php";
+
+        }
+    }
+
+    /**
+     * Check whether the page is admin page or not
+     * @return bool
+     */
+    private function isAdminPage()
+    {
+        $currentPage    = (isset($_GET["page"])) ? $_GET["page"] : null;
+
+        $availablePages = array(
+            "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone"
+        );
+
+        if (!is_admin() || !did_action("wp_loaded") || !in_array($currentPage, $availablePages, true))
+        {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check whether we can show poll or not
+     * @param string $type
+     * @param int $days
+     * @return bool
+     */
+    private function canShow($type, $days = 10)
+    {
+        $installDate= new \DateTime(get_option("wpstg_installDate"));
+        $now        = new \DateTime("now");
+
+        // Get days difference
+        $difference = $now->diff($installDate)->days;
+
+        return ($days <= $difference && "no" !== get_option("wpstg_start_poll"));
+    }
+
+    /**
+     * Ajax Hide Poll
+     */
+    public function ajaxHidePoll()
+    {
+        wp_send_json(update_option("wpstg_start_poll", "no"));
+    }
+
+    /**
+     * Ajax Hide Rating
+     */
+    public function ajaxHideRating()
+    {
+        wp_send_json(update_option("wpstg_RatingDiv", "yes"));
+    }
+
+    /**
+     * Ajax Hide Beta
+     */
+    public function ajaxHideBeta()
+    {
+        wp_send_json(update_option("wpstg_hide_beta", "yes"));
     }
 }
