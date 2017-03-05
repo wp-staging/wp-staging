@@ -83,6 +83,7 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_hide_rating", $this, "ajaxHideRating");
         $loader->addAction("wp_ajax_wpstg_hide_beta", $this, "ajaxHideBeta");
         $loader->addAction("wp_ajax_wpstg_logs", $this, "ajaxLogs");
+        $loader->addAction("wp_ajax_wpstg_check_disk_space", $this, "ajaxCheckFreeSpace");
     }
 
     /**
@@ -721,5 +722,16 @@ class Administrator extends InjectionAware
 
         $logs = new Logs();
         wp_send_json($logs->start());
+    }
+
+    /**
+     * Ajax Checks Free Disk Space
+     */
+    public function ajaxCheckFreeSpace()
+    {
+        check_ajax_referer("wpstg_ajax_nonce", "nonce");
+
+        $scan = new Scan();
+        return $scan->hasFreeDiskSpace();
     }
 }

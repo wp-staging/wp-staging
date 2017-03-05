@@ -3,15 +3,13 @@
     <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if (null !== $options->current) echo " disabled='disabled'"?>>
 </label>
 
-<?php if (false === $options->hasEnoughDiskSpace):?>
-    <span class="wpstg-error-msg" id="wpstg-clone-id-error">
-            <?php echo __(
-                "<br>Probably not enough free disk space to create a staging site. ".
-                "<br> You can continue but its likely that the copying process will fail.",
-                "wpstg"
-            )?>
-    </span>
-<?php endif?>
+<span class="wpstg-error-msg" id="wpstg-clone-id-error" style="display:none;">
+        <?php echo __(
+            "<br>Probably not enough free disk space to create a staging site. ".
+            "<br> You can continue but its likely that the copying process will fail.",
+            "wpstg"
+        )?>
+</span>
 
 <div class="wpstg-tabs-wrapper">
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">

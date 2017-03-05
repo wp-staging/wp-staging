@@ -291,15 +291,21 @@ var WPStaging = (function($)
 
     /**
      * Ajax Requests
-     * @param data
-     * @param callback
-     * @param dataType
+     * @param {Object} data
+     * @param {Function} callback
+     * @param {String} dataType
+     * @param {Boolean} showErrors
      */
-    var ajax            = function(data, callback, dataType)
+    var ajax            = function(data, callback, dataType, showErrors)
     {
         if ("undefined" === typeof(dataType))
         {
             dataType = "json";
+        }
+
+        if (false !== showErrors)
+        {
+            showErrors = true;
         }
 
         $.ajax({
@@ -311,6 +317,11 @@ var WPStaging = (function($)
             error       : function(xhr, textStatus, errorThrown) {
                 console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
                 console.log(textStatus);
+
+                if (false === showErrors)
+                {
+                    return false;
+                }
 
                 showError(
                     "Fatal Error: This should not happen but is most often caused by other plugins. " +
@@ -349,7 +360,8 @@ var WPStaging = (function($)
             .on("click", ".wpstg-next-step-link", function(e) {
                 e.preventDefault();
 
-                var $this = $(this);
+                var $this   = $(this),
+                    isScan  = false;
 
                 // Button is disabled
                 if ($this.attr("disabled"))
@@ -370,6 +382,9 @@ var WPStaging = (function($)
                 getCloningData();
 
                 console.log(that.data);
+
+                isScan = ("wpstg_scanning" === that.action);
+                console.log(isScan);
 
                 // Send ajax request
                 ajax(
@@ -606,6 +621,27 @@ var WPStaging = (function($)
     that.startCloning   = (function() {
         if ("wpstg_cloning" !== that.data.action)
         {
+            console.log("check disk space");
+            ajax(
+                {
+                    action: "wpstg_check_disk_space",
+                    nonce: wpstg.nonce
+                },
+                function(response)
+                {
+                    if (false !==  response)
+                    {
+                        cache.get("#wpstg-clone-id-error").hide();
+                        return;
+                    }
+
+                    // Not enough disk space
+                    cache.get("#wpstg-clone-id-error").show();
+                },
+                "json",
+                false
+            );
+
             return;
         }
 
