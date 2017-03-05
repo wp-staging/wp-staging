@@ -52,7 +52,8 @@ class Cache
         // Set cache directory
         if (!empty($cacheDir) && is_dir($cacheDir))
         {
-            $this->cacheDir = rtrim($cacheDir, "/\\") . DIRECTORY_SEPARATOR;
+            $cacheDir       = str_replace(array('/', "\\"), DIRECTORY_SEPARATOR, $cacheDir);
+            $this->cacheDir = ABSPATH . trim($cacheDir, "/\\") . DIRECTORY_SEPARATOR;
         }
         // Set default
         else

@@ -93,7 +93,7 @@ abstract class Job implements JobInterface
         $this->executionLimit   = $this->maxExecutionTime * self::EXECUTION_TIME_RATIO;
 
         // Services
-        $this->cache    = new Cache(-1);
+        $this->cache    = new Cache(-1, "wp-content/uploads/" . WPStaging::SLUG);
         $this->logger   = WPStaging::getInstance()->get("logger");
 
         // Settings and Options
