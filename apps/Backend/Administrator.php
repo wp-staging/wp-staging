@@ -613,6 +613,18 @@ class Administrator extends InjectionAware
             require_once "{$messagesDirectory}/logs-directory-permission-problem.php";
         }
 
+        // Vars directory is not writable
+        if (!wp_is_writable($varsDirectory))
+        {
+            require_once "{$messagesDirectory}/vars-directory-permission-problem.php";
+        }
+
+        // Cache directory in uploads is not writable
+        if (!wp_is_writable(ABSPATH . "wp-content/uploads/" . WPStaging::SLUG))
+        {
+            require_once "{$messagesDirectory}/uploads-cache-directory-permission-problem.php";
+        }
+
         // Version Control
         if (version_compare(WPStaging::WP_COMPATIBLE, get_bloginfo("version"), "<"))
         {
