@@ -161,53 +161,7 @@ class Cloning extends Job
      */
     public function jobFinish()
     {
-        $this->log("Deleting clone job's cache files...");
-
-        // Clean cache files
-        $this->cache->delete("clone_options");
-        $this->cache->delete("files_to_copy");
-
-        $this->log("Clone job's cache files have been deleted!");
-
-        // Check if clones still exist
-        $this->log("Verifying existing clones...");
-        foreach ($this->options->existingClones as $name => $clone)
-        {
-            if (!is_dir($clone["path"]))
-            {
-                unset($this->options->existingClones[$name]);
-            }
-        }
-        $this->log("Existing clones verified!");
-
-        // Clone data already exists
-        if (isset($this->options->existingClones[$this->options->clone]))
-        {
-            $this->log("Clone data already exists, no need to update, the job finished");
-            return (object) $this->options->existingClones[$this->options->clone];
-        }
-
-        // Save new clone data
-        $this->log("{$this->options->clone}'s clone job's data is not in database, generating data");
-        $this->options->existingClones[$this->options->clone] = array(
-            "directoryName"     => $this->options->cloneDirectoryName,
-            "path"              => ABSPATH . $this->options->cloneDirectoryName,
-            "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
-            "number"            => $this->options->cloneNumber
-        );
-
-        if (false === update_option("wpstg_existing_clones", $this->options->existingClones))
-        {
-            $this->log("Failed to save {$this->options->clone}'s clone job data to database'");
-            return (object) $this->options->existingClones[$this->options->clone];
-        }
-
-        // Save scanned directories for delete job
-        $this->cache->save("delete_directories_" . $this->options->clone, $this->options->scannedDirectories);
-
-        $this->log("Successfully saved {$this->options->clone}'s clone job data to database'");
-        $this->log("Cloning job has finished!");
-
-        return (object) $this->options->existingClones[$this->options->clone];
+        $finish = new Finish();
+        return $this->handleJobResponse($finish->start(), '');
     }
 }
