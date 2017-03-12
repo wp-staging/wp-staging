@@ -60,9 +60,22 @@ final class WPStaging
      */
     private function __construct()
     {
+        $file = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . self::SLUG . ".php";
+
+        // Activation Hook
+        register_activation_hook($file, array($this, "onActivation"));
+
         $this->registerNamespaces();
         $this->loadLanguages();
         $this->loadDependencies();
+    }
+
+    /**
+     * Method to be executed upon activation of the plugin
+     */
+    public function onActivation()
+    {
+
     }
 
     /**
