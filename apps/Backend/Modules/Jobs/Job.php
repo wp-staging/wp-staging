@@ -88,10 +88,6 @@ abstract class Job implements JobInterface
             $this->maxExecutionTime = 30;
         }
 
-        // Calculate threshold limits
-        $this->memoryLimit      = $this->maxMemoryLimit * self::MAX_MEMORY_RATIO;
-        $this->executionLimit   = $this->maxExecutionTime * self::EXECUTION_TIME_RATIO;
-
         // Services
         $this->cache    = new Cache(-1, "wp-content/uploads/" . WPStaging::SLUG);
         $this->logger   = WPStaging::getInstance()->get("logger");
@@ -115,6 +111,9 @@ abstract class Job implements JobInterface
             $this->settings = new \stdClass();
         }
 
+        // Set limits accordingly to CPU LIMITS
+        $this->setLimits();
+
         if (method_exists($this, "initialize"))
         {
             $this->initialize();
@@ -128,6 +127,39 @@ abstract class Job implements JobInterface
     {
         // Commit logs
         $this->logger->commit();
+    }
+
+    /**
+     * Set limits accordingly to
+     */
+    protected function setLimits()
+    {
+        if (!isset($this->settings->wpstg_cpu_load))
+        {
+            $this->settings->wpstg_cpu_load = "medium";
+        }
+
+        $memoryLimit= self::MAX_MEMORY_RATIO;
+        $timeLimit  = self::EXECUTION_TIME_RATIO;
+
+        switch($this->settings->wpstg_cpu_load)
+        {
+            case "medium":
+                $memoryLimit= $memoryLimit / 2;
+                $timeLimit  = $timeLimit / 2;
+                break;
+            case "low":
+                $memoryLimit= $memoryLimit / 4;
+                $timeLimit  = $timeLimit / 4;
+                break;
+
+            case "default":
+            default:
+                break;
+        }
+
+        $this->memoryLimit      = $this->maxMemoryLimit * $memoryLimit;
+        $this->executionLimit   = $this->maxExecutionTime * $timeLimit;
     }
 
     /**
