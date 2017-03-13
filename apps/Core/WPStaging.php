@@ -41,7 +41,8 @@ final class WPStaging
     /**
      * Compatible WP Version
      */
-    const WP_COMPATIBLE = "4.7";
+    const WP_COMPATIBLE = "4.7.3";
+    
 
     /**
      * Services
@@ -69,6 +70,7 @@ final class WPStaging
         $this->loadLanguages();
         $this->loadDependencies();
     }
+    
 
     /**
      * Method to be executed upon activation of the plugin
@@ -76,6 +78,14 @@ final class WPStaging
     public function onActivation()
     {
 
+    }
+    /**
+     * Caching and logging folder
+     * 
+     * @return string
+     */
+    public static function getContentDir(){
+        return WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR;
     }
 
     /**
