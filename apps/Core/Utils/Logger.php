@@ -65,9 +65,9 @@ class Logger
         // Set default
         else
         {
-            $ds = DIRECTORY_SEPARATOR;
 
-            $this->logDir = WP_CONTENT_DIR . $ds . 'uploads' . $ds . WPStaging::SLUG . $ds . "logs" . $ds;
+            $this->logDir = \WPStaging\WPStaging::getContentDir() . "logs" . DIRECTORY_SEPARATOR;
+            
         }
 
         // Set log extension
