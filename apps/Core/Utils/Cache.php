@@ -60,7 +60,7 @@ class Cache
         {
             $ds = DIRECTORY_SEPARATOR;
 
-            $this->cacheDir = \WPStaging\WPStaging::getContentDir() . "cache" . $ds;
+            $this->cacheDir = \WPStaging\WPStaging::getContentDir() . "cache" . $ds; 
         }
 
         // Set cache extension
