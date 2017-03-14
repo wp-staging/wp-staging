@@ -28,6 +28,9 @@ class Cloning extends Job
         $this->options->cloneDirectoryName  = preg_replace("#\W+#", '-', strtolower($this->options->clone));
         $this->options->cloneNumber         = 1;
 
+        // Job
+        $this->options->job                 = new \stdClass();
+
         if (isset($this->options->existingClones[$this->options->clone]))
         {
             $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;

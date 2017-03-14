@@ -22,12 +22,18 @@ class Database extends JobExecutable
     private $total = 0;
 
     /**
+     * @var \WPDB
+     */
+    private $db;
+
+    /**
      * Initialize
      */
     public function initialize()
     {
         // Variables
         $this->total                = count($this->options->tables);
+        $this->db                   = WPStaging::getInstance()->get("wpdb");
     }
 
     /**
@@ -70,7 +76,14 @@ class Database extends JobExecutable
         }
 
         // Copy table
-        $this->copyTable($this->options->tables[$this->options->currentStep]->name);
+        if (!$this->copyTable($this->options->tables[$this->options->currentStep]->name))
+        {
+            // Prepare Response
+            $this->prepareResponse(false, false);
+
+            // Not finished
+            return true;
+        }
 
         // Prepare Response
         $this->prepareResponse();
@@ -82,33 +95,147 @@ class Database extends JobExecutable
     /**
      * No worries, SQL queries don't eat from PHP execution time!
      * @param string $tableName
-     * @return mixed
+     * @return bool
      */
     private function copyTable($tableName)
     {
-        $wpDB = WPStaging::getInstance()->get("wpdb");
-
-        $newTableName = "wpstg{$this->options->cloneNumber}_" . str_replace($wpDB->prefix, null, $tableName);
+        $newTableName = "wpstg{$this->options->cloneNumber}_" . str_replace($this->db->prefix, null, $tableName);
 
         // Drop table if necessary
-        $currentNewTable = $wpDB->get_var(
-            $wpDB->prepare("SHOW TABLES LIKE %s", $newTableName)
-        );
+        $this->dropTable($newTableName);
 
-        if ($currentNewTable === $newTableName)
+        // Save current job
+        $this->setJob($newTableName);
+
+        // Beginning of the job
+        if (!$this->startJob($newTableName, $tableName))
         {
-            $this->log("{$newTableName} already exists, dropping it first");
-            $wpDB->query("DROP TABLE {$newTableName}");
+            return true;
         }
 
-        $this->log("Copying {$tableName} as {$newTableName}");
+        // Copy data
+        $this->copyData($newTableName, $tableName);
 
-        $wpDB->query(
-        //"CREATE TABLE {$newTableName} LIKE {$tableName}; INSERT {$newTableName} SELECT * FROM {$tableName}"
-            "CREATE TABLE {$newTableName} SELECT * FROM {$tableName}"
+        // Finis the step
+        return $this->finishStep();
+    }
+
+    /**
+     * Copy data from old table to new table
+     * @param string $new
+     * @param string $old
+     */
+    private function copyData($new, $old)
+    {
+        $this->log(
+            "Copying {$old} as {$new} between {$this->options->job->start} to {$this->settings->queryLimit} records"
         );
 
+        $this->db->query(
+            "INSERT INTO {$new} SELECT * FROM {$old} LIMIT {$this->settings->queryLimit} " .
+            "OFFSET {$this->options->job->start}"
+        );
+
+        // Set new offset
+        $this->options->job->start += $this->settings->queryLimit;
+    }
+
+    /**
+     * Set the job
+     * @param string $table
+     */
+    private function setJob($table)
+    {
+        if (isset($this->options->job->current))
+        {
+            return;
+        }
+
+        $this->options->job->current = $table;
+        $this->options->job->start   = 0;
+    }
+
+    /**
+     * Start Job
+     * @param string $new
+     * @param string $old
+     * @return bool
+     */
+    private function startJob($new, $old)
+    {
+        if (0 != $this->options->job->start)
+        {
+            return true;
+        }
+
+        $this->log("Creating table {$new} like {$old}");
+
+        $this->db->query("CREATE TABLE {$new} LIKE {$old}");
+
+        $this->options->job->total = (int) $this->db->get_var("SELECT COUNT(1) FROM {$old}");
+
+        if (0 == $this->options->job->total)
+        {
+            $this->finishStep();
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Finish the step
+     */
+    private function finishStep()
+    {
+        // This job is not finished yet
+        if ($this->options->job->total > $this->options->job->start)
+        {
+            return false;
+        }
+
         // Add it to cloned tables listing
-        $this->options->clonedTables[] = $this->options->tables[$this->options->currentStep];
+        $this->options->clonedTables[]  = $this->options->tables[$this->options->currentStep];
+
+        // Reset job
+        $this->options->job             = new \stdClass();
+
+        return true;
+    }
+
+    /**
+     * Drop table if necessary
+     * @param string $new
+     * @param string $old
+     */
+    private function dropTable($new)
+    {
+        $old = $this->db->get_var($this->db->prepare("SHOW TABLES LIKE %s", $new));
+
+        if (!$this->shouldDropTable($new, $old))
+        {
+            return;
+        }
+
+        $this->log("{$new} already exists, dropping it first");
+        $this->db->query("DROP TABLE {$new}");
+    }
+
+    /**
+     * Check if table needs to be dropped
+     * @param string $new
+     * @param string $old
+     * @return bool
+     */
+    private function shouldDropTable($new, $old)
+    {
+        return (
+            $old === $new &&
+            (
+                !isset($this->options->job->current) ||
+                !isset($this->options->job->start) ||
+                0 == $this->options->job->start
+            )
+        );
     }
 }
