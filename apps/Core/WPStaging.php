@@ -85,7 +85,10 @@ final class WPStaging
      * @return string
      */
     public static function getContentDir(){
-        return WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR;
+	$wp_upload_dir = wp_upload_dir();
+        $path = $wp_upload_dir['basedir'] . '/wp-staging';
+	wp_mkdir_p( $path );
+	return apply_filters( 'wpstg_get_upload_dir', $path . DIRECTORY_SEPARATOR );        
     }
 
     /**
