@@ -67,6 +67,7 @@ class Scan extends JobWithCommandLine
 
         // Directories
         $this->options->includedDirectories     = array();
+        $this->options->excludedDirectories     = array();
         $this->options->extraDirectories        = array();
         $this->options->directoriesToCopy       = array();
         $this->options->scannedDirectories      = array();

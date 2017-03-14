@@ -46,6 +46,12 @@ class Cloning extends Job
             $this->options->excludedTables = $_POST["excludedTables"];
         }
 
+        // Excluded Directories
+        if (isset($_POST["excludedDirectories"]) && is_array($_POST["excludedDirectories"]))
+        {
+            $this->options->excludedDirectories = $_POST["excludedDirectories"];
+        }
+
         // Included Directories
         if (isset($_POST["includedDirectories"]) && is_array($_POST["includedDirectories"]))
         {

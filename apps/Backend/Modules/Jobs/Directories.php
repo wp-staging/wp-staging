@@ -145,6 +145,12 @@ class Directories extends JobExecutable
                 continue;
             }
 
+            // Excluded directory
+            if (in_array($directory->getRealPath(), $this->options->excludedDirectories))
+            {
+                continue;
+            }
+
             // This directory is already scanned
             if (in_array($path, $this->options->scannedDirectories))
             {
@@ -177,7 +183,7 @@ class Directories extends JobExecutable
         {
             $fullPath = $directory . $file;
 
-            if (is_dir($fullPath) && !in_array($fullPath, $this->options->directoriesToCopy))
+            if (is_dir($fullPath) && in_array($fullPath, $this->options->directoriesToCopy))
             {
                 $this->options->directoriesToCopy[] = $fullPath;
                 continue;
