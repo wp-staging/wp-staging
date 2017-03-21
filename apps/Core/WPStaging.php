@@ -41,7 +41,8 @@ final class WPStaging
     /**
      * Compatible WP Version
      */
-    const WP_COMPATIBLE = "4.7";
+    const WP_COMPATIBLE = "4.7.3";
+    
 
     /**
      * Services
@@ -69,6 +70,7 @@ final class WPStaging
         $this->loadLanguages();
         $this->loadDependencies();
     }
+    
 
     /**
      * Method to be executed upon activation of the plugin
@@ -76,6 +78,17 @@ final class WPStaging
     public function onActivation()
     {
 
+    }
+    /**
+     * Caching and logging folder
+     * 
+     * @return string
+     */
+    public static function getContentDir(){
+	$wp_upload_dir = wp_upload_dir();
+        $path = $wp_upload_dir['basedir'] . '/wp-staging';
+	wp_mkdir_p( $path );
+	return apply_filters( 'wpstg_get_upload_dir', $path . DIRECTORY_SEPARATOR );        
     }
 
     /**

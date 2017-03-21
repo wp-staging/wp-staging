@@ -52,15 +52,13 @@ class Cache
         // Set cache directory
         if (!empty($cacheDir) && is_dir($cacheDir))
         {
-            $cacheDir       = str_replace(array('/', "\\"), DIRECTORY_SEPARATOR, $cacheDir);
-            $this->cacheDir = ABSPATH . trim($cacheDir, "/\\") . DIRECTORY_SEPARATOR;
+            $this->cacheDir = $cacheDir;
         }
         // Set default
         else
         {
-            $ds = DIRECTORY_SEPARATOR;
 
-            $this->cacheDir = WP_PLUGIN_DIR . $ds . WPStaging::SLUG . $ds . "vars" . $ds . "cache" . $ds;
+            $this->cacheDir = \WPStaging\WPStaging::getContentDir();
         }
 
         // Set cache extension

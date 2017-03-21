@@ -87,9 +87,8 @@ abstract class Job implements JobInterface
         {
             $this->maxExecutionTime = 30;
         }
-
         // Services
-        $this->cache    = new Cache(-1, "wp-content/uploads/" . WPStaging::SLUG);
+        $this->cache    = new Cache(-1, \WPStaging\WPStaging::getContentDir());
         $this->logger   = WPStaging::getInstance()->get("logger");
 
         // Settings and Options
@@ -261,14 +260,19 @@ abstract class Job implements JobInterface
     {
         // Check if the memory is over threshold
         $usedMemory = (int) @memory_get_usage(true);
-
+        
+        $this->log('used memory is ' . $usedMemory);
+        
         if ($usedMemory >= $this->memoryLimit)
         {
             return (!$this->resetMemory());
         }
 
+        
         // Check if execution time is over threshold
-        $time = round($this->start - $this->time(), 4);
+        ///$time = round($this->start + $this->time(), 4);
+        $time = round($this->time() - $this->start, 4);
+        $this->log('execution time is ' . $time . ' | execution time limit is ' . $this->executionLimit);
         if ($time >= $this->executionLimit)
         {
             return (!$this->resetTime());
