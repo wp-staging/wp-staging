@@ -8,7 +8,7 @@
     </span>
 
     <div class="wpstg-header">
-        <div class='wpstg-share-button-container'>
+    <div class='wpstg-share-button-container'>
         <div class='wpstg-share-button wpstg-share-button-twitter' data-share-url="https://wordpress.org/plugins/wp-staging">
             <div clas='box'>
                 <a href="https://twitter.com/intent/tweet?button_hashtag=wpstaging&text=Check%20out%20this%20plugin%20for%20creating%20a%20one%20click%20WordPress%20testing%20site&via=wpstg" target='_blank'>
