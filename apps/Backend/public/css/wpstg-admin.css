@@ -619,3 +619,55 @@ color:#777777;
 .form-table td:first-child {
 	width:30%;
 }
+
+
+.wpstg-share-button-container{
+    margin: 5px 0;
+}
+
+.wpstg-share-button-container p{
+    margin:0px 0 10px 0;
+}
+
+.wpstg-share-button {
+    display: inline-block;
+}
+
+.wpstg-share-button a{
+    text-decoration:none;
+}
+
+.wpstg-share-button .wpstg-share {
+    font-family:sans-serif;
+    font-weight:bold;
+    text-decoration:none;
+    text-align:center;
+}
+
+
+.wpstg-share-button .wpstg-share {
+    -webkit-border-radius:2px;
+    -moz-border-radius:2px;
+    border-radius:2px;
+    color:#FFF;
+    display:inline;
+    font-size:16px;
+    width:40px;
+    padding:4px 8px;
+}
+
+.wpstg-share-button-twitter .wpstg-share {
+    background-color:#00ABF0;
+}
+
+.wpstg-share-button-facebook .wpstg-share {
+    background-color:#3b5998;
+}
+
+.wpstg-share-button-googleplus .wpstg-share {
+    background-color:#F53424;
+}
+
+.wpstg-share-button-twitter .share:active,.wpstg-share-button-facebook .share:active,.wpstg-share-button-googleplus .share:active {
+    background-color:#353535;
+}
