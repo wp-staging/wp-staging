@@ -24,7 +24,7 @@ class Files extends JobExecutableWithCommandLine
     /**
      * @var int
      */
-    private $maxFilesPerRun = 1000;
+    private $maxFilesPerRun = 500;
 
     /**
      * @var string
