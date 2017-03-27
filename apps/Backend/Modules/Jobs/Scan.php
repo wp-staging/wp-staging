@@ -14,7 +14,7 @@ use WPStaging\WPStaging;
  * Class Scan
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Scan extends JobWithCommandLine
+class Scan extends Job
 {
 
     /**

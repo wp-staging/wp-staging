@@ -13,7 +13,7 @@ if (!defined("WPINC"))
  * Class Files
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Files extends JobExecutableWithCommandLine
+class Files extends JobExecutable
 {
 
     /**
@@ -66,6 +66,8 @@ class Files extends JobExecutableWithCommandLine
                 $this->log("Files will be copied using PHP, platform : {$this->OS}");
             }
         }
+
+        $this->settings->batchSize = $this->settings->batchSize * 1000000;
     }
 
     /**
@@ -183,21 +185,8 @@ class Files extends JobExecutableWithCommandLine
             return false;
         }
 
-
-        // We can use exec
-        if (true === $this->canUseExec)
-        {
-            return $this->copyFileWithExec($file, $destination);
-        }
-
-        // We can use popen
-        if (true === $this->canUsePopen)
-        {
-            return $this->copyFileWithPopen($file, $destination);
-        }
-
         // Good old PHP
-        return $this->copyFileWithPHP($file, $destination);
+        return $this->copy($file, $destination);
     }
 
     /**
@@ -227,7 +216,7 @@ class Files extends JobExecutableWithCommandLine
      * @param string $destination
      * @return bool
      */
-    private function copyFileWithPHP($file, $destination)
+    private function copy($file, $destination)
     {
         // Get file size
         $fileSize = filesize($file);
@@ -235,7 +224,7 @@ class Files extends JobExecutableWithCommandLine
         // File is over batch size
         if ($fileSize >= $this->settings->batchSize)
         {
-            return $this->copyBigFileWithPHP($file, $destination);
+            return $this->copyBig($file, $destination);
         }
 
         // Attempt to copy
@@ -254,7 +243,7 @@ class Files extends JobExecutableWithCommandLine
      * @param string $destination
      * @return bool
      */
-    private function copyBigFileWithPHP($file, $destination)
+    private function copyBig($file, $destination)
     {
         $bytes      = 0;
         $fileInput  = new \SplFileObject($file, "rb");
@@ -271,97 +260,5 @@ class Files extends JobExecutableWithCommandLine
         $fileOutput= null;
 
         return ($bytes > 0);
-    }
-
-    /**
-     * @param string $file
-     * @param string $destination
-     * @return bool
-     */
-    private function copyFileWithExec($file, $destination)
-    {
-        // OS is not supported
-        if (!in_array($this->OS, array("WIN", "LIN"), true))
-        {
-            return false;
-        }
-
-        // WIN OS
-        if ("WIN" === $this->OS)
-        {
-            return $this->copyFileWithExecForWin($file, $destination);
-        }
-
-        // *Nix OS
-        return $this->copyFileWithExecForNix($file, $destination);
-    }
-
-    /**
-     * @param string $file
-     * @param string $destination
-     * @return bool
-     */
-    private function copyFileWithExecForWin($file, $destination)
-    {
-        @exec("copy {$file} {$destination}");
-        return true;
-    }
-
-    /**
-     * @param string $file
-     * @param string $destination
-     * @return bool
-     */
-    private function copyFileWithExecForNix($file, $destination)
-    {
-        @exec("cp {$file} {$destination} > /dev/null &");
-        return true;
-    }
-
-    /**
-     * @param string $file
-     * @param string $destination
-     * @return int
-     */
-    private function copyFileWithPopen($file, $destination)
-    {
-        // OS is not supported
-        if (!in_array($this->OS, array("WIN", "LIN"), true))
-        {
-            return 0;
-        }
-
-        // WIN OS
-        if ("WIN" === $this->OS)
-        {
-            return $this->copyFileWithPopenForWin($file, $destination);
-        }
-
-        // *Nix OS
-        return $this->copyFileWithPopenForNix($file, $destination);
-    }
-
-    /**
-     * @param string $file
-     * @param string $destination
-     * @return bool
-     */
-    private function copyFileWithPopenForWin($file, $destination)
-    {
-        $handle = @popen("/usr/bin/copy {$file} {$destination}", "w+");
-        pclose($handle);
-        return true;
-    }
-
-    /**
-     * @param string $file
-     * @param string $destination
-     * @return bool
-     */
-    private function copyFileWithPopenForNix($file, $destination)
-    {
-        $handle = @popen("/usr/bin/cp {$file} {$destination} > /dev/null &", "w+");
-        pclose($handle);
-        return true;
     }
 }
