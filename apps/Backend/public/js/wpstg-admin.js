@@ -159,13 +159,13 @@ var WPStaging = (function($)
                                 {
                                     cache.get("#wpstg-new-clone-id").removeClass("wpstg-error-input");
                                     cache.get("#wpstg-start-cloning").removeAttr("disabled");
-                                    cache.get("#wpstg-clone-id-error").text('');
+                                    cache.get("#wpstg-clone-id-error").text('').hide();
                                 }
                                 else
                                 {
                                     cache.get("#wpstg-new-clone-id").addClass("wpstg-error-input");
                                     cache.get("#wpstg-start-cloning").prop("disabled", true);
-                                    cache.get("#wpstg-clone-id-error").text(response.message);
+                                    cache.get("#wpstg-clone-id-error").text(response.message).show();
                                 }
                             }
                         );
@@ -468,7 +468,7 @@ var WPStaging = (function($)
         });
 
         return excludedDirectories;
-    }
+    };
 
     /**
      * Get Cloning Step Data

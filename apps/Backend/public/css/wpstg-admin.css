@@ -436,6 +436,12 @@ color:#777777;
 	color: #ff4235;
 }
 
+#wpstg-clone-id-error {
+	display: block;
+	text-align: right;
+	margin-right: 90px;
+}
+
 #wpstg-start-cloning + .wpstg-error-msg {
 	display: block;
 	margin-top: 5px;
