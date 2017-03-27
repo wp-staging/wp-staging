@@ -44,6 +44,8 @@ class Settings
     {
         $this->form["general"] = new Form();
 
+        $settings = json_decode(json_encode(get_option("wpstg_settings", array())));
+
         // DB Copy Query Limit
         $element = new Numeric(
             "wpstg_settings[queryLimit]",
@@ -57,7 +59,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("DB Copy Query Limit")
-            ->setDefault(1000)
+            ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 1000)
         );
 
         // File Copy Batch Size
@@ -73,7 +75,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("File Copy Batch Size")
-            ->setDefault(2)
+            ->setDefault(isset($settings->batchSize) ? $settings->batchSize : 2)
         );
 
         // CPU load priority
@@ -89,7 +91,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("CPU load priority")
-            ->setDefault("default")
+            ->setDefault(isset($settings->cpuLoad) ? $settings->cpuLoad : "default")
         );
 
         // Optimizer
@@ -100,6 +102,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("Optimizer")
+            ->setDefault((isset($settings->optimizer)) ? $settings->optimizer : null)
         );
 
         // Disable admin authorization
@@ -110,6 +113,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("Disable admin authorization")
+                ->setDefault((isset($settings->disableAdminLogin)) ? $settings->disableAdminLogin : null)
         );
 
         // WordPress in subdirectory
@@ -120,6 +124,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("Wordpress in subdirectory")
+                ->setDefault((isset($settings->wpSubDirectory)) ? $settings->wpSubDirectory : null)
         );
 
         // Debug Mode
@@ -130,6 +135,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("Debug Mode")
+                ->setDefault((isset($settings->debugMode)) ? $settings->debugMode : null)
         );
 
         // Remove Data on Uninstall?
@@ -140,6 +146,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("Remove Data on Uninstall?")
+                ->setDefault((isset($settings->unInstallOnDelete)) ? $settings->unInstallOnDelete : null)
         );
 
         // Check Directory Sizes
@@ -150,6 +157,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("Check Directory Size")
+                ->setDefault((isset($settings->checkDirectorySize)) ? $settings->checkDirectorySize : null)
         );
     }
 

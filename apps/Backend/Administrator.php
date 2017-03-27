@@ -86,7 +86,6 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_logs", $this, "ajaxLogs");
         $loader->addAction("wp_ajax_wpstg_check_disk_space", $this, "ajaxCheckFreeSpace");
     }
-    
 
     /**
      * Register options form elements
