@@ -665,8 +665,6 @@ var WPStaging = (function($)
             return;
         }
 
-        console.log(that.data);
-
         // Start the process
         start();
 
@@ -675,6 +673,8 @@ var WPStaging = (function($)
         function start()
         {
             console.log("Staring cloning process...");
+
+            cache.get("#wpstg-loader").show();
 
             // Clone Database
             cloneDatabase();
@@ -848,6 +848,7 @@ var WPStaging = (function($)
 
             if (true === that.isCancelled || true === that.isFinished)
             {
+                cache.get("#wpstg-loader").hide();
                 return false;
             }
 
