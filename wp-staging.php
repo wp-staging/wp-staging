@@ -44,4 +44,9 @@ if (isset($wpdb))
     $wpStaging->set("wpdb", $wpdb);
 }
 
+if (isset($wp_rewrite))
+{
+    $wpStaging->set("wpRewrite", $wp_rewrite);
+}
+
 $wpStaging->run();

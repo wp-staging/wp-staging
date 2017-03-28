@@ -11,6 +11,7 @@ if (!defined("WPINC"))
 require_once __DIR__ . DIRECTORY_SEPARATOR . "Utils" . DIRECTORY_SEPARATOR . "Autoloader.php";
 
 use WPStaging\Backend\Administrator;
+use WPStaging\Frontend\Frontend;
 use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
 use WPStaging\Utils\Loader;
@@ -163,6 +164,10 @@ final class WPStaging
         if (is_admin())
         {
             new Administrator($this);
+        }
+        else
+        {
+            new Frontend($this);
         }
     }
 
