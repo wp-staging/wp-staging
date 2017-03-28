@@ -20,7 +20,7 @@ class Check extends ElementsWithOptions
 
         foreach ($this->options as $id => $value)
         {
-            $checked = ($this->isChecked($value)) ? " checked=''" : '';
+            $checked = ($this->isChecked($id)) ? " checked=''" : '';
 
             $attributeId = $this->getId() . '_' . $this->getId($id);
 
@@ -45,6 +45,7 @@ class Check extends ElementsWithOptions
             $this->default &&
             (
                 (is_string($this->default) && $this->default === $value) ||
+                (is_int($value) && (int) $this->default == $value) ||
                 (is_array($this->default) && in_array($value, $this->default))
             )
         )

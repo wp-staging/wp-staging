@@ -260,7 +260,7 @@ abstract class Elements implements InterfaceElement
             return '';
         }
 
-        return str_replace(' ', '_', strtolower($name));
+        return str_replace(' ', '_', $name);
     }
 
     /**
