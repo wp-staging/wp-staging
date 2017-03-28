@@ -19,7 +19,7 @@ class Select extends ElementsWithOptions
 
             foreach ($this->options as $id => $value)
             {
-                $selected = ($this->isSelected($value)) ? " selected=''" : '';
+                $selected = ($this->isSelected($id)) ? " selected=''" : '';
 
                 $output .= "<option value='{$id}'{$selected}>{$value}</option>";
             }
