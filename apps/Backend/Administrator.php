@@ -15,6 +15,7 @@ use WPStaging\Backend\Modules\Jobs\Delete;
 use WPStaging\Backend\Modules\Jobs\Files;
 use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Backend\Modules\Jobs\Logs;
+use WPStaging\Backend\Modules\Optimizer;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Notices\Notices;
@@ -66,6 +67,19 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_post_wpstg_export", $this, "export");
         $loader->addAction("admin_post_wpstg_import_settings", $this, "import");
         $loader->addAction("admin_notices", $this, "messages");
+
+        // Settings
+        $settings = $this->di->get("settings");
+
+        // Optimizer is ON
+        if ($settings->isOptimizer())
+        {
+            $optimizer = new Optimizer($this->di);
+
+            $loader->addAction("admin_init", $optimizer, "compatibility", 1);
+            $loader->addFilter("option_active_plugins", $optimizer, "excludedPlugins");
+            $loader->addFilter("site_option_active_sitewide_plugins", $optimizer, "excludedPlugins");
+        }
 
         // Ajax Requests
         $loader->addAction("wp_ajax_wpstg_overview", $this, "ajaxOverview");

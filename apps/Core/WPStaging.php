@@ -11,6 +11,7 @@ if (!defined("WPINC"))
 require_once __DIR__ . DIRECTORY_SEPARATOR . "Utils" . DIRECTORY_SEPARATOR . "Autoloader.php";
 
 use WPStaging\Backend\Administrator;
+use WPStaging\DTO\Settings;
 use WPStaging\Frontend\Frontend;
 use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
@@ -157,8 +158,8 @@ final class WPStaging
         // Set logger
         $this->set("logger", new Logger());
 
-        // Set options
-        $this->set("options", get_option("wpstg_settings"));
+        // Set settings
+        $this->set("settings", new Settings());
 
         // Set Administrator
         if (is_admin())

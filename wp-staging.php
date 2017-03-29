@@ -49,4 +49,11 @@ if (isset($wp_rewrite))
     $wpStaging->set("wpRewrite", $wp_rewrite);
 }
 
+if (isset($wp_filter))
+{
+    $wpStaging->set("wp_filter", function() use(&$wp_filter) {
+        return $wp_filter;
+    });
+}
+
 $wpStaging->run();
