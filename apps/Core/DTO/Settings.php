@@ -69,7 +69,7 @@ class Settings
     {
         $this->_raw = get_option("wpstg_settings", array());
 
-        $this->hydrate($this->raw);
+        $this->hydrate($this->_raw);
     }
 
     /**

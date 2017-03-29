@@ -26,11 +26,32 @@ class Directories extends JobExecutable
     private $total = 0;
 
     /**
+     * @var int
+     */
+    private $maxRecursionLimit = -1;
+
+    /**
+     * @var int
+     */
+    private $totalRecursion = 0;
+
+    /**
      * Initialize
      */
     public function initialize()
     {
         $this->total        = count($this->options->directoriesToCopy);
+
+        $this->maxRecursionLimit = (int) ini_get("xdebug.max_nesting_level");
+
+        if ($this->maxRecursionLimit < 1)
+        {
+            $this->maxRecursionLimit = -1;
+        }
+        else
+        {
+            $this->maxRecursionLimit = $this->maxRecursionLimit - 30; // just to make sure
+        }
     }
 
     /**
@@ -126,12 +147,14 @@ class Directories extends JobExecutable
      */
     protected function getFilesFromSubDirectories($path)
     {
-        if ($this->isOverThreshold())
+        if ($this->isOverThreshold() || $this->totalRecursion > $this->maxRecursionLimit)
         {
             $this->saveProgress();
 
             return false;
         }
+
+        $this->totalRecursion++;
 
         $this->log("Scanning {$path} for its sub-directories and files");
 
@@ -172,7 +195,8 @@ class Directories extends JobExecutable
     }
 
     /**
-     * @param string $directory
+     * @param $directory
+     * @return bool
      */
     protected function getFilesFromDirectory($directory)
     {
@@ -183,10 +207,15 @@ class Directories extends JobExecutable
         {
             $fullPath = $directory . $file;
 
-            if (is_dir($fullPath) && in_array($fullPath, $this->options->directoriesToCopy))
+            if (is_dir($fullPath) && !in_array($fullPath, $this->options->directoriesToCopy))
             {
+                if (false !== strpos($fullPath, "/var/www/wordpress.com/wp/media"))
+                {
+                    $var = '';
+                }
                 $this->options->directoriesToCopy[] = $fullPath;
-                continue;
+                return $this->getFilesFromSubDirectories($fullPath);
+                //continue;
             }
 
             if (!is_file($fullPath) || in_array($fullPath, $this->files))
