@@ -50,7 +50,7 @@ class Directories extends JobExecutable
         }
         else
         {
-            $this->maxRecursionLimit = $this->maxRecursionLimit - 30; // just to make sure
+            $this->maxRecursionLimit = $this->maxRecursionLimit - 50; // just to make sure
         }
     }
 
@@ -147,11 +147,16 @@ class Directories extends JobExecutable
      */
     protected function getFilesFromSubDirectories($path)
     {
-        if ($this->isOverThreshold() || $this->totalRecursion > $this->maxRecursionLimit)
+        if ($this->isOverThreshold() || $this->totalRecursion >= $this->maxRecursionLimit)
         {
             $this->saveProgress();
 
             return false;
+        }
+
+        if ($this->totalRecursion >= 220)
+        {
+            $var = '';
         }
 
         $this->totalRecursion++;

@@ -131,9 +131,15 @@ class Database extends JobExecutable
             "Copying {$old} as {$new} between {$this->options->job->start} to {$this->settings->queryLimit} records"
         );
 
+        $limitation = '';
+
+        if (0 < (int) $this->settings->queryLimit)
+        {
+            $limitation = " LIMIT {$this->settings->queryLimit} OFFSET {$this->options->job->start}";
+        }
+
         $this->db->query(
-            "INSERT INTO {$new} SELECT * FROM {$old} LIMIT {$this->settings->queryLimit} " .
-            "OFFSET {$this->options->job->start}"
+            "INSERT INTO {$new} SELECT * FROM {$old} {$limitation}"
         );
 
         // Set new offset
@@ -206,7 +212,6 @@ class Database extends JobExecutable
     /**
      * Drop table if necessary
      * @param string $new
-     * @param string $old
      */
     private function dropTable($new)
     {
