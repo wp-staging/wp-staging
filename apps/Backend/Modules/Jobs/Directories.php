@@ -147,6 +147,8 @@ class Directories extends JobExecutable
      */
     protected function getFilesFromSubDirectories($path)
     {
+        $this->totalRecursion++;
+
         if ($this->isOverThreshold() || $this->totalRecursion >= $this->maxRecursionLimit)
         {
             $this->saveProgress();
@@ -158,8 +160,6 @@ class Directories extends JobExecutable
         {
             $var = '';
         }
-
-        $this->totalRecursion++;
 
         $this->log("Scanning {$path} for its sub-directories and files");
 
@@ -214,10 +214,6 @@ class Directories extends JobExecutable
 
             if (is_dir($fullPath) && !in_array($fullPath, $this->options->directoriesToCopy))
             {
-                if (false !== strpos($fullPath, "/var/www/wordpress.com/wp/media"))
-                {
-                    $var = '';
-                }
                 $this->options->directoriesToCopy[] = $fullPath;
                 return $this->getFilesFromSubDirectories($fullPath);
                 //continue;

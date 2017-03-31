@@ -49,22 +49,6 @@ class Files extends JobExecutable
         if (0 == $this->options->currentStep)
         {
             $this->log("Copying files...");
-
-            // We can use exec
-            if (true === $this->canUseExec)
-            {
-                $this->log("Files will be copied using EXEC, platform : {$this->OS}");
-            }
-            // We'll use popen
-            elseif (true === $this->canUsePopen)
-            {
-                $this->log("Files will be copied using POPEN, platform : {$this->OS}");
-            }
-            // PHP
-            else
-            {
-                $this->log("Files will be copied using PHP, platform : {$this->OS}");
-            }
         }
 
         $this->settings->batchSize = $this->settings->batchSize * 1000000;
@@ -176,12 +160,14 @@ class Files extends JobExecutable
         // Invalid file, skipping it as if succeeded
         if (!is_file($file) || !is_readable($file))
         {
+            $this->log("Can't read file or file doesn't exist {$file}");
             return true;
         }
 
         // Failed to get destination
         if (false === ($destination = $this->getDestination($file)))
         {
+            $this->log("Can't get the destination of {$file}");
             return false;
         }
 
