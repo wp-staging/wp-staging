@@ -600,7 +600,7 @@ class Administrator extends InjectionAware
      * Admin Messages
      */
     public function messages(){
-        $notice = new Notices($this->path);
+        $notice = new Notices($this->path, $this->url);
                
         $run = $notice->messages();
     }

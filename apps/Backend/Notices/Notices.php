@@ -14,9 +14,25 @@ if (!defined("WPINC"))
 
 use WPStaging\WPStaging;
 
-class Notices {
-    
-    public function __construct($path) {
+/**
+ * Class Notices
+ * @package WPStaging\Backend\Notices
+ */
+class Notices
+{
+
+    /**
+     * @var string
+     */
+    private $path;
+
+    /**
+     * @var string
+     */
+    private $url;
+
+    public function __construct($path, $url)
+    {
         $this->path = $path;
     }
     
