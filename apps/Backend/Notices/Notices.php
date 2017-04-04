@@ -34,6 +34,7 @@ class Notices
     public function __construct($path, $url)
     {
         $this->path = $path;
+        $this->url  = $url;
     }
     
     /**
