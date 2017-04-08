@@ -937,6 +937,12 @@ var WPStaging = (function($)
         tabs();
     });
 
+    /**
+     * Ajax call
+     * @type {ajax}
+     */
+    that.ajax           = ajax;
+
     return that;
 })(jQuery);
 
