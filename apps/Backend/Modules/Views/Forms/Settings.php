@@ -2,7 +2,7 @@
 namespace WPStaging\Backend\Modules\Views\Forms;
 
 use WPStaging\Forms\Elements\Check;
-use WPStaging\Forms\Elements\Numeric;
+use WPStaging\Forms\Elements\Numerical;
 use WPStaging\Forms\Elements\Select;
 use WPStaging\Forms\Form;
 use WPStaging\Backend\Modules\Views\Tabs\Settings as Tabs;
@@ -47,7 +47,7 @@ class Settings
         $settings = json_decode(json_encode(get_option("wpstg_settings", array())));
 
         // DB Copy Query Limit
-        $element = new Numeric(
+        $element = new Numerical(
             "wpstg_settings[queryLimit]",
             array(
                 "class" => "medium-text",
@@ -63,7 +63,7 @@ class Settings
         );
 
         // File Copy Batch Size
-        $element = new Numeric(
+        $element = new Numerical(
             "wpstg_settings[batchSize]",
             array(
                 "class" => "medium-text",

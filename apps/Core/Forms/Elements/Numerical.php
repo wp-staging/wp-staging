@@ -4,10 +4,10 @@ namespace WPStaging\Forms\Elements;
 use WPStaging\Forms\Elements;
 
 /**
- * Class Numeric
+ * Class Numerical
  * @package WPStaging\Forms\Elements
  */
-class Numeric extends Elements
+class Numerical extends Elements
 {
 
     /**
