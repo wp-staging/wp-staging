@@ -307,7 +307,7 @@ class Administrator extends InjectionAware
 
         ignore_user_abort(true);
 
-        if (!in_array("set_time_limit", explode(',', ini_get("disable_functions"))) && !ini_get("safe_mode"))
+        if (!in_array("set_time_limit", explode(',', ini_get("disable_functions"))) && !@ini_get("safe_mode"))
         {
             set_time_limit(0);
         }
