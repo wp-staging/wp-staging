@@ -337,7 +337,7 @@ class SystemInfo extends InjectionAware
     public function php()
     {
         $output  = $this->header("PHP Configuration");
-        $output .= $this->info("Safe Mode:", (ini_get("safe_mode") ? "Enabled" : "Disabled"));
+        $output .= $this->info("Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
         $output .= $this->info("Memory Limit:", ini_get("memory_limit"));
         $output .= $this->info("Upload Max Size:", ini_get("upload_max_filesize"));
         $output .= $this->info("Post Max Size:", ini_get("post_max_size"));
@@ -349,6 +349,18 @@ class SystemInfo extends InjectionAware
         $output .= $this->info("Display Errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A");
 
         return apply_filters("wpstg_sysinfo_after_php_config", $output);
+    }
+
+    /**
+     * Check if PHP is on Safe Mode
+     * @return bool
+     */
+    public function isSafeModeEnabled()
+    {
+        return (
+            version_compare(PHP_VERSION, "5.4.0", '<') &&
+            @ini_get("safe_mode")
+        );
     }
 
     /**
