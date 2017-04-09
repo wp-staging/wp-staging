@@ -175,7 +175,7 @@ var WPStaging = (function($)
             })
             // Display logs
             .on("click", "#wpstg-show-log-button", function (e) {
-                e.defaultPrevented();
+                e.preventDefault();
                 var $logDetails = cache.get("#wpstg-log-details");
 
                 $logDetails.toggle();
@@ -220,7 +220,7 @@ var WPStaging = (function($)
             })
             // Delete clone - confirmation
             .on("click", ".wpstg-remove-clone[data-clone]", function(e) {
-                e.defaultPrevented();
+                e.preventDefault();
 
                 var $existingClones = cache.get("#wpstg-existing-clones");
 
@@ -244,7 +244,7 @@ var WPStaging = (function($)
             })
             // Delete clone - confirmed
             .on("click", "#wpstg-remove-clone", function (e) {
-                e.defaultPrevented();
+                e.preventDefault();
 
                 cache.get("#wpstg-removing-clone").addClass("loading");
 
@@ -252,13 +252,13 @@ var WPStaging = (function($)
             })
             // Cancel deleting clone
             .on("click", "#wpstg-cancel-removing", function (e) {
-                e.defaultPrevented();
+                e.preventDefault();
                 $(".wpstg-clone").removeClass("active");
                 cache.get("#wpstg-removing-clone").html('');
             })
             // Edit
             .on("click", ".wpstg-execute-clone", function (e) {
-                e.defaultPrevented();
+                e.preventDefault();
 
                 var clone = $(this).data("clone");
 
@@ -358,7 +358,7 @@ var WPStaging = (function($)
         $workFlow
             // Next Button
             .on("click", ".wpstg-next-step-link", function(e) {
-                e.defaultPrevented();
+                e.preventDefault();
 
                 var $this   = $(this),
                     isScan  = false;
@@ -412,7 +412,7 @@ var WPStaging = (function($)
             })
             // Previous Button
             .on("click", ".wpstg-prev-step-link", function(e) {
-                e.defaultPrevented();
+                e.preventDefault();
                 loadOverview();
             });
     };
@@ -528,7 +528,7 @@ var WPStaging = (function($)
     var tabs            = function()
     {
         cache.get("#wpstg-workflow").on("click", ".wpstg-tab-header", function(e) {
-            e.defaultPrevented();
+            e.preventDefault();
 
             var $this       = $(this),
                 $section    = cache.get($this.data("id"));
