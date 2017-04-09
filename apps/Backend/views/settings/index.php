@@ -164,6 +164,9 @@
                                     </td>
                                     <td>
                                         <?php echo $form->render("wpstg_settings[optimizer]")?>
+                                        <div id="wpstg_pluginListing" style="display:none">
+                                            <?php echo $form->render("wpstg_settings[blackListedPlugins][]")?>
+                                        </div>
                                     </td>
                                 </tr>
 

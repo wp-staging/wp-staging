@@ -116,18 +116,29 @@ class Administrator extends InjectionAware
      */
     public function sanitizeOptions($data = array())
     {
-        $sanitized = array();
-
-        foreach ($data as $key => $value)
-        {
-            $sanitized[$key] = htmlspecialchars($value);
-        }
+        $sanitized = $this->sanitizeData($data);
 
         add_settings_error("wpstg-notices", '', __("Settings updated.", "wpstg"), "updated");
 
         // Return sanitized data
         //return $sanitized;
         return apply_filters("wpstg-settings", $sanitized, $data);
+    }
+
+    /**
+     * @param array $data
+     * @return array
+     */
+    private function sanitizeData($data = array())
+    {
+        $sanitized = array();
+
+        foreach ($data as $key => $value)
+        {
+            $sanitized[$key] = (is_array($value)) ? $this->sanitizeData($value) :  htmlspecialchars($value);
+        }
+
+        return $sanitized;
     }
 
     /**

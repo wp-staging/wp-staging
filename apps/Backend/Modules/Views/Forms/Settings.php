@@ -5,7 +5,7 @@ use WPStaging\Forms\Elements\Check;
 use WPStaging\Forms\Elements\Numerical;
 use WPStaging\Forms\Elements\Select;
 use WPStaging\Forms\Form;
-use WPStaging\Backend\Modules\Views\Tabs\Settings as Tabs;
+use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 
 /**
  * Class Settings
@@ -19,6 +19,9 @@ class Settings
      */
     private $form = array();
 
+    /**
+     * @var Tabs
+     */
     private $tabs;
 
     /**
@@ -103,6 +106,32 @@ class Settings
         $this->form["general"]->add(
             $element->setLabel("Optimizer")
             ->setDefault((isset($settings->optimizer)) ? $settings->optimizer : null)
+        );
+
+        // Plugins
+        $plugins = array();
+
+        foreach (get_plugins() as $key => $data)
+        {
+            if ("wp-staging/wp-staging.php" === $key)
+            {
+                continue;
+            }
+
+            $plugins[$key] = $data["Name"];
+        }
+
+        $element = new Select(
+            "wpstg_settings[blackListedPlugins][]",
+            $plugins,
+            array(
+                "multiple"  => "multiple",
+                "style"     => "min-height:400px;"
+            )
+        );
+
+        $this->form["general"]->add(
+            $element->setDefault((isset($settings->blackListedPlugins)) ? $settings->blackListedPlugins : null)
         );
 
         // Disable admin authorization

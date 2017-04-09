@@ -175,7 +175,7 @@ var WPStaging = (function($)
             })
             // Display logs
             .on("click", "#wpstg-show-log-button", function (e) {
-                e.preventDefault();
+                e.defaultPrevented();
                 var $logDetails = cache.get("#wpstg-log-details");
 
                 $logDetails.toggle();
@@ -220,7 +220,7 @@ var WPStaging = (function($)
             })
             // Delete clone - confirmation
             .on("click", ".wpstg-remove-clone[data-clone]", function(e) {
-                e.preventDefault();
+                e.defaultPrevented();
 
                 var $existingClones = cache.get("#wpstg-existing-clones");
 
@@ -244,7 +244,7 @@ var WPStaging = (function($)
             })
             // Delete clone - confirmed
             .on("click", "#wpstg-remove-clone", function (e) {
-                e.preventDefault();
+                e.defaultPrevented();
 
                 cache.get("#wpstg-removing-clone").addClass("loading");
 
@@ -252,13 +252,13 @@ var WPStaging = (function($)
             })
             // Cancel deleting clone
             .on("click", "#wpstg-cancel-removing", function (e) {
-                e.preventDefault();
+                e.defaultPrevented();
                 $(".wpstg-clone").removeClass("active");
                 cache.get("#wpstg-removing-clone").html('');
             })
             // Edit
             .on("click", ".wpstg-execute-clone", function (e) {
-                e.preventDefault();
+                e.defaultPrevented();
 
                 var clone = $(this).data("clone");
 
@@ -358,7 +358,7 @@ var WPStaging = (function($)
         $workFlow
             // Next Button
             .on("click", ".wpstg-next-step-link", function(e) {
-                e.preventDefault();
+                e.defaultPrevented();
 
                 var $this   = $(this),
                     isScan  = false;
@@ -412,7 +412,7 @@ var WPStaging = (function($)
             })
             // Previous Button
             .on("click", ".wpstg-prev-step-link", function(e) {
-                e.preventDefault();
+                e.defaultPrevented();
                 loadOverview();
             });
     };
@@ -528,7 +528,7 @@ var WPStaging = (function($)
     var tabs            = function()
     {
         cache.get("#wpstg-workflow").on("click", ".wpstg-tab-header", function(e) {
-            e.preventDefault();
+            e.defaultPrevented();
 
             var $this       = $(this),
                 $section    = cache.get($this.data("id"));
@@ -632,6 +632,33 @@ var WPStaging = (function($)
                 cache.get("#wpstg-log-details").html(response);
             }
         );
+    };
+
+    /**
+     * Optimizer
+     */
+    var optimizer       = function()
+    {
+        var $optimizer = cache.get('input[name="wpstg_settings\[optimizer\]"]');
+
+        // On load
+        optimizerAction($optimizer.is(':checked'));
+
+        // On action
+        $optimizer.on('change', function(){
+            optimizerAction(this.checked);
+        });
+
+        function optimizerAction(isChecked)
+        {
+            if (false === isChecked)
+            {
+                cache.get('#wpstg_pluginListing').hide();
+                return false;
+            }
+
+            cache.get('#wpstg_pluginListing').show();
+        }
     };
 
     /**
@@ -935,6 +962,7 @@ var WPStaging = (function($)
         elements();
         stepButtons();
         tabs();
+        optimizer();
     });
 
     /**

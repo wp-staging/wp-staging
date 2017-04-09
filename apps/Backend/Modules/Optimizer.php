@@ -15,8 +15,6 @@ class Optimizer extends InjectionAware
      */
     private $wpFilter;
 
-    private $settings;
-
     /**
      * Optimizer constructor.
      */
