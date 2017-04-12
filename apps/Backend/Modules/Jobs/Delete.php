@@ -34,16 +34,6 @@ class Delete extends Job
     private $forceDeleteDirectories = false;
 
     /**
-     * @var int
-     */
-    private $maxRecursionLimit = -1;
-
-    /**
-     * @var int
-     */
-    private $totalRecursion = 0;
-
-    /**
      * Sets Clone and Table Records
      * @param null|array $clone
      */
@@ -57,17 +47,6 @@ class Delete extends Job
         {
             $this->clone                    = (object) $clone;
             $this->forceDeleteDirectories   = true;
-        }
-
-        $this->maxRecursionLimit = (int) ini_get("xdebug.max_nesting_level");
-
-        if ($this->maxRecursionLimit < 1)
-        {
-            $this->maxRecursionLimit = -1;
-        }
-        else
-        {
-            $this->maxRecursionLimit = $this->maxRecursionLimit - 30; // just to make sure
         }
 
         $this->getTableRecords();
@@ -344,14 +323,6 @@ class Delete extends Job
     }
 
     /**
-     * @return bool
-     */
-    private function isRecursionLimit()
-    {
-        return ($this->maxRecursionLimit > 1 && $this->totalRecursion > $this->maxRecursionLimit);
-    }
-
-    /**
      * @param string $path
      * @return bool
      */
@@ -359,8 +330,7 @@ class Delete extends Job
     {
         return (
             $this->isOverThreshold() ||
-            !is_dir($path) ||
-            $this->isRecursionLimit() ||
+            !is_dir($path) || 
             $this->isDirectoryDeletingFinished()
         );
     }

@@ -26,32 +26,11 @@ class Directories extends JobExecutable
     private $total = 0;
 
     /**
-     * @var int
-     */
-    private $maxRecursionLimit = -1;
-
-    /**
-     * @var int
-     */
-    private $totalRecursion = 0;
-
-    /**
      * Initialize
      */
     public function initialize()
     {
         $this->total        = count($this->options->directoriesToCopy);
-
-        $this->maxRecursionLimit = (int) ini_get("xdebug.max_nesting_level");
-
-        if ($this->maxRecursionLimit < 1)
-        {
-            $this->maxRecursionLimit = -1;
-        }
-        else
-        {
-            $this->maxRecursionLimit = $this->maxRecursionLimit - 50; // just to make sure
-        }
     }
 
     /**
@@ -149,7 +128,7 @@ class Directories extends JobExecutable
     {
         $this->totalRecursion++;
 
-        if ($this->isOverThreshold() || $this->totalRecursion >= $this->maxRecursionLimit)
+        if ($this->isOverThreshold())
         {
             $this->saveProgress();
 

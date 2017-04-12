@@ -71,6 +71,16 @@ abstract class Job implements JobInterface
     /**
      * @var int
      */
+    protected $totalRecursion;
+
+    /**
+     * @var int
+     */
+    protected $maxRecursionLimit;
+
+    /**
+     * @var int
+     */
     protected $start;
 
     /**
@@ -87,6 +97,7 @@ abstract class Job implements JobInterface
         {
             $this->maxExecutionTime = 30;
         }
+
         // Services
         $this->cache    = new Cache(-1, \WPStaging\WPStaging::getContentDir());
         $this->logger   = WPStaging::getInstance()->get("logger");
@@ -112,6 +123,17 @@ abstract class Job implements JobInterface
 
         // Set limits accordingly to CPU LIMITS
         $this->setLimits();
+
+        $this->maxRecursionLimit = (int) ini_get("xdebug.max_nesting_level");
+
+        if ($this->maxRecursionLimit < 1)
+        {
+            $this->maxRecursionLimit = -1;
+        }
+        else
+        {
+            $this->maxRecursionLimit = $this->maxRecursionLimit - 50; // just to make sure
+        }
 
         if (method_exists($this, "initialize"))
         {
@@ -268,6 +290,10 @@ abstract class Job implements JobInterface
             return (!$this->resetMemory());
         }
 
+        if ($this->isRecursionLimit())
+        {
+            return true;
+        }
         
         // Check if execution time is over threshold
         ///$time = round($this->start + $this->time(), 4);
@@ -348,6 +374,15 @@ abstract class Job implements JobInterface
         }
 
         return true;
+    }
+
+    /**
+     * Checks if calls are over recursion limit
+     * @return bool
+     */
+    protected function isRecursionLimit()
+    {
+        return ($this->maxRecursionLimit > 0 && $this->totalRecursion >= $this->maxRecursionLimit);
     }
 
     /**
