@@ -156,11 +156,6 @@ class Directories extends JobExecutable
             return false;
         }
 
-        if ($this->totalRecursion >= 220)
-        {
-            $var = '';
-        }
-
         $this->log("Scanning {$path} for its sub-directories and files");
 
         $directories = new \DirectoryIterator($path);
@@ -174,7 +169,7 @@ class Directories extends JobExecutable
             }
 
             // Excluded directory
-            if (in_array($directory->getRealPath(), $this->options->excludedDirectories))
+            if ($this->isDirectoryExcluded($directory->getRealPath()))
             {
                 continue;
             }
@@ -246,6 +241,23 @@ class Directories extends JobExecutable
         }
 
         return $path;
+    }
+
+    /**
+     * @param string $directory
+     * @return bool
+     */
+    protected function isDirectoryExcluded($directory)
+    {
+        foreach ($this->options->excludedDirectories as $excludedDirectory)
+        {
+            if (strpos($directory, $excludedDirectory) === 0)
+            {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**

@@ -22,9 +22,9 @@ final class Loader
         $this->actions = $this->add($this->actions, $hook, $component, $callback, $priority, $acceptedArgs);
     }
 
-    public function addFilter($hook, $component, $callback)
+    public function addFilter($hook, $component, $callback, $priority = 10, $acceptedArgs = 1)
     {
-        $this->filters = $this->add($this->filters, $hook, $component, $callback);
+        $this->filters = $this->add($this->filters, $hook, $component, $callback, $priority, $acceptedArgs);
     }
 
     private function add($hooks, $hook, $component, $callback, $priority = 10, $acceptedArgs = 1)
@@ -46,7 +46,7 @@ final class Loader
         foreach ($this->filters as $key => $hook)
         {
             add_filter(
-                $hook["hook"], array($hook["component"]), $hook["callback"], $hook["priority"], $hook["acceptedArgs"]
+                $hook["hook"], array($hook["component"], $hook["callback"]), $hook["priority"], $hook["acceptedArgs"]
             );
 
             if (true === $emptyAfterRun)
