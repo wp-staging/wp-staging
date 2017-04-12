@@ -173,6 +173,11 @@ var WPStaging = (function($)
                     500
                 );
             })
+            // Restart cloning process
+            .on("click", "#wpstg-start-cloning", function() {
+                that.isCancelled= false;
+                that.getLogs    = false;
+            })
             // Display logs
             .on("click", "#wpstg-show-log-button", function (e) {
                 e.preventDefault();
