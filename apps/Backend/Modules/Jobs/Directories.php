@@ -31,6 +31,7 @@ class Directories extends JobExecutable
     public function initialize()
     {
         $this->total        = count($this->options->directoriesToCopy);
+        $this->getFiles();
     }
 
     /**
@@ -130,7 +131,7 @@ class Directories extends JobExecutable
 
         if ($this->isOverThreshold())
         {
-            $this->saveProgress();
+            //$this->saveProgress();
 
             return false;
         }
@@ -179,6 +180,8 @@ class Directories extends JobExecutable
      */
     protected function getFilesFromDirectory($directory)
     {
+        $this->totalRecursion++;
+        
         // Save all files
         $files = array_diff(scandir($directory), array('.', ".."));
 
@@ -186,7 +189,7 @@ class Directories extends JobExecutable
         {
             $fullPath = $directory . $file;
 
-            if (is_dir($fullPath) && !in_array($fullPath, $this->options->directoriesToCopy))
+            if (is_dir($fullPath) && !in_array($fullPath, $this->options->directoriesToCopy) && !$this->isDirectoryExcluded($fullPath))
             {
                 $this->options->directoriesToCopy[] = $fullPath;
                 return $this->getFilesFromSubDirectories($fullPath);
@@ -252,9 +255,26 @@ class Directories extends JobExecutable
 
         if (strlen($files) > 0)
         {
-            $files .= PHP_EOL;
+            //$files .= PHP_EOL;
         }
 
-        return (false !== @file_put_contents($fileName, $files, FILE_APPEND));
+        return (false !== @file_put_contents($fileName, $files));
+    }
+
+    /**
+     * Save files
+     * @return void
+     */
+    protected function getFiles()
+    {
+        $fileName   = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
+
+        if (false === ($this->files = file_get_contents($fileName)))
+        {
+            $this->files = array();
+            return;
+        }
+
+        $this->files = explode(PHP_EOL, $this->files);
     }
 }
