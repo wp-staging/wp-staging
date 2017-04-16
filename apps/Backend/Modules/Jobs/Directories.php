@@ -131,7 +131,7 @@ class Directories extends JobExecutable
 
         if ($this->isOverThreshold())
         {
-            //$this->saveProgress();
+            $this->saveProgress();
 
             return false;
         }

@@ -124,7 +124,7 @@ abstract class Job implements JobInterface
         // Set limits accordingly to CPU LIMITS
         $this->setLimits();
 
-        $this->maxRecursionLimit = (int) ini_get("xdebug.max_nesting_level");
+        //$this->maxRecursionLimit = (int) ini_get("xdebug.max_nesting_level");
 
         if ($this->maxRecursionLimit < 1)
         {
