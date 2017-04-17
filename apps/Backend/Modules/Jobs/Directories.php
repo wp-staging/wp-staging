@@ -131,7 +131,7 @@ class Directories extends JobExecutable
 
         if ($this->isOverThreshold())
         {
-            $this->saveProgress();
+            //$this->saveProgress();
 
             return false;
         }
@@ -259,7 +259,7 @@ class Directories extends JobExecutable
         }
 
         return (false !== @file_put_contents($fileName, $files));
-    }
+        }
 
     /**
      * Save files
