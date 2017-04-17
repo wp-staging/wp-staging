@@ -22,7 +22,8 @@ abstract class JobExecutable extends Job
         "status"        => false,
         "percentage"    => 0,
         "total"         => 0,
-        "step"          => 0
+        "step"          => 0,
+        "last_msg"      => ''
     );
 
     /**
@@ -56,7 +57,8 @@ abstract class JobExecutable extends Job
             "status"        => $status,
             "percentage"    => $percentage,
             "total"         => $this->options->totalSteps,
-            "step"          => $this->options->currentStep
+            "step"          => $this->options->currentStep,
+            "last_msg"      => $this->logger->getLastLogMsg($this->options->currentStep, $this->options->totalSteps)
         );
     }
 

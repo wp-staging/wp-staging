@@ -131,7 +131,7 @@ class Directories extends JobExecutable
 
         if ($this->isOverThreshold())
         {
-            $this->saveProgress();
+            //$this->saveProgress();
 
             return false;
         }
@@ -268,6 +268,7 @@ class Directories extends JobExecutable
     protected function getFiles()
     {
         $fileName   = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
+        $this->log($fileName);
 
         if (false === ($this->files = file_get_contents($fileName)))
         {
