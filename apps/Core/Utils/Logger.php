@@ -203,4 +203,14 @@ class Logger
     {
         return $this->logExtension;
     }
+    
+    /**
+     * Get last element of logging data array
+     * @return string
+     */
+    public function getLastLogMsg($currentStep, $TotalSteps)
+    {
+        //return $this->messages[]=array_pop($this->messages);
+        return array_slice ($this->messages, $currentStep, $TotalSteps, true);
+    }
 }
