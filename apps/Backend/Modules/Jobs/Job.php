@@ -134,7 +134,7 @@ abstract class Job implements JobInterface
         {
             $this->maxRecursionLimit = $this->maxRecursionLimit - 50; // just to make sure
         }
-
+        
         if (method_exists($this, "initialize"))
         {
             $this->initialize();
