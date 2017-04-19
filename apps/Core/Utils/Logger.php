@@ -205,15 +205,13 @@ class Logger
     }
     
     /**
-     * Get last element of logging data array
+     * Get last log entries of current working batch data array
      * @return string
      */
     public function getLastLogMsg($currentStep, $TotalSteps)
     {
-        //return $this->messages[]=array_pop($this->messages);
-        // return all last x messages
+        // return all messages
         if (count ($this->messages) > 1){
-            //return array_slice ($this->messages, $currentStep, $TotalSteps, true);
             return $this->messages;
         }else{
             // Return last message
