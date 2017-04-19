@@ -128,8 +128,9 @@ abstract class Job implements JobInterface
         
         /* 
          * This is needed to make sure that maxRecursionLimit = -1 
-         * if xdebug is not used in production env. For using xdebug, maxRecursionLimit must be larger
-         * otherwise xdebug is throwing and error 500 while debugging
+         * if xdebug is not used in production env. 
+         * For using xdebug, maxRecursionLimit must be larger
+         * otherwise xdebug is throwing an error 500 while debugging
          */
         if ($this->maxRecursionLimit < 1)
         {
