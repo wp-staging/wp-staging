@@ -182,6 +182,8 @@ class Directories extends JobExecutable
     {
         $this->totalRecursion++;
         
+        $this->log("Scanning {$directory} for its sub-directories and files");
+        
         // Save all files
         $files = array_diff(scandir($directory), array('.', ".."));
 
@@ -268,7 +270,6 @@ class Directories extends JobExecutable
     protected function getFiles()
     {
         $fileName   = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
-        $this->log($fileName);
 
         if (false === ($this->files = file_get_contents($fileName)))
         {

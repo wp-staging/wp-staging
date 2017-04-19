@@ -58,7 +58,8 @@ abstract class JobExecutable extends Job
             "percentage"    => $percentage,
             "total"         => $this->options->totalSteps,
             "step"          => $this->options->currentStep,
-            "last_msg"      => $this->logger->getLastLogMsg($this->options->currentStep, $this->options->totalSteps)
+            "last_msg"      => $this->logger->getLastLogMsg($this->options->currentStep, $this->options->totalSteps),
+            "running_time"  => $this->logger->getRunningTime()
         );
     }
 
@@ -77,6 +78,8 @@ abstract class JobExecutable extends Job
             }
         }
     }
+    
+
 
     /**
      * Start Module

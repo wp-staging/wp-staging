@@ -211,6 +211,22 @@ class Logger
     public function getLastLogMsg($currentStep, $TotalSteps)
     {
         //return $this->messages[]=array_pop($this->messages);
-        return array_slice ($this->messages, $currentStep, $TotalSteps, true);
+        // return all last x messages
+        if (count ($this->messages) > 1){
+            //return array_slice ($this->messages, $currentStep, $TotalSteps, true);
+            return $this->messages;
+        }else{
+            // Return last message
+            return $this->messages[]=array_pop($this->messages);  
+        }
+    }
+    
+    /**
+     * Get running time in seconds
+     * @return int
+     */
+    public function getRunningTime(){
+        $str_time = $this->messages[0]["date"];
+        return $str_time;
     }
 }

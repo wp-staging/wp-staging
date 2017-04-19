@@ -803,6 +803,12 @@ var WPStaging = (function($)
                             {
                                 cache.get("#wpstg-directories-progress").width(response.percentage + '%');
                             }
+                            
+                            // Add Log
+                            if ("undefined" !== typeof(response.last_msg))
+                            {
+                                getLogs(response.last_msg);
+                            }
 
                             if (false === response.status)
                             {
@@ -842,6 +848,12 @@ var WPStaging = (function($)
                     if ("undefined" !== typeof(response.percentage))
                     {
                         cache.get("#wpstg-files-progress").width(response.percentage + '%');
+                    }
+                    
+                    // Add Log
+                    if ("undefined" !== typeof(response.last_msg))
+                    {
+                        getLogs(response.last_msg);
                     }
 
                     if (false === response.status)
