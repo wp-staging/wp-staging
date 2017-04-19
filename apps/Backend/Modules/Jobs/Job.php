@@ -292,7 +292,7 @@ abstract class Job implements JobInterface
         if ($usedMemory >= $this->memoryLimit)
         {
             $this->log('RESET MEMORY');
-            return (!$this->resetMemory());
+            return true;
         }
 
         if ($this->isRecursionLimit())
@@ -309,7 +309,7 @@ abstract class Job implements JobInterface
         {
             $this->log('RESET TIME');
             //return (!$this->resetTime());
-            return false;
+            return true;
         }
 
         return false;
