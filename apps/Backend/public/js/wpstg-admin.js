@@ -60,13 +60,14 @@ var WPStaging = (function($)
             return;
         }
 
-        $.post(
-            ajaxurl,
-            {
-                action  : "wpstg_error_processing",
-                message : message
-            }
-        );
+// No reason to start another ajax request for showing error message. (Huge performance issue)
+//        $.post(
+//            ajaxurl,
+//            {
+//                action  : "wpstg_error_processing",
+//                message : message
+//            }
+//        );
     };
 
     /**
@@ -616,27 +617,42 @@ var WPStaging = (function($)
         );
     };
 
-    var getLogs         = function()
+//    var getLogs         = function()
+//    {
+//        if (true !== that.getLogs)
+//        {
+//            return;
+//        }
+//
+//        console.log("Retrieving logs...");
+//        //cache.get("#wpstg-log-details").html("refreshing...");
+//
+//        ajax(
+//            {
+//                action  : "wpstg_logs",
+//                nonce   : wpstg.nonce,
+//                clone   : cache.get("#wpstg-show-log-button").data("clone")
+//            },
+//            function(response)
+//            {
+//                cache.get("#wpstg-log-details").html(response);
+//            }
+//        );
+//    };
+    var getLogs         = function(log)
     {
-        if (true !== that.getLogs)
-        {
-            return;
+        console.log("Adding logs...");
+        
+        if ("undefined" !== typeof(log)){
+            //cache.get("#wpstg-log-details").append(log.type + ' ' + log.date + ' ' + log.message + ' </br>');
+            $.each(log, function(index, value){
+                console.log(index, value);
+                cache.get("#wpstg-log-details").append(value.type + ' ' + value.date + ' ' + value.message +  '</br>');
+            })
         }
 
-        console.log("Retrieving logs...");
-        //cache.get("#wpstg-log-details").html("refreshing...");
 
-        ajax(
-            {
-                action  : "wpstg_logs",
-                nonce   : wpstg.nonce,
-                clone   : cache.get("#wpstg-show-log-button").data("clone")
-            },
-            function(response)
-            {
-                cache.get("#wpstg-log-details").html(response);
-            }
-        );
+
     };
 
     /**
@@ -704,7 +720,7 @@ var WPStaging = (function($)
         // Start
         function start()
         {
-            console.log("Staring cloning process...");
+            console.log("Starting cloning process...");
 
             cache.get("#wpstg-loader").show();
 
@@ -738,11 +754,18 @@ var WPStaging = (function($)
                             {
                                 cache.get("#wpstg-db-progress").width(response.percentage + '%');
                             }
+                            // Add Log
+                            if ("undefined" !== typeof(response.last_msg))
+                            {
+                                getLogs(response.last_msg);
+                            }
 
+                            // Continue clone DB
                             if (false === response.status)
                             {
                                 cloneDatabase();
                             }
+                            // Next Step
                             else if (true === response.status)
                             {
                                 prepareDirectories();
@@ -779,6 +802,12 @@ var WPStaging = (function($)
                             if ("undefined" !== typeof(response.percentage))
                             {
                                 cache.get("#wpstg-directories-progress").width(response.percentage + '%');
+                            }
+
+                            // Add Log
+                            if ("undefined" !== typeof(response.last_msg))
+                            {
+                                getLogs(response.last_msg);
                             }
 
                             if (false === response.status)

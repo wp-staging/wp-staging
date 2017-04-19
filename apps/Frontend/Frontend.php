@@ -43,7 +43,7 @@ class Frontend extends InjectionAware
     {
         if ($this->shouldDisableLogin())
         {
-            wp_die(__('Access denied. <a href="%1$s" target="_blank">Login</a> first', "wpstg"), wp_login_url());
+            wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first','wpstg'), wp_login_url()  ) );
         }
 
         $this->resetPermaLinks();
