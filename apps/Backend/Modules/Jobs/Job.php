@@ -125,7 +125,12 @@ abstract class Job implements JobInterface
         $this->setLimits();
 
         $this->maxRecursionLimit = (int) ini_get("xdebug.max_nesting_level");
-
+        
+        /* 
+         * This is needed to make sure that maxRecursionLimit = -1 
+         * if xdebug is not used in production env. For using xdebug, maxRecursionLimit must be larger
+         * otherwise xdebug is throwing and error 500 while debugging
+         */
         if ($this->maxRecursionLimit < 1)
         {
             $this->maxRecursionLimit = -1;
@@ -282,26 +287,28 @@ abstract class Job implements JobInterface
     {
         // Check if the memory is over threshold
         $usedMemory = (int) @memory_get_usage(true);
-        
-        //$this->log('used memory is ' . $usedMemory);
-        
+                
         if ($usedMemory >= $this->memoryLimit)
         {
+            $this->log('RESET MEMORY');
             return (!$this->resetMemory());
         }
 
         if ($this->isRecursionLimit())
         {
+            $this->log('RESET RECURSION');
             return true;
         }
         
         // Check if execution time is over threshold
         ///$time = round($this->start + $this->time(), 4);
         $time = round($this->time() - $this->start, 4);
-        //$this->log('execution time is ' . $time . ' | execution time limit is ' . $this->executionLimit);
+        
         if ($time >= $this->executionLimit)
         {
-            return (!$this->resetTime());
+            $this->log('RESET TIME');
+            //return (!$this->resetTime());
+            return false;
         }
 
         return false;
@@ -310,6 +317,8 @@ abstract class Job implements JobInterface
     /**
      * Attempt to reset memory
      * @return bool
+     * 
+     * @deprecated since version 2.0.0
      */
     protected function resetMemory()
     {
@@ -340,6 +349,9 @@ abstract class Job implements JobInterface
     /**
      * Attempt to reset time
      * @return bool
+     * 
+     * @deprecated since version 2.0.0
+
      */
     protected function resetTime()
     {
@@ -358,6 +370,8 @@ abstract class Job implements JobInterface
     /**
      * Reset time limit and memory
      * @return bool
+     * 
+     * @deprecated since version 2.0.0
      */
     protected function reset()
     {
