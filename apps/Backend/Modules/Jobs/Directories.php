@@ -262,7 +262,7 @@ class Directories extends JobExecutable
     }
 
     /**
-     * Save files
+     * Get files
      * @return void
      */
     protected function getFiles()
