@@ -8,7 +8,7 @@ var WPStaging = (function($)
             getLogs     : false
         },
         cache       = {elements : []},
-        ajaxSpinner;
+        timeout, ajaxSpinner;
 
     /**
      * Get / Set Cache for Selector
@@ -185,15 +185,15 @@ var WPStaging = (function($)
                 var $logDetails = cache.get("#wpstg-log-details");
 
                 $logDetails.toggle();
-                cache.get("html, body").animate({
-                    scrollTop: $logDetails.offset().top
-                }, 400);
+
+                logscroll();
 
                 that.getLogs = (false === that.getLogs);
             });
 
         cloneActions();
     };
+    
 
     /**
      * Clone actions
@@ -616,43 +616,34 @@ var WPStaging = (function($)
             }
         );
     };
+    
+    /**
+     * Scroll the window log to bottom
+     * @returns void
+     */
+    var logscroll = function () {
+        var $div = cache.get("#wpstg-log-details");
+        $div.scrollTop($div[0].scrollHeight);
+    }
 
-//    var getLogs         = function()
-//    {
-//        if (true !== that.getLogs)
-//        {
-//            return;
-//        }
-//
-//        console.log("Retrieving logs...");
-//        //cache.get("#wpstg-log-details").html("refreshing...");
-//
-//        ajax(
-//            {
-//                action  : "wpstg_logs",
-//                nonce   : wpstg.nonce,
-//                clone   : cache.get("#wpstg-show-log-button").data("clone")
-//            },
-//            function(response)
-//            {
-//                cache.get("#wpstg-log-details").html(response);
-//            }
-//        );
-//    };
+    /**
+     * Append the log to the logging window
+     * @param string log
+     * @returns void
+     */
     var getLogs = function (log)
     {
-        console.log("Adding logs...");
-
         if ("undefined" !== typeof (log)) {
             if (log.constructor === Array) {
                 $.each(log, function (index, value) {
-                    console.log(index, value);
+                    //console.log(index, value);
                     cache.get("#wpstg-log-details").append(value.type + ' ' + value.date + ' ' + value.message + '</br>');
                 })
             } else {
                 cache.get("#wpstg-log-details").append(log.type + ' ' + log.date + ' ' + log.message + '</br>');
             }
         }
+        logscroll();
 
     };
 
@@ -726,7 +717,7 @@ var WPStaging = (function($)
             cache.get("#wpstg-loader").show();
 
             // Clone Database
-            cloneDatabase();
+            setTimeout(function() {cloneDatabase();}, wpstg.cpuLoad);
         }
 
         // Step 1: Clone Database
@@ -764,13 +755,13 @@ var WPStaging = (function($)
                             // Continue clone DB
                             if (false === response.status)
                             {
-                                cloneDatabase();
+                                setTimeout(function() {cloneDatabase();}, wpstg.cpuLoad);
                             }
                             // Next Step
                             else if (true === response.status)
                             {
                                 console.log('prepareDirectories' + response.status);
-                                prepareDirectories();
+                                setTimeout(function() {prepareDirectories();}, wpstg.cpuLoad);
                             }
                         }
                     );
@@ -814,7 +805,7 @@ var WPStaging = (function($)
 
                             if (false === response.status)
                             {
-                                prepareDirectories();
+                                setTimeout(function() {prepareDirectories();}, wpstg.cpuLoad);
                             }
                             else if (true === response.status)
                             {
@@ -861,11 +852,11 @@ var WPStaging = (function($)
 
                     if (false === response.status)
                     {
-                        cloneFiles();
+                        setTimeout(function() {cloneFiles();}, wpstg.cpuLoad);
                     }
                     else if (true === response.status)
                     {
-                        replaceData();
+                        setTimeout(function() {replaceData();}, wpstg.cpuLoad);
                     }
                 }
             );
@@ -898,7 +889,7 @@ var WPStaging = (function($)
 
                     if (false === response.status)
                     {
-                        replaceData();
+                        setTimeout(function() {replaceData();}, wpstg.cpuLoad);
                     }
                     else if (true === response.status)
                     {

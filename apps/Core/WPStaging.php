@@ -236,8 +236,8 @@ final class WPStaging
      */
     public function getCPULoadSetting()
     {
-        $options = $this->get("options");
-        $setting = (isset($options->cpuLoad)) ? $options->cpuLoad : "default";
+        $options = $this->get("settings");
+        $setting = $options->getCpuLoad();
 
         switch ($setting)
         {

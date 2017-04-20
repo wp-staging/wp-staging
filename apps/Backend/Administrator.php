@@ -385,7 +385,7 @@ class Administrator extends InjectionAware
                 "A problem occurred when trying to add plugins to backlist.",
                 "wpstg"
             ),
-            "cpuLoad"                               => $this->di->getCPULoadSetting(),
+            "cpuLoad"                               => empty($cpuLoad = $this->di->getCPULoadSetting()) ? 0 : $cpuLoad,
             "settings"                              => (object) array() // TODO add settings?
         ));
     }
