@@ -89,18 +89,11 @@ class Frontend extends InjectionAware
         {
             return;
         }
-        
-        $wpRewrite = $this->getDI()->get("wpRewrite");
-        
-        if (null === $wpRewrite)
-        {
-            return;
-        }
-        
-        $wpRewrite->set_permalink_structure(null);
-        
+
+        $this->getDI()->get("wpRewrite")->set_permalink_structure(null);
+
         flush_rewrite_rules();
-        
+
         update_option("wpstg_rmpermalinks_executed", "true");
     }
 }
