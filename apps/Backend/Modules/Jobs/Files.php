@@ -85,7 +85,7 @@ class Files extends JobExecutable
             return false;
         }
 
-        // Prepare response
+        // Prepare and return response
         $this->prepareResponse();
 
         // Not finished
@@ -210,13 +210,14 @@ class Files extends JobExecutable
         // File is over batch size
         if ($fileSize >= $this->settings->batchSize)
         {
-            return $this->copyBig($file, $destination);
+            $this->log("Trying to copy big file {$file} -> {$destination}", Logger::TYPE_INFO);
+            return $this->copyBig($file, $destination, $this->settings->batchSize);
         }
 
         // Attempt to copy
         if (!@copy($file, $destination))
         {
-            $this->log("Failed to copy file to destination; {$file} -> {$destination}", Logger::TYPE_ERROR);
+            $this->log("Failed to copy file to destination: {$file} -> {$destination}", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -228,23 +229,59 @@ class Files extends JobExecutable
      * @param string $file
      * @param string $destination
      * @return bool
+     * 
+     * @deprecated since version 2.0.0 (Supported only in php 5.5.11 and later)
      */
-    private function copyBig($file, $destination)
-    {
-        $bytes      = 0;
-        $fileInput  = new \SplFileObject($file, "rb");
-        $fileOutput = new \SplFileObject($destination, 'w');
-
-        $this->log("Copying big file; {$file} -> {$destination}");
-
-        while (!$fileInput->eof())
-        {
-            $bytes += $fileOutput->fwrite($fileInput->fread($this->settings->batchSize));
+//    private function copyBig($file, $destination)
+//    {
+//        $bytes      = 0;
+//        $fileInput  = new \SplFileObject($file, "rb");
+//        $fileOutput = new \SplFileObject($destination, 'w');
+//
+//        $this->log("Copying big file; {$file} -> {$destination}");
+//
+//        while (!$fileInput->eof())
+//        {
+//            $bytes += $fileOutput->fwrite($fileInput->fread($this->settings->batchSize));
+//        }
+//
+//        $fileInput = null;
+//        $fileOutput= null;
+//
+//        return ($bytes > 0);
+//    }
+    
+    /**
+     * Copy bigger files than $this->settings->batchSize
+     * @param string $src
+     * @param string $dst
+     * @param int $buffersize
+     * @return boolean
+     */
+    private function copyBig($src, $dst, $buffersize) {
+    $src = fopen($src, 'r');
+    $dest = fopen($dst, 'w');
+    
+        // Try first method:
+        while (! feof($src)){
+                    if (false === fwrite($dest, fread($src, $buffersize))){
+                        $error = true;
+                    }                 
         }
-
-        $fileInput = null;
-        $fileOutput= null;
-
-        return ($bytes > 0);
-    }
+        // Try second method if first one failed
+        if (isset($error) && ($error === true)){
+            while(!feof($src)){
+                if (false === stream_copy_to_stream($src, $dest, 1024 )) {
+                    $this->log("Can not copy big file; {$src} -> {$dest}");
+                    fclose($src);
+                    fclose($dest);
+                    return false;
+                }
+            }
+        }
+        // Close any open handler
+        fclose($src);
+        fclose($dest);
+        return true;
+}
 }
