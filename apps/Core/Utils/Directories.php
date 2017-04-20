@@ -78,18 +78,18 @@ class Directories
         {
             return null;
         }
-
-        // We can use exec(), you go dude!
-        if (true === $this->canUseExec)
-        {
-            return $this->sizeWithExec($path);
-        }
-
-        // Well, exec failed try popen()
-        if (true === $this->canUsePopen)
-        {
-            return $this->sizeWithPopen($path);
-        }
+        // Maybe we use this later. For now disabled for performance reasons
+//        // We can use exec(), you go dude!
+//        if (true === $this->canUseExec)
+//        {
+//            return $this->sizeWithExec($path);
+//        }
+//
+//        // Well, exec failed try popen()
+//        if (true === $this->canUsePopen)
+//        {
+//            return $this->sizeWithPopen($path);
+//        }
 
         // Good, old PHP... slow but will get the job done
         return $this->sizeWithPHP($path);
@@ -130,6 +130,8 @@ class Directories
     /**
      * @param string $path
      * @return int
+     * @deprecated since version 2.0.0
+     * 
      */
     private function sizeWithExec($path)
     {
@@ -152,6 +154,7 @@ class Directories
     /**
      * @param string $path
      * @return int
+     * @deprecated since version 2.0.0
      */
     private function sizeForNixWithExec($path)
     {
@@ -170,6 +173,7 @@ class Directories
     /**
      * @param string $path
      * @return int
+     * @deprecated since version 2.0.0
      */
     private function sizeForWinWithExec($path)
     {
@@ -188,6 +192,7 @@ class Directories
     /**
      * @param string $path
      * @return int
+     * @deprecated since version 2.0.0
      */
     private function sizeWithPopen($path)
     {
@@ -210,6 +215,7 @@ class Directories
     /**
      * @param string $path
      * @return int
+     * @deprecated since version 2.0.0
      */
     private function sizeForNixWithPopen($path)
     {
@@ -226,7 +232,8 @@ class Directories
     /**
      * @param string $path
      * @return int
-     */
+     * @deprecated since version 2.0.0
+     **/
     private function sizeForWinWithCOM($path)
     {
         if (!class_exists("\\COM"))
