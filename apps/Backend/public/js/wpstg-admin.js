@@ -639,19 +639,20 @@ var WPStaging = (function($)
 //            }
 //        );
 //    };
-    var getLogs         = function(log)
+    var getLogs = function (log)
     {
         console.log("Adding logs...");
-        
-        if ("undefined" !== typeof(log)){
-            //cache.get("#wpstg-log-details").append(log.type + ' ' + log.date + ' ' + log.message + ' </br>');
-            $.each(log, function(index, value){
-                console.log(index, value);
-                cache.get("#wpstg-log-details").append(value.type + ' ' + value.date + ' ' + value.message +  '</br>');
-            })
+
+        if ("undefined" !== typeof (log)) {
+            if (log.constructor === Array) {
+                $.each(log, function (index, value) {
+                    console.log(index, value);
+                    cache.get("#wpstg-log-details").append(value.type + ' ' + value.date + ' ' + value.message + '</br>');
+                })
+            } else {
+                cache.get("#wpstg-log-details").append(log.type + ' ' + log.date + ' ' + log.message + '</br>');
+            }
         }
-
-
 
     };
 
@@ -768,6 +769,7 @@ var WPStaging = (function($)
                             // Next Step
                             else if (true === response.status)
                             {
+                                console.log('prepareDirectories' + response.status);
                                 prepareDirectories();
                             }
                         }
@@ -816,6 +818,7 @@ var WPStaging = (function($)
                             }
                             else if (true === response.status)
                             {
+                                console.log('prepareDirectories' + response.status);
                                 cloneFiles();
                             }
                         }
@@ -848,6 +851,12 @@ var WPStaging = (function($)
                     if ("undefined" !== typeof(response.percentage))
                     {
                         cache.get("#wpstg-files-progress").width(response.percentage + '%');
+                    }
+                    
+                    // Add Log
+                    if ("undefined" !== typeof (response.last_msg))
+                    {
+                        getLogs(response.last_msg);
                     }
 
                     if (false === response.status)
