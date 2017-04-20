@@ -8,7 +8,7 @@ var WPStaging = (function($)
             getLogs     : false
         },
         cache       = {elements : []},
-        ajaxSpinner;
+        timeout, ajaxSpinner;
 
     /**
      * Get / Set Cache for Selector
@@ -709,7 +709,14 @@ var WPStaging = (function($)
             cache.get("#wpstg-loader").show();
 
             // Clone Database
-            cloneDatabase();
+            if (wpstg.cpuLoad > 0)
+            {
+                setTimeout(function() {cloneDatabase();}, wpstg.cpuLoad);
+            }
+            else
+            {
+                cloneDatabase();
+            }
         }
 
         // Step 1: Clone Database
@@ -741,11 +748,25 @@ var WPStaging = (function($)
 
                             if (false === response.status)
                             {
-                                cloneDatabase();
+                                if (wpstg.cpuLoad > 0)
+                                {
+                                    setTimeout(function() {cloneDatabase();}, wpstg.cpuLoad);
+                                }
+                                else
+                                {
+                                    cloneDatabase();
+                                }
                             }
                             else if (true === response.status)
                             {
-                                prepareDirectories();
+                                if (wpstg.cpuLoad > 0)
+                                {
+                                    setTimeout(function() {prepareDirectories();}, wpstg.cpuLoad);
+                                }
+                                else
+                                {
+                                    prepareDirectories();
+                                }
                             }
                         }
                     );
@@ -783,11 +804,25 @@ var WPStaging = (function($)
 
                             if (false === response.status)
                             {
-                                prepareDirectories();
+                                if (wpstg.cpuLoad > 0)
+                                {
+                                    setTimeout(function() {prepareDirectories();}, wpstg.cpuLoad);
+                                }
+                                else
+                                {
+                                    prepareDirectories();
+                                }
                             }
                             else if (true === response.status)
                             {
-                                cloneFiles();
+                                if (wpstg.cpuLoad > 0)
+                                {
+                                    setTimeout(function() {cloneFiles();}, wpstg.cpuLoad);
+                                }
+                                else
+                                {
+                                    cloneFiles();
+                                }
                             }
                         }
                     );
@@ -823,11 +858,25 @@ var WPStaging = (function($)
 
                     if (false === response.status)
                     {
-                        cloneFiles();
+                        if (wpstg.cpuLoad > 0)
+                        {
+                            setTimeout(function() {cloneFiles();}, wpstg.cpuLoad);
+                        }
+                        else
+                        {
+                            cloneFiles();
+                        }
                     }
                     else if (true === response.status)
                     {
-                        replaceData();
+                        if (wpstg.cpuLoad > 0)
+                        {
+                            setTimeout(function() {replaceData();}, wpstg.cpuLoad);
+                        }
+                        else
+                        {
+                            replaceData();
+                        }
                     }
                 }
             );
@@ -860,11 +909,25 @@ var WPStaging = (function($)
 
                     if (false === response.status)
                     {
-                        replaceData();
+                        if (wpstg.cpuLoad > 0)
+                        {
+                            setTimeout(function() {replaceData();}, wpstg.cpuLoad);
+                        }
+                        else
+                        {
+                            replaceData();
+                        }
                     }
                     else if (true === response.status)
                     {
-                        finish();
+                        if (wpstg.cpuLoad > 0)
+                        {
+                            setTimeout(function() {finish();}, wpstg.cpuLoad);
+                        }
+                        else
+                        {
+                            finish();
+                        }
                     }
                 }
             );

@@ -135,6 +135,8 @@ abstract class Job implements JobInterface
             $this->maxRecursionLimit = $this->maxRecursionLimit - 50; // just to make sure
         }
 
+        //die('Limit : ' . $this->maxRecursionLimit);
+
         if (method_exists($this, "initialize"))
         {
             $this->initialize();
@@ -287,7 +289,8 @@ abstract class Job implements JobInterface
         
         if ($usedMemory >= $this->memoryLimit)
         {
-            return (!$this->resetMemory());
+//            return (!$this->resetMemory());
+            return true;
         }
 
         if ($this->isRecursionLimit())
@@ -301,7 +304,8 @@ abstract class Job implements JobInterface
         $this->log('execution time is ' . $time . ' | execution time limit is ' . $this->executionLimit);
         if ($time >= $this->executionLimit)
         {
-            return (!$this->resetTime());
+//            return (!$this->resetTime());
+            return true;
         }
 
         return false;
