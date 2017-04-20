@@ -105,6 +105,8 @@ abstract class Job implements JobInterface
         // Settings and Options
         $this->options  = $this->cache->get("clone_options");
         $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
+        
+
 
         if (!$this->options)
         {
@@ -119,6 +121,7 @@ abstract class Job implements JobInterface
         if (!$this->settings)
         {
             $this->settings = new \stdClass();
+            $this->setDefaultSettings();
         }
 
         // Set limits accordingly to CPU LIMITS
@@ -155,6 +158,15 @@ abstract class Job implements JobInterface
         // Commit logs
         $this->logger->commit();
     }
+    
+    /**
+     * Set default settings
+     */
+    protected function setDefaultSettings(){
+        $this->settings->queryLimit = "1000";
+        $this->settings->batchSize = "2";
+        $this->settings->cpuLoad = 'medium';
+    }
 
     /**
      * Set limits accordingly to
@@ -163,13 +175,13 @@ abstract class Job implements JobInterface
     {
         if (!isset($this->settings->wpstg_cpu_load))
         {
-            $this->settings->wpstg_cpu_load = "medium";
+            $this->settings->cpuLoad = "medium";
         }
 
         $memoryLimit= self::MAX_MEMORY_RATIO;
         $timeLimit  = self::EXECUTION_TIME_RATIO;
 
-        switch($this->settings->wpstg_cpu_load)
+        switch($this->settings->cpuLoad)
         {
             case "medium":
                 $memoryLimit= $memoryLimit / 2;
