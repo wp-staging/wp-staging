@@ -90,7 +90,14 @@ class Frontend extends InjectionAware
             return;
         }
 
-        $this->getDI()->get("wpRewrite")->set_permalink_structure(null);
+        $wpRewrite = $this->getDI()->get("wpRewrite");
+
+        if (null === $wpRewrite)
+        {
+            return;
+        }
+
+        $wpRewrite->set_permalink_structure(null);
 
         flush_rewrite_rules();
 
