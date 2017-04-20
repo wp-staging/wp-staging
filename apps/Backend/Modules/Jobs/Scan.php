@@ -296,7 +296,7 @@ class Scan extends Job
         $directoryArray = explode(DIRECTORY_SEPARATOR, $path);
         $total          = count($directoryArray);
 
-        if (count($total) < 1)
+        if ($total) < 1)
         {
             return;
         }
