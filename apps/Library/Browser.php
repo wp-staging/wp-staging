@@ -219,7 +219,7 @@ namespace WPStaging\Library;
 
 		public $OPERATING_SYSTEM_UNKNOWN = 'unknown';
 
-		function Browser($useragent="") {
+		public function __construct ($useragent="") {
 			$this->reset();
 			if( $useragent != "" ) {
 				$this->setUserAgent($useragent);
