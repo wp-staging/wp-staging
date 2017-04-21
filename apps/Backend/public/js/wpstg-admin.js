@@ -53,21 +53,6 @@ var WPStaging = (function($)
             .html(message);
 
         cache.get("#wpstg-loader").hide();
-
-        // Log error message on
-        if (false === wpstg.settings.isDebugMode)
-        {
-            return;
-        }
-
-// No reason to start another ajax request for showing error message. (Huge performance issue)
-//        $.post(
-//            ajaxurl,
-//            {
-//                action  : "wpstg_error_processing",
-//                message : message
-//            }
-//        );
     };
 
     /**
@@ -991,7 +976,7 @@ var WPStaging = (function($)
      * @type {Function}
      */
     that.init           = (function() {
-        console.log("Initiating WPStaging...");
+        //console.log("Initiating WPStaging...");
         loadOverview();
         elements();
         stepButtons();
