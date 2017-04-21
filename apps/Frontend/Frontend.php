@@ -2,7 +2,6 @@
 namespace WPStaging\Frontend;
 
 use WPStaging\DI\InjectionAware;
-
 /**
  * Class Frontend
  * @package WPStaging\Frontend
@@ -89,8 +88,9 @@ class Frontend extends InjectionAware
         {
             return;
         }
-
-        $this->getDI()->get("wpRewrite")->set_permalink_structure(null);
+        // $wp_redirect is not available before the init hook. So we need to use the global declaration
+        global $wp_rewrite;
+        $wp_rewrite->set_permalink_structure(null);
 
         flush_rewrite_rules();
 
