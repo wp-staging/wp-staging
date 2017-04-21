@@ -8,7 +8,7 @@
  * Author URI: https://wordpress.org/plugins/wp-staging
  * Version: 2.0.0
  * Text Domain: wpstg
- * Domain Path: /vars/languages/
+ * Domain Path: /languages/
 
  *
  * WP-Staging is free software: you can redistribute it and/or modify
@@ -39,15 +39,12 @@ require_once plugin_dir_path(__FILE__) . "apps/Core/WPStaging.php";
 
 $wpStaging = \WPStaging\WPStaging::getInstance();
 
+// Load WP globals into WPStaging
 if (isset($wpdb))
 {
     $wpStaging->set("wpdb", $wpdb);
 }
 
-if (isset($wp_rewrite))
-{
-    $wpStaging->set("wpRewrite", $wp_rewrite);
-}
 
 if (isset($wp_filter))
 {
