@@ -37,7 +37,7 @@ class Cloning extends Job
         }
         elseif (!empty($this->options->existingClones))
         {
-            $this->options->cloneNumber =  count($this->options->existingClones);
+            $this->options->cloneNumber =  count($this->options->existingClones)+1;
         }
 
         // Excluded Tables
