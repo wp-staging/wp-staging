@@ -239,12 +239,30 @@ class Delete extends Job
 
         foreach ($this->getTablesToRemove() as $table)
         {
-            $wpdb->query("DROP TABLE {$table}");
+            // PROTECTION: Never delete any table that beginns with wp prefix of live site
+            if($this->startsWith($table, $wpdb->prefix)){
+                $this->log("Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL);
+                return false;
+            } else{
+                $wpdb->query("DROP TABLE {$table}");
+            }
         }
 
         // Move on to the next
         $this->job->current = "directory";
         $this->updateJob();
+    }
+    
+    /**
+     * Check if a strings start with a specific string
+     * @param string $haystack
+     * @param string $needle
+     * @return bool
+     */
+    protected function startsWith($haystack, $needle)
+    {
+     $length = strlen($needle);
+     return (substr($haystack, 0, $length) === $needle);
     }
 
     /**
@@ -328,6 +346,13 @@ class Delete extends Job
      */
     private function shouldStop($path)
     {
+        // Just to make sure the root dir is never deleted!
+        if ($path === get_home_path()){
+            $this->log("Fatal Error: Trying to delete root of WP installation!", Logger::TYPE_CRITICAL);
+            return true;
+        }
+        
+        // Check if threshold is reached and is valid dir
         return (
             $this->isOverThreshold() ||
             !is_dir($path) || 
