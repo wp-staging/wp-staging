@@ -44,7 +44,7 @@ final class WPStaging
     /**
      * Compatible WP Version
      */
-    const WP_COMPATIBLE = "4.7.3";
+    const WP_COMPATIBLE = "4.7.4";
     
 
     /**
