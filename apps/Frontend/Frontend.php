@@ -22,6 +22,7 @@ class Frontend extends InjectionAware
         $this->defineHooks();
 
         $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
+        
     }
 
     /**
@@ -33,7 +34,36 @@ class Frontend extends InjectionAware
         $loader = $this->di->get("loader");
 
         $loader->addAction("init", $this, "checkPermissions");
+        $loader->addFilter("wp_before_admin_bar_render", $this, "changeSiteName");
+        //$loader->addAction("wp_enqueue_scripts", $this, "enqueueElements", 10);
     }
+    
+    /**
+     * Change admin_bar site_name
+     * 
+     * @global object $wp_admin_bar
+     * @return void
+     */
+    public function changeSiteName() {
+        global $wp_admin_bar;
+        if( $this->isStagingSite() ) {
+            // Main Title
+            $wp_admin_bar->add_menu( array(
+                'id' => 'site-name',
+                'title' => is_admin() ? ('STAGING - ' . get_bloginfo( 'name' ) ) : ( 'STAGING - ' . get_bloginfo( 'name' ) . ' Dashboard' ),
+                'href' => is_admin() ? home_url( '/' ) : admin_url(),
+            ) );
+        }
+    }
+    
+    /**
+     * Load css files
+     */
+//    public function enqueueElements() {
+//        if( $this->isStagingSite() ) {
+//            wp_enqueue_style( "wpstg-admin-bar", $this->admin_url . "/css/wpstg-admin-bar.css", $this->di->getVersion() );
+//        }
+//    }
 
     /**
      * Check permissions for the page to decide whether or not to disable the page

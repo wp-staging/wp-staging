@@ -17,6 +17,7 @@ use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
 use WPStaging\Utils\Loader;
 use WPStaging\Utils\Logger;
+use WPStaging\DI\InjectionAware;
 
 /**
  * Class WPStaging
@@ -71,8 +72,91 @@ final class WPStaging
         $this->registerNamespaces();
         $this->loadLanguages();
         $this->loadDependencies();
+        $this->defineHooks();
+        
+        // URL to apps folder
+        $this->url  = plugin_dir_url(  dirname(__FILE__) );
+        
+        // URL to backend public folder folder
+        $this->backend_url  = plugin_dir_url(  dirname(__FILE__) ) . "Backend/public/";
+        
+        // URL to frontend public folder folder
+        $this->frontend_url  = plugin_dir_url(  dirname(__FILE__) ) . "Frontend/public/";
     }
     
+    /**
+     * Define Hooks
+     */
+    public function defineHooks()
+    {
+        $loader = $this->get("loader");
+        $loader->addAction("admin_enqueue_scripts", $this, "enqueueElements", 100);
+        $loader->addAction("wp_enqueue_scripts", $this, "enqueueElements", 100);
+    }
+    
+        /**
+     * Scripts and Styles
+     * @param string $hook
+     */
+    public function enqueueElements($hook)
+    {
+                
+        // Load this css file on frontend and backend on all pages if current site is a staging site
+        if( $this->isStagingSite() ) {
+            wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", $this->getVersion() );
+        }
+        
+        $availablePages = array(
+            "toplevel_page_wpstg_clone",
+            "wp-staging_page_wpstg-settings",
+            "wp-staging_page_wpstg-tools"
+        );
+
+        // Load these css and js files only on wp staging admin pages
+        if (!in_array($hook, $availablePages) || !is_admin())
+        {
+            return;
+        }
+
+        // Load admin js files
+        wp_enqueue_script(
+            "wpstg-admin-script",
+            $this->backend_url . "js/wpstg-admin.js",
+            array("jquery"),
+            $this->getVersion(),
+            false
+        );
+        
+        // Load admin css files
+        wp_enqueue_style(
+            "wpstg-admin",
+            $this->backend_url . "css/wpstg-admin.css",
+            $this->getVersion()
+        );
+
+        wp_localize_script("wpstg-admin-script", "wpstg", array(
+            "nonce"                                 => wp_create_nonce("wpstg_ajax_nonce"),
+            "mu_plugin_confirmation"                => __(
+                "If confirmed we will install an additional WordPress 'Must Use' plugin. "
+                . "This plugin will allow us to control which plugins are loaded during "
+                . "WP Staging specific operations. Do you wish to continue?",
+                "wpstg"
+            ),
+            "plugin_compatibility_settings_problem" => __(
+                "A problem occurred when trying to change the plugin compatibility setting.",
+                "wpstg"
+            ),
+            "saved"                                 => __("Saved", "The settings were saved successfully", "wpstg"),
+            "status"                                => __("Status", "Current request status", "wpstg"),
+            "response"                              => __("Response", "The message the server responded with", "wpstg"),
+            "blacklist_problem"                     => __(
+                "A problem occurred when trying to add plugins to backlist.",
+                "wpstg"
+            ),
+            "cpuLoad"                               => $this->getCPULoadSetting(),
+            "settings"                              => (object) array() // TODO add settings?
+        ));
+    }
 
     /**
      * Method to be executed upon activation of the plugin
@@ -92,6 +176,7 @@ final class WPStaging
 	wp_mkdir_p( $path );
 	return apply_filters( 'wpstg_get_upload_dir', $path . DIRECTORY_SEPARATOR );        
     }
+    
 
     /**
      * Register used namespaces
@@ -230,6 +315,21 @@ final class WPStaging
     {
         return self::SLUG;
     }
+    
+    /**
+     * Get path to main plugin file
+     * @return string
+     */
+    public function getPath(){
+        return dirname(dirname(__FILE__));
+    }
+    /**
+     * Get main plugin url
+     * @return type
+     */
+    public function getUrl(){
+        return plugin_dir_url(dirname(__FILE__));
+    }
 
     /**
      * @return array|mixed|object
@@ -296,4 +396,14 @@ final class WPStaging
             load_plugin_textdomain("wpstg", false, $languagesDirectory);
         }
     }
+    
+    /**
+     * Check if it is a staging site
+     * @return bool
+     */
+    private function isStagingSite()
+    {
+        return ("true" === get_option("wpstg_is_staging_site"));
+    }
+   
 }

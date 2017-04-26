@@ -49,7 +49,10 @@ class Administrator extends InjectionAware
 
         // Path to backend
         $this->path = plugin_dir_path(__FILE__);
+        
+        // URL to public backend folder
         $this->url  = plugin_dir_url(__FILE__) . "public/";
+        
     }
 
     /**
@@ -60,7 +63,7 @@ class Administrator extends InjectionAware
         // Get loader
         $loader = $this->di->get("loader");
 
-        $loader->addAction("admin_enqueue_scripts", $this, "enqueueElements", 100);
+        //$loader->addAction("admin_enqueue_scripts", $this, "enqueueElements", 100);
         $loader->addAction("admin_menu", $this, "addMenu", 10);
         $loader->addAction("admin_init", $this, "setOptionFormElements");
         $loader->addAction("admin_post_wpstg_download_sysinfo", $this, "systemInfoDownload");
@@ -337,58 +340,63 @@ class Administrator extends InjectionAware
      * Scripts and Styles
      * @param string $hook
      */
-    public function enqueueElements($hook)
-    {
-        $availablePages = array(
-            "toplevel_page_wpstg_clone",
-            "wp-staging_page_wpstg-settings",
-            "wp-staging_page_wpstg-tools"
-        );
-
-        if (!in_array($hook, $availablePages))
-        {
-            return;
-        }
-        //$suffix = isset($wpstg_options['debug_mode']) ? '.min' : '';
-        $suffix = '';
-
-        wp_enqueue_script(
-            "wpstg-admin-script",
-            $this->url . "js/wpstg-admin" . $suffix . ".js",
-            array("jquery"),
-            $this->di->getVersion(),
-            false
-        );
-
-        wp_enqueue_style(
-            "wpstg-admin",
-            $this->url . "css/wpstg-admin" . $suffix . ".css",
-            $this->di->getVersion()
-        );
-
-        wp_localize_script("wpstg-admin-script", "wpstg", array(
-            "nonce"                                 => wp_create_nonce("wpstg_ajax_nonce"),
-            "mu_plugin_confirmation"                => __(
-                "If confirmed we will install an additional WordPress 'Must Use' plugin. "
-                . "This plugin will allow us to control which plugins are loaded during "
-                . "WP Staging specific operations. Do you wish to continue?",
-                "wpstg"
-            ),
-            "plugin_compatibility_settings_problem" => __(
-                "A problem occurred when trying to change the plugin compatibility setting.",
-                "wpstg"
-            ),
-            "saved"                                 => __("Saved", "The settings were saved successfully", "wpstg"),
-            "status"                                => __("Status", "Current request status", "wpstg"),
-            "response"                              => __("Response", "The message the server responded with", "wpstg"),
-            "blacklist_problem"                     => __(
-                "A problem occurred when trying to add plugins to backlist.",
-                "wpstg"
-            ),
-            "cpuLoad"                               => $this->di->getCPULoadSetting(),
-            "settings"                              => (object) array() // TODO add settings?
-        ));
-    }
+//    public function enqueueElements($hook)
+//    {
+//        $availablePages = array(
+//            "toplevel_page_wpstg_clone",
+//            "wp-staging_page_wpstg-settings",
+//            "wp-staging_page_wpstg-tools"
+//        );
+//
+//        if (!in_array($hook, $availablePages))
+//        {
+//            return;
+//        }
+//
+//        // Load admin js files
+//        wp_enqueue_script(
+//            "wpstg-admin-script",
+//            $this->url . "js/wpstg-admin.js",
+//            array("jquery"),
+//            $this->di->getVersion(),
+//            false
+//        );
+//        
+//        // Load admin css files
+//        wp_enqueue_style(
+//            "wpstg-admin",
+//            $this->url . "css/wpstg-admin.css",
+//            $this->di->getVersion()
+//        );
+//        
+//        // Load admin css files if current site is a staging site
+//        if( $this->isStagingSite() ) {
+//            wp_enqueue_style( "wpstg-admin-bar", $this->url . "css/wpstg-admin-bar.css", $this->di->getVersion() );
+//        }
+//
+//        wp_localize_script("wpstg-admin-script", "wpstg", array(
+//            "nonce"                                 => wp_create_nonce("wpstg_ajax_nonce"),
+//            "mu_plugin_confirmation"                => __(
+//                "If confirmed we will install an additional WordPress 'Must Use' plugin. "
+//                . "This plugin will allow us to control which plugins are loaded during "
+//                . "WP Staging specific operations. Do you wish to continue?",
+//                "wpstg"
+//            ),
+//            "plugin_compatibility_settings_problem" => __(
+//                "A problem occurred when trying to change the plugin compatibility setting.",
+//                "wpstg"
+//            ),
+//            "saved"                                 => __("Saved", "The settings were saved successfully", "wpstg"),
+//            "status"                                => __("Status", "Current request status", "wpstg"),
+//            "response"                              => __("Response", "The message the server responded with", "wpstg"),
+//            "blacklist_problem"                     => __(
+//                "A problem occurred when trying to add plugins to backlist.",
+//                "wpstg"
+//            ),
+//            "cpuLoad"                               => $this->di->getCPULoadSetting(),
+//            "settings"                              => (object) array() // TODO add settings?
+//        ));
+//    }
 
     /**
      * Render a view file
@@ -662,4 +670,13 @@ class Administrator extends InjectionAware
         $scan = new Scan();
         return $scan->hasFreeDiskSpace();
     }
+    
+//    /**
+//     * Check if it is a staging site
+//     * @return bool
+//     */
+//    private function isStagingSite()
+//    {
+//        return ("true" === get_option("wpstg_is_staging_site"));
+//    }
 }

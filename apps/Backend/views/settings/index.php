@@ -147,8 +147,8 @@
                                         <?php echo $form->render("wpstg_settings[cpuLoad]")?>
                                     </td>
                                 </tr>
-
-                                <tr class="row">
+                                <!-- Deactivated -->
+                                <tr class="row" style="display:none;">
                                     <td class="row th">
                                         <div class="col-title">
                                             <?php echo $form->label("wpstg_settings[optimizer]")?>
@@ -202,8 +202,8 @@
                                         <?php echo $form->render("wpstg_settings[wpSubDirectory]")?>
                                     </td>
                                 </tr>
-
-                                <tr class="row">
+                                <!-- Deactivated -->
+                                <tr class="row" style="display: none;">
                                     <td class="row th">
                                         <div class="col-title">
                                             <?php echo $form->label("wpstg_settings[debugMode]")?>
