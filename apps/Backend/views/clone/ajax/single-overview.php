@@ -48,7 +48,7 @@
     echo __(
         sprintf(
             "WP Staging successfully created a staging site in a sub-directory of your main site in: ".
-            "<strong>%s/<span id='wpstg_staging_name'></span></strong>",
+            "<strong><a href=\"%s\" target=\"_blank\">%s/<span id='wpstg_staging_name'></span></strong>",
             get_home_url()
         ),
         "wpstg"
@@ -63,11 +63,11 @@
             (login with your admin credentials)
         </span>
     </a>
-
+<!--
     <a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="">
-        <?php echo __("Remove", "wpstg")?>
+        <?php //echo __("Remove", "wpstg")?>
     </a>
-
+//-->
     <a href="" class="wpstg-link-btn button-primary" id="wpstg-home-link">
         <?php echo __("Start again", "wpstg")?>
     </a>
