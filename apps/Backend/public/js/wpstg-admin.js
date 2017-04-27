@@ -871,6 +871,12 @@ var WPStaging = (function($)
                     {
                         cache.get("#wpstg-links-progress").width(response.percentage + '%');
                     }
+                    
+                    // Add Log
+                    if ("undefined" !== typeof (response.last_msg))
+                    {
+                        getLogs(response.last_msg);
+                    }
 
                     if (false === response.status)
                     {

@@ -69,7 +69,9 @@ class Data extends JobExecutable
             "status"        => true,
             "percentage"    => 100,
             "total"         => $this->options->totalSteps,
-            "step"          => $this->options->totalSteps
+            "step"          => $this->options->totalSteps,
+            "last_msg"      => $this->logger->getLastLogMsg(),
+            "running_time"  => $this->time() - time()
         );
 
         return (object) $this->response;
@@ -131,6 +133,8 @@ class Data extends JobExecutable
      */
     protected function step1()
     {
+        $this->log( "Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+
         $result = $this->db->query(
             $this->db->prepare(
                 "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'",
@@ -144,7 +148,7 @@ class Data extends JobExecutable
             return true;
         }
 
-        $this->log("Failed to update siteurl and homeurl; {$this->db->last_error}", Logger::TYPE_ERROR);
+        $this->log("Failed to update siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
         return false;
     }
 
@@ -154,6 +158,8 @@ class Data extends JobExecutable
      */
     protected function step2()
     {
+        $this->log( "Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}" );
+
         $result = $this->db->query(
             $this->db->prepare(
                 "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'",
@@ -178,7 +184,7 @@ class Data extends JobExecutable
             return true;
         }
 
-        $this->log("Failed to update wpstg_is_staging_site; {$this->db->last_error}", Logger::TYPE_ERROR);
+        $this->log("Failed to update wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
         return false;
     }
 
@@ -188,10 +194,12 @@ class Data extends JobExecutable
      */
     protected function step3()
     {
+        $this->log("Updating rewrite_rules in {$this->prefix}options {$this->db->last_error}");
+        
         $result = $this->db->query(
             $this->db->prepare(
                 "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'rewrite_rules'",
-                ''
+                ' '
             )
         );
 
@@ -201,7 +209,7 @@ class Data extends JobExecutable
             return true;
         }
 
-        $this->log("Failed to update rewrite_rules; {$this->db->last_error}", Logger::TYPE_ERROR);
+        $this->log("Failed to update rewrite_rules in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
         return false;
     }
 
@@ -209,41 +217,30 @@ class Data extends JobExecutable
      * Update Table Prefix in meta_keys
      * @return bool
      */
-    protected function step4()
-    {
+    protected function step4() {
+        $this->log( "Updating {$this->prefix}usermeta db prefix {$this->db->last_error}" );
+
         $resultOptions = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s",
-                $this->db->prefix,
-                $this->prefix,
-                $this->db->prefix . "_%"
-            )
+                $this->db->prepare(
+                        "UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
+                )
         );
 
-        if (!$resultOptions)
-        {
-            $this->log(
-                "Failed to update usermeta meta_key database table prefixes; {$this->db->last_error}",
-                Logger::TYPE_ERROR
-            );
+        if( !$resultOptions ) {
+            $this->log( "Failed to update usermeta meta_key database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
             return false;
         }
 
+        $this->log( "Updating {$this->prefix}options, option_name database table prefixes; {$this->db->last_error}" );
+
         $resultUserMeta = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s",
-                $this->db->prefix,
-                $this->prefix,
-                $this->db->prefix . "_%"
-            )
+                $this->db->prepare(
+                        "UPDATE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
+                )
         );
 
-        if (!$resultUserMeta)
-        {
-            $this->log(
-                "Failed to update options, option_name database table prefixes; {$this->db->last_error}",
-                Logger::TYPE_ERROR
-            );
+        if( !$resultUserMeta ) {
+            $this->log( "Failed to update options, option_name database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
             return false;
         }
 
@@ -257,13 +254,14 @@ class Data extends JobExecutable
     protected function step5()
     {
         $path = get_home_path() . $this->options->cloneDirectoryName . "/wp-config.php";
-
+        
+        $this->log("Updating \$table_prefix in wp-config...");
         if (false === ($content = file_get_contents($path)))
         {
             $this->log("Failed to update \$table_prefix in wp-config; can't read contents", Logger::TYPE_ERROR);
             return false;
         }
-
+        
         // Replace table prefix
         $content = str_replace('$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content);
 

@@ -208,14 +208,14 @@ class Logger
      * Get last element of logging data array
      * @return string
      */
-    public function getLastLogMsg($currentStep, $TotalSteps)
+    public function getLastLogMsg()
     {
         // return all messages
         if (count ($this->messages) > 1){
             return $this->messages;
         }else{
             // Return last message
-            return $this->messages[]=array_pop($this->messages);  
+            return $this->messages[]=array_pop($this->messages);
         }
     }
     

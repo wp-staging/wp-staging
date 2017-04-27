@@ -309,7 +309,7 @@ abstract class Job implements JobInterface
 
         if ($this->isRecursionLimit())
         {
-            $this->log('RESET RECURSION');
+            //$this->log('RESET RECURSION');
             return true;
         }
         
@@ -319,7 +319,7 @@ abstract class Job implements JobInterface
         
         if ($time >= $this->executionLimit)
         {
-            $this->log('RESET TIME');
+            //$this->log('RESET TIME');
             //return (!$this->resetTime());
             return true;
         }

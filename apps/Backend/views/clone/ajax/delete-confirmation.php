@@ -62,14 +62,14 @@
     <!-- Files -->
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
         <h4 style="margin:0;">
-            <?php _e("De-select If You Don't Want to Delete the Directory", "wpstg") ?>
+            <?php _e("Unselect for not deleting the directory including all its subfolders:", "wpstg") ?>
         </h4>
 
         <div class="wpstg-dir">
             <label>
                 <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1" checked>
-                <?php echo $clone->name?>
-                <span class="wpstg-size-info"><?php echo $clone->size?></span>
+                <?php echo $clone->path; ?>
+                <span class="wpstg-size-info"><?php echo $clone->size; ?></span>
             </label>
         </div>
     </div>
