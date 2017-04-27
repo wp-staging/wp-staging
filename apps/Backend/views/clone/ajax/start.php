@@ -56,9 +56,9 @@
     <a href="<?php echo get_home_url()?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">
         Open staging site <span style="font-size: 10px;">(login with your admin credentials)</span>
     </a>
-    <a href="" class="wpstg-link-btn button-primary" id="wpstg-remove-cloning">
-        <?php echo __("Remove", "wpstg")?>
-    </a>
+    <!--<a href="" class="wpstg-link-btn button-primary" id="wpstg-remove-cloning">
+        <?php //echo __("Remove", "wpstg")?>
+    </a>//-->
     <a href="" class="wpstg-link-btn button-primary" id="wpstg-home-link">
         <?php echo __("Start again", "wpstg")?>
     </a>
