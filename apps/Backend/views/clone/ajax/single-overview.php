@@ -55,7 +55,7 @@
     )
     ?>
     <br><br>
-    <?php echo __("Now, you have several options: ", "wpstg")?>
+    <?php echo __("Open and access the staging site: ", "wpstg")?>
     <br>
     <a href="<?php echo get_home_url()?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">
         Open staging site
