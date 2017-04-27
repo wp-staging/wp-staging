@@ -127,8 +127,9 @@ class Database extends JobExecutable
      */
     private function copyData($new, $old)
     {
+        $rows = $this->options->job->start+$this->settings->queryLimit;
         $this->log(
-            "Copying {$old} as {$new} between {$this->options->job->start} to {$this->settings->queryLimit} records"
+            "Copying {$old} as {$new} between {$this->options->job->start} to {$rows} records"
         );
 
         $limitation = '';
