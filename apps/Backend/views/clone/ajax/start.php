@@ -40,13 +40,18 @@
 
 <div id="wpstg-finished-result">
     <h3>Congratulations: </h3>
-    <?php
-    echo __("WP Staging succesfully created a staging site in a sub-directory of your main site in: <strong> ", "wpstg")
-        . get_home_url()
-    ?>/<span id="wpstg_staging_name"></span>
-    </strong>
+        <?php
+    echo __(
+        sprintf(
+            "WP Staging successfully created a staging site in a sub-directory of your main site in: ".
+            "<strong><a href=\"%s\" target=\"_blank\">%s/<span id='wpstg_staging_name'></span></strong>",
+            get_home_url()
+        ),
+        "wpstg"
+    )
+    ?>
     <br><br>
-    <?php echo __("Now, you have several options: ", "wpstg")?>
+    <?php echo __("Open and access the staging site: ", "wpstg")?>
     <br>
     <a href="<?php echo get_home_url()?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">
         Open staging site <span style="font-size: 10px;">(login with your admin credentials)</span>

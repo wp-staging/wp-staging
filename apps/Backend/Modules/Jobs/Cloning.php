@@ -98,7 +98,7 @@ class Cloning extends Job
         }
 
         // Call the job
-        $this->log("execute job: Job's method {$methodName}");
+        //$this->log("execute job: Job's method {$methodName}");
         return $this->{$methodName}();
     }
 
