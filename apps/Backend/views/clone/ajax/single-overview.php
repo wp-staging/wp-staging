@@ -8,7 +8,7 @@
     <!-- Existing Clones -->
     <div id="wpstg-existing-clones">
         <h3>
-            <?php _e("Available Staging Sites:", "wpstg")?>
+            <?php _e("Your Staging Sites:", "wpstg")?>
         </h3>
 
         <?php foreach ($availableClones as $name => $data):?>

@@ -32,7 +32,7 @@
     <!-- Database -->
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
         <h4 style="margin:0;">
-            <?php _e("Select the tables for removal:", "wpstg")?>
+            <?php _e("Unselect database tables you do not want to delete:", "wpstg")?>
         </h4>
 
         <?php foreach ($delete->getTables() as $table):?>
@@ -62,7 +62,7 @@
     <!-- Files -->
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
         <h4 style="margin:0;">
-            <?php _e("Unselect for not deleting the directory including all its subfolders:", "wpstg") ?>
+            <?php _e("The folder below and all of its subfolders will be deleted. Unselect the checkbox for not deleting the files.", "wpstg") ?>
         </h4>
 
         <div class="wpstg-dir">

@@ -216,7 +216,8 @@ var WPStaging = (function($)
                 var $existingClones = cache.get("#wpstg-existing-clones");
 
                 $workFlow.removeClass('active');
-                $existingClones.append(ajaxSpinner);
+                
+                cache.get("#wpstg-loader").show();
 
                 ajax(
                     {
@@ -229,6 +230,8 @@ var WPStaging = (function($)
                         cache.get("#wpstg-removing-clone").html(response);
 
                         $existingClones.children("img").remove();
+                        
+                        cache.get("#wpstg-loader").hide();
                     },
                     "HTML"
                 );
@@ -238,6 +241,10 @@ var WPStaging = (function($)
                 e.preventDefault();
 
                 cache.get("#wpstg-removing-clone").addClass("loading");
+
+                //$this.parent().append(ajaxSpinner);
+                
+                cache.get("#wpstg-loader").show();
 
                 deleteClone($(this).data("clone"));
             })
@@ -545,6 +552,7 @@ var WPStaging = (function($)
      */
     var deleteClone     = function(clone)
     {
+        
         ajax(
             {
                 action          : "wpstg_delete_clone",
@@ -568,6 +576,8 @@ var WPStaging = (function($)
                 {
                     cache.get("#wpstg-existing-clones").find("h3").text('');
                 }
+                
+                cache.get("#wpstg-loader").hide();
             }
         );
     };
