@@ -1,7 +1,7 @@
 <div class="wpstg-notice-alert">
     <h4 style="margin:0">
         <?php
-        _e("Attention: Check carefully if this DB tables and files are safe to delete for the staging site", "wpstg")
+        _e("Attention: Check carefully if these database tables and files are safe to delete and do not belong to your live site!", "wpstg")
         ?>
     </h4>
 
@@ -14,7 +14,7 @@
     <p>
         <?php
         _e(
-            "Usually the preselected data can be deleted without any risk, ".
+            "Usually the preselected data can be deleted without any risk ".
             "but in case something goes wrong you better check it first.",
             "wpstg"
         )

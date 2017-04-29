@@ -84,6 +84,11 @@ class Data extends JobExecutable
      */
     protected function execute()
     {
+        // Fatal error. Let this happen never and break here immediately
+        if ($this->isRoot()){
+            return false;
+        }
+        
         // Over limits threshold
         if ($this->isOverThreshold())
         {
@@ -125,6 +130,32 @@ class Data extends JobExecutable
             $this->options->currentStep > $this->options->totalSteps ||
             !method_exists($this, "step" . $this->options->currentStep)
         );
+    }
+    
+    /**
+     * Check if current operation is done on the root folder or on the live DB
+     * @return boolean
+     */
+    private function isRoot(){
+        
+        // Prefix is the same as the one of live site
+        $wpdb = WPStaging::getInstance()->get("wpdb");
+        if ($wpdb->prefix === $this->prefix){
+            return true;
+        }
+        
+        // CloneName is empty
+        $name = (array)$this->options->cloneDirectoryName;
+        if (empty($name)){
+            return true;
+        }
+        
+        // Live Path === Staging path
+        if (get_home_url() . $this->options->cloneDirectoryName === get_home_url()){
+            return true;
+        }
+        
+        return false;
     }
 
     /**
