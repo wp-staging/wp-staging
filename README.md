@@ -28,5 +28,5 @@ There are various ways you can contribute:
 3. Translate WP-Staging into different languages
 4. Provide feedback and suggestions on [enhancements](https://github.com/rene-hermenau/wp-staging/issues?direction=desc&labels=Enhancement&page=1&sort=created&state=open)
 
-## Contributors## 
+## Contributors ## 
 [@rene-hermenau](https://github.com/rene-hermenau), [@ilgityildirim](https://github.com/ilgityildirim)
