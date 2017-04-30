@@ -32,13 +32,13 @@ class Scan extends Job
      */
     protected function initialize()
     {
+        $this->objDirectories = new Directories();
+                
         // Database Tables
         $this->getTables();
 
         // Get directories
         $this->directories();
-
-        $this->objDirectories = new Directories();
     }
 
     /**
