@@ -24,12 +24,12 @@ class Directories
     /**
      * @var bool
      */
-    private $canUseExec = false;
+    //private $canUseExec = false;
 
     /**
      * @var bool
      */
-    private $canUsePopen = false;
+    //private $canUsePopen = false;
 
     /**
      * @var Logger
@@ -45,23 +45,23 @@ class Directories
 
         $this->log          = WPStaging::getInstance()->get("logger");
         $this->OS           = $info->getOS();
-        $this->canUseExec   = $info->canUse("exec");
-        $this->canUsePopen  = $info->canUse("popen");
+        //$this->canUseExec   = $info->canUse("exec");
+        //$this->canUsePopen  = $info->canUse("popen");
 
         // Windows Fix for Popen
-        if ("WIN" === $this->OS && true === $this->canUsePopen)
-        {
-            $this->canUsePopen = class_exists("\\COM");
-        }
+//        if ("WIN" === $this->OS && true === $this->canUsePopen)
+//        {
+//            $this->canUsePopen = class_exists("\\COM");
+//        }
     }
 
     /**
      * @param string $fileName
      */
-    public function setLoggerFileName($fileName)
-    {
-        $this->log->setFileName($fileName);
-    }
+//    public function setLoggerFileName($fileName)
+//    {
+//        $this->log->setFileName($fileName);
+//    }
 
     /**
      * Gets size of given directory
@@ -133,118 +133,118 @@ class Directories
      * @deprecated since version 2.0.0
      * 
      */
-    private function sizeWithExec($path)
-    {
-        // OS is not supported
-        if (!in_array($this->OS, array("WIN", "LIN"), true))
-        {
-            return 0;
-        }
-
-        // WIN OS
-        if ("WIN" === $this->OS)
-        {
-            return $this->sizeForWinWithExec($path);
-        }
-
-        // *Nix OS
-        return $this->sizeForNixWithExec($path);
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     * @deprecated since version 2.0.0
-     */
-    private function sizeForNixWithExec($path)
-    {
-        exec("du -s {$path}", $output, $return);
-
-        $size = explode("\t", $output[0]);
-
-        if (0 == $return && count($size) == 2)
-        {
-            return (int) $size[0];
-        }
-
-        return 0;
-    }
+//    private function sizeWithExec($path)
+//    {
+//        // OS is not supported
+//        if (!in_array($this->OS, array("WIN", "LIN"), true))
+//        {
+//            return 0;
+//        }
+//
+//        // WIN OS
+//        if ("WIN" === $this->OS)
+//        {
+//            return $this->sizeForWinWithExec($path);
+//        }
+//
+//        // *Nix OS
+//        return $this->sizeForNixWithExec($path);
+//    }
 
     /**
      * @param string $path
      * @return int
      * @deprecated since version 2.0.0
      */
-    private function sizeForWinWithExec($path)
-    {
-        exec("diruse {$path}", $output, $return);
-
-        $size = explode("\t", $output[0]);
-
-        if (0 == $return && count($size) >= 4)
-        {
-            return (int) $size[0];
-        }
-
-        return 0;
-    }
-
-    /**
-     * @param string $path
-     * @return int
-     * @deprecated since version 2.0.0
-     */
-    private function sizeWithPopen($path)
-    {
-        // OS is not supported
-        if (!in_array($this->OS, array("WIN", "LIN"), true))
-        {
-            return 0;
-        }
-
-        // WIN OS
-        if ("WIN" === $this->OS)
-        {
-            return $this->sizeForWinWithCOM($path);
-        }
-
-        // *Nix OS
-        return $this->sizeForNixWithPopen($path);
-    }
+//    private function sizeForNixWithExec($path)
+//    {
+//        exec("du -s {$path}", $output, $return);
+//
+//        $size = explode("\t", $output[0]);
+//
+//        if (0 == $return && count($size) == 2)
+//        {
+//            return (int) $size[0];
+//        }
+//
+//        return 0;
+//    }
 
     /**
      * @param string $path
      * @return int
      * @deprecated since version 2.0.0
      */
-    private function sizeForNixWithPopen($path)
-    {
-        $filePointer= popen("/usr/bin/du -sk {$path}", 'r');
+//    private function sizeForWinWithExec($path)
+//    {
+//        exec("diruse {$path}", $output, $return);
+//
+//        $size = explode("\t", $output[0]);
+//
+//        if (0 == $return && count($size) >= 4)
+//        {
+//            return (int) $size[0];
+//        }
+//
+//        return 0;
+//    }
 
-        $size       = fgets($filePointer, 4096);
-        $size       = (int) substr($size, 0, strpos($size, "\t"));
+    /**
+     * @param string $path
+     * @return int
+     * @deprecated since version 2.0.0
+     */
+//    private function sizeWithPopen($path)
+//    {
+//        // OS is not supported
+//        if (!in_array($this->OS, array("WIN", "LIN"), true))
+//        {
+//            return 0;
+//        }
+//
+//        // WIN OS
+//        if ("WIN" === $this->OS)
+//        {
+//            return $this->sizeForWinWithCOM($path);
+//        }
+//
+//        // *Nix OS
+//        return $this->sizeForNixWithPopen($path);
+//    }
 
-        pclose($filePointer);
-
-        return $size;
-    }
+    /**
+     * @param string $path
+     * @return int
+     * @deprecated since version 2.0.0
+     */
+//    private function sizeForNixWithPopen($path)
+//    {
+//        $filePointer= popen("/usr/bin/du -sk {$path}", 'r');
+//
+//        $size       = fgets($filePointer, 4096);
+//        $size       = (int) substr($size, 0, strpos($size, "\t"));
+//
+//        pclose($filePointer);
+//
+//        return $size;
+//    }
 
     /**
      * @param string $path
      * @return int
      * @deprecated since version 2.0.0
      **/
-    private function sizeForWinWithCOM($path)
-    {
-        if (!class_exists("\\COM"))
-        {
-            return 0;
-        }
-
-        $com = new \COM("scripting.filesystemobject");
-
-        $directory = $com->getfolder($path);
-
-        return (int) $directory->size;
-    }
+//    private function sizeForWinWithCOM($path)
+//    {
+//        if (!class_exists("\\COM"))
+//        {
+//            return 0;
+//        }
+//
+//        $com = new \COM("scripting.filesystemobject");
+//
+//        $directory = $com->getfolder($path);
+//
+//        return (int) $directory->size;
+//    }
 }
