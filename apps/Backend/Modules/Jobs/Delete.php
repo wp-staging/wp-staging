@@ -80,14 +80,14 @@ class Delete extends Job
 
         $this->clone            = $clones[$name];
         $this->clone["name"]    = $name;
-        $this->clone["size"]    = null;
-
-        if (isset($this->settings->checkDirectorySize) || '1' === $this->settings->checkDirectorySize)
-        {
-            $directories = new Directories();
-            $this->clone["size"] = $this->formatSize($directories->size($this->clone));
-            unset($directories);
-        }
+//        $this->clone["size"]    = null;
+//
+//        if (isset($this->settings->checkDirectorySize) || '1' === $this->settings->checkDirectorySize)
+//        {
+//            $directories = new Directories();
+//            $this->clone["size"] = $this->formatSize($directories->size($this->clone));
+//            unset($directories);
+//        }
 
         $this->clone = (object) $this->clone;
 
