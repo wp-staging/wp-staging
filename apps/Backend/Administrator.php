@@ -63,9 +63,9 @@ class Administrator extends InjectionAware
         // Get loader
         $loader = $this->di->get("loader");
 
-        //$loader->addAction("admin_enqueue_scripts", $this, "enqueueElements", 100);
         $loader->addAction("admin_menu", $this, "addMenu", 10);
         $loader->addAction("admin_init", $this, "setOptionFormElements");
+        $loader->addAction("admin_init", $this, "upgrade");
         $loader->addAction("admin_post_wpstg_download_sysinfo", $this, "systemInfoDownload");
         $loader->addAction("admin_post_wpstg_export", $this, "export");
         $loader->addAction("admin_post_wpstg_import_settings", $this, "import");
@@ -110,6 +110,14 @@ class Administrator extends InjectionAware
     public function setOptionFormElements()
     {
         register_setting("wpstg_settings", "wpstg_settings", array($this, "sanitizeOptions"));
+    }
+    
+    /**
+     * Upgrade routine
+     */
+    public function upgrade(){
+        $upgrade = new Upgrade\Upgrade();
+        $upgrade->doUpgrade();
     }
 
     /**
@@ -609,5 +617,7 @@ class Administrator extends InjectionAware
         $scan = new Scan();
         return $scan->hasFreeDiskSpace();
     }
+    
+    
     
 }

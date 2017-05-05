@@ -5,6 +5,12 @@ use WPStaging\DI\InjectionAware;
 use WPStaging\Library\Browser;
 use WPStaging\WPStaging;
 
+// No Direct Access
+if (!defined("WPINC"))
+{
+    die;
+}
+
 /**
  * Class SystemInfo
  * @package WPStaging\Backend\Modules

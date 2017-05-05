@@ -3,6 +3,12 @@ namespace WPStaging\Backend\Modules;
 
 use WPStaging\DI\InjectionAware;
 
+// No Direct Access
+if (!defined("WPINC"))
+{
+    die;
+}
+
 /**
  * Class Optimizer
  * @package WPStaging\Backend\Modules;
