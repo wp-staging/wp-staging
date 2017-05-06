@@ -618,7 +618,9 @@ var WPStaging = (function($)
      */
     var logscroll = function () {
         var $div = cache.get("#wpstg-log-details");
-        $div.scrollTop($div[0].scrollHeight);
+        if ("undefined" !== typeof($div[0])){
+            $div.scrollTop($div[0].scrollHeight);
+        }
     }
 
     /**
@@ -628,7 +630,10 @@ var WPStaging = (function($)
      */
     var getLogs = function (log)
     {
-        if ("undefined" !== typeof (log)) {
+        
+        
+        
+        if (log != null && "undefined" !== typeof (log)) {
             if (log.constructor === Array) {
                 $.each(log, function (index, value) {
                     //console.log(index, value);
