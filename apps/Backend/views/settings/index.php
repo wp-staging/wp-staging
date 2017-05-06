@@ -175,9 +175,8 @@
                                         <div class="col-title">
                                             <?php echo $form->label("wpstg_settings[disableAdminLogin]")?>
                                             <span class="description">
-                                                Use this option only if you are using a custom login page and not the default login.php.
-                                                If you enable this option you are allowing everyone including search engines
-                                                to see your staging site, so you have to create a custom authentication like using .htaccess
+                                                If you want to remove the requirement to login to the staging site you can deactivate it here.
+                                                <strong>Note:</strong> If you disable authentication everyone can see your staging sites including search engines and this can lead to "duplicate content" in search engines.
                                             </span>
                                         </div>
                                     </td>
