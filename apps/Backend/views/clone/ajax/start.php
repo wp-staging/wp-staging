@@ -44,7 +44,7 @@
     echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site in:<strong><a href="%s" target="_blank">%s</a></strong>', 'wpstg' ), get_home_url() );
     ?>
     <br><br>
-    <?php echo __("Open and access the staging site: ", "wpstg")?>
+    <?php echo __('Open and access the staging site: ', 'wpstg')?>
     <br>
     <br>
     <a href="<?php echo get_home_url()?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">
