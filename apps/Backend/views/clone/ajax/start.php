@@ -31,7 +31,7 @@
 </button>
 
 <button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;">
-    <?php _e("Display working log", "wpstg")?>
+    <?php _e('Display working log', 'wpstg')?>
 </button>
 
 <div>
@@ -39,13 +39,13 @@
 </div>
 
 <div id="wpstg-finished-result">
-    <h3>Congratulations::</h3>
+    <h3>Congratulations
+    </h3>
     <?php
-    echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site in:<strong><a href="%s" target="_blank">%s</a></strong>', 'wpstg' ), get_home_url() );
+        echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site in:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wpstg' ), get_home_url() );
     ?>
-    <br><br>
-    <?php echo __('Open and access the staging site: ', 'wpstg')?>
     <br>
+    <?php //echo __('Open and access the staging site: ', 'wpstg')?>
     <br>
     <a href="<?php echo get_home_url()?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">
         Open staging site <span style="font-size: 10px;">(login with your admin credentials)</span>
