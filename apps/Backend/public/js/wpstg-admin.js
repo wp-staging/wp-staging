@@ -933,7 +933,7 @@ var WPStaging = (function($)
                             "Couldn't finish the cloning process properly. " +
                             "Your clone has been copied but failed to do clean up and " +
                             "saving its records to the database." +
-                            "Please contact support and provide your logs"
+                            "Please contact support and provide your logs."
                         );
 
                         return;
@@ -941,11 +941,14 @@ var WPStaging = (function($)
 
                     console.log("Cloning process finished");
 
+                    var $link1 = cache.get("#wpstg-clone-url-1");
                     var $link = cache.get("#wpstg-clone-url");
 
                     cache.get("#wpstg_staging_name").html(that.data.cloneID);
                     cache.get("#wpstg-finished-result").show();
                     cache.get("#wpstg-cancel-cloning").prop("disabled", true);
+                    $link1.attr("href", $link1.attr("href") + '/' + response.directoryName);
+                    $link1.append('/' + response.directoryName);
                     $link.attr("href", $link.attr("href") + '/' + response.directoryName);
                     cache.get("#wpstg-remove-clone").data("clone", that.data.cloneID);
 

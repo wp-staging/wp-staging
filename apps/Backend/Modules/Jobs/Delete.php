@@ -100,6 +100,11 @@ class Delete extends Job
     private function getTableRecords()
     {
         $wpdb   = WPStaging::getInstance()->get("wpdb");
+        
+//        if ($this->clone['version']){
+//            
+//        }
+        
         $tables = $wpdb->get_results("SHOW TABLE STATUS LIKE 'wpstg{$this->clone->number}_%'");
 
         $this->tables = array();

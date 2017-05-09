@@ -93,10 +93,15 @@ class Notices
             require_once "{$messagesDirectory}poll.php";
         }
         
-    // Cache directory in uploads is not writable
+        // Cache directory in uploads is not writable
         if (!wp_is_writable($varsDirectory))
         {
             require_once "{$messagesDirectory}/uploads-cache-directory-permission-problem.php";
+        }
+        // Staging directory is not writable
+        if (!wp_is_writable(get_home_path()))
+        {
+            require_once "{$messagesDirectory}/staging-directory-permission-problem.php";
         }
 // Cache dir is not available after installation
 //        // Cache directory is not writable
@@ -126,7 +131,7 @@ class Notices
         }
 
         // Beta
-        if ("no" === get_option("wpstg_hide_beta"))
+        if (false === get_option("wpstg_hide_beta") || "no" === get_option("wpstg_hide_beta"))
         {
             require_once "{$messagesDirectory}beta.php";
         }

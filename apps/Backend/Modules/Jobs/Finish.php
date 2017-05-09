@@ -3,6 +3,8 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\WPStaging;
 
+//error_reporting( E_ALL );
+
 /**
  * Class Finish
  * @package WPStaging\Backend\Modules\Jobs
@@ -20,7 +22,7 @@ class Finish extends Job
         $this->deleteCacheFiles();
 
         // Prepare .htaccess file for staging site
-        $this->protectDirectoriesAndFiles();
+        //$this->protectDirectoriesAndFiles();
 
         // Prepare clone records & save scanned directories for delete job later
         $this->prepareCloneDataRecords();
@@ -155,27 +157,27 @@ class Finish extends Job
      * Prepare protect directories and files
      * @param bool $force
      */
-    protected function protectDirectoriesAndFiles($force = false)
-    {
-        // Don't execute
-        if (true !== get_transient("wpstg_check_protection_files") && false === $force)
-        {
-            return;
-        }
-
-        // Save .htaccess file
-        $this->saveHTAccess();
-
-        // Save blank index.php file
-        $this->saveBlankIndex();
-
-        // TODO put blank index to upload directories?? Why??
-
-        // Check files once a day
-        set_transient("wpstg_check_protection_files", true, DAY_IN_SECONDS); // 24 hours in seconds
-
-
-    }
+//    protected function protectDirectoriesAndFiles($force = false)
+//    {
+//        // Don't execute
+//        if (true !== get_transient("wpstg_check_protection_files") && false === $force)
+//        {
+//            return;
+//        }
+//
+//        // Save .htaccess file
+//        $this->saveHTAccess();
+//
+//        // Save blank index.php file
+//        $this->saveBlankIndex();
+//
+//        // TODO put blank index to upload directories?? Why??
+//
+//        // Check files once a day
+//        set_transient("wpstg_check_protection_files", true, DAY_IN_SECONDS); // 24 hours in seconds
+//
+//
+//    }
 
     /**
      * Prepare clone records
@@ -185,14 +187,14 @@ class Finish extends Job
     {
         // Check if clones still exist
         $this->log("Verifying existing clones...");
-        foreach ($this->options->existingClones as $name => $clone)
-        {
-            if (!is_dir($clone["path"]))
-            {
-                unset($this->options->existingClones[$name]);
-            }
-        }
-        $this->log("Existing clones verified!");
+//        foreach ($this->options->existingClones as $name => $clone)
+//        {
+//            if (!is_dir($clone["path"]))
+//            {
+//                unset($this->options->existingClones[$name]);
+//            }
+//        }
+//        $this->log("Existing clones verified!");
 
         // Clone data already exists
         if (isset($this->options->existingClones[$this->options->clone]))
@@ -203,12 +205,29 @@ class Finish extends Job
 
         // Save new clone data
         $this->log("{$this->options->clone}'s clone job's data is not in database, generating data");
+        
+        
+        
         $this->options->existingClones[$this->options->clone] = array(
             "directoryName"     => $this->options->cloneDirectoryName,
             "path"              => ABSPATH . $this->options->cloneDirectoryName,
             "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
-            "number"            => $this->options->cloneNumber
+            "number"            => $this->options->cloneNumber,
+            "version"           => \WPStaging\WPStaging::VERSION,
         );
+        
+//        $array = json_decode(json_encode($this->options->existingClones[$this->options->clone], JSON_FORCE_OBJECT), false);
+//        
+//        var_dump($this->options->existingClones[$this->options->clone]);
+//        echo '###########################';
+//        var_dump($this->options->existingClones);
+//        echo '###########################';
+//        var_dump($array);
+//        echo '###########################';
+//
+//        die();
+        
+        //wp_die(var_dump($this->options->existingClones));
 
         if (false === update_option("wpstg_existing_clones", $this->options->existingClones))
         {

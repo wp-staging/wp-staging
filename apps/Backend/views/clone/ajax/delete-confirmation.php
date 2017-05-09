@@ -6,18 +6,19 @@
     </h4>
 
     <p>
-        Clone name: <span style="background-color:#575757;color:#fff;">
-        <?php echo $clone->name; ?>
-    </span>
+        <?php _e('Clone name:', 'wpstg'); ?> 
+        <span style="background-color:#575757;color:#fff;">
+        <?php echo $clone->directoryName; ?>
+        </span>
     </p>
 
     <p>
         <?php
         _e(
-            "Usually the preselected data can be deleted without any risk ".
-            "but in case something goes wrong you better check it first.",
-            "wpstg"
-        )
+            'Usually the preselected data can be deleted without any risk '.
+            'but in case something goes wrong you better check it first.',
+            'wpstg'
+        );
         ?>
     </p>
 </div>

@@ -286,10 +286,10 @@ class Data extends JobExecutable
     {
         $path = get_home_path() . $this->options->cloneDirectoryName . "/wp-config.php";
         
-        $this->log("Updating \$table_prefix in wp-config...");
+        $this->log("Updating table_prefix in wp-config to " . $this->prefix);
         if (false === ($content = file_get_contents($path)))
         {
-            $this->log("Failed to update \$table_prefix in wp-config; can't read contents", Logger::TYPE_ERROR);
+            $this->log("Failed to update table_prefix in wp-config; can't read contents", Logger::TYPE_ERROR);
             return false;
         }
         
@@ -301,7 +301,7 @@ class Data extends JobExecutable
 
         if (false === @file_put_contents($path, $content))
         {
-            $this->log("Failed to update \$table_prefix in wp-config; can't save contents", Logger::TYPE_ERROR);
+            $this->log("Failed to update $table_prefix in wp-config to " .$this->prefix . ". Can't save contents", Logger::TYPE_ERROR);
             return false;
         }
 

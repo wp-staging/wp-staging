@@ -10,14 +10,15 @@
         <h3>
             <?php _e("Your Staging Sites:", "wpstg")?>
         </h3>
-
+<?php //wp_die(var_dump($availableClones)); ?>
         <?php foreach ($availableClones as $name => $data):?>
-            <div id="<?php echo $data["directoryName"]?>" class="wpstg-clone">
+            <div id="<?php echo $data["directoryName"]; ?>" class="wpstg-clone">
 
                 <?php $urlLogin = $data["url"] . "/wp-login.php"?>
 
                 <a href="<?php echo $urlLogin?>" class="wpstg-clone-title" target="_blank">
-                    <?php echo $name?>
+                    <?php //echo $name?>
+                    <?php echo $data["directoryName"]; ?>
                 </a>
 
                 <?php echo apply_filters("wpstg_before_stage_buttons", $html = '', $name, $data)?>
