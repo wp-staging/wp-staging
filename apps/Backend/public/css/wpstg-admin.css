@@ -579,7 +579,6 @@ color:#777777;
 }
 
 #wpstg-log-details{
-    display:none;
     height: 300px;
     overflow: scroll;
     max-width: 650px;
