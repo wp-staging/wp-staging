@@ -115,6 +115,8 @@ class SystemInfo extends InjectionAware
         $output  = "-- Site Info" . PHP_EOL . PHP_EOL;
         $output .= $this->info("Site URL:", site_url());
         $output .= $this->info("Home URL:", home_url());
+        $output .= $this->info("Home Path:", get_home_path());
+        $output .= $this->info("Installed in subdir:", ( $this->isSubDir() ? 'Yes' : 'No' )) ;
         $output .= $this->info("Multisite:", ($this->isMultiSite ? "Yes" : "No" ));
 
         return apply_filters("wpstg_sysinfo_after_site_info", $output);
@@ -411,5 +413,16 @@ class SystemInfo extends InjectionAware
         $output .= $this->info("Suhosin:", $this->isInstalled("suhosin", false));
 
         return apply_filters("wpstg_sysinfo_after_php_ext", $output);
+    }
+    
+    /**
+     * Check if WP is installed in subdir
+     * @return boolean
+     */
+    private function isSubDir(){
+        if ( get_option( 'siteurl' ) !== get_option( 'home' ) ) { 
+            return true;
+        }
+        return false;
     }
 }
