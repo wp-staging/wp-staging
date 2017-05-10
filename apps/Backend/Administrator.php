@@ -574,18 +574,26 @@ class Administrator extends InjectionAware
 
     /**
      * Ajax Hide Poll
+     * @return mixed boolean | json
      */
-    public function ajaxHidePoll()
+    public function ajaxHidePoll() 
     {
-        wp_send_json(update_option("wpstg_start_poll", "no"));
+        if( false !== update_option( "wpstg_poll", "no" ) ) {
+            wp_send_json( true );
+        }
+        return wp_send_json();
     }
 
     /**
      * Ajax Hide Rating
+     * @return mixed bool | json
      */
     public function ajaxHideRating()
-    {
-        wp_send_json(update_option("wpstg_RatingDiv", "yes"));
+    {        
+        if( false !== update_option( "wpstg_rating", "no" ) ) {
+            wp_send_json( true );
+        }
+        return wp_send_json();
     }
 
     /**
@@ -593,7 +601,7 @@ class Administrator extends InjectionAware
      */
     public function ajaxHideBeta()
     {
-        wp_send_json(update_option("wpstg_hide_beta", "yes"));
+        wp_send_json(update_option("wpstg_beta", "no"));
     }
 
     /**

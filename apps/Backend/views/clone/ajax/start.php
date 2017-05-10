@@ -64,12 +64,12 @@
             <li>
                 <strong>1. Permalinks on your <span style="font-style:italic;">staging site</span> will be disabled for technical reasons! </strong>
                 <br>
-                Usually this is no problem for a staging website and you do not have to use permalinks!
+                Usually this is no problem for a staging website and you do not need to use permalinks!
                 <br>
                 <p>
-                    If you really need permalinks on your staging site you have to do several modifications to your .htaccess (Apache) or *.conf (Nginx).
+                    If you really want permalinks on your staging site you need to do several modifications to your .htaccess (Apache) or *.conf (Nginx).
                     <br>
-                    WP Staging can not do this automatically.
+                    WP Staging can not do this modification automatically.
                 </p>
                 <p>
                     <strong>Read more:</strong>
@@ -86,11 +86,11 @@
                 <br>
                 Your main and your staging site are both reachable under the same domain so
                 <br>
-                it´s easy to become confused.
+                it´s easy to get confused.
                 <p>
                     To assist you we changed the name of the dashboard link to
                     <strong style="font-style:italic;">
-                        "Staging - <span class="wpstg-clone-name"><?php echo get_bloginfo("name")?></span>"
+                        "STAGING - <span class="wpstg-clone-name"><?php echo get_bloginfo("name")?></span>"
                     </strong>.
                     <br>
                     You will notice this new name in the admin bar:

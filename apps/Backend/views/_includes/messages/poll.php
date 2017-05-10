@@ -9,7 +9,7 @@
 
         <br><br>
 
-        Click on the <a href="" target="_blank"><i>Yes, i am interested</i></a>
+        Click on the <a href="https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link" target="_blank"><i>Yes, i am interested</i></a>
         Button and fill out the poll!
 
         <br>

@@ -40,6 +40,7 @@ class Upgrade {
         if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.0.0', '<' ) ) {
             $this->newInstall();
             $this->upgradeV1();
+            $this->upgradeNotices();
         }
         $this->setVersion();
     }
@@ -86,12 +87,6 @@ class Upgrade {
             if( isset( $value['directoryName'] ) || !empty( $value['directoryName'] ) ) {
                 continue;
             } 
-            
-//            $new[$key]['directoryName'] = $value;
-//            $new[$key]['path'] = get_home_path() . $value;
-//            $new[$key]['url'] = get_home_url() . "/" . $value;
-//            $new[$key]['number'] = $key+1;
-//            $new[$key]['version'] = $this->previousVersion;
             $new[$value]['directoryName'] = $value;
             $new[$value]['path'] = get_home_path() . $value;
             $new[$value]['url'] = get_home_url() . "/" . $value;
@@ -106,6 +101,26 @@ class Upgrade {
             $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . \WPStaging\WPStaging::VERSION );
             //wp_die('error');
         }
+    }
+    
+    /**
+     * Upgrade Notices Db options from wpstg 1.3 -> 2.0.1
+     * Fix some logical db options
+     */
+    private function upgradeNotices(){
+            $poll = get_option( "wpstg_start_poll", false );
+            $beta = get_option( "wpstg_hide_beta", false );
+            $rating = get_option( "wpstg_RatingDiv", false );
+            
+            if ($poll && $poll === "no"){
+                update_option('wpstg_poll', 'no'); 
+            }
+            if ($beta && $beta === "yes"){
+                update_option('wpstg_beta', 'no');
+            }
+            if ($rating && $rating === 'yes'){
+                update_option('wpstg_rating', 'no');
+            }
     }
 
 }

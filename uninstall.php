@@ -23,12 +23,17 @@ if( isset( $options->unInstallOnDelete ) && '1' === $options->unInstallOnDelete 
     delete_option( "wpstg_version_upgraded_from" );
     delete_option( "wpstg_version" );
     delete_option( "wpstg_installDate" );
-    delete_option( "wpstg_RatingDiv" );
     delete_option( "wpstg_firsttime" );
     delete_option( "wpstg_is_staging_site" );
-    delete_option( "wpstg_hide_beta" );
     delete_option( "wpstg_settings" );
     delete_option( "wpstg_existing_clones" );
+    // Old wpstg 1.3 options for admin notices
     delete_option( "wpstg_start_poll" );
+    delete_option( "wpstg_hide_beta" );
+    delete_option( "wpstg_RatingDiv" );
+    // New ones
+    delete_option( "wpstg_poll" );
+    delete_option( "wpstg_rating" );
+    delete_option( "wpstg_beta" );
 }
 

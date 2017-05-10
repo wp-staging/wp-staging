@@ -1,55 +1,24 @@
-jQuery(document).ready(function($){
-    $(".wpstg_hide_poll").click(function(e) {
+jQuery(document).ready(function ($) {
+    $(".wpstg_hide_rating").click(function (e) {
         e.preventDefault();
 
         WPStaging.ajax(
-            {action: "wpstg_hide_rating"},
-            function(response)
+                {action: "wpstg_hide_rating"},
+        function (response)
+        {
+            if (true === response)
             {
-                if (true === response)
-                {
-                    $(".wpstg_fivestar").slideUp("fast");
-                    return true;
-                }
-
+                $(".wpstg_fivestar").slideUp("fast");
+                return true;
+            } else {
                 alert(
-                    "Unexpected message received. This might mean the data was not saved " +
-                    "and you might see this message again"
-                );
+                        "Unexpected message received. This might mean the data was not saved " +
+                        "and you might see this message again"
+                        );
             }
+        }
         );
 
-        // var url = $(this).data("url");
-        //
-        // $.ajax({
-        //     url     : url,
-        //     type    : "POST",
-        //     data    : {action: "wpstg_hide_rating"},
-        //     dataType: "JSON",
-        //     error       : function(xhr, textStatus, errorThrown) {
-        //         console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
-        //         console.log(textStatus);
-        //     },
-        //     success     : function(response) {
-        //         if (true === response)
-        //         {
-        //             $(".wpstg_beta_notice").slideUp("slow");
-        //             return true;
-        //         }
-        //
-        //         alert(
-        //             "Unexpected message received. This might mean the data was not saved " +
-        //             "and you might see this message again"
-        //         );
-        //     },
-        //     statusCode  : {
-        //         404: function() {
-        //             alert("Something went wrong; can't find ajax request URL!");
-        //         },
-        //         500: function() {
-        //             alert("Something went wrong; internal server error while processing the request!");
-        //         }
-        //     }
-        // });
+
     })
 });
