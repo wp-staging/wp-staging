@@ -160,6 +160,7 @@ final class WPStaging
 
     /**
      * Method to be executed upon activation of the plugin
+     * @todo must be tested. If remember right this is not working from inside a class and must be access from the outside
      */
     public function onActivation()
     {
