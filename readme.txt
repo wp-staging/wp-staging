@@ -8,7 +8,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
-Tested up to: 4.7.4
+Tested up to: 4.7
 Stable tag: {{ version }}
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
@@ -20,8 +20,7 @@ If you find a bug please open a ticket in the [support request](https://wordpres
 </strong>
 <br /><br />
 <strong>Note: </strong> This plugin is not able to push back your changes to the live site at the moment! 
-Please let us know your most requested feature and use our quick poll. It only takes one minute of your time:
-[Start the Poll](https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link "wp staging poll")
+Please let us know your most requested feature and use our quick poll. It only takes one minute of your time: [Start the poll](https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link "wp staging poll")
 <br /> <br />
 
 
@@ -224,52 +223,7 @@ https://wp-staging.com
 * Fix: $db_helper undefined message
 * Fix: Skip non utf8 encoded files during copying process
 
-= 0.9.9 =
-* Fix: Use back ticks for table names to prevent copy errors when table names are containing hyphens or similar special characters
-* New: Load option to reduce cpu load and to lower the risk of killed ajax calls because of security flooding mechanism (Prevent 405 errors: not allowed)
-* Tweak: Load non minified js file when WPSTG debug mode is enabled
-
-= 0.9.8 = 
-* New: Tested up to WP 4.4
-* New: New debug mode in settings
-* Tweak: Check if url's in staging's wp-config.php needs a replacement and do so.
-* Fix: Prevent fatal error and end of copying process. Make sure files are writable before trying to copy them  
-
-= 0.9.7 =
-* Fix: Change backend link to https://wordpress.org/plugins/wp-staging/ when using an outdated version of the plugin
-* New: Tested up to WP 4.3.1
-
-= 0.9.6 =
-* New: Show notice when there is not enough disk space for a clone
-* Fix: PHP Error on 32bit systems: "disk_free_space(): Value too large for defined data type"
-* Fix: Copying process of larges files gets interupted sometimes due undefined variable
-* Fix: Define width and height for the system info export formular
-* Fix: Cannot redeclare deleteDirectory()
-
-= 0.9.5 =
-* Fix: Option for cloning sites which are moved into a subdirectory was not working on several systems
-* New: WordPress Migration tested up to WP 4.3
-
-= 0.9.4 =
-* Fix: Large files are copied partly
-* Fix: js error xhr.statusText not defined
-* New: Option for cloning sites which are moved into a subdirectory. Read more: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
-* New: Create an alternative copy method for large files
-* New: Add new author WP-Staging to the readme.txt and to the wordpress repository
-
-= 0.9.3 =
-* Fix: Rating container is not shown because of wrong wordpress option name
-* Tweak: Change color of the rating links
-
-= 0.9.2 =
-* Fix: A conflict with the plugin WP Migrate DB (Pro)
-* Fix: Limit the staging name to maximum of 16 characters for migration process
-
-= 0.9.1 =
-* Fix: Change search and replace function for table wp_options when running migration. This prevented on some sites the moving of serialized theme data
-
-= 0.9 =
-* New: Release
+Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.com/changelog.txt)
 
 == Upgrade Notice ==
 

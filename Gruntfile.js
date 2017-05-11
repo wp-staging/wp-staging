@@ -29,7 +29,8 @@ module.exports = function (grunt) {
                     {
                         // Copy to base foldedr
                         expand: true,
-                        src: ['**',
+                        src: [
+                            '**',
                             '!node_modules/**',
                             '!Gruntfile.js',
                             '!package.json',
@@ -37,13 +38,19 @@ module.exports = function (grunt) {
                             '!grunt/**',
                             '!includes/class-wpstg-file-sync.php',
                             '!wp-staging-pro.php',
-                            '!views/view-sync-settings.php'],
+                            '!views/view-sync-settings.php',
+                            '!.gitignore',
+                            '!.CHANGELOG.md',
+                            '!.CONTRIBUTING.md',
+                            '!.README.md',
+                        ],
                         dest: '<%= paths.base %>'
                     },
                     {
                         // Copy to basetrunk foldedr
                         expand: true,
-                        src: ['**',
+                        src: [
+                            '**',
                             '!node_modules/**',
                             '!Gruntfile.js',
                             '!package.json',
@@ -51,7 +58,12 @@ module.exports = function (grunt) {
                             '!grunt/**',
                             '!includes/class-wpstg-file-sync.php',
                             '!wp-staging-pro.php',
-                            '!views/view-sync-settings.php'],
+                            '!views/view-sync-settings.php'
+                            '!.gitignore',
+                            '!.CHANGELOG.md',
+                            '!.CONTRIBUTING.md',
+                            '!.README.md',
+                        ],
                         dest: '<%= paths.basetrunk %>'
                     }
                 ]
@@ -121,6 +133,6 @@ module.exports = function (grunt) {
     //grunt.registerTask( 'build', [ 'clean:build', 'uglify:build', 'copy:build', 'string-replace:version', 'compress:build' ]);
     grunt.registerTask(
             'build',
-            ['clean:build','copy:build','string-replace:version','compress:build']
+            ['clean:build', 'copy:build', 'string-replace:version', 'compress:build']
             );
 };
