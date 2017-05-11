@@ -2,3 +2,4 @@ nbproject
 .idea/
 vars/
 !vars/languages
+node_modules
