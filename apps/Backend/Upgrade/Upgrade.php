@@ -35,7 +35,7 @@ class Upgrade {
 
     public function __construct() {
         $this->previousVersion = preg_replace( '/[^0-9.].*/', '', get_option( 'wpstg_version' ) );
-        $this->clones = get_option( "wpstg_existing_clones", array() );
+        $this->clones = get_option( "wpstg_existing_clones_beta", array() );
         $this->logger = new Logger;
     }
 
@@ -133,7 +133,7 @@ class Upgrade {
         }
         unset($value);
 
-        if( empty($new) || false === update_option( 'wpstg_existing_clones', $new ) ) {
+        if( empty($new) || false === update_option( 'wpstg_existing_clones_beta', $new ) ) {
             $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . \WPStaging\WPStaging::VERSION );
         }
     }

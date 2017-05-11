@@ -216,7 +216,7 @@ class Finish extends Job
             "version"           => \WPStaging\WPStaging::VERSION,
         );
 
-        if (false === update_option("wpstg_existing_clones", $this->options->existingClones))
+        if (false === update_option("wpstg_existing_clones_beta", $this->options->existingClones))
         {
             $this->log("Failed to save {$this->options->clone}'s clone job data to database'");
             return false;

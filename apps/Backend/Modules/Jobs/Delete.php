@@ -70,7 +70,7 @@ class Delete extends Job
             $name = $_POST["clone"];
         }
 
-        $clones = get_option("wpstg_existing_clones", array());
+        $clones = get_option("wpstg_existing_clones_beta", array());
 
         if (empty($clones) || !isset($clones[$name]))
         {
@@ -370,7 +370,7 @@ class Delete extends Job
      */
     public function deleteFinish()
     {
-        $existingClones = get_option("wpstg_existing_clones", array());
+        $existingClones = get_option("wpstg_existing_clones_beta", array());
 
         // Check if clones still exist
         $this->log("Verifying existing clones...");
@@ -383,7 +383,7 @@ class Delete extends Job
         }
         $this->log("Existing clones verified!");
 
-        if (false === update_option("wpstg_existing_clones", $existingClones))
+        if (false === update_option("wpstg_existing_clones_beta", $existingClones))
         {
             $this->log("Failed to save {$this->options->clone}'s clone job data to database'");
         }
