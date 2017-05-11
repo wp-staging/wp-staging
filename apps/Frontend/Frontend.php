@@ -35,7 +35,6 @@ class Frontend extends InjectionAware
 
         $loader->addAction("init", $this, "checkPermissions");
         $loader->addFilter("wp_before_admin_bar_render", $this, "changeSiteName");
-        //$loader->addAction("wp_enqueue_scripts", $this, "enqueueElements", 10);
     }
     
     /**

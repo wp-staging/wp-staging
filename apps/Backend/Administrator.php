@@ -53,6 +53,13 @@ class Administrator extends InjectionAware
         // URL to public backend folder
         $this->url  = plugin_dir_url(__FILE__) . "public/";
         
+        // Load plugins meta data
+        $this->loadMeta();
+        
+    }
+    
+    public function loadMeta(){
+        $run = new \WPStaging\Backend\Pluginmeta\Pluginmeta();
     }
 
     /**
@@ -70,6 +77,8 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_post_wpstg_export", $this, "export");
         $loader->addAction("admin_post_wpstg_import_settings", $this, "import");
         $loader->addAction("admin_notices", $this, "messages");
+       
+
 
         // Settings
         $settings = $this->di->get("settings");
@@ -103,6 +112,7 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_logs", $this, "ajaxLogs");
         $loader->addAction("wp_ajax_wpstg_check_disk_space", $this, "ajaxCheckFreeSpace");
     }
+   
 
     /**
      * Register options form elements
@@ -197,6 +207,8 @@ class Administrator extends InjectionAware
             array($this, "getToolsPage")
         );
     }
+    
+    
 
     /**
      * Settings Page

@@ -127,7 +127,7 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 
 == Official Site ==
-
+https://wp-staging.com
 
 == Installation ==
 1. Download the file "wp-staging" , unzip and place it in your wp-content/plugins/wp-staging folder. You can alternatively upload and install it via the WordPress plugin backend.

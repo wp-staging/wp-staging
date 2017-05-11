@@ -54,7 +54,7 @@ class Upgrade {
             $this->upgradeClonesBeta();
             $this->upgradeNotices();
         }
-        //$this->setVersion();
+        $this->setVersion();
     }
 
     /**
