@@ -27,6 +27,7 @@ module.exports = function (grunt) {
             build: {
                 files: [
                     {
+                        // Copy to base foldedr
                         expand: true,
                         src: ['**',
                             '!node_modules/**',
@@ -40,6 +41,7 @@ module.exports = function (grunt) {
                         dest: '<%= paths.base %>'
                     },
                     {
+                        // Copy to basetrunk foldedr
                         expand: true,
                         src: ['**',
                             '!node_modules/**',
@@ -97,10 +99,11 @@ module.exports = function (grunt) {
         compress: {
             build: {
                 options: {
-                    archive: '<%= paths.basezip %>/<%= pkg.name %>.zip' //target
+                    archive: '<%= paths.basezip %><%= pkg.name %>.zip' //target
                 },
                 cwd: '<%= paths.basetrunk %>',
-                src: ['**/*']
+                src: ['**/*'],
+                expand: true
             }
         }
 
@@ -118,9 +121,6 @@ module.exports = function (grunt) {
     //grunt.registerTask( 'build', [ 'clean:build', 'uglify:build', 'copy:build', 'string-replace:version', 'compress:build' ]);
     grunt.registerTask(
             'build',
-            ['clean:build',
-                'copy:build',
-                'string-replace:version',
-                'compress:build']
+            ['clean:build','copy:build','string-replace:version','compress:build']
             );
 };
