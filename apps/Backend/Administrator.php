@@ -21,6 +21,7 @@ use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Notices\Notices;
 use WPStaging\DI\InjectionAware;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
+use WPStaging\Backend\Activation;
 use WPStaging\WPStaging;
 
 /**
@@ -69,7 +70,10 @@ class Administrator extends InjectionAware
     {
         // Get loader
         $loader = $this->di->get("loader");
-
+        
+        $Activation = new \WPStaging\Backend\Activation\Activation();
+        
+        $loader->addAction("activated_plugin", $Activation, 'deactivate_other_instances');
         $loader->addAction("admin_menu", $this, "addMenu", 10);
         $loader->addAction("admin_init", $this, "setOptionFormElements");
         $loader->addAction("admin_init", $this, "upgrade");
@@ -77,8 +81,6 @@ class Administrator extends InjectionAware
         $loader->addAction("admin_post_wpstg_export", $this, "export");
         $loader->addAction("admin_post_wpstg_import_settings", $this, "import");
         $loader->addAction("admin_notices", $this, "messages");
-       
-
 
         // Settings
         $settings = $this->di->get("settings");
@@ -111,6 +113,12 @@ class Administrator extends InjectionAware
         $loader->addAction("wp_ajax_wpstg_hide_beta", $this, "ajaxHideBeta");
         $loader->addAction("wp_ajax_wpstg_logs", $this, "ajaxLogs");
         $loader->addAction("wp_ajax_wpstg_check_disk_space", $this, "ajaxCheckFreeSpace");
+    }
+    
+    public function Activation(){
+        $run = new \WPStaging\Backend\Activation();
+        $run->deactivate_other_instances();
+        //echo 'activated';
     }
    
 
