@@ -27,6 +27,10 @@ class Upgrade {
      */
     private $clones;
     
+    /**
+     * Logger
+     * @var obj 
+     */
     private $logger;
 
     public function __construct() {
@@ -36,10 +40,10 @@ class Upgrade {
     }
 
     public function doUpgrade() {
-        // Previous version lower than 2.0.0 or new install
-        if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.0.0', '<' ) ) {
-            $this->newInstall();
-            $this->upgradeV1();
+        // Previous version lower than 2.0.2 or new install
+        if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.0.2', '<' ) ) {
+            $this->upgradeOptions();
+            $this->upgradeClonesBeta();
             $this->upgradeNotices();
         }
         $this->setVersion();
@@ -48,7 +52,7 @@ class Upgrade {
     /**
      * Upgrade routine for new install
      */
-    private function newInstall(){
+    private function upgradeOptions(){
         // Write some default vars
         add_option( 'wpstg_installDate', date( 'Y-m-d h:i:s' ) );
     }
@@ -69,11 +73,44 @@ class Upgrade {
         }
         return false;
     }
+    
 
     /**
-     * Convert clone data from wpstg 1.x to wpstg 2.0.1
+     * Create a new db option for beta version 2.0.2
+     * @return bool
      */
-    private function upgradeV1() {
+    private function upgradeClonesBeta() {
+
+        $new = array();
+        
+        if (empty($this->clones)){
+            return false;
+        }
+
+        foreach ( $this->clones as $key => &$value ) {
+            
+            // Skip the rest of the loop if data is already compatible to wpstg 2.0.2
+            if( isset( $value['directoryName'] ) || !empty( $value['directoryName'] ) ) {
+                continue;
+            } 
+            $new[$value]['directoryName'] = $value;
+            $new[$value]['path'] = get_home_path() . $value;
+            $new[$value]['url'] = get_home_url() . "/" . $value;
+            $new[$value]['number'] = $key+1;
+            $new[$value]['version'] = $this->previousVersion;
+
+        }
+        unset($value);
+
+        if( empty($new) || false === update_option( 'wpstg_existing_clones_beta', $new ) ) {
+            $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . \WPStaging\WPStaging::VERSION );
+        }
+    }
+    /**
+     * Convert clone data from wpstg 1.x to wpstg 2.x 
+     * Only use this later when wpstg 2.x is ready for production
+     */
+    private function upgradeClones() {
 
         $new = array();
         
@@ -95,11 +132,9 @@ class Upgrade {
 
         }
         unset($value);
-        //var_dump( $new );
 
         if( empty($new) || false === update_option( 'wpstg_existing_clones', $new ) ) {
             $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . \WPStaging\WPStaging::VERSION );
-            //wp_die('error');
         }
     }
     

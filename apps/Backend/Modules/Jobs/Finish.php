@@ -215,19 +215,6 @@ class Finish extends Job
             "number"            => $this->options->cloneNumber,
             "version"           => \WPStaging\WPStaging::VERSION,
         );
-        
-//        $array = json_decode(json_encode($this->options->existingClones[$this->options->clone], JSON_FORCE_OBJECT), false);
-//        
-//        var_dump($this->options->existingClones[$this->options->clone]);
-//        echo '###########################';
-//        var_dump($this->options->existingClones);
-//        echo '###########################';
-//        var_dump($array);
-//        echo '###########################';
-//
-//        die();
-        
-        //wp_die(var_dump($this->options->existingClones));
 
         if (false === update_option("wpstg_existing_clones", $this->options->existingClones))
         {

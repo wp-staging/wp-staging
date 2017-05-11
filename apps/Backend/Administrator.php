@@ -224,7 +224,7 @@ class Administrator extends InjectionAware
     public function getClonePage()
     {
         // Existing clones
-        $availableClones = get_option("wpstg_existing_clones", array());
+        $availableClones = get_option("wpstg_existing_clones_beta", array());
 
         require_once "{$this->path}views/clone/index.php";
     }
@@ -390,7 +390,7 @@ class Administrator extends InjectionAware
         check_ajax_referer("wpstg_ajax_nonce", "nonce");
 
         // Existing clones
-        $availableClones = get_option("wpstg_existing_clones", array());
+        $availableClones = get_option("wpstg_existing_clones_beta", array());
 
         require_once "{$this->path}views/clone/ajax/single-overview.php";
 
@@ -423,7 +423,7 @@ class Administrator extends InjectionAware
     {
         $cloneName          = sanitize_key($_POST["cloneID"]);
         $cloneNameLength    = strlen($cloneName);
-        $clones             = get_option("wpstg_existing_clones", array());
+        $clones             = get_option("wpstg_existing_clones_beta", array());
 
         // Check clone name length
         if ($cloneNameLength < 1 || $cloneNameLength > 16)

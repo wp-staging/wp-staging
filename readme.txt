@@ -143,6 +143,32 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Changelog ==
 
+
+= {{ version }} =
+* New: Complete rewrite of the code base
+* New: Batch processing allows to clone even huge sites without any timeouts
+* New: Preparation for WP QUADS PRO with ability to copy file changes back to live site
+
+= 1.1.6 =
+* New: Add download link to WP Staging Beta Version 2.0.1
+
+= 1.1.5 =
+* Fix: Admin notice is throwing a false positive write permission error
+* New: Move log folder to wp-content/uploads/wp-staging/logs
+* New: Tested up to WP 4.7.3
+
+= 1.1.4 =
+* Fix: Fatal error Unsupported operand types
+
+= 1.1.3 =
+* New: Tested up to wp 4.7.2
+* Fix: Arrows in drop down for folder selection are distorted
+* Tweak: Show working log as default to make debugging easier
+
+= 1.1.2 = 
+* Fix: Settings are not deleted when plugin is removed
+* Fix: Staging site is available for non administrators
+
 = 1.1.1 =
 * Fix: Change rating url
 
