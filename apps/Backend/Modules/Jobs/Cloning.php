@@ -72,6 +72,8 @@ class Cloning extends Job
 
         array_unshift($this->options->directoriesToCopy, ABSPATH);
         
+        //var_dump($this->options->directoriesToCopy);
+        
         // Delete files to copy listing
         $this->cache->delete("files_to_copy");
 

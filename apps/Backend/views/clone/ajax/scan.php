@@ -61,7 +61,7 @@
         <?php echo $scan->directoryListing()?>
 
         <h4 style="margin:10px 0 10px 0">
-            <?php echo __("Extra Directories", "wpstg")?>
+            <?php echo __("Extra directories to copy", "wpstg")?>
         </h4>
 
         <textarea id="wpstg_extraDirectories" name="wpstg_extraDirectories" style="width:100%;height:250px;"></textarea>

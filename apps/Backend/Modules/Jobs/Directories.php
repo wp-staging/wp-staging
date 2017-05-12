@@ -1,9 +1,9 @@
 <?php
+
 namespace WPStaging\Backend\Modules\Jobs;
 
 // No Direct Access
-if (!defined("WPINC"))
-{
+if( !defined( "WPINC" ) ) {
     die;
 }
 
@@ -13,8 +13,8 @@ use WPStaging\WPStaging;
  * Class Files
  * @package WPStaging\Backend\Modules\Directories
  */
-class Directories extends JobExecutable
-{
+class Directories extends JobExecutable {
+
     /**
      * @var array
      */
@@ -28,9 +28,8 @@ class Directories extends JobExecutable
     /**
      * Initialize
      */
-    public function initialize()
-    {
-        $this->total        = count($this->options->directoriesToCopy);
+    public function initialize() {
+        $this->total = count( $this->options->directoriesToCopy );
         $this->getFiles();
     }
 
@@ -38,30 +37,26 @@ class Directories extends JobExecutable
      * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
      * @return void
      */
-    protected function calculateTotalSteps()
-    {
+    protected function calculateTotalSteps() {
         $this->options->totalSteps = $this->total;
     }
 
     /**
      * Get Root Files
      */
-    protected function getRootFiles()
-    {
-        if (1 < $this->options->totalFiles)
-        {
+    protected function getRootFiles() {
+        if( 1 < $this->options->totalFiles ) {
             return;
         }
 
-        $this->getFilesFromDirectory(ABSPATH);
+        $this->getFilesFromDirectory( ABSPATH );
     }
 
     /**
      * Start Module
      * @return object
      */
-    public function start()
-    {
+    public function start() {
         // Root files
         $this->getRootFiles();
 
@@ -71,7 +66,7 @@ class Directories extends JobExecutable
         // Save option, progress
         $this->saveProgress();
 
-        return (object) $this->response;
+        return ( object ) $this->response;
     }
 
     /**
@@ -79,12 +74,10 @@ class Directories extends JobExecutable
      * Returns false when over threshold limits are hit or when the job is done, true otherwise
      * @return bool
      */
-    protected function execute()
-    {
+    protected function execute() {
         // No job left to execute
-        if ($this->isFinished())
-        {
-            $this->prepareResponse(true, false);
+        if( $this->isFinished() ) {
+            $this->prepareResponse( true, false );
             return false;
         }
 
@@ -92,9 +85,8 @@ class Directories extends JobExecutable
         $directory = $this->options->directoriesToCopy[$this->options->currentStep];
 
         // Get files recursively
-        if (!$this->getFilesFromSubDirectories($directory))
-        {
-            $this->prepareResponse(false, false);
+        if( !$this->getFilesFromSubDirectories( $directory ) ) {
+            $this->prepareResponse( false, false );
             return false;
         }
 
@@ -112,57 +104,50 @@ class Directories extends JobExecutable
      * Checks Whether There is Any Job to Execute or Not
      * @return bool
      */
-    private function isFinished()
-    {
+    private function isFinished() {
         return (
-            $this->options->currentStep > $this->total ||
-            empty($this->options->directoriesToCopy) ||
-            !isset($this->options->directoriesToCopy[$this->options->currentStep])
-        );
+                $this->options->currentStep > $this->total ||
+                empty( $this->options->directoriesToCopy ) ||
+                !isset( $this->options->directoriesToCopy[$this->options->currentStep] )
+                );
     }
 
     /**
      * @param $path
      * @return bool
      */
-    protected function getFilesFromSubDirectories($path)
-    {
+    protected function getFilesFromSubDirectories( $path ) {
         $this->totalRecursion++;
 
-        if ($this->isOverThreshold())
-        {
+        if( $this->isOverThreshold() ) {
             //$this->saveProgress();
 
             return false;
         }
 
-        $this->log("Scanning {$path} for its sub-directories and files");
+        $this->log( "Scanning {$path} for its sub-directories and files" );
 
-        $directories = new \DirectoryIterator($path);
+        $directories = new \DirectoryIterator( $path );
 
-        foreach($directories as $directory)
-        {
+        foreach ( $directories as $directory ) {
             // Not a valid directory
-            if (false === ($path = $this->getPath($directory)))
-            {
+            if( false === ($path = $this->getPath( $directory )) ) {
                 continue;
             }
 
             // Excluded directory
-            if ($this->isDirectoryExcluded($directory->getRealPath()))
-            {
+            if( $this->isDirectoryExcluded( $directory->getRealPath() ) ) {
                 continue;
             }
 
             // This directory is already scanned
-            if (in_array($path, $this->options->scannedDirectories))
-            {
+            if( in_array( $path, $this->options->scannedDirectories ) ) {
                 continue;
             }
 
             // Save all files
             $dir = ABSPATH . $path . DIRECTORY_SEPARATOR;
-            $this->getFilesFromDirectory($dir);
+            $this->getFilesFromDirectory( $dir );
 
             // Add scanned directory listing
             $this->options->scannedDirectories[] = $dir;
@@ -178,26 +163,22 @@ class Directories extends JobExecutable
      * @param $directory
      * @return bool
      */
-    protected function getFilesFromDirectory($directory)
-    {
+    protected function getFilesFromDirectory( $directory ) {
         $this->totalRecursion++;
-        
-        // Save all files
-        $files = array_diff(scandir($directory), array('.', ".."));
 
-        foreach ($files as $file)
-        {
+        // Save all files
+        $files = array_diff( scandir( $directory ), array('.', "..") );
+
+        foreach ( $files as $file ) {
             $fullPath = $directory . $file;
 
-            if (is_dir($fullPath) && !in_array($fullPath, $this->options->directoriesToCopy) && !$this->isDirectoryExcluded($fullPath))
-            {
+            if( is_dir( $fullPath ) && !in_array( $fullPath, $this->options->directoriesToCopy ) && !$this->isDirectoryExcluded( $fullPath ) ) {
                 $this->options->directoriesToCopy[] = $fullPath;
-                return $this->getFilesFromSubDirectories($fullPath);
+                return $this->getFilesFromSubDirectories( $fullPath );
                 //continue;
             }
 
-            if (!is_file($fullPath) || in_array($fullPath, $this->files))
-            {
+            if( !is_file( $fullPath ) || in_array( $fullPath, $this->files ) ) {
                 continue;
             }
 
@@ -212,13 +193,11 @@ class Directories extends JobExecutable
      * @param \SplFileInfo $directory
      * @return string|false
      */
-    protected function getPath($directory)
-    {
-        $path = str_replace(ABSPATH, null, $directory->getRealPath());
+    protected function getPath( $directory ) {
+        $path = str_replace( ABSPATH, null, $directory->getRealPath() );
 
         // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
-        if (!$directory->isDir() || strlen($path) < 1 || strpos($directory->getRealPath(), ABSPATH) !== 0)
-        {
+        if( !$directory->isDir() || strlen( $path ) < 1 || strpos( $directory->getRealPath(), ABSPATH ) !== 0 ) {
             return false;
         }
 
@@ -226,15 +205,13 @@ class Directories extends JobExecutable
     }
 
     /**
+     * Check if directory is excluded from copying
      * @param string $directory
      * @return bool
      */
-    protected function isDirectoryExcluded($directory)
-    {
-        foreach ($this->options->excludedDirectories as $excludedDirectory)
-        {
-            if (strpos($directory, $excludedDirectory) === 0)
-            {
+    protected function isDirectoryExcluded( $directory ) {
+        foreach ( $this->options->excludedDirectories as $excludedDirectory ) {
+            if( strpos( $directory, $excludedDirectory ) === 0 && !$this->isExtraDirectory( $directory ) ) {
                 return true;
             }
         }
@@ -243,38 +220,50 @@ class Directories extends JobExecutable
     }
 
     /**
+     * Check if directory is an extra directory and should be copied
+     * @param string $directory
+     * @return boolean
+     */
+    protected function isExtraDirectory( $directory ) {
+        foreach ( $this->options->extraDirectories as $extraDirectory ) {
+            if( strpos( $directory, $extraDirectory ) === 0 ) {
+                return true;
+            }
+        }
+        
+        return false;
+    }
+
+    /**
      * Save files
      * @return bool
      */
-    protected function saveProgress()
-    {
+    protected function saveProgress() {
         $this->saveOptions();
 
-        $fileName   = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
-        $files      = implode(PHP_EOL, $this->files);
+        $fileName = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
+        $files = implode( PHP_EOL, $this->files );
 
-        if (strlen($files) > 0)
-        {
+        if( strlen( $files ) > 0 ) {
             //$files .= PHP_EOL;
         }
 
-        return (false !== @file_put_contents($fileName, $files));
+        return (false !== @file_put_contents( $fileName, $files ));
     }
 
     /**
      * Get files
      * @return void
      */
-    protected function getFiles()
-    {
-        $fileName   = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
+    protected function getFiles() {
+        $fileName = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
-        if (false === ($this->files = file_get_contents($fileName)))
-        {
+        if( false === ($this->files = file_get_contents( $fileName )) ) {
             $this->files = array();
             return;
         }
 
-        $this->files = explode(PHP_EOL, $this->files);
+        $this->files = explode( PHP_EOL, $this->files );
     }
+
 }
