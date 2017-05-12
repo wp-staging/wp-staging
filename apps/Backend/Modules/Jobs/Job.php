@@ -49,19 +49,22 @@ abstract class Job implements JobInterface
     protected $settings;
 
     /**
+     * System total maximum memory consumption
      * @var int
      */
     protected $maxMemoryLimit;
+    
+    /**
+     * Script maximum memory consumption
+     * @var int
+     */
+    protected $memoryLimit;
 
     /**
      * @var int
      */
     protected $maxExecutionTime;
 
-    /**
-     * @var int
-     */
-    protected $memoryLimit;
 
     /**
      * @var int
@@ -173,7 +176,8 @@ abstract class Job implements JobInterface
      */
     protected function setLimits()
     {
-        if (!isset($this->settings->wpstg_cpu_load))
+        
+        if (!isset($this->settings->cpuLoad))
         {
             $this->settings->cpuLoad = "medium";
         }
@@ -184,15 +188,15 @@ abstract class Job implements JobInterface
         switch($this->settings->cpuLoad)
         {
             case "medium":
-                $memoryLimit= $memoryLimit / 2;
-                $timeLimit  = $timeLimit / 2;
+                $memoryLimit= $memoryLimit / 2; // 0.4
+                $timeLimit  = $timeLimit / 2; 
                 break;
             case "low":
-                $memoryLimit= $memoryLimit / 4;
+                $memoryLimit= $memoryLimit / 4; // 0.2
                 $timeLimit  = $timeLimit / 4;
                 break;
 
-            case "default":
+            case "fast": // 0.8
             default:
                 break;
         }
@@ -301,9 +305,12 @@ abstract class Job implements JobInterface
         // Check if the memory is over threshold
         $usedMemory = (int) @memory_get_usage(true);
         
+        //$this->log('USED MEMORY: ' . $usedMemory . ' Memory Limit: ' . $this->maxMemoryLimit . ' Script memory limit: ' . $this->memoryLimit);
+
         if ($usedMemory >= $this->memoryLimit)
         {
-            $this->log('RESET MEMORY');
+            $this->log('RESET MEMORY: ' . $usedMemory . ' Memory Limit: ' . $this->maxMemoryLimit . ' Script memory limit: ' . $this->memoryLimit);
+            $this->resetMemory();
             return true;
         }
 
@@ -320,7 +327,6 @@ abstract class Job implements JobInterface
         if ($time >= $this->executionLimit)
         {
             //$this->log('RESET TIME');
-            //return (!$this->resetTime());
             return true;
         }
 
@@ -331,7 +337,6 @@ abstract class Job implements JobInterface
      * Attempt to reset memory
      * @return bool
      * 
-     * @deprecated since version 2.0.0
      */
     protected function resetMemory()
     {
@@ -340,6 +345,7 @@ abstract class Job implements JobInterface
         // Failed to set
         if (false === ini_set("memory_limit", $this->formatBytes($newMemoryLimit)))
         {
+            $this->log('Can not free some memory', Logger::TYPE_CRITICAL);
             return false;
         }
 

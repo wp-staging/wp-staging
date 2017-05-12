@@ -202,7 +202,7 @@ var WPStaging = (function($)
 
                 that.isCancelled = true;
 
-                $("#wpstg-cloning-result").text("Please wait...this can take up to a minute");
+                $("#wpstg-cloning-result").text("Please wait...this can take up a while.");
                 $("#wpstg-loader, #wpstg-show-log-button").hide();
 
                 $this.parent().append(ajaxSpinner);

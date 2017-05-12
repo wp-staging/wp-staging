@@ -85,7 +85,6 @@ class Settings
         $element = new Select(
             "wpstg_settings[cpuLoad]",
             array(
-                "default"   => "Default",
                 "high"      => "High (fast)",
                 "medium"    => "Medium (average)",
                 "low"       => "Low (slow)"
@@ -94,7 +93,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("CPU load priority")
-            ->setDefault(isset($settings->cpuLoad) ? $settings->cpuLoad : "default")
+            ->setDefault(isset($settings->cpuLoad) ? $settings->cpuLoad : "fast")
         );
 
         // Optimizer
