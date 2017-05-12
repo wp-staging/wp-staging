@@ -59,8 +59,8 @@ class Cloning extends Job
         }
 
         // Extra Directories
-        if (isset($_POST["extraDirectories"]) && strlen($_POST["extraDirectories"]) > 0)
-        {
+        if (isset($_POST["extraDirectories"]) && !empty($_POST["extraDirectories"]) )
+        {      
             $this->options->extraDirectories = $_POST["extraDirectories"];
         }
 
@@ -71,7 +71,7 @@ class Cloning extends Job
         );
 
         array_unshift($this->options->directoriesToCopy, ABSPATH);
-
+        
         // Delete files to copy listing
         $this->cache->delete("files_to_copy");
 

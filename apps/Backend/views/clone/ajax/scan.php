@@ -61,7 +61,7 @@
         <?php echo $scan->directoryListing()?>
 
         <h4 style="margin:10px 0 10px 0">
-            <?php echo __("Extra Directories / Files", "wpstg")?>
+            <?php echo __("Extra Directories", "wpstg")?>
         </h4>
 
         <textarea id="wpstg_extraDirectories" name="wpstg_extraDirectories" style="width:100%;height:250px;"></textarea>
@@ -69,9 +69,8 @@
             <span>
                 <?php
                 echo __(
-                    "Add additional extra directories you'd like to clone to your staging site<br>".
-                    "You must write full path of the directory / file<br>".
-                    "Full path must start with " . $options->root,
+                    "Enter one folder path per line.<br>".
+                    "Folders must start with absolute path: " . $options->root,
                     "wpstg"
                 )
                 ?>
@@ -81,7 +80,7 @@
         <p>
             <span>
                 <?php
-                echo __("Files will be copied into subfolder of: ", "wpstg") . $options->root
+                echo __("All files are copied into: ", "wpstg") . $options->root . $options->clone;
                 ?>
             </span>
         </p>

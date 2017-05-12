@@ -382,7 +382,6 @@ var WPStaging = (function($)
                 console.log(that.data);
 
                 isScan = ("wpstg_scanning" === that.action);
-                console.log(isScan);
 
                 // Send ajax request
                 ajax(
@@ -467,6 +466,24 @@ var WPStaging = (function($)
 
         return excludedDirectories;
     };
+    
+    /**
+     * Get Included Extra Directories
+     * @returns {Array}
+     */
+    var getIncludedExtraDirectories = function()
+    {
+        var extraDirectories = [];
+        var extraDirectories = $("#wpstg_extraDirectories").val().split(/\r?\n/);
+        console.log(extraDirectories);
+                
+        //excludedDirectories.push($this.val());
+
+
+        return extraDirectories;
+    };
+    
+    
 
     /**
      * Get Cloning Step Data
@@ -482,7 +499,10 @@ var WPStaging = (function($)
         that.data.excludedTables        = getExcludedTables();
         that.data.includedDirectories   = getIncludedDirectories();
         that.data.excludedDirectories   = getExcludedDirectories();
-        that.data.extraDirectories      = $("#wpstg_extraDirectories").val() || null;
+        //that.data.extraDirectories      = $("#wpstg_extraDirectories").val() || null;
+        that.data.extraDirectories      = getIncludedExtraDirectories() || null;
+        console.log(that.data);
+        
     };
 
     /**
@@ -760,7 +780,7 @@ var WPStaging = (function($)
                             // Next Step
                             else if (true === response.status)
                             {
-                                console.log('prepareDirectories' + response.status);
+                                //console.log('prepareDirectories ' + response.status);
                                 setTimeout(function() {prepareDirectories();}, wpstg.cpuLoad);
                             }
                         }
