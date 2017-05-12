@@ -305,11 +305,11 @@ abstract class Job implements JobInterface
         // Check if the memory is over threshold
         $usedMemory = (int) @memory_get_usage(true);
         
-        //$this->log('USED MEMORY: ' . $usedMemory . ' Memory Limit: ' . $this->maxMemoryLimit . ' Script memory limit: ' . $this->memoryLimit);
+        $this->log('Used Memory: ' . $this->formatBytes( $usedMemory ) . ' Max Memory Limit: ' . $this->formatBytes( $this->maxMemoryLimit ) . ' Script Memory Limit: ' . $this->formatBytes( $this->memoryLimit) );
 
         if ($usedMemory >= $this->memoryLimit)
         {
-            $this->log('RESET MEMORY: ' . $usedMemory . ' Memory Limit: ' . $this->maxMemoryLimit . ' Script memory limit: ' . $this->memoryLimit);
+            $this->log('Reset Memory: ' . $this->formatBytes($usedMemory) . ' Memory Limit: ' . $this->formatBytes($this->maxMemoryLimit) . ' Script memory limit: ' . $this->formatBytes( $this->memoryLimit ) );
             $this->resetMemory();
             return true;
         }
@@ -432,4 +432,18 @@ abstract class Job implements JobInterface
 
         $this->logger->add($msg, $type);
     }
+    
+//    protected function formatBytes($bytes, $precision = 2) { 
+//    $units = array('B', 'KB', 'MB', 'GB', 'TB'); 
+//
+//    $bytes = max($bytes, 0); 
+//    $pow = floor(($bytes ? log($bytes) : 0) / log(1024)); 
+//    $pow = min($pow, count($units) - 1); 
+//
+//    // Uncomment one of the following alternatives
+//    // $bytes /= pow(1024, $pow);
+//    // $bytes /= (1 << (10 * $pow)); 
+//
+//    return round($bytes, $precision) . ' ' . $units[$pow]; 
+//} 
 }
