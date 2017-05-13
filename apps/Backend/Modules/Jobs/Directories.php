@@ -130,6 +130,8 @@ class Directories extends JobExecutable {
         $directories = new \DirectoryIterator( $path );
 
         foreach ( $directories as $directory ) {
+
+            
             // Not a valid directory
             if( false === ($path = $this->getPath( $directory )) ) {
                 continue;
@@ -174,6 +176,7 @@ class Directories extends JobExecutable {
 
             if( is_dir( $fullPath ) && !in_array( $fullPath, $this->options->directoriesToCopy ) && !$this->isDirectoryExcluded( $fullPath ) ) {
                 $this->options->directoriesToCopy[] = $fullPath;
+
                 return $this->getFilesFromSubDirectories( $fullPath );
                 //continue;
             }
@@ -185,6 +188,12 @@ class Directories extends JobExecutable {
             $this->options->totalFiles++;
 
             $this->files[] = $fullPath;
+            
+            /**
+             * Test and measure if its faster to copy at the same time while the array with folders is  generated
+             */
+            //$this->copy($fullPath);
+
         }
     }
 
@@ -264,6 +273,67 @@ class Directories extends JobExecutable {
         }
 
         $this->files = explode( PHP_EOL, $this->files );
+    }
+    
+    /**
+     * Copy File using PHP (Only for testing)
+     * @param string $file
+     * @param string $destination
+     * @return bool
+     * 
+     * @deprecated since version 2.0.2
+     */
+    protected function copy($file)
+    {
+        
+        if( $this->isOverThreshold() ) {
+            return false;
+        }
+        
+        // Failed to get destination
+        if (false === ($destination = $this->getDestination($file)))
+        {
+            //$this->log("Can't get the destination of {$file}");
+            //return false;
+        }
+
+        // Attempt to copy
+        if (!@copy($file, $destination))
+        {
+            //$this->log("Failed to copy file to destination: {$file} -> {$destination}", Logger::TYPE_ERROR);
+            //return false;
+        }
+        
+        //$this->log("Copy {$file} -> {$destination}", Logger::TYPE_INFO);
+
+        // Not finished
+        return true;
+    }
+
+    
+    /**
+     * (only for testing)
+     * Gets destination file and checks if the directory exists, if it does not attempts to create it.
+     * If creating destination directory fails, it returns false, gives destination full path otherwise
+     * @param string $file
+     * @return bool|string
+     * 
+     * @deprecated
+     */
+    private function getDestination($file)
+    {
+        $destination = ABSPATH . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR;
+        $relativePath           = str_replace(ABSPATH, null, $file);
+        $destinationPath        = $destination . $relativePath;
+        $destinationDirectory   = dirname($destinationPath);
+
+        if (!is_dir($destinationDirectory) && !@mkdir($destinationDirectory, 0775, true))
+        {
+            $this->log("Destination directory doesn't exist; {$destinationDirectory}", Logger::TYPE_ERROR);
+            //return false;
+        }
+
+        return $destinationPath;
     }
 
 }
