@@ -242,8 +242,6 @@ var WPStaging = (function ($)
 
                     cache.get("#wpstg-removing-clone").addClass("loading");
 
-                    //$this.parent().append(ajaxSpinner);
-
                     cache.get("#wpstg-loader").show();
 
                     deleteClone($(this).data("clone"));
@@ -661,10 +659,10 @@ var WPStaging = (function ($)
             if (log.constructor === Array) {
                 $.each(log, function (index, value) {
                     //console.log(index, value);
-                    cache.get("#wpstg-log-details").append(value.type + ' ' + value.date + ' ' + value.message + '</br>');
+                    cache.get("#wpstg-log-details").append('[' + value.type + ']-'+ '[' + value.date + '] ' + value.message + '</br>');
                 })
             } else {
-                cache.get("#wpstg-log-details").append(log.type + ' ' + log.date + ' ' + log.message + '</br>');
+                cache.get("#wpstg-log-details").append('[' + log.type + ']-' + '[' + log.date + '] ' + log.message + '</br>');
             }
         }
         logscroll();

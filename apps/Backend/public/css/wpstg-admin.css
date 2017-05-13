@@ -581,12 +581,14 @@ color:#777777;
 #wpstg-log-details{
     height: 300px;
     overflow: scroll;
-    max-width: 650px;
-    font-size: 11px;
+    /*max-width: 650px;*/
+    font-family: monospace;
+    font-size: 12px;
+    line-height: 15px;
     border: 1px solid #FFF;
     background-color: black;
-    color: white;
-    padding:10px;
+    color: #c0c0c0;
+    padding:3px;
     white-space: nowrap;
     margin-top: 15px;
 }
