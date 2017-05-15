@@ -40,7 +40,7 @@ class Pluginmeta {
      */
     public function actionLinks( $links, $file ) {
         $settings_link = '<a href="' . admin_url( 'admin.php?page=wpstg-settings' ) . '">' . esc_html__( 'Settings', 'wpstg' ) . '</a>';
-        if( $file == 'wp-staging/wp-staging.php' )
+        if( $file == 'wp-staging/wp-staging.php' || $file == 'wp-staging-pro/wp-staging-pro.php')
             array_unshift( $links, $settings_link );
         return $links;
     }
@@ -55,8 +55,9 @@ class Pluginmeta {
      * @return array $input
      */
     public function rowMeta( $input, $file ) {
-        if( $file != 'wp-staging/wp-staging.php' )
+        if( $file != 'wp-staging/wp-staging.php' && $file != 'wp-staging-pro/wp-staging-pro.php'){
             return $input;
+        }
 
         $links = array(
             '<a href="' . admin_url( 'admin.php?page=wpstg_clone' ) . '">' . esc_html__( 'Start Now', 'wpstg' ) . '</a>',

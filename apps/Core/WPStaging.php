@@ -46,6 +46,18 @@ final class WPStaging
      */
     const WP_COMPATIBLE = "4.7.4";
     
+    /**
+     * Slug: Either wp-staging or wp-staging-pro
+     * @var string 
+     */
+    public $slug;
+
+    /**
+     * Absolute plugin path
+     * @var string
+     */
+    public $pluginPath;
+    
 
     /**
      * Services
@@ -64,24 +76,35 @@ final class WPStaging
      */
     private function __construct()
     {
+
         $file = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . self::SLUG . ".php";
 
         // Activation Hook
         register_activation_hook($file, array($this, "onActivation"));
 
+        $this->registerMain();
         $this->registerNamespaces();
         $this->loadLanguages();
         $this->loadDependencies();
         $this->defineHooks();
+    }
         
+    
+    private function registerMain() {
+      // Slug of the plugin
+      $this->slug = plugin_basename(dirname(dirname(dirname(__FILE__))));
+
+      // absolute path to the main plugin dir
+      $this->pluginPath = plugin_dir_path( dirname(dirname(__FILE__)));
+
         // URL to apps folder
-        $this->url  = plugin_dir_url(  dirname(__FILE__) );
+      $this->url = plugin_dir_url( dirname( __FILE__ ) );
         
         // URL to backend public folder folder
-        $this->backend_url  = plugin_dir_url(  dirname(__FILE__) ) . "Backend/public/";
+      $this->backend_url = plugin_dir_url( dirname( __FILE__ ) ) . "Backend/public/";
         
         // URL to frontend public folder folder
-        $this->frontend_url  = plugin_dir_url(  dirname(__FILE__) ) . "Frontend/public/";
+      $this->frontend_url = plugin_dir_url( dirname( __FILE__ ) ) . "Frontend/public/";
     }
     
     /**
@@ -186,14 +209,11 @@ final class WPStaging
         $autoloader = new Autoloader();
         $this->set("autoloader", $autoloader);
 
-        // Base directory
-        $dir = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . "apps" . DIRECTORY_SEPARATOR;
-
         // Autoloader
         $autoloader->registerNamespaces(array(
             "WPStaging" => array(
-                $dir,
-                $dir . "Core" . DIRECTORY_SEPARATOR
+                $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR,
+                $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR
             )
         ));
 
