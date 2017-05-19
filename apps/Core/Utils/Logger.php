@@ -24,6 +24,8 @@ class Logger
     const TYPE_WARNING  = "WARNING";
 
     const TYPE_INFO     = "INFO";
+    
+    const TYPE_DEBUG     = "DEBUG";
 
     /**
      * Log directory (full path)
@@ -98,7 +100,7 @@ class Logger
      * @param string $type
      */
     public function add($message, $type = self::TYPE_ERROR)
-    {
+    {  
         $this->messages[] = array(
             "type"      => $type,
             "date"      => date("Y/m/d H:i:s"),

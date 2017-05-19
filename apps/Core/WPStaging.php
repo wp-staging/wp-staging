@@ -50,7 +50,7 @@ final class WPStaging
      * Slug: Either wp-staging or wp-staging-pro
      * @var string 
      */
-    public $slug;
+    static $slug;
 
     /**
      * Absolute plugin path
@@ -90,7 +90,7 @@ final class WPStaging
     }
         
     
-    private function registerMain() {
+    public function registerMain() {
       // Slug of the plugin
       $this->slug = plugin_basename(dirname(dirname(dirname(__FILE__))));
 
@@ -331,9 +331,9 @@ final class WPStaging
     /**
      * @return string
      */
-    public function getSlug()
+    public static function getSlug()
     {
-        return self::SLUG;
+        return plugin_basename(dirname(dirname(dirname(__FILE__))));
     }
     
     /**

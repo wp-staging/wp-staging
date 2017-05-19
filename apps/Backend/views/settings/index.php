@@ -202,13 +202,13 @@
                                     </td>
                                 </tr>
                                 <!-- Deactivated -->
-                                <tr class="row" style="display: none;">
+                                <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
                                             <?php echo $form->label("wpstg_settings[debugMode]")?>
                                             <span class="description">
                                                 This will enable an extended debug mode which creates additional entries
-                                                in <strong>wp-content/wp-staging/logs</strong>.
+                                                in <strong>wp-content/uploads/wp-staging/logs/logfile.log</strong>.
                                                 Please enable this when we ask you to do so.
                                             </span>
                                         </div>

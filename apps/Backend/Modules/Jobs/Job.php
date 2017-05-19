@@ -305,7 +305,7 @@ abstract class Job implements JobInterface
         // Check if the memory is over threshold
         $usedMemory = (int) @memory_get_usage(true);
         
-        //$this->log('Used Memory: ' . $this->formatBytes( $usedMemory ) . ' Max Memory Limit: ' . $this->formatBytes( $this->maxMemoryLimit ) . ' Max Script Memory Limit: ' . $this->formatBytes( $this->memoryLimit) );
+        $this->debugLog('Used Memory: ' . $this->formatBytes( $usedMemory ) . ' Max Memory Limit: ' . $this->formatBytes( $this->maxMemoryLimit ) . ' Max Script Memory Limit: ' . $this->formatBytes( $this->memoryLimit), Logger::TYPE_DEBUG );
 
         if ($usedMemory >= $this->memoryLimit)
         {
@@ -429,7 +429,25 @@ abstract class Job implements JobInterface
             $this->logger->setFileName($this->options->clone);
             $this->hasLoggedFileNameSet = true;
         }
-
+        
         $this->logger->add($msg, $type);
+    }
+    /**
+     * @param string $msg
+     * @param string $type
+     */
+    protected function debugLog($msg, $type = Logger::TYPE_INFO)
+    {
+        if (false === $this->hasLoggedFileNameSet && 0 < strlen($this->options->clone))
+        {
+            $this->logger->setFileName($this->options->clone);
+            $this->hasLoggedFileNameSet = true;
+        }
+
+        
+        if (isset($this->settings->debugMode)){
+            $this->logger->add($msg, $type);
+        }
+        
     }
 }

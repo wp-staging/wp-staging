@@ -3,7 +3,7 @@
 </span>
 
 <span class="wpstg-version">
-    <?php if (\WPStaging\WPStaging::SLUG === "wp-staging-pro") echo "Pro" ?> Version <?php echo \WPStaging\WPStaging::VERSION ?>
+    <?php if (WPStaging\WPStaging::getSlug() === "wp-staging-pro") echo "Pro" ?> Version <?php echo \WPStaging\WPStaging::VERSION ?>
 </span>
 
 <div class="wpstg-header">
