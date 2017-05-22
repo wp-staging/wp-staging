@@ -696,13 +696,9 @@ var WPStaging = (function ($)
         }
     };
 
-    /**
-     * Start Cloning Process
-     * @type {Function}
-     */
-    that.startCloning = (function () {
-        if ("wpstg_cloning" !== that.data.action)
-        {
+    var checkDiskSpace = function () {
+        cache.get("#wpstg-check-space").on("click", function (e) {
+            cache.get("#wpstg-loader").show();
             console.log("check disk space");
             ajax(
                     {
@@ -711,19 +707,35 @@ var WPStaging = (function ($)
                     },
             function (response)
             {
-                if (false !== response)
+                if (false === response)
                 {
-                    cache.get("#wpstg-clone-id-error").hide();
+                    cache.get("#wpstg-clone-id-error").text('Can not detect disk space').show();
+                    cache.get("#wpstg-loader").hide();
                     return;
                 }
 
                 // Not enough disk space
-                cache.get("#wpstg-clone-id-error").show();
+                cache.get("#wpstg-clone-id-error").text('Available free disk space ' + response.freespace + ' | Estimated necessary disk space: ' + response.usedspace).show();
+                cache.get("#wpstg-loader").hide();
             },
                     "json",
                     false
                     );
+        });
 
+    }
+
+    /**
+     * Start Cloning Process
+     * @type {Function}
+     */
+    that.startCloning = (function () {
+        
+        // Register function for checking disk space
+        checkDiskSpace();
+        
+        if ("wpstg_cloning" !== that.data.action)
+        {
             return;
         }
 

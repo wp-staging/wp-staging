@@ -165,24 +165,35 @@ class Scan extends Job
      * Returns null when can't run disk_free_space function one way or another
      * @return bool|null
      */
-    public function hasFreeDiskSpace()
-    {
-        if (!function_exists("disk_free_space"))
-        {
-            return null;
-        }
+    public function hasFreeDiskSpace() {
+      if( !function_exists( "disk_free_space" ) ) {
+         return null;
+      }
 
-        $freeSpace = @disk_free_space(ABSPATH);
+      $freeSpace = @disk_free_space( ABSPATH );
 
-        if (false === $freeSpace)
-        {
-            return null;
-        }
+      if( false === $freeSpace ) {
+         $data = array(
+             'freespace' => false,
+             'usedspace' => $this->formatSize($this->getDirectorySizeInclSubdirs(ABSPATH))
+         );
+         echo json_encode($data);
+         die();
+        //return null;
+      }
 
-        return ($freeSpace >= $this->getDirectorySize(ABSPATH));
-    }
+      //return ($freeSpace >= $this->getDirectorySize(ABSPATH));
 
-    /**
+      $data = array(
+          'freespace' => $this->formatSize($freeSpace),
+          'usedspace' => $this->formatSize($this->getDirectorySizeInclSubdirs(ABSPATH))
+      );
+
+      echo json_encode( $data );
+      die();
+   }
+
+   /**
      * Get Database Tables
      */
     protected function getTables()
@@ -343,4 +354,18 @@ class Scan extends Job
 
         return $this->objDirectories->size($path);
     }
+    
+    /**
+     * Get total size of a directory including all its subdirectories
+     * @param type $dir
+     * @return type
+     */
+    function getDirectorySizeInclSubdirs( $dir ) {
+      $size = 0;
+      foreach ( glob( rtrim( $dir, '/' ) . '/*', GLOB_NOSORT ) as $each ) {
+         $size += is_file( $each ) ? filesize( $each ) : $this->getDirectorySizeInclSubdirs( $each );
+      }
+      return $size;
+   }
+
 }

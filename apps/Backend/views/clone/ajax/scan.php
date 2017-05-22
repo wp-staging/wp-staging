@@ -113,3 +113,5 @@
     }
     ?>
 </button>
+
+<a href="#" id="wpstg-check-space"><?php _e('Check Disk Space', 'wpstg'); ?></a>

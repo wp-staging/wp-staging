@@ -50,7 +50,7 @@ final class WPStaging
      * Slug: Either wp-staging or wp-staging-pro
      * @var string 
      */
-    static $slug;
+    public $slug;
 
     /**
      * Absolute plugin path
@@ -208,12 +208,14 @@ final class WPStaging
     {
         $autoloader = new Autoloader();
         $this->set("autoloader", $autoloader);
+        
+        //wp_die($this->pluginPath . 'apps' . DIRECTORY_SEPARATOR);
 
         // Autoloader
         $autoloader->registerNamespaces(array(
             "WPStaging" => array(
                 $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR,
-                $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'core' . DIRECTORY_SEPARATOR
+                $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR
             )
         ));
 

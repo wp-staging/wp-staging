@@ -679,3 +679,7 @@ color:#777777;
 .wpstg-share-button-twitter .share:active,.wpstg-share-button-facebook .share:active,.wpstg-share-button-googleplus .share:active {
     background-color:#353535;
 }
+
+#wpstg-check-space {
+    margin-left:8px;
+}
