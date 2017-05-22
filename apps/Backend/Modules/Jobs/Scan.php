@@ -92,14 +92,14 @@ class Scan extends Job
      */
     public function formatSize($bytes, $precision = 2)
     {
-        if ((int) $bytes < 1)
+        if ((double) $bytes < 1)
         {
             return '';
         }
 
         $units  = array('B', "KB", "MB", "GB", "TB");
 
-        $bytes  = (int) $bytes;
+        $bytes  = (double) $bytes;
         $base   = log($bytes) / log(1000); // 1024 would be for MiB KiB etc
         $pow    = pow(1000, $base - floor($base)); // Same rule for 1000
 
@@ -179,10 +179,8 @@ class Scan extends Job
          );
          echo json_encode($data);
          die();
-        //return null;
       }
 
-      //return ($freeSpace >= $this->getDirectorySize(ABSPATH));
 
       $data = array(
           'freespace' => $this->formatSize($freeSpace),
@@ -357,8 +355,8 @@ class Scan extends Job
     
     /**
      * Get total size of a directory including all its subdirectories
-     * @param type $dir
-     * @return type
+     * @param string $dir
+     * @return int
      */
     function getDirectorySizeInclSubdirs( $dir ) {
       $size = 0;
