@@ -371,6 +371,14 @@ color:#777777;
    margin-top:-5px;
 }
 
+#wpstg-loader.wpstg-finished {
+        content:"Finished";
+        background-color:#00c89a;
+        color:white; 
+        padding:2px;
+        margin-top:6px;
+}
+
 #wpstg-workflow {
 	position: relative;
 	clear:both;

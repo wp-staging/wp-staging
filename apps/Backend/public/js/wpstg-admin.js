@@ -533,10 +533,6 @@ var WPStaging = (function ($)
             // Styling of elements
             $workFlow.removeClass("loading").html(response);
 
-            $currentStep
-                    .removeClass("wpstg-current-step")
-                    .next("li")
-                    .addClass("wpstg-current-step");
         },
                 "HTML"
                 );
@@ -1061,6 +1057,8 @@ var WPStaging = (function ($)
      * @type {ajax}
      */
     that.ajax = ajax;
+    that.showError = showError;
+    that.getLogs = getLogs;
 
     return that;
 })(jQuery);

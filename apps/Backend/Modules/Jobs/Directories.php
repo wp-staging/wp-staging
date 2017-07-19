@@ -267,7 +267,7 @@ class Directories extends JobExecutable {
     protected function getFiles() {
         $fileName = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
-        if( false === ($this->files = file_get_contents( $fileName )) ) {
+        if( false === ($this->files = @file_get_contents( $fileName )) ) {
             $this->files = array();
             return;
         }

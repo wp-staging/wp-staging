@@ -35,17 +35,27 @@ if (!defined("WPINC"))
     die;
 }
 
-require_once plugin_dir_path(__FILE__) . "apps/Core/WPStaging.php";
+/**
+ * Path to main WP Staging class
+ * Make sure to not redeclare class in case free version has been installed previosly
+ */
+if (!class_exists( 'WPStaging\WPStaging' )){
+   require_once plugin_dir_path(__FILE__) . "apps/Core/WPStaging.php";
+}
 
 $wpStaging = \WPStaging\WPStaging::getInstance();
 
-// Load WP globals into WPStaging
+/**
+ * Load a few important WP globals into WPStaging class to make them available via dependancy injection
+ */
+
+// Wordpress DB Object
 if (isset($wpdb))
 {
     $wpStaging->set("wpdb", $wpdb);
 }
 
-
+// WordPress Filter Object
 if (isset($wp_filter))
 {
     $wpStaging->set("wp_filter", function() use(&$wp_filter) {
@@ -53,4 +63,7 @@ if (isset($wp_filter))
     });
 }
 
+/**
+ * Inititalize WPStaging
+ */
 $wpStaging->run();
