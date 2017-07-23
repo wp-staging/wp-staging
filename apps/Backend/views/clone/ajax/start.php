@@ -30,7 +30,7 @@
     <?php echo __("Cancel", "wpstg")?>
 </button>
 
-<button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;">
+<button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;display:none;">
     <?php _e('Display working log', 'wpstg')?>
 </button>
 

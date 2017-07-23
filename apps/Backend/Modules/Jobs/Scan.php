@@ -286,16 +286,17 @@ class Scan extends Job
     protected function getPath($directory)
     {
       /* 
-       * Do not follow path like web/wp-content/.. or web/wp-content/.
+       * Do not follow root path like src/web/..
+       * This must be done before \SplFileInfo->isDir() is used!
        * Prevents open base dir restriction fatal errors
        */
-      if ($directory->isDot()) {
-             return false;
+      if (strpos( $directory->getRealPath(), ABSPATH ) !== 0 ) {
+         return false;
       }
         $path = str_replace(ABSPATH, null, $directory->getRealPath());
 
         // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
-        if (!$directory->isDir() || strlen($path) < 1 || strpos($directory->getRealPath(), ABSPATH) !== 0)
+        if (!$directory->isDir() || strlen($path) < 1)
         {
             return false;
         }
