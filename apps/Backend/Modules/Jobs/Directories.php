@@ -203,6 +203,15 @@ class Directories extends JobExecutable {
      * @return string|false
      */
     protected function getPath( $directory ) {
+       
+      /* 
+       * Do not follow path like web/wp-content/.. or web/wp-content/.
+       * Prevents open base dir restriction fatal errors
+       */
+      if ($directory->isDot()) {
+             return false;
+      }
+      
         $path = str_replace( ABSPATH, null, $directory->getRealPath() );
 
         // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
