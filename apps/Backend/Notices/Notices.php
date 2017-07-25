@@ -88,10 +88,10 @@ class Notices {
         $varsDirectory = \WPStaging\WPStaging::getContentDir();
 
 
-        // Poll
-        if( $this->canShow( "wpstg_poll", 7 ) ) {
+        // Poll do not show any longer
+        /*if( $this->canShow( "wpstg_poll", 7 ) ) {
             require_once "{$viewsNoticesPath}poll.php";
-        }
+        }*/
 
         // Cache directory in uploads is not writable
         if( !wp_is_writable( $varsDirectory ) ) {

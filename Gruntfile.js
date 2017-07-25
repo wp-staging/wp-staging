@@ -38,9 +38,9 @@ module.exports = function (grunt) {
                             '!grunt/**',
                             '!wp-staging-pro.php',
                             '!.gitignore',
-                            '!.CHANGELOG.md',
-                            '!.CONTRIBUTING.md',
-                            '!.README.md',
+                            '!CHANGELOG.md',
+                            '!CONTRIBUTING.md',
+                            '!README.md',
                         ],
                         dest: '<%= paths.base %>'
                     },
@@ -56,9 +56,9 @@ module.exports = function (grunt) {
                             '!grunt/**',
                             '!wp-staging-pro.php',
                             '!.gitignore',
-                            '!.CHANGELOG.md',
-                            '!.CONTRIBUTING.md',
-                            '!.README.md',
+                            '!CHANGELOG.md',
+                            '!CONTRIBUTING.md',
+                            '!README.md',
                         ],
                         dest: '<%= paths.basetrunk %>'
                     }
