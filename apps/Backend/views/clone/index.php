@@ -2,7 +2,7 @@
 
     <?php require_once($this->path . "views/_includes/header.php")?>
 
-    <h2 class="nav-tab-wrapper"></h2>
+    <h2 class="wpstg-nav-tab-wrapper"></h2>
 
     <?php
     do_action("wpstg_notifications");

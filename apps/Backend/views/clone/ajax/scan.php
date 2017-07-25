@@ -1,5 +1,5 @@
 <label id="wpstg-clone-label" for="wpstg-new-clone">
-    <?php echo __('Name your new site, e.g. <i>staging</i> or <i>development</i>:', 'wpstg')?>
+    <?php echo __('Staging Site Name:', 'wpstg')?>
     <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if (null !== $options->current) echo " disabled='disabled'"?>>
 </label>
 

@@ -17,3 +17,4 @@
 </ul>
 
 <div id="wpstg-workflow"></div>
+<div id="wpstg-sidebar"><a href="https://wp-staging.com/?utm_source=tryout&utm_medium=plugin&utm_campaign=tryout&utm_term=tryout" target="_new"><img src="<?php echo WPSTG_PLUGIN_URL . '/apps/Backend/public/img/wpstaging-banner200x400-tryout.gif'; ?>"></a></div>

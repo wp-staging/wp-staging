@@ -24,7 +24,7 @@
         ?>
     </ul>
 
-    <h2 class="nav-tab-wrapper"></h2>
+    <h2 class="wpstg-nav-tab-wrapper"></h2>
 
     <div class="metabox-holder">
         <?php require_once $this->path . "views/tools/tabs/" . $activeTab . ".php"?>

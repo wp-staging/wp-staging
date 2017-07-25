@@ -190,14 +190,14 @@ color:#777777;
 /* Cloning workflow */
 #wpstg-clonepage-wrapper {
 	margin-bottom: 20px;
-        width: 690px;      
+        /*width: 690px;    */  
 }
 
 @media screen and (min-width:1090px){
     #wpstg-clonepage-wrapper {
         float: left;
 	margin-bottom: 20px;
-        width: 690px;      
+        /*width: 690px;*/      
     }
     .wpstg-sidebar{
         display: none;
@@ -384,6 +384,17 @@ color:#777777;
 	clear:both;
 	padding-top:20px;
         margin-right:20px;
+        float:left;
+        min-width: 500px;
+        border-right: 1px solid #DFDFDF;
+        min-height: 380px;
+        padding-right: 20px;
+}
+
+#wpstg-sidebar {
+    float: left;
+    max-width: 400px;
+    display: block;
 }
 
 #wpstg-workflow.loading::after,
@@ -588,6 +599,7 @@ color:#777777;
 
 #wpstg-log-details{
     height: 300px;
+    max-width: 700px;
     overflow: scroll;
     /*max-width: 650px;*/
     font-family: monospace;

@@ -39,6 +39,10 @@ if (!defined("WPINC"))
 if( !defined( 'WPSTG_PLUGIN_DIR' ) ) {
    define( 'WPSTG_PLUGIN_DIR', plugin_dir_path(  __FILE__ ) );
 }
+// Plugin Folder URL
+if( !defined( 'WPSTG_PLUGIN_URL' ) ) {
+   define( 'WPSTG_PLUGIN_URL', plugin_dir_url(  __FILE__ ) );
+}
 
 //require_once WPSTG_PLUGIN_DIR . 'apps/Backend/Install/install.php';
 
