@@ -69,8 +69,6 @@
         <div class="wpstg-dir">
             <label>
                 <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1" checked>
-                <?php echo $clone->path; ?>
-                <span class="wpstg-size-info"><?php echo $clone->size; ?></span>
             </label>
         </div>
     </div>

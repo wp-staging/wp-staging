@@ -95,6 +95,7 @@ abstract class Job implements JobInterface
         $this->start            = $this->time();
         $this->maxMemoryLimit   = $this->getMemoryInBytes(@ini_get("memory_limit"));
         $this->maxExecutionTime = (int) ini_get("max_execution_time");
+        //$this->maxExecutionTime = (int) 9;
 
         if ($this->maxExecutionTime < 1)
         {
@@ -424,6 +425,11 @@ abstract class Job implements JobInterface
      */
     protected function log($msg, $type = Logger::TYPE_INFO)
     {
+       
+       if (!isset($this->options->clone)){
+          $this->options->clone = date(DATE_ATOM, mktime(0, 0, 0, 7, 1, 2000));
+       }
+       
         if (false === $this->hasLoggedFileNameSet && 0 < strlen($this->options->clone))
         {
             $this->logger->setFileName($this->options->clone);
@@ -438,6 +444,11 @@ abstract class Job implements JobInterface
      */
     protected function debugLog($msg, $type = Logger::TYPE_INFO)
     {
+       
+       if (!isset($this->options->clone)){
+          $this->options->clone = date(DATE_ATOM, mktime(0, 0, 0, 7, 1, 2000));
+       }
+       
         if (false === $this->hasLoggedFileNameSet && 0 < strlen($this->options->clone))
         {
             $this->logger->setFileName($this->options->clone);

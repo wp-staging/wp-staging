@@ -80,15 +80,6 @@ class Delete extends Job
 
         $this->clone            = $clones[$name];
         $this->clone["name"]    = $name;
-//        $this->clone["size"]    = null;
-//
-//        if (isset($this->settings->checkDirectorySize) || '1' === $this->settings->checkDirectorySize)
-//        {
-//            $directories = new Directories();
-//            $this->clone["size"] = $this->formatSize($directories->size($this->clone));
-//            unset($directories);
-//        }
-
         $this->clone = (object) $this->clone;
 
         unset($clones);
@@ -100,10 +91,6 @@ class Delete extends Job
     private function getTableRecords()
     {
         $wpdb   = WPStaging::getInstance()->get("wpdb");
-        
-//        if ($this->clone['version']){
-//            
-//        }
         
         $tables = $wpdb->get_results("SHOW TABLE STATUS LIKE 'wpstg{$this->clone->number}_%'");
 
@@ -118,28 +105,6 @@ class Delete extends Job
         }
 
         $this->tables = json_decode(json_encode($this->tables));
-    }
-
-    /**
-     * Format bytes into human readable form
-     * @param int $bytes
-     * @param int $precision
-     * @return string
-     */
-    public function formatSize($bytes, $precision = 2)
-    {
-        if ((int) $bytes < 1)
-        {
-            return '';
-        }
-
-        $units  = array('B', "KB", "MB", "GB", "TB");
-
-        $bytes  = (int) $bytes;
-        $base   = log($bytes) / log(1000); // 1024 would be for MiB KiB etc
-        $pow    = pow(1000, $base - floor($base)); // Same rule for 1000
-
-        return round($pow, $precision) . ' ' . $units[(int) floor($base)];
     }
 
     /**
@@ -174,6 +139,8 @@ class Delete extends Job
         $method = "delete" . ucwords($this->job->current);
         return $this->{$method}();
     }
+    
+
 
     /**
      * Get job data
@@ -194,6 +161,40 @@ class Delete extends Job
         );
 
         $this->cache->save("delete_job_{$this->clone->name}", $this->job);
+    }
+    
+        /**
+     * Delete Directories
+     */
+//    public function deleteDirectory()
+//    {
+//        // No deleting directories or root of this clone is deleted
+//        if ($this->isDirectoryDeletingFinished())
+//        {
+//            $this->job->current = "finish";
+//            $this->updateJob();
+//            return;
+//        }
+//
+//        $this->processDirectory($this->job->nextDirectoryToDelete);
+//
+//        return;
+//    }
+    
+    public function deleteDirectory(){
+        // Just to make sure the root dir is never deleted!
+        if ($this->clone->path === get_home_path()){
+            $this->log("Fatal Error: Trying to delete root of WP installation!", Logger::TYPE_CRITICAL);
+            return false;
+        }
+       
+       $files = glob($this->clone->path . '/*');
+	foreach ($files as $file) {
+		is_dir($file) ? $this->deleteDirectory($file) : unlink($file);
+	}
+	rmdir($path);
+ 	$this->processDirectory($this->job->nextDirectoryToDelete);
+       return;
     }
 
     /**
@@ -270,23 +271,7 @@ class Delete extends Job
      return (substr($haystack, 0, $length) === $needle);
     }
 
-    /**
-     * Delete Directories
-     */
-    public function deleteDirectory()
-    {
-        // No deleting directories or root of this clone is deleted
-        if ($this->isDirectoryDeletingFinished())
-        {
-            $this->job->current = "finish";
-            $this->updateJob();
-            return;
-        }
 
-        $this->processDirectory($this->job->nextDirectoryToDelete);
-
-        return;
-    }
 
     /**
      * @return bool
