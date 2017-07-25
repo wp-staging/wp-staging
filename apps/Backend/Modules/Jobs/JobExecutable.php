@@ -39,7 +39,7 @@ abstract class JobExecutable extends Job
 
     /**
      * Prepare Response Array
-     * @param bool $status
+     * @param bool $status false when the job is not done
      * @param bool $incrementCurrentStep
      * @return array
      */

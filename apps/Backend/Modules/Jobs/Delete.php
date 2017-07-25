@@ -268,31 +268,31 @@ class Delete extends Job
     * @param array $excluded_dirs
     * @return boolean false when its finished
     */
-//   function deleteDirectoryNative( $dir = '' ) {
-//
-//      if( !file_exists( $dir ) ) {
-//         return $this->isFinished();
-//      }
-//
-//      if( !is_dir( $dir ) || is_link( $dir ) ) {
-//         unlink( $dir );
-//         return $this->isFinished();
-//      }
-//      foreach ( scandir( $dir ) as $item ) {
-//         if( $item == '.' || $item == '..' ) {
-//            continue;
-//         }
-//         if( !$this->deleteDirectoryNative( $dir . "/" . $item, false ) ) {
-//            //chmod( $dir . "/" . $item, 0777 );
-//            //if( !$this->deleteDirectoryNative( $dir . "/" . $item, false ) ){
-//               //return false;
-//            //}
-//         }
-//      };
-//
-//      rmdir( $dir );
-//      return $this->isFinished();
-//   }
+   function deleteDirectoryNative( $dir = '' ) {
+
+      if( !file_exists( $dir ) ) {
+         return $this->isFinished();
+      }
+
+      if( !is_dir( $dir ) || is_link( $dir ) ) {
+         unlink( $dir );
+         return $this->isFinished();
+      }
+      foreach ( scandir( $dir ) as $item ) {
+         if( $item == '.' || $item == '..' ) {
+            continue;
+         }
+         if( !$this->deleteDirectoryNative( $dir . "/" . $item, false ) ) {
+            //chmod( $dir . "/" . $item, 0777 );
+            //if( !$this->deleteDirectoryNative( $dir . "/" . $item, false ) ){
+               //return false;
+            //}
+         }
+      };
+
+      rmdir( $dir );
+      return $this->isFinished();
+   }
    
 
 

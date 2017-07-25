@@ -10,9 +10,9 @@
         <a href="https://wordpress.org/plugins/backwpup/" target="_blank">BackWPup</a>
     </p>
     <p>
-        I am not responsible for any damages this plugin will cause to your site.
+        I am not responsible for any damages you do to your site;)
         <br>
-        Do a full backup first!
+        Create a full backup first.
     </p>
     <ul>
         <li>

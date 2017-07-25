@@ -85,7 +85,8 @@ class Directories extends JobExecutable {
         $directory = $this->options->directoriesToCopy[$this->options->currentStep];
 
         // Get files recursively
-        if( !$this->getFilesFromSubDirectories( $directory ) ) {
+        $this->debugLog('Get files from subdir' . $this->options->directoriesToCopy[$this->options->currentStep]);
+        if( false === $this->getFilesFromSubDirectories( $directory ) ) {
             $this->prepareResponse( false, false );
             return false;
         }
@@ -119,11 +120,13 @@ class Directories extends JobExecutable {
     protected function getFilesFromSubDirectories( $path ) {
         $this->totalRecursion++;
 
-        if( $this->isOverThreshold() ) {
-            //$this->saveProgress();
-
-            return false;
-        }
+        /**
+         * This is a test 26.07.17 rhe
+         */
+//        if( $this->isOverThreshold() ) { 
+//            //$this->saveProgress(); // RHE
+//            return false;
+//        }
 
         $this->log( "Scanning {$path} for its sub-directories and files" );
 
@@ -166,6 +169,11 @@ class Directories extends JobExecutable {
      * @return bool
      */
     protected function getFilesFromDirectory( $directory ) {
+            if( $this->isOverThreshold() ) {
+            //$this->saveProgress(); // RHE
+            return false;
+        }
+       
         $this->totalRecursion++;
 
         // Save all files
@@ -188,6 +196,8 @@ class Directories extends JobExecutable {
             $this->options->totalFiles++;
 
             $this->files[] = $fullPath;
+            //$this->debugLog('Get file' . $file);
+
             
             /**
              * Test and measure if its faster to copy at the same time while the array with folders is  generated

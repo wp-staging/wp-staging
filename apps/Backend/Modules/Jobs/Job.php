@@ -324,7 +324,7 @@ abstract class Job implements JobInterface
         // Check if execution time is over threshold
         ///$time = round($this->start + $this->time(), 4);
         $time = round($this->time() - $this->start, 4);
-        
+        $this->debugLog( 'Execution time: ' . $time . ' Execution Limit' . $this->executionLimit );
         if ($time >= $this->executionLimit)
         {
             //$this->log('RESET TIME');

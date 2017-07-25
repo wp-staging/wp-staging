@@ -164,7 +164,7 @@ class Data extends JobExecutable
      */
     protected function step1()
     {
-        $this->log( "Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+        $this->log( "Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO );
 
         $result = $this->db->query(
             $this->db->prepare(
