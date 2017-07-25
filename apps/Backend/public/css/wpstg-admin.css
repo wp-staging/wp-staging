@@ -397,6 +397,12 @@ color:#777777;
     display: block;
 }
 
+@media screen and (max-width:1150px){
+    #wpstg-sidebar img{
+        margin-top: 30px;
+    }
+}
+
 #wpstg-workflow.loading::after,
 #wpstg-removing-clone.loading::after {
 	background: rgba(255, 255, 255, .7);
