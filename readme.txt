@@ -15,24 +15,21 @@ A duplicator plugin! Clone, duplicate and migrate live sites to independent stag
 
 == Description == 
 
-<strong>This cloning and staging plugin is well tested but still work in progress! <br>
-If you find a bug please open a ticket in the [support request](https://wordpress.org/support/plugin/wp-staging/ "support forum"). Any issues will be fixed asap!
+<strong>This cloning and staging plugin is well tested but work in progress. <br><br>
+If you find any issue, please open a [support ticket](https://wp-staging.com/support/ "support ticket").
 </strong>
 <br /><br />
-<strong>Note: </strong> This plugin is not able to push back your changes to the live site at the moment! 
-Please let us know your most requested feature and use our quick poll. It only takes one minute of your time: [Start the poll](https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link "wp staging poll")
-<br /> <br />
-
-
+<strong>Note: </strong> For pushing plugins and theme files to live site, check out [https://wp-staging.com/](https://wp-staging.com/ "WP Staging Pro")
+<br /><br />
 <blockquote>
 <h4> WP Staging for WordPress Migration </h4>
 This duplicator plugin allows you to create an staging or development environment in seconds* <br /> <br />
-It creates a file clone of your website into a subfolder of your current WordPress installation with an entire copy of your database. 
-This sounds pretty simple and yes it is! All the hard time consumptive database and file copy stuff including url replacements is done in the background.
+It creates a clone of your website into a subfolder of your main WordPress installation including an entire copy of your database. 
+This sounds pretty simple and yes it is! All the hard time-consumptive database and file copying stuff including url replacements is done in the background.
  <br /> <br />
 I created this plugin because all other solutions are way too complex, overloaded with dozens of options or having server requirements which are not available on most shared hosting solutions.
 All these reasons prevent user from testing new plugins and updates first before installing them on their live website, so its time to release a plugin which has the potential to be merged into everyone´s wordpress workflow.
- <br /> <br />
+ <br /><br />
 <p><small><em>* Time of creation depends on size of your database and file size</em></small></p>
 </blockquote>
 
