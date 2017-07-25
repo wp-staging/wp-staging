@@ -3,11 +3,16 @@
 namespace WPStaging\Backend\Upgrade;
 
 use WPStaging\WPStaging;
+use WPStaging\Backend\Optimizer\Optimizer;
+use WPStaging\Cron\Cron;
 use WPStaging\Utils\Logger;
 
 /**
  * Upgrade Class
+ * This must be loaded on every page init to ensure all settings are 
+ * adjusted correctly and to run any upgrade process if necessary.
  */
+
 // No Direct Access
 if( !defined( "WPINC" ) ) {
     die;
@@ -16,7 +21,7 @@ if( !defined( "WPINC" ) ) {
 class Upgrade {
 
     /**
-     * Previous Version
+    * Previous Version number
      * @var string 
      */
     private $previousVersion;
@@ -34,30 +39,69 @@ class Upgrade {
     private $clonesBeta;
 
     /**
+    * Cron data
+    * @var obj
+    */
+   private $cron;
+
+   /**
      * Logger
      * @var obj 
      */
     private $logger;
 
     public function __construct() {
+      
+      // add wpstg_weekly_event to cron events
+      $this->cron = new \WPStaging\Cron\Cron;
+      
+      // Previous version
         $this->previousVersion = preg_replace( '/[^0-9.].*/', '', get_option( 'wpstg_version' ) );
-        // Original option
+      
+      // Options earlier than version 2.0.0
         $this->clones = get_option( "wpstg_existing_clones", array() );
+      
+      // Current options
         $this->clonesBeta = get_option( "wpstg_existing_clones_beta", array() );
+      
+      // Logger
         $this->logger = new Logger;
     }
 
     public function doUpgrade() {
+      $this->upgrade2_0_3();
+      //$this->upgrade2_0_4();
+      $this->setVersion();
+   }
+
+   /**
+    * Upgrade method 2.0.3
+    */
+   public function upgrade2_0_3() {
         // Previous version lower than 2.0.2 or new install
         if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.0.2', '<' ) ) {
             $this->upgradeOptions();
             $this->upgradeClonesBeta();
             $this->upgradeNotices();
         }
-        $this->setVersion();
     }
 
     /**
+    * Upgrade method 2.0.4
+    */
+//   public function upgrade2_0_4() {
+//      if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.0.4', '<' ) ) {
+//
+//      // Register cron job.
+//      $this->cron->schedule_event();
+//
+//      // Install Optimizer 
+//      $optimizer = new Optimizer();
+//      $optimizer->installOptimizer();
+//      }
+//   }
+
+   /**
      * Upgrade routine for new install
      */
     private function upgradeOptions() {
@@ -150,7 +194,7 @@ class Upgrade {
     }
 
     /**
-     * Upgrade Notices Db options from wpstg 1.3 -> 2.0.1
+    * Upgrade Notices db options from wpstg 1.3 -> 2.0.1
      * Fix some logical db options
      */
     private function upgradeNotices() {

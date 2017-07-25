@@ -35,6 +35,13 @@ if (!defined("WPINC"))
     die;
 }
 
+// Plugin Folder Path
+if( !defined( 'WPSTG_PLUGIN_DIR' ) ) {
+   define( 'WPSTG_PLUGIN_DIR', plugin_dir_path(  __FILE__ ) );
+}
+
+//require_once WPSTG_PLUGIN_DIR . 'apps/Backend/Install/install.php';
+
 /**
  * Path to main WP Staging class
  * Make sure to not redeclare class in case free version has been installed previosly
