@@ -2,7 +2,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\CloneNotFoundException;
-use WPStaging\Utils\Directories;
+//use WPStaging\Utils\Directories;
 use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 
@@ -10,7 +10,7 @@ use WPStaging\WPStaging;
  * Class Delete
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Delete_old extends Job
+class Delete_deprecated extends Job
 {
 
     /**
@@ -80,14 +80,14 @@ class Delete_old extends Job
 
         $this->clone            = $clones[$name];
         $this->clone["name"]    = $name;
-        $this->clone["size"]    = null;
-
-        if (isset($this->settings->checkDirectorySize) || '1' === $this->settings->checkDirectorySize)
-        {
-            $directories = new Directories();
-            $this->clone["size"] = $this->formatSize($directories->size($this->clone));
-            unset($directories);
-        }
+//        $this->clone["size"]    = null;
+//
+//        if (isset($this->settings->checkDirectorySize) || '1' === $this->settings->checkDirectorySize)
+//        {
+//            $directories = new Directories();
+//            $this->clone["size"] = $this->formatSize($directories->size($this->clone));
+//            unset($directories);
+//        }
 
         $this->clone = (object) $this->clone;
 
@@ -100,6 +100,11 @@ class Delete_old extends Job
     private function getTableRecords()
     {
         $wpdb   = WPStaging::getInstance()->get("wpdb");
+        
+//        if ($this->clone['version']){
+//            
+//        }
+        
         $tables = $wpdb->get_results("SHOW TABLE STATUS LIKE 'wpstg{$this->clone->number}_%'");
 
         $this->tables = array();
@@ -239,12 +244,30 @@ class Delete_old extends Job
 
         foreach ($this->getTablesToRemove() as $table)
         {
-            $wpdb->query("DROP TABLE {$table}");
+            // PROTECTION: Never delete any table that beginns with wp prefix of live site
+            if($this->startsWith($table, $wpdb->prefix)){
+                $this->log("Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL);
+                return false;
+            } else{
+                $wpdb->query("DROP TABLE {$table}");
+            }
         }
 
         // Move on to the next
         $this->job->current = "directory";
         $this->updateJob();
+    }
+    
+    /**
+     * Check if a strings start with a specific string
+     * @param string $haystack
+     * @param string $needle
+     * @return bool
+     */
+    protected function startsWith($haystack, $needle)
+    {
+     $length = strlen($needle);
+     return (substr($haystack, 0, $length) === $needle);
     }
 
     /**
@@ -328,6 +351,13 @@ class Delete_old extends Job
      */
     private function shouldStop($path)
     {
+        // Just to make sure the root dir is never deleted!
+        if ($path === get_home_path()){
+            $this->log("Fatal Error: Trying to delete root of WP installation!", Logger::TYPE_CRITICAL);
+            return true;
+        }
+        
+        // Check if threshold is reached and is valid dir
         return (
             $this->isOverThreshold() ||
             !is_dir($path) || 

@@ -187,14 +187,7 @@ class Finish extends Job
     {
         // Check if clones still exist
         $this->log("Verifying existing clones...");
-//        foreach ($this->options->existingClones as $name => $clone)
-//        {
-//            if (!is_dir($clone["path"]))
-//            {
-//                unset($this->options->existingClones[$name]);
-//            }
-//        }
-//        $this->log("Existing clones verified!");
+        
 
         // Clone data already exists
         if (isset($this->options->existingClones[$this->options->clone]))
@@ -214,6 +207,7 @@ class Finish extends Job
             "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
             "number"            => $this->options->cloneNumber,
             "version"           => \WPStaging\WPStaging::VERSION,
+            "status"            => false
         );
 
         if (false === update_option("wpstg_existing_clones_beta", $this->options->existingClones))

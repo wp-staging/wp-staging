@@ -75,19 +75,11 @@ class Delete extends Job
         if (empty($clones) || !isset($clones[$name]))
         {
             $this->log("Couldn't find clone name {$name} or no existing clone", Logger::TYPE_FATAL);
-            throw new CloneNotFoundException();
+            //throw new CloneNotFoundException();
         }
 
         $this->clone            = $clones[$name];
         $this->clone["name"]    = $name;
-//        $this->clone["size"]    = null;
-//
-//        if (isset($this->settings->checkDirectorySize) || '1' === $this->settings->checkDirectorySize)
-//        {
-//            $directories = new Directories();
-//            $this->clone["size"] = $this->formatSize($directories->size($this->clone));
-//            unset($directories);
-//        }
 
         $this->clone = (object) $this->clone;
 
@@ -100,10 +92,6 @@ class Delete extends Job
     private function getTableRecords()
     {
         $wpdb   = WPStaging::getInstance()->get("wpdb");
-        
-//        if ($this->clone['version']){
-//            
-//        }
         
         $tables = $wpdb->get_results("SHOW TABLE STATUS LIKE 'wpstg{$this->clone->number}_%'");
 
@@ -119,8 +107,8 @@ class Delete extends Job
 
         $this->tables = json_decode(json_encode($this->tables));
     }
-
-    /**
+    
+        /**
      * Format bytes into human readable form
      * @param int $bytes
      * @param int $precision
@@ -141,6 +129,7 @@ class Delete extends Job
 
         return round($pow, $precision) . ' ' . $units[(int) floor($base)];
     }
+
 
     /**
      * @return false
@@ -178,25 +167,27 @@ class Delete extends Job
     /**
      * Get job data
      */
-    private function getJob()
-    {
-        $this->job = $this->cache->get("delete_job_{$this->clone->name}");
+    private function getJob() {
+      $this->job = $this->cache->get( "delete_job_{$this->clone->name}" );
 
-        if (null !== $this->job)
-        {
-            return;
-        }
 
-        // Generate JOB
-        $this->job = (object) array(
-            "current"               => "tables",
-            "nextDirectoryToDelete" => $this->clone->path
-        );
+      if( null !== $this->job ) {
+         return;
+      }
 
-        $this->cache->save("delete_job_{$this->clone->name}", $this->job);
-    }
+      // Generate JOB
+      $this->job = ( object ) array(
+                  "current" => "tables",
+                  "nextDirectoryToDelete" => $this->clone->path,
+                  "name" => $this->clone->name
+      );
 
-    /**
+      $this->cache->save( "delete_job_{$this->clone->name}", $this->job );
+   }
+   
+
+
+   /**
      * @return bool
      */
     private function updateJob()
@@ -269,8 +260,43 @@ class Delete extends Job
      $length = strlen($needle);
      return (substr($haystack, 0, $length) === $needle);
     }
+    
+   /**
+    * Delete a specific directory and all of its subfolders in a native way without using any external caching data
+    * 
+    * @param array $dir
+    * @param array $excluded_dirs
+    * @return boolean false when its finished
+    */
+//   function deleteDirectoryNative( $dir = '' ) {
+//
+//      if( !file_exists( $dir ) ) {
+//         return $this->isFinished();
+//      }
+//
+//      if( !is_dir( $dir ) || is_link( $dir ) ) {
+//         unlink( $dir );
+//         return $this->isFinished();
+//      }
+//      foreach ( scandir( $dir ) as $item ) {
+//         if( $item == '.' || $item == '..' ) {
+//            continue;
+//         }
+//         if( !$this->deleteDirectoryNative( $dir . "/" . $item, false ) ) {
+//            //chmod( $dir . "/" . $item, 0777 );
+//            //if( !$this->deleteDirectoryNative( $dir . "/" . $item, false ) ){
+//               //return false;
+//            //}
+//         }
+//      };
+//
+//      rmdir( $dir );
+//      return $this->isFinished();
+//   }
+   
 
-    /**
+
+   /**
      * Delete Directories
      */
     public function deleteDirectory()
@@ -392,6 +418,8 @@ class Delete extends Job
         $this->cache->delete("delete_job_{$this->clone->name}");
         $this->cache->delete("delete_directories_{$this->clone->name}");
 
-        return true;
+        //return true;
+        $response = array('delete' => 'finished');
+        wp_die(json_encode($response));
     }
 }

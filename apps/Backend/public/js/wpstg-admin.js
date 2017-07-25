@@ -581,21 +581,28 @@ var WPStaging = (function ($)
                 },
         function (response)
         {
+            if (response) {
+                if ("undefined" !== typeof response.delete && response.delete === 'finished') {
+
+                    cache.get("#wpstg-removing-clone").removeClass("loading").html('');
+                    $(".wpstg-clone#" + clone).remove();
+
+                    if ($(".wpstg-clone").length < 1)
+                    {
+                        cache.get("#wpstg-existing-clones").find("h3").text('');
+                    }
+
+                    cache.get("#wpstg-loader").hide();
+                    return;
+                }
+            }
+            // continue
             if (true !== response)
             {
                 deleteClone(clone);
                 return;
             }
 
-            cache.get("#wpstg-removing-clone").removeClass("loading").html('');
-            $(".wpstg-clone#" + clone).remove();
-
-            if ($(".wpstg-clone").length < 1)
-            {
-                cache.get("#wpstg-existing-clones").find("h3").text('');
-            }
-
-            cache.get("#wpstg-loader").hide();
         }
         );
     };
@@ -648,14 +655,16 @@ var WPStaging = (function ($)
      */
     var getLogs = function (log)
     {
-
-
-
         if (log != null && "undefined" !== typeof (log)) {
             if (log.constructor === Array) {
                 $.each(log, function (index, value) {
+                    
                     //console.log(index, value);
+                    if (value.type === 'ERROR'){
+                        cache.get("#wpstg-log-details").append('<span style="color:red;">[' + value.type + ']</span>-'+ '[' + value.date + '] ' + value.message + '</br>');
+                    } else {
                     cache.get("#wpstg-log-details").append('[' + value.type + ']-'+ '[' + value.date + '] ' + value.message + '</br>');
+                    }   
                 })
             } else {
                 cache.get("#wpstg-log-details").append('[' + log.type + ']-' + '[' + log.date + '] ' + log.message + '</br>');

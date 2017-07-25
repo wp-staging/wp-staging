@@ -10,7 +10,7 @@ use WPStaging\WPStaging;
  * Class Delete
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Delete extends Job
+class Delete_new extends Job
 {
 
     /**

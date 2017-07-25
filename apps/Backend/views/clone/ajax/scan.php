@@ -80,7 +80,9 @@
         <p>
             <span>
                 <?php
+                if (isset($options->clone)){
                 echo __("All files are copied into: ", "wpstg") . $options->root . $options->clone;
+                }
                 ?>
             </span>
         </p>
