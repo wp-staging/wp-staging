@@ -1,0 +1,32 @@
+<div class="wrap" id="wpstg-tools">
+    <ul class="nav-tab-wrapper">
+        <?php
+        $tabs       = $this->di->get("tabs")->get();
+        $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "import_export";
+
+        # Loop through tabs
+        foreach ($tabs as $id => $name):
+            $url = esc_url(add_query_arg(array(
+                "settings-updated"  => false,
+                "tab"               => $id
+            )));
+
+            $activeClass = ($activeTab === $id) ? " nav-tab-active" : '';
+            ?>
+            <li>
+                <a href="<?php echo $url?>" title="<?php echo esc_attr($name)?>" class="nav-tab<?php echo $activeClass?>">
+                    <?php echo esc_html($name)?>
+                </a>
+            </li>
+            <?php
+            unset($url, $activeClass);
+        endforeach;
+        ?>
+    </ul>
+
+    <h2 class="wpstg-nav-tab-wrapper"></h2>
+
+    <div class="metabox-holder">
+        <?php require_once $this->path . "views/tools/tabs/" . $activeTab . ".php"?>
+    </div>
+</div>

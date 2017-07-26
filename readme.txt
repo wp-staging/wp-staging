@@ -8,32 +8,28 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
-Tested up to: 4.7
+Tested up to: 4.8
 Stable tag: {{ version }}
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
 == Description == 
 
-<strong>This cloning and staging plugin is well tested but still work in progress! <br>
-If you find a bug please open a ticket in the [support request](https://wordpress.org/support/plugin/wp-staging/ "support forum"). Every issue will be fixed asap!
+<strong>This cloning and staging plugin is well tested but work in progress. <br><br>
+If you find any issue, please open a [support ticket](https://wp-staging.com/support/ "support ticket").
 </strong>
 <br /><br />
-<strong>Note: </strong> This plugin is not able to push back your changes to the live site at the moment! 
-Please let us know your most requested feature and use our quick poll. It only takes one minute of your time:
-[Start the Poll](https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link "wp staging poll")
-<br /> <br />
-
-
+<strong>Note: </strong> For pushing plugins and theme files to live site, check out [https://wp-staging.com/](https://wp-staging.com/ "WP Staging Pro")
+<br /><br />
 <blockquote>
 <h4> WP Staging for WordPress Migration </h4>
 This duplicator plugin allows you to create an staging or development environment in seconds* <br /> <br />
-It creates a file clone of your website into a subfolder of your current WordPress installation with an entire copy of your database. 
-This sounds pretty simple and yes it is! All the hard time consumptive database and file copy stuff including url replacements is done in the background.
+It creates a clone of your website into a subfolder of your main WordPress installation including an entire copy of your database. 
+This sounds pretty simple and yes it is! All the hard time-consumptive database and file copying stuff including url replacements is done in the background.
  <br /> <br />
 I created this plugin because all other solutions are way too complex, overloaded with dozens of options or having server requirements which are not available on most shared hosting solutions.
 All these reasons prevent user from testing new plugins and updates first before installing them on their live website, so its time to release a plugin which has the potential to be merged into everyone´s wordpress workflow.
- <br /> <br />
+ <br /><br />
 <p><small><em>* Time of creation depends on size of your database and file size</em></small></p>
 </blockquote>
 
@@ -127,7 +123,7 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 
 == Official Site ==
-
+https://wp-staging.com
 
 == Installation ==
 1. Download the file "wp-staging" , unzip and place it in your wp-content/plugins/wp-staging folder. You can alternatively upload and install it via the WordPress plugin backend.
@@ -142,6 +138,33 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 4. Finish!
 
 == Changelog ==
+
+
+= {{ version }} =
+* New: Major version - Complete rewrite of the code base
+* New: Batch processing allows to clone even huge sites without any timeouts
+* New: Preparation for WP QUADS PRO with ability to copy file changes back to live site
+* New: Bypass (broken) third party plugins during wp staging related ajax requests to prevent processing errors. Use a mu plugin for this.
+
+= 1.1.6 =
+* New: Add download link to WP Staging Beta Version 2.0.1
+
+= 1.1.5 =
+* Fix: Admin notice is throwing a false positive write permission error
+* New: Move log folder to wp-content/uploads/wp-staging/logs
+* New: Tested up to WP 4.7.3
+
+= 1.1.4 =
+* Fix: Fatal error Unsupported operand types
+
+= 1.1.3 =
+* New: Tested up to wp 4.7.2
+* Fix: Arrows in drop down for folder selection are distorted
+* Tweak: Show working log as default to make debugging easier
+
+= 1.1.2 = 
+* Fix: Settings are not deleted when plugin is removed
+* Fix: Staging site is available for non administrators
 
 = 1.1.1 =
 * Fix: Change rating url
@@ -198,54 +221,9 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 * Fix: $db_helper undefined message
 * Fix: Skip non utf8 encoded files during copying process
 
-= 0.9.9 =
-* Fix: Use back ticks for table names to prevent copy errors when table names are containing hyphens or similar special characters
-* New: Load option to reduce cpu load and to lower the risk of killed ajax calls because of security flooding mechanism (Prevent 405 errors: not allowed)
-* Tweak: Load non minified js file when WPSTG debug mode is enabled
-
-= 0.9.8 = 
-* New: Tested up to WP 4.4
-* New: New debug mode in settings
-* Tweak: Check if url's in staging's wp-config.php needs a replacement and do so.
-* Fix: Prevent fatal error and end of copying process. Make sure files are writable before trying to copy them  
-
-= 0.9.7 =
-* Fix: Change backend link to https://wordpress.org/plugins/wp-staging/ when using an outdated version of the plugin
-* New: Tested up to WP 4.3.1
-
-= 0.9.6 =
-* New: Show notice when there is not enough disk space for a clone
-* Fix: PHP Error on 32bit systems: "disk_free_space(): Value too large for defined data type"
-* Fix: Copying process of larges files gets interupted sometimes due undefined variable
-* Fix: Define width and height for the system info export formular
-* Fix: Cannot redeclare deleteDirectory()
-
-= 0.9.5 =
-* Fix: Option for cloning sites which are moved into a subdirectory was not working on several systems
-* New: WordPress Migration tested up to WP 4.3
-
-= 0.9.4 =
-* Fix: Large files are copied partly
-* Fix: js error xhr.statusText not defined
-* New: Option for cloning sites which are moved into a subdirectory. Read more: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
-* New: Create an alternative copy method for large files
-* New: Add new author WP-Staging to the readme.txt and to the wordpress repository
-
-= 0.9.3 =
-* Fix: Rating container is not shown because of wrong wordpress option name
-* Tweak: Change color of the rating links
-
-= 0.9.2 =
-* Fix: A conflict with the plugin WP Migrate DB (Pro)
-* Fix: Limit the staging name to maximum of 16 characters for migration process
-
-= 0.9.1 =
-* Fix: Change search and replace function for table wp_options when running migration. This prevented on some sites the moving of serialized theme data
-
-= 0.9 =
-* New: Release
+Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.com/changelog.txt)
 
 == Upgrade Notice ==
 
-= 1.1.0 =
-1.1.0 <strong>Compatible up to WP 4.6</strong>
+= 2.0.2 =
+2.0.2 * New: Batch processing allows to clone even huge sites without any timeouts
