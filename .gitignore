@@ -4,3 +4,4 @@ vars/
 !vars/languages
 node_modules
 wp-staging-pro.php
+Gruntfile.js
