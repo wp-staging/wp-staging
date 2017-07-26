@@ -73,6 +73,8 @@ class Administrator extends InjectionAware {
       $loader = $this->di->get( "loader" );
 
       $Activation = new \WPStaging\Backend\Activation\Activation();
+      
+      $Welcome = new Activation\Welcome();
 
       $loader->addAction( "activated_plugin", $Activation, 'deactivate_other_instances' );
       $loader->addAction( "admin_menu", $this, "addMenu", 10 );
@@ -189,6 +191,10 @@ class Administrator extends InjectionAware {
       add_submenu_page(
               "wpstg_clone", __( "WP Staging Tools", "wpstg" ), __( "Tools", "wpstg" ), "manage_options", "wpstg-tools", array($this, "getToolsPage")
       );
+      // Page: Tools
+      add_submenu_page(
+              "wpstg_clone", __( "WP Staging Welcome", "wpstg" ), __( "Get WP Staging Pro", "wpstg" ), "manage_options", "wpstg-welcome", array($this, "getWelcomePage")
+      );
 
       if( class_exists( 'WPStaging\Backend\Pro\Licensing\Licensing' ) ) {
          // Page: License
@@ -225,6 +231,13 @@ class Administrator extends InjectionAware {
       $availableClones = get_option( "wpstg_existing_clones_beta", array() );
 
       require_once "{$this->path}views/clone/index.php";
+   }
+   
+   /**
+    * Welcome Page
+    */
+   public function getWelcomePage() {
+      require_once "{$this->path}views/welcome/welcome.php";
    }
 
    /**

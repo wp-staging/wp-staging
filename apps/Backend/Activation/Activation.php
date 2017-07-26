@@ -53,6 +53,9 @@ class Activation {
       // Install Optimizer 
       $optimizer = new Optimizer();
       $optimizer->installOptimizer();
+
+      // Add the transient to redirect for class Welcome (not for multisites)
+      set_transient( 'wpstg_activation_redirect', true, 3600 );
    }
 
 }

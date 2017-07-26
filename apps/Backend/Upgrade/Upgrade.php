@@ -3,8 +3,6 @@
 namespace WPStaging\Backend\Upgrade;
 
 use WPStaging\WPStaging;
-//use WPStaging\Backend\Optimizer\Optimizer;
-//use WPStaging\Cron\Cron;
 use WPStaging\Utils\Logger;
 
 /**

@@ -2,6 +2,8 @@
     <p>
         Awesome, you've been using <strong>WP Staging </strong> for more than 1 week.
         May I ask you to give it a <strong>5-star</strong> rating on Wordpress?
+        <br><br>
+        P.S. Looking for a way to copy plugins and theme files from staging to live site? Try out <a href="https://wp-staging.com" target="_blank">WP Staging Pro</a> <br>
     </p>
 
     <p>

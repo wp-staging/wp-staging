@@ -147,7 +147,8 @@ final class WPStaging {
           "toplevel_page_wpstg_clone",
           "wp-staging_page_wpstg-settings",
           "wp-staging_page_wpstg-tools",
-          "wp-staging_page_wpstg-license"
+          "wp-staging_page_wpstg-license",
+          "wp-staging_page_wpstg-welcome",
       );
 
       // Load these css and js files only on wp staging admin pages
@@ -211,7 +212,6 @@ final class WPStaging {
           "WPStaging" => array(
               $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR,
               $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR,
-              //$this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR
           )
       ) );
 
