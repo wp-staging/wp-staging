@@ -9,6 +9,7 @@ var WPStaging = (function ($)
     },
     cache = {elements: []},
     timeout, ajaxSpinner;
+    ajaxurl = ("undefined" !== typeof wpstg.ajaxurl) ? wpstg.ajaxurl : ajaxurl;
 
     /**
      * Get / Set Cache for Selector

@@ -167,6 +167,7 @@ final class WPStaging {
       );
 
       wp_localize_script( "wpstg-admin-script", "wpstg", array(
+          "ajaxurl" => admin_url( 'admin-ajax.php' ),
           "nonce" => wp_create_nonce( "wpstg_ajax_nonce" ),
           "mu_plugin_confirmation" => __(
                   "If confirmed we will install an additional WordPress 'Must Use' plugin. "
