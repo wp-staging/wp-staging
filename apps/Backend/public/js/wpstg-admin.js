@@ -667,8 +667,9 @@ var WPStaging = (function ($)
         if (log != null && "undefined" !== typeof (log)) {
             if (log.constructor === Array) {
                 $.each(log, function (index, value) {
-                    
-                    //console.log(index, value);
+                    if (value === null){
+                        return;
+                    }
                     if (value.type === 'ERROR'){
                         cache.get("#wpstg-log-details").append('<span style="color:red;">[' + value.type + ']</span>-'+ '[' + value.date + '] ' + value.message + '</br>');
                     } else {
