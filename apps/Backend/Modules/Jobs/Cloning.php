@@ -3,6 +3,10 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 
+//ini_set('display_startup_errors', 1);
+//ini_set('display_errors', 1);
+//error_reporting(-1);
+
 /**
  * Class Cloning
  * @package WPStaging\Backend\Modules\Jobs

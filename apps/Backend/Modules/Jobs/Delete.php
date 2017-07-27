@@ -320,8 +320,9 @@ class Delete extends Job
     public function isDirectoryDeletingFinished()
     {
         return (
+            !is_dir($this->clone->path) ||
             (false === $this->forceDeleteDirectories && (!isset($_POST["deleteDir"]) || '1' !== $_POST["deleteDir"])) ||
-            !is_dir($this->clone->path) || ABSPATH === $this->job->nextDirectoryToDelete
+             ABSPATH === $this->job->nextDirectoryToDelete
         );
     }
 

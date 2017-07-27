@@ -140,7 +140,13 @@ https://wp-staging.com
 == Changelog ==
 
 
+
 = {{ version }} =
+* Fix: Cancel Cloning button not working
+* Fix: Limit max execution time to a maximum of 30sec to prevent high memory consumption and script timeouts
+
+
+= 2.0.5 =
 * New: Major version - Complete rewrite of the code base
 * New: Batch processing allows to clone even huge sites without any timeouts
 * New: Preparation for WP QUADS PRO with ability to copy file changes back to live site

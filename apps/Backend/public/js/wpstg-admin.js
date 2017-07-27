@@ -321,11 +321,10 @@ var WPStaging = (function ($)
                 }
 
                 showError(
-                        "Fatal Error: This should not happen but is most often caused by other plugins. " +
-                        "Try first the option 'Optimizer' in WP Staging->Settings and try again. " +
-                        "If this does not help, enable " +
-                        "<a href='https://codex.wordpress.org/Debugging_in_WordPress' target='_blank'>wordpress debug mode</a> " +
-                        "to find out which plugin is causing this."
+                        "Fatal Unknown Error. This should not happen." +
+                        "Please again. If this does not help, " +
+                        "<a href='https://wordpress.org/support/plugin/wp-staging' target='_blank'>Open a ticket</a> " +
+                        "in the WP Staging support forum."
                         );
             },
             success: function (data) {
@@ -626,8 +625,17 @@ var WPStaging = (function ($)
                 },
         function (response)
         {
+            
+            
+            if( response && "undefined" !== typeof(response.delete) && response.delete === "finished"){
+                // Load overview
+                loadOverview();
+                return;
+            }
+            
             if (true !== response)
             {
+                // continue
                 cancelCloning();
                 return;
             }

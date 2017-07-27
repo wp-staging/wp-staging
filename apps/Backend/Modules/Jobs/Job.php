@@ -95,12 +95,18 @@ abstract class Job implements JobInterface
         $this->start            = $this->time();
         $this->maxMemoryLimit   = $this->getMemoryInBytes(@ini_get("memory_limit"));
         $this->maxExecutionTime = (int) ini_get("max_execution_time");
-        //$this->maxExecutionTime = (int) 9;
+        //$this->maxExecutionTime = (int) 30; 
+        
+        if ($this->maxExecutionTime > 30)
+        {
+            $this->maxExecutionTime = 30;
+        }
 
         if ($this->maxExecutionTime < 1)
         {
             $this->maxExecutionTime = 30;
         }
+
 
         // Services
         $this->cache    = new Cache(-1, \WPStaging\WPStaging::getContentDir());
