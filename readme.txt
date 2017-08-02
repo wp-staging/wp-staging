@@ -141,7 +141,11 @@ https://wp-staging.com
 
 
 
-= {{ version }} =
+= 2.0.7 =
+* Fix: After update from wpstg 1.6.x to 2.x previous settings were not imported resulting in cancelation of cloning process
+
+
+= 2.0.6 =
 * Fix: Cancel Cloning button not working
 * Fix: Limit max execution time to a maximum of 30sec to prevent high memory consumption and script timeouts
 

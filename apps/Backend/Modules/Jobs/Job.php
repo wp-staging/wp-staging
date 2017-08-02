@@ -118,7 +118,8 @@ abstract class Job implements JobInterface
         
 
 
-        if (!$this->options)
+        // check default options
+        if (!$this->settings || !$this->settings->queryLimit || !$this->settings->batchSize || !$this->cpuLoad)
         {
             $this->options = new \stdClass();
         }
