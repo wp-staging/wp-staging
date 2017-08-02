@@ -114,7 +114,8 @@ abstract class Job implements JobInterface
 
         // Settings and Options
         $this->options  = $this->cache->get("clone_options");
-        $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
+        //$this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
+        $this->settings = (object)get_option("wpstg_settings", array());
         
 
 
@@ -129,9 +130,7 @@ abstract class Job implements JobInterface
             $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
         }
 
-        //if (!$this->settings || !$this->settings->queryLimit || !$this->settings->batchSize || !$this->cpuLoad)
-        if (!$this->settings || empty($this->settings->queryLimit) || empty($this->settings->batchSize) || empty($this->cpuLoad))
-        //if (!$this->settings || empty($this->settings))
+        if (!isset($this->settings) || !isset($this->settings->queryLimit) || !isset($this->settings->batchSize) || !isset($this->settings->cpuLoad))
         {
             $this->settings = new \stdClass();
             $this->setDefaultSettings();
