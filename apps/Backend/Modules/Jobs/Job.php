@@ -129,8 +129,9 @@ abstract class Job implements JobInterface
             $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
         }
 
-        if (!$this->settings || !$this->settings->queryLimit || !$this->settings->batchSize || !$this->cpuLoad)
-        //if (!$this->settings)
+        //if (!$this->settings || !$this->settings->queryLimit || !$this->settings->batchSize || !$this->cpuLoad)
+        if (!$this->settings || empty($this->settings->queryLimit) || empty($this->settings->batchSize) || empty($this->cpuLoad))
+        //if (!$this->settings || empty($this->settings))
         {
             $this->settings = new \stdClass();
             $this->setDefaultSettings();
@@ -178,6 +179,7 @@ abstract class Job implements JobInterface
         $this->settings->queryLimit = "1000";
         $this->settings->batchSize = "2";
         $this->settings->cpuLoad = 'medium';
+        update_option('wpstg_settings', $this->settings);
     }
 
     /**
