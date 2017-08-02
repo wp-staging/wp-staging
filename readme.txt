@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
 Tested up to: 4.8
-Stable tag: {{ version }}
+Stable tag: {{version}}
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 

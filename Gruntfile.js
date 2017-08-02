@@ -12,6 +12,12 @@ module.exports = function (grunt) {
             base: '../../wordpress-svn/wp-staging/tags/<%= pkg.version %>/',
             basetrunk: '../../wordpress-svn/wp-staging/trunk/',
             basezip: '../../wordpress-svn/wp-staging/'
+            
+            // Base destination dir
+//            base: '../../wp-staging-pro/tags/<%= pkg.version %>/wp-staging-pro/',
+//            basetrunk: '../../wp-staging-pro/trunk/',
+//            destzip: '../../wp-staging-pro/',
+//            basezip: '../../wp-staging-pro/tags/<%= pkg.version %>',
         },
         // minify js
         uglify: {
@@ -69,13 +75,16 @@ module.exports = function (grunt) {
             version: {
                 files: {
                     '<%= paths.basetrunk %>wp-staging.php': 'wp-staging.php',
-                    '<%= paths.base %>readme.txt': 'readme.txt',
-                    '<%= paths.base %>wp-staging.php': 'wp-staging.php',
                     '<%= paths.basetrunk %>readme.txt': 'readme.txt',
+                    '<%= paths.basetrunk %>apps/Core/WPStaging.php': '<%= paths.basetrunk %>apps/Core/WPStaging.php',
+                    
+                    '<%= paths.base %>wp-staging.php': 'wp-staging.php',
+                    '<%= paths.base %>readme.txt': 'readme.txt',
+                    '<%= paths.base %>apps/Core/WPStaging.php': '<%= paths.base %>apps/Core/WPStaging.php',
                 },
                 options: {
                     replacements: [{
-                            pattern: /{{ version }}/g,
+                            pattern: /{{version}}/g,
                             replacement: '<%= pkg.version %>'
                         }]
                 }
