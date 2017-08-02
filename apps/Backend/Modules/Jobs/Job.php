@@ -119,7 +119,7 @@ abstract class Job implements JobInterface
 
 
         // check default options
-        if (!$this->settings || !$this->settings->queryLimit || !$this->settings->batchSize || !$this->cpuLoad)
+        if (!$this->settings)
         {
             $this->options = new \stdClass();
         }
@@ -129,7 +129,8 @@ abstract class Job implements JobInterface
             $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
         }
 
-        if (!$this->settings)
+        if (!$this->settings || !$this->settings->queryLimit || !$this->settings->batchSize || !$this->cpuLoad)
+        //if (!$this->settings)
         {
             $this->settings = new \stdClass();
             $this->setDefaultSettings();
