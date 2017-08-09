@@ -3,10 +3,6 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 
-//ini_set('display_startup_errors', 1);
-//ini_set('display_errors', 1);
-//error_reporting(-1);
-
 /**
  * Class Cloning
  * @package WPStaging\Backend\Modules\Jobs
@@ -58,6 +54,14 @@ class Cloning extends Job
         {
             $this->options->excludedDirectories = $_POST["excludedDirectories"];
         }
+        
+        // Excluded Directories TOTAL
+        // Do not copy the cache folder
+        $excludedDirectories = array(
+            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'cache'
+            );
+        
+        $this->options->excludedDirectories = array_merge($excludedDirectories, $this->options->excludedDirectories);
 
         // Included Directories
         if (isset($_POST["includedDirectories"]) && is_array($_POST["includedDirectories"]))
