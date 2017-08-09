@@ -176,19 +176,33 @@ class Data extends JobExecutable
      * Replace "siteurl"
      * @return bool
      */
-    protected function step1()
-    {
+    protected function step1() {
       $this->log( "Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO );
 
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
 
+      // Installed in sub-directory
+      if( isset( $this->settings->wpSubDirectory ) || "1" === $this->settings->wpSubDirectory ) {
+         $subDirectory = str_replace( get_home_path(), '', ABSPATH );
+         $this->log( "Updating siteurl and homeurl to " . get_home_url() . '/' . $subDirectory . $this->options->cloneDirectoryName );
+         // Replace URLs
       $result = $this->db->query(
               $this->db->prepare(
+                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", get_home_url() . '/' . $subDirectory . $this->options->cloneDirectoryName
+                 )
+         );
+      } else {
+         $this->log( "Updating siteurl and homeurl to " . get_home_url() . '/' . $this->options->cloneDirectoryName );
+         // Replace URLs
+         $result = $this->db->query(
+                 $this->db->prepare(
                       "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", get_home_url() . '/' . $this->options->cloneDirectoryName
               )
       );
+      }
+
 
       // All good
       if( $result ) {
