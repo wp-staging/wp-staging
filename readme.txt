@@ -141,6 +141,9 @@ https://wp-staging.com
 
 
 
+= 2.0.9 =
+* Fix: Check if tables in staging site exists before attempting to modify them
+
 = 2.0.8 =
 * Fix: After update from wpstg 1.6.x to 2.x previous settings were not imported resulting in cancelation of cloning process. Still not fixed in 2.0.7
 

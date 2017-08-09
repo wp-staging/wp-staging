@@ -125,7 +125,6 @@ class Directories extends JobExecutable {
 
         if( $this->isOverThreshold() ) {
             //$this->saveProgress();
-
             return false;
         }
 
@@ -172,26 +171,41 @@ class Directories extends JobExecutable {
     protected function getFilesFromDirectory( $directory ) {
         $this->totalRecursion++;
 
-        // Save all files
+        // Get only files
         $files = array_diff( scandir( $directory ), array('.', "..") );
 
         foreach ( $files as $file ) {
             $fullPath = $directory . $file;
+            
+            // It's a readable valid file
+            if( is_file( $fullPath ) ) {
+               $this->options->totalFiles++;
+               $this->files[] = $fullPath;
+               continue;
+            }
+            // It's a valid file but not readable
+            if( is_file( $fullPath ) && !is_readable( $fullPath ) ) {
+                    $this->debugLog('File {$fullPath} is not readable', Logger::TYPE_DEBUG );
+               continue;
+            }
 
+            // Iterate and loop through if it's a directory and if it's not excluded
             if( is_dir( $fullPath ) && !in_array( $fullPath, $this->options->directoriesToCopy ) && !$this->isDirectoryExcluded( $fullPath ) ) {
                 $this->options->directoriesToCopy[] = $fullPath;
 
-                return $this->getFilesFromSubDirectories( $fullPath );
+                //return $this->getFilesFromSubDirectories( $fullPath );
                 //continue;
-            }
-
-            if( !is_file( $fullPath ) || in_array( $fullPath, $this->files ) ) {
+                $this->getFilesFromSubDirectories( $fullPath );
                 continue;
             }
 
-            $this->options->totalFiles++;
+//            if( !is_file( $fullPath ) || in_array( $fullPath, $this->files ) ) {
+//                continue;
+//            }
 
-            $this->files[] = $fullPath;
+//            $this->options->totalFiles++;
+//
+//            $this->files[] = $fullPath;
 
             /**
              * Test and measure if its faster to copy at the same time while the array with folders is  generated
