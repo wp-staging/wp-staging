@@ -322,7 +322,7 @@ var WPStaging = (function ($)
 
                 showError(
                         "Fatal Unknown Error. This should not happen." +
-                        "Please again. If this does not help, " +
+                        "Plese try again. If this does not help, " +
                         "<a href='https://wordpress.org/support/plugin/wp-staging' target='_blank'>Open a ticket</a> " +
                         "in the WP Staging support forum."
                         );

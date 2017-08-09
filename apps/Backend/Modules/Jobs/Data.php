@@ -157,6 +157,20 @@ class Data extends JobExecutable
         
         return false;
     }
+    
+        
+    /**
+     * Check if table exists
+     * @param string $table
+     * @return boolean
+     */
+    protected function isTable($table){
+      if($this->db->get_var("SHOW TABLES LIKE '{$table}'") != $table ){
+         $this->log( "Table {$table} does not exists", Logger::TYPE_ERROR );
+         return false;
+      }
+      return true;
+    }
 
     /**
      * Replace "siteurl"
@@ -164,32 +178,39 @@ class Data extends JobExecutable
      */
     protected function step1()
     {
-        $this->log( "Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO );
+      $this->log( "Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO );
 
-        $result = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'",
-                get_home_url() . '/' . $this->options->cloneDirectoryName
-            )
-        );
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
 
-        // All good
-        if ($result)
-        {
-            return true;
-        }
+      $result = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", get_home_url() . '/' . $this->options->cloneDirectoryName
+              )
+      );
 
-        $this->log("Failed to update siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
-        return false;
-    }
+      // All good
+      if( $result ) {
+         return true;
+      }
 
-    /**
+      $this->log( "Failed to update siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+      return false;
+   }
+
+   /**
      * Update "wpstg_is_staging_site"
      * @return bool
      */
     protected function step2()
     {
+              
         $this->log( "Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}" );
+        
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
 
         $result = $this->db->query(
             $this->db->prepare(
@@ -225,7 +246,12 @@ class Data extends JobExecutable
      */
     protected function step3()
     {
+       
         $this->log("Updating rewrite_rules in {$this->prefix}options {$this->db->last_error}");
+        
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
         
         $result = $this->db->query(
             $this->db->prepare(
@@ -250,6 +276,10 @@ class Data extends JobExecutable
      */
     protected function step4() {
         $this->log( "Updating {$this->prefix}usermeta db prefix {$this->db->last_error}" );
+        
+      if( false === $this->isTable( $this->prefix . 'usermeta' ) ) {
+         return true;
+      }
 
         $resultOptions = $this->db->query(
                 $this->db->prepare(
