@@ -177,8 +177,8 @@ class Directories extends JobExecutable {
         foreach ( $files as $file ) {
             $fullPath = $directory . $file;
             
-            // It's a readable valid file
-            if( is_file( $fullPath ) ) {
+            // It's a readable valid file and not excluded for copying
+            if( is_file( $fullPath ) && !$this->isExcluded($file) ) {
                $this->options->totalFiles++;
                $this->files[] = $fullPath;
                continue;
@@ -363,5 +363,22 @@ class Directories extends JobExecutable {
 
         return $destinationPath;
     }
+    
+    /**
+    * Check if filename is excluded for cloning process
+     * 
+    * @param string $file filename including ending
+    * @return boolean
+    */
+   private function isExcluded( $file ) {
+      $excluded = false;
+      foreach ( $this->options->excludedFiles as $excludedFile ) {
+         if (stripos(strrev($file), strrev($excludedFile)) === 0) {
+           $excluded = true;
+           break;
+         }
+      }
+      return $excluded;
+   }
 
 }

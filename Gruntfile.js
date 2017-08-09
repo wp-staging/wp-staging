@@ -12,12 +12,6 @@ module.exports = function (grunt) {
             base: '../../wordpress-svn/wp-staging/tags/<%= pkg.version %>/',
             basetrunk: '../../wordpress-svn/wp-staging/trunk/',
             basezip: '../../wordpress-svn/wp-staging/'
-            
-            // Base destination dir
-//            base: '../../wp-staging-pro/tags/<%= pkg.version %>/wp-staging-pro/',
-//            basetrunk: '../../wp-staging-pro/trunk/',
-//            destzip: '../../wp-staging-pro/',
-//            basezip: '../../wp-staging-pro/tags/<%= pkg.version %>',
         },
         // minify js
         uglify: {

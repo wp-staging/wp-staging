@@ -30,6 +30,7 @@ class Cloning extends Job
         $this->options->includedDirectories = array();
         $this->options->excludedDirectories = array();
         $this->options->extraDirectories = array();
+        $this->options->excludedFiles = array('.htaccess', '.DS_Store', '.git', '.svn', '.tmp', 'desktop.ini', '.gitignore', '.log');
 
         // Job
         $this->options->job                 = new \stdClass();
@@ -82,9 +83,7 @@ class Cloning extends Job
         );
 
         array_unshift($this->options->directoriesToCopy, ABSPATH);
-        
-        //var_dump($this->options->directoriesToCopy);
-        
+                
         // Delete files to copy listing
         $this->cache->delete("files_to_copy");
 
