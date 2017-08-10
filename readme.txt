@@ -143,6 +143,7 @@ https://wp-staging.com
 
 = 2.0.9 =
 * New: Exclude unneccessary files from cloning process: .tmp, .log, .htaccess, .git, .gitignore, desktop.ini, .DS_Store, .svn
+* New: More details for debugging in Tools->System Info
 * Fix: Check if tables in staging site exists before attempting to modify them
 * Fix: WordPress in sub directories were not opening
 * Tweak: Exclude wp-content/cache folder from copying process

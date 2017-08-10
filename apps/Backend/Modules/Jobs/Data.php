@@ -184,7 +184,7 @@ class Data extends JobExecutable
       }
 
       // Installed in sub-directory
-      if( isset( $this->settings->wpSubDirectory ) || "1" === $this->settings->wpSubDirectory ) {
+      if( isset( $this->settings->wpSubDirectory ) && "1" === $this->settings->wpSubDirectory ) {
          $subDirectory = str_replace( get_home_path(), '', ABSPATH );
          $this->log( "Updating siteurl and homeurl to " . get_home_url() . '/' . $subDirectory . $this->options->cloneDirectoryName );
          // Replace URLs

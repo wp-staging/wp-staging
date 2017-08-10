@@ -23,6 +23,7 @@ class SystemInfo extends InjectionAware
      */
     private $isMultiSite;
 
+
     /**
      * Initialize class
      */
@@ -48,6 +49,8 @@ class SystemInfo extends InjectionAware
     {
         $output  = "### Begin System Info ###" . PHP_EOL . PHP_EOL;
 
+        $output .= $this->wpstaging();
+        
         $output .= $this->site();
 
         $output .= $this->browser();
@@ -69,6 +72,8 @@ class SystemInfo extends InjectionAware
         return $output;
     }
 
+
+
     /**
      * @param string $string
      * @return string
@@ -86,7 +91,7 @@ class SystemInfo extends InjectionAware
      */
     public function info($title, $value)
     {
-        return str_pad($title, 26, ' ', STR_PAD_RIGHT) . $value . PHP_EOL;
+        return str_pad($title, 56, ' ', STR_PAD_RIGHT) . $value . PHP_EOL;
     }
 
     /**
@@ -123,6 +128,53 @@ class SystemInfo extends InjectionAware
     }
 
     /**
+     * Wp Staging plugin Information
+     * @return string
+     */
+    public function wpstaging() {
+      // Get wpstg settings
+      $settings = ( object ) get_option( 'wpstg_settings', array() );
+
+      // Clones data < 1.6.x
+      $clones = ( object ) get_option( 'wpstg_existing_clones', array() );
+      // Clones data version > 2.x
+      $clonesBeta = get_option( 'wpstg_existing_clones_beta' );
+
+
+      $output = "-- WP Staging Settings" . PHP_EOL . PHP_EOL;
+      $output .= $this->info( "Query Limit:", isset( $settings->queryLimit ) ? $settings->queryLimit : 'undefined' );
+      $output .= $this->info( "Batch Size:", isset( $settings->batchSize ) ? $settings->batchSize : 'undefined' );
+      $output .= $this->info( "CPU Load:", isset( $settings->cpuLoad ) ? $settings->cpuLoad : 'undefined' );
+      $output .= $this->info( "WP in Subdir:", isset( $settings->wpSubDirectory ) ? $settings->wpSubDirectory : 'undefined' );
+
+      $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version < 1.6.x" . PHP_EOL . PHP_EOL;
+
+      $i = 1;
+      foreach ( $clones as $key => $value ) {
+         $output .= $this->info( "Site name & subfolder :", $value );
+      }
+      $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version > 2.0.x" . PHP_EOL . PHP_EOL;
+
+      foreach ( $clonesBeta as $key => $clone ) {
+         $output .= $this->info( "Number:", isset( $clone['number'] ) ? $clone['number'] : 'undefined' );
+         $output .= $this->info( "directoryName:", isset( $clone['directoryName'] ) ? $clone['directoryName'] : 'undefined' );
+         $output .= $this->info( "Path:", isset( $clone['path'] ) ? $clone['path'] : 'undefined' );
+         $output .= $this->info( "URL:", isset( $clone['url'] ) ? $clone['url'] : 'undefined' );
+         $output .= $this->info( "Version:", isset( $clone['version'] ) ? $clone['version'] : 'undefined' ) . PHP_EOL . PHP_EOL;
+      }
+
+      //$output .= PHP_EOL . PHP_EOL;
+      
+      $output .= $this->info( "Plugin Version:", get_option('wpstg_version', 'undefined') );
+      $output .= $this->info( "Install Date:", get_option('wpstg_installDate', 'undefined') );
+      $output .= $this->info( "Upgraded from:", get_option('wpstg_version_upgraded_from', 'undefined') );
+      $output .= $this->info( "Is Staging Site:", get_option('wpstg_is_staging_site', 'undefined') );
+
+
+      return apply_filters( "wpstg_sysinfo_after_wpstaging_info", $output );
+   }
+
+   /**
      * Browser Information
      * @return string
      */

@@ -65,14 +65,15 @@ class Settings
     /**
      * Settings constructor.
      */
-    public function __construct()
-    {
-        $this->_raw = get_option("wpstg_settings", array());
+    public function __construct() {
+      $this->_raw = get_option( "wpstg_settings", array() );
 
-        $this->hydrate($this->_raw);
-    }
+      if( !empty( $this->_raw ) ) {
+         $this->hydrate( $this->_raw );
+      }
+   }
 
-    /**
+   /**
      * @param array $settings
      * @return $this
      */
@@ -94,22 +95,19 @@ class Settings
     /**
      * @return bool
      */
-    public function save()
-    {
-        $data = array();
-
-        foreach (get_object_vars($this) as $key => $value)
-        {
-            if (0 == strpos($key, '_'))
-            {
-                continue;
-            }
-
-            $data[$key] = $value;
-        }
-
-        return update_option("wpstg_settings", $data);
-    }
+//   public function save() {
+//      $data = array();
+//
+//      foreach ( get_object_vars( $this ) as $key => $value ) {
+//         if( 0 == strpos( $key, '_' ) ) {
+//            continue;
+//         }
+//
+//         $data[$key] = $value;
+//      }
+//      
+//      return update_option( "wpstg_settings", $data );
+//   }
 
     /**
      * @return array

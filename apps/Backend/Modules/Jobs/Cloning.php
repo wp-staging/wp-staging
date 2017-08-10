@@ -57,9 +57,10 @@ class Cloning extends Job
         }
         
         // Excluded Directories TOTAL
-        // Do not copy the cache folder
+        // Do not copy these folders and plugins
         $excludedDirectories = array(
-            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'cache'
+            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
+            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login'
             );
         
         $this->options->excludedDirectories = array_merge($excludedDirectories, $this->options->excludedDirectories);
