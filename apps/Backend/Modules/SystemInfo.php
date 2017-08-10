@@ -22,7 +22,7 @@ class SystemInfo extends InjectionAware
      * @var bool
      */
     private $isMultiSite;
-
+    
 
     /**
      * Initialize class
@@ -71,7 +71,7 @@ class SystemInfo extends InjectionAware
 
         return $output;
     }
-
+    
 
 
     /**
@@ -126,7 +126,7 @@ class SystemInfo extends InjectionAware
 
         return apply_filters("wpstg_sysinfo_after_site_info", $output);
     }
-
+    
     /**
      * Wp Staging plugin Information
      * @return string
@@ -145,7 +145,7 @@ class SystemInfo extends InjectionAware
       $output .= $this->info( "Query Limit:", isset( $settings->queryLimit ) ? $settings->queryLimit : 'undefined' );
       $output .= $this->info( "Batch Size:", isset( $settings->batchSize ) ? $settings->batchSize : 'undefined' );
       $output .= $this->info( "CPU Load:", isset( $settings->cpuLoad ) ? $settings->cpuLoad : 'undefined' );
-      $output .= $this->info( "WP in Subdir:", isset( $settings->wpSubDirectory ) ? $settings->wpSubDirectory : 'undefined' );
+      $output .= $this->info( "WP in Subdir:", isset( $settings->wpSubDirectory ) ? $settings->wpSubDirectory : 'false' );
 
       $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version < 1.6.x" . PHP_EOL . PHP_EOL;
 
@@ -168,7 +168,7 @@ class SystemInfo extends InjectionAware
       $output .= $this->info( "Plugin Version:", get_option('wpstg_version', 'undefined') );
       $output .= $this->info( "Install Date:", get_option('wpstg_installDate', 'undefined') );
       $output .= $this->info( "Upgraded from:", get_option('wpstg_version_upgraded_from', 'undefined') );
-      $output .= $this->info( "Is Staging Site:", get_option('wpstg_is_staging_site', 'undefined') );
+      $output .= $this->info( "Is Staging Site:", get_option('wpstg_is_staging_site', 'undefined') )  . PHP_EOL . PHP_EOL;
 
 
       return apply_filters( "wpstg_sysinfo_after_wpstaging_info", $output );
