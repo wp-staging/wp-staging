@@ -44,6 +44,18 @@ if( !defined( 'WPSTG_PLUGIN_URL' ) ) {
    define( 'WPSTG_PLUGIN_URL', plugin_dir_url(  __FILE__ ) );
 }
 
+
+/**
+ * Fix nonce check
+ * https://core.trac.wordpress.org/ticket/41617#ticket
+ * @param int $seconds
+ * @return int
+ */
+function wpstg_overwrite_nonce($seconds){
+	 return 86400;
+ }
+ add_filter('nonce_life', 'wpstg_overwrite_nonce', 99999);
+
 /**
  * Path to main WP Staging class
  * Make sure to not redeclare class in case free version has been installed previosly

@@ -141,12 +141,18 @@ https://wp-staging.com
 
 
 
-= 2.0.9 =
+= 2.1.0 =
 * New: Exclude unneccessary files from cloning process: .tmp, .log, .htaccess, .git, .gitignore, desktop.ini, .DS_Store, .svn
 * New: More details for debugging in Tools->System Info
 * Fix: Check if tables in staging site exists before attempting to modify them
 * Fix: WordPress in sub directories were not opening
+* Fix: Nonce check not working if nonce life time is filtered by another plugin WP Bug: https://core.trac.wordpress.org/ticket/41617#comment:1
+* Fix: Access to staging site not working, if WP_SITEURL and WP_HOME is defined in wp-config.php 
 * Tweak: Exclude wp-content/cache folder from copying process
+
+
+= 2.0.9 =
+* Skip Version
 
 = 2.0.8 =
 * Fix: After update from wpstg 1.6.x to 2.x previous settings were not imported resulting in cancelation of cloning process. Still not fixed in 2.0.7

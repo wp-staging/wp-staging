@@ -341,7 +341,7 @@ class Data extends JobExecutable
         $content = str_replace('$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content);
 
         // Replace URLs
-        $content = str_replace(get_home_url(), get_home_url() . $this->options->cloneDirectoryName, $content);
+        $content = str_replace(get_home_url(), get_home_url() . '/' . $this->options->cloneDirectoryName, $content);
 
         if (false === @file_put_contents($path, $content))
         {
