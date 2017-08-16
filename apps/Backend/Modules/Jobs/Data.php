@@ -53,6 +53,15 @@ class Data extends JobExecutable
     }
 
     /**
+     * Calculate siteurl
+     * @return string
+     */
+    private function calculateSiteURL()
+    {
+        return get_home_url() . '/' . $this->options->cloneDirectoryName;
+    }
+
+    /**
      * Start Module
      * @return object
      */
@@ -151,7 +160,7 @@ class Data extends JobExecutable
         }
         
         // Live Path === Staging path
-        if (get_home_url() . $this->options->cloneDirectoryName === get_home_url()){
+        if ($this->calculateSiteURL() === get_home_url()){
             return true;
         }
         
@@ -169,7 +178,7 @@ class Data extends JobExecutable
         $result = $this->db->query(
             $this->db->prepare(
                 "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'",
-                get_home_url() . '/' . $this->options->cloneDirectoryName
+                $this->calculateSiteURL()
             )
         );
 
@@ -297,7 +306,7 @@ class Data extends JobExecutable
         $content = str_replace('$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content);
 
         // Replace URLs
-        $content = str_replace(get_home_url(), get_home_url() . $this->options->cloneDirectoryName, $content);
+        $content = str_replace(get_home_url(), $this->calculateSiteURL(), $content);
 
         if (false === @file_put_contents($path, $content))
         {
