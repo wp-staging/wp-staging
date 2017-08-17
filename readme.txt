@@ -141,6 +141,9 @@ https://wp-staging.com
 
 
 
+= 2.1.1 =
+* New: Add link to tutorial explaining the process of pushing modification to the live site
+
 = 2.1.0 =
 * New: Exclude unneccessary files from cloning process: .tmp, .log, .htaccess, .git, .gitignore, desktop.ini, .DS_Store, .svn
 * New: More details for debugging in Tools->System Info

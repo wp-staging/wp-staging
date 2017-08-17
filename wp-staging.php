@@ -4,8 +4,9 @@
  * Plugin Name: WP Staging
  * Plugin URI: https://wordpress.org/plugins/wp-staging
  * Description: Create a staging clone site for testing & developing
- * Author: WP-Staging, René Hermenau, Ilgıt Yıldırım
- * Author URI: https://wordpress.org/plugins/wp-staging
+ * Author: WP-Staging
+ * Author URI: https://wp-staging.com
+ * Contributors: ReneHermi, ilgityildirim
  * Version: {{version}}
  * Text Domain: wpstg
  * Domain Path: /languages/

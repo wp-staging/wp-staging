@@ -30,4 +30,7 @@
             </div>
         </div>
     </div>
+    <div style="font-size:14px;">
+        Tutorial: <a href="https://wp-staging.com/docs/copy-staging-site-to-live-site/" target="_blank">Learn how to push changes to live website</a>
+    </div>
 </div>
