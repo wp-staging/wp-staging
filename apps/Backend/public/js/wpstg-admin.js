@@ -321,10 +321,9 @@ var WPStaging = (function ($)
                 }
 
                 showError(
-                        "Fatal Unknown Error. This should not happen." +
-                        "Plese try again. If this does not help, " +
-                        "<a href='https://wordpress.org/support/plugin/wp-staging' target='_blank'>Open a ticket</a> " +
-                        "in the WP Staging support forum."
+                        "Fatal Unknown Error. Go to WP Staging > Settings and lower 'File Copy Limit'" +
+                        "Than try again. If this does not help, " +
+                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
                         );
             },
             success: function (data) {
