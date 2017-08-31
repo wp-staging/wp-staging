@@ -2,10 +2,6 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-//ini_set('display_startup_errors', 1);
-//ini_set('display_errors', 1);
-//error_reporting(-1);
-
 // No Direct Access
 if( !defined( "WPINC" ) ) {
     die;
@@ -156,6 +152,11 @@ class Directories extends JobExecutable {
 
             // Add scanned directory listing
             $this->options->scannedDirectories[] = $dir;
+            
+            if( $this->isOverThreshold() ) {
+               //$this->saveProgress();
+               return false;
+            }
         }
 
         $this->saveOptions();
@@ -165,6 +166,7 @@ class Directories extends JobExecutable {
     }
 
     /**
+     * Get files from directory
      * @param $directory
      * @return bool
      */
@@ -177,8 +179,13 @@ class Directories extends JobExecutable {
         foreach ( $files as $file ) {
             $fullPath = $directory . $file;
             
-            // It's a readable valid file and not excluded for copying
-            if( is_file( $fullPath ) && !$this->isExcluded($file) ) {
+            // Conditions: 
+            // - Must be valid file
+            // - Is readable file
+            // - Not collected already
+            // - File not excluded by another rule or condition
+            
+            if( is_file( $fullPath ) && is_readable( $fullPath ) && !in_array( $fullPath, $this->files ) && !$this->isExcluded($file) ) {
                $this->options->totalFiles++;
                $this->files[] = $fullPath;
                continue;

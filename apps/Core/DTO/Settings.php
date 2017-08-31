@@ -1,12 +1,13 @@
 <?php
+
 namespace WPStaging\DTO;
 
 /**
  * Class Settings
  * @package WPStaging\DTO
  */
-class Settings
-{
+class Settings {
+
     /**
      * @var array
      */
@@ -20,6 +21,11 @@ class Settings
     /**
      * @var int
      */
+   protected $fileCopyLimit;
+
+   /**
+    * @var int
+    */
     protected $batchSize;
 
     /**
@@ -68,7 +74,7 @@ class Settings
     public function __construct() {
       $this->_raw = get_option( "wpstg_settings", array() );
 
-      if( !empty( $this->_raw ) ) {
+      if (!empty($this->_raw)){
          $this->hydrate( $this->_raw );
       }
    }
@@ -77,14 +83,11 @@ class Settings
      * @param array $settings
      * @return $this
      */
-    public function hydrate($settings = array())
-    {
+   public function hydrate( $settings = array() ) {
         $this->_raw = $settings;
 
-        foreach ($settings as $key => $value)
-        {
-            if (property_exists($this, $key))
-            {
+      foreach ( $settings as $key => $value ) {
+         if( property_exists( $this, $key ) ) {
                 $this->{$key} = $value;
             }
         }
@@ -112,168 +115,161 @@ class Settings
     /**
      * @return array
      */
-    public function getRaw()
-    {
+   public function getRaw() {
         return $this->_raw;
     }
 
     /**
      * @return int
      */
-    public function getQueryLimit()
-    {
-        return (int) $this->queryLimit;
+   public function getQueryLimit() {
+      return ( int ) $this->queryLimit;
     }
 
     /**
      * @param int $queryLimit
      */
-    public function setQueryLimit($queryLimit)
-    {
+   public function setQueryLimit( $queryLimit ) {
         $this->queryLimit = $queryLimit;
     }
 
     /**
      * @return int
      */
-    public function getBatchSize()
-    {
-        return (int) $this->batchSize;
+   public function getFileCopyLimit() {
+      return ( int ) $this->fileCopyLimit;
     }
 
     /**
+    * @param int $fileCopyLimit
+    */
+   public function setFileCopyLimit( $fileCopyLimit ) {
+      $this->fileCopyLimit = $fileCopyLimit;
+   }
+
+   /**
+    * @return int
+    */
+   public function getBatchSize() {
+      return ( int ) $this->batchSize;
+   }
+
+   /**
      * @param int $batchSize
      */
-    public function setBatchSize($batchSize)
-    {
+   public function setBatchSize( $batchSize ) {
         $this->batchSize = $batchSize;
     }
 
     /**
      * @return string
      */
-    public function getCpuLoad()
-    {
+   public function getCpuLoad() {
         return $this->cpuLoad;
     }
 
     /**
      * @param string $cpuLoad
      */
-    public function setCpuLoad($cpuLoad)
-    {
+   public function setCpuLoad( $cpuLoad ) {
         $this->cpuLoad = $cpuLoad;
     }
 
     /**
      * @return bool
      */
-    public function isUnInstallOnDelete()
-    {
+   public function isUnInstallOnDelete() {
         return ('1' === $this->unInstallOnDelete);
     }
 
     /**
      * @param bool $unInstallOnDelete
      */
-    public function setUnInstallOnDelete($unInstallOnDelete)
-    {
+   public function setUnInstallOnDelete( $unInstallOnDelete ) {
         $this->unInstallOnDelete = $unInstallOnDelete;
     }
 
     /**
      * @return bool
      */
-    public function isOptimizer()
-    {
+   public function isOptimizer() {
         return ('1' === $this->optimizer);
     }
 
     /**
      * @param bool $optimizer
      */
-    public function setOptimizer($optimizer)
-    {
+   public function setOptimizer( $optimizer ) {
         $this->optimizer = $optimizer;
     }
 
     /**
      * @return bool
      */
-    public function isDisableAdminLogin()
-    {
+   public function isDisableAdminLogin() {
         return ('1' === $this->disableAdminLogin);
     }
 
     /**
      * @param bool $disableAdminLogin
      */
-    public function setDisableAdminLogin($disableAdminLogin)
-    {
+   public function setDisableAdminLogin( $disableAdminLogin ) {
         $this->disableAdminLogin = $disableAdminLogin;
     }
 
     /**
      * @return bool
      */
-    public function isWpSubDirectory()
-    {
+   public function isWpSubDirectory() {
         return ('1' === $this->wpSubDirectory);
     }
 
     /**
      * @param bool $wpSubDirectory
      */
-    public function setWpSubDirectory($wpSubDirectory)
-    {
+   public function setWpSubDirectory( $wpSubDirectory ) {
         $this->wpSubDirectory = $wpSubDirectory;
     }
 
     /**
      * @return bool
      */
-    public function isCheckDirectorySize()
-    {
+   public function isCheckDirectorySize() {
         return ('1' === $this->checkDirectorySize);
     }
 
     /**
      * @param bool $checkDirectorySize
      */
-    public function setCheckDirectorySize($checkDirectorySize)
-    {
+   public function setCheckDirectorySize( $checkDirectorySize ) {
         $this->checkDirectorySize = $checkDirectorySize;
     }
 
     /**
      * @return bool
      */
-    public function isDebugMode()
-    {
+   public function isDebugMode() {
         return ('1' === $this->debugMode);
     }
 
     /**
      * @param bool $debugMode
      */
-    public function setDebugMode($debugMode)
-    {
+   public function setDebugMode( $debugMode ) {
         $this->debugMode = $debugMode;
     }
 
     /**
      * @return array
      */
-    public function getBlackListedPlugins()
-    {
+   public function getBlackListedPlugins() {
         return $this->blackListedPlugins;
     }
 
     /**
      * @param array $blackListedPlugins
      */
-    public function setBlackListedPlugins($blackListedPlugins)
-    {
+   public function setBlackListedPlugins( $blackListedPlugins ) {
         $this->blackListedPlugins = $blackListedPlugins;
     }
 }

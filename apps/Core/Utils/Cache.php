@@ -111,6 +111,7 @@ class Cache
 
         // Save it to file
         return (file_put_contents($cacheFile, @serialize($value), LOCK_EX) !== false);
+        //return (file_put_contents($cacheFile, @serialize($value)) !== false);
     }
 
     /**

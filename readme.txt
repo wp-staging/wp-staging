@@ -139,7 +139,11 @@ https://wp-staging.com
 
 == Changelog ==
 
-
+= 2.1.2 =
+* Fix: Remove LOCK_EX parameter in file_put_contents(). LOCK_EX is not working on several systems which results in cloning process timeouts
+* Fix: Huge Performance improvement in copying process by removing duplicate file entries in the cache file. This also prevents weird timeout issues on some hosted websites
+* TODO Tweak: Better admin message for asking for a review #####################TODO#######################
+* New: New setting to specify the maximum amount of files copied within one ajax call
 
 = 2.1.1 =
 * New: Add link to tutorial explaining the process of pushing modification to the live site

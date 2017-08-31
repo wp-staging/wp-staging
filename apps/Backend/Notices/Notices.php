@@ -35,7 +35,7 @@ class Notices {
     }
 
     /**
-     * Check whether the page is admin page or not
+     * Check whether the page is an WP QUADS admin settings page or not
      * @return bool
      */
     private function isAdminPage() {
@@ -45,7 +45,8 @@ class Notices {
             "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone"
         );
 
-        if( !is_admin() || !did_action( "wp_loaded" ) || !in_array( $currentPage, $availablePages, true ) ) {
+        //if( !is_admin() || !did_action( "wp_loaded" ) || !in_array( $currentPage, $availablePages, true ) ) {
+        if( !is_admin() || !in_array( $currentPage, $availablePages, true ) ) {
             return false;
         }
 
@@ -75,56 +76,63 @@ class Notices {
     }
 
     public function messages() {
-        
-        $this->plugin_deactivated_notice();
-        
-        // Display messages to only admins, only on admin panel
-        if( !current_user_can( "update_plugins" ) || !$this->isAdminPage() ) {
-            return;
-        }
 
-        $viewsNoticesPath = "{$this->path}views/_includes/messages/";
+      $this->plugin_deactivated_notice();
 
-        $varsDirectory = \WPStaging\WPStaging::getContentDir();
+      // Do not display notices to user_roles lower than 'update_plugins'
+      if( !current_user_can( 'update_plugins' ) ) {
+         return;
+      }
+      
+      $viewsNoticesPath = "{$this->path}views/_includes/messages/";
+
+      // Show rating review message on all admin pages
+      if( $this->canShow( "wpstg_rating", 7 ) ) {
+         require_once "{$viewsNoticesPath}rating.php";
+      }
 
 
-        // Poll do not show any longer
-        /*if( $this->canShow( "wpstg_poll", 7 ) ) {
-            require_once "{$viewsNoticesPath}poll.php";
-        }*/
+      // Display messages below on wp quads admin page only
+      if( !$this->isAdminPage() ) {
+         return;
+      }
 
-        // Cache directory in uploads is not writable
-        if( !wp_is_writable( $varsDirectory ) ) {
-            require_once "{$viewsNoticesPath}/uploads-cache-directory-permission-problem.php";
-        }
-        // Staging directory is not writable
-        if( !wp_is_writable( get_home_path() ) ) {
-            require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
-        }
 
-        // Version Control
-        if( version_compare( WPStaging::WP_COMPATIBLE, get_bloginfo( "version" ), "<" ) ) {
-            require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
-        }
+      $varsDirectory = \WPStaging\WPStaging::getContentDir();
 
-        // Beta
-        if( false === get_option( "wpstg_beta" ) || "no" !== get_option( "wpstg_beta" ) ) {
-            require_once "{$viewsNoticesPath}beta.php";
-        }
 
-        // WP Staging Pro and Free can not be activated both
-        if( false !== ( $deactivatedNoticeID = get_transient( "wp_staging_deactivated_notice_id" ) ) ) {
-            require_once "{$viewsNoticesPath}transient.php";
-            delete_transient( "wp_staging_deactivated_notice_id" );
-        }
+      // Poll do not show any longer
+      /* if( $this->canShow( "wpstg_poll", 7 ) ) {
+        require_once "{$viewsNoticesPath}poll.php";
+        } */
 
-        if( $this->canShow( "wpstg_rating", 7 ) ) {
-            require_once "{$viewsNoticesPath}rating.php";
-        }
-        
-    }
+      // Cache directory in uploads is not writable
+      if( !wp_is_writable( $varsDirectory ) ) {
+         require_once "{$viewsNoticesPath}/uploads-cache-directory-permission-problem.php";
+      }
+      // Staging directory is not writable
+      if( !wp_is_writable( get_home_path() ) ) {
+         require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
+      }
 
-    /**
+      // Version Control
+      if( version_compare( WPStaging::WP_COMPATIBLE, get_bloginfo( "version" ), "<" ) ) {
+         require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
+      }
+
+      // Beta
+      if( false === get_option( "wpstg_beta" ) || "no" !== get_option( "wpstg_beta" ) ) {
+         require_once "{$viewsNoticesPath}beta.php";
+      }
+
+      // WP Staging Pro and Free can not be activated both
+      if( false !== ( $deactivatedNoticeID = get_transient( "wp_staging_deactivated_notice_id" ) ) ) {
+         require_once "{$viewsNoticesPath}transient.php";
+         delete_transient( "wp_staging_deactivated_notice_id" );
+      }
+   }
+
+   /**
      * Show a message when pro or free plugin becomes deactivated
      * 
      * @return void

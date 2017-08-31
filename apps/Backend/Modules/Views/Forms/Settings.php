@@ -65,6 +65,26 @@ class Settings
             ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 1000)
         );
 
+        $options = array(250 => 250 ,500 => 500, 1000 => 1000);
+        // DB Copy Query Limit
+        $element = new Select(
+            "wpstg_settings[fileCopyLimit]",
+            $options,
+            array(
+                "class" => "medium-text",
+                "step"  => 1,
+                "max"   => 999999,
+                "min"   => 0
+            )
+        );
+        
+        
+        $this->form["general"]->add(
+            $element->setLabel("File Copy Limit")
+            ->setDefault(isset($settings->fileCopyLimit) ? $settings->fileCopyLimit : 500)
+        );
+
+
         // File Copy Batch Size
         $element = new Numerical(
             "wpstg_settings[batchSize]",
@@ -95,6 +115,7 @@ class Settings
             $element->setLabel("CPU load priority")
             ->setDefault(isset($settings->cpuLoad) ? $settings->cpuLoad : "fast")
         );
+
 
         // Optimizer
         $element = new Check(

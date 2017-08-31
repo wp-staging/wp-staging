@@ -111,6 +111,27 @@
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
+                                            <?php
+                                            echo $form->label("wpstg_settings[fileCopyLimit]")
+                                            ?>
+                                            <span class="description">
+                                                Number of files to copy that will be copied within one ajax request.
+                                                The higher the value the faster the file copy process.
+                                                To find out the highest possible values try a high value like 500 or more. If you get timeout issues, lower it
+                                                until you get no more errors during copying process.
+                                                <br>
+                                                <strong> Default: 500 </strong>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?php echo $form->render("wpstg_settings[fileCopyLimit]")?>
+                                    </td>
+                                </tr>
+
+                                <tr class="row">
+                                    <td class="row th">
+                                        <div class="col-title">
                                             <?php echo $form->label("wpstg_settings[batchSize]")?>
                                             <span class="description">
                                                 Buffer size for the file copy process in megabyte.

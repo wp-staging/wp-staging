@@ -13,7 +13,7 @@ jQuery(document).ready(function ($) {
             } else {
                 alert(
                         "Unexpected message received. This might mean the data was not saved " +
-                        "and you might see this message again"
+                        "and you might see this message again. Contact us support@wp-staging.com"
                         );
             }
         }
