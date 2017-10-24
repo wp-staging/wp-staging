@@ -147,8 +147,11 @@ https://wp-staging.com
 * Fix: Sanitize Clone Names and Keys to fix "clone not found" issue in upgrade routine
 * Fix: Do not clone the plugin wps-hide-login
 * Fix: Staging sites can not be deleted if they are very big
+* Fix: Link to staging site is undefined
 * Tweak: Better admin message for asking for a review
+* Tweak: Remove table wpstg_rmpermalinks_executed when plugin is uninstalled
 * New: New setting to specify the maximum amount of files copied within one ajax call to fix godaddy and bluehost ajax 404 errors. Default 10 per batch
+
 
 = 2.1.1 =
 * New: Add link to tutorial explaining the process of pushing modification to the live site
@@ -263,5 +266,5 @@ Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.co
 
 == Upgrade Notice ==
 
-= 2.0.2 =
-2.0.2 * New: Batch processing allows to clone even huge sites without any timeouts
+= 2.1.2 =
+2.1.2 * Lot of modifications to increase speed and reliability for crewating staging sites
