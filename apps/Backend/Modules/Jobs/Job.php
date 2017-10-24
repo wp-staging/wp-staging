@@ -94,18 +94,18 @@ abstract class Job implements JobInterface
         // Get max limits
         $this->start            = $this->time();
         $this->maxMemoryLimit   = $this->getMemoryInBytes(@ini_get("memory_limit"));
-        $this->maxExecutionTime = (int) ini_get("max_execution_time");
-        //$this->maxExecutionTime = (int) 30; 
+        //$this->maxExecutionTime = (int) ini_get("max_execution_time");
+        $this->maxExecutionTime = (int) 30; 
         
-        if ($this->maxExecutionTime > 30)
-        {
-            $this->maxExecutionTime = 30;
-        }
-
-        if ($this->maxExecutionTime < 1)
-        {
-            $this->maxExecutionTime = 30;
-        }
+//        if ($this->maxExecutionTime > 30)
+//        {
+//            $this->maxExecutionTime = 30;
+//        }
+//
+//        if ($this->maxExecutionTime < 1)
+//        {
+//            $this->maxExecutionTime = 30;
+//        }
 
 
         // Services
@@ -176,6 +176,7 @@ abstract class Job implements JobInterface
      */
     protected function setDefaultSettings(){
         $this->settings->queryLimit = "1000";
+        $this->settings->fileCopyLimit = "10";
         $this->settings->batchSize = "2";
         $this->settings->cpuLoad = 'medium';
         update_option('wpstg_settings', $this->settings);

@@ -4,6 +4,7 @@ namespace WPStaging\Backend\Modules\Views\Forms;
 use WPStaging\Forms\Elements\Check;
 use WPStaging\Forms\Elements\Numerical;
 use WPStaging\Forms\Elements\Select;
+use WPStaging\Forms\Elements\SelectMultiple;
 use WPStaging\Forms\Form;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 
@@ -65,10 +66,10 @@ class Settings
             ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 1000)
         );
 
-        $options = array(250 => 250 ,500 => 500, 1000 => 1000);
+        $options = array('250' => '250' ,'500' => '500', '1000' => '1000');
         // DB Copy Query Limit
         $element = new Select(
-            "wpstg_settings[fileCopyLimit]",
+            "wpstg_settings[fileLimit]",
             $options,
             array(
                 "class" => "medium-text",
@@ -78,10 +79,8 @@ class Settings
             )
         );
         
-        
         $this->form["general"]->add(
-            $element->setLabel("File Copy Limit")
-            ->setDefault(isset($settings->fileCopyLimit) ? $settings->fileCopyLimit : 500)
+            $element->setLabel("File Copy Limit")->setDefault(isset($settings->fileLimit) ? $settings->fileLimit : 500)
         );
 
 

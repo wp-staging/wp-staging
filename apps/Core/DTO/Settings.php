@@ -21,7 +21,7 @@ class Settings {
     /**
      * @var int
      */
-   protected $fileCopyLimit;
+   protected $fileLimit;
 
    /**
     * @var int
@@ -136,15 +136,15 @@ class Settings {
     /**
      * @return int
      */
-   public function getFileCopyLimit() {
-      return ( int ) $this->fileCopyLimit;
+   public function getFileLimit() {
+      return ( int ) $this->fileLimit;
     }
 
     /**
     * @param int $fileCopyLimit
     */
-   public function setFileCopyLimit( $fileCopyLimit ) {
-      $this->fileCopyLimit = $fileCopyLimit;
+   public function setFileLimit( $fileLimit ) {
+      $this->fileLimit = $fileLimit;
    }
 
    /**

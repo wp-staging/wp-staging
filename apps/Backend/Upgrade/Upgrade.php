@@ -69,6 +69,7 @@ class Upgrade {
     public function doUpgrade() {
       $this->upgrade2_0_3();
       //$this->upgrade2_0_4();
+      $this->upgrade2_1_2();
       $this->setVersion();
    }
 
@@ -98,6 +99,20 @@ class Upgrade {
 //      $optimizer->installOptimizer();
 //      }
 //   }
+    
+       /**
+    * Upgrade method 2.1.2
+    * Sanitize the clone key value.
+    */
+   private function upgrade2_1_2(){
+       if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.1.7', '<' ) ) {
+           foreach ( $this->clonesBeta as $key => $value){
+               unset($this->clonesBeta[$key]);
+               $this->clonesBeta[preg_replace("#\W+#", '-', strtolower($key))] = $value;
+           }
+          update_option('wpstg_existing_clones_beta', $this->clonesBeta);
+       }
+   }
 
    /**
      * Upgrade routine for new install

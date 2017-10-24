@@ -8,6 +8,8 @@ if( !defined( "WPINC" ) ) {
 }
 
 use WPStaging\WPStaging;
+use WPStaging\Utils\Logger;
+
 
 /**
  * Class Files

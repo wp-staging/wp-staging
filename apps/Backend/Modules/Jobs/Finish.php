@@ -188,7 +188,6 @@ class Finish extends Job
         // Check if clones still exist
         $this->log("Verifying existing clones...");
         
-
         // Clone data already exists
         if (isset($this->options->existingClones[$this->options->clone]))
         {
@@ -199,9 +198,10 @@ class Finish extends Job
         // Save new clone data
         $this->log("{$this->options->clone}'s clone job's data is not in database, generating data");
         
+        // sanitize the clone name before saving
+        $clone = preg_replace("#\W+#", '-', strtolower($this->options->clone));
         
-        
-        $this->options->existingClones[$this->options->clone] = array(
+        $this->options->existingClones[$clone] = array(
             "directoryName"     => $this->options->cloneDirectoryName,
             "path"              => ABSPATH . $this->options->cloneDirectoryName,
             "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,

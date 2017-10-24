@@ -24,7 +24,6 @@ class Files extends JobExecutable
     /**
      * @var int
      */
-    //private $maxFilesPerRun = 500;
     private $maxFilesPerRun;
 
     /**
@@ -53,7 +52,7 @@ class Files extends JobExecutable
         }
 
         $this->settings->batchSize = $this->settings->batchSize * 1000000;
-        $this->maxFilesPerRun = $this->settings->fileCopyLimit;
+        $this->maxFilesPerRun = $this->settings->fileLimit;
     }
 
     /**

@@ -96,10 +96,10 @@
                                             <span class="description">
                                                 Number of DB rows, that will be copied within one ajax request.
                                                 The higher the value the faster the database copy process.
-                                                To find out the highest possible values try a high value like 1.000 or more and decrease it
-                                                until you get no more errors during copy process.
+                                                To find out the highest possible values try a high value like 1.000 or more. If you get timeout issues, lower it
+                                                until you get no more errors during copying process.
                                                 <br>
-                                                <strong> Default: 100 </strong>
+                                                <strong> Default: 1000 </strong>
                                             </span>
                                         </div>
                                     </td>
@@ -112,7 +112,7 @@
                                     <td class="row th">
                                         <div class="col-title">
                                             <?php
-                                            echo $form->label("wpstg_settings[fileCopyLimit]")
+                                            echo $form->label("wpstg_settings[fileLimit]")
                                             ?>
                                             <span class="description">
                                                 Number of files to copy that will be copied within one ajax request.
@@ -125,7 +125,7 @@
                                         </div>
                                     </td>
                                     <td>
-                                        <?php echo $form->render("wpstg_settings[fileCopyLimit]")?>
+                                        <?php echo $form->render("wpstg_settings[fileLimit]")?>
                                     </td>
                                 </tr>
 

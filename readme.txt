@@ -142,8 +142,13 @@ https://wp-staging.com
 = 2.1.2 =
 * Fix: Remove LOCK_EX parameter in file_put_contents(). LOCK_EX is not working on several systems which results in cloning process timeouts
 * Fix: Huge Performance improvement in copying process by removing duplicate file entries in the cache file. This also prevents weird timeout issues on some hosted websites
-* TODO Tweak: Better admin message for asking for a review #####################TODO#######################
-* New: New setting to specify the maximum amount of files copied within one ajax call
+* Fix: Error 500 when debug mode is activated
+* Fix: Limit maximum execution time to 30 seconds
+* Fix: Sanitize Clone Names and Keys to fix "clone not found" issue in upgrade routine
+* Fix: Do not clone the plugin wps-hide-login
+* Fix: Staging sites can not be deleted if they are very big
+* Tweak: Better admin message for asking for a review
+* New: New setting to specify the maximum amount of files copied within one ajax call to fix godaddy and bluehost ajax 404 errors. Default 10 per batch
 
 = 2.1.1 =
 * New: Add link to tutorial explaining the process of pushing modification to the live site
