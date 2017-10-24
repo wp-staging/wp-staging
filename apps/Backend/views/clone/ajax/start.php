@@ -42,17 +42,15 @@
     <h3>Congratulations
     </h3>
     <?php
+    //echo ABSPATH . '<br>';
+    //echo get_home_path();
     $subDirectory = str_replace( get_home_path(), '', ABSPATH ); 
-    $url = get_home_url() . '/' . str_replace('/', '', $subDirectory);
+    $url = get_home_url() . str_replace('/', '', $subDirectory);
     echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site in:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wpstg' ), $url );
     ?>
     <br>
     <?php //echo __('Open and access the staging site: ', 'wpstg')?>
     <br>
-    <?php 
-    $subDirectory = str_replace( get_home_path(), '', ABSPATH ); 
-    $url = get_home_url() . $subDirectory;
-    ?>
     <a href="<?php echo $url; ?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">
         Open staging site <span style="font-size: 10px;">(login with your admin credentials)</span>
     </a>
