@@ -139,6 +139,15 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.1.3 =
+* New: Add more details to tools->system info log for better debugging
+* New: Add buttons to select all default wp tables with one click
+* New: Show used db table in list of staging sites
+* Fix: Delete staging site not possible if db prefix is same as one of the live site
+* Fix: Edit/Update clone function is duplicating tables.
+* Fix: Other staging site can be overwritten when Edit/Update clone function is executed
+* Fix: Several improvements to improve reliability and prevent timeouts and fatal errors during cloning
+
 = 2.1.2 =
 * Fix: Remove LOCK_EX parameter in file_put_contents(). LOCK_EX is not working on several systems which results in cloning process timeouts
 * Fix: Huge Performance improvement in copying process by removing duplicate file entries in the cache file. This also prevents weird timeout issues on some hosted websites

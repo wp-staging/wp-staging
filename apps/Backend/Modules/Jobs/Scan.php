@@ -26,6 +26,7 @@ class Scan extends Job
      * @var Directories
      */
     private $objDirectories;
+    
 
     /**
      * Upon class initialization
@@ -39,6 +40,11 @@ class Scan extends Job
 
         // Get directories
         $this->directories();
+        
+        $this->db = WPStaging::getInstance()->get('wpdb');
+        $this->prefix = $this->db->prefix;
+        
+                
     }
 
     /**
@@ -58,7 +64,7 @@ class Scan extends Job
         }
 
         // Tables
-        $this->options->excludedTables          = array();
+        //$this->options->excludedTables          = array();
         $this->options->clonedTables            = array();
 
         // Files
@@ -71,12 +77,17 @@ class Scan extends Job
         $this->options->extraDirectories        = array();
         $this->options->directoriesToCopy       = array();
         $this->options->scannedDirectories      = array();
-        //$this->options->lastScannedDirectory    = array();
 
         // Job
         $this->options->currentJob              = "database";
         $this->options->currentStep             = 0;
         $this->options->totalSteps              = 0;
+
+        // Delete previous cached files
+        $this->cache->delete("files_to_copy");
+        $this->cache->delete("clone_options");
+        //$this->cache->delete("files_to_verify");
+        //$this->cache->delete("files_verified");
 
         // Save options
         $this->saveOptions();
@@ -200,24 +211,35 @@ class Scan extends Job
 
         if (strlen($wpDB->prefix) > 0)
         {
+            $prefix = str_replace('_', '', $wpDB->prefix);
+            //$sql = "SHOW TABLE STATUS LIKE '{$prefix}\%'";
             $sql = "SHOW TABLE STATUS LIKE '{$wpDB->prefix}%'";
         }
         else
         {
             $sql = "SHOW TABLE STATUS";
         }
-
+        
         $tables = $wpDB->get_results($sql);
-
+        
         $currentTables = array();
-
+          
+        // Reset excluded Tables than loop through all tables
+        $this->options->excludedTables = array();
         foreach ($tables as $table)
         {
+            
             // Exclude WP Staging Tables
-            if (0 === strpos($table->Name, "wpstg"))
+//            if (0 === strpos($table->Name, "wpstg"))
+//            {
+//                continue;
+//            }
+            // Create array of unchecked tables
+            if (0 !== strpos($table->Name, $wpDB->prefix))
             {
-                continue;
+                $this->options->excludedTables[] = $table->Name;
             }
+            
 
             $currentTables[] = array(
                 "name"  => $table->Name,
@@ -285,6 +307,7 @@ class Scan extends Job
      */
     protected function getPath($directory)
     {
+       
       /* 
        * Do not follow root path like src/web/..
        * This must be done before \SplFileInfo->isDir() is used!

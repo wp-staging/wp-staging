@@ -8,13 +8,13 @@ use WPStaging\WPStaging;
  * Class Cloning
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Cloning extends Job
+class Updating extends Job
 {
     /**
      * Initialize is called in \Job
      */
     public function initialize(){
-        $this->db                   = WPStaging::getInstance()->get("wpdb");
+        $this->db = WPStaging::getInstance()->get("wpdb");
     }
 
     /**
@@ -33,11 +33,6 @@ class Cloning extends Job
         $this->options->clone               = $_POST["cloneID"];
         $this->options->cloneDirectoryName  = preg_replace("#\W+#", '-', strtolower($this->options->clone));
         $this->options->cloneNumber         = 1;
-        //$this->options->prefix              = "wpstg1_";
-        //$this->options->prefix = '2323';
-        $this->options->prefix = $this->getStagingPrefix();
-
-        //$this->options->prefix              = $this->getStagingPrefix();
         $this->options->includedDirectories = array();
         $this->options->excludedDirectories = array();
         $this->options->extraDirectories    = array();
@@ -49,20 +44,12 @@ class Cloning extends Job
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone]) )
         {
-            
-            $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;
-            
-            $this->options->prefix = isset($this->options->existingClones[$this->options->clone]->prefix) ? 
-                    $this->options->existingClones[$this->options->clone]->prefix : 
-                    $this->getStagingPrefix();  
-            
-        }   // Clone does not exist but there are other clones in db
-            // Get data and increment it
-        elseif (!empty($this->options->existingClones))
-        {
-            $this->options->cloneNumber =  count($this->options->existingClones)+1;
-            $this->options->prefix = $this->getStagingPrefix();  
+            $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]['number'];  
+            $this->options->prefix = $this->getStagingPrefix();
+        } else {
+            wp_die('Fatal Error: Can not update clone because there is no clone data.');
         }
+               
 
         // Excluded Tables
         if (isset($_POST["excludedTables"]) && is_array($_POST["excludedTables"]))
@@ -110,46 +97,70 @@ class Cloning extends Job
 
         return $this->saveOptions();
     }
-
-    /**
-     * Create a new staging prefix which does not already exists in database
-     */
-    public function getStagingPrefix(){
-        
-        // Find a new prefix that does not already exist in database. 
-        // 1000 different possible prefixes should be enough here
-        for($i=0; $i <= 10000; $i++){
-            $this->options->prefix = isset($this->options->existingClones) ? 
-                    'wpstg' . (count($this->options->existingClones)+$i) . '_' : 
-                    'wpstg' . $i . '_';
-            
-            $sql = "SHOW TABLE STATUS LIKE '{$this->options->prefix}%'";
-            $tables = $this->db->get_results($sql);
-            
-            // Prefix does not exists. We can use it
-            if (!$tables){
-                //$this->returnException('new ' . $this->options->prefix);
-                return $this->options->prefix;
-            }
-        }
-        $this->returnException("Fatal Error: Can not create staging prefix. '{$this->options->prefix}' already exists! Stopping for security reasons. Contact support@wp-staging.com");
-        wp_die("Fatal Error: Can not create staging prefix. Prefix '{$this->options->prefix}' already exists! Stopping for security reasons. Contact support@wp-staging.com");
-        }
     
     /**
-     * Check if potential new prefix of staging site would be identical with live site. 
-     * @return boolean
+     * Check and return prefix of the staging site
      */
-    private function isPrefixIdentical(){
-        $db = WPStaging::getInstance()->get("wpdb");
-        
-        $livePrefix = $db->prefix;
-        $stagingPrefix = $this->options->prefix;
-        
-        if ($livePrefix == $stagingPrefix){
-            return true;
+
+
+//    public function getStagingPrefix_old(){
+//        $prefix = !empty($this->options->existingClones[$this->options->clone]['prefix']) ? 
+//                    $this->options->existingClones[$this->options->clone]['prefix'] : 
+//                    false;  
+//                
+//        if(!$prefix){
+//            $this->returnException("Fatal Error: Can not update staging site. Can not find Prefix. '{$prefix}'. Stopping for security reasons. Creating a new staging site will likely resolve this the next time. Contact support@wp-staging.com");
+//            wp_die("Fatal Error: Can not update staging site. Can not find Prefix. '{$prefix}'. Stopping for security reasons. Creating a new staging site will likely resolve this the next time. Contact support@wp-staging.com");
+//        }
+//        
+//        if ($this->options->existingClones[$this->options->clone]['prefix'] == $this->db->prefix){
+//            $this->returnException("Fatal Error: Can not update staging site. Prefix. '{$prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com");
+//            wp_die("Fatal Error: Can not update staging site. Prefix. '{$prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com");
+//        }
+//        
+//        return $prefix;
+//    }
+    
+    /**
+     * Check and return prefix of the staging site
+     */
+    public function getStagingPrefix() {
+        // prefix not defined! Happens if staging site has ben generated with older version of wpstg
+        // Try to get staging prefix from wp-config.php of staging site
+        $this->options->prefix = $this->options->existingClones[$this->options->clone]['prefix'];
+        //wp_die($this->options->prefix);
+        if (empty($this->options->prefix)) {
+            // Throw error if wp-config.php is not readable 
+            $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
+            //wp_die($path);
+            if (false === ($content = @file_get_contents($path))) {
+                $this->log("Can not open {$path}. Can't read contents", Logger::TYPE_ERROR);
+                $this->returnException("Fatal Error: Can not read {$path} to get correct table prefix. Stopping for security reasons. Deleting this staging site and creating a new one could fix this issue. Otherwise contact us support@wp-staging.com");
+                wp_die("Fatal Error: Can not read {$path} to get correct table prefix. Stopping for security reasons. Deleting this staging site and creating a new one could fix this issue. Otherwise contact us support@wp-staging.com");
+            } else {
+                // Get prefix from wp-config.php
+                preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
+                //wp_die(var_dump($matches));
+
+                if (!empty($matches[1])) {
+                    $this->options->prefix = $matches[1];
+                } else {
+                    $this->returnException("Fatal Error: Can not detect prefix from {$path}. Stopping for security reasons. Deleting this staging site and creating a new one could fix this issue. Otherwise contact us support@wp-staging.com");
+                    wp_die("Fatal Error: Can not detect prefix from {$path}. Stopping for security reasons. Deleting this staging site and creating a new one could fix this issue. Otherwise contact us support@wp-staging.com");
+                }
+            }
         }
-        return false;
+
+        // Die() if staging prefix is the same as the live prefix
+        if ($this->db->prefix == $this->options->prefix) {
+            $this->log("Fatal Error: Can not updatte staging site. Prefix. '{$this->options->prefix}' is used for the live site. Stopping for security reasons. Deleting this staging site and creating a new one could fix this issue. Otherwise contact us support@wp-staging.com");
+            wp_die("Fatal Error: Can not update staging site. Prefix. '{$this->options->prefix}' is used for the live site. Stopping for security reasons. Deleting this staging site and creating a new one could fix this issue. Otherwise contact us support@wp-staging.com");
+        }
+
+        // Else
+        //$this->returnException($this->options->prefix);
+        //wp_die($this->options->prefix);
+        return $this->options->prefix;
     }
 
     /**

@@ -161,6 +161,8 @@ class SystemInfo extends InjectionAware
          $output .= $this->info( "directoryName:", isset( $clone['directoryName'] ) ? $clone['directoryName'] : 'undefined' );
          $output .= $this->info( "Path:", isset( $clone['path'] ) ? $clone['path'] : 'undefined' );
          $output .= $this->info( "URL:", isset( $clone['url'] ) ? $clone['url'] : 'undefined' );
+         $output .= $this->info( "DB Prefix:", isset( $clone['prefix'] ) ? $clone['prefix'] : 'undefined' );
+         $output .= $this->info( "DB Prefix wp-config.php:", $this->getStagingPrefix($clone));
          $output .= $this->info( "Version:", isset( $clone['version'] ) ? $clone['version'] : 'undefined' ) . PHP_EOL . PHP_EOL;
       }
 
@@ -265,8 +267,9 @@ class SystemInfo extends InjectionAware
 
         // Table Prefix
         $wpDB           = $this->di->get("wpdb");
-        $tablePrefix    = "Length: " . strlen($wpDB->prefix) . "   Status: ";
-        $tablePrefix   .= (strlen($wpDB->prefix) > 16) ? "ERROR: Too long" : "Acceptable";
+        $tablePrefix    = "DB Prefix: " . $wpDB->prefix . ' ';
+        $tablePrefix   .= "Length: " . strlen($wpDB->prefix) . "   Status: ";
+        $tablePrefix   .= (strlen($wpDB->prefix) > 16) ? " ERROR: Too long" : " Acceptable";
 
         $output .= $this->info("Table Prefix:", $tablePrefix);
 
@@ -477,5 +480,34 @@ class SystemInfo extends InjectionAware
             return true;
         }
         return false;
+    }
+    
+    /**
+     * Check and return prefix of the staging site
+     */
+    /**
+     * Try to get the staging prefix from wp-config.php of staging site
+     * @param array $clone
+     * @return sting
+     */
+    private function getStagingPrefix($clone=array()) {
+            // Throw error
+            $path = ABSPATH . $clone['directoryName'] . "/wp-config.php";
+            if (false === ($content = @file_get_contents($path))) {
+                return 'Can\'t find staging wp-config.php';
+            } else {
+
+                // Get prefix from wp-config.php
+                //preg_match_all("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
+                preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
+                //wp_die(var_dump($matches));
+
+                if (!empty($matches[1])) {
+                    return $matches[1];
+                } else {
+                    return 'No table_prefix in wp-config.php';
+                }
+            }
+
     }
 }

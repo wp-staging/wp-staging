@@ -770,3 +770,14 @@ color:#777777;
     margin-top: 20px;
     font-style: italic;
 }
+
+.wpstg-staging-info {
+    clear:both;
+    float: right;
+    color:grey;
+    font-size: 12px;
+}
+
+.wpstg-bold{
+    font-weight: 600;
+}

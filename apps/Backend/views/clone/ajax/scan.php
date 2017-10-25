@@ -20,13 +20,19 @@
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
         <?php do_action("wpstg_scanning_db")?>
         <h4 style="margin:0">
-            <?php echo __(
-                "Uncheck the tables you do not want to copy. (If the copy process was previously interrupted, ".
-                "successfully copied tables are greyed out and copy process will skip these ones)",
+            <?php 
+
+            echo __(
+                "Uncheck the tables you do not want to copy. Usually you should select tables with prefix '{$scan->prefix}', only.",
                 "wpstg"
             )?>
         </h4>
+        <div style="margin-top:10px;margin-bottom:10px;">
+            <a href="#" class="wpstg-button-unselect button"> None </a>
+            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wpstg'); ?> </a>
+        </div>
         <?php
+        //print_r( $options->excludedTables);
         foreach ($options->tables as $table):
             $attributes = in_array($table->name, $options->excludedTables) ? '' : "checked";
             $attributes .= in_array($table->name, $options->clonedTables) ? " disabled" : '';
@@ -41,10 +47,9 @@
 			</span>
             </div>
         <?php endforeach ?>
-        <div>
-            <a href="#" class="wpstg-button-unselect">
-                Un-check All
-            </a>
+        <div style="margin-top:10px;">
+            <a href="#" class="wpstg-button-unselect button"> None </a>
+            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wpstg'); ?> </a>
         </div>
     </div>
 
@@ -81,7 +86,7 @@
             <span>
                 <?php
                 if (isset($options->clone)){
-                echo __("All files are copied into: ", "wpstg") . $options->root . $options->clone;
+                echo __("All files will be copied to: ", "wpstg") . $options->root . $options->clone;
                 }
                 ?>
             </span>
@@ -103,17 +108,22 @@
     <?php _e("Back", "wpstg")?>
 </button>
 
-<button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_cloning">
     <?php
     if (null !== $options->current)
     {
-        echo __("Update Clone", "wpstg");
+        $label =  __("Update Clone", "wpstg");
+        $action = 'wpstg_update';
+        
+        echo '<button type="button" id="wpstg-start-updating" class="wpstg-next-step-link  wpstg-link-btn button-primary" data-action="'.$action.'">'.$label.'</button>';
     }
     else
     {
-        echo __("Start Cloning", "wpstg");
+        $label =  __("Start Cloning", "wpstg");
+        $action = 'wpstg_cloning';
+       
+        echo '<button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="'.$action.'">'.$label.'</button>';
+
     }
     ?>
-</button>
 
 <a href="#" id="wpstg-check-space"><?php _e('Check Disk Space', 'wpstg'); ?></a>

@@ -97,16 +97,10 @@ abstract class Job implements JobInterface
         //$this->maxExecutionTime = (int) ini_get("max_execution_time");
         $this->maxExecutionTime = (int) 30; 
         
-//        if ($this->maxExecutionTime > 30)
+//        if ($this->maxExecutionTime < 1 || $this->maxExecutionTime > 30)
 //        {
 //            $this->maxExecutionTime = 30;
 //        }
-//
-//        if ($this->maxExecutionTime < 1)
-//        {
-//            $this->maxExecutionTime = 30;
-//        }
-
 
         // Services
         $this->cache    = new Cache(-1, \WPStaging\WPStaging::getContentDir());
@@ -115,12 +109,9 @@ abstract class Job implements JobInterface
         // Settings and Options
         $this->options  = $this->cache->get("clone_options");
         //$this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
-        $this->settings = (object)get_option("wpstg_settings", array());
-        
+        $this->settings = (object) get_option("wpstg_settings", array());
 
-
-        // check default options
-        if (!$this->settings)
+        if (!$this->options)
         {
             $this->options = new \stdClass();
         }
@@ -130,7 +121,14 @@ abstract class Job implements JobInterface
             $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
         }
 
-        if (!isset($this->settings) || !isset($this->settings->queryLimit) || !isset($this->settings->batchSize) || !isset($this->settings->cpuLoad))
+        // check default options
+        if (    !isset($this->settings) || 
+                !isset($this->settings->queryLimit) || 
+                !isset($this->settings->batchSize) || 
+                !isset($this->settings->cpuLoad) ||
+                !isset($this->settings->fileLimit) 
+            )
+
         {
             $this->settings = new \stdClass();
             $this->setDefaultSettings();
@@ -176,7 +174,7 @@ abstract class Job implements JobInterface
      */
     protected function setDefaultSettings(){
         $this->settings->queryLimit = "1000";
-        $this->settings->fileCopyLimit = "10";
+        $this->settings->fileLimit = "10";
         $this->settings->batchSize = "2";
         $this->settings->cpuLoad = 'medium';
         update_option('wpstg_settings', $this->settings);
@@ -231,7 +229,6 @@ abstract class Job implements JobInterface
 
         // Ensure that it is an object
         $options = json_decode(json_encode($options));
-
         return $this->cache->save("clone_options", $options);
     }
 
@@ -320,8 +317,8 @@ abstract class Job implements JobInterface
 
         if ($usedMemory >= $this->memoryLimit)
         {
-            $this->log('Used Memory: ' . $this->formatBytes($usedMemory) . ' Memory Limit: ' . $this->formatBytes($this->maxMemoryLimit) . ' Max Script memory limit: ' . $this->formatBytes( $this->memoryLimit ) );
-            $this->resetMemory();
+            $this->log('Used Memory: ' . $this->formatBytes($usedMemory) . ' Memory Limit: ' . $this->formatBytes($this->maxMemoryLimit) . ' Max Script memory limit: ' . $this->formatBytes( $this->memoryLimit ), Logger::TYPE_ERROR );
+            //$this->resetMemory();
             return true;
         }
 
@@ -334,7 +331,7 @@ abstract class Job implements JobInterface
         // Check if execution time is over threshold
         ///$time = round($this->start + $this->time(), 4);
         $time = round($this->time() - $this->start, 4);
-        $this->debugLog( 'Execution time: ' . $time . ' Execution Limit' . $this->executionLimit );
+        
         if ($time >= $this->executionLimit)
         {
             //$this->log('RESET TIME');
@@ -470,5 +467,18 @@ abstract class Job implements JobInterface
             $this->logger->add($msg, $type);
         }
         
+    }
+    
+    /**
+     * Throw a errror message via json and stop further execution
+     * @param string $message
+     */
+    protected function returnException($message = ''){
+        wp_die( json_encode(array(
+                  'job'     => $this->options->currentJob,
+                  'status'  => false,
+                  'message' => $message,
+                  'error' => true
+            )));
     }
 }

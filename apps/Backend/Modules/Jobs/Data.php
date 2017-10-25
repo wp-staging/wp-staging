@@ -34,7 +34,8 @@ class Data extends JobExecutable
     {
         $this->db       = WPStaging::getInstance()->get("wpdb");
 
-        $this->prefix   = "wpstg{$this->options->cloneNumber}_";
+        //$this->prefix   = "wpstg{$this->options->cloneNumber}_";
+        $this->prefix   = $this->options->prefix;
 
         // Fix current step
         if (0 == $this->options->currentStep)
@@ -71,7 +72,8 @@ class Data extends JobExecutable
             "total"         => $this->options->totalSteps,
             "step"          => $this->options->totalSteps,
             "last_msg"      => $this->logger->getLastLogMsg(),
-            "running_time"  => $this->time() - time()
+            "running_time"  => $this->time() - time(),
+            "job_done"      => true
         );
 
         return (object) $this->response;
@@ -157,7 +159,7 @@ class Data extends JobExecutable
         
         return false;
     }
-    
+
         
     /**
      * Check if table exists
@@ -177,7 +179,7 @@ class Data extends JobExecutable
      * @return bool
      */
     protected function step1() {
-      $this->log( "Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO );
+      $this->log( "Search & Replace: Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO );
 
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
@@ -188,19 +190,19 @@ class Data extends JobExecutable
          $subDirectory = str_replace( get_home_path(), '', ABSPATH );
          $this->log( "Updating siteurl and homeurl to " . get_home_url() . '/' . $subDirectory . $this->options->cloneDirectoryName );
          // Replace URLs
-      $result = $this->db->query(
-              $this->db->prepare(
+         $result = $this->db->query(
+                 $this->db->prepare(
                          "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", get_home_url() . '/' . $subDirectory . $this->options->cloneDirectoryName
                  )
          );
       } else {
-         $this->log( "Updating siteurl and homeurl to " . get_home_url() . '/' . $this->options->cloneDirectoryName );
+         $this->log( "Search & Replace:: Updating siteurl and homeurl to " . get_home_url() . '/' . $this->options->cloneDirectoryName );
          // Replace URLs
          $result = $this->db->query(
                  $this->db->prepare(
-                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", get_home_url() . '/' . $this->options->cloneDirectoryName
-              )
-      );
+                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", get_home_url() . '/' . $this->options->cloneDirectoryName
+                 )
+         );
       }
 
 
@@ -209,7 +211,7 @@ class Data extends JobExecutable
          return true;
       }
 
-      $this->log( "Failed to update siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+      $this->log( "Search & Replace: Failed to update siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
       return false;
    }
 
@@ -220,8 +222,8 @@ class Data extends JobExecutable
     protected function step2()
     {
               
-        $this->log( "Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}" );
-        
+        $this->log( "Search & Replace: Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}" );
+
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
@@ -250,7 +252,7 @@ class Data extends JobExecutable
             return true;
         }
 
-        $this->log("Failed to update wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
+        $this->log("Search & Replace: Failed to update wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
         return false;
     }
 
@@ -261,7 +263,7 @@ class Data extends JobExecutable
     protected function step3()
     {
        
-        $this->log("Updating rewrite_rules in {$this->prefix}options {$this->db->last_error}");
+        $this->log("Search & Replace: Updating rewrite_rules in {$this->prefix}options {$this->db->last_error}");
         
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
@@ -281,7 +283,7 @@ class Data extends JobExecutable
         }
 
         $this->log("Failed to update rewrite_rules in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
-        return false;
+        return true;
     }
 
     /**
@@ -289,8 +291,8 @@ class Data extends JobExecutable
      * @return bool
      */
     protected function step4() {
-        $this->log( "Updating {$this->prefix}usermeta db prefix {$this->db->last_error}" );
-        
+        $this->log( "Search & Replace: Updating {$this->prefix}usermeta db prefix {$this->db->last_error}" );
+
       if( false === $this->isTable( $this->prefix . 'usermeta' ) ) {
          return true;
       }
@@ -302,7 +304,7 @@ class Data extends JobExecutable
         );
 
         if( !$resultOptions ) {
-            $this->log( "Failed to update usermeta meta_key database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
+            $this->log( "Search & Replace: Failed to update usermeta meta_key database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
             return false;
         }
 
@@ -315,7 +317,7 @@ class Data extends JobExecutable
         );
 
         if( !$resultUserMeta ) {
-            $this->log( "Failed to update options, option_name database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
+            $this->log( "Search & Replace: Failed to update options, option_name database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
             return false;
         }
 
@@ -328,24 +330,24 @@ class Data extends JobExecutable
      */
     protected function step5()
     {
-        $path = get_home_path() . $this->options->cloneDirectoryName . "/wp-config.php";
+        $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
         
-        $this->log("Updating table_prefix in wp-config to " . $this->prefix);
+        $this->log("Search & Replace: Updating table_prefix in {$path} to " . $this->prefix);
         if (false === ($content = file_get_contents($path)))
         {
-            $this->log("Failed to update table_prefix in wp-config; can't read contents", Logger::TYPE_ERROR);
+            $this->log("Search & Replace: Failed to update table_prefix in {$path}. Can't read contents", Logger::TYPE_ERROR);
             return false;
         }
         
         // Replace table prefix
         $content = str_replace('$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content);
-
+        
         // Replace URLs
         $content = str_replace(get_home_url(), get_home_url() . '/' . $this->options->cloneDirectoryName, $content);
 
         if (false === @file_put_contents($path, $content))
         {
-            $this->log("Failed to update $table_prefix in wp-config to " .$this->prefix . ". Can't save contents", Logger::TYPE_ERROR);
+            $this->log("Search & Replace: Failed to update $table_prefix in {$path} to " .$this->prefix . ". Can't save contents", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -363,15 +365,15 @@ class Data extends JobExecutable
         // No settings, all good
         if (!isset($this->settings->wpSubDirectory) || "1" !== $this->settings->wpSubDirectory)
         {
-            $this->log("WP installation is not in a subdirectory! All good, skipping this step");
+            $this->log("Search & Replace: WP installation is not in a subdirectory! All good, skipping this step");
             return true;
         }
 
-        $path = get_home_path() . $this->options->cloneDirectoryName . "/index.php";
+        $path = ABSPATH . $this->options->cloneDirectoryName . "/index.php";
 
         if (false === ($content = file_get_contents($path)))
         {
-            $this->log("Failed to reset index.php for sub directory; can't read contents", Logger::TYPE_ERROR);
+            $this->log("Search & Replace: Failed to reset {$path} for sub directory; can't read contents", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -379,7 +381,7 @@ class Data extends JobExecutable
         if (!preg_match("/(require(.*)wp-blog-header.php' \);)/", $content, $matches))
         {
             $this->log(
-                "Failed to reset index.php for sub directory; wp-blog-header.php is missing",
+                "Search & Replace: Failed to reset index.php for sub directory; wp-blog-header.php is missing",
                 Logger::TYPE_ERROR
             );
             return false;
@@ -392,13 +394,13 @@ class Data extends JobExecutable
 
         if (null === preg_replace($pattern, $replace, $content))
         {
-            $this->log("Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
+            $this->log("Search & Replace: Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
             return false;
         }
 
         if (false === @file_put_contents($path, $content))
         {
-            $this->log("Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
+            $this->log("Search & Replace: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
             return false;
         }
 

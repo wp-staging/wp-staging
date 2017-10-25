@@ -8,7 +8,9 @@ if( !defined( "WPINC" ) ) {
 }
 
 use WPStaging\Backend\Modules\Jobs\Cancel;
+use WPStaging\Backend\Modules\Jobs\CancelUpdate;
 use WPStaging\Backend\Modules\Jobs\Cloning;
+use WPStaging\Backend\Modules\Jobs\Updating;
 use WPStaging\Backend\Modules\Jobs\Data;
 use WPStaging\Backend\Modules\Jobs\Database;
 use WPStaging\Backend\Modules\Jobs\Delete;
@@ -85,22 +87,12 @@ class Administrator extends InjectionAware {
       $loader->addAction( "admin_post_wpstg_import_settings", $this, "import" );
       $loader->addAction( "admin_notices", $this, "messages" );
 
-      // Settings
-      $settings = $this->di->get( "settings" );
-
-      // Optimizer is ON
-      if( $settings->isOptimizer() ) {
-         $optimizer = new Optimizer( $this->di );
-
-         $loader->addAction( "admin_init", $optimizer, "compatibility", 1 );
-         $loader->addFilter( "option_active_plugins", $optimizer, "excludedPlugins" );
-         $loader->addFilter( "site_option_active_sitewide_plugins", $optimizer, "excludedPlugins" );
-      }
-
       // Ajax Requests
       $loader->addAction( "wp_ajax_wpstg_overview", $this, "ajaxOverview" );
       $loader->addAction( "wp_ajax_wpstg_scanning", $this, "ajaxScan" );
       $loader->addAction( "wp_ajax_wpstg_check_clone", $this, "ajaxcheckCloneName" );
+      //$loader->addAction( "wp_ajax_wpstg_update_struc", $this, "ajaxStartUpdate" );
+      $loader->addAction( "wp_ajax_wpstg_update", $this, "ajaxUpdateProcess" );
       $loader->addAction( "wp_ajax_wpstg_cloning", $this, "ajaxStartClone" );
       $loader->addAction( "wp_ajax_wpstg_clone_database", $this, "ajaxCloneDatabase" );
       $loader->addAction( "wp_ajax_wpstg_clone_prepare_directories", $this, "ajaxPrepareDirectories" );
@@ -110,6 +102,7 @@ class Administrator extends InjectionAware {
       $loader->addAction( "wp_ajax_wpstg_confirm_delete_clone", $this, "ajaxDeleteConfirmation" );
       $loader->addAction( "wp_ajax_wpstg_delete_clone", $this, "ajaxDeleteClone" );
       $loader->addAction( "wp_ajax_wpstg_cancel_clone", $this, "ajaxCancelClone" );
+      $loader->addAction( "wp_ajax_wpstg_cancel_update", $this, "ajaxCancelUpdate" );
       $loader->addAction( "wp_ajax_wpstg_hide_poll", $this, "ajaxHidePoll" );
       $loader->addAction( "wp_ajax_wpstg_hide_rating", $this, "ajaxHideRating" );
       $loader->addAction( "wp_ajax_wpstg_hide_beta", $this, "ajaxHideBeta" );
@@ -117,8 +110,9 @@ class Administrator extends InjectionAware {
       $loader->addAction( "wp_ajax_wpstg_check_disk_space", $this, "ajaxCheckFreeSpace" );
 
       // Ajax hooks pro Version
-      $loader->addAction( "wp_ajax_wpstg_start_processing", $this, "ajaxProcessing" );
-      $loader->addAction( "wp_ajax_wpstg_push_changes", $this, "ajaxPushChanges" );
+      $loader->addAction( "wp_ajax_wpstg_scan", $this, "ajaxPushScan" );
+      $loader->addAction( "wp_ajax_wpstg_push_processing", $this, "ajaxPushProcessing" );
+      //$loader->addAction( "wp_ajax_wpstg_copy_database", $this, "ajaxCopyDatabase" );
    }
 
    /**
@@ -384,6 +378,7 @@ class Administrator extends InjectionAware {
       // Get license data
       $license = get_option( 'wpstg_license_status' );
 
+      
       if( \WPStaging\WPStaging::getSlug() === 'wp-staging-pro' ) {
          require_once "{$this->path}Pro/views/single-overview-pro.php";
       } else {
@@ -435,6 +430,43 @@ class Administrator extends InjectionAware {
       echo wp_send_json( array("status" => "success") );
    }
 
+
+   
+   
+   /**
+    * Ajax Start Updating Clone (Basically just layout and saving data)
+    */
+//   public function ajaxStartUpdate() {
+//      check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
+//
+//      $cloning = new Updating();
+//
+//      if( !$cloning->save() ) {
+//         wp_die('can not save clone data');
+//      }
+//
+//      require_once "{$this->path}views/clone/ajax/update.php";
+//
+//      wp_die();
+//   }
+   /**
+    * Ajax Start Updating Clone (Basically just layout and saving data)
+    */
+   public function ajaxUpdateProcess() {
+      check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
+
+      $cloning = new Updating();
+
+      if( !$cloning->save() ) {
+         wp_die('can not save clone data');
+      }
+
+      require_once "{$this->path}views/clone/ajax/update.php";
+
+      wp_die();
+      
+      //wp_send_json( $cloning->start() );
+   }
    /**
     * Ajax Start Clone (Basically just layout and saving data)
     */
@@ -444,7 +476,7 @@ class Administrator extends InjectionAware {
       $cloning = new Cloning();
 
       if( !$cloning->save() ) {
-         wp_die();
+         wp_die('can not save clone data');
       }
 
       require_once "{$this->path}views/clone/ajax/start.php";
@@ -544,6 +576,16 @@ class Administrator extends InjectionAware {
    }
 
    /**
+    * Cancel updating process / Do not delete clone!
+    */
+   public function ajaxCancelUpdate() {
+      check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
+
+      $cancel = new CancelUpdate();
+      wp_send_json( $cancel->start() );
+   }
+
+   /**
     * Admin Messages
     */
    public function messages() {
@@ -603,8 +645,9 @@ class Administrator extends InjectionAware {
 
    /**
     * Ajax Start Push Changes Process
+    * Start with the module Scan
     */
-   public function ajaxProcessing() {
+   public function ajaxPushScan() {
       check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
 
       if( !class_exists( 'WPStaging\Backend\Pro\Modules\Jobs\Scan' ) ) {
@@ -613,6 +656,7 @@ class Administrator extends InjectionAware {
 
       // Scan
       $scan = new Pro\Modules\Jobs\Scan();
+
       $scan->start();
 
       // Get Options
@@ -626,7 +670,7 @@ class Administrator extends InjectionAware {
    /**
     * Ajax Start Pushing. Needs wp quads pro)
     */
-   public function ajaxPushChanges() {
+   public function ajaxPushProcessing() {
       check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
 
       if( !class_exists( 'WPStaging\Backend\Pro\Modules\Jobs\Processing' ) ) {

@@ -125,6 +125,49 @@ class Delete extends Job {
             $path = ABSPATH . $this->clone->directoryName . "/wp-config.php";
             if (false === ($content = @file_get_contents($path))) {
                 $this->log("Can not open {$path}. Can't read contents", Logger::TYPE_ERROR);
+                // Create a random prefix which highly like never exists
+                $this->clone->prefix = rand(7, 15) . '_';
+            } else {
+
+                // Get prefix from wp-config.php
+                //preg_match_all("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
+                preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
+
+                if (!empty($matches[1])) {
+                    $this->clone->prefix = $matches[1];
+                } else {
+                    $this->log("Can not find Prefix. '{$matches[1]}'.");
+                    // Create a random prefix which highly like never exists
+                    return $this->clone->prefix = rand(7, 15) . '_';
+                }
+            }
+        }
+
+        // Check if staging prefix is the same as the live prefix
+        if ($this->wpdb->prefix == $this->clone->prefix) {
+            // Create a random prefix which highly like never exists
+            return $this->clone->prefix = rand(7, 15) . '_';
+            $this->log("Can not use prefix. '{$this->clone->prefix}', is used for the live site. Creating a new random prefix");
+            //wp_die("Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com");
+        }
+
+        // Else
+        return $this->clone->prefix;
+    }
+
+    /**
+     * Check if we can delete the staging site tables without affecting live ones
+     * @return bool
+     */
+    public function isInvalidStagingPrefix() {
+        // prefix not defined! Happens if staging site has ben generated with older version of wpstg
+        // Try to get staging prefix from wp-config.php of staging site
+        //wp_die($this->clone->directoryName);
+        if (empty($this->clone->prefix)) {
+            // Throw error
+            $path = ABSPATH . $this->clone->directoryName . "/wp-config.php";
+            if (false === ($content = @file_get_contents($path))) {
+                $this->log("Can not open {$path}. Can't read contents", Logger::TYPE_ERROR);
                 // Create a random prefix which hopefully never exists.
                 $this->clone->prefix = rand(7, 15) . '_';
             } else {
@@ -146,12 +189,11 @@ class Delete extends Job {
 
         // Check if staging prefix is the same as the live prefix
         if ($this->wpdb->prefix == $this->clone->prefix) {
-            $this->log("Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com");
-            wp_die("Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com");
+            return true;
         }
 
         // Else
-        return $this->clone->prefix;
+        return false;
     }
 
     /**
@@ -215,12 +257,23 @@ class Delete extends Job {
             return;
         }
 
-        // Generate JOB
-        $this->job = (object) array(
-                    "current" => "tables",
-                    "nextDirectoryToDelete" => $this->clone->path,
-                    "name" => $this->clone->name
-        );
+        // Skip deletion of tables and generate JOB to delete directories
+        if ($this->isInvalidStagingPrefix()) {
+            $this->log('Invalid staging prefix. Skip deleting tables');
+            // Generate JOB and delete tables
+            $this->job = (object) array(
+                        "current" => "directory",
+                        "nextDirectoryToDelete" => $this->clone->path,
+                        "name" => $this->clone->name
+                    );
+        } else {
+            // Generate JOB and delete tables
+            $this->job = (object) array(
+                        "current" => "tables",
+                        "nextDirectoryToDelete" => $this->clone->path,
+                        "name" => $this->clone->name
+            );
+        }
 
         $this->cache->save("delete_job_{$this->clone->name}", $this->job);
     }
@@ -263,12 +316,11 @@ class Delete extends Job {
             return;
         }
 
-        //$wpdb = WPStaging::getInstance()->get("wpdb");
 
         foreach ($this->getTablesToRemove() as $table) {
             // PROTECTION: Never delete any table that beginns with wp prefix of live site
             if ($this->startsWith($table, $this->wpdb->prefix)) {
-                $this->log("Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL);
+                $this->log("Fatal Error: Trying to delete table {$table} of main WP installation! Contact support[at]wp-staging.com", Logger::TYPE_CRITICAL);
                 return false;
             } else {
                 $this->wpdb->query("DROP TABLE {$table}");
@@ -328,36 +380,14 @@ class Delete extends Job {
                 return;
             }
         }
-        //rmdir($this->clone->path);
-//        if (is_dir($this->clone->path)) {
-//            return $this->returnException('Unable to delete all files in folder' . $this->clone->path . '<br>Please try to delete the folder manually via FTP. Than run the delete function again.');
-//        } else {
-//            return $this->returnFinish();
-//        }
-        if (@rmdir($this->clone->path)){
+
+        if (@rmdir($this->clone->path)) {
             return $this->returnFinish();
         }
         return;
-        
-        
-
     }
 
-    /**
-     * Delete Directories
-     */
-    public function deleteDirectory_old() {
-        // No deleting directories or root of this clone is deleted
-        if ($this->isDirectoryDeletingFinished()) {
-            $this->job->current = "finish";
-            $this->updateJob();
-            return;
-        }
 
-        $this->processDirectory($this->job->nextDirectoryToDelete);
-
-        return;
-    }
 
     /**
      * @return bool
@@ -456,18 +486,7 @@ class Delete extends Job {
         wp_die(json_encode($response));
     }
 
-    /**
-     * Get json response
-     * return json
-     */
-//    private function returnException($message = ''){
-//        wp_die( json_encode(array(
-//                  'job'     => 'delete',
-//                  'status'  => false,
-//                  'message' => $message,
-//                  'error' => true
-//            )));
-//    }
+
     /**
      * Get json response
      * return json

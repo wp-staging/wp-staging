@@ -1,10 +1,6 @@
 <?php
 namespace WPStaging\Backend\Modules\Jobs;
 
-//ini_set('display_startup_errors', 1);
-//ini_set('display_errors', 1);
-//error_reporting(-1);
-
 // No Direct Access
 if (!defined("WPINC"))
 {
@@ -97,13 +93,29 @@ class Database extends JobExecutable
     }
 
     /**
+     * Get new prefix for the staging site
+     * @return string
+     */
+    private function getStagingPrefix(){
+        $stagingPrefix = $this->options->prefix;
+        // Make sure prefix of staging site is NEVER identical to prefix of live site! 
+        if ( $stagingPrefix == $this->db->prefix ){
+            wp_die('Fatal error 7: The new database table prefix '. $stagingPrefix .' would be identical to the table prefix of the live site. Please open a support ticket to support@wp-staging.com'); 
+        }  
+        return $stagingPrefix;
+    }
+
+    /**
      * No worries, SQL queries don't eat from PHP execution time!
      * @param string $tableName
      * @return bool
      */
     private function copyTable($tableName)
     {
-        $newTableName = "wpstg{$this->options->cloneNumber}_" . str_replace($this->db->prefix, null, $tableName);
+        //$this->returnException($this->getStagingPrefix());
+
+        //$newTableName = "wpstg{$this->options->cloneNumber}_" . str_replace($this->db->prefix, null, $tableName);
+        $newTableName = $this->getStagingPrefix() . str_replace($this->db->prefix, null, $tableName);
 
         // Drop table if necessary
         $this->dropTable($newTableName);
@@ -133,7 +145,7 @@ class Database extends JobExecutable
     {
         $rows = $this->options->job->start+$this->settings->queryLimit;
         $this->log(
-            "Copying {$old} as {$new} between {$this->options->job->start} to {$rows} records"
+            "DB Copy: {$old} as {$new} between {$this->options->job->start} to {$rows} records"
         );
 
         $limitation = '';
@@ -179,7 +191,7 @@ class Database extends JobExecutable
             return true;
         }
 
-        $this->log("Creating table {$new} like {$old}");
+        $this->log("DB Copy: Creating table {$new} like {$old}");
 
         $this->db->query("CREATE TABLE {$new} LIKE {$old}");
 
@@ -227,7 +239,7 @@ class Database extends JobExecutable
             return;
         }
 
-        $this->log("{$new} already exists, dropping it first");
+        $this->log("DB Copy: {$new} already exists, dropping it first");
         $this->db->query("DROP TABLE {$new}");
     }
 

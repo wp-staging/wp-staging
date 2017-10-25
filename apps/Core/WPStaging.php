@@ -82,12 +82,8 @@ final class WPStaging {
       $this->loadLanguages();
       $this->loadDependencies();
       $this->defineHooks();
-            
       // Licensing stuff be loaded in wpstg core to make cron hook available from frontpage
-      $this->licensing();
-      
-      // Activation Hook
-      register_activation_hook( $file, array($this, "onActivation") );
+      $this->initLicensing();
    }
 
    /**
@@ -167,7 +163,6 @@ final class WPStaging {
       );
 
       wp_localize_script( "wpstg-admin-script", "wpstg", array(
-          "ajaxurl" => admin_url( 'admin-ajax.php' ),
           "nonce" => wp_create_nonce( "wpstg_ajax_nonce" ),
           "mu_plugin_confirmation" => __(
                   "If confirmed we will install an additional WordPress 'Must Use' plugin. "
@@ -184,8 +179,18 @@ final class WPStaging {
                   "A problem occurred when trying to add plugins to backlist.", "wpstg"
           ),
           "cpuLoad" => $this->getCPULoadSetting(),
-          "settings" => ( object ) array() // TODO add settings?
+          "settings" => ( object ) array(), // TODO add settings?
+          "tblprefix" => self::getTablePrefix()
       ) );
+   }
+
+   /**
+    * Get table prefix of the current site
+    * @return string
+    */
+   public static function getTablePrefix(){
+       $wpDB = WPStaging::getInstance()->get("wpdb");
+       return $wpDB->prefix;
    }
 
    /**
@@ -207,7 +212,6 @@ final class WPStaging {
       $autoloader = new Autoloader();
       $this->set( "autoloader", $autoloader );
 
-      //wp_die($this->pluginPath . 'apps' . DIRECTORY_SEPARATOR);
       // Autoloader
       $autoloader->registerNamespaces( array(
           "WPStaging" => array(
@@ -414,7 +418,7 @@ final class WPStaging {
     * Initialize licensing functions
     * @return boolean
     */
-   private function licensing() {
+   public function initLicensing() {
       // Add licensing stuff if class exists
       if( class_exists( 'WPStaging\Backend\Pro\Licensing\Licensing' ) ) {
          $licensing = new Backend\Pro\Licensing\Licensing();

@@ -24,18 +24,25 @@
                 <?php echo apply_filters("wpstg_before_stage_buttons", $html = '', $name, $data)?>
 
                 <a href="<?php echo $urlLogin?>" class="wpstg-open-clone wpstg-clone-action" target="_blank">
-                    <?php _e("Open", "wpstg")?>
+                    <?php _e("Open", "wpstg"); ?>
                 </a>
 
                 <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $name?>">
-                    <?php _e("Edit", "wpstg")?>
+                    <?php _e("Update", "wpstg"); ?>
                 </a>
 
                 <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo $name?>">
-                    <?php _e("Delete", "wpstg")?>
+                    <?php _e("Delete", "wpstg"); ?>
                 </a>
 
                 <?php echo apply_filters("wpstg_after_stage_buttons", $html = '', $name, $data)?>
+                <div class="wpstg-staging-info">                   
+                    <?php 
+                    $prefix = isset ($data['prefix']) ? __("DB prefix: <span class='wpstg-bold'>" . $data['prefix'], "wpstg") . '</span> ' : '&nbsp;&nbsp;&nbsp;';
+                    //$path = isset ($data['directoryName']) ? __("Subdir: <span class='wpstg-bold'>" . $data['directoryName'], "wpstg") . '</span>' : '';
+                    echo $prefix;
+                    ?>
+                </div>
             </div>
         <?php endforeach?>
     </div>

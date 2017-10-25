@@ -7,6 +7,7 @@ if (!defined("WPINC"))
     die;
 }
 
+
 /**
  * Class JobExecutable
  * I'm sorry for such mess, we need to support PHP 5.3
@@ -23,7 +24,7 @@ abstract class JobExecutable extends Job
         "percentage"    => 0,
         "total"         => 0,
         "step"          => 0,
-        "last_msg"      => ''
+        "last_msg"      => '',
     );
 
     /**
@@ -39,7 +40,7 @@ abstract class JobExecutable extends Job
 
     /**
      * Prepare Response Array
-     * @param bool $status false when the job is not done
+     * @param bool $status
      * @param bool $incrementCurrentStep
      * @return array
      */
@@ -58,25 +59,11 @@ abstract class JobExecutable extends Job
             "percentage"    => $percentage,
             "total"         => $this->options->totalSteps,
             "step"          => $this->options->currentStep,
+            "job"           => $this->options->currentJob,
             "last_msg"      => $this->logger->getLastLogMsg(),
-            "running_time"  => $this->time() - time()
+            "running_time"  => $this->time() - time(),
+            "job_done"      => $status
         );
-    }
-
-    /**
-     * Run Steps
-     */
-    protected function run()
-    {
-        // Execute steps
-        for ($i = 0; $i < $this->options->totalSteps; $i++)
-        {
-            // Job is finished or over threshold limits was hit
-            if (!$this->execute())
-            {
-                break;
-            }
-        }
     }
 
     /**
@@ -92,6 +79,22 @@ abstract class JobExecutable extends Job
         $this->saveOptions();
 
         return (object) $this->response;
+    }
+    
+        /**
+     * Run Steps
+     */
+    protected function run()
+    {
+        // Execute steps
+        for ($i = 0; $i < $this->options->totalSteps; $i++)
+        {
+            // Job is finished or over threshold limits was hit
+            if (!$this->execute())
+            {
+                break;
+            }
+        }
     }
 
     /**
