@@ -139,6 +139,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.1.4 =
+* Fix: Link to the staging site is missing a slash if WordPress is installed in subdir
+
 = 2.1.3 =
 * New: Add more details to tools->system info log for better debugging
 * New: Add buttons to select all default wp tables with one click

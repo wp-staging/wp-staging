@@ -1207,9 +1207,11 @@ var WPStaging = (function ($)
                 cache.get("#wpstg-finished-result").show();
                 cache.get("#wpstg-cancel-cloning").prop("disabled", true);
                 cache.get("#wpstg-cancel-cloning-update").prop("disabled", true);
-                $link1.attr("href", $link1.attr("href") + '/' + response.directoryName);
-                $link1.append('/' + response.directoryName);
-                $link.attr("href", $link.attr("href") + '/' + response.directoryName);
+//                $link1.attr("href", $link1.attr("href") + '/' + response.directoryName);
+//                $link1.append('/' + response.directoryName);
+//                $link.attr("href", $link.attr("href") + '/' + response.directoryName);
+                $link1.attr("href", response.url);
+                $link.attr("href", response.url);
                 cache.get("#wpstg-remove-clone").data("clone", that.data.cloneID);
 
                 // Finished
