@@ -361,7 +361,7 @@ var WPStaging = (function ($)
                 }
 
                 showError(
-                        "Fatal Unknown Error. Go to WP Staging > Settings and lower 'File Copy Limit'" +
+                        "Fatal Unknown Error. Go to WP Staging > Settings and set  'File Copy Limit' to 1. Also try to lower 'cpu load' there." +
                         "Than try again. If this does not help, " +
                         "<a href='https://wpquads.com/support/' target='_blank'>open a support ticket</a> "
                         );

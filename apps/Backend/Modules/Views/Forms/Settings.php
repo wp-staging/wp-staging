@@ -66,7 +66,7 @@ class Settings
             ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 1000)
         );
 
-        $options = array('250' => '250' ,'500' => '500', '1000' => '1000');
+        $options = array('1' => '1', '250' => '250' ,'500' => '500', '1000' => '1000');
         // DB Copy Query Limit
         $element = new Select(
             "wpstg_settings[fileLimit]",
@@ -80,7 +80,7 @@ class Settings
         );
         
         $this->form["general"]->add(
-            $element->setLabel("File Copy Limit")->setDefault(isset($settings->fileLimit) ? $settings->fileLimit : 500)
+            $element->setLabel("File Copy Limit")->setDefault(isset($settings->fileLimit) ? $settings->fileLimit : 250)
         );
 
 

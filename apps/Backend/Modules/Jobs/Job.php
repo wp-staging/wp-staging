@@ -174,7 +174,7 @@ abstract class Job implements JobInterface
      */
     protected function setDefaultSettings(){
         $this->settings->queryLimit = "1000";
-        $this->settings->fileLimit = "10";
+        $this->settings->fileLimit = "1";
         $this->settings->batchSize = "2";
         $this->settings->cpuLoad = 'medium';
         update_option('wpstg_settings', $this->settings);

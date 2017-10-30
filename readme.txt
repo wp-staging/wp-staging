@@ -141,6 +141,7 @@ https://wp-staging.com
 
 = 2.1.4 =
 * Fix: Link to the staging site is missing a slash if WordPress is installed in subdir
+* Tweak: Allow file copy limit 1 to prevent copy timeouts
 
 = 2.1.3 =
 * New: Add more details to tools->system info log for better debugging
