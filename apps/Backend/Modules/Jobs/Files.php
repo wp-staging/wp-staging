@@ -110,8 +110,9 @@ class Files extends JobExecutable {
         }
 
         // Go to last copied line and than to next one
-        if ($this->options->copiedFiles != 0) {
-            $this->file->seek($this->options->copiedFiles);
+        //if ($this->options->copiedFiles != 0) {
+        if (isset($this->options->copiedFiles) && $this->options->copiedFiles != 0) {
+            $this->file->seek($this->options->copiedFiles-1);
         }
 
         $this->file->setFlags(\SplFileObject::SKIP_EMPTY | \SplFileObject::READ_AHEAD);
@@ -135,6 +136,8 @@ class Files extends JobExecutable {
             if ($this->file->eof()) {
                 break;
             }
+            
+
             $file = $this->file->fgets();
             $this->debugLog('copy file ' . $file, Logger::TYPE_DEBUG);
             $this->copyFile($file);
@@ -142,8 +145,8 @@ class Files extends JobExecutable {
 
         }
 
-        $totalFiles = $this->maxFilesPerRun + $this->options->copiedFiles;
-        //$totalFiles = $this->options->copiedFiles;
+        //$totalFiles = $this->maxFilesPerRun + $this->options->copiedFiles;
+        $totalFiles = $this->options->copiedFiles;
         $this->log("Total {$totalFiles} files processed");
         //$this->saveCopiedFiles();
 
