@@ -141,6 +141,7 @@ https://wp-staging.com
 
 = 2.1.5 =
 * Fix. Change link to support
+* Fix: Missing files in clone site if copy file limit is higher than 1
 
 = 2.1.4 =
 * Fix: Link to the staging site is missing a slash if WordPress is installed in subdir

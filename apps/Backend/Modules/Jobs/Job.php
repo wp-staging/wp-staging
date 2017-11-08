@@ -334,7 +334,7 @@ abstract class Job implements JobInterface
         
         if ($time >= $this->executionLimit)
         {
-            //$this->log('RESET TIME');
+            $this->log('RESET TIME: current time: ' . $time . ', Start Time: ' . $this->start . ', exec time limit: ' . $this->executionLimit);
             return true;
         }
 
@@ -380,19 +380,19 @@ abstract class Job implements JobInterface
      * @deprecated since version 2.0.0
 
      */
-    protected function resetTime()
-    {
-        // Attempt to reset timeout
-        if (!@set_time_limit($this->maxExecutionTime))
-        {
-            return false;
-        }
-
-        // Increase execution limit
-        $this->executionLimit = $this->executionLimit * 2;
-
-        return true;
-    }
+//    protected function resetTime()
+//    {
+//        // Attempt to reset timeout
+//        if (!@set_time_limit($this->maxExecutionTime))
+//        {
+//            return false;
+//        }
+//
+//        // Increase execution limit
+//        $this->executionLimit = $this->executionLimit * 2;
+//
+//        return true;
+//    }
 
     /**
      * Reset time limit and memory
@@ -400,22 +400,22 @@ abstract class Job implements JobInterface
      * 
      * @deprecated since version 2.0.0
      */
-    protected function reset()
-    {
-        // Attempt to reset time
-        if (!$this->resetTime())
-        {
-            return false;
-        }
-
-        // Attempt to reset memory
-        if (!$this->resetMemory())
-        {
-            return false;
-        }
-
-        return true;
-    }
+//    protected function reset()
+//    {
+//        // Attempt to reset time
+//        if (!$this->resetTime())
+//        {
+//            return false;
+//        }
+//
+//        // Attempt to reset memory
+//        if (!$this->resetMemory())
+//        {
+//            return false;
+//        }
+//
+//        return true;
+//    }
 
     /**
      * Checks if calls are over recursion limit
