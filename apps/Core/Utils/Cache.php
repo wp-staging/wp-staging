@@ -8,6 +8,7 @@ if (!defined("WPINC"))
 }
 
 use WPStaging\WPStaging;
+use WPStaging\Backend\Modules\Jobs;
 
 /**
  * Class Cache
@@ -106,12 +107,26 @@ class Cache
         // Attempt to delete cache file if it exists
         if (is_file($cacheFile) && !@unlink($cacheFile))
         {
+            $this->returnException("Can't delete existing cache file");
             throw new \Exception("Can't delete existing cache file");
         }
 
         // Save it to file
         return (file_put_contents($cacheFile, @serialize($value), LOCK_EX) !== false);
         //return (file_put_contents($cacheFile, @serialize($value)) !== false);
+    }
+    
+        /**
+     * Throw a errror message via json and stop further execution
+     * @param string $message
+     */
+    protected function returnException($message = ''){
+        wp_die( json_encode(array(
+                  'job'     => isset($this->options->currentJob) ? $this->options->currentJob : '',
+                  'status'  => false,
+                  'message' => $message,
+                  'error' => true
+            )));
     }
 
     /**

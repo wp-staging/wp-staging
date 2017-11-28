@@ -475,7 +475,7 @@ abstract class Job implements JobInterface
      */
     protected function returnException($message = ''){
         wp_die( json_encode(array(
-                  'job'     => $this->options->currentJob,
+                  'job'     => isset($this->options->currentJob) ? $this->options->currentJob : '',
                   'status'  => false,
                   'message' => $message,
                   'error' => true

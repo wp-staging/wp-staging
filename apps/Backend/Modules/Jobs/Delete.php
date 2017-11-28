@@ -296,8 +296,8 @@ class Delete extends Job {
      */
     public function deleteDirectory() {
         if ($this->isFatalError() ){
-           $this->returnException('Can not delete directory: ' . $this->path . '. This seems to be the root directory. Please contact support@wp-staging.com');
-           throw new \Exception('Can not delete directory: ' . $this->path . ' This seems to be the root directory. Please contact support@wp-staging.com');
+           $this->returnException('Can not delete directory: ' . $this->clone->path . '. This seems to be the root directory. Please contact support@wp-staging.com');
+           throw new \Exception('Can not delete directory: ' . $this->clone->path . ' This seems to be the root directory. Please contact support@wp-staging.com');
         }
         // Finished or path does not exist
         if (    
