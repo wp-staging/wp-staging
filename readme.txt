@@ -8,7 +8,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
-Tested up to: 4.8
+Tested up to: 4.9
 Stable tag: {{version}}
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
@@ -138,6 +138,10 @@ https://wp-staging.com
 4. Finish!
 
 == Changelog ==
+
+= 2.1.6 =
+* Fix: Additional checks to ensure that the root path is never deleted
+* New: Compatible up to WP 4.9
 
 = 2.1.5 =
 * Fix. Change link to support
@@ -283,5 +287,5 @@ Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.co
 
 == Upgrade Notice ==
 
-= 2.1.2 =
-2.1.2 * Lot of modifications to increase speed and reliability for crewating staging sites
+= 2.1.6 =
+2.1.6 * * Fix: Additional checks to ensure that the root path is never deleted
