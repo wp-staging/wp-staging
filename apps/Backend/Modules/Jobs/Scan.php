@@ -69,7 +69,9 @@ class Scan extends Job
 
         // Files
         $this->options->totalFiles              = 0;
+        $this->options->totalFileSize           = 0;
         $this->options->copiedFiles             = 0;
+
 
         // Directories
         $this->options->includedDirectories     = array();
