@@ -23,9 +23,8 @@ class Files extends JobExecutable {
     /**
      * @var int
      */
-    //private $maxFilesPerRun = 500;
     private $maxFilesPerRun;
-    
+
     /**
      * File Object
      */
@@ -40,8 +39,7 @@ class Files extends JobExecutable {
      * Initialization
      */
     public function initialize() {
-        //$this->getVerifyFiles();
-        
+
         $this->destination = ABSPATH . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR;
 
         $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
@@ -57,8 +55,6 @@ class Files extends JobExecutable {
 
         $this->settings->batchSize = $this->settings->batchSize * 1000000;
         $this->maxFilesPerRun = $this->settings->fileLimit;
-        //$this->maxFilesPerRun = 1;
-        //$this->options->copiedFiles = 0;
     }
 
     /**
@@ -67,7 +63,6 @@ class Files extends JobExecutable {
      */
     protected function calculateTotalSteps() {
         $this->options->totalSteps = ceil($this->options->totalFiles / $this->maxFilesPerRun);
-        //$this->options->totalSteps = $this->options->totalFiles;
     }
 
     /**
@@ -112,22 +107,15 @@ class Files extends JobExecutable {
         // Go to last copied line and than to next one
         //if ($this->options->copiedFiles != 0) {
         if (isset($this->options->copiedFiles) && $this->options->copiedFiles != 0) {
-            $this->file->seek($this->options->copiedFiles-1);
+            $this->file->seek($this->options->copiedFiles - 1);
         }
 
         $this->file->setFlags(\SplFileObject::SKIP_EMPTY | \SplFileObject::READ_AHEAD);
 
-        // End of file
-//        if ($this->file->eof())
-//        {
-//            // Increment copied files when end of file is reached
-//            $this->options->copiedFiles++;
-//            return;
-//        }
+
         // Loop x files at a time
         for ($i = 0; $i < $this->maxFilesPerRun; $i++) {
-            
-            
+
             // Increment copied files
             // Do this anytime to make sure to not stuck in the same step / files
             $this->options->copiedFiles++;
@@ -136,19 +124,16 @@ class Files extends JobExecutable {
             if ($this->file->eof()) {
                 break;
             }
-            
+
 
             $file = $this->file->fgets();
             $this->debugLog('copy file ' . $file, Logger::TYPE_DEBUG);
             $this->copyFile($file);
-            //$this->verifyFiles[] = $file;
-
         }
 
         //$totalFiles = $this->maxFilesPerRun + $this->options->copiedFiles;
         $totalFiles = $this->options->copiedFiles;
         $this->log("Total {$totalFiles} files processed");
-        //$this->saveCopiedFiles();
 
         return true;
     }
@@ -169,7 +154,30 @@ class Files extends JobExecutable {
      * @return bool
      */
     private function copyFile($file) {
-        $file = trim($file);
+        $file = trim(ABSPATH . $file);
+
+        $directory = dirname($file);
+
+        // Get file size
+        $fileSize = filesize($file);
+
+        // Directory is excluded
+        if ($this->isDirectoryExcluded($directory)) {
+            $this->log("Skipping directory by rule: {$file}", Logger::TYPE_INFO);
+            return false;
+        }
+
+        // File is excluded
+        if ($this->isFileExcluded($file)) {
+            $this->log("Skipping file by rule: {$file}", Logger::TYPE_INFO);
+            return false;
+        }
+
+        // File is over maximum allowed file size (8MB)
+        if ($fileSize >= 8000000) {
+            $this->log("Skipping big file: {$file}", Logger::TYPE_INFO);
+            return false;
+        }
 
         // Invalid file, skipping it as if succeeded
         if (!is_file($file) || !is_readable($file)) {
@@ -183,8 +191,22 @@ class Files extends JobExecutable {
             return false;
         }
 
+        // File is over batch size
+        if ($fileSize >= $this->settings->batchSize) {
+            $this->log("Trying to copy big file: {$file} -> {$destination}", Logger::TYPE_INFO);
+            return $this->copyBig($file, $destination, $this->settings->batchSize);
+        }
+
+        // Attempt to copy
+        if (!@copy($file, $destination)) {
+            $this->log("Failed to copy file to destination: {$file} -> {$destination}", Logger::TYPE_ERROR);
+            return false;
+        }
+
+        return true;
+
         // Good old PHP
-        return $this->copy($file, $destination);
+        //return $this->copy($file, $destination);
     }
 
     /**
@@ -212,24 +234,25 @@ class Files extends JobExecutable {
      * @param string $destination
      * @return bool
      */
-    private function copy($file, $destination) {
-        // Get file size
-        $fileSize = filesize($file);
-
-        // File is over batch size
-        if ($fileSize >= $this->settings->batchSize) {
-            $this->log("Trying to copy big file {$file} -> {$destination}", Logger::TYPE_INFO);
-            return $this->copyBig($file, $destination, $this->settings->batchSize);
-        }
-
-        // Attempt to copy
-        if (!@copy($file, $destination)) {
-            $this->log("Failed to copy file to destination: {$file} -> {$destination}", Logger::TYPE_ERROR);
-            return false;
-        }
-
-        return true;
-    }
+//    private function copy($file, $destination) {
+//        // Get file size
+//        $fileSize = filesize($file);
+//        
+//
+//        // File is over batch size
+//        if ($fileSize >= $this->settings->batchSize) {
+//            $this->log("Trying to copy big file: {$file} -> {$destination}", Logger::TYPE_INFO);
+//            return $this->copyBig($file, $destination, $this->settings->batchSize);
+//        }
+//
+//        // Attempt to copy
+//        if (!@copy($file, $destination)) {
+//            $this->log("Failed to copy file to destination: {$file} -> {$destination}", Logger::TYPE_ERROR);
+//            return false;
+//        }
+//
+//        return true;
+//    }
 
     /**
      * Copy bigger files than $this->settings->batchSize
@@ -291,31 +314,52 @@ class Files extends JobExecutable {
         fclose($dest);
         return true;
     }
-    
+
     /**
-     * Save verified Files
+     * Check if file is excluded from copying process
+     * 
+     * @param string $file filename including ending
+     * @return boolean
+     */
+    private function isFileExcluded($file) {
+        $excluded = false;
+        foreach ($this->options->excludedFiles as $excludedFile) {
+            if (stripos(strrev($file), strrev($excludedFile)) === 0) {
+                $excluded = true;
+                break;
+            }
+        }
+        return $excluded;
+    }
+
+    /**
+     * Check if directory is excluded from copying
+     * @param string $directory
      * @return bool
      */
-//    private function saveCopiedFiles(){
-//        $fileName = $this->cache->getCacheDir() . "files_to_verify." . $this->cache->getCacheExtension();
-//        $files = implode( PHP_EOL, $this->verifyFiles );
-//
-//        return (false !== @file_put_contents( $fileName, $files ));
-//    }
-    
+    private function isDirectoryExcluded($directory) {
+        foreach ($this->options->excludedDirectories as $excludedDirectory) {
+            if (strpos($directory, $excludedDirectory) === 0 && !$this->isExtraDirectory($directory)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     /**
-     * Get files
-     * @return void
+     * Check if directory is an extra directory and should be copied
+     * @param string $directory
+     * @return boolean
      */
-//    protected function getVerifyFiles() {
-//        $fileName = $this->cache->getCacheDir() . "files_to_verify." . $this->cache->getCacheExtension();
-//
-//        if( false === ($this->verifyFiles = @file_get_contents( $fileName )) ) {
-//            $this->verifyFiles = array();
-//            return;
-//        }
-//
-//        $this->verifyFiles = explode( PHP_EOL, $this->verifyFiles );
-//    }
+    protected function isExtraDirectory($directory) {
+        foreach ($this->options->extraDirectories as $extraDirectory) {
+            if (strpos($directory, $extraDirectory) === 0) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 
 }
