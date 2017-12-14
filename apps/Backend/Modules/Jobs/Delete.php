@@ -69,7 +69,7 @@ class Delete extends Job {
             $this->log("Clone name is not set", Logger::TYPE_FATAL);
             throw new CloneNotFoundException();
         }
-        
+
         if (null === $name) {
             $name = $_POST["clone"];
         }
@@ -295,17 +295,16 @@ class Delete extends Job {
      * @throws InvalidArgumentException
      */
     public function deleteDirectory() {
-        if ($this->isFatalError() ){
-           $this->returnException('Can not delete directory: ' . $this->clone->path . '. This seems to be the root directory. Please contact support@wp-staging.com');
-           throw new \Exception('Can not delete directory: ' . $this->clone->path . ' This seems to be the root directory. Please contact support@wp-staging.com');
+        if ($this->isFatalError()) {
+            $this->returnException('Can not delete directory: ' . $this->clone->path . '. This seems to be the root directory. Please contact support@wp-staging.com');
+            throw new \Exception('Can not delete directory: ' . $this->clone->path . ' This seems to be the root directory. Please contact support@wp-staging.com');
         }
         // Finished or path does not exist
-        if (    
-                empty($this->clone->path) || 
-                $this->clone->path == get_home_path() || 
-                !is_dir($this->clone->path)) 
-            {
-            
+        if (
+                empty($this->clone->path) ||
+                $this->clone->path == get_home_path() ||
+                !is_dir($this->clone->path)) {
+
             $this->job->current = "finish";
             $this->updateJob();
             return $this->returnFinish();
@@ -328,18 +327,34 @@ class Delete extends Job {
         $di = new \RecursiveDirectoryIterator($this->clone->path, \FilesystemIterator::SKIP_DOTS);
         $ri = new \RecursiveIteratorIterator($di, \RecursiveIteratorIterator::CHILD_FIRST);
         foreach ($ri as $file) {
-            $file->isDir() ? @rmdir($file) : unlink($file);
+            //$file->isDir() ? @rmdir($file) : unlink($file);
+            $this->deleteFile($file);
             if ($this->isOverThreshold()) {
                 //$this->returnException('Maximum PHP execution time exceeded. Run again and repeat the deletion process until it is sucessfully finished.');
                 return;
             }
         }
 
-        if (@rmdir($this->clone->path)){
+        if (@rmdir($this->clone->path)) {
             return $this->returnFinish();
         }
-        return; 
+        return;
+    }
 
+    /**
+     * Delete file
+     * @param object iterator $file
+     */
+    private function deleteFile($file) {
+        if ($file->isDir()) {
+            if (!@rmdir($file)) {
+                $this->returnException('Permission Error: Can not delete folder ' . $file);
+            }
+        } else {
+            if (!unlink($file)) {
+                $this->returnException('Permission Error: Can not delete file ' . $file);
+            }
+        }
     }
 
     /**
@@ -410,17 +425,16 @@ class Delete extends Job {
 //                $this->isDirectoryDeletingFinished()
 //                );
 //    }
-    
+
     /**
      * 
      * @return boolean
      */
-    public function isFatalError(){
-        if (rtrim($this->clone->path,"/")  == rtrim(get_home_path(), "/")){
+    public function isFatalError() {
+        if (rtrim($this->clone->path, "/") == rtrim(get_home_path(), "/")) {
             return true;
         }
         return false;
-            
     }
 
     /**
