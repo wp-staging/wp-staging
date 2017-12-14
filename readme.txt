@@ -140,8 +140,10 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.1.6 =
+* New: increased speed for cloning process by factor 5, using new method of file agregation 
+* New: Skip files larger than 8MB
 * Fix: Additional checks to ensure that the root path is never deleted
-* New: Compatible up to WP 4.9
+* New: Compatible up to WP 4.9.1
 
 = 2.1.5 =
 * Fix. Change link to support
