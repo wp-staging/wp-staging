@@ -139,6 +139,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.1.7 =
++ New: Throw error if there is not enough disk space for creating a cloning site
+
 = 2.1.6 =
 * New: increased speed for cloning process by factor 5, using new method of file agregation 
 * New: Skip files larger than 8MB

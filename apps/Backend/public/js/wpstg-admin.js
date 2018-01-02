@@ -1032,6 +1032,13 @@ var WPStaging = (function ($)
                                     nonce: wpstg.nonce
                                 },
                         function (response) {
+                            
+                            // Error
+                            if ("undefined" !== typeof response.error && "undefined" !== typeof response.message) {
+                                showError(response.message);
+                                console.log(response.message);
+                            }
+                            
                             // Add percentage
                             if ("undefined" !== typeof (response.percentage))
                             {

@@ -90,7 +90,8 @@ class Directories extends JobExecutable {
                 }
             }
         } catch (\Exception $e) {
-            throw new \Exception('Out of disk space.');
+            $this->returnException('Out of disk space.');
+            //throw new \Exception('Out of disk space.');
         } catch (\Exception $e) {
             // Skip bad file permissions
         }
