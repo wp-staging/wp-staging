@@ -140,7 +140,8 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.1.7 =
-* New: Throw error if there is not enough disk space for creating a cloning site
+* Tweak: Return more human readable error notices
+* Fix: Cloning process stops due to file permission issue
 
 = 2.1.6 =
 * New: increased speed for cloning process by factor 5, using new method of file agregation 
