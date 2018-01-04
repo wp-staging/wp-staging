@@ -7,7 +7,7 @@ if (!defined("WPINC")) {
     die;
 }
 
-use WPStaging\WPStaging;
+use WPStaging\WPStaging; 
 use WPStaging\Utils\Logger;
 use WPStaging\Iterators\RecursiveDirectoryIterator;
 use WPStaging\Iterators\RecursiveFilterNewLine;
@@ -75,22 +75,22 @@ class Directories extends JobExecutable {
 
         try {
 
-            // Iterate over content directory
+            // Iterate over wp root directory
             $iterator = new \DirectoryIterator(ABSPATH);
 
             // Write path line
             foreach ($iterator as $item) {
-                if ($item->isFile()) {
+                if (!$item->isDot() && $item->isFile()) {
                     if ($this->write($files, $iterator->getFilename() . PHP_EOL)) {
                         $this->options->totalFiles++;
 
                         // Add current file size
                         $this->options->totalFileSize += $iterator->getSize();
-    }
+                    }
                 }
             }
         } catch (\Exception $e) {
-            $this->returnException('Out of disk space.');
+            $this->returnException('Error: ' . $e->getMessage());
             //throw new \Exception('Out of disk space.');
         } catch (\Exception $e) {
             // Skip bad file permissions
@@ -147,8 +147,8 @@ class Directories extends JobExecutable {
         }
             }
         } catch (\Exception $e) {
-            $this->returnException('Out of disk space.');
-            //throw new \Exception('Out of disk space.');
+            //$this->returnException('Out of disk space.');
+            throw new \Exception('Error: ' . $e->getMessage());
         } catch (\Exception $e) {
             // Skip bad file permissions
         }
@@ -193,8 +193,8 @@ class Directories extends JobExecutable {
             }
             }
         } catch (\Exception $e) {
-            $this->returnException('Out of disk space.');
-            //throw new \Exception('Out of disk space.');
+            //$this->returnException('Out of disk space.');
+            throw new \Exception('Error: ' . $e->getMessage());
         } catch (\Exception $e) {
             // Skip bad file permissions
         }
@@ -238,8 +238,8 @@ class Directories extends JobExecutable {
             }
         }
         } catch (\Exception $e) {
-            $this->returnException('Out of disk space.');
-            //throw new \Exception('Out of disk space.');
+            //$this->returnException('Out of disk space.');
+            throw new \Exception('Error: ' . $e->getMessage());
         } catch (\Exception $e) {
             // Skip bad file permissions
         }
@@ -291,12 +291,12 @@ class Directories extends JobExecutable {
         $write_result = @fwrite($handle, $content);
         if (false === $write_result) {
             if (( $meta = \stream_get_meta_data($handle))) {
-                $this->returnException(sprintf(__('Unable to write to: %s', 'wpstg'), $meta['uri']));
-                //throw new \Exception(sprintf(__('Unable to write to: %s', 'wpstg'), $meta['uri']));
+                //$this->returnException(sprintf(__('Unable to write to: %s', 'wpstg'), $meta['uri']));
+                throw new \Exception(sprintf(__('Unable to write to: %s', 'wpstg'), $meta['uri']));
         }
         } elseif (strlen($content) !== $write_result) {
-            $this->returnException(__('Out of disk space.', 'wpstg'));
-            //throw new \Exception(__('Out of disk space.', 'wpstg'));
+            //$this->returnException(__('Out of disk space.', 'wpstg'));
+            throw new \Exception(__('Out of disk space.', 'wpstg'));
         }
 
         return $write_result;
