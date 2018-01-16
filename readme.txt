@@ -142,6 +142,7 @@ https://wp-staging.com
 = 2.1.7 =
 * Tweak: Return more human readable error notices
 * Fix: Cloning process stops due to file permission issue
+* Fix: Exclude WP Super Cache from copying process because of bug in WP Super Cache, see https://github.com/Automattic/wp-super-cache/issues/505
 
 = 2.1.6 =
 * New: increased speed for cloning process by factor 5, using new method of file agregation 
@@ -293,5 +294,5 @@ Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.co
 
 == Upgrade Notice ==
 
-= 2.1.6 =
-2.1.6 * * Fix: Additional checks to ensure that the root path is never deleted
+= 2.1.7 =
+2.1.7 * Update for WordPress 4.9.1. Preparations for Database Migration

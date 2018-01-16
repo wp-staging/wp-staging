@@ -33,8 +33,6 @@ class Cloning extends Job
         $this->options->clone               = $_POST["cloneID"];
         $this->options->cloneDirectoryName  = preg_replace("#\W+#", '-', strtolower($this->options->clone));
         $this->options->cloneNumber         = 1;
-        //$this->options->prefix              = "wpstg1_";
-        //$this->options->prefix = '2323';
         $this->options->prefix = $this->getStagingPrefix();
 
         //$this->options->prefix              = $this->getStagingPrefix();
@@ -80,7 +78,8 @@ class Cloning extends Job
         // Do not copy these folders and plugins
         $excludedDirectories = array(
             ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
-            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login'
+            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
+            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-super-cache',
             );
         
         $this->options->excludedDirectories = array_merge($excludedDirectories, $this->options->excludedDirectories);
