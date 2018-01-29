@@ -139,6 +139,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.1.8 =
+* Fix: Increase the max memory consumption
+
 = 2.1.7 =
 * Tweak: Return more human readable error notices
 * Fix: Cloning process stops due to file permission issue

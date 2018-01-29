@@ -191,7 +191,8 @@ abstract class Job implements JobInterface
             $this->settings->cpuLoad = "medium";
         }
 
-        $memoryLimit= self::MAX_MEMORY_RATIO;
+        //$memoryLimit= self::MAX_MEMORY_RATIO;
+        $memoryLimit= 1;
         $timeLimit  = self::EXECUTION_TIME_RATIO;
 
         switch($this->settings->cpuLoad)
