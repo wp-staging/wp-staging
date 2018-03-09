@@ -45,9 +45,8 @@ class Finish extends Job
             "job"               => $this->options->currentJob
         );
         
+        //$this->flush();
 
-        //return (object) $this->options->existingClones[$this->options->clone];
-        //return (object) $this->options->existingClones[$this->clone];
         return (object) $return;
     }
 
@@ -103,160 +102,20 @@ class Finish extends Job
             return false;
         }
 
-        // Save scanned directories for a delete job
-        //$this->saveScannedDirectories();
-
         return true;
     }
 
-    /**
-     * Save Scanned Directories for Delete Job Later
-     */
-//    protected function saveScannedDirectories()
-//    {
-//        // Save scanned directories for delete job
-//        $this->cache->save("delete_directories_" . $this->options->clone, $this->options->scannedDirectories);
-//
-//        $this->log("Successfully saved {$this->options->clone}'s clone job data to database'");
-//        $this->log("Cloning job has finished!");
-//    }
 
     /**
-     * Get Upload Directory
-     * @return string
+     * Flush wpdb cache and permalinks
+     * @global type $wp_rewrite
      */
-//    private function getUploadDirectory()
-//    {
-//        $wpUploadDirectory  = wp_get_upload_dir();
-//        $uploadDirectory    = $wpUploadDirectory["basedir"] . DIRECTORY_SEPARATOR . WPStaging::SLUG;
-//
-//        // Failed to create upload directory
-//        if (!is_dir($uploadDirectory) && !wp_mkdir_p($uploadDirectory))
-//        {
-//            $this->log("Upload directory ({$uploadDirectory}) doesn't exist and failed to create!");
-//        }
-//
-//        $uploadDirectory = apply_filters("wpstg_get_upload_dir", $uploadDirectory);
-//
-//        return rtrim($uploadDirectory, DIRECTORY_SEPARATOR) . DIRECTORY_SEPARATOR;
+//    protected function flush() {
+//        // flush rewrite rules to prevent 404s 
+//        // and other oddities
+//        wp_cache_flush();
+//        global $wp_rewrite;
+//        $wp_rewrite->init();
+//        flush_rewrite_rules(true); // true = hard refresh, recreates the .htaccess file
 //    }
-    
-    
-
-    /**
-     * Get .htaccess rules
-     * @return string
-     */
-//    private function getHtaccessRules()
-//    {
-//        // Prevent directory browsing and direct access to all files
-//        $rules = "<Files \"*\">\n";
-//        $rules .= "<IfModule mod_access.c>\n";
-//        $rules .= "Deny from all\n";
-//        $rules .= "</IfModule>\n";
-//        $rules .= "<IfModule !mod_access_compat>\n";
-//        $rules .= "<IfModule mod_authz_host.c>\n";
-//        $rules .= "Deny from all\n";
-//        $rules .= "</IfModule>\n";
-//        $rules .= "</IfModule>\n";
-//        $rules .= "<IfModule mod_access_compat>\n";
-//        $rules .= "Deny from all\n";
-//        $rules .= "</IfModule>\n";
-//        $rules .= "</Files>\n";
-//
-//        return apply_filters("wpstg_protected_directory_htaccess_rules", $rules);
-//    }
-
-    /**
-     * Update .htaccess file and its rules
-     * @param string $file
-     * @param string $contents
-     * @return bool
-     */
-//    private function updateHTAccess($file, $contents)
-//    {
-//        return (
-//            (!$contents || $this->getHtaccessRules() !== $contents) &&
-//            false === @file_put_contents($file, $this->getHtaccessRules())
-//        );
-//    }
-
-    /**
-     * Save HTAccess file
-     */
-//    private function saveHTAccess()
-//    {
-//        $uploadDir      = $this->getUploadDirectory();
-//        $htAccessFile   = $uploadDir . ".htaccess";
-//
-//        // .htaccess exists
-//        if (file_exists($htAccessFile))
-//        {
-//            $contents   = @file_get_contents($htAccessFile);
-//
-//            // Rules doesn't match, update .htaccess rules
-//            if (false === $this->updateHTAccess($htAccessFile, $contents))
-//            {
-//                $this->log("Failed to update {$htAccessFile}");
-//            }
-//        }
-//        // .htaccess doesn't exists and
-//        else if (wp_is_writable($uploadDir) && false === @file_put_contents($htAccessFile, $this->getHtaccessRules()))
-//        {
-//            $this->log("Failed to create {$htAccessFile}");
-//        }
-//    }
-
-    /**
-     * Save blank index file
-     * @return bool
-     */
-//    private function saveBlankIndex()
-//    {
-//        $uploadDir      = $this->getUploadDirectory();
-//        $indexFile      = $uploadDir . "index.php";
-//
-//        if (file_exists($indexFile))
-//        {
-//            return true;
-//        }
-//
-//        $contents = "<?php" . PHP_EOL . "// WP-Staging protection file";
-//
-//        if (!wp_is_writable($uploadDir) || false === @file_put_contents($indexFile, $contents))
-//        {
-//            $this->log("{$uploadDir} is not writable or couldn't generate {$indexFile}");
-//            return false;
-//        }
-//
-//        return true;
-//    }
-
-    /**
-     * Prepare protect directories and files
-     * @param bool $force
-     */
-//    protected function protectDirectoriesAndFiles($force = false)
-//    {
-//        // Don't execute
-//        if (true !== get_transient("wpstg_check_protection_files") && false === $force)
-//        {
-//            return;
-//        }
-//
-//        // Save .htaccess file
-//        $this->saveHTAccess();
-//
-//        // Save blank index.php file
-//        $this->saveBlankIndex();
-//
-//        // TODO put blank index to upload directories?? Why??
-//
-//        // Check files once a day
-//        set_transient("wpstg_check_protection_files", true, DAY_IN_SECONDS); // 24 hours in seconds
-//
-//
-//    }
-
- 
 }
