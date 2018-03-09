@@ -360,10 +360,11 @@ var WPStaging = (function ($)
                     return false;
                 }
 
+
                 showError(
-                        "Fatal Unknown Error. Go to WP Staging > Settings and set  'File Copy Limit' to 1. Also try to lower 'cpu load' there." +
+                        "Fatal Unknown Error. Go to WP Staging > Settings and lower 'File Copy Limit' and DB query limit" +
                         "Than try again. If this does not help, " +
-                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                        "<a href='https://wpquads.com/support/' target='_blank'>open a support ticket</a> "
                         );
             },
             success: function (data) {
@@ -373,7 +374,7 @@ var WPStaging = (function ($)
                 }
             },
             statusCode: {
-                404: function () {
+                404: function (data) {
                     showError("Something went wrong; can't find ajax request URL!");
                 },
                 500: function () {
@@ -454,6 +455,20 @@ var WPStaging = (function ($)
                 });
     };
 
+    /**
+     * Get Included (Checked) Database Tables
+     * @returns {Array}
+     */
+    var getIncludedTables = function ()
+    {
+        var includedTables = [];
+
+        $(".wpstg-db-table input:checked").each(function () {
+            includedTables.push(this.name);
+        });
+
+        return includedTables;
+    };
     /**
      * Get Excluded (Unchecked) Database Tables
      * @returns {Array}
@@ -540,7 +555,9 @@ var WPStaging = (function ($)
         }
 
         that.data.cloneID = $("#wpstg-new-clone-id").val() || new Date().getTime().toString();
-        that.data.excludedTables = getExcludedTables();
+        // Remove this to keep &_POST[] small otherwise mod_security will throw error 404
+        //that.data.excludedTables = getExcludedTables();
+        that.data.includedTables = getIncludedTables();
         that.data.includedDirectories = getIncludedDirectories();
         that.data.excludedDirectories = getExcludedDirectories();
         that.data.extraDirectories = getIncludedExtraDirectories();
@@ -824,107 +841,7 @@ var WPStaging = (function ($)
 
     }
 
-    /**
-     * Fire the update cloning process
-     * @returns {undefined}
-     */
-//    var startUpdate = function (){
-//        var $workFlow = cache.get("#wpstg-workflow");
-//        $workFlow.on("click", "#wpstg-start-updating", function (e) {
-//            e.preventDefault();
-//                    
-//            var cloneID = $("#wpstg-new-clone-id").val();
-//            updateStruc(cloneID);
-//        });
-//    };
-//    
-//    var updateStruc = function (cloneID){
-//                    ajax(
-//                    {
-//                        action: "wpstg_update_struc",
-//                        nonce: wpstg.nonce,
-//                        cloneID: cloneID,
-//                        excludedTables: getExcludedTables(),
-//                        includedDirectories: getIncludedDirectories(),
-//                        excludedDirectories: getExcludedDirectories(),
-//                        extraDirectories: getIncludedExtraDirectories()
-//                    },
-//                        function (response) {
-//                            //console.log(response);
-//                            updating(cloneID);
-//                        },
-//            "HTML",
-//            false
-//        );
-//    }
 
-    /**
-     * Start ajax updating process
-     * @returns string
-     */
-//    var updating = function (cloneID) {
-//        
-//            console.log("Start updating");
-//            
-//            // Show loader gif
-//            cache.get("#wpstg-loader").show();
-//            cache.get(".wpstg-loader").show();
-//
-//            ajax(
-//                    {
-//                        action: "wpstg_update",
-//                        nonce: wpstg.nonce,
-//                        cloneID: cloneID,
-//                        excludedTables: getExcludedTables(),
-//                        includedDirectories: getIncludedDirectories(),
-//                        excludedDirectories: getExcludedDirectories(),
-//                        extraDirectories: getIncludedExtraDirectories()
-//                    },
-//                        function (response) {
-//                           
-//                            // Throw Error
-//                            if ("undefined" !== typeof(response.error) && response.error){
-//                                console.log(response.message);
-//                                showError(response.message);
-//                                return;
-//                            }
-//                
-//                            // Add percentage
-//                            if ("undefined" !== typeof (response.percentage))
-//                            {
-//                                cache.get("#wpstg-db-progress").width(response.percentage + '%');
-//                            }
-//                            // Add Log
-//                            if ("undefined" !== typeof (response.last_msg))
-//                            {
-//                                getLogs(response.last_msg);
-//                            }
-//
-//                            // Continue clone DB
-//                            if (false === response.status)
-//                            {
-//                                setTimeout(function () {
-//                                    updating(cloneID);
-//                                }, wpstg.cpuLoad);
-//                            }
-//                            // Next Step
-//                            else if (true === response.status)
-//                            {
-//                                console.log('startCloning ' + response.status);
-//                                setTimeout(function () {
-//                                    // Prepare data
-//                                    that.data = {
-//                                        action: 'wpstg_cloning',
-//                                        nonce: wpstg.nonce
-//                                    };
-//                                    that.startCloning();
-//                                }, wpstg.cpuLoad);
-//                            }
-//                        },
-//            "json",
-//            false
-//        );
-//    };
 
     /**
      * Start Cloning Process
