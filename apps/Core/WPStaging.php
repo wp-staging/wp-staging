@@ -44,7 +44,7 @@ final class WPStaging {
    /**
     * Compatible WP Version
     */
-   const WP_COMPATIBLE = "4.9.1";
+   const WP_COMPATIBLE = "4.9.4";
 
    /**
     * Slug: Either wp-staging or wp-staging-pro
