@@ -94,6 +94,8 @@ abstract class Job implements JobInterface
         // Get max limits
         $this->start            = $this->time();
         $this->maxMemoryLimit   = $this->getMemoryInBytes(@ini_get("memory_limit"));
+
+        
         //$this->maxExecutionTime = (int) ini_get("max_execution_time");
         $this->maxExecutionTime = (int) 30; 
         
@@ -173,7 +175,7 @@ abstract class Job implements JobInterface
      * Set default settings
      */
     protected function setDefaultSettings(){
-        $this->settings->queryLimit = "1000";
+        $this->settings->queryLimit = "5000";
         $this->settings->fileLimit = "1";
         $this->settings->batchSize = "2";
         $this->settings->cpuLoad = 'medium';
@@ -191,8 +193,7 @@ abstract class Job implements JobInterface
             $this->settings->cpuLoad = "medium";
         }
 
-        //$memoryLimit= self::MAX_MEMORY_RATIO;
-        $memoryLimit= 1;
+        $memoryLimit= self::MAX_MEMORY_RATIO;
         $timeLimit  = self::EXECUTION_TIME_RATIO;
 
         switch($this->settings->cpuLoad)
@@ -250,7 +251,9 @@ abstract class Job implements JobInterface
         // Handle unlimited ones
         if (1 > (int) $memory)
         {
-            return (int) $memory;
+            //return (int) $memory;
+            // 128 MB default value
+            return (int) 134217728;
         }
 
         $bytes  = (int) $memory; // grab only the number
@@ -335,7 +338,7 @@ abstract class Job implements JobInterface
         
         if ($time >= $this->executionLimit)
         {
-            $this->log('RESET TIME: current time: ' . $time . ', Start Time: ' . $this->start . ', exec time limit: ' . $this->executionLimit);
+            $this->debugLog('RESET TIME: current time: ' . $time . ', Start Time: ' . $this->start . ', exec time limit: ' . $this->executionLimit);
             return true;
         }
 
@@ -345,34 +348,34 @@ abstract class Job implements JobInterface
     /**
      * Attempt to reset memory
      * @return bool
-     * 
+     * memory
      */
-    protected function resetMemory()
-    {
-        $newMemoryLimit = $this->maxMemoryLimit * 2;
-
-        // Failed to set
-        if (false === ini_set("memory_limit", $this->formatBytes($newMemoryLimit)))
-        {
-            $this->log('Can not free some memory', Logger::TYPE_CRITICAL);
-            return false;
-        }
-
-        // Double checking
-        $newMemoryLimit = $this->getMemoryInBytes(@ini_get("memory_limit"));
-        if ($newMemoryLimit <= $this->maxMemoryLimit)
-        {
-            return false;
-        }
-
-        // Set the new Maximum memory limit
-        $this->maxMemoryLimit   = $newMemoryLimit;
-
-        // Calculate threshold limit
-        $this->memoryLimit      = $newMemoryLimit * self::MAX_MEMORY_RATIO;
-
-        return true;
-    }
+//    protected function resetMemory()
+//    {
+//        $newMemoryLimit = $this->maxMemoryLimit * 2;
+//
+//        // Failed to set
+//        if (false === ini_set("memory_limit", $this->formatBytes($newMemoryLimit)))
+//        {
+//            $this->log('Can not free some memory', Logger::TYPE_CRITICAL);
+//            return false;
+//        }
+//
+//        // Double checking
+//        $newMemoryLimit = $this->getMemoryInBytes(@ini_get("memory_limit"));
+//        if ($newMemoryLimit <= $this->maxMemoryLimit)
+//        {
+//            return false;
+//        }
+//
+//        // Set the new Maximum memory limit
+//        $this->maxMemoryLimit   = $newMemoryLimit;
+//
+//        // Calculate threshold limit
+//        $this->memoryLimit      = $newMemoryLimit * self::MAX_MEMORY_RATIO;
+//
+//        return true;
+//    }
 
     /**
      * Attempt to reset time
