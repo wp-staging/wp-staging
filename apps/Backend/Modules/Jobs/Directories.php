@@ -69,6 +69,11 @@ class Directories extends JobExecutable {
      */
     private function getWpRootFiles() {
 
+        // Skip it
+//        if ($this->isDirectoryExcluded(ABSPATH)){
+//            return true;
+//        }
+        
         // open file handle
         $files = $this->open($this->filename, 'a');
 
@@ -78,6 +83,8 @@ class Directories extends JobExecutable {
             // Iterate over wp root directory
             $iterator = new \DirectoryIterator(ABSPATH);
 
+            $this->log( "Scanning ".ABSPATH." for its sub-directories and files" );
+            
             // Write path line
             foreach ($iterator as $item) {
                 if (!$item->isDot() && $item->isFile()) {
@@ -107,10 +114,10 @@ class Directories extends JobExecutable {
      */
     public function getWpContentFiles() {
 
-//        if (1 < $this->options->totalFiles) {
-//            return;
-//        }
-
+        // Skip it
+        if ($this->isDirectoryExcluded(WP_CONTENT_DIR)){
+            return true;
+        }
         // open file handle
         $files = $this->open($this->filename, 'a');
 
@@ -135,6 +142,9 @@ class Directories extends JobExecutable {
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD);
 
+            $path = 'wp-content' . DIRECTORY_SEPARATOR . $iterator->getSubPathName();
+            $this->log( "Scanning {$path} for its sub-directories and files" );
+                        
             // Write path line
             foreach ($iterator as $item) {
                 if ($item->isFile()) {
@@ -165,6 +175,11 @@ class Directories extends JobExecutable {
      */
     public function getWpIncludesFiles() {
 
+        // Skip it
+        if ($this->isDirectoryExcluded(ABSPATH . 'wp-includes' . DIRECTORY_SEPARATOR)){
+            return true;
+        }   
+
         // open file handle and attach data to end of file
         $files = $this->open($this->filename, 'a');
 
@@ -181,6 +196,9 @@ class Directories extends JobExecutable {
             // Recursively iterate over wp-includes directory
             $iterator = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD);
 
+            $path = ABSPATH . 'wp-includes' . DIRECTORY_SEPARATOR;
+            $this->log( "Scanning {$path} for its sub-directories and files" );
+            
             // Write files
             foreach ($iterator as $item) {
                 if ($item->isFile()) {
@@ -211,6 +229,11 @@ class Directories extends JobExecutable {
              */
     public function getWpAdminFiles() {
 
+        // Skip it
+        if ($this->isDirectoryExcluded(ABSPATH . 'wp-admin' . DIRECTORY_SEPARATOR)) {
+            return true;
+        }
+
         // open file handle and attach data to end of file
         $files = $this->open($this->filename, 'a');
 
@@ -227,6 +250,9 @@ class Directories extends JobExecutable {
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD);
 
+            $path = ABSPATH . 'wp-admin' . DIRECTORY_SEPARATOR;
+            $this->log("Scanning {$path} for its sub-directories and files");
+            
             // Write path line
             foreach ($iterator as $item) {
                 if ($item->isFile()) {
@@ -238,8 +264,8 @@ class Directories extends JobExecutable {
             }
         }
         } catch (\Exception $e) {
-            //$this->returnException('Out of disk space.');
-            throw new \Exception('Error: ' . $e->getMessage());
+            $this->returnException('Error: ' . $e->getMessage());
+            //throw new \Exception('Error: ' . $e->getMessage());
         } catch (\Exception $e) {
             // Skip bad file permissions
         }
@@ -358,61 +384,8 @@ class Directories extends JobExecutable {
                 );
     }
     
-    /**
-     * Get Path from $directory
-     * @param \SplFileInfo $directory
-     * @return string|false
-     */
-//    protected function getPath($directory) {
-//
-//        /*
-//         * Do not follow root path like src/web/..
-//         * This must be done before \SplFileInfo->isDir() is used!
-//         * Prevents open base dir restriction fatal errors
-//         */
-//        if (strpos($directory->getRealPath(), ABSPATH) !== 0) {
-//            return false;
-//        }
-//
-//        $path = str_replace(ABSPATH, null, $directory->getRealPath());
-//
-//        // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
-//        if (!$directory->isDir() || strlen($path) < 1) {
-//            return false;
-//        }
-//
-//        return $path;
-//    }
 
-    /**
-     * Check if directory is excluded from copying
-     * @param string $directory
-     * @return bool
-     */
-//    protected function isDirectoryExcluded($directory) {
-//        foreach ($this->options->excludedDirectories as $excludedDirectory) {
-//            if (strpos($directory, $excludedDirectory) === 0 && !$this->isExtraDirectory($directory)) {
-//                return true;
-//            }
-//        }
-//
-//        return false;
-//    }
 
-    /**
-     * Check if directory is an extra directory and should be copied
-     * @param string $directory
-     * @return boolean
-     */
-//    protected function isExtraDirectory($directory) {
-//        foreach ($this->options->extraDirectories as $extraDirectory) {
-//            if (strpos($directory, $extraDirectory) === 0) {
-//                return true;
-//            }
-//        }
-//
-//        return false;
-//    }
 
     /**
      * Save files
@@ -420,15 +393,6 @@ class Directories extends JobExecutable {
      */
     protected function saveProgress() {
         return $this->saveOptions();
-
-//        $fileName = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
-//        $files = implode(PHP_EOL, $this->files);
-//
-//        if (strlen($files) > 0) {
-//            //$files .= PHP_EOL;
-//        }
-//
-//        return (false !== @file_put_contents($fileName, $files));
     }
     
     /**
@@ -446,6 +410,19 @@ class Directories extends JobExecutable {
         $this->files = explode(PHP_EOL, $this->files);
       }
 
+    /**
+     * Check if directory is excluded from colec
+     * @param string $directory
+     * @return bool
+     */
+    protected function isDirectoryExcluded($directory) {
+        foreach ($this->options->excludedDirectories as $excludedDirectory) {
+            if (strpos($directory, $excludedDirectory) === 0) {
+                return true;
+            }
+        }
 
+        return false;
+    }
 
 }
