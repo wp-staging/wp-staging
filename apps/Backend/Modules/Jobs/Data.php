@@ -34,7 +34,6 @@ class Data extends JobExecutable
     {
         $this->db       = WPStaging::getInstance()->get("wpdb");
 
-        //$this->prefix   = "wpstg{$this->options->cloneNumber}_";
         $this->prefix   = $this->options->prefix;
 
         // Fix current step
@@ -66,15 +65,15 @@ class Data extends JobExecutable
         $this->saveOptions();
 
         // Prepare response
-        $this->response = array(
-            "status"        => true,
-            "percentage"    => 100,
-            "total"         => $this->options->totalSteps,
-            "step"          => $this->options->totalSteps,
-            "last_msg"      => $this->logger->getLastLogMsg(),
-            "running_time"  => $this->time() - time(),
-            "job_done"      => true
-        );
+//        $this->response = array(
+//            "status"        => true,
+//            "percentage"    => 100,
+//            "total"         => $this->options->totalSteps,
+//            "step"          => $this->options->totalSteps,
+//            "last_msg"      => $this->logger->getLastLogMsg(),
+//            "running_time"  => $this->time() - time(),
+//            "job_done"      => true
+//        );
 
         return (object) $this->response;
     }
@@ -186,7 +185,8 @@ class Data extends JobExecutable
       }
 
       // Installed in sub-directory
-      if( isset( $this->settings->wpSubDirectory ) && "1" === $this->settings->wpSubDirectory ) {
+      //if( isset( $this->settings->wpSubDirectory ) && "1" === $this->settings->wpSubDirectory ) {
+      if( $this->isSubDir() ) {
          $subDirectory = str_replace( get_home_path(), '', ABSPATH );
          $this->log( "Updating siteurl and homeurl to " . get_home_url() . '/' . $subDirectory . $this->options->cloneDirectoryName );
          // Replace URLs
@@ -356,6 +356,7 @@ class Data extends JobExecutable
 
     /**
      * Reset index.php to original file
+     * This is needed if live site is located in subfolder
      * Check first if main wordpress is used in subfolder and index.php in parent directory
      * @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
      * @return bool
@@ -363,9 +364,14 @@ class Data extends JobExecutable
     protected function step6()
     {
         // No settings, all good
-        if (!isset($this->settings->wpSubDirectory) || "1" !== $this->settings->wpSubDirectory)
+//        if (!isset($this->settings->wpSubDirectory) || "1" !== $this->settings->wpSubDirectory)
+//        {
+//            $this->log("Search & Replace: WP installation is not in a subdirectory! All good, skipping this step");
+//            return true;
+//        }
+        if (!$this->isSubDir())
         {
-            $this->log("Search & Replace: WP installation is not in a subdirectory! All good, skipping this step");
+            $this->debugLog("Search & Replace: WP installation is not in a subdirectory! All good, skipping this step");
             return true;
         }
 
@@ -386,13 +392,16 @@ class Data extends JobExecutable
             );
             return false;
         }
+        $this->log("Search & Replace: WP installation is in a subdirectory. Progressing...");
 
         $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);/";
 
         $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0];
         $replace.= " // Changed by WP-Staging";
 
-        if (null === preg_replace($pattern, $replace, $content))
+        
+        
+        if (null === ($content = preg_replace(array($pattern), $replace, $content)))
         {
             $this->log("Search & Replace: Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
             return false;
@@ -403,7 +412,49 @@ class Data extends JobExecutable
             $this->log("Search & Replace: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
             return false;
         }
+        $this->Log("Search & Replace: Finished Step 6 successfully");
 
         return true;
+    }
+    
+    /**
+     * Update wpstg_rmpermalinks_executed
+     * @return bool
+     */
+    protected function step7()
+    {
+       
+        $this->log("Search & Replace: Updating wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}");
+        
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+}
+        
+        $result = $this->db->query(
+            $this->db->prepare(
+                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_rmpermalinks_executed'",
+                ' '
+            )
+        );
+
+        // All good
+        if ($result)
+        {
+            return true;
+        }
+
+        $this->log("Failed to update wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_WARNING);
+        return true;
+    }
+    
+    /**
+     * Check if WP is installed in subdir
+     * @return boolean
+     */
+    protected function isSubDir(){
+        if ( get_option( 'siteurl' ) !== get_option( 'home' ) ) { 
+            return true;
+        }
+        return false;
     }
 }
