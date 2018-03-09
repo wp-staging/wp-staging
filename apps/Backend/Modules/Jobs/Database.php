@@ -8,6 +8,7 @@ if (!defined("WPINC"))
 }
 
 use WPStaging\WPStaging;
+use WPStaging\Utils\Strings;
 
 /**
  * Class Database
@@ -42,7 +43,7 @@ class Database extends JobExecutable
      */
     protected function calculateTotalSteps()
     {
-        $this->options->totalSteps  = $this->total;
+        $this->options->totalSteps  = $this->total === 0 ? 1 : $this->total;
     }
 
     /**
@@ -69,14 +70,15 @@ class Database extends JobExecutable
         }
 
         // Table is excluded
-        if (in_array($this->options->tables[$this->options->currentStep]->name, $this->options->excludedTables))
-        {
-            $this->prepareResponse();
-            return true;
-        }
+//        if (in_array($this->options->tables[$this->options->currentStep]->name, $this->options->excludedTables))
+//        {
+//            $this->prepareResponse();
+//            return true;
+//        }
 
         // Copy table
-        if (!$this->copyTable($this->options->tables[$this->options->currentStep]->name))
+        //if (!$this->copyTable($this->options->tables[$this->options->currentStep]->name))
+        if (!$this->copyTable($this->options->tables[$this->options->currentStep]))
         {
             // Prepare Response
             $this->prepareResponse(false, false);
@@ -112,10 +114,10 @@ class Database extends JobExecutable
      */
     private function copyTable($tableName)
     {
-        //$this->returnException($this->getStagingPrefix());
 
-        //$newTableName = "wpstg{$this->options->cloneNumber}_" . str_replace($this->db->prefix, null, $tableName);
-        $newTableName = $this->getStagingPrefix() . str_replace($this->db->prefix, null, $tableName);
+        $strings = new Strings();
+        $tableName = is_object($tableName) ? $tableName->name : $tableName;
+        $newTableName = $this->getStagingPrefix() . $strings->str_replace_first($this->db->prefix, null, $tableName);
 
         // Drop table if necessary
         $this->dropTable($newTableName);
