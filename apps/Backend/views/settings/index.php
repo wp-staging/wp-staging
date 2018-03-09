@@ -99,7 +99,7 @@
                                                 To find out the highest possible values try a high value like 1.000 or more. If you get timeout issues, lower it
                                                 until you get no more errors during copying process.
                                                 <br>
-                                                <strong> Default: 1000 </strong>
+                                                <strong> Default: 5000 </strong>
                                             </span>
                                         </div>
                                     </td>

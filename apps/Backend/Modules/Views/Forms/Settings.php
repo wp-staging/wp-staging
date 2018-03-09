@@ -63,7 +63,7 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel("DB Copy Query Limit")
-            ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 1000)
+            ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 5000)
         );
 
         $options = array('1' => '1', '250' => '250' ,'500' => '500', '1000' => '1000');
