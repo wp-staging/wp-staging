@@ -84,34 +84,26 @@ class Upgrade {
             $this->upgradeNotices();
         }
     }
-
-    /**
-    * Upgrade method 2.0.4
-    */
-//   public function upgrade2_0_4() {
-//      if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.0.4', '<' ) ) {
-//
-//      // Register cron job.
-//      $this->cron->schedule_event();
-//
-//      // Install Optimizer 
-//      $optimizer = new Optimizer();
-//      $optimizer->installOptimizer();
-//      }
-//   }
     
-       /**
+   /**
     * Upgrade method 2.1.2
     * Sanitize the clone key value.
     */
-   private function upgrade2_1_2(){
-       if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.1.7', '<' ) ) {
-           foreach ( $this->clonesBeta as $key => $value){
-               unset($this->clonesBeta[$key]);
-               $this->clonesBeta[preg_replace("#\W+#", '-', strtolower($key))] = $value;
-           }
-          update_option('wpstg_existing_clones_beta', $this->clonesBeta);
-       }
+   private function upgrade2_1_2() {
+
+      // Current options
+      $this->clonesBeta = get_option( "wpstg_existing_clones_beta", array() );
+
+      if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.1.7', '<' ) ) {
+         foreach ( $this->clonesBeta as $key => $value ) {
+            unset( $this->clonesBeta[$key] );
+            $this->clonesBeta[preg_replace( "#\W+#", '-', strtolower( $key ) )] = $value;
+         }
+         if( empty( $this->clonesBeta ) )
+            return false;
+
+         update_option( 'wpstg_existing_clones_beta', $this->clonesBeta );
+      }
    }
 
    /**

@@ -139,6 +139,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.1.9 =
+* Fix: Updating from a old version 1.1.6 < to latest version deletes the staging sites listing table
+
 = 2.1.8 =
 * Fix: Increase the max memory consumption
 
