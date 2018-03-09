@@ -121,6 +121,11 @@ class Scan extends Job
         $output = '';
         foreach ($directories as $name => $directory)
         {
+            if (!is_array($directory)) {
+                // Not a directory, possibly a symlink, therefore we will skip it
+                continue;
+            }
+
             // Need to preserve keys so no array_shift()
             $data = reset($directory);
             unset($directory[key($directory)]);
