@@ -214,7 +214,6 @@ class Scan extends Job
         if (strlen($wpDB->prefix) > 0)
         {
             $prefix = str_replace('_', '', $wpDB->prefix);
-            //$sql = "SHOW TABLE STATUS LIKE '{$prefix}\%'";
             $sql = "SHOW TABLE STATUS LIKE '{$wpDB->prefix}%'";
         }
         else
