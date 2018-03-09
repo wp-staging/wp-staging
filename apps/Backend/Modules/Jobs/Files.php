@@ -131,9 +131,11 @@ class Files extends JobExecutable {
             $this->copyFile($file);
         }
 
-        //$totalFiles = $this->maxFilesPerRun + $this->options->copiedFiles;
         $totalFiles = $this->options->copiedFiles;
+        // Log this only every 50 entries to keep the log small and to not block the rendering browser
+        if ($this->options->copiedFiles %50 == 0){
         $this->log("Total {$totalFiles} files processed");
+        }
 
         return true;
     }
@@ -163,7 +165,7 @@ class Files extends JobExecutable {
 
         // Directory is excluded
         if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skipping directory by rule: {$file}", Logger::TYPE_INFO);
+            $this->debugLog("Skipping directory by rule: {$file}", Logger::TYPE_INFO);
             return false;
         }
 
@@ -221,7 +223,7 @@ class Files extends JobExecutable {
         $destinationDirectory = dirname($destinationPath);
 
         if (!is_dir($destinationDirectory) && !@mkdir($destinationDirectory, 0775, true)) {
-            $this->log("Destination directory doesn't exist; {$destinationDirectory}", Logger::TYPE_ERROR);
+            $this->log("Files: Can not create directory {$destinationDirectory}", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -361,5 +363,4 @@ class Files extends JobExecutable {
 
         return false;
     }
-
 }
