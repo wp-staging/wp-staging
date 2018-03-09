@@ -52,9 +52,16 @@ class Updating extends Job
                
 
         // Excluded Tables
-        if (isset($_POST["excludedTables"]) && is_array($_POST["excludedTables"]))
+//        if (isset($_POST["excludedTables"]) && is_array($_POST["excludedTables"]))
+//        {
+//            $this->options->excludedTables = $_POST["excludedTables"];
+//        }
+        // Included Tables
+        if (isset($_POST["includedTables"]) && is_array($_POST["includedTables"]))
         {
-            $this->options->excludedTables = $_POST["excludedTables"];
+            $this->options->tables = $_POST["includedTables"];
+        } else {
+            $this->options->tables = array(); 
         }
 
         // Excluded Directories
@@ -98,29 +105,7 @@ class Updating extends Job
         return $this->saveOptions();
     }
     
-    /**
-     * Check and return prefix of the staging site
-     */
 
-
-//    public function getStagingPrefix_old(){
-//        $prefix = !empty($this->options->existingClones[$this->options->clone]['prefix']) ? 
-//                    $this->options->existingClones[$this->options->clone]['prefix'] : 
-//                    false;  
-//                
-//        if(!$prefix){
-//            $this->returnException("Fatal Error: Can not update staging site. Can not find Prefix. '{$prefix}'. Stopping for security reasons. Creating a new staging site will likely resolve this the next time. Contact support@wp-staging.com");
-//            wp_die("Fatal Error: Can not update staging site. Can not find Prefix. '{$prefix}'. Stopping for security reasons. Creating a new staging site will likely resolve this the next time. Contact support@wp-staging.com");
-//        }
-//        
-//        if ($this->options->existingClones[$this->options->clone]['prefix'] == $this->db->prefix){
-//            $this->returnException("Fatal Error: Can not update staging site. Prefix. '{$prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com");
-//            wp_die("Fatal Error: Can not update staging site. Prefix. '{$prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com");
-//        }
-//        
-//        return $prefix;
-//    }
-    
     /**
      * Check and return prefix of the staging site
      */
@@ -158,7 +143,6 @@ class Updating extends Job
         }
 
         // Else
-        //$this->returnException($this->options->prefix);
         //wp_die($this->options->prefix);
         return $this->options->prefix;
     }
@@ -210,6 +194,9 @@ class Updating extends Job
         return $response;
     }
 
+
+    
+    
     /**
      * Clone Database
      * @return object
