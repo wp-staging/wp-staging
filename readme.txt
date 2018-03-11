@@ -141,8 +141,9 @@ https://wp-staging.com
 
 = 2.1.9 =
 * New: Performance improvement increase db query limit to 5000
+* New: Detect automatically if WordPress is installed in sub folder
 * Tweak: Tested up to WP 4.9.4
-* Fix: Updating from a old version 1.1.6 < to latest version deletes the staging sites listing table
+* Fix: Updating from an old version 1.1.6 < to latest version deletes the staging sites listing table
 * Fix: Reduce memory size of the logging window to prevent browser timeouts
 * Fix: Can not copy db table if table name contains the db prefix multiple times
 * Fix: Some excluded folders are not ignored during copy process
