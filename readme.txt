@@ -148,7 +148,7 @@ https://wp-staging.com
 * Fix: Can not copy db table if table name contains the db prefix multiple times
 * Fix: Some excluded folders are not ignored during copy process
 * Fix: mod_security is causing script termination
-* Fix: Fix to skip directory listings for symlinks
+* Fix: Skip directory listings for symlinks
 
 = 2.1.8 =
 * Fix: Increase the max memory consumption
