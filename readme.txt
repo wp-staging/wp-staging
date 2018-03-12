@@ -19,7 +19,7 @@ A duplicator plugin! Clone, duplicate and migrate live sites to independent stag
 If you find any issue, please open a [support ticket](https://wp-staging.com/support/ "support ticket").
 </strong>
 <br /><br />
-<strong>Note: </strong> For pushing plugins and theme files to live site, check out [https://wp-staging.com/](https://wp-staging.com/ "WP Staging Pro")
+<strong>Note: </strong> For pushing & migrating plugins and theme files to live site, check out [https://wp-staging.com/](https://wp-staging.com/ "WP Staging Pro")
 <br /><br />
 <blockquote>
 <h4> WP Staging for WordPress Migration </h4>
@@ -34,6 +34,8 @@ All these reasons prevent user from testing new plugins and updates first before
 </blockquote>
 
 WP Staging helps you to prevent your website from being broken or unavailable because of installing untested plugin updates! 
+<p>Note: WordPress 5.0 will be shipped with a new visual editor called Gutenberg. Use WP Staging to check if Gutenberg editor is working as intended on your website and that all used plugins are compatible with that new editor.</p>
+
 
 [youtube https://www.youtube.com/watch?v=Ye3fC6cdB3A]
 
