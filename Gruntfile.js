@@ -11,7 +11,8 @@ module.exports = function (grunt) {
             // Base destination dir
             base: '../../wordpress-svn/wp-staging/tags/<%= pkg.version %>/',
             basetrunk: '../../wordpress-svn/wp-staging/trunk/',
-            basezip: '../../wordpress-svn/wp-staging/'
+            destzip: '../../wordpress-svn/',
+            basezip: '../../wordpress-svn/wp-staging/tags/<%= pkg.version %>',
         },
         // minify js
         uglify: {
@@ -27,7 +28,7 @@ module.exports = function (grunt) {
             build: {
                 files: [
                     {
-                        // Copy to base foldedr
+                        // Copy to base folder
                         expand: true,
                         src: [
                             '**',
@@ -36,7 +37,7 @@ module.exports = function (grunt) {
                             '!package.json',
                             '!nbproject/**',
                             '!grunt/**',
-                            '!wp-staging-pro.php',
+                            '!wp-staging.php',
                             '!.gitignore',
                             '!CHANGELOG.md',
                             '!CONTRIBUTING.md',
@@ -54,7 +55,7 @@ module.exports = function (grunt) {
                             '!package.json',
                             '!nbproject/**',
                             '!grunt/**',
-                            '!wp-staging-pro.php',
+                            '!wp-staging.php',
                             '!.gitignore',
                             '!CHANGELOG.md',
                             '!CONTRIBUTING.md',
@@ -70,11 +71,11 @@ module.exports = function (grunt) {
                 files: {
                     '<%= paths.basetrunk %>wp-staging.php': 'wp-staging.php',
                     '<%= paths.basetrunk %>readme.txt': 'readme.txt',
-                    '<%= paths.basetrunk %>apps/Core/WPStaging.php': '<%= paths.basetrunk %>apps/Core/WPStaging.php',
+                    '<%= paths.basetrunk %>apps/Core/WPStaging.php': '<%= paths.base %>apps/Core/WPStaging.php',
                     
-                    '<%= paths.base %>wp-staging.php': 'wp-staging.php',
-                    '<%= paths.base %>readme.txt': 'readme.txt',
-                    '<%= paths.base %>apps/Core/WPStaging.php': '<%= paths.base %>apps/Core/WPStaging.php',
+                    '<%= paths.base %>/wp-staging.php': 'wp-staging.php',
+                    '<%= paths.base %>/readme.txt': 'readme.txt',
+                    '<%= paths.base %>/apps/Core/WPStaging.php': '<%= paths.base %>apps/Core/WPStaging.php',
                 },
                 options: {
                     replacements: [{
@@ -110,9 +111,10 @@ module.exports = function (grunt) {
         compress: {
             build: {
                 options: {
-                    archive: '<%= paths.basezip %><%= pkg.name %>.zip' //target
+                    archive: '<%= paths.destzip %><%= pkg.name %>.zip' //target
                 },
-                cwd: '<%= paths.basetrunk %>',
+                //cwd: '<%= paths.basetrunk %>',
+                cwd: '<%= paths.basezip %>',
                 src: ['**/*'],
                 expand: true
             }
