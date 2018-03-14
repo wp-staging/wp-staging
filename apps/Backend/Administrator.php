@@ -173,7 +173,7 @@ class Administrator extends InjectionAware {
 
       // Page: Clone
       add_submenu_page(
-              "wpstg_clone", __( "WP Staging Jobs", "wpstg" ), __( "Start", "wpstg" ), "manage_options", "wpstg_clone", array($this, "getClonePage")
+              "wpstg_clone", __( "WP Staging Jobs", "wpstg" ), __( "Sites / Start", "wpstg" ), "manage_options", "wpstg_clone", array($this, "getClonePage")
       );
 
       // Page: Settings
