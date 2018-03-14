@@ -127,7 +127,7 @@ class Files extends JobExecutable {
 
 
             $file = $this->file->fgets();
-            $this->debugLog('copy file ' . $file, Logger::TYPE_DEBUG);
+            //$this->debugLog('copy file ' . $file, Logger::TYPE_DEBUG);
             $this->copyFile($file);
         }
 
