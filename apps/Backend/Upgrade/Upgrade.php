@@ -159,6 +159,8 @@ class Upgrade {
             $new[$value]['url'] = get_home_url() . "/" . $value;
             $new[$value]['number'] = $key + 1;
             $new[$value]['version'] = $this->previousVersion;
+            $new[$value]['prefix'] = strtolower($value);
+
         }
         unset( $value );
 
