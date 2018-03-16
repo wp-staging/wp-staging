@@ -141,6 +141,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.2.0 =
+* Fix: Old staging site is not listed and pushing is not working properly if plugin is updated from wp staging version 1.6 and lower
+
 = 2.1.9 =
 * New: Performance improvement increase db query limit to 5000
 * New: Detect automatically if WordPress is installed in sub folder
