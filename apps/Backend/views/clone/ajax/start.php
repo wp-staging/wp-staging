@@ -72,10 +72,11 @@
                 <br>
                 <p>
                     If your site is executed by the Apache webserver there is a good chance that permalinks are working without less efforts. 
-                    In that case, try to activate the permalinks at <a href="%s">settings > permalinks</a>
+                    In that case, try to activate the permalinks at <a href="<?php echo  admin_url() . 'options-permalink.php'; ?>">settings > permalinks</a>
+                    <br/>
                     If that does not work or you are using Nginx webserver you need to do a few modifications to the .htaccess (Apache) or *.conf (Nginx).
                     <br>
-                    WP Staging can not do this modification automatically.
+                    WP Staging can not do these modifications automatically.
                 </p>
                 <p>
                     <strong><a href="https://wp-staging.com/docs/activate-permalinks-staging-site/?utm_source=wpstg_admin&utm_medium=finish_screen&utm_campaign=tutorial" target="_blank">Read here</a> how to activate permalinks.</strong>
