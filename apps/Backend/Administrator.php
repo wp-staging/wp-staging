@@ -214,6 +214,7 @@ class Administrator extends InjectionAware {
               // Forms
               ->set( "forms", new FormSettings( $tabs ) );
 
+
       require_once "{$this->path}views/settings/index.php";
    }
 
@@ -394,6 +395,7 @@ class Administrator extends InjectionAware {
    public function ajaxScan() {
       check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
 
+
       // Scan
       $scan = new Scan();
       $scan->start();
@@ -430,25 +432,6 @@ class Administrator extends InjectionAware {
       echo wp_send_json( array("status" => "success") );
    }
 
-
-   
-   
-   /**
-    * Ajax Start Updating Clone (Basically just layout and saving data)
-    */
-//   public function ajaxStartUpdate() {
-//      check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
-//
-//      $cloning = new Updating();
-//
-//      if( !$cloning->save() ) {
-//         wp_die('can not save clone data');
-//      }
-//
-//      require_once "{$this->path}views/clone/ajax/update.php";
-//
-//      wp_die();
-//   }
    /**
     * Ajax Start Updating Clone (Basically just layout and saving data)
     */
@@ -465,7 +448,6 @@ class Administrator extends InjectionAware {
 
       wp_die();
       
-      //wp_send_json( $cloning->start() );
    }
    /**
     * Ajax Start Clone (Basically just layout and saving data)
@@ -668,7 +650,7 @@ class Administrator extends InjectionAware {
    }
 
    /**
-    * Ajax Start Pushing. Needs wp quads pro)
+    * Ajax Start Pushing. Needs wp quads pro
     */
    public function ajaxPushProcessing() {
       check_ajax_referer( "wpstg_ajax_nonce", "nonce" );

@@ -48,7 +48,8 @@ WP Staging helps you to prevent your website from being broken or unavailable be
 <strong>More safe:</strong> 
 <br>
 * Admin bar reflects that you are working on a staging site
-* Extensive logging if duplication and migration process fails.
+* Extensive logging if duplication or  migration process should fail.
+* New: Compatible to All In One WP Security & Firewall
 
 = What does not work or is not tested when running wordpress migration? =
 
@@ -109,11 +110,25 @@ Please open a [support request](https://wordpress.org/support/plugin/wp-staging/
 
 = Important =
 
-Per default the staging site will have permalinks disabled because the staging site will be cloned into a subfolder and regular permalinks are not working 
-without doing changes to your .htaccess or nginx.conf.
-In the majority of cases this is abolutely fine for a staging platform and you still will be able to test new plugins and do some theme changes on your staging platform. 
-If you need the same permalink stucture on your staging platform as you have in your prodcution website you have to create a custom .htaccess for apache webserver 
-or to adjust your nginx.conf.
+Permalinks are disabled on the staging site because the staging site is cloned into a subfolder and permalinks are not working on all systems
+without doing changes to the .htaccess (Apache server) or nginx.conf (Nginx Server).
+
+If you are using Apache server try to enable the permalinks and see if they are working. In case you are using Nginx server a small change in in the nginx.conf is needed.
+ 
+In the majority of cases it is absolutely fine to disable permalinks on a staging platform and you still will be able to test new plugins and do theme changes on your staging platform. 
+If you need the same permalink stucture on your staging platform as you have in your prodcution website just add the following block to the nginx.conf:
+
+<pre>
+location /blog {
+        root /var/www/html/staging/;
+
+        location ~ \.php$ {
+                include snippets/fastcgi-php.conf;
+                fastcgi_pass unix:/run/php/php7.1-fpm.sock;
+        }
+
+}
+</pre>
 
  
 = How to install and setup? =
@@ -123,14 +138,19 @@ After installation goto the settings page 'Staging' and do your adjustments ther
 
 == Frequently Asked Questions ==
 
+* I can not login to the staging site
+If you are using a security plugin like All In One WP Security & Firewall you need to install latest version of WP Staging. 
+Go to WP Staging > Settings and add the slug to the custom login page which you set up in All In One WP Security & Firewall plugin.
+
+
 
 == Official Site ==
 https://wp-staging.com
 
 == Installation ==
-1. Download the file "wp-staging" , unzip and place it in your wp-content/plugins/wp-staging folder. You can alternatively upload and install it via the WordPress plugin backend.
-2. Activate the plugin through the 'Plugins' menu in WordPress.
-3. Start Plugins->Staging
+1. Download the file "wp-staging.zip":
+2. Upload and install it via the WordPress plugin backend wp-admin > plugins > add new > uploads
+3. Activate the plugin through the 'Plugins' menu in WordPress.
 
 == Screenshots ==
 
@@ -140,6 +160,10 @@ https://wp-staging.com
 4. Finish!
 
 == Changelog ==
+
+= 2.2.1 =
+* New: Option to set custom login url if there is one
+* Fix: Can not login to staging site if plugin All In One WP Security & Firewall is used
 
 = 2.2.0 =
 * Fix: Old staging site is not listed and pushing is not working properly if plugin is updated from wp staging version 1.6 and lower
@@ -212,106 +236,9 @@ https://wp-staging.com
 * Fix: Access to staging site not working, if WP_SITEURL and WP_HOME is defined in wp-config.php 
 * Tweak: Exclude wp-content/cache folder from copying process
 
-
-= 2.0.9 =
-* Skip Version
-
-= 2.0.8 =
-* Fix: After update from wpstg 1.6.x to 2.x previous settings were not imported resulting in cancelation of cloning process. Still not fixed in 2.0.7
-
-= 2.0.7 =
-* Fix: After update from wpstg 1.6.x to 2.x previous settings were not imported resulting in cancelation of cloning process
-
-
-= 2.0.6 =
-* Fix: Cancel Cloning button not working
-* Fix: Limit max execution time to a maximum of 30sec to prevent high memory consumption and script timeouts
-
-
-= 2.0.5 =
-* New: Major version - Complete rewrite of the code base
-* New: Batch processing allows to clone even huge sites without any timeouts
-* New: Preparation for WP QUADS PRO with ability to copy file changes back to live site
-* New: Bypass (broken) third party plugins during wp staging related ajax requests to prevent processing errors. Use a mu plugin for this.
-
-= 1.1.6 =
-* New: Add download link to WP Staging Beta Version 2.0.1
-
-= 1.1.5 =
-* Fix: Admin notice is throwing a false positive write permission error
-* New: Move log folder to wp-content/uploads/wp-staging/logs
-* New: Tested up to WP 4.7.3
-
-= 1.1.4 =
-* Fix: Fatal error Unsupported operand types
-
-= 1.1.3 =
-* New: Tested up to wp 4.7.2
-* Fix: Arrows in drop down for folder selection are distorted
-* Tweak: Show working log as default to make debugging easier
-
-= 1.1.2 = 
-* Fix: Settings are not deleted when plugin is removed
-* Fix: Staging site is available for non administrators
-
-= 1.1.1 =
-* Fix: Change rating url
-
-= 1.1.0 =
-* New: Tested up to WP 4.6
-* New: Create a poll and ask what feature is most required
-
-= 1.0.9 =
-* Fix: Undefined WPSTG() warning
-* Fix: Change compatibility version to wp 4.5.3
-
-= 1.0.8 =
-* Tested up to WP 4.5.2
-
-= 1.0.7 =
-* Fix: Activation hook is not fired and staging site is not working properly
-* Performance: Increase default query copy limit to 1000
-
-= 1.0.6 =
-* Fix: Uninstalling plugin throwing error
-* Fix: Error permission admin notice although permission issues are correct
-
-
-=  1.0.5 =
-* New: Tested up to WP 4.5
-* Fix: Download system log not working
-* Fix: Click on Optimizer "Select all | none | invert" links leads to jumping
-* Tweak: Make clear that unselecting a checkbox will exlude table or file from copy process
-* Tweak: Remove unnecessary text
-* Tweak: Change beta notice in dashboard. WP Staging is stable
-* Tweak: Change twitter handle to @wpstg
-
-= 1.0.3 =
-* Fix: Missing const MASHFS_VERSION
-* Fix: Remove error "table XY has been created, BUT inserting rows failed."
-* Fix: Not tested up to 4.4.2 message shown although it's tested up to WP 4.4.2
-* New: Disable either free or pro version and does not allow to have both version enabled at the same time
-
-= 1.0.2 =
-* Tweak: Change setting description of uninstall option
-* Tweak: Lower tags in readme.txt
-
-= 1.0.1 =
-* New: Orange colored admin bar on staging site for better visualization and comparision between production live site and staging site
-* Tweak: Remove contact link on multisite notification
-
-= 1.0.0 =
-* Fix: Do not follow symlinks during file copy process
-* Fix: css error
-* Fix: Show "not-compatible" notice only when blog version is higher than plugin tested version.
-* Fix: undefined var $size
-* Fix: Check if $path is null before writing to remaining_files.json
-* Fix: $db_helper undefined message
-* Fix: Skip non utf8 encoded files during copying process
-
 Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.com/changelog.txt)
 
 == Upgrade Notice ==
 
-= 2.1.7 =
-2.1.7 * Update for WordPress 4.9.1. Preparations for Database Migration
+= 2.2.1 =
+2.2.1 * Compatible to All In One WP Security & Firewall
