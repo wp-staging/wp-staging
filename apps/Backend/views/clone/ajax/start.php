@@ -66,23 +66,19 @@
         </h3>
         <ul>
             <li>
-                <strong>1. Permalinks on your <span style="font-style:italic;">staging site</span> will be disabled for technical reasons! </strong>
+                <strong>1. Permalinks on your <span style="font-style:italic;">staging site</span> are disabled for technical reasons. </strong>
                 <br>
-                Usually this is no problem for a staging website and you do not need to use permalinks!
+                Usually this is absolutely ok for a staging website and you do not need to use permalinks at all.
                 <br>
                 <p>
-                    If you really want permalinks on your staging site you need to do several modifications to your .htaccess (Apache) or *.conf (Nginx).
+                    If your site is executed by the Apache webserver there is a good chance that permalinks are working without less efforts. 
+                    In that case, try to activate the permalinks at <a href="%s">settings > permalinks</a>
+                    If that does not work or you are using Nginx webserver you need to do a few modifications to the .htaccess (Apache) or *.conf (Nginx).
                     <br>
                     WP Staging can not do this modification automatically.
                 </p>
                 <p>
-                    <strong>Read more:</strong>
-                    <a href="http://stackoverflow.com/questions/5564881/htaccess-to-rewrite-wordpress-subdirectory-with-permalinks-to-root" target="_blank">
-                        Changes .htaccess
-                    </a> |
-                    <a href="http://robido.com/nginx/nginx-wordpress-subdirectory-configuration-example/" target="_blank">
-                        Changes nginx conf
-                    </a>
+                    <strong><a href="https://wp-staging.com/docs/activate-permalinks-staging-site/?utm_source=wpstg_admin&utm_medium=finish_screen&utm_campaign=tutorial" target="_blank">Read here</a> how to activate permalinks.</strong>
                 </p>
             </li>
             <li>
@@ -92,7 +88,7 @@
                 <br>
                 it´s easy to get confused.
                 <p>
-                    To assist you we changed the name of the dashboard link to
+                    To assist you we changed the color of the admin bar and the name of the dashboard link to
                     <strong style="font-style:italic;">
                         "STAGING - <span class="wpstg-clone-name"><?php echo get_bloginfo("name")?></span>"
                     </strong>.
