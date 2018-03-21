@@ -14,7 +14,8 @@
         <?php foreach ($availableClones as $name => $data):?>
             <div id="<?php echo $data["directoryName"]; ?>" class="wpstg-clone">
 
-                <?php $urlLogin = $data["url"] . "/wp-login.php"?>
+                <?php //$urlLogin = $data["url"] . "/wp-login.php";?>
+                <?php $urlLogin = $data["url"] . "/?";?>
 
                 <a href="<?php echo $urlLogin?>" class="wpstg-clone-title" target="_blank">
                     <?php //echo $name?>
