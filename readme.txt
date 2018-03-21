@@ -112,23 +112,7 @@ Please open a [support request](https://wordpress.org/support/plugin/wp-staging/
 
 Permalinks are disabled on the staging site because the staging site is cloned into a subfolder and permalinks are not working on all systems
 without doing changes to the .htaccess (Apache server) or nginx.conf (Nginx Server).
-
-If you are using Apache server try to enable the permalinks and see if they are working. In case you are using Nginx server a small change in in the nginx.conf is needed.
- 
-In the majority of cases it is absolutely fine to disable permalinks on a staging platform and you still will be able to test new plugins and do theme changes on your staging platform. 
-If you need the same permalink stucture on your staging platform as you have in your prodcution website just add the following block to the nginx.conf:
-
-<pre>
-location /blog {
-        root /var/www/html/staging/;
-
-        location ~ \.php$ {
-                include snippets/fastcgi-php.conf;
-                fastcgi_pass unix:/run/php/php7.1-fpm.sock;
-        }
-
-}
-</pre>
+[Read here](https://wp-staging.com/docs/activate-permalinks-staging-site/ "activate permalinks on staging site") how to activate permalinks on the staging site.
 
  
 = How to install and setup? =
