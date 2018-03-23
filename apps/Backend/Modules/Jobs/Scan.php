@@ -131,6 +131,9 @@ class Scan extends Job
             $directories = $this->directories;
         }
 
+        // Sort results
+        uksort($directories, 'strcasecmp');
+        
         $output = '';
         foreach ($directories as $name => $directory)
         {

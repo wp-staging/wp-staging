@@ -196,7 +196,7 @@
                                            <?php echo $form->label( "wpstg_settings[disableAdminLogin]" ) ?>
                                            <span class="description">
                                                If you want to remove the requirement to login to the staging site you can deactivate it here.
-                                               <strong>Note:</strong> If you disable authentication everyone can see your staging sites including search engines and this can lead to "duplicate content" in search engines.
+                                               <strong>Note:</strong> The staging site discourages search engines from indexing the site by setting the 'noindex' tag into header of the staging site.
                                            </span>
                                        </div>
                                    </td>

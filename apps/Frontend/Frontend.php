@@ -4,12 +4,12 @@ namespace WPStaging\Frontend;
 
 use WPStaging\DI\InjectionAware;
 use WPStaging\Frontend\loginForm;
+
 /**
  * Class Frontend
  * @package WPStaging\Frontend
  */
-class Frontend extends InjectionAware
-{
+class Frontend extends InjectionAware {
 
    /**
     * @var object
@@ -19,27 +19,22 @@ class Frontend extends InjectionAware
    /**
     * Frontend initialization.
     */
-    public function initialize()
-    {
+   public function initialize() {
       $this->defineHooks();
 
-        $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
-        
+      $this->settings = json_decode( json_encode( get_option( "wpstg_settings", array() ) ) );
    }
 
    /**
     * Define Hooks
     */
-    private function defineHooks()
-    {
+   private function defineHooks() {
       // Get loader
-        $loader = $this->di->get("loader");
-        $loader->addAction("init", $this, "checkPermissions");
-        $loader->addFilter("wp_before_admin_bar_render", $this, "changeSiteName");
+      $loader = $this->di->get( "loader" );
+      $loader->addAction( "init", $this, "checkPermissions" );
+      $loader->addFilter( "wp_before_admin_bar_render", $this, "changeSiteName" );
    }
 
-    
-    
    /**
     * Change admin_bar site_name
     * 
@@ -58,13 +53,14 @@ class Frontend extends InjectionAware
       }
    }
 
-
    /**
     * Check permissions for the page to decide whether or not to disable the page
     */
    public function checkPermissions() {
+      $this->resetPermaLinks();
+
       if( $this->disableLogin() ) {
-         wp_die( sprintf ( __('Access denied. <a href="%1$s" target="_blank">Login</a> first to access this site','wpstg'), $this->getLoginUrl()  ) );
+         wp_die( sprintf( __( 'Access denied. <a href="%1$s" target="_blank">Login</a> first to access this site', 'wpstg' ), $this->getLoginUrl() ) );
 
          /**
           * Lines below are not used at the moment but are fully functional
@@ -73,8 +69,6 @@ class Frontend extends InjectionAware
          //$login->renderForm();
          //die();
       }
-
-      $this->resetPermaLinks();
    }
 
    /**
@@ -95,7 +89,7 @@ class Frontend extends InjectionAware
     */
    private function disableLogin() {
       // Is not staging site
-      if (!$this->isStagingSite()){
+      if( !$this->isStagingSite() ) {
          return false;
       }
 
@@ -114,39 +108,36 @@ class Frontend extends InjectionAware
     * Check if it is a staging site
     * @return bool
     */
-    private function isStagingSite()
-    {
-        return ("true" === get_option("wpstg_is_staging_site"));
+   private function isStagingSite() {
+      return ("true" === get_option( "wpstg_is_staging_site" ));
    }
 
    /**
     * Check if it is the login page
     * @return bool
     */
-    private function isLoginPage()
-    {
-        return (
-                in_array($GLOBALS["pagenow"], array("wp-login.php")) || 
-                in_array($this->settings->loginSlug, $_GET) ||
-                array_key_exists ($this->settings->loginSlug, $_GET)
-                );
+   private function isLoginPage() {
+      return (
+              in_array( $GLOBALS["pagenow"], array("wp-login.php") ) ||
+              in_array( $this->settings->loginSlug, $_GET ) ||
+              array_key_exists( $this->settings->loginSlug, $_GET )
+              );
    }
 
    /**
     * Reset permalink structure of the clone to default; index.php?p=123
     */
-    private function resetPermaLinks()
-    {
-        if (!$this->isStagingSite() || "true" === get_option("wpstg_rmpermalinks_executed"))
-        {
+   private function resetPermaLinks() {
+      if( !$this->isStagingSite() || "true" === get_option( "wpstg_rmpermalinks_executed" ) ) {
          return;
       }
-        // $wp_rewrite is not available before the init hook. So we need to use the global declaration
+      // $wp_rewrite is not available before the init hook. So we need to use the global declaration
       global $wp_rewrite;
-        $wp_rewrite->set_permalink_structure(null);
+      $wp_rewrite->set_permalink_structure( null );
 
       flush_rewrite_rules();
 
-        update_option("wpstg_rmpermalinks_executed", "true");
+      update_option( "wpstg_rmpermalinks_executed", "true" );
    }
+
 }

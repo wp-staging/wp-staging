@@ -93,18 +93,27 @@
         </p>
     </div>
 
-    <!--<a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
+    <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php //echo __("Login Options", "wpstg")?>
-    </a>//-->
+        <?php echo __("Login Options", "wpstg")?>
+    </a>
 
-    <!--<div class="wpstg-tab-section" id="wpstg-advanced-settings">
+    <div class="wpstg-tab-section" id="wpstg-advanced-settings">
+        <p>
                 <?php
+                  _e('<strong>Important:</strong> Are you using a custom login url?', 'wpstg');
+                  echo '<br/>';
+                  echo sprintf(__('Set up first <a href="%1$s"><strong>Login Custom Link</strong></a> if login to the admin dashboard is not reachable from the default url <pre>%2$s</pre>', 'wpstg'),
+                        admin_url() . '/admin.php?page=wpstg-settings#wpstg_settings[loginSlug]',
+                        admin_url()
+                          );
+                  _e('<strong>If you do not do that step, the staging site will not be accessable!</strong>', 'wpstg');
                      //$form = $this->di->get("forms")->get("general");
                      //echo $form->label("wpstg_settings['loginPostId']");
                      //echo $form->render("wpstg_settings['loginPostId']");
                 ?>
-    </div>//-->
+        </p>
+    </div>
 
 </div>
 

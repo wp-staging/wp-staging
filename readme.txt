@@ -146,8 +146,12 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.2.1 =
-* New: Option to set custom login url if there is one
+* New: Option to set Custom Login Link if there is one
+* New: Set meta noindex for staging site to make it non indexable for search engines
+* New: Better multiple folder selection. Allows to unselect a parent folder without collapsing all child folders
+* New: Sorted list of folders to copy
 * Fix: Can not login to staging site if plugin All In One WP Security & Firewall is used
+* Fix: Staging site not reachable because permalinks are not disabled under certain conditions
 
 = 2.2.0 =
 * Fix: Old staging site is not listed and pushing is not working properly if plugin is updated from wp staging version 1.6 and lower

@@ -49,7 +49,7 @@ class Data extends JobExecutable
      */
     protected function calculateTotalSteps()
     {
-        $this->options->totalSteps = 6;
+        $this->options->totalSteps = 8;
     }
 
     /**
@@ -363,12 +363,7 @@ class Data extends JobExecutable
      */
     protected function step6()
     {
-        // No settings, all good
-//        if (!isset($this->settings->wpSubDirectory) || "1" !== $this->settings->wpSubDirectory)
-//        {
-//            $this->log("Search & Replace: WP installation is not in a subdirectory! All good, skipping this step");
-//            return true;
-//        }
+
         if (!$this->isSubDir())
         {
             $this->debugLog("Search & Replace: WP installation is not in a subdirectory! All good, skipping this step");
@@ -413,7 +408,6 @@ class Data extends JobExecutable
             return false;
         }
         $this->Log("Search & Replace: Finished Step 6 successfully");
-
         return true;
     }
     
@@ -440,10 +434,72 @@ class Data extends JobExecutable
         // All good
         if ($result)
         {
+            $this->Log("Search & Replace: Finished Step 7 successfully");
             return true;
         }
 
         $this->log("Failed to update wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_WARNING);
+        return true;
+    }
+    
+    /**
+     * Update permalink_structure
+     * @return bool
+     */
+    protected function step8()
+    {
+       
+        $this->log("Search & Replace: Updating permalink_structure in {$this->prefix}options {$this->db->last_error}");
+        
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+        
+        $result = $this->db->query(
+            $this->db->prepare(
+                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'permalink_structure'",
+                ' '
+            )
+        );
+
+        // All good
+        if ($result)
+        {
+            $this->Log("Search & Replace: Finished Step 8 successfully");
+            return true;
+        }
+
+        $this->log("Failed to update permalink_structure in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
+        return true;
+    }
+    /**
+     * Update blog_public option to not allow staging site to be indexed by search engines
+     * @return bool
+     */
+    protected function step9()
+    {
+       
+        $this->log("Search & Replace: Updating blog_public in {$this->prefix}options {$this->db->last_error}");
+        
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+        
+        $result = $this->db->query(
+            $this->db->prepare(
+                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'blog_public'",
+                '0'
+            )
+        );
+
+        // All good
+        if ($result)
+        {
+            $this->Log("Search & Replace: Finished Step 9 successfully");
+            return true;
+        }
+
+        $this->log("Failed to update blog_public in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
         return true;
     }
     

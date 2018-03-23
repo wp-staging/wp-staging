@@ -93,7 +93,6 @@ var WPStaging = (function ($)
                     }
                 })
                 .on("click", ".wpstg-button-select", function (e) {
-                    console.log('test1');
 
                     e.preventDefault();
 
@@ -117,8 +116,8 @@ var WPStaging = (function ($)
                         $this.siblings(".wpstg-subdir").slideToggle();
                     }
                 })
-                // When a Directory is Selected
-                .on("change", ".wpstg-check-dir", function () {
+                // When a directory checkbox is Selected
+                .on("change", "input.wpstg-check-dir", function () {
                     var $directory = $(this).parent(".wpstg-dir");
 
                     if (this.checked)
@@ -132,7 +131,25 @@ var WPStaging = (function ($)
                         $directory.find(".wpstg-dir .wpstg-check-dir").prop("checked", false);
                         $directory.find(".wpstg-expand-dirs, .wpstg-check-subdirs").addClass("disabled");
                         $directory.find(".wpstg-check-subdirs").data("action", "check").text("check");
-                        $directory.children(".wpstg-subdir").slideUp();
+                        //$directory.children(".wpstg-subdir").slideUp();
+                    }
+                })
+                // When a directory name is Selected
+                .on("change", "href.wpstg-check-dir", function () {
+                    var $directory = $(this).parent(".wpstg-dir");
+
+                    if (this.checked)
+                    {
+                        $directory.parents(".wpstg-dir").children(".wpstg-check-dir").prop("checked", true);
+                        $directory.find(".wpstg-expand-dirs").removeClass("disabled");
+                        $directory.find(".wpstg-subdir .wpstg-check-dir").prop("checked", true);
+                    }
+                    else
+                    {
+                        $directory.find(".wpstg-dir .wpstg-check-dir").prop("checked", false);
+                        $directory.find(".wpstg-expand-dirs, .wpstg-check-subdirs").addClass("disabled");
+                        $directory.find(".wpstg-check-subdirs").data("action", "check").text("check");
+                        //$directory.children(".wpstg-subdir").slideUp();
                     }
                 })
                 // Check the max length of the clone name and if the clone name already exists
