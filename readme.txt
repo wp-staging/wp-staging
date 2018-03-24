@@ -145,6 +145,13 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.2.3 =
+* Fix: Change default login link to wp-admin
+* Fix: Unneccessary duplicates of wpstg tables in db
+
+= 2.2.2 =
+* Fix: Undefined property: stdClass::$loginSlug
+
 = 2.2.1 =
 * New: Option to set Custom Login Link if there is one
 * New: Set meta noindex for staging site to make it non indexable for search engines

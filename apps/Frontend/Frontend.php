@@ -15,6 +15,12 @@ class Frontend extends InjectionAware {
     * @var object
     */
    private $settings;
+   
+   /**
+    *
+    * @var string
+    */
+   private $loginSlug;
 
    /**
     * Frontend initialization.
@@ -23,6 +29,9 @@ class Frontend extends InjectionAware {
       $this->defineHooks();
 
       $this->settings = json_decode( json_encode( get_option( "wpstg_settings", array() ) ) );
+      
+      $this->loginSlug = isset($this->settings->loginSlug) ? $this->settings->loginSlug : '';
+
    }
 
    /**
@@ -76,11 +85,12 @@ class Frontend extends InjectionAware {
     * @return string
     */
    private function getLoginUrl() {
-      if( empty( $this->settings->loginSlug ) ) {
-         return wp_login_url();
+      
+      if( empty( $this->loginSlug ) ) {
+         return get_home_url() . '/wp-admin';
       }
 
-      return get_home_url() . '/?' . $this->settings->loginSlug;
+      return get_home_url() . '/?' . $this->loginSlug;
    }
 
    /**
@@ -117,10 +127,11 @@ class Frontend extends InjectionAware {
     * @return bool
     */
    private function isLoginPage() {
+      
       return (
               in_array( $GLOBALS["pagenow"], array("wp-login.php") ) ||
-              in_array( $this->settings->loginSlug, $_GET ) ||
-              array_key_exists( $this->settings->loginSlug, $_GET )
+              in_array( $this->loginSlug, $_GET ) ||
+              array_key_exists( $this->loginSlug, $_GET )
               );
    }
 

@@ -33,9 +33,7 @@ class Cloning extends Job
         $this->options->clone               = $_POST["cloneID"];
         $this->options->cloneDirectoryName  = preg_replace("#\W+#", '-', strtolower($this->options->clone));
         $this->options->cloneNumber         = 1;
-        $this->options->prefix = $this->getStagingPrefix();
-
-        //$this->options->prefix              = $this->getStagingPrefix();
+        $this->options->prefix = $this->setStagingPrefix();
         $this->options->includedDirectories = array();
         $this->options->excludedDirectories = array();
         $this->options->extraDirectories    = array();
@@ -52,21 +50,28 @@ class Cloning extends Job
             
             $this->options->prefix = isset($this->options->existingClones[$this->options->clone]->prefix) ? 
                     $this->options->existingClones[$this->options->clone]->prefix : 
-                    $this->getStagingPrefix();  
+                    $this->setStagingPrefix();  
             
         }   // Clone does not exist but there are other clones in db
             // Get data and increment it
         elseif (!empty($this->options->existingClones))
         {
             $this->options->cloneNumber =  count($this->options->existingClones)+1;
-            $this->options->prefix = $this->getStagingPrefix();  
+            $this->options->prefix = $this->setStagingPrefix();  
         }
 
-        // Excluded Tables
-        if (isset($_POST["excludedTables"]) && is_array($_POST["excludedTables"]))
+        // Included Tables
+        if (isset($_POST["includedTables"]) && is_array($_POST["includedTables"]))
         {
-            $this->options->excludedTables = $_POST["excludedTables"];
+            $this->options->tables = $_POST["includedTables"];
+        } else {
+            $this->options->tables = array(); 
         }
+        // Excluded Tables
+//        if (isset($_POST["excludedTables"]) && is_array($_POST["excludedTables"]))
+//        {
+//            $this->options->excludedTables = $_POST["excludedTables"];
+//        }
 
         // Excluded Directories
         if (isset($_POST["excludedDirectories"]) && is_array($_POST["excludedDirectories"]))
@@ -74,12 +79,14 @@ class Cloning extends Job
             $this->options->excludedDirectories = $_POST["excludedDirectories"];
         }
         
+        
         // Excluded Directories TOTAL
         // Do not copy these folders and plugins
         $excludedDirectories = array(
             ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
             ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
             ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-super-cache',
+            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'peters-login-redirect',
             );
         
         $this->options->excludedDirectories = array_merge($excludedDirectories, $this->options->excludedDirectories);
@@ -113,10 +120,10 @@ class Cloning extends Job
     /**
      * Create a new staging prefix which does not already exists in database
      */
-    public function getStagingPrefix(){
+    public function setStagingPrefix(){
         
-        // Find a new prefix that does not already exist in database. 
-        // 1000 different possible prefixes should be enough here
+        // Get & find a new prefix that does not already exist in database. 
+        // Loop through up to 1000 different possible prefixes should be enough here;)
         for($i=0; $i <= 10000; $i++){
             $this->options->prefix = isset($this->options->existingClones) ? 
                     'wpstg' . (count($this->options->existingClones)+$i) . '_' : 
@@ -198,6 +205,10 @@ class Cloning extends Job
         return $response;
     }
 
+
+    
+       
+    
     /**
      * Clone Database
      * @return object
@@ -238,6 +249,7 @@ class Cloning extends Job
         return $this->handleJobResponse($data->start(), "finish");
     }
 
+    
     /**
      * Save Clone Data
      * @return object
@@ -247,4 +259,6 @@ class Cloning extends Job
         $finish = new Finish();
         return $this->handleJobResponse($finish->start(), '');
     }
+    
+    
 }

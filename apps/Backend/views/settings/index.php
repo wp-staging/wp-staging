@@ -273,7 +273,7 @@
                                            <span class="description">
                                                Check this box if you like WP Staging to check sizes of each directory on scanning process.
                                                <br>
-                                               Warning this might cause timeout problems in big directory / file structures.
+                                               Warning this might cause timeout problems in big directories / file structures.
                                            </span>
                                        </div>
                                    </td>
