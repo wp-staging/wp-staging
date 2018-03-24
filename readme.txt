@@ -145,6 +145,8 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.2.4 =
+
 = 2.2.3 =
 * Fix: Change default login link to wp-admin
 * Fix: Unneccessary duplicates of wpstg tables in db
