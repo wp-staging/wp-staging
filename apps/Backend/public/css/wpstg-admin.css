@@ -249,7 +249,7 @@ color:#777777;
     border: 3px solid #ffffff;
     margin-bottom: 5px;
     padding: 5px 10px;
-    width: 300px;
+    width: 400px;
     position: relative;
     overflow: hidden;
     transition: border-color .2s ease-in-out;
@@ -324,13 +324,13 @@ color:#777777;
 	pointer-events: none;
 }
 
-#wpstg-cancel-cloning {
+#wpstg-cancel-cloning, #wpstg-cancel-cloning-update {
 	background: #ff3428;
 	border-color: #e72f24;
 	margin-top: 5px;
 }
 
-#wpstg-cancel-cloning.success {
+#wpstg-cancel-cloning.success, #wpstg-cancel-cloning.success {
 	background: #64dd58;
 	border-color: #54bd4a;
 }
@@ -373,14 +373,29 @@ color:#777777;
 }
 
 #wpstg-loader.wpstg-finished {
+        display:block;
         content:"Finished";
         background-color:#00c89a;
         color:white; 
         padding:2px;
-        margin-top:6px;
+        margin-top:0px;
+}
+.wpstg-loader {
+   content: url('../img/loading.gif'); 
+   margin-top:-5px;
+}
+
+.wpstg-loader.wpstg-finished {
+        content:"Finished";
+        background-color:#00c89a;
+        color:white; 
+        padding:2px;
+        margin-top:0px;
+        max-width:60px;
 }
 
 #wpstg-workflow {
+        max-width:650px;
 	position: relative;
 	clear:both;
 	padding-top:20px;
@@ -430,17 +445,27 @@ color:#777777;
 }
 
 .wpstg-progress-bar {
-	max-width: 900px;
+	/*max-width: 900px;*/
 	height: 27px;
 	padding: 0;
 	background-color: #d6d8d7;
 }
 
 .wpstg-progress {
-	background: #1d94cf;
+    float:left;
+	background: #3fa5ee;
 	width: 0;
 	height: 100%;
-	transition: width 1s;
+	transition: width .6s ease;
+        color:white;
+        line-height:25px;
+        text-align:center;
+}
+.wpstg-progress-files {
+	background: #16b4f0;
+	width: 0;
+	height: 100%;
+	transition: width .6s ease;
         color:white;
         line-height:25px;
         text-align:center;
@@ -570,6 +595,10 @@ color:#777777;
 	display: none;
 	margin-left: 20px;
 }
+.wpstg-subdir.wpstg-push {
+	display: block;
+	margin-left: 20px;
+}
 
 .wpstg-dir a.disabled {
 	color: #888;
@@ -606,9 +635,8 @@ color:#777777;
 
 #wpstg-log-details{
     height: 300px;
-    max-width: 700px;
     overflow: scroll;
-    /*max-width: 650px;*/
+    max-width: 650px;
     font-family: monospace;
     font-size: 12px;
     line-height: 15px;
@@ -644,7 +672,7 @@ color:#777777;
 
 .wpstg-sysinfo {
     width:700px;
-    height: 500px;
+    height: 700px;
 }
 
 .form-table .col-title label {
@@ -686,7 +714,7 @@ color:#777777;
     border-radius:2px;
     color:#FFF;
     display:inline;
-    font-size:16px;
+    font-size:12px;
     width:40px;
     padding:4px 8px;
 }
@@ -781,4 +809,17 @@ color:#777777;
 
 .wpstg-bold{
     font-weight: 600;
+}
+
+#wpstg-processing-status {
+    margin-top:5px;
+    font-size: 13px;
+    font-weight: 400px;
+    float:left;
+}
+#wpstg-processing-timer {    
+    margin-top:5px;
+    font-size: 13px;
+    font-weight: 400px;
+    float:right;
 }

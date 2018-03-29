@@ -37,7 +37,7 @@ class Cancel extends Job {
         $clone["name"] = $this->options->clone;
         $clone["number"] = $this->options->cloneNumber;
         $clone["path"] = ABSPATH . $this->options->cloneDirectoryName;
-        $clone["prefix"] = ABSPATH . $this->options->prefix;
+        $clone["prefix"] = $this->options->prefix;
 
         return $clone;
     }

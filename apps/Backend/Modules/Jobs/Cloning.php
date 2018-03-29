@@ -38,6 +38,7 @@ class Cloning extends Job
         $this->options->excludedDirectories = array();
         $this->options->extraDirectories    = array();
         $this->options->excludedFiles       = array('.htaccess', '.DS_Store', '.git', '.svn', '.tmp', 'desktop.ini', '.gitignore', '.log');
+        $this->options->currentStep         = 0;
 
         // Job
         $this->options->job                 = new \stdClass();
@@ -216,7 +217,17 @@ class Cloning extends Job
     public function jobDatabase()
     {
         $database = new Database();
-        return $this->handleJobResponse($database->start(), "directories");
+        return $this->handleJobResponse($database->start(), "SearchReplace");
+    }
+
+    /**
+     * Search & Replace
+     * @return object
+     */
+    public function jobSearchReplace()
+    {
+        $searchReplace = new SearchReplace();
+        return $this->handleJobResponse($searchReplace->start(), "directories");
     }
 
     /**

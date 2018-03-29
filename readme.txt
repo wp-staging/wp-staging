@@ -146,6 +146,12 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.2.4 =
+* New: Replace even hardcoded links and server path by using search & replace through all staging site database tables
+* New: New and improved progress bar with elapsed time
+* Fix: Cancel cloning does not clean up unused tables and leads to duplicate tables
+* Tweak: Wordings in rating admin notice
+* Fix: Set meta noindex for staging site to make it non indexable for search engines
+
 
 = 2.2.3 =
 * Fix: Change default login link to wp-admin

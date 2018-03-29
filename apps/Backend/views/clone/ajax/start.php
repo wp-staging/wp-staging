@@ -1,30 +1,38 @@
 <div class=successfullying-section">
-    <?php echo __("Copy Database Tables", "wpstg")?>
+    <h2 id="wpstg-processing-header"><?php echo __("Processing, please wait...", "wpstg")?></h2>
     <div class="wpstg-progress-bar">
-        <div class="wpstg-progress" id="wpstg-db-progress" style="width:0"></div>
+        <div class="wpstg-progress" id="wpstg-progress-db" style="width:0;overflow: hidden;"></div>
+        <div class="wpstg-progress" id="wpstg-progress-sr" style="width:0;background-color:#3c9ee4;overflow: hidden;"></div>
+        <div class="wpstg-progress" id="wpstg-progress-dirs" style="width:0;background-color:#3a96d7;overflow: hidden;"></div>
+        <div class="wpstg-progress" id="wpstg-progress-files" style="width:0;background-color:#378cc9;overflow: hidden;"></div>
     </div>
+    <div style="clear:both;">
+        <div id="wpstg-processing-status"></div>
+        <div id="wpstg-processing-timer"></div>
+</div>
+    <div style="clear: both;"></div>
 </div>
 
-<div class="wpstg-cloning-section">
-    <?php echo __("Prepare Directories", "wpstg")?>
+<!--<div class="wpstg-cloning-section">
+    <?php //echo __("Prepare Directories", "wpstg")?>
     <div class="wpstg-progress-bar">
         <div class="wpstg-progress" id="wpstg-directories-progress" style="width:0"></div>
     </div>
-</div>
+</div>-->
 
-<div class="wpstg-cloning-section">
-    <?php echo __("Copy Files", "wpstg")?>
+<!--<div class="wpstg-cloning-section">
+    <?php //echo __("Copy Files", "wpstg")?>
     <div class="wpstg-progress-bar">
         <div class="wpstg-progress" id="wpstg-files-progress" style="width:0"></div>
     </div>
 </div>
 
 <div class="wpstg-cloning-section">
-    <?php echo __("Replace Data", "wpstg")?>
+    <?php //echo __("Replace Data", "wpstg")?>
     <div class="wpstg-progress-bar">
         <div class="wpstg-progress" id="wpstg-links-progress" style="width:0"></div>
     </div>
-</div>
+</div>-->
 
 <button type="button" id="wpstg-cancel-cloning" class="wpstg-link-btn button-primary">
     <?php echo __("Cancel", "wpstg")?>
@@ -42,11 +50,9 @@
     <h3>Congratulations
     </h3>
     <?php
-    //echo ABSPATH . '<br>';
-    //echo get_home_path();
     $subDirectory = str_replace( get_home_path(), '', ABSPATH ); 
     $url = get_home_url() . str_replace('/', '', $subDirectory);
-    echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site in:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wpstg' ), $url );
+    echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wpstg' ), $url );
     ?>
     <br>
     <?php //echo __('Open and access the staging site: ', 'wpstg')?>
@@ -71,9 +77,10 @@
                 Usually this is absolutely ok for a staging website and you do not need to use permalinks at all.
                 <br>
                 <p>
-                    If your site is executed by the Apache webserver there is a good chance that permalinks are working without less efforts. 
-                    In that case, try to activate the permalinks at <a href="<?php echo  admin_url() . 'options-permalink.php'; ?>">settings > permalinks</a>
-                    <br/>
+                    If your site is executed by the Apache webserver there is a good chance that permalinks are working without much efforts. 
+                    In that case, try to activate the permalinks from <br/>
+                    Staging Site > wp-admin > Settings > Permalinks</a>
+                    <br/><br/>
                     If that does not work or you are using Nginx webserver you need to do a few modifications to the .htaccess (Apache) or *.conf (Nginx).
                     <br>
                     WP Staging can not do these modifications automatically.

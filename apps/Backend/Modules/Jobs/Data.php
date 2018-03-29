@@ -49,7 +49,7 @@ class Data extends JobExecutable
      */
     protected function calculateTotalSteps()
     {
-        $this->options->totalSteps = 8;
+        $this->options->totalSteps = 9;
     }
 
     /**

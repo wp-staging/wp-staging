@@ -18,13 +18,12 @@
             </a>
         </li>
         <li>
-            <a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:bold;">
-                I already did
+            <a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:normal;color:white;">
                 <?php _e('I already did','wpstg')?>
             </a>
         </li>
         <li>
-            <a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:bold;">
+            <a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:normal;color:white;">
                 <?php _e('No, not good enough','wpstg')?>
             </a>
         </li>

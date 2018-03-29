@@ -122,7 +122,6 @@ class Directories extends JobExecutable {
         $files = $this->open($this->filename, 'a');
 
         $excludeWpContent = array(
-            'HUGE-FOLDER',
             'cache',
             'wps-hide-login',
             'node_modules',
@@ -411,7 +410,7 @@ class Directories extends JobExecutable {
       }
 
     /**
-     * Check if directory is excluded from colec
+     * Check if directory is excluded
      * @param string $directory
      * @return bool
      */

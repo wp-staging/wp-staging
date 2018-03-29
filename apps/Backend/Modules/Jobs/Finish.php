@@ -39,10 +39,12 @@ class Finish extends Job
             "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
             "number"            => $this->options->cloneNumber,
             "version"           => \WPStaging\WPStaging::VERSION,
-            "status"            => false,
+            "status"            => 'finished',
             "prefix"            => $this->options->prefix,
             "last_msg"          => $this->logger->getLastLogMsg(),
-            "job"               => $this->options->currentJob
+            "job"               => $this->options->currentJob,
+            "percentage"        => 100
+                
         );
         
         //$this->flush();
@@ -104,18 +106,4 @@ class Finish extends Job
 
         return true;
     }
-
-
-    /**
-     * Flush wpdb cache and permalinks
-     * @global type $wp_rewrite
-     */
-//    protected function flush() {
-//        // flush rewrite rules to prevent 404s 
-//        // and other oddities
-//        wp_cache_flush();
-//        global $wp_rewrite;
-//        $wp_rewrite->init();
-//        flush_rewrite_rules(true); // true = hard refresh, recreates the .htaccess file
-//    }
 }
