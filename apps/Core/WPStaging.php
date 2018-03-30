@@ -363,7 +363,7 @@ final class WPStaging {
             break;
 
          case "low":
-            $cpuLoad = 3000;
+            $cpuLoad = 1500;
             break;
 
          case "default":
