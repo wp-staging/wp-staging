@@ -151,6 +151,7 @@ https://wp-staging.com
 * Fix: Cancel cloning does not clean up unused tables and leads to duplicate tables
 * Tweak: Wordings in rating admin notice
 * Tweak: Better error messages
+* Tweak: Open staging site in same window from login request
 * Fix: Set meta noindex for staging site to make it non indexable for search engines
 
 
@@ -244,5 +245,5 @@ Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.co
 
 == Upgrade Notice ==
 
-= 2.2.1 =
-2.2.1 * Compatible to All In One WP Security & Firewall
+= 2.2.4 =
+2.2.1 * New search & replace feature for serialized data
