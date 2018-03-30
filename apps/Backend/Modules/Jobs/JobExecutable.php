@@ -40,7 +40,7 @@ abstract class JobExecutable extends Job
 
     /**
      * Prepare Response Array
-     * @param bool $status
+     * @param bool $status false if not finished
      * @param bool $incrementCurrentStep
      * @return array
      */
@@ -51,8 +51,11 @@ abstract class JobExecutable extends Job
             $this->options->currentStep++;
         }
 
+        $percentage = 0;
+        if (isset($this->options->currentStep) && isset($this->options->totalSteps) && $this->options->totalSteps > 0){
         $percentage = round(($this->options->currentStep / $this->options->totalSteps) * 100);
         $percentage = (100 < $percentage) ? 100 : $percentage;
+        }
 
         return $this->response = array(
             "status"        => $status,
@@ -93,6 +96,12 @@ abstract class JobExecutable extends Job
             if (!$this->execute())
             {
                 break;
+            }
+            // Return after every step to create lower batches
+            // This also gets a smoother progress bar and to a less consumptive php cpu load
+            // This decrease performance tremendous but also lowers memory consumption
+            if ($this->settings->cpuLoad === 'low'){
+               return (object) $this->response;
             }
         }
     }

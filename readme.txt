@@ -150,6 +150,7 @@ https://wp-staging.com
 * New: New and improved progress bar with elapsed time
 * Fix: Cancel cloning does not clean up unused tables and leads to duplicate tables
 * Tweak: Wordings in rating admin notice
+* Tweak: Better error messages
 * Fix: Set meta noindex for staging site to make it non indexable for search engines
 
 

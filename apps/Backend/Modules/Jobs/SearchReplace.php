@@ -154,7 +154,9 @@ class SearchReplace extends JobExecutable {
     */
    private function startReplace( $new ) {
       $rows = $this->options->job->start + $this->settings->queryLimit;
-
+      $this->log(
+                "DB Processing:  {$this->options->job->start} to {$rows} records"
+        );
 
       // Search & Replace
       $this->searchReplace( $new, $rows, array() );
@@ -235,9 +237,7 @@ class SearchReplace extends JobExecutable {
       // Get a list of columns in this table.
       list( $primary_key, $columns ) = $this->get_columns( $table );
 
-      $this->log(
-              "DB Search & Replace:  Table {$table} - {$this->options->job->start} to {$this->settings->queryLimit} records"
-      );
+      $this->log( "DB Processing:  Table {$table}" );
 
 
       // Bail out early if there isn't a primary key.
@@ -257,7 +257,7 @@ class SearchReplace extends JobExecutable {
          $current_row++;
          $update_sql = array();
          $where_sql = array();
-         $isUpdate = false;
+         $upd = false;
 
          foreach ( $columns as $column ) {
 
@@ -273,6 +273,7 @@ class SearchReplace extends JobExecutable {
                continue;
             }
 
+            
             // Check options table
             if( $this->options->prefix . 'options' === $table ) {
 
@@ -299,32 +300,36 @@ class SearchReplace extends JobExecutable {
             foreach ( $args['search_for'] as $replace ) {
                $dataRow = $this->recursive_unserialize_replace( $args['search_for'][$i], $args['replace_with'][$i], $dataRow, false, $args['case_insensitive'] );
                // Do not uncomment line below! Will lead to memory issues and timeouts
-               //$this->debugLog('DB Search & Replace: '.$table.' - Replace ' . $args['search_for'][$i] . ' with ' . $args['replace_with'][$i]);
+               //$this->debugLog('DB Processing: '.$table.' - Replace ' . $args['search_for'][$i] . ' with ' . $args['replace_with'][$i]);
                $i++;
             }
-
+            unset ($replace);
+            unset ($i);
 
             // Something was changed
             if( $row[$column] != $dataRow ) {
                $update_sql[] = $column . ' = "' . $this->mysql_escape_mimic( $dataRow ) . '"';
-               $isUpdate = true;
-               //$this->log("Changed {$update_sql} ", \WPStaging\Utils\Logger::TYPE_INFO);
+               $upd = true;
             }
          }
 
          // Determine what to do with updates.
          if( $args['dry_run'] === 'on' ) {
             // Don't do anything if a dry run
-         } elseif( $isUpdate && !empty( $where_sql ) ) {
+         } elseif( $upd && !empty( $where_sql ) ) {
             // If there are changes to make, run the query.
             $sql = 'UPDATE ' . $table . ' SET ' . implode( ', ', $update_sql ) . ' WHERE ' . implode( ' AND ', array_filter( $where_sql ) );
+
             $result = $this->db->query( $sql );
 
             if( !$result ) {
-               $this->log("Error updating row {$current_row} {$sql}", \WPStaging\Utils\Logger::TYPE_ERROR);
-            } 
+               //$this->log("Error updating row {$current_row} {$sql}", \WPStaging\Utils\Logger::TYPE_ERROR);
+            } else {
+               // Do nothing
+            }
          }
       } // end row loop
+      unset ($row);
 
       if( $current_page >= $pages - 1 ) {
          $done = true;
@@ -519,7 +524,7 @@ class SearchReplace extends JobExecutable {
          return;
       }
 
-      $this->log( "DB Search & Replace: {$new} already exists, dropping it first" );
+      $this->log( "DB Processing: {$new} already exists, dropping it first" );
       $this->db->query( "DROP TABLE {$new}" );
    }
 

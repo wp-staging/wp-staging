@@ -334,7 +334,11 @@ var WPStaging = (function ($)
                     {
                         if (response.length < 1)
                         {
-                            showError("Something went wrong, please try again");
+                            showError(
+                                "Something went wrong! Error: No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                                "Than try again. If that does not help, " +
+                                "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                                ); 
                         }
 
                         $workFlow.removeClass("loading").html(response);
@@ -386,9 +390,9 @@ var WPStaging = (function ($)
 
 
                 showError(
-                        "Fatal Unknown Error. Go to WP Staging > Settings and lower 'File Copy Limit' and DB query limit" +
-                        "Than try again. If this does not help, " +
-                        "<a href='https://wpquads.com/support/' target='_blank'>open a support ticket</a> "
+                        "Fatal Unknown Error. Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                        "Than try again. If that does not help, " +
+                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
                         );
             },
             success: function (data) {
@@ -399,11 +403,19 @@ var WPStaging = (function ($)
             },
             statusCode: {
                 404: function (data) {
-                    showError("Something went wrong; can't find ajax request URL!");
+                    showError(
+                        "Something went wrong; can't find ajax request URL! Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                        "Than try again. If that does not help, " +
+                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                        );
                     // Try again after 10 seconds
                 },
                 500: function () {
-                    showError("Something went wrong; internal server error while processing the request!");
+                    showError(
+                        "Something went wrong! Internal server error while processing the request! Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                        "Than try again. If that does not help, " +
+                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                        );
                 }
             }
         });
@@ -453,7 +465,11 @@ var WPStaging = (function ($)
 
                                 if (response.length < 1)
                                 {
-                                    showError("Something went wrong, please try again");
+                                    showError(
+                                    "Something went wrong! No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                                    "Than try again. If that does not help, " +
+                                    "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                                    );
                                 }
 
                                 // Styling of elements
@@ -608,7 +624,11 @@ var WPStaging = (function ($)
 
             if (response.length < 1)
             {
-                showError("Something went wrong, please try again");
+                                    showError(
+                                    "Something went wrong! No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                                    "Than try again. If that does not help, " +
+                                    "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                                    );
             }
 
             var $currentStep = cache.get(".wpstg-current-step");
@@ -671,7 +691,11 @@ var WPStaging = (function ($)
             if (response) {
                 // Error
                 if ("undefined" !== typeof response.error && "undefined" !== typeof response.message) {
-                    showError(response.message);
+                showError(
+                    "Something went wrong! Error:" +response.message+ ".  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                    "Than try again. If that does not help, " +
+                    "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                    );  
                     console.log(response.message);
                 }
 
@@ -971,6 +995,11 @@ var WPStaging = (function ($)
                 if (false === response)
             {
                     showError("Unknown Error, please try again");
+                    showError(
+                    "Something went wrong! Error: No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                    "Than try again. If that does not help, " +
+                    "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                    ); 
                     cache.get("#wpstg-loader").hide();
                     cache.get(".wpstg-loader").hide();
                     return;
@@ -979,7 +1008,12 @@ var WPStaging = (function ($)
                 // Throw Error
                 if ("undefined" !== typeof (response.error) && response.error) {
                     console.log(response.message);
-                    WPStaging.showError(response.message);
+                    showError(
+                    "Something went wrong! Error:" +response.message+ ".  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                    "Than try again. If that does not help, " +
+                    "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                    ); 
+                    
                     return;
             }
 
