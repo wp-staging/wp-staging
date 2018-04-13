@@ -60,7 +60,7 @@
 
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
         <h4 style="margin:0">
-            <?php echo __("Uncheck the folders you do not want to copy. Click on them for expanding!", "wpstg")?>
+            <?php echo __("Select folders to copy. Click on folder name to list subfolders!", "wpstg")?>
         </h4>
 
         <?php echo $scan->directoryListing()?>
@@ -101,18 +101,13 @@
     <div class="wpstg-tab-section" id="wpstg-advanced-settings">
         <p>
                 <?php
-                  _e('<strong>Important:</strong> Is your site using a custom login url?', 'wpstg');                  
+                  _e('<strong>Important:</strong> Are you using a custom login url?', 'wpstg');
                   echo '<br/>';
-                  echo sprintf(__('Set up a <a href="%1$s" target="_blank" rel="noopener"><strong>Login Custom Link</strong></a> if login to the admin dashboard is <strong>not</strong> reachable from the default login url.', 'wpstg'),
-                        admin_url() . '/admin.php?page=wpstg-settings#wpstg_settings[loginSlug]'
+                  echo sprintf(__('Set up first <a href="%1$s"><strong>Login Custom Link</strong></a> if login to the admin dashboard is not reachable from the default url below:<pre>%2$s</pre>', 'wpstg'),
+                        admin_url() . '/admin.php?page=wpstg-settings#wpstg_settings[loginSlug]',
+                        admin_url()
                           );
-                  echo '<br/>';
-                  sprintf(__('To test this you need to log out first! Than login again by using the link <a href="%1$s" target="_blank">12$s</a>.', 'wpstg'), admin_url());
-                  echo '<br/>';
-                  _e('If the login link does not work you <strong>must</strong> define the Login Custom Link option.', 'wpstg');
-                  echo '<br/>';
-                  echo '<br/>';
-                  _e('<strong>If you are using a custom login and you do not define that setting, the staging site will not be accessable!</strong>', 'wpstg');
+                  _e('<strong>If you do not do that step, the staging site could be unavailable!</strong>', 'wpstg');
                      //$form = $this->di->get("forms")->get("general");
                      //echo $form->label("wpstg_settings['loginPostId']");
                      //echo $form->render("wpstg_settings['loginPostId']");

@@ -147,7 +147,7 @@ class Database extends JobExecutable
     {
         $rows = $this->options->job->start+$this->settings->queryLimit;
         $this->log(
-            "DB Copy: {$old} as {$new} between {$this->options->job->start} to {$rows} records"
+            "DB Copy: {$old} as {$new} from {$this->options->job->start} to {$rows} records"
         );
 
         $limitation = '';
@@ -193,9 +193,9 @@ class Database extends JobExecutable
             return true;
         }
 
-        $this->log("DB Copy: Creating table {$new} like {$old}");
+        $this->log("DB Copy: Creating table {$new}");
 
-        $this->db->query("CREATE TABLE {$new} LIKE {$old}");
+        $this->db->query("CREATE TABLE {$new}");
 
         $this->options->job->total = (int) $this->db->get_var("SELECT COUNT(1) FROM {$old}");
 

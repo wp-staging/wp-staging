@@ -8,7 +8,6 @@ if (!defined("WPINC"))
 }
 
 use WPStaging\WPStaging;
-use WPStaging\Backend\Modules\Jobs;
 
 /**
  * Class Cache
@@ -73,6 +72,7 @@ class Cache
         {
             throw new \Exception("Failed to create cache directory " . $this->cacheDir . '! Make sure folder permission is 755 and owner is correct. Should be www-data or similar.');
         }
+        
     }
 
     /**
@@ -112,24 +112,16 @@ class Cache
         }
 
         // Save it to file
-        return (file_put_contents($cacheFile, @serialize($value), LOCK_EX) !== false);
+        //return (file_put_contents($cacheFile, @serialize($value), LOCK_EX) !== false);
+        if (!file_put_contents($cacheFile, @serialize($value))){
+           $this->returnException(" Can't save data to: " . $cacheFile);
+           return false;
+        }
+        return true;
         //return (file_put_contents($cacheFile, @serialize($value)) !== false);
     }
     
         /**
-     * Throw a errror message via json and stop further execution
-     * @param string $message
-     */
-    protected function returnException($message = ''){
-        wp_die( json_encode(array(
-                  'job'     => isset($this->options->currentJob) ? $this->options->currentJob : '',
-                  'status'  => false,
-                  'message' => $message,
-                  'error' => true
-            )));
-    }
-
-    /**
      * Checks if file is valid or not
      * @param $cacheFileName
      * @param bool $deleteFileIfInvalid
@@ -209,4 +201,18 @@ class Cache
     {
         return $this->cacheExtension;
     }
+    
+    
+    /**
+     * Throw a errror message via json and stop further execution
+     * @param string $message
+     */
+    protected function returnException($message = ''){
+        wp_die( json_encode(array(
+                  'job'     => isset($this->options->currentJob) ? $this->options->currentJob : '',
+                  'status'  => false,
+                  'message' => $message,
+                  'error' => true
+            )));
+}
 }

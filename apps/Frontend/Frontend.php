@@ -87,7 +87,8 @@ class Frontend extends InjectionAware {
    private function getLoginUrl() {
       
       if( empty( $this->loginSlug ) ) {
-         return get_home_url() . '/wp-admin';
+         //return get_home_url() . '/wp-admin';
+         return get_site_url() . '/wp-admin';
       }
 
       return get_home_url() . '/?' . $this->loginSlug;

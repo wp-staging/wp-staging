@@ -1,4 +1,5 @@
 <?php
+
 namespace WPStaging\Backend\Modules;
 
 use WPStaging\DI\InjectionAware;
@@ -23,7 +24,6 @@ class SystemInfo extends InjectionAware
      */
     private $isMultiSite;
     
-
     /**
      * Initialize class
      */
@@ -45,9 +45,8 @@ class SystemInfo extends InjectionAware
      * Get System Information as text
      * @return string
      */
-    public function get()
-    {
-        $output  = "### Begin System Info ###" . PHP_EOL . PHP_EOL;
+   public function get() {
+      $output = "### Begin System Info ###" . PHP_EOL . PHP_EOL;
 
         $output .= $this->wpstaging();
         
@@ -72,8 +71,6 @@ class SystemInfo extends InjectionAware
         return $output;
     }
     
-
-
     /**
      * @param string $string
      * @return string
@@ -166,6 +163,12 @@ class SystemInfo extends InjectionAware
          $output .= $this->info( "DB Prefix wp-config.php:", $this->getStagingPrefix($clone));
          $output .= $this->info( "Version:", isset( $clone['version'] ) ? $clone['version'] : 'undefined' ) . PHP_EOL . PHP_EOL;
       }
+
+
+      $output .= $this->info( "Raw Clones Data:", json_encode( get_option( 'wpstg_existing_clones_beta', 'undefined' ) ) );
+
+      $output .= '' . PHP_EOL;
+
 
       //$output .= PHP_EOL . PHP_EOL;
       
@@ -273,6 +276,16 @@ class SystemInfo extends InjectionAware
         $tablePrefix   .= (strlen($wpDB->prefix) > 16) ? " ERROR: Too long" : " Acceptable";
 
         $output .= $this->info("Table Prefix:", $tablePrefix);
+
+      // Constants
+      $output .= $this->info( "WP Content Path:", WP_CONTENT_DIR );
+      $output .= $this->info( "WP Plugin Dir:", WP_PLUGIN_DIR );
+      if (defined('UPLOADS'))
+      $output .= $this->info( "WP UPLOADS CONST:", UPLOADS );
+      $uploads = wp_upload_dir();
+      $output .= $this->info( "WP Uploads Dir:", wp_basename( $uploads['baseurl'] ) );
+      if (defined('WP_TEMP_DIR'))
+      $output .= $this->info( "WP Temp Dir:", WP_TEMP_DIR );
 
         // WP Debug
         $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? WP_DEBUG ? "Enabled" : "Disabled" : "Not set");

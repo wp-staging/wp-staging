@@ -340,6 +340,11 @@ class Files extends JobExecutable {
      * @return bool
      */
     private function isDirectoryExcluded($directory) {
+       // Make sure that wp-staging-pro directory / plugin is never excluded
+       if (false !== strpos( $directory, 'wp-staging' ) || false !== strpos( $directory, 'wp-staging-pro' ) ){
+          return false;
+       }
+
         foreach ($this->options->excludedDirectories as $excludedDirectory) {
             if (strpos($directory, $excludedDirectory) === 0 && !$this->isExtraDirectory($directory)) {
                 return true;

@@ -75,6 +75,7 @@ class Scan extends Job
 
         // Directories
         $this->options->includedDirectories     = array();
+        $this->options->includedExtraDirectories= array();
         $this->options->excludedDirectories     = array();
         $this->options->extraDirectories        = array();
         $this->options->directoriesToCopy       = array();
@@ -137,9 +138,8 @@ class Scan extends Job
         $output = '';
         foreach ($directories as $name => $directory)
         {
-           
+            // Not a directory, possibly a symlink, therefore we will skip it           
             if (!is_array($directory)) {
-                // Not a directory, possibly a symlink, therefore we will skip it
                 continue;
             }
            
@@ -152,17 +152,31 @@ class Scan extends Job
                 in_array($data["path"], $this->options->includedDirectories)
             );
 
-            $isDisabled = ($this->options->existingClones && isset($this->options->existingClones[$name]));
+            //$isDisabled = ($this->options->existingClones && isset($this->options->existingClones[$name]));
+
+            // Include wp core folders and their sub dirs. 
+            // Exclude all other folders (default setting)
+            $isDisabled = ($name !== 'wp-admin' && 
+                          $name !== 'wp-includes' && 
+                          $name !== 'wp-content') &&
+                          false === strpos( strrev($data["path"]), strrev("wp-admin") ) &&
+                          false === strpos( strrev($data["path"]), strrev("wp-includes") ) &&
+                          false === strpos( strrev($data["path"]), strrev("wp-content") )
+                           ? true : false;
+            
+            // Extra class to differentiate between wp core and non core folders
+            $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
+            
 
             $output .= "<div class='wpstg-dir'>";
-            $output .= "<input type='checkbox' class='wpstg-check-dir'";
+            $output .= "<input type='checkbox' class='wpstg-check-dir " . $class . "'";
 
             if ($isChecked && !$isDisabled && !$forceDisabled) $output .= " checked";
-            if ($forceDisabled || $isDisabled) $output .= " disabled";
+            //if ($forceDisabled || $isDisabled) $output .= " disabled";
 
             $output .= " name='selectedDirectories[]' value='{$data["path"]}'>";
 
-            $output .= "<a href='#' class='wpstg-expand-dirs";
+            $output .= "<a href='#' class='wpstg-expand-dirs ";
             if (!$isChecked || $isDisabled) $output .= " disabled";
             $output .= "'>{$name}";
             $output .= "</a>";
@@ -245,7 +259,7 @@ class Scan extends Job
 //                continue;
 //            }
             // Create array of unchecked tables
-            if (0 !== strpos($table->Name, $wpDB->prefix))
+            if (!empty($wpDB->prefix) && 0 !== strpos($table->Name, $wpDB->prefix))
             {
                 $this->options->excludedTables[] = $table->Name;
             }

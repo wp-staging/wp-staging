@@ -10,6 +10,7 @@ Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testi
 Requires at least: 3.6+
 Tested up to: 4.9
 Stable tag: {{version}}
+Requires PHP: 5.3
 
 A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
 
@@ -144,6 +145,15 @@ https://wp-staging.com
 4. Finish!
 
 == Changelog ==
+
+= 2.2.5 =
+* New: Compatible to WP 4.9.5
+* New: Allow to select and copy extra folders that are on the root level
+* Fix: Incorrect login path to staging site if WordPress is installed in subdirectory
+* Fix: Login url is wrong if WP is installed in subfolder
+* Tweak: Only wp root folders are pre selected before cloning is starting
+* Tweak: Change WP_HOME or WP_SITEURL constants of staging site if they are defined in wp-config.php 
+
 
 = 2.2.4 =
 * New: Replace even hardcoded links and server path by using search & replace through all staging site database tables

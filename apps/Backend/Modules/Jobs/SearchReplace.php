@@ -44,6 +44,10 @@ class SearchReplace extends JobExecutable {
    }
 
    public function start() {
+      // Skip job. Nothing to do
+      if ($this->options->totalSteps === 0){
+         $this->prepareResponse( true, false );
+      }
 
       $this->run();
 
@@ -104,13 +108,13 @@ class SearchReplace extends JobExecutable {
       return true;
    }
 
-   private function convertExcludedTables() {
-      $tmp = array();
-      foreach ( $this->options->excludedTables as $table ) {
-         $tmp[] = str_replace( $this->options->prefix, $this->tmpPrefix, $table );
-      }
-      $this->options->excludedTables = $tmp;
-   }
+//   private function convertExcludedTables() {
+//      $tmp = array();
+//      foreach ( $this->options->excludedTables as $table ) {
+//         $tmp[] = str_replace( $this->options->prefix, $this->tmpPrefix, $table );
+//      }
+//      $this->options->excludedTables = $tmp;
+//   }
 
    /**
     * Stop Execution immediately
@@ -220,15 +224,41 @@ class SearchReplace extends JobExecutable {
       $pages = $this->get_pages_in_table( $table );
       $done = false;
 
+            
+      if( $this->isSubDir() ) {
+         //$homeUrl = rtrim(get_home_url(), "/") . $this->getSubDir() . $this->options->cloneDirectoryName;
       // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
       $args['search_for'] = array(
-          get_home_url(),
+             rtrim(get_home_url(), "/") . $this->getSubDir(),
           ABSPATH
       );
+
       $args['replace_with'] = array(
+             rtrim(get_home_url(), "/") . $this->getSubDir() . '/'. $this->options->cloneDirectoryName,
+             rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
+         );
+      } else {
+         $args['search_for'] = array(
+             rtrim(get_home_url(), '/'),
+             ABSPATH
+         );
+         $args['replace_with'] = array(
           rtrim( get_home_url(), '/' ) . '/' . $this->options->cloneDirectoryName,
           rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
       );
+      }
+
+//      // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
+//      $args['search_for'] = array(
+//          get_home_url(),
+//          ABSPATH
+//      );
+//
+//      
+//      $args['replace_with'] = array(
+//          rtrim( get_home_url(), '/' ) . '/' . $this->options->cloneDirectoryName,
+//          rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
+//      );
       $args['replace_guids'] = 'off';
       $args['dry_run'] = 'off';
       $args['case_insensitive'] = false;
@@ -257,7 +287,7 @@ class SearchReplace extends JobExecutable {
          $current_row++;
          $update_sql = array();
          $where_sql = array();
-         $upd = false;
+         $isUpdate = false;
 
          foreach ( $columns as $column ) {
 
@@ -309,23 +339,21 @@ class SearchReplace extends JobExecutable {
             // Something was changed
             if( $row[$column] != $dataRow ) {
                $update_sql[] = $column . ' = "' . $this->mysql_escape_mimic( $dataRow ) . '"';
-               $upd = true;
+               $isUpdate = true;
+               //$this->log("Changed {$update_sql[]} ", \WPStaging\Utils\Logger::TYPE_INFO);
             }
          }
 
          // Determine what to do with updates.
          if( $args['dry_run'] === 'on' ) {
             // Don't do anything if a dry run
-         } elseif( $upd && !empty( $where_sql ) ) {
+         } elseif( $isUpdate && !empty( $where_sql ) ) {
             // If there are changes to make, run the query.
             $sql = 'UPDATE ' . $table . ' SET ' . implode( ', ', $update_sql ) . ' WHERE ' . implode( ' AND ', array_filter( $where_sql ) );
-
             $result = $this->db->query( $sql );
 
             if( !$result ) {
-               //$this->log("Error updating row {$current_row} {$sql}", \WPStaging\Utils\Logger::TYPE_ERROR);
-            } else {
-               // Do nothing
+               $this->log("Error updating row {$current_row}", \WPStaging\Utils\Logger::TYPE_ERROR);
             }
          }
       } // end row loop
@@ -544,5 +572,32 @@ class SearchReplace extends JobExecutable {
               )
               );
    }
+
+    /**
+     * Check if WP is installed in subdir
+     * @return boolean
+     */
+    private function isSubDir(){
+        if ( get_option( 'siteurl' ) !== get_option( 'home' ) ) { 
+            return true;
+}
+        return false;
+    }
+   
+    /**
+     * Get the install sub directory if WP is installed in sub directory
+     * @return string
+     */
+    private function getSubDir(){
+       $home = get_option('home');
+       $siteurl = get_option('siteurl');
+       
+       if (empty($home) || empty($siteurl)){
+          return '/';
+       }
+       
+       $dir = str_replace($home, '', $siteurl);
+       return '/' . str_replace('/', '', $dir);
+    }
 
 }

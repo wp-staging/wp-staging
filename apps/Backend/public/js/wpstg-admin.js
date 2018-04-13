@@ -533,12 +533,12 @@ var WPStaging = (function ($)
     {
         var includedDirectories = [];
 
-        $(".wpstg-dir input:checked").each(function () {
+        $(".wpstg-dir input:checked.wpstg-root").each(function () {
             var $this = $(this);
-            if (!$this.parent(".wpstg-dir").parents(".wpstg-dir").children(".wpstg-expand-dirs").hasClass("disabled"))
-            {
+            //if (!$this.parent(".wpstg-dir").parents(".wpstg-dir").children(".wpstg-expand-dirs").hasClass("disabled"))
+            //{
                 includedDirectories.push($this.val());
-            }
+            //}
         });
 
         return includedDirectories;
@@ -552,7 +552,8 @@ var WPStaging = (function ($)
     {
         var excludedDirectories = [];
 
-        $(".wpstg-dir input:not(:checked)").each(function () {
+        //$(".wpstg-dir .wpstg-root input:not(:checked)").each(function () {
+        $(".wpstg-dir input:not(:checked).wpstg-root").each(function () {
             var $this = $(this);
             //if (!$this.parent(".wpstg-dir").parents(".wpstg-dir").children(".wpstg-expand-dirs").hasClass("disabled"))
             //{
@@ -562,26 +563,42 @@ var WPStaging = (function ($)
 
         return excludedDirectories;
     };
-
     /**
-     * Get Included Extra Directories
+     * Get included extra directories of the root level
+     * All directories except wp-content, wp-admin, wp-includes
      * @returns {Array}
      */
     var getIncludedExtraDirectories = function ()
     {
         var extraDirectories = [];
 
-        if (!$("#wpstg_extraDirectories").val()) {
-            return extraDirectories;
-        }
-
-        var extraDirectories = $("#wpstg_extraDirectories").val().split(/\r?\n/);
-        console.log(extraDirectories);
-
-        //excludedDirectories.push($this.val());
+        $(".wpstg-dir input:checked.wpstg-extra").each(function () {
+            var $this = $(this);
+            extraDirectories.push($this.val());
+        });
 
         return extraDirectories;
     };
+
+    /**
+     * Get Included Extra Directories
+     * @returns {Array}
+     */
+//    var getIncludedExtraDirectories = function ()
+//    {
+//        var extraDirectories = [];
+//
+//        if (!$("#wpstg_extraDirectories").val()) {
+//            return extraDirectories;
+//        }
+//
+//        var extraDirectories = $("#wpstg_extraDirectories").val().split(/\r?\n/);
+//        console.log(extraDirectories);
+//
+//        //excludedDirectories.push($this.val());
+//
+//        return extraDirectories;
+//    };
 
 
 
@@ -994,7 +1011,6 @@ var WPStaging = (function ($)
                 // Undefined Error
                 if (false === response)
             {
-                    showError("Unknown Error, please try again");
                     showError(
                     "Something went wrong! Error: No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
                     "Than try again. If that does not help, " +
