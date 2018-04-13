@@ -195,7 +195,7 @@ class Database extends JobExecutable
 
         $this->log("DB Copy: Creating table {$new}");
 
-        $this->db->query("CREATE TABLE {$new}");
+        $this->db->query("CREATE TABLE {$new} LIKE {$old}");
 
         $this->options->job->total = (int) $this->db->get_var("SELECT COUNT(1) FROM {$old}");
 
