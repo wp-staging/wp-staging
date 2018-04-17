@@ -146,6 +146,8 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.2.6 =
+
 = 2.2.5 =
 * New: Compatible to WP 4.9.5
 * New: Allow to select and copy extra folders that are on the root level
