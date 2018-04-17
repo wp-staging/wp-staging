@@ -149,8 +149,10 @@ https://wp-staging.com
 = 2.2.5 =
 * New: Compatible to WP 4.9.5
 * New: Allow to select and copy extra folders that are on the root level
+* New: Use fully custom login form to prevent access denied issues on sites where access to wp-login.php is denied or redirection plugins are used
 * Fix: Incorrect login path to staging site if WordPress is installed in subdirectory
 * Fix: Login url is wrong if WP is installed in subfolder
+* Fix: If PHP 5.6.34 is used, the cloning process could be unfinished due to use of private member in protected class
 * Tweak: Only wp root folders are pre selected before cloning is starting
 * Tweak: Change WP_HOME or WP_SITEURL constants of staging site if they are defined in wp-config.php 
 
@@ -225,35 +227,9 @@ https://wp-staging.com
 * Fix: Other staging site can be overwritten when Edit/Update clone function is executed
 * Fix: Several improvements to improve reliability and prevent timeouts and fatal errors during cloning
 
-= 2.1.2 =
-* Fix: Remove LOCK_EX parameter in file_put_contents(). LOCK_EX is not working on several systems which results in cloning process timeouts
-* Fix: Huge Performance improvement in copying process by removing duplicate file entries in the cache file. This also prevents weird timeout issues on some hosted websites
-* Fix: Error 500 when debug mode is activated
-* Fix: Limit maximum execution time to 30 seconds
-* Fix: Sanitize Clone Names and Keys to fix "clone not found" issue in upgrade routine
-* Fix: Do not clone the plugin wps-hide-login
-* Fix: Staging sites can not be deleted if they are very big
-* Fix: Link to staging site is undefined
-* Tweak: Better admin message for asking for a review
-* Tweak: Remove table wpstg_rmpermalinks_executed when plugin is uninstalled
-* New: New setting to specify the maximum amount of files copied within one ajax call to fix godaddy and bluehost ajax 404 errors. Default 10 per batch
-
-
-= 2.1.1 =
-* New: Add link to tutorial explaining the process of pushing modification to the live site
-
-= 2.1.0 =
-* New: Exclude unneccessary files from cloning process: .tmp, .log, .htaccess, .git, .gitignore, desktop.ini, .DS_Store, .svn
-* New: More details for debugging in Tools->System Info
-* Fix: Check if tables in staging site exists before attempting to modify them
-* Fix: WordPress in sub directories were not opening
-* Fix: Nonce check not working if nonce life time is filtered by another plugin WP Bug: https://core.trac.wordpress.org/ticket/41617#comment:1
-* Fix: Access to staging site not working, if WP_SITEURL and WP_HOME is defined in wp-config.php 
-* Tweak: Exclude wp-content/cache folder from copying process
-
 Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.com/changelog.txt)
 
 == Upgrade Notice ==
 
-= 2.2.4 =
-2.2.1 * New search & replace feature for serialized data
+= 2.2.5 =
+2.2.5 * New: Compatible to WP 4.9.5

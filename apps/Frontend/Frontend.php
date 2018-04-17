@@ -30,8 +30,7 @@ class Frontend extends InjectionAware {
 
       $this->settings = json_decode( json_encode( get_option( "wpstg_settings", array() ) ) );
       
-      $this->loginSlug = isset($this->settings->loginSlug) ? $this->settings->loginSlug : '';
-
+      $this->loginSlug = isset( $this->settings->loginSlug ) ? $this->settings->loginSlug : '';
    }
 
    /**
@@ -65,18 +64,45 @@ class Frontend extends InjectionAware {
    /**
     * Check permissions for the page to decide whether or not to disable the page
     */
+//   public function checkPermissions() {
+//      $this->resetPermaLinks();
+//
+//      if( $this->disableLogin() ) {
+//         wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wpstg' ), $this->getLoginUrl() ) );
+//      }
+//   }
    public function checkPermissions() {
       $this->resetPermaLinks();
 
-      if( $this->disableLogin() ) {
-         wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wpstg' ), $this->getLoginUrl() ) );
+      if($this->disableLogin() ) {
+         //wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wpstg' ), $this->getLoginUrl() ) );
+         //}
+         	$args = array(
+		'echo' => true,
+		// Default 'redirect' value takes the user back to the request URI.
+		'redirect' => ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
+		'form_id' => 'loginform',
+		'label_username' => __( 'Username or Email Address' ),
+		'label_password' => __( 'Password' ),
+		'label_remember' => __( 'Remember Me' ),
+		'label_log_in' => __( 'Log In' ),
+		'id_username' => 'user_login',
+		'id_password' => 'user_pass',
+		'id_remember' => 'rememberme',
+		'id_submit' => 'wp-submit',
+		'remember' => true,
+		'value_username' => '',
+		// Set 'value_remember' to true to default the "Remember me" checkbox to checked.
+		'value_remember' => false,
+                  );
+
 
          /**
           * Lines below are not used at the moment but are fully functional
           */
-         //$login = new loginForm();
-         //$login->renderForm();
-         //die();
+         $login = new loginForm();
+         $login->renderForm($args);
+         die();
       }
    }
 
@@ -84,15 +110,23 @@ class Frontend extends InjectionAware {
     * Get login link
     * @return string
     */
+//   private function getLoginUrl() {
+//      
+//      if( empty( $this->loginSlug ) ) {
+//         //return get_home_url() . '/wp-admin';
+//         return get_site_url() . '/wp-admin';
+//
+//      }
+//
+//      return get_home_url() . '/?' . $this->loginSlug;
+//   }
+   /**
+    * Get path to wp-login.php
+    * @return string
+    */
    private function getLoginUrl() {
-      
-      if( empty( $this->loginSlug ) ) {
-         //return get_home_url() . '/wp-admin';
-         return get_site_url() . '/wp-admin';
+      return get_site_url() . '/wp-login.php';
       }
-
-      return get_home_url() . '/?' . $this->loginSlug;
-   }
 
    /**
     * Check if the page should be blocked
