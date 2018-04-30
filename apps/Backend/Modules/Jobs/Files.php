@@ -26,11 +26,6 @@ class Files extends JobExecutable {
     private $maxFilesPerRun;
 
     /**
-     * File Object
-     */
-    //private $verifyFiles = array();
-
-    /**
      * @var string
      */
     private $destination;

@@ -4,14 +4,13 @@ namespace WPStaging\Backend\Upgrade;
 
 use WPStaging\WPStaging;
 use WPStaging\Utils\Logger;
-
+use WPStaging\Utils\Helper;
 
 /**
  * Upgrade Class
  * This must be loaded on every page init to ensure all settings are 
  * adjusted correctly and to run any upgrade process if necessary.
  */
-
 // No Direct Access
 if( !defined( "WPINC" ) ) {
     die;
@@ -32,12 +31,6 @@ class Upgrade {
     private $clones;
 
     /**
-     * Clone data
-     * @var obj 
-     */
-    //private $clonesBeta;
-
-    /**
     * Cron data
     * @var obj
     */
@@ -54,7 +47,6 @@ class Upgrade {
      * @var obj 
      */
     private $db;
-
 
     public function __construct() {
 
@@ -98,7 +90,7 @@ class Upgrade {
       // Current options
       $sites = get_option( "wpstg_existing_clones_beta", array() );
       
-      if (false === $sites){
+      if( false === $sites || count($sites) === 0 ) {
          return;
       }
 
@@ -118,8 +110,6 @@ class Upgrade {
       }
    }
    
-
-
    /**
     * Check and return prefix of the staging site
     * @param string $directory
@@ -148,7 +138,6 @@ class Upgrade {
          return "";
       }
    }
-
 
    /**
     * Upgrade method 2.0.3
@@ -214,12 +203,10 @@ class Upgrade {
      */
     private function upgradeClonesBeta() {
 
-        // Get options
-        $this->clones = get_option( "wpstg_existing_clones", array() );
 
-        $new = array();
+      $new = array();
 
-        if( empty( $this->clones ) ) {
+      if( empty( $this->clones ) || count( $this->clones ) === 0 ) {
             return false;
         }
 
@@ -233,11 +220,11 @@ class Upgrade {
 
             $new[$value]['directoryName'] = $value;
             $new[$value]['path'] = get_home_path() . $value;
-            $new[$value]['url'] = get_home_url() . "/" . $value;
+            $helper = new Helper();
+            $new[$value]['url'] = $helper->get_home_url() . "/" . $value;
             $new[$value]['number'] = $key + 1;
             $new[$value]['version'] = $this->previousVersion;
-            //$new[$value]['prefix'] = $value . '_';
-
+         //$new[$value]['prefix'] = $value;
         }
         unset( $value );
 
@@ -245,40 +232,6 @@ class Upgrade {
             $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . \WPStaging\WPStaging::VERSION );
         }
     }
-
-    /**
-     * Convert clone data from wpstg 1.x to wpstg 2.x 
-     * Only use this later when wpstg 2.x is ready for production
-     */
-//    private function upgradeClones() {
-//
-//        $new = array();
-//        
-//        // Get options
-//        $this->clones = get_option( "wpstg_existing_clones", array() );
-//
-//        if( empty( $this->clones ) ) {
-//            return false;
-//        }
-//
-//        foreach ( $this->clones as $key => &$value ) {
-//
-//            // Skip the rest of the loop if data is already compatible to wpstg 2.0.1
-//            if( isset( $value['directoryName'] ) || !empty( $value['directoryName'] ) ) {
-//                continue;
-//            }
-//            $new[$value]['directoryName'] = $value;
-//            $new[$value]['path'] = get_home_path() . $value;
-//            $new[$value]['url'] = get_home_url() . "/" . $value;
-//            $new[$value]['number'] = $key + 1;
-//            $new[$value]['version'] = $this->previousVersion;
-//        }
-//        unset( $value );
-//
-//        if( empty( $new ) || false === update_option( 'wpstg_existing_clones', $new ) ) {
-//            $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . \WPStaging\WPStaging::VERSION );
-//        }
-//    }
 
     /**
     * Upgrade Notices db options from wpstg 1.3 -> 2.0.1

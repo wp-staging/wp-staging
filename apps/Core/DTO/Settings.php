@@ -63,11 +63,13 @@ class Settings {
      */
     protected $debugMode;
 
+
     /**
      * @var array
      */
     protected $blackListedPlugins = array();
 
+   
     /**
      * Settings constructor.
      */
@@ -98,19 +100,19 @@ class Settings {
     /**
      * @return bool
      */
-//   public function save() {
-//      $data = array();
-//
-//      foreach ( get_object_vars( $this ) as $key => $value ) {
-//         if( 0 == strpos( $key, '_' ) ) {
-//            continue;
-//         }
-//
-//         $data[$key] = $value;
-//      }
-//      
-//      return update_option( "wpstg_settings", $data );
-//   }
+   public function save() {
+      $data = array();
+
+      foreach ( get_object_vars( $this ) as $key => $value ) {
+         if( 0 == strpos( $key, '_' ) ) {
+            continue;
+         }
+
+         $data[$key] = $value;
+      }
+      
+      return update_option( "wpstg_settings", $data );
+   }
 
     /**
      * @return array

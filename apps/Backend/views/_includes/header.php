@@ -32,6 +32,6 @@
     </div>
     <div style="font-size:14px;">
         Tutorial: <a href="https://wp-staging.com/docs/copy-staging-site-to-live-site/" target="_blank">Learn how to push changes to live website</a>
-        <span style="float:right;"><a href="https://wordpress.org/support/plugin/wp-staging/reviews/?filter=5" target="_blank" rel="external noopener">Rate the plugin</a></span>
+        <span style="float:right;"><a href="https://wordpress.org/support/plugin/wp-staging/reviews/?filter=5" target="_blank" rel="external noopener">Rate it &#9733;&#9733;&#9733;</a></span>
     </div>
 </div>

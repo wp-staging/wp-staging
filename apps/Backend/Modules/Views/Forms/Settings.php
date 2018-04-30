@@ -74,8 +74,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "File Copy Limit" )
-                      ->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : 1 )
+              $element->setLabel( "File Copy Limit" )->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : 1 )
       );
 
 
@@ -104,7 +103,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "CPU load priority" )
+              $element->setLabel( "CPU Load Priority" )
                       ->setDefault( isset( $settings->cpuLoad ) ? $settings->cpuLoad : "fast" )
       );
 

@@ -9,6 +9,7 @@ if( !defined( "WPINC" ) ) {
 
 use WPStaging\WPStaging;
 use WPStaging\Utils\Strings;
+use WPStaging\Utils\Helper;
 
 /**
  * Class Database
@@ -26,6 +27,14 @@ class SearchReplace extends JobExecutable {
     */
    public $db;
 
+   
+   /**
+    *
+    * @var string
+    */
+   private $homeUrl;
+
+
    /**
     * The prefix of the new database tables which are used for the live site after updating tables
     * @var string 
@@ -40,7 +49,8 @@ class SearchReplace extends JobExecutable {
       $this->db = WPStaging::getInstance()->get( "wpdb" );
       //$this->tmpPrefix = 'wpstgtmp_';
       $this->tmpPrefix = $this->options->prefix;
-      //$this->settings->queryLimit = 2;
+      $helper = new Helper();      
+      $this->homeUrl = $helper->get_home_url();
    }
 
    public function start() {
@@ -159,7 +169,7 @@ class SearchReplace extends JobExecutable {
    private function startReplace( $new ) {
       $rows = $this->options->job->start + $this->settings->queryLimit;
       $this->log(
-                "DB Processing:  {$this->options->job->start} to {$rows} records"
+              "DB Processing:  Table {$new} {$this->options->job->start} to {$rows} records"
         );
 
       // Search & Replace
@@ -174,7 +184,7 @@ class SearchReplace extends JobExecutable {
     * @access public
     * @return int
     */
-   public function get_pages_in_table( $table ) {
+   private function get_pages_in_table( $table ) {
       $table = esc_sql( $table );
       $rows = $this->db->get_var( "SELECT COUNT(*) FROM $table" );
       $pages = ceil( $rows / $this->settings->queryLimit );
@@ -187,7 +197,7 @@ class SearchReplace extends JobExecutable {
     * @param  string $table The table to check.
     * @return array
     */
-   public function get_columns( $table ) {
+   private function get_columns( $table ) {
       $primary_key = null;
       $columns = array();
       $fields = $this->db->get_results( 'DESCRIBE ' . $table );
@@ -218,45 +228,46 @@ class SearchReplace extends JobExecutable {
     */
    private function searchReplace( $table, $page, $args ) {
 
+
       // Load up the default settings for this chunk.
       $table = esc_sql( $table );
       $current_page = $this->options->job->start + $this->settings->queryLimit;
       $pages = $this->get_pages_in_table( $table );
-      $done = false;
+      //$done = false;
 
             
       if( $this->isSubDir() ) {
-         //$homeUrl = rtrim(get_home_url(), "/") . $this->getSubDir() . $this->options->cloneDirectoryName;
+         //$homeUrl = rtrim($this->homeUrl, "/") . $this->getSubDir() . $this->options->cloneDirectoryName;
       // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
       $args['search_for'] = array(
-             rtrim(get_home_url(), "/") . $this->getSubDir(),
+             rtrim( $this->homeUrl, "/" ) . $this->getSubDir(),
           ABSPATH
       );
 
       $args['replace_with'] = array(
-             rtrim(get_home_url(), "/") . $this->getSubDir() . '/'. $this->options->cloneDirectoryName,
+             rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName,
              rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
          );
       } else {
          $args['search_for'] = array(
-             rtrim(get_home_url(), '/'),
+             rtrim( $this->homeUrl, '/' ),
              ABSPATH
          );
          $args['replace_with'] = array(
-          rtrim( get_home_url(), '/' ) . '/' . $this->options->cloneDirectoryName,
+             rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
           rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
       );
       }
 
 //      // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
 //      $args['search_for'] = array(
-//          get_home_url(),
+//          $this->homeUrl,
 //          ABSPATH
 //      );
 //
 //      
 //      $args['replace_with'] = array(
-//          rtrim( get_home_url(), '/' ) . '/' . $this->options->cloneDirectoryName,
+//          rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
 //          rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
 //      );
       $args['replace_guids'] = 'off';
@@ -266,9 +277,6 @@ class SearchReplace extends JobExecutable {
 
       // Get a list of columns in this table.
       list( $primary_key, $columns ) = $this->get_columns( $table );
-
-      $this->log( "DB Processing:  Table {$table}" );
-
 
       // Bail out early if there isn't a primary key.
       if( null === $primary_key ) {
@@ -287,7 +295,7 @@ class SearchReplace extends JobExecutable {
          $current_row++;
          $update_sql = array();
          $where_sql = array();
-         $isUpdate = false;
+         $upd = false;
 
          foreach ( $columns as $column ) {
 
@@ -329,39 +337,36 @@ class SearchReplace extends JobExecutable {
             $i = 0;
             foreach ( $args['search_for'] as $replace ) {
                $dataRow = $this->recursive_unserialize_replace( $args['search_for'][$i], $args['replace_with'][$i], $dataRow, false, $args['case_insensitive'] );
-               // Do not uncomment line below! Will lead to memory issues and timeouts
-               //$this->debugLog('DB Processing: '.$table.' - Replace ' . $args['search_for'][$i] . ' with ' . $args['replace_with'][$i]);
                $i++;
             }
-            unset ($replace);
-            unset ($i);
+            unset( $replace );
+            unset( $i );
 
             // Something was changed
             if( $row[$column] != $dataRow ) {
                $update_sql[] = $column . ' = "' . $this->mysql_escape_mimic( $dataRow ) . '"';
-               $isUpdate = true;
-               //$this->log("Changed {$update_sql[]} ", \WPStaging\Utils\Logger::TYPE_INFO);
+               $upd = true;
             }
          }
 
          // Determine what to do with updates.
          if( $args['dry_run'] === 'on' ) {
             // Don't do anything if a dry run
-         } elseif( $isUpdate && !empty( $where_sql ) ) {
+         } elseif( $upd && !empty( $where_sql ) ) {
             // If there are changes to make, run the query.
             $sql = 'UPDATE ' . $table . ' SET ' . implode( ', ', $update_sql ) . ' WHERE ' . implode( ' AND ', array_filter( $where_sql ) );
             $result = $this->db->query( $sql );
 
             if( !$result ) {
-               $this->log("Error updating row {$current_row}", \WPStaging\Utils\Logger::TYPE_ERROR);
+               $this->log( "Error updating row {$current_row}", \WPStaging\Utils\Logger::TYPE_ERROR );
             }
          }
       } // end row loop
-      unset ($row);
+      unset( $row );
 
-      if( $current_page >= $pages - 1 ) {
-         $done = true;
-      }
+//      if( $current_page >= $pages - 1 ) {
+//         $done = true;
+//      }
 
       // DB Flush
       $this->db->flush();
@@ -401,8 +406,7 @@ class SearchReplace extends JobExecutable {
          }
 
          // Submitted by Tina Matter
-         elseif( is_object( $data ) ) {
-            // $data_class = get_class( $data );
+         elseif( $this->isValidObject($data) ) {
             $_tmp = $data; // new $data_class( );
             $props = get_object_vars( $data );
             foreach ( $props as $key => $value ) {
@@ -433,13 +437,40 @@ class SearchReplace extends JobExecutable {
    }
 
    /**
+    * Check if the object is a valid one and not __PHP_Incomplete_Class_Name
+    * Can not use is_object alone because in php 7.2 it's returning true even though object is __PHP_Incomplete_Class_Name
+    * @return boolean
+    */
+   private function isValidObject($data){
+      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
+         return false;
+      }
+      
+      $invalid_class_props = get_object_vars( $data );
+      
+      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
+         // Assume it must be an valid object
+         return true;
+      }
+      
+      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
+
+      if( !empty( $invalid_object_class ) ) {
+         return false;
+      }
+      
+      // Assume it must be an valid object
+      return true;
+   }
+
+   /**
     * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
     * @link   http://php.net/manual/en/function.mysql-real-escape-string.php#101248
     * @access public
     * @param  string $input The string to escape.
     * @return string
     */
-   public function mysql_escape_mimic( $input ) {
+   private function mysql_escape_mimic( $input ) {
       if( is_array( $input ) ) {
          return array_map( __METHOD__, $input );
       }
@@ -458,7 +489,7 @@ class SearchReplace extends JobExecutable {
     *
     * @return mixed, false on failure
     */
-   public static function unserialize( $serialized_string ) {
+   private static function unserialize( $serialized_string ) {
       if( !is_serialized( $serialized_string ) ) {
          return false;
       }
@@ -479,7 +510,7 @@ class SearchReplace extends JobExecutable {
     *
     * @return string
     */
-   public function str_replace( $from, $to, $data, $case_insensitive = false ) {
+   private function str_replace( $from, $to, $data, $case_insensitive = false ) {
       if( 'on' === $case_insensitive ) {
          $data = str_ireplace( $from, $to, $data );
       } else {
@@ -588,16 +619,16 @@ class SearchReplace extends JobExecutable {
      * Get the install sub directory if WP is installed in sub directory
      * @return string
      */
-    private function getSubDir(){
-       $home = get_option('home');
-       $siteurl = get_option('siteurl');
+   private function getSubDir() {
+      $home = get_option( 'home' );
+      $siteurl = get_option( 'siteurl' );
        
-       if (empty($home) || empty($siteurl)){
+      if( empty( $home ) || empty( $siteurl ) ) {
           return '/';
        }
        
-       $dir = str_replace($home, '', $siteurl);
-       return '/' . str_replace('/', '', $dir);
+      $dir = str_replace( $home, '', $siteurl );
+      return '/' . str_replace( '/', '', $dir );
     }
 
 }

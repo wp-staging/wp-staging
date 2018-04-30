@@ -5,6 +5,7 @@ namespace WPStaging\Backend\Modules;
 use WPStaging\DI\InjectionAware;
 use WPStaging\Library\Browser;
 use WPStaging\WPStaging;
+use WPStaging\Utils;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -25,11 +26,18 @@ class SystemInfo extends InjectionAware
     private $isMultiSite;
     
     /**
+    *
+    * @var obj
+    */
+   private $helper;
+
+   /**
      * Initialize class
      */
     public function initialize()
     {
         $this->isMultiSite = is_multisite();
+      $this->helper = new Utils\Helper();
     }
 
     /**
@@ -112,14 +120,14 @@ class SystemInfo extends InjectionAware
      * Site Information
      * @return string
      */
-    public function site()
-    {
-        $output  = "-- Site Info" . PHP_EOL . PHP_EOL;
-        $output .= $this->info("Site URL:", site_url());
-        $output .= $this->info("Home URL:", home_url());
-        $output .= $this->info("Home Path:", get_home_path());
-        $output .= $this->info("Installed in subdir:", ( $this->isSubDir() ? 'Yes' : 'No' )) ;
-        $output .= $this->info("Multisite:", ($this->isMultiSite ? "Yes" : "No" ));
+   public function site() {
+      $output = "-- Site Info" . PHP_EOL . PHP_EOL;
+      $output .= $this->info( "Site URL:", site_url() );
+      $output .= $this->info( "Home URL:", $this->helper->get_home_url() );
+      $output .= $this->info( "Home Path:", get_home_path() );
+      $output .= $this->info( "ABSPATH:", ABSPATH );
+      $output .= $this->info( "Installed in subdir:", ( $this->isSubDir() ? 'Yes' : 'No' ) );
+      $output .= $this->info( "Multisite:", ($this->isMultiSite ? "Yes" : "No" ) );
 
         return apply_filters("wpstg_sysinfo_after_site_info", $output);
     }

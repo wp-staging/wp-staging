@@ -1,188 +1,189 @@
 <?php
+
 namespace WPStaging\Backend\Modules\Jobs;
 
 // No Direct Access
-if (!defined("WPINC"))
-{
-    die;
+if( !defined( "WPINC" ) ) {
+   die;
 }
 
 use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
+use WPStaging\Utils\Helper;
 
 /**
  * Class Data
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Data extends JobExecutable
-{
+class Data extends JobExecutable {
 
-    /**
-     * @var \wpdb
-     */
-    private $db;
+   /**
+    * @var \wpdb
+    */
+   private $db;
 
-    /**
-     * @var string
-     */
-    private $prefix;
+   /**
+    * @var string
+    */
+   private $prefix;
 
-    /**
-     * Initialize
-     */
-    public function initialize()
-    {
-        $this->db       = WPStaging::getInstance()->get("wpdb");
+   /**
+    *
+    * @var string
+    */
+   private $homeUrl;
 
-        $this->prefix   = $this->options->prefix;
+   /**
+    * Initialize
+    */
+   public function initialize() {
+      $this->db = WPStaging::getInstance()->get( "wpdb" );
 
-        // Fix current step
-        if (0 == $this->options->currentStep)
-        {
-            $this->options->currentStep = 1;
-        }
-    }
+      $this->prefix = $this->options->prefix;
 
-    /**
-     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
-     * @return void
-     */
-    protected function calculateTotalSteps()
-    {
-        $this->options->totalSteps = 11;
-    }
+      $helper = new Helper();
 
-    /**
-     * Start Module
-     * @return object
-     */
-    public function start()
-    {
-        // Execute steps
-        $this->run();
+      $this->homeUrl = $helper->get_home_url();
 
-        // Save option, progress
-        $this->saveOptions();
 
-        return (object) $this->response;
-    }
+      // Fix current step
+      if( 0 == $this->options->currentStep ) {
+         $this->options->currentStep = 1;
+      }
+   }
 
-    /**
-     * Execute the Current Step
-     * Returns false when over threshold limits are hit or when the job is done, true otherwise
-     * @return bool
-     */
-    protected function execute()
-    {
-        // Fatal error. Let this happen never and break here immediately
-        if ($this->isRoot()){
-            return false;
-        }
-        
-        // Over limits threshold
-        if ($this->isOverThreshold())
-        {
-            // Prepare response and save current progress
-            $this->prepareResponse(false, false);
-            $this->saveOptions();
-            return false;
-        }
+   /**
+    * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
+    * @return void
+    */
+   protected function calculateTotalSteps() {
+      $this->options->totalSteps = 11;
+   }
 
-        // No more steps, finished
-        if ($this->isFinished())
-        {
-            $this->prepareResponse(true, false);
-            return false;
-        }
+   /**
+    * Start Module
+    * @return object
+    */
+   public function start() {
+      // Execute steps
+      $this->run();
 
-        // Execute step
-        $stepMethodName = "step" . $this->options->currentStep;
-        if (!$this->{$stepMethodName}())
-        {
-            $this->prepareResponse(false, false);
-            return false;
-        }
+      // Save option, progress
+      $this->saveOptions();
 
-        // Prepare Response
-        $this->prepareResponse();
+      return ( object ) $this->response;
+   }
 
-        // Not finished
-        return true;
-    }
+   /**
+    * Execute the Current Step
+    * Returns false when over threshold limits are hit or when the job is done, true otherwise
+    * @return bool
+    */
+   protected function execute() {
+      // Fatal error. Let this happen never and break here immediately
+      if( $this->isRoot() ) {
+         return false;
+      }
 
-    /**
-     * Checks Whether There is Any Job to Execute or Not
-     * @return bool
-     */
-    private function isFinished()
-    {
-        return (
-            $this->options->currentStep > $this->options->totalSteps ||
-            !method_exists($this, "step" . $this->options->currentStep)
-        );
-    }
-    
-    /**
-     * Check if current operation is done on the root folder or on the live DB
-     * @return boolean
-     */
-    private function isRoot(){
-        
-        // Prefix is the same as the one of live site
-        $wpdb = WPStaging::getInstance()->get("wpdb");
-        if ($wpdb->prefix === $this->prefix){
-            return true;
-        }
-        
-        // CloneName is empty
-        $name = (array)$this->options->cloneDirectoryName;
-        if (empty($name)){
-            return true;
-        }
-        
-        // Live Path === Staging path
-        if (get_home_url() . $this->options->cloneDirectoryName === get_home_url()){
-            return true;
-        }
-        
-        return false;
-    }
+      // Over limits threshold
+      if( $this->isOverThreshold() ) {
+         // Prepare response and save current progress
+         $this->prepareResponse( false, false );
+         $this->saveOptions();
+         return false;
+      }
 
-        
-    /**
-     * Check if table exists
-     * @param string $table
-     * @return boolean
-     */
-    protected function isTable($table){
-      if($this->db->get_var("SHOW TABLES LIKE '{$table}'") != $table ){
+      // No more steps, finished
+      if( $this->isFinished() ) {
+         $this->prepareResponse( true, false );
+         return false;
+      }
+
+      // Execute step
+      $stepMethodName = "step" . $this->options->currentStep;
+      if( !$this->{$stepMethodName}() ) {
+         $this->prepareResponse( false, false );
+         return false;
+      }
+
+      // Prepare Response
+      $this->prepareResponse();
+
+      // Not finished
+      return true;
+   }
+
+   /**
+    * Checks Whether There is Any Job to Execute or Not
+    * @return bool
+    */
+   protected function isFinished() {
+      return (
+              $this->options->currentStep > $this->options->totalSteps ||
+              !method_exists( $this, "step" . $this->options->currentStep )
+              );
+   }
+
+   /**
+    * Check if current operation is done on the root folder or on the live DB
+    * @return boolean
+    */
+   protected function isRoot() {
+
+      // Prefix is the same as the one of live site
+      $wpdb = WPStaging::getInstance()->get( "wpdb" );
+      if( $wpdb->prefix === $this->prefix ) {
+         return true;
+      }
+
+      // CloneName is empty
+      $name = ( array ) $this->options->cloneDirectoryName;
+      if( empty( $name ) ) {
+         return true;
+      }
+
+      // Live Path === Staging path
+      if( $this->homeUrl . $this->options->cloneDirectoryName === $this->homeUrl ) {
+         return true;
+      }
+
+      return false;
+   }
+
+   /**
+    * Check if table exists
+    * @param string $table
+    * @return boolean
+    */
+   protected function isTable( $table ) {
+      if( $this->db->get_var( "SHOW TABLES LIKE '{$table}'" ) != $table ) {
          $this->log( "Table {$table} does not exists", Logger::TYPE_ERROR );
          return false;
       }
       return true;
-    }
+   }
 
-    /**
-     * Get the install sub directory if WP is installed in sub directory
-     * @return string
-     */
-    protected function getSubDir(){
-       $home = get_option('home');
-       $siteurl = get_option('siteurl');
-       
-       if (empty($home) || empty($siteurl)){
-          return '/';
-       }
-       
-       $dir = str_replace($home, '', $siteurl);
-       return '/' . str_replace('/', '', $dir) . '/';
-    }
-    
-    /**
-     * Replace "siteurl" and "home"
-     * @return bool
-     */
-    protected function step1() {
+   /**
+    * Get the install sub directory if WP is installed in sub directory
+    * @return string
+    */
+   protected function getSubDir() {
+      $home = get_option( 'home' );
+      $siteurl = get_option( 'siteurl' );
+
+      if( empty( $home ) || empty( $siteurl ) ) {
+         return '/';
+      }
+
+      $dir = str_replace( $home, '', $siteurl );
+      return '/' . str_replace( '/', '', $dir ) . '/';
+   }
+
+   /**
+    * Replace "siteurl" and "home"
+    * @return bool
+    */
+   protected function step1() {
       $this->log( "Preparing Data Step1: Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO );
 
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
@@ -191,19 +192,19 @@ class Data extends JobExecutable
 
       // Installed in sub-directory
       if( $this->isSubDir() ) {
-         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim(get_home_url(), "/") . $this->getSubDir() . $this->options->cloneDirectoryName );
+         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName );
          // Replace URLs
          $result = $this->db->query(
                  $this->db->prepare(
-                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", rtrim(get_home_url(), "/") . $this->getSubDir() . $this->options->cloneDirectoryName
+                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName
                  )
          );
       } else {
-         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim(get_home_url(), "/") . '/' . $this->options->cloneDirectoryName );
+         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim( $this->homeUrl, "/" ) . '/' . $this->options->cloneDirectoryName );
          // Replace URLs
          $result = $this->db->query(
                  $this->db->prepare(
-                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", get_home_url() . '/' . $this->options->cloneDirectoryName
+                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->homeUrl . '/' . $this->options->cloneDirectoryName
                  )
          );
       }
@@ -219,298 +220,274 @@ class Data extends JobExecutable
    }
 
    /**
-     * Update "wpstg_is_staging_site"
-     * @return bool
-     */
-    protected function step2()
-    {
-              
-        $this->log( "Preparing Data Step2: Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}" );
+    * Update "wpstg_is_staging_site"
+    * @return bool
+    */
+   protected function step2() {
+
+      $this->log( "Preparing Data Step2: Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}" );
 
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
 
-        $result = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'",
-                "true"
-            )
-        );
+      $result = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'", "true"
+              )
+      );
 
-        // No errors but no option name such as wpstg_is_staging_site
-        if ('' === $this->db->last_error && 0 == $result)
-        {
-            $result = $this->db->query(
-                $this->db->prepare(
-                    "INSERT INTO {$this->prefix}options (option_name,option_value) VALUES ('wpstg_is_staging_site',%s)",
-                    "true"
-                )
-            );
-        }
+      // No errors but no option name such as wpstg_is_staging_site
+      if( '' === $this->db->last_error && 0 == $result ) {
+         $result = $this->db->query(
+                 $this->db->prepare(
+                         "INSERT INTO {$this->prefix}options (option_name,option_value) VALUES ('wpstg_is_staging_site',%s)", "true"
+                 )
+         );
+      }
 
-        // All good
-        if ($result)
-        {
-            return true;
-        }
+      // All good
+      if( $result ) {
+         return true;
+      }
 
-        $this->log("Preparing Data Step2: Failed to update wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
-        return false;
-    }
+      $this->log( "Preparing Data Step2: Failed to update wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+      return false;
+   }
 
-    /**
-     * Update rewrite_rules
-     * @return bool
-     */
-    protected function step3()
-    {
-       
-        $this->log("Preparing Data Step3: Updating rewrite_rules in {$this->prefix}options {$this->db->last_error}");
-        
+   /**
+    * Update rewrite_rules
+    * @return bool
+    */
+   protected function step3() {
+
+      $this->log( "Preparing Data Step3: Updating rewrite_rules in {$this->prefix}options {$this->db->last_error}" );
+
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
-        
-        $result = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'rewrite_rules'",
-                ' '
-            )
-        );
 
-        // All good
-        if ($result)
-        {
-            return true;
-        }
+      $result = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'rewrite_rules'", ' '
+              )
+      );
 
-        $this->log("Preparing Data Step3: Failed to update rewrite_rules in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
-        return true;
-    }
+      // All good
+      if( $result ) {
+         return true;
+      }
 
-    /**
-     * Update Table Prefix in meta_keys
-     * @return bool
-     */
-    protected function step4() {
-        $this->log( "Preparing Data Step4: Updating db prefix in {$this->prefix}usermeta. Error: {$this->db->last_error}" );
+      $this->log( "Preparing Data Step3: Failed to update rewrite_rules in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+      return true;
+   }
+
+   /**
+    * Update Table Prefix in meta_keys
+    * @return bool
+    */
+   protected function step4() {
+      $this->log( "Preparing Data Step4: Updating db prefix in {$this->prefix}usermeta. Error: {$this->db->last_error}" );
 
       if( false === $this->isTable( $this->prefix . 'usermeta' ) ) {
          return true;
       }
 
-        $resultOptions = $this->db->query(
-                $this->db->prepare(
-                        "UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
-                )
-        );
+      $update = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
+              )
+      );
 
-        if( !$resultOptions ) {
-            $this->log( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
-            //return false;
-        }
+      if( !$update ) {
+         $this->log( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
+         $this->returnException( "Data Crunching Step 4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}" );
+         return false;
+      }
 
-        $this->log( "Updating db prefixes in {$this->prefix}options. Error: {$this->db->last_error}" );
+      $this->log( "Updating db prefixes in {$this->prefix}options. Error: {$this->db->last_error}" );
 
-        $resultUserMeta = $this->db->query(
-                $this->db->prepare(
-                        "UPDATE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
-                )
-        );
+      $resultUserMeta = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
+              )
+      );
 
-        if( !$resultUserMeta ) {
-            $this->log( "Preparing Data Step4: Failed to update db prefixes in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
-            //return false;
-        }
+      if( !$resultUserMeta ) {
+         $this->log( "Preparing Data Step4: Failed to update db prefixes in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
+         $this->returnException( "Data Crunching Step 4: Failed to update db prefixes in {$this->prefix}options. Error: {$this->db->last_error}" );
+         return false;
+      }
 
-        return true;
-    }
+      return true;
+   }
 
-    /**
-     * Update $table_prefix in wp-config.php
-     * @return bool
-     */
-    protected function step5()
-    {
-        $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
-        
-        $this->log("Preparing Data Step5: Updating table_prefix in {$path} to " . $this->prefix);
-        if (false === ($content = file_get_contents($path)))
-        {
-            $this->log("Preparing Data Step5: Failed to update table_prefix in {$path}. Can't read contents", Logger::TYPE_ERROR);
-            return false;
-        }
-        
-        // Replace table prefix
-        $content = str_replace('$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content);
-        
-        // Replace URLs
-        $content = str_replace(get_home_url(), get_home_url() . '/' . $this->options->cloneDirectoryName, $content);
+   /**
+    * Update $table_prefix in wp-config.php
+    * @return bool
+    */
+   protected function step5() {
+      $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
 
-        if (false === @file_put_contents($path, $content))
-        {
-            $this->log("Preparing Data Step5: Failed to update $table_prefix in {$path} to " .$this->prefix . ". Can't save contents", Logger::TYPE_ERROR);
-            return false;
-        }
+      $this->log( "Preparing Data Step5: Updating table_prefix in {$path} to " . $this->prefix );
+      if( false === ($content = file_get_contents( $path )) ) {
+         $this->log( "Preparing Data Step5: Failed to update table_prefix in {$path}. Can't read contents", Logger::TYPE_ERROR );
+         return false;
+      }
 
-        return true;
-    }
+      // Replace table prefix
+      $content = str_replace( '$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content );
 
-    /**
-     * Reset index.php to original file
-     * This is needed if live site is located in subfolder
-     * Check first if main wordpress is used in subfolder and index.php in parent directory
-     * @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
-     * @return bool
-     */
-    protected function step6()
-    {
+      // Replace URLs
+      $content = str_replace( $this->homeUrl, $this->homeUrl . '/' . $this->options->cloneDirectoryName, $content );
 
-        if (!$this->isSubDir())
-        {
-            $this->debugLog("Preparing Data Step6: WP installation is not in a subdirectory! All good, skipping this step");
-            return true;
-        }
+      if( false === @file_put_contents( $path, $content ) ) {
+         $this->log( "Preparing Data Step5: Failed to update $table_prefix in {$path} to " . $this->prefix . ". Can't save contents", Logger::TYPE_ERROR );
+         return false;
+      }
 
-        $path = ABSPATH . $this->options->cloneDirectoryName . "/index.php";
+      return true;
+   }
 
-        if (false === ($content = file_get_contents($path)))
-        {
-            $this->log("Preparing Data Step6: Failed to reset {$path} for sub directory; can't read contents", Logger::TYPE_ERROR);
-            return false;
-        }
+   /**
+    * Reset index.php to original file
+    * This is needed if live site is located in subfolder
+    * Check first if main wordpress is used in subfolder and index.php in parent directory
+    * @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
+    * @return bool
+    */
+   protected function step6() {
 
-
-        if (!preg_match("/(require(.*)wp-blog-header.php' \);)/", $content, $matches))
-        {
-            $this->log(
-                "Preparing Data Step6: Failed to reset index.php for sub directory; wp-blog-header.php is missing",
-                Logger::TYPE_ERROR
-            );
-            return false;
-        }
-        $this->log("Preparing Data: WP installation is in a subdirectory. Progressing...");
-
-        $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);/";
-
-        $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0];
-        $replace.= " // Changed by WP-Staging";
-
-        
-        
-        if (null === ($content = preg_replace(array($pattern), $replace, $content)))
-        {
-            $this->log("Preparing Data: Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
-            return false;
-        }
-
-        if (false === @file_put_contents($path, $content))
-        {
-            $this->log("Preparing Data: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
-            return false;
-        }
-        $this->Log("Preparing Data: Finished Step 6 successfully");
-        return true;
-    }
-    
-    /**
-     * Update wpstg_rmpermalinks_executed
-     * @return bool
-     */
-    protected function step7()
-    {
-       
-        $this->log("Preparing Data Step7: Updating wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}");
-        
-      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+      if( !$this->isSubDir() ) {
+         $this->debugLog( "Preparing Data Step6: WP installation is not in a subdirectory! All good, skipping this step" );
          return true;
-}
-        
-        $result = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_rmpermalinks_executed'",
-                ' '
-            )
-        );
+      }
 
-        // All good
-        if ($result)
-        {
-            $this->Log("Preparing Data Step7: Finished Step 7 successfully");
-            return true;
-        }
+      $path = ABSPATH . $this->options->cloneDirectoryName . "/index.php";
 
-        $this->log("Failed to update wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_WARNING);
-        return true;
-    }
-    
-    /**
-     * Update permalink_structure
-     * @return bool
-     */
-    protected function step8()
-    {
-       
-        $this->log("Preparing Data Step8: Updating permalink_structure in {$this->prefix}options {$this->db->last_error}");
-        
+      if( false === ($content = file_get_contents( $path )) ) {
+         $this->log( "Preparing Data Step6: Failed to reset {$path} for sub directory; can't read contents", Logger::TYPE_ERROR );
+         return false;
+      }
+
+
+      if( !preg_match( "/(require(.*)wp-blog-header.php' \);)/", $content, $matches ) ) {
+         $this->log(
+                 "Preparing Data Step6: Failed to reset index.php for sub directory; wp-blog-header.php is missing", Logger::TYPE_ERROR
+         );
+         return false;
+      }
+      $this->log( "Preparing Data: WP installation is in a subdirectory. Progressing..." );
+
+      $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);/";
+
+      $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0];
+      $replace.= " // Changed by WP-Staging";
+
+
+
+      if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+         $this->log( "Preparing Data: Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR );
+         return false;
+      }
+
+      if( false === @file_put_contents( $path, $content ) ) {
+         $this->log( "Preparing Data: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR );
+         return false;
+      }
+      $this->Log( "Preparing Data: Finished Step 6 successfully" );
+      return true;
+   }
+
+   /**
+    * Update wpstg_rmpermalinks_executed
+    * @return bool
+    */
+   protected function step7() {
+
+      $this->log( "Preparing Data Step7: Updating wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}" );
+
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
-        
-        $result = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'permalink_structure'",
-                ' '
-            )
-        );
 
-        // All good
-        if ($result)
-        {
-            $this->Log("Preparing Data Step8: Finished Step 8 successfully");
-            return true;
-        }
+      $result = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_rmpermalinks_executed'", ' '
+              )
+      );
 
-        $this->log("Failed to update permalink_structure in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
-        return true;
-    }
-    /**
-     * Update blog_public option to not allow staging site to be indexed by search engines
-     * @return bool
-     */
-    protected function step9()
-    {
-       
-        $this->log("Preparing Data Step9: Set staging site to noindex");
-        
+      // All good
+      if( $result ) {
+         $this->Log( "Preparing Data Step7: Finished Step 7 successfully" );
+         return true;
+      }
+
+      $this->log( "Failed to update wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_WARNING );
+      return true;
+   }
+
+   /**
+    * Update permalink_structure
+    * @return bool
+    */
+   protected function step8() {
+
+      $this->log( "Preparing Data Step8: Updating permalink_structure in {$this->prefix}options {$this->db->last_error}" );
+
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
-        
-        $result = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'blog_public'",
-                '0'
-            )
-        );
 
-        // All good
-        if ($result)
-        {
-            $this->Log("Preparing Data Step9: Finished Step 9 successfully");
-            return true;
-        }
+      $result = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'permalink_structure'", ' '
+              )
+      );
 
-        $this->log("Can not update staging site to noindex. Possible already done!", Logger::TYPE_WARNING);
-        return true;
-    }
-    
-    /**
-     * Update WP_HOME in wp-config.php
-     * @return bool
-     */
-    protected function step10() {
+      // All good
+      if( $result ) {
+         $this->Log( "Preparing Data Step8: Finished Step 8 successfully" );
+         return true;
+      }
+
+      $this->log( "Failed to update permalink_structure in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+      return true;
+   }
+
+   /**
+    * Update blog_public option to not allow staging site to be indexed by search engines
+    * @return bool
+    */
+   protected function step9() {
+
+      $this->log( "Preparing Data Step9: Set staging site to noindex" );
+
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      $result = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'blog_public'", '0'
+              )
+      );
+
+      // All good
+      if( $result ) {
+         $this->Log( "Preparing Data Step9: Finished Step 9 successfully" );
+         return true;
+      }
+
+      $this->log( "Can not update staging site to noindex. Possible already done!", Logger::TYPE_WARNING );
+      return true;
+   }
+
+   /**
+    * Update WP_HOME in wp-config.php
+    * @return bool
+    */
+   protected function step10() {
       $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
 
       $this->log( "Preparing Data Step10: Updating WP_HOME in wp-config.php to " . $this->getStagingSiteUrl() );
@@ -549,10 +526,10 @@ class Data extends JobExecutable
    }
 
    /**
-     * Update WP_SITEURL in wp-config.php
-     * @return bool
-     */
-    protected function step11() {
+    * Update WP_SITEURL in wp-config.php
+    * @return bool
+    */
+   protected function step11() {
       $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
 
       $this->log( "Preparing Data Step11: Updating WP_SITEURL in wp-config.php to " . $this->getStagingSiteUrl() );
@@ -597,20 +574,21 @@ class Data extends JobExecutable
     */
    protected function getStagingSiteUrl() {
       if( $this->isSubDir() ) {
-         return rtrim( get_home_url(), "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName;
+         return rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName;
       }
 
-      return rtrim( get_home_url(), "/" ) . '/' . $this->options->cloneDirectoryName;
+      return rtrim( $this->homeUrl, "/" ) . '/' . $this->options->cloneDirectoryName;
    }
 
    /**
-     * Check if WP is installed in subdir
-     * @return boolean
-     */
-    protected function isSubDir(){
-        if ( get_option( 'siteurl' ) !== get_option( 'home' ) ) { 
-            return true;
-        }
-        return false;
-    }
+    * Check if WP is installed in subdir
+    * @return boolean
+    */
+   protected function isSubDir() {
+      if( get_option( 'siteurl' ) !== get_option( 'home' ) ) {
+         return true;
+      }
+      return false;
+   }
+
 }

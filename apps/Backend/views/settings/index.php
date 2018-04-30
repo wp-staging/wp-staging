@@ -167,29 +167,6 @@
                                        <?php echo $form->render( "wpstg_settings[cpuLoad]" ) ?>
                                    </td>
                                </tr>
-                               <!-- Deactivated -->
-                               <tr class="row" style="display:none;">
-                                   <td class="row th">
-                                       <div class="col-title">
-                                           <?php echo $form->label( "wpstg_settings[optimizer]" ) ?>
-                                           <span class="description">
-                                               Select the plugins that should be disabled during build process of the staging site.
-                                               Some plugins slow down the copy process and add overhead to each request, requiring extra CPU and memory consumption.
-                                               Some of them can interfere with cloning process and cause them to fail, so we recommend to select all plugins here.
-
-                                               <br><br>
-                                               <strong>Note:</strong> This does not disable plugins on your staging site. You have to disable them there separately.
-                                           </span>
-                                       </div>
-                                   </td>
-                                   <td>
-                                       <?php echo $form->render( "wpstg_settings[optimizer]" ) ?>
-                                       <div id="wpstg_pluginListing" style="display:none">
-                                           <?php echo $form->render( "wpstg_settings[blackListedPlugins][]" ) ?>
-                                       </div>
-                                   </td>
-                               </tr>
-
                                <tr class="row">
                                    <td class="row th">
                                        <div class="col-title">

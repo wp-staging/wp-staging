@@ -358,9 +358,10 @@ class Scan extends Job
     protected function handleDirectory($path)
     {
         $directoryArray = explode(DIRECTORY_SEPARATOR, $path);
-        $total          = count($directoryArray);
+        $total          = is_array($directoryArray) || $directoryArray instanceof Countable ? count($directoryArray) : 0;
 
-        if (count($total) < 1)
+
+        if ($total < 1)
         {
             return;
         }
