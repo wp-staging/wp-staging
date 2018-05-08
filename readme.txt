@@ -146,7 +146,21 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.2.7 =
+* Fix: Serialize replace is not working properly for serialized strings
+* Fix: WP_SITEURL & WP_HOME not replaced if constant contains php generated string
+
+
 = 2.2.6 =
+* Fix: If WPML is used the live site is not reachable
+* Fix: Can not disable optimizer
+* Fix: Stop cloning if wp_usermeta or wp_options can not be adapted
+* Fix: All methods should be private in class SearchReplace
+* Fix: PHP 7.2 is not countable warning
+* Fix: PHP 7.2 can not replace data in objects when object is incomplete (__PHP_Incomplete_Class_Name)
+* New: Use fully custom login form to prevent access denied issues on sites where access to wp-login.php is denied or redirection plugins are used
+* New: Link to support section
+
 
 = 2.2.5 =
 * New: Compatible to WP 4.9.5
@@ -233,5 +247,6 @@ Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.co
 
 == Upgrade Notice ==
 
-= 2.2.5 =
-2.2.5 * New: Compatible to WP 4.9.5
+= 2.2.7 =
+* Fix: Serialize replace is not working properly for serialized strings
+* Fix: WP_SITEURL & WP_HOME not replaced if constant contains php generated string
