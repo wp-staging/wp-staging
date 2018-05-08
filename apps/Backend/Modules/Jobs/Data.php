@@ -499,12 +499,12 @@ class Data extends JobExecutable {
 
 
       // Get WP_HOME from wp-config.php
-      preg_match( "/define\s*\(\s*'WP_HOME'\s*,\s*'(.*)'\s*\);/", $content, $matches );
+      preg_match( "/define\s*\(\s*'WP_HOME'\s*,\s*(.*)\s*\);/", $content, $matches );
 
       if( !empty( $matches[1] ) ) {
          $matches[1];
 
-         $pattern = "/define\s*\(\s*'WP_HOME'\s*,\s*'(.*)'\s*\);/";
+         $pattern = "/define\s*\(\s*'WP_HOME'\s*,\s*(.*)\s*\);/";
 
          $replace = "define('WP_HOME','" . $this->getStagingSiteUrl() . "'); // " . $matches[1];
          $replace.= " // Changed by WP-Staging";
@@ -541,12 +541,12 @@ class Data extends JobExecutable {
 
 
       // Get WP_SITEURL from wp-config.php
-      preg_match( "/define\s*\(\s*'WP_SITEURL'\s*,\s*'(.*)'\s*\);/", $content, $matches );
+      preg_match( "/define\s*\(\s*'WP_SITEURL'\s*,\s*(.*)\s*\);/", $content, $matches );
 
       if( !empty( $matches[1] ) ) {
          $matches[1];
 
-         $pattern = "/define\s*\(\s*'WP_SITEURL'\s*,\s*'(.*)'\s*\);/";
+         $pattern = "/define\s*\(\s*'WP_SITEURL'\s*,\s*(.*)\s*\);/";
 
          $replace = "define('WP_SITEURL','" . $this->getStagingSiteUrl() . "'); // " . $matches[1];
          $replace.= " // Changed by WP-Staging";
