@@ -414,11 +414,11 @@ class SearchReplace extends JobExecutable {
             }
 
             $data = $_tmp;
-            unset( $_tmp );
-         } elseif( is_serialized_string( $data ) ) {
-            if( $data = $this->unserialize( $data ) !== false ) {
-               $data = $this->str_replace( $from, $to, $data, $case_insensitive );
-               $data = serialize( $data );
+            unset($_tmp);
+            } elseif (is_serialized_string($data)) {
+                if (false !== ($data = $this->unserialize($data)) ) {
+                    $data = $this->str_replace($from, $to, $data, $case_insensitive);
+                    $data = serialize($data);
             }
          } else {
             if( is_string( $data ) ) {
