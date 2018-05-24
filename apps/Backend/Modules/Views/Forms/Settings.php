@@ -61,6 +61,20 @@ class Settings {
               $element->setLabel( "DB Copy Query Limit" )
                       ->setDefault( isset( $settings->queryLimit ) ? $settings->queryLimit : 5000 )
       );
+      // DB Search & Replace Query Limit
+      $element = new Numerical(
+              "wpstg_settings[querySRLimit]", array(
+          "class" => "medium-text",
+          "step" => 1,
+          "max" => 999999,
+          "min" => 0
+              )
+      );
+
+      $this->form["general"]->add(
+              $element->setLabel( "DB Search & Replace Limit" )
+                      ->setDefault( isset( $settings->querySRLimit ) ? $settings->querySRLimit : 5000 )
+      );
 
       $options = array('1' => '1', '10' => '10', '50' => '50', '250' => '250', '500' => '500', '1000' => '1000');
       // DB Copy Query Limit

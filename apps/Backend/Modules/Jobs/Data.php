@@ -283,7 +283,7 @@ class Data extends JobExecutable {
    }
 
    /**
-    * Update Table Prefix in meta_keys
+    * Update Table Prefix in wp_usermeta and wp_options
     * @return bool
     */
    protected function step4() {
@@ -305,17 +305,35 @@ class Data extends JobExecutable {
          return false;
       }
 
-      $this->log( "Updating db prefixes in {$this->prefix}options. Error: {$this->db->last_error}" );
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      $this->log( "Updating db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+      
+      // Filter the rows below. Do not update them!
+      $filters = array(
+          'wp_mail_smtp',
+          'wp_mail_smtp_version',
+          'wp_mail_smtp_debug',
+      );
+      
+      $filters = apply_filters('wpstg_filter_options_replace', $filters);
+      
+      $where = "";
+      foreach($filters as $filter){
+         $where .= " AND option_name <> '" . $filter . "'";
+      }
 
       $resultUserMeta = $this->db->query(
               $this->db->prepare(
-                      "UPDATE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
+                      "UPDATE IGNORE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s" . $where, $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
               )
       );
 
       if( !$resultUserMeta ) {
-         $this->log( "Preparing Data Step4: Failed to update db prefixes in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
-         $this->returnException( "Data Crunching Step 4: Failed to update db prefixes in {$this->prefix}options. Error: {$this->db->last_error}" );
+         $this->log( "Preparing Data Step4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
+         $this->returnException( "Data Crunching Step 4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
          return false;
       }
 

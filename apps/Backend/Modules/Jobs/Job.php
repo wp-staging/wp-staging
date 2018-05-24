@@ -126,6 +126,7 @@ abstract class Job implements JobInterface
         // check default options
         if (    !isset($this->settings) || 
                 !isset($this->settings->queryLimit) || 
+                !isset($this->settings->querySRLimit) || 
                 !isset($this->settings->batchSize) || 
                 !isset($this->settings->cpuLoad) ||
                 !isset($this->settings->fileLimit) 
@@ -176,6 +177,7 @@ abstract class Job implements JobInterface
      */
     protected function setDefaultSettings(){
         $this->settings->queryLimit = "5000";
+        $this->settings->querySRLimit = "5000";
         $this->settings->fileLimit = "1";
         $this->settings->batchSize = "2";
         $this->settings->cpuLoad = 'medium';

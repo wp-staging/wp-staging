@@ -146,6 +146,17 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.2.8 =
+* New: Add filter 'wpstg_filter_options_replace' to exclude certain tables from updating while cloning
+* New: Exclude tables for plugin wp_mail_smtp
+* New: Support for custom upload folder. For instance, if upload folder has been renamed and removed outsite wp-content folder
+* New: Add datetime timestamp internally to clone. (Used in WP Staging pro)
+* New: Add filter 'wpstg_fiter_search_replace_rows' to exclude certain tables from search & replace
+* New: Supports search & replace for revslider image slider and several visual editors which are using non default serialized data
+* New: Add new setting which allow to specify the search & replace processing query limit
+* New: Compatible to WordPress 4.9.6
+
+
 = 2.2.7 =
 * Fix: Serialize replace is not working properly for serialized strings
 * Fix: WP_SITEURL & WP_HOME not replaced if constant contains php generated string
@@ -247,6 +258,6 @@ Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.co
 
 == Upgrade Notice ==
 
-= 2.2.7 =
-* Fix: Serialize replace is not working properly for serialized strings
-* Fix: WP_SITEURL & WP_HOME not replaced if constant contains php generated string
+= 2.2.8 =
+* New: Compatible to WordPress 4.9.6
+

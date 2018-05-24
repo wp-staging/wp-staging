@@ -106,6 +106,25 @@
                                        <?php echo $form->render( "wpstg_settings[queryLimit]" ) ?>
                                    </td>
                                </tr>
+                                <tr class="row">
+                                    <td class="row th">
+                                        <div class="col-title">
+                                            <?php
+                                            echo $form->label("wpstg_settings[querySRLimit]")
+                                            ?>
+                                            <span class="description">
+                                                Number of DB rows, that will be processed within one ajax request.
+                                                The higher the value the faster the database search & replace process.
+                                                This is a high memory consumptive process. If you get timeouts lower this value!
+                                                <br>
+                                                <strong> Default: 5000 </strong>
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?php echo $form->render("wpstg_settings[querySRLimit]")?>
+                                    </td>
+                                </tr>
 
                                <tr class="row">
                                    <td class="row th">
@@ -118,6 +137,10 @@
                                                The higher the value the faster the file copy process.
                                                To find out the highest possible values try a high value like 500 or more. If you get timeout issues, lower it
                                                until you get no more errors during copying process.
+                                               <br>                                                
+                                               <br>
+                                               <strong>Important:</strong> If CPU Load Priority is Low try a file copy limit value of 10 or higher. Otherwise file copying process takes a lot of time.
+                                               <br>
                                                <br>
                                                <strong> Default: 1 </strong>
                                            </span>

@@ -45,6 +45,7 @@ class Scan extends Job
         $this->prefix = $this->db->prefix;
         
                 
+                
     }
 
     /**
@@ -89,14 +90,31 @@ class Scan extends Job
         // Delete previous cached files
         $this->cache->delete("files_to_copy");
         $this->cache->delete("clone_options");
-        //$this->cache->delete("files_to_verify");
-        //$this->cache->delete("files_verified");
 
         // Save options
         $this->saveOptions();
 
         return $this;
     }
+
+    /**
+     * Get relative WP uploads path
+     * @return string
+     */
+    protected function getUploadDir(){
+      $uploads = wp_upload_dir();
+      return $uploads['basedir'];
+    }
+    
+    /**
+     * Get WP media folder
+     * 
+     * @return string
+     */
+//    protected function getUploadFolder(){
+//      $uploads = wp_upload_dir();
+//      return wp_basedir($uploads['baseurl']);
+//    }
 
     /**
      * Format bytes into human readable form
@@ -301,8 +319,11 @@ class Scan extends Job
         // Gather Themes
         $this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "themes");
 
-        // Gather Uploads
-        $this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "uploads");
+        // Gather Default Uploads Folder
+        //$this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "uploads");
+        
+        // Gather Custom Uploads Folder if there is one
+        //$this->getSubDirectories( $this->getUploadDir() );
     }
 
     /**
@@ -359,7 +380,6 @@ class Scan extends Job
     {
         $directoryArray = explode(DIRECTORY_SEPARATOR, $path);
         $total          = is_array($directoryArray) || $directoryArray instanceof Countable ? count($directoryArray) : 0;
-
 
         if ($total < 1)
         {

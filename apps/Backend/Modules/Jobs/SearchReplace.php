@@ -27,13 +27,11 @@ class SearchReplace extends JobExecutable {
     */
    public $db;
 
-   
    /**
     *
     * @var string
     */
    private $homeUrl;
-
 
    /**
     * The prefix of the new database tables which are used for the live site after updating tables
@@ -55,7 +53,7 @@ class SearchReplace extends JobExecutable {
 
    public function start() {
       // Skip job. Nothing to do
-      if ($this->options->totalSteps === 0){
+      if( $this->options->totalSteps === 0 ) {
          $this->prepareResponse( true, false );
       }
 
@@ -167,7 +165,7 @@ class SearchReplace extends JobExecutable {
     * @param string $old
     */
    private function startReplace( $new ) {
-      $rows = $this->options->job->start + $this->settings->queryLimit;
+      $rows = $this->options->job->start + $this->settings->querySRLimit;
       $this->log(
               "DB Processing:  Table {$new} {$this->options->job->start} to {$rows} records"
         );
@@ -176,7 +174,7 @@ class SearchReplace extends JobExecutable {
       $this->searchReplace( $new, $rows, array() );
 
       // Set new offset
-      $this->options->job->start += $this->settings->queryLimit;
+      $this->options->job->start += $this->settings->querySRLimit;
    }
 
    /**
@@ -187,7 +185,7 @@ class SearchReplace extends JobExecutable {
    private function get_pages_in_table( $table ) {
       $table = esc_sql( $table );
       $rows = $this->db->get_var( "SELECT COUNT(*) FROM $table" );
-      $pages = ceil( $rows / $this->settings->queryLimit );
+      $pages = ceil( $rows / $this->settings->querySRLimit );
       return absint( $pages );
    }
 
@@ -231,31 +229,35 @@ class SearchReplace extends JobExecutable {
 
       // Load up the default settings for this chunk.
       $table = esc_sql( $table );
-      $current_page = $this->options->job->start + $this->settings->queryLimit;
+      $current_page = $this->options->job->start + $this->settings->querySRLimit;
       $pages = $this->get_pages_in_table( $table );
       //$done = false;
 
             
       if( $this->isSubDir() ) {
-         //$homeUrl = rtrim($this->homeUrl, "/") . $this->getSubDir() . $this->options->cloneDirectoryName;
       // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
       $args['search_for'] = array(
-             rtrim( $this->homeUrl, "/" ) . $this->getSubDir(),
-          ABSPATH
+         rtrim( $this->homeUrl, "/" ) . $this->getSubDir(),
+         ABSPATH,
+         str_replace('/', '\/', rtrim( $this->homeUrl, '/' )) . str_replace('/', '\/', $this->getSubDir()) // // Used by revslider and several visual editors
+
       );
 
       $args['replace_with'] = array(
              rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName,
-             rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
+             rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName, 
+             str_replace('/', '\/', rtrim( $this->homeUrl, "/" )) . str_replace('/', '\/', $this->getSubDir()) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
          );
       } else {
          $args['search_for'] = array(
              rtrim( $this->homeUrl, '/' ),
-             ABSPATH
+             ABSPATH,
+             str_replace('/', '\/' , rtrim( $this->homeUrl, '/' ))
          );
          $args['replace_with'] = array(
              rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
-          rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
+             rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName, 
+             str_replace('/', '\/', rtrim( $this->homeUrl, '/' )) . '\/' . $this->options->cloneDirectoryName,
       );
       }
 
@@ -279,16 +281,34 @@ class SearchReplace extends JobExecutable {
       list( $primary_key, $columns ) = $this->get_columns( $table );
 
       // Bail out early if there isn't a primary key.
-      if( null === $primary_key ) {
-         return false;
-      }
+      // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides
+      // @todo test this carefully. If it causes (performance) issues we need to activate it again!
+      // @since 2.4.4
+
+      //      if( null === $primary_key ) {
+      //         return false;
+      //      }
 
       $current_row = 0;
       $start = $this->options->job->start;
-      $end = $this->settings->queryLimit;
+      $end = $this->settings->querySRLimit;
 
       // Grab the content of the table.
       $data = $this->db->get_results( "SELECT * FROM $table LIMIT $start, $end", ARRAY_A );
+      
+      // Filter certain rows (of other plugins)
+      $filter = array(
+          'Admin_custome_login_Slidshow',
+          'Admin_custome_login_Social',
+          'Admin_custome_login_logo',
+          'Admin_custome_login_text',
+          'Admin_custome_login_login',
+          'Admin_custome_login_top',
+          'Admin_custome_login_dashboard',
+          'Admin_custome_login_Version',
+          );
+
+      apply_filters('wpstg_fiter_search_replace_rows', $filter);
 
       // Loop through the data.
       foreach ( $data as $row ) {
@@ -296,6 +316,16 @@ class SearchReplace extends JobExecutable {
          $update_sql = array();
          $where_sql = array();
          $upd = false;
+
+         // Skip rows below
+         if (isset($row['option_name']) && in_array($row['option_name'], $filter)){
+            continue;
+         }
+         
+         // Skip rows with transients (They can store huge data and we need to save memory)
+         if( isset( $row['option_name'] ) && strpos( $row['option_name'], '_transient' ) === 0 ) {
+            continue;
+         }
 
          foreach ( $columns as $column ) {
 
@@ -363,10 +393,10 @@ class SearchReplace extends JobExecutable {
          }
       } // end row loop
       unset( $row );
+      unset( $update_sql );
+      unset( $where_sql );
+      unset( $sql );
 
-//      if( $current_page >= $pages - 1 ) {
-//         $done = true;
-//      }
 
       // DB Flush
       $this->db->flush();

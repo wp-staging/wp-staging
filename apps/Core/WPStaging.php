@@ -29,7 +29,7 @@ final class WPStaging {
    /**
     * Plugin version
     */
-   const VERSION = "2.2.7";
+   const VERSION = "2.2.8";
 
    /**
     * Plugin name
@@ -44,7 +44,7 @@ final class WPStaging {
    /**
     * Compatible WP Version
     */
-   const WP_COMPATIBLE = "4.9.5";
+   const WP_COMPATIBLE = "4.9.6";
 
    /**
     * Slug: Either wp-staging or wp-staging-pro

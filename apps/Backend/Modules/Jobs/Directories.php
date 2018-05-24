@@ -68,6 +68,8 @@ class Directories extends JobExecutable {
       return ( object ) $this->response;
    }
 
+
+
    /**
     * Step 0 
     * Get WP Root files
@@ -125,7 +127,8 @@ class Directories extends JobExecutable {
           'cache',
           'wps-hide-login',
           'node_modules',
-          'nbproject'
+          'nbproject',
+          '.idea'
       );
 
       try {
@@ -284,7 +287,7 @@ class Directories extends JobExecutable {
 
       try {
 
-         // Iterate over wp-admin directory
+         // Iterate over extra directory
          $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( $folder );
 
          // Exclude new line file names
@@ -313,7 +316,8 @@ class Directories extends JobExecutable {
          // Write path line
          foreach ( $iterator as $item ) {
             if( $item->isFile() ) {
-               if( $this->write( $files, $strings->getLastElemAfterString( '/', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
+               //if( $this->write( $files, $strings->getLastElemAfterString( '/', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
+               if( $this->write( $files, str_replace( ABSPATH, '', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                   $this->options->totalFiles++;
                   // Add current file size
                   $this->options->totalFileSize += $iterator->getSize();
