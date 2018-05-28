@@ -146,6 +146,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.2.9 =
+* Fix: Missing trailingslash results to wrong absolute paths in database after Search & Replace operation 
+
+
 = 2.2.8 =
 * New: Add filter 'wpstg_filter_options_replace' to exclude certain tables from updating while cloning
 * New: Exclude tables for plugin wp_mail_smtp

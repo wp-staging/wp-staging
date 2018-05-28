@@ -238,7 +238,7 @@ class SearchReplace extends JobExecutable {
       // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
       $args['search_for'] = array(
          rtrim( $this->homeUrl, "/" ) . $this->getSubDir(),
-         ABSPATH,
+         rtrim( ABSPATH, '/' ),
          str_replace('/', '\/', rtrim( $this->homeUrl, '/' )) . str_replace('/', '\/', $this->getSubDir()) // // Used by revslider and several visual editors
 
       );
@@ -251,7 +251,7 @@ class SearchReplace extends JobExecutable {
       } else {
          $args['search_for'] = array(
              rtrim( $this->homeUrl, '/' ),
-             ABSPATH,
+             rtrim( ABSPATH, '/' ),
              str_replace('/', '\/' , rtrim( $this->homeUrl, '/' ))
          );
          $args['replace_with'] = array(
