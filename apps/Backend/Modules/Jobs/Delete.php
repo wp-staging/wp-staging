@@ -367,71 +367,15 @@ class Delete extends Job {
                 );
     }
 
-    /**
-     * Delete contents of the directory if there are no directories in it and then delete itself
-     * @param string $path
-     * @return mixed
-     */
-//    private function processDirectory($path) {
-//        // We hit the limit, stop
-//        if ($this->shouldStop($path)) {
-//            $this->updateJob();
-//            return false;
-//        }
-//
-//        $this->totalRecursion++;
-//
-//        $contents = new \DirectoryIterator($path);
-//
-//        foreach ($contents as $content => $value) {
-//
-//            // Skip dots
-//            if ($content->isDot())
-//
-//
-//            // Get into the directory
-//                if (!$content->isLink() && $content->isDir()) {
-//                    return $this->processDirectory($content->getRealPath());
-//                }
-//
-//            // Delete file
-//            if ($content->isFile()) {
-//                @unlink($content->getRealPath());
-//            }
-//        }
-//
-//        // Delete directory
-//        $this->job->lastDeletedDirectory = realpath($path . "/..");
-//        @rmdir($path);
-//        $this->updateJob();
-//        $this->processDirectory($this->job->nextDirectoryToDelete);
-//    }
 
-    /**
-     * @param string $path
-     * @return bool
-     */
-//    private function shouldStop($path) {
-//        // Just to make sure the root dir is never deleted!
-//        if ($path === get_home_path()) {
-//            $this->log("Fatal Error: Trying to delete root of WP installation!", Logger::TYPE_CRITICAL);
-//            return true;
-//        }
-//
-//        // Check if threshold is reached and is valid dir
-//        return (
-//                $this->isOverThreshold() ||
-//                !is_dir($path) ||
-//                $this->isDirectoryDeletingFinished()
-//                );
-//    }
 
     /**
      * 
      * @return boolean
      */
-    public function isFatalError() {
-        if (rtrim($this->clone->path, "/") == rtrim(get_home_path(), "/")) {
+    public function isFatalError(){
+       $homePath = rtrim(get_home_path(), "/");
+        if (rtrim($this->clone->path,"/")  == $homePath){
             return true;
         }
         return false;
@@ -465,18 +409,6 @@ class Delete extends Job {
         wp_die(json_encode($response));
     }
 
-    /**
-     * Get json response
-     * return json
-     */
-//    private function returnException($message = ''){
-//        wp_die( json_encode(array(
-//                  'job'     => 'delete',
-//                  'status'  => false,
-//                  'message' => $message,
-//                  'error' => true
-//            )));
-//    }
     /**
      * Get json response
      * return json

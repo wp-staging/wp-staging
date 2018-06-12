@@ -94,6 +94,21 @@ class Settings {
 
       // File Copy Batch Size
       $element = new Numerical(
+              "wpstg_settings[maxFileSize]", array(
+          "class" => "medium-text",
+          "step" => 1,
+          "max" => 999999,
+          "min" => 0
+              )
+      );
+
+      $this->form["general"]->add(
+              $element->setLabel( "Maximum File Size (MB)" )
+                      ->setDefault( isset( $settings->maxFileSize ) ? $settings->maxFileSize : 8 )
+      );
+      
+      // File Copy Batch Size
+      $element = new Numerical(
               "wpstg_settings[batchSize]", array(
           "class" => "medium-text",
           "step" => 1,

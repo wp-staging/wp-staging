@@ -97,24 +97,6 @@ class Scan extends Job
         return $this;
     }
 
-    /**
-     * Get relative WP uploads path
-     * @return string
-     */
-    protected function getUploadDir(){
-      $uploads = wp_upload_dir();
-      return $uploads['basedir'];
-    }
-    
-    /**
-     * Get WP media folder
-     * 
-     * @return string
-     */
-//    protected function getUploadFolder(){
-//      $uploads = wp_upload_dir();
-//      return wp_basedir($uploads['baseurl']);
-//    }
 
     /**
      * Format bytes into human readable form
@@ -254,7 +236,7 @@ class Scan extends Job
 
         if (strlen($wpDB->prefix) > 0)
         {
-            $prefix = str_replace('_', '', $wpDB->prefix);
+            //$prefix = str_replace('_', '', $wpDB->prefix);
             $sql = "SHOW TABLE STATUS LIKE '{$wpDB->prefix}%'";
         }
         else
@@ -323,7 +305,7 @@ class Scan extends Job
         //$this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "uploads");
         
         // Gather Custom Uploads Folder if there is one
-        //$this->getSubDirectories( $this->getUploadDir() );
+        $this->getSubDirectories( $this->getUploadDir() );
     }
 
     /**
@@ -440,6 +422,15 @@ class Scan extends Job
          $size += is_file( $each ) ? filesize( $each ) : $this->getDirectorySizeInclSubdirs( $each );
       }
       return $size;
+   }
+   
+       /**
+     * Get relative WP uploads path
+     * @return string
+     */
+    protected function getUploadDir() {
+      $uploads = wp_upload_dir();
+      return $uploads['basedir'];
    }
 
 }

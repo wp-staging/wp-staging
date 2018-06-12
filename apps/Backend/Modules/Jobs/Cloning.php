@@ -121,7 +121,7 @@ class Cloning extends Job
     /**
      * Create a new staging prefix which does not already exists in database
      */
-    public function setStagingPrefix(){
+   private function setStagingPrefix() {
         
         // Get & find a new prefix that does not already exist in database. 
         // Loop through up to 1000 different possible prefixes should be enough here;)

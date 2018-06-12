@@ -171,7 +171,7 @@ class Files extends JobExecutable {
         }
 
         // File is over maximum allowed file size (8MB)
-        if ($fileSize >= 8000000) {
+        if ($fileSize >= $this->settings->maxFileSize * 1000000) {
             $this->log("Skipping big file: {$file}", Logger::TYPE_INFO);
             return false;
         }
@@ -225,58 +225,8 @@ class Files extends JobExecutable {
         return $destinationPath;
     }
 
-    /**
-     * Copy File using PHP
-     * @param string $file
-     * @param string $destination
-     * @return bool
-     */
-//    private function copy($file, $destination) {
-//        // Get file size
-//        $fileSize = filesize($file);
-//        
-//
-//        // File is over batch size
-//        if ($fileSize >= $this->settings->batchSize) {
-//            $this->log("Trying to copy big file: {$file} -> {$destination}", Logger::TYPE_INFO);
-//            return $this->copyBig($file, $destination, $this->settings->batchSize);
-//        }
-//
-//        // Attempt to copy
-//        if (!@copy($file, $destination)) {
-//            $this->log("Failed to copy file to destination: {$file} -> {$destination}", Logger::TYPE_ERROR);
-//            return false;
-//        }
-//
-//        return true;
-//    }
 
-    /**
-     * Copy bigger files than $this->settings->batchSize
-     * @param string $file
-     * @param string $destination
-     * @return bool
-     * 
-     * @deprecated since version 2.0.0 (Supported only in php 5.5.11 and later)
-     */
-//    private function copyBig($file, $destination)
-//    {
-//        $bytes      = 0;
-//        $fileInput  = new \SplFileObject($file, "rb");
-//        $fileOutput = new \SplFileObject($destination, 'w');
-//
-//        $this->log("Copying big file; {$file} -> {$destination}");
-//
-//        while (!$fileInput->eof())
-//        {
-//            $bytes += $fileOutput->fwrite($fileInput->fread($this->settings->batchSize));
-//        }
-//
-//        $fileInput = null;
-//        $fileOutput= null;
-//
-//        return ($bytes > 0);
-//    }
+
 
     /**
      * Copy bigger files than $this->settings->batchSize
@@ -326,6 +276,14 @@ class Files extends JobExecutable {
                 break;
             }
         }
+        
+        // Do not copy wp-config.php if the clone gets updated. This is for security purposes, 
+        // because if the updating process fails, the staging site is not accessable any longer
+        if (isset($this->options->mainJob ) && $this->options->mainJob == "updating" && stripos(strrev($file), strrev("wp-config.php")) === 0){
+            $excluded = true;
+        }
+        
+        
         return $excluded;
     }
 
@@ -354,7 +312,7 @@ class Files extends JobExecutable {
      * @param string $directory
      * @return boolean
      */
-    protected function isExtraDirectory($directory) {
+    private function isExtraDirectory($directory) {
         foreach ($this->options->extraDirectories as $extraDirectory) {
             if (strpos($directory, $extraDirectory) === 0) {
                 return true;

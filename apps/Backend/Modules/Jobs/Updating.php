@@ -38,6 +38,9 @@ class Updating extends Job
         $this->options->extraDirectories    = array();
         $this->options->excludedFiles       = array('.htaccess', '.DS_Store', '.git', '.svn', '.tmp', 'desktop.ini', '.gitignore', '.log');
 
+        // Define mainJob to differentiate between cloning, updating and pushing
+        $this->options->mainJob             = 'updating';
+
         // Job
         $this->options->job                 = new \stdClass();
 
@@ -113,11 +116,9 @@ class Updating extends Job
         // prefix not defined! Happens if staging site has ben generated with older version of wpstg
         // Try to get staging prefix from wp-config.php of staging site
         $this->options->prefix = $this->options->existingClones[$this->options->clone]['prefix'];
-        //wp_die($this->options->prefix);
         if (empty($this->options->prefix)) {
             // Throw error if wp-config.php is not readable 
             $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
-            //wp_die($path);
             if (false === ($content = @file_get_contents($path))) {
                 $this->log("Can not open {$path}. Can't read contents", Logger::TYPE_ERROR);
                 $this->returnException("Fatal Error: Can not read {$path} to get correct table prefix. Stopping for security reasons. Deleting this staging site and creating a new one could fix this issue. Otherwise contact us support@wp-staging.com");
@@ -125,7 +126,6 @@ class Updating extends Job
             } else {
                 // Get prefix from wp-config.php
                 preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
-                //wp_die(var_dump($matches));
 
                 if (!empty($matches[1])) {
                     $this->options->prefix = $matches[1];
@@ -143,7 +143,6 @@ class Updating extends Job
         }
 
         // Else
-        //wp_die($this->options->prefix);
         return $this->options->prefix;
     }
 

@@ -35,9 +35,25 @@ class Database extends JobExecutable
         // Variables
         $this->total                = count($this->options->tables);
         $this->db                   = WPStaging::getInstance()->get("wpdb");
+        $this->isFatalError();
+
     }
 
+      
     /**
+    * Return fatal error and stops here if subfolder already exists
+    * and mainJob is not updating the clone 
+    * @return boolean
+    */
+   private function isFatalError(){
+      $path = trailingslashit(get_home_path()) . $this->options->cloneDirectoryName;
+      if (isset($this->options->mainJob) && $this->options->mainJob !== 'updating' && is_dir($path)){
+         $this->returnException( " Can not continue! Change the name of the clone or delete existing folder. Then try again. Folder already exists: " . $path );
+      }
+      return false;
+   }
+
+   /**
      * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
      * @return void
      */
@@ -262,4 +278,5 @@ class Database extends JobExecutable
             )
         );
     }
+
 }

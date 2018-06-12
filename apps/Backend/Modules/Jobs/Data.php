@@ -10,6 +10,7 @@ if( !defined( "WPINC" ) ) {
 use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 use WPStaging\Utils\Helper;
+use WPStaging\Utils\Strings;
 
 /**
  * Class Data
@@ -34,12 +35,20 @@ class Data extends JobExecutable {
    private $homeUrl;
 
    /**
+    * Tables e.g wpstg3_options
+    * @var array
+    */
+   private $tables;
+
+   /**
     * Initialize
     */
    public function initialize() {
       $this->db = WPStaging::getInstance()->get( "wpdb" );
 
       $this->prefix = $this->options->prefix;
+
+      $this->getTables();
 
       $helper = new Helper();
 
@@ -53,11 +62,22 @@ class Data extends JobExecutable {
    }
 
    /**
+    * Get a list of tables to copy
+    */
+   private function getTables() {
+      $strings = new Strings();
+      $this->tables = array();
+      foreach ( $this->options->tables as $table ) {
+         $this->tables[] = $this->options->prefix . $strings->str_replace_first( $this->db->prefix, null, $table );
+      }
+   }
+
+   /**
     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
     * @return void
     */
    protected function calculateTotalSteps() {
-      $this->options->totalSteps = 11;
+      $this->options->totalSteps = 12;
    }
 
    /**
@@ -186,7 +206,13 @@ class Data extends JobExecutable {
    protected function step1() {
       $this->log( "Preparing Data Step1: Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO );
 
+      // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step1: Skipping" );
          return true;
       }
 
@@ -227,7 +253,13 @@ class Data extends JobExecutable {
 
       $this->log( "Preparing Data Step2: Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}" );
 
+      // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step2: Skipping" );
          return true;
       }
 
@@ -263,7 +295,14 @@ class Data extends JobExecutable {
 
       $this->log( "Preparing Data Step3: Updating rewrite_rules in {$this->prefix}options {$this->db->last_error}" );
 
+      // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step3: Skipping" );
          return true;
       }
 
@@ -287,9 +326,16 @@ class Data extends JobExecutable {
     * @return bool
     */
    protected function step4() {
-      $this->log( "Preparing Data Step4: Updating db prefix in {$this->prefix}usermeta. Error: {$this->db->last_error}" );
+      $this->log( "Preparing Data Step4: Updating db prefix in {$this->prefix}usermeta. " );
 
+      // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'usermeta' ) ) {
+         return true;
+      }
+
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'usermeta', $this->tables ) ) {
+         $this->log( "Preparing Data Step4: Skipping" );
          return true;
       }
 
@@ -305,37 +351,36 @@ class Data extends JobExecutable {
          return false;
       }
 
-      if( false === $this->isTable( $this->prefix . 'options' ) ) {
-         return true;
-      }
-
-      $this->log( "Updating db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-      
-      // Filter the rows below. Do not update them!
-      $filters = array(
-          'wp_mail_smtp',
-          'wp_mail_smtp_version',
-          'wp_mail_smtp_debug',
-      );
-      
-      $filters = apply_filters('wpstg_filter_options_replace', $filters);
-      
-      $where = "";
-      foreach($filters as $filter){
-         $where .= " AND option_name <> '" . $filter . "'";
-      }
-
-      $resultUserMeta = $this->db->query(
-              $this->db->prepare(
-                      "UPDATE IGNORE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s" . $where, $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
-              )
-      );
-
-      if( !$resultUserMeta ) {
-         $this->log( "Preparing Data Step4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
-         $this->returnException( "Data Crunching Step 4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-         return false;
-      }
+//      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+//         return true;
+//      }
+//      $this->log( "Updating db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+//      
+//      // Filter the rows below. Do not update them!
+//      $filters = array(
+//          'wp_mail_smtp',
+//          'wp_mail_smtp_version',
+//          'wp_mail_smtp_debug',
+//      );
+//      
+//      $filters = apply_filters('wpstg_filter_options_replace', $filters);
+//      
+//      $where = "";
+//      foreach($filters as $filter){
+//         $where .= " AND option_name <> '" . $filter . "'";
+//      }    
+//
+//      $updateOptions = $this->db->query(
+//              $this->db->prepare(
+//                      "UPDATE IGNORE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s" . $where, $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
+//              )
+//      );
+//
+//      if( !$updateOptions ) {
+//         $this->log( "Preparing Data Step4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
+//         $this->returnException( "Data Crunching Step 4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+//         return false;
+//      }
 
       return true;
    }
@@ -425,7 +470,14 @@ class Data extends JobExecutable {
 
       $this->log( "Preparing Data Step7: Updating wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}" );
 
+      // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step7: Skipping" );
          return true;
       }
 
@@ -453,7 +505,14 @@ class Data extends JobExecutable {
 
       $this->log( "Preparing Data Step8: Updating permalink_structure in {$this->prefix}options {$this->db->last_error}" );
 
+      // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step8: Skipping" );
          return true;
       }
 
@@ -482,6 +541,12 @@ class Data extends JobExecutable {
       $this->log( "Preparing Data Step9: Set staging site to noindex" );
 
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step9: Skipping" );
          return true;
       }
 
@@ -583,6 +648,56 @@ class Data extends JobExecutable {
          return false;
       }
       $this->Log( "Preparing Data: Finished Step 11 successfully" );
+      return true;
+   }
+
+   /**
+    * Update Table Prefix in wp_options
+    * @return bool
+    */
+   protected function step12() {
+      $this->log( "Preparing Data Step12: Updating db prefix in {$this->prefix}options. Error: {$this->db->last_error}" );
+
+      // Skip - Table does not exist
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step12: Skipping" );
+         return true;
+      }
+
+
+      $this->log( "Updating db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+
+      // Filter the rows below. Do not update them!
+      $filters = array(
+          'wp_mail_smtp',
+          'wp_mail_smtp_version',
+          'wp_mail_smtp_debug',
+      );
+
+      $filters = apply_filters( 'wpstg_filter_options_replace', $filters );
+
+      $where = "";
+      foreach ( $filters as $filter ) {
+         $where .= " AND option_name <> '" . $filter . "'";
+      }
+
+      $updateOptions = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE IGNORE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s" . $where, $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
+              )
+      );
+
+      if( !$updateOptions ) {
+         $this->log( "Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
+         $this->returnException( "Data Crunching Step 15: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+         return false;
+      }
+
       return true;
    }
 
