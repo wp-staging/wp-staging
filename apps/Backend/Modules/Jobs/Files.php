@@ -166,7 +166,7 @@ class Files extends JobExecutable {
 
         // File is excluded
         if ($this->isFileExcluded($file)) {
-            $this->log("Skipping file by rule: {$file}", Logger::TYPE_INFO);
+            $this->debugLog("Skipping file by rule: {$file}", Logger::TYPE_INFO);
             return false;
         }
 
@@ -177,8 +177,13 @@ class Files extends JobExecutable {
         }
 
         // Invalid file, skipping it as if succeeded
-        if (!is_file($file) || !is_readable($file)) {
-            $this->log("Can't read file or file doesn't exist {$file}");
+        if (!is_file($file)) {
+            $this->debugLog("Not a file {$file}");
+            return true;
+        }
+        // Invalid file, skipping it as if succeeded
+        if (!is_readable($file)) {
+            $this->log("Can't read file {$file}");
             return true;
         }
 
@@ -278,7 +283,7 @@ class Files extends JobExecutable {
         }
         
         // Do not copy wp-config.php if the clone gets updated. This is for security purposes, 
-        // because if the updating process fails, the staging site is not accessable any longer
+        // because if the updating process fails, the staging site would not be accessable any longer
         if (isset($this->options->mainJob ) && $this->options->mainJob == "updating" && stripos(strrev($file), strrev("wp-config.php")) === 0){
             $excluded = true;
         }
