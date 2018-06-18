@@ -440,6 +440,9 @@ class SearchReplace extends JobExecutable {
             $_tmp = $data; // new $data_class( );
             $props = get_object_vars( $data );
             foreach ( $props as $key => $value ) {
+               if( $key === '' || ord( $key[0] ) === 0 ) {
+                  continue;
+               }
                $_tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
             }
 
