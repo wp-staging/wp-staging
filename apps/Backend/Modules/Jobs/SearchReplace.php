@@ -261,17 +261,7 @@ class SearchReplace extends JobExecutable {
       );
       }
 
-//      // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
-//      $args['search_for'] = array(
-//          $this->homeUrl,
-//          ABSPATH
-//      );
-//
-//      
-//      $args['replace_with'] = array(
-//          rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
-//          rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
-//      );
+
       $args['replace_guids'] = 'off';
       $args['dry_run'] = 'off';
       $args['case_insensitive'] = false;
