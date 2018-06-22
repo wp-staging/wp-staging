@@ -10,6 +10,7 @@ if (!defined("WPINC"))
 
 class Helper {
 
+
    /**
     * Retrieves the URL for a given site where the front end is accessible.
     * This is from WordPress source 4.9.5/src/wp-includes/link-template.php
@@ -67,5 +68,7 @@ class Helper {
        */
       return $url;
    }
+
+
 
 }

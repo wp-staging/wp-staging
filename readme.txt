@@ -147,7 +147,6 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.3.0 =
-* Tweaks: remove term "error" from several log entries
 * Security: Do not allow to create a new staging site into a subfolder which already exists
 * New: Option to allow adjustment of the allowed maximum size of files that are going to be copied while cloning.
 * New: Add multisite informations in system info log
@@ -157,6 +156,12 @@ https://wp-staging.com
 * Fix: If cloning update process is interupted it may happen that staging site is not available any longer. (Updating the clone does not copy index.php to staging site again)
 * Fix: Progress bar not shown as intented for clone updating process
 * Fix: Can not open upload folder in file selection menu
+* Fix: Undefined object $this->tables
+* Fix: wp-config.php not copied when previous clone updating process has been failed
+* Fix: Parameter must be an array or an object that implements Callable
+* Fix: Skip search & replace for objects where key is null
+* Tweaks: remove term "error" from several log entries
+* Tweak: Remove certain debugging notices from the default log window
 
 = 2.2.9 =
 * Fix: Missing trailingslash results to wrong absolute paths in database after Search & Replace operation 
