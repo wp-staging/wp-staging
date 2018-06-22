@@ -160,6 +160,7 @@ https://wp-staging.com
 * Fix: wp-config.php not copied when previous clone updating process has been failed
 * Fix: Parameter must be an array or an object that implements Callable
 * Fix: Skip search & replace for objects where key is null
+* Fix: Search & Replace not working if serialized object contains __PHP_Incomplete_Class_Name
 * Tweaks: remove term "error" from several log entries
 * Tweak: Remove certain debugging notices from the default log window
 

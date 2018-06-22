@@ -410,46 +410,88 @@ class SearchReplace extends JobExecutable {
     *
     * @return string|array	The original array with all elements replaced as needed.
     */
-   private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialised = false, $case_insensitive = false ) {
+//   private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialised = false, $case_insensitive = false ) {
+//      try {
+//
+//         if( is_string( $data ) && !is_serialized_string( $data ) && ( $unserialized = $this->unserialize( $data ) ) !== false ) {
+//            $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
+//         } elseif( is_array( $data ) ) {
+//            $_tmp = array();
+//            foreach ( $data as $key => $value ) {
+//               $_tmp[$key] = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+//            }
+//
+//            $data = $_tmp;
+//            unset( $_tmp );
+//         }
+//
+//         // Submitted by Tina Matter
+//         elseif( $this->isValidObject($data) ) {
+//            $_tmp = $data; // new $data_class( );
+//            $props = get_object_vars( $data );
+//            foreach ( $props as $key => $value ) {
+//               if( $key === '' || ord( $key[0] ) === 0 ) {
+//                  continue;
+//               }
+//               $_tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+//            }
+//
+//            $data = $_tmp;
+//            unset($_tmp);
+//            } elseif (is_serialized_string($data)) {
+//                if (false !== ($data = $this->unserialize($data)) ) {
+//                    $data = $this->str_replace($from, $to, $data, $case_insensitive);
+//                    $data = serialize($data);
+//            }
+//         } else {
+//            if( is_string( $data ) ) {
+//               $data = $this->str_replace( $from, $to, $data, $case_insensitive );
+//            }
+//         }
+//
+//         if( $serialised ) {
+//            return serialize( $data );
+//         }
+//      } catch ( Exception $error ) {
+//         
+//      }
+//
+//      return $data;
+//   }
+      private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialized = false, $case_insensitive = false ) {
       try {
-
-         if( is_string( $data ) && !is_serialized_string( $data ) && ( $unserialized = $this->unserialize( $data ) ) !== false ) {
+         // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
+         if( is_serialized( $data ) && ( $unserialized = @unserialize( $data ) ) !== false ) {
             $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
          } elseif( is_array( $data ) ) {
-            $_tmp = array();
+            $tmp = array();
             foreach ( $data as $key => $value ) {
-               $_tmp[$key] = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+               $tmp[$key] = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
             }
 
-            $data = $_tmp;
-            unset( $_tmp );
-         }
-
-         // Submitted by Tina Matter
-         elseif( $this->isValidObject($data) ) {
-            $_tmp = $data; // new $data_class( );
+            $data = $tmp;
+            unset( $tmp );
+         } elseif( is_object( $data ) ) {
+            $tmp = $data;
             $props = get_object_vars( $data );
             foreach ( $props as $key => $value ) {
                if( $key === '' || ord( $key[0] ) === 0 ) {
                   continue;
                }
-               $_tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+               $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
             }
 
-            $data = $_tmp;
-            unset($_tmp);
-            } elseif (is_serialized_string($data)) {
-                if (false !== ($data = $this->unserialize($data)) ) {
-                    $data = $this->str_replace($from, $to, $data, $case_insensitive);
-                    $data = serialize($data);
-            }
+            $data = $tmp;
+            unset( $tmp );
          } else {
             if( is_string( $data ) ) {
+               if( !empty( $from ) && !empty( $to ) ) {
                $data = $this->str_replace( $from, $to, $data, $case_insensitive );
+               }
             }
          }
 
-         if( $serialised ) {
+         if( $serialized ) {
             return serialize( $data );
          }
       } catch ( Exception $error ) {
@@ -464,27 +506,27 @@ class SearchReplace extends JobExecutable {
     * Can not use is_object alone because in php 7.2 it's returning true even though object is __PHP_Incomplete_Class_Name
     * @return boolean
     */
-   private function isValidObject($data){
-      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
-         return false;
-      }
-      
-      $invalid_class_props = get_object_vars( $data );
-      
-      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
-         // Assume it must be an valid object
-         return true;
-      }
-      
-      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
-
-      if( !empty( $invalid_object_class ) ) {
-         return false;
-      }
-      
-      // Assume it must be an valid object
-      return true;
-   }
+//   private function isValidObject($data){
+//      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
+//         return false;
+//      }
+//      
+//      $invalid_class_props = get_object_vars( $data );
+//      
+//      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
+//         // Assume it must be an valid object
+//         return true;
+//      }
+//      
+//      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
+//
+//      if( !empty( $invalid_object_class ) ) {
+//         return false;
+//      }
+//      
+//      // Assume it must be an valid object
+//      return true;
+//   }
 
    /**
     * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
