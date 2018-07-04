@@ -29,7 +29,7 @@ final class WPStaging {
    /**
     * Plugin version
     */
-   const VERSION = "2.3.0";
+   const VERSION = "2.3.1";
 
    /**
     * Plugin name

@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.1 =
+* Fix: Creating a new clone resets the custom wp staging user settings. E.g. ignores authentication setting
+
 = 2.3.0 =
 * Security: Do not allow to create a new staging site into a subfolder which already exists
 * New: Option to allow adjustment of the allowed maximum size of files that are going to be copied while cloning.

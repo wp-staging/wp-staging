@@ -140,8 +140,11 @@ class Frontend extends InjectionAware {
 
       // Allow access for user role administrator in any case
       if( current_user_can( 'administrator' ) ) {
+          //wp_die('is admin');
          return false;
       }
+      
+      wp_die(print_r($this->settings));
 
       return (
               (!isset( $this->settings->disableAdminLogin ) || '1' !== $this->settings->disableAdminLogin) &&
