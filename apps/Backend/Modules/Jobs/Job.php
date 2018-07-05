@@ -131,6 +131,7 @@ abstract class Job implements JobInterface {
               !isset( $this->settings->querySRLimit ) ||
               !isset( $this->settings->batchSize ) ||
               !isset( $this->settings->cpuLoad ) ||
+              !isset( $this->settings->maxFileSize ) ||
               !isset( $this->settings->fileLimit )
       ) {
          $this->settings = new \stdClass();

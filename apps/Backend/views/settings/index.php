@@ -154,8 +154,24 @@
                                <tr class="row">
                                    <td class="row th">
                                        <div class="col-title">
-                                           <?php echo $form->label( "wpstg_settings[batchSize]" ) ?>
+                                            <?php echo $form->label("wpstg_settings[maxFileSize]")?>
                                            <span class="description">
+                                                Maximum size of the files which are allowed to copy. All files larger than this value will be skipped.                                              
+                                                Note: Increase this option only if you have a good reason. Files larger than a few megabytes are in 99% of all cases logging and backup files which are not needed on a staging site.
+                                                <br>
+                                                <strong>Default:</strong> 8 MB
+                                            </span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <?php echo $form->render("wpstg_settings[maxFileSize]")?>
+                                    </td>
+                                </tr>
+                                <tr class="row">
+                                    <td class="row th">
+                                        <div class="col-title">
+                                            <?php echo $form->label("wpstg_settings[batchSize]")?>
+                                            <span class="description">
                                                Buffer size for the file copy process in megabyte.
                                                The higher the value the faster large files will be copied.
                                                To find out the highest possible values try a high one and lower it until
@@ -163,7 +179,7 @@
                                                with the memory consumption of php so make sure that
                                                it does not exceed any php.ini max_memory limits.
                                                <br>
-                                               <strong>Default:</strong> 2
+                                                <strong>Default:</strong> 2 MB
                                            </span>
                                        </div>
                                    </td>

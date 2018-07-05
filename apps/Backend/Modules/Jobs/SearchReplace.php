@@ -48,7 +48,9 @@ class SearchReplace extends JobExecutable {
       //$this->tmpPrefix = 'wpstgtmp_';
       $this->tmpPrefix = $this->options->prefix;
       $helper = new Helper();      
-      $this->homeUrl = $helper->get_home_url();
+      //$this->homeUrl = $helper->get_home_url();
+      $this->homeUrl = $helper->get_home_url_without_scheme();
+                
    }
 
    public function start() {
@@ -116,13 +118,6 @@ class SearchReplace extends JobExecutable {
       return true;
    }
 
-//   private function convertExcludedTables() {
-//      $tmp = array();
-//      foreach ( $this->options->excludedTables as $table ) {
-//         $tmp[] = str_replace( $this->options->prefix, $this->tmpPrefix, $table );
-//      }
-//      $this->options->excludedTables = $tmp;
-//   }
 
    /**
     * Stop Execution immediately
@@ -239,25 +234,25 @@ class SearchReplace extends JobExecutable {
       $args['search_for'] = array(
          rtrim( $this->homeUrl, "/" ) . $this->getSubDir(),
          rtrim( ABSPATH, '/' ),
-         str_replace('/', '\/', rtrim( $this->homeUrl, '/' )) . str_replace('/', '\/', $this->getSubDir()) // // Used by revslider and several visual editors
+         $this->homeUrl . str_replace('/', '\/', $this->getSubDir()) // // Used by revslider and several visual editors
 
       );
 
       $args['replace_with'] = array(
              rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName,
              rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName, 
-             str_replace('/', '\/', rtrim( $this->homeUrl, "/" )) . str_replace('/', '\/', $this->getSubDir()) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
+             $this->homeUrl . str_replace('/', '\/', $this->getSubDir()) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
          );
       } else {
          $args['search_for'] = array(
              rtrim( $this->homeUrl, '/' ),
              rtrim( ABSPATH, '/' ),
-             str_replace('/', '\/' , rtrim( $this->homeUrl, '/' ))
+             $this->homeUrl . '\/'
          );
          $args['replace_with'] = array(
              rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
              rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName, 
-             str_replace('/', '\/', rtrim( $this->homeUrl, '/' )) . '\/' . $this->options->cloneDirectoryName,
+             $this->homeUrl . '\/' . $this->options->cloneDirectoryName,
       );
       }
 

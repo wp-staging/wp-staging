@@ -144,7 +144,6 @@ class Frontend extends InjectionAware {
          return false;
       }
       
-      wp_die(print_r($this->settings));
 
       return (
               (!isset( $this->settings->disableAdminLogin ) || '1' !== $this->settings->disableAdminLogin) &&

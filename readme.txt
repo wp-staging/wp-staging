@@ -148,6 +148,8 @@ https://wp-staging.com
 
 = 2.3.1 =
 * Fix: Creating a new clone resets the custom wp staging user settings. E.g. ignores authentication setting
+* Fix: Search & replace path not correct if scheme http/https is not identical in wp-config and db wp_options
+* New: Setting to specify the maximum allowed file size to copy
 
 = 2.3.0 =
 * Security: Do not allow to create a new staging site into a subfolder which already exists
