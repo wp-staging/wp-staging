@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.2 =
+* Fix: Do not search & replace mail addresses
+
 = 2.3.1 =
 * Fix: Creating a new clone resets the custom wp staging user settings. E.g. ignores authentication setting
 * Fix: Search & replace path not correct if scheme http/https is not identical in wp-config and db wp_options
@@ -187,98 +190,6 @@ https://wp-staging.com
 * Fix: Serialize replace is not working properly for serialized strings
 * Fix: WP_SITEURL & WP_HOME not replaced if constant contains php generated string
 
-
-= 2.2.6 =
-* Fix: If WPML is used the live site is not reachable
-* Fix: Can not disable optimizer
-* Fix: Stop cloning if wp_usermeta or wp_options can not be adapted
-* Fix: All methods should be private in class SearchReplace
-* Fix: PHP 7.2 is not countable warning
-* Fix: PHP 7.2 can not replace data in objects when object is incomplete (__PHP_Incomplete_Class_Name)
-* New: Use fully custom login form to prevent access denied issues on sites where access to wp-login.php is denied or redirection plugins are used
-* New: Link to support section
-
-
-= 2.2.5 =
-* New: Compatible to WP 4.9.5
-* New: Allow to select and copy extra folders that are on the root level
-* New: Use fully custom login form to prevent access denied issues on sites where access to wp-login.php is denied or redirection plugins are used
-* Fix: Incorrect login path to staging site if WordPress is installed in subdirectory
-* Fix: Login url is wrong if WP is installed in subfolder
-* Fix: If PHP 5.6.34 is used, the cloning process could be unfinished due to use of private member in protected class
-* Tweak: Only wp root folders are pre selected before cloning is starting
-* Tweak: Change WP_HOME or WP_SITEURL constants of staging site if they are defined in wp-config.php 
-
-
-= 2.2.4 =
-* New: Replace even hardcoded links and server path by using search & replace through all staging site database tables
-* New: New and improved progress bar with elapsed time
-* Fix: Cancel cloning does not clean up unused tables and leads to duplicate tables
-* Tweak: Wordings in rating admin notice
-* Tweak: Better error messages
-* Tweak: Open staging site in same window from login request
-* Fix: Set meta noindex for staging site to make it non indexable for search engines
-
-
-= 2.2.3 =
-* Fix: Change default login link to wp-admin
-* Fix: Unneccessary duplicates of wpstg tables in db
-
-= 2.2.2 =
-* Fix: Undefined property: stdClass::$loginSlug
-
-= 2.2.1 =
-* New: Option to set Custom Login Link if there is one
-* New: Set meta noindex for staging site to make it non indexable for search engines
-* New: Better multiple folder selection. Allows to unselect a parent folder without collapsing all child folders
-* New: Sorted list of folders to copy
-* Fix: Can not login to staging site if plugin All In One WP Security & Firewall is used
-* Fix: Staging site not reachable because permalinks are not disabled under certain conditions
-
-= 2.2.0 =
-* Fix: Old staging site is not listed and pushing is not working properly if plugin is updated from wp staging version 1.6 and lower
-
-= 2.1.9 =
-* New: Performance improvement increase db query limit to 5000
-* New: Detect automatically if WordPress is installed in sub folder
-* Tweak: Tested up to WP 4.9.4
-* Fix: Updating from an old version 1.1.6 < to latest version deletes the staging sites listing table
-* Fix: Reduce memory size of the logging window to prevent browser timeouts
-* Fix: Can not copy db table if table name contains the db prefix multiple times
-* Fix: Some excluded folders are not ignored during copy process
-* Fix: mod_security is causing script termination
-* Fix: Skip directory listings for symlinks
-
-= 2.1.8 =
-* Fix: Increase the max memory consumption
-
-= 2.1.7 =
-* Tweak: Return more human readable error notices
-* Fix: Cloning process stops due to file permission issue
-* Fix: Exclude WP Super Cache from copying process because of bug in WP Super Cache, see https://github.com/Automattic/wp-super-cache/issues/505
-
-= 2.1.6 =
-* New: increased speed for cloning process by factor 5, using new method of file agregation 
-* New: Skip files larger than 8MB
-* Fix: Additional checks to ensure that the root path is never deleted
-* New: Compatible up to WP 4.9.1
-
-= 2.1.5 =
-* Fix. Change link to support
-* Fix: Missing files in clone site if copy file limit is higher than 1
-
-= 2.1.4 =
-* Fix: Link to the staging site is missing a slash if WordPress is installed in subdir
-* Tweak: Allow file copy limit 1 to prevent copy timeouts
-
-= 2.1.3 =
-* New: Add more details to tools->system info log for better debugging
-* New: Add buttons to select all default wp tables with one click
-* New: Show used db table in list of staging sites
-* Fix: Delete staging site not possible if db prefix is same as one of the live site
-* Fix: Edit/Update clone function is duplicating tables.
-* Fix: Other staging site can be overwritten when Edit/Update clone function is executed
-* Fix: Several improvements to improve reliability and prevent timeouts and fatal errors during cloning
 
 Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.com/changelog.txt)
 

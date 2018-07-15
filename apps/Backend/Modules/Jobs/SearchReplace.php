@@ -261,6 +261,7 @@ class SearchReplace extends JobExecutable {
       $args['dry_run'] = 'off';
       $args['case_insensitive'] = false;
       $args['replace_guids'] = 'off';
+      $args['replace_mails'] = 'off';
 
       // Get a list of columns in this table.
       list( $primary_key, $columns ) = $this->get_columns( $table );
@@ -294,6 +295,14 @@ class SearchReplace extends JobExecutable {
           );
 
       apply_filters('wpstg_fiter_search_replace_rows', $filter);
+      
+//      // Do not search & replace any strings below
+//      $filterStrings = array(
+//        '@' . $this->homeUrl  // Mail addresses
+//      );
+      
+      //apply_filters('wpstg_fiter_search_replace_strings', $filterStrings);
+
 
       // Loop through the data.
       foreach ( $data as $row ) {
@@ -325,7 +334,11 @@ class SearchReplace extends JobExecutable {
             if( 'on' !== $args['replace_guids'] && 'guid' == $column ) {
                continue;
             }
-
+            
+            // Skip mail addresses
+            if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->homeUrl ) ) {
+               continue;
+            }
             
             // Check options table
             if( $this->options->prefix . 'options' === $table ) {
@@ -336,7 +349,7 @@ class SearchReplace extends JobExecutable {
                   continue;
                }
 
-               // Skip this row
+               // Skip this rows
                if( 'wpstg_existing_clones_beta' === $dataRow ||
                        'wpstg_existing_clones' === $dataRow ||
                        'wpstg_settings' === $dataRow ||
@@ -347,6 +360,7 @@ class SearchReplace extends JobExecutable {
                   $should_skip = true;
                }
             }
+
 
             // Run a search replace on the data that'll respect the serialisation.
             $i = 0;
