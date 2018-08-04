@@ -93,10 +93,10 @@
         </p>
     </div>
 
-    <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
+<!--    <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __("Login Options", "wpstg")?>
-    </a>
+        <?php //echo __("Login Options", "wpstg")?>
+    </a>-->
 
     <div class="wpstg-tab-section" id="wpstg-advanced-settings">
         <p>

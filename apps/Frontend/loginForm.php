@@ -69,7 +69,7 @@ class loginForm {
               <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
               <meta name="viewport" content="width=device-width">
                   <meta name='robots' content='noindex,follow' />
-                  <title>WordPress &rsaquo; Error</title>
+                  <title>WordPress &rsaquo; You need to login to access that page</title>
                   <style type="text/css">
                       html {
                           background: #f1f1f1;

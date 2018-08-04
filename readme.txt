@@ -16,11 +16,11 @@ A duplicator plugin! Clone, duplicate and migrate live sites to independent stag
 
 == Description == 
 
-<strong>This cloning and staging plugin is well tested but work in progress. <br><br>
+<strong>This cloning and staging plugin is well tested and work in progress. <br><br>
 If you find any issue, please open a [support ticket](https://wp-staging.com/support/ "support ticket").
 </strong>
 <br /><br />
-<strong>Note: </strong> For pushing & migrating plugins and theme files to live site, check out [https://wp-staging.com/](https://wp-staging.com/ "WP Staging Pro")
+<strong>Note: </strong> For pushing & migrating plugins and theme files to live site, check out the pro version [https://wp-staging.com/](https://wp-staging.com/ "WP Staging Pro")
 <br /><br />
 <blockquote>
 <h4> WP Staging for WordPress Migration </h4>
@@ -146,6 +146,13 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.3 =
+* New: Compatible up to WordPress 4.9.8
+* New: Better error reporting
+* New: Detect if wp-config.php has been moved one folder level up
+* New: Login options not needed any more - removed
+* Fix: Remove term 'Error' from login page
+
 = 2.3.2 =
 * Fix: Do not search & replace mail addresses
 
@@ -195,6 +202,6 @@ Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.co
 
 == Upgrade Notice ==
 
-= 2.2.8 =
-* New: Compatible to WordPress 4.9.6
+= 2.3.3 =
+* New: Compatible to WordPress 4.9.7
 

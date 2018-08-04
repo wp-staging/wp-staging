@@ -57,7 +57,7 @@ class Data extends JobExecutable {
 
       // Fix current step
       if( 0 == $this->options->currentStep ) {
-         $this->options->currentStep = 1;
+         $this->options->currentStep = 0;
       }
    }
 
@@ -197,6 +197,47 @@ class Data extends JobExecutable {
 
       $dir = str_replace( $home, '', $siteurl );
       return '/' . str_replace( '/', '', $dir ) . '/';
+   }
+   
+   /**
+    * Copy wp-config.php if it is located outside of root one level up
+    * @todo Needs some more testing before it will be released
+    * @return boolean
+    */
+   protected function step0() {
+      $this->log( "Preparing Data Step0: Check if wp-config.php is located in root path", Logger::TYPE_INFO );
+
+      $dir = trailingslashit( dirname( ABSPATH ) );
+
+      $source = $dir . 'wp-config.php';
+
+      $destination = trailingslashit( ABSPATH ) . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR . 'wp-config.php';
+
+
+      // Do not do anything
+      if( (!is_file( $source ) && !is_link( $source )) || is_file( $destination ) ) {
+         $this->log( "Preparing Data Step0: Skip it", Logger::TYPE_INFO );
+         return true;
+      }
+
+      // Copy target of a symbolic link
+      if( is_link( $source ) ) {
+         $this->log( "Preparing Data Step0: Symbolic link found...", Logger::TYPE_INFO );
+         if( !@copy( readlink( $source ), $destination ) ) {
+            $errors = error_get_last();
+            $this->log( "Preparing Data Step0: Failed to copy wp-config.php! Error: {$errors['message']} {$source} -> {$destination}", Logger::TYPE_ERROR );
+            return true;
+         }
+      }
+
+      // Copy file wp-config.php
+      if( !@copy( $source, $destination ) ) {
+         $errors = error_get_last();
+         $this->log( "Preparing Data Step0: Failed to copy wp-config.php! Error: {$errors['message']} {$source} -> {$destination}", Logger::TYPE_ERROR );
+         return true;
+      }
+      $this->log( "Preparing Data Step0: Successfull", Logger::TYPE_INFO );
+      return true;
    }
 
    /**
@@ -350,38 +391,6 @@ class Data extends JobExecutable {
          $this->returnException( "Data Crunching Step 4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}" );
          return false;
       }
-
-//      if( false === $this->isTable( $this->prefix . 'options' ) ) {
-//         return true;
-//      }
-//      $this->log( "Updating db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-//      
-//      // Filter the rows below. Do not update them!
-//      $filters = array(
-//          'wp_mail_smtp',
-//          'wp_mail_smtp_version',
-//          'wp_mail_smtp_debug',
-//      );
-//      
-//      $filters = apply_filters('wpstg_filter_options_replace', $filters);
-//      
-//      $where = "";
-//      foreach($filters as $filter){
-//         $where .= " AND option_name <> '" . $filter . "'";
-//      }    
-//
-//      $updateOptions = $this->db->query(
-//              $this->db->prepare(
-//                      "UPDATE IGNORE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s" . $where, $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
-//              )
-//      );
-//
-//      if( !$updateOptions ) {
-//         $this->log( "Preparing Data Step4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
-//         $this->returnException( "Data Crunching Step 4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-//         return false;
-//      }
-
       return true;
    }
 
