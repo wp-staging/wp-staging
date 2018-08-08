@@ -84,7 +84,7 @@ class Directories extends JobExecutable {
       try {
 
          // Iterate over wp root directory
-         $iterator = new \DirectoryIterator( ABSPATH );
+         $iterator = new \DirectoryIterator( \WPStaging\WPStaging::getWPpath() );
 
          $this->log( "Scanning / for files" );
 
@@ -118,6 +118,7 @@ class Directories extends JobExecutable {
 
       // Skip it
       if( $this->isDirectoryExcluded( WP_CONTENT_DIR ) ) {
+         $this->log( "Skip " .  \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR);
          return true;
       }
       // open file handle
@@ -177,7 +178,8 @@ class Directories extends JobExecutable {
    private function getWpIncludesFiles() {
 
       // Skip it
-      if( $this->isDirectoryExcluded( ABSPATH . 'wp-includes' . DIRECTORY_SEPARATOR ) ) {
+      if( $this->isDirectoryExcluded( \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR ) ) {
+         $this->log( "Skip " .  \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR);
          return true;
       }
 
@@ -187,13 +189,11 @@ class Directories extends JobExecutable {
       try {
 
          // Iterate over wp-admin directory
-         $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( ABSPATH . 'wp-includes' . DIRECTORY_SEPARATOR );
+         $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
 
          // Exclude new line file names
          $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
-         // Exclude uploads, plugins or themes
-         //$iterator = new \WPStaging\Iterators\RecursiveFilterExclude($iterator, apply_filters('wpstg_exclude_content', $exclude_filters));
          // Recursively iterate over wp-includes directory
          $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -230,7 +230,8 @@ class Directories extends JobExecutable {
    private function getWpAdminFiles() {
 
       // Skip it
-      if( $this->isDirectoryExcluded( ABSPATH . 'wp-admin' . DIRECTORY_SEPARATOR ) ) {
+      if( $this->isDirectoryExcluded( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR ) ) {
+         $this->log( "Skip " .  \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR);
          return true;
       }
 
@@ -240,13 +241,11 @@ class Directories extends JobExecutable {
       try {
 
          // Iterate over wp-admin directory
-         $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( ABSPATH . 'wp-admin' . DIRECTORY_SEPARATOR );
+         $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
 
          // Exclude new line file names
          $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
-         // Exclude uploads, plugins or themes
-         //$iterator = new \WPStaging\Iterators\RecursiveFilterExclude($iterator, apply_filters('wpstg_exclude_content', $exclude_filters));
          // Recursively iterate over content directory
          $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -317,7 +316,7 @@ class Directories extends JobExecutable {
          foreach ( $iterator as $item ) {
             if( $item->isFile() ) {
                //if( $this->write( $files, $strings->getLastElemAfterString( '/', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
-               if( $this->write( $files, str_replace( ABSPATH, '', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
+               if( $this->write( $files, str_replace( \WPStaging\WPStaging::getWPpath(), '', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                   $this->options->totalFiles++;
                   // Add current file size
                   $this->options->totalFileSize += $iterator->getSize();
@@ -514,14 +513,32 @@ class Directories extends JobExecutable {
       $this->files = explode( PHP_EOL, $this->files );
    }
 
+   
+   /**
+    * Replace forward slash with current directory separator
+    *
+    * @param string $path Path
+    *
+    * @return string
+    */
+   private function sanitizeDirectorySeparator( $path ) {
+      $string = str_replace( "/", "\\", $path );
+      return str_replace( '\\\\', '\\', $string );
+   }
+
    /**
     * Check if directory is excluded
     * @param string $directory
     * @return bool
     */
    protected function isDirectoryExcluded( $directory ) {
+      
+      $directory = $this->sanitizeDirectorySeparator($directory);
+      
       foreach ( $this->options->excludedDirectories as $excludedDirectory ) {
-         if( strpos( $directory, $excludedDirectory ) === 0 ) {
+         //echo $this->sanitizeDirectorySeparator($excludedDirectory). '</br>';
+         //echo $this->sanitizeDirectorySeparator($directory). '</br>';
+         if( strpos( $directory, $this->sanitizeDirectorySeparator($excludedDirectory) ) === 0 ) {
             return true;
          }
       }

@@ -29,7 +29,7 @@ final class WPStaging {
    /**
     * Plugin version
     */
-   const VERSION = "2.3.3";
+   const VERSION = "2.3.4";
 
    /**
     * Plugin name
@@ -45,6 +45,8 @@ final class WPStaging {
     * Compatible WP Version
     */
    const WP_COMPATIBLE = "4.9.8";
+
+   public $wpPath;
 
    /**
     * Slug: Either wp-staging or wp-staging-pro
@@ -85,6 +87,18 @@ final class WPStaging {
       // Licensing stuff be loaded in wpstg core to make cron hook available from frontpage
       $this->initLicensing();
    }
+
+   /**
+    * Get root WP root path -
+    * Changed ABSPATH trailingslash for windows compatibility
+
+    * @return type
+    */
+   public static function getWPpath(){
+      return str_replace('/', DIRECTORY_SEPARATOR, ABSPATH);
+   }
+   
+
 
    /**
     * Method to be executed upon activation of the plugin
@@ -164,23 +178,11 @@ final class WPStaging {
 
       wp_localize_script( "wpstg-admin-script", "wpstg", array(
           "nonce" => wp_create_nonce( "wpstg_ajax_nonce" ),
-          "mu_plugin_confirmation" => __(
-                  "If confirmed we will install an additional WordPress 'Must Use' plugin. "
-                  . "This plugin will allow us to control which plugins are loaded during "
-                  . "WP Staging specific operations. Do you wish to continue?", "wpstg"
-          ),
-          "plugin_compatibility_settings_problem" => __(
-                  "A problem occurred when trying to change the plugin compatibility setting.", "wpstg"
-          ),
-          "saved" => __( "Saved", "The settings were saved successfully", "wpstg" ),
-          "status" => __( "Status", "Current request status", "wpstg" ),
-          "response" => __( "Response", "The message the server responded with", "wpstg" ),
-          "blacklist_problem" => __(
-                  "A problem occurred when trying to add plugins to backlist.", "wpstg"
-          ),
+          "noncetick" =>  apply_filters( 'nonce_life', DAY_IN_SECONDS ),
           "cpuLoad" => $this->getCPULoadSetting(),
           "settings" => ( object ) array(), // TODO add settings?
-          "tblprefix" => self::getTablePrefix()
+          "tblprefix" => self::getTablePrefix(),
+          "isMultisite" => is_multisite() ? true : false    
       ) );
    }
 
@@ -217,6 +219,10 @@ final class WPStaging {
           "WPStaging" => array(
               $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR,
               $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR,
+              $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'Iterators' . DIRECTORY_SEPARATOR,
+          ),
+          "splitbrain" => array(
+              $this->pluginPath . 'vendor' . DIRECTORY_SEPARATOR . 'splitbrain' . DIRECTORY_SEPARATOR
           )
       ) );
 

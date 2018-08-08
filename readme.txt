@@ -146,6 +146,11 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.4 =
+* New: Compatible up to WordPress 4.9.8
+* New: Support for Windows Azure cloud servers
+* Fix: Missing http(s) scheme after cloning multisites results in not working clones
+
 = 2.3.3 =
 * New: Compatible up to WordPress 4.9.8
 * New: Better error reporting
@@ -202,6 +207,6 @@ Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.co
 
 == Upgrade Notice ==
 
-= 2.3.3 =
+= 2.3.4 =
 * New: Compatible to WordPress 4.9.7
 

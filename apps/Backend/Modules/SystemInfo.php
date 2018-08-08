@@ -6,6 +6,7 @@ use WPStaging\DI\InjectionAware;
 use WPStaging\Library\Browser;
 use WPStaging\WPStaging;
 use WPStaging\Utils;
+use WPStaging\Utils\Multisite;
 
 // No Direct Access
 if( !defined( "WPINC" ) ) {
@@ -55,6 +56,8 @@ class SystemInfo extends InjectionAware {
       $output .= $this->wpstaging();
 
       $output .= $this->site();
+
+      $output .= $this->getMultisiteInfo();
 
       $output .= $this->browser();
 
@@ -119,11 +122,31 @@ class SystemInfo extends InjectionAware {
       $output .= $this->info( "Home Path:", get_home_path() );
       $output .= $this->info( "ABSPATH:", ABSPATH );
       $output .= $this->info( "Installed in subdir:", ( $this->isSubDir() ? 'Yes' : 'No' ) );
-      $output .= $this->info( "Multisite:", ($this->isMultiSite ? "Yes" : "No" ) );
-      $output .= $this->info( "Multisite Blog ID:", get_current_blog_id() );
 
       return apply_filters( "wpstg_sysinfo_after_site_info", $output );
    }
+
+   /**
+    * Multisite information
+    * @return string
+    */
+   private function getMultisiteInfo(){
+      if (!$this->isMultiSite){
+         return '';
+      }
+      
+      $multisite = new Multisite();
+      
+      $output = $this->info( "Multisite:", ($this->isMultiSite ? "Yes" : "No" ) );
+      $output .= $this->info( "Multisite Blog ID:", get_current_blog_id() );
+      $output .= $this->info( "MultiSite URL scheme:", $multisite->getHomeURL() );
+      $output .= $this->info( "MultiSite URL without scheme:", $multisite->getHomeUrlWithoutScheme() );
+      
+      return apply_filters( "wpstg_sysinfo_after_multisite_info", $output );
+
+
+   }
+   
 
    /**
     * Wp Staging plugin Information
@@ -145,7 +168,7 @@ class SystemInfo extends InjectionAware {
       $output .= $this->info( "Batch Size:", isset( $settings->batchSize ) ? $settings->batchSize : 'undefined'  );
       $output .= $this->info( "CPU Load:", isset( $settings->cpuLoad ) ? $settings->cpuLoad : 'undefined'  );
       $output .= $this->info( "WP in Subdir:", isset( $settings->wpSubDirectory ) ? $settings->wpSubDirectory : 'false'  );
-      $output .= $this->info( "Login Custom Link:", isset( $settings->loginSlug ) ? $settings->loginSlug : 'false'  );
+      //$output .= $this->info( "Login Custom Link:", isset( $settings->loginSlug ) ? $settings->loginSlug : 'false'  );
 
       $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version < 1.1.6.x" . PHP_EOL . PHP_EOL;
 
@@ -249,11 +272,11 @@ class SystemInfo extends InjectionAware {
    public function wp() {
       $output = $this->header( "WordPress Configuration" );
       $output .= $this->info( "Version:", get_bloginfo( "version" ) );
-      $output .= $this->info( "Language:", (defined( "WPLANG" ) && WPLANG) ? WPLANG : "en_US" );
+      $output .= $this->info( "Language:", (defined( "WPLANG" ) && WPLANG) ? WPLANG : "en_US"  );
 
       $permalinkStructure = get_option( "permalink_structure" );
       ;
-      $output .= $this->info( "Permalink Structure:", ($permalinkStructure) ? $permalinkStructure : "Default" );
+      $output .= $this->info( "Permalink Structure:", ($permalinkStructure) ? $permalinkStructure : "Default"  );
 
       $output .= $this->info( "Active Theme:", $this->theme() );
       $output .= $this->info( "Show On Front:", get_option( "show_on_front" ) );
@@ -275,15 +298,15 @@ class SystemInfo extends InjectionAware {
       // Constants
       $output .= $this->info( "WP Content Path:", WP_CONTENT_DIR );
       $output .= $this->info( "WP Plugin Dir:", WP_PLUGIN_DIR );
-      if (defined('UPLOADS'))
+      if( defined( 'UPLOADS' ) )
          $output .= $this->info( "WP UPLOADS CONST:", UPLOADS );
       $uploads = wp_upload_dir();
-      $output .= $this->info( "WP Uploads Dir:",  $uploads['basedir'] );
-      if (defined('WP_TEMP_DIR'))
+      $output .= $this->info( "WP Uploads Dir:", $uploads['basedir'] );
+      if( defined( 'WP_TEMP_DIR' ) )
          $output .= $this->info( "WP Temp Dir:", WP_TEMP_DIR );
 
       // WP Debug
-      $output .= $this->info( "WP_DEBUG:", (defined( "WP_DEBUG" )) ? WP_DEBUG ? "Enabled" : "Disabled" : "Not set" );
+      $output .= $this->info( "WP_DEBUG:", (defined( "WP_DEBUG" )) ? WP_DEBUG ? "Enabled" : "Disabled" : "Not set"  );
       $output .= $this->info( "Memory Limit:", WP_MEMORY_LIMIT );
       $output .= $this->info( "Registered Post Stati:", implode( ", ", \get_post_stati() ) );
 
@@ -406,7 +429,7 @@ class SystemInfo extends InjectionAware {
       $output .= $this->info( "Max Input Vars:", ini_get( "max_input_vars" ) );
 
       $displayErrors = ini_get( "display_errors" );
-      $output .= $this->info( "Display Errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A" );
+      $output .= $this->info( "Display Errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A"  );
 
       return apply_filters( "wpstg_sysinfo_after_php_config", $output );
    }
@@ -451,8 +474,28 @@ class SystemInfo extends InjectionAware {
     */
    public function phpExtensions() {
       // Important PHP Extensions
+      $version = curl_version();
+
+      $bitfields = Array(
+          'CURL_VERSION_IPV6',
+          'CURL_VERSION_KERBEROS4',
+          'CURL_VERSION_SSL',
+          'CURL_VERSION_LIBZ'
+      );
+
       $output = $this->header( "PHP Extensions" );
       $output .= $this->info( "cURL:", $this->isSupported( "curl_init" ) );
+      $output .= $this->info( "cURL version:", $version['version'] );
+      $output .= $this->info( "cURL ssl version number:", $version['ssl_version'] );
+      $output .= $this->info( "cURL host:", $version['host'] );
+      foreach ( $version['protocols'] as $protocols ) {
+         $output .= $this->info( "cURL protocols:", $protocols );
+      }
+      foreach ( $bitfields as $feature ) {
+         $output .= $feature . ($version['features'] & constant( $feature ) ? ' yes' : ' no') . PHP_EOL;
+      }
+      
+      
       $output .= $this->info( "fsockopen:", $this->isSupported( "fsockopen" ) );
       $output .= $this->info( "SOAP Client:", $this->isInstalled( "SoapClient" ) );
       $output .= $this->info( "Suhosin:", $this->isInstalled( "suhosin", false ) );
@@ -474,6 +517,7 @@ class SystemInfo extends InjectionAware {
    /**
     * Check and return prefix of the staging site
     */
+
    /**
     * Try to get the staging prefix from wp-config.php of staging site
     * @param array $clone
@@ -481,7 +525,7 @@ class SystemInfo extends InjectionAware {
     */
    private function getStagingPrefix( $clone = array() ) {
       // Throw error
-      $path = ABSPATH . $clone['directoryName'] . "/wp-config.php";
+      $path = ABSPATH . $clone['directoryName'] . DIRECTORY_SEPARATOR . "wp-config.php";
       if( false === ($content = @file_get_contents( $path )) ) {
          return 'Can\'t find staging wp-config.php';
       } else {

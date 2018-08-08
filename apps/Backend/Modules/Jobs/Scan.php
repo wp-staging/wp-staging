@@ -48,7 +48,7 @@ class Scan extends Job {
     */
    public function start() {
       // Basic Options
-      $this->options->root = str_replace( array("\\", '/'), DIRECTORY_SEPARATOR, ABSPATH );
+      $this->options->root = str_replace( array("\\", '/'), DIRECTORY_SEPARATOR, \WPStaging\WPStaging::getWPpath() );
       $this->options->existingClones = get_option( "wpstg_existing_clones_beta", array() );
       $this->options->current = null;
 
@@ -76,6 +76,7 @@ class Scan extends Job {
 
       // Job
       $this->options->currentJob = "database";
+      //$this->options->currentJob = "directories";
       $this->options->currentStep = 0;
       $this->options->totalSteps = 0;
 
@@ -194,12 +195,12 @@ class Scan extends Job {
          return null;
       }
 
-      $freeSpace = @disk_free_space( ABSPATH );
+      $freeSpace = @disk_free_space( \WPStaging\WPStaging::getWPpath() );
 
       if( false === $freeSpace ) {
          $data = array(
              'freespace' => false,
-             'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( ABSPATH ) )
+             'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( \WPStaging\WPStaging::getWPpath() ) )
          );
          echo json_encode( $data );
          die();
@@ -208,7 +209,7 @@ class Scan extends Job {
 
       $data = array(
           'freespace' => $this->formatSize( $freeSpace ),
-          'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( ABSPATH ) )
+          'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( \WPStaging\WPStaging::getWPpath() ) )
       );
 
       echo json_encode( $data );
@@ -227,6 +228,7 @@ class Scan extends Job {
       } else {
          $sql = "SHOW TABLE STATUS";
       }
+
 
       $tables = $wpDB->get_results( $sql );
 
@@ -260,13 +262,14 @@ class Scan extends Job {
     * Get directories and main meta data about'em recursively
     */
    protected function directories() {
-      $directories = new \DirectoryIterator( ABSPATH );
+      $directories = new \DirectoryIterator( \WPStaging\WPStaging::getWPpath() );
 
       foreach ( $directories as $directory ) {
          // Not a valid directory
          if( false === ($path = $this->getPath( $directory )) ) {
             continue;
          }
+         //echo $directory . '<br>';
 
          $this->handleDirectory( $path );
 
@@ -314,10 +317,16 @@ class Scan extends Job {
        * This must be done before \SplFileInfo->isDir() is used!
        * Prevents open base dir restriction fatal errors
        */
-      if( strpos( $directory->getRealPath(), ABSPATH ) !== 0 ) {
+      
+      //echo $directory->getRealPath() . '<br>';
+      //echo 'abspath: ' . \WPStaging\WPStaging::getWPpath() . '<br>';
+      
+      //if( strpos( $directory->getRealPath(), ABSPATH ) !== 0 ) {
+      if( strpos( $directory->getRealPath(), \WPStaging\WPStaging::getWPpath() ) !== 0 ) {
          return false;
       }
-      $path = str_replace( ABSPATH, null, $directory->getRealPath() );
+      //$path = str_replace( ABSPATH, null, $directory->getRealPath() );
+      $path = str_replace( \WPStaging\WPStaging::getWPpath(), null, $directory->getRealPath() );
 
       // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
       if( !$directory->isDir() || strlen( $path ) < 1 ) {
@@ -332,9 +341,8 @@ class Scan extends Job {
     * @param string $path
     */
    protected function handleDirectory( $path ) {
-
       $directoryArray = explode( DIRECTORY_SEPARATOR, $path );
-      $total = (is_array($directoryArray) || $directoryArray instanceof Countable ) ? count( $directoryArray ) : 0;
+      $total = is_array( $directoryArray ) || $directoryArray instanceof Countable ? count( $directoryArray ) : 0;
 
       if( $total < 1 ) {
          return;
@@ -355,12 +363,12 @@ class Scan extends Job {
             continue;
          }
 
-         $fullPath = ABSPATH . $path;
+         $fullPath = \WPStaging\WPStaging::getWPpath() . $path;
          $size = $this->getDirectorySize( $fullPath );
 
          $currentArray["metaData"] = array(
              "size" => $size,
-             "path" => ABSPATH . $path,
+             "path" => \WPStaging\WPStaging::getWPpath() . $path,
          );
       }
    }

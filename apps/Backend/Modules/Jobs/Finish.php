@@ -35,7 +35,7 @@ class Finish extends Job
         
         $return = array(
             "directoryName"     => $this->options->cloneDirectoryName,
-            "path"              => ABSPATH . $this->options->cloneDirectoryName,
+            "path"              => \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName,
             "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
             "number"            => $this->options->cloneNumber,
             "version"           => \WPStaging\WPStaging::VERSION,
@@ -92,7 +92,7 @@ class Finish extends Job
         
         $this->options->existingClones[$this->clone] = array(
             "directoryName"     => $this->options->cloneDirectoryName,
-            "path"              => ABSPATH . $this->options->cloneDirectoryName,
+            "path"              => \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName,
             "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
             "number"            => $this->options->cloneNumber,
             "version"           => \WPStaging\WPStaging::VERSION,

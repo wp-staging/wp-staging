@@ -137,9 +137,9 @@ class Directories extends JobExecutable {
        * Get user excluded folders
        */
       $directory = array();
-      foreach ($this->options->excludedDirectories as $dir){
-         if( strpos($dir, WP_CONTENT_DIR) !== false){
-            $directory[] = ltrim(str_replace(WP_CONTENT_DIR, '', $dir), '/');
+      foreach ( $this->options->excludedDirectories as $dir ) {
+         if( strpos( $dir, WP_CONTENT_DIR ) !== false ) {
+            $directory[] = ltrim( str_replace( WP_CONTENT_DIR, '', $dir ), '/' );
          }
       }
 
@@ -161,7 +161,7 @@ class Directories extends JobExecutable {
          $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
          // Exclude sites, uploads, plugins or themes
-         $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, $excludePaths);
+         $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, $excludePaths );
          // Recursively iterate over content directory
          $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -299,7 +299,7 @@ class Directories extends JobExecutable {
     */
    private function getWpContentUploadsSites() {
       
-      if(is_main_site()){
+      if( is_main_site() ) {
          return true;
       }
       
@@ -329,9 +329,9 @@ class Directories extends JobExecutable {
        * Get user excluded folders
        */
       $directory = array();
-      foreach ($this->options->excludedDirectories as $dir){
-         if( strpos($dir, $path) !== false){
-            $directory[] = ltrim(str_replace($path, '', $dir), '/');
+      foreach ( $this->options->excludedDirectories as $dir ) {
+         if( strpos( $dir, $path ) !== false ) {
+            $directory[] = ltrim( str_replace( $path, '', $dir ), '/' );
          }
       }
 
@@ -346,7 +346,7 @@ class Directories extends JobExecutable {
          $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
          // Exclude sites, uploads, plugins or themes
-         $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, $excludePaths);
+         $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, $excludePaths );
          // Recursively iterate over content directory
          $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
          $this->log( "Scanning /wp-content/uploads/sites/{$blogId} for its sub-directories and files" );
@@ -433,7 +433,6 @@ class Directories extends JobExecutable {
       // close the file handler
       $this->close( $files );
       return true;
-
    }
 
    /**
@@ -585,12 +584,26 @@ class Directories extends JobExecutable {
    }
 
    /**
+    * Replace forward slash with current directory separator
+    * Windows Compatibility Fix
+    * @param string $path Path
+    *
+    * @return string
+    */
+   private function sanitizeDirectorySeparator( $path ) {
+      $string = str_replace( "/", "\\", $path );
+      return str_replace( '\\\\', '\\', $string );
+   }
+
+   /**
     * Check if directory is excluded
     * @param string $directory
     * @return bool
     */
    protected function isDirectoryExcluded( $directory ) {
+      $directory = $this->sanitizeDirectorySeparator( $directory );
       foreach ( $this->options->excludedDirectories as $excludedDirectory ) {
+         $excludedDirectory = $this->sanitizeDirectorySeparator( $excludedDirectory );
          if( strpos( $directory, $excludedDirectory ) === 0 ) {
             return true;
          }
