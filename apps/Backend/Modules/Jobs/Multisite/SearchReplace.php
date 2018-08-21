@@ -109,13 +109,6 @@ class SearchReplace extends JobExecutable {
       return true;
    }
 
-//   private function convertExcludedTables() {
-//      $tmp = array();
-//      foreach ( $this->options->excludedTables as $table ) {
-//         $tmp[] = str_replace( $this->options->prefix, $this->tmpPrefix, $table );
-//      }
-//      $this->options->excludedTables = $tmp;
-//   }
 
    /**
     * Stop Execution immediately
@@ -231,41 +224,38 @@ class SearchReplace extends JobExecutable {
          // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
          $args['search_for'] = array(
              rtrim( $this->multisiteHomeUrl, "/" ) . $this->getSubDir(),
-             ABSPATH
+             ABSPATH,
+             str_replace( '/', '\/', rtrim( $this->multisiteHomeUrl, '/' ) ) . str_replace( '/', '\/', $this->getSubDir() ) // // Used by revslider and several visual editors
          );
 
 
          $args['replace_with'] = array(
              rtrim( $this->multisiteHomeUrl, "/" ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName,
-             rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
+             rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName,
+             str_replace( '/', '\/', rtrim( $this->multisiteHomeUrl, "/" ) ) . str_replace( '/', '\/', $this->getSubDir() ) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
          );
       } else {
          $args['search_for'] = array(
              rtrim( $this->multisiteHomeUrl, '/' ),
-             ABSPATH
+             ABSPATH,
+             str_replace( '/', '\/', rtrim( $this->multisiteHomeUrl, '/' ) )
          );
          $args['replace_with'] = array(
              rtrim( $this->multisiteHomeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
-             rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
+             rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName,
+             str_replace( '/', '\/', rtrim( $this->multisiteHomeUrl, '/' ) ) . '\/' . $this->options->cloneDirectoryName,
          );
       }
 
-//      // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
-//      $args['search_for'] = array(
-//          $this->multisiteHomeUrl,
-//          ABSPATH
-//      );
-//
-//      
-//      $args['replace_with'] = array(
-//          rtrim( $this->multisiteHomeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
-//          rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName
-//      );
       $args['replace_guids'] = 'off';
       $args['dry_run'] = 'off';
       $args['case_insensitive'] = false;
       $args['replace_guids'] = 'off';
+      $args['replace_mails'] = 'off';
 
+      // Allow filtering of search & replace parameters
+      $args = apply_filters('wpstg_clone_searchreplace_params', $args);
+      
       // Get a list of columns in this table.
       list( $primary_key, $columns ) = $this->get_columns( $table );
 
@@ -273,7 +263,6 @@ class SearchReplace extends JobExecutable {
       // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides
       // @todo test this carefully. If it causes (performance) issues we need to activate it again!
       // @since 2.4.4
-
       //      if( null === $primary_key ) {
       //         return false;
       //      }
@@ -285,7 +274,7 @@ class SearchReplace extends JobExecutable {
       // Grab the content of the table.
       $data = $this->db->get_results( "SELECT * FROM $table LIMIT $start, $end", ARRAY_A );
 
-      // Filter certain rows (of other plugins)
+      // Filter certain option_name (of other plugins)
       $filter = array(
           'Admin_custome_login_Slidshow',
           'Admin_custome_login_Social',
@@ -297,7 +286,7 @@ class SearchReplace extends JobExecutable {
           'Admin_custome_login_Version',
           );
         
-      apply_filters('wpstg_fiter_search_replace_rows', $filter);
+      apply_filters( 'wpstg_clone_searchreplace_excl_rows', $filter );
 
       // Loop through the data.
       foreach ( $data as $row ) {
@@ -307,7 +296,7 @@ class SearchReplace extends JobExecutable {
          $upd = false;
 
          // Skip rows below
-         if (isset($row['option_name']) && in_array($row['option_name'], $filter)){
+         if( isset( $row['option_name'] ) && in_array( $row['option_name'], $filter ) ) {
             continue;
          }
          
@@ -316,6 +305,7 @@ class SearchReplace extends JobExecutable {
             continue;
          }
          
+
          foreach ( $columns as $column ) {
 
             $dataRow = $row[$column];
@@ -330,6 +320,11 @@ class SearchReplace extends JobExecutable {
                continue;
             }
 
+
+            // Skip mail addresses
+            if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->homeUrl ) ) {
+               continue;
+            }
 
             // Check options table
             if( $this->options->prefix . 'options' === $table ) {
@@ -352,14 +347,30 @@ class SearchReplace extends JobExecutable {
                }
             }
 
-            // Run a search replace on the data that'll respect the serialisation.
+            // Check the path delimiter for / or \/ and remove one of those which prevents from resulting in wrong syntax like domain.com/staging\/.
+            // 1. local.wordpress.test -> local.wordpress.test/staging
+            // 2. local.wordpress.test\/ -> local.wordpress.test\/staging\/
+            $tmp = $args;
+            if (  false === strpos( $dataRow, $tmp['search_for'][0] )){
+               array_shift($tmp['search_for']); // rtrim( $this->homeUrl, '/' ),
+               array_shift($tmp['replace_with']); // rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
+            } else {
+               unset($tmp['search_for'][1]);
+               unset($tmp['replace_with'][1]);
+               // recount array
+               $tmp['search_for'] = array_values($tmp['search_for']);
+               $tmp['replace_with'] = array_values($tmp['replace_with']);
+            }
+
+            // Run a search replace on the data row and respect the serialisation.
             $i = 0;
-            foreach ( $args['search_for'] as $replace ) {
-               $dataRow = $this->recursive_unserialize_replace( $args['search_for'][$i], $args['replace_with'][$i], $dataRow, false, $args['case_insensitive'] );
+            foreach ( $tmp['search_for'] as $replace ) {
+               $dataRow = $this->recursive_unserialize_replace( $tmp['search_for'][$i], $tmp['replace_with'][$i], $dataRow, false, $args['case_insensitive'] );
                $i++;
             }
             unset( $replace );
             unset( $i );
+            unset( $tmp );
 
             // Something was changed
             if( $row[$column] != $dataRow ) {
@@ -404,48 +415,45 @@ class SearchReplace extends JobExecutable {
     * @param  string 			$from       		String we're looking to replace.
     * @param  string 			$to         		What we want it to be replaced with
     * @param  array  			$data       		Used to pass any subordinate arrays back to in.
-    * @param  boolean 			$serialised 		Does the array passed via $data need serialising.
+    * @param  boolean 			$serialized 		Does the array passed via $data need serialising.
     * @param  sting|boolean              $case_insensitive 	Set to 'on' if we should ignore case, false otherwise.
     *
     * @return string|array	The original array with all elements replaced as needed.
     */
-   private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialised = false, $case_insensitive = false ) {
+   private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialized = false, $case_insensitive = false ) {
       try {
-
-         if( is_string( $data ) && !is_serialized_string( $data ) && ( $unserialized = $this->unserialize( $data ) ) !== false ) {
+         // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
+         if( is_serialized( $data ) && ( $unserialized = @unserialize( $data ) ) !== false ) {
             $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
          } elseif( is_array( $data ) ) {
-            $_tmp = array();
+            $tmp = array();
             foreach ( $data as $key => $value ) {
-               $_tmp[$key] = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+               $tmp[$key] = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
             }
 
-            $data = $_tmp;
-            unset( $_tmp );
-         }
-
-         // Submitted by Tina Matter
-         elseif( $this->isValidObject($data) ) {
-            $_tmp = $data; // new $data_class( );
+            $data = $tmp;
+            unset( $tmp );
+         } elseif( is_object( $data ) ) {
+            $tmp = $data;
             $props = get_object_vars( $data );
             foreach ( $props as $key => $value ) {
-               $_tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+               if( $key === '' || ord( $key[0] ) === 0 ) {
+                  continue;
+            }
+               $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
             }
 
-            $data = $_tmp;
-            unset( $_tmp );
-         } elseif( is_serialized_string( $data ) ) {
-            if (false !== ($data = $this->unserialize($data)) ) {
-               $data = $this->str_replace( $from, $to, $data, $case_insensitive );
-               $data = serialize( $data );
-            }
+            $data = $tmp;
+            unset( $tmp );
          } else {
             if( is_string( $data ) ) {
+               if( !empty( $from ) && !empty( $to ) ) {
                $data = $this->str_replace( $from, $to, $data, $case_insensitive );
             }
          }
+         }
 
-         if( $serialised ) {
+         if( $serialized ) {
             return serialize( $data );
          }
       } catch ( Exception $error ) {
@@ -460,28 +468,28 @@ class SearchReplace extends JobExecutable {
     * Can not use is_object alone because in php 7.2 it's returning true even though object is __PHP_Incomplete_Class_Name
     * @return boolean
     */
-   private function isValidObject($data){
-      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
-         return false;
-      }
+//   private function isValidObject( $data ) {
+//      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
+//         return false;
+//      }
+//
+//      $invalid_class_props = get_object_vars( $data );
+//
+//      if( !isset( $invalid_class_props['__PHP_Incomplete_Class_Name'] ) ) {
+//         // Assume it must be an valid object
+//         return true;
+//      }
+//
+//      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
+//
+//      if( !empty( $invalid_object_class ) ) {
+//         return false;
+//      }
+//
+//      // Assume it must be an valid object
+//      return true;
+//   }
       
-      $invalid_class_props = get_object_vars( $data );
-      
-      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
-         // Assume it must be an valid object
-         return true;
-      }
-      
-      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
-
-      if( !empty( $invalid_object_class ) ) {
-         return false;
-      }
-      
-      // Assume it must be an valid object
-      return true;
-   }
-
    /**
     * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
     * @link   http://php.net/manual/en/function.mysql-real-escape-string.php#101248
@@ -530,10 +538,22 @@ class SearchReplace extends JobExecutable {
     * @return string
     */
    private function str_replace( $from, $to, $data, $case_insensitive = false ) {
+
+      // Add filter
+      $excludes = apply_filters( 'wpstg_clone_searchreplace_excl', array() );
+
+      // Build pattern
+      $regexExclude = '';
+      foreach ( $excludes as $exclude ) {
+         $regexExclude .= $exclude . '(*SKIP)(FAIL)|';
+      }
+      
       if( 'on' === $case_insensitive ) {
-         $data = str_ireplace( $from, $to, $data );
+         //$data = str_ireplace( $from, $to, $data );
+         $data = preg_replace( '#' . $regexExclude . preg_quote ( $from) . '#i', $to, $data );
       } else {
-         $data = str_replace( $from, $to, $data );
+         //$data = str_replace( $from, $to, $data );
+         $data = preg_replace( '#' . $regexExclude . preg_quote($from) . '#', $to, $data );
       }
 
       return $data;

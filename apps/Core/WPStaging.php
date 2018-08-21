@@ -29,7 +29,7 @@ final class WPStaging {
    /**
     * Plugin version
     */
-   const VERSION = "2.3.4";
+   const VERSION = "2.3.5";
 
    /**
     * Plugin name
@@ -94,11 +94,9 @@ final class WPStaging {
 
     * @return type
     */
-   public static function getWPpath(){
-      return str_replace('/', DIRECTORY_SEPARATOR, ABSPATH);
+   public static function getWPpath() {
+      return str_replace( '/', DIRECTORY_SEPARATOR, ABSPATH );
    }
-   
-
 
    /**
     * Method to be executed upon activation of the plugin
@@ -134,11 +132,11 @@ final class WPStaging {
       $loader->addAction( "wp_enqueue_scripts", $this, "enqueueElements", 100 );
       $this->addIntervals();
    }
-   
+
    /**
     * Add new cron time event "weekly"
     */
-   public function addIntervals(){
+   public function addIntervals() {
       $interval = new Cron();
    }
 
@@ -161,6 +159,13 @@ final class WPStaging {
           "wp-staging_page_wpstg-welcome",
       );
 
+
+      // Disable heartbeat check for cloning and pushing
+      wp_deregister_script( 'heartbeat' );
+
+      // Disable user login status check
+      remove_action( 'admin_enqueue_scripts', 'wp_auth_check_load' );
+
       // Load these css and js files only on wp staging admin pages
       if( !in_array( $hook, $availablePages ) || !is_admin() ) {
          return;
@@ -178,11 +183,11 @@ final class WPStaging {
 
       wp_localize_script( "wpstg-admin-script", "wpstg", array(
           "nonce" => wp_create_nonce( "wpstg_ajax_nonce" ),
-          "noncetick" =>  apply_filters( 'nonce_life', DAY_IN_SECONDS ),
+          "noncetick" => apply_filters( 'nonce_life', DAY_IN_SECONDS ),
           "cpuLoad" => $this->getCPULoadSetting(),
           "settings" => ( object ) array(), // TODO add settings?
           "tblprefix" => self::getTablePrefix(),
-          "isMultisite" => is_multisite() ? true : false    
+          "isMultisite" => is_multisite() ? true : false
       ) );
    }
 
@@ -190,9 +195,9 @@ final class WPStaging {
     * Get table prefix of the current site
     * @return string
     */
-   public static function getTablePrefix(){
-       $wpDB = WPStaging::getInstance()->get("wpdb");
-       return $wpDB->prefix;
+   public static function getTablePrefix() {
+      $wpDB = WPStaging::getInstance()->get( "wpdb" );
+      return $wpDB->prefix;
    }
 
    /**
@@ -384,31 +389,30 @@ final class WPStaging {
     * Load language file
     */
    public function loadLanguages() {
-      $languagesDirectory = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR;
-      $languagesDirectory.= "vars" . DIRECTORY_SEPARATOR . "languages" . DIRECTORY_SEPARATOR;
+      $languagesDirectory = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . "languages" . DIRECTORY_SEPARATOR;
 
       // Set filter for plugins languages directory
       $languagesDirectory = apply_filters( "wpstg_languages_directory", $languagesDirectory );
 
       // Traditional WP plugin locale filter
-      $locale = apply_filters( "plugin_locale", get_locale(), "wpstg" );
-      $moFile = sprintf( '%1$s-%2$s.mo', "wpstg", $locale );
+      $locale = apply_filters( "plugin_locale", get_locale(), "wp-staging" );
+      $moFile = sprintf( '%1$s-%2$s.mo', "wp-staging", $locale );
 
       // Setup paths to current locale file
       $moFileLocal = $languagesDirectory . $moFile;
-      $moFileGlobal = WP_LANG_DIR . DIRECTORY_SEPARATOR . "wpstg" . DIRECTORY_SEPARATOR . $moFile;
+      $moFileGlobal = WP_LANG_DIR . DIRECTORY_SEPARATOR . "wp-staging" . DIRECTORY_SEPARATOR . $moFile;
 
-      // Global file (/wp-content/languages/WPSTG)
+      // Global file (/wp-content/languages/wpstg)
       if( file_exists( $moFileGlobal ) ) {
-         load_textdomain( "wpstg", $moFileGlobal );
+         load_textdomain( "wp-staging", $moFileGlobal );
       }
       // Local file (/wp-content/plugins/wp-staging/languages/)
       elseif( file_exists( $moFileLocal ) ) {
-         load_textdomain( "wpstg", $moFileGlobal );
+         load_textdomain( "wp-staging", $moFileGlobal );
       }
       // Default file
       else {
-         load_plugin_textdomain( "wpstg", false, $languagesDirectory );
+         load_plugin_textdomain( "wp-staging", false, $languagesDirectory );
       }
    }
 
@@ -428,7 +432,7 @@ final class WPStaging {
       // Add licensing stuff if class exists
       if( class_exists( 'WPStaging\Backend\Pro\Licensing\Licensing' ) ) {
          $licensing = new Backend\Pro\Licensing\Licensing();
-}
+      }
       return false;
    }
 

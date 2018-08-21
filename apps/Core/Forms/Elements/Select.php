@@ -38,7 +38,7 @@ class Select extends ElementsWithOptions
         if (
             $this->default &&
             (
-                (is_string($this->default) && $this->default === $value) ||
+                (is_string($this->default) && trim($this->default) === trim($value)) ||
                 (is_array($this->default) && in_array($value, $this->default))
             )
         )

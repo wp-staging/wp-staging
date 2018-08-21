@@ -146,6 +146,16 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.5 =
+* New: Enable Optimizer as default option
+* New: Add filter to exclude strings from search & replace, docs: https://wp-staging.com/docs/actions-and-filters/
+* New: Add filter to change search & replace parameters
+* New: Add language files and change text domain to slug of the plugin
+* New: Disable heartbeat api and user login check for wp staging processing
+* New: Add issue reporting form
+* New: Check if clone subfolder already exists before creating clone
+* Fix: Changing file copy limit not working
+
 = 2.3.4 =
 * New: Compatible up to WordPress 4.9.8
 * New: Support for Windows Azure cloud servers
@@ -158,55 +168,11 @@ https://wp-staging.com
 * New: Login options not needed any more - removed
 * Fix: Remove term 'Error' from login page
 
-= 2.3.2 =
-* Fix: Do not search & replace mail addresses
 
-= 2.3.1 =
-* Fix: Creating a new clone resets the custom wp staging user settings. E.g. ignores authentication setting
-* Fix: Search & replace path not correct if scheme http/https is not identical in wp-config and db wp_options
-* New: Setting to specify the maximum allowed file size to copy
-
-= 2.3.0 =
-* Security: Do not allow to create a new staging site into a subfolder which already exists
-* New: Option to allow adjustment of the allowed maximum size of files that are going to be copied while cloning.
-* New: Add multisite informations in system info log
-* New: Option to allow adjustment of the allowed maximum size of files that are going to be copied while cloning.
-* New: Use the new progress bar for clone updating process
-* Fix: Progress bar for step 'database' is not filling up to 100%
-* Fix: If cloning update process is interupted it may happen that staging site is not available any longer. (Updating the clone does not copy index.php to staging site again)
-* Fix: Progress bar not shown as intented for clone updating process
-* Fix: Can not open upload folder in file selection menu
-* Fix: Undefined object $this->tables
-* Fix: wp-config.php not copied when previous clone updating process has been failed
-* Fix: Parameter must be an array or an object that implements Callable
-* Fix: Skip search & replace for objects where key is null
-* Fix: Search & Replace not working if serialized object contains __PHP_Incomplete_Class_Name
-* Tweaks: remove term "error" from several log entries
-* Tweak: Remove certain debugging notices from the default log window
-
-= 2.2.9 =
-* Fix: Missing trailingslash results to wrong absolute paths in database after Search & Replace operation 
-
-= 2.2.8 =
-* New: Add filter 'wpstg_filter_options_replace' to exclude certain tables from updating while cloning
-* New: Exclude tables for plugin wp_mail_smtp
-* New: Support for custom upload folder. For instance, if upload folder has been renamed and removed outsite wp-content folder
-* New: Add datetime timestamp internally to clone. (Used in WP Staging pro)
-* New: Add filter 'wpstg_fiter_search_replace_rows' to exclude certain tables from search & replace
-* New: Supports search & replace for revslider image slider and several visual editors which are using non default serialized data
-* New: Add new setting which allow to specify the search & replace processing query limit
-* New: Compatible to WordPress 4.9.6
-
-
-= 2.2.7 =
-* Fix: Serialize replace is not working properly for serialized strings
-* Fix: WP_SITEURL & WP_HOME not replaced if constant contains php generated string
-
-
-Complete changelog: [https://wp-staging.com/changelog.txt](https://wp-staging.com/changelog.txt)
+Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
 
-= 2.3.4 =
-* New: Compatible to WordPress 4.9.7
+= 2.3.5 =
+* New: Compatible to WordPress 4.9.8
 

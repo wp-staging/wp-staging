@@ -45,12 +45,10 @@ class SearchReplace extends JobExecutable {
    public function initialize() {
       $this->total = count( $this->options->tables );
       $this->db = WPStaging::getInstance()->get( "wpdb" );
-      //$this->tmpPrefix = 'wpstgtmp_';
       $this->tmpPrefix = $this->options->prefix;
       $helper = new Helper();      
       //$this->homeUrl = $helper->get_home_url();
       $this->homeUrl = $helper->get_home_url_without_scheme();
-                
    }
 
    public function start() {
@@ -117,7 +115,6 @@ class SearchReplace extends JobExecutable {
       // Not finished
       return true;
    }
-
 
    /**
     * Stop Execution immediately
@@ -216,7 +213,7 @@ class SearchReplace extends JobExecutable {
     * @access public
     * @param  string 	$table 	The table to run the replacement on.
     * @param  int          $page  	The page/block to begin the query on.
-    * @param  array 	$args         An associative array containing arguements for this run.
+    * @param  array 	$args         An associative array containing arguments for this run.
     * @return array
     */
    private function searchReplace( $table, $page, $args ) {
@@ -226,33 +223,33 @@ class SearchReplace extends JobExecutable {
       $table = esc_sql( $table );
       $current_page = $this->options->job->start + $this->settings->querySRLimit;
       $pages = $this->get_pages_in_table( $table );
-      //$done = false;
 
             
       if( $this->isSubDir() ) {
       // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
       $args['search_for'] = array(
+         $this->homeUrl . str_replace( '/', '\/', $this->getSubDir() ), // // Used by revslider and several visual editors
          rtrim( $this->homeUrl, "/" ) . $this->getSubDir(),
          rtrim( ABSPATH, '/' ),
-         $this->homeUrl . str_replace('/', '\/', $this->getSubDir()) // // Used by revslider and several visual editors
-
       );
 
       $args['replace_with'] = array(
+             $this->homeUrl . str_replace( '/', '\/', $this->getSubDir() ) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
              rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName,
              rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName, 
-             $this->homeUrl . str_replace('/', '\/', $this->getSubDir()) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
+
          );
       } else {
          $args['search_for'] = array(
+             $this->homeUrl . '\/',
              rtrim( $this->homeUrl, '/' ),
              rtrim( ABSPATH, '/' ),
-             $this->homeUrl . '\/'
          );
          $args['replace_with'] = array(
+             $this->homeUrl . '\/' . $this->options->cloneDirectoryName . '\/',
              rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
              rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName, 
-             $this->homeUrl . '\/' . $this->options->cloneDirectoryName,
+
       );
       }
 
@@ -262,6 +259,11 @@ class SearchReplace extends JobExecutable {
       $args['case_insensitive'] = false;
       $args['replace_guids'] = 'off';
       $args['replace_mails'] = 'off';
+      $args['skip_transients'] = 'on';
+
+      
+      // Allow filtering of search & replace parameters
+      $args = apply_filters('wpstg_clone_searchreplace_params', $args);
 
       // Get a list of columns in this table.
       list( $primary_key, $columns ) = $this->get_columns( $table );
@@ -270,7 +272,6 @@ class SearchReplace extends JobExecutable {
       // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides
       // @todo test this carefully. If it causes (performance) issues we need to activate it again!
       // @since 2.4.4
-
       //      if( null === $primary_key ) {
       //         return false;
       //      }
@@ -294,30 +295,22 @@ class SearchReplace extends JobExecutable {
           'Admin_custome_login_Version',
           );
 
-      apply_filters('wpstg_fiter_search_replace_rows', $filter);
+      $filter = apply_filters( 'wpstg_clone_searchreplace_excl_rows', $filter );
       
-//      // Do not search & replace any strings below
-//      $filterStrings = array(
-//        '@' . $this->homeUrl  // Mail addresses
-//      );
-      
-      //apply_filters('wpstg_fiter_search_replace_strings', $filterStrings);
-
-
       // Loop through the data.
       foreach ( $data as $row ) {
-         $current_row++;
+         //$current_row++;
          $update_sql = array();
          $where_sql = array();
          $upd = false;
 
          // Skip rows below
-         if (isset($row['option_name']) && in_array($row['option_name'], $filter)){
+         if( isset( $row['option_name'] ) && in_array( $row['option_name'], $filter ) ) {
             continue;
          }
          
          // Skip rows with transients (They can store huge data and we need to save memory)
-         if( isset( $row['option_name'] ) && strpos( $row['option_name'], '_transient' ) === 0 ) {
+         if( isset( $row['option_name'] ) && 'on' === $args['skip_transients'] && false !== strpos( $row['option_name'], '_transient' ) ) {
             continue;
          }
 
@@ -340,6 +333,7 @@ class SearchReplace extends JobExecutable {
                continue;
             }
             
+
             // Check options table
             if( $this->options->prefix . 'options' === $table ) {
 
@@ -349,7 +343,7 @@ class SearchReplace extends JobExecutable {
                   continue;
                }
 
-               // Skip this rows
+               // Skip this row
                if( 'wpstg_existing_clones_beta' === $dataRow ||
                        'wpstg_existing_clones' === $dataRow ||
                        'wpstg_settings' === $dataRow ||
@@ -360,16 +354,32 @@ class SearchReplace extends JobExecutable {
                   $should_skip = true;
                }
             }
+            $tmp = $args;
+            // Check the path delimiter for / or \/ and remove one of those which prevents from resulting in wrong syntax like domain.com/staging\/.
+            // 1. local.wordpress.test -> local.wordpress.test/staging
+            // 2. local.wordpress.test\/ -> local.wordpress.test\/staging\/
+            if (  false === strpos( $dataRow, $tmp['search_for'][0] )){
+               array_shift($tmp['search_for']); // rtrim( $this->homeUrl, '/' ),
+               array_shift($tmp['replace_with']); // rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
+            } else {
+               unset($tmp['search_for'][1]);
+               unset($tmp['replace_with'][1]);
+               // recount array
+               $tmp['search_for'] = array_values($tmp['search_for']);
+               $tmp['replace_with'] = array_values($tmp['replace_with']);
+            }
 
 
-            // Run a search replace on the data that'll respect the serialisation.
+                           
+            // Run a search replace on the data row and respect the serialisation.
             $i = 0;
-            foreach ( $args['search_for'] as $replace ) {
-               $dataRow = $this->recursive_unserialize_replace( $args['search_for'][$i], $args['replace_with'][$i], $dataRow, false, $args['case_insensitive'] );
+            foreach ( $tmp['search_for'] as $replace ) {
+               $dataRow = $this->recursive_unserialize_replace( $tmp['search_for'][$i], $tmp['replace_with'][$i], $dataRow, false, $args['case_insensitive'] );
                $i++;
             }
             unset( $replace );
             unset( $i );
+            unset( $tmp );
 
             // Something was changed
             if( $row[$column] != $dataRow ) {
@@ -419,54 +429,6 @@ class SearchReplace extends JobExecutable {
     *
     * @return string|array	The original array with all elements replaced as needed.
     */
-//   private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialised = false, $case_insensitive = false ) {
-//      try {
-//
-//         if( is_string( $data ) && !is_serialized_string( $data ) && ( $unserialized = $this->unserialize( $data ) ) !== false ) {
-//            $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
-//         } elseif( is_array( $data ) ) {
-//            $_tmp = array();
-//            foreach ( $data as $key => $value ) {
-//               $_tmp[$key] = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
-//            }
-//
-//            $data = $_tmp;
-//            unset( $_tmp );
-//         }
-//
-//         // Submitted by Tina Matter
-//         elseif( $this->isValidObject($data) ) {
-//            $_tmp = $data; // new $data_class( );
-//            $props = get_object_vars( $data );
-//            foreach ( $props as $key => $value ) {
-//               if( $key === '' || ord( $key[0] ) === 0 ) {
-//                  continue;
-//               }
-//               $_tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
-//            }
-//
-//            $data = $_tmp;
-//            unset($_tmp);
-//            } elseif (is_serialized_string($data)) {
-//                if (false !== ($data = $this->unserialize($data)) ) {
-//                    $data = $this->str_replace($from, $to, $data, $case_insensitive);
-//                    $data = serialize($data);
-//            }
-//         } else {
-//            if( is_string( $data ) ) {
-//               $data = $this->str_replace( $from, $to, $data, $case_insensitive );
-//            }
-//         }
-//
-//         if( $serialised ) {
-//            return serialize( $data );
-//         }
-//      } catch ( Exception $error ) {
-//         
-//      }
-//
-//      return $data;
-//   }
       private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialized = false, $case_insensitive = false ) {
       try {
          // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
@@ -585,10 +547,22 @@ class SearchReplace extends JobExecutable {
     * @return string
     */
    private function str_replace( $from, $to, $data, $case_insensitive = false ) {
+
+      // Add filter
+      $excludes = apply_filters( 'wpstg_clone_searchreplace_excl', array() );
+
+      // Build pattern
+      $regexExclude = '';
+      foreach ( $excludes as $exclude ) {
+         $regexExclude .= $exclude . '(*SKIP)(FAIL)|';
+      }
+      
       if( 'on' === $case_insensitive ) {
-         $data = str_ireplace( $from, $to, $data );
+         //$data = str_ireplace( $from, $to, $data );
+         $data = preg_replace( '#' . $regexExclude . preg_quote ( $from) . '#i', $to, $data );
       } else {
-         $data = str_replace( $from, $to, $data );
+         //$data = str_replace( $from, $to, $data );
+         $data = preg_replace( '#' . $regexExclude . preg_quote($from) . '#', $to, $data );
       }
 
       return $data;
@@ -682,8 +656,8 @@ class SearchReplace extends JobExecutable {
      * Check if WP is installed in subdir
      * @return boolean
      */
-    private function isSubDir(){
-        if ( get_option( 'siteurl' ) !== get_option( 'home' ) ) { 
+   private function isSubDir() {
+      if( get_option( 'siteurl' ) !== get_option( 'home' ) ) {
             return true;
 }
         return false;

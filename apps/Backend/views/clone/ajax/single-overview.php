@@ -1,6 +1,6 @@
 <div id="wpstg-step-1">
-    <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="wpstg_scanning">
-        <?php echo __("Create new staging site", "wpstg")?>
+    <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn button-primary wpstg-button" data-action="wpstg_scanning">
+        <?php echo __("Create new staging site", "wp-staging")?>
     </button>
 </div>
 
@@ -8,7 +8,7 @@
     <!-- Existing Clones -->
     <div id="wpstg-existing-clones">
         <h3>
-            <?php _e("Your Staging Sites:", "wpstg")?>
+            <?php _e("Your Staging Sites:", "wp-staging")?>
         </h3>
 <?php //wp_die(var_dump($availableClones)); ?>
         <?php foreach ($availableClones as $name => $data):?>
@@ -25,22 +25,22 @@
                 <?php echo apply_filters("wpstg_before_stage_buttons", $html = '', $name, $data)?>
 
                 <a href="<?php echo $urlLogin?>" class="wpstg-open-clone wpstg-clone-action" target="_blank">
-                    <?php _e("Open", "wpstg"); ?>
+                    <?php _e("Open", "wp-staging"); ?>
                 </a>
 
                 <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $name?>">
-                    <?php _e("Update", "wpstg"); ?>
+                    <?php _e("Update", "wp-staging"); ?>
                 </a>
 
                 <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo $name?>">
-                    <?php _e("Delete", "wpstg"); ?>
+                    <?php _e("Delete", "wp-staging"); ?>
                 </a>
 
                 <?php echo apply_filters("wpstg_after_stage_buttons", $html = '', $name, $data)?>
                 <div class="wpstg-staging-info">                   
                     <?php 
-                    $prefix = isset ($data['prefix']) ? __("DB prefix: <span class='wpstg-bold'>" . $data['prefix'], "wpstg") . '</span> ' : '&nbsp;&nbsp;&nbsp;';
-                    //$path = isset ($data['directoryName']) ? __("Subdir: <span class='wpstg-bold'>" . $data['directoryName'], "wpstg") . '</span>' : '';
+                    $prefix = isset ($data['prefix']) ? __("DB prefix: <span class='wpstg-bold'>" . $data['prefix'], "wp-staging") . '</span> ' : '&nbsp;&nbsp;&nbsp;';
+                    //$path = isset ($data['directoryName']) ? __("Subdir: <span class='wpstg-bold'>" . $data['directoryName'], "wp-staging") . '</span>' : '';
                     echo $prefix;
                     ?>
                 </div>

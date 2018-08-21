@@ -147,7 +147,9 @@
                                        </div>
                                    </td>
                                    <td>
-                                       <?php echo $form->render( "wpstg_settings[fileLimit]" ) ?>
+                                       <?php 
+                                       echo $form->render( "wpstg_settings[fileLimit]" ); 
+                                               ?>
                                    </td>
                                </tr>
 

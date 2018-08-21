@@ -196,19 +196,6 @@ class Data extends JobExecutable {
    }
 
    /**
-    * Get path to wp-config.php if it's located in parent folder and not root level
-    * @return mixed string | boolean
-    */
-//   protected function getPathWpConfig() {
-//      $dir = trailingslashit( dirname( ABSPATH ) );
-//
-//      if( is_file( $dir . 'wp-config.php' ) ) {
-//         return $dir . 'wp-config.php';
-//      }
-//      return false;
-//   }
-
-   /**
     * Copy wp-config.php if it is located outside of root one level up
     * @todo Needs some more testing before it will be released
     * @return boolean
@@ -399,39 +386,6 @@ class Data extends JobExecutable {
          $this->returnException( "Data Crunching Step 4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}" );
          return false;
       }
-
-//      if( false === $this->isTable( $this->prefix . 'options' ) ) {
-//         return true;
-//      }
-      
-//      $this->log( "Updating db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-//      
-//      // Filter the rows below. Do not update them!
-//      $filters = array(
-//          'wp_mail_smtp',
-//          'wp_mail_smtp_version',
-//          'wp_mail_smtp_debug',
-//      );
-//      
-//      $filters = apply_filters('wpstg_filter_options_replace', $filters);
-//      
-//      $where = "";
-//      foreach($filters as $filter){
-//         $where .= " AND option_name <> '" . $filter . "'";
-//      }    
-//
-//      $updateOptions = $this->db->query(
-//              $this->db->prepare(
-//                      "UPDATE IGNORE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s" . $where, $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
-//              )
-//      );
-//
-//      if( !$updateOptions ) {
-//         $this->log( "Preparing Data Step4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
-//         $this->returnException( "Data Crunching Step 4: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-//         return false;
-//      }
-
       return true;
    }
 
@@ -874,7 +828,7 @@ class Data extends JobExecutable {
           'wp_mail_smtp_debug',
       );
       
-      $filters = apply_filters('wpstg_filter_options_replace', $filters);
+      $filters = apply_filters('wpstg_data_excl_rows', $filters);
       
       $where = "";
       foreach($filters as $filter){

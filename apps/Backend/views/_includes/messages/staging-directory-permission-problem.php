@@ -5,7 +5,7 @@
         %1$s is not write and/or readable.
         <br>
         Check if the folder <strong>%1$s</strong> is writeable by php user www-data.
-        File permissions should be chmod 755 or 777.','wpstg'), get_home_path() );
+        File permissions should be chmod 755 or 777.','wpstg'), ABSPATH );
         ?>
     </p>
 </div>

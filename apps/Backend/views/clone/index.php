@@ -1,19 +1,20 @@
 <div id="wpstg-clonepage-wrapper">
 
-    <?php require_once($this->path . "views/_includes/header.php")?>
+    <?php
+    require_once($this->path . "views/_includes/header.php");
+    require_once($this->path . "views/_includes/report-issue.php");
+    ?>
 
     <?php
-    do_action("wpstg_notifications");
+    do_action( "wpstg_notifications" );
 
     // Multi site
-    if (is_multisite())
-    {
-        require_once($this->path . "views/clone/multi-site/index.php");
+    if( is_multisite() ) {
+       require_once($this->path . "views/clone/multi-site/index.php");
     }
     // Single site
-    else
-    {
-        require_once($this->path . "views/clone/single-site/index.php");
+    else {
+       require_once($this->path . "views/clone/single-site/index.php");
     }
 
     // Footer

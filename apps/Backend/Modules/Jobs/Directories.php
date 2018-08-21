@@ -141,7 +141,7 @@ class Directories extends JobExecutable {
          $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
          // Exclude uploads, plugins or themes
-         $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, apply_filters( 'wpstg_exclude_content', $excludeWpContent ) );
+         $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, apply_filters( 'wpstg_clone_excl_folders', $excludeWpContent ) );
          // Recursively iterate over content directory
          $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -532,13 +532,10 @@ class Directories extends JobExecutable {
     * @return bool
     */
    protected function isDirectoryExcluded( $directory ) {
-      
-      $directory = $this->sanitizeDirectorySeparator($directory);
-      
+      $directory = $this->sanitizeDirectorySeparator( $directory );
       foreach ( $this->options->excludedDirectories as $excludedDirectory ) {
-         //echo $this->sanitizeDirectorySeparator($excludedDirectory). '</br>';
-         //echo $this->sanitizeDirectorySeparator($directory). '</br>';
-         if( strpos( $directory, $this->sanitizeDirectorySeparator($excludedDirectory) ) === 0 ) {
+         $excludedDirectory = $this->sanitizeDirectorySeparator( $excludedDirectory );
+         if( strpos( $directory, $excludedDirectory ) === 0 ) {
             return true;
          }
       }

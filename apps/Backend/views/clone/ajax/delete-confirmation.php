@@ -1,7 +1,7 @@
 <div class="wpstg-notice-alert">
     <h4 style="margin:0">
         <?php
-        _e("Attention: Check carefully if these database tables and files are safe to delete and do not belong to your live site!", "wpstg")
+        _e("Attention: Check carefully if these database tables and files are safe to delete and do not belong to your live site!", "wp-staging")
         ?>
     </h4>
 
@@ -27,13 +27,13 @@
 
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __("DB tables to remove", "wpstg")?>
+        <?php echo __("DB tables to remove", "wp-staging")?>
     </a>
 
     <!-- Database -->
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
         <h4 style="margin:0;">
-            <?php _e("Unselect database tables you do not want to delete:", "wpstg")?>
+            <?php _e("Unselect database tables you do not want to delete:", "wp-staging")?>
         </h4>
 
         <?php foreach ($delete->getTables() as $table):?>
@@ -57,13 +57,13 @@
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __("Files to remove", "wpstg")?>
+        <?php echo __("Files to remove", "wp-staging")?>
     </a>
 
     <!-- Files -->
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
         <h4 style="margin:0;">
-            <?php _e("The folder below and all of its subfolders will be deleted. Unselect the checkbox for not deleting the files.", "wpstg") ?>
+            <?php _e("The folder below and all of its subfolders will be deleted. Unselect the checkbox for not deleting the files.", "wp-staging") ?>
         </h4>
 
         <div class="wpstg-dir">
@@ -78,9 +78,9 @@
 </div>
 
 <a href="#" class="wpstg-link-btn button-primary" id="wpstg-cancel-removing">
-    <?php _e("Cancel", "wpstg")?>
+    <?php _e("Cancel", "wp-staging")?>
 </a>
 
 <a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="<?php echo $clone->name?>">
-    <?php echo __("Remove", "wpstg")?>
+    <?php echo __("Remove", "wp-staging")?>
 </a>

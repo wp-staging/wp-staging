@@ -239,7 +239,7 @@ class Scan extends Job {
       foreach ( $tables as $table ) {
 
          // Exclude WP Staging Tables
-//            if (0 === strpos($table->Name, "wpstg"))
+//            if (0 === strpos($table->Name, "wp-staging"))
 //            {
 //                continue;
 //            }
@@ -293,6 +293,11 @@ class Scan extends Job {
     * @param string $path
     */
    protected function getSubDirectories( $path ) {
+      
+      if (!is_readable($path)){
+         return false;
+      }
+      
       $directories = new \DirectoryIterator( $path );
 
       foreach ( $directories as $directory ) {

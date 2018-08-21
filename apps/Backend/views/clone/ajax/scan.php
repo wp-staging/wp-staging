@@ -7,14 +7,14 @@
         <?php echo __(
             "<br>Probably not enough free disk space to create a staging site. ".
             "<br> You can continue but its likely that the copying process will fail.",
-            "wpstg"
+            "wp-staging"
         )?>
 </span>
 
 <div class="wpstg-tabs-wrapper">
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __("DB Tables", "wpstg")?>
+        <?php echo __("DB Tables", "wp-staging")?>
     </a>
 
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
@@ -24,7 +24,7 @@
 
             echo __(
                 "Uncheck the tables you do not want to copy. Usually you should select tables with prefix '{$scan->prefix}', only.",
-                "wpstg"
+                "wp-staging"
             )?>
         </h4>
         <div style="margin-top:10px;margin-bottom:10px;">
@@ -55,18 +55,18 @@
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __("Files", "wpstg")?>
+        <?php echo __("Files", "wp-staging")?>
     </a>
 
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
         <h4 style="margin:0">
-            <?php echo __("Select folders to copy. Click on folder name to list subfolders!", "wpstg")?>
+            <?php echo __("Select folders to copy. Click on folder name to list subfolders!", "wp-staging")?>
         </h4>
 
         <?php echo $scan->directoryListing()?>
 
         <h4 style="margin:10px 0 10px 0">
-            <?php echo __("Extra directories to copy", "wpstg")?>
+            <?php echo __("Extra directories to copy", "wp-staging")?>
         </h4>
 
         <textarea id="wpstg_extraDirectories" name="wpstg_extraDirectories" style="width:100%;height:250px;"></textarea>
@@ -76,7 +76,7 @@
                 echo __(
                     "Enter one folder path per line.<br>".
                     "Folders must start with absolute path: " . $options->root,
-                    "wpstg"
+                    "wp-staging"
                 )
                 ?>
             </span>
@@ -86,7 +86,7 @@
             <span>
                 <?php
                 if (isset($options->clone)){
-                echo __("All files will be copied to: ", "wpstg") . $options->root . $options->clone;
+                echo __("All files will be copied to: ", "wp-staging") . $options->root . $options->clone;
                 }
                 ?>
             </span>
@@ -95,7 +95,7 @@
 
 <!--    <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php //echo __("Login Options", "wpstg")?>
+        <?php //echo __("Login Options", "wp-staging")?>
     </a>-->
 
     <div class="wpstg-tab-section" id="wpstg-advanced-settings">
@@ -117,24 +117,24 @@
 
 </div>
 
-<button type="button" class="wpstg-prev-step-link wpstg-link-btn button-primary">
-    <?php _e("Back", "wpstg")?>
+<button type="button" class="wpstg-prev-step-link wpstg-link-btn button-primary wpstg-button">
+    <?php _e("Back", "wp-staging")?>
 </button>
 
     <?php
     if (null !== $options->current)
     {
-        $label =  __("Update Clone", "wpstg");
+        $label =  __("Update Clone", "wp-staging");
         $action = 'wpstg_update';
         
-        echo '<button type="button" id="wpstg-start-updating" class="wpstg-next-step-link  wpstg-link-btn button-primary" data-action="'.$action.'">'.$label.'</button>';
+        echo '<button type="button" id="wpstg-start-updating" class="wpstg-next-step-link  wpstg-link-btn button-primary wpstg-button" data-action="'.$action.'">'.$label.'</button>';
     }
     else
     {
-        $label =  __("Start Cloning", "wpstg");
+        $label =  __("Start Cloning", "wp-staging");
         $action = 'wpstg_cloning';
        
-        echo '<button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary" data-action="'.$action.'">'.$label.'</button>';
+        echo '<button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary wpstg-button" data-action="'.$action.'">'.$label.'</button>';
 
     }
     ?>

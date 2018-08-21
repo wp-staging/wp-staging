@@ -380,6 +380,8 @@ class Data extends JobExecutable {
          return true;
       }
 
+      $this->debugLog("SQL: UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, {$this->db->prefix}, {$this->prefix}) WHERE meta_key LIKE {$this->db->prefix}_%");
+
       $update = $this->db->query(
               $this->db->prepare(
                       "UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
@@ -391,11 +393,14 @@ class Data extends JobExecutable {
          $this->returnException( "Data Crunching Step 4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}" );
          return false;
       }
+
+
+
       return true;
    }
 
    /**
-    * Update $table_prefix in wp-config.php
+    * Update Table prefix in wp-config.php
     * @return bool
     */
    protected function step5() {
@@ -665,7 +670,7 @@ class Data extends JobExecutable {
     * @return bool
     */
    protected function step12() {
-      $this->log( "Preparing Data Step12: Updating db prefix in {$this->prefix}options. Error: {$this->db->last_error}" );
+      $this->log( "Preparing Data Step12: Updating db prefix in {$this->prefix}options." );
 
       // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
@@ -678,8 +683,9 @@ class Data extends JobExecutable {
          return true;
       }
 
+      $notice = isset( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
 
-      $this->log( "Updating db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+      $this->log( "Updating option_name in {$this->prefix}options. {$notice}" );
 
       // Filter the rows below. Do not update them!
       $filters = array(
@@ -688,7 +694,7 @@ class Data extends JobExecutable {
           'wp_mail_smtp_debug',
       );
 
-      $filters = apply_filters( 'wpstg_filter_options_replace', $filters );
+      $filters = apply_filters( 'wpstg_data_excl_rows', $filters );
 
       $where = "";
       foreach ( $filters as $filter ) {

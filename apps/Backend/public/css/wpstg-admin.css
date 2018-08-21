@@ -823,3 +823,123 @@ color:#777777;
     font-weight: 400px;
     float:right;
 }
+
+#wpstg-report-issue-button{
+    margin-left: 50px;
+    border: 1px solid #ef5a4b;
+    color: #ef5a4b;
+    background-color: white;
+}
+
+#wpstg-report-issue-button:hover {
+    background-color: #e74c3c;
+    color: #fff;
+}
+
+.wpstg-button{
+    display: inline-block;
+    background-color: transparent;
+    color: #95a5a6;
+    border-radius: 3px;
+    cursor: pointer;
+    padding: 2px 10px 2px 10px;
+    text-transform: uppercase;
+    font-weight: 500;
+    outline: 0;
+    transition: background-color .1s ease-in;
+    text-decoration: none;
+}
+
+
+.wpstg-report-issue-form {
+    position: absolute;
+    z-index: 9999;
+    width: 300px;
+    background-color: #fff;
+    margin: 6px 0 0;
+    padding: 15px 15px 10px;
+    border: 1px solid #e8e8e8;
+    border-radius: 3px;
+    box-shadow: 0 1px 0 0 #fff inset;
+    display: none;
+    margin-top: 67px;
+    margin-left: 123px;
+}
+
+.wpstg-report-show {
+    display: block;
+}
+
+.wpstg-field input[type=text], .wpstg-field textarea {
+    width: 100%;
+    font-weight: 400;
+    line-height: 1.4;
+    margin-bottom:4px;
+}
+
+.wpstg-report-email {
+    width: 100%;
+    font-weight: 400;
+    font-size: .8rem;
+    height: 2.3rem;
+    line-height: 2.3rem;
+    border-radius: 3px;
+    margin-bottom: 4px;
+    padding: 0 10px;
+}
+
+.wpstg-report-description {
+    border-radius: 3px;
+    font-size: .8rem;
+    padding: 6px 10px;
+    resize: none;
+}
+
+.wpstg-report-privacy-policy{
+    font-size:12px;
+    margin-bottom:15px;
+}
+
+#wpstg-report-cancel{
+    float:right;
+    margin-right: 5px;
+}
+
+.wpstg-buttons .spinner{
+    float:none;
+    margin: 0px 0px 0px 5px;
+}
+
+.wpstg-message {
+    -moz-box-sizing: border-box;
+    background-color: #f5e0de;
+    border-radius: 3px;
+    color: rgba(0,0,0,.6);
+    height: auto;
+    margin: 10px 0;
+    min-height: 18px;
+    padding: 6px 10px;
+    position: relative;
+}
+
+.wpstg-message.wpstg-error-message {
+    background-color: #f5e0de;
+    color: #b65147;
+    font-size: 12px;
+}
+
+.wpstg-message.wpstg-success-message{
+    background-color: #d7f8e0;
+    color: #515151;
+}
+
+.wpstg-message p {
+    margin: 3px 0;
+    font-size: 13px;
+}
+
+.wpstg-share-button-wordpress {
+ border:1px solid #87c131;
+ background-color: white;
+ color: #87c131;
+}
