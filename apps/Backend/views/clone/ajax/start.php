@@ -77,6 +77,7 @@
                     To assist you we changed the color of the admin bar:
                     <br><br>
                     <img src="<?php echo $this->url . "/img/admin_dashboard.png" ?>">
+                    <br>
                     On the fronpage the name also changed to <br>
                     <strong style="font-style:italic;">
                         "STAGING - <span class="wpstg-clone-name"><?php echo get_bloginfo("name")?></span>"
