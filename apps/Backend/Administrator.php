@@ -216,7 +216,7 @@ class Administrator extends InjectionAware {
               ->set( "forms", new FormSettings( $tabs ) );
 
 
-      require_once "{$this->path}views/settings/index.php";
+      require_once "{$this->path}views/settings/main-settings.php";
    }
 
    /**
