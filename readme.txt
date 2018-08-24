@@ -177,6 +177,6 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.3.5 =
+= 2.3.6 =
 * New: Compatible to WordPress 4.9.8
 

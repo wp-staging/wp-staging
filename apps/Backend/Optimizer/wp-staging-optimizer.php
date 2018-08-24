@@ -77,7 +77,7 @@ function wpstg_is_compatibility_mode_request() {
    if( !defined( 'DOING_AJAX' ) ||
            !DOING_AJAX ||
            !isset( $_POST['action'] ) ||
-           false === strpos( $_POST['action'], 'wp-staging' )
+           false === strpos( $_POST['action'], 'wpstg' )
    ) {
 
       return false;
@@ -98,7 +98,7 @@ function wpstg_tgmpa_compatibility() {
       $remove_function = true;
    }
    // run on wpstg ajax requests
-   if( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_POST['action'] ) && false !== strpos( $_POST['action'], 'wp-staging' ) ) {
+   if( defined( 'DOING_AJAX' ) && DOING_AJAX && isset( $_POST['action'] ) && false !== strpos( $_POST['action'], 'wpstg' ) ) {
       $remove_function = true;
    }
 
