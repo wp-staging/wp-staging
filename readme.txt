@@ -149,6 +149,8 @@ https://wp-staging.com
 = 2.3.6 =
 * Fix: Add version number to css and js files to prevent caching issues
 * Fix: Wrong text domain in a few language strings
+* Fix: Optimizer mu-plugin not installed all the time 
+* Fix: Language files not loaded correctly 
 
 = 2.3.5 =
 * New: Enable Optimizer as default option

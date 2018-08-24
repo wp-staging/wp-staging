@@ -80,6 +80,7 @@ class Administrator extends InjectionAware {
       $Welcome = new Activation\Welcome();
 
       $loader->addAction( "activated_plugin", $Activation, 'deactivate_other_instances' );
+      $loader->addAction( "activated_plugin", $Activation, 'install_dependancies' );
       $loader->addAction( "admin_menu", $this, "addMenu", 10 );
       $loader->addAction( "admin_init", $this, "setOptionFormElements" );
       $loader->addAction( "admin_init", $this, "upgrade" );

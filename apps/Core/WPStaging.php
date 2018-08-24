@@ -77,7 +77,10 @@ final class WPStaging {
     */
    private function __construct() {
 
-      $file = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . self::SLUG . ".php";
+      //$file = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . self::SLUG . ".php";
+      
+      // Activation Hook
+      //register_activation_hook( __FILE__, array($this, "onActivation") );
 
       $this->registerMain();
       $this->registerNamespaces();
@@ -101,10 +104,10 @@ final class WPStaging {
    /**
     * Method to be executed upon activation of the plugin
     */
-   public function onActivation() {
-      $Activation = new \WPStaging\Backend\Activation\Activation();
-      $Activation->install_dependancies();
-   }
+//   public function onActivation() {
+//      $Activation = new \WPStaging\Backend\Activation\Activation();
+//      $Activation->install_dependancies();
+//   }
 
    public function registerMain() {
       // Slug of the plugin
@@ -408,7 +411,7 @@ final class WPStaging {
       }
       // Local file (/wp-content/plugins/wp-staging/languages/)
       elseif( file_exists( $moFileLocal ) ) {
-         load_textdomain( "wp-staging", $moFileGlobal );
+         load_textdomain( "wp-staging", $moFileLocal );
       }
       // Default file
       else {
