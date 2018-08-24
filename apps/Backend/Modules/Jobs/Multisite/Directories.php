@@ -457,8 +457,8 @@ class Directories extends JobExecutable {
 
       $file_handle = @fopen( $file, $mode );
       if( false === $file_handle ) {
-         $this->returnException( sprintf( __( 'Unable to open %s with mode %s', 'wpstg' ), $file, $mode ) );
-         //throw new Exception(sprintf(__('Unable to open %s with mode %s', 'wpstg'), $file, $mode));
+         $this->returnException( sprintf( __( 'Unable to open %s with mode %s', 'wp-staging' ), $file, $mode ) );
+         //throw new Exception(sprintf(__('Unable to open %s with mode %s', 'wp-staging'), $file, $mode));
       }
 
       return $file_handle;
@@ -477,12 +477,12 @@ class Directories extends JobExecutable {
       $write_result = @fwrite( $handle, $content );
       if( false === $write_result ) {
          if( ( $meta = \stream_get_meta_data( $handle ) ) ) {
-            //$this->returnException(sprintf(__('Unable to write to: %s', 'wpstg'), $meta['uri']));
-            throw new \Exception( sprintf( __( 'Unable to write to: %s', 'wpstg' ), $meta['uri'] ) );
+            //$this->returnException(sprintf(__('Unable to write to: %s', 'wp-staging'), $meta['uri']));
+            throw new \Exception( sprintf( __( 'Unable to write to: %s', 'wp-staging' ), $meta['uri'] ) );
          }
       } elseif( strlen( $content ) !== $write_result ) {
-         //$this->returnException(__('Out of disk space.', 'wpstg'));
-         throw new \Exception( __( 'Out of disk space.', 'wpstg' ) );
+         //$this->returnException(__('Out of disk space.', 'wp-staging'));
+         throw new \Exception( __( 'Out of disk space.', 'wp-staging' ) );
       }
 
       return $write_result;

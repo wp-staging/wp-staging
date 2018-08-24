@@ -23,7 +23,7 @@
     <div class="wpstg-field">
         <div class="wpstg-buttons">                               
             <button type="submit" id="wpstg-report-submit" class="wpstg-form-submit button-primary wpstg-button">
-                <?php _e( 'Send Issue', 'wp-staging' ); ?>
+                <?php _e( 'Submit', 'wp-staging' ); ?>
             </button>
             <span class="spinner"></span>
              <a href="#" id="wpstg-report-cancel" class="wpstg-report-cancel">Close</a>

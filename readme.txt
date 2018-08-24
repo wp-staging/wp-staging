@@ -146,6 +146,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.6 =
+* Fix: Add version number to css and js files to prevent caching issues
+* Fix: Wrong text domain in a few language strings
+
 = 2.3.5 =
 * New: Enable Optimizer as default option
 * New: Add filter to exclude strings from search & replace, docs: https://wp-staging.com/docs/actions-and-filters/

@@ -29,7 +29,7 @@ final class WPStaging {
    /**
     * Plugin version
     */
-   const VERSION = "2.3.5";
+   const VERSION = "2.3.6";
 
    /**
     * Plugin name
@@ -148,7 +148,7 @@ final class WPStaging {
 
       // Load this css file on frontend and backend on all pages if current site is a staging site
       if( $this->isStagingSite() ) {
-         wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", $this->getVersion() );
+         wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", array(), $this->getVersion() );
       }
 
       $availablePages = array(
@@ -178,7 +178,7 @@ final class WPStaging {
 
       // Load admin css files
       wp_enqueue_style(
-              "wpstg-admin", $this->backend_url . "css/wpstg-admin.css", $this->getVersion()
+              "wpstg-admin", $this->backend_url . "css/wpstg-admin.css", array(), $this->getVersion()
       );
 
       wp_localize_script( "wpstg-admin-script", "wpstg", array(

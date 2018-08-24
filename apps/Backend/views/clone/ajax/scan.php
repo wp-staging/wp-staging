@@ -1,5 +1,5 @@
 <label id="wpstg-clone-label" for="wpstg-new-clone">
-    <?php echo __('Staging Site Name:', 'wpstg')?>
+    <?php echo __('Staging Site Name:', 'wp-staging')?>
     <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if (null !== $options->current) echo " disabled='disabled'"?>>
 </label>
 
@@ -29,7 +29,7 @@
         </h4>
         <div style="margin-top:10px;margin-bottom:10px;">
             <a href="#" class="wpstg-button-unselect button"> None </a>
-            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wpstg'); ?> </a>
+            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
         </div>
         <?php
         //print_r( $options->excludedTables);
@@ -49,7 +49,7 @@
         <?php endforeach ?>
         <div style="margin-top:10px;">
             <a href="#" class="wpstg-button-unselect button"> None </a>
-            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wpstg'); ?> </a>
+            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
         </div>
     </div>
 
@@ -101,13 +101,13 @@
     <div class="wpstg-tab-section" id="wpstg-advanced-settings">
         <p>
                 <?php
-                  _e('<strong>Important:</strong> Are you using a custom login url?', 'wpstg');
+                  _e('<strong>Important:</strong> Are you using a custom login url?', 'wp-staging');
                   echo '<br/>';
-                  echo sprintf(__('Set up first <a href="%1$s"><strong>Login Custom Link</strong></a> if login to the admin dashboard is not reachable from the default url below:<pre>%2$s</pre>', 'wpstg'),
+                  echo sprintf(__('Set up first <a href="%1$s"><strong>Login Custom Link</strong></a> if login to the admin dashboard is not reachable from the default url below:<pre>%2$s</pre>', 'wp-staging'),
                         admin_url() . '/admin.php?page=wpstg-settings#wpstg_settings[loginSlug]',
                         admin_url()
                           );
-                  _e('<strong>If you do not do that step, the staging site could be unavailable!</strong>', 'wpstg');
+                  _e('<strong>If you do not do that step, the staging site could be unavailable!</strong>', 'wp-staging');
                      //$form = $this->di->get("forms")->get("general");
                      //echo $form->label("wpstg_settings['loginPostId']");
                      //echo $form->render("wpstg_settings['loginPostId']");
@@ -139,4 +139,4 @@
     }
     ?>
 
-<a href="#" id="wpstg-check-space"><?php _e('Check Disk Space', 'wpstg'); ?></a>
+<a href="#" id="wpstg-check-space"><?php _e('Check Disk Space', 'wp-staging'); ?></a>

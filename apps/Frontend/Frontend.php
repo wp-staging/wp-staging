@@ -68,14 +68,14 @@ class Frontend extends InjectionAware {
 //      $this->resetPermaLinks();
 //
 //      if( $this->disableLogin() ) {
-//         wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wpstg' ), $this->getLoginUrl() ) );
+//         wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wp-staging' ), $this->getLoginUrl() ) );
 //      }
 //   }
    public function checkPermissions() {
       $this->resetPermaLinks();
 
       if($this->disableLogin() ) {
-         //wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wpstg' ), $this->getLoginUrl() ) );
+         //wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wp-staging' ), $this->getLoginUrl() ) );
          //}
          	$args = array(
 		'echo' => true,

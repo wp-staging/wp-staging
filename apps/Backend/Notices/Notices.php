@@ -140,9 +140,9 @@ class Notices {
     private function plugin_deactivated_notice() {
         if( false !== ( $deactivated_notice_id = get_transient( 'wp_staging_deactivated_notice_id' ) ) ) {
             if( '1' === $deactivated_notice_id ) {
-                $message = __( "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging.", 'wpstg' );
+                $message = __( "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging.", 'wp-staging' );
             } else {
-                $message = __( "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging Pro.", 'wpstg' );
+                $message = __( "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging Pro.", 'wp-staging' );
             }
             ?>
             <div class="updated notice is-dismissible" style="border-left: 4px solid #ffba00;">

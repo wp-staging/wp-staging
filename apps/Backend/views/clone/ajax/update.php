@@ -18,7 +18,7 @@
 </button>
 
 <button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;display:none;">
-    <?php _e('Display working log', 'wpstg')?>
+    <?php _e('Display working log', 'wp-staging')?>
 </button>
 
 <div>

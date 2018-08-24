@@ -18,7 +18,7 @@
 </button>
 
 <button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;display:none;">
-    <?php _e('Display working log', 'wpstg')?>
+    <?php _e('Display working log', 'wp-staging')?>
 </button>
 
 <div>
@@ -32,10 +32,10 @@
     $subDirectory = str_replace( get_home_path(), '', ABSPATH ); 
     $helper = new \WPStaging\Utils\Helper();
     $url = $helper->get_home_url() . str_replace('/', '', $subDirectory);
-    echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wpstg' ), $url );
+    echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging' ), $url );
     ?>
     <br>
-    <?php //echo __('Open and access the staging site: ', 'wpstg')?>
+    <?php //echo __('Open and access the staging site: ', 'wp-staging')?>
     <br>
     <a href="<?php echo $url; ?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">
         Open staging site <span style="font-size: 10px;">(login with your admin credentials)</span>

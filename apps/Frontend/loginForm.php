@@ -192,14 +192,14 @@ class loginForm {
 //       private function getLoginForm() {
 //          $this->getHeader();
 //          echo '<body id="error-page">';
-//          echo __( 'Access denied. Login to access this site', 'wpstg' );
+//          echo __( 'Access denied. Login to access this site', 'wp-staging' );
 //
 //          $args = array(
 //              'redirect' => admin_url(),
 //              'redirect' => admin_url(),
 //              'form_id' => 'wpstg-loginform',
-//              'label_username' => __( 'Username', 'wpstg' ),
-//              'label_password' => __( 'Password', 'wpstg' ),
+//              'label_username' => __( 'Username', 'wp-staging' ),
+//              'label_password' => __( 'Password', 'wp-staging' ),
 //              'label_remember' => __( 'Remember Me' ),
 //              'label_log_in' => __( 'Log In Staging Site' ),
 //              'remember' => true

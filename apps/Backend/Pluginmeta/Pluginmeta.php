@@ -39,7 +39,7 @@ class Pluginmeta {
      * @return array $links
      */
     public function actionLinks( $links, $file ) {
-        $settings_link = '<a href="' . admin_url( 'admin.php?page=wpstg-settings' ) . '">' . esc_html__( 'Settings', 'wpstg' ) . '</a>';
+        $settings_link = '<a href="' . admin_url( 'admin.php?page=wpstg-settings' ) . '">' . esc_html__( 'Settings', 'wp-staging' ) . '</a>';
         if( $file == 'wp-staging/wp-staging.php' || $file == 'wp-staging-pro/wp-staging-pro.php')
             array_unshift( $links, $settings_link );
         return $links;
@@ -60,7 +60,7 @@ class Pluginmeta {
         }
 
         $links = array(
-            '<a href="' . admin_url( 'admin.php?page=wpstg_clone' ) . '">' . esc_html__( 'Start Now', 'wpstg' ) . '</a>',
+            '<a href="' . admin_url( 'admin.php?page=wpstg_clone' ) . '">' . esc_html__( 'Start Now', 'wp-staging' ) . '</a>',
         );
         $input = array_merge( $input, $links );
         return $input;

@@ -6,7 +6,7 @@
     </h4>
 
     <p>
-        <?php _e('Clone name:', 'wpstg'); ?> 
+        <?php _e('Clone name:', 'wp-staging'); ?> 
         <span style="background-color:#575757;color:#fff;">
         <?php echo $clone->directoryName; ?>
         </span>
@@ -17,7 +17,7 @@
         _e(
             'Usually the preselected data can be deleted without any risk '.
             'but in case something goes wrong you better check it first.',
-            'wpstg'
+            'wp-staging'
         );
         ?>
     </p>
