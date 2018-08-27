@@ -78,7 +78,6 @@ final class WPStaging {
    private function __construct() {
 
       //$file = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . self::SLUG . ".php";
-      
       // Activation Hook
       //register_activation_hook( __FILE__, array($this, "onActivation") );
 
@@ -162,17 +161,16 @@ final class WPStaging {
           "wp-staging_page_wpstg-welcome",
       );
 
+      // Load these css and js files only on wp staging admin pages
+      if( !in_array( $hook, $availablePages ) || !is_admin() ) {
+         return;
+      }
 
       // Disable heartbeat check for cloning and pushing
       wp_deregister_script( 'heartbeat' );
 
       // Disable user login status check
       remove_action( 'admin_enqueue_scripts', 'wp_auth_check_load' );
-
-      // Load these css and js files only on wp staging admin pages
-      if( !in_array( $hook, $availablePages ) || !is_admin() ) {
-         return;
-      }
 
       // Load admin js files
       wp_enqueue_script(
