@@ -293,6 +293,7 @@ class SearchReplace extends JobExecutable {
           'Admin_custome_login_top',
           'Admin_custome_login_dashboard',
           'Admin_custome_login_Version',
+          'upload_path'
           );
 
       $filter = apply_filters( 'wpstg_clone_searchreplace_excl_rows', $filter );

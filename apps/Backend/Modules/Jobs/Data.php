@@ -77,7 +77,7 @@ class Data extends JobExecutable {
     * @return void
     */
    protected function calculateTotalSteps() {
-      $this->options->totalSteps = 12;
+      $this->options->totalSteps = 13;
    }
 
    /**
@@ -198,7 +198,7 @@ class Data extends JobExecutable {
       $dir = str_replace( $home, '', $siteurl );
       return '/' . str_replace( '/', '', $dir ) . '/';
    }
-   
+
    /**
     * Copy wp-config.php if it is located outside of root one level up
     * @todo Needs some more testing before it will be released
@@ -380,7 +380,7 @@ class Data extends JobExecutable {
          return true;
       }
 
-      $this->debugLog("SQL: UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, {$this->db->prefix}, {$this->prefix}) WHERE meta_key LIKE {$this->db->prefix}_%");
+      $this->debugLog( "SQL: UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, {$this->db->prefix}, {$this->prefix}) WHERE meta_key LIKE {$this->db->prefix}_%" );
 
       $update = $this->db->query(
               $this->db->prepare(
@@ -713,6 +713,49 @@ class Data extends JobExecutable {
          return false;
       }
 
+      return true;
+   }
+
+   /**
+    * Change upload_path in wp_options (if it is defined)
+    * @return bool
+    */
+   protected function step13() {
+      $this->log( "Preparing Data Step13: Updating upload_path {$this->prefix}options." );
+
+      // Skip - Table does not exist
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      $newUploadPath = $this->getNewUploadPath();
+
+      if( false === $newUploadPath ) {
+         $this->log( "Preparing Data Step13: Skipping" );
+         return true;
+      }
+
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step13: Skipping" );
+         return true;
+      }
+
+      $error = isset( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
+
+      $this->log( "Updating upload_path in {$this->prefix}options. {$error}" );
+
+      $updateOptions = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'upload_path'", $newUploadPath
+              )
+      );
+
+      if( !$updateOptions ) {
+         $this->log( "Preparing Data Step13: Failed to update upload_path in {$this->prefix}options. {$error}", Logger::TYPE_ERROR );
+         return true;
+      }
+      $this->Log( "Preparing Data: Finished Step 13 successfully" );
       return true;
    }
 
