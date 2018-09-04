@@ -20,7 +20,7 @@ use WPStaging\Utils\Multisite;
 abstract class Job implements JobInterface {
 
    const EXECUTION_TIME_RATIO = 0.8;
-   const MAX_MEMORY_RATIO = 0.8;
+   const MAX_MEMORY_RATIO = 1;
 
    /**
     * @var Cache

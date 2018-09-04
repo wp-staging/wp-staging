@@ -170,7 +170,7 @@ final class WPStaging {
       wp_deregister_script( 'heartbeat' );
 
       // Disable user login status check
-      remove_action( 'admin_enqueue_scripts', 'wp_auth_check_load' );
+      //remove_action( 'admin_enqueue_scripts', 'wp_auth_check_load' );
 
       // Load admin js files
       wp_enqueue_script(

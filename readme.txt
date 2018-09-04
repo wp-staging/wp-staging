@@ -151,6 +151,9 @@ https://wp-staging.com
 * Fix: Wrong text domain in a few language strings
 * Fix: Optimizer mu-plugin not installed all the time 
 * Fix: Language files not loaded correctly 
+* Fix: Remove heartbeat check only on wp staging admin pages
+* Fix: WordPress custom upload path variable upload_path could be wrong after cloning
+* Fix: Increase maximum memory consumption
 
 = 2.3.5 =
 * New: Enable Optimizer as default option
@@ -180,5 +183,5 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 == Upgrade Notice ==
 
 = 2.3.6 =
-* New: Compatible to WordPress 4.9.8
+* New: Compatible to WordPress 4.9.8. Important fixes!
 
