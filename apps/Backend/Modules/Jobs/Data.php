@@ -759,6 +759,20 @@ class Data extends JobExecutable {
       return true;
    }
 
+   protected function getNewUploadPath() {
+      $uploadPath = get_option( 'upload_path' );
+
+      if( !$uploadPath ) {
+         return false;
+      }
+
+      $customSlug = str_replace( \WPStaging\WPStaging::getWPpath(), '', $uploadPath );
+
+      $newUploadPath = \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR . $customSlug;
+
+      return $newUploadPath;
+   }
+
    /**
     * Return URL to staging site
     * @return string
