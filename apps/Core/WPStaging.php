@@ -29,7 +29,7 @@ final class WPStaging {
    /**
     * Plugin version
     */
-   const VERSION = "2.3.6";
+   const VERSION = "2.3.7";
 
    /**
     * Plugin name
@@ -375,12 +375,12 @@ final class WPStaging {
             break;
 
          case "low":
-            $cpuLoad = 1500;
+            $cpuLoad = 0;
             break;
 
          case "default":
          default:
-            $cpuLoad = 1000;
+            $cpuLoad = 0;
       }
 
       return $cpuLoad;

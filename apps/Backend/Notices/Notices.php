@@ -77,14 +77,10 @@ class Notices {
 
     public function messages() {
 
-      $this->plugin_deactivated_notice();
-
-      // Do not display notices to user_roles lower than 'update_plugins'
-      if( !current_user_can( 'update_plugins' ) ) {
-         return;
-      }
-      
       $viewsNoticesPath = "{$this->path}views/_includes/messages/";
+
+      $this->plugin_deactivated_notice();
+      
 
       // Show rating review message on all admin pages
       if( $this->canShow( "wpstg_rating", 7 ) ) {
@@ -92,26 +88,18 @@ class Notices {
       }
 
 
-      // Display messages below on wp quads admin page only
-      if( !$this->isAdminPage() ) {
+      // Display messages below to admins only, only on admin panel
+      if( !current_user_can( "update_plugins" ) || !$this->isAdminPage() ) {
          return;
       }
 
 
       $varsDirectory = \WPStaging\WPStaging::getContentDir();
-
-
-      // Poll do not show any longer
-      /* if( $this->canShow( "wpstg_poll", 7 ) ) {
-        require_once "{$viewsNoticesPath}poll.php";
-        } */
-
-      // Cache directory in uploads is not writable
       if( !wp_is_writable( $varsDirectory ) ) {
          require_once "{$viewsNoticesPath}/uploads-cache-directory-permission-problem.php";
       }
       // Staging directory is not writable
-      if( !wp_is_writable( get_home_path() ) ) {
+      if( !wp_is_writable( ABSPATH ) ) {
          require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
       }
 
@@ -130,6 +118,30 @@ class Notices {
          require_once "{$viewsNoticesPath}transient.php";
          delete_transient( "wp_staging_deactivated_notice_id" );
       }
+      // Rating
+      if( $this->canShow( "wpstg_rating", 7 ) ) {
+         require_once "{$viewsNoticesPath}rating.php";
+      }
+   
+      // Different scheme in home and siteurl
+      if ($this->isDifferentScheme()){
+         require_once "{$viewsNoticesPath}wrong-scheme.php";
+      }
+   }
+   
+   /**
+    * Check if the url scheme of siteurl and home is identical
+    * @return boolean
+    */
+   private function isDifferentScheme(){
+      $siteurlScheme = parse_url(get_option('siteurl'), PHP_URL_SCHEME);
+      $homeScheme = parse_url(get_option('home'), PHP_URL_SCHEME);
+      
+      if ($siteurlScheme === $homeScheme){
+         return false;
+      }
+      return true;
+      
    }
 
    /**

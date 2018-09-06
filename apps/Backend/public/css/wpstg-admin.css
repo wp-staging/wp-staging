@@ -937,3 +937,12 @@ color:#777777;
     margin: 3px 0;
     font-size: 13px;
 }
+
+.wpstg-error {
+    display:block;
+    padding: 10px;
+    background-color: #f5e0de;
+    color:#b65147;
+    margin: 10px;
+    margin-left:0px;
+}

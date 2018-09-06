@@ -1,4 +1,4 @@
-<div class="wpstg_beta_notice error" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
+<div class="wpstg_beta_notice wpstg-error" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
     <p>
         WP Staging is well tested and we did a lot to catch every possible error but
         we can not handle all possible combinations of server, plugins and themes. <br>

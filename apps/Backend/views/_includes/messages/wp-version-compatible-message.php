@@ -1,4 +1,4 @@
-<div class="error">
+<div class="wpstg-error">
     <p>
         <?php
         echo sprintf( __(

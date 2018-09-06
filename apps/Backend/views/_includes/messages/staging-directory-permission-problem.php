@@ -1,4 +1,4 @@
-<div class="error">
+<div class="wpstg-error">
     <p>
         <strong>
         <?php echo sprintf(__('WP Staging Folder Permission error:</strong>

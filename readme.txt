@@ -146,6 +146,12 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.7 =
+* New: Better looking admin notices
+* New: Increase cloning performance
+* Fix: Different scheme of siteurl and home leads to non available staging site. Show admin notice to ask user to fix that first before creating a staging site
+
+
 = 2.3.6 =
 * Fix: Add version number to css and js files to prevent caching issues
 * Fix: Wrong text domain in a few language strings
@@ -182,6 +188,6 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.3.6 =
+= 2.3.7 =
 * New: Compatible to WordPress 4.9.8. Important fixes!
 

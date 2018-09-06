@@ -1,4 +1,4 @@
-<div class="error">
+<div class="wpstg-error">
     <p>
         <strong>WP Staging Folder Permission error: </strong> <?php echo "{$varsDirectory}"?> is not write and/or readable.
         <br>
