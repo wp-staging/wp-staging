@@ -29,22 +29,31 @@
  * @category Core
  * @author René Hermenau, Ilgıt Yıldırım
  */
-
 // No Direct Access
-if (!defined("WPINC"))
-{
-    die;
+if( !defined( "WPINC" ) ) {
+   die;
 }
 
 // Plugin Folder Path
 if( !defined( 'WPSTG_PLUGIN_DIR' ) ) {
-   define( 'WPSTG_PLUGIN_DIR', plugin_dir_path(  __FILE__ ) );
+   define( 'WPSTG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 }
 // Plugin Folder URL
 if( !defined( 'WPSTG_PLUGIN_URL' ) ) {
-   define( 'WPSTG_PLUGIN_URL', plugin_dir_url(  __FILE__ ) );
+   define( 'WPSTG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 
+/**
+ * Check if system fullfils all requirements
+ */
+include( dirname( __FILE__ ) . '/apps/Core/Utils/requirements-check.php' );
+
+$plugin_requirements = new Wpstg_Requirements_Check( array(
+    'title' => 'WP STAGING',
+    'php' => '5.3',
+    'wp' => '3.0',
+    'file' => __FILE__,
+        ) );
 
 /**
  * Fix nonce check
@@ -52,40 +61,41 @@ if( !defined( 'WPSTG_PLUGIN_URL' ) ) {
  * @param int $seconds
  * @return int
  */
-function wpstg_overwrite_nonce($seconds){
-	 return 86400;
- }
- add_filter('nonce_life', 'wpstg_overwrite_nonce', 99999);
+function wpstg_overwrite_nonce( $seconds ) {
+   return 86400;
+}
+
+add_filter( 'nonce_life', 'wpstg_overwrite_nonce', 99999 );
 
 /**
  * Path to main WP Staging class
  * Make sure to not redeclare class in case free version has been installed previosly
  */
-if (!class_exists( 'WPStaging\WPStaging' )){
-   require_once plugin_dir_path(__FILE__) . "apps/Core/WPStaging.php";
+if( !class_exists( 'WPStaging\WPStaging' ) ) {
+   require_once plugin_dir_path( __FILE__ ) . "apps/Core/WPStaging.php";
 }
 
-$wpStaging = \WPStaging\WPStaging::getInstance();
+if( $plugin_requirements->passes() ) {
 
-/**
- * Load a few important WP globals into WPStaging class to make them available via dependancy injection
- */
+   $wpStaging = \WPStaging\WPStaging::getInstance();
 
+   /**
+    * Load a few important WP globals into WPStaging class to make them available via dependancy injection
+    */
 // Wordpress DB Object
-if (isset($wpdb))
-{
-    $wpStaging->set("wpdb", $wpdb);
-}
+   if( isset( $wpdb ) ) {
+      $wpStaging->set( "wpdb", $wpdb );
+   }
 
 // WordPress Filter Object
-if (isset($wp_filter))
-{
-    $wpStaging->set("wp_filter", function() use(&$wp_filter) {
-        return $wp_filter;
-    });
-}
+   if( isset( $wp_filter ) ) {
+      $wpStaging->set( "wp_filter", function() use(&$wp_filter) {
+         return $wp_filter;
+      } );
+   }
 
-/**
- * Inititalize WPStaging
- */
-$wpStaging->run();
+   /**
+    * Inititalize WPStaging
+    */
+   $wpStaging->run();
+}
