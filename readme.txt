@@ -149,6 +149,7 @@ https://wp-staging.com
 = 2.3.7 =
 * New: Better looking admin notices
 * New: Increase cloning performance
+* New: Show admin notice if php version and wordpress version do not meet requirements.
 * Fix: Different scheme of siteurl and home leads to non available staging site. Show admin notice to ask user to fix that first before creating a staging site
 
 
