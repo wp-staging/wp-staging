@@ -34,20 +34,32 @@ if( !defined( "WPINC" ) ) {
    die;
 }
 
-// Plugin Folder Path
+// Slug
+if( !defined( 'WPSTG_PLUGIN_SLUG' ) ) {
+   define( 'WPSTG_PLUGIN_SLUG', 'wp-staging' );
+}
+
+// Folder Path
 if( !defined( 'WPSTG_PLUGIN_DIR' ) ) {
    define( 'WPSTG_PLUGIN_DIR', plugin_dir_path( __FILE__ ) );
 }
-// Plugin Folder URL
+
+// Folder URL
 if( !defined( 'WPSTG_PLUGIN_URL' ) ) {
    define( 'WPSTG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
+}
+
+// Version
+if( !defined( 'WPSTGPRO_VERSION' ) ) {
+   define( 'WPSTGPRO_VERSION', '{{version}}' );
 }
 
 /**
  * Check if system fullfils all requirements
  */
-include( dirname( __FILE__ ) . '/apps/Core/Utils/requirements-check.php' );
-
+if( !class_exists( 'Wpstg_Requirements_Check' ) ) {
+   include( dirname( __FILE__ ) . '/apps/Core/Utils/requirements-check.php' );
+}
 $plugin_requirements = new Wpstg_Requirements_Check( array(
     'title' => 'WP STAGING',
     'php' => '5.3',
@@ -57,7 +69,7 @@ $plugin_requirements = new Wpstg_Requirements_Check( array(
 
 /**
  * Fix nonce check
- * https://core.trac.wordpress.org/ticket/41617#ticket
+ * Bug: https://core.trac.wordpress.org/ticket/41617#ticket
  * @param int $seconds
  * @return int
  */
@@ -98,4 +110,11 @@ if( $plugin_requirements->passes() ) {
     * Inititalize WPStaging
     */
    $wpStaging->run();
+}
+
+/**
+ * Installation Hooks
+ */
+if( !class_exists( 'WPStaging\Install' ) ) {
+   require_once plugin_dir_path( __FILE__ ) . "/install.php";
 }

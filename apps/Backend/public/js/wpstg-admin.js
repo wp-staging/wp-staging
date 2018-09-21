@@ -49,11 +49,11 @@ var WPStaging = (function ($)
     {
         cache.get("#wpstg-try-again").css("display", "inline-block");
         cache.get("#wpstg-cancel-cloning").text("Reset");
-        cache.get("#wpstg-cloning-result").text("Fail");
+        cache.get("#wpstg-resume-cloning").show();
+        //cache.get("#wpstg-cloning-result").text("Fail");
+        //cache.get("#wpstg-processing-status").text("Process Failed");
         cache.get("#wpstg-error-wrapper").show();
-        cache.get("#wpstg-error-details")
-                .show()
-                .html(message);
+        cache.get("#wpstg-error-details").show().html(message);
         cache.get("#wpstg-removing-clone").removeClass("loading");
         cache.get("#wpstg-loader").hide();
     };
@@ -240,8 +240,6 @@ var WPStaging = (function ($)
                     that.isCancelled = true;
                     that.progressBar = 0;
 
-
-                    //$("#wpstg-cloning-result").text("Please wait...this can take up a while.");
                     $("#wpstg-processing-status").text("Please wait...this can take up a while.");
                     $("#wpstg-loader, #wpstg-show-log-button").hide();
 
@@ -249,12 +247,30 @@ var WPStaging = (function ($)
 
                     cancelCloning();
                 })
+                // Resume cloning
+                .on("click", "#wpstg-resume-cloning", function () {
+
+                    var $this = $(this);
+
+                    $("#wpstg-try-again, #wpstg-home-link").hide();
+
+                    that.isCancelled = false;
+                    //that.progressBar = 0;
+
+                    $("#wpstg-processing-status").text("Try to resume cloning process...");
+                    $("#wpstg-error-details").hide();
+                    $("#wpstg-loader").show();
+
+                    $this.parent().append(ajaxSpinner);
+
+                    that.startCloning();
+                })
                 // Cancel update cloning
                 .on("click", "#wpstg-cancel-cloning-update", function () {
-                    if (!confirm("Are you sure you want to cancel clone updating process?"))
-                    {
-                        return false;
-                    }
+//                    if (!confirm("Are you sure you want to cancel clone updating process?"))
+//                    {
+//                        return false;
+//                    }
 
                     var $this = $(this);
 
@@ -337,9 +353,7 @@ var WPStaging = (function ($)
                         if (response.length < 1)
                         {
                             showError(
-                                    "Something went wrong! Error: No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                                    "Than try again. If that does not help, " +
-                                    "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                                    "Something went wrong! Error: No response.  Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                                     );
                         }
 
@@ -392,9 +406,7 @@ var WPStaging = (function ($)
 
 
                 showError(
-                        "Fatal Unknown Error. Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                        "Than try again. If that does not help, " +
-                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                        "Fatal Unknown Error. Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                         );
             },
             success: function (data) {
@@ -406,18 +418,22 @@ var WPStaging = (function ($)
             statusCode: {
                 404: function (data) {
                     showError(
-                            "Something went wrong; can't find ajax request URL! Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                            "Than try again. If that does not help, " +
-                            "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                            "Something went wrong! can't find ajax request URL! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                             );
-                    // Try again after 10 seconds
+
                 },
                 500: function () {
                     showError(
-                            "Something went wrong! Internal server error while processing the request! Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                            "Than try again. If that does not help, " +
-                            "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                            "Something went wrong! Internal server error while processing the request! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                             );
+                },
+                504: function () {
+                    showError("It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
+                    var obj = new Object();
+                    obj.status = false;
+                    obj.error = 'custom error';
+                    return JSON.stringify(obj);
+
                 }
             }
         });
@@ -435,8 +451,18 @@ var WPStaging = (function ($)
                 .on("click", ".wpstg-next-step-link", function (e) {
                     e.preventDefault();
 
-                    var $this = $(this),
-                            isScan = false;
+                    var $this = $(this);
+                    var isScan = false;
+
+                    if ($this.data("action") === "wpstg_update") {
+                        // Update Clone - confirmed
+                        if (!confirm("Are you sure you want to update the staging site with data from the live site? \n\nMake sure to exclude all the tables and folders which you do not want to overwrite first! \n\nDo not necessarily cancel the updating process! This can break your staging site."))
+                        {
+                            return false;
+                        }
+
+                    }
+
 
                     // Button is disabled
                     if ($this.attr("disabled"))
@@ -480,7 +506,7 @@ var WPStaging = (function ($)
                                 {
                                     showError(
                                             "Something went wrong! No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                                            "Then try again. If that does not help, " +
+                                            "and try again. If that does not help, " +
                                             "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
                                             );
                                 }
@@ -626,7 +652,7 @@ var WPStaging = (function ($)
         }
 
         that.data.cloneID = $("#wpstg-new-clone-id").val() || new Date().getTime().toString();
-        // Remove this to keep &_POST[] small otherwise mod_security will throw erro 404
+        // Remove this to keep &_POST[] small otherwise mod_security will throw error 404
         //that.data.excludedTables = getExcludedTables();
         that.data.includedTables = getIncludedTables();
         that.data.includedDirectories = getIncludedDirectories();
@@ -655,9 +681,7 @@ var WPStaging = (function ($)
             if (response.length < 1)
             {
                 showError(
-                        "Something went wrong! No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                        "Then try again. If that does not help, " +
-                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                        "Something went wrong! No response. Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                         );
             }
 
@@ -722,9 +746,7 @@ var WPStaging = (function ($)
                 // Error
                 if ("undefined" !== typeof response.error && "undefined" !== typeof response.message) {
                     showError(
-                            "Something went wrong! Error:" + response.message + ".  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                            "Than try again. If that does not help, " +
-                            "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                            "Something went wrong! Error:" + response.message + ". Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                             );
                     console.log(response.message);
                 }
@@ -837,6 +859,7 @@ var WPStaging = (function ($)
         }
         );
     };
+
 
     /**
      * Scroll the window log to bottom
@@ -974,6 +997,8 @@ var WPStaging = (function ($)
             console.log("Starting cloning process...");
 
             cache.get("#wpstg-loader").show();
+            cache.get("#wpstg-cancel-cloning").text('Cancel');
+            cache.get("#wpstg-resume-cloning").hide();
 
             // Clone Database
             setTimeout(function () {
@@ -1025,9 +1050,7 @@ var WPStaging = (function ($)
                 if (false === response)
                 {
                     showError(
-                            "Something went wrong! Error: No response.  <br/><br/> Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                            "Then try again. If that does not help, " +
-                            "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                            "Something went wrong! Error: No response.  <br/><br/> Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                             );
                     cache.get("#wpstg-loader").hide();
                     cache.get(".wpstg-loader").hide();
@@ -1038,9 +1061,7 @@ var WPStaging = (function ($)
                 if ("undefined" !== typeof (response.error) && response.error) {
                     console.log(response.message);
                     showError(
-                            "Something went wrong! Error:" + response.message + ".  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                            "Then try again. If that does not help, " +
-                            "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                            "Something went wrong! Error:" + response.message + ". Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                             );
 
                     return;
@@ -1102,6 +1123,7 @@ var WPStaging = (function ($)
             cache.get("#wpstg_staging_name").html(that.data.cloneID);
             cache.get("#wpstg-finished-result").show();
             cache.get("#wpstg-cancel-cloning").hide();
+            cache.get("#wpstg-resume-cloning").hide();
             cache.get("#wpstg-cancel-cloning-update").prop("disabled", true);
 
             var $link1 = cache.get("#wpstg-clone-url-1");

@@ -17,6 +17,10 @@
     <?php echo __("Cancel", "wp-staging")?>
 </button>
 
+<button type="button" id="wpstg-resume-cloning" class="wpstg-link-btn button-primary">
+    <?php echo __("Resume", "wp-staging")?>
+</button>
+
 <button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;display:none;">
     <?php _e('Display working log', 'wp-staging')?>
 </button>

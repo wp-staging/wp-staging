@@ -938,6 +938,7 @@ color:#777777;
     font-size: 13px;
 }
 
+
 .wpstg-error {
     display:block;
     padding: 10px;
@@ -945,4 +946,8 @@ color:#777777;
     color:#b65147;
     margin: 10px;
     margin-left:0px;
+}
+
+#wpstg-resume-cloning {
+    display:none;
 }

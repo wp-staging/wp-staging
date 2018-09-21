@@ -80,7 +80,7 @@ class Administrator extends InjectionAware {
       $Welcome = new Activation\Welcome();
 
       $loader->addAction( "activated_plugin", $Activation, 'deactivate_other_instances' );
-      $loader->addAction( "activated_plugin", $Activation, 'install_dependancies' );
+      //$loader->addAction( "activated_plugin", $Activation, 'install_dependancies' );
       $loader->addAction( "admin_menu", $this, "addMenu", 10 );
       $loader->addAction( "admin_init", $this, "setOptionFormElements" );
       $loader->addAction( "admin_init", $this, "upgrade" );
@@ -482,6 +482,10 @@ class Administrator extends InjectionAware {
       check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
 
       $cloning = new Cloning();
+
+      // Uncomment these lines to test different error codes
+      //http_response_code(504);
+      //wp_send_json( '<html><body><head></head><body>test</body></html>' );
 
       wp_send_json( $cloning->start() );
    }

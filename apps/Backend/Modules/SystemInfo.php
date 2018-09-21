@@ -139,8 +139,9 @@ class SystemInfo extends InjectionAware {
       
       $output = $this->info( "Multisite:", ($this->isMultiSite ? "Yes" : "No" ) );
       $output .= $this->info( "Multisite Blog ID:", get_current_blog_id() );
-      $output .= $this->info( "MultiSite URL scheme:", $multisite->getHomeURL() );
+      $output .= $this->info( "MultiSite URL:", $multisite->getHomeURL() );
       $output .= $this->info( "MultiSite URL without scheme:", $multisite->getHomeUrlWithoutScheme() );
+      $output .= $this->info( "MultiSite is Main Site:", is_main_site() ? 'Yes' : 'No' );
       
       return apply_filters( "wpstg_sysinfo_after_multisite_info", $output );
 
@@ -159,7 +160,7 @@ class SystemInfo extends InjectionAware {
       // Clones data < 1.1.6.x
       $clones = ( object ) get_option( 'wpstg_existing_clones', array() );
       // Clones data version > 2.x
-      $clonesBeta = get_option( 'wpstg_existing_clones_beta' );
+      $clonesBeta = get_option( 'wpstg_existing_clones_beta', array() );
 
 
       $output = "-- WP Staging Settings" . PHP_EOL . PHP_EOL;
@@ -172,7 +173,6 @@ class SystemInfo extends InjectionAware {
 
       $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version < 1.1.6.x" . PHP_EOL . PHP_EOL;
 
-      $i = 1;
       foreach ( $clones as $key => $value ) {
          $output .= $this->info( "Site name & subfolder :", $value );
       }
@@ -508,7 +508,12 @@ class SystemInfo extends InjectionAware {
     * @return boolean
     */
    private function isSubDir() {
-      if( get_option( 'siteurl' ) !== get_option( 'home' ) ) {
+      // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
+      // This is happening much more often than you would expect
+      $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
+      $home = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
+
+      if( $home !== $siteurl ) {
          return true;
       }
       return false;

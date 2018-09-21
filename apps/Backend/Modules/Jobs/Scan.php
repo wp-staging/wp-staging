@@ -137,20 +137,23 @@ class Scan extends Job {
          $data = reset( $directory );
          unset( $directory[key( $directory )] );
 
+
          $isChecked = (
                  empty( $this->options->includedDirectories ) ||
                  in_array( $data["path"], $this->options->includedDirectories )
                  );
 
-         //$isDisabled = ($this->options->existingClones && isset($this->options->existingClones[$name]));
+
          // Include wp core folders and their sub dirs. 
          // Exclude all other folders (default setting)
+         $dataPath = isset( $data["path"] ) ? $data["path"] : '';
+         $dataSize = isset( $data["size"] ) ? $data["size"] : '';
          $isDisabled = ($name !== 'wp-admin' &&
                  $name !== 'wp-includes' &&
                  $name !== 'wp-content') &&
-                 false === strpos( strrev( $data["path"] ), strrev( "wp-admin" ) ) &&
-                 false === strpos( strrev( $data["path"] ), strrev( "wp-includes" ) ) &&
-                 false === strpos( strrev( $data["path"] ), strrev( "wp-content" ) ) ? true : false;
+                 false === strpos( strrev( $dataPath ), strrev( "wp-admin" ) ) &&
+                 false === strpos( strrev( $dataPath ), strrev( "wp-includes" ) ) &&
+                 false === strpos( strrev( $dataPath ), strrev( "wp-content" ) ) ? true : false;
 
          // Extra class to differentiate between wp core and non core folders
          $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
@@ -163,15 +166,15 @@ class Scan extends Job {
             $output .= " checked";
          //if ($forceDisabled || $isDisabled) $output .= " disabled";
 
-         $output .= " name='selectedDirectories[]' value='{$data["path"]}'>";
+         $output .= " name='selectedDirectories[]' value='{$dataPath}'>";
 
          $output .= "<a href='#' class='wpstg-expand-dirs ";
-         if( !$isChecked || $isDisabled )
+         if( !$isChecked || $isDisabled ) {
             $output .= " disabled";
+         }
          $output .= "'>{$name}";
          $output .= "</a>";
-
-         $output .= "<span class='wpstg-size-info'>{$this->formatSize( $data["size"] )}</span>";
+         $output .= "<span class='wpstg-size-info'>{$this->formatSize( $dataSize )}</span>";
 
          if( !empty( $directory ) ) {
             $output .= "<div class='wpstg-dir wpstg-subdir'>";
@@ -294,7 +297,7 @@ class Scan extends Job {
     */
    protected function getSubDirectories( $path ) {
       
-      if (!is_readable($path)){
+      if( !is_readable( $path ) ) {
          return false;
       }
       
@@ -325,7 +328,6 @@ class Scan extends Job {
       
       //echo $directory->getRealPath() . '<br>';
       //echo 'abspath: ' . \WPStaging\WPStaging::getWPpath() . '<br>';
-      
       //if( strpos( $directory->getRealPath(), ABSPATH ) !== 0 ) {
       if( strpos( $directory->getRealPath(), \WPStaging\WPStaging::getWPpath() ) !== 0 ) {
          return false;

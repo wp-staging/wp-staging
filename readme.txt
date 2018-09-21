@@ -147,10 +147,15 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.3.7 =
-* New: Better looking admin notices
 * New: Increase cloning performance
 * New: Show admin notice if php version and wordpress version do not meet requirements.
+* New: Show error if there is not enough free diskspace
+* New: Add resume function in case the cloning process interrupts
+* New: Add italian translation
+* New: Better looking admin notices
 * Fix: Different scheme of siteurl and home leads to non available staging site. Show admin notice to ask user to fix that first before creating a staging site
+* Fix: WP Staging welcome screen shown when any plugin is activated
+* Fix: Lower default settings to 10000, cpu load low. File copy limit to 50
 
 
 = 2.3.6 =

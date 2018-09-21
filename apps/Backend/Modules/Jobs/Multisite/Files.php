@@ -36,7 +36,7 @@ class Files extends JobExecutable {
     */
    public function initialize() {
 
-      $this->destination = ABSPATH . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR;
+      $this->destination = \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR;
 
       $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
@@ -152,7 +152,7 @@ class Files extends JobExecutable {
     * @return bool
     */
    private function copyFile( $file ) {
-      $file = trim( ABSPATH . $file );
+      $file = trim( \WPStaging\WPStaging::getWPpath() . $file );
 
       $directory = dirname( $file );
 
@@ -215,8 +215,8 @@ class Files extends JobExecutable {
     * @return bool|string
     */
    private function getDestination( $file ) {
-      $file = $this->replaceMultisiteUploadFolder( $file );
-      $relativePath = str_replace( ABSPATH, null, $file );
+      $file = $this->getMultisiteUploadFolder( $file );
+      $relativePath = str_replace( \WPStaging\WPStaging::getWPpath(), null, $file );
       $destinationPath = $this->destination . $relativePath;
       $destinationDirectory = dirname( $destinationPath );
 
@@ -226,6 +226,31 @@ class Files extends JobExecutable {
       }
 
       return $destinationPath;
+   }
+
+   /**
+    * Replace relative path of file if its located in multisite upload folder 
+    * wp-content/uploads/sites/SITEID or old wordpress structure wp-content/blogs.dir/SITEID/files
+    * @return boolean
+    */
+   private function getMultisiteUploadFolder( $file ) {
+      // Check first which method is used 
+      $uploads = wp_upload_dir();
+      $basedir = $uploads['basedir'];
+
+      if( false === strpos( $basedir, 'blogs.dir' ) ) {
+         // Since WP 3.5
+         $search = 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'sites' . DIRECTORY_SEPARATOR . get_current_blog_id();
+         $replace = 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
+         $uploadsFolder = str_replace( $search, $replace, $file );
+      } else {
+         // old blog structure
+         $search = 'wp-content' . DIRECTORY_SEPARATOR . 'blogs.dir' . DIRECTORY_SEPARATOR . get_current_blog_id() . DIRECTORY_SEPARATOR . 'files';
+         $replace = 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
+         $uploadsFolder = str_replace( $search, $replace, $file );
+      }
+
+      return $uploadsFolder;
    }
 
    /**
@@ -335,17 +360,6 @@ class Files extends JobExecutable {
       }
 
       return false;
-   }
-
-   /**
-    * Replace relative path of file if its located in multisite upload folder wp-content/uploads/sites/x/
-    * @return boolean
-    */
-   private function replaceMultisiteUploadFolder( $file ) {
-      $search = 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'sites' . DIRECTORY_SEPARATOR . get_current_blog_id();
-      $replace = 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
-
-      return str_replace( $search, $replace, $file );
    }
 
 }

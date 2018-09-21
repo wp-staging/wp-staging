@@ -80,10 +80,22 @@ abstract class Job implements JobInterface {
    protected $maxRecursionLimit;
 
    /**
-    * Multisite Home Url
+    * Multisite Home Url without Scheme
     * @var string 
     */
-   protected $multisiteHomeUrl;
+   protected $multisiteHomeUrlWithoutScheme;
+
+   /**
+    * Multisite home domain without scheme
+    * @var type 
+    */
+   protected $multisiteDomainWithoutScheme;
+   
+   /**
+    * Multisite home domain without scheme
+    * @var type 
+    */
+   protected $multisiteHomeDomain;
 
    /**
     * @var int
@@ -99,7 +111,10 @@ abstract class Job implements JobInterface {
       $this->maxMemoryLimit = $this->getMemoryInBytes( @ini_get( "memory_limit" ) );
 
       $multisite = new Multisite;
-      $this->multisiteHomeUrl = $multisite->getHomeURL();
+      $this->multisiteHomeUrlWithoutScheme = $multisite->getHomeUrlWithoutScheme();
+      $this->multisiteHomeDomain = $multisite->getHomeDomain();
+      $this->multisiteDomainWithoutScheme = $multisite->getHomeDomainWithoutScheme();
+      //$this->multisiteUrl = $multisite->getHomeDomain();
 
       //$this->maxExecutionTime = (int) ini_get("max_execution_time");
       $this->maxExecutionTime = ( int ) 30;
@@ -172,11 +187,11 @@ abstract class Job implements JobInterface {
     * Set default settings
     */
    protected function setDefaultSettings() {
-      $this->settings->queryLimit = "20000";
+      $this->settings->queryLimit = "10000";
       $this->settings->querySRLimit = "5000";
-      $this->settings->fileLimit = "1";
+      $this->settings->fileLimit = "50";
       $this->settings->batchSize = "2";
-      $this->settings->cpuLoad = 'medium';
+      $this->settings->cpuLoad = 'low';
       $this->settings->maxFileSize = 8;
       update_option( 'wpstg_settings', $this->settings );
    }
@@ -187,7 +202,7 @@ abstract class Job implements JobInterface {
    protected function setLimits() {
 
       if( !isset( $this->settings->cpuLoad ) ) {
-         $this->settings->cpuLoad = "medium";
+         $this->settings->cpuLoad = "low";
       }
 
       $memoryLimit = self::MAX_MEMORY_RATIO;

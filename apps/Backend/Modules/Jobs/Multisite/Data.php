@@ -29,7 +29,7 @@ class Data extends JobExecutable {
     * @var string
     */
    private $prefix;
-   
+
    /**
     * Tables e.g wpstg3_options
     * @var array
@@ -51,27 +51,27 @@ class Data extends JobExecutable {
          $this->options->currentStep = 1;
       }
    }
-   
+
    /**
     * Get a list of tables to copy
     */
-   private function getTables(){
+   private function getTables() {
       $strings = new Strings();
       $this->tables = array();
-      foreach($this->options->tables as $table){
+      foreach ( $this->options->tables as $table ) {
          $this->tables[] = $this->options->prefix . $strings->str_replace_first( $this->db->prefix, null, $table );
       }
       // Add extra global tables from main multisite (wpstgx_users and wpstgx_usermeta)
       $this->tables[] = $this->options->prefix . $strings->str_replace_first( $this->db->prefix, null, 'users' );
       $this->tables[] = $this->options->prefix . $strings->str_replace_first( $this->db->prefix, null, 'usermeta' );
-
    }
+
    /**
     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
     * @return void
     */
    protected function calculateTotalSteps() {
-      $this->options->totalSteps = 15;
+      $this->options->totalSteps = 16;
    }
 
    /**
@@ -157,7 +157,7 @@ class Data extends JobExecutable {
       }
 
       // Live Path === Staging path
-      if( $this->multisiteHomeUrl . $this->options->cloneDirectoryName === $this->multisiteHomeUrl ) {
+      if( $this->multisiteHomeDomain . $this->options->cloneDirectoryName === $this->multisiteHomeDomain ) {
          return true;
       }
 
@@ -247,26 +247,26 @@ class Data extends JobExecutable {
          return true;
       }
       // Skip - Table is not selected or updated
-      if (!in_array($this->prefix . 'options', $this->tables)){
-         $this->log("Preparing Data Step1: Skipping");
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step1: Skipping" );
          return true;
       }
 
       // Installed in sub-directory
       if( $this->isSubDir() ) {
-         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim( $this->multisiteHomeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName );
+         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim( $this->multisiteHomeDomain, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName );
          // Replace URLs
          $result = $this->db->query(
                  $this->db->prepare(
-                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", rtrim( $this->multisiteHomeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName
+                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", rtrim( $this->multisiteHomeDomain, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName
                  )
          );
       } else {
-         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim( $this->multisiteHomeUrl, "/" ) . '/' . $this->options->cloneDirectoryName );
+         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim( $this->multisiteHomeDomain, "/" ) . '/' . $this->options->cloneDirectoryName );
          // Replace URLs
          $result = $this->db->query(
                  $this->db->prepare(
-                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->multisiteHomeUrl . '/' . $this->options->cloneDirectoryName
+                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->multisiteHomeDomain . '/' . $this->options->cloneDirectoryName
                  )
          );
       }
@@ -288,14 +288,14 @@ class Data extends JobExecutable {
    protected function step2() {
 
       $this->log( "Preparing Data Step2: Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}" );
-      
+
       // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
       // Skip - Table is not selected or updated
-      if (!in_array($this->prefix . 'options', $this->tables)){
-         $this->log("Preparing Data Step2: Skipping");
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step2: Skipping" );
          return true;
       }
 
@@ -330,15 +330,15 @@ class Data extends JobExecutable {
    protected function step3() {
 
       $this->log( "Preparing Data Step3: Updating rewrite_rules in {$this->prefix}options {$this->db->last_error}" );
-      
+
       // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
-      
+
       // Skip - Table is not selected or updated
-      if (!in_array($this->prefix . 'options', $this->tables)){
-                  $this->log( "Preparing Data Step3: Skipping" );
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step3: Skipping" );
          return true;
       }
 
@@ -368,10 +368,10 @@ class Data extends JobExecutable {
       if( false === $this->isTable( $this->prefix . 'usermeta' ) ) {
          return true;
       }
-      
+
       // Skip - Table is not selected or updated
-      if (!in_array($this->prefix . 'usermeta', $this->tables)){
-         $this->log("Preparing Data Step4: Skipping");
+      if( !in_array( $this->prefix . 'usermeta', $this->tables ) ) {
+         $this->log( "Preparing Data Step4: Skipping" );
          return true;
       }
 
@@ -406,7 +406,7 @@ class Data extends JobExecutable {
       $content = str_replace( '$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content );
 
       // Replace URLs
-      $content = str_replace( $this->multisiteHomeUrl, $this->multisiteHomeUrl . '/' . $this->options->cloneDirectoryName, $content );
+      $content = str_replace( $this->multisiteHomeDomain, $this->multisiteHomeDomain . '/' . $this->options->cloneDirectoryName, $content );
 
       if( false === @file_put_contents( $path, $content ) ) {
          $this->log( "Preparing Data Step5: Failed to update $table_prefix in {$path} to " . $this->prefix . ". Can't save contents", Logger::TYPE_ERROR );
@@ -473,15 +473,15 @@ class Data extends JobExecutable {
    protected function step7() {
 
       $this->log( "Preparing Data Step7: Updating wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}" );
-      
+
       // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
-            
+
       // Skip - Table is not selected or updated
       if( !in_array( $this->prefix . 'options', $this->tables ) ) {
-         $this->log("Preparing Data Step7: Skipping");
+         $this->log( "Preparing Data Step7: Skipping" );
          return true;
       }
 
@@ -508,18 +508,18 @@ class Data extends JobExecutable {
    protected function step8() {
 
       $this->log( "Preparing Data Step8: Updating permalink_structure in {$this->prefix}options {$this->db->last_error}" );
-      
+
       // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
-      
+
       // Skip - Table is not selected or updated
       if( !in_array( $this->prefix . 'options', $this->tables ) ) {
          $this->log( "Preparing Data Step8: Skipping" );
          return true;
       }
-      
+
       $result = $this->db->query(
               $this->db->prepare(
                       "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'permalink_structure'", ' '
@@ -547,13 +547,13 @@ class Data extends JobExecutable {
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
-      
+
       // Skip - Table is not selected or updated
       if( !in_array( $this->prefix . 'options', $this->tables ) ) {
          $this->log( "Preparing Data Step9: Skipping" );
          return true;
       }
-      
+
       $result = $this->db->query(
               $this->db->prepare(
                       "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'blog_public'", '0'
@@ -755,13 +755,13 @@ class Data extends JobExecutable {
          $this->returnException( 'Data Crunching Step 8: Fatal Error ' . $this->prefix . 'options does not exist' );
          return false;
       }
-      
+
       // Skip - Table is not selected or updated
       if( !in_array( $this->prefix . 'options', $this->tables ) ) {
-         $this->log("Preparing Data Step14: Skipping");
+         $this->log( "Preparing Data Step14: Skipping" );
          return true;
       }
-      
+
       // Get active_plugins value from sub site options table
       $active_plugins = $this->db->get_var( "SELECT option_value FROM {$this->db->prefix}options WHERE option_name = 'active_plugins' " );
 
@@ -799,41 +799,41 @@ class Data extends JobExecutable {
       $this->log( "Data Crunching Step 14: Successfull!" );
       return true;
    }
-   
+
    /**
     * Update Table Prefix in wp_options
     * @return bool
     */
    protected function step15() {
-      $this->log( "Preparing Data Step15: Updating db prefix in {$this->prefix}options. Error: {$this->db->last_error}" );
+      $this->log( "Preparing Data Step15: Updating db prefix in {$this->prefix}options." );
 
       // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
          return true;
       }
-      
+
       // Skip - Table is not selected or updated
-      if (!in_array($this->prefix . 'options', $this->tables)){
-         $this->log("Preparing Data Step4: Skipping");
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step4: Skipping" );
          return true;
       }
 
-      
-      $this->log( "Updating db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-      
+
+      $this->log( "Updating db option_names in {$this->prefix}options. " );
+
       // Filter the rows below. Do not update them!
       $filters = array(
           'wp_mail_smtp',
           'wp_mail_smtp_version',
           'wp_mail_smtp_debug',
       );
-      
-      $filters = apply_filters('wpstg_data_excl_rows', $filters);
-      
+
+      $filters = apply_filters( 'wpstg_data_excl_rows', $filters );
+
       $where = "";
-      foreach($filters as $filter){
+      foreach ( $filters as $filter ) {
          $where .= " AND option_name <> '" . $filter . "'";
-      }    
+      }
 
       $updateOptions = $this->db->query(
               $this->db->prepare(
@@ -849,8 +849,63 @@ class Data extends JobExecutable {
 
       return true;
    }
-   
-   
+
+   /**
+    * Change upload_path in wp_options (if it is defined)
+    * @return bool
+    */
+   protected function step16() {
+      $this->log( "Preparing Data Step16: Updating upload_path {$this->prefix}options." );
+
+      // Skip - Table does not exist
+      if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         return true;
+      }
+
+      $newUploadPath = $this->getNewUploadPath();
+
+      if( false === $newUploadPath ) {
+         $this->log( "Preparing Data Step16: Skipping" );
+         return true;
+      }
+
+      // Skip - Table is not selected or updated
+      if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+         $this->log( "Preparing Data Step16: Skipping" );
+         return true;
+      }
+
+      $error = isset( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
+
+      $this->log( "Updating upload_path in {$this->prefix}options. {$error}" );
+
+      $updateOptions = $this->db->query(
+              $this->db->prepare(
+                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'upload_path'", $newUploadPath
+              )
+      );
+
+      if( !$updateOptions ) {
+         $this->log( "Preparing Data Step16: Failed to update upload_path in {$this->prefix}options. {$error}", Logger::TYPE_ERROR );
+         return true;
+      }
+      $this->Log( "Preparing Data: Finished Step 16 successfully" );
+      return true;
+   }
+
+   protected function getNewUploadPath() {
+      $uploadPath = get_option( 'upload_path' );
+
+      if( !$uploadPath ) {
+         return false;
+      }
+
+      $customSlug = str_replace( \WPStaging\WPStaging::getWPpath(), '', $uploadPath );
+
+      $newUploadPath = \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR . $customSlug;
+
+      return $newUploadPath;
+   }
 
    /**
     * Return URL to staging site
@@ -858,10 +913,10 @@ class Data extends JobExecutable {
     */
    protected function getStagingSiteUrl() {
       if( $this->isSubDir() ) {
-         return rtrim( $this->multisiteHomeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName;
+         return rtrim( $this->multisiteHomeDomain, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName;
       }
 
-      return rtrim( $this->multisiteHomeUrl, "/" ) . '/' . $this->options->cloneDirectoryName;
+      return rtrim( $this->multisiteHomeDomain, "/" ) . '/' . $this->options->cloneDirectoryName;
    }
 
    /**
@@ -869,7 +924,12 @@ class Data extends JobExecutable {
     * @return boolean
     */
    protected function isSubDir() {
-      if( get_option( 'siteurl' ) !== get_option( 'home' ) ) {
+      // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
+      // This is happening much more often than you would expect
+      $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
+      $home = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
+
+      if( $home !== $siteurl ) {
          return true;
       }
       return false;

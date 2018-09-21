@@ -8,7 +8,7 @@ if( !defined( "WPINC" ) ) {
 }
 
 use WPStaging\WPStaging;
-use WPStaging\Backend\Optimizer\Optimizer;
+//use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Cron\Cron;
 
 class Activation {
@@ -45,17 +45,17 @@ class Activation {
       }
    }
 
-   public static function install_dependancies() {
-      // Register cron job.
-      $cron = new \WPStaging\Cron\Cron;
-      $cron->schedule_event();
-
-      // Install Optimizer 
-      $optimizer = new Optimizer();
-      $optimizer->installOptimizer();
-
-      // Add the transient to redirect for class Welcome (not for multisites)
-      set_transient( 'wpstg_activation_redirect', true, 3600 );
-   }
+//   public static function install_dependancies() {
+//      // Register cron job.
+//      $cron = new \WPStaging\Cron\Cron;
+//      $cron->schedule_event();
+//
+//      // Install Optimizer 
+//      $optimizer = new Optimizer();
+//      $optimizer->installOptimizer();
+//
+//      // Add the transient to redirect for class Welcome (not for multisites)
+//      set_transient( 'wpstg_activation_redirect', true, 3600 );
+//   }
 
 }

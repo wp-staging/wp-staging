@@ -47,7 +47,6 @@ class SearchReplace extends JobExecutable {
       $this->db = WPStaging::getInstance()->get( "wpdb" );
       $this->tmpPrefix = $this->options->prefix;
       $helper = new Helper();      
-      //$this->homeUrl = $helper->get_home_url();
       $this->homeUrl = $helper->get_home_url_without_scheme();
    }
 
@@ -293,7 +292,7 @@ class SearchReplace extends JobExecutable {
           'Admin_custome_login_top',
           'Admin_custome_login_dashboard',
           'Admin_custome_login_Version',
-          'upload_path'
+          'upload_path',
           );
 
       $filter = apply_filters( 'wpstg_clone_searchreplace_excl_rows', $filter );
@@ -398,7 +397,7 @@ class SearchReplace extends JobExecutable {
             $result = $this->db->query( $sql );
 
             if( !$result ) {
-               $this->log( "Error updating row {$current_row}", \WPStaging\Utils\Logger::TYPE_ERROR );
+               $this->log( "Error updating row {$current_row} SQL: {$sql}", \WPStaging\Utils\Logger::TYPE_ERROR );
             }
          }
       } // end row loop
@@ -658,7 +657,12 @@ class SearchReplace extends JobExecutable {
      * @return boolean
      */
    private function isSubDir() {
-      if( get_option( 'siteurl' ) !== get_option( 'home' ) ) {
+      // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
+      // This is happening much more often than you would expect
+      $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
+      $home = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
+
+      if( $home !== $siteurl ) {
             return true;
 }
         return false;
