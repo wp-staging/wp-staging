@@ -8,8 +8,9 @@
         <li><strong>Authentication</strong> - <?php _e( 'Staging Site is available to authenticated users only', 'wp-staging' ); ?></li>
         <li><strong>High Performance</strong> - <?php _e( 'Cloning process is fast and does not slow down website loading', 'wp-staging' ); ?></li>
         <li><strong>Secure</strong> - <?php _e( 'WP Staging is coded well for protection of your data', 'wp-staging' ); ?></li>
+        <li><strong>Multisites</strong> - <?php _e( 'WP Staging Pro allows to clone and push Multisites, (main site & sub sites)', 'wp-staging' ); ?></li>
         <a href="http://wp-staging.com/?utm_source=wpstg&utm_medium=addon_page&utm_term=click-wpstaging-pro&utm_campaign=wpstaging" target="_blank" class="wpstg-button green">Buy WP Staging Pro</a>
         <a href="<?php echo admin_url(); ?>admin.php?page=wpstg_clone" target="_self" style="margin-left:30px;">Skip - Start Cloning</a>
-        <div class="wpstg-footer"> <?php _e( 'Comes with our 30-day no questions asked money back guarantee', 'wp-staging' ); ?></div>
+        <div class="wpstg-footer"> <?php _e( 'Comes with our 30-day money back guarantee * You need to give us chance to resolve your issue first.', 'wp-staging' ); ?></div>
     </div>
 </div>
