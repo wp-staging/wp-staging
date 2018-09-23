@@ -88,7 +88,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "File Copy Limit" )->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : 50 )
+              $element->setLabel( "File Copy Limit" )->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : '50' )
       );
 
 
