@@ -299,7 +299,7 @@ class SearchReplace extends JobExecutable {
       
       // Loop through the data.
       foreach ( $data as $row ) {
-         //$current_row++;
+         $current_row++;
          $update_sql = array();
          $where_sql = array();
          $upd = false;

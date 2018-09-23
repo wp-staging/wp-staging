@@ -98,7 +98,7 @@
                                                To find out the highest possible values try a high value like 1.000 or more. If you get timeout issues, lower it
                                                 until you get no more errors during copying process.", "wp-staging" ); ?>
                                                <br>
-                                               <strong> Default: 5000 </strong>
+                                               <strong> Default: 10000 </strong>
                                            </span>
                                        </div>
                                    </td>
@@ -139,7 +139,7 @@
                                                 until you get no more errors during copying process.", "wp-staging" ); ?>
                                                <br>                                                
                                                <br>
-                                               <?php _e( "<strong>Important:</strong> If CPU Load Priority is <strong>Low</strong> set a file copy limit value of 10 or higher! Otherwise file copying process takes a lot of time.", "wp-staging" ); ?>
+                                               <?php _e( "<strong>Important:</strong> If CPU Load Priority is <strong>Low</strong> set a file copy limit value of 50 or higher! Otherwise file copying process takes a lot of time.", "wp-staging" ); ?>
                                                <br>
                                                <br>
                                                <strong> Default: 1 </strong>
@@ -157,7 +157,7 @@
                                            <?php echo $form->label( "wpstg_settings[maxFileSize]" ) ?>
                                            <span class="description">
                                                <?php _e( "Maximum size of the files which are allowed to copy. All files larger than this value will be skipped.                                              
-                                                Note: Increase this option only if you have a good reason. Files larger than a few megabytes are in 99% of all cases logging and backup files which are not needed on a staging site.", "wp-staging" ); ?>
+                                                Note: Increase this option only if you have a good reason. Files larger than a few megabytes are in 99% of all cases log and backup files which are not needed on a staging site.", "wp-staging" ); ?>
                                                <br>
                                                <strong>Default:</strong> 8 MB
                                            </span>
@@ -198,7 +198,7 @@
                                                (e.g. <strong>authorization error</strong>).
                                                 Using a lower value results in lower cpu load on your server but also slower staging site creation.", "wp-staging" ); ?>
                                                <br>
-                                               <strong>Default: </strong> Medium
+                                               <strong>Default: </strong> Low
                                            </span>
                                        </div>
                                    </td>

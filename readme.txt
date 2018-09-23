@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.8 =
+* Tweak: Lowering default performance settings for more reliability during cloning
+
 = 2.3.7 =
 * New: Increase cloning performance
 * New: Show admin notice if php version and wordpress version do not meet requirements.
@@ -194,6 +197,6 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.3.7 =
+= 2.3.8 =
 * New: Compatible to WordPress 4.9.8. Important fixes!
 

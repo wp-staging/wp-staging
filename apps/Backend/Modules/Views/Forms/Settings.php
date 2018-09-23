@@ -59,7 +59,7 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "DB Copy Query Limit" )
-                      ->setDefault( isset( $settings->queryLimit ) ? $settings->queryLimit : 5000 )
+                      ->setDefault( isset( $settings->queryLimit ) ? $settings->queryLimit : 10000 )
       );
       // DB Search & Replace Query Limit
       $element = new Numerical(
@@ -88,9 +88,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "File Copy Limit" )
-              ->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : 1 )
-              
+              $element->setLabel( "File Copy Limit" )->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : 50 )
       );
 
 
@@ -135,7 +133,7 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "CPU Load Priority" )
-                      ->setDefault( isset( $settings->cpuLoad ) ? $settings->cpuLoad : "fast" )
+                      ->setDefault( isset( $settings->cpuLoad ) ? $settings->cpuLoad : "low" )
       );
 
 
