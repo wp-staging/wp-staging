@@ -45,7 +45,9 @@ class Cloning extends Job {
           'desktop.ini',
           '.gitignore',
           '.log',
-          'web.config'
+          'web.config',
+          'db.php',
+          'object-cache.php'
       );
       $this->options->currentStep = 0;
 

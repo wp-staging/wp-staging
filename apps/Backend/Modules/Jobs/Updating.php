@@ -41,7 +41,18 @@ class Updating extends Job {
       $this->options->includedDirectories = array();
       $this->options->excludedDirectories = array();
       $this->options->extraDirectories = array();
-      $this->options->excludedFiles = array('.htaccess', '.DS_Store', '.git', '.svn', '.tmp', 'desktop.ini', '.gitignore', '.log');
+      $this->options->excludedFiles = array(
+          '.htaccess',
+          '.DS_Store',
+          '.git',
+          '.svn',
+          '.tmp',
+          'desktop.ini',
+          '.gitignore',
+          '.log',
+          'db.php',
+          'object-cache.php'
+      );
 
       // Define mainJob to differentiate between cloning, updating and pushing
       $this->options->mainJob = 'updating';
@@ -194,7 +205,7 @@ class Updating extends Job {
       if( is_multisite() ) {
          $database = new muDatabase();
       } else {
-      $database = new Database();
+         $database = new Database();
       }
       return $this->handleJobResponse( $database->start(), "directories" );
    }
@@ -207,7 +218,7 @@ class Updating extends Job {
       if( is_multisite() ) {
          $directories = new muDirectories();
       } else {
-      $directories = new Directories();
+         $directories = new Directories();
       }
       return $this->handleJobResponse( $directories->start(), "files" );
    }
@@ -220,7 +231,7 @@ class Updating extends Job {
       if( is_multisite() ) {
          $files = new muFiles();
       } else {
-      $files = new Files();
+         $files = new Files();
       }
       return $this->handleJobResponse( $files->start(), "data" );
    }
@@ -233,7 +244,7 @@ class Updating extends Job {
       if( is_multisite() ) {
          $data = new muData();
       } else {
-      $data = new Data();
+         $data = new Data();
       }
       return $this->handleJobResponse( $data->start(), "finish" );
    }
@@ -246,7 +257,7 @@ class Updating extends Job {
       if( is_multisite() ) {
          $finish = new muFinish();
       } else {
-      $finish = new Finish();
+         $finish = new Finish();
       }
       $finish = new Finish();
       return $this->handleJobResponse( $finish->start(), '' );
