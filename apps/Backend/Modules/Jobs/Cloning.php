@@ -49,7 +49,8 @@ class Cloning extends Job {
       );
       $this->options->excludedFilesFullPath = array(
           'wp-content' . DIRECTORY_SEPARATOR . 'db.php',
-          'wp-content' . DIRECTORY_SEPARATOR . 'object-cache.php'
+          'wp-content' . DIRECTORY_SEPARATOR . 'object-cache.php',
+          'wp-content' . DIRECTORY_SEPARATOR . 'advanced-cache.php'
       );
       $this->options->currentStep = 0;
 

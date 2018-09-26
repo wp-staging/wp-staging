@@ -77,7 +77,7 @@ class Data extends JobExecutable {
     * @return void
     */
    protected function calculateTotalSteps() {
-      $this->options->totalSteps = 13;
+      $this->options->totalSteps = 14;
    }
 
    /**
@@ -756,6 +756,48 @@ class Data extends JobExecutable {
          return true;
       }
       $this->Log( "Preparing Data: Finished Step 13 successfully" );
+      return true;
+   }
+
+   /**
+    * Update WP_CACHE in wp-config.php
+    * @return bool
+    */
+   protected function step14() {
+      $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
+
+      $this->log( "Preparing Data Step14: Set WP_CACHE in wp-config.php to false" );
+
+      if( false === ($content = file_get_contents( $path )) ) {
+         $this->log( "Preparing Data Step14: Failed to update WP_CACHE in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
+         return false;
+      }
+
+
+      // Get WP_CACHE from wp-config.php
+      preg_match( "/define\s*\(\s*'WP_CACHE'\s*,\s*(.*)\s*\);/", $content, $matches );
+
+      if( !empty( $matches[1] ) ) {
+         $matches[1];
+
+         $pattern = "/define\s*\(\s*'WP_CACHE'\s*,\s*(.*)\s*\);/";
+
+         $replace = "define('WP_CACHE','false'); // " . $matches[1];
+         $replace.= " // Changed by WP-Staging";
+
+         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+            $this->log( "Preparing Data: Failed to change WP_CACHE", Logger::TYPE_ERROR );
+            return false;
+         }
+      } else {
+         $this->log( "Preparing Data Step14: WP_CACHE not defined in wp-config.php. Skipping this step." );
+      }
+
+      if( false === @file_put_contents( $path, $content ) ) {
+         $this->log( "Preparing Data Step14: Failed to update WP_CACHE. Can't save contents", Logger::TYPE_ERROR );
+         return false;
+      }
+      $this->Log( "Preparing Data: Finished Step 14 successfully" );
       return true;
    }
 

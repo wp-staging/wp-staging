@@ -148,6 +148,9 @@ https://wp-staging.com
 
 = 2.3.8 =
 * Tweak: Lowering default performance settings for more reliability during cloning
+* New: Set WP_CACHE to false in wp-config.php after cloning to prevent log in issues to staging site
+* Fix: Do not clone db.php, object-cache.php and advanced-cache.php
+
 
 = 2.3.7 =
 * New: Increase cloning performance
