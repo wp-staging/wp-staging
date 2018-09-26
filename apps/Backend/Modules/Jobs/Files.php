@@ -161,16 +161,22 @@ class Files extends JobExecutable {
 
       // Directory is excluded
       if( $this->isDirectoryExcluded( $directory ) ) {
-         $this->debugLog( "Skipping directory by rule: {$file}", Logger::TYPE_INFO );
+         $this->debugLog( "Directory Excluded: {$file}", Logger::TYPE_INFO );
          return false;
       }
 
       // File is excluded
       if( $this->isFileExcluded( $file ) ) {
-         $this->debugLog( "Skipping file by rule: {$file}", Logger::TYPE_INFO );
+         $this->debugLog( "File excluded: {$file}", Logger::TYPE_INFO );
          return false;
       }
-
+      
+      // Path + File is excluded
+      if( $this->isFileExcludedFullPath( $file ) ) {
+         $this->debugLog( "File Excluded Full Path: {$file}", Logger::TYPE_INFO );
+         return false;
+      }
+      
       // File is over maximum allowed file size (8MB)
       if( $fileSize >= $this->settings->maxFileSize * 1000000 ) {
          $this->log( "Skipping big file: {$file}", Logger::TYPE_INFO );
@@ -224,7 +230,7 @@ class Files extends JobExecutable {
       $destinationPath = $this->destination . $relativePath;
       $destinationDirectory = dirname( $destinationPath );
 
-      if( !is_dir( $destinationDirectory ) && !@mkdir( $destinationDirectory, 0775, true ) ) {
+      if( !is_dir( $destinationDirectory ) && !@mkdir( $destinationDirectory, 0755, true ) ) {
          $this->log( "Files: Can not create directory {$destinationDirectory}", Logger::TYPE_ERROR );
          return false;
       }
@@ -273,22 +279,36 @@ class Files extends JobExecutable {
     * @return boolean
     */
    private function isFileExcluded( $file ) {
-      $excluded = false;
-      foreach ( $this->options->excludedFiles as $excludedFile ) {
-         if( stripos( strrev( $file ), strrev( $excludedFile ) ) === 0 ) {
-            $excluded = true;
-            break;
-         }
-      }
 
+      if( in_array( basename( $file ), $this->options->excludedFiles ) ) {
+         return true;
+      }
       // Do not copy wp-config.php if the clone gets updated. This is for security purposes, 
       // because if the updating process fails, the staging site would not be accessable any longer
       if( isset( $this->options->mainJob ) && $this->options->mainJob == "updating" && stripos( strrev( $file ), strrev( "wp-config.php" ) ) === 0 ) {
-         $excluded = true;
+         return true;      
+         
       }
 
 
-      return $excluded;
+      return false;
+   }
+   
+      /**
+    * Check if certain file is excluded from copying process
+    * 
+    * @param string $file filename including ending + (part) path e.g wp-content/db.php
+    * @return boolean
+    */
+   private function isFileExcludedFullPath( $file ) {
+      // If path + file exists
+      foreach ($this->options->excludedFilesFullPath as $excludedFile){
+         if(  false !== strpos( $file, $excludedFile )){
+            return true;
+         }
+      }
+
+      return false;
    }
 
    /**
@@ -337,7 +357,7 @@ class Files extends JobExecutable {
       $directory = $this->sanitizeDirectorySeparator( $directory );
 
       foreach ( $this->options->extraDirectories as $extraDirectory ) {
-         if( strpos( $directory, $this->sanitizeDirectorySeparator($extraDirectory) ) === 0 ) {
+         if( strpos( $directory, $this->sanitizeDirectorySeparator( $extraDirectory ) ) === 0 ) {
             return true;
          }
       }
