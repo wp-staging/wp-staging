@@ -45,9 +45,7 @@ class Cloning extends Job {
           'desktop.ini',
           '.gitignore',
           '.log',
-          'web.config',
-          'db.php',
-          'object-cache.php'
+          'web.config'
       );
       $this->options->excludedFilesFullPath = array(
           'wp-content' . DIRECTORY_SEPARATOR . 'db.php',
