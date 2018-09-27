@@ -12,6 +12,8 @@ use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 use WPStaging\Utils\Cache;
 use WPStaging\Utils\Multisite;
+use WPStaging\thirdParty\thirdPartyCompatibility;
+
 
 /**
  * Class Job
@@ -87,15 +89,21 @@ abstract class Job implements JobInterface {
 
    /**
     * Multisite home domain without scheme
-    * @var type 
+    * @var string 
     */
    protected $multisiteDomainWithoutScheme;
    
    /**
     * Multisite home domain without scheme
-    * @var type 
+    * @var string 
     */
    protected $multisiteHomeDomain;
+   
+   /**
+    * 
+    * @var object
+    */
+   protected $thirdParty;
 
    /**
     * @var int
@@ -109,12 +117,12 @@ abstract class Job implements JobInterface {
       // Get max limits
       $this->start = $this->time();
       $this->maxMemoryLimit = $this->getMemoryInBytes( @ini_get( "memory_limit" ) );
+      $this->thirdParty = new thirdPartyCompatibility($this);
 
       $multisite = new Multisite;
       $this->multisiteHomeUrlWithoutScheme = $multisite->getHomeUrlWithoutScheme();
       $this->multisiteHomeDomain = $multisite->getHomeDomain();
       $this->multisiteDomainWithoutScheme = $multisite->getHomeDomainWithoutScheme();
-      //$this->multisiteUrl = $multisite->getHomeDomain();
 
       //$this->maxExecutionTime = (int) ini_get("max_execution_time");
       $this->maxExecutionTime = ( int ) 30;
