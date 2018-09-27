@@ -399,14 +399,15 @@ var WPStaging = (function ($)
                 console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
                 console.log(textStatus);
 
-                if (false === showErrors)
-                {
-                    return false;
-                }
+//                if (false === showErrors)
+//                {
+//                    return false;
+//                }
 
+                var errorCode = "undefined" === typeof(xhr.status) ? "Unknown" : xhr.status;
 
                 showError(
-                        "Fatal Unknown Error. Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
+                        "Fatal Error:  "+ errorCode +" Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                         );
             },
             success: function (data) {
@@ -428,6 +429,14 @@ var WPStaging = (function ($)
                             );
                 },
                 504: function () {
+                    showError("It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
+                    var obj = new Object();
+                    obj.status = false;
+                    obj.error = 'custom error';
+                    return JSON.stringify(obj);
+
+                },
+                429: function () {
                     showError("It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
                     var obj = new Object();
                     obj.status = false;
