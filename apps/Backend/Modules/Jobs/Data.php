@@ -782,7 +782,7 @@ class Data extends JobExecutable {
 
          $pattern = "/define\s*\(\s*'WP_CACHE'\s*,\s*(.*)\s*\);/";
 
-         $replace = "define('WP_CACHE','false'); // " . $matches[1];
+         $replace = "define('WP_CACHE',false); // " . $matches[1];
          $replace.= " // Changed by WP-Staging";
 
          if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
