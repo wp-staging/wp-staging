@@ -211,6 +211,10 @@ class SearchReplace extends JobExecutable {
     */
    private function searchReplace( $table, $page, $args ) {
 
+      if( $this->thirdParty->isSearchReplaceExcluded( $table ) ) {
+         $this->log( "DB Processing: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
+         return true;
+      }
 
       // Load up the default settings for this chunk.
       $table = esc_sql( $table );
@@ -252,7 +256,7 @@ class SearchReplace extends JobExecutable {
 
       //$this->log( 'Search: ' . $this->multisiteHomeUrlWithoutScheme . ' Replace: ' . rtrim( $this->multisiteDomainWithoutScheme, '/' ) . '/' . $this->options->cloneDirectoryName );
 
-      
+
       $args['replace_guids'] = 'off';
       $args['dry_run'] = 'off';
       $args['case_insensitive'] = false;

@@ -216,8 +216,13 @@ class SearchReplace extends JobExecutable {
     * @return array
     */
    private function searchReplace( $table, $page, $args ) {
-
-
+      
+      if( $this->thirdParty->isSearchReplaceExcluded($table) ) {
+         $this->log( "DB Processing: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
+         return true;
+      }
+      
+      
       // Load up the default settings for this chunk.
       $table = esc_sql( $table );
       $current_page = $this->options->job->start + $this->settings->querySRLimit;
@@ -683,5 +688,6 @@ class SearchReplace extends JobExecutable {
       $dir = str_replace( $home, '', $siteurl );
       return '/' . str_replace( '/', '', $dir );
     }
+
 
 }
