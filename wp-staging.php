@@ -50,8 +50,8 @@ if( !defined( 'WPSTG_PLUGIN_URL' ) ) {
 }
 
 // Version
-if( !defined( 'WPSTGPRO_VERSION' ) ) {
-   define( 'WPSTGPRO_VERSION', '{{version}}' );
+if( !defined( 'WPSTG_VERSION' ) ) {
+   define( 'WPSTG_VERSION', '{{version}}' );
 }
 
 /**
@@ -60,6 +60,7 @@ if( !defined( 'WPSTGPRO_VERSION' ) ) {
 if( !class_exists( 'Wpstg_Requirements_Check' ) ) {
    include( dirname( __FILE__ ) . '/apps/Core/Utils/requirements-check.php' );
 }
+
 $plugin_requirements = new Wpstg_Requirements_Check( array(
     'title' => 'WP STAGING',
     'php' => '5.3',
@@ -110,11 +111,12 @@ if( $plugin_requirements->passes() ) {
     * Inititalize WPStaging
     */
    $wpStaging->run();
-}
 
-/**
- * Installation Hooks
- */
-if( !class_exists( 'WPStaging\Install' ) ) {
-   require_once plugin_dir_path( __FILE__ ) . "/install.php";
+
+   /**
+    * Installation Hooks
+    */
+   if( !class_exists( 'WPStaging\Install' ) ) {
+      require_once plugin_dir_path( __FILE__ ) . "/install.php";
+   }
 }
