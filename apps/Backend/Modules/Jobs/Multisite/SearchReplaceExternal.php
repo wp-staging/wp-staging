@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Backend\Modules\Jobs;
+namespace WPStaging\Backend\Modules\Jobs\Multisite;
 
 // No Direct Access
 if( !defined( "WPINC" ) ) {
@@ -10,12 +10,14 @@ if( !defined( "WPINC" ) ) {
 use WPStaging\WPStaging;
 use WPStaging\Utils\Strings;
 use WPStaging\Utils\Helper;
+use WPStaging\Utils\Multisite;
+use WPStaging\Backend\Modules\Jobs\JobExecutable;
 
 /**
  * Class Database
  * @package WPStaging\Backend\Modules\Jobs
  */
-class SearchReplace extends JobExecutable {
+class SearchReplaceExternal extends JobExecutable {
 
    /**
     * @var int
@@ -28,12 +30,6 @@ class SearchReplace extends JobExecutable {
    public $db;
 
    /**
-    *
-    * @var string
-    */
-   private $homeUrl;
-
-   /**
     * The prefix of the new database tables which are used for the live site after updating tables
     * @var string 
     */
@@ -44,10 +40,15 @@ class SearchReplace extends JobExecutable {
     */
    public function initialize() {
       $this->total = count( $this->options->tables );
-      $this->db = WPStaging::getInstance()->get( "wpdb" );
+      $this->db = $this->getStagingDB();
       $this->tmpPrefix = $this->options->prefix;
-      $helper = new Helper();
-      $this->homeUrl = $helper->get_home_url_without_scheme();
+   }
+   
+      /**
+    * Get database object to interact with
+    */
+   private function getStagingDB() {
+      return new \wpdb( $this->options->databaseUser, $this->options->databasePassword, $this->options->databaseDatabase, $this->options->databaseServer );
    }
 
    public function start() {
@@ -120,9 +121,9 @@ class SearchReplace extends JobExecutable {
     * return mixed bool | json
     */
    private function stopExecution() {
-      if( $this->db->prefix == $this->tmpPrefix ) {
-         $this->returnException( 'Fatal Error 9: Prefix ' . $this->db->prefix . ' is used for the live site hence it can not be used for the staging site as well. Please ask support@wp-staging.com how to resolve this.' );
-      }
+//      if( $this->db->prefix == $this->tmpPrefix ) {
+//         $this->returnException( 'Fatal Error 9: Prefix ' . $this->db->prefix . ' is used for the live site hence it can not be used for the staging site as well. Please ask support@wp-staging.com how to resolve this.' );
+//      }
       return false;
    }
 
@@ -133,7 +134,7 @@ class SearchReplace extends JobExecutable {
     */
    private function updateTable( $tableName ) {
       $strings = new Strings();
-      $table = $strings->str_replace_first( $this->db->prefix, '', $tableName );
+      $table = $strings->str_replace_first( $this->options->databasePrefix, '', $tableName );
       $newTableName = $this->tmpPrefix . $table;
 
       // Save current job
@@ -221,7 +222,7 @@ class SearchReplace extends JobExecutable {
          $this->log( "DB Processing: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
          return true;
       }
-
+      
       // Load up the default settings for this chunk.
       $table = esc_sql( $table );
       $current_page = $this->options->job->start + $this->settings->querySRLimit;
@@ -231,28 +232,35 @@ class SearchReplace extends JobExecutable {
       if( $this->isSubDir() ) {
          // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
          $args['search_for'] = array(
-             $this->homeUrl . str_replace( '/', '\/', $this->getSubDir() ), // // Used by revslider and several visual editors
-             rtrim( $this->homeUrl, "/" ) . $this->getSubDir(),
-             rtrim( ABSPATH, '/' ),
+             rtrim( $this->multisiteHomeUrlWithoutScheme, "/" ) . $this->getSubDir(),
+             ABSPATH,
+             str_replace( '/', '\/', rtrim( $this->multisiteHomeUrlWithoutScheme, '/' ) ) . str_replace( '/', '\/', $this->getSubDir() ), // // Used by revslider and several visual editors
+             $this->getImagePathLive()
          );
 
+
          $args['replace_with'] = array(
-             $this->homeUrl . str_replace( '/', '\/', $this->getSubDir() ) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
-             rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName,
+             rtrim( $this->multisiteDomainWithoutScheme, "/" ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName,
              rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName,
+             str_replace( '/', '\/', rtrim( $this->multisiteDomainWithoutScheme, "/" ) ) . str_replace( '/', '\/', $this->getSubDir() ) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
+             $this->getImagePathStaging()
          );
       } else {
          $args['search_for'] = array(
-             $this->homeUrl . '\/',
-             rtrim( $this->homeUrl, '/' ),
-             rtrim( ABSPATH, '/' ),
+             rtrim( $this->multisiteHomeUrlWithoutScheme, '/' ),
+             ABSPATH,
+             str_replace( '/', '\/', rtrim( $this->multisiteHomeUrlWithoutScheme, '/' ) ),
+             $this->getImagePathLive()
          );
          $args['replace_with'] = array(
-             $this->homeUrl . '\/' . $this->options->cloneDirectoryName . '\/',
-             rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
+             rtrim( $this->multisiteDomainWithoutScheme, '/' ) . '/' . $this->options->cloneDirectoryName,
              rtrim( ABSPATH, '/' ) . '/' . $this->options->cloneDirectoryName,
+             str_replace( '/', '\/', rtrim( $this->multisiteDomainWithoutScheme, '/' ) ) . '\/' . $this->options->cloneDirectoryName,
+             $this->getImagePathStaging()
          );
       }
+
+      //$this->log( 'Search: ' . $this->multisiteHomeUrlWithoutScheme . ' Replace: ' . rtrim( $this->multisiteDomainWithoutScheme, '/' ) . '/' . $this->options->cloneDirectoryName );
 
 
       $args['replace_guids'] = 'off';
@@ -330,10 +338,9 @@ class SearchReplace extends JobExecutable {
             }
 
             // Skip mail addresses
-            if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->homeUrl ) ) {
+            if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->multisiteDomainWithoutScheme ) ) {
                continue;
             }
-
 
             // Check options table
             if( $this->options->prefix . 'options' === $table ) {
@@ -355,10 +362,11 @@ class SearchReplace extends JobExecutable {
                   $should_skip = true;
                }
             }
-            $tmp = $args;
+
             // Check the path delimiter for / or \/ and remove one of those which prevents from resulting in wrong syntax like domain.com/staging\/.
             // 1. local.wordpress.test -> local.wordpress.test/staging
             // 2. local.wordpress.test\/ -> local.wordpress.test\/staging\/
+            $tmp = $args;
             if( false === strpos( $dataRow, $tmp['search_for'][0] ) ) {
                array_shift( $tmp['search_for'] ); // rtrim( $this->homeUrl, '/' ),
                array_shift( $tmp['replace_with'] ); // rtrim( $this->homeUrl, '/' ) . '/' . $this->options->cloneDirectoryName,
@@ -370,11 +378,10 @@ class SearchReplace extends JobExecutable {
                $tmp['replace_with'] = array_values( $tmp['replace_with'] );
             }
 
-
-
             // Run a search replace on the data row and respect the serialisation.
             $i = 0;
             foreach ( $tmp['search_for'] as $replace ) {
+               //$this->log( "Search for:  {$tmp['search_for'][$i]} Replace with {$tmp['replace_with'][$i]}", \WPStaging\Utils\Logger::TYPE_ERROR );
                $dataRow = $this->recursive_unserialize_replace( $tmp['search_for'][$i], $tmp['replace_with'][$i], $dataRow, false, $args['case_insensitive'] );
                $i++;
             }
@@ -414,6 +421,38 @@ class SearchReplace extends JobExecutable {
    }
 
    /**
+    * Get path to multisite image folder e.g. wp-content/blogs.dir/ID/files or wp-content/uploads/sites/ID
+    * @return string
+    */
+   private function getImagePathLive() {
+      // Check first which structure is used 
+      $uploads = wp_upload_dir();
+      $basedir = $uploads['basedir'];
+      $blogId = get_current_blog_id();
+
+      if( false === strpos( $basedir, 'blogs.dir' ) ) {
+         // Since WP 3.5
+         $path = $blogId > 1 ?
+                 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'sites' . DIRECTORY_SEPARATOR . get_current_blog_id() . DIRECTORY_SEPARATOR :
+                 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
+      } else {
+         // old blog structure
+         $path = $blogId > 1 ?
+                 'wp-content' . DIRECTORY_SEPARATOR . 'blogs.dir' . DIRECTORY_SEPARATOR . get_current_blog_id() . DIRECTORY_SEPARATOR . 'files' . DIRECTORY_SEPARATOR :
+                 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
+      }
+      return $path;
+   }
+
+   /**
+    * Get path to staging site image path wp-content/uploads
+    * @return string
+    */
+   private function getImagePathStaging() {
+      return 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
+   }
+
+   /**
     * Adapted from interconnect/it's search/replace script.
     *
     * @link https://interconnectit.com/products/search-and-replace-for-wordpress-databases/
@@ -425,7 +464,7 @@ class SearchReplace extends JobExecutable {
     * @param  string 			$from       		String we're looking to replace.
     * @param  string 			$to         		What we want it to be replaced with
     * @param  array  			$data       		Used to pass any subordinate arrays back to in.
-    * @param  boolean 			$serialised 		Does the array passed via $data need serialising.
+    * @param  boolean 			$serialized 		Does the array passed via $data need serialising.
     * @param  sting|boolean              $case_insensitive 	Set to 'on' if we should ignore case, false otherwise.
     *
     * @return string|array	The original array with all elements replaced as needed.
@@ -478,24 +517,24 @@ class SearchReplace extends JobExecutable {
     * Can not use is_object alone because in php 7.2 it's returning true even though object is __PHP_Incomplete_Class_Name
     * @return boolean
     */
-//   private function isValidObject($data){
+//   private function isValidObject( $data ) {
 //      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
 //         return false;
 //      }
-//      
+//
 //      $invalid_class_props = get_object_vars( $data );
-//      
+//
 //      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
 //         // Assume it must be an valid object
 //         return true;
 //      }
-//      
+//
 //      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
 //
 //      if( !empty( $invalid_object_class ) ) {
 //         return false;
 //      }
-//      
+//
 //      // Assume it must be an valid object
 //      return true;
 //   }

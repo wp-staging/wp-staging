@@ -18,7 +18,7 @@ use WPStaging\Backend\Modules\Jobs\JobExecutable;
  * Class Data
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Data extends JobExecutable {
+class DataExternal extends JobExecutable {
 
    /**
     * @var \wpdb
@@ -40,9 +40,11 @@ class Data extends JobExecutable {
     * Initialize
     */
    public function initialize() {
-      $this->db = WPStaging::getInstance()->get( "wpdb" );
-
+      //$this->db = WPStaging::getInstance()->get( "wpdb" );
+      $this->db = $this->getStagingDB();
+      $this->productionDb = WPStaging::getInstance()->get( "wpdb" );
       $this->prefix = $this->options->prefix;
+      $this->db->prefix = $this->options->databasePrefix;
 
       $this->getTables();
 
@@ -50,6 +52,13 @@ class Data extends JobExecutable {
       if( 0 == $this->options->currentStep ) {
          $this->options->currentStep = 0;
       }
+   }
+
+   /**
+    * Get database object to interact with
+    */
+   private function getStagingDB() {
+      return new \wpdb( $this->options->databaseUser, $this->options->databasePassword, $this->options->databaseDatabase, $this->options->databaseServer );
    }
 
    /**
@@ -71,7 +80,7 @@ class Data extends JobExecutable {
     * @return void
     */
    protected function calculateTotalSteps() {
-      $this->options->totalSteps = 18;
+      $this->options->totalSteps = 19;
    }
 
    /**
@@ -145,11 +154,10 @@ class Data extends JobExecutable {
    protected function isRoot() {
 
       // Prefix is the same as the one of live site
-      $wpdb = WPStaging::getInstance()->get( "wpdb" );
-      if( $wpdb->prefix === $this->prefix ) {
-         return true;
-      }
-
+//      $wpdb = WPStaging::getInstance()->get( "wpdb" );
+//      if( $wpdb->prefix === $this->prefix ) {
+//         return true;
+//      }
       // CloneName is empty
       $name = ( array ) $this->options->cloneDirectoryName;
       if( empty( $name ) ) {
@@ -345,7 +353,7 @@ class Data extends JobExecutable {
     * @return bool
     */
    protected function step4() {
-      $this->log( "Preparing Data Step4: Updating db prefix in {$this->prefix}usermeta. {$this->db->last_error}" );
+      $this->log( "Preparing Data Step4: Updating db prefix in {$this->prefix}usermeta. " );
 
       // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'usermeta' ) ) {
@@ -354,6 +362,12 @@ class Data extends JobExecutable {
 
       // Skip - Table is not selected or updated
       if( !in_array( $this->prefix . 'usermeta', $this->tables ) ) {
+         $this->log( "Preparing Data Step4: Skipping" );
+         return true;
+      }
+
+      // Skip, prefixes are identical. No change needed
+      if( $this->db->prefix === $this->prefix ) {
          $this->log( "Preparing Data Step4: Skipping" );
          return true;
       }
@@ -580,7 +594,7 @@ class Data extends JobExecutable {
          $replace.= " // Changed by WP-Staging";
 
          if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
-            $this->log( "Preparing Data: Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data: Failed to update WP_HOME", Logger::TYPE_ERROR );
             return false;
          }
       } else {
@@ -588,10 +602,10 @@ class Data extends JobExecutable {
       }
 
       if( false === @file_put_contents( $path, $content ) ) {
-         $this->log( "Preparing Data Step11: Failed to update WP_SITEURL. Can't save contents", Logger::TYPE_ERROR );
+         $this->log( "Preparing Data Step10: Failed to update WP_HOME. Can't save contents", Logger::TYPE_ERROR );
          return false;
       }
-      $this->Log( "Preparing Data: Finished Step 11 successfully" );
+      $this->Log( "Preparing Data: Finished Step 10 successfully" );
       return true;
    }
 
@@ -746,17 +760,17 @@ class Data extends JobExecutable {
       }
 
       // Get active_plugins value from sub site options table
-      $active_plugins = $this->db->get_var( "SELECT option_value FROM {$this->db->prefix}options WHERE option_name = 'active_plugins' " );
+      $active_plugins = $this->db->get_var( "SELECT option_value FROM {$this->productionDb->prefix}options WHERE option_name = 'active_plugins' " );
 
       if( !$active_plugins ) {
          $this->log( "Data Crunching Step 14: Option active_plugins are empty " );
          $active_plugins = array();
       }
       // Get active_sitewide_plugins value from main multisite wp_sitemeta table
-      $active_sitewide_plugins = $this->db->get_var( "SELECT meta_value FROM {$this->db->base_prefix}sitemeta WHERE meta_key = 'active_sitewide_plugins' " );
+      $active_sitewide_plugins = $this->db->get_var( "SELECT meta_value FROM {$this->productionDb->base_prefix}sitemeta WHERE meta_key = 'active_sitewide_plugins' " );
 
       if( !$active_sitewide_plugins ) {
-         $this->log( "Data Crunching Step 14: Options {$this->db->base_prefix}active_sitewide_plugins is empty " );
+         $this->log( "Data Crunching Step 14: Options {$this->liveDb->base_prefix}active_sitewide_plugins is empty " );
          $active_sitewide_plugins = array();
       }
 
@@ -800,6 +814,11 @@ class Data extends JobExecutable {
          return true;
       }
 
+      // Skip, prefixes are identical. No change needed
+      if( $this->db->prefix === $this->prefix ) {
+         $this->log( "Preparing Data Step4: Skipping" );
+         return true;
+      }
 
       $this->log( "Updating db option_names in {$this->prefix}options. " );
 
@@ -918,7 +937,104 @@ class Data extends JobExecutable {
    }
 
    /**
-    * Get Upload Path to staging site
+    * Update database credentials in wp-config.php
+    * @return bool
+    */
+   protected function step18() {
+      $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
+
+      $this->log( "Preparing Data Step18: Change database credentials in wp-config.php" );
+
+      if( false === ($content = file_get_contents( $path )) ) {
+         $this->log( "Preparing Data Step18: Failed to update database credentials in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
+         return false;
+      }
+
+
+      // Get DB_NAME from wp-config.php
+      preg_match( "/define\s*\(\s*'DB_NAME'\s*,\s*(.*)\s*\);/", $content, $matches );
+
+      if( !empty( $matches[1] ) ) {
+         $matches[1];
+
+         $pattern = "/define\s*\(\s*'DB_NAME'\s*,\s*(.*)\s*\);/";
+
+         $replace = "define('DB_NAME','{$this->options->databaseDatabase}'); // " . $matches[1];
+         $replace.= " // Changed by WP-Staging";
+
+         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+            $this->log( "Preparing Data: Failed to change DB_NAME", Logger::TYPE_ERROR );
+            return false;
+         }
+      } else {
+         $this->log( "Preparing Data Step18: DB_NAME not defined in wp-config.php. Skipping this step." );
+      }
+      // Get DB_USER from wp-config.php
+      preg_match( "/define\s*\(\s*'DB_USER'\s*,\s*(.*)\s*\);/", $content, $matches );
+
+      if( !empty( $matches[1] ) ) {
+         $matches[1];
+
+         $pattern = "/define\s*\(\s*'DB_USER'\s*,\s*(.*)\s*\);/";
+
+         $replace = "define('DB_USER','{$this->options->databaseUser}'); // " . $matches[1];
+         $replace.= " // Changed by WP-Staging";
+
+         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+            $this->log( "Preparing Data: Failed to change DB_USER", Logger::TYPE_ERROR );
+            return false;
+         }
+      } else {
+         $this->log( "Preparing Data Step18: DB_USER not defined in wp-config.php. Skipping this step." );
+      }
+      // Get DB_PASSWORD from wp-config.php
+      preg_match( "/define\s*\(\s*'DB_PASSWORD'\s*,\s*(.*)\s*\);/", $content, $matches );
+
+      if( !empty( $matches[1] ) ) {
+         $matches[1];
+
+         $pattern = "/define\s*\(\s*'DB_PASSWORD'\s*,\s*(.*)\s*\);/";
+
+         $replace = "define('DB_PASSWORD','{$this->options->databasePassword}'); // " . $matches[1];
+         $replace.= " // Changed by WP-Staging";
+
+         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+            $this->log( "Preparing Data: Failed to change DB_PASSWORD", Logger::TYPE_ERROR );
+            return false;
+         }
+      } else {
+         $this->log( "Preparing Data Step18: DB_PASSWORD not defined in wp-config.php. Skipping this step." );
+      }
+      // Get DB_HOST from wp-config.php
+      preg_match( "/define\s*\(\s*'DB_HOST'\s*,\s*(.*)\s*\);/", $content, $matches );
+
+      if( !empty( $matches[1] ) ) {
+         $matches[1];
+
+         $pattern = "/define\s*\(\s*'DB_HOST'\s*,\s*(.*)\s*\);/";
+
+         $replace = "define('DB_HOST','{$this->options->databaseServer}'); // " . $matches[1];
+         $replace.= " // Changed by WP-Staging";
+
+         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+            $this->log( "Preparing Data: Failed to change DB_HOST", Logger::TYPE_ERROR );
+            return false;
+         }
+      } else {
+         $this->log( "Preparing Data Step18: DB_HOST not defined in wp-config.php. Skipping this step." );
+      }
+
+
+      if( false === @file_put_contents( $path, $content ) ) {
+         $this->log( "Preparing Data Step18: Failed to update database credentials in wp-config.php. Can't save contents", Logger::TYPE_ERROR );
+         return false;
+      }
+      $this->Log( "Preparing Data: Finished Step 18 successfully" );
+      return true;
+   }
+
+   /**
+    * Get upload path
     * @return boolean|string
     */
    protected function getNewUploadPath() {

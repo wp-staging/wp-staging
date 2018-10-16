@@ -165,6 +165,7 @@ class SystemInfo extends InjectionAware {
 
       $output = "-- WP Staging Settings" . PHP_EOL . PHP_EOL;
       $output .= $this->info( "Query Limit:", isset( $settings->queryLimit ) ? $settings->queryLimit : 'undefined'  );
+      $output .= $this->info( "DB Search & Replace Limit:", isset( $settings->querySRLimit ) ? $settings->querySRLimit : 'undefined'  );
       $output .= $this->info( "File Copy Limit:", isset( $settings->fileLimit ) ? $settings->fileLimit : 'undefined'  );
       $output .= $this->info( "Batch Size:", isset( $settings->batchSize ) ? $settings->batchSize : 'undefined'  );
       $output .= $this->info( "CPU Load:", isset( $settings->cpuLoad ) ? $settings->cpuLoad : 'undefined'  );

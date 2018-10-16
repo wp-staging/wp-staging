@@ -5,7 +5,6 @@ use WPStaging\WPStaging;
 use WPStaging\Backend\Modules\Jobs\Job;
 use WPStaging\Utils\Multisite;
 
-//error_reporting( E_ALL );
 
 /**
  * Class Finish
@@ -40,9 +39,8 @@ class Finish extends Job
         
         $return = array(
             "directoryName"     => $this->options->cloneDirectoryName,
-            "path"              => ABSPATH . $this->options->cloneDirectoryName,
+            "path"              => \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName,
             "url"               => $this->multisiteHomeDomain . '/' . $this->options->cloneDirectoryName,
-            //"url"               => $this->multisiteUrl . '/' . $this->options->cloneDirectoryName,
             "number"            => $this->options->cloneNumber,
             "version"           => \WPStaging\WPStaging::VERSION,
             "status"            => 'finished',
@@ -84,7 +82,9 @@ class Finish extends Job
         // Clone data already exists
         if (isset($this->options->existingClones[$this->options->clone]))
         {
-            $this->log("Finish: Clone data already exists, no need to update, the job finished");
+           $this->options->existingClones[$this->options->clone]['datetime'] = time();
+           update_option("wpstg_existing_clones_beta", $this->options->existingClones);
+           $this->log("Finish: The job finished!");
             return true;
         }
 
@@ -96,13 +96,18 @@ class Finish extends Job
         
         $this->options->existingClones[$this->clone] = array(
             "directoryName"     => $this->options->cloneDirectoryName,
-            "path"              => ABSPATH . $this->options->cloneDirectoryName,
-            //"url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
+            "path"              => \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName,
             "url"               => $this->multisiteHomeDomain . '/' . $this->options->cloneDirectoryName,
             "number"            => $this->options->cloneNumber,
             "version"           => \WPStaging\WPStaging::VERSION,
             "status"            => false,
             "prefix"            => $this->options->prefix,
+            "datetime"          => time(),
+            "databaseUser"      => $this->options->databaseUser,
+            "databasePassword"  => $this->options->databasePassword,
+            "databaseDatabase"  => $this->options->databaseDatabase,
+            "databaseServer"  => $this->options->databaseServer,
+            "databasePrefix"  => $this->options->databasePrefix,
         );
 
         if (false === update_option("wpstg_existing_clones_beta", $this->options->existingClones))

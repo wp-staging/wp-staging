@@ -15,14 +15,17 @@ class Cancel extends Job {
     public function start() {
         $cloneData = $this->createCloneData();
 
-        if (empty($cloneData)) {
+      if( empty( $cloneData ) ) {
             return true;
         }
-
-
+      // Delete data in external database
+      if( empty( $this->options->databaseUser ) ) {
         $delete = new Delete();
-        return $delete->start($cloneData);
+      } else {
+         $delete = new Delete( true );
     }
+      return $delete->start( $cloneData );
+   }
 
     /**
      * @return array
@@ -30,7 +33,7 @@ class Cancel extends Job {
     protected function createCloneData() {
         $clone = array();
 
-        if (!$this->check()) {
+      if( !$this->check() ) {
             return $clone;
         }
 
@@ -47,11 +50,11 @@ class Cancel extends Job {
      */
     public function check() {
         return (
-                isset($this->options) &&
-                isset($this->options->clone) &&
-                isset($this->options->cloneNumber) &&
-                isset($this->options->cloneDirectoryName) &&
-                isset($_POST["clone"]) &&
+              isset( $this->options ) &&
+              isset( $this->options->clone ) &&
+              isset( $this->options->cloneNumber ) &&
+              isset( $this->options->cloneDirectoryName ) &&
+              isset( $_POST["clone"] ) &&
                 $_POST["clone"] === $this->options->clone
                 );
     }
@@ -60,15 +63,15 @@ class Cancel extends Job {
      * Get json response
      * return json
      */
-    private function returnFinish($message = '') {
+   private function returnFinish( $message = '' ) {
 
-        wp_die(json_encode(array(
+      wp_die( json_encode( array(
             'job' => 'delete',
             'status' => true,
             'message' => $message,
             'error' => false,
             'delete' => 'finished'
-        )));
+      ) ) );
     }
 
 }

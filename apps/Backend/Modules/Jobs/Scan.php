@@ -7,8 +7,9 @@ if( !defined( "WPINC" ) ) {
    die;
 }
 
-use WPStaging\Utils\Directories;
 use WPStaging\WPStaging;
+use WPStaging\Utils\Directories;
+use WPStaging\Backend\Optimizer\Optimizer;
 
 /**
  * Class Scan
@@ -37,6 +38,10 @@ class Scan extends Job {
 
       // Get directories
       $this->directories();
+
+      // Install Optimizer
+      $this->installOptimizer();
+      
 
       $this->db = WPStaging::getInstance()->get( 'wpdb' );
       $this->prefix = $this->db->prefix;
@@ -91,6 +96,14 @@ class Scan extends Job {
       $this->saveOptions();
 
       return $this;
+   }
+
+   /**
+    * Make sure the Optimizer mu plugin is installed before cloning or pushing
+    */
+   private function installOptimizer(){
+      $optimizer = new Optimizer();
+      $optimizer->installOptimizer();
    }
 
    /**
@@ -157,7 +170,6 @@ class Scan extends Job {
 
          // Extra class to differentiate between wp core and non core folders
          $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
-
 
          $output .= "<div class='wpstg-dir'>";
          $output .= "<input type='checkbox' class='wpstg-check-dir " . $class . "'";

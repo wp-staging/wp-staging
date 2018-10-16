@@ -751,6 +751,9 @@ color:#777777;
     text-align: center;
     margin-top: 20px;
 }
+.wpstg-button.green:hover {
+    background-color: #8ed122;
+}
 #wpstg-welcome li {
     font-size: 18px;
     line-height: 29px;
@@ -802,7 +805,7 @@ color:#777777;
 
 .wpstg-staging-info {
     clear:both;
-    float: right;
+    float: left;
     color:grey;
     font-size: 12px;
 }
@@ -950,4 +953,40 @@ color:#777777;
 
 #wpstg-resume-cloning {
     display:none;
+}
+
+#wpstg-external-db th {
+    text-align: left;
+}
+
+#wpstg-db-connect{
+    font-weight: normal;
+}
+
+#wpstg-db-status {
+    display:block;
+    margin-top:5px;
+    padding: 5px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-decoration: none;
+    text-align:center;
+}
+
+.wpstg-success {
+    color: #3c763d;
+    background-color: #dff0d8;
+    border-color: #d6e9c6;
+}
+.wpstg-failed {
+    color: #a94442;
+    background-color: #f2dede;
+    border-color: #ebccd1;
+}
+
+#wpstg-external-db tr th{
+    font-weight:500;
+    color:grey;
+    opacity: 0.8;
 }

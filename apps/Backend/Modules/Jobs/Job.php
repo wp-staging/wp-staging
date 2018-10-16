@@ -201,6 +201,7 @@ abstract class Job implements JobInterface {
       $this->settings->batchSize = "2";
       $this->settings->cpuLoad = 'low';
       $this->settings->maxFileSize = 8;
+      $this->settings->optimizer = "1";
       update_option( 'wpstg_settings', $this->settings );
    }
 

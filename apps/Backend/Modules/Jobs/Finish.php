@@ -98,7 +98,12 @@ class Finish extends Job
             "version"           => \WPStaging\WPStaging::VERSION,
             "status"            => false,
             "prefix"            => $this->options->prefix,
-            "datetime"          => time()
+            "datetime"          => time(),
+            "databaseUser"      => $this->options->databaseUser,
+            "databasePassword"  => $this->options->databasePassword,
+            "databaseDatabase"  => $this->options->databaseDatabase,
+            "databaseServer"  => $this->options->databaseServer,
+            "databasePrefix"  => $this->options->databasePrefix,
         );
 
         if (false === update_option("wpstg_existing_clones_beta", $this->options->existingClones))

@@ -14,7 +14,6 @@
         <?php foreach ($availableClones as $name => $data):?>
             <div id="<?php echo $data["directoryName"]; ?>" class="wpstg-clone">
 
-                <?php //$urlLogin = $data["url"] . "/wp-login.php";?>
                 <?php $urlLogin = $data["url"] . "/?";?>
 
                 <a href="<?php echo $urlLogin?>" class="wpstg-clone-title" target="_blank">
@@ -39,9 +38,15 @@
                 <?php echo apply_filters("wpstg_after_stage_buttons", $html = '', $name, $data)?>
                 <div class="wpstg-staging-info">                   
                     <?php 
-                    $prefix = isset ($data['prefix']) ? __("DB prefix: <span class='wpstg-bold'>" . $data['prefix'], "wp-staging") . '</span> ' : '&nbsp;&nbsp;&nbsp;';
-                    //$path = isset ($data['directoryName']) ? __("Subdir: <span class='wpstg-bold'>" . $data['directoryName'], "wp-staging") . '</span>' : '';
+                    $prefix = !empty ($data['prefix']) ? __("DB Prefix: <span class='wpstg-bold'>" . $data['prefix'], "wp-staging") . '</span> ' : '&nbsp;&nbsp;&nbsp;';
                     echo $prefix;
+                    echo '</br>';
+                    $dbname = !empty ($data['databaseDatabase']) ? __("DB Name: <span class='wpstg-bold'>" . $data['databaseDatabase'], "wp-staging") . '</span></br> ' : '';
+                    echo $dbname;
+                    $datetime = !empty ($data['datetime']) ? __("Updated: <span>" . date("D, d M Y H:i:s T",$data['datetime']) , "wp-staging") . '</span> ' : '&nbsp;&nbsp;&nbsp;';
+                    echo $datetime;
+                    
+                    
                     ?>
                 </div>
             </div>

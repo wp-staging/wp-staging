@@ -146,6 +146,14 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.3.9 =
+* New: Support for wp-config.php located in one level up of the root folder for multisites
+* New: Allow exclusion of custom options from wp_options from beeing pushed
+* New: Make sure Optimizer is installed and activated
+* New: Show date of site creation/update in list of staging sites
+* Tweak: Better looking UI elements
+* Fix: Requirements Check not working as intended
+
 = 2.3.8 =
 * Tweak: Lowering default performance settings for more reliability during cloning
 * New: Set WP_CACHE to false in wp-config.php after cloning to prevent log in issues to staging site
@@ -185,23 +193,11 @@ https://wp-staging.com
 * New: Check if clone subfolder already exists before creating clone
 * Fix: Changing file copy limit not working
 
-= 2.3.4 =
-* New: Compatible up to WordPress 4.9.8
-* New: Support for Windows Azure cloud servers
-* Fix: Missing http(s) scheme after cloning multisites results in not working clones
-
-= 2.3.3 =
-* New: Compatible up to WordPress 4.9.8
-* New: Better error reporting
-* New: Detect if wp-config.php has been moved one folder level up
-* New: Login options not needed any more - removed
-* Fix: Remove term 'Error' from login page
-
 
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
 
-= 2.3.8 =
+= 2.3.9 =
 * New: Compatible to WordPress 4.9.8. Important fixes!
 

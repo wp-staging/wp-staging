@@ -278,7 +278,8 @@ class Data extends JobExecutable {
 
 
       // All good
-      if( $result ) {
+      if( false !== $result) {
+         $this->log( "Preparing Data Step1: Successfull", Logger::TYPE_INFO );
          return true;
       }
 
@@ -296,6 +297,7 @@ class Data extends JobExecutable {
 
       // Skip - Table does not exist
       if( false === $this->isTable( $this->prefix . 'options' ) ) {
+         $this->log( "Preparing Data Step2: Skipping" );
          return true;
       }
       // Skip - Table is not selected or updated
@@ -304,23 +306,30 @@ class Data extends JobExecutable {
          return true;
       }
 
-      $result = $this->db->query(
+//      $result = $this->db->query(
+//              $this->db->prepare(
+//                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'", "true"
+//              )
+//      );
+      $delete = $this->db->query(
               $this->db->prepare(
-                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'", "true"
+                      "DELETE FROM `{$this->prefix}options` WHERE `option_name` = %s;", 'wpstg_is_staging_site'
               )
       );
 
+
       // No errors but no option name such as wpstg_is_staging_site
-      if( '' === $this->db->last_error && 0 == $result ) {
-         $result = $this->db->query(
+      //if( '' === $this->db->last_error && 0 == $result ) {
+         $insert = $this->db->query(
                  $this->db->prepare(
                          "INSERT INTO {$this->prefix}options (option_name,option_value) VALUES ('wpstg_is_staging_site',%s)", "true"
                  )
          );
-      }
+      //}
 
       // All good
-      if( $result ) {
+      if( $insert ) {
+         $this->log( "Preparing Data Step2: Successfull", Logger::TYPE_INFO );
          return true;
       }
 
@@ -607,7 +616,7 @@ class Data extends JobExecutable {
          $replace.= " // Changed by WP-Staging";
 
          if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
-            $this->log( "Preparing Data: Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data: Failed to update WP_HOME", Logger::TYPE_ERROR );
             return false;
          }
       } else {
@@ -615,10 +624,10 @@ class Data extends JobExecutable {
       }
 
       if( false === @file_put_contents( $path, $content ) ) {
-         $this->log( "Preparing Data Step11: Failed to update WP_SITEURL. Can't save contents", Logger::TYPE_ERROR );
+         $this->log( "Preparing Data Step10: Failed to update WP_HOME. Can't save contents", Logger::TYPE_ERROR );
          return false;
       }
-      $this->Log( "Preparing Data: Finished Step 11 successfully" );
+      $this->Log( "Preparing Data: Finished Step 10 successfully" );
       return true;
    }
 
@@ -709,10 +718,10 @@ class Data extends JobExecutable {
 
       if( !$updateOptions ) {
          $this->log( "Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
-         $this->returnException( "Data Crunching Step 15: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+         $this->returnException( " Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
          return false;
       }
-
+      $this->Log( "Preparing Data: Finished Step 12 successfully" );
       return true;
    }
 
@@ -832,7 +841,12 @@ class Data extends JobExecutable {
     * @return boolean
     */
    protected function isSubDir() {
-      if( get_option( 'siteurl' ) !== get_option( 'home' ) ) {
+// Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
+// This is happening much more often than you would expect
+      $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
+      $home = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
+
+      if( $home !== $siteurl ) {
          return true;
       }
       return false;

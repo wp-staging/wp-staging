@@ -6,9 +6,20 @@
     </h4>
 
     <p>
-        <?php _e('Clone name:', 'wp-staging'); ?> 
-        <span style="background-color:#575757;color:#fff;">
-        <?php echo $clone->directoryName; ?>
+        <?php _e('Clone Name:', 'wp-staging'); ?> 
+        <span style="background-color:#5b9dd9;color:#fff;padding: 2px;border-radius: 3px;">
+        <?php 
+        echo $clone->directoryName; 
+        ?>
+        </span>
+    </p>
+    <p>
+        <?php _e('Database Name:', 'wp-staging'); ?> 
+        <span style="background-color:#5b9dd9;color:#fff;padding: 2px;border-radius: 3px;">
+        <?php 
+        $database = empty($clone->databaseDatabase) ? "{$dbname} (Main Database)" : $clone->databaseDatabase;
+        echo $database; 
+        ?>
         </span>
     </p>
 
@@ -43,7 +54,7 @@
                     <?php echo $table->name?>
                 </label>
                 <span class="wpstg-size-info">
-				<?php echo $table->size?>
+				<?php echo isset($table->size) ? $table->size : '';?>
 			</span>
             </div>
         <?php endforeach ?>
@@ -69,8 +80,8 @@
         <div class="wpstg-dir">
             <label>
                 <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1" checked>
-                <?php echo $clone->path; ?>
-                <span class="wpstg-size-info"></span>
+                <?php echo $clone->path;?>
+                <span class="wpstg-size-info"><?php echo isset($clone->size) ? $clone->size : ''; ?></span>
             </label>
         </div>
     </div>

@@ -43,7 +43,7 @@ class SearchReplace extends JobExecutable {
       $this->db = WPStaging::getInstance()->get( "wpdb" );
       $this->tmpPrefix = $this->options->prefix;
    }
-
+   
    public function start() {
       // Skip job. Nothing to do
       if( $this->options->totalSteps === 0 ) {
@@ -215,7 +215,7 @@ class SearchReplace extends JobExecutable {
          $this->log( "DB Processing: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
          return true;
       }
-
+      
       // Load up the default settings for this chunk.
       $table = esc_sql( $table );
       $current_page = $this->options->job->start + $this->settings->querySRLimit;
@@ -260,7 +260,6 @@ class SearchReplace extends JobExecutable {
       $args['replace_guids'] = 'off';
       $args['dry_run'] = 'off';
       $args['case_insensitive'] = false;
-      $args['replace_guids'] = 'off';
       $args['replace_mails'] = 'off';
 
       // Allow filtering of search & replace parameters

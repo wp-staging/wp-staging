@@ -55,6 +55,7 @@ class uninstall {
             delete_option("wpstg_is_staging_site");
             delete_option("wpstg_settings");
             delete_option("wpstg_rmpermalinks_executed");
+            delete_option("wpstg_activation_redirect");
 
             /* Do not delete these fields without actually deleting the staging site
              * @create a delete routine which deletes the staging sites first 

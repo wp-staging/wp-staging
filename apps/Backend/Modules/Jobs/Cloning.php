@@ -118,6 +118,29 @@ class Cloning extends Job {
 
       array_unshift( $this->options->directoriesToCopy, \WPStaging\WPStaging::getWPpath() );
 
+      $this->options->databaseServer = 'localhost';
+      if( isset( $_POST["databaseServer"] ) && !empty( $_POST["databaseServer"] ) ) {
+         $this->options->databaseServer = $_POST["databaseServer"];
+      }
+      $this->options->databaseUser = '';
+      if( isset( $_POST["databaseUser"] ) && !empty( $_POST["databaseUser"] ) ) {
+         $this->options->databaseUser = $_POST["databaseUser"];
+      }
+      $this->options->databasePassword = '';
+      if( isset( $_POST["databasePassword"] ) && !empty( $_POST["databasePassword"] ) ) {
+         $this->options->databasePassword = $_POST["databasePassword"];
+      }
+      $this->options->databaseDatabase = '';
+      if( isset( $_POST["databaseDatabase"] ) && !empty( $_POST["databaseDatabase"] ) ) {
+         $this->options->databaseDatabase = $_POST["databaseDatabase"];
+      }
+      $this->options->databasePrefix = 'wp_';
+      if( isset( $_POST["databasePrefix"] ) && !empty( $_POST["databasePrefix"] ) ) {
+         $this->options->databasePrefix = $_POST["databasePrefix"];
+      }
+
+
+
       // Delete files to copy listing
       $this->cache->delete( "files_to_copy" );
 

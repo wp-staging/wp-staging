@@ -17,7 +17,7 @@ use WPStaging\Backend\Modules\Jobs\Delete;
 use WPStaging\Backend\Modules\Jobs\Files;
 use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Backend\Modules\Jobs\Logs;
-use WPStaging\Backend\Modules\Optimizer;
+#use WPStaging\Backend\Modules\Optimizer;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Notices\Notices;
@@ -93,7 +93,6 @@ class Administrator extends InjectionAware {
       $loader->addAction( "wp_ajax_wpstg_overview", $this, "ajaxOverview" );
       $loader->addAction( "wp_ajax_wpstg_scanning", $this, "ajaxScan" );
       $loader->addAction( "wp_ajax_wpstg_check_clone", $this, "ajaxcheckCloneName" );
-      //$loader->addAction( "wp_ajax_wpstg_update_struc", $this, "ajaxStartUpdate" );
       $loader->addAction( "wp_ajax_wpstg_update", $this, "ajaxUpdateProcess" );
       $loader->addAction( "wp_ajax_wpstg_cloning", $this, "ajaxStartClone" );
       $loader->addAction( "wp_ajax_wpstg_clone_database", $this, "ajaxCloneDatabase" );
@@ -397,6 +396,7 @@ class Administrator extends InjectionAware {
    public function ajaxScan() {
       check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
 
+      $db = WPStaging::getInstance()->get( 'wpdb' );
 
       // Scan
       $scan = new Scan();
@@ -418,7 +418,7 @@ class Administrator extends InjectionAware {
       $cloneNameLength = strlen( $cloneName );
       $clones = get_option( "wpstg_existing_clones_beta", array() );
 
-      $clonePath = trailingslashit(get_home_path()) . $cloneName;
+      $clonePath = trailingslashit( get_home_path() ) . $cloneName;
 
       // Check clone name length
       if( $cloneNameLength < 1 || $cloneNameLength > 16 ) {
@@ -456,8 +456,8 @@ class Administrator extends InjectionAware {
       require_once "{$this->path}views/clone/ajax/update.php";
 
       wp_die();
-      
    }
+      
    /**
     * Ajax Start Clone (Basically just layout and saving data)
     */
@@ -545,6 +545,8 @@ class Administrator extends InjectionAware {
 
       $clone = $delete->getClone();
 
+      $dbname = $delete->getDbName();
+
       require_once "{$this->path}views/clone/ajax/delete-confirmation.php";
 
       wp_die();
@@ -557,6 +559,7 @@ class Administrator extends InjectionAware {
       check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
 
       $delete = new Delete();
+
       wp_send_json( $delete->start() );
    }
 
@@ -567,6 +570,7 @@ class Administrator extends InjectionAware {
       check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
 
       $cancel = new Cancel();
+
       wp_send_json( $cancel->start() );
    }
 
@@ -720,10 +724,44 @@ class Administrator extends InjectionAware {
          $terms = ( bool ) $args['wpstg_terms'];
       }
 
-      $report = new Report($this->di);
+      $report = new Report( $this->di );
       $errors = $report->send( $email, $message, $terms, $syslog );
 
       echo json_encode( array('errors' => $errors) );
+      exit;
+   }
+
+   /**
+    * Connect to external database for testing correct credentials
+    */
+   public function ajaxDatabaseConnect() {
+      // Set params
+      if( empty( $args ) ) {
+         $args = stripslashes_deep( $_POST );
+}
+
+      $user = !empty( $args['databaseUser'] ) ? $args['databaseUser'] : '';
+      $password = !empty( $args['databasePassword'] ) ? $args['databasePassword'] : '';
+      $database = !empty( $args['databaseDatabase'] ) ? $args['databaseDatabase'] : '';
+      $server = !empty( $args['databaseServer'] ) ? $args['databaseServer'] : '';
+
+      $db = new \wpdb( $user, $password, $database, $server );
+
+      // Can not connect to mysql
+      if( !empty( $db->error->errors['db_connect_fail']['0'] ) ) {
+         echo json_encode( array('errors' => $db->error->errors['db_connect_fail']['0']) );
+         exit;
+      }
+
+
+      // Can not connect to database
+      $sql = "SHOW DATABASES LIKE '{$database}';";
+      $results = $db->query( $sql );
+      if( empty( $results ) ) {
+         echo json_encode( array('errors' => " Database {$database} does not exist. You need to create it first. ") );
+         exit;
+      }
+      echo json_encode( array('success' => 'true') );
       exit;
    }
 

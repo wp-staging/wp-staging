@@ -167,13 +167,12 @@ class Files extends JobExecutable {
 
       // File is excluded
       if( $this->isFileExcluded( $file ) ) {
-         $this->debugLog( "File Excluded: {$file}", Logger::TYPE_INFO );
+         $this->log( "Skipping file by rule: {$file}", Logger::TYPE_INFO );
          return false;
       }
-
       // Path + File is excluded
       if( $this->isFileExcludedFullPath( $file ) ) {
-         $this->debugLog( "File Excluded Full Path: {$file}", Logger::TYPE_INFO );
+         $this->log( "Skipping file by rule: {$file}", Logger::TYPE_INFO );
          return false;
       }
 
@@ -226,7 +225,7 @@ class Files extends JobExecutable {
       $destinationPath = $this->destination . $relativePath;
       $destinationDirectory = dirname( $destinationPath );
 
-      if( !is_dir( $destinationDirectory ) && !@mkdir( $destinationDirectory, 0755, true ) ) {
+      if( !is_dir( $destinationDirectory ) && !@mkdir( $destinationDirectory, 0775, true ) ) {
          $this->log( "Files: Can not create directory {$destinationDirectory}", Logger::TYPE_ERROR );
          return false;
       }
@@ -294,26 +293,26 @@ class Files extends JobExecutable {
    }
 
    /**
-    * Check if file is excluded from copying process
+    * Check if certain file is excluded from copying process
     * 
-    * @param string $file filename including ending
+    * @param string $file filename including ending without full path
     * @return boolean
     */
    private function isFileExcluded( $file ) {
-      
-      if( in_array( basename( $file ), $this->options->excludedFiles ) ) {
+      // If file name exists
+      if (  in_array( basename($file), $this->options->excludedFiles )){
          return true;
       }
+
       // Do not copy wp-config.php if the clone gets updated. This is for security purposes, 
       // because if the updating process fails, the staging site is not accessable any longer
       if( isset( $this->options->mainJob ) && $this->options->mainJob == "updating" && stripos( strrev( $file ), strrev( "wp-config.php" ) ) === 0 ) {
          return true;
       }
 
-
       return false;
    }
-
+   
    /**
     * Check if certain file is excluded from copying process
     * 
@@ -322,8 +321,8 @@ class Files extends JobExecutable {
     */
    private function isFileExcludedFullPath( $file ) {
       // If path + file exists
-      foreach ( $this->options->excludedFilesFullPath as $excludedFile ) {
-         if( false !== strpos( $file, $excludedFile ) ) {
+      foreach ($this->options->excludedFilesFullPath as $excludedFile){
+         if(  false !== strpos( $file, $excludedFile )){
             return true;
          }
       }
