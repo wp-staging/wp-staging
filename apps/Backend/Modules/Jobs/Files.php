@@ -156,9 +156,6 @@ class Files extends JobExecutable {
 
       $directory = dirname( $file );
 
-      // Get file size
-      $fileSize = filesize( $file );
-
       // Directory is excluded
       if( $this->isDirectoryExcluded( $directory ) ) {
          $this->debugLog( "Directory Excluded: {$file}", Logger::TYPE_INFO );
@@ -170,23 +167,26 @@ class Files extends JobExecutable {
          $this->debugLog( "File excluded: {$file}", Logger::TYPE_INFO );
          return false;
       }
-      
+
       // Path + File is excluded
       if( $this->isFileExcludedFullPath( $file ) ) {
          $this->debugLog( "File Excluded Full Path: {$file}", Logger::TYPE_INFO );
          return false;
       }
-      
-      // File is over maximum allowed file size (8MB)
-      if( $fileSize >= $this->settings->maxFileSize * 1000000 ) {
-         $this->log( "Skipping big file: {$file}", Logger::TYPE_INFO );
-         return false;
-      }
+
 
       // Invalid file, skipping it as if succeeded
       if( !is_file( $file ) ) {
          $this->debugLog( "Not a file {$file}" );
          return true;
+      }
+
+      // Get file size
+      $fileSize = filesize( $file );
+      // File is over maximum allowed file size (8MB)
+      if( $fileSize >= $this->settings->maxFileSize * 1000000 ) {
+         $this->log( "Skipping big file: {$file}", Logger::TYPE_INFO );
+         return false;
       }
       // Invalid file, skipping it as if succeeded
       if( !is_readable( $file ) ) {
@@ -286,15 +286,14 @@ class Files extends JobExecutable {
       // Do not copy wp-config.php if the clone gets updated. This is for security purposes, 
       // because if the updating process fails, the staging site would not be accessable any longer
       if( isset( $this->options->mainJob ) && $this->options->mainJob == "updating" && stripos( strrev( $file ), strrev( "wp-config.php" ) ) === 0 ) {
-         return true;      
-         
+         return true;
       }
 
 
       return false;
    }
-   
-      /**
+
+   /**
     * Check if certain file is excluded from copying process
     * 
     * @param string $file filename including ending + (part) path e.g wp-content/db.php
@@ -302,8 +301,8 @@ class Files extends JobExecutable {
     */
    private function isFileExcludedFullPath( $file ) {
       // If path + file exists
-      foreach ($this->options->excludedFilesFullPath as $excludedFile){
-         if(  false !== strpos( $file, $excludedFile )){
+      foreach ( $this->options->excludedFilesFullPath as $excludedFile ) {
+         if( false !== strpos( $file, $excludedFile ) ) {
             return true;
          }
       }
