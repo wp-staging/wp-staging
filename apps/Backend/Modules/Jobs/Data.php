@@ -306,11 +306,6 @@ class Data extends JobExecutable {
          return true;
       }
 
-//      $result = $this->db->query(
-//              $this->db->prepare(
-//                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'", "true"
-//              )
-//      );
       $delete = $this->db->query(
               $this->db->prepare(
                       "DELETE FROM `{$this->prefix}options` WHERE `option_name` = %s;", 'wpstg_is_staging_site'
