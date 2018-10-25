@@ -64,13 +64,7 @@ class Frontend extends InjectionAware {
    /**
     * Check permissions for the page to decide whether or not to disable the page
     */
-//   public function checkPermissions() {
-//      $this->resetPermaLinks();
-//
-//      if( $this->disableLogin() ) {
-//         wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wp-staging' ), $this->getLoginUrl() ) );
-//      }
-//   }
+
    public function checkPermissions() {
       $this->resetPermaLinks();
 
@@ -106,20 +100,6 @@ class Frontend extends InjectionAware {
       }
    }
 
-   /**
-    * Get login link
-    * @return string
-    */
-//   private function getLoginUrl() {
-//      
-//      if( empty( $this->loginSlug ) ) {
-//         //return get_home_url() . '/wp-admin';
-//         return get_site_url() . '/wp-admin';
-//
-//      }
-//
-//      return get_home_url() . '/?' . $this->loginSlug;
-//   }
    /**
     * Get path to wp-login.php
     * @return string
