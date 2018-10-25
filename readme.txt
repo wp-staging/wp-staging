@@ -153,6 +153,8 @@ https://wp-staging.com
 * New: Show date of site creation/update in list of staging sites
 * Tweak: Better looking UI elements
 * Fix: Requirements Check not working as intended
+* Fix: Filesize() failed if file to copy is not a regular file
+* Fix: remove ? parameter from staging site
 
 = 2.3.8 =
 * Tweak: Lowering default performance settings for more reliability during cloning
