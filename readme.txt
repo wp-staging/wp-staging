@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.4.0 =
+* New: Compatible to WP 5.0.0 Gutenberg
+
 = 2.3.9 =
 * New: Support for wp-config.php located in one level up of the root folder for multisites
 * New: Allow exclusion of custom options from wp_options from beeing pushed
@@ -200,6 +203,6 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.3.9 =
-* New: Compatible to WordPress 4.9.8. Important fixes!
+= 2.4.0 =
+* New: Compatible to WordPress 5.0.0. Important fixes!
 
