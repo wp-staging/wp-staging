@@ -1,0 +1,41 @@
+# Codeception Test Suite Configuration
+#
+# Suite for acceptance tests.
+# Perform tests in browser using the WebDriver or PhpBrowser.
+# If you need both WebDriver and PHPBrowser tests - create a separate suite.
+
+actor: AcceptanceTester
+modules:
+    enabled: 
+        - WebDriver:
+            url: http://local.wordpress.test
+            #browser: firefox
+            browser: chrome
+            window_size: 1024x1300
+            capabilities:
+                unexpectedAlertBehaviour: 'accept'
+#              chromeOptions:
+#                  args:
+#                    ['disable-infobars', 'headless', 'disable-gpu']
+        - \Helper\Acceptance
+        - Asserts
+        
+env:
+    multisite:
+        modules:
+            config:
+                WebDriver:
+                    url: 'http://local.multipath.test'
+                    window_size: 1024x1300
+    singlesubdir:
+        modules:
+            config:
+                WebDriver:
+                    url: 'http://local.subfolder.test/wordpress'
+                    window_size: 1024x1300
+    single:
+        modules:
+            config:
+                WebDriver:
+                    url: 'http://local.wordpress.test'
+                    window_size: 1024x1300
