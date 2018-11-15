@@ -169,8 +169,7 @@ class SystemInfo extends InjectionAware {
       $output .= $this->info( "File Copy Limit:", isset( $settings->fileLimit ) ? $settings->fileLimit : 'undefined'  );
       $output .= $this->info( "Batch Size:", isset( $settings->batchSize ) ? $settings->batchSize : 'undefined'  );
       $output .= $this->info( "CPU Load:", isset( $settings->cpuLoad ) ? $settings->cpuLoad : 'undefined'  );
-      $output .= $this->info( "WP in Subdir:", isset( $settings->wpSubDirectory ) ? $settings->wpSubDirectory : 'false'  );
-      //$output .= $this->info( "Login Custom Link:", isset( $settings->loginSlug ) ? $settings->loginSlug : 'false'  );
+      $output .= $this->info( "WP in Subdir:", $this->isSubDir() ? 'true' : 'false'  );
 
       $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version < 1.1.6.x" . PHP_EOL . PHP_EOL;
 

@@ -37,10 +37,11 @@ class DatabaseExternal extends JobExecutable {
     * Initialize
     */
    public function initialize() {
-      // Add 2 to total table count because we need to copy two more tables from the main multisite installation wp_users and wp_usermeta
-      $this->total = count( $this->options->tables ) + 2;
       $this->db = WPStaging::getInstance()->get( "wpdb" );
       $this->stagingDb = $this->getExternalDBConnection();
+      $this->getTables();
+      // Add 2 to total table count because we need to copy two more tables from the main multisite installation wp_users and wp_usermeta
+      $this->total = count( $this->options->tables ) + 2;
       $this->isFatalError();
    }
 
@@ -68,6 +69,19 @@ class DatabaseExternal extends JobExecutable {
       return $db;
    }
 
+   private function getTables() {
+      // Add wp_users and wp_usermeta to the tables if they do not exist
+      // because they are not available in MU installation but we need them on the staging site
+
+      if( !in_array( $this->db->prefix . 'users', $this->options->tables ) ) {
+         array_push( $this->options->tables, $this->db->prefix . 'users' );
+         $this->saveOptions();
+      }
+      if( !in_array( $this->db->prefix . 'usermeta', $this->options->tables ) ) {
+         array_push( $this->options->tables, $this->db->prefix . 'usermeta' );
+         $this->saveOptions();
+      }
+   }
 
    /**
     * Return fatal error and stops here if subfolder already exists
@@ -87,7 +101,7 @@ class DatabaseExternal extends JobExecutable {
     * @return void
     */
    protected function calculateTotalSteps() {
-      $this->options->totalSteps = $this->total === 0 ? 1 : $this->total;
+      $this->options->totalSteps = ($this->total === 0) ? 1 : $this->total;
    }
 
    /**
@@ -107,7 +121,6 @@ class DatabaseExternal extends JobExecutable {
       }
 
       // No more steps, finished
-      //if( $this->options->currentStep > $this->total || !isset( $this->options->tables[$this->options->currentStep] ) ) {
       if( $this->options->currentStep > $this->total ) {
          $this->prepareResponse( true, false );
          return false;
@@ -122,10 +135,9 @@ class DatabaseExternal extends JobExecutable {
          return true;
       }
 
-      $this->copyWpUsers();
-
-      $this->copyWpUsermeta();
-
+//      $this->copyWpUsers();
+//
+//      $this->copyWpUsermeta();
       // Prepare Response
       $this->prepareResponse();
 
@@ -139,7 +151,7 @@ class DatabaseExternal extends JobExecutable {
     */
    private function getStagingPrefix() {
 
-      $this->options->prefix = $this->options->databasePrefix;
+      $this->options->prefix = !empty( $this->options->databasePrefix ) ? $this->options->databasePrefix : $this->db->prefix;
 
       return $this->options->prefix;
    }
@@ -154,6 +166,15 @@ class DatabaseExternal extends JobExecutable {
       $strings = new Strings();
       $tableName = is_object( $tableName ) ? $tableName->name : $tableName;
       $newTableName = $this->getStagingPrefix() . $strings->str_replace_first( $this->db->prefix, null, $tableName );
+
+      // Get wp_users from main site
+      if( 'users' === $strings->str_replace_first( $this->db->prefix, null, $tableName ) ) {
+         $tableName = $this->db->base_prefix . 'users';
+      }
+      // Get wp_usermeta from main site
+      if( 'usermeta' === $strings->str_replace_first( $this->db->prefix, null, $tableName ) ) {
+         $tableName = $this->db->base_prefix . 'usermeta';
+      }
 
       // Drop table if necessary
       $this->dropTable( $newTableName );
@@ -177,54 +198,54 @@ class DatabaseExternal extends JobExecutable {
     * Copy multisite global user table wp_users to wpstgX_users
     * @return bool
     */
-   private function copyWpUsers() {
-      $strings = new Strings();
-      $tableName = $this->db->base_prefix . 'users';
-      $newTableName = $this->getStagingPrefix() . $strings->str_replace_first( $this->db->base_prefix, null, $tableName );
-
-      // Drop table if necessary
-      $this->dropTable( $newTableName );
-
-      // Save current job
-      $this->setJob( $newTableName );
-
-      // Beginning of the job
-      if( !$this->startJob( $newTableName, $tableName ) ) {
-         return true;
-      }
-
-      // Copy data
-      $this->copyData( $newTableName, $tableName );
-
-      // Finish the step
-      return $this->finishStep();
-   }
+//   private function copyWpUsers() {
+//      $strings = new Strings();
+//      $tableName = $this->db->base_prefix . 'users';
+//      $newTableName = $this->getStagingPrefix() . $strings->str_replace_first( $this->db->base_prefix, null, $tableName );
+//
+//      // Drop table if necessary
+//      $this->dropTable( $newTableName );
+//
+//      // Save current job
+//      $this->setJob( $newTableName );
+//
+//      // Beginning of the job
+//      if( !$this->startJob( $newTableName, $tableName ) ) {
+//         return true;
+//      }
+//
+//      // Copy data
+//      $this->copyData( $newTableName, $tableName );
+//
+//      // Finish the step
+//      return $this->finishStep();
+//   }
 
    /**
     * Copy multisite global user table wp_usermeta to wpstgX_users
     * @return bool
     */
-   private function copyWpUsermeta() {
-      $strings = new Strings();
-      $tableName = $this->db->base_prefix . 'usermeta';
-      $newTableName = $this->getStagingPrefix() . $strings->str_replace_first( $this->db->base_prefix, null, $tableName );
-
-      // Drop table if necessary
-      $this->dropTable( $newTableName );
-
-      // Save current job
-      $this->setJob( $newTableName );
-
-      // Beginning of the job
-      if( !$this->startJob( $newTableName, $tableName ) ) {
-         return true;
-      }
-      // Copy data
-      $this->copyData( $newTableName, $tableName );
-
-      // Finish the step
-      return $this->finishStep();
-   }
+//   private function copyWpUsermeta() {
+//      $strings = new Strings();
+//      $tableName = $this->db->base_prefix . 'usermeta';
+//      $newTableName = $this->getStagingPrefix() . $strings->str_replace_first( $this->db->base_prefix, null, $tableName );
+//
+//      // Drop table if necessary
+//      $this->dropTable( $newTableName );
+//
+//      // Save current job
+//      $this->setJob( $newTableName );
+//
+//      // Beginning of the job
+//      if( !$this->startJob( $newTableName, $tableName ) ) {
+//         return true;
+//      }
+//      // Copy data
+//      $this->copyData( $newTableName, $tableName );
+//
+//      // Finish the step
+//      return $this->finishStep();
+//   }
 
    /**
     * Copy data from old table to new table
@@ -232,7 +253,7 @@ class DatabaseExternal extends JobExecutable {
     * @param string $old
     */
    private function copyData( $new, $old ) {
-      $old = $this->db->dbname . '.' . $new;
+      $old = $this->db->dbname . '.' . $old;
       $new = $this->options->databaseDatabase . '.' . $new;
 
 
@@ -276,10 +297,23 @@ class DatabaseExternal extends JobExecutable {
     */
    private function startJob( $new, $old ) {
 
+      if( $this->isExcludedTable( $new ) ) {
+         return false;
+      }
+
+      $this->options->job->total = 0;
+
       $new = $this->options->databaseDatabase . '.' . $new;
       $old = $this->db->dbname . '.' . $old;
 
       if( 0 != $this->options->job->start ) {
+         return true;
+      }
+
+      // Table does not exists
+      $table = str_replace( $this->db->dbname . '.', null, $old );
+      $result = $this->db->query( "SHOW TABLES LIKE '{$table}'" );
+      if( !$result || 0 === $result ) {
          return true;
       }
 
@@ -295,6 +329,29 @@ class DatabaseExternal extends JobExecutable {
       }
 
       return true;
+   }
+
+   /**
+    * Is table excluded from search replace processing?
+    * @param string $table
+    * @return boolean
+    */
+   private function isExcludedTable( $table ) {
+
+      $customTables = apply_filters( 'wpstg_clone_database_tables_exclude', array() );
+      $defaultTables = array('blogs', 'blog_versions');
+
+      $tables = array_merge( $customTables, $defaultTables );
+
+      $excludedTables = array();
+      foreach ( $tables as $key => $value ) {
+         $excludedTables[] = $this->options->prefix . $value;
+      }
+
+      if( in_array( $table, $excludedTables ) ) {
+         return true;
+      }
+      return false;
    }
 
    /**
@@ -337,14 +394,18 @@ class DatabaseExternal extends JobExecutable {
     * @return bool
     */
    private function shouldDropTable( $new, $old ) {
-      return (
-              $old === $new &&
+
+
+
+      if( $old === $new &&
               (
               !isset( $this->options->job->current ) ||
               !isset( $this->options->job->start ) ||
               0 == $this->options->job->start
-              )
-              );
+              ) ) {
+         return true;
+      }
+      return false;
    }
 
 }

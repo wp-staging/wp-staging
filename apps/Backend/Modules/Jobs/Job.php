@@ -124,13 +124,8 @@ abstract class Job implements JobInterface {
       $this->multisiteHomeDomain = $multisite->getHomeDomain();
       $this->multisiteDomainWithoutScheme = $multisite->getHomeDomainWithoutScheme();
 
-      //$this->maxExecutionTime = (int) ini_get("max_execution_time");
-      $this->maxExecutionTime = ( int ) 30;
+      $this->maxExecutionTime = ( int ) 10;
 
-//        if ($this->maxExecutionTime < 1 || $this->maxExecutionTime > 30)
-//        {
-//            $this->maxExecutionTime = 30;
-//        }
       // Services
       $this->cache = new Cache( -1, \WPStaging\WPStaging::getContentDir() );
       $this->logger = WPStaging::getInstance()->get( "logger" );
@@ -351,81 +346,6 @@ abstract class Job implements JobInterface {
       return false;
    }
 
-   /**
-    * Attempt to reset memory
-    * @return bool
-    * memory
-    */
-//    protected function resetMemory()
-//    {
-//        $newMemoryLimit = $this->maxMemoryLimit * 2;
-//
-//        // Failed to set
-//        if (false === ini_set("memory_limit", $this->formatBytes($newMemoryLimit)))
-//        {
-//            $this->log('Can not free some memory', Logger::TYPE_CRITICAL);
-//            return false;
-//        }
-//
-//        // Double checking
-//        $newMemoryLimit = $this->getMemoryInBytes(@ini_get("memory_limit"));
-//        if ($newMemoryLimit <= $this->maxMemoryLimit)
-//        {
-//            return false;
-//        }
-//
-//        // Set the new Maximum memory limit
-//        $this->maxMemoryLimit   = $newMemoryLimit;
-//
-//        // Calculate threshold limit
-//        $this->memoryLimit      = $newMemoryLimit * self::MAX_MEMORY_RATIO;
-//
-//        return true;
-//    }
-
-   /**
-    * Attempt to reset time
-    * @return bool
-    * 
-    * @deprecated since version 2.0.0
-
-    */
-//    protected function resetTime()
-//    {
-//        // Attempt to reset timeout
-//        if (!@set_time_limit($this->maxExecutionTime))
-//        {
-//            return false;
-//        }
-//
-//        // Increase execution limit
-//        $this->executionLimit = $this->executionLimit * 2;
-//
-//        return true;
-//    }
-
-   /**
-    * Reset time limit and memory
-    * @return bool
-    * 
-    * @deprecated since version 2.0.0
-    */
-//    protected function reset()
-//    {
-//        // Attempt to reset time
-//        if (!$this->resetTime())
-//        {
-//            return false;
-//        }
-//
-//        // Attempt to reset memory
-//        if (!$this->resetMemory())
-//        {
-//            return false;
-//        }
-//
-//        return true;
-//    }
 
    /**
     * Checks if calls are over recursion limit

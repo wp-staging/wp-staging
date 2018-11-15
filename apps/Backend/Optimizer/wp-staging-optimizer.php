@@ -5,12 +5,41 @@
   Plugin URI: https://wp-staging.com
   Description: Prevents 3rd party plugins from being loaded during WP Staging specific operations
   Author: René Hermenau
-  Version: 1.0
+  Version: 1.1
   Author URI: https://wp-staging.com
   Credit: Original version is made by Delicious Brains (WP Migrate DB). Thank you guys!
  */
 
+/**
+ * Get plugins dir 
+ * @return string
+ */
+function wpstg_get_plugins_dir() {
 
+   if( defined( 'WP_PLUGIN_DIR' ) ) {
+      $pluginsDir = trailingslashit( WP_PLUGIN_DIR );
+   } else if( defined( 'WP_CONTENT_DIR' ) ) {
+      $pluginsDir = trailingslashit( WP_CONTENT_DIR ) . 'plugins/';
+   }
+   return $pluginsDir;
+}
+
+/*
+ * Check if optimizer is enabled
+ * @return bool false if it's disabled
+ *
+ */
+
+function wpstg_is_enabled_optimizer() {
+   $status = ( object ) get_option( 'wpstg_settings' );
+
+   if( $status && isset( $status->optimizer ) && $status->optimizer == 1 ) {
+      return true;
+   }
+   // Activate the Optimizer all the times. 
+   // Until now we never had any issue with the Optimizer so its default state is activated
+   return true;
+}
 
 /**
  * remove all plugins except wp-staging and wp-staging-pro from blog-active plugins
@@ -27,18 +56,54 @@ function wpstg_exclude_plugins( $plugins ) {
    if( !wpstg_is_compatibility_mode_request() ) {
       return $plugins;
    }
- 
-      foreach ( $plugins as $key => $plugin ) {
-         if( false !== strpos( $plugin, 'wp-staging' ) ) {
-            continue;
-         }
-         unset( $plugins[$key] );
+
+   foreach ( $plugins as $key => $plugin ) {
+      if( false !== strpos( $plugin, 'wp-staging' ) ) {
+         continue;
       }
+      unset( $plugins[$key] );
+   }
 
    return $plugins;
 }
+
 add_filter( 'option_active_plugins', 'wpstg_exclude_plugins' );
 
+/**
+ *
+ * Disables the theme during WP Staging AJAX requests
+ *
+ *
+ * @param $dir
+ *
+ * @return string
+ */
+function wpstg_disable_theme( $dir ) {
+   $enableTheme = apply_filters( 'wpstg_optimizer_enable_theme', false );
+
+   if( wpstg_is_compatibility_mode_request() && false === $enableTheme ) {
+      $wpstgRootPro = wpstg_get_plugins_dir() . 'wp-staging-pro';
+      $wpstgRoot = wpstg_get_plugins_dir() . 'wp-staging';
+
+      $file = DIRECTORY_SEPARATOR . 'apps' . DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme' . DIRECTORY_SEPARATOR . 'functions.php';
+      $theme = DIRECTORY_SEPARATOR . 'apps' . DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme';
+
+
+      if( file_exists( $wpstgRoot . $file ) ) {
+         return $wpstgRoot . $theme;
+      } elseif( file_exists( $wpstgRootPro . $file ) ) {
+         return $wpstgRootPro . $theme;
+      } else {
+         return '';
+      }
+      return $themeDir;
+   }
+
+   return $dir;
+}
+
+add_filter( 'stylesheet_directory', 'wpstg_disable_theme' );
+add_filter( 'template_directory', 'wpstg_disable_theme' );
 
 /**
  * remove all plugins except wp-staging and wp-staging-pro from network-active plugins
@@ -56,16 +121,17 @@ function wpstg_exclude_site_plugins( $plugins ) {
       return $plugins;
    }
 
-   
-      foreach ( array_keys( $plugins ) as $plugin ) {
-         if( false !== strpos( $plugin, 'wp-staging' ) || !isset( $blacklist_plugins[$plugin] ) ) {
-            continue;
-         }
-         unset( $plugins[$plugin] );
+
+   foreach ( array_keys( $plugins ) as $plugin ) {
+      if( false !== strpos( $plugin, 'wp-staging' ) || !isset( $blacklist_plugins[$plugin] ) ) {
+         continue;
       }
+      unset( $plugins[$plugin] );
+   }
 
    return $plugins;
 }
+
 add_filter( 'site_option_active_sitewide_plugins', 'wpstg_exclude_site_plugins' );
 
 /**
@@ -74,6 +140,12 @@ add_filter( 'site_option_active_sitewide_plugins', 'wpstg_exclude_site_plugins' 
  * @return bool
  */
 function wpstg_is_compatibility_mode_request() {
+
+   // Optimizer not enabled  
+   if( !wpstg_is_enabled_optimizer() ) {
+      return false;
+   }
+
    if( !defined( 'DOING_AJAX' ) ||
            !DOING_AJAX ||
            !isset( $_POST['action'] ) ||
@@ -82,6 +154,7 @@ function wpstg_is_compatibility_mode_request() {
 
       return false;
    }
+
    return true;
 }
 
@@ -117,4 +190,5 @@ function wpstg_tgmpa_compatibility() {
       }
    }
 }
+
 add_action( 'admin_init', 'wpstg_tgmpa_compatibility', 1 );

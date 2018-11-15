@@ -392,8 +392,8 @@ class Directories extends JobExecutable {
       // Check first which method is used 
       $uploads = wp_upload_dir();
       $basedir = $uploads['basedir'];
-      
-      return trailingslashit($basedir);
+
+      return trailingslashit( $basedir );
 
 //      if( false === strpos( $basedir, 'blogs.dir' ) ) {
 //         // Since WP 3.5
@@ -403,6 +403,7 @@ class Directories extends JobExecutable {
 //         return 'wp-content' . DIRECTORY_SEPARATOR . 'blogs.dir' . DIRECTORY_SEPARATOR . get_current_blog_id() . DIRECTORY_SEPARATOR . 'files';
 //      }
    }
+
    /**
     * Get relative path to the upload folder like wp-content/uploads or wp-content/blogs.dir/2/files
     * @return string
@@ -410,8 +411,8 @@ class Directories extends JobExecutable {
    private function getRelUploadPath() {
       $uploads = wp_upload_dir();
       $basedir = $uploads['basedir'];
-      
-      return trailingslashit(str_replace(\WPStaging\WPStaging::getWPpath(), '', $basedir));
+
+      return trailingslashit( str_replace( \WPStaging\WPStaging::getWPpath(), '', $basedir ) );
    }
 
    /**
@@ -421,6 +422,9 @@ class Directories extends JobExecutable {
     */
    private function getExtraFiles( $folder ) {
 
+      if( !is_dir( $folder ) ) {
+         return true;
+      }
 
       // open file handle and attach data to end of file
       $files = $this->open( $this->filename, 'a' );

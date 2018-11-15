@@ -68,8 +68,6 @@ class Directories extends JobExecutable {
       return ( object ) $this->response;
    }
 
-
-
    /**
     * Step 0 
     * Get WP Root files
@@ -94,14 +92,13 @@ class Directories extends JobExecutable {
                if( $this->write( $files, $iterator->getFilename() . PHP_EOL ) ) {
                   $this->options->totalFiles++;
 
-                  // Add current file size
-                  $this->options->totalFileSize += $iterator->getSize();
+                  // Too much cpu time
+                  //$this->options->totalFileSize += $iterator->getSize();
                }
             }
          }
       } catch ( \Exception $e ) {
          $this->returnException( 'Error: ' . $e->getMessage() );
-         //throw new \Exception('Out of disk space.');
       } catch ( \Exception $e ) {
          // Skip bad file permissions
       }
@@ -118,7 +115,7 @@ class Directories extends JobExecutable {
 
       // Skip it
       if( $this->isDirectoryExcluded( WP_CONTENT_DIR ) ) {
-         $this->log( "Skip " .  \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR);
+            $this->log( "Skip " . \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR );
          return true;
       }
       // open file handle
@@ -127,9 +124,7 @@ class Directories extends JobExecutable {
       $excludeWpContent = array(
           'cache',
           'wps-hide-login',
-          'node_modules',
-          'nbproject',
-          '.idea'
+            'node_modules'
       );
 
       try {
@@ -153,8 +148,8 @@ class Directories extends JobExecutable {
                if( $this->write( $files, 'wp-content' . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                   $this->options->totalFiles++;
 
-                  // Add current file size
-                  $this->options->totalFileSize += $iterator->getSize();
+                  // Too much cpu time
+                  //$this->options->totalFileSize += $iterator->getSize();
                }
             }
          }
@@ -179,7 +174,7 @@ class Directories extends JobExecutable {
 
       // Skip it
       if( $this->isDirectoryExcluded( \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR ) ) {
-         $this->log( "Skip " .  \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR);
+            $this->log( "Skip " . \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
          return true;
       }
 
@@ -205,8 +200,8 @@ class Directories extends JobExecutable {
                if( $this->write( $files, 'wp-includes' . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                   $this->options->totalFiles++;
 
-                  // Add current file size
-                  $this->options->totalFileSize += $iterator->getSize();
+                  // Too much cpu time
+                  //$this->options->totalFileSize += $iterator->getSize();
                }
             }
          }
@@ -231,7 +226,7 @@ class Directories extends JobExecutable {
 
       // Skip it
       if( $this->isDirectoryExcluded( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR ) ) {
-         $this->log( "Skip " .  \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR);
+            $this->log( "Skip " . \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
          return true;
       }
 
@@ -256,8 +251,8 @@ class Directories extends JobExecutable {
             if( $item->isFile() ) {
                if( $this->write( $files, 'wp-admin' . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                   $this->options->totalFiles++;
-                  // Add current file size
-                  $this->options->totalFileSize += $iterator->getSize();
+                  // Too much cpu time
+                  //$this->options->totalFileSize += $iterator->getSize();
                }
             }
          }
@@ -280,6 +275,9 @@ class Directories extends JobExecutable {
     */
    private function getExtraFiles( $folder ) {
 
+        if( !is_dir( $folder ) ) {
+            return true;
+        }
 
       // open file handle and attach data to end of file
       $files = $this->open( $this->filename, 'a' );
@@ -318,8 +316,8 @@ class Directories extends JobExecutable {
                //if( $this->write( $files, $strings->getLastElemAfterString( '/', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                if( $this->write( $files, str_replace( \WPStaging\WPStaging::getWPpath(), '', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                   $this->options->totalFiles++;
-                  // Add current file size
-                  $this->options->totalFileSize += $iterator->getSize();
+                  // Too much cpu time
+                  //$this->options->totalFileSize += $iterator->getSize();
                }
             }
          }
@@ -332,43 +330,6 @@ class Directories extends JobExecutable {
       // close the file handler
       $this->close( $files );
       return true;
-
-
-      // Skip it
-//        if ($this->isDirectoryExcluded(ABSPATH)){
-//            return true;
-//        }
-//        // open file handle
-//        $files = $this->open($this->filename, 'a');
-//        
-//        
-//        try {
-//
-//            // Iterate over wp root directory
-//            $iterator = new \DirectoryIterator(ABSPATH);
-//
-//            $this->log( "Scanning ".ABSPATH." for its sub-directories and files" );
-//            
-//            // Write path line
-//            foreach ($iterator as $item) {
-//                if (!$item->isDot() && $item->isFile()) {
-//                    if ($this->write($files, $iterator->getFilename() . PHP_EOL)) {
-//                        $this->options->totalFiles++;
-//
-//                        // Add current file size
-//                        $this->options->totalFileSize += $iterator->getSize();
-//                    }
-//                }
-//            }
-//        } catch (\Exception $e) {
-//            $this->returnException('Error: ' . $e->getMessage());
-//            //throw new \Exception('Out of disk space.');
-//        } catch (\Exception $e) {
-//            // Skip bad file permissions
-//        }
-//        
-//        $this->close($files);
-//        return true;
    }
 
    /**
@@ -513,7 +474,6 @@ class Directories extends JobExecutable {
       $this->files = explode( PHP_EOL, $this->files );
    }
 
-   
    /**
     * Replace forward slash with current directory separator
     *
@@ -535,7 +495,7 @@ class Directories extends JobExecutable {
       $directory = $this->sanitizeDirectorySeparator( $directory );
       foreach ( $this->options->excludedDirectories as $excludedDirectory ) {
          $excludedDirectory = $this->sanitizeDirectorySeparator( $excludedDirectory );
-         if( strpos( $directory, $excludedDirectory ) === 0 ) {
+            if( strpos( trailingslashit( $directory ), trailingslashit( $excludedDirectory ) ) === 0 ) {
             return true;
          }
       }

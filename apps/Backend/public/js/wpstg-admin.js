@@ -332,10 +332,10 @@ var WPStaging = (function ($)
                 .on("click", ".wpstg-execute-clone", function (e) {
                     e.preventDefault();
 
-                    if (!confirm("Are you sure you want to update the staging site? All your staging site modifications will be overwritten with the data from the live site. So make sure that your live site is up to date."))
-                    {
-                        return false;
-                    }
+//                    if (!confirm("Are you sure you want to update the staging site? All your staging site modifications will be overwritten with the data from the live site. So make sure that your live site is up to date."))
+//                    {
+//                        return false;
+//                    }
 
                     var clone = $(this).data("clone");
 
@@ -376,7 +376,7 @@ var WPStaging = (function ($)
      * @param {String} dataType
      * @param {Boolean} showErrors
      */
-    var ajax = function (data, callback, dataType, showErrors)
+    var ajax = function (data, callback, dataType, showErrors, tryCount)
     {
         if ("undefined" === typeof (dataType))
         {
@@ -387,27 +387,39 @@ var WPStaging = (function ($)
         {
             showErrors = true;
         }
+        
+        var tryCount = "undefined" === typeof (tryCount) ? 0 : tryCount;
+        
+        var retryLimit = 10;
+        
+        var retryTimeout = 10000 * tryCount;
 
         $.ajax({
-            url: ajaxurl,
+            url: ajaxurl + '?action=wpstg_processing&_=' + (Date.now() / 1000),
             type: "POST",
             dataType: dataType,
             cache: false,
             data: data,
             error: function (xhr, textStatus, errorThrown) {
                 console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
-                console.log(textStatus);
 
-//                if (false === showErrors)
-//                {
-//                    return false;
-//                }
+                //try again after 10 seconds
+                tryCount++;
+                if (tryCount <= retryLimit) {
+                    setTimeout(function () {
+                        ajax(data, callback, dataType, showErrors, tryCount);
+                        return;
+                    }, retryTimeout);
 
+                } else {
                 var errorCode = "undefined" === typeof (xhr.status) ? "Unknown" : xhr.status;
-
                 showError(
                         "Fatal Error:  " + errorCode + " Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                         );
+                }
+
+
+
             },
             success: function (data) {
                 if ("function" === typeof (callback))
@@ -417,35 +429,49 @@ var WPStaging = (function ($)
             },
             statusCode: {
                 404: function (data) {
-                    showError(
-                            "Error 404 - Can't find ajax request URL! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
-                            );
-
+                    if (tryCount >= retryLimit) {
+                    showError("Error 404 - Can't find ajax request URL! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.");
+                    }
                 },
                 500: function () {
-                    showError(
-                            "Fatal Error 500 - Internal server error while processing the request! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
-                            );
+                    if (tryCount >= retryLimit) {
+                        showError("Fatal Error 500 - Internal server error while processing the request! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.");
+                    }
+//                    var obj = new Object();
+//                    obj.status = false;
+//                    obj.error = 'custom error';
+//                    return JSON.stringify(obj);
                 },
                 504: function () {
+                    if (tryCount > retryLimit) {
                     showError("Error 504 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
-                    var obj = new Object();
-                    obj.status = false;
-                    obj.error = 'custom error';
-                    return JSON.stringify(obj);
+                    }
 
                 },
+                502: function () {
+                    if (tryCount >= retryLimit) {
+                        showError("Error 502 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
+                    }
+                },
+                503: function () {
+                    if (tryCount >= retryLimit) {
+                        showError("Error 503 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
+                    }
+                },
                 429: function () {
+                    if (tryCount >= retryLimit) {
                     showError("Error 429 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
-                    var obj = new Object();
-                    obj.status = false;
-                    obj.error = 'custom error';
-                    return JSON.stringify(obj);
-
                 }
+                },
+                403: function () {
+                    if (tryCount >= retryLimit) {
+                    showError("Refresh page or login again! The process should be finished successfully. \n\ ");
+            }
+            }
             }
         });
     };
+
 
     /**
      * Next / Previous Step Clicks to Navigate Through Staging Job
@@ -464,7 +490,7 @@ var WPStaging = (function ($)
 
                     if ($this.data("action") === "wpstg_update") {
                         // Update Clone - confirmed
-                        if (!confirm("Are you sure you want to update the staging site with data from the live site? \n\nMake sure to exclude all the tables and folders which you do not want to overwrite first! \n\nDo not necessarily cancel the updating process! This can break your staging site."))
+                        if (!confirm("Are you sure you want to update the staging site with data from the live site? \n\nEnsure to exclude all tables and folders which you do not want to overwrite, first! \n\nDo not necessarily cancel the updating process! This can break your staging site."))
                         {
                             return false;
                         }
@@ -672,7 +698,9 @@ var WPStaging = (function ($)
         that.data.databasePassword = $("#wpstg_db_password").val();
         that.data.databaseDatabase = $("#wpstg_db_database").val();
         that.data.databasePrefix = $("#wpstg_db_prefix").val();
-        console.log(that.data);
+        that.data.cloneDir = $("#wpstg_clone_dir").val();
+        that.data.cloneHostname = $("#wpstg_clone_hostname").val();
+        //console.log(that.data);
 
     };
 
@@ -998,6 +1026,8 @@ var WPStaging = (function ($)
         {
             return;
         }
+        
+        that.isCancelled = false;
 
         // Start the process
         start();
@@ -1019,7 +1049,7 @@ var WPStaging = (function ($)
             setTimeout(function () {
                 //cloneDatabase();
                 processing();
-            }, wpstg.cpuLoad);
+            }, wpstg.delayReq);
 
             that.timer('start');
 
@@ -1051,7 +1081,7 @@ var WPStaging = (function ($)
 
             WPStaging.ajax(
                     {
-                        action: "wpstg_clone_database",
+                        action: "wpstg_processing",
                         nonce: wpstg.nonce,
                         excludedTables: getExcludedTables(),
                         includedDirectories: getIncludedDirectories(),
@@ -1075,7 +1105,7 @@ var WPStaging = (function ($)
                 if ("undefined" !== typeof (response.error) && response.error) {
                     console.log(response.message);
                     showError(
-                            "Something went wrong! Error:" + response.message + ". Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
+                            "Something went wrong! Error: " + response.message + ". Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
                             );
 
                     return;
@@ -1095,7 +1125,7 @@ var WPStaging = (function ($)
                         //console.log('continue processing');
                         cache.get("#wpstg-loader").show();
                         processing();
-                    }, wpstg.cpuLoad);
+                    }, wpstg.delayReq);
 
                 } else if (true === response.status && 'finished' !== response.status) {
                     //console.log('Processing...');

@@ -1,6 +1,6 @@
 <?php
 
-class cloningCest {
+class updateCest {
 
     /**
      * @ env single

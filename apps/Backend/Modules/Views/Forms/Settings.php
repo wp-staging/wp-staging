@@ -179,16 +179,6 @@ class Settings {
                       ->setDefault( (isset( $settings->disableAdminLogin )) ? $settings->disableAdminLogin : null )
       );
 
-      // WordPress in subdirectory
-      $element = new Check(
-              "wpstg_settings[wpSubDirectory]", array('1' => '')
-      );
-
-      $this->form["general"]->add(
-              $element->setLabel( "Wordpress in subdirectory" )
-                      ->setDefault( (isset( $settings->wpSubDirectory )) ? $settings->wpSubDirectory : null )
-      );
-
       // Debug Mode
       $element = new Check(
               "wpstg_settings[debugMode]", array('1' => '')

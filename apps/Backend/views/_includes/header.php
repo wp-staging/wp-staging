@@ -10,7 +10,7 @@
     <div class='wpstg-share-button-container'>
         <div class='wpstg-share-button wpstg-share-button-twitter' data-share-url="https://wordpress.org/plugins/wp-staging">
             <div clas='box'>
-                <a href="https://twitter.com/intent/tweet?button_hashtag=wpstaging&text=Check%20out%20this%20plugin%20for%20creating%20a%20one%20click%20WordPress%20testing%20site&via=wpstg" target='_blank'>
+                <a href="https://twitter.com/intent/tweet?button_hashtag=wpstaging&text=Check%20out%20this%20plugin%20for%20creating%20a%20one-click%20WordPress%20testing%20site&via=wpstg" target='_blank'>
                     <span class='wpstg-share'><?php echo __('Tweet #wpstaging','wp-staging'); ?></span>
                 </a>
             </div>
@@ -24,7 +24,7 @@
         </div>
         <div class="wpstg-share-button wpstg-share-button-facebook" data-share-url="https://wordpress.org/plugins/wp-staging">
             <div class="box">
-                <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwordpress.org%2Fplugins%2Fwp-staging" target="_blank">
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwp-staging.com%2Fwow-cloning-wordpress-websites-has-never-been-easier%2F" target="_blank">
                     <span class='wpstg-share'><?php echo __('Share on Facebook','wp-staging'); ?></span>
                 </a>
             </div>

@@ -1,16 +1,15 @@
 <?php
+
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\WPStaging;
-
-//error_reporting( E_ALL );
 
 /**
  * Class Finish
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Finish extends Job
-{
+class Finish extends Job {
+
     /**
      * Clone Key
      * @var string 
@@ -21,97 +20,138 @@ class Finish extends Job
      * Start Module
      * @return object
      */
-    public function start()
-    {
+    public function start() {
         // sanitize the clone name before saving
-        $this->clone = preg_replace("#\W+#", '-', strtolower($this->options->clone)); 
-        
+        $this->clone = preg_replace( "#\W+#", '-', strtolower( $this->options->clone ) );
+
         // Delete Cache Files
         $this->deleteCacheFiles();
 
         // Prepare clone records & save scanned directories for delete job later
         $this->prepareCloneDataRecords();
 
-        
         $return = array(
-            "directoryName"     => $this->options->cloneDirectoryName,
-            "path"              => \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName,
-            "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
-            "number"            => $this->options->cloneNumber,
-            "version"           => \WPStaging\WPStaging::VERSION,
-            "status"            => 'finished',
-            "prefix"            => $this->options->prefix,
-            "last_msg"          => $this->logger->getLastLogMsg(),
-            "job"               => $this->options->currentJob,
-            "percentage"        => 100
-                
+            "directoryName" => $this->options->cloneDirectoryName,
+            "path"          => trailingslashit( $this->options->destinationDir ),
+            "url"           => $this->getDestinationUrl(),
+            "number"        => $this->options->cloneNumber,
+            "version"       => \WPStaging\WPStaging::VERSION,
+            "status"        => 'finished',
+            "prefix"        => $this->options->prefix,
+            "last_msg"      => $this->logger->getLastLogMsg(),
+            "job"           => $this->options->currentJob,
+            "percentage"    => 100
         );
-        
+
         //$this->flush();
 
-        return (object) $return;
+        return ( object ) $return;
     }
 
     /**
      * Delete Cache Files
      */
-    protected function deleteCacheFiles()
-    {
-        $this->log("Finish: Deleting clone job's cache files...");
+    protected function deleteCacheFiles() {
+        $this->log( "Finish: Deleting clone job's cache files..." );
 
         // Clean cache files
-        $this->cache->delete("clone_options");
-        $this->cache->delete("files_to_copy");
+        $this->cache->delete( "clone_options" );
+        $this->cache->delete( "files_to_copy" );
 
-        $this->log("Finish: Clone job's cache files have been deleted!");
+        $this->log( "Finish: Clone job's cache files have been deleted!" );
     }
-    
-       /**
+
+    /**
      * Prepare clone records
      * @return bool
      */
-    protected function prepareCloneDataRecords()
-    {
+    protected function prepareCloneDataRecords() {
         // Check if clones still exist
-        $this->log("Finish: Verifying existing clones...");
+        $this->log( "Finish: Verifying existing clones..." );
 
         // Clone data already exists
-        if (isset($this->options->existingClones[$this->options->clone]))
-        {
-           $this->options->existingClones[$this->options->clone]['datetime'] = time();
-           update_option("wpstg_existing_clones_beta", $this->options->existingClones);
-           $this->log("Finish: The job finished!");
+        if( isset( $this->options->existingClones[$this->options->clone] ) ) {
+            $this->options->existingClones[$this->options->clone]['datetime'] = time();
+            update_option( "wpstg_existing_clones_beta", $this->options->existingClones );
+            $this->log( "Finish: The job finished!" );
             return true;
         }
 
         // Save new clone data
-        $this->log("Finish: {$this->options->clone}'s clone job's data is not in database, generating data");
-        
+        $this->log( "Finish: {$this->options->clone}'s clone job's data is not in database, generating data" );
+
         // sanitize the clone name before saving
         //$clone = preg_replace("#\W+#", '-', strtolower($this->options->clone));
-        
+
         $this->options->existingClones[$this->clone] = array(
-            "directoryName"     => $this->options->cloneDirectoryName,
-            "path"              => \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName,
-            "url"               => get_site_url() . '/' . $this->options->cloneDirectoryName,
-            "number"            => $this->options->cloneNumber,
-            "version"           => \WPStaging\WPStaging::VERSION,
-            "status"            => false,
-            "prefix"            => $this->options->prefix,
-            "datetime"          => time(),
-            "databaseUser"      => $this->options->databaseUser,
-            "databasePassword"  => $this->options->databasePassword,
-            "databaseDatabase"  => $this->options->databaseDatabase,
-            "databaseServer"  => $this->options->databaseServer,
-            "databasePrefix"  => $this->options->databasePrefix,
+            "directoryName"    => $this->options->cloneDirectoryName,
+            "path"             => trailingslashit( $this->options->destinationDir ),
+            "url"              => $this->getDestinationUrl(),
+            "number"           => $this->options->cloneNumber,
+            "version"          => \WPStaging\WPStaging::VERSION,
+            "status"           => false,
+            "prefix"           => $this->options->prefix,
+            "datetime"         => time(),
+            "databaseUser"     => $this->options->databaseUser,
+            "databasePassword" => $this->options->databasePassword,
+            "databaseDatabase" => $this->options->databaseDatabase,
+            "databaseServer"   => $this->options->databaseServer,
+            "databasePrefix"   => $this->options->databasePrefix
         );
 
-        if (false === update_option("wpstg_existing_clones_beta", $this->options->existingClones))
-        {
-            $this->log("Finish: Failed to save {$this->options->clone}'s clone job data to database'");
+        if( false === update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) ) {
+            $this->log( "Finish: Failed to save {$this->options->clone}'s clone job data to database'" );
             return false;
         }
 
         return true;
     }
+
+    /**
+     * Get destination Hostname depending on wheather WP has been installed in sub dir or not
+     * @return type
+     */
+    private function getDestinationUrl() {
+
+        if( !empty( $this->options->cloneHostname ) ) {
+            return $this->options->cloneHostname;
+}
+
+//        if( isSubDir ) {
+//            return trailingslashit( get_site_url() ) . trailingslashit($this->getSubDir()) . $this->options->cloneDirectoryName;
+//        }
+        return trailingslashit( get_site_url() ) . $this->options->cloneDirectoryName;
+    }
+
+    /**
+     * Check if WP is installed in subdir
+     * @return boolean
+     */
+//    private function isSubDir() {
+//        // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
+//        // This is happening much more often than you would expect
+//        $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
+//        $home    = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
+//
+//        if( $home !== $siteurl ) {
+//            return true;
+//        }
+//        return false;
+//    }
+
+    /**
+     * Get the install sub directory if WP is installed in sub directory
+     * @return string
+     */
+//    private function getSubDir() {
+//        $home    = get_option( 'home' );
+//        $siteurl = get_option( 'siteurl' );
+//
+//        if( empty( $home ) || empty( $siteurl ) ) {
+//            return '';
+//        }
+//
+//        $dir = str_replace( $home, '', $siteurl );
+//        return str_replace( '/', '', $dir );
+//    }
 }

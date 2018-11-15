@@ -50,10 +50,8 @@ class Data extends JobExecutable {
 
       $this->getTables();
 
-      $helper = new Helper();
-
+        $helper        = new Helper();
       $this->homeUrl = $helper->get_home_url();
-
 
       // Fix current step
       if( 0 == $this->options->currentStep ) {
@@ -65,7 +63,7 @@ class Data extends JobExecutable {
     * Get a list of tables to copy
     */
    private function getTables() {
-      $strings = new Strings();
+      $strings      = new Strings();
       $this->tables = array();
       foreach ( $this->options->tables as $table ) {
          $this->tables[] = $this->options->prefix . $strings->str_replace_first( $this->db->prefix, null, $table );
@@ -77,7 +75,7 @@ class Data extends JobExecutable {
     * @return void
     */
    protected function calculateTotalSteps() {
-      $this->options->totalSteps = 14;
+        $this->options->totalSteps = 15;
    }
 
    /**
@@ -184,22 +182,6 @@ class Data extends JobExecutable {
    }
 
    /**
-    * Get the install sub directory if WP is installed in sub directory
-    * @return string
-    */
-   protected function getSubDir() {
-      $home = get_option( 'home' );
-      $siteurl = get_option( 'siteurl' );
-
-      if( empty( $home ) || empty( $siteurl ) ) {
-         return '/';
-      }
-
-      $dir = str_replace( $home, '', $siteurl );
-      return '/' . str_replace( '/', '', $dir ) . '/';
-   }
-
-   /**
     * Copy wp-config.php if it is located outside of root one level up
     * @todo Needs some more testing before it will be released
     * @return boolean
@@ -211,7 +193,7 @@ class Data extends JobExecutable {
 
       $source = $dir . 'wp-config.php';
 
-      $destination = trailingslashit( ABSPATH ) . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR . 'wp-config.php';
+        $destination = $this->options->destinationDir . 'wp-config.php';
 
 
       // Do not do anything
@@ -258,28 +240,36 @@ class Data extends JobExecutable {
       }
 
       // Installed in sub-directory
-      if( $this->isSubDir() ) {
-         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName );
+//      if( $this->isSubDir() ) {
+//         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . $this->getStagingSiteUrl() );
+//         // Replace URLs
+//         $result = $this->db->query(
+//                 $this->db->prepare(
+//                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->getStagingSiteUrl()
+//                 )
+//         );
+//      } else {
+//         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . $this->getStagingSiteUrl() );
+//         // Replace URLs
+//         $result = $this->db->query(
+//                 $this->db->prepare(
+//                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->getStagingSiteUrl()
+//                 )
+//         );
+//      }
+
+        $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . $this->getStagingSiteUrl() );
          // Replace URLs
          $result = $this->db->query(
                  $this->db->prepare(
-                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName
+                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->getStagingSiteUrl()
                  )
          );
-      } else {
-         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . rtrim( $this->homeUrl, "/" ) . '/' . $this->options->cloneDirectoryName );
-         // Replace URLs
-         $result = $this->db->query(
-                 $this->db->prepare(
-                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->homeUrl . '/' . $this->options->cloneDirectoryName
-                 )
-         );
-      }
+
 
 
       // All good
-      if( false !== $result) {
-         $this->log( "Preparing Data Step1: Successfull", Logger::TYPE_INFO );
+        if( $result ) {
          return true;
       }
 
@@ -306,6 +296,11 @@ class Data extends JobExecutable {
          return true;
       }
 
+//      $result = $this->db->query(
+//              $this->db->prepare(
+//                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'", "true"
+//              )
+//      );
       $delete = $this->db->query(
               $this->db->prepare(
                       "DELETE FROM `{$this->prefix}options` WHERE `option_name` = %s;", 'wpstg_is_staging_site'
@@ -321,7 +316,6 @@ class Data extends JobExecutable {
                  )
          );
       //}
-
       // All good
       if( $insert ) {
          $this->log( "Preparing Data Step2: Successfull", Logger::TYPE_INFO );
@@ -394,7 +388,7 @@ class Data extends JobExecutable {
 
       if( !$update ) {
          $this->log( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
-         $this->returnException( "Data Crunching Step 4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}" );
+            $this->returnException( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}" );
          return false;
       }
 
@@ -408,7 +402,7 @@ class Data extends JobExecutable {
     * @return bool
     */
    protected function step5() {
-      $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
+        $path = $this->options->destinationDir . "wp-config.php";
 
       $this->log( "Preparing Data Step5: Updating table_prefix in {$path} to " . $this->prefix );
       if( false === ($content = file_get_contents( $path )) ) {
@@ -420,7 +414,7 @@ class Data extends JobExecutable {
       $content = str_replace( '$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content );
 
       // Replace URLs
-      $content = str_replace( $this->homeUrl, $this->homeUrl . '/' . $this->options->cloneDirectoryName, $content );
+        $content = str_replace( $this->homeUrl, $this->getStagingSiteUrl(), $content );
 
       if( false === @file_put_contents( $path, $content ) ) {
          $this->log( "Preparing Data Step5: Failed to update $table_prefix in {$path} to " . $this->prefix . ". Can't save contents", Logger::TYPE_ERROR );
@@ -444,7 +438,7 @@ class Data extends JobExecutable {
          return true;
       }
 
-      $path = ABSPATH . $this->options->cloneDirectoryName . "/index.php";
+        $path = $this->options->destinationDir . "index.php";
 
       if( false === ($content = file_get_contents( $path )) ) {
          $this->log( "Preparing Data Step6: Failed to reset {$path} for sub directory; can't read contents", Logger::TYPE_ERROR );
@@ -476,7 +470,7 @@ class Data extends JobExecutable {
          $this->log( "Preparing Data: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR );
          return false;
       }
-      $this->Log( "Preparing Data: Finished Step 6 successfully" );
+        $this->Log( "Preparing Data Step 6: Finished successfully" );
       return true;
    }
 
@@ -507,7 +501,7 @@ class Data extends JobExecutable {
 
       // All good
       if( $result ) {
-         $this->Log( "Preparing Data Step7: Finished Step 7 successfully" );
+            $this->Log( "Preparing Data Step7: Finished successfully" );
          return true;
       }
 
@@ -542,7 +536,7 @@ class Data extends JobExecutable {
 
       // All good
       if( $result ) {
-         $this->Log( "Preparing Data Step8: Finished Step 8 successfully" );
+            $this->Log( "Preparing Data Step8: Finished successfully" );
          return true;
       }
 
@@ -576,7 +570,7 @@ class Data extends JobExecutable {
 
       // All good
       if( $result ) {
-         $this->Log( "Preparing Data Step9: Finished Step 9 successfully" );
+            $this->Log( "Preparing Data Step9: Finished successfully" );
          return true;
       }
 
@@ -589,7 +583,7 @@ class Data extends JobExecutable {
     * @return bool
     */
    protected function step10() {
-      $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
+        $path = $this->options->destinationDir . "wp-config.php";
 
       $this->log( "Preparing Data Step10: Updating WP_HOME in wp-config.php to " . $this->getStagingSiteUrl() );
 
@@ -622,7 +616,7 @@ class Data extends JobExecutable {
          $this->log( "Preparing Data Step10: Failed to update WP_HOME. Can't save contents", Logger::TYPE_ERROR );
          return false;
       }
-      $this->Log( "Preparing Data: Finished Step 10 successfully" );
+        $this->Log( "Preparing Data Step 10: Finished successfully" );
       return true;
    }
 
@@ -631,7 +625,7 @@ class Data extends JobExecutable {
     * @return bool
     */
    protected function step11() {
-      $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
+        $path = $this->options->destinationDir . "wp-config.php";
 
       $this->log( "Preparing Data Step11: Updating WP_SITEURL in wp-config.php to " . $this->getStagingSiteUrl() );
 
@@ -665,11 +659,77 @@ class Data extends JobExecutable {
          $this->log( "Preparing Data Step11: Failed to update WP_SITEURL. Can't save contents", Logger::TYPE_ERROR );
          return false;
       }
-      $this->Log( "Preparing Data: Finished Step 11 successfully" );
+        $this->Log( "Preparing Data Step 11: Finished successfully" );
       return true;
    }
 
    /**
+     * Set true WP_DEBUG & WP_DEBUG_DISPLAY in wp-config.php
+     * @return bool
+     */
+//   protected function step12() {
+//      $path = $this->getAbsDestination() . $this->options->cloneDirectoryName . "/wp-config.php";
+//
+//      $this->log( "Preparing Data Step12: Set WP_DEBUG to true in wp-config.php." );
+//
+//      if( false === ($content = file_get_contents( $path )) ) {
+//         $this->log( "Preparing Data Step12: Failed to update WP_DEBUG in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
+//         return false;
+//      }
+//
+//
+//      // Get WP_DEBUG from wp-config.php
+//      preg_match( "/define\s*\(\s*'WP_DEBUG'\s*,\s*(.*)\s*\);/", $content, $matches );
+//
+//      // Found it!
+//      if( !empty( $matches[1] ) ) {
+//         $matches[1];
+//
+//         $pattern = "/define\s*\(\s*'WP_DEBUG'\s*,\s*(.*)\s*\);/";
+//
+//         $replace = "define('WP_DEBUG',true); // " . $matches[1];
+//         $replace.= " // Changed by WP-Staging";
+//
+//         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+//            $this->log( "Preparing Data Step12: Failed to update WP_DEBUG", Logger::TYPE_ERROR );
+//            return false;
+//         }
+//      } else {
+//         $this->log( "Preparing Data Step12: WP_DEBUG not defined in wp-config.php. Skip it." );
+//      }
+//      
+//      
+//      
+//      // Get WP_DEBUG_DISPLAY
+//      preg_match( "/define\s*\(\s*'WP_DEBUG_DISPLAY'\s*,\s*(.*)\s*\);/", $content, $matches );
+//
+//      // Found it!
+//      if( !empty( $matches[1] ) ) {
+//         $matches[1];
+//
+//         $pattern = "/define\s*\(\s*'WP_DEBUG_DISPLAY'\s*,\s*(.*)\s*\);/";
+//
+//         $replace = "define('WP_DEBUG_DISPLAY',true); // " . $matches[1];
+//         $replace.= " // Changed by WP-Staging";
+//
+//         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+//            $this->log( "Preparing Data Step12: Failed to update WP_DEBUG", Logger::TYPE_ERROR );
+//            return false;
+//         }
+//      } else {
+//         $this->log( "Preparing Data Step12: WP_DEBUG not defined in wp-config.php. Skip it." );
+//      }
+//      
+//
+//      if( false === @file_put_contents( $path, $content ) ) {
+//         $this->log( "Preparing Data Step12: Failed to update WP_DEBUG. Can't save content in wp-config.php", Logger::TYPE_ERROR );
+//         return false;
+//      }
+//      $this->Log( "Preparing Data: Finished Step 12 successfully" );
+//      return true;
+//   }
+
+    /**
     * Update Table Prefix in wp_options
     * @return bool
     */
@@ -687,10 +747,9 @@ class Data extends JobExecutable {
          return true;
       }
 
-      $notice = isset( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
+        $notice = !empty( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
 
-      $this->log( "Updating option_name in {$this->prefix}options. {$notice}" );
-
+        //$this->log( "Updating option_name in {$this->prefix}options. {$notice}" );
       // Filter the rows below. Do not update them!
       $filters = array(
           'wp_mail_smtp',
@@ -712,11 +771,11 @@ class Data extends JobExecutable {
       );
 
       if( !$updateOptions ) {
-         $this->log( "Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data Step12: Failed to update option_name in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
          $this->returnException( " Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
          return false;
       }
-      $this->Log( "Preparing Data: Finished Step 12 successfully" );
+        $this->Log( "Preparing Data Step 12: Finished successfully" );
       return true;
    }
 
@@ -735,13 +794,13 @@ class Data extends JobExecutable {
       $newUploadPath = $this->getNewUploadPath();
 
       if( false === $newUploadPath ) {
-         $this->log( "Preparing Data Step13: Skipping" );
+            $this->log( "Preparing Data Step13: Skipped" );
          return true;
       }
 
       // Skip - Table is not selected or updated
       if( !in_array( $this->prefix . 'options', $this->tables ) ) {
-         $this->log( "Preparing Data Step13: Skipping" );
+            $this->log( "Preparing Data Step13: Skipped" );
          return true;
       }
 
@@ -759,7 +818,7 @@ class Data extends JobExecutable {
          $this->log( "Preparing Data Step13: Failed to update upload_path in {$this->prefix}options. {$error}", Logger::TYPE_ERROR );
          return true;
       }
-      $this->Log( "Preparing Data: Finished Step 13 successfully" );
+        $this->Log( "Preparing Data Step 13: Finished successfully" );
       return true;
    }
 
@@ -768,7 +827,7 @@ class Data extends JobExecutable {
     * @return bool
     */
    protected function step14() {
-      $path = ABSPATH . $this->options->cloneDirectoryName . "/wp-config.php";
+        $path = $this->options->destinationDir . "wp-config.php";
 
       $this->log( "Preparing Data Step14: Set WP_CACHE in wp-config.php to false" );
 
@@ -801,7 +860,7 @@ class Data extends JobExecutable {
          $this->log( "Preparing Data Step14: Failed to update WP_CACHE. Can't save contents", Logger::TYPE_ERROR );
          return false;
       }
-      $this->Log( "Preparing Data: Finished Step 14 successfully" );
+        $this->Log( "Preparing Data Step 14: Finished successfully" );
       return true;
    }
 
@@ -814,7 +873,7 @@ class Data extends JobExecutable {
 
       $customSlug = str_replace( \WPStaging\WPStaging::getWPpath(), '', $uploadPath );
 
-      $newUploadPath = \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR . $customSlug;
+        $newUploadPath = $this->options->destinationDir . $customSlug;
 
       return $newUploadPath;
    }
@@ -824,11 +883,14 @@ class Data extends JobExecutable {
     * @return string
     */
    protected function getStagingSiteUrl() {
+        if( !empty( $this->options->cloneHostname ) ) {
+            return $this->options->cloneHostname;
+        }
       if( $this->isSubDir() ) {
-         return rtrim( $this->homeUrl, "/" ) . $this->getSubDir() . $this->options->cloneDirectoryName;
+            return trailingslashit( $this->homeUrl ) . trailingslashit( $this->getSubDir() ) . $this->options->cloneDirectoryName;
       }
 
-      return rtrim( $this->homeUrl, "/" ) . '/' . $this->options->cloneDirectoryName;
+        return trailingslashit( $this->homeUrl ) . $this->options->cloneDirectoryName;
    }
 
    /**
@@ -839,12 +901,28 @@ class Data extends JobExecutable {
 // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
 // This is happening much more often than you would expect
       $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
-      $home = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
+        $home    = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
 
       if( $home !== $siteurl ) {
          return true;
       }
       return false;
    }
+
+    /**
+     * Get the install sub directory if WP is installed in sub directory
+     * @return string
+     */
+    protected function getSubDir() {
+        $home    = get_option( 'home' );
+        $siteurl = get_option( 'siteurl' );
+
+        if( empty( $home ) || empty( $siteurl ) ) {
+            return '';
+}
+
+        $dir = str_replace( $home, '', $siteurl );
+        return str_replace( '/', '', $dir );
+    }
 
 }

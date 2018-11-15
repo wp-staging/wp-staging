@@ -1,4 +1,4 @@
-<div class="wpstg-notice-alert">
+<div class="wpstg-notice-alert wpstg-failed">
     <h4 style="margin:0">
         <?php
         _e("Attention: Check carefully if these database tables and files are safe to delete and do not belong to your live site!", "wp-staging")
@@ -17,7 +17,7 @@
         <?php _e('Database Name:', 'wp-staging'); ?> 
         <span style="background-color:#5b9dd9;color:#fff;padding: 2px;border-radius: 3px;">
         <?php 
-        $database = empty($clone->databaseDatabase) ? "{$dbname} (Main Database)" : $clone->databaseDatabase;
+        $database = empty($clone->databaseDatabase) ? "{$dbname} / Main Database)" : $clone->databaseDatabase;
         echo $database; 
         ?>
         </span>

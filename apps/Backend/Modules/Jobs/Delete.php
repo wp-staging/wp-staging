@@ -38,12 +38,18 @@ class Delete extends Job {
     * @var object 
     */
    public $wpdb;
+   
+   /**
+    *
+    * @var bool
+    */
    private $isExternal;
+
+   
 
    public function __construct( $isExternal = false ) {
       parent::__construct();
       $this->isExternal = $isExternal;
-      //$this->wpdb = WPStaging::getInstance()->get("wpdb");
    }
 
    /**
@@ -74,6 +80,10 @@ class Delete extends Job {
       return new \wpdb( $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase, $this->clone->databaseServer );
    }
 
+   /**
+    * Date database name
+    * @return type
+    */
    public function getDbName() {
       return $this->wpdb->dbname;
    }
