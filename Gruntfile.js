@@ -53,11 +53,11 @@ module.exports = function (grunt) {
                             '!run-test.bat',
                             '!tests/**',
                             '!idea/**',
-                            'codecept-multisite.bat',
-                            'codecept-single.bat',
-                            'codecept-singlesubdir.bat',
+                            '!codecept-multisite.bat',
+                            '!codecept-single.bat',
+                            '!codecept-singlesubdir.bat',
                             '!.git/**',
-                            'package-lock.json'
+                            '!package-lock.json'
                         ],
                         dest: '<%= paths.base %>'
                     },
@@ -86,12 +86,13 @@ module.exports = function (grunt) {
                             '!selenium.bat',
                             '!run-test.bat',
                             '!tests/**',
+                            '!vendor/**',
                             '!idea/**',
-                            'codecept-multisite.bat',
-                            'codecept-single.bat',
-                            'codecept-singlesubdir.bat',
+                            '!codecept-multisite.bat',
+                            '!codecept-single.bat',
+                            '!codecept-singlesubdir.bat',
                             '!.git/**',
-                            'package-lock.json'
+                            '!package-lock.json'
                         ],
                         dest: '<%= paths.basetrunk %>'
                     }
