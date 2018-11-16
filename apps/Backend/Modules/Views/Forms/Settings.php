@@ -59,7 +59,7 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "DB Copy Query Limit" )
-                      ->setDefault( isset( $settings->queryLimit ) ? $settings->queryLimit : 10000 )
+                      ->setDefault( isset( $settings->queryLimit ) ? $settings->queryLimit : 10000  )
       );
       // DB Search & Replace Query Limit
       $element = new Numerical(
@@ -73,7 +73,7 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "DB Search & Replace Limit" )
-                      ->setDefault( isset( $settings->querySRLimit ) ? $settings->querySRLimit : 5000 )
+                      ->setDefault( isset( $settings->querySRLimit ) ? $settings->querySRLimit : 5000  )
       );
 
       $options = array('1' => '1', '10' => '10', '50' => '50', '250' => '250', '500' => '500', '1000' => '1000');
@@ -136,6 +136,21 @@ class Settings {
                       ->setDefault( isset( $settings->cpuLoad ) ? $settings->cpuLoad : "low" )
       );
 
+      // Delay Between Requests
+      $element = new Numerical(
+              "wpstg_settings[delayRequests]", array(
+          "class" => "medium-text",
+          "step" => 1,
+          "max" => 5,
+          "min" => 0
+              )
+      );
+
+      $this->form["general"]->add(
+              $element->setLabel( "Delay Between Requests" )
+                      ->setDefault( (isset( $settings->delayRequests )) ? $settings->delayRequests : 0  )
+      );
+
 
       // Optimizer
       $element = new Check(
@@ -144,7 +159,7 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "Optimizer" )
-                      ->setDefault( (isset( $settings->optimizer )) ? $settings->optimizer : null )
+                      ->setDefault( (isset( $settings->optimizer )) ? $settings->optimizer : null  )
       );
 
       // Plugins
