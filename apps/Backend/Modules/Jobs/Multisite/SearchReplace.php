@@ -315,7 +315,7 @@ class SearchReplace extends JobExecutable {
         $args['search_for'] = array(
             '//' . $this->getSourceHostname(),
             ABSPATH,
-            str_replace( '/', '\/', $this->getSourceHostname() ), // // Used by revslider and several visual editors
+            '\/\/' . str_replace( '/', '\/', $this->getSourceHostname() ), // // Used by revslider and several visual editors
             $this->getImagePathLive()
         );
 
@@ -323,7 +323,7 @@ class SearchReplace extends JobExecutable {
         $args['replace_with'] = array(
             '//' . $this->getDestinationHostname(),
             $this->options->destinationDir,
-            str_replace( '/', '\/', $this->getDestinationHostname() ), // Used by revslider and several visual editors
+            '\/\/' . str_replace( '/', '\/', $this->getDestinationHostname() ), // Used by revslider and several visual editors
             $this->getImagePathStaging()
         );
 
