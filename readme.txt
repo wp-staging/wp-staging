@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.4.1 =
+* Fix: Error notice if user tries to update staging site located in another database
+
 = 2.4.0 =
 * New: Compatible to WP 5.0.0 Gutenberg
 * New: Increase file scanning process performance
