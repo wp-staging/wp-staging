@@ -148,7 +148,7 @@ https://wp-staging.com
 
 = 2.4.1 =
 * Fix: Error notice if user tries to update staging site located in another database
-* Fix: Search & Replace adds staging site subfolder multiple times to string when staging site is updated
+* Fix: Search & Replace adds staging site subfolder multiple times to replaced string when staging site is updated
 
 = 2.4.0 =
 * New: Compatible to WP 5.0.0 Gutenberg
