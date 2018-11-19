@@ -86,8 +86,8 @@ class Updating extends Job {
             $this->options->databasePrefix      = $this->options->existingClones[$this->options->clone]['databasePrefix'];
             $this->options->destinationHostname = $this->options->existingClones[$this->options->clone]['url'];
             $this->options->prefix              = $this->getStagingPrefix();
-            $helper                      = new Helper();
-            $this->options->homeHostname = $helper->get_home_url_without_scheme();
+            $helper                             = new Helper();
+            $this->options->homeHostname        = $helper->get_home_url_without_scheme();
         } else {
             wp_die( 'Fatal Error: Can not update clone because there is no clone data.' );
         }
@@ -138,6 +138,9 @@ class Updating extends Job {
         if( isset( $_POST["cloneHostname"] ) && !empty( $_POST["cloneHostname"] ) ) {
             $this->options->cloneHostname = $_POST["cloneHostname"];
         }
+        
+        $this->options->destinationHostname = $this->getDestinationHostname();
+
 
         // Directories to Copy
         $this->options->directoriesToCopy = array_merge(
@@ -147,6 +150,18 @@ class Updating extends Job {
         array_unshift( $this->options->directoriesToCopy, ABSPATH );
 
         return $this->saveOptions();
+    }
+
+    /**
+     * Return target hostname
+     * @return string
+     */
+    private function getDestinationHostname() {
+        if( empty( $this->options->cloneHostname ) ) {
+            $helper = new Helper();
+            return $helper->get_home_url_without_scheme();
+        }
+        return $this->getHostnameWithoutScheme( $this->options->cloneHostname );
     }
 
     /**

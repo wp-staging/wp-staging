@@ -308,7 +308,7 @@ class SearchReplace extends JobExecutable {
             $args['replace_with'] = array(
             '\/\/' . str_replace( '/', '\/', $this->destinationHostname ),
             '//' . $this->destinationHostname,
-            $this->options->destinationDir,
+            rtrim ($this->options->destinationDir, '/'),
             );
 
 
