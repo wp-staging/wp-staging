@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.4.2 =
+* Fix: Error 500 on some systems when files are collected and plugin iterates through the directories
+
 = 2.4.1 =
 * Fix: Error notice if user tries to update staging site located in another database
 * Fix: Search & Replace adds staging site subfolder multiple times to replaced string when staging site is updated
@@ -168,9 +171,6 @@ https://wp-staging.com
 * Fix: Selected folders are not excluded under Windows IIS server
 * Fix: Windows IIS server compatibilility issues resolved
 
-
-
-
 = 2.3.9 =
 * New: Support for wp-config.php located in one level up of the root folder for multisites
 * New: Allow exclusion of custom options from wp_options from beeing pushed
@@ -181,50 +181,12 @@ https://wp-staging.com
 * Fix: Filesize() failed if file to copy is not a regular file
 * Fix: remove ? parameter from staging site
 
-= 2.3.8 =
-* Tweak: Lowering default performance settings for more reliability during cloning
-* New: Set WP_CACHE to false in wp-config.php after cloning to prevent log in issues to staging site
-* New: Compatibility mode to skip certain tables from third party plugins from beeing searched & replaced
-* Fix: Do not clone db.php, object-cache.php and advanced-cache.php
-* Fix: Show error message if ajax requests fail for any reason
-
-
-= 2.3.7 =
-* New: Increase cloning performance
-* New: Show admin notice if php version and wordpress version do not meet requirements.
-* New: Show error if there is not enough free diskspace
-* New: Add resume function in case the cloning process interrupts
-* New: Add italian translation
-* New: Better looking admin notices
-* Fix: Different scheme of siteurl and home leads to non available staging site. Show admin notice to ask user to fix that first before creating a staging site
-* Fix: WP Staging welcome screen shown when any plugin is activated
-* Fix: Lower default settings to 10000, cpu load low. File copy limit to 50
-
-
-= 2.3.6 =
-* Fix: Add version number to css and js files to prevent caching issues
-* Fix: Wrong text domain in a few language strings
-* Fix: Optimizer mu-plugin not installed all the time 
-* Fix: Language files not loaded correctly 
-* Fix: Remove heartbeat check only on wp staging admin pages
-* Fix: WordPress custom upload path variable upload_path could be wrong after cloning
-* Fix: Increase maximum memory consumption
-
-= 2.3.5 =
-* New: Enable Optimizer as default option
-* New: Add filter to exclude strings from search & replace, docs: https://wp-staging.com/docs/actions-and-filters/
-* New: Add filter to change search & replace parameters
-* New: Add language files and change text domain to slug of the plugin
-* New: Disable heartbeat api and user login check for wp staging processing
-* New: Add issue reporting form
-* New: Check if clone subfolder already exists before creating clone
-* Fix: Changing file copy limit not working
-
 
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
 
-= 2.4.0 =
-* New: Compatible to WordPress 5.0.0. Important fixes!
+= 2.4.2 =
+* Fix: Error 500 on some systems when files are collected and plugin iterates through the directories
+
 
