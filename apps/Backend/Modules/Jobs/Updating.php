@@ -61,7 +61,9 @@ class Updating extends Job {
             '.gitignore',
             '.log',
             'db.php',
-            'object-cache.php'
+            'object-cache.php',
+            'web.config' // Important: Windows IIS configuartion file. Must not be in the staging site!
+
         );
 
         $this->options->excludedFilesFullPath = array(
