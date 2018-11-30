@@ -149,6 +149,7 @@ https://wp-staging.com
 = 2.4.3 =
 * Fix: Updating staging site does not exclude Windows IIS configuration file web.config and can lead to server error
 * Fix: Redirect to the correct url after log in to staging site
+* New: Support for custom directories of wp-content and uploads folder
 
 
 = 2.4.2 =
@@ -191,7 +192,7 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.4.2 =
-* Fix: Error 500 on some systems when files are collected and plugin iterates through the directories
+= 2.4.3 =
+* New: Support for custom directories of wp-content and uploads folder
 
 

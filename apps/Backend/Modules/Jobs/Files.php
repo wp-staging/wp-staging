@@ -239,6 +239,34 @@ class Files extends JobExecutable {
     }
 
     /**
+     * Get wp-content and wp-content/uploads destination dir
+     * Necessary if these folders were customized and changed from the default ones.
+     * 
+     * @return string
+     */
+    protected function getWpContentPath( $file ) {
+        // Get absolute custom upload dir 
+        $uploads = wp_upload_dir();
+
+        // Get absolute upload dir from ABSPATH
+        $uploadsAbsPath = trailingslashit($uploads['basedir']);
+
+        // Get absolute custom wp-content dir
+        $wpContentDir = trailingslashit(WP_CONTENT_DIR);
+
+        // Check if there is a custom upload directory and do a search $ replace
+        $file = str_replace( $uploadsAbsPath, ABSPATH . 'wp-content/uploads/', $file, $count );
+
+        // If there is no custom upload directory do a search & replace of the custom wp-content directory
+        if( empty( $count ) || $count === 0 ) {
+            $file = str_replace( $wpContentDir, ABSPATH . 'wp-content/', $file );
+        }
+
+
+        return $file;
+    }
+
+    /**
      * Set directory permissions
      * @param type $file
      * @return boolean
@@ -247,7 +275,7 @@ class Files extends JobExecutable {
         $dir = dirname( $file );
         if( is_dir( $dir ) ) {
             @chmod( $dir, wpstg_get_permissions_for_directory() );
-    }
+        }
         return false;
     }
 
@@ -258,6 +286,9 @@ class Files extends JobExecutable {
      * @return bool|string
      */
     private function getDestination( $file ) {
+
+        // Get custom wp-content and uploads folder
+        $file = $this->getWpContentPath( $file );
 
         $relativePath         = str_replace( \WPStaging\WPStaging::getWPpath(), null, $file );
         $destinationPath      = $this->destination . $relativePath;

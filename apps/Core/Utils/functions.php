@@ -73,3 +73,51 @@ function wpstg_escape_windows_directory_separator( $path ) {
 function wpstg_replace_windows_directory_separator( $path ) {
     return preg_replace( '/[\\\\]+/', '/', $path );
 }
+
+/**
+ * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
+ * @link   http://php.net/manual/en/function.mysql-real-escape-string.php#101248
+ * @access public
+ * @param  string $input The string to escape.
+ * @return string
+ */
+function wpstg_mysql_escape_mimic( $input ) {
+    if( is_array( $input ) ) {
+        return array_map( __METHOD__, $input );
+    }
+    if( !empty( $input ) && is_string( $input ) ) {
+        return str_replace( array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $input );
+    }
+
+    return $input;
+}
+
+/**
+ * Search & Replace first occurence of string in haystack
+ * @param type $haystack
+ * @param type $needle
+ * @return type
+ */
+function wpstg_replace_first_match( $needle, $replace, $haystack ) {
+    $result = $haystack;
+    $pos    = strpos( $haystack, $needle );
+    if( $pos !== false ) {
+        $result = substr_replace( $haystack, $replace, $pos, strlen( $needle ) );
+    }
+    return $result;
+}
+
+/**
+ * Search & Replace last occurence of string in haystack
+ * @param type $haystack
+ * @param type $needle
+ * @return type
+ */
+function wpstg_replace_last_match( $needle, $replace, $haystack ) {
+    $result = $haystack;
+    $pos    = strrpos( $haystack, $needle );
+    if( $pos !== false ) {
+        $result = substr_replace( $haystack, $replace, $pos, strlen( $needle ) );
+    }
+    return $result;
+}
