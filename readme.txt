@@ -148,6 +148,8 @@ https://wp-staging.com
 
 = 2.4.3 =
 * Fix: Updating staging site does not exclude Windows IIS configuration file web.config and can lead to server error
+* Fix: Redirect to the correct url after log in to staging site
+
 
 = 2.4.2 =
 * Fix: Error 500 on some systems when files are collected and plugin iterates through the directories

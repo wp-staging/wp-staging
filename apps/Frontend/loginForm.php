@@ -49,7 +49,14 @@ class loginForm {
             wp_set_auth_cookie( $user_data->ID, $rememberme );
             wp_set_current_user( $user_data->ID, $_POST['wpstg-username'] );
             do_action( 'wp_login', $_POST['wpstg-username'], get_userdata( $user_data->ID ) );
-            header( 'Location:' . get_site_url() . '/wp-admin/' );
+
+            $redirect_to = get_site_url() . '/wp-admin/';
+            
+            if( !empty( $_POST['redirect_to'] ) ) {
+                $redirectTo = $_POST['redirect_to'];
+            }
+
+            header( 'Location:' . $redirectTo );
         } else {
             $this->error = 'Username or password wrong!';
         }
