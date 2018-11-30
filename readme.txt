@@ -149,6 +149,7 @@ https://wp-staging.com
 = 2.4.3 =
 * Fix: Updating staging site does not exclude Windows IIS configuration file web.config and can lead to server error
 * Fix: Redirect to the correct url after log in to staging site
+* Fix: Supports HTML entities in links created by WP Backery Page Builder Plugin
 * New: Support for custom directories of wp-content and uploads folder
 
 

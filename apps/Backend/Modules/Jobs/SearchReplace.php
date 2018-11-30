@@ -28,7 +28,6 @@ class SearchReplace extends JobExecutable {
      */
     public $db;
 
-
     /**
      *
      * @var string
@@ -174,7 +173,7 @@ class SearchReplace extends JobExecutable {
         $host = $this->options->homeHostname;
 
         if( $this->isSubDir() ) {
-            $host = trailingslashit($this->options->homeHostname) . $this->getSubDir();
+            $host = trailingslashit( $this->options->homeHostname ) . $this->getSubDir();
         }
         return $this->strings->getUrlWithoutScheme( $host );
     }
@@ -299,17 +298,19 @@ class SearchReplace extends JobExecutable {
         $pages        = $this->get_pages_in_table( $table );
 
 
-            $args['search_for'] = array(
+        $args['search_for'] = array(
+            '%2F%2F' . str_replace( '/', '%2F', $this->sourceHostname ), // HTML entitity for WP Backery Page Builder Plugin
             '\/\/' . str_replace( '/', '\/', $this->sourceHostname ), // Escaped \/ used by revslider and several visual editors
             '//' . $this->sourceHostname,
-                rtrim( ABSPATH, '/' ),
-            );
+            rtrim( ABSPATH, '/' ),
+        );
 
-            $args['replace_with'] = array(
+        $args['replace_with'] = array(
+            '%2F%2F' . str_replace( '/', '%2F', $this->destinationHostname ),
             '\/\/' . str_replace( '/', '\/', $this->destinationHostname ),
             '//' . $this->destinationHostname,
-            rtrim ($this->options->destinationDir, '/'),
-            );
+            rtrim( $this->options->destinationDir, '/' ),
+        );
 
 
         $args['replace_guids']    = 'off';
@@ -387,7 +388,7 @@ class SearchReplace extends JobExecutable {
                 }
 
                 // Skip mail addresses
-                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' .$this->options->homeHostname ) ) {
+                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->options->homeHostname ) ) {
                     continue;
                 }
 
@@ -759,4 +760,4 @@ class SearchReplace extends JobExecutable {
         return false;
     }
 
-        }
+}
