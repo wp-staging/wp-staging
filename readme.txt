@@ -151,6 +151,7 @@ https://wp-staging.com
 * Fix: Redirect to the correct url after log in to staging site
 * Fix: Supports HTML entities in links created by WP Backery Page Builder Plugin
 * New: Support for custom directories of wp-content and uploads folder
+* New: Option to show again the rating notice in a week
 
 
 = 2.4.2 =

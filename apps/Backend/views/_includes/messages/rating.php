@@ -27,6 +27,11 @@
                 <?php _e('No, not good enough','wp-staging')?>
             </a>
         </li>
+        <li>
+            <a href="javascript:void(0);" class="wpstg_rate_later" title="Ask me again in a week" style="font-weight:normal;color:white;">
+                <?php _e('I want to rate later - Ask me again in a week','wp-staging')?>
+            </a>
+        </li>
     </ul>
 </div>
 <script type="text/javascript" src="<?php echo $this->url . "js/wpstg-admin-rating.js"?>"></script>
