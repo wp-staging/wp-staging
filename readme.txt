@@ -150,9 +150,8 @@ https://wp-staging.com
 * Fix: Updating staging site does not exclude Windows IIS configuration file web.config and can lead to server error
 * Fix: Redirect to the correct url after log in to staging site
 * Fix: Supports HTML entities in links created by WP Backery Page Builder Plugin
-* New: Support for custom directories of wp-content and uploads folder
+* New: Support for custom and non-default wp-content and uploads folder
 * New: Option to show again the rating notice in a week
-
 
 = 2.4.2 =
 * Fix: Error 500 on some systems when files are collected and plugin iterates through the directories

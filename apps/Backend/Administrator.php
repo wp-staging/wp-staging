@@ -620,7 +620,7 @@ class Administrator extends InjectionAware {
         ) {
             wp_send_json( true );
         }
-        return wp_send_json();
+        return wp_send_json(false);
     }
 
     /**

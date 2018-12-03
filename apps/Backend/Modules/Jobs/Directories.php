@@ -11,7 +11,6 @@ use WPStaging\WPStaging;
 use WPStaging\Utils\Logger;
 use WPStaging\Utils\Strings;
 use WPStaging\Iterators\RecursiveDirectoryIterator;
-//use WPStaging\Iterators\RecursiveFilterNewLine;
 use WPStaging\Iterators\RecursiveFilterExclude;
 
 /**
@@ -132,20 +131,21 @@ class Directories extends JobExecutable {
             // Iterate over content directory
             $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( WP_CONTENT_DIR );
 
-            // Exclude new line file names
-            //$iterator = new \WPStaging\Iterators\RecursiveFilterNewline( $iterator );
+            // Exclude new line file names Do not use this. Leads to error 500 on some systems
+            // $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
+
             // Exclude uploads, plugins or themes
             $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, apply_filters( 'wpstg_clone_excl_folders', $excludeWpContent ) );
-
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
-            $this->log( "Scanning /wp-content for its sub-directories and files" );
+            $this->log( "Scanning wp-content folder " . WP_CONTENT_DIR );
 
             // Write path line
             foreach ( $iterator as $item ) {
                 if( $item->isFile() ) {
-                    if( $this->write( $files, 'wp-content' . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
+                    $wpContentDir = str_replace(ABSPATH, '', WP_CONTENT_DIR);
+                    if( $this->write( $files, $wpContentDir . '/' . $iterator->getSubPathName() . PHP_EOL ) ) {
                         $this->options->totalFiles++;
 
                         // Too much cpu time
@@ -184,8 +184,9 @@ class Directories extends JobExecutable {
             // Iterate over wp-admin directory
             $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
 
-            // Exclude new line file names
-            //$iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
+            // Exclude new line file names Do not use this. Leads to error 500 on some systems
+            // $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
+
             // Recursively iterate over wp-includes directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -235,8 +236,9 @@ class Directories extends JobExecutable {
             // Iterate over wp-admin directory
             $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
 
-            // Exclude new line file names
-            //$iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
+            // Exclude new line file names Do not use this. Leads to error 500 on some systems
+            // $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
+
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -254,7 +256,6 @@ class Directories extends JobExecutable {
             }
         } catch ( \Exception $e ) {
             $this->returnException( 'Error: ' . $e->getMessage() );
-            //throw new \Exception('Error: ' . $e->getMessage());
         } catch ( \Exception $e ) {
             // Skip bad file permissions
         }
@@ -283,18 +284,8 @@ class Directories extends JobExecutable {
             // Iterate over extra directory
             $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( $folder );
 
-            // Exclude new line file names
-            //$iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
-            // Exclude wp core folders 
-//         $exclude = array('wp-includes', 
-//                          'wp-admin', 
-//                          'wp-content');
-//         
-//         $excludeMore = array();
-//          foreach ($this->options->excludedDirectories as $key => $value){
-//             $excludeMore[] = $this->getLastElemAfterString('/', $value);
-//          }
-            //$exclude = array_merge($exclude, $excludeMore); 
+            // Exclude new line file names Do not use this. Leads to error 500 on some systems
+            // $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
             $exclude = array();
 

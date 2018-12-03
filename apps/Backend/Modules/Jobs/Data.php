@@ -75,7 +75,7 @@ class Data extends JobExecutable {
     * @return void
     */
    protected function calculateTotalSteps() {
-        $this->options->totalSteps = 15;
+        $this->options->totalSteps = 17;
    }
 
    /**
@@ -841,7 +841,6 @@ class Data extends JobExecutable {
       preg_match( "/define\s*\(\s*'WP_CACHE'\s*,\s*(.*)\s*\);/", $content, $matches );
 
       if( !empty( $matches[1] ) ) {
-         $matches[1];
 
          $pattern = "/define\s*\(\s*'WP_CACHE'\s*,\s*(.*)\s*\);/";
 
@@ -863,6 +862,87 @@ class Data extends JobExecutable {
         $this->Log( "Preparing Data Step 14: Finished successfully" );
       return true;
    }
+
+    /**
+     * Remove WP_CONTENT_DIR in wp-config.php
+     * @return bool
+     */
+    protected function step15() {
+        $path = $this->options->destinationDir . "wp-config.php";
+
+        $this->log( "Preparing Data Step15: Set WP_CONTENT_DIR in wp-config.php to false" );
+
+        if( false === ($content = file_get_contents( $path )) ) {
+            $this->log( "Preparing Data Step15: Failed to update WP_CONTENT_DIR in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
+            return false;
+        }
+
+
+        // Get WP_CONTENT_DIR from wp-config.php
+        preg_match( "/define\s*\(\s*'WP_CONTENT_DIR'\s*,\s*(.*)\s*\);/", $content, $matches );
+
+        if( !empty( $matches[0] ) ) {
+
+            $pattern = "/define\s*\(\s*'WP_CONTENT_DIR'\s*,\s*(.*)\s*\);/";
+
+            $replace = "";
+
+            if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+                $this->log( "Preparing Data: Failed to change WP_CONTENT_DIR", Logger::TYPE_ERROR );
+                return false;
+            }
+        } else {
+            $this->log( "Preparing Data Step15: WP_CONTENT_DIR not defined in wp-config.php. Skipping this step." );
+        }
+
+        if( false === @file_put_contents( $path, $content ) ) {
+            $this->log( "Preparing Data Step15: Failed to update WP_CONTENT_DIR. Can't save contents", Logger::TYPE_ERROR );
+            return false;
+        }
+        $this->Log( "Preparing Data Step 15: Finished successfully" );
+        return true;
+    }
+    /**
+     * Remove WP_CONTENT_URL in wp-config.php
+     * @return bool
+     */
+    protected function step16() {
+        $path = $this->options->destinationDir . "wp-config.php";
+
+        $this->log( "Preparing Data Step16: Set WP_CONTENT_URL in wp-config.php to false" );
+
+        if( false === ($content = file_get_contents( $path )) ) {
+            $this->log( "Preparing Data Step16: Failed to update WP_CONTENT_URL in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
+            return false;
+        }
+
+
+        // Get WP_CONTENT_DIR from wp-config.php
+        preg_match( "/define\s*\(\s*'WP_CONTENT_URL'\s*,\s*(.*)\s*\);/", $content, $matches );
+
+        if( !empty( $matches[0] ) ) {
+
+            $pattern = "/define\s*\(\s*'WP_CONTENT_URL'\s*,\s*(.*)\s*\);/";
+
+            $replace = "";
+
+            if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+                $this->log( "Preparing Data: Failed to change WP_CONTENT_URL", Logger::TYPE_ERROR );
+                return false;
+            }
+        } else {
+            $this->log( "Preparing Data Step16: WP_CONTENT_URL not defined in wp-config.php. Skipping this step." );
+        }
+
+        if( false === @file_put_contents( $path, $content ) ) {
+            $this->log( "Preparing Data Step16: Failed to update WP_CONTENT_URL. Can't save contents", Logger::TYPE_ERROR );
+            return false;
+        }
+        $this->Log( "Preparing Data Step 16: Finished successfully" );
+        return true;
+    }
+
+
 
    protected function getNewUploadPath() {
       $uploadPath = get_option( 'upload_path' );
