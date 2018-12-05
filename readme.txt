@@ -81,7 +81,7 @@ I totally understand this and i am guilty as well here, but unfortunately this l
 
 <strong> I think its time to change this, so i created "WP Staging" for WordPress migration of staging sites</strong>
 
-<h3> Can´t i just use my local wordpress development copy for testing like xampp / lampp? </h3>
+<h3> Can´t I just use my local wordpress development copy for testing like xampp / lampp? </h3>
 
 Nope! If your local hardware and software environment is not a 100% exact clone of your production server there is NO guarantee that every aspect 
 of your local copy is working on your live website exactely as you would expect it. 
