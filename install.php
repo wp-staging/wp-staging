@@ -9,19 +9,14 @@ use WPStaging\Utils\IISWebConfig;
 use WPStaging\Utils\Htaccess;
 use WPStaging\Utils\Filesystem;
 
-/**
- * Install Function
- *
- */
+
 // Exit if accessed directly
 if( !defined( 'ABSPATH' ) )
     exit;
 
-/*
- * Install Multisite
- * check first if multisite is enabled
- * @since 2.1.1
- * 
+/**
+ * Install Class
+ *
  */
 
 class Install {
