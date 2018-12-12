@@ -146,6 +146,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.4.4 =
+* Fix: Security, prevent downloading wp staging log files by third party users from uploads folder
+* New: Compatible up to WordPress 5.0 Gutenberg
+
 = 2.4.3 =
 * Fix: Updating staging site does not exclude Windows IIS configuration file web.config and can lead to server error
 * Fix: Redirect to the correct url after log in to staging site
