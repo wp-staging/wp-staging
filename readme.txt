@@ -197,7 +197,8 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.4.3 =
-* New: Support for custom directories of wp-content and uploads folder
+= 2.4.4 =
+* Fix: Security, prevent downloading wp staging log files by third party users from uploads folder
+* New: Compatible up to WordPress 5.0 Gutenberg
 
 
