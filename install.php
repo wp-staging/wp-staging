@@ -20,19 +20,21 @@ if( !defined( 'ABSPATH' ) )
  */
 
 class Install {
-
+        
     public function __construct() {
         register_activation_hook( __DIR__ . DIRECTORY_SEPARATOR . WPSTG_PLUGIN_SLUG . '.php', array($this, 'activation') );
     }
 
     public static function activation() {
-        $this->installOptimizer();
-        $this->createHtaccess();
-        $this->createIndex();
-        $this->createWebConfig();
+        $install = new Install();
+        
+        $install->installOptimizer();
+        $install->createHtaccess();
+        $install->createIndex();
+        $install->createWebConfig();
     }
 
-    public function installOptimizer() {
+    private function installOptimizer() {
         // Register cron job.
         $cron = new \WPStaging\Cron\Cron;
         $cron->schedule_event();
@@ -45,7 +47,7 @@ class Install {
         set_transient( 'wpstg_activation_redirect', true, 3600 );
     }
 
-    public function createHtaccess() {
+    private function createHtaccess() {
         $htaccess = new Htaccess();
         $htaccess->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . '.htaccess' );
         $htaccess->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'logs/.htaccess' );
@@ -55,13 +57,13 @@ class Install {
         }
     }
 
-    public function createIndex() {
+    private function createIndex() {
         $filesystem = new Filesystem();
         $filesystem->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'index.php', "<?php // silence" );
         $filesystem->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'logs/index.php', "<?php // silence" );
     }
 
-    public function createWebConfig() {
+    private function createWebConfig() {
         $webconfig = new IISWebConfig();
         $webconfig->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'web.config' );
         $webconfig->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'logs/web.config' );
