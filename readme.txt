@@ -146,6 +146,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.4.5 =
+* New: Compatible up to WordPress 5.0.1 Gutenberg
+
+
 = 2.4.4 =
 * Fix: Security, prevent downloading wp staging log files by third party users from uploads folder
 * New: Compatible up to WordPress 5.0 Gutenberg
