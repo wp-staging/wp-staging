@@ -148,6 +148,10 @@ https://wp-staging.com
 
 = 2.4.5 =
 * New: Compatible up to WordPress 5.0.1 Gutenberg
+* New: Show WP version of staging site in the sysinfo log
+* Fix: Make sure optimizer must-use plugin is updated as well after updating the main plugin
+* Fix: Plugin can not be uninstalled if WP Staging Pro is activated
+* Fix: Prevent error $this not in object context in install.php
 
 
 = 2.4.4 =
@@ -201,8 +205,8 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.4.4 =
+= 2.4.5 =
 * Fix: Security, prevent downloading wp staging log files by third party users from uploads folder
-* New: Compatible up to WordPress 5.0 Gutenberg
+* New: Compatible up to WordPress 5.0.1 Gutenberg
 
 
