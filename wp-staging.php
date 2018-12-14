@@ -54,6 +54,11 @@ if( !defined( 'WPSTG_VERSION' ) ) {
    define( 'WPSTG_VERSION', '{{version}}' );
 }
 
+// Must use version of the optimizer
+if( !defined( 'WPSTG_OPTIMIZER_MUVERSION' ) ) {
+   define( 'WPSTG_OPTIMIZER_MUVERSION', 1.1 );
+}
+
 /**
  * Check if system fullfils all requirements
  */

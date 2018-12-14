@@ -53,14 +53,16 @@ class Optimizer {
    private function mustUpdateOptimizer(){
        $isVersionNumber = defined('WPSTG_OPTIMIZER_VERSION') ? WPSTG_OPTIMIZER_VERSION : false;
       
+       $update = false;
+       
        if (false === $isVersionNumber){
            return true;
 }
        
-       $mustVersionNumber = defined('WPSTGPRO_OPTIMIZER_MUVERSION') ? WPSTGPRO_OPTIMIZER_MUVERSION : false;
+       $mustVersionNumber = defined('WPSTG_OPTIMIZER_MUVERSION') ? WPSTG_OPTIMIZER_MUVERSION : false;
        
        if ($mustVersionNumber){
-           $update = version_compare($isVersionNumber, $mustVersionNumber, '==');
+           $update = version_compare($isVersionNumber, $mustVersionNumber, '!=');
        }
       
        return $update;
