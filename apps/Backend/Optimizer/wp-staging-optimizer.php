@@ -10,6 +10,11 @@
   Credit: Original version is made by Delicious Brains (WP Migrate DB). Thank you guys!
  */
 
+
+if ( ! defined( 'WPSTG_OPTIMIZER_VERSION' ) ){
+	define( 'WPSTG_OPTIMIZER_VERSION', 1.1 );
+}
+
 /**
  * Get plugins dir 
  * @return string

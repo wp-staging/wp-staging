@@ -24,13 +24,17 @@ class Optimizer {
    }
 
    public function installOptimizer() {
+      if (file_exists( $this->dest ) && false === $this->mustUpdateOptimizer()){
+         return false;
+      }
+      
       if( wp_mkdir_p( $this->mudir ) ) {
          $this->copy();
       } 
       return false;
    }
 
-   public function unstallOptimizer() {
+   public function uninstallOptimizer() {
       if( file_exists( $this->dest ) && !unlink( $this->dest ) ) {
          return false;
       }
@@ -40,6 +44,26 @@ class Optimizer {
       if( !copy( $this->source, $this->dest ) ) {
          return false;
       }
+   }
+
+   /**
+    * Check if the Optimizer must use plugin must be updated
+    * @return boolean
+    */
+   private function mustUpdateOptimizer(){
+       $isVersionNumber = defined('WPSTG_OPTIMIZER_VERSION') ? WPSTG_OPTIMIZER_VERSION : false;
+      
+       if (false === $isVersionNumber){
+           return true;
+}
+       
+       $mustVersionNumber = defined('WPSTGPRO_OPTIMIZER_MUVERSION') ? WPSTGPRO_OPTIMIZER_MUVERSION : false;
+       
+       if ($mustVersionNumber){
+           $update = version_compare($isVersionNumber, $mustVersionNumber, '==');
+       }
+      
+       return $update;
    }
 
 }
