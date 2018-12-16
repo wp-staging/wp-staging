@@ -147,7 +147,7 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.4.6 =
-* Fix: Can not login to staging site . Changed mMinimum user capability to 'manage_options' instead 'administrator' 
+* Fix: Can not login to staging site . Changed minimum user capability to 'manage_options' instead 'administrator' 
 
 = 2.4.5 =
 * New: Compatible up to WordPress 5.0.1 Gutenberg
