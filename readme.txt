@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.4.7 =
+* New: Support WordPress 5.0.2
+
 = 2.4.6 =
 * Fix: Can not login to staging site . Changed minimum user capability to 'manage_options' instead 'administrator' 
 
@@ -208,8 +211,8 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.4.6 =
+= 2.4.7 =
 * Fix: Security, prevent downloading wp staging log files by third party users from uploads folder
-* New: Compatible up to WordPress 5.0.1 Gutenberg
+* New: Compatible up to WordPress 5.0.2 Gutenberg
 
 
