@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.4.8 =
+* Fix: Prevent throwing error when table prefix of table usermeta can not be changed
+
 = 2.4.7 =
 * New: Support WordPress 5.0.2
 
