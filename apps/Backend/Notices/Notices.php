@@ -93,6 +93,15 @@ class Notices {
 
         return false;
     }
+    /**
+     * Get current page
+     * @return string | post, page
+     */
+    private function getCurrentScreen(){
+        if ( function_exists('get_current_screen')) { 
+            return \get_current_screen()->post_type;
+        }
+    }
 
     public function messages() {
 
@@ -103,7 +112,7 @@ class Notices {
 
 
         // Show rating review message on all admin pages
-        if( $this->canShow( "wpstg_rating", 7 ) ) {
+        if( $this->canShow( "wpstg_rating", 7 ) && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post' ) {
             require_once "{$viewsNoticesPath}rating.php";
         }
 
@@ -115,11 +124,11 @@ class Notices {
 
 
         $varsDirectory = \WPStaging\WPStaging::getContentDir();
-        if( !wp_is_writable( $varsDirectory ) ) {
+      if( !is_writable( $varsDirectory ) ) {
             require_once "{$viewsNoticesPath}/uploads-cache-directory-permission-problem.php";
         }
         // Staging directory is not writable
-        if( !wp_is_writable( ABSPATH ) ) {
+      if( !is_writeable( ABSPATH ) ) {
             require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
         }
 
@@ -161,6 +170,7 @@ class Notices {
             return false;
         }
         return true;
+      
     }
 
     /**

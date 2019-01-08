@@ -386,13 +386,11 @@ class Data extends JobExecutable {
               )
       );
 
-//      if( !$update ) {
-//         $this->log( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
-//            $this->returnException( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes {$this->db->last_error}" );
-//         return false;
-//      }
-
-
+      if( !$update ) {
+         $this->log( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes; {$this->db->last_error}", Logger::TYPE_ERROR );
+            $this->returnException( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes {$this->db->last_error}" );
+         return false;
+      }
 
       return true;
    }

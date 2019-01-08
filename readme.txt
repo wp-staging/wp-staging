@@ -148,6 +148,8 @@ https://wp-staging.com
 
 = 2.4.8 =
 * Fix: Prevent throwing error when table prefix of table usermeta can not be changed
+* Fix: WP Staging does not run with old WordPress version 3.2
+* Fix: Do not show rating box on posts and pages editor
 
 = 2.4.7 =
 * New: Support WordPress 5.0.2
