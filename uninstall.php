@@ -53,7 +53,9 @@ class uninstall {
             delete_option( "wpstg_installDate" );
             delete_option( "wpstg_firsttime" );
             delete_option( "wpstg_is_staging_site" );
-            delete_option( "wpstg_settings" );
+            // Do not delete main wpstg_settings any longer. 
+            // People forget that this removes their staging sites from the list and ask us often to restore it for them
+            //delete_option( "wpstg_settings" );
             delete_option( "wpstg_rmpermalinks_executed" );
             delete_option( "wpstg_activation_redirect" );
 
