@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.4.9 =
+* Fix: Better warning notices before updating a staging site
+
 = 2.4.8 =
 * Fix: Prevent throwing error when table prefix of table usermeta can not be changed
 * Fix: WP Staging does not run with old WordPress version 3.2
