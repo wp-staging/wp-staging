@@ -332,10 +332,6 @@ var WPStaging = (function ($)
                 .on("click", ".wpstg-execute-clone", function (e) {
                     e.preventDefault();
 
-//                    if (!confirm("Are you sure you want to update the staging site? All your staging site modifications will be overwritten with the data from the live site. So make sure that your live site is up to date."))
-//                    {
-//                        return false;
-//                    }
 
                     var clone = $(this).data("clone");
 
@@ -490,7 +486,7 @@ var WPStaging = (function ($)
 
                     if ($this.data("action") === "wpstg_update") {
                         // Update Clone - confirmed
-                        if (!confirm("Are you sure you want to update the staging site with data from the live site? \n\nEnsure to exclude all tables and folders which you do not want to overwrite, first! \n\nDo not necessarily cancel the updating process! This can break your staging site."))
+                        if (!confirm("ATTENTION! This will overwrite your staging site with all selected data from the live site! Are you sure you want to do this? \n\nMake sure to exclude all tables and folders which you do not want to overwrite, first! \n\nDo not necessarily cancel the updating process! This can break your staging site."))
                         {
                             return false;
                         }
