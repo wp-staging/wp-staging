@@ -148,6 +148,9 @@ https://wp-staging.com
 
 = 2.4.9 =
 * Fix: Better warning notices before updating a staging site
+* Fix: Stop delete process if staging site has been deleted manually before
+* Fix: Log file folder does not have correct permission 0755
+
 
 = 2.4.8 =
 * Fix: Prevent throwing error when table prefix of table usermeta can not be changed
@@ -221,8 +224,8 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.4.7 =
+= 2.4.9 =
 * Fix: Security, prevent downloading wp staging log files by third party users from uploads folder
-* New: Compatible up to WordPress 5.0.2 Gutenberg
+* New: Compatible up to WordPress 5.0.3 Gutenberg
 
 

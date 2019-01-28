@@ -79,7 +79,7 @@ class Logger
         }
 
         // If cache directory doesn't exists, create it
-        if (!is_dir($this->logDir) && !@mkdir($this->logDir, 0775, true))
+        if (!is_dir($this->logDir) && !@mkdir($this->logDir, 0755, true))
         {
             throw new \Exception("Failed to create log directory!");
         }
