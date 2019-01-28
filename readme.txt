@@ -150,6 +150,7 @@ https://wp-staging.com
 * Fix: Better warning notices before updating a staging site
 * Fix: Stop delete process if staging site has been deleted manually before
 * Fix: Log file folder does not have correct permission 0755
+* Tweak: Better warning for update method
 
 
 = 2.4.8 =

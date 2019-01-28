@@ -486,7 +486,7 @@ var WPStaging = (function ($)
 
                     if ($this.data("action") === "wpstg_update") {
                         // Update Clone - confirmed
-                        if (!confirm("ATTENTION! This will overwrite your staging site with all selected data from the live site! Are you sure you want to do this? \n\nMake sure to exclude all tables and folders which you do not want to overwrite, first! \n\nDo not necessarily cancel the updating process! This can break your staging site."))
+                        if (!confirm("ATTENTION! This will overwrite your staging site with all selected data from the live site! This should be used only if you want to clone again your production site. Are you sure you want to do this? \n\nMake sure to exclude all tables and folders which you do not want to overwrite, first! \n\nDo not necessarily cancel the updating process! This can break your staging site."))
                         {
                             return false;
                         }
