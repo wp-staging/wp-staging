@@ -448,6 +448,10 @@
     position: relative;
 }
 
+#wpstg-removing-clone .wpstg-tab-section{
+    display: block;
+}
+
 .wpstg-progress-bar {
     /*max-width: 900px;*/
     height: 27px;

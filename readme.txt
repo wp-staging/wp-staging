@@ -151,6 +151,8 @@ https://wp-staging.com
 * Fix: Stop delete process if staging site has been deleted manually before
 * Fix: Log file folder does not have correct permission 0755
 * Tweak: Better warning for update method
+* Tweak: DB tables and file verification opened as default option
+
 
 
 = 2.4.8 =
