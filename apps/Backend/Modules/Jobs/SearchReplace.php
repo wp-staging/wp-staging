@@ -351,7 +351,7 @@ class SearchReplace extends JobExecutable {
             'Admin_custome_login_top',
             'Admin_custome_login_dashboard',
             'Admin_custome_login_Version',
-            'upload_path',
+            'upload_path'
         );
 
         $filter = apply_filters( 'wpstg_clone_searchreplace_excl_rows', $filter );
@@ -372,11 +372,24 @@ class SearchReplace extends JobExecutable {
             if( isset( $row['option_name'] ) && 'on' === $args['skip_transients'] && false !== strpos( $row['option_name'], '_transient' ) ) {
                 continue;
             }
+            // Skip rows with more than 5MB to save memory
+            if( isset( $row['option_value'] ) && strlen($row['option_value']) >= 5000000  ) {
+                continue;
+            }
+
 
             foreach ( $columns as $column ) {
 
                 $dataRow = $row[$column];
 
+                
+                // Skip rows larger than 5MB                
+                $size = strlen($dataRow);
+                if ($size >= 5000000){
+                    continue;
+                }
+
+                // Skip Primary key
                 if( $column == $primary_key ) {
                     $where_sql[] = $column . ' = "' . $this->mysql_escape_mimic( $dataRow ) . '"';
                     continue;
