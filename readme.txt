@@ -154,6 +154,7 @@ https://wp-staging.com
 * Tweak: Better warning for update method
 * Tweak: DB tables and file verification opened as default option
 * Tweak: Skip rows larger than 5MB for search & replace operations to keep memory consumption low
+* Tweak: clean up search & replace method
 
 
 
