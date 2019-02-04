@@ -282,7 +282,7 @@ class Data extends JobExecutable {
         }
 
         $this->log( "Preparing Data Step1: Failed to update siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
-        return false;
+        return true;
     }
 
     /**
