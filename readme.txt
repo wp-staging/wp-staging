@@ -150,8 +150,10 @@ https://wp-staging.com
 * Fix: Better warning notices before updating a staging site
 * Fix: Stop delete process if staging site has been deleted manually before
 * Fix: Log file folder does not have correct permission 0755
+* Fix: Continue cloning if siteurl & home in wp_options could not be changed
 * Tweak: Better warning for update method
 * Tweak: DB tables and file verification opened as default option
+* Tweak: Skip rows larger than 5MB for search & replace operations to keep memory consumption low
 
 
 

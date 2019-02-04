@@ -336,37 +336,6 @@ class SearchReplaceExternal extends JobExecutable {
             $this->getImagePathStaging()
         );
 
-        //        if( $this->isSubDir() ) {
-//            // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
-//            $args['search_for'] = array(
-//                '//' . rtrim( $this->multisiteHomeUrlWithoutScheme, "/" ) . $this->getSubDir(),
-//                ABSPATH,
-//                str_replace( '/', '\/', rtrim( $this->multisiteHomeUrlWithoutScheme, '/' ) ) . str_replace( '/', '\/', $this->getSubDir() ), // // Used by revslider and several visual editors
-//                $this->getImagePathLive()
-//            );
-//
-//
-//            $args['replace_with'] = array(
-//                '//' . rtrim( $this->multisiteDomainWithoutScheme, "/" ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName,
-//                rtrim( $this->getAbsDestination(), '/' ) . '/' . $this->options->cloneDirectoryName,
-//                str_replace( '/', '\/', rtrim( $this->multisiteDomainWithoutScheme, "/" ) ) . str_replace( '/', '\/', $this->getSubDir() ) . '\/' . $this->options->cloneDirectoryName, // Used by revslider and several visual editors
-//                $this->getImagePathStaging()
-//            );
-//        } else {
-//            $args['search_for']   = array(
-//                '//' . rtrim( $this->multisiteHomeUrlWithoutScheme, '/' ),
-//                ABSPATH,
-//                str_replace( '/', '\/', rtrim( $this->multisiteHomeUrlWithoutScheme, '/' ) ),
-//                $this->getImagePathLive()
-//            );
-//            $args['replace_with'] = array(
-//                '//' . rtrim( $this->multisiteDomainWithoutScheme, '/' ) . '/' . $this->options->cloneDirectoryName,
-//                rtrim( $this->getAbsDestination(), '/' ) . '/' . $this->options->cloneDirectoryName,
-//                str_replace( '/', '\/', rtrim( $this->multisiteDomainWithoutScheme, '/' ) ) . '\/' . $this->options->cloneDirectoryName,
-//                $this->getImagePathStaging()
-//            );
-//        }
-
         $args['replace_guids']    = 'off';
         $args['dry_run']          = 'off';
         $args['case_insensitive'] = false;
@@ -450,10 +419,10 @@ class SearchReplaceExternal extends JobExecutable {
                 if( $this->options->prefix . 'options' === $table ) {
 
                     // Skip certain options
-                    if( isset( $should_skip ) && true === $should_skip ) {
-                        $should_skip = false;
-                        continue;
-                    }
+//                    if( isset( $should_skip ) && true === $should_skip ) {
+//                        $should_skip = false;
+//                        continue;
+//                    }
 
                     // Skip this row
                     if( 'wpstg_existing_clones_beta' === $dataRow ||
@@ -463,7 +432,8 @@ class SearchReplaceExternal extends JobExecutable {
                             'siteurl' === $dataRow ||
                             'home' === $dataRow
                     ) {
-                        $should_skip = true;
+                        //$should_skip = true;
+                        continue;
                     }
                 }
 
