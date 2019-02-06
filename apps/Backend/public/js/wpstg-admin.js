@@ -64,7 +64,7 @@ var WPStaging = (function ($)
     var elements = function ()
     {
         var $workFlow = cache.get("#wpstg-workflow"),
-                isAllChecked = true,
+                isAllChecked = false,
                 urlSpinner = ajaxurl.replace("/admin-ajax.php", '') + "/images/spinner",
                 timer;
 
@@ -78,49 +78,97 @@ var WPStaging = (function ($)
         ajaxSpinner = "<img src=''" + urlSpinner + "' alt='' class='ajax-spinner general-spinner' />";
 
         $workFlow
-                // Check / Un-check Database Tables
+                // Check / Un-check All Database Tables
+//                .on("click", ".wpstg-button-unselect", function (e) {
+//                    e.preventDefault();
+//
+//                    if (false === isAllChecked)
+//                    {
+//                        cache.get(".wpstg-db-table-checkboxes").prop("checked", true);
+//                        cache.get(".wpstg-button-unselect").text("Un-check All");
+//                        isAllChecked = true;
+//                    }
+//                    else
+//                    {
+//                        cache.get(".wpstg-db-table-checkboxes").prop("checked", false);
+//                        cache.get(".wpstg-button-unselect").text("Check All");
+//                        isAllChecked = false;
+//                    }
+//                })
+                // Check / Un-check All Database Tables New
                 .on("click", ".wpstg-button-unselect", function (e) {
                     e.preventDefault();
 
-                    if (false === isAllChecked)
+                        
+                    //if (typeof(isAllChecked) !== 'defined' || true === isAllChecked )
+                    if (false === isAllChecked )
                     {
-                        cache.get(".wpstg-db-table-checkboxes").prop("checked", true);
-                        cache.get(".wpstg-button-unselect").text("Un-check All");
+                        console.log('true');
+                        cache.get("#wpstg_select_tables_cloning .wpstg-db-table").prop("selected", "selected");
+                        cache.get(".wpstg-button-unselect").text("Unselect All");
                         isAllChecked = true;
                     }
                     else
                     {
-                        cache.get(".wpstg-db-table-checkboxes").prop("checked", false);
-                        cache.get(".wpstg-button-unselect").text("Check All");
+                        console.log('false');
+                        cache.get("#wpstg_select_tables_cloning .wpstg-db-table").prop("selected", false);
+                        cache.get(".wpstg-button-unselect").text("Select All");
                         isAllChecked = false;
                     }
                 })
+
                 /**
                  * Select tables with certain tbl prefix
                  * @param obj e
                  * @returns {undefined}
                  */
+//                .on("click", ".wpstg-button-select", function (e) {
+//                    e.preventDefault();
+//                    $(".wpstg-db-table input").each(function () {
+//
+//                        if (wpstg.isMultisite == 1) {
+//                            if ($(this).attr('name').match("^" + wpstg.tblprefix + "([^0-9])_*")) {
+//                                $(this).prop("checked", true);
+//                            } else {
+//                                $(this).prop("checked", false);
+//                            }
+//                        }
+//
+//                        if (wpstg.isMultisite == 0) {
+//                            if ($(this).attr('name').match("^" + wpstg.tblprefix)) {
+//                                $(this).prop("checked", true);
+//                            } else {
+//                                $(this).prop("checked", false);
+//                            }
+//                        }
+//                    })
+//                })
+                /**
+                 * Select tables with certain tbl prefix | NEW
+                 * @param obj e
+                 * @returns {undefined}
+                 */
                 .on("click", ".wpstg-button-select", function (e) {
                     e.preventDefault();
-                    $(".wpstg-db-table input").each(function () {
-
+                    $("#wpstg_select_tables_cloning .wpstg-db-table").each(function () {
                         if (wpstg.isMultisite == 1) {
                             if ($(this).attr('name').match("^" + wpstg.tblprefix + "([^0-9])_*")) {
-                                $(this).prop("checked", true);
+                                $(this).prop("selected", "selected");
                             } else {
-                                $(this).prop("checked", false);
+                                $(this).prop("selected", false);
                             }
                         }
 
                         if (wpstg.isMultisite == 0) {
                         if ($(this).attr('name').match("^" + wpstg.tblprefix)) {
-                            $(this).prop("checked", true);
+                                $(this).prop("selected", "selected");
                         } else {
-                            $(this).prop("checked", false);
+                                $(this).prop("selected", false);
                         }
                         }
                 })
                 })
+
                 // Expand Directories
                 .on("click", ".wpstg-expand-dirs", function (e) {
                     e.preventDefault();
@@ -331,7 +379,6 @@ var WPStaging = (function ($)
                 // Update
                 .on("click", ".wpstg-execute-clone", function (e) {
                     e.preventDefault();
-
 
                     var clone = $(this).data("clone");
 
@@ -573,21 +620,29 @@ var WPStaging = (function ($)
     {
         var includedTables = [];
 
-        $(".wpstg-db-table input:checked").each(function () {
-            includedTables.push(this.name);
+//        $(".wpstg-db-table input:checked").each(function () {
+//            includedTables.push(this.name);
+//        });
+        $("#wpstg_select_tables_cloning option:selected").each(function () {
+            //console.log(this);
+            includedTables.push(this.value);
         });
 
         return includedTables;
     };
     /**
      * Get Excluded (Unchecked) Database Tables
+     * Not used anymore!
      * @returns {Array}
      */
     var getExcludedTables = function ()
     {
         var excludedTables = [];
 
-        $(".wpstg-db-table input:not(:checked)").each(function () {
+//        $(".wpstg-db-table input:not(:checked)").each(function () {
+//            excludedTables.push(this.name);
+//        });
+        $("#wpstg_select_tables_cloning option:not(:selected)").each(function () {
             excludedTables.push(this.name);
         });
 

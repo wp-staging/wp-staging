@@ -284,7 +284,6 @@ class Scan extends Job {
          if( false === ($path = $this->getPath( $directory )) ) {
             continue;
          }
-         //echo $directory . '<br>';
 
          $this->handleDirectory( $path );
 
@@ -338,13 +337,9 @@ class Scan extends Job {
        * Prevents open base dir restriction fatal errors
        */
       
-      //echo $directory->getRealPath() . '<br>';
-      //echo 'abspath: ' . \WPStaging\WPStaging::getWPpath() . '<br>';
-      //if( strpos( $directory->getRealPath(), ABSPATH ) !== 0 ) {
       if( strpos( $directory->getRealPath(), \WPStaging\WPStaging::getWPpath() ) !== 0 ) {
          return false;
       }
-      //$path = str_replace( ABSPATH, null, $directory->getRealPath() );
       $path = str_replace( \WPStaging\WPStaging::getWPpath(), null, $directory->getRealPath() );
 
       // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures

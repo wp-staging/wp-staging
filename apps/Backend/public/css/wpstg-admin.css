@@ -452,6 +452,7 @@
     display: block;
 }
 
+
 .wpstg-progress-bar {
     /*max-width: 900px;*/
     height: 27px;
@@ -996,4 +997,9 @@
     color: #a94442;
     background-color: #f2dede;
     border-color: #ebccd1;
+}
+
+#wpstg_select_tables_cloning {
+    height: 600px;
+    font-size: 13px;
 }

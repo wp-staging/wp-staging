@@ -147,6 +147,7 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.4.9 =
+* New: Add new db table selection manager
 * Fix: Better warning notices before updating a staging site
 * Fix: Stop delete process if staging site has been deleted manually before
 * Fix: Log file folder does not have correct permission 0755
@@ -155,6 +156,7 @@ https://wp-staging.com
 * Tweak: DB tables and file verification opened as default option
 * Tweak: Skip rows larger than 5MB for search & replace operations to keep memory consumption low
 * Tweak: clean up search & replace method
+* Tweak: Better FAQ
 
 
 

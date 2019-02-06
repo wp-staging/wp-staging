@@ -15,7 +15,7 @@
 <div class="wpstg-tabs-wrapper">
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
         <span class="wpstg-tab-triangle">&#9658;</span>
-<?php echo __( "DB Tables", "wp-staging" ) ?>
+        <?php echo __( "Database Tables", "wp-staging" ) ?>
     </a>
 
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
@@ -23,29 +23,50 @@
         <h4 style="margin:0">
             <?php
             echo __(
-                    "Uncheck the tables you do not want to copy. Usually you should select tables with prefix '{$scan->prefix}', only.", "wp-staging"
-            )
+                    "Select the tables you like to clone. All tables beginning with prefix '{$scan->prefix}' have been selected already.", "wp-staging"
+            );
+            ?>
+            <p></p>
+            <?php
+            echo __(
+                    "Select multiple tables by pressing left mouse button and moving or by pressing STRG+Left Mouse button. (Mac ⌘+Left Mouse Button)", "wp-staging"
+            );
             ?>
         </h4>
         <div style="margin-top:10px;margin-bottom:10px;">
-            <a href="#" class="wpstg-button-unselect button"> None </a>
+            <a href="#" class="wpstg-button-unselect button"><?php _e('Select All','wp-staging'); ?></a>
             <a href="#" class="wpstg-button-select button"> <?php _e( WPStaging\WPStaging::getTablePrefix(), 'wp-staging' ); ?> </a>
         </div>
+        <select multiple="multiple" id="wpstg_select_tables_cloning">
         <?php
         foreach ( $options->tables as $table ):
-            $attributes = in_array( $table->name, $options->excludedTables ) ? '' : "checked";
-            $attributes .= in_array( $table->name, $options->clonedTables ) ? " disabled" : '';
+                $attributes =  !in_array( $table->name, $options->excludedTables ) && (strpos( $table->name, $db->prefix ) === 0) ? "selected='selected'" : "";
+                $attributes .= in_array( $table->name, $options->clonedTables ) ? "disabled" : '';
             ?>
-            <div class="wpstg-db-table">
+                <option class="wpstg-db-table" value="<?php echo $table->name ?>" name="<?php echo $table->name ?>" <?php echo $attributes ?>>
+                    <?php echo $table->name ?>           - <?php echo $scan->formatSize( $table->size ) ?>
+                </option>
+            <?php endforeach ?>
+        </select>
+
+
+
+        <?php
+//        foreach ( $options->tables as $table ):
+//            $attributes = in_array( $table->name, $options->excludedTables ) ? '' : "checked";
+//            $attributes .= in_array( $table->name, $options->clonedTables ) ? " disabled" : '';
+            ?>
+<!--            <div class="wpstg-db-table">
                 <label>
-                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->name ?>" <?php echo $attributes ?>>
-                    <?php echo $table->name ?>
+                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php // echo $table->name ?>" <?php // echo $attributes ?>>
+                    <?php // echo $table->name ?>
                 </label>
                 <span class="wpstg-size-info">
-                    <?php echo $scan->formatSize( $table->size ) ?>
+                    <?php // echo $scan->formatSize( $table->size ) ?>
                 </span>
-            </div>
-        <?php endforeach ?>
+            </div>-->
+        <?php // endforeach ?>
+        
         <div style="margin-top:10px;">
             <a href="#" class="wpstg-button-unselect button"> None </a>
             <a href="#" class="wpstg-button-select button"> <?php _e( WPStaging\WPStaging::getTablePrefix(), 'wp-staging' ); ?> </a>
