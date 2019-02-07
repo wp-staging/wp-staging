@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.0 =
+* Fix: Do not exclude db.php if it is not located in the wp-content folder
+
 = 2.4.9 =
 * New: Add new db table selection manager
 * Fix: Better warning notices before updating a staging site
