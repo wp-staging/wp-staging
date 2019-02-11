@@ -148,6 +148,8 @@ https://wp-staging.com
 
 = 2.5.0 =
 * Fix: Do not exclude db.php if it is not located in the wp-content folder
+* New: Add Filter to exclude certain tables from search & replace operation
+
 
 = 2.4.9 =
 * New: Add new db table selection manager
