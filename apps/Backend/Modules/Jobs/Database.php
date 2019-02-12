@@ -43,8 +43,7 @@ class Database extends JobExecutable {
      */
     private function isExternalDatabase() {
         if( !empty( $this->options->databaseUser ) ) {
-            $this->returnException( __("This staging site is located in another database and needs to be edited with <a href='https://wp-staging.com' target='_blank'>WP Staging Pro</a>","wp-staging") );
-
+            $this->returnException( __( "This staging site is located in another database and needs to be edited with <a href='https://wp-staging.com' target='_blank'>WP Staging Pro</a>", "wp-staging" ) );
         }
         return false;
     }
@@ -85,7 +84,7 @@ class Database extends JobExecutable {
         }
 
         // No more steps, finished
-        if( $this->options->currentStep > $this->total || !isset( $this->options->tables[$this->options->currentStep] ) ) {
+        if( !isset( $this->options->isRunning ) || $this->options->currentStep > $this->total || !isset( $this->options->tables[$this->options->currentStep] ) ) {
             $this->prepareResponse( true, false );
             return false;
         }
@@ -121,8 +120,7 @@ class Database extends JobExecutable {
         $stagingPrefix = $this->options->prefix;
         // Make sure prefix of staging site is NEVER identical to prefix of live site! 
         if( $stagingPrefix == $this->db->prefix ) {
-            //wp_die('Fatal error 7: The new database table prefix '. $stagingPrefix .' would be identical to the table prefix of the live site. Please open a support ticket to support@wp-staging.com'); 
-            $this->returnException( 'Fatal error 7: The new database table prefix ' . $stagingPrefix . ' would be identical to the table prefix of the live site. Please open a support ticket to support@wp-staging.com' );
+            wp_die( 'Fatal error 7: The new database table prefix ' . $stagingPrefix . ' would be identical to the table prefix of the live site. Please open a support ticket at support@wp-staging.com' );
         }
         return $stagingPrefix;
     }

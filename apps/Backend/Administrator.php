@@ -15,6 +15,7 @@ use WPStaging\Backend\Modules\Jobs\Updating;
 use WPStaging\Backend\Modules\Jobs\Delete;
 use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Backend\Modules\Jobs\Logs;
+use WPStaging\Backend\Modules\Jobs\ProcessLock;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Notices\Notices;
@@ -87,6 +88,7 @@ class Administrator extends InjectionAware {
         $loader->addAction( "wp_ajax_wpstg_overview", $this, "ajaxOverview" );
         $loader->addAction( "wp_ajax_wpstg_scanning", $this, "ajaxScan" );
         $loader->addAction( "wp_ajax_wpstg_check_clone", $this, "ajaxcheckCloneName" );
+        $loader->addAction( "wp_ajax_wpstg_restart", $this, "ajaxRestart" );
         $loader->addAction( "wp_ajax_wpstg_update", $this, "ajaxUpdateProcess" );
         $loader->addAction( "wp_ajax_wpstg_cloning", $this, "ajaxStartClone" );
         $loader->addAction( "wp_ajax_wpstg_processing", $this, "ajaxCloneDatabase" );
@@ -363,6 +365,16 @@ class Administrator extends InjectionAware {
     }
 
     /**
+     * Restart cloning process
+     */
+    public function ajaxRestart() {
+        check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
+
+        $process = new ProcessLock();
+        $process->restart();
+    }
+
+    /**
      * Ajax Overview
      */
     public function ajaxOverview() {
@@ -391,6 +403,10 @@ class Administrator extends InjectionAware {
      */
     public function ajaxScan() {
         check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
+
+        // Check first if there is already a process running
+        $processLock = new ProcessLock();
+        $processLock->isRunning();
 
         $db = WPStaging::getInstance()->get( 'wpdb' );
 
@@ -459,6 +475,10 @@ class Administrator extends InjectionAware {
      */
     public function ajaxStartClone() {
         check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
+
+        // Check first if there is already a process running
+        $processLock = new ProcessLock();
+        $processLock->isRunning();
 
         $cloning = new Cloning();
 
@@ -683,6 +703,7 @@ class Administrator extends InjectionAware {
         if( !class_exists( 'WPStaging\Backend\Pro\Modules\Jobs\Processing' ) ) {
             return false;
         }
+
         // Start the process
         $processing = new Processing();
         wp_send_json( $processing->start() );
@@ -751,7 +772,7 @@ class Administrator extends InjectionAware {
         $user     = !empty( $args['databaseUser'] ) ? $args['databaseUser'] : '';
         $password = !empty( $args['databasePassword'] ) ? $args['databasePassword'] : '';
         $database = !empty( $args['databaseDatabase'] ) ? $args['databaseDatabase'] : '';
-        $server   = !empty( $args['databaseServer'] ) ? $args['databaseServer'] : '';
+        $server   = !empty( $args['databaseServer'] ) ? $args['databaseServer'] : 'localhost';
 
         $db = new \wpdb( $user, $password, $database, $server );
 

@@ -49,7 +49,7 @@ class Cloning extends Job {
             'desktop.ini',
             '.gitignore',
             '.log',
-            'web.config'
+            'web.config' // Important: Windows IIS configuartion file. Must not be in the staging site!
         );
         $this->options->excludedFilesFullPath = array(
             'wp-content' . DIRECTORY_SEPARATOR . 'db.php',
@@ -152,6 +152,9 @@ class Cloning extends Job {
 
         $helper                      = new Helper();
         $this->options->homeHostname = $helper->get_home_url_without_scheme();
+
+        // Process lock state
+        $this->options->isRunning = true;
 
         return $this->saveOptions();
     }
@@ -297,8 +300,8 @@ class Cloning extends Job {
      * Start the cloning job
      */
     public function start() {
-        if( null === $this->options->currentJob ) {
-            $this->log( "Cloning job for {$this->options->clone} finished" );
+        if( !property_exists($this->options, 'currentJob') || null === $this->options->currentJob ) {
+            $this->log( "Cloning job finished" );
             return true;
         }
 

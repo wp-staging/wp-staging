@@ -448,6 +448,7 @@ class Delete extends Job {
         // Delete cached file
         $this->cache->delete( "delete_job_{$this->clone->name}" );
         $this->cache->delete( "delete_directories_{$this->clone->name}" );
+        $this->cache->delete( "clone_options" );
 
         //return true;
         $response = array('delete' => 'finished');

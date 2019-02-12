@@ -158,6 +158,7 @@ class Files extends JobExecutable {
      */
     private function isFinished() {
         return (
+                !isset($this->options->isRunning) ||
                 $this->options->currentStep > $this->options->totalSteps ||
                 $this->options->copiedFiles >= $this->options->totalFiles
                 );

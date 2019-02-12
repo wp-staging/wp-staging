@@ -137,6 +137,7 @@ class Data extends JobExecutable {
     */
    protected function isFinished() {
       return (
+                !isset($this->options->isRunning) ||
               $this->options->currentStep > $this->options->totalSteps ||
               !method_exists( $this, "step" . $this->options->currentStep )
               );
@@ -182,12 +183,12 @@ class Data extends JobExecutable {
    }
 
    /**
-    * Copy wp-config.php if it is located outside of root one level up
-    * @todo Needs some more testing before it will be released
+     * Copy wp-config.php from the staging site if it is located outside of root one level up or
+     * copy default wp-config.php if production site uses bedrock or any other boilerplate solution that stores wp default config data elsewhere.
     * @return boolean
     */
    protected function step0() {
-      $this->log( "Preparing Data Step0: Check if wp-config.php is located in root path", Logger::TYPE_INFO );
+        $this->log( "Preparing Data Step0: Copy wp-config.php file", Logger::TYPE_INFO );
 
       $dir = trailingslashit( dirname( ABSPATH ) );
 
@@ -238,25 +239,6 @@ class Data extends JobExecutable {
          $this->log( "Preparing Data Step1: Skipping" );
          return true;
       }
-
-      // Installed in sub-directory
-//      if( $this->isSubDir() ) {
-//         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . $this->getStagingSiteUrl() );
-//         // Replace URLs
-//         $result = $this->db->query(
-//                 $this->db->prepare(
-//                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->getStagingSiteUrl()
-//                 )
-//         );
-//      } else {
-//         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . $this->getStagingSiteUrl() );
-//         // Replace URLs
-//         $result = $this->db->query(
-//                 $this->db->prepare(
-//                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'siteurl' or option_name='home'", $this->getStagingSiteUrl()
-//                 )
-//         );
-//      }
 
         $this->log( "Preparing Data Step1: Updating siteurl and homeurl to " . $this->getStagingSiteUrl() );
          // Replace URLs
@@ -391,6 +373,8 @@ class Data extends JobExecutable {
             $this->returnException( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes {$this->db->last_error}" );
          return false;
       }
+
+
 
       return true;
    }
@@ -592,12 +576,12 @@ class Data extends JobExecutable {
 
 
       // Get WP_HOME from wp-config.php
-      preg_match( "/define\s*\(\s*'WP_HOME'\s*,\s*(.*)\s*\);/", $content, $matches );
+        preg_match( "/define\s*\(\s*['\"]WP_HOME['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
       if( !empty( $matches[1] ) ) {
          $matches[1];
 
-         $pattern = "/define\s*\(\s*'WP_HOME'\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]WP_HOME['\"]\s*,\s*(.*)\s*\);/";
 
          $replace = "define('WP_HOME','" . $this->getStagingSiteUrl() . "'); // " . $matches[1];
          $replace.= " // Changed by WP-Staging";
@@ -634,12 +618,12 @@ class Data extends JobExecutable {
 
 
       // Get WP_SITEURL from wp-config.php
-      preg_match( "/define\s*\(\s*'WP_SITEURL'\s*,\s*(.*)\s*\);/", $content, $matches );
+        preg_match( "/define\s*\(\s*['\"]WP_SITEURL['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
       if( !empty( $matches[1] ) ) {
          $matches[1];
 
-         $pattern = "/define\s*\(\s*'WP_SITEURL'\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]WP_SITEURL['\"]\s*,\s*(.*)\s*\);/";
 
          $replace = "define('WP_SITEURL','" . $this->getStagingSiteUrl() . "'); // " . $matches[1];
          $replace.= " // Changed by WP-Staging";
@@ -768,11 +752,11 @@ class Data extends JobExecutable {
               )
       );
 
-      if( !$updateOptions ) {
-            $this->log( "Preparing Data Step12: Failed to update option_name in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
-         $this->returnException( " Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-         return false;
-      }
+//        if( !$updateOptions ) {
+//            $this->log( "Preparing Data Step12: Failed to update option_name in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
+//            $this->returnException( " Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+//            return false;
+//        }
         $this->Log( "Preparing Data Step 12: Finished successfully" );
       return true;
    }
@@ -836,11 +820,11 @@ class Data extends JobExecutable {
 
 
       // Get WP_CACHE from wp-config.php
-      preg_match( "/define\s*\(\s*'WP_CACHE'\s*,\s*(.*)\s*\);/", $content, $matches );
+        preg_match( "/define\s*\(\s*['\"]WP_CACHE['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
       if( !empty( $matches[1] ) ) {
 
-         $pattern = "/define\s*\(\s*'WP_CACHE'\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]WP_CACHE['\"]\s*,\s*(.*)\s*\);/";
 
          $replace = "define('WP_CACHE',false); // " . $matches[1];
          $replace.= " // Changed by WP-Staging";
@@ -876,12 +860,12 @@ class Data extends JobExecutable {
         }
 
 
-        // Get WP_CONTENT_DIR from wp-config.php
-        preg_match( "/define\s*\(\s*'WP_CONTENT_DIR'\s*,\s*(.*)\s*\);/", $content, $matches );
+        // Remove WP_CONTENT_DIR from wp-config.php
+        preg_match( "/define\s*\(\s*['\"]WP_CONTENT_DIR['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
         if( !empty( $matches[0] ) ) {
 
-            $pattern = "/define\s*\(\s*'WP_CONTENT_DIR'\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]WP_CONTENT_DIR['\"]\s*,\s*(.*)\s*\);/";
 
             $replace = "";
 
@@ -900,8 +884,9 @@ class Data extends JobExecutable {
         $this->Log( "Preparing Data Step 15: Finished successfully" );
         return true;
     }
+
     /**
-     * Remove WP_CONTENT_URL in wp-config.php
+     * Remove WP_CONTENT_URL in wp-config.php to reset default image folder
      * @return bool
      */
     protected function step16() {
@@ -915,8 +900,8 @@ class Data extends JobExecutable {
         }
 
 
-        // Get WP_CONTENT_DIR from wp-config.php
-        preg_match( "/define\s*\(\s*'WP_CONTENT_URL'\s*,\s*(.*)\s*\);/", $content, $matches );
+        // Get WP_CONTENT_DIR from wp-config.php to reset default image folder
+        preg_match( "/define\s*\(\s*['\"]WP_CONTENT_URL['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
         if( !empty( $matches[0] ) ) {
 

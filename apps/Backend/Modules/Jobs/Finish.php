@@ -30,6 +30,8 @@ class Finish extends Job {
         // Prepare clone records & save scanned directories for delete job later
         $this->prepareCloneDataRecords();
 
+        $this->options->isRunning = false;
+
         $return = array(
             "directoryName" => $this->options->cloneDirectoryName,
             "path"          => trailingslashit( $this->options->destinationDir ),
@@ -117,41 +119,6 @@ class Finish extends Job {
             return $this->options->cloneHostname;
 }
 
-//        if( isSubDir ) {
-//            return trailingslashit( get_site_url() ) . trailingslashit($this->getSubDir()) . $this->options->cloneDirectoryName;
-//        }
         return trailingslashit( get_site_url() ) . $this->options->cloneDirectoryName;
     }
-
-    /**
-     * Check if WP is installed in subdir
-     * @return boolean
-     */
-//    private function isSubDir() {
-//        // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
-//        // This is happening much more often than you would expect
-//        $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
-//        $home    = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
-//
-//        if( $home !== $siteurl ) {
-//            return true;
-//        }
-//        return false;
-//    }
-
-    /**
-     * Get the install sub directory if WP is installed in sub directory
-     * @return string
-     */
-//    private function getSubDir() {
-//        $home    = get_option( 'home' );
-//        $siteurl = get_option( 'siteurl' );
-//
-//        if( empty( $home ) || empty( $siteurl ) ) {
-//            return '';
-//        }
-//
-//        $dir = str_replace( $home, '', $siteurl );
-//        return str_replace( '/', '', $dir );
-//    }
 }
