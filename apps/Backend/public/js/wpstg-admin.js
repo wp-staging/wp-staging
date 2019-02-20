@@ -99,12 +99,11 @@ var WPStaging = (function ($)
                 .on("click", ".wpstg-button-unselect", function (e) {
                     e.preventDefault();
 
-                        
-                    //if (typeof(isAllChecked) !== 'defined' || true === isAllChecked )
                     if (false === isAllChecked )
                     {
                         console.log('true');
                         cache.get("#wpstg_select_tables_cloning .wpstg-db-table").prop("selected", "selected");
+                        cache.get(".wpstg-db-table-checkboxes").prop("checked", true);
                         cache.get(".wpstg-button-unselect").text("Unselect All");
                         isAllChecked = true;
                     }
@@ -112,6 +111,7 @@ var WPStaging = (function ($)
                     {
                         console.log('false');
                         cache.get("#wpstg_select_tables_cloning .wpstg-db-table").prop("selected", false);
+                        cache.get(".wpstg-db-table-checkboxes").prop("checked", false);
                         cache.get(".wpstg-button-unselect").text("Select All");
                         isAllChecked = false;
                     }
