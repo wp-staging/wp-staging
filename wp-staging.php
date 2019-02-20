@@ -79,8 +79,10 @@ $plugin_requirements = new Wpstg_Requirements_Check( array(
  * @param int $seconds
  * @return int
  */
+if ( !function_exists( 'wpstgpro_overwrite_nonce')){
 function wpstg_overwrite_nonce( $seconds ) {
    return 86400;
+}
 }
 
 add_filter( 'nonce_life', 'wpstg_overwrite_nonce', 99999 );
