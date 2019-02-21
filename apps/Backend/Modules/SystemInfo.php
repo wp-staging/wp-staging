@@ -3,7 +3,7 @@
 namespace WPStaging\Backend\Modules;
 
 use WPStaging\DI\InjectionAware;
-use WPStaging\Library\Browser;
+use WPStaging\Utils\Browser;
 use WPStaging\WPStaging;
 use WPStaging\Utils;
 use WPStaging\Utils\Multisite;
@@ -181,12 +181,12 @@ class SystemInfo extends InjectionAware {
             
             $output .= $this->info( "Number:", isset( $clone['number'] ) ? $clone['number'] : 'undefined'  );
             $output .= $this->info( "directoryName:", isset( $clone['directoryName'] ) ? $clone['directoryName'] : 'undefined'  );
-            $output .= $this->info( "Path:", $path  );
+            $output .= $this->info( "Path:", $path );
             $output .= $this->info( "URL:", isset( $clone['url'] ) ? $clone['url'] : 'undefined'  );
             $output .= $this->info( "DB Prefix:", isset( $clone['prefix'] ) ? $clone['prefix'] : 'undefined'  );
             $output .= $this->info( "DB Prefix wp-config.php:", $this->getStagingPrefix( $clone ) );
             $output .= $this->info( "WP Staging Version:", isset( $clone['version'] ) ? $clone['version'] : 'undefined'  );
-            $output .= $this->info( "WP Version:", $this->getStagingWpVersion($path)) . PHP_EOL . PHP_EOL;
+            $output .= $this->info( "WP Version:", $this->getStagingWpVersion( $path ) ) . PHP_EOL . PHP_EOL;
         }
 
 
@@ -422,17 +422,40 @@ class SystemInfo extends InjectionAware {
     public function php() {
         $output = $this->header( "PHP Configuration" );
         $output .= $this->info( "Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled" ) );
-        $output .= $this->info( "Memory Limit:", ini_get( "memory_limit" ) );
+        $output .= $this->info( "PHP Max Memory Limit:", ini_get( "memory_limit" ) );
         $output .= $this->info( "Upload Max Size:", ini_get( "upload_max_filesize" ) );
         $output .= $this->info( "Post Max Size:", ini_get( "post_max_size" ) );
         $output .= $this->info( "Upload Max Filesize:", ini_get( "upload_max_filesize" ) );
         $output .= $this->info( "Time Limit:", ini_get( "max_execution_time" ) );
         $output .= $this->info( "Max Input Vars:", ini_get( "max_input_vars" ) );
+        $output .= $this->info( "PHP User:", $this->getPHPUser() );
 
         $displayErrors = ini_get( "display_errors" );
         $output .= $this->info( "Display Errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A"  );
 
         return apply_filters( "wpstg_sysinfo_after_php_config", $output );
+    }
+
+    /**
+     * 
+     * @return string
+     */
+    private function getPHPUser() {
+
+        $user = '';
+
+        if( extension_loaded( 'posix' ) ) {
+            $file = WPSTG_PLUGIN_DIR . 'wp-staging-pro.php';
+            $user = posix_getpwuid( fileowner( $file ) );
+            return $user;
+        }
+
+        if( function_exists( 'exec' ) && @exec('echo EXEC') == 'EXEC') {
+            $user = exec( 'whoami' );
+            return $user;
+        }
+
+        return $user;
     }
 
     /**
@@ -560,7 +583,7 @@ class SystemInfo extends InjectionAware {
         }
 
         // Get version number of wp staging
-        $file           = $path . 'wp-includes/version.php';
+        $file           = trailingslashit( $path ) . 'wp-includes/version.php';
         $versionStaging = file_get_contents( $file );
 
         preg_match( "/\\\$wp_version.*=.*'(.*)';/", $versionStaging, $matches );
@@ -570,7 +593,6 @@ class SystemInfo extends InjectionAware {
             $error .= "Error: Cannot detect WP version";
         }
         return $matches[1];
-
     }
 
 }
