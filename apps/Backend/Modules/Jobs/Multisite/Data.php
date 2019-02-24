@@ -444,7 +444,7 @@ class Data extends JobExecutable {
 
         if( !preg_match( "/(require(.*)wp-blog-header.php' \);)/", $content, $matches ) ) {
             $this->log(
-                    "Preparing Data Step6: Failed to reset index.php for sub directory; wp-blog-header.php is missing", Logger::TYPE_ERROR
+                    "Preparing Data Step6: Failed to reset index.php for sub directory. Can not find line 'require(.*)wp-blog-header.php' in index.php", Logger::TYPE_ERROR
             );
             return false;
         }

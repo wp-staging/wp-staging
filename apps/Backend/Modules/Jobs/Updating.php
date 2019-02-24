@@ -149,6 +149,9 @@ class Updating extends Job {
         );
 
         array_unshift( $this->options->directoriesToCopy, ABSPATH );
+                
+        // Process lock state
+        $this->options->isRunning = true;
 
         return $this->saveOptions();
     }

@@ -8,7 +8,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
-Tested up to: 5.0
+Tested up to: 5.1
 Stable tag: {{version}}
 Requires PHP: 5.3
 
@@ -150,6 +150,8 @@ https://wp-staging.com
 * Fix: Do not exclude db.php if it is not located in the wp-content folder
 * New: Add Filter to exclude certain tables from search & replace operation
 * New: Show PHP user in system info
+* New: Check if there is already one process running before executing the cloning process
+* New: Support up to WordPress 5.1
 
 
 

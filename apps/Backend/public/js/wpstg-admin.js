@@ -335,7 +335,6 @@ var WPStaging = (function ($)
                 })
                 // Restart cloning
                 .on("click", "#wpstg-restart-cloning", function () {
-                    console.log('test');
 
                     var $this = $(this);
 
@@ -983,7 +982,7 @@ var WPStaging = (function ($)
         ajax(
                 {
                     action: "wpstg_restart",
-                    clone: that.data.cloneID,
+                    //clone: that.data.cloneID,
                     nonce: wpstg.nonce
                 },
         function (response)
