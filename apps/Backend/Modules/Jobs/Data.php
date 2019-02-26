@@ -751,12 +751,13 @@ class Data extends JobExecutable {
                       "UPDATE IGNORE {$this->prefix}options SET option_name= replace(option_name, %s, %s) WHERE option_name LIKE %s" . $where, $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
               )
       );
-
-//        if( !$updateOptions ) {
-//            $this->log( "Preparing Data Step12: Failed to update option_name in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
-//            $this->returnException( " Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
-//            return false;
-//        }
+                     
+        if( !$updateOptions ) {
+            $this->log( "Preparing Data Step12: Failed to update option_name in {$this->prefix}options. Error: {$this->db->last_error}", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data Step12: Query: UPDATE IGNORE {$this->prefix}options SET option_name= replace(option_name, {$this->db->prefix}, {$this->prefix}) WHERE option_name LIKE {$this->db->prefix} {$where}", Logger::TYPE_ERROR );
+            $this->returnException( " Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
+            return false;
+        }
         $this->Log( "Preparing Data Step 12: Finished successfully" );
       return true;
    }
