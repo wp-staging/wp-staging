@@ -34,7 +34,7 @@
             ?>
         </h4>
         <div style="margin-top:10px;margin-bottom:10px;">
-            <a href="#" class="wpstg-button-unselect button"><?php _e('Select All','wp-staging'); ?></a>
+            <a href="#" class="wpstg-button-unselect button"><?php _e('Unselect All','wp-staging'); ?></a>
             <a href="#" class="wpstg-button-select button"> <?php _e( WPStaging\WPStaging::getTablePrefix(), 'wp-staging' ); ?> </a>
         </div>
         <select multiple="multiple" id="wpstg_select_tables_cloning">
@@ -68,7 +68,7 @@
         <?php // endforeach ?>
         
         <div style="margin-top:10px;">
-            <a href="#" class="wpstg-button-unselect button"> None </a>
+            <a href="#" class="wpstg-button-unselect button"> <?php _e('Unselect All','wp-staging'); ?> </a>
             <a href="#" class="wpstg-button-select button"> <?php _e( WPStaging\WPStaging::getTablePrefix(), 'wp-staging' ); ?> </a>
         </div>
     </div>

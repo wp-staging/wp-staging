@@ -64,7 +64,7 @@ var WPStaging = (function ($)
     var elements = function ()
     {
         var $workFlow = cache.get("#wpstg-workflow"),
-                isAllChecked = false,
+                isAllChecked = true,
                 urlSpinner = ajaxurl.replace("/admin-ajax.php", '') + "/images/spinner",
                 timer;
 
@@ -103,16 +103,16 @@ var WPStaging = (function ($)
                     {
                         console.log('true');
                         cache.get("#wpstg_select_tables_cloning .wpstg-db-table").prop("selected", "selected");
-                        cache.get(".wpstg-db-table-checkboxes").prop("checked", true);
                         cache.get(".wpstg-button-unselect").text("Unselect All");
+                        cache.get(".wpstg-db-table-checkboxes").prop("checked", true);
                         isAllChecked = true;
                     }
                     else
                     {
                         console.log('false');
                         cache.get("#wpstg_select_tables_cloning .wpstg-db-table").prop("selected", false);
-                        cache.get(".wpstg-db-table-checkboxes").prop("checked", false);
                         cache.get(".wpstg-button-unselect").text("Select All");
+                        cache.get(".wpstg-db-table-checkboxes").prop("checked", false);
                         isAllChecked = false;
                     }
                 })

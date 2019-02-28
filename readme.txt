@@ -148,6 +148,7 @@ https://wp-staging.com
 
 = 2.5.0 =
 * Fix: Do not exclude db.php if it is not located in the wp-content folder
+* Fix: Select All button for db tables not working properly
 * New: Add Filter to exclude certain tables from search & replace operation
 * New: Show PHP user in system info
 * New: Check if there is already one process running before executing the cloning process
