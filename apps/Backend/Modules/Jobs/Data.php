@@ -937,7 +937,7 @@ class Data extends JobExecutable {
 
       $customSlug = str_replace( \WPStaging\WPStaging::getWPpath(), '', $uploadPath );
 
-        $newUploadPath = $this->options->destinationDir . $customSlug;
+      $newUploadPath = $this->options->destinationDir . $customSlug;
 
       return $newUploadPath;
    }
