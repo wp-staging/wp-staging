@@ -238,8 +238,9 @@ class Administrator extends InjectionAware {
     public function getToolsPage() {
         // Tabs
         $tabs = new Tabs( array(
-            "import_export" => __( "Import/Export", "wp-staging" ),
-            "system_info"   => __( "System Info", "wp-staging" )
+            
+            "system_info"   => __( "System Info", "wp-staging" ),
+            "import_export" => __( "Import/Export", "wp-staging" )
                 ) );
 
         $this->di->set( "tabs", $tabs );

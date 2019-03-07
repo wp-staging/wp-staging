@@ -148,6 +148,7 @@ https://wp-staging.com
 
 = 2.5.1 =
 * Fix: WP Staging > Tools > System Info does not open 
+* New: Open system info log file directly via wp staging > tools
 
 = 2.5.0 =
 * Fix: Do not exclude db.php if it is not located in the wp-content folder

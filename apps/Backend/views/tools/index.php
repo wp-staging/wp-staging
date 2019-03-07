@@ -2,7 +2,7 @@
     <ul class="nav-tab-wrapper">
         <?php
         $tabs       = $this->di->get("tabs")->get();
-        $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "import_export";
+        $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "system_info";
 
         # Loop through tabs
         foreach ($tabs as $id => $name):
