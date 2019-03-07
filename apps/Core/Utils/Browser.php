@@ -1,5 +1,5 @@
 <?php
-namespace WPStaging\Library;
+namespace WPStaging\Utils;
 
 	/**
 	 * Modified to remove var
