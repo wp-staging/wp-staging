@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.2 =
+* New: Tested up to WordPress 5.1.1
+
 = 2.5.1 =
 * Fix: WP Staging > Tools > System Info does not open 
 * New: Open system info log file directly via wp staging > tools
