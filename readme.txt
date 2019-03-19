@@ -146,6 +146,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.3 =
+* Fix: Disable the WP-Spamshield Plugin on staging site because it prevents login to staging site
+
 = 2.5.2 =
 * New: Tested up to WordPress 5.1.1
 

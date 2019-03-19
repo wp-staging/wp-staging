@@ -238,7 +238,6 @@ class Administrator extends InjectionAware {
     public function getToolsPage() {
         // Tabs
         $tabs = new Tabs( array(
-            
             "system_info"   => __( "System Info", "wp-staging" ),
             "import_export" => __( "Import/Export", "wp-staging" )
                 ) );
@@ -641,7 +640,7 @@ class Administrator extends InjectionAware {
         ) {
             wp_send_json( true );
         }
-        return wp_send_json(false);
+        return wp_send_json( false );
     }
 
     /**
@@ -785,10 +784,15 @@ class Administrator extends InjectionAware {
 
 
         // Can not connect to database
-        $sql     = "SHOW DATABASES LIKE '{$database}';";
-        $results = $db->query( $sql );
-        if( empty( $results ) ) {
-            echo json_encode( array('errors' => " Database {$database} does not exist. You need to create it first. ") );
+//        $sql     = "SHOW DATABASES LIKE '{$database}';";
+//        $results = $db->query( $sql );
+//        if( empty( $results ) ) {
+//            echo json_encode( array('errors' => " Database {$database} does not exist. You need to create it first. ") );
+//            exit;
+//        }
+        $db->select( $database );
+        if( !$db->ready ) {
+            echo json_encode( array('errors' => "Error: Can't select {$database} [" . print_r( $db->error, true ) . "] Either it does not exists or you don't have privileges to access it. ") );
             exit;
         }
         echo json_encode( array('success' => 'true') );
