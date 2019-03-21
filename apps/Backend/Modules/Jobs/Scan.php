@@ -288,7 +288,7 @@ class Scan extends Job {
          $this->handleDirectory( $path );
 
          // Get Sub-directories
-         $this->getSubDirectories( $directory->getRealPath() );
+         //$this->getSubDirectories( $directory->getRealPath() );
       }
 
       // Gather Plugins
