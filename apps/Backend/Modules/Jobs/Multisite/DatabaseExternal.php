@@ -310,7 +310,7 @@ class DatabaseExternal extends JobExecutable {
          return true;
       }
 
-      // Table does not exists
+      // Table does not exist
       $table = str_replace( $this->db->dbname . '.', null, $old );
       $result = $this->db->query( "SHOW TABLES LIKE '{$table}'" );
       if( !$result || 0 === $result ) {

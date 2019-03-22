@@ -792,7 +792,7 @@ class Administrator extends InjectionAware {
 //        }
         $db->select( $database );
         if( !$db->ready ) {
-            echo json_encode( array('errors' => "Error: Can't select {$database} [" . print_r( $db->error, true ) . "] Either it does not exists or you don't have privileges to access it. ") );
+            echo json_encode( array('errors' => "Error: Can't select {$database} [" . print_r( $db->error, true ) . "] Either it does not exist or you don't have privileges to access it. ") );
             exit;
         }
         echo json_encode( array('success' => 'true') );

@@ -272,7 +272,7 @@ class Cloning extends Job {
             $sql    = "SHOW TABLE STATUS LIKE '{$this->options->prefix}%'";
             $tables = $this->db->get_results( $sql );
 
-            // Prefix does not exists. We can use it
+            // Prefix does not exist. We can use it
             if( !$tables ) {
                 return $this->options->prefix;
             }

@@ -284,7 +284,7 @@ class Database extends JobExecutable {
          return true;
       }
 
-      // Table does not exists
+      // Table does not exist
       $result = $this->db->query( "SHOW TABLES LIKE '{$old}'" );
       if( !$result || 0 === $result ) {
          return true;

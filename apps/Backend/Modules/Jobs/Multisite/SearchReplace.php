@@ -240,7 +240,7 @@ class SearchReplace extends JobExecutable {
      */
     private function get_pages_in_table( $table ) {
 
-        // Table does not exists
+        // Table does not exist
         $result = $this->db->query( "SHOW TABLES LIKE '{$table}'" );
         if( !$result || 0 === $result ) {
             return 0;
@@ -699,7 +699,7 @@ class SearchReplace extends JobExecutable {
             return true;
         }
 
-        // Table does not exists
+        // Table does not exist
         $result = $this->db->query( "SHOW TABLES LIKE '{$old}'" );
         if( !$result || 0 === $result ) {
             return false;
