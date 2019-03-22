@@ -224,6 +224,9 @@ class Files extends JobExecutable {
             return $this->copyBig( $file, $destination, $this->settings->batchSize );
         }
 
+        $this->debugLog( "Try to copy: {$file} to {$destination}", Logger::TYPE_INFO );
+
+
         // Attempt to copy
         if( !@copy( $file, $destination ) ) {
             $errors = error_get_last();
@@ -250,10 +253,10 @@ class Files extends JobExecutable {
         $uploads = wp_upload_dir();
 
         // Get absolute upload dir from ABSPATH
-        $uploadsAbsPath = trailingslashit($uploads['basedir']);
+        $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
 
         // Get absolute custom wp-content dir
-        $wpContentDir = trailingslashit(WP_CONTENT_DIR);
+        $wpContentDir = trailingslashit( WP_CONTENT_DIR );
 
         // Check if there is a custom upload directory and do a search $ replace
         $file = str_replace( $uploadsAbsPath, ABSPATH . 'wp-content/uploads/', $file, $count );
@@ -401,13 +404,10 @@ class Files extends JobExecutable {
         if( false !== strpos( $directory, 'wp-staging' ) || false !== strpos( $directory, 'wp-staging-pro' ) ) {
             return false;
         }
-//        $directory = wpstg_replace_windows_directory_separator( $directory );
-//        $directory = trailingslashit( $directory );
+
         $directory = trailingslashit( $this->sanitizeDirectorySeparator( $directory ) );
 
         foreach ( $this->options->excludedDirectories as $excludedDirectory ) {
-//            $excludedDirectory = wpstg_replace_windows_directory_separator( $excludedDirectory );
-//            $excludedDirectory = trailingslashit( $excludedDirectory );
             $excludedDirectory = trailingslashit( $this->sanitizeDirectorySeparator( $excludedDirectory ) );
             if( strpos( $directory, $excludedDirectory ) === 0 && !$this->isExtraDirectory( $directory ) ) {
                 return true;
