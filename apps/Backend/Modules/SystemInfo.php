@@ -444,7 +444,7 @@ class SystemInfo extends InjectionAware {
 
         $user = '';
 
-        if( extension_loaded( 'posix' ) ) {
+        if( extension_loaded( 'posix' ) && function_exists('posix_getpwuid') ) {
             $file = WPSTG_PLUGIN_DIR . 'wp-staging.php';
             $user = posix_getpwuid( fileowner( $file ) );
             return isset($user['name']) ? $user['name'] : 'can not detect php user name';
