@@ -428,7 +428,7 @@ class SystemInfo extends InjectionAware {
         $output .= $this->info( "Upload Max Filesize:", ini_get( "upload_max_filesize" ) );
         $output .= $this->info( "Time Limit:", ini_get( "max_execution_time" ) );
         $output .= $this->info( "Max Input Vars:", ini_get( "max_input_vars" ) );
-        //$output .= $this->info( "PHP User:", $this->getPHPUser() );
+        $output .= $this->info( "PHP User:", $this->getPHPUser() );
 
         $displayErrors = ini_get( "display_errors" );
         $output .= $this->info( "Display Errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A"  );

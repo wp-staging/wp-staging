@@ -149,6 +149,7 @@ https://wp-staging.com
 = 2.5.3 =
 * Fix: Disable the WP-Spamshield Plugin on staging site because it prevents login to staging site
 * Fix: Lower the memory consumption when cloning scan process is started
+* New: Show PHP user in system info log
 
 = 2.5.2 =
 * New: Tested up to WordPress 5.1.1
