@@ -59,6 +59,7 @@ Supports all main web servers including Apache, Nginx, and Microsoft IIS
 
 * Wordpress migration and cloning of WordPress multisites
 * Choose a separate database and select a custom directory for cloning
+* Clone your website into a subdomain
 * Specify certain user roles for accessing the staging site
 * Copy all modifications on staging site to the production website
 
