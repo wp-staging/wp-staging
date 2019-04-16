@@ -248,12 +248,8 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.5.0 =
-* Fix: Do not exclude db.php if it is not located in the wp-content folder
-* Fix: Select All button for db tables not working properly
-* New: Add Filter to exclude certain tables from search & replace operation
-* New: Show PHP user in system info
-* New: Check if there is already one process running before executing the cloning process
-* New: Support up to WordPress 5.1
+= 2.5.4 =
+* Fix: WordFence firewall rule 'local file inclusion' blocks wp staging initial starting cloning sequence
+* Fix: Values of form Extra directories to copy are ignored
 
 
