@@ -27,7 +27,7 @@ If you find an issue, please open a [support ticket](https://wp-staging.com/supp
 This duplicator plugin allows you to create an staging or development environment in seconds* <br /> <br />
 It creates a clone of your website into a subfolder of your main WordPress installation including an entire copy of your database. 
  <br /> <br />
-This sounds pretty simple and yes it is! All the hard time-consumptive database and file copying stuff including URL replacements is done in the background.
+This sounds pretty simple and yes it is! All the hard time-consumptive database and file copying stuff including URL replacements is done in the background. The plugin even automatically does an entire search & replace of all links.
  <br /> <br />
 I created this plugin because all other solutions are way too complex, overloaded with dozens of options or having server requirements which are not available on most shared hosting solutions.
  <br /> <br />
@@ -64,10 +64,11 @@ Supports all main web servers including Apache, Nginx, and Microsoft IIS
 
 <strong>Change your workflow of updating themes and plugins data:</strong>
 
-1. Use WP Staging to clone a production website for staging or testing purposes
-2. Customize theme, configuration, and plugins or install new plugins
-3. Test everything on your staging site first
-4. Everything running as intended? Start the migration and copy all modifications to your production site!
+1. Use WP Staging to clone a production website for staging, testing or backup purposes
+2. Create a backup of your website
+3. Customize theme, configuration, and plugins or install new plugins
+4. Test everything on your staging site first
+5. Everything running as intended? Start the migration and copy all modifications to your production site!
 
 
 <h3> Why should I use a staging website? </h3>
