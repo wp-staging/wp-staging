@@ -218,31 +218,6 @@ https://wp-staging.com
 * New: Support for custom and non-default wp-content and uploads folder
 * New: Option to show again the rating notice in a week
 
-= 2.4.2 =
-* Fix: Error 500 on some systems when files are collected and plugin iterates through the directories
-
-= 2.4.1 =
-* Fix: Error notice if user tries to update staging site located in another database
-* Fix: Search & Replace adds staging site subfolder multiple times to replaced string when staging site is updated
-* Fix: Missing ajax delay setting
-
-= 2.4.0 =
-* New: Compatible to WP 5.0.0 Gutenberg
-* New: Increase file scanning process performance
-* New: Preview for external database cloning
-* New: Add delay between requests setting to prevent timeouts on rate limited servers
-* New: Try again automatically cloning process if ajax request has been killed due to server ressource limit error
-
-* Fix: Error when removing heartbeat api
-* Fix: remove ? parameter from staging site
-* Fix: Do not load theme while WP Staging is running. Prevents processing interruption if there are fatal errors in the theme
-* Fix: When cloning has been canceled page needs to be reloaded before beeing able to clone again
-* Fix: Under rare circumstances plugins are disabled when wp staging runs.
-* Fix: Prevent error 503 (firewall/performance timeout) by adding post parameter to the ajax url
-* Fix: Adding automatic resume function to the ajax processing to prevent cloning and pushing interruptions due to hitting server ressource or network glitches.
-* Fix: Selected folders are not excluded under Windows IIS server
-* Fix: Windows IIS server compatibilility issues resolved
-
 
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
