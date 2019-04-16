@@ -86,7 +86,7 @@ class Cloning extends Job {
 
         // Excluded Directories
         if( isset( $_POST["excludedDirectories"] ) && is_array( $_POST["excludedDirectories"] ) ) {
-            $this->options->excludedDirectories = $_POST["excludedDirectories"];
+            $this->options->excludedDirectories = wpstg_urldecode($_POST["excludedDirectories"]);
         }
 
         // Excluded Directories TOTAL
@@ -99,18 +99,18 @@ class Cloning extends Job {
             \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-spamshield',
         );
 
-        $this->options->excludedDirectories = array_merge( $excludedDirectories, $this->options->excludedDirectories );
+        $this->options->excludedDirectories = array_merge( $excludedDirectories, wpstg_urldecode($this->options->excludedDirectories ));
 
         array_unshift( $this->options->directoriesToCopy, \WPStaging\WPStaging::getWPpath() );
 
         // Included Directories
         if( isset( $_POST["includedDirectories"] ) && is_array( $_POST["includedDirectories"] ) ) {
-            $this->options->includedDirectories = $_POST["includedDirectories"];
+            $this->options->includedDirectories = wpstg_urldecode($_POST["includedDirectories"]);
         }
 
         // Extra Directories
         if( isset( $_POST["extraDirectories"] ) && !empty( $_POST["extraDirectories"] ) ) {
-            $this->options->extraDirectories = $_POST["extraDirectories"];
+            $this->options->extraDirectories = wpstg_urldecode($_POST["extraDirectories"]);
         }
 
         // Directories to Copy
@@ -141,7 +141,7 @@ class Cloning extends Job {
         }
         $this->options->cloneDir = '';
         if( isset( $_POST["cloneDir"] ) && !empty( $_POST["cloneDir"] ) ) {
-            $this->options->cloneDir = trailingslashit( $_POST["cloneDir"] );
+            $this->options->cloneDir = wpstg_urldecode(trailingslashit( $_POST["cloneDir"] ));
         }
         $this->options->cloneHostname = '';
         if( isset( $_POST["cloneHostname"] ) && !empty( $_POST["cloneHostname"] ) ) {
@@ -190,58 +190,8 @@ class Cloning extends Job {
         if( empty( $this->options->cloneDir ) || $this->options->cloneDir ==  (string)\WPStaging\WPStaging::getWPpath()) {
             return trailingslashit( \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName );
         }
-        //return trailingslashit($this->options->cloneDir . $this->options->cloneDirectoryName);
         return trailingslashit( $this->options->cloneDir );
     }
-
-    /**
-     * Check if WP is installed in subdir
-     * @return boolean
-     */
-//   private function isSubDir() {
-//      // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
-//      // This is happening much more often than you would expect
-//      $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
-//      $home = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
-//
-//      if( $home !== $siteurl ) {
-//         return true;
-//      }
-//      return false;
-//   }
-
-    /**
-     * Get the install sub directory if WP is installed in sub directory or return empty string
-     * Result contains a trailingslash
-     * @return string
-     */
-//   private function getSubDir() {
-//      
-//      if(!$this->isSubDir()){
-//         return '';
-//      }
-//      
-//      $home = get_option( 'home' );
-//      $siteurl = get_option( 'siteurl' );
-//
-//      if( empty( $home ) || empty( $siteurl ) ) {
-//         return '';
-//      }
-//
-//      $dir = str_replace( $home, '', $siteurl );
-//      return trailingslashit($dir);
-//   }
-
-    /**
-     * Get Destination Directory
-     * @return type
-     */
-//   private function getDestinationRoot() {
-//      if( empty( $this->options->cloneDir ) ) {
-//         return \WPStaging\WPStaging::getWPpath();
-//      }
-//      return $this->options->cloneDir;
-//   }
 
     /**
      * Make sure prefix contains appending underscore

@@ -123,13 +123,28 @@ function wpstg_replace_last_match( $needle, $replace, $haystack ) {
 }
 
 /**
- * Check if string is valid date
- * @param type $date
- * @param type $format
- * @return bool
+ * Convert all values of a string or an array into url decoded values
+ * Main use for preventing Wordfence firewall rule 'local file inclusion'
+ * @param miced string | array $data
+ * @return mixed string | array
  */
-function wpstg_validate_date( $date, $format = 'Y-m-d' ) {
-    $d = DateTime::createFromFormat( $format, $date );
-    // The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
-    return $d && $d->format( $format ) === $date;
+function wpstg_urldecode($data){
+    if (empty($data)){
+        return $data;
+    }
+    
+    if (  is_string( $data)){
+        return urldecode($data);
+    }
+    
+    if(  is_array( $data )){
+        $array = array();
+        foreach ($data as $string){
+            $array[] = urldecode($string);
+        } 
+        return $array;
+    }
+    
+    return $data;
+    
 }

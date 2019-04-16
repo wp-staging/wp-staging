@@ -157,14 +157,16 @@ class Scan extends Job {
                     in_array( $data["path"], $this->options->includedDirectories )
                     );
 
+            $dataPath = isset( $data["path"] ) ? $data["path"] : '';
+            $dataSize = isset( $data["size"] ) ? $data["size"] : '';
+
 
             // Include wp core folders and their sub dirs. 
             // Exclude all other folders (default setting)
-            $dataPath   = isset( $data["path"] ) ? $data["path"] : '';
-            $dataSize   = isset( $data["size"] ) ? $data["size"] : '';
             $isDisabled = ($name !== 'wp-admin' &&
                     $name !== 'wp-includes' &&
-                    $name !== 'wp-content') &&
+                    $name !== 'wp-content' &&
+                    $name !== 'sites') &&
                     false === strpos( strrev( $dataPath ), strrev( "wp-admin" ) ) &&
                     false === strpos( strrev( $dataPath ), strrev( "wp-includes" ) ) &&
                     false === strpos( strrev( $dataPath ), strrev( "wp-content" ) ) ? true : false;

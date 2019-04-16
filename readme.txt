@@ -146,6 +146,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.4 =
+* Fix: WordFence firewall rule 'local file inclusion' blocks wp staging initial starting cloning sequence
+* Fix: Values of form Extra directories to copy are ignored
+
 = 2.5.3 =
 * Fix: Disable the WP-Spamshield Plugin on staging site because it prevents login to staging site
 * Fix: Lower the memory consumption when cloning scan process is started

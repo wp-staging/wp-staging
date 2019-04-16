@@ -676,10 +676,7 @@ var WPStaging = (function ($)
 
         $(".wpstg-dir input:checked.wpstg-root").each(function () {
             var $this = $(this);
-            //if (!$this.parent(".wpstg-dir").parents(".wpstg-dir").children(".wpstg-expand-dirs").hasClass("disabled"))
-            //{
-            includedDirectories.push($this.val());
-            //}
+            includedDirectories.push(encodeURIComponent($this.val()));
         });
 
         return includedDirectories;
@@ -693,13 +690,9 @@ var WPStaging = (function ($)
     {
         var excludedDirectories = [];
 
-        //$(".wpstg-dir .wpstg-root input:not(:checked)").each(function () {
         $(".wpstg-dir input:not(:checked).wpstg-root").each(function () {
             var $this = $(this);
-            //if (!$this.parent(".wpstg-dir").parents(".wpstg-dir").children(".wpstg-expand-dirs").hasClass("disabled"))
-            //{
-            excludedDirectories.push($this.val());
-            //}
+            excludedDirectories.push(encodeURIComponent($this.val()));
         });
 
         return excludedDirectories;
@@ -711,14 +704,22 @@ var WPStaging = (function ($)
      */
     var getIncludedExtraDirectories = function ()
     {
+        // Add directories from the root level
         var extraDirectories = [];
 
         $(".wpstg-dir input:checked.wpstg-extra").each(function () {
             var $this = $(this);
-            extraDirectories.push($this.val());
+            extraDirectories.push(encodeURIComponent($this.val()));
         });
 
+        // Add any other custom selected extra directories 
+        if (!$("#wpstg_extraDirectories").val()) {
         return extraDirectories;
+        }
+        
+        var extraCustomDirectories = encodeURIComponent($("#wpstg_extraDirectories").val().split(/\r?\n/));
+
+        return extraDirectories.concat(extraCustomDirectories);
     };
 
 
@@ -766,7 +767,7 @@ var WPStaging = (function ($)
         that.data.databasePassword = $("#wpstg_db_password").val();
         that.data.databaseDatabase = $("#wpstg_db_database").val();
         that.data.databasePrefix = $("#wpstg_db_prefix").val();
-        that.data.cloneDir = $("#wpstg_clone_dir").val();
+        that.data.cloneDir = encodeURIComponent($("#wpstg_clone_dir").val());
         that.data.cloneHostname = $("#wpstg_clone_hostname").val();
         //console.log(that.data);
 

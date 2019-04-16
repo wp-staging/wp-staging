@@ -2,14 +2,14 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
+//use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\WPStaging;
-use WPStaging\Backend\Modules\Jobs\Multisite\Database as muDatabase;
-use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplace as muSearchReplace;
-use WPStaging\Backend\Modules\Jobs\Multisite\Data as muData;
-use WPStaging\Backend\Modules\Jobs\Multisite\Finish as muFinish;
-use WPStaging\Backend\Modules\Jobs\Multisite\Directories as muDirectories;
-use WPStaging\Backend\Modules\Jobs\Multisite\Files as muFiles;
+//use WPStaging\Backend\Modules\Jobs\Multisite\Database as muDatabase;
+//use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplace as muSearchReplace;
+//use WPStaging\Backend\Modules\Jobs\Multisite\Data as muData;
+//use WPStaging\Backend\Modules\Jobs\Multisite\Finish as muFinish;
+//use WPStaging\Backend\Modules\Jobs\Multisite\Directories as muDirectories;
+//use WPStaging\Backend\Modules\Jobs\Multisite\Files as muFiles;
 use WPStaging\Utils\Helper;
 
 /**
@@ -104,31 +104,33 @@ class Updating extends Job {
 
         // Excluded Directories
         if( isset( $_POST["excludedDirectories"] ) && is_array( $_POST["excludedDirectories"] ) ) {
-            $this->options->excludedDirectories = $_POST["excludedDirectories"];
+            $this->options->excludedDirectories = wpstg_urldecode($_POST["excludedDirectories"]);
         }
 
         // Excluded Directories TOTAL
         // Do not copy these folders and plugins
         $excludedDirectories = array(
-            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
-            ABSPATH . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login'
+            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
+            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
+            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-super-cache',
+            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'peters-login-redirect',
         );
 
         $this->options->excludedDirectories = array_merge( $excludedDirectories, $this->options->excludedDirectories );
 
         // Included Directories
         if( isset( $_POST["includedDirectories"] ) && is_array( $_POST["includedDirectories"] ) ) {
-            $this->options->includedDirectories = $_POST["includedDirectories"];
+            $this->options->includedDirectories = wpstg_urldecode($_POST["includedDirectories"]);
         }
 
         // Extra Directories
         if( isset( $_POST["extraDirectories"] ) && !empty( $_POST["extraDirectories"] ) ) {
-            $this->options->extraDirectories = $_POST["extraDirectories"];
+            $this->options->extraDirectories = wpstg_urldecode($_POST["extraDirectories"]);
         }
 
         $this->options->cloneDir = '';
         if( isset( $_POST["cloneDir"] ) && !empty( $_POST["cloneDir"] ) ) {
-            $this->options->cloneDir = trailingslashit( $_POST["cloneDir"] );
+            $this->options->cloneDir = wpstg_urldecode(trailingslashit( $_POST["cloneDir"] ));
         }
 
         //$this->options->destinationDir = !empty( $this->options->cloneDir ) ? trailingslashit( $this->options->cloneDir ) : trailingslashit( $this->options->existingClones[$this->options->clone]['path'] );
@@ -140,9 +142,6 @@ class Updating extends Job {
             $this->options->cloneHostname = $_POST["cloneHostname"];
         }
         
-        $this->options->destinationHostname = $this->getDestinationHostname();
-
-
         // Directories to Copy
         $this->options->directoriesToCopy = array_merge(
                 $this->options->includedDirectories, $this->options->extraDirectories
@@ -154,18 +153,6 @@ class Updating extends Job {
         $this->options->isRunning = true;
 
         return $this->saveOptions();
-    }
-
-    /**
-     * Return target hostname
-     * @return string
-     */
-    private function getDestinationHostname() {
-        if( empty( $this->options->cloneHostname ) ) {
-            $helper = new Helper();
-            return $helper->get_home_url_without_scheme();
-        }
-        return $this->getHostnameWithoutScheme( $this->options->cloneHostname );
     }
 
     /**
@@ -219,123 +206,10 @@ class Updating extends Job {
 
     /**
      * Start the cloning job
+     * not used but is abstract
      */
     public function start() {
-        if( null === $this->options->currentJob ) {
-            $this->log( "Cloning job for {$this->options->clone} finished" );
-            return true;
+
         }
 
-        $methodName = "job" . ucwords( $this->options->currentJob );
-
-        if( !method_exists( $this, $methodName ) ) {
-            $this->log( "Can't execute job; Job's method {$methodName} is not found" );
-            throw new JobNotFoundException( $methodName );
-        }
-
-        // Call the job
-        //$this->log("execute job: Job's method {$methodName}");
-        return $this->{$methodName}();
     }
-
-    /**
-     * @param object $response
-     * @param string $nextJob
-     * @return object
-     */
-    private function handleJobResponse( $response, $nextJob ) {
-        // Job is not done
-        if( true !== $response->status ) {
-            return $response;
-        }
-
-        $this->options->currentJob  = $nextJob;
-        $this->options->currentStep = 0;
-        $this->options->totalSteps  = 0;
-
-        // Save options
-        $this->saveOptions();
-
-        return $response;
-    }
-
-    /**
-     * Clone Database
-     * @return object
-     */
-//   public function jobDatabase() {
-//      if( is_multisite() ) {
-//         $database = new muDatabase();
-//      } else {
-//         $database = new Database();
-//      }
-//      return $this->handleJobResponse( $database->start(), "directories" );
-//   }
-
-    /**
-     * Clone Database
-     * @return object
-     */
-    public function jobDatabase() {
-        if( is_multisite() ) {
-            $database = new muDatabase();
-        } else {
-            $database = new Database();
-        }
-        return $this->handleJobResponse( $database->start(), "directories" );
-    }
-
-    /**
-     * Get All Files From Selected Directories Recursively Into a File
-     * @return object
-     */
-    public function jobDirectories() {
-        if( is_multisite() ) {
-            $directories = new muDirectories();
-        } else {
-            $directories = new Directories();
-        }
-        return $this->handleJobResponse( $directories->start(), "files" );
-    }
-
-    /**
-     * Copy Files
-     * @return object
-     */
-    public function jobFiles() {
-        if( is_multisite() ) {
-            $files = new muFiles();
-        } else {
-            $files = new Files();
-        }
-        return $this->handleJobResponse( $files->start(), "data" );
-    }
-
-    /**
-     * Replace Data
-     * @return object
-     */
-    public function jobData() {
-        if( is_multisite() ) {
-            $data = new muData();
-        } else {
-            $data = new Data();
-        }
-        return $this->handleJobResponse( $data->start(), "finish" );
-    }
-
-    /**
-     * Save Clone Data
-     * @return object
-     */
-    public function jobFinish() {
-        if( is_multisite() ) {
-            $finish = new muFinish();
-        } else {
-            $finish = new Finish();
-        }
-        $finish = new Finish();
-        return $this->handleJobResponse( $finish->start(), '' );
-    }
-
-}
