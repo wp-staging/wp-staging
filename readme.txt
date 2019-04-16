@@ -151,6 +151,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.5 =
+* Fix: Fatal error, undefined function wpstg_validate_data()
+
 = 2.5.4 =
 * Fix: WordFence firewall rule 'local file inclusion' blocks wp staging initial starting cloning sequence
 * Fix: Values of form Extra directories to copy are ignored
