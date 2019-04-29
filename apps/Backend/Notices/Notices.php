@@ -103,21 +103,25 @@ class Notices {
         }
     }
 
+    /**
+     * Load admin notices
+     * @return string
+     */
     public function messages() {
 
-        $viewsNoticesPath = "{$this->path}views/_includes/messages/";
+        $viewsNoticesPath = "{$this->path}views/notices/";
 
         // Show notice when free and pro version have been activated at the same time
         $this->plugin_deactivated_notice();
 
 
-        // Show rating review message on all admin pages
+        // Show rating review message on all admin pages except pages and posts
         if( $this->canShow( "wpstg_rating", 7 ) && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post' ) {
             require_once "{$viewsNoticesPath}rating.php";
         }
 
 
-        // Display messages below to admins only, only on admin panel
+        // Display notices below to admins only, only on admin panel
         if( !current_user_can( "update_plugins" ) || !$this->isAdminPage() ) {
             return;
         }
@@ -148,9 +152,9 @@ class Notices {
             delete_transient( "wp_staging_deactivated_notice_id" );
         }
         // Rating
-        if( $this->canShow( "wpstg_rating", 7 ) ) {
-            require_once "{$viewsNoticesPath}rating.php";
-        }
+//        if( $this->canShow( "wpstg_rating", 7 ) ) {
+//            require_once "{$viewsNoticesPath}rating.php";
+//        }
 
         // Different scheme in home and siteurl
         if( $this->isDifferentScheme() ) {

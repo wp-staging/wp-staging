@@ -18,17 +18,17 @@
             </a>
         </li>
         <li>
-            <a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did" style="font-weight:normal;color:white;">
+            <a href="javascript:void(0);" id="wpstg_hide_rating" title="I already did" style="font-weight:normal;color:white;">
                 <?php _e('I already did','wp-staging')?>
             </a>
         </li>
         <li>
-            <a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough" style="font-weight:normal;color:white;">
+            <a href="javascript:void(0);" id="wpstg_hide_rating" title="No, not good enough" style="font-weight:normal;color:white;">
                 <?php _e('No, not good enough','wp-staging')?>
             </a>
         </li>
         <li>
-            <a href="javascript:void(0);" class="wpstg_rate_later" title="Ask me again in a week" style="font-weight:normal;color:white;">
+            <a href="javascript:void(0);" id="wpstg_rate_later" title="Ask me again in a week" style="font-weight:normal;color:white;">
                 <?php _e('I want to rate later - Ask me again in a week','wp-staging')?>
             </a>
         </li>

@@ -151,6 +151,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.6 =
+* New:  compatible to WordPress 5.2
+* Tweak:  Move admin notices templates to views/notices
+
 = 2.5.5 =
 * Fix: Fatal error, undefined function wpstg_validate_data()
 
@@ -227,6 +231,6 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.5.4 =
-* Fix: WordFence firewall rule 'local file inclusion' blocks wp staging initial starting cloning sequence
-* Fix: Values of form Extra directories to copy are ignored
+= 2.5.6 =
+* New:  compatible to WordPress 5.2
+* Tweak:  Move admin notices templates to views/notices
