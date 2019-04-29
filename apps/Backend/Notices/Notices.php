@@ -60,33 +60,43 @@ class Notices {
      */
     private function canShow( $option, $days = 10 ) {
 
+        // Do not show notice
         if( empty( $option ) ) {
             return false;
         }
 
         $dbOption = get_option( $option );
+        
+        // Do not show notice
+        if ("no" === $dbOption){
+            return false;
+        }
 
         $now = new \DateTime( "now" );
 
-
-        // Check if user clicked on "rate later" button
-        if( "no" !== $dbOption && wpstg_validate_date( $dbOption ) ) {
+        // Check if user clicked on "rate later" button and if there is a valid 'later' date
+        if( wpstg_is_valid_date( $dbOption ) ) {
             // Get days difference
-            $hideDate   = new \DateTime( $dbOption );
-            $difference = $now->diff( $hideDate )->days;
-
-            if( $days <= $difference )
-                return true;
+//            $hideDate   = new \DateTime( $dbOption );
+//            $difference = $now->diff( $hideDate )->days;
+//
+//            if( $days >= $difference )
+//                return true;
+            // Do not show before this date
+            $show = new \DateTime( $dbOption );
+            if ($now < $show){
+                return false;
+            }
         }
 
 
         // Show X days after installation
         $installDate = new \DateTime( get_option( "wpstg_installDate" ) );
 
-        // Get days difference
+        // get number of days between installation date and today
         $difference = $now->diff( $installDate )->days;
 
-        if( $days <= $difference && "no" !== $dbOption ) {
+        if( $days <= $difference ) {
             return true;
         }
 

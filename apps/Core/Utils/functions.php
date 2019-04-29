@@ -128,7 +128,7 @@ function wpstg_replace_last_match( $needle, $replace, $haystack ) {
  * @param type $format
  * @return bool
  */
-function wpstg_validate_date( $date, $format = 'Y-m-d' ) {
+function wpstg_is_valid_date( $date, $format = 'Y-m-d' ) {
     $d = DateTime::createFromFormat( $format, $date );
     // The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
     return $d && $d->format( $format ) === $date;

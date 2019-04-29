@@ -1,6 +1,6 @@
 jQuery(document).ready(function ($) {
     
-    $("#wpstg_hide_rating").click(function (e) {
+    $(".wpstg_hide_rating").click(function (e) {
         e.preventDefault();
 
         $.ajax({
@@ -30,7 +30,7 @@ jQuery(document).ready(function ($) {
         });
     });
     
-    $("#wpstg_rate_later").click(function (e) {
+    $(".wpstg_rate_later").click(function (e) {
         e.preventDefault();
 
         $.ajax({

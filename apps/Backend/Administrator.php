@@ -636,8 +636,8 @@ class Administrator extends InjectionAware {
      * @return mixed bool | json
      */
     public function ajaxHideLaterRating() {
-        if( false !== update_option( 'wpstg_rating', date( 'Y-m-d' ) )
-        ) {
+        $date = date('Y-m-d', strtotime(date('Y-m-d'). ' + 7 days'));
+        if( false !== update_option( 'wpstg_rating',$date )) {
             wp_send_json( true );
         }
         return wp_send_json( false );
