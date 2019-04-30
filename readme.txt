@@ -155,6 +155,8 @@ https://wp-staging.com
 * New:  compatible to WordPress 5.2
 * Tweak:  Move admin notices templates to views/notices
 * Fix: Rating notice appears again immediately after using review later button
+* Fix: Convert staging site table prefix to lowercase
+
 
 = 2.5.5 =
 * Fix: Fatal error, undefined function wpstg_validate_data()

@@ -137,7 +137,7 @@ class Cloning extends Job {
         }
         $this->options->databasePrefix = '';
         if( isset( $_POST["databasePrefix"] ) && !empty( $_POST["databasePrefix"] ) ) {
-            $this->options->databasePrefix = $this->sanitizePrefix( $_POST["databasePrefix"] );
+            $this->options->databasePrefix = strtolower($this->sanitizePrefix( $_POST["databasePrefix"] ));
         }
         $this->options->cloneDir = '';
         if( isset( $_POST["cloneDir"] ) && !empty( $_POST["cloneDir"] ) ) {
@@ -224,7 +224,7 @@ class Cloning extends Job {
 
             // Prefix does not exist. We can use it
             if( !$tables ) {
-                return $this->options->prefix;
+                return strtolower($this->options->prefix);
             }
         }
         $this->returnException( "Fatal Error: Can not create staging prefix. '{$this->options->prefix}' already exists! Stopping for security reasons. Contact support@wp-staging.com" );
