@@ -238,8 +238,8 @@ class Administrator extends InjectionAware {
     public function getToolsPage() {
         // Tabs
         $tabs = new Tabs( array(
-            "system_info"   => __( "System Info", "wp-staging" ),
-            "import_export" => __( "Import/Export", "wp-staging" )
+            "import_export" => __( "Import/Export", "wp-staging" ),
+            "system_info"   => __( "System Info", "wp-staging" )
                 ) );
 
         $this->di->set( "tabs", $tabs );
@@ -695,7 +695,7 @@ class Administrator extends InjectionAware {
     }
 
     /**
-     * Ajax Start Pushing. Needs wp quads pro
+     * Ajax Start Pushing. Needs WP Staging Pro
      */
     public function ajaxPushProcessing() {
         check_ajax_referer( "wpstg_ajax_nonce", "nonce" );
@@ -792,7 +792,8 @@ class Administrator extends InjectionAware {
 //        }
         $db->select( $database );
         if( !$db->ready ) {
-            echo json_encode( array('errors' => "Error: Can't select {$database} [" . print_r( $db->error, true ) . "] Either it does not exist or you don't have privileges to access it. ") );
+            $error = isset($db->error->errors['db_select_fail']) ? $db->error->errors['db_select_fail'] : "Error: Can't select {database} Either it does not exist or you don't have privileges to access it.";
+            echo json_encode( array('errors' => $error ) );
             exit;
         }
         echo json_encode( array('success' => 'true') );

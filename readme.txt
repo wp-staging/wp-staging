@@ -153,6 +153,7 @@ https://wp-staging.com
 
 = 2.5.6 =
 * New:  compatible to WordPress 5.2
+* New: Allow adding file .wp-staging to root of website to determine if it's a staging or production website
 * Tweak:  Move admin notices templates to views/notices
 * Fix: Rating notice appears again immediately after using review later button
 * Fix: Convert staging site table prefix to lowercase

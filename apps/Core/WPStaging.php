@@ -167,7 +167,7 @@ final class WPStaging {
     public function enqueueElements( $hook ) {
 
         // Load this css file on frontend and backend on all pages if current site is a staging site
-        if( $this->isStagingSite() ) {
+        if( wpstg_is_stagingsite() ) {
             wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", array(), $this->getVersion() );
         }
 
@@ -444,9 +444,9 @@ final class WPStaging {
      * Check if it is a staging site
      * @return bool
      */
-    private function isStagingSite() {
-        return ("true" === get_option( "wpstg_is_staging_site" ));
-    }
+//    private function isStagingSite() {
+//        return ("true" === get_option( "wpstg_is_staging_site" ));
+//    }
 
     /**
      * Initialize licensing functions

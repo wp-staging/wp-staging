@@ -35,7 +35,7 @@ class Notices {
     }
 
     /**
-     * Check whether the page is an WP QUADS admin settings page or not
+    * Check whether the page is admin page or not
      * @return bool
      */
     private function isAdminPage() {

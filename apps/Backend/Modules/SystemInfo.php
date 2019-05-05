@@ -200,7 +200,7 @@ class SystemInfo extends InjectionAware {
         $output .= $this->info( "Plugin Version:", get_option( 'wpstg_version', 'undefined' ) );
         $output .= $this->info( "Install Date:", get_option( 'wpstg_installDate', 'undefined' ) );
         $output .= $this->info( "Upgraded from:", get_option( 'wpstg_version_upgraded_from', 'undefined' ) );
-        $output .= $this->info( "Is Staging Site:", get_option( 'wpstg_is_staging_site', 'undefined' ) ) . PHP_EOL . PHP_EOL;
+        $output .= $this->info( "Is Staging Site:", wpstg_is_stagingsite() ? 'true' : 'false' ) . PHP_EOL . PHP_EOL;
 
 
         return apply_filters( "wpstg_sysinfo_after_wpstaging_info", $output );

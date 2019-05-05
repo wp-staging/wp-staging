@@ -114,11 +114,11 @@ class Frontend extends InjectionAware {
     */
    private function disableLogin() {
       // Is not staging site
-      if( !$this->isStagingSite() ) {
+        if( !wpstg_is_stagingsite() ) {
          return false;
       }
 
-      // Allow access for users with certain capabilitie only
+        // Allow access for user role administrator in any case
       if( current_user_can( 'manage_options' ) ) {
       //if( current_user_can( 'administrator' ) ) {
          return false;
@@ -156,6 +156,7 @@ class Frontend extends InjectionAware {
     * Reset permalink structure of the clone to default; index.php?p=123
     */
    private function resetPermaLinks() {
+        // Do nothing 
       if( !$this->isStagingSite() || "true" === get_option( "wpstg_rmpermalinks_executed" ) ) {
          return;
       }

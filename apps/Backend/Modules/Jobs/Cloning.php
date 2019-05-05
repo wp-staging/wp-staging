@@ -49,7 +49,8 @@ class Cloning extends Job {
             'desktop.ini',
             '.gitignore',
             '.log',
-            'web.config' // Important: Windows IIS configuartion file. Must not be in the staging site!
+            'web.config', // Important: Windows IIS configuartion file. Must not be in the staging site!
+            '.wp-staging' // Determines if a site is a staging site
         );
         $this->options->excludedFilesFullPath = array(
             'wp-content' . DIRECTORY_SEPARATOR . 'db.php',
@@ -86,7 +87,7 @@ class Cloning extends Job {
 
         // Excluded Directories
         if( isset( $_POST["excludedDirectories"] ) && is_array( $_POST["excludedDirectories"] ) ) {
-            $this->options->excludedDirectories = wpstg_urldecode($_POST["excludedDirectories"]);
+            $this->options->excludedDirectories = wpstg_urldecode( $_POST["excludedDirectories"] );
         }
 
         // Excluded Directories TOTAL
@@ -99,18 +100,18 @@ class Cloning extends Job {
             \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-spamshield',
         );
 
-        $this->options->excludedDirectories = array_merge( $excludedDirectories, wpstg_urldecode($this->options->excludedDirectories ));
+        $this->options->excludedDirectories = array_merge( $excludedDirectories, wpstg_urldecode( $this->options->excludedDirectories ) );
 
         array_unshift( $this->options->directoriesToCopy, \WPStaging\WPStaging::getWPpath() );
 
         // Included Directories
         if( isset( $_POST["includedDirectories"] ) && is_array( $_POST["includedDirectories"] ) ) {
-            $this->options->includedDirectories = wpstg_urldecode($_POST["includedDirectories"]);
+            $this->options->includedDirectories = wpstg_urldecode( $_POST["includedDirectories"] );
         }
 
         // Extra Directories
         if( isset( $_POST["extraDirectories"] ) && !empty( $_POST["extraDirectories"] ) ) {
-            $this->options->extraDirectories = wpstg_urldecode($_POST["extraDirectories"]);
+            $this->options->extraDirectories = wpstg_urldecode( $_POST["extraDirectories"] );
         }
 
         // Directories to Copy
@@ -137,11 +138,11 @@ class Cloning extends Job {
         }
         $this->options->databasePrefix = '';
         if( isset( $_POST["databasePrefix"] ) && !empty( $_POST["databasePrefix"] ) ) {
-            $this->options->databasePrefix = strtolower($this->sanitizePrefix( $_POST["databasePrefix"] ));
+            $this->options->databasePrefix = strtolower( $this->sanitizePrefix( $_POST["databasePrefix"] ) );
         }
         $this->options->cloneDir = '';
         if( isset( $_POST["cloneDir"] ) && !empty( $_POST["cloneDir"] ) ) {
-            $this->options->cloneDir = wpstg_urldecode(trailingslashit( $_POST["cloneDir"] ));
+            $this->options->cloneDir = wpstg_urldecode( trailingslashit( $_POST["cloneDir"] ) );
         }
         $this->options->cloneHostname = '';
         if( isset( $_POST["cloneHostname"] ) && !empty( $_POST["cloneHostname"] ) ) {
@@ -187,7 +188,7 @@ class Cloning extends Job {
      */
     private function getDestinationDir() {
         // No custom clone dir or clone dir equals abspath of main wordpress site
-        if( empty( $this->options->cloneDir ) || $this->options->cloneDir ==  (string)\WPStaging\WPStaging::getWPpath()) {
+        if( empty( $this->options->cloneDir ) || $this->options->cloneDir == ( string ) \WPStaging\WPStaging::getWPpath() ) {
             return trailingslashit( \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName );
         }
         return trailingslashit( $this->options->cloneDir );
@@ -224,7 +225,7 @@ class Cloning extends Job {
 
             // Prefix does not exist. We can use it
             if( !$tables ) {
-                return strtolower($this->options->prefix);
+                return strtolower( $this->options->prefix );
             }
         }
         $this->returnException( "Fatal Error: Can not create staging prefix. '{$this->options->prefix}' already exists! Stopping for security reasons. Contact support@wp-staging.com" );
@@ -251,7 +252,7 @@ class Cloning extends Job {
      * Start the cloning job
      */
     public function start() {
-        if( !property_exists($this->options, 'currentJob') || null === $this->options->currentJob ) {
+        if( !property_exists( $this->options, 'currentJob' ) || null === $this->options->currentJob ) {
             $this->log( "Cloning job finished" );
             return true;
         }

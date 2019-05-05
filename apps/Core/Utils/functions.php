@@ -140,23 +140,38 @@ function wpstg_is_valid_date( $date, $format = 'Y-m-d' ) {
  * @param miced string | array $data
  * @return mixed string | array
  */
-function wpstg_urldecode($data){
-    if (empty($data)){
+function wpstg_urldecode( $data ) {
+    if( empty( $data ) ) {
         return $data;
     }
-    
-    if (  is_string( $data)){
-        return urldecode($data);
+
+    if( is_string( $data ) ) {
+        return urldecode( $data );
     }
-    
-    if(  is_array( $data )){
+
+    if( is_array( $data ) ) {
         $array = array();
-        foreach ($data as $string){
-            $array[] = urldecode($string);
-        } 
+        foreach ( $data as $string ) {
+            $array[] = urldecode( $string );
+        }
         return $array;
     }
-    
+
     return $data;
-    
+}
+
+/**
+ * Check if it is a staging site
+ * @return bool
+ */
+function wpstg_is_stagingsite() {
+    if( "true" === get_option( "wpstg_is_staging_site" ) ) {
+        return true;
+    }
+
+    if( file_exists( ABSPATH . '.wp-staging' ) ) {
+        return true;
+    }
+
+    return false;
 }
