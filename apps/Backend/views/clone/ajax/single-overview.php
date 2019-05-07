@@ -37,16 +37,25 @@
 
                 <?php echo apply_filters("wpstg_after_stage_buttons", $html = '', $name, $data)?>
                 <div class="wpstg-staging-info">                   
-                    <?php 
-                    $prefix = !empty ($data['prefix']) ? __("DB Prefix: <span class='wpstg-bold'>" . $data['prefix'], "wp-staging") . '</span> ' : '&nbsp;&nbsp;&nbsp;';
+                    <?php
+                  $dbname = !empty( $data['databaseDatabase'] ) ? __( "Database: <span class='wpstg-bold'>" . $data['databaseDatabase'], "wp-staging" ) . '</span>' : 'Database: <span class="wpstg-bold">' . DB_NAME . '</span>';
+                  $prefix = !empty( $data['prefix'] ) ? __( "Database Prefix: <span class='wpstg-bold'>" . $data['prefix'], "wp-staging" ) . '</span> ' : '';
+                  $cloneDir = !empty( $data['path'] ) ? __( "Directory: <span class='wpstg-bold'>" . $data['path'], "wp-staging" ) . '</span> ' : 'Directory: ';
+                  $url = !empty( $data['url'] ) ? __( "URL: <span class='wpstg-bold'>" . $data['url'], "wp-staging" ) . '</span> ' : 'URL: ';
+                  $datetime = !empty( $data['datetime'] ) ? __( "Updated: <span>" . date( "D, d M Y H:i:s T", $data['datetime'] ), "wp-staging" ) . '</span> ' : '&nbsp;&nbsp;&nbsp;';
+                  $status = !empty( $data['status'] ) && $data['status'] !== 'finished' ? "Status: <span class='wpstg-bold'>" . $data['status'] . "</span>" : '&nbsp;&nbsp;&nbsp;';
+
+                    echo $dbname;
+                    echo '</br>';
                     echo $prefix;
                     echo '</br>';
-                    $dbname = !empty ($data['databaseDatabase']) ? __("DB Name: <span class='wpstg-bold'>" . $data['databaseDatabase'], "wp-staging") . '</span></br> ' : '';
-                    echo $dbname;
-                    $datetime = !empty ($data['datetime']) ? __("Updated: <span>" . date("D, d M Y H:i:s T",$data['datetime']) , "wp-staging") . '</span> ' : '&nbsp;&nbsp;&nbsp;';
+                    echo $cloneDir;
+                    echo '</br>';
+                    echo $url;
+                    echo '</br>';
+                    echo $status;
+                    echo '</br>';
                     echo $datetime;
-                    
-                    
                     ?>
                 </div>
             </div>

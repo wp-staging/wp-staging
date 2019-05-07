@@ -49,7 +49,7 @@ class Cloning extends Job {
             'desktop.ini',
             '.gitignore',
             '.log',
-            'web.config', // Important: Windows IIS configuartion file. Must not be in the staging site!
+            'web.config', // Important: Windows IIS configuration file. Must not be in the staging site!
             '.wp-staging' // Determines if a site is a staging site
         );
         $this->options->excludedFilesFullPath = array(
@@ -75,7 +75,7 @@ class Cloning extends Job {
         // Get data and increment it
         elseif( !empty( $this->options->existingClones ) ) {
             $this->options->cloneNumber = count( $this->options->existingClones ) + 1;
-            $this->options->prefix      = $this->setStagingPrefix();
+            //$this->options->prefix      = $this->setStagingPrefix();
         }
 
         // Included Tables
@@ -158,8 +158,60 @@ class Cloning extends Job {
         // Process lock state
         $this->options->isRunning = true;
 
+        
+        // Save Clone data
+        $this->saveClone();
+        
         return $this->saveOptions();
     }
+
+    /**
+     * Save clone data initially
+     * @return boolean
+     */
+    private function saveClone(){
+        // Save new clone data
+        $this->log( "Cloning: {$this->options->clone}'s clone job's data is not in database, generating data" );
+
+        $this->options->existingClones[$this->options->clone] = array(
+            "directoryName"    => $this->options->cloneDirectoryName,
+            "path"             => trailingslashit( $this->options->destinationDir ),
+            "url"              => $this->getDestinationUrl(),
+            "number"           => $this->options->cloneNumber,
+            "version"          => \WPStaging\WPStaging::VERSION,
+            //"status"           => false,
+            "status"           => "unfinished or broken",
+            "prefix"           => $this->options->prefix,
+            "datetime"         => time(),
+            "databaseUser"     => $this->options->databaseUser,
+            "databasePassword" => $this->options->databasePassword,
+            "databaseDatabase" => $this->options->databaseDatabase,
+            "databaseServer"   => $this->options->databaseServer,
+            "databasePrefix"   => $this->options->databasePrefix
+        );
+
+        if( false === update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) ) {
+            $this->log( "Cloning: Failed to save {$this->options->clone}'s clone job data to database'" );
+            return false;
+        } 
+        
+        return true;
+    }
+    
+    
+        /**
+     * Get destination Hostname depending on wheather WP has been installed in sub dir or not
+     * @return type
+     */
+    private function getDestinationUrl() {
+
+        if( !empty( $this->options->cloneHostname ) ) {
+            return $this->options->cloneHostname;
+        }
+
+        return trailingslashit( get_site_url() ) . $this->options->cloneDirectoryName;
+    }
+    
 
     /**
      * Return target hostname

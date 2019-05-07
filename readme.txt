@@ -152,12 +152,14 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.5.6 =
-* New:  compatible to WordPress 5.2
+* New: Compatible to WordPress 5.2
 * New: Allow adding file .wp-staging to root of website to determine if it's a staging or production website
+* New: Add extended data about a staging site in list overview of staging sites
+* New: Show unfinished or interrupted clones and allow deletion of them
 * Tweak:  Move admin notices templates to views/notices
-* Fix: Rating notice appears again immediately after using review later button
-* Fix: Convert staging site table prefix to lowercase
-
+* Fix: Rating notice appears again after using review later button
+* Fix: Can not find staging site when staging site has been created with old version of wp staging
+* Fix: Do not search & replace over incomplete classes in database to prevent warnings
 
 = 2.5.5 =
 * Fix: Fatal error, undefined function wpstg_validate_data()
@@ -237,4 +239,8 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 = 2.5.6 =
 * New:  compatible to WordPress 5.2
+* New: Allow adding file .wp-staging to root of website to determine if it's a staging or production website
 * Tweak:  Move admin notices templates to views/notices
+* Fix: Rating notice appears again immediately after using review later button
+* Fix: Convert staging site table prefix to lowercase
+* New: Show unfinished or interrupted clones and allow deletion of them

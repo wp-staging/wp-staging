@@ -74,6 +74,7 @@ class Finish extends Job {
         // Clone data already exists
         if( isset( $this->options->existingClones[$this->options->clone] ) ) {
             $this->options->existingClones[$this->options->clone]['datetime'] = time();
+            $this->options->existingClones[$this->options->clone]['status'] = 'finished';
             update_option( "wpstg_existing_clones_beta", $this->options->existingClones );
             $this->log( "Finish: The job finished!" );
             return true;
@@ -91,7 +92,8 @@ class Finish extends Job {
             "url"              => $this->getDestinationUrl(),
             "number"           => $this->options->cloneNumber,
             "version"          => \WPStaging\WPStaging::VERSION,
-            "status"           => false,
+            //"status"           => false,
+            "status"           => "finished",
             "prefix"           => $this->options->prefix,
             "datetime"         => time(),
             "databaseUser"     => $this->options->databaseUser,

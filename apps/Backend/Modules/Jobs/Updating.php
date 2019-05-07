@@ -2,14 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-//use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\WPStaging;
-//use WPStaging\Backend\Modules\Jobs\Multisite\Database as muDatabase;
-//use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplace as muSearchReplace;
-//use WPStaging\Backend\Modules\Jobs\Multisite\Data as muData;
-//use WPStaging\Backend\Modules\Jobs\Multisite\Finish as muFinish;
-//use WPStaging\Backend\Modules\Jobs\Multisite\Directories as muDirectories;
-//use WPStaging\Backend\Modules\Jobs\Multisite\Files as muFiles;
 use WPStaging\Utils\Helper;
 
 /**
@@ -132,8 +125,6 @@ class Updating extends Job {
         if( isset( $_POST["cloneDir"] ) && !empty( $_POST["cloneDir"] ) ) {
             $this->options->cloneDir = wpstg_urldecode(trailingslashit( $_POST["cloneDir"] ));
         }
-
-        //$this->options->destinationDir = !empty( $this->options->cloneDir ) ? trailingslashit( $this->options->cloneDir ) : trailingslashit( $this->options->existingClones[$this->options->clone]['path'] );
 
         $this->options->destinationDir = $this->getDestinationDir();
 

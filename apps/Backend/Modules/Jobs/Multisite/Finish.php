@@ -32,6 +32,8 @@ class Finish extends Job {
         // Prepare clone records & save scanned directories for delete job later
         $this->prepareCloneDataRecords();
 
+        $this->options->isRunning = false;
+
         $multisite = new Multisite;
 
 
@@ -79,6 +81,7 @@ class Finish extends Job {
         if( isset( $this->options->existingClones[$this->options->clone] ) ) {
             $this->options->existingClones[$this->options->clone]['datetime'] = time();
             $this->options->existingClones[$this->options->clone]['url']      = $this->getDestinationUrl();
+            $this->options->existingClones[$this->options->clone]['status'] = 'finished';
             update_option( "wpstg_existing_clones_beta", $this->options->existingClones );
             $this->log( "Finish: The job finished!" );
             return true;
@@ -96,7 +99,7 @@ class Finish extends Job {
             "url"              => $this->getDestinationUrl(),
             "number"           => $this->options->cloneNumber,
             "version"          => \WPStaging\WPStaging::VERSION,
-            "status"           => false,
+            "status"           => "finished",
             "prefix"           => $this->options->prefix,
             "datetime"         => time(),
             "databaseUser"     => $this->options->databaseUser,
@@ -114,7 +117,6 @@ class Finish extends Job {
         return true;
     }
 
-
     /**
      * Get destination Hostname depending on wheather WP has been installed in sub dir or not
      * @return type
@@ -125,39 +127,13 @@ class Finish extends Job {
             return $this->options->cloneHostname;
         }
 
-        return trailingslashit( $this->multisiteHomeDomain ) . $this->options->cloneDirectoryName;
+        //return trailingslashit( $this->multisiteHomeDomain ) . $this->options->cloneDirectoryName;
+        // Get the path to the main multisite without appending and trailingslash e.g. wordpress
+        $multisitePath = defined( 'PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';       
+        return rtrim( $this->multisiteHomeDomain, '/\\' ) . $multisitePath . $this->options->cloneDirectoryName;
+        //$multisitePath = defined( 'PATH_CURRENT_SITE' ) ? str_replace( '/', '', PATH_CURRENT_SITE ) : '';
+
+        //return trailingslashit( $this->multisiteHomeDomain ) . $multisitePath . '/' . $this->options->cloneDirectoryName;
     }
-
-    /**
-     * Check if WP is installed in subdir
-     * @return boolean
-     */
-//    private function isSubDir() {
-//        // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
-//        // This is happening much more often than you would expect
-//        $siteurl = preg_replace( '#^https?://#', '', rtrim( get_option( 'siteurl' ), '/' ) );
-//        $home    = preg_replace( '#^https?://#', '', rtrim( get_option( 'home' ), '/' ) );
-//
-//        if( $home !== $siteurl ) {
-//            return true;
-//        }
-//        return false;
-//    }
-
-    /**
-     * Get the install sub directory if WP is installed in sub directory
-     * @return string
-     */
-//    private function getSubDir() {
-//        $home    = get_option( 'home' );
-//        $siteurl = get_option( 'siteurl' );
-//
-//        if( empty( $home ) || empty( $siteurl ) ) {
-//            return '';
-//        }
-//
-//        $dir = str_replace( $home, '', $siteurl );
-//        return str_replace( '/', '', $dir );
-//    }
 
 }

@@ -514,6 +514,12 @@ class SearchReplace extends JobExecutable {
                 $data = $tmp;
                 unset( $tmp );
             } elseif( is_object( $data ) ) {
+                
+                // Is no valid or is incomplete object
+                if (!$this->isValidObject($data)){
+                    return $data;
+                }
+                
                 $tmp   = $data;
                 $props = get_object_vars( $data );
                 foreach ( $props as $key => $value ) {
@@ -548,27 +554,27 @@ class SearchReplace extends JobExecutable {
      * Can not use is_object alone because in php 7.2 it's returning true even though object is __PHP_Incomplete_Class_Name
      * @return boolean
      */
-//   private function isValidObject($data){
-//      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
-//         return false;
-//      }
-//      
-//      $invalid_class_props = get_object_vars( $data );
-//      
-//      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
-//         // Assume it must be an valid object
-//         return true;
-//      }
-//      
-//      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
-//
-//      if( !empty( $invalid_object_class ) ) {
-//         return false;
-//      }
-//      
-//      // Assume it must be an valid object
-//      return true;
-//   }
+   private function isValidObject($data){
+      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
+         return false;
+      }
+      
+      $invalid_class_props = get_object_vars( $data );
+      
+      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
+         // Assume it must be an valid object
+         return true;
+      }
+      
+      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
+
+      if( !empty( $invalid_object_class ) ) {
+         return false;
+      }
+      
+      // Assume it must be an valid object
+      return true;
+   }
 
     /**
      * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
