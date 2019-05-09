@@ -152,8 +152,8 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.5.7 =
-* Fix: Remove previous implemented action to not search & replace over incomplete classes. This lead to high memory consumption.
-
+* Fix: Fatal Error: Remove previous implemented action to not search & replace over incomplete classes. This lead to high memory consumption and error 500 in step 2 of the cloning
+* Fix: Cloning process interupts if there is not data to change in last step of cloning 
 
 = 2.5.6 =
 * New: Compatible to WordPress 5.2
@@ -216,25 +216,6 @@ https://wp-staging.com
 
 = 2.4.6 =
 * Fix: Can not login to staging site . Changed minimum user capability to 'manage_options' instead 'administrator' 
-
-= 2.4.5 =
-* New: Compatible up to WordPress 5.0.1 Gutenberg
-* New: Show WP version of staging site in the sysinfo log
-* Fix: Make sure optimizer must-use plugin is updated as well after updating the main plugin
-* Fix: Plugin cannot be uninstalled if WP Staging Pro is activated
-* Fix: Prevent error $this not in object context in install.php
-
-
-= 2.4.4 =
-* Fix: Security, prevent downloading wp staging log files by third-party users from uploads folder
-* New: Compatible up to WordPress 5.0 Gutenberg
-
-= 2.4.3 =
-* Fix: Updating staging site does not exclude Windows IIS configuration file web.config and can lead to server error
-* Fix: Redirect to the correct URL after login to the staging site
-* Fix: Supports HTML entities in links created by WP Bakery Page Builder Plugin
-* New: Support for custom and non-default wp-content and uploads folder
-* New: Option to show again the rating notice in a week
 
 
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
