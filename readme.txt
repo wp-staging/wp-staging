@@ -151,6 +151,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.7 =
+* Fix: Remove previous implemented action to not search & replace over incomplete classes. This lead to high memory consumption.
+
+
 = 2.5.6 =
 * New: Compatible to WordPress 5.2
 * New: Allow adding file .wp-staging to root of website to determine if it's a staging or production website

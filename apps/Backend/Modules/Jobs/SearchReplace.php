@@ -476,7 +476,8 @@ class SearchReplace extends JobExecutable {
         unset( $update_sql );
         unset( $where_sql );
         unset( $sql );
-
+        unset( $current_row );
+        
 
         // DB Flush
         $this->db->flush();
@@ -516,9 +517,10 @@ class SearchReplace extends JobExecutable {
             } elseif( is_object( $data ) ) {
                 
                 // Is no valid or is incomplete object
-                if (!$this->isValidObject($data)){
-                    return $data;
-                }
+                // Do not use it any longer because it increases the memory consumption and can lead to memory exhausted errors
+//                if (!$this->isValidObject($data)){
+//                    return $data;
+//                }
                 
                 $tmp   = $data;
                 $props = get_object_vars( $data );
