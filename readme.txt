@@ -151,6 +151,8 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.9 =
+
 = 2.5.8 =
 * Fix: Remove admin notice that wp staging is not compatible with latest wp version
 
