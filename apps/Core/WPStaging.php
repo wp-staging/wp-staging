@@ -29,7 +29,7 @@ final class WPStaging {
     /**
      * Plugin version
      */
-    const VERSION = "2.5.7";
+    const VERSION = "2.5.8";
 
     /**
      * Plugin name
@@ -44,7 +44,7 @@ final class WPStaging {
     /**
      * Compatible WP Version
      */
-    const WP_COMPATIBLE = "5.1.1";
+    const WP_COMPATIBLE = "5.2.0";
 
     public $wpPath;
 

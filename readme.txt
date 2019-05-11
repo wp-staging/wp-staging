@@ -151,6 +151,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.5.8 =
+* Fix: Remove admin notice that wp staging is not compatible with latest wp version
+
 = 2.5.7 =
 * Fix: Fatal Error: Remove previous implemented action to not search & replace over incomplete classes. This lead to high memory consumption and error 500 in step 2 of the cloning
 * Fix: Cloning process interupts if there is not data to change in last step of cloning 
