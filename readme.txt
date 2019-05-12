@@ -152,6 +152,9 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.5.9 =
+* New: Better warning notices before updating process is executed
+* Fix: Prevent wordfence firewall rule interupting the clone deletion method
+* Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way 
 
 = 2.5.8 =
 * Fix: Remove admin notice that wp staging is not compatible with latest wp version

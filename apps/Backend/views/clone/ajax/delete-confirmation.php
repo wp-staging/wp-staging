@@ -27,7 +27,7 @@
         <?php
         _e(
             'Usually the preselected data can be deleted without any risk '.
-            'but in case something goes wrong you better check it first.',
+            'but in case something is going wrong you better verify it.',
             'wp-staging'
         );
         ?>
@@ -38,14 +38,19 @@
 
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __("DB tables to remove", "wp-staging")?>
+        <?php echo __("Database tables to remove", "wp-staging")?>
     </a>
 
     <!-- Database -->
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
         <h4 style="margin:0;">
-            <?php _e("Unselect database tables you do not want to delete:", "wp-staging")?>
+            <?php _e("Unselect all database tables you do not want to delete:", "wp-staging")?>
         </h4>
+        <div style="margin-bottom:6px;margin-top:6px;">
+            <a href="#" class="wpstg-button-unselect">
+                Unselect All
+            </a>
+        </div>
 
         <?php foreach ($delete->getTables() as $table):?>
             <div class="wpstg-db-table">
@@ -58,9 +63,9 @@
 			</span>
             </div>
         <?php endforeach ?>
-        <div>
+        <div style="margin-bottom:6px;margin-top:6px;">
             <a href="#" class="wpstg-button-unselect">
-                Un-check All
+                Unselect All
             </a>
         </div>
     </div>
@@ -73,13 +78,13 @@
 
     <!-- Files -->
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
-        <h4 style="margin:0;">
-            <?php _e("The folder below and all of its subfolders will be deleted. Unselect the checkbox for not deleting the files.", "wp-staging") ?>
+        <h4 style="margin:0;margin-bottom:10px;">
+            <?php _e("Selected folder and all of its subfolders and files will be deleted. <br/>Unselect it if you want to keep the staging site file data.", "wp-staging") ?>
         </h4>
 
         <div class="wpstg-dir">
             <label>
-                <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1" checked>
+                <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1" checked data-deletepath="<?php echo urlencode($clone->path);?>">
                 <?php echo $clone->path;?>
                 <span class="wpstg-size-info"><?php echo isset($clone->size) ? $clone->size : ''; ?></span>
             </label>

@@ -550,7 +550,7 @@ var WPStaging = (function ($)
 
                     if ($this.data("action") === "wpstg_update") {
                         // Update Clone - confirmed
-                        if (!confirm("ATTENTION! This will overwrite your staging site with all selected data from the live site! This should be used only if you want to clone again your production site. Are you sure you want to do this? \n\nMake sure to exclude all tables and folders which you do not want to overwrite, first! \n\nDo not necessarily cancel the updating process! This can break your staging site."))
+                        if (!confirm("STOP! This will overwrite your staging site with all selected data from the live site! This should be used only if you want to clone again your production site. Are you sure you want to do this? \n\nMake sure to exclude all tables and folders which you do not want to overwrite, first! \n\nDo not necessarily cancel the updating process! This can break your staging site. \n\n\Make sure you have a backop of your staging website before you proceed."))
                         {
                             return false;
                         }
@@ -589,8 +589,8 @@ var WPStaging = (function ($)
                                 if (false === response)
                                 {
                                     showError(
-                                            "Something went wrong!<br/><br/> Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
-                                            "Then try again. If that does not help, " +
+                                            "Something went wrong!<br/><br/> Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low '" +
+                                            "and try again. If that does not help, " +
                                             "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
                                             );
                                 }
@@ -599,7 +599,7 @@ var WPStaging = (function ($)
                                 if (response.length < 1)
                                 {
                                     showError(
-                                            "Something went wrong! No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low.'" +
+                                            "Something went wrong! No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low '" +
                                             "and try again. If that does not help, " +
                                             "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
                                             );
@@ -706,7 +706,6 @@ var WPStaging = (function ($)
     {
         // Add directories from the root level
         var extraDirectories = [];
-
         $(".wpstg-dir input:checked.wpstg-extra").each(function () {
             var $this = $(this);
             extraDirectories.push(encodeURIComponent($this.val()));
@@ -843,13 +842,15 @@ var WPStaging = (function ($)
     var deleteClone = function (clone)
     {
 
+        var deleteDir = $("#deleteDirectory:checked").data("deletepath");
+
         ajax(
                 {
                     action: "wpstg_delete_clone",
                     clone: clone,
                     nonce: wpstg.nonce,
                     excludedTables: getExcludedTables(),
-                    deleteDir: $("#deleteDirectory:checked").val()
+                    deleteDir: deleteDir
                 },
         function (response)
         {

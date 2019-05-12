@@ -19,6 +19,12 @@ class Delete extends Job {
     private $clone = false;
 
     /**
+     * The path to delete
+     * @var type 
+     */
+    private $deleteDir = '';
+
+    /**
      * @var null|object
      */
     private $tables = null;
@@ -48,6 +54,8 @@ class Delete extends Job {
     public function __construct( $isExternal = false ) {
         parent::__construct();
         $this->isExternal = $isExternal;
+
+        $this->deleteDir = !empty( $_POST['deleteDir'] ) ? urldecode( $_POST['deleteDir'] ) : '';
     }
 
     /**
@@ -338,24 +346,24 @@ class Delete extends Job {
      */
     public function deleteDirectory() {
         if( $this->isFatalError() ) {
-            $this->returnException( 'Can not delete directory: ' . $this->clone->path . '. This seems to be the root directory. Please contact support@wp-staging.com' );
-            throw new \Exception( 'Can not delete directory: ' . $this->clone->path . ' This seems to be the root directory. Please contact support@wp-staging.com' );
+            $this->returnException( 'Can not delete directory: ' . $this->deleteDir . '. This seems to be the root directory. Exclude this directory from deleting and try again.' );
+            throw new \Exception( 'Can not delete directory: ' . $this->deleteDir . ' This seems to be the root directory. Exclude this directory from deleting and try again.' );
         }
         // Finished or path does not exist
         if(
-                empty( $this->clone->path ) ||
-                $this->clone->path == get_home_path() ||
-                !is_dir( $this->clone->path ) ) {
+                empty( $this->deleteDir ) ||
+                $this->deleteDir == get_home_path() ||
+                !is_dir( $this->deleteDir ) ) {
 
             $this->job->current = "finish";
             $this->updateJob();
-            return $this->returnFinish();
+            return $this->deleteFinish();
         }
 
         $this->log( "Delete staging site: " . $this->clone->path, Logger::TYPE_INFO );
 
         // Just to make sure the root dir is never deleted!
-        if( $this->clone->path == get_home_path() ) {
+        if( $this->deleteDir == get_home_path() ) {
             $this->log( "Fatal Error 8: Trying to delete root of WP installation!", Logger::TYPE_CRITICAL );
             $this->returnException( 'Fatal Error 8: Trying to delete root of WP installation!' );
         }
@@ -366,10 +374,9 @@ class Delete extends Job {
             return;
         }
 
-        $di = new \RecursiveDirectoryIterator( $this->clone->path, \FilesystemIterator::SKIP_DOTS );
+        $di = new \RecursiveDirectoryIterator( $this->deleteDir, \FilesystemIterator::SKIP_DOTS );
         $ri = new \RecursiveIteratorIterator( $di, \RecursiveIteratorIterator::CHILD_FIRST );
         foreach ( $ri as $file ) {
-            //$file->isDir() ? @rmdir($file) : unlink($file);
             $this->deleteFile( $file );
             if( $this->isOverThreshold() ) {
                 //$this->returnException('Maximum PHP execution time exceeded. Run again and repeat the deletion process until it is sucessfully finished.');
@@ -377,10 +384,24 @@ class Delete extends Job {
             }
         }
 
-        if( @rmdir( $this->clone->path ) ) {
-            return $this->returnFinish();
+        // Delete left over staging site root folder
+        @rmdir( $this->deleteDir );
+
+        // Throw fatal error if the folder is still not deleted
+        if( is_dir($this->deleteDir) ) {
+            $clone    = ( string ) $this->clone->path;
+            $response = array(
+                'job'     => 'delete',
+                'status'  => true,
+                'delete'  => 'finished',
+                'message' => "Could not the staging site entirely. The folder {$clone}is still not empty. <br/><br/> If this happens again please contact us at support@wp-staging.com",
+                'error'   => true,
+            );
+            wp_die( json_encode( $response ) );
         }
-        return;
+
+        // Successfull finish deleting job
+        return $this->deleteFinish();
     }
 
     /**
@@ -407,12 +428,12 @@ class Delete extends Job {
     /**
      * @return bool
      */
-    public function isDirectoryDeletingFinished() {
-        return (
-                (false === $this->forceDeleteDirectories && (!isset( $_POST["deleteDir"] ) || '1' !== $_POST["deleteDir"])) ||
-                !is_dir( $this->clone->path ) || ABSPATH === $this->job->nextDirectoryToDelete
-                );
-    }
+//    public function isDirectoryDeletingFinished() {
+//        return (
+//                (false === $this->forceDeleteDirectories && (!isset( $_POST["deleteDir"] ) || '1' !== $_POST["deleteDir"])) ||
+//                !is_dir( $this->clone->path ) || ABSPATH === $this->job->nextDirectoryToDelete
+//                );
+//    }
 
     /**
      * 
@@ -420,7 +441,7 @@ class Delete extends Job {
      */
     public function isFatalError() {
         $homePath = rtrim( get_home_path(), "/" );
-        if( rtrim( $this->clone->path, "/" ) == $homePath ) {
+        if( rtrim( $this->deleteDir, "/" ) == $homePath ) {
             return true;
         }
         return false;
@@ -430,19 +451,26 @@ class Delete extends Job {
      * Finish / Update Existing Clones
      */
     public function deleteFinish() {
+
+        $response = array(
+            'delete' => 'finished',
+        );
+
         $existingClones = get_option( "wpstg_existing_clones_beta", array() );
 
-        // Check if clones still exist
+        // Check if clone exist and then remove it from options
         $this->log( "Verifying existing clones..." );
         foreach ( $existingClones as $name => $clone ) {
-            if( !is_dir( $clone["path"] ) ) {
+            if( $clone["path"] == $this->clone->path ) {
                 unset( $existingClones[$name] );
             }
+//            if( !is_dir( $clone["path"] ) ) {
+//                unset( $existingClones[$name] );
+//            }
         }
-        $this->log( "Existing clones verified!" );
 
         if( false === update_option( "wpstg_existing_clones_beta", $existingClones ) ) {
-            $this->log( "Failed to save {$this->options->clone}'s clone job data to database'" );
+            $this->log( "Delete: Nothing to save.'" );
         }
 
         // Delete cached file
@@ -450,26 +478,7 @@ class Delete extends Job {
         $this->cache->delete( "delete_directories_{$this->clone->name}" );
         $this->cache->delete( "clone_options" );
 
-        //return true;
-        $response = array('delete' => 'finished');
         wp_die( json_encode( $response ) );
     }
 
-    /**
-     * Get json response
-     * return json
-     */
-    private function returnFinish( $message = '' ) {
-
-        $this->deleteFinish();
-
-        wp_die( json_encode( array(
-            'job'     => 'delete',
-            'status'  => true,
-            'message' => $message,
-            'error'   => false,
-            'delete'  => 'finished'
-        ) ) );
     }
-
-}
