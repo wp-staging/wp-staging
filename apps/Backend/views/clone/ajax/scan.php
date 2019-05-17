@@ -128,7 +128,7 @@
 
 </div>
 
-<button type="button" class="wpstg-prev-step-link wpstg-link-btn button-primary wpstg-button">
+<button type="button" class="wpstg-prev-step-link wpstg-link-btn wpstg-blue-primary wpstg-button">
     <?php _e( "Back", "wp-staging" ) ?>
 </button>
 
@@ -137,12 +137,12 @@ if( null !== $options->current ) {
     $label  = __( "Update Clone", "wp-staging" );
     $action = 'wpstg_update';
 
-    echo '<button type="button" id="wpstg-start-updating" class="wpstg-next-step-link  wpstg-link-btn button-primary wpstg-button" data-action="' . $action . '">' . $label . '</button>';
+    echo '<button type="button" id="wpstg-start-updating" class="wpstg-next-step-link  wpstg-link-btn wpstg-blue-primary wpstg-button" data-action="' . $action . '">' . $label . '</button>';
 } else {
     $label  = __( "Start Cloning", "wp-staging" );
     $action = 'wpstg_cloning';
 
-    echo '<button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn button-primary wpstg-button" data-action="' . $action . '">' . $label . '</button>';
+    echo '<button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn wpstg-blue-primary wpstg-button" data-action="' . $action . '">' . $label . '</button>';
 }
 ?>
 

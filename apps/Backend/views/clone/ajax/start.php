@@ -13,7 +13,7 @@
     <div style="clear: both;"></div>
 </div>
 
-<button type="button" id="wpstg-cancel-cloning" class="wpstg-link-btn button-primary">
+<button type="button" id="wpstg-cancel-cloning" class="wpstg-button wpstg-link-btn wpstg-blue-primary">
     <?php echo __("Cancel", "wp-staging")?>
 </button>
 
