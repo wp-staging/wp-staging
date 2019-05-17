@@ -75,7 +75,7 @@ class Data extends JobExecutable {
      * @return void
      */
     protected function calculateTotalSteps() {
-        $this->options->totalSteps = 17;
+        $this->options->totalSteps = 18;
     }
 
     /**
@@ -176,7 +176,7 @@ class Data extends JobExecutable {
      */
     protected function isTable( $table ) {
         if( $this->db->get_var( "SHOW TABLES LIKE '{$table}'" ) != $table ) {
-            $this->log( "Table {$table} does not exist", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data: Table {$table} does not exist.", Logger::TYPE_ERROR );
             return false;
         }
         return true;
@@ -196,30 +196,141 @@ class Data extends JobExecutable {
 
         $destination = $this->options->destinationDir . 'wp-config.php';
 
-
-        // Do not do anything
-        if( (!is_file( $source ) && !is_link( $source )) || is_file( $destination ) ) {
-            $this->log( "Preparing Data Step0: Skip it", Logger::TYPE_INFO );
+        // Check if there is already a valid wp-config.php in root of staging site
+        if( $this->isValidWpConfig( $destination ) ) {
             return true;
         }
 
-        // Copy target of a symbolic link
-        if( is_link( $source ) ) {
-            $this->log( "Preparing Data Step0: Symbolic link found...", Logger::TYPE_INFO );
-            if( !@copy( readlink( $source ), $destination ) ) {
-                $errors = error_get_last();
-                $this->log( "Preparing Data Step0: Failed to copy wp-config.php! Error: {$errors['message']} {$source} -> {$destination}", Logger::TYPE_ERROR );
-                return true;
+        // Check if there is a valid wp-config.php outside root of wp production site
+        if( $this->isValidWpConfig( $source ) ) {
+            // Copy it to staging site
+            if( $this->copy( $source, $destination ) ) {
+            return true;
+        }
+        }
+
+        // No valid wp-config.php found so let's copy wp stagings default wp-config.php to staging site
+        $source = WPSTG_PLUGIN_DIR . "apps/Backend/helpers/wp-config.php";
+        if( $this->copy( $source, $destination ) ) {
+            // add missing db credentials to wp-config.php
+            if( !$this->alterWpConfig( $destination ) ) {
+                $this->log( "Preparing Data Step0: Can not alter db credentials in wp-config.php", Logger::TYPE_INFO );
+                return false;
             }
         }
 
-        // Copy file wp-config.php
+        $this->log( "Preparing Data Step0: Successfull", Logger::TYPE_INFO );
+        return true;
+    }
+
+    /**
+     * Copy files with symlink support
+     * @param type $source
+     * @param type $destination
+     * @return boolean
+     */
+    protected function copy( $source, $destination ) {
+        // Copy symbolic link
+        if( is_link( $source ) ) {
+            $this->log( "Preparing Data: Symbolic link found...", Logger::TYPE_INFO );
+            if( !@copy( readlink( $source ), $destination ) ) {
+                $errors = error_get_last();
+                $this->log( "Preparing Data: Failed to copy {$source} Error: {$errors['message']} {$source} -> {$destination}", Logger::TYPE_ERROR );
+                return false;
+            }
+        }
+
+        // Copy file
         if( !@copy( $source, $destination ) ) {
             $errors = error_get_last();
-            $this->log( "Preparing Data Step0: Failed to copy wp-config.php! Error: {$errors['message']} {$source} -> {$destination}", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data Step0: Failed to copy {$source}! Error: {$errors['message']} {$source} -> {$destination}", Logger::TYPE_ERROR );
+            return false;
+        }
+
             return true;
         }
-        $this->log( "Preparing Data Step0: Successfull", Logger::TYPE_INFO );
+
+    /**
+     * Make sure wp-config.php contains correct db credentials
+     * @param type $source
+     * @return boolean
+     */
+    protected function alterWpConfig( $source ) {
+        $content = file_get_contents( $source );
+
+        if( false === ($content = file_get_contents( $source )) ) {
+            return false;
+        }
+
+        $search = "// ** MySQL settings ** //";
+
+        $replace = "// ** MySQL settings ** //\r\n
+define( 'DB_NAME', '" . DB_NAME . "' );\r\n
+/** MySQL database username */\r\n
+define( 'DB_USER', '" . DB_USER . "' );\r\n
+/** MySQL database password */\r\n
+define( 'DB_PASSWORD', '" . DB_PASSWORD . "' );\r\n
+/** MySQL hostname */\r\n
+define( 'DB_HOST', '" . DB_HOST . "' );\r\n
+/** Database Charset to use in creating database tables. */\r\n
+define( 'DB_CHARSET', '" . DB_CHARSET . "' );\r\n
+/** The Database Collate type. Don't change this if in doubt. */\r\n
+define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
+
+        $content = str_replace( $search, $replace, $content );
+
+        if( false === @file_put_contents( $source, $content ) ) {
+            $this->log( "Preparing Data: Can't save wp-config.php", Logger::TYPE_ERROR );
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Check if wp-config.php contains important constants
+     * @param type $source
+     * @return boolean
+     */
+    protected function isValidWpConfig( $source ) {
+
+        if( !is_file( $source ) && !is_link( $source ) ) {
+            return false;
+        }
+
+        $content = file_get_contents( $source );
+
+        if( false === ($content = file_get_contents( $source )) ) {
+            return false;
+        }
+
+        // Get DB_NAME from wp-config.php
+        preg_match( "/define\s*\(\s*['\"]DB_NAME['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
+
+        if( empty( $matches[1] ) ) {
+            return false;
+        }
+
+        // Get DB_USER from wp-config.php
+        preg_match( "/define\s*\(\s*['\"]DB_USER['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
+
+        if( empty( $matches[1] ) ) {
+            return false;
+        }
+
+        // Get DB_PASSWORD from wp-config.php
+        preg_match( "/define\s*\(\s*['\"]DB_PASSWORD['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
+
+        if( empty( $matches[1] ) ) {
+            return false;
+        }
+
+        // Get DB_HOST from wp-config.php
+        preg_match( "/define\s*\(\s*['\"]DB_HOST['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
+
+        if( empty( $matches[1] ) ) {
+            return false;
+        }
         return true;
     }
 
@@ -251,11 +362,11 @@ class Data extends JobExecutable {
 
 
         // All good
-        if( false === $result ) {
-            $this->log( "Preparing Data Step1: Failed to update siteurl and homeurl in {$this->prefix}options. Probably already did! {$this->db->last_error}", Logger::TYPE_WARNING );
+        if( $result ) {
             return true;
         }
 
+        $this->log( "Preparing Data Step1: Skip updating siteurl and homeurl in {$this->prefix}options. Probably already did! {$this->db->last_error}", Logger::TYPE_WARNING );
         return true;
     }
 
@@ -299,12 +410,13 @@ class Data extends JobExecutable {
         );
         //}
         // All good
-        if( false === $insert ) {
-            $this->log( "Preparing Data Step2: Failed to update wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
-            return true;
-        }
+        if( $insert ) {
         $this->log( "Preparing Data Step2: Successfull", Logger::TYPE_INFO );
         return true;
+    }
+
+        $this->log( "Preparing Data Step2: Failed to update wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+        return false;
     }
 
     /**
@@ -317,6 +429,7 @@ class Data extends JobExecutable {
 
         // Skip - Table does not exist
         if( false === $this->isTable( $this->prefix . 'options' ) ) {
+            $this->log( "Preparing Data Step3: Skipping" );
             return true;
         }
 
@@ -333,11 +446,11 @@ class Data extends JobExecutable {
         );
 
         // All good
-        if( false === $result ) {
-            $this->log( "Preparing Data Step3: Failed to update rewrite_rules in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+        if( $result ) {
             return true;
         }
 
+        $this->log( "Preparing Data Step3: Failed to update rewrite_rules in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
         return true;
     }
 
@@ -372,6 +485,8 @@ class Data extends JobExecutable {
             $this->returnException( "Preparing Data Step4: Failed to update {$this->prefix}usermeta meta_key database table prefixes {$this->db->last_error}" );
             return false;
         }
+
+
 
         return true;
     }
@@ -449,7 +564,7 @@ class Data extends JobExecutable {
             $this->log( "Preparing Data: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR );
             return false;
         }
-        $this->Log( "Preparing Data Step 6: Finished successfully" );
+        $this->Log( "Preparing Data Step6: Finished successfully" );
         return true;
     }
 
@@ -463,6 +578,7 @@ class Data extends JobExecutable {
 
         // Skip - Table does not exist
         if( false === $this->isTable( $this->prefix . 'options' ) ) {
+            $this->log( "Preparing Data Step7: Skipping Table {$this->prefix}'options' does not exist" );
             return true;
         }
 
@@ -595,7 +711,7 @@ class Data extends JobExecutable {
             $this->log( "Preparing Data Step10: Failed to update WP_HOME. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
-        $this->Log( "Preparing Data Step 10: Finished successfully" );
+        $this->Log( "Preparing Data Step10: Finished successfully" );
         return true;
     }
 
@@ -626,7 +742,7 @@ class Data extends JobExecutable {
             $replace.= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
-                $this->log( "Preparing Data Step11: Failed to update WP_SITEURL", Logger::TYPE_ERROR );
+                $this->log( "Preparing Data Step11: Failed to update WP_SITEURL to " . $this->getStagingSiteUrl(), Logger::TYPE_ERROR );
                 return false;
             }
         } else {
@@ -635,10 +751,10 @@ class Data extends JobExecutable {
 
 
         if( false === @file_put_contents( $path, $content ) ) {
-            $this->log( "Preparing Data Step11: Failed to update WP_SITEURL. Can't save contents", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data Step11: Failed to update WP_SITEURL to " . $this->getStagingSiteUrl(). " Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
-        $this->Log( "Preparing Data Step 11: Finished successfully" );
+        $this->Log( "Preparing Data Step11: Finished successfully" );
         return true;
     }
 
@@ -755,7 +871,7 @@ class Data extends JobExecutable {
             $this->returnException( " Preparing Data Step12: Failed to update db option_names in {$this->prefix}options. Error: {$this->db->last_error}" );
             return false;
         }
-        $this->Log( "Preparing Data Step 12: Finished successfully" );
+        $this->Log( "Preparing Data Step12: Finished successfully" );
         return true;
     }
 
@@ -839,7 +955,7 @@ class Data extends JobExecutable {
             $this->log( "Preparing Data Step14: Failed to update WP_CACHE. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
-        $this->Log( "Preparing Data Step 14: Finished successfully" );
+        $this->Log( "Preparing Data Step14: Finished successfully" );
         return true;
     }
 
@@ -879,7 +995,7 @@ class Data extends JobExecutable {
             $this->log( "Preparing Data Step15: Failed to update WP_CONTENT_DIR. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
-        $this->Log( "Preparing Data Step 15: Finished successfully" );
+        $this->Log( "Preparing Data Step15: Finished successfully" );
         return true;
     }
 
@@ -919,18 +1035,83 @@ class Data extends JobExecutable {
             $this->log( "Preparing Data Step16: Failed to update WP_CONTENT_URL. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
-        $this->Log( "Preparing Data Step 16: Finished successfully" );
+        $this->Log( "Preparing Data Step16: Finished successfully" );
         return true;
     }
 
     /**
-     * Get upload path
+     * Remove UPLOADS constant in wp-config.php to reset default image folder
+     * @return bool
+     */
+    protected function step17() {
+        $path = $this->options->destinationDir . "wp-config.php";
+
+        $this->log( "Preparing Data Step17: Remove UPLOADS in wp-config.php" );
+
+        if( false === ($content = file_get_contents( $path )) ) {
+            $this->log( "Preparing Data Step17: Failed to get UPLOADS in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
+            return false;
+        }
+
+
+        // Get UPLOADS from wp-config.php
+        preg_match( "/define\s*\(\s*['\"]UPLOADS['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
+
+        if( !empty( $matches[0] ) ) {
+
+            $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
+
+            $replace = "";
+
+            if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
+                $this->log( "Preparing Data: Failed to change UPLOADS", Logger::TYPE_ERROR );
+                return false;
+            }
+        } else {
+            $this->log( "Preparing Data Step17: UPLOADS not defined in wp-config.php. Skipping this step." );
+        }
+
+        if( false === @file_put_contents( $path, $content ) ) {
+            $this->log( "Preparing Data Step17: Failed to update UPLOADS. Can't save contents", Logger::TYPE_ERROR );
+            return false;
+        }
+        $this->Log( "Preparing Data Step17: Finished successfully" );
+        return true;
+    }
+
+    /**
+     * Create a robots.txt in path of the staging site
+     */
+//    protected function step18() {
+//        $file = new RobotsTxt();
+//        if( false === $file->create( $this->options->destinationDir . "robots.txt" ) ) {
+//            $this->log( "Preparing Data Step18: Failed to create robots.txt", Logger::TYPE_ERROR );
+//        }
+//        return true;
+//    }
+
+    /**
+     * Change upload path of staging site if it has been customized on production site
      * @return boolean|string
      */
     protected function getNewUploadPath() {
         $uploadPath = get_option( 'upload_path' );
 
         if( !$uploadPath ) {
+            return false;
+        }
+
+        // Get absolute custom upload dir 
+        $uploads = wp_upload_dir();
+        
+        // Get absolute upload dir from ABSPATH
+        $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
+
+        // Get absolute custom wp-content dir
+        $wpContentDir = trailingslashit( WP_CONTENT_DIR );
+        
+        // Do nothing if uploads path is identical to wp-content dir
+        if ($uploadsAbsPath == $wpContentDir){
             return false;
         }
 

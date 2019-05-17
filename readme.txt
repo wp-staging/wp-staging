@@ -152,8 +152,12 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.5.9 =
+* New: Better corporate identity and more friendly UI colors for staging sites listings and button
 * New: Better warning notices before updating process is executed
-* Fix: Prevent wordfence firewall rule interupting the clone deletion method
+* New: Add tooltips for explaining navigation buttons
+* New: Check if UPLOAD constant is defined and use this value for uploads folder destination
+* Fix: Do not search & replace through "__PHP_Incomplete_Class_Name" definitions
+* Fix: Prevent wordfence firewall rule interrupting the clone deletion method
 * Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way 
 
 = 2.5.8 =
@@ -230,10 +234,8 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 
 == Upgrade Notice ==
 
-= 2.5.6 =
-* New:  compatible to WordPress 5.2
-* New: Allow adding file .wp-staging to root of website to determine if it's a staging or production website
-* Tweak:  Move admin notices templates to views/notices
-* Fix: Rating notice appears again immediately after using review later button
-* Fix: Convert staging site table prefix to lowercase
-* New: Show unfinished or interrupted clones and allow deletion of them
+= 2.5.9 =
+* New: Increase the cloning/pushing speed by benchmarking and automatic tuning the maximum possible performance settings
+* New: Better warning notices before updating process is executed
+* Fix: Prevent wordfence firewall rule interupting the clone deletion method
+* Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way 

@@ -169,9 +169,39 @@ function wpstg_is_stagingsite() {
         return true;
     }
 
-    if( file_exists( ABSPATH . '.wp-staging' ) ) {
+    if(  file_exists( ABSPATH . '.wp-staging')){
         return true;
     }
 
     return false;
 }
+
+   /**
+    * @param string $memory
+    * @return int
+    */
+   function wpstg_get_memory_in_bytes( $memory ) {
+      // Handle unlimited ones
+      if( 1 > ( int ) $memory ) {
+         //return (int) $memory;
+         // 128 MB default value
+         return ( int ) 134217728;
+      }
+
+      $bytes = ( int ) $memory; // grab only the number
+      $size = trim( str_replace( $bytes, null, strtolower( $memory ) ) ); // strip away number and lower-case it
+      // Actual calculation
+      switch ( $size ) {
+         case 'k':
+            $bytes *= 1024;
+            break;
+         case 'm':
+            $bytes *= (1024 * 1024);
+            break;
+         case 'g':
+            $bytes *= (1024 * 1024 * 1024);
+            break;
+      }
+
+      return $bytes;
+   }
