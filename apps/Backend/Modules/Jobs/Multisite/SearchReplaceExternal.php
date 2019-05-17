@@ -324,8 +324,9 @@ class SearchReplaceExternal extends JobExecutable {
         $args['search_for'] = array(
             '//' . $this->sourceHostname,
             ABSPATH,
-            '\/\/' . str_replace( '/', '\/', $this->sourceHostname ), // // Used by revslider and several visual editors
-            $this->getImagePathLive()
+            '\/\/' . str_replace( '/', '\/', $this->sourceHostname ), // Used by revslider and several visual editors
+            '%2F%2F' . str_replace( '/', '%2F', $this->sourceHostname ), // HTML entitity for WP Backery Page Builder Plugin
+            //$this->getImagePathLive()
         );
 
 
@@ -333,13 +334,15 @@ class SearchReplaceExternal extends JobExecutable {
             '//' . $this->destinationHostname,
             $this->options->destinationDir,
             '\/\/' . str_replace( '/', '\/', $this->destinationHostname ), // Used by revslider and several visual editors
-            $this->getImagePathStaging()
+            '%2F%2F' . str_replace( '/', '%2F', $this->destinationHostname ), // HTML entitity for WP Backery Page Builder Plugin
+            //$this->getImagePathStaging()
         );
+
 
         $args['replace_guids']    = 'off';
         $args['dry_run']          = 'off';
         $args['case_insensitive'] = false;
-        $args['replace_mails']    = 'off';
+        //$args['replace_mails']    = 'off';
         $args['skip_transients']  = 'on';
 
 
@@ -395,11 +398,23 @@ class SearchReplaceExternal extends JobExecutable {
             if( isset( $row['option_name'] ) && 'on' === $args['skip_transients'] && false !== strpos( $row['option_name'], '_transient' ) ) {
                 continue;
             }
+            // Skip rows with more than 5MB to save memory
+            if( isset( $row['option_value'] ) && strlen( $row['option_value'] ) >= 5000000 ) {
+                continue;
+            }
+
 
             foreach ( $columns as $column ) {
 
                 $dataRow = $row[$column];
 
+                // Skip rows larger than 10MB
+                $size = strlen( $dataRow );
+                if( $size >= 5000000 ) {
+                    continue;
+                }
+
+                // Skip Primary key
                 if( $column == $primary_key ) {
                     $where_sql[] = $column . ' = "' . $this->mysql_escape_mimic( $dataRow ) . '"';
                     continue;
@@ -411,18 +426,18 @@ class SearchReplaceExternal extends JobExecutable {
                 }
 
                 // Skip mail addresses
-                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->multisiteDomainWithoutScheme ) ) {
-                    continue;
-                }
+//                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->multisiteDomainWithoutScheme ) ) {
+//                    continue;
+//                }
 
                 // Check options table
                 if( $this->options->prefix . 'options' === $table ) {
 
                     // Skip certain options
-//                    if( isset( $should_skip ) && true === $should_skip ) {
-//                        $should_skip = false;
-//                        continue;
-//                    }
+                    if( isset( $should_skip ) && true === $should_skip ) {
+                        $should_skip = false;
+                        continue;
+                    }
 
                     // Skip this row
                     if( 'wpstg_existing_clones_beta' === $dataRow ||
@@ -432,8 +447,7 @@ class SearchReplaceExternal extends JobExecutable {
                             'siteurl' === $dataRow ||
                             'home' === $dataRow
                     ) {
-                        //$should_skip = true;
-                        continue;
+                        $should_skip = true;
                     }
                 }
 
@@ -558,6 +572,13 @@ class SearchReplaceExternal extends JobExecutable {
             } elseif( is_object( $data ) ) {
                 $tmp   = $data;
                 $props = get_object_vars( $data );
+
+                // Do not continue if class contains __PHP_Incomplete_Class_Name
+                if( !empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
+                    return $data;
+                }
+
+                // Do a search & replace
                 foreach ( $props as $key => $value ) {
                     if( $key === '' || ord( $key[0] ) === 0 ) {
                         continue;
@@ -567,6 +588,7 @@ class SearchReplaceExternal extends JobExecutable {
 
                 $data = $tmp;
                 unset( $tmp );
+                unset( $props );
             } else {
                 if( is_string( $data ) ) {
                     if( !empty( $from ) && !empty( $to ) ) {

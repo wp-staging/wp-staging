@@ -235,20 +235,20 @@ class SearchReplace extends JobExecutable {
      * @access public
      * @return int
      */
-    private function get_pages_in_table( $table ) {
-
-        // Table does not exist
-        $table  = str_replace( $this->options->prefix . '.', null, $table );
-        $result = $this->db->query( "SHOW TABLES LIKE '{$table}'" );
-        if( !$result || 0 === $result ) {
-            return 0;
-        }
-
-        $table = esc_sql( $table );
-        $rows  = $this->db->get_var( "SELECT COUNT(*) FROM $table" );
-        $pages = ceil( $rows / $this->settings->querySRLimit );
-        return absint( $pages );
-    }
+//    private function get_pages_in_table( $table ) {
+//
+//        // Table does not exist
+//        $table  = str_replace( $this->options->prefix . '.', null, $table );
+//        $result = $this->db->query( "SHOW TABLES LIKE '{$table}'" );
+//        if( !$result || 0 === $result ) {
+//            return 0;
+//        }
+//
+//        $table = esc_sql( $table );
+//        $rows  = $this->db->get_var( "SELECT COUNT(*) FROM $table" );
+//        $pages = ceil( $rows / $this->settings->querySRLimit );
+//        return absint( $pages );
+//    }
 
     /**
      * Gets the columns in a table.
@@ -293,9 +293,9 @@ class SearchReplace extends JobExecutable {
         }
 
         // Load up the default settings for this chunk.
-        $table        = esc_sql( $table );
-        $current_page = $this->options->job->start + $this->settings->querySRLimit;
-        $pages        = $this->get_pages_in_table( $table );
+        $table = esc_sql( $table );
+        //$current_page = $this->options->job->start + $this->settings->querySRLimit;
+        //$pages        = $this->get_pages_in_table( $table );
 
 
         $args['search_for'] = array(
@@ -316,7 +316,7 @@ class SearchReplace extends JobExecutable {
         $args['replace_guids']    = 'off';
         $args['dry_run']          = 'off';
         $args['case_insensitive'] = false;
-        $args['replace_mails']    = 'off';
+        //$args['replace_mails']    = 'off';
         $args['skip_transients']  = 'on';
 
 
@@ -336,10 +336,38 @@ class SearchReplace extends JobExecutable {
 
         $current_row = 0;
         $start       = $this->options->job->start;
+
+        //Make sure value is never smaller than 1 or greater than 20000
+        //$end = $this->settings->querySRLimit == '0' || empty( $this->settings->querySRLimit ) ? 1 : $this->settings->querySRLimit > 20000 ? 20000 : $this->settings->querySRLimit;
         $end         = $this->settings->querySRLimit;
 
-        // Grab the content of the table.
+        // Grab the content of the current table.
         $data = $this->db->get_results( "SELECT * FROM $table LIMIT $start, $end", ARRAY_A );
+
+//        // Current memory usage
+//        $memUsage = memory_get_usage();
+//
+//        // 80% Memory Limit
+//        $memLimit = wpstg_get_memory_in_bytes( ini_get( 'memory_limit' ) ) * 0.8;
+//        //$memLimit = 10;
+//
+//        // Memory limit higher than 80% - reduce the numbers and try again
+//        if( $memUsage >= $memLimit ) {
+//            unset( $data );
+//            $end                 = ceil( $end - 100 );
+//            $this->settings->querySRLimit = $end;
+//            update_option( 'wpstg_settings', $this->settings );
+//            // Grab again the content of the current table.
+//            $data = $this->db->get_results( "SELECT * FROM $table LIMIT $start, $end", ARRAY_A );
+//        }
+//
+//        // If memory limit lower than 50% - increase the numbers for the next batch to get more speed
+//        $memLimit = wpstg_get_memory_in_bytes( ini_get( 'memory_limit' ) ) * 0.5;
+//        if( $memUsage < $memLimit ) {
+//            $end                          = ceil( $end + 100 );
+//            $this->settings->querySRLimit = $end;
+//            update_option( 'wpstg_settings', $this->settings );
+//        }
 
         // Filter certain rows (of other plugins)
         $filter = array(
@@ -373,7 +401,7 @@ class SearchReplace extends JobExecutable {
                 continue;
             }
             // Skip rows with more than 5MB to save memory
-            if( isset( $row['option_value'] ) && strlen($row['option_value']) >= 5000000  ) {
+            if( isset( $row['option_value'] ) && strlen( $row['option_value'] ) >= 5000000 ) {
                 continue;
             }
 
@@ -382,10 +410,10 @@ class SearchReplace extends JobExecutable {
 
                 $dataRow = $row[$column];
 
-                
+
                 // Skip rows larger than 5MB                
-                $size = strlen($dataRow);
-                if ($size >= 5000000){
+                $size = strlen( $dataRow );
+                if( $size >= 5000000 ) {
                     continue;
                 }
 
@@ -401,20 +429,17 @@ class SearchReplace extends JobExecutable {
                 }
 
                 // Skip mail addresses
-                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->options->homeHostname ) ) {
-                    continue;
-                }
-
-
+//                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->options->homeHostname ) ) {
+//                    continue;
+//                }
                 // Check options table
                 if( $this->options->prefix . 'options' === $table ) {
 
                     // Skip certain options
-                    if( isset( $should_skip ) && true === $should_skip ) {
-                        $should_skip = false;
-                        continue;
-                    }
-
+//                    if( isset( $should_skip ) && true === $should_skip ) {
+//                        $should_skip = false;
+//                        continue;
+//                    }
                     // Skip this row
                     if( 'wpstg_existing_clones_beta' === $dataRow ||
                             'wpstg_existing_clones' === $dataRow ||
@@ -423,7 +448,8 @@ class SearchReplace extends JobExecutable {
                             'siteurl' === $dataRow ||
                             'home' === $dataRow
                     ) {
-                        $should_skip = true;
+                        //$should_skip = true;
+                        continue;
                     }
                 }
 
@@ -477,12 +503,14 @@ class SearchReplace extends JobExecutable {
         unset( $where_sql );
         unset( $sql );
         unset( $current_row );
-        
+
 
         // DB Flush
         $this->db->flush();
         return true;
     }
+
+
 
     /**
      * Adapted from interconnect/it's search/replace script.
@@ -515,15 +543,16 @@ class SearchReplace extends JobExecutable {
                 $data = $tmp;
                 unset( $tmp );
             } elseif( is_object( $data ) ) {
-                
-                // Is no valid or is incomplete object
-                // Do not use it any longer because it increases the memory consumption and can lead to memory exhausted errors
-//                if (!$this->isValidObject($data)){
-//                    return $data;
-//                }
-                
-                $tmp   = $data;
                 $props = get_object_vars( $data );
+
+                // Do not continue if class contains __PHP_Incomplete_Class_Name
+                if( !empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
+                    unset( $props );
+                    return $data;
+                }
+
+                // Do a search & replace                
+                $tmp = $data;
                 foreach ( $props as $key => $value ) {
                     if( $key === '' || ord( $key[0] ) === 0 ) {
                         continue;
@@ -533,6 +562,7 @@ class SearchReplace extends JobExecutable {
 
                 $data = $tmp;
                 unset( $tmp );
+                unset( $props );
             } else {
                 if( is_string( $data ) ) {
                     if( !empty( $from ) && !empty( $to ) ) {
@@ -556,27 +586,27 @@ class SearchReplace extends JobExecutable {
      * Can not use is_object alone because in php 7.2 it's returning true even though object is __PHP_Incomplete_Class_Name
      * @return boolean
      */
-   private function isValidObject($data){
-      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
-         return false;
-      }
-      
-      $invalid_class_props = get_object_vars( $data );
-      
-      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
-         // Assume it must be an valid object
-         return true;
-      }
-      
-      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
-
-      if( !empty( $invalid_object_class ) ) {
-         return false;
-      }
-      
-      // Assume it must be an valid object
-      return true;
-   }
+//   private function isValidObject($data){
+//      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
+//         return false;
+//      }
+//      
+//      $invalid_class_props = get_object_vars( $data );
+//      
+//      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
+//         // Assume it must be an valid object
+//         return true;
+//      }
+//      
+//      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
+//
+//      if( !empty( $invalid_object_class ) ) {
+//         return false;
+//      }
+//      
+//      // Assume it must be an valid object
+//      return true;
+//   }
 
     /**
      * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.

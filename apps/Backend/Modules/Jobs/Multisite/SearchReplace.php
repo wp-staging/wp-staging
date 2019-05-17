@@ -63,11 +63,11 @@ class SearchReplace extends JobExecutable {
      * Initialize
      */
     public function initialize() {
-        $this->total     = count( $this->options->tables );
-        $this->db        = WPStaging::getInstance()->get( "wpdb" );
-        $this->tmpPrefix = $this->options->prefix;
-        $this->strings   = new Strings();
-        $this->sourceHostname = $this->getSourceHostname();
+        $this->total               = count( $this->options->tables );
+        $this->db                  = WPStaging::getInstance()->get( "wpdb" );
+        $this->tmpPrefix           = $this->options->prefix;
+        $this->strings             = new Strings();
+        $this->sourceHostname      = $this->getSourceHostname();
         $this->destinationHostname = $this->getDestinationHostname();
     }
 
@@ -190,13 +190,19 @@ class SearchReplace extends JobExecutable {
     public function getDestinationHostname() {
 
         if( !empty( $this->options->cloneHostname ) ) {
-            return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
+            return $this->strings->getUrlWithoutScheme( $this->options->cloneHostname );
         }
 
         if( $this->isSubDir() ) {
-            return trailingslashit( $this->strings->getUrlWithoutScheme($this->multisiteDomainWithoutScheme) ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName;
+            return trailingslashit( $this->strings->getUrlWithoutScheme( $this->multisiteDomainWithoutScheme ) ) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName;
         }
-        return trailingslashit( $this->strings->getUrlWithoutScheme($this->multisiteDomainWithoutScheme) ) . $this->options->cloneDirectoryName;
+
+        // Get the path to the main multisite without appending and trailingslash e.g. wordpress
+        $multisitePath = defined( 'PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';       
+        $url = rtrim( $this->strings->getUrlWithoutScheme( $this->multisiteDomainWithoutScheme ), '/\\' ) . $multisitePath . $this->options->cloneDirectoryName;
+        //$multisitePath = defined( 'PATH_CURRENT_SITE' ) ? str_replace( '/', '', PATH_CURRENT_SITE ) : '';
+        //$url           = trailingslashit( $this->strings->getUrlWithoutScheme( $this->multisiteDomainWithoutScheme ) ) . $multisitePath . '/' . $this->options->cloneDirectoryName;
+        return $url;
     }
 
     /**
@@ -315,8 +321,9 @@ class SearchReplace extends JobExecutable {
         $args['search_for'] = array(
             '//' . $this->getSourceHostname(),
             ABSPATH,
-            '\/\/' . str_replace( '/', '\/', $this->getSourceHostname() ), // // Used by revslider and several visual editors
-            $this->getImagePathLive()
+            '\/\/' . str_replace( '/', '\/', $this->getSourceHostname() ), // Used by revslider and several visual editors
+            '%2F%2F' . str_replace( '/', '%2F', $this->getSourceHostname() ), // HTML entitity for WP Backery Page Builder Plugin
+                //$this->getImagePathLive()
         );
 
 
@@ -324,13 +331,19 @@ class SearchReplace extends JobExecutable {
             '//' . $this->getDestinationHostname(),
             $this->options->destinationDir,
             '\/\/' . str_replace( '/', '\/', $this->getDestinationHostname() ), // Used by revslider and several visual editors
-            $this->getImagePathStaging()
+            '%2F%2F' . str_replace( '/', '%2F', $this->getDestinationHostname() ), // HTML entitity for WP Backery Page Builder Plugin
+                //$this->getImagePathStaging()
         );
+
+        $this->debugLog( "DB Processing: Search: {$args['search_for'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
+        $this->debugLog( "DB Processing: Replace: {$args['replace_with'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
+
+
 
         $args['replace_guids']    = 'off';
         $args['dry_run']          = 'off';
         $args['case_insensitive'] = false;
-        $args['replace_mails']    = 'off';
+        //$args['replace_mails']    = 'off';
         $args['skip_transients']  = 'on';
 
 
@@ -386,11 +399,23 @@ class SearchReplace extends JobExecutable {
             if( isset( $row['option_name'] ) && 'on' === $args['skip_transients'] && false !== strpos( $row['option_name'], '_transient' ) ) {
                 continue;
             }
+            // Skip rows with more than 5MB to save memory
+            if( isset( $row['option_value'] ) && strlen( $row['option_value'] ) >= 5000000 ) {
+                continue;
+            }
+
 
             foreach ( $columns as $column ) {
 
                 $dataRow = $row[$column];
 
+                // Skip rows larger than 5MB
+                $size = strlen( $dataRow );
+                if( $size >= 5000000 ) {
+                    continue;
+                }
+
+                // Skip Primary key
                 if( $column == $primary_key ) {
                     $where_sql[] = $column . ' = "' . $this->mysql_escape_mimic( $dataRow ) . '"';
                     continue;
@@ -402,10 +427,9 @@ class SearchReplace extends JobExecutable {
                 }
 
                 // Skip mail addresses
-                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->multisiteDomainWithoutScheme ) ) {
-                    continue;
-                }
-
+//                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->multisiteDomainWithoutScheme ) ) {
+//                    continue;
+//                }
                 // Check options table
                 if( $this->options->prefix . 'options' === $table ) {
 
@@ -414,7 +438,6 @@ class SearchReplace extends JobExecutable {
 //                        $should_skip = false;
 //                        continue;
 //                    }
-
                     // Skip this row
                     if( 'wpstg_existing_clones_beta' === $dataRow ||
                             'wpstg_existing_clones' === $dataRow ||
@@ -549,6 +572,14 @@ class SearchReplace extends JobExecutable {
             } elseif( is_object( $data ) ) {
                 $tmp   = $data;
                 $props = get_object_vars( $data );
+
+                // Do not continue if class contains __PHP_Incomplete_Class_Name
+                if( !empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
+                    return $data;
+                    
+                }
+
+                // Do a search & replace
                 foreach ( $props as $key => $value ) {
                     if( $key === '' || ord( $key[0] ) === 0 ) {
                         continue;
@@ -558,6 +589,7 @@ class SearchReplace extends JobExecutable {
 
                 $data = $tmp;
                 unset( $tmp );
+                unset( $props );
             } else {
                 if( is_string( $data ) ) {
                     if( !empty( $from ) && !empty( $to ) ) {
