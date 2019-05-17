@@ -545,24 +545,21 @@ class SearchReplace extends JobExecutable {
             } elseif( is_object( $data ) ) {
                 $props = get_object_vars( $data );
 
-                // Do not continue if class contains __PHP_Incomplete_Class_Name
-                if( !empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
-                    unset( $props );
-                    return $data;
-                }
-
                 // Do a search & replace                
-                $tmp = $data;
-                foreach ( $props as $key => $value ) {
-                    if( $key === '' || ord( $key[0] ) === 0 ) {
-                        continue;
+                if( empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
+                    $tmp = $data;
+                    foreach ( $props as $key => $value ) {
+                        if( $key === '' || ord( $key[0] ) === 0 ) {
+                            continue;
+                        }
+                        $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
                     }
-                    $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+                    $data = $tmp;
+                    $tmp   = '';
+                    $props = '';
+                    unset( $tmp );
+                    unset( $props );
                 }
-
-                $data = $tmp;
-                unset( $tmp );
-                unset( $props );
             } else {
                 if( is_string( $data ) ) {
                     if( !empty( $from ) && !empty( $to ) ) {
