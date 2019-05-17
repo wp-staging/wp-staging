@@ -46,6 +46,8 @@ class Finish extends Job {
         );
 
         //$this->flush();
+        do_action('wpstg_cloning_complete');
+
 
         return ( object ) $return;
     }
@@ -75,6 +77,7 @@ class Finish extends Job {
         if( isset( $this->options->existingClones[$this->options->clone] ) ) {
             $this->options->existingClones[$this->options->clone]['datetime'] = time();
             $this->options->existingClones[$this->options->clone]['status'] = 'finished';
+            $this->options->existingClones[$this->options->clone]['prefix'] = $this->options->prefix;
             update_option( "wpstg_existing_clones_beta", $this->options->existingClones );
             $this->log( "Finish: The job finished!" );
             return true;
