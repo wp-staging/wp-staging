@@ -246,15 +246,16 @@
 }
 
 .wpstg-clone {
-    border: 3px solid #ffffff;
+    border: 5px solid #ffffff;
     margin-bottom: 5px;
     padding: 5px 10px;
     width: 400px;
     position: relative;
     overflow: hidden;
     transition: border-color .2s ease-in-out;
-    background-color: #DDDDDD;
+    background-color: #25a1f0;
 }
+
 
 .wpstg-clone.active {
     border-color: #1d94cf;;
@@ -266,8 +267,13 @@
     max-width: 130px;
     text-decoration: none;
     font-weight: bold;
-    color:#0285AE;
+    color:white;
 }
+.wpstg-clone-title:hover{
+    color:#f1f1f1;
+}
+
+
 
 .wpstg-clone-action {
     background: #ffffff;
@@ -484,6 +490,20 @@
 #wpstg-clone-path.wpstg-error-input {
     border: 1px solid #ff4235;
     box-shadow: 0 0 2px rgba(255, 66, 53, .8);
+}
+
+#wpstg-new-clone {
+    background: #25a1f0;
+    border-color: #2188c9;
+    /*box-shadow: inset 0 2px 0 #006799;*/
+    background-color: #25a1f0;
+}
+#wpstg-new-clone:hover {
+    background: #259be6;
+    border-color: #2188c9;
+    /*border-width: 2px;*/
+    /*box-shadow: inset 0 2px 0 #006799;*/
+    background-color: #259be6;
 }
 
 #wpstg-clone-path {
@@ -819,7 +839,7 @@
 .wpstg-staging-info {
     clear:both;
     float: left;
-    color:grey;
+    color:white;
     font-size: 12px;
 }
 
@@ -864,6 +884,32 @@
     outline: 0;
     transition: background-color .1s ease-in;
     text-decoration: none;
+}
+
+.wpstg-blue-primary {
+    display: inline-block;
+    text-decoration: none;
+    font-size: 13px;
+    line-height: 26px;
+    height: 28px;
+    margin: 0;
+    padding: 0 10px 1px;
+    cursor: pointer;
+    border-width: 1px;
+    border-style: solid;
+    -webkit-appearance: none;
+    border-radius: 3px;
+    white-space: nowrap;
+    box-sizing: border-box;
+    background: #25a1f0;
+    border-color: #2188c9;
+    /*box-shadow: 0 1px 0 #006799;*/
+    color: #fff;
+    text-decoration: none;
+    text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799;
+}
+.wpstg-blue-primary:hover {
+  background-color: #259be6;
 }
 
 
