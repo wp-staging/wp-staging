@@ -79,8 +79,30 @@ class Upgrade {
         $this->upgrade2_1_2();
         $this->upgrade2_2_0();
         $this->upgrade2_4_4();
+        $this->upgrade2_5_9();
 
         $this->setVersion();
+    }
+
+    /**
+     * Fix array keys of staging sites
+     */
+    private function upgrade2_5_9() {
+        // Previous version lower than 2.5.9
+        if( version_compare( $this->previousVersion, '2.5.9', '<' ) ) {
+
+            // Current options
+            $sites = get_option( "wpstg_existing_clones_beta", array() );
+
+            $new = array();
+
+            // Fix keys. Replace white spaces with dash character
+            foreach ( $sites as $oldKey => $site ) {
+                $key       = preg_replace( "#\W+#", '-', strtolower( $oldKey ) );
+                $new[$key] = $sites[$oldKey];
+            }
+            update_option( "wpstg_existing_clones_beta", $new );
+        }
     }
 
     private function upgrade2_4_4() {
