@@ -38,13 +38,14 @@ class Updating extends Job {
 
         // Generate Options
         // Clone
-        $this->options->clone               = $_POST["cloneID"];
-        $this->options->cloneDirectoryName  = preg_replace( "#\W+#", '-', strtolower( $this->options->clone ) );
-        $this->options->cloneNumber         = 1;
-        $this->options->includedDirectories = array();
-        $this->options->excludedDirectories = array();
-        $this->options->extraDirectories    = array();
-        $this->options->excludedFiles       = array(
+        //$this->options->clone                 = $_POST["cloneID"];
+        $this->options->clone                 = preg_replace( "#\W+#", '-', strtolower( $_POST["cloneID"] ) );
+        $this->options->cloneDirectoryName    = preg_replace( "#\W+#", '-', strtolower( $this->options->clone ) );
+        $this->options->cloneNumber           = 1;
+        $this->options->includedDirectories   = array();
+        $this->options->excludedDirectories   = array();
+        $this->options->extraDirectories      = array();
+        $this->options->excludedFiles         = array(
             '.htaccess',
             '.DS_Store',
             '.git',
