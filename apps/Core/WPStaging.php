@@ -44,7 +44,7 @@ final class WPStaging {
     /**
      * Compatible WP Version
      */
-    const WP_COMPATIBLE = "5.2.0";
+    const WP_COMPATIBLE = "5.2.1";
 
     public $wpPath;
 

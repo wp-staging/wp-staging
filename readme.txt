@@ -152,13 +152,15 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.5.9 =
+* New: Update for WP 5.2.1
 * New: Better corporate identity and more friendly UI colors for staging sites listings and button
 * New: Better warning notices before updating process is executed
 * New: Add tooltips for explaining navigation buttons
 * New: Check if UPLOAD constant is defined and use this value for uploads folder destination
 * Fix: Do not search & replace through "__PHP_Incomplete_Class_Name" definitions
 * Fix: Prevent wordfence firewall rule interrupting the clone deletion method
-* Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way 
+* Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way
+* Fix: Strip whitespaces in cloning site internal names
 
 = 2.5.8 =
 * Fix: Remove admin notice that wp staging is not compatible with latest wp version
