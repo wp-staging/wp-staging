@@ -33,7 +33,8 @@ class Cloning extends Job {
 
         // Generate Options
         // Clone
-        $this->options->clone                 = $_POST["cloneID"];
+        //$this->options->clone                 = $_POST["cloneID"];
+        $this->options->clone                 = preg_replace( "#\W+#", '-', strtolower( $_POST["cloneID"] ) );
         $this->options->cloneDirectoryName    = preg_replace( "#\W+#", '-', strtolower( $this->options->clone ) );
         $this->options->cloneNumber           = 1;
         $this->options->prefix                = $this->setStagingPrefix();
