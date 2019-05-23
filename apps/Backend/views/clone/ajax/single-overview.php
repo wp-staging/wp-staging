@@ -1,4 +1,11 @@
 <div id="wpstg-step-1">
+    <!--
+    <?php //if (  wpstg_is_stagingsite()) {?>
+    <h3 style="color:red;"><?php //echo __("This is your staging website!", "wp-staging") ?></h3>
+    <p><?php //echo __("You can still clone it. <br>For example, to push another clone to this site for testing purposes.", "wp-staging"); ?> </p>
+    <p><?php //echo __("Go to the Production website > WP Staging > Sites if you want to push this site to live.","wp-staging"); ?></p>
+    <?php //} ?>
+    //-->
     <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn wpstg-blue-primary wpstg-button" data-action="wpstg_scanning">
         <?php echo __( "Create new staging site", "wp-staging" ) ?>
     </button>
@@ -17,7 +24,6 @@
                 <?php $urlLogin = $data["url"]; ?>
 
                 <a href="<?php echo $urlLogin ?>" class="wpstg-clone-title" target="_blank">
-                    <?php //echo $name?>
                     <?php echo $data["directoryName"]; ?>
                 </a>
 
