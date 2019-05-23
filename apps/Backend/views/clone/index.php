@@ -8,13 +8,15 @@
     <?php
     do_action( "wpstg_notifications" );
 
-    // Multi site
-    if( is_multisite() ) {
-       require_once($this->path . "views/clone/multi-site/index.php");
+    if( wpstg_is_stagingsite() ) {
+        // Staging site
+        require_once($this->path . "views/clone/staging-site/index.php");
+    } elseif( is_multisite() ) {
+        require_once($this->path . "views/clone/multi-site/index.php");
     }
     // Single site
     else {
-       require_once($this->path . "views/clone/single-site/index.php");
+        require_once($this->path . "views/clone/single-site/index.php");
     }
 
     // Footer
