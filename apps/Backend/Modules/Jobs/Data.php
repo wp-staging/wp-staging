@@ -205,8 +205,8 @@ class Data extends JobExecutable {
         if( $this->isValidWpConfig( $source ) ) {
             // Copy it to staging site
             if( $this->copy( $source, $destination ) ) {
-            return true;
-        }
+                return true;
+            }
         }
 
         // No valid wp-config.php found so let's copy wp stagings default wp-config.php to staging site
@@ -247,8 +247,8 @@ class Data extends JobExecutable {
             return false;
         }
 
-            return true;
-        }
+        return true;
+    }
 
     /**
      * Make sure wp-config.php contains correct db credentials
@@ -411,9 +411,9 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         //}
         // All good
         if( $insert ) {
-        $this->log( "Preparing Data Step2: Successfull", Logger::TYPE_INFO );
-        return true;
-    }
+            $this->log( "Preparing Data Step2: Successfull", Logger::TYPE_INFO );
+            return true;
+        }
 
         $this->log( "Preparing Data Step2: Failed to update wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
         return false;
@@ -751,7 +751,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
 
         if( false === @file_put_contents( $path, $content ) ) {
-            $this->log( "Preparing Data Step11: Failed to update WP_SITEURL to " . $this->getStagingSiteUrl(). " Can't save contents", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data Step11: Failed to update WP_SITEURL to " . $this->getStagingSiteUrl() . " Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
         $this->Log( "Preparing Data Step11: Finished successfully" );
@@ -1080,6 +1080,40 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
+     * Empty wpstg_existing_clones_beta on the staging site
+     * @return bool
+     */
+//    protected function step18() {
+//
+//        $this->log( "Preparing Data Step18: Clean up list of staging sites" );
+//
+//        if( false === $this->isTable( $this->prefix . 'options' ) ) {
+//            return true;
+//        }
+//
+//        // Skip - Table is not selected or updated
+//        if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+//            $this->log( "Preparing Data Step18: Skipping" );
+//            return true;
+//        }
+//
+//        $result = $this->db->query(
+//                $this->db->prepare(
+//                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_existing_clones_beta'", 'a:0:{}'
+//                )
+//        );
+//
+//        // All good
+//        if( false === $result ) {
+//            $this->log( "Preparing Data Step18: Can not update listing of staging sites.", Logger::TYPE_WARNING );
+//            return true;
+//        }
+//
+//        $this->Log( "Preparing Data Step18: Finished successfully" );
+//        return true;
+//    }
+
+    /**
      * Create a robots.txt in path of the staging site
      */
 //    protected function step18() {
@@ -1103,15 +1137,15 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         // Get absolute custom upload dir 
         $uploads = wp_upload_dir();
-        
+
         // Get absolute upload dir from ABSPATH
         $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
 
         // Get absolute custom wp-content dir
         $wpContentDir = trailingslashit( WP_CONTENT_DIR );
-        
+
         // Do nothing if uploads path is identical to wp-content dir
-        if ($uploadsAbsPath == $wpContentDir){
+        if( $uploadsAbsPath == $wpContentDir ) {
             return false;
         }
 
