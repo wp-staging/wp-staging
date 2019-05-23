@@ -1,7 +1,7 @@
 <div class="wpstg-notice-alert wpstg-failed">
     <h4 style="margin:0">
         <?php
-        _e("Attention: Check carefully if the database tables and files from the selection below are safe to delete and do not belong to your live site!", "wp-staging")
+        _e("Note: The selected tables below will be deleted. <br/>Verify that before you delete them.", "wp-staging")
         ?>
     </h4>
 
