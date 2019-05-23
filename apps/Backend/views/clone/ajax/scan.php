@@ -128,6 +128,9 @@
 
 </div>
 
+<strong>Important:</strong><a href="#" id="wpstg-check-space"><?php _e( 'Check required disk space', 'wp-staging' ); ?></a>
+<p></p>
+
 <button type="button" class="wpstg-prev-step-link wpstg-link-btn wpstg-blue-primary wpstg-button">
     <?php _e( "Back", "wp-staging" ) ?>
 </button>
@@ -145,5 +148,3 @@ if( null !== $options->current ) {
     echo '<button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn wpstg-blue-primary wpstg-button" data-action="' . $action . '">' . $label . '</button>';
 }
 ?>
-
-<a href="#" id="wpstg-check-space"><?php _e( 'Check Free Disk Space', 'wp-staging' ); ?></a>

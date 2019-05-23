@@ -213,20 +213,20 @@ class Scan extends Job {
             return null;
         }
 
-        $freeSpace = @disk_free_space( \WPStaging\WPStaging::getWPpath() );
-
-        if( false === $freeSpace ) {
-            $data = array(
-                'freespace' => false,
-                'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( \WPStaging\WPStaging::getWPpath() ) )
-            );
-            echo json_encode( $data );
-            die();
-        }
+//        $freeSpace = @disk_free_space( \WPStaging\WPStaging::getWPpath() );
+//
+//        if( false === $freeSpace ) {
+//            $data = array(
+//                'freespace' => false,
+//                'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( \WPStaging\WPStaging::getWPpath() ) )
+//            );
+//            echo json_encode( $data );
+//            die();
+//        }
 
 
         $data = array(
-            'freespace' => $this->formatSize( $freeSpace ),
+            //'freespace' => $this->formatSize( $freeSpace ),
             'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( \WPStaging\WPStaging::getWPpath() ) )
         );
 

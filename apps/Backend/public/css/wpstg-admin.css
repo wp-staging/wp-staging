@@ -517,8 +517,9 @@
 
 #wpstg-clone-id-error {
     display: block;
-    text-align: right;
-    margin-right: 90px;
+    background-color:#f0f8ff;
+    padding:10px;
+    margin: 20px;
 }
 
 #wpstg-start-cloning + .wpstg-error-msg {
@@ -557,13 +558,13 @@
 }
 
 .wpstg-tabs-wrapper {
-    border: 1px solid #ddd;
+    /*border: 1px solid #ddd;
     border-right: none;
-    border-left: none;
+    border-left: none;*/
 }
 
 .wpstg-tab-section {
-    border: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
     border-right: none;
     border-left: none;
     display: none;
@@ -577,7 +578,7 @@
 }
 
 .wpstg-tab-header {
-    border: 1px solid #ddd;
+    border-bottom: 1px solid #ddd;
     border-right: none;
     border-left: none;
     color: #444;
