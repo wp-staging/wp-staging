@@ -157,6 +157,8 @@ https://wp-staging.com
 * New: Better warning notices before updating process is executed
 * New: Add tooltips for explaining navigation buttons
 * New: Check if UPLOAD constant is defined and use this value for uploads folder destination
+* New: Show notice if user tries to clone a staging website.
+* Fix: Staging sites listing entries appeared on the cloned website.
 * Fix: Do not search & replace through "__PHP_Incomplete_Class_Name" definitions
 * Fix: Prevent wordfence firewall rule interrupting the clone deletion method
 * Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way

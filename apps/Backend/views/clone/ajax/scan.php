@@ -23,7 +23,7 @@
         <h4 style="margin:0">
             <?php
             echo __(
-                    "Select the tables you like to clone. All tables beginning with prefix '{$scan->prefix}' have been selected already.", "wp-staging"
+                    "Select the tables to copy. Tables beginning with the prefix '{$scan->prefix}' have already been selected.", "wp-staging"
             );
             ?>
             <p></p>
