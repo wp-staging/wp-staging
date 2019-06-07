@@ -11,7 +11,6 @@ use WPStaging\WPStaging;
 use WPStaging\Utils\Logger;
 use WPStaging\Utils\Strings;
 use WPStaging\Iterators\RecursiveDirectoryIterator;
-use WPStaging\Iterators\RecursiveFilterNewLine;
 use WPStaging\Iterators\RecursiveFilterExclude;
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
 
@@ -127,8 +126,8 @@ class Directories extends JobExecutable {
        */
       $excludePaths = array(
           'cache',
-          'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
-          'uploads' . DIRECTORY_SEPARATOR . 'sites'
+          'plugins/wps-hide-login',
+          'uploads/sites'
       );
 
       /**
@@ -136,30 +135,25 @@ class Directories extends JobExecutable {
        */
       $directory = array();
       foreach ( $this->options->excludedDirectories as $dir ) {
-         if( strpos( $dir, WP_CONTENT_DIR ) !== false ) {
-            $directory[] = ltrim( str_replace( WP_CONTENT_DIR, '', $dir ), '/' );
+          // Windows compatibility fix
+         $dir = wpstg_replace_windows_directory_separator($dir);
+         $wpContentDir = wpstg_replace_windows_directory_separator(WP_CONTENT_DIR);
+         
+         if( strpos( $dir, $wpContentDir ) !== false ) {
+            $directory[] = ltrim( str_replace( $wpContentDir, '', $dir ), '/\\' );
          }
       }
 
       $excludePaths = array_merge( $excludePaths, $directory );
-
-//      $excludeFolders = array(
-//          'cache',
-//          'node_modules',
-//          'nbproject',
-//          'wps-hide-login'
-//      );
 
       try {
 
          // Iterate over content directory
          $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( WP_CONTENT_DIR );
 
-         // Exclude new line file names
-         $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
-
          // Exclude sites, uploads, plugins or themes
          $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, apply_filters( 'wpstg_clone_mu_excl_folders', $excludePaths ) );
+         
          // Recursively iterate over content directory
          $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -210,9 +204,6 @@ class Directories extends JobExecutable {
          // Iterate over wp-admin directory
          $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
 
-         // Exclude new line file names
-         $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
-
          // Recursively iterate over wp-includes directory
          $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -261,9 +252,6 @@ class Directories extends JobExecutable {
 
          // Iterate over wp-admin directory
          $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
-
-         // Exclude new line file names
-         $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
          // Recursively iterate over content directory
          $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
@@ -328,8 +316,8 @@ class Directories extends JobExecutable {
        */
       $excludePaths = array(
           'cache',
-          'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
-          'uploads' . DIRECTORY_SEPARATOR . 'sites'
+          'plugins/wps-hide-login',
+          'uploads/sites'
       );
 
       /**
@@ -337,6 +325,8 @@ class Directories extends JobExecutable {
        */
       $directory = array();
       foreach ( $this->options->excludedDirectories as $dir ) {
+         $path = wpstg_replace_windows_directory_separator($path);
+         $dir = wpstg_replace_windows_directory_separator($dir);
          if( strpos( $dir, $path ) !== false ) {
             $directory[] = ltrim( str_replace( $path, '', $dir ), '/' );
          }
@@ -348,9 +338,6 @@ class Directories extends JobExecutable {
 
          // Iterate over content directory
          $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( $path );
-
-         // Exclude new line file names
-         $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
          // Exclude sites, uploads, plugins or themes
          $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, $excludePaths );
@@ -433,20 +420,6 @@ class Directories extends JobExecutable {
 
          // Iterate over extra directory
          $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( $folder );
-
-         // Exclude new line file names
-         $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
-
-         // Exclude wp core folders 
-//         $exclude = array('wp-includes', 
-//                          'wp-admin', 
-//                          'wp-content');
-//         
-//         $excludeMore = array();
-//          foreach ($this->options->excludedDirectories as $key => $value){
-//             $excludeMore[] = $this->getLastElemAfterString('/', $value);
-//          }
-         //$exclude = array_merge($exclude, $excludeMore); 
 
          $exclude = array();
 
