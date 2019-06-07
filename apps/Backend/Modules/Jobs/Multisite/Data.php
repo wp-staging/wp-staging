@@ -799,7 +799,7 @@ class Data extends JobExecutable {
             return false;
         }
 
-        $this->log( "Data Crunching Step 14: Successfull!" );
+        $this->log( "Data Crunching Step 14: Successful!" );
         return true;
     }
 
