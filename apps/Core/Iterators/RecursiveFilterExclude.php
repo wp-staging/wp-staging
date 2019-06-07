@@ -15,16 +15,18 @@ class RecursiveFilterExclude extends \RecursiveFilterIterator {
 
     public function accept() {
         
+        $subPath = $this->getInnerIterator()->getSubPathname();
+        
         //  Path contains new line character on linux
-        if(strpos( $this->getInnerIterator()->getSubPathname(), "\n" ) !== false)
+        if(strpos( $subPath, "\n" ) !== false)
                 return false;
         
         // Path contains new line character on Windows
-        if(strpos( $this->getInnerIterator()->getSubPathname(), "\r" ) !== false)
+        if(strpos( $subPath, "\r" ) !== false)
                 return false;
-        
+                
         // Part of the path is excluded
-        if (in_array( $this->getInnerIterator()->getSubPathname(), $this->exclude ))
+        if (in_array( wpstg_replace_windows_directory_separator($subPath), $this->exclude ))
                 return false;
         
         return true;
