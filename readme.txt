@@ -151,6 +151,12 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.0 =
+* Fix: Excluded folders under wp-content level are not take into account on microsoft IIS servers
+* New: Performance improvement for directory iterator using less server ressources
+* Fix: Error conditions in class Data does not compare type strict (== vs. ==)  resulting in interruption of clone process
+
+
 = 2.5.9 =
 * New: Update for WP 5.2.1
 * New: Better corporate identity and more friendly UI colors for staging sites listings and button
