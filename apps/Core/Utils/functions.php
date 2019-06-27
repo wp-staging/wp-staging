@@ -6,11 +6,12 @@
  * @return int
  */
 function wpstg_get_permissions_for_directory() {
-    if( defined( 'FS_CHMOD_DIR' ) ) {
-        return FS_CHMOD_DIR;
+    $octal = 0755;
+    if (defined('FS_CHMOD_DIR')) {
+        $octal = FS_CHMOD_DIR;
     }
 
-    return 0755;
+    return apply_filters('wpstg_folder_permission', $octal);
 }
 
 /**
