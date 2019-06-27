@@ -244,11 +244,3 @@ https://wp-staging.com
 
 
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
-
-== Upgrade Notice ==
-
-= 2.5.9 =
-* New: Increase the cloning/pushing speed by benchmarking and automatic tuning the maximum possible performance settings
-* New: Better warning notices before updating process is executed
-* Fix: Prevent wordfence firewall rule interupting the clone deletion method
-* Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way 
