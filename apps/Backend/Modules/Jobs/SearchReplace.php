@@ -339,7 +339,7 @@ class SearchReplace extends JobExecutable {
 
         //Make sure value is never smaller than 1 or greater than 20000
         //$end = $this->settings->querySRLimit == '0' || empty( $this->settings->querySRLimit ) ? 1 : $this->settings->querySRLimit > 20000 ? 20000 : $this->settings->querySRLimit;
-        $end         = $this->settings->querySRLimit;
+        $end = $this->settings->querySRLimit;
 
         // Grab the content of the current table.
         $data = $this->db->get_results( "SELECT * FROM $table LIMIT $start, $end", ARRAY_A );
@@ -368,7 +368,6 @@ class SearchReplace extends JobExecutable {
 //            $this->settings->querySRLimit = $end;
 //            update_option( 'wpstg_settings', $this->settings );
 //        }
-
         // Filter certain rows (of other plugins)
         $filter = array(
             'Admin_custome_login_Slidshow',
@@ -510,8 +509,6 @@ class SearchReplace extends JobExecutable {
         return true;
     }
 
-
-
     /**
      * Adapted from interconnect/it's search/replace script.
      *
@@ -531,6 +528,10 @@ class SearchReplace extends JobExecutable {
      */
     private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialized = false, $case_insensitive = false ) {
         try {
+            // PDO instances can not be serialized or unserialized
+            if( is_serialized( $data ) && strpos( $data, 'O:3:"PDO":0:' ) !== false ) {
+                return $data;
+            }
             // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
             if( is_serialized( $data ) && ( $unserialized = @unserialize( $data ) ) !== false ) {
                 $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
@@ -554,7 +555,7 @@ class SearchReplace extends JobExecutable {
                         }
                         $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
                     }
-                    $data = $tmp;
+                    $data  = $tmp;
                     $tmp   = '';
                     $props = '';
                     unset( $tmp );

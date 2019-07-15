@@ -151,14 +151,15 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.1 =
+* Fix: PDO instances can not be serialized or unserialized
+
 = 2.6.0 =
 * New: Compatible up to WordPress 5.2.2
 * New: Performance improvement for directory iterator using less server ressources
 * New: Add filter wpstg_folder_permission to set a custom folder permission like 0755, allows to overwrite FS_CHMOD_DIR if it has been defined.
 * Fix: Error conditions in class Data does not compare type strict (== vs. ==)  resulting in interruption of clone process
 * Fix: Excluded folders under wp-content level are not take into account on microsoft IIS servers
-
-
 
 = 2.5.9 =
 * New: Update for WP 5.2.1
