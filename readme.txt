@@ -152,6 +152,8 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.6.1 =
+* New: Improve styling of login form. Thanks to Andy Kennan (Screaming Frog)
+* New: Add 'password lost' button to login form
 * Fix: PDO instances can not be serialized or unserialized
 
 = 2.6.0 =

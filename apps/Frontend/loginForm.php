@@ -51,7 +51,7 @@ class loginForm {
             do_action( 'wp_login', $_POST['wpstg-username'], get_userdata( $user_data->ID ) );
 
             $redirect_to = get_site_url() . '/wp-admin/';
-            
+
             if( !empty( $_POST['redirect_to'] ) ) {
                 $redirectTo = $_POST['redirect_to'];
             }
@@ -79,144 +79,148 @@ class loginForm {
                 <meta name="viewport" content="width=device-width">
                     <meta name='robots' content='noindex,follow' />
                     <title>WordPress &rsaquo; You need to login to access that page</title>
+
                     <style type="text/css">
+
+                        * {
+                            -webkit-box-sizing: border-box;
+                            box-sizing: border-box;
+                        }
+
                         html {
                             background: #f1f1f1;
                         }
+
                         body {
-                            background: #fff;
                             color: #444;
                             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
-                            margin: 2em auto;
-                            padding: 1em 2em;
-                            max-width: 700px;
+                            margin: 0;
+                        }
+
+                        .wp-staging-login {
+                            padding: 1rem;
+                        }
+
+                        .wp-staging-form {
                             -webkit-box-shadow: 0 1px 3px rgba(0,0,0,0.13);
                             box-shadow: 0 1px 3px rgba(0,0,0,0.13);
+                            max-width: 500px;
+                            width: 100%;
+                            margin: 3rem auto;
+                            background: #fff;
+                            padding: 1rem;
+                            overflow: hidden;
                         }
-                        h1 {
-                            border-bottom: 1px solid #dadada;
-                            clear: both;
-                            color: #666;
-                            font-size: 24px;
-                            margin: 30px 0 0 0;
-                            padding: 0;
-                            padding-bottom: 7px;
-                        }
-                        #error-page {
-                            margin-top: 50px;
-                        }
-                        #error-page p {
+
+                        .form-control {
+                            width: 100%;
+                            border: 1px solid #ced4da;
+                            border-radius: .25rem;
+                            padding: 0.75rem 1rem;
                             font-size: 14px;
-                            line-height: 1.5;
-                            margin: 25px 0 20px;
                         }
-                        #error-page code {
-                            font-family: Consolas, Monaco, monospace;
+
+                        .form-control:focus {
+                            outline: 0;
+                            -webkit-box-shadow: 0 0 0 0.1rem rgba(221,221,221,.35);
+                            box-shadow: 0 0 0 0.1rem rgba(221,221,221,.35);
                         }
-                        ul li {
-                            margin-bottom: 10px;
-                            font-size: 14px ;
+
+                        .form-group {
+                            margin: 0 0 1em;
                         }
-                        a {
-                            color: #0073aa;
+
+                        .form-group label {
+                            margin: 0 0 0.5em;
+                            display: block;
                         }
-                        a:hover,
-                        a:active {
-                            color: #00a0d2;
+
+                        .login-remember input {
+                            margin-top: 0;
+                            vertical-align: middle;
                         }
-                        a:focus {
-                            color: #124964;
-                            -webkit-box-shadow:
-                                0 0 0 1px #5b9dd9,
-                                0 0 2px 1px rgba(30, 140, 190, .8);
-                            box-shadow:
-                                0 0 0 1px #5b9dd9,
-                                0 0 2px 1px rgba(30, 140, 190, .8);
-                            outline: none;
-                        }
-                        .button {
+
+                        .btn {
                             background: #f7f7f7;
                             border: 1px solid #ccc;
                             color: #555;
                             display: inline-block;
                             text-decoration: none;
-                            font-size: 13px;
-                            line-height: 26px;
-                            height: 28px;
+                            font-size: 14px;
                             margin: 0;
-                            padding: 0 10px 1px;
+                            padding: 0.65rem 1.1rem;
                             cursor: pointer;
                             -webkit-border-radius: 3px;
                             -webkit-appearance: none;
                             border-radius: 3px;
                             white-space: nowrap;
-                            -webkit-box-sizing: border-box;
-                            -moz-box-sizing:    border-box;
-                            box-sizing:         border-box;
-
-                            -webkit-box-shadow: 0 1px 0 #ccc;
-                            box-shadow: 0 1px 0 #ccc;
                             vertical-align: top;
+                            -webkit-transition: -webkit-box-shadow 0.2s ease;
+                            transition: -webkit-box-shadow 0.2s ease;
+                            -o-transition: box-shadow 0.2s ease;
+                            transition: box-shadow 0.2s ease;
+                            transition: box-shadow 0.2s ease, -webkit-box-shadow 0.2s ease;
                         }
 
-                        .button.button-large {
-                            height: 30px;
-                            line-height: 28px;
-                            padding: 0 12px 2px;
+                        .btn:hover {
+                            -webkit-box-shadow: 0 0 0 0.1rem rgba(221,221,221,.35);
+                            box-shadow: 0 0 0 0.1rem rgba(221,221,221,.35);
                         }
 
-                        .button:hover,
-                        .button:focus {
-                            background: #fafafa;
-                            border-color: #999;
-                            color: #23282d;
+                        #error-page {
+                            margin-top: 50px;
                         }
 
-                        .button:focus  {
-                            border-color: #5b9dd9;
-                            -webkit-box-shadow: 0 0 3px rgba( 0, 115, 170, .8 );
-                            box-shadow: 0 0 3px rgba( 0, 115, 170, .8 );
-                            outline: none;
+                        #error-page p {
+                            font-size: 14px;
+                            line-height: 1.5;
+                            margin: 25px 0 20px;
                         }
 
-                        .button:active {
-                            background: #eee;
-                            border-color: #999;
-                            -webkit-box-shadow: inset 0 2px 5px -3px rgba( 0, 0, 0, 0.5 );
-                            box-shadow: inset 0 2px 5px -3px rgba( 0, 0, 0, 0.5 );
-                            -webkit-transform: translateY(1px);
-                            -ms-transform: translateY(1px);
-                            transform: translateY(1px);
+                        #error-page code {
+                            font-family: Consolas, Monaco, monospace;
                         }
 
+                        .error-msg {
+                            -webkit-animation: slideIn 0.3s ease;
+                            animation: slideIn 0.3s ease;
+                            color: #ff4c4c;
+                        }
+                        
+                        .password-lost{
+                            padding-top:20px;
+                        }
+
+                        @-webkit-keyframes slideIn {
+                            0% {
+                                -webkit-transform: translateX(-100%);
+                                transform: translateX(-100%);
+                            }
+                            100% {
+                                -webkit-transform: translateX(0);
+                                transform: translateX(0);
+                            }
+                        }
+
+                        @keyframes slideIn {
+                            0% {
+                                -webkit-transform: translateX(-100%);
+                                transform: translateX(-100%);
+                            }
+                            100% {
+                                -webkit-transform: translateX(0);
+                                transform: translateX(0);
+                            }
+                        }
                     </style>
             </head>
             <?php
         }
 
         /**
-         * Render login form by using native wp function wp_login_form
-         * return string
+         * Add footer
+         * 
          */
-//       private function getLoginForm() {
-//          $this->getHeader();
-//          echo '<body id="error-page">';
-//          echo __( 'Access denied. Login to access this site', 'wp-staging' );
-//
-//          $args = array(
-//              'redirect' => admin_url(),
-//              'redirect' => admin_url(),
-//              'form_id' => 'wpstg-loginform',
-//              'label_username' => __( 'Username', 'wp-staging' ),
-//              'label_password' => __( 'Password', 'wp-staging' ),
-//              'label_remember' => __( 'Remember Me' ),
-//              'label_log_in' => __( 'Log In Staging Site' ),
-//              'remember' => true
-//          );
-//          wp_login_form( $args );
-//          $this->getFooter();
-//       }
-
         private function getFooter() {
             echo '</html>';
         }
@@ -259,7 +263,7 @@ class loginForm {
                 // Default 'redirect' value takes the user back to the request URI.
                 'redirect'       => ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
                 'form_id'        => 'loginform',
-                'label_username' => __( 'Username or Email Address' ),
+                'label_username' => __( 'Username' ),
                 'label_password' => __( 'Password' ),
                 'label_remember' => __( 'Remember Me' ),
                 'label_log_in'   => __( 'Log In' ),
@@ -276,26 +280,31 @@ class loginForm {
             $args = empty( $this->args ) ? $arguments : $this->args;
 
             $form = '
-		<form name="' . $args['form_id'] . '" id="' . $args['form_id'] . '" action="" method="post">
-			<p class="login-username">
-				<label for="' . esc_attr( $args['id_username'] ) . '">' . esc_html( $args['label_username'] ) . '</label>
-				<input type="text" name="wpstg-username" id="' . esc_attr( $args['id_username'] ) . '" class="input" value="' . esc_attr( $args['value_username'] ) . '" size="20" />
-			</p>
-			<p class="login-password">
-				<label for="' . esc_attr( $args['id_password'] ) . '">' . esc_html( $args['label_password'] ) . '</label>
-				<input type="password" name="wpstg-pass" id="' . esc_attr( $args['id_password'] ) . '" class="input" value="" size="20" />
-			</p>
-			' . ( $args['remember'] ? '<p class="login-remember"><label><input name="rememberme" type="checkbox" id="' . esc_attr( $args['id_remember'] ) . '" value="forever"' . ( $args['value_remember'] ? ' checked="checked"' : '' ) . ' /> ' . esc_html( $args['label_remember'] ) . '</label></p>' : '' ) . '
-			<p class="login-submit">
-				<input type="submit" name="wpstg-submit" id="' . esc_attr( $args['id_submit'] ) . '" class="button button-primary" value="' . esc_attr( $args['label_log_in'] ) . '" />
-				<input type="hidden" name="redirect_to" value="' . esc_url( $args['redirect'] ) . '" />
-			</p>
-                     <p>
-                     ' . $this->error . '
-                     </p>
-                     
-			
-		</form>';
+        <main class="wp-staging-login" >
+            <form class="wp-staging-form" name="' . $args['form_id'] . '" id="' . $args['form_id'] . '" action="" method="post">
+                <div class="form-group login-username">
+                    <label for="' . esc_attr( $args['id_username'] ) . '">' . esc_html( $args['label_username'] ) . '</label>
+                    <input type="text" name="wpstg-username" id="' . esc_attr( $args['id_username'] ) . '" class="input form-control" value="' . esc_attr( $args['value_username'] ) . '" size="20" />
+                </div>
+                <div class=" form-group login-password">
+                    <label for="' . esc_attr( $args['id_password'] ) . '">' . esc_html( $args['label_password'] ) . '</label>
+                    <input type="password" name="wpstg-pass" id="' . esc_attr( $args['id_password'] ) . '" class="input form-control" value="" size="20" />
+                </div>
+                ' . ( $args['remember'] ? '
+                <div class="form-group login-remember"><label><input name="rememberme" type="checkbox" id="' . esc_attr( $args['id_remember'] ) . '" value="forever"' . ( $args['value_remember'] ? ' checked="checked"' : '' ) . ' /> <span>' . esc_html( $args['label_remember'] ) . '</span></label></div>
+                ' : '' ) . '
+                <div class="login-submit">
+                    <button type="submit" name="wpstg-submit" id="' . esc_attr( $args['id_submit'] ) . '" class="btn" value="' . esc_attr( $args['label_log_in'] ) . '">Login</button>
+                    <input type="hidden" name="redirect_to" value="' . esc_url( $args['redirect'] ) . '" />
+                </div>
+                <div class="password-lost">
+                    <a href="' . trailingslashit(esc_url( $args['redirect'] )) . 'wp-login.php?action=lostpassword">Lost your password?</a>
+                </div>
+                <p class="error-msg">
+                    ' . $this->error . '
+                </p>
+            </form>
+        </main>';
 
             if( $args['echo'] )
                 echo $form;
