@@ -121,7 +121,7 @@ class Database extends JobExecutable {
         // Make sure prefix of staging site is NEVER identical to prefix of live site! 
         if( $stagingPrefix == $this->db->prefix ) {
             $error = 'Fatal error 7: The new database table prefix ' . $stagingPrefix . ' would be identical to the table prefix of the live site. Please open a support ticket at support@wp-staging.com';
-            $this->returnException($error);
+            $this->returnException( $error );
             wp_die( $error );
         }
         return $stagingPrefix;
@@ -249,7 +249,10 @@ class Database extends JobExecutable {
         }
 
         $this->log( "DB Copy: {$new} already exists, dropping it first" );
+        
+        $this->db->query( "SET FOREIGN_KEY_CHECKS=0" );
         $this->db->query( "DROP TABLE {$new}" );
+        $this->db->query( "SET FOREIGN_KEY_CHECKS=1" );
     }
 
     /**
