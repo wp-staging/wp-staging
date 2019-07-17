@@ -902,7 +902,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         $error = isset( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
 
-        $this->log( "Updating upload_path in {$this->prefix}options. {$error}" );
+        $this->log( "Preparing Data Step13: Updating upload_path in {$this->prefix}options. {$error}" );
 
         $updateOptions = $this->db->query(
                 $this->db->prepare(
