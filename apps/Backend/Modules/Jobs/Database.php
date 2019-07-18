@@ -54,7 +54,8 @@ class Database extends JobExecutable {
      * @return boolean
      */
     private function isFatalError() {
-        $path = trailingslashit( get_home_path() ) . $this->options->cloneDirectoryName;
+        //$path = trailingslashit( get_home_path() ) . $this->options->cloneDirectoryName;
+        $path = trailingslashit($this->options->cloneDir);
         if( isset( $this->options->mainJob ) && $this->options->mainJob !== 'updating' && is_dir( $path ) ) {
             $this->returnException( " Can not continue! Change the name of the clone or delete existing folder. Then try again. Folder already exists: " . $path );
         }
