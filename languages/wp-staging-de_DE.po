@@ -339,19 +339,19 @@ msgstr "Klon Bezeichnung"
 msgid "Attention: Check carefully if these database tables and files are safe to delete and do not belong to your live site!"
 msgstr "Achtung: Überprüfe sorgfältig ob diese Datenbank Tabellen und Dateien sicher gelöscht werden dürfen und nicht zu Deiner Live Seite gehören!"
 
-#: apps/Backend/views/_includes/report-issue.php:26
+#: apps/Backend/views/_main/report-issue.php:26
 msgid "Send Issue"
 msgstr "Abschicken"
 
-#: apps/Backend/views/_includes/report-issue.php:20
+#: apps/Backend/views/_main/report-issue.php:20
 msgid "By submitting, I accept the <a href=\"https://wp-staging.com/privacy-policy/\" target=\"_blank\">Privacy Policy</a> and consent that my email will be stored and processed for the purposes of proving support."
 msgstr "Mit Übertragen akzeptiere ich die  <a href=\"https://wp-staging.com/privacy-policy/\" target=\"_blank\">Datenschutz Vereinbarung</a> und erlaube, dass meine E-Mail Adresse gespeichert und verarbeitet wird um meine Support Anfrage zu beantworten."
 
-#: apps/Backend/views/_includes/report-issue.php:12
+#: apps/Backend/views/_main/report-issue.php:12
 msgid "Optional: Submit the <a href=\"%s\" target=\"_blank\">System Log</a>. This helps us to resolve your technical issues."
 msgstr "Optional: Übertrage das <a href=\"%s\" target=\"_blank\">System Log</a>. Das hilft und Dein technisches Anliegen zu lösen."
 
-#: apps/Backend/views/_includes/messages/staging-directory-permission-problem.php:4
+#: apps/Backend/views/_main/messages/staging-directory-permission-problem.php:4
 msgid ""
 "WP Staging Folder Permission error:</strong>\n"
 "        %1$s is not write and/or readable.\n"
@@ -365,19 +365,19 @@ msgstr ""
 "        Überprüfe ob der Ordner <strong>%1$s</strong> beschreibbar ist vom PHP Benutzer  www-data.\n"
 "        File permissions should be chmod 755 or 777."
 
-#: apps/Backend/views/_includes/messages/rating.php:27
+#: apps/Backend/views/_main/messages/rating.php:27
 msgid "No, not good enough"
 msgstr "Nein, nicht gut genug"
 
-#: apps/Backend/views/_includes/messages/rating.php:22
+#: apps/Backend/views/_main/messages/rating.php:22
 msgid "I already did"
 msgstr "Habe ich schon getan"
 
-#: apps/Backend/views/_includes/messages/rating.php:17
+#: apps/Backend/views/_main/messages/rating.php:17
 msgid "Ok, you deserved it"
 msgstr "Ok, hast Du verdient"
 
-#: apps/Backend/views/_includes/messages/rating.php:5
+#: apps/Backend/views/_main/messages/rating.php:5
 msgid ""
 "P.S. Looking for a way to migrate the staging site database and copy plugins and theme files from staging to live site?<br/>\n"
 "           Try out <a href=\"%1$s\" target=\"_blank\" style=\"color:white;font-weight:bold;\">WP Staging Pro</a>\n"
@@ -387,23 +387,23 @@ msgstr ""
 "Probiere <a href=\"%1$s\" target=\"_blank\" style=\"color:white;font-weight:bold;\">WP Staging Pro</a>\n"
 " aus"
 
-#: apps/Backend/views/_includes/messages/rating.php:2
+#: apps/Backend/views/_main/messages/rating.php:2
 msgid ""
 " Awesome, you've been using <strong>WP Staging </strong> for more than 1 week.\n"
 "        May I ask you to give it a <strong>5-star</strong> rating on Wordpress?"
 msgstr "Toll, Du verwendest <strong>WP Staging</strong> seit mehr als eine Woche. Darf ich Dich bitten eine 5-Sterne Bewertung auf WordPress.org abzugeben?"
 
-#: apps/Backend/views/_includes/header.php:28
+#: apps/Backend/views/_main/header.php:28
 #: apps/Backend/views/settings/main-settings.php:29
 msgid "Share on Facebook"
 msgstr "Teile auf Facebook"
 
-#: apps/Backend/views/_includes/header.php:21
+#: apps/Backend/views/_main/header.php:21
 #: apps/Backend/views/settings/main-settings.php:22
 msgid "Follow @wpstaging"
 msgstr "Folge @wpstaging"
 
-#: apps/Backend/views/_includes/header.php:14
+#: apps/Backend/views/_main/header.php:14
 #: apps/Backend/views/settings/main-settings.php:15
 msgid "Tweet #wpstaging"
 msgstr "Tweet #wpstaging"
@@ -413,12 +413,12 @@ msgid "Start Now"
 msgstr "Jetzt Starten"
 
 #: apps/Backend/Notices/Notices.php:145
-#: apps/Backend/views/_includes/messages/transient.php:7
+#: apps/Backend/views/_main/messages/transient.php:7
 msgid "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging Pro."
 msgstr "WP Staging und WP Staging Pro können nicht beide gleichzeitig aktiv sein. Wir haben WP Staging Pro daher deaktiviert."
 
 #: apps/Backend/Notices/Notices.php:143
-#: apps/Backend/views/_includes/messages/transient.php:6
+#: apps/Backend/views/_main/messages/transient.php:6
 msgid "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging."
 msgstr "WP Staging und WP Staging Pro können nicht beide gleichzeitig aktiv sein. Wir haben WP Staging daher deaktiviert."
 

@@ -46,8 +46,6 @@ final class WPStaging {
      */
     const WP_COMPATIBLE = "5.2.2";
 
-    //public $wpPath;
-
     /**
      * Slug: Either wp-staging or wp-staging-pro
      * @var string 
@@ -161,6 +159,16 @@ final class WPStaging {
     }
 
     /**
+     * Check if current page is plugins.php
+     * @global array $pagenow
+     * @return bool
+     */
+    private function isPluginsPage() {
+        global $pagenow;
+        return ( 'plugins.php' === $pagenow );
+    }
+
+    /**
      * Scripts and Styles
      * @param string $hook
      */
@@ -169,6 +177,16 @@ final class WPStaging {
         // Load this css file on frontend and backend on all pages if current site is a staging site
         if( wpstg_is_stagingsite() ) {
             wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", array(), $this->getVersion() );
+        }
+
+        // Load js file on page plugins.php
+        if( $this->isPluginsPage() ) {
+            wp_enqueue_script(
+                    "wpstg-admin-script", $this->backend_url . "js/wpstg-admin-plugins.js", array("jquery"), $this->getVersion(), false
+            );
+            wp_enqueue_style(
+                    "wpstg-admin-feedback", $this->backend_url . "css/wpstg-admin-feedback.css", array(), $this->getVersion()
+            );
         }
 
         $availablePages = array(
@@ -189,6 +207,8 @@ final class WPStaging {
         wp_enqueue_script(
                 "wpstg-admin-script", $this->backend_url . "js/wpstg-admin.js", array("jquery"), $this->getVersion(), false
         );
+
+
 
         // Load admin css files
         wp_enqueue_style(

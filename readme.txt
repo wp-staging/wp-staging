@@ -154,7 +154,11 @@ https://wp-staging.com
 = 2.6.1 =
 * New: Improve styling of login form. Thanks to Andy Kennan (Screaming Frog)
 * New: Add 'password lost' button to login form
+* New: Change welcome page CTA
+* New: Add feedback option when plugin is disabled
 * Fix: PDO instances can not be serialized or unserialized
+* Fix: Can not update staging site db table if there are constraints in it
+
 
 = 2.6.0 =
 * New: Compatible up to WordPress 5.2.2

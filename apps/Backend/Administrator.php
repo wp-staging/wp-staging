@@ -23,6 +23,7 @@ use WPStaging\DI\InjectionAware;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 use WPStaging\Utils\Report;
 use WPStaging\Backend\Activation;
+use WPStaging\Backend\Feedback;
 
 /**
  * Class Administrator
@@ -84,6 +85,11 @@ class Administrator extends InjectionAware {
         $loader->addAction( "admin_post_wpstg_import_settings", $this, "import" );
         $loader->addAction( "admin_notices", $this, "messages" );
 
+        //require_once WPSTG_PLUGIN_DIR . 'apps/Backend/Feedback/Feedback.php';
+        //add_filter( 'admin_footer', 'mashsb_add_deactivation_feedback_modal' );
+        add_filter( 'admin_footer', array($this, 'loadFeedbackForm') );
+
+
         // Ajax Requests
         $loader->addAction( "wp_ajax_wpstg_overview", $this, "ajaxOverview" );
         $loader->addAction( "wp_ajax_wpstg_scanning", $this, "ajaxScan" );
@@ -108,10 +114,28 @@ class Administrator extends InjectionAware {
         $loader->addAction( "wp_ajax_wpstg_logs", $this, "ajaxLogs" );
         $loader->addAction( "wp_ajax_wpstg_check_disk_space", $this, "ajaxCheckFreeSpace" );
         $loader->addAction( "wp_ajax_wpstg_send_report", $this, "ajaxSendReport" );
+        $loader->addAction( "wp_ajax_wpstg_send_feedback", $this, "sendFeedback" );
+
 
         // Ajax hooks pro Version
         $loader->addAction( "wp_ajax_wpstg_scan", $this, "ajaxPushScan" );
         $loader->addAction( "wp_ajax_wpstg_push_processing", $this, "ajaxPushProcessing" );
+    }
+
+    /**
+     * Load Feedback Form on plugins.php
+     */
+    public function loadFeedbackForm() {
+        $form = new Feedback\Feedback();
+        $load = $form->loadForm();
+    }
+    
+    /**
+     * Send Feedback form via mail
+     */
+    public function sendFeedback() {
+        $form = new Feedback\Feedback();
+        $send = $form->sendMail();
     }
 
     /**
@@ -636,8 +660,8 @@ class Administrator extends InjectionAware {
      * @return mixed bool | json
      */
     public function ajaxHideLaterRating() {
-        $date = date('Y-m-d', strtotime(date('Y-m-d'). ' + 7 days'));
-        if( false !== update_option( 'wpstg_rating',$date )) {
+        $date = date( 'Y-m-d', strtotime( date( 'Y-m-d' ) . ' + 7 days' ) );
+        if( false !== update_option( 'wpstg_rating', $date ) ) {
             wp_send_json( true );
         }
         return wp_send_json( false );
@@ -792,8 +816,8 @@ class Administrator extends InjectionAware {
 //        }
         $db->select( $database );
         if( !$db->ready ) {
-            $error = isset($db->error->errors['db_select_fail']) ? $db->error->errors['db_select_fail'] : "Error: Can't select {database} Either it does not exist or you don't have privileges to access it.";
-            echo json_encode( array('errors' => $error ) );
+            $error = isset( $db->error->errors['db_select_fail'] ) ? $db->error->errors['db_select_fail'] : "Error: Can't select {database} Either it does not exist or you don't have privileges to access it.";
+            echo json_encode( array('errors' => $error) );
             exit;
         }
         echo json_encode( array('success' => 'true') );
