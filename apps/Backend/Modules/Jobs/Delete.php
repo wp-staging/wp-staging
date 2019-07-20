@@ -152,11 +152,14 @@ class Delete extends Job {
 
         $this->tables = array();
 
+        // no results
+        if( null !== $tables ) {
         foreach ( $tables as $table ) {
             $this->tables[] = array(
                 "name" => $table->Name,
                 "size" => $this->formatSize( ($table->Data_length + $table->Index_length ) )
             );
+        }
         }
 
         $this->tables = json_decode( json_encode( $this->tables ) );
@@ -310,10 +313,13 @@ class Delete extends Job {
      */
     public function deleteTables() {
         if( $this->isOverThreshold() ) {
+            $this->log( "Deleting: Is over threshold", Logger::TYPE_INFO );
             return;
         }
 
-        foreach ( $this->getTablesToRemove() as $table ) {
+        $tables = $this->getTablesToRemove();
+
+        foreach ( $tables as $table ) {
             // PROTECTION: Never delete any table that beginns with wp prefix of live site
             if( !$this->isExternalDatabase() && $this->startsWith( $table, $this->wpdb->prefix ) ) {
                 $this->log( "Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL );
@@ -374,6 +380,7 @@ class Delete extends Job {
             return;
         }
 
+        if( $this->isNotEmpty( $this->deleteDir ) ) {
         $di = new \RecursiveDirectoryIterator( $this->deleteDir, \FilesystemIterator::SKIP_DOTS );
         $ri = new \RecursiveIteratorIterator( $di, \RecursiveIteratorIterator::CHILD_FIRST );
         foreach ( $ri as $file ) {
@@ -383,25 +390,41 @@ class Delete extends Job {
                 return;
             }
         }
+        }
 
         // Delete left over staging site root folder
         @rmdir( $this->deleteDir );
 
-        // Throw fatal error if the folder is still not deleted
-        if( is_dir($this->deleteDir) ) {
+        // Throw fatal error if the folder has still not been deleted and there are files in it
+        if( $this->isNotEmpty( $this->deleteDir ) ) {
             $clone    = ( string ) $this->clone->path;
             $response = array(
                 'job'     => 'delete',
                 'status'  => true,
                 'delete'  => 'finished',
-                'message' => "Could not the staging site entirely. The folder {$clone}is still not empty. <br/><br/> If this happens again please contact us at support@wp-staging.com",
+                'message' => "Could not delete the entire staging site. The folder {$clone} still exists and is not empty. <br/> Try to empty this folder manually by using FTP or file manager plugin and then try to delete again the staging site here.<br/> If this happens again please contact us at support@wp-staging.com",
                 'error'   => true,
             );
             wp_die( json_encode( $response ) );
         }
 
-        // Successfull finish deleting job
+        // Successful finish deleting job
         return $this->deleteFinish();
+    }
+
+    /**
+     * Check if directory exists and is not empty
+     * @param string $dir
+     * @return bool
+     */
+    private function isNotEmpty( $dir ) {
+        // Throw fatal error if the folder has still not been deleted and there are files in it
+        $isDirNotEmpty = false;
+        if( is_dir( $dir ) ) {
+            $iterator      = new \FilesystemIterator( $dir );
+            $isDirNotEmpty = $iterator->valid();
+        }
+        return $isDirNotEmpty;
     }
 
     /**
