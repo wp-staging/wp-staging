@@ -171,7 +171,7 @@ class Data extends JobExecutable {
      */
     protected function isTable( $table ) {
         if( $this->db->get_var( "SHOW TABLES LIKE '{$table}'" ) != $table ) {
-            $this->log( "Table {$table} does not exist", Logger::TYPE_ERROR );
+            $this->log( "Table {$table} does not exist", Logger::TYPE_INFO );
             return false;
         }
         return true;

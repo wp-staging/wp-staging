@@ -176,7 +176,7 @@ class Data extends JobExecutable {
      */
     protected function isTable( $table ) {
         if( $this->db->get_var( "SHOW TABLES LIKE '{$table}'" ) != $table ) {
-            $this->log( "Preparing Data: Table {$table} does not exist.", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data: Table {$table} does not exist.", Logger::TYPE_INFO );
             return false;
         }
         return true;
@@ -450,7 +450,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return true;
         }
 
-        $this->log( "Preparing Data Step3: Failed to update rewrite_rules in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
+        //$this->log( "Preparing Data Step3: Failed to update rewrite_rules in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR );
         return true;
     }
 
