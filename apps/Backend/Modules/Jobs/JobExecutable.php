@@ -34,8 +34,8 @@ abstract class JobExecutable extends Job
     {
         parent::__construct();
 
-        // Calculate total steps
-        $this->calculateTotalSteps();
+        // Set server settings (Do not set this globally. HS Ticket #9061)
+        wpstg_setup_environment();
     }
 
     /**

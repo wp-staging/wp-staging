@@ -29,7 +29,7 @@ final class WPStaging {
     /**
      * Plugin version
      */
-    const VERSION = "2.6.1";
+    const VERSION = "2.6.2";
 
     /**
      * Plugin name
@@ -83,7 +83,7 @@ final class WPStaging {
         // Licensing stuff be loaded in wpstg core to make cron hook available from frontpage
         $this->initLicensing();
 
-        wpstg_setup_environment();
+        //wpstg_setup_environment();
     }
 
     /**
