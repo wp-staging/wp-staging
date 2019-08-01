@@ -900,21 +900,24 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return true;
         }
 
-        $error = isset( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
+        $error = !empty( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
 
-        $this->log( "Preparing Data Step13: Updating upload_path in {$this->prefix}options. {$error}" );
-
+//        $updateOptions = $this->db->query(
+//                $this->db->prepare(
+//                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'upload_path'", $newUploadPath
+//                )
+//        );
         $updateOptions = $this->db->query(
                 $this->db->prepare(
-                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'upload_path'", $newUploadPath
+                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'upload_path'", ""
                 )
         );
 
         if( false === $updateOptions ) {
-            $this->log( "Preparing Data Step13: Failed to update upload_path in {$this->prefix}options. {$error}", Logger::TYPE_ERROR );
+            $this->log( "Preparing Data Step13: Did not update upload_path in {$this->prefix}options. {$error}", Logger::TYPE_INFO );
             return true;
         }
-        $this->Log( "Preparing Data Step 13: Finished successfully" );
+        $this->Log( "Preparing Data Step13: Finished successfully" );
         return true;
     }
 
