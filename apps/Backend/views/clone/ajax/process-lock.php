@@ -7,7 +7,7 @@
 </button>
 
 <button type="button" id="wpstg-restart-cloning" class="wpstg-link-btn button-primary wpstg-button">
-    <?php echo __("Start over and stop other process", "wp-staging")?>
+    <?php echo __("Stop other process", "wp-staging")?>
 </button>
 
 
