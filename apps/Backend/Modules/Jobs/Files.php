@@ -158,7 +158,7 @@ class Files extends JobExecutable {
      */
     private function isFinished() {
         return (
-                !isset($this->options->isRunning) ||
+                !isset( $this->options->isRunning ) ||
                 $this->options->currentStep > $this->options->totalSteps ||
                 $this->options->copiedFiles >= $this->options->totalFiles
                 );
@@ -248,25 +248,57 @@ class Files extends JobExecutable {
      * 
      * @return string
      */
-    protected function getWpContentPath( $file ) {
-        // Get absolute custom upload dir 
-        $uploads = wp_upload_dir();
+//    protected function getWpContentPath( $file ) {
+//        // Get absolute custom upload dir 
+//        $uploads = wp_upload_dir();
+//
+//        // Get absolute upload dir from ABSPATH
+//        $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
+//
+//        // Get absolute custom wp-content dir
+//        $wpContentDir = trailingslashit( WP_CONTENT_DIR );
+//
+//        // Check if there is a custom upload directory and do a search $ replace
+//        $file = str_replace( $uploadsAbsPath, ABSPATH . 'wp-content/uploads/', $file, $count );
+//
+//        // If there is no custom upload directory do a search & replace of the custom wp-content directory
+//        if( empty( $count ) || $count === 0 ) {
+//            $file = str_replace( $wpContentDir, ABSPATH . 'wp-content/', $file );
+//        }
+//
+//
+//        return $file;
+//    }
 
-        // Get absolute upload dir from ABSPATH
+    /**
+     * Get wp-content and wp-content/uploads destination dir
+     * Necessary if these folders were customized and changed from the default ones.
+     * 
+     * @return string
+     */
+    protected function getWpContentPath( $file ) {
+        // Get upload directory information
+        $uploads        = wp_upload_dir();
+        
+        // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
         $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
 
-        // Get absolute custom wp-content dir
-        $wpContentDir = trailingslashit( WP_CONTENT_DIR );
-
-        // Check if there is a custom upload directory and do a search $ replace
-        $file = str_replace( $uploadsAbsPath, ABSPATH . 'wp-content/uploads/', $file, $count );
-
+        // Get relative path to the uploads folder, e.g assets
+        $uploadsRelPath = wpstg_get_rel_upload_dir();
+        
+        // Get absolute path to wp-content directory e.g srv/www/htdocs/sitename/wp-content
+        $wpContentDir   = trailingslashit( WP_CONTENT_DIR );
+        
+        // Check if there is a custom uploads directory, then do a search $ replace. Do this only if custom upload path is not identical to WP_CONTENT_DIR
+        if( $uploadsAbsPath != $wpContentDir ) {
+            //$file = str_replace( $uploadsAbsPath, ABSPATH . 'wp-content/uploads/', $file, $count );
+            $file = str_replace( $uploadsAbsPath, ABSPATH . $uploadsRelPath, $file, $count );
+        }
         // If there is no custom upload directory do a search & replace of the custom wp-content directory
         if( empty( $count ) || $count === 0 ) {
+            //$file = str_replace( $wpContentDir, ABSPATH . 'wp-content/', $file );
             $file = str_replace( $wpContentDir, ABSPATH . 'wp-content/', $file );
         }
-
-
         return $file;
     }
 
@@ -294,8 +326,11 @@ class Files extends JobExecutable {
         // Get custom wp-content and uploads folder
         $file = $this->getWpContentPath( $file );
 
+        // remove ABSPATH and get last part of the path
         $relativePath         = str_replace( \WPStaging\WPStaging::getWPpath(), null, $file );
+        // add destination path
         $destinationPath      = $this->destination . $relativePath;
+        // get folder
         $destinationDirectory = dirname( $destinationPath );
 
         if( !is_dir( $destinationDirectory ) && !@mkdir( $destinationDirectory, wpstg_get_permissions_for_directory(), true ) ) {

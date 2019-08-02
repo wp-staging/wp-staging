@@ -7,11 +7,11 @@
  */
 function wpstg_get_permissions_for_directory() {
     $octal = 0755;
-    if (defined('FS_CHMOD_DIR')) {
+    if( defined( 'FS_CHMOD_DIR' ) ) {
         $octal = FS_CHMOD_DIR;
     }
 
-    return apply_filters('wpstg_folder_permission', $octal);
+    return apply_filters( 'wpstg_folder_permission', $octal );
 }
 
 /**
@@ -170,39 +170,87 @@ function wpstg_is_stagingsite() {
         return true;
     }
 
-    if(  file_exists( ABSPATH . '.wp-staging')){
+    if( file_exists( ABSPATH . '.wp-staging' ) ) {
         return true;
     }
 
     return false;
 }
 
-   /**
-    * @param string $memory
-    * @return int
-    */
-   function wpstg_get_memory_in_bytes( $memory ) {
-      // Handle unlimited ones
-      if( 1 > ( int ) $memory ) {
-         //return (int) $memory;
-         // 128 MB default value
-         return ( int ) 134217728;
-      }
+/**
+ * @param string $memory
+ * @return int
+ */
+function wpstg_get_memory_in_bytes( $memory ) {
+    // Handle unlimited ones
+    if( 1 > ( int ) $memory ) {
+        //return (int) $memory;
+        // 128 MB default value
+        return ( int ) 134217728;
+    }
 
-      $bytes = ( int ) $memory; // grab only the number
-      $size = trim( str_replace( $bytes, null, strtolower( $memory ) ) ); // strip away number and lower-case it
-      // Actual calculation
-      switch ( $size ) {
-         case 'k':
+    $bytes = ( int ) $memory; // grab only the number
+    $size  = trim( str_replace( $bytes, null, strtolower( $memory ) ) ); // strip away number and lower-case it
+    // Actual calculation
+    switch ( $size ) {
+        case 'k':
             $bytes *= 1024;
             break;
-         case 'm':
+        case 'm':
             $bytes *= (1024 * 1024);
             break;
-         case 'g':
+        case 'g':
             $bytes *= (1024 * 1024 * 1024);
             break;
-      }
+    }
 
-      return $bytes;
-   }
+    return $bytes;
+}
+
+/**
+ * Invalidate constraints
+ * @param type $query
+ * @return type
+ */
+function wpstg_unique_constraint( $query ) {
+    // Change name to random in all constraints, if there, to prevent trouble with existing  
+    $query = preg_replace_callback( "/CONSTRAINT\s`(\w+)`/", function() {
+        return "CONSTRAINT `" . uniqid() . "`";
+    }, $query );
+
+    return $query;
+}
+
+/**
+ * Get relative path to the uploads folder, can be a custom folder e.g assets or default folder wp-content/uploads
+ * @return string
+ */
+function wpstg_get_rel_upload_dir() {
+    // Get upload directory information. Default is ABSPATH . 'wp-content/uploads'
+    // Can be customized by populating the db option upload_path or the constant UPLOADS
+    // If both are defined WordPress will uses the value of the UPLOADS constant
+    $uploads = wp_upload_dir();
+
+    // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
+    $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
+
+    // Get relative path to the uploads folder, e.g assets
+    //$relPath = rtrim(str_replace( ABSPATH, null, $uploadsAbsPath ), "/\\");
+    $relPath = str_replace( ABSPATH, null, $uploadsAbsPath );
+
+    return $relPath;
+}
+
+/**
+ * Get relative path to the uploads folder, can be a custom folder e.g assets or default folder wp-content/uploads
+ * @return string
+ */
+function wpstg_get_abs_upload_dir() {
+    // Get upload directory information. 
+    $uploads = wp_upload_dir();
+
+    // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
+    $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
+
+    return $uploadsAbsPath;
+}

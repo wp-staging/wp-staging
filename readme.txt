@@ -151,6 +151,12 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.2 =
+* Fix: Do not show warning "Preparing Data Step3: Failed to update rewrite_rules in wpstg0_options"
+* Fix: Change error "Table wpstgtmp_options does not exist" to warning
+* New: Add arguments for hook wpstg_cloning_complete
+* New: Setup server environment variables per process and not globally (e.g. set_time_limit)
+
 = 2.6.1 =
 * New: Improve styling of login form. Thanks to Andy Kennan (Screaming Frog)
 * New: Add 'password lost' button to login form
@@ -158,6 +164,7 @@ https://wp-staging.com
 * New: Add feedback option when plugin is disabled
 * Fix: PDO instances can not be serialized or unserialized
 * Fix: Can not update staging site db table if there are constraints in it
+
 
 
 = 2.6.0 =
