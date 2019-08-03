@@ -156,6 +156,8 @@ https://wp-staging.com
 * Fix: Change error "Table wpstgtmp_options does not exist" to warning
 * New: Add arguments for hook wpstg_cloning_complete
 * New: Setup server environment variables per process and not globally (e.g. set_time_limit)
+* New: Add support for custom uploads folder if user customized UPLOADS constant or upload_path in DB
+
 
 = 2.6.1 =
 * New: Improve styling of login form. Thanks to Andy Kennan (Screaming Frog)
