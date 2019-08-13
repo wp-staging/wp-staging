@@ -151,6 +151,8 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.3 =
+
 = 2.6.2 =
 * Fix: Do not show warning "Preparing Data Step3: Failed to update rewrite_rules in wpstg0_options"
 * Fix: Change error "Table wpstgtmp_options does not exist" to warning
