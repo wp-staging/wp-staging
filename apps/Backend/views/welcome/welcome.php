@@ -1,7 +1,7 @@
 <div class="" id="wpstg-welcome">
     <div style="border: 2px solid white;padding: 20px;margin-bottom:20px;">
         <h2 class="wpstg-h2">
-            <span class="wpstg-heading-pro"><?php _e( 'WP Staging Pro', 'wp-staging' ); ?></span><?php _e( ' - Migrate and copy over staging site to live site', 'wp-staging' ); ?> 
+            <span class="wpstg-heading-pro"><?php _e( 'WP Staging Pro', 'wp-staging' ); ?></span><?php _e( ' - Copy Themes & Plugins from Staging to Live Site', 'wp-staging' ); ?> 
         </h2>
         <li><strong>Cloning</strong> - <?php _e( 'Create a clone of your website with a simple click', 'wp-staging' ); ?></li>
         <li><strong>Push Changes</strong> - <?php _e( 'Copy plugin and theme files from staging to live site', 'wp-staging' ); ?></li>
