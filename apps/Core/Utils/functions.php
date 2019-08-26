@@ -166,6 +166,12 @@ function wpstg_urldecode( $data ) {
  * @return bool
  */
 function wpstg_is_stagingsite() {
+
+    if( file_exists( ABSPATH . '.wp-staging-cloneable' ) ) {
+        return false;
+    }
+
+
     if( "true" === get_option( "wpstg_is_staging_site" ) ) {
         return true;
     }
@@ -253,4 +259,80 @@ function wpstg_get_abs_upload_dir() {
     $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
 
     return $uploadsAbsPath;
+}
+
+/**
+ * Get hostname of production site including scheme
+ * @return string
+ */
+function wpstg_get_production_hostname() {
+
+    $connection = get_option( 'wpstg_connection' );
+
+    // Get the stored hostname
+    if( !empty( $connection['prodHostname'] ) ) {
+        return $connection['prodHostname'];
+    }
+
+    // Default. Try to get the hostname from the main domain (Workaround for WP Staging Pro older < 2.9.1)
+    $siteurl = get_site_url();
+    $result  = parse_url( $siteurl );
+    return $result['scheme'] . "://" . $result['host'];
+}
+
+/**
+ * Check if string starts with specific string
+ * @param string $haystack
+ * @param string $needle
+ * @return bool
+ */
+function wpstg_starts_with( $haystack, $needle ) {
+    $length = strlen( $needle );
+    return (substr( $haystack, 0, $length ) === $needle);
+}
+
+/**
+ * Check if folder is empty
+ * @param type $dir
+ * @return boolean
+ */
+function wpstg_is_empty_dir( $dir ) {
+    if (  !is_dir( $dir)){
+        return true;
+    }
+    $iterator   = new \FilesystemIterator( $dir );
+    if ($iterator->valid()){
+        return false;
+    }
+    return true;
+}
+
+/**
+ * Get absolute WP uploads path e.g. 
+ * Multisites: /var/www/htdocs/example.com/wp-content/uploads/sites/1 or /var/www/htdocs/example.com/wp-content/blogs.dir/1/files
+ * Single sites: /var/www/htdocs/example.com/wp-content/uploads
+ * @return string
+ */
+function wpstg_get_upload_dir() {
+    $uploads = wp_upload_dir( null, false );
+
+    $baseDir = wpstg_replace_windows_directory_separator( $uploads['basedir'] );
+
+    // If multisite (and if not the main site in a post-MU network)
+    if( is_multisite() && !( is_main_network() && is_main_site() && defined( 'MULTISITE' ) ) ) {
+        // blogs.dir is used on WP 3.5 and earlier
+        if( false !== strpos( $baseDir, 'blogs.dir' ) ) {
+            // remove this piece from the basedir: /blogs.dir/2/files
+            $uploadDir = wpstg_replace_first_match( '/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir );
+            $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/blogs.dir' );
+        } else {
+            // remove this piece from the basedir: /sites/2
+            $uploadDir = wpstg_replace_first_match( '/sites/' . get_current_blog_id(), null, $baseDir );
+            $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/sites' );
+        }
+
+
+        return $dir;
+    }
+    return false;
 }

@@ -198,8 +198,8 @@ class SearchReplace extends JobExecutable {
         }
 
         // Get the path to the main multisite without appending and trailingslash e.g. wordpress
-        $multisitePath = defined( 'PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';       
-        $url = rtrim( $this->strings->getUrlWithoutScheme( $this->multisiteDomainWithoutScheme ), '/\\' ) . $multisitePath . $this->options->cloneDirectoryName;
+        $multisitePath = defined( 'PATH_CURRENT_SITE' ) ? PATH_CURRENT_SITE : '/';
+        $url           = rtrim( $this->strings->getUrlWithoutScheme( $this->multisiteDomainWithoutScheme ), '/\\' ) . $multisitePath . $this->options->cloneDirectoryName;
         //$multisitePath = defined( 'PATH_CURRENT_SITE' ) ? str_replace( '/', '', PATH_CURRENT_SITE ) : '';
         //$url           = trailingslashit( $this->strings->getUrlWithoutScheme( $this->multisiteDomainWithoutScheme ) ) . $multisitePath . '/' . $this->options->cloneDirectoryName;
         return $url;
@@ -229,7 +229,7 @@ class SearchReplace extends JobExecutable {
     private function startReplace( $table ) {
         $rows = $this->options->job->start + $this->settings->querySRLimit;
         $this->log(
-                "DB Processing:  Table {$table} {$this->options->job->start} to {$rows} records"
+                "DB Search & Replace:  Table {$table} {$this->options->job->start} to {$rows} records"
         );
 
         // Search & Replace
@@ -244,19 +244,19 @@ class SearchReplace extends JobExecutable {
      * @access public
      * @return int
      */
-    private function get_pages_in_table( $table ) {
-
-        // Table does not exist
-        $result = $this->db->query( "SHOW TABLES LIKE '{$table}'" );
-        if( !$result || 0 === $result ) {
-            return 0;
-        }
-
-        $table = esc_sql( $table );
-        $rows  = $this->db->get_var( "SELECT COUNT(*) FROM $table" );
-        $pages = ceil( $rows / $this->settings->querySRLimit );
-        return absint( $pages );
-    }
+//    private function get_pages_in_table( $table ) {
+//
+//        // Table does not exist
+//        $result = $this->db->query( "SHOW TABLES LIKE '{$table}'" );
+//        if( !$result || 0 === $result ) {
+//            return 0;
+//        }
+//
+//        $table = esc_sql( $table );
+//        $rows  = $this->db->get_var( "SELECT COUNT(*) FROM $table" );
+//        $pages = ceil( $rows / $this->settings->querySRLimit );
+//        return absint( $pages );
+//    }
 
     /**
      * Gets the columns in a table.
@@ -307,16 +307,14 @@ class SearchReplace extends JobExecutable {
     private function searchReplace( $table, $page, $args ) {
 
         if( $this->thirdParty->isSearchReplaceExcluded( $table ) ) {
-            $this->log( "DB Processing: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
+            $this->log( "DB Search & Replace: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
             return true;
         }
 
         // Load up the default settings for this chunk.
-        $table        = esc_sql( $table );
-        $current_page = $this->options->job->start + $this->settings->querySRLimit;
-        $pages        = $this->get_pages_in_table( $table );
-
-
+        $table = esc_sql( $table );
+        //$current_page = $this->options->job->start + $this->settings->querySRLimit;
+        //$pages        = $this->get_pages_in_table( $table );
         // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
         $args['search_for'] = array(
             '//' . $this->getSourceHostname(),
@@ -335,8 +333,8 @@ class SearchReplace extends JobExecutable {
                 //$this->getImagePathStaging()
         );
 
-        $this->debugLog( "DB Processing: Search: {$args['search_for'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
-        $this->debugLog( "DB Processing: Replace: {$args['replace_with'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
+        $this->debugLog( "DB Search & Replace: Search: {$args['search_for'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
+        $this->debugLog( "DB Search & Replace: Replace: {$args['replace_with'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
 
 
 
@@ -378,7 +376,7 @@ class SearchReplace extends JobExecutable {
             'Admin_custome_login_top',
             'Admin_custome_login_dashboard',
             'Admin_custome_login_Version',
-            'upload_path',
+            'upload_path'
         );
 
         $filter = apply_filters( 'wpstg_clone_searchreplace_excl_rows', $filter );
@@ -500,6 +498,7 @@ class SearchReplace extends JobExecutable {
         unset( $update_sql );
         unset( $where_sql );
         unset( $sql );
+        unset( $current_row );
 
 
         // DB Flush
@@ -558,6 +557,10 @@ class SearchReplace extends JobExecutable {
      */
     private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialized = false, $case_insensitive = false ) {
         try {
+            // PDO instances can not be serialized or unserialized
+            if( is_serialized( $data ) && strpos( $data, 'O:3:"PDO":0:' ) !== false ) {
+                return $data;
+            }
             // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
             if( is_serialized( $data ) && ( $unserialized = @unserialize( $data ) ) !== false ) {
                 $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
@@ -570,26 +573,23 @@ class SearchReplace extends JobExecutable {
                 $data = $tmp;
                 unset( $tmp );
             } elseif( is_object( $data ) ) {
-                $tmp   = $data;
                 $props = get_object_vars( $data );
 
-                // Do not continue if class contains __PHP_Incomplete_Class_Name
-                if( !empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
-                    return $data;
-                    
-                }
-
                 // Do a search & replace
-                foreach ( $props as $key => $value ) {
-                    if( $key === '' || ord( $key[0] ) === 0 ) {
-                        continue;
+                if( empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
+                    $tmp = $data;
+                    foreach ( $props as $key => $value ) {
+                        if( $key === '' || ord( $key[0] ) === 0 ) {
+                            continue;
+                        }
+                        $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
                     }
-                    $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+                    $data  = $tmp;
+                    $tmp   = '';
+                    $props = '';
+                    unset( $tmp );
+                    unset( $props );
                 }
-
-                $data = $tmp;
-                unset( $tmp );
-                unset( $props );
             } else {
                 if( is_string( $data ) ) {
                     if( !empty( $from ) && !empty( $to ) ) {
@@ -748,6 +748,29 @@ class SearchReplace extends JobExecutable {
     }
 
     /**
+     * Is table excluded from search replace processing?
+     * @param string $table
+     * @return boolean
+     */
+    private function isExcludedTable( $table ) {
+
+        $customTables  = apply_filters( 'wpstg_clone_searchreplace_tables_exclude', array() );
+        $defaultTables = array('blogs');
+
+        $tables = array_merge( $customTables, $defaultTables );
+
+        $excludedTables = array();
+        foreach ( $tables as $key => $value ) {
+            $excludedTables[] = $this->options->prefix . $value;
+        }
+
+        if( in_array( $table, $excludedTables ) ) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Finish the step
      */
     private function finishStep() {
@@ -776,7 +799,7 @@ class SearchReplace extends JobExecutable {
             return;
         }
 
-        $this->log( "DB Processing: {$new} already exists, dropping it first" );
+        $this->log( "DB Search & Replace: {$new} already exists, dropping it first" );
         $this->db->query( "DROP TABLE {$new}" );
     }
 

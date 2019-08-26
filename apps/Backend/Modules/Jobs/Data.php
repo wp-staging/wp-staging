@@ -219,7 +219,7 @@ class Data extends JobExecutable {
             }
         }
 
-        $this->log( "Preparing Data Step0: Successfull", Logger::TYPE_INFO );
+        $this->log( "Preparing Data Step0: Successful", Logger::TYPE_INFO );
         return true;
     }
 
@@ -389,11 +389,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return true;
         }
 
-//      $result = $this->db->query(
-//              $this->db->prepare(
-//                      "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_is_staging_site'", "true"
-//              )
-//      );
         $delete = $this->db->query(
                 $this->db->prepare(
                         "DELETE FROM `{$this->prefix}options` WHERE `option_name` = %s;", 'wpstg_is_staging_site'
@@ -760,72 +755,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Set true WP_DEBUG & WP_DEBUG_DISPLAY in wp-config.php
-     * @return bool
-     */
-//   protected function step12() {
-//      $path = $this->getAbsDestination() . $this->options->cloneDirectoryName . "/wp-config.php";
-//
-//      $this->log( "Preparing Data Step12: Set WP_DEBUG to true in wp-config.php." );
-//
-//      if( false === ($content = file_get_contents( $path )) ) {
-//         $this->log( "Preparing Data Step12: Failed to update WP_DEBUG in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
-//         return false;
-//      }
-//
-//
-//      // Get WP_DEBUG from wp-config.php
-//      preg_match( "/define\s*\(\s*'WP_DEBUG'\s*,\s*(.*)\s*\);/", $content, $matches );
-//
-//      // Found it!
-//      if( !empty( $matches[1] ) ) {
-//         $matches[1];
-//
-//         $pattern = "/define\s*\(\s*'WP_DEBUG'\s*,\s*(.*)\s*\);/";
-//
-//         $replace = "define('WP_DEBUG',true); // " . $matches[1];
-//         $replace.= " // Changed by WP-Staging";
-//
-//         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
-//            $this->log( "Preparing Data Step12: Failed to update WP_DEBUG", Logger::TYPE_ERROR );
-//            return false;
-//         }
-//      } else {
-//         $this->log( "Preparing Data Step12: WP_DEBUG not defined in wp-config.php. Skip it." );
-//      }
-//      
-//      
-//      
-//      // Get WP_DEBUG_DISPLAY
-//      preg_match( "/define\s*\(\s*'WP_DEBUG_DISPLAY'\s*,\s*(.*)\s*\);/", $content, $matches );
-//
-//      // Found it!
-//      if( !empty( $matches[1] ) ) {
-//         $matches[1];
-//
-//         $pattern = "/define\s*\(\s*'WP_DEBUG_DISPLAY'\s*,\s*(.*)\s*\);/";
-//
-//         $replace = "define('WP_DEBUG_DISPLAY',true); // " . $matches[1];
-//         $replace.= " // Changed by WP-Staging";
-//
-//         if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
-//            $this->log( "Preparing Data Step12: Failed to update WP_DEBUG", Logger::TYPE_ERROR );
-//            return false;
-//         }
-//      } else {
-//         $this->log( "Preparing Data Step12: WP_DEBUG not defined in wp-config.php. Skip it." );
-//      }
-//      
-//
-//      if( false === @file_put_contents( $path, $content ) ) {
-//         $this->log( "Preparing Data Step12: Failed to update WP_DEBUG. Can't save content in wp-config.php", Logger::TYPE_ERROR );
-//         return false;
-//      }
-//      $this->Log( "Preparing Data: Finished Step 12 successfully" );
-//      return true;
-//   }
-
-    /**
      * Update Table Prefix in wp_options
      * @return bool
      */
@@ -903,11 +832,14 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         $error = !empty( $this->db->last_error ) ? 'Last error: ' . $this->db->last_error : '';
 
+        $this->log( "Updating upload_path in {$this->prefix}options. {$error}" );
+
 //        $updateOptions = $this->db->query(
 //                $this->db->prepare(
 //                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'upload_path'", $newUploadPath
 //                )
 //        );
+        // remove upload_path value and use UPLOADS constant instead. (upload_path is deprecated and should not be used any longer)
         $updateOptions = $this->db->query(
                 $this->db->prepare(
                         "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'upload_path'", ""
@@ -1044,46 +976,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Remove UPLOADS constant in wp-config.php to reset default image folder
-     * @return bool
-     */
-//    protected function step17() {
-//        $path = $this->options->destinationDir . "wp-config.php";
-//
-//        $this->log( "Preparing Data Step17: Remove UPLOADS in wp-config.php" );
-//
-//        if( false === ($content = file_get_contents( $path )) ) {
-//            $this->log( "Preparing Data Step17: Failed to get UPLOADS in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
-//            return false;
-//        }
-//
-//
-//        // Get UPLOADS from wp-config.php
-//        preg_match( "/define\s*\(\s*['\"]UPLOADS['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
-//
-//        if( !empty( $matches[0] ) ) {
-//
-//            $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
-//
-//            $replace = "";
-//
-//            if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
-//                $this->log( "Preparing Data: Failed to change UPLOADS", Logger::TYPE_ERROR );
-//                return false;
-//            }
-//        } else {
-//            $this->log( "Preparing Data Step17: UPLOADS not defined in wp-config.php. Skipping this step." );
-//        }
-//
-//        if( false === @file_put_contents( $path, $content ) ) {
-//            $this->log( "Preparing Data Step17: Failed to update UPLOADS. Can't save contents", Logger::TYPE_ERROR );
-//            return false;
-//        }
-//        $this->Log( "Preparing Data Step17: Finished successfully" );
-//        return true;
-//    }
-
-    /**
      * Add UPLOADS constant in wp-config.php or change it to correct destination. 
      * This is important when a custom uploads folder is used
      * @return bool
@@ -1100,6 +992,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $uploadFolder = wpstg_get_rel_upload_dir();
         if( !empty( $matches[0] ) ) {
             $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
+
             $replace = "define('UPLOADS', '" . $uploadFolder . "');";
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data Step17: Failed to change UPLOADS", Logger::TYPE_ERROR );
@@ -1131,49 +1024,31 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Empty wpstg_existing_clones_beta on the staging site
-     * @return bool
+     * Save hostname of parent production site in option_name wpstg_connection
+     * @return boolean
      */
-//    protected function step18() {
-//
-//        $this->log( "Preparing Data Step18: Clean up list of staging sites" );
-//
-//        if( false === $this->isTable( $this->prefix . 'options' ) ) {
-//            return true;
-//        }
-//
-//        // Skip - Table is not selected or updated
-//        if( !in_array( $this->prefix . 'options', $this->tables ) ) {
-//            $this->log( "Preparing Data Step18: Skipping" );
-//            return true;
-//        }
-//
-//        $result = $this->db->query(
-//                $this->db->prepare(
-//                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'wpstg_existing_clones_beta'", 'a:0:{}'
-//                )
-//        );
-//
-//        // All good
-//        if( false === $result ) {
-//            $this->log( "Preparing Data Step18: Can not update listing of staging sites.", Logger::TYPE_WARNING );
-//            return true;
-//        }
-//
-//        $this->Log( "Preparing Data Step18: Finished successfully" );
-//        return true;
-//    }
+    protected function step18() {
 
-    /**
-     * Create a robots.txt in path of the staging site
-     */
-//    protected function step18() {
-//        $file = new RobotsTxt();
-//        if( false === $file->create( $this->options->destinationDir . "robots.txt" ) ) {
-//            $this->log( "Preparing Data Step18: Failed to create robots.txt", Logger::TYPE_ERROR );
-//        }
-//        return true;
-//    }
+        $table = $this->prefix . 'options';
+
+        $siteurl = get_site_url();
+
+        $connection = json_encode( array('prodHostname' => $siteurl) );
+
+        $data = array(
+            'option_name'  => 'wpstg_connection',
+            'option_value' => $connection
+        );
+
+        $format = array('%s', '%s');
+
+        $result = $this->db->replace( $table, $data, $format );
+
+        if( false === $result ) {
+            $this->Log( "Preparing Data Step18: Could not save {$siteurl} in {$table}", Logger::TYPE_ERROR );
+        }
+        return true;
+    }
 
     /**
      * Change upload path of staging site if it has been customized on production site
@@ -1200,7 +1075,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return false;
         }
 
-        $customSlug = str_replace( \WPStaging\WPStaging::getWPpath(), '', $uploadPath );
+        $customSlug = str_replace( wpstg_replace_windows_directory_separator( \WPStaging\WPStaging::getWPpath() ), '', wpstg_replace_windows_directory_separator( $uploadPath ) );
 
         $newUploadPath = $this->options->destinationDir . $customSlug;
 

@@ -315,7 +315,7 @@ class Directories extends JobExecutable {
             foreach ( $iterator as $item ) {
                 if( $item->isFile() ) {
                     //if( $this->write( $files, $strings->getLastElemAfterString( '/', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
-                    if( $this->write( $files, str_replace( \WPStaging\WPStaging::getWPpath(), '', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
+                    if( $this->write( $files, str_replace( wpstg_replace_windows_directory_separator(\WPStaging\WPStaging::getWPpath()), '', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                         $this->options->totalFiles++;
                         // Too much cpu time
                         //$this->options->totalFileSize += $iterator->getSize();

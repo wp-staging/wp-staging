@@ -152,6 +152,10 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.6.3 =
+* New: Allow wildcards for excluding files
+* Fix: Better compatibility with Windows IIS server
+* Tweak: Improved support for custom uploads folder if user customized UPLOADS constant or upload_path in DB
+
 
 = 2.6.2 =
 * Fix: Do not show warning "Preparing Data Step3: Failed to update rewrite_rules in wpstg0_options"
