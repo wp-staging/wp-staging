@@ -154,6 +154,7 @@ https://wp-staging.com
 = 2.6.3 =
 * New: Allow wildcards for excluding files
 * Fix: Better compatibility with Windows IIS server
+* Fix: External links are broken after cloning if ABSPATH is equal to /www/
 * Tweak: Improved support for custom uploads folder if user customized UPLOADS constant or upload_path in DB
 
 

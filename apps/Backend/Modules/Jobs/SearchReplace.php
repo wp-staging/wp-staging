@@ -220,7 +220,7 @@ class SearchReplace extends JobExecutable {
     private function startReplace( $table ) {
         $rows = $this->options->job->start + $this->settings->querySRLimit;
         $this->log(
-                "DB Processing:  Table {$table} {$this->options->job->start} to {$rows} records"
+                "DB Search & Replace:  Table {$table} {$this->options->job->start} to {$rows} records"
         );
 
         // Search & Replace
@@ -288,7 +288,7 @@ class SearchReplace extends JobExecutable {
     private function searchReplace( $table, $page, $args ) {
 
         if( $this->thirdParty->isSearchReplaceExcluded( $table ) ) {
-            $this->log( "DB Processing: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
+            $this->log( "DB Search & Replace: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
             return true;
         }
 
@@ -302,15 +302,20 @@ class SearchReplace extends JobExecutable {
             '%2F%2F' . str_replace( '/', '%2F', $this->sourceHostname ), // HTML entitity for WP Backery Page Builder Plugin
             '\/\/' . str_replace( '/', '\/', $this->sourceHostname ), // Escaped \/ used by revslider and several visual editors
             '//' . $this->sourceHostname,
-            rtrim( ABSPATH, '/' ),
+            //rtrim( ABSPATH, '/' ), // This lead to errors if ABSPATH is /www/ because this would break external links like https://www.domain.com to https://www/replace-string/domain.com
+            ABSPATH
         );
 
         $args['replace_with'] = array(
             '%2F%2F' . str_replace( '/', '%2F', $this->destinationHostname ),
             '\/\/' . str_replace( '/', '\/', $this->destinationHostname ),
             '//' . $this->destinationHostname,
-            rtrim( $this->options->destinationDir, '/' ),
+            //rtrim( $this->options->destinationDir, '/' ),
+            $this->options->destinationDir
         );
+
+        $this->debugLog( "DB Search & Replace: Search: {$args['search_for'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
+        $this->debugLog( "DB Search & Replace: Replace: {$args['replace_with'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
 
 
         $args['replace_guids']    = 'off';
@@ -772,7 +777,7 @@ class SearchReplace extends JobExecutable {
             return;
         }
 
-        $this->log( "DB Processing: {$new} already exists, dropping it first" );
+        $this->log( "DB Search & Replace: {$new} already exists, dropping it first" );
         $this->db->query( "DROP TABLE {$new}" );
     }
 
