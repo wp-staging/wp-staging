@@ -164,7 +164,8 @@ class Directories extends JobExecutable {
             foreach ( $iterator as $item ) {
                 if( $item->isFile() ) {
                     $wpContentDir = str_replace( ABSPATH, '', WP_CONTENT_DIR );
-                    if( $this->write( $files, $wpContentDir . '/' . $iterator->getSubPathName() . PHP_EOL ) ) {
+                    $file = $wpContentDir . '/' . $iterator->getSubPathName() . PHP_EOL;
+                    if( $this->write( $files, $file ) ) {
                         $this->options->totalFiles++;
 
                         // Too much cpu time
