@@ -297,11 +297,11 @@ function wpstg_starts_with( $haystack, $needle ) {
  * @return boolean
  */
 function wpstg_is_empty_dir( $dir ) {
-    if (  !is_dir( $dir)){
+    if( !is_dir( $dir ) ) {
         return true;
     }
-    $iterator   = new \FilesystemIterator( $dir );
-    if ($iterator->valid()){
+    $iterator = new \FilesystemIterator( $dir );
+    if( $iterator->valid() ) {
         return false;
     }
     return true;
@@ -335,4 +335,124 @@ function wpstg_get_upload_dir() {
         return $dir;
     }
     return false;
+}
+
+/**
+ * Write data to file 
+ * An alternative function for file_put_contents which is disabled on some hosts
+ * 
+ * @param string $file
+ * @param string $contents
+ * @param int | false $mode
+ * @return boolean
+ */
+function wpstg_put_contents( $file, $contents, $mode = false ) {
+    $fp = @fopen( $file, 'wb' );
+    
+    if( !$fp ) {
+        return false;
+    }
+
+    mbstring_binary_safe_encoding();
+
+    $data_length = strlen( $contents );
+
+    $bytes_written = fwrite( $fp, $contents );
+
+    reset_mbstring_encoding();
+
+    fclose( $fp );
+
+    if( $data_length !== $bytes_written ) {
+        return false;
+    }
+
+    wpstg_chmod( $file, $mode );
+
+    return true;
+}
+
+/**
+ * Change chmod of file or folder
+ * @param string $file path to file
+ * @param mixed $mode false or specific octal value like 0755
+ * @param type $recursive
+ * @return boolean
+ */
+function wpstg_chmod( $file, $mode = false ) {
+    if( !$mode ) {
+        if( @is_file( $file ) ) {
+            if( defined( 'FS_CHMOD_FILE' ) ) {
+                $mode = FS_CHMOD_FILE;
+            } else {
+                $mode = ( int ) 0644;
+            }
+        } elseif( @is_dir( $file ) ) {
+            if( defined( 'FS_CHMOD_FILE' ) ) {
+                $mode = FS_CHMOD_DIR;
+            } else {
+                $mode = ( int ) 0755;
+            }
+        } else {
+            return false;
+        }
+    }
+
+    if( !@is_dir( $file ) ) {
+        return @chmod( $file, $mode );
+    }
+
+    return true;
+}
+
+/**
+ * Create file if it does not exist
+ * 
+ * @param string $path
+ * @param (int|false) $chmod The permissions as octal number (or false to skip chmod)
+ * @param (string|int) $chown A user name or number (or false to skip chown).
+ * @return boolean true on success, false on failure.
+ */
+function wpstg_mkdir( $path, $chmod = false, $chown = false ) {
+    // Safe mode fails with a trailing slash under certain PHP versions.
+    $path = untrailingslashit( $path );
+    if( empty( $path ) ) {
+        return false;
+    }
+
+    if( !$chmod ) {
+        $chmod = FS_CHMOD_DIR;
+    }
+
+    if( !@mkdir( $path ) ) {
+        return false;
+    }
+    wpstg_chmod( $path, $chmod );
+
+    if( $chown ) {
+        wpstg_chown( $path, $chown );
+    }
+
+    return true;
+}
+
+/**
+ * Changes the owner of a file or directory.
+ *
+ *
+ * @param string     $file      Path to the file or directory.
+ * @param string|int $owner     A user name or number.
+ * @param bool       $recursive Optional. If set to true, changes file owner recursively.
+ *                              Default false.
+ * @return bool True on success, false on failure.
+ */
+function wpstg_chown( $file, $owner ) {
+    if( !@file_exists( $file ) ) {
+        return false;
+    }
+
+    if( !@is_dir( $file ) ) {
+        return @chown( $file, $owner );
+    }
+    return true;
 }
