@@ -101,6 +101,7 @@ class Logger
      */
     public function add($message, $type = self::TYPE_ERROR)
     {  
+  
         $this->messages[] = array(
             "type"      => $type,
             "date"      => date("Y/m/d H:i:s"),
@@ -145,7 +146,8 @@ class Logger
             return true;
         }
 
-        return (@file_put_contents($this->getLogFile(), $messageString, FILE_APPEND | LOCK_EX));
+        //return (@file_put_contents($this->getLogFile(), $messageString, FILE_APPEND | LOCK_EX));
+        return (@file_put_contents($this->getLogFile(), $messageString, FILE_APPEND));
     }
 
     /**
