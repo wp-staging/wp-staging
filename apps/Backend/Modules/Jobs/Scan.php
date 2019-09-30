@@ -320,6 +320,16 @@ class Scan extends Job {
             return false;
         }
 
+        if( !is_dir( $path ) ) {
+            return false;
+        }
+
+        // IMPORTANT: If this is not used and a folder belongs to another user 
+        // DirectoryIterator() will throw a fatal error which can not be catched with is_readable()
+        if( !opendir( $path ) ) {
+            return false;
+        }
+
         $directories = new \DirectoryIterator( $path );
 
         foreach ( $directories as $directory ) {
@@ -448,18 +458,7 @@ class Scan extends Job {
 
             return $dir;
 }
-        return false;
-//        $uploads = wp_upload_dir( null, false );
-//
-//        // If multisite (and if not the main site in a post-MU network)
-//        if( is_multisite() && !( is_main_network() && is_main_site() && defined( 'MULTISITE' ) ) ) {
-//            // remove this piece from the basedir: /sites/2
-//            $uploadDir = wpstg_replace_first_match( '/sites/' . get_current_blog_id(), null, $uploads['basedir'] );
-//            return $uploadDir;
-//        }
-//
-//        // Default upload dir in a regular WordPress installation
-//        return $uploads['basedir'];
+        return $baseDir;
     }
 
     /**
@@ -489,7 +488,7 @@ class Scan extends Job {
 
             return $dir;
         }
-        return false;
+        return $baseDir;
     }
 
 }
