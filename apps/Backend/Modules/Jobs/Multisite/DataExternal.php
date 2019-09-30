@@ -79,7 +79,7 @@ class DataExternal extends JobExecutable {
      * @return void
      */
     protected function calculateTotalSteps() {
-        $this->options->totalSteps = 20;
+        $this->options->totalSteps = 22;
     }
 
     /**
@@ -201,6 +201,7 @@ class DataExternal extends JobExecutable {
 
         // Check if there is already a valid wp-config.php in root of staging site
         if( $this->isValidWpConfig( $destination ) ) {
+            $this->log( "Preparing Data Step0: Found wp-config.php file in folder {$destination}", Logger::TYPE_INFO );
             return true;
         }
 
@@ -208,12 +209,16 @@ class DataExternal extends JobExecutable {
         if( $this->isValidWpConfig( $source ) ) {
             // Copy it to staging site
             if( $this->copy( $source, $destination ) ) {
+                $this->log( "Preparing Data Step0: Copy wp-config.php file from source {$source} to {$destination}", Logger::TYPE_INFO );
                 return true;
             }
         }
 
         // No valid wp-config.php found so let's copy wp stagings default wp-config.php to staging site
         $source = WPSTG_PLUGIN_DIR . "apps/Backend/helpers/wp-config.php";
+
+        $this->log( "Preparing Data Step0: Copy default wp-config.php file from source {$source} to {$destination}", Logger::TYPE_INFO );
+
         if( $this->copy( $source, $destination ) ) {
             // add missing db credentials to wp-config.php
             if( !$this->alterWpConfig( $destination ) ) {
@@ -259,6 +264,8 @@ class DataExternal extends JobExecutable {
      * @return boolean
      */
     protected function alterWpConfig( $source ) {
+        $this->log( "Preparing Data: Alter wp-config.php", Logger::TYPE_INFO );
+
         $content = file_get_contents( $source );
 
         if( false === ($content = file_get_contents( $source )) ) {
@@ -282,7 +289,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         $content = str_replace( $search, $replace, $content );
 
-        if( false === @file_put_contents( $source, $content ) ) {
+        if( false === @wpstg_put_contents( $source, $content ) ) {
             $this->log( "Preparing Data: Can't save wp-config.php", Logger::TYPE_ERROR );
             return false;
         }
@@ -298,12 +305,14 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     protected function isValidWpConfig( $source ) {
 
         if( !is_file( $source ) && !is_link( $source ) ) {
+            $this->log( "Preparing Data Step0: Can not find {$source}", Logger::TYPE_INFO );
             return false;
         }
 
         $content = file_get_contents( $source );
 
         if( false === ($content = file_get_contents( $source )) ) {
+            $this->log( "Preparing Data Step0: Can not read {$source}", Logger::TYPE_INFO );
             return false;
         }
 
@@ -311,6 +320,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         preg_match( "/define\s*\(\s*['\"]DB_NAME['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
         if( empty( $matches[1] ) ) {
+            $this->log( "Preparing Data Step0: Can not find DB_NAME in wp-config.php", Logger::TYPE_INFO );
             return false;
         }
 
@@ -318,6 +328,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         preg_match( "/define\s*\(\s*['\"]DB_USER['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
         if( empty( $matches[1] ) ) {
+            $this->log( "Preparing Data Step0: Can not find DB_USER in wp-config.php", Logger::TYPE_INFO );
             return false;
         }
 
@@ -325,6 +336,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         preg_match( "/define\s*\(\s*['\"]DB_PASSWORD['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
         if( empty( $matches[1] ) ) {
+            $this->log( "Preparing Data Step0: Can not find DB_PASSWORD in wp-config.php", Logger::TYPE_INFO );
             return false;
         }
 
@@ -332,6 +344,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         preg_match( "/define\s*\(\s*['\"]DB_HOST['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
 
         if( empty( $matches[1] ) ) {
+            $this->log( "Preparing Data Step0: Can not find DB_HOST in wp-config.php", Logger::TYPE_INFO );
             return false;
         }
         return true;
@@ -474,6 +487,8 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return true;
         }
 
+        // Change the base table prefix of the main network site
+        $this->debugLog( "Preparing Data Step4: UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, {$this->productionDb->base_prefix}, {$this->prefix}) WHERE meta_key LIKE  {$this->productionDb->base_prefix}_%" );
         $update = $this->db->query(
                 $this->db->prepare(
                         "UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s", $this->productionDb->base_prefix, $this->prefix, $this->productionDb->base_prefix . "_%"
@@ -481,9 +496,11 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         );
 
         if( false === $update ) {
-            $this->log( "Preparing Data Step4a: Skip updating {$this->prefix}usermeta meta_key database base_prefix; {$this->db->last_error}", Logger::TYPE_INFO );
+            $this->log( "Preparing Data Step4: Skip updating {$this->prefix}usermeta meta_key database base_prefix; {$this->db->last_error}", Logger::TYPE_INFO );
         }
 
+        // Change the table prefix of the child network site
+        $this->debugLog( "Preparing Data Step4: UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, {$this->db->prefix}, {$this->prefix}) WHERE meta_key LIKE  {$this->db->prefix}_%" );
         $update = $this->db->query(
                 $this->db->prepare(
                         "UPDATE {$this->prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s", $this->db->prefix, $this->prefix, $this->db->prefix . "_%"
@@ -512,12 +529,19 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
         // Replace table prefix
-        $content = str_replace( '$table_prefix', '$table_prefix = \'' . $this->prefix . '\';//', $content );
+        $pattern     = '/\$table_prefix\s*=\s*(.*).*/';
+        $replacement = '$table_prefix = \'' . $this->prefix . '\'; // Changed by WP Staging';
+        $content     = preg_replace( $pattern, $replacement, $content );
+
+        if( null === $content ) {
+            $this->log( "Preparing Data Step5: Failed to update table_prefix in {$path}. Can't read contents", Logger::TYPE_ERROR );
+            return false;
+        }
 
         // Replace URLs
         $content = str_replace( $this->multisiteHomeDomain, $this->getStagingSiteUrl(), $content );
 
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data Step5: Failed to update $table_prefix in {$path} to " . $this->prefix . ". Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
@@ -555,10 +579,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
         $this->log( "Preparing Data: WP installation is in a subdirectory. Progressing..." );
 
-        $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);/";
+        $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);.*/";
 
         $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0];
-        $replace.= " // Changed by WP-Staging";
+        //$replace.= " // Changed by WP-Staging";
 
 
 
@@ -567,7 +591,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return false;
         }
 
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR );
             return false;
         }
@@ -700,10 +724,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*['\"]WP_HOME['\"]\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]WP_HOME['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('WP_HOME','" . $this->getStagingSiteUrl() . "'); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            //$replace .= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data: Failed to update WP_HOME", Logger::TYPE_ERROR );
@@ -713,7 +737,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             $this->log( "Preparing Data Step10: WP_HOME not defined in wp-config.php. Skipping this step." );
         }
 
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data Step10: Failed to update WP_HOME. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
@@ -742,10 +766,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*['\"]WP_SITEURL['\"]\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]WP_SITEURL['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('WP_SITEURL','" . $this->getStagingSiteUrl() . "'); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            //$replace .= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data Step11: Failed to update WP_SITEURL", Logger::TYPE_ERROR );
@@ -756,7 +780,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
 
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data Step11: Failed to update WP_SITEURL. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
@@ -785,10 +809,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*['\"]WP_ALLOW_MULTISITE['\"]\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]WP_ALLOW_MULTISITE['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('WP_ALLOW_MULTISITE',false); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            //$replace .= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data Step12: Failed to update WP_ALLOW_MULTISITE", Logger::TYPE_ERROR );
@@ -799,7 +823,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
 
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data Step12: Failed to update WP_ALLOW_MULTISITE. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
@@ -828,10 +852,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*['\"]MULTISITE['\"]\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]MULTISITE['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('MULTISITE',false); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            //$replace .= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data Step13: Failed to update MULTISITE", Logger::TYPE_ERROR );
@@ -842,7 +866,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
 
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data Step13: Failed to update MULTISITE. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
@@ -1023,10 +1047,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*['\"]WP_CACHE['\"]\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]WP_CACHE['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('WP_CACHE',false); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            //$replace.= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data: Failed to change WP_CACHE", Logger::TYPE_ERROR );
@@ -1036,7 +1060,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             $this->log( "Preparing Data Step17: WP_CACHE not defined in wp-config.php. Skipping this step." );
         }
 
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data Step17: Failed to update WP_CACHE. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
@@ -1062,22 +1086,21 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
 
             $replace = "define('UPLOADS', '" . $uploadFolder . "');";
+            $this->log( "Preparing Data Step18: Change UPLOADS constant in wp-config.php to {$uploadFolder}." );
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data Step 18: Failed to change UPLOADS", Logger::TYPE_ERROR );
                 return false;
             }
         } else {
             $this->log( "Preparing Data Step18: UPLOADS not defined in wp-config.php. Creating new entry." );
-            // Find WP_ALLOW_MULTISITE
-            // preg_match("/define\s*\(\s*['\"]WP_ALLOW_MULTISITE['\"]\s*,\s*(.*)\s*\);/", $content, $matches);
             // Find ABSPATH and add UPLOAD constant above
             preg_match( "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/", $content, $matches );
             if( !empty( $matches[0] ) ) {
                 $matches[0];
-                //$pattern = "/define\s*\(\s*['\"]WP_ALLOW_MULTISITE['\"]\s*,\s*(.*)\s*\);/";
                 $pattern = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
                 $replace = "define('UPLOADS', '" . $uploadFolder . "'); \n" .
-                        "if ( ! defined( 'ABSPATH' ) ) \n";
+                        "if ( ! defined( 'ABSPATH' ) )";
+                $this->log( "Preparing Data Step18: Change UPLOADS constant in wp-config.php to {$uploadFolder}." );
                 if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                     $this->log( "Preparing Data Step 18: Failed to change UPLOADS", Logger::TYPE_ERROR );
                     return false;
@@ -1086,7 +1109,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
                 $this->log( "Preparing Data Step 18: Can not add UPLOAD constant to wp-config.php. Can not find free position to add it.", Logger::TYPE_ERROR );
             }
         }
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data Step18: Failed to update UPLOADS. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
@@ -1115,10 +1138,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*'DB_NAME'\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*'DB_NAME'\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('DB_NAME','{$this->options->databaseDatabase}'); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            //$replace.= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data: Failed to change DB_NAME", Logger::TYPE_ERROR );
@@ -1133,10 +1156,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*['\"]DB_USER['\"]\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]DB_USER['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('DB_USER','{$this->options->databaseUser}'); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            //$replace.= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data: Failed to change DB_USER", Logger::TYPE_ERROR );
@@ -1151,10 +1174,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*['\"]DB_PASSWORD['\"]\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]DB_PASSWORD['\"]\s*,\s*(.*)\s*\);.*/";
 
-            $replace = "define('DB_PASSWORD','{$this->options->databasePassword}'); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            $replace = "define('DB_PASSWORD','{$this->options->databasePassword}'); // Changed by WP Staging";
+            //$replace.= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data: Failed to change DB_PASSWORD", Logger::TYPE_ERROR );
@@ -1169,10 +1192,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if( !empty( $matches[1] ) ) {
             $matches[1];
 
-            $pattern = "/define\s*\(\s*['\"]DB_HOST['\"]\s*,\s*(.*)\s*\);/";
+            $pattern = "/define\s*\(\s*['\"]DB_HOST['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('DB_HOST','{$this->options->databaseServer}'); // " . $matches[1];
-            $replace.= " // Changed by WP-Staging";
+            //$replace.= " // Changed by WP-Staging";
 
             if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
                 $this->log( "Preparing Data: Failed to change DB_HOST", Logger::TYPE_ERROR );
@@ -1183,15 +1206,15 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
 
-        if( false === @file_put_contents( $path, $content ) ) {
+        if( false === @wpstg_put_contents( $path, $content ) ) {
             $this->log( "Preparing Data Step19: Failed to update database credentials in wp-config.php. Can't save contents", Logger::TYPE_ERROR );
             return false;
         }
         $this->Log( "Preparing Data Step 19: Finished successfully" );
         return true;
     }
-    
-        /**
+
+    /**
      * Save hostname of parent production site in option_name wpstg_connection
      * @return boolean
      */
@@ -1200,15 +1223,15 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $table = $this->prefix . 'options';
 
         $siteurl = get_site_url();
-        
+
         $connection = json_encode( array('prodHostname' => $siteurl) );
 
         $data = array(
             'option_name'  => 'wpstg_connection',
             'option_value' => $connection
         );
-        
-        $format = array( '%s', '%s' );
+
+        $format = array('%s', '%s');
 
         $result = $this->db->replace( $table, $data, $format );
 
@@ -1219,44 +1242,104 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Remove UPLOADS constant in wp-config.php to reset default image folder
+     * Add option_name wpstg_execute and set it to true
+     * This option is used to determine if the staging website has not been loaded initiall for executing certain custom actions from \WPStaging\initActions()
+     * @return boolean
+     */
+    protected function step21() {
+
+        $table = $this->prefix . 'options';
+
+        // Skip - Table does not exist
+        if( false === $this->isTable( $table ) ) {
+            return true;
+        }
+
+
+        $result = $this->db->query(
+                $this->db->prepare(
+                        "INSERT INTO {$this->prefix}options (option_name,option_value) VALUES ('wpstg_execute',%s) ON DUPLICATE KEY UPDATE option_value = %s", "true", "true"
+                )
+        );
+
+        if( false === $result ) {
+            $this->Log( "Preparing Data Step21: Could not save wpstg_execute in {$table}", Logger::TYPE_ERROR );
+        }
+        return true;
+    }
+
+    /**
+     * Preserve data and prevents data in wp_options from beeing cloned to staging site
      * @return bool
      */
-//    protected function step20() {
-//        $path = $this->options->destinationDir . "wp-config.php";
-//
-//        $this->log( "Preparing Data Step20: Remove UPLOADS in wp-config.php" );
-//
-//        if( false === ($content = file_get_contents( $path )) ) {
-//            $this->log( "Preparing Data Step20: Failed to get UPLOADS in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR );
-//            return false;
-//        }
-//
-//
-//        // Get UPLOADS from wp-config.php
-//        preg_match( "/define\s*\(\s*['\"]UPLOADS['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
-//
-//        if( !empty( $matches[0] ) ) {
-//
-//            $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
-//
-//            $replace = "";
-//
-//            if( null === ($content = preg_replace( array($pattern), $replace, $content )) ) {
-//                $this->log( "Preparing Data: Failed to change UPLOADS", Logger::TYPE_ERROR );
-//                return false;
-//            }
-//        } else {
-//            $this->log( "Preparing Data Step19: UPLOADS not defined in wp-config.php. Skipping this step." );
-//        }
-//
-//        if( false === @file_put_contents( $path, $content ) ) {
-//            $this->log( "Preparing Data Step20: Failed to update UPLOADS. Can't save contents", Logger::TYPE_ERROR );
-//            return false;
-//        }
-//        $this->Log( "Preparing Data Step 20: Finished successfully" );
-//        return true;
-//    }
+    protected function step22() {
+        $this->log( "Preparing Data Step22: Preserve Data in " . $this->prefix . "options" );
+
+        // Skip - Table does not exist
+        if( false === $this->isTable( $this->prefix . 'options' ) ) {
+            return true;
+        }
+
+        // Skip - Table is not selected or updated
+        if( !in_array( $this->prefix . 'options', $this->tables ) ) {
+            $this->log( "Preparing Data Step22: Skipped" );
+            return true;
+        }
+
+        $sql = '';
+
+        $preserved_option_names = array('wpstg_existing_clones_beta');
+
+        $preserved_option_names    = apply_filters( 'wpstg_preserved_options_cloning', $preserved_option_names );
+        $preserved_options_escaped = esc_sql( $preserved_option_names );
+
+        $preserved_options_data = array();
+
+        // Get preserved data in wp_options tables
+        $table                                             = $this->db->prefix . 'options';
+        $preserved_options_data[$this->prefix . 'options'] = $this->db->get_results(
+                sprintf(
+                        "SELECT * FROM `{$table}` WHERE `option_name` IN ('%s')", implode( "','", $preserved_options_escaped )
+                ), ARRAY_A
+        );
+
+        // Create preserved data queries for options tables
+        foreach ( $preserved_options_data as $key => $value ) {
+            if( false === empty( $value ) ) {
+                foreach ( $value as $option ) {
+                    $sql .= $this->db->prepare(
+                            "DELETE FROM `{$key}` WHERE `option_name` = %s;\n", $option['option_name']
+                    );
+
+                    $sql .= $this->db->prepare(
+                            "INSERT INTO `{$key}` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s );\n", $option['option_name'], $option['option_value'], $option['autoload']
+                    );
+                }
+            }
+        }
+
+        $this->debugLog( "Preparing Data Step22: Preserve values " . json_encode( $preserved_options_data ), Logger::TYPE_INFO );
+
+        $this->executeSql( $sql );
+
+        $this->log( "Preparing Data Step22: Successful!" );
+        return true;
+    }
+
+    /**
+     * Execute a batch of sql queries
+     * @param string $sqlbatch
+     */
+    private function executeSql( $sqlbatch ) {
+        $queries = array_filter( explode( ";\n", $sqlbatch ) );
+
+        foreach ( $queries as $query ) {
+            if( false === $this->db->query( $query ) ) {
+                $this->log( "Data Crunching Warning:  Can not execute query {$query}", Logger::TYPE_WARNING );
+            }
+        }
+        return true;
+    }
 
     /**
      * Get relative path to the uploads media folder of multisite e.g.  
@@ -1267,9 +1350,9 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $strings = new Strings();
         // Get absolute path to uploads folder
         $uploads = wp_upload_dir();
-        $basedir = $strings->sanitizeDirectorySeparator( $uploads['basedir'] );
+        $basedir = $uploads['basedir'];
         // Get relative upload path
-        $relDir  = str_replace( ABSPATH, null, $basedir );
+        $relDir  = str_replace( wpstg_replace_windows_directory_separator( ABSPATH ), null, wpstg_replace_windows_directory_separator( $basedir ) );
         return $relDir;
     }
 
@@ -1284,9 +1367,9 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return false;
         }
 
-        $customSlug = str_replace( \WPStaging\WPStaging::getWPpath(), '', $uploadPath );
+        $customSlug = str_replace( wpstg_replace_windows_directory_separator( \WPStaging\WPStaging::getWPpath() ), '', wpstg_replace_windows_directory_separator( $uploadPath ) );
 
-        $newUploadPath = \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR . $customSlug;
+        $newUploadPath = wpstg_replace_windows_directory_separator( \WPStaging\WPStaging::getWPpath() ) . $this->options->cloneDirectoryName . '/' . $customSlug;
 
         return $newUploadPath;
     }
@@ -1309,8 +1392,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $multisitePath = defined( 'PATH_CURRENT_SITE' ) ? PATH_CURRENT_SITE : '/';
         $url           = rtrim( $this->multisiteHomeDomain, '/\\' ) . $multisitePath . $this->options->cloneDirectoryName;
 
-        //$multisitePath = defined( 'PATH_CURRENT_SITE') ? str_replace('/', '', PATH_CURRENT_SITE) : '';       
-        //$url = trailingslashit( $this->multisiteHomeDomain ) . $multisitePath . '/' . $this->options->cloneDirectoryName;
         return $url;
     }
 
