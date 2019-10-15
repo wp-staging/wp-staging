@@ -154,6 +154,7 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.6.3 =
+* New Support for WordPress 5.2.4
 * New: Allow wildcards for excluding files
 * New: Add hook "wpstg_clone_action_staging" to execute code on staging site after cloning 
 * Tweak: Improved support for custom uploads folder if user customized UPLOADS constant or upload_path in DB
