@@ -283,7 +283,7 @@ class Administrator extends InjectionAware {
 
         nocache_headers();
         header( "Content-Type: text/plain" );
-        header( "Content-Disposition: attachment; filename='wpstg-system-info.txt'" );
+        header( 'Content-Disposition: attachment; filename="wpstg-system-info.txt"' );
         echo wp_strip_all_tags( new SystemInfo( $this->di ) );
     }
 
