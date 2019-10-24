@@ -135,9 +135,7 @@ class Files extends JobExecutable {
 
             $file = $this->file->fgets();
 
-//            if( false !== strpos( $file, 'index.php' ) ) {
-//                $test = $file;
-//            }
+
             $this->copyFile( $file );
         }
 
@@ -158,6 +156,7 @@ class Files extends JobExecutable {
      */
     private function isFinished() {
         return (
+                !isset( $this->options->isRunning ) ||
                 $this->options->currentStep > $this->options->totalSteps ||
                 $this->options->copiedFiles >= $this->options->totalFiles
                 );
@@ -170,6 +169,8 @@ class Files extends JobExecutable {
     private function copyFile( $file ) {
 
         $file = trim( \WPStaging\WPStaging::getWPpath() . $file );
+        
+        $file = wpstg_replace_windows_directory_separator($file);
 
         $directory = dirname( $file );
 
@@ -231,9 +232,9 @@ class Files extends JobExecutable {
         }
 
         // Set file permissions
-        @chmod( $file, wpstg_get_permissions_for_file() );
+        @chmod( $destination, wpstg_get_permissions_for_file() );
 
-        $this->setDirPermissions( $file );
+        $this->setDirPermissions( $destination );
 
         return true;
     }
@@ -258,8 +259,10 @@ class Files extends JobExecutable {
      * @return bool|string
      */
     private function getDestination( $file ) {
-        $file                 = $this->getMultisiteUploadFolder( $file );
-        $relativePath         = str_replace( \WPStaging\WPStaging::getWPpath(), null, $file );
+        //$file                 = $this->getMultisiteUploadFolder( $file );
+        $file = wpstg_replace_windows_directory_separator($file);
+        $rootPath = wpstg_replace_windows_directory_separator(\WPStaging\WPStaging::getWPpath());
+        $relativePath         = str_replace( $rootPath, null, $file );
         $destinationPath      = $this->destination . $relativePath;
         $destinationDirectory = dirname( $destinationPath );
 
@@ -337,9 +340,29 @@ class Files extends JobExecutable {
      * @return boolean
      */
     private function isFileExcluded( $file ) {
+
+        $excludedFiles = ( array ) $this->options->excludedFiles;
+
+        $basenameFile = basename( $file );
+
+
+        // Remove .htaccess and web.config from array excludedFiles if staging site is copied to a subdomain
+        //if( $this->isCustomDirectory() ) {
+        if( false === $this->isIdenticalHostname() ) {
+            $excludedFiles = \array_diff( $excludedFiles, array("web.config", ".htaccess") );
+        }
+
+
         // If file name exists
-        if( in_array( basename( $file ), $this->options->excludedFiles ) ) {
+        if( in_array( $basenameFile, $excludedFiles ) ) {
             return true;
+        }
+
+        // Check for wildcards
+        foreach ($excludedFiles as $pattern){
+            if(fnmatch($pattern, $basenameFile)){
+                return true;          
+            }
         }
 
         // Do not copy wp-config.php if the clone gets updated. This is for security purposes, 
@@ -349,6 +372,41 @@ class Files extends JobExecutable {
         }
 
 
+        return false;
+    }
+
+    /**
+     * Check if custom target directory is used
+     * @return boolean
+     */
+//    private function isCustomDirectory() {
+//
+//        if( empty( $this->options->cloneDir ) ) {
+//            return false;
+//        }
+//        return true;
+//    }
+
+    /**
+     * Check if production and staging hostname are identical
+     * If they are not identical we assume website is cloned to a subdomain and not into a subfolder
+     * @return boolean
+     */
+    private function isIdenticalHostname() {
+        // hostname of production site without scheme
+        $siteurl            = get_site_url();
+        $url                = parse_url( $siteurl );
+        $productionHostname = $url['host'];
+
+        // hostname of staging site without scheme
+        $cloneUrl       = empty( $this->options->cloneHostname ) ? $url : parse_url( $this->options->cloneHostname );
+        $targetHostname = $cloneUrl['host'];
+
+        // Check if target hostname beginns with the production hostname
+        // Only compare the hostname without path
+        if( wpstg_starts_with( $productionHostname, $targetHostname ) ) {
+            return true;
+        }
         return false;
     }
 
@@ -371,17 +429,12 @@ class Files extends JobExecutable {
 
     /**
      * Replace backward slash with forward slash directory separator
-     * Escape Windows Backward Slash -  Compatibility Fix
-
+     * Windows Compatibility Fix
+     * 
      * @param string $path Path
-     *
      * @return string
      */
     private function sanitizeDirectorySeparator( $path ) {
-        //$string = str_replace( '\\', '/', $path );
-        //$string = str_replace( "/", "\\", $path );
-        //return str_replace( '\\\\', '\\', $string );
-        //return preg_replace( '/[\\\\]+/', '\\\\\\\\', $string );
         return preg_replace( '/[\\\\]+/', '/', $path );
     }
 
@@ -395,13 +448,10 @@ class Files extends JobExecutable {
         if( false !== strpos( $directory, 'wp-staging' ) || false !== strpos( $directory, 'wp-staging-pro' ) ) {
             return false;
         }
-//        $directory = wpstg_replace_windows_directory_separator( $directory );
-//        $directory = trailingslashit( $directory );
+
         $directory = trailingslashit( $this->sanitizeDirectorySeparator( $directory ) );
 
         foreach ( $this->options->excludedDirectories as $excludedDirectory ) {
-//            $excludedDirectory = wpstg_replace_windows_directory_separator( $excludedDirectory );
-//            $excludedDirectory = trailingslashit( $excludedDirectory );
             $excludedDirectory = trailingslashit( $this->sanitizeDirectorySeparator( $excludedDirectory ) );
             if( strpos( $directory, $excludedDirectory ) === 0 && !$this->isExtraDirectory( $directory ) ) {
                 return true;

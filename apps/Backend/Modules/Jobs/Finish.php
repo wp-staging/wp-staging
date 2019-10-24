@@ -46,7 +46,7 @@ class Finish extends Job {
         );
 
         //$this->flush();
-        do_action('wpstg_cloning_complete');
+        do_action('wpstg_cloning_complete', $this->options);
 
 
         return ( object ) $return;

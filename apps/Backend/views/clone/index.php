@@ -1,8 +1,8 @@
 <div id="wpstg-clonepage-wrapper">
 
     <?php
-    require_once($this->path . "views/_includes/header.php");
-    require_once($this->path . "views/_includes/report-issue.php");
+    require_once($this->path . "views/_main/header.php");
+    require_once($this->path . "views/_main/report-issue.php");
     ?>
 
     <?php
@@ -20,6 +20,6 @@
     }
 
     // Footer
-    require_once($this->path . "views/clone/includes/footer.php");
+    require_once($this->path . "views/_main/footer.php");
     ?>
 </div>

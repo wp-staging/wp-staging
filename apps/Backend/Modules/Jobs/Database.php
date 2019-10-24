@@ -54,7 +54,8 @@ class Database extends JobExecutable {
      * @return boolean
      */
     private function isFatalError() {
-        $path = trailingslashit( get_home_path() ) . $this->options->cloneDirectoryName;
+        //$path = trailingslashit( get_home_path() ) . $this->options->cloneDirectoryName;
+        $path = trailingslashit($this->options->cloneDir);
         if( isset( $this->options->mainJob ) && $this->options->mainJob !== 'updating' && is_dir( $path ) ) {
             $this->returnException( " Can not continue! Change the name of the clone or delete existing folder. Then try again. Folder already exists: " . $path );
         }
@@ -121,7 +122,7 @@ class Database extends JobExecutable {
         // Make sure prefix of staging site is NEVER identical to prefix of live site! 
         if( $stagingPrefix == $this->db->prefix ) {
             $error = 'Fatal error 7: The new database table prefix ' . $stagingPrefix . ' would be identical to the table prefix of the live site. Please open a support ticket at support@wp-staging.com';
-            $this->returnException($error);
+            $this->returnException( $error );
             wp_die( $error );
         }
         return $stagingPrefix;
@@ -249,7 +250,10 @@ class Database extends JobExecutable {
         }
 
         $this->log( "DB Copy: {$new} already exists, dropping it first" );
+        
+        $this->db->query( "SET FOREIGN_KEY_CHECKS=0" );
         $this->db->query( "DROP TABLE {$new}" );
+        $this->db->query( "SET FOREIGN_KEY_CHECKS=1" );
     }
 
     /**

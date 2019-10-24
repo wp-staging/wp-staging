@@ -242,7 +242,9 @@ class Cloning extends Job {
     private function getDestinationDir() {
         // No custom clone dir or clone dir equals abspath of main wordpress site
         if( empty( $this->options->cloneDir ) || $this->options->cloneDir == ( string ) \WPStaging\WPStaging::getWPpath() ) {
-            return trailingslashit( \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName );
+            $this->options->cloneDir = trailingslashit( \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName );
+            //return trailingslashit( \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName );
+            return $this->options->cloneDir;        
         }
         return trailingslashit( $this->options->cloneDir );
     }

@@ -161,15 +161,15 @@ class Scan extends Job {
             $dataSize = isset( $data["size"] ) ? $data["size"] : '';
 
 
-            // Include wp core folders and their sub dirs. 
-            // Exclude all other folders (default setting)
+            // Select all wp core folders and their sub dirs. 
+            // Unselect all other folders (default setting)
             $isDisabled = ($name !== 'wp-admin' &&
                     $name !== 'wp-includes' &&
                     $name !== 'wp-content' &&
                     $name !== 'sites') &&
-                    false === strpos( strrev( $dataPath ), strrev( "wp-admin" ) ) &&
-                    false === strpos( strrev( $dataPath ), strrev( "wp-includes" ) ) &&
-                    false === strpos( strrev( $dataPath ), strrev( "wp-content" ) ) ? true : false;
+                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) &&
+                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) &&
+                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) ? true : false;
 
             // Extra class to differentiate between wp core and non core folders
             $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
@@ -190,6 +190,7 @@ class Scan extends Job {
             $output .= "'>{$name}";
             $output .= "</a>";
             $output .= "<span class='wpstg-size-info'>{$this->formatSize( $dataSize )}</span>";
+            $output .= isset( $this->settings->debugMode ) ? "<span class='wpstg-size-info'> {$dataPath}</span>" : "";
 
             if( !empty( $directory ) ) {
                 $output .= "<div class='wpstg-dir wpstg-subdir'>";
@@ -303,10 +304,11 @@ class Scan extends Job {
         // Gather Themes
         $this->getSubDirectories( WP_CONTENT_DIR . DIRECTORY_SEPARATOR . "themes" );
 
-        // Gather Default Uploads Folder
-        //$this->getSubDirectories(WP_CONTENT_DIR  . DIRECTORY_SEPARATOR . "uploads");
         // Gather Custom Uploads Folder if there is one
         $this->getSubDirectories( $this->getUploadDir() );
+
+        // Gather /sites/ or /blogs.dir/ folder if there is one (for multisites)
+        $this->getSubDirectories( $this->getMuUploadSitesDir() );
     }
 
     /**
@@ -315,6 +317,16 @@ class Scan extends Job {
     protected function getSubDirectories( $path ) {
 
         if( !is_readable( $path ) ) {
+            return false;
+        }
+
+        if( !is_dir( $path ) ) {
+            return false;
+        }
+
+        // IMPORTANT: If this is not used and a folder belongs to another user 
+        // DirectoryIterator() will throw a fatal error which can not be catched with is_readable()
+        if( !opendir( $path ) ) {
             return false;
         }
 
@@ -420,12 +432,63 @@ class Scan extends Job {
     }
 
     /**
-     * Get absolute WP uploads path e.g. /var/www/htdocs/example.com/wp-content/uploads/sites/1
+     * Get absolute WP uploads path e.g. 
+     * Multisites: /var/www/htdocs/example.com/wp-content/uploads/sites/1 or /var/www/htdocs/example.com/wp-content/blogs.dir/1/files
+     * Single sites: /var/www/htdocs/example.com/wp-content/uploads
      * @return string
      */
     protected function getUploadDir() {
-        $uploads = wp_upload_dir();
-        return $uploads['basedir'];
+        $uploads = wp_upload_dir( null, false );
+
+        $baseDir = wpstg_replace_windows_directory_separator( $uploads['basedir'] );
+
+        // If multisite (and if not the main site in a post-MU network)
+        if( is_multisite() && !( is_main_network() && is_main_site() && defined( 'MULTISITE' ) ) ) {
+            // blogs.dir is used on WP 3.5 and lower
+            if( false !== strpos( $baseDir, 'blogs.dir' ) ) {
+                // remove this piece from the basedir: /blogs.dir/2/files
+                $uploadDir = wpstg_replace_first_match( '/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir );
+                $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/blogs.dir' );
+            } else {
+                // remove this piece from the basedir: /sites/2
+                $uploadDir = wpstg_replace_first_match( '/sites/' . get_current_blog_id(), null, $baseDir );
+                $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/sites' );
+    }
+
+
+            return $dir;
+}
+        return $baseDir;
+    }
+
+    /**
+     * Get absolute WP uploads path e.g. 
+     * Multisites: /var/www/htdocs/example.com/wp-content/uploads/sites/1 or /var/www/htdocs/example.com/wp-content/blogs.dir/1/files
+     * Single sites: /var/www/htdocs/example.com/wp-content/uploads
+     * @return string
+     */
+    protected function getMuUploadSitesDir() {
+        $uploads = wp_upload_dir( null, false );
+
+        $baseDir = wpstg_replace_windows_directory_separator( $uploads['basedir'] );
+
+        // If multisite (and if not the main site in a post-MU network)
+        if( is_multisite() && !( is_main_network() && is_main_site() && defined( 'MULTISITE' ) ) ) {
+            // blogs.dir is used on WP 3.5 and lower
+            if( false !== strpos( $baseDir, 'blogs.dir' ) ) {
+                // remove this piece from the basedir: /blogs.dir/2/files
+                $uploadDir = wpstg_replace_first_match( '/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir );
+                $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/blogs.dir' );
+            } else {
+                // remove this piece from the basedir: /sites/2
+                $uploadDir = wpstg_replace_first_match( '/sites/' . get_current_blog_id(), null, $baseDir );
+                $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/sites' );
+            }
+
+
+            return $dir;
+        }
+        return $baseDir;
     }
 
 }

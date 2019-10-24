@@ -40,7 +40,7 @@ class Finish extends Job {
 
         $return = array(
             "directoryName" => $this->options->cloneDirectoryName,
-            "path"          => $this->options->destinationDir,
+            "path"          => trailingslashit( $this->options->destinationDir ),
             "url"           => $this->getDestinationUrl(),
             "number"        => $this->options->cloneNumber,
             "version"       => \WPStaging\WPStaging::VERSION,
@@ -52,6 +52,8 @@ class Finish extends Job {
         );
 
         //$this->flush();
+        do_action( 'wpstg_cloning_complete', $this->options );
+
 
         return ( object ) $return;
     }
@@ -81,7 +83,8 @@ class Finish extends Job {
         if( isset( $this->options->existingClones[$this->options->clone] ) ) {
             $this->options->existingClones[$this->options->clone]['datetime'] = time();
             $this->options->existingClones[$this->options->clone]['url']      = $this->getDestinationUrl();
-            $this->options->existingClones[$this->options->clone]['status'] = 'finished';
+            $this->options->existingClones[$this->options->clone]['status']   = 'finished';
+            $this->options->existingClones[$this->options->clone]['prefix']   = $this->options->prefix;
             update_option( "wpstg_existing_clones_beta", $this->options->existingClones );
             $this->log( "Finish: The job finished!" );
             return true;
@@ -95,7 +98,7 @@ class Finish extends Job {
 
         $this->options->existingClones[$this->clone] = array(
             "directoryName"    => $this->options->cloneDirectoryName,
-            "path"             => $this->options->destinationDir,
+            "path"             => trailingslashit( $this->options->destinationDir ),
             "url"              => $this->getDestinationUrl(),
             "number"           => $this->options->cloneNumber,
             "version"          => \WPStaging\WPStaging::VERSION,
@@ -129,10 +132,9 @@ class Finish extends Job {
 
         //return trailingslashit( $this->multisiteHomeDomain ) . $this->options->cloneDirectoryName;
         // Get the path to the main multisite without appending and trailingslash e.g. wordpress
-        $multisitePath = defined( 'PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';       
+        $multisitePath = defined( 'PATH_CURRENT_SITE' ) ? PATH_CURRENT_SITE : '/';
         return rtrim( $this->multisiteHomeDomain, '/\\' ) . $multisitePath . $this->options->cloneDirectoryName;
         //$multisitePath = defined( 'PATH_CURRENT_SITE' ) ? str_replace( '/', '', PATH_CURRENT_SITE ) : '';
-
         //return trailingslashit( $this->multisiteHomeDomain ) . $multisitePath . '/' . $this->options->cloneDirectoryName;
     }
 

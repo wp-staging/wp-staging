@@ -231,7 +231,7 @@ class SearchReplaceExternal extends JobExecutable {
     private function startReplace( $table ) {
         $rows = $this->options->job->start + $this->settings->querySRLimit;
         $this->log(
-                "DB Processing:  Table {$table} {$this->options->job->start} to {$rows} records"
+                "DB Search & Replace:  Table {$table} {$this->options->job->start} to {$rows} records"
         );
 
         // Search & Replace
@@ -246,20 +246,20 @@ class SearchReplaceExternal extends JobExecutable {
      * @access public
      * @return int
      */
-    private function get_pages_in_table( $table ) {
-
-        // Table does not exist
-        $table  = str_replace( $this->options->prefix . '.', null, $table );
-        $result = $this->productionDb->query( "SHOW TABLES LIKE '{$table}'" );
-        if( !$result || 0 === $result ) {
-            return 0;
-        }
-
-        $table = esc_sql( $table );
-        $rows  = $this->productionDb->get_var( "SELECT COUNT(*) FROM $table" );
-        $pages = ceil( $rows / $this->settings->querySRLimit );
-        return absint( $pages );
-    }
+//    private function get_pages_in_table( $table ) {
+//
+//        // Table does not exist
+//        $table  = str_replace( $this->options->prefix . '.', null, $table );
+//        $result = $this->productionDb->query( "SHOW TABLES LIKE '{$table}'" );
+//        if( !$result || 0 === $result ) {
+//            return 0;
+//        }
+//
+//        $table = esc_sql( $table );
+//        $rows  = $this->productionDb->get_var( "SELECT COUNT(*) FROM $table" );
+//        $pages = ceil( $rows / $this->settings->querySRLimit );
+//        return absint( $pages );
+//    }
 
     /**
      * Gets the columns in a table.
@@ -283,17 +283,6 @@ class SearchReplaceExternal extends JobExecutable {
     }
 
     /**
-     * Return absolute destination path
-     * @return string
-     */
-//    private function getAbsDestination() {
-//        if( empty( $this->options->cloneDir ) ) {
-//            return \WPStaging\WPStaging::getWPpath();
-//        }
-//        return trailingslashit( $this->options->cloneDir );
-//    }
-
-    /**
      * Adapated from interconnect/it's search/replace script, adapted from Better Search Replace
      *
      * Modified to use WordPress wpdb functions instead of PHP's native mysql/pdo functions,
@@ -310,23 +299,21 @@ class SearchReplaceExternal extends JobExecutable {
     private function searchReplace( $table, $page, $args ) {
 
         if( $this->thirdParty->isSearchReplaceExcluded( $table ) ) {
-            $this->log( "DB Processing: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
+            $this->log( "DB Search & Replace: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
             return true;
         }
 
         // Load up the default settings for this chunk.
-        $table        = esc_sql( $table );
-        $current_page = $this->options->job->start + $this->settings->querySRLimit;
-        $pages        = $this->get_pages_in_table( $table );
-
-
+        $table              = esc_sql( $table );
+        //$current_page = $this->options->job->start + $this->settings->querySRLimit;
+        //$pages        = $this->get_pages_in_table( $table );
         // Search URL example.com/staging and root path to staging site /var/www/htdocs/staging
         $args['search_for'] = array(
             '//' . $this->sourceHostname,
             ABSPATH,
             '\/\/' . str_replace( '/', '\/', $this->sourceHostname ), // Used by revslider and several visual editors
             '%2F%2F' . str_replace( '/', '%2F', $this->sourceHostname ), // HTML entitity for WP Backery Page Builder Plugin
-            //$this->getImagePathLive()
+                //$this->getImagePathLive()
         );
 
 
@@ -335,8 +322,11 @@ class SearchReplaceExternal extends JobExecutable {
             $this->options->destinationDir,
             '\/\/' . str_replace( '/', '\/', $this->destinationHostname ), // Used by revslider and several visual editors
             '%2F%2F' . str_replace( '/', '%2F', $this->destinationHostname ), // HTML entitity for WP Backery Page Builder Plugin
-            //$this->getImagePathStaging()
+                //$this->getImagePathStaging()
         );
+
+        $this->debugLog( "DB Search & Replace: Search: {$args['search_for'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
+        $this->debugLog( "DB Search & Replace: Replace: {$args['replace_with'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
 
 
         $args['replace_guids']    = 'off';
@@ -377,7 +367,7 @@ class SearchReplaceExternal extends JobExecutable {
             'Admin_custome_login_top',
             'Admin_custome_login_dashboard',
             'Admin_custome_login_Version',
-            'upload_path',
+            'upload_path'
         );
 
         $filter = apply_filters( 'wpstg_clone_searchreplace_excl_rows', $filter );
@@ -408,7 +398,8 @@ class SearchReplaceExternal extends JobExecutable {
 
                 $dataRow = $row[$column];
 
-                // Skip rows larger than 10MB
+
+                // Skip rows larger than 5MB                
                 $size = strlen( $dataRow );
                 if( $size >= 5000000 ) {
                     continue;
@@ -429,16 +420,14 @@ class SearchReplaceExternal extends JobExecutable {
 //                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->multisiteDomainWithoutScheme ) ) {
 //                    continue;
 //                }
-
                 // Check options table
                 if( $this->options->prefix . 'options' === $table ) {
 
                     // Skip certain options
-                    if( isset( $should_skip ) && true === $should_skip ) {
-                        $should_skip = false;
-                        continue;
-                    }
-
+//                    if( isset( $should_skip ) && true === $should_skip ) {
+//                        $should_skip = false;
+//                        continue;
+//                    }
                     // Skip this row
                     if( 'wpstg_existing_clones_beta' === $dataRow ||
                             'wpstg_existing_clones' === $dataRow ||
@@ -447,7 +436,8 @@ class SearchReplaceExternal extends JobExecutable {
                             'siteurl' === $dataRow ||
                             'home' === $dataRow
                     ) {
-                        $should_skip = true;
+                        //$should_skip = true;
+                        continue;
                     }
                 }
 
@@ -500,6 +490,7 @@ class SearchReplaceExternal extends JobExecutable {
         unset( $update_sql );
         unset( $where_sql );
         unset( $sql );
+        unset( $current_row );
 
 
         // DB Flush
@@ -558,6 +549,10 @@ class SearchReplaceExternal extends JobExecutable {
      */
     private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialized = false, $case_insensitive = false ) {
         try {
+            // PDO instances can not be serialized or unserialized
+            if( is_serialized( $data ) && strpos( $data, 'O:3:"PDO":0:' ) !== false ) {
+                return $data;
+            }
             // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
             if( is_serialized( $data ) && ( $unserialized = @unserialize( $data ) ) !== false ) {
                 $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
@@ -570,25 +565,23 @@ class SearchReplaceExternal extends JobExecutable {
                 $data = $tmp;
                 unset( $tmp );
             } elseif( is_object( $data ) ) {
-                $tmp   = $data;
                 $props = get_object_vars( $data );
 
-                // Do not continue if class contains __PHP_Incomplete_Class_Name
-                if( !empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
-                    return $data;
-                }
-
                 // Do a search & replace
-                foreach ( $props as $key => $value ) {
-                    if( $key === '' || ord( $key[0] ) === 0 ) {
-                        continue;
+                if( empty( $props['__PHP_Incomplete_Class_Name'] ) ) {
+                    $tmp = $data;
+                    foreach ( $props as $key => $value ) {
+                        if( $key === '' || ord( $key[0] ) === 0 ) {
+                            continue;
+                        }
+                        $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
                     }
-                    $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
+                    $data  = $tmp;
+                    $tmp   = '';
+                    $props = '';
+                    unset( $tmp );
+                    unset( $props );
                 }
-
-                $data = $tmp;
-                unset( $tmp );
-                unset( $props );
             } else {
                 if( is_string( $data ) ) {
                     if( !empty( $from ) && !empty( $to ) ) {
@@ -800,7 +793,7 @@ class SearchReplaceExternal extends JobExecutable {
             return;
         }
 
-        $this->log( "DB Processing: {$new} already exists, dropping it first" );
+        $this->log( "DB Search & Replace: {$new} already exists, dropping it first" );
         $this->stagingDb->query( "DROP TABLE {$new}" );
     }
 

@@ -220,7 +220,7 @@ class SearchReplace extends JobExecutable {
     private function startReplace( $table ) {
         $rows = $this->options->job->start + $this->settings->querySRLimit;
         $this->log(
-                "DB Processing:  Table {$table} {$this->options->job->start} to {$rows} records"
+                "DB Search & Replace:  Table {$table} {$this->options->job->start} to {$rows} records"
         );
 
         // Search & Replace
@@ -288,7 +288,7 @@ class SearchReplace extends JobExecutable {
     private function searchReplace( $table, $page, $args ) {
 
         if( $this->thirdParty->isSearchReplaceExcluded( $table ) ) {
-            $this->log( "DB Processing: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
+            $this->log( "DB Search & Replace: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO );
             return true;
         }
 
@@ -302,15 +302,20 @@ class SearchReplace extends JobExecutable {
             '%2F%2F' . str_replace( '/', '%2F', $this->sourceHostname ), // HTML entitity for WP Backery Page Builder Plugin
             '\/\/' . str_replace( '/', '\/', $this->sourceHostname ), // Escaped \/ used by revslider and several visual editors
             '//' . $this->sourceHostname,
-            rtrim( ABSPATH, '/' ),
+            //rtrim( ABSPATH, '/' ), // This lead to errors if ABSPATH is /www/ because this would break external links like https://www.domain.com to https://www/replace-string/domain.com
+            ABSPATH
         );
 
         $args['replace_with'] = array(
             '%2F%2F' . str_replace( '/', '%2F', $this->destinationHostname ),
             '\/\/' . str_replace( '/', '\/', $this->destinationHostname ),
             '//' . $this->destinationHostname,
-            rtrim( $this->options->destinationDir, '/' ),
+            //rtrim( $this->options->destinationDir, '/' ),
+            $this->options->destinationDir
         );
+
+        $this->debugLog( "DB Search & Replace: Search: {$args['search_for'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
+        $this->debugLog( "DB Search & Replace: Replace: {$args['replace_with'][0]}", \WPStaging\Utils\Logger::TYPE_INFO );
 
 
         $args['replace_guids']    = 'off';
@@ -339,7 +344,7 @@ class SearchReplace extends JobExecutable {
 
         //Make sure value is never smaller than 1 or greater than 20000
         //$end = $this->settings->querySRLimit == '0' || empty( $this->settings->querySRLimit ) ? 1 : $this->settings->querySRLimit > 20000 ? 20000 : $this->settings->querySRLimit;
-        $end         = $this->settings->querySRLimit;
+        $end = $this->settings->querySRLimit;
 
         // Grab the content of the current table.
         $data = $this->db->get_results( "SELECT * FROM $table LIMIT $start, $end", ARRAY_A );
@@ -368,7 +373,6 @@ class SearchReplace extends JobExecutable {
 //            $this->settings->querySRLimit = $end;
 //            update_option( 'wpstg_settings', $this->settings );
 //        }
-
         // Filter certain rows (of other plugins)
         $filter = array(
             'Admin_custome_login_Slidshow',
@@ -510,8 +514,6 @@ class SearchReplace extends JobExecutable {
         return true;
     }
 
-
-
     /**
      * Adapted from interconnect/it's search/replace script.
      *
@@ -531,6 +533,10 @@ class SearchReplace extends JobExecutable {
      */
     private function recursive_unserialize_replace( $from = '', $to = '', $data = '', $serialized = false, $case_insensitive = false ) {
         try {
+            // PDO instances can not be serialized or unserialized
+            if( is_serialized( $data ) && strpos( $data, 'O:3:"PDO":0:' ) !== false ) {
+                return $data;
+            }
             // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
             if( is_serialized( $data ) && ( $unserialized = @unserialize( $data ) ) !== false ) {
                 $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
@@ -554,7 +560,7 @@ class SearchReplace extends JobExecutable {
                         }
                         $tmp->$key = $this->recursive_unserialize_replace( $from, $to, $value, false, $case_insensitive );
                     }
-                    $data = $tmp;
+                    $data  = $tmp;
                     $tmp   = '';
                     $props = '';
                     unset( $tmp );
@@ -771,7 +777,7 @@ class SearchReplace extends JobExecutable {
             return;
         }
 
-        $this->log( "DB Processing: {$new} already exists, dropping it first" );
+        $this->log( "DB Search & Replace: {$new} already exists, dropping it first" );
         $this->db->query( "DROP TABLE {$new}" );
     }
 
