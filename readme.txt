@@ -12,7 +12,7 @@ Tested up to: 5.2
 Stable tag: {{version}}
 Requires PHP: 5.3
 
-A duplicator plugin! Clone, duplicate and migrate live sites to independent staging and development sites that are available only to administrators.
+A duplicator plugin - clone/move, duplicate & migrate live websites to independent staging and development sites that are accessible​ by authorized users only.
 
 == Description == 
 
@@ -152,6 +152,9 @@ https://wp-staging.com
 4. Finish!
 
 == Changelog ==
+
+= 2.6.4 =
+* Fix: Broken image folder with duplicate leading slash after cloning
 
 = 2.6.3 =
 * New Support for WordPress 5.2.4
