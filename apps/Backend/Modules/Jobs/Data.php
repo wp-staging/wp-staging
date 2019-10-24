@@ -995,6 +995,9 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         // Get UPLOADS from wp-config.php if there is already one
         preg_match( "/define\s*\(\s*['\"]UPLOADS['\"]\s*,\s*(.*)\s*\);/", $content, $matches );
         $uploadFolder = wpstg_get_rel_upload_dir();
+        $uploadFolder = ltrim($uploadFolder, '/');
+        $uploadFolder = rtrim($uploadFolder, '/');
+
         if( !empty( $matches[0] ) ) {
             $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
 
