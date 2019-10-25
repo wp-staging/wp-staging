@@ -8,3 +8,4 @@ Gruntfile.js
 robo
 .trash
 .vscode
+test/_output/*
