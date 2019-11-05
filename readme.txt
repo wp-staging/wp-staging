@@ -153,6 +153,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.5 =
+* Fix: Fatal error: Invalid serialization data for DateTime object #91
+
 = 2.6.4 =
 * Fix: Broken image folder with duplicate leading slash after cloning
 
