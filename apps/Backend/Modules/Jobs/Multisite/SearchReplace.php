@@ -561,6 +561,12 @@ class SearchReplace extends JobExecutable {
             if( is_serialized( $data ) && strpos( $data, 'O:3:"PDO":0:' ) !== false ) {
                 return $data;
             }
+            // DateTime object can not be unserialized.
+            // Would throw PHP Fatal error:  Uncaught Error: Invalid serialization data for DateTime object in
+            // Bug PHP https://bugs.php.net/bug.php?id=68889&thanks=6 and https://github.com/WP-Staging/wp-staging-pro/issues/74
+            if( is_serialized( $data ) && strpos( $data, 'O:8:"DateTime":0:' ) !== false ) {
+                return $data;
+            }
             // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
             if( is_serialized( $data ) && ( $unserialized = @unserialize( $data ) ) !== false ) {
                 $data = $this->recursive_unserialize_replace( $from, $to, $unserialized, true, $case_insensitive );
