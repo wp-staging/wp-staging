@@ -104,9 +104,9 @@ final class WPStaging {
         $this->slug = plugin_basename( dirname( dirname( dirname( __FILE__ ) ) ) );
 
         // absolute path to the main plugin dir
-        $this->pluginPath = plugin_dir_path( dirname( dirname( __FILE__ ) ) );
+        $this->pluginPath = plugin_dir_path( dirname( __FILE__ ) );
 
-        // URL to apps folder
+        // URL to root plugin folder
         $this->url = plugin_dir_url( dirname( __FILE__ ) );
 
         // URL to backend public folder folder
@@ -256,9 +256,9 @@ final class WPStaging {
         // Autoloader
         $autoloader->registerNamespaces( array(
             "WPStaging"  => array(
-                $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR,
-                $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR,
-                $this->pluginPath . 'apps' . DIRECTORY_SEPARATOR . 'Core' . DIRECTORY_SEPARATOR . 'Iterators' . DIRECTORY_SEPARATOR,
+                $this->pluginPath,
+                $this->pluginPath . 'Core' . DIRECTORY_SEPARATOR,
+                $this->pluginPath . 'Core' . DIRECTORY_SEPARATOR . 'Iterators' . DIRECTORY_SEPARATOR,
             ),
             "splitbrain" => array(
                 $this->pluginPath . 'vendor' . DIRECTORY_SEPARATOR . 'splitbrain' . DIRECTORY_SEPARATOR
@@ -314,7 +314,7 @@ final class WPStaging {
         $this->set( "settings", new Settings() );
 
         // Load globally available functions
-        require_once $this->pluginPath . 'apps/Core/Utils/functions.php';
+        require_once $this->pluginPath . 'Core/Utils/functions.php';
 
         // Set Administrator
         if( is_admin() ) {

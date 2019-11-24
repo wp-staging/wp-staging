@@ -35,7 +35,7 @@ class Feedback {
             $email = trim( $current_user->user_email );
         }
 
-        include WPSTG_PLUGIN_DIR . 'apps/Backend/views/feedback/deactivate-feedback.php';
+        include WPSTG_PLUGIN_DIR . 'Backend/views/feedback/deactivate-feedback.php';
     }
 
     public function sendMail() {
@@ -105,7 +105,7 @@ class Feedback {
 //        $email = trim( $current_user->user_email );
 //    }
 //
-//    include WPSTG_PLUGIN_DIR . 'apps/Backend/views/feedback/deactivate-feedback.php';
+//    include WPSTG_PLUGIN_DIR . 'Backend/views/feedback/deactivate-feedback.php';
 //}
 
 /**

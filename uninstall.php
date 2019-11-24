@@ -32,7 +32,7 @@ class uninstall {
          * Make sure to not redeclare class in case free version has been installed previosly
          */
         if( !class_exists( 'WPStaging\WPStaging' ) ) {
-            require_once plugin_dir_path( __FILE__ ) . "apps/Core/WPStaging.php";
+            require_once plugin_dir_path( __FILE__ ) . "Core/WPStaging.php";
         }
         $wpStaging = \WPStaging\WPStaging::getInstance();
 

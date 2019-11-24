@@ -90,8 +90,8 @@ function wpstg_disable_theme( $dir ) {
       $wpstgRootPro = wpstg_get_plugins_dir() . 'wp-staging-pro';
       $wpstgRoot = wpstg_get_plugins_dir() . 'wp-staging';
 
-      $file = DIRECTORY_SEPARATOR . 'apps' . DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme' . DIRECTORY_SEPARATOR . 'functions.php';
-      $theme = DIRECTORY_SEPARATOR . 'apps' . DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme';
+      $file = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme' . DIRECTORY_SEPARATOR . 'functions.php';
+      $theme = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme';
 
 
       if( file_exists( $wpstgRoot . $file ) ) {
