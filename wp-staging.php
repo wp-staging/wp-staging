@@ -63,7 +63,7 @@ if( !defined( 'WPSTG_OPTIMIZER_MUVERSION' ) ) {
  * Check if system fullfils all requirements
  */
 if( !class_exists( 'Wpstg_Requirements_Check' ) ) {
-   include( dirname( __FILE__ ) . '/apps/Core/Utils/requirements-check.php' );
+   include( dirname( __FILE__ ) . '/Core/Utils/requirements-check.php' );
 }
 
 $plugin_requirements = new Wpstg_Requirements_Check( array(
@@ -92,7 +92,7 @@ add_filter( 'nonce_life', 'wpstg_overwrite_nonce', 99999 );
  * Make sure to not redeclare class in case free version has been installed previosly
  */
 if( !class_exists( 'WPStaging\WPStaging' ) ) {
-   require_once plugin_dir_path( __FILE__ ) . "apps/Core/WPStaging.php";
+   require_once plugin_dir_path( __FILE__ ) . "Core/WPStaging.php";
 }
 
 if( $plugin_requirements->passes() ) {

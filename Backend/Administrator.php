@@ -85,7 +85,7 @@ class Administrator extends InjectionAware {
         $loader->addAction( "admin_post_wpstg_import_settings", $this, "import" );
         $loader->addAction( "admin_notices", $this, "messages" );
 
-        //require_once WPSTG_PLUGIN_DIR . 'apps/Backend/Feedback/Feedback.php';
+        //require_once WPSTG_PLUGIN_DIR . 'Backend/Feedback/Feedback.php';
         //add_filter( 'admin_footer', 'mashsb_add_deactivation_feedback_modal' );
         add_filter( 'admin_footer', array($this, 'loadFeedbackForm') );
 

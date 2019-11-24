@@ -215,7 +215,7 @@ class DataExternal extends JobExecutable {
         }
 
         // No valid wp-config.php found so let's copy wp stagings default wp-config.php to staging site
-        $source = WPSTG_PLUGIN_DIR . "apps/Backend/helpers/wp-config.php";
+        $source = WPSTG_PLUGIN_DIR . "Backend/helpers/wp-config.php";
 
         $this->log( "Preparing Data Step0: Copy default wp-config.php file from source {$source} to {$destination}", Logger::TYPE_INFO );
 

@@ -210,7 +210,7 @@ class Data extends JobExecutable {
         }
 
         // No valid wp-config.php found so let's copy wp stagings default wp-config.php to staging site
-        $source = WPSTG_PLUGIN_DIR . "apps/Backend/helpers/wp-config.php";
+        $source = WPSTG_PLUGIN_DIR . "Backend/helpers/wp-config.php";
         if( $this->copy( $source, $destination ) ) {
             // add missing db credentials to wp-config.php
             if( !$this->alterWpConfig( $destination ) ) {
