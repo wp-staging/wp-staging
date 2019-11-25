@@ -1,0 +1,62 @@
+version: '3.7'
+
+volumes:
+  database:
+    driver: local
+
+networks:
+  default:
+    ipam:
+      driver: default
+      config:
+        - subnet: ${DOCKER_SUBNET}
+
+services:
+  database:
+    image: mariadb:10.4
+    command:
+      --max_allowed_packet=1073741824
+      --innodb_log_file_size=1073741824
+    environment:
+      - MYSQL_DATABASE_SINGLE=${MYSQL_DATABASE_SINGLE}
+      - MYSQL_DATABASE_MULTI=${MYSQL_DATABASE_MULTI}
+      - MYSQL_DATABASE_EXTERNAL=${MYSQL_DATABASE_EXTERNAL}
+      - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - database:/var/lib/mysql
+    ports:
+      - ${DOCKER_GATEWAY_IP}:3306:3306
+  php-fpm:
+    image: triplebits/php:7.3-fpm
+    build: ./docker/php/7.3-fpm
+    env_file: .env
+    depends_on:
+      - database
+    links:
+      - database
+    volumes:
+      - ./var/www:/var/www
+      - ./src/.:/var/www/single/wp-content/plugins/wp-staging
+      - ./src/.:/var/www/multi/wp-content/plugins/wp-staging
+      - ./src/.:/var/www/custom/wp-content/plugins/wp-staging
+      - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ./docker/install/install:/usr/local/bin/install:ro
+      - ./docker/install/databases:/usr/local/bin/databases:ro
+      - ./docker/install/single:/usr/local/bin/multi:ro
+      - ./docker/install/multi:/usr/local/bin/single:ro
+  nginx:
+    image: nginx
+    build: ./docker/nginx
+    tty: true
+    depends_on:
+      - database
+      - php-fpm
+    volumes:
+      - ./var/www:/var/www
+      - ./src/.:/var/www/single/wp-content/plugins/wp-staging
+      - ./src/.:/var/www/multi/wp-content/plugins/wp-staging
+    ports:
+      - ${DOCKER_GATEWAY_IP}:80:80
+      - ${DOCKER_GATEWAY_IP}:443:443

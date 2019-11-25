@@ -3,9 +3,12 @@ nbproject
 vars/
 !vars/languages
 node_modules
-wp-staging-pro.php
-Gruntfile.js
-robo
-.trash
 .vscode
-test/_output/*
+vendor
+.trash
+.env
+var
+!var/www/.gitkeep
+!tests/functional/.gitkeep
+!tests/unit/.gitkeep
+tests/_output/*
