@@ -1,0 +1,75 @@
+#!/bin/bash
+PATH_MULTI=/var/www/multi/
+
+chown www-data:www-data /var/www/multi -R
+
+echo "Installing WordPress Multi in ${PATH_MULTI}"
+cd $PATH_MULTI || exit 1
+
+if [ ! -f $PATH_MULTI"wp-config.php" ]; then
+  echo "Downloading WordPress"
+  su www-data -c "wp core download"
+fi
+
+if [ -f $PATH_MULTI"wp-config.php" ]; then
+  echo "Backing up wp-config.php file..."
+  mv $PATH_MULTI"wp-config.php" $PATH_MULTI"wp-config.php.bak"
+fi
+
+RES=$(su www-data -c "wp --path=$PATH_MULTI core config --dbname=$MYSQL_DATABASE_MULTI --dbuser=$MYSQL_USER --dbpass=$MYSQL_PASSWORD --dbhost=database --dbprefix=wpm_")
+if [[ $RES != *"Success"* ]]; then
+  echo "Failed to create config..."
+  if [ -f $PATH_MULTI"wp-config.php.bak" ]; then
+    echo "Restoring wp-config.php backup..."
+    mv $PATH_MULTI"wp-config.php.bak" $PATH_MULTI"wp-config.php"
+  fi
+  exit 1
+fi
+
+if [ -f $PATH_MULTI"wp-config.php.bak" ]; then
+  echo -n "Removing wp-config.php backup..."
+  rm -f $PATH_MULTI"wp-config.php.bak"
+fi
+
+RES=$(su www-data -c "wp --path=$PATH_MULTI db query 'SHOW DATABASES LIKE \"$MYSQL_DATABASE_MULTI\";'" )
+if [[ ! ${#RES} -gt 0 ]]; then
+  echo "Database not found, creating database..."
+  su www-data -c "wp --path=$PATH_MULTI db create"
+  exit 1
+fi
+
+rm -f $PATH_MULTI"wp-config.php"
+echo "Creating config..."
+su www-data -c "wp --path=$PATH_MULTI core config --dbname=$MYSQL_DATABASE_MULTI --dbuser=$MYSQL_USER --dbpass=$MYSQL_PASSWORD --dbhost=database --dbprefix=wp_ <<PHP
+define('WP_DEBUG', true);
+define('WP_DEBUG_LOG', true);
+define('WP_DEBUG_DISPLAY', true);
+define('WP_MEMORY_LIMIT', '512M');
+PHP"
+
+
+chmod 644 "${PATH_MULTI}wp-config.php"
+
+echo "Installing WP"
+su www-data -c "wp --path=$PATH_MULTI core install --url=\"https://${HOST_MULTI}\" --title=\"WP Staging Multi\" --admin_user=\"${WP_ADMIN_USERNAME}\" --admin_password=\"${WP_ADMIN_PASSWORD}\" --admin_email=\"${WP_ADMIN_EMAIL}\""
+
+echo "Disabling Unneccessary Plugins"
+su www-data -c "wp --path=$PATH_MULTI plugin deactivate hello"
+su www-data -c "wp --path=$PATH_MULTI plugin deactivate akismet"
+su www-data -c "wp --path=$PATH_MULTI plugin delete hello"
+su www-data -c "wp --path=$PATH_MULTI plugin delete akismet"
+
+echo "Enabling WP-Staging Plugin: "
+su www-data -c "wp --path=$PATH_MULTI plugin activate wp-staging"
+su www-data -c "wp --path=$PATH_MULTI db query 'INSERT INTO wp_options (option_name, option_value) VALUES(\"wpstg_license_key\", \"${LICENSE_KEY}\");'"
+
+
+UPLOADS_PATH=$PATH_MULTI"wp-content/uploads"
+if [ ! -d $UPLOADS_PATH ]; then
+  echo "Enabling uploads..."
+  mkdir $UPLOADS_PATH
+  chmod 775 $UPLOADS_PATH
+fi
+
+echo "Converting to Multi Site"
+su www-data -c "wp --path=$PATH_MULTI core multisite-convert"
