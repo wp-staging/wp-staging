@@ -1,7 +1,5 @@
 nbproject
 .idea/
-vars/
-!vars/languages
 node_modules
 .vscode
 vendor
@@ -12,3 +10,6 @@ var
 !tests/functional/.gitkeep
 !tests/unit/.gitkeep
 tests/_output/*
+tests/_support/_generated/AcceptanceTesterActions.php
+tests/_support/_generated/FunctionalTesterActions.php
+tests/_support/_generated/UnitTesterActions.php

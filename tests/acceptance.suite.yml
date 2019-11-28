@@ -8,15 +8,14 @@ actor: AcceptanceTester
 modules:
     enabled: 
         - WebDriver:
-            url: http://local.wordpress.test
+            url: http://single.wp-staging-free.local
             #browser: firefox
             browser: chrome
             window_size: 1024x1300
             capabilities:
+                chromeOptions:
+                    {w3c: false}
                 unexpectedAlertBehaviour: 'accept'
-#              chromeOptions:
-#                  args:
-#                    ['disable-infobars', 'headless', 'disable-gpu']
         - \Helper\Acceptance
         - Asserts
         
@@ -25,17 +24,17 @@ env:
         modules:
             config:
                 WebDriver:
-                    url: 'http://local.multipath.test'
+                    url: http://multi.wp-staging-free.local
                     window_size: 1024x1300
     singlesubdir:
         modules:
             config:
                 WebDriver:
-                    url: 'http://local.subfolder.test/wordpress'
+                    url: 'http://single.wp-staging-free.local/subdir'
                     window_size: 1024x1300
     single:
         modules:
             config:
                 WebDriver:
-                    url: 'http://local.wordpress.test'
+                    url: http://single.wp-staging-free.local
                     window_size: 1024x1300
