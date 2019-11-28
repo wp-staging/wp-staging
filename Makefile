@@ -31,7 +31,7 @@ reset: down stop
 	make up
 	sleep $${WAIT_SERVICES_IN_SECONDS}
 	make install
-	sudo $(USER):$(USER) ./var -R
+	sudo chown $(USER):$(USER) ./var -R
 test_up: # Tests require selenium server running
 	java -jar selenium-server-standalone-3.141.5.jar
 test_single:
@@ -40,17 +40,4 @@ test_multi:
 	php codecept.phar run --env multisite --steps
 test_acceptance:
 	#php codecept.phar run acceptance 001-cloneCest.php --env single --steps
-	#php codecept.phar run acceptance 002-pushCest.php --env single --steps
-	#php codecept.phar run acceptance 003-cloneExtDbCest.php --env single --steps
-	#php codecept.phar run acceptance 004-pushExtDbCest.php --env single --steps
-	#php codecept.phar run acceptance 005-cloneExtDirCest.php --env single --steps
-	#php codecept.phar run acceptance 006-pushExtDirCestCest.php --env single --steps
-	#php codecept.phar run acceptance 007-updatingCest.php --env single --steps
-
-	#php codecept.phar run acceptance 001-cloneCest.php --env multisite --steps
-	#php codecept.phar run acceptance 002-pushCest.php --env multisite --steps
-	#php codecept.phar run acceptance 003-cloneExtDbCest.php --env multisite --steps
-	#php codecept.phar run acceptance 004-pushExtDbCest.php --env multisite --steps
-	#php codecept.phar run acceptance 005-cloneExtDirCest.php --env multisite --steps
-	#php codecept.phar run acceptance 006-pushExtDirCestCest.php --env multisite --steps
-	#php codecept.phar run acceptance 007-updatingCest.php --env multisite --steps
+	#php codecept.phar run acceptance 003-updatingCest.php --env single --steps
