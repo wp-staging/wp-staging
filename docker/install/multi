@@ -63,6 +63,8 @@ echo "Enabling WP-Staging Plugin: "
 su www-data -c "wp --path=$PATH_MULTI plugin activate wp-staging"
 su www-data -c "wp --path=$PATH_MULTI db query 'INSERT INTO wp_options (option_name, option_value) VALUES(\"wpstg_license_key\", \"${LICENSE_KEY}\");'"
 
+echo "Installing Extra Plugins"
+su www-data -c "wp plugin install query-monitor --activate"
 
 UPLOADS_PATH=$PATH_MULTI"wp-content/uploads"
 if [ ! -d $UPLOADS_PATH ]; then
