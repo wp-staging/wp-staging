@@ -29,8 +29,8 @@ You can access them via `single.wp-staging.local` and `multi.wp-staging.local`
 * Copy `.env.dist` as `.env`
 * Make sure to add given IP address in `DOCKER_GATEWAY_IP` value, in `.env` file to your hosts file. Such as;
 ```
-172.200.0.1 single.wp-staging.local
-172.200.0.1 multi.wp-staging.local
+172.199.0.1 single.wp-staging-free.local
+172.199.0.1 multi.wp-staging-free.local
 ``` 
 
 Files in `docker/install/*` must be executable within host (your own) FS (file system) 
