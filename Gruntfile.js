@@ -1,6 +1,21 @@
-/* local path for wp-staging git repository
- cd "s:\github\wp-staging"
+/**
+ * Deployment script for WP Staging
+ *
+ * What it does:
+ *
+ * - Copy source files into folder ../../releases/wp-staging-svn/tags/x.x.x/
+ * - Copy source files into folder ../../releases/wp-staging-svn/trunk/
+ * - Creates zip file ../../releases/wp-staging-svn/x.x.x/wp-staging-pro.zip ready to be uploaded into WordPress
+ * - String replace of {{version}} in source code files with version number
+ *
+ * Makes use of the grunt taskrunner based on npm
+ * Install grunt https://gruntjs.com/installing-grunt
  * 
+ * How to use:
+ *
+ * 1. Change the version number in package.json
+ * 2. Run 'npm install' (Initially one time)
+ * 3. Run 'grunt build'
  */
 module.exports = function (grunt) {
 
@@ -8,11 +23,11 @@ module.exports = function (grunt) {
     grunt.initConfig({
         pkg: grunt.file.readJSON('package.json'),
         paths: {
-            // Base destination dir
-            base: '../../wordpress-svn/wp-staging/tags/<%= pkg.version %>/',
-            basetrunk: '../../wordpress-svn/wp-staging/trunk/',
-            destzip: '../../wordpress-svn/',
-            basezip: '../../wordpress-svn/wp-staging/tags/<%= pkg.version %>',
+            // Destination of tagged releases
+            releaseDirTags: '../../releases/wp-staging-svn/tags/<%= pkg.version %>/',
+            releaseDirTrunk: '../../releases/wp-staging-svn/trunk/',
+            // Files in this folder will be compressed
+            zipDir: '../../releases/wp-staging-svn/<%= pkg.version %>/',
         },
         // minify js
         uglify: {
@@ -23,12 +38,12 @@ module.exports = function (grunt) {
                 ]
             }
         },
-        // Copy to build folder
+        // Copy files
         copy: {
             build: {
                 files: [
                     {
-                        // Copy to base folder
+                        // Copy to tags folder
                         expand: true,
                         src: [
                             '**',
@@ -37,41 +52,6 @@ module.exports = function (grunt) {
                             '!package.json',
                             '!nbproject/**',
                             '!grunt/**',
-                            '!wp-staging.php',
-                            '!.gitignore',
-                            '!CHANGELOG.md',
-                            '!CONTRIBUTING.md',
-                            '!README.md',
-                            '!selenium-server-standalone-3.141.5.jar',
-                            '!chromedriver.exe',
-                            '!codecept.phar',
-                            '!composer.json',
-                            '!composer.lock',
-                            '!codeception.yml',
-                            '!codecept.bat',
-                            '!selenium.bat',
-                            '!run-test.bat',
-                            '!tests/**',
-                            '!idea/**',
-                            '!codecept-multisite.bat',
-                            '!codecept-single.bat',
-                            '!codecept-singlesubdir.bat',
-                            '!.git/**',
-                            '!package-lock.json'
-                        ],
-                        dest: '<%= paths.base %>'
-                    },
-                    {
-                        // Copy to basetrunk foldedr
-                        expand: true,
-                        src: [
-                            '**',
-                            '!node_modules/**',
-                            '!Gruntfile.js',
-                            '!package.json',
-                            '!nbproject/**',
-                            '!grunt/**',
-                            '!wp-staging.php',
                             '!.gitignore',
                             '!CHANGELOG.md',
                             '!CONTRIBUTING.md',
@@ -92,22 +72,56 @@ module.exports = function (grunt) {
                             '!codecept-single.bat',
                             '!codecept-singlesubdir.bat',
                             '!.git/**',
-                            '!package-lock.json'
+                            '!package-lock.json',
+                            '!docker'
                         ],
-                        dest: '<%= paths.basetrunk %>'
-                    }
+                        cwd: 'src/',
+                        dest: '<%= paths.releaseDirTags %>',
+                    },                    {
+                        // Copy to trunk folder
+                        expand: true,
+                        src: [
+                            '**',
+                            '!node_modules/**',
+                            '!Gruntfile.js',
+                            '!package.json',
+                            '!nbproject/**',
+                            '!grunt/**',
+                            '!.gitignore',
+                            '!CHANGELOG.md',
+                            '!CONTRIBUTING.md',
+                            '!README.md',
+                            '!selenium-server-standalone-3.141.5.jar',
+                            '!chromedriver.exe',
+                            '!codecept.phar',
+                            '!composer.json',
+                            '!composer.lock',
+                            '!codeception.yml',
+                            '!codecept.bat',
+                            '!selenium.bat',
+                            '!run-test.bat',
+                            '!tests/**',
+                            '!vendor/**',
+                            '!idea/**',
+                            '!codecept-multisite.bat',
+                            '!codecept-single.bat',
+                            '!codecept-singlesubdir.bat',
+                            '!.git/**',
+                            '!package-lock.json',
+                            '!docker'
+                        ],
+                        cwd: 'src/',
+                        dest: '<%= paths.releaseDirTrunk %>',
+                    },
                 ]
             },
         },
         'string-replace': {
             version: {
                 files: {
-                    '<%= paths.basetrunk %>wp-staging.php': 'wp-staging.php',
-                    '<%= paths.basetrunk %>readme.txt': 'readme.txt',
-                    '<%= paths.basetrunk %>apps/Core/WPStaging.php': '<%= paths.base %>apps/Core/WPStaging.php',
-                    '<%= paths.base %>/wp-staging.php': 'wp-staging.php',
-                    '<%= paths.base %>/readme.txt': 'readme.txt',
-                    '<%= paths.base %>/apps/Core/WPStaging.php': '<%= paths.base %>apps/Core/WPStaging.php',
+                    '<%= paths.releaseDirTags %>wp-staging.php': '<%= paths.releaseDirTags %>wp-staging.php',
+                    '<%= paths.releaseDirTags %>readme.txt': '<%= paths.releaseDirTags %>readme.txt',
+                    '<%= paths.releaseDirTags %>Core/WPStaging.php': '<%= paths.releaseDirTags %>Core/WPStaging.php',
                 },
                 options: {
                     replacements: [{
@@ -124,29 +138,19 @@ module.exports = function (grunt) {
             },
             build: {
                 files: [
-                    {src: ['<%= paths.base %>']},
-                    {src: ['<%= paths.basetrunk %>']},
+                    {src: ['<%= paths.releaseDirTags %>']},
+                    {src: ['<%= paths.releaseDirTrunk %>']},
                 ]
 
-            }
-        },
-        // Minify CSS files into NAME-OF-FILE.min.css
-        cssmin: {
-            build: {
-                files: [
-                    {'assets/css/wpstg-admin.min.css': 'assets/css/wpstg-admin.css'},
-                    {'templates/wpstg.min.css': 'templates/wpstg.min.css'},
-                ]
             }
         },
         // Compress the build folder into an upload-ready zip file
         compress: {
             build: {
                 options: {
-                    archive: '<%= paths.destzip %><%= pkg.name %>.zip' //target
+                    archive: '<%= paths.zipDir %><%= pkg.name %>.zip' //target
                 },
-                //cwd: '<%= paths.basetrunk %>',
-                cwd: '<%= paths.basezip %>',
+                cwd: '<%= paths.zipDir %>',
                 src: ['**/*'],
                 expand: true
             }
@@ -162,8 +166,6 @@ module.exports = function (grunt) {
     require('time-grunt')(grunt);
 
     // Build task
-    //grunt.registerTask( 'build', [ 'compress:build' ]);
-    //grunt.registerTask( 'build', [ 'clean:build', 'uglify:build', 'copy:build', 'string-replace:version', 'compress:build' ]);
     grunt.registerTask(
             'build',
             ['clean:build', 'copy:build', 'string-replace:version', 'compress:build']

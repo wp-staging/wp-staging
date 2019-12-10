@@ -34,9 +34,16 @@ if( !defined( "WPINC" ) ) {
    die;
 }
 
+
+
 // Slug
 if( !defined( 'WPSTG_PLUGIN_SLUG' ) ) {
-   define( 'WPSTG_PLUGIN_SLUG', 'wp-staging' );
+    define( 'WPSTG_PLUGIN_SLUG', 'wp-staging-pro' );
+}
+
+// Version
+if( !defined( 'WPSTG_VERSION' ) ) {
+    define( 'WPSTG_VERSION', '{{version}}' );
 }
 
 // Folder Path
@@ -49,29 +56,10 @@ if( !defined( 'WPSTG_PLUGIN_URL' ) ) {
    define( 'WPSTG_PLUGIN_URL', plugin_dir_url( __FILE__ ) );
 }
 
-// Version
-if( !defined( 'WPSTG_VERSION' ) ) {
-   define( 'WPSTG_VERSION', '{{version}}' );
-}
-
 // Must use version of the optimizer
 if( !defined( 'WPSTG_OPTIMIZER_MUVERSION' ) ) {
    define( 'WPSTG_OPTIMIZER_MUVERSION', 1.1 );
 }
-
-/**
- * Check if system fullfils all requirements
- */
-if( !class_exists( 'Wpstg_Requirements_Check' ) ) {
-   include( dirname( __FILE__ ) . '/Core/Utils/requirements-check.php' );
-}
-
-$plugin_requirements = new Wpstg_Requirements_Check( array(
-    'title' => 'WP STAGING',
-    'php' => '5.3',
-    'wp' => '3.0',
-    'file' => __FILE__,
-        ) );
 
 /**
  * Fix nonce check
@@ -79,51 +67,62 @@ $plugin_requirements = new Wpstg_Requirements_Check( array(
  * @param int $seconds
  * @return int
  */
-if ( !function_exists( 'wpstgpro_overwrite_nonce')){
-function wpstg_overwrite_nonce( $seconds ) {
-   return 86400;
-}
+function wpstgpro_overwrite_nonce( $seconds ) {
+    return 86400;
 }
 
-add_filter( 'nonce_life', 'wpstg_overwrite_nonce', 99999 );
+add_filter( 'nonce_life', 'wpstgpro_overwrite_nonce', 99999 );
+
 
 /**
  * Path to main WP Staging class
- * Make sure to not redeclare class in case free version has been installed previosly
+ * Make sure to not redeclare class in case free version has been installed previously
  */
 if( !class_exists( 'WPStaging\WPStaging' ) ) {
-   require_once plugin_dir_path( __FILE__ ) . "Core/WPStaging.php";
+    require_once plugin_dir_path( __FILE__ ) . "Core/WPStaging.php";
 }
+
+if( !class_exists( 'Wpstg_Requirements_Check' ) ) {
+    include( dirname( __FILE__ ) . '/Core/Utils/requirements-check.php' );
+}
+
+$plugin_requirements = new Wpstg_Requirements_Check( array(
+    'title' => 'WP STAGING',
+    'php'   => '5.3',
+    'wp'    => '3.0',
+    'file'  => __FILE__,
+        ) );
 
 if( $plugin_requirements->passes() ) {
 
-   $wpStaging = \WPStaging\WPStaging::getInstance();
 
-   /**
-    * Load a few important WP globals into WPStaging class to make them available via dependancy injection
-    */
-// Wordpress DB Object
-   if( isset( $wpdb ) ) {
-      $wpStaging->set( "wpdb", $wpdb );
-   }
+    $wpStaging = \WPStaging\WPStaging::getInstance();
 
-// WordPress Filter Object
-   if( isset( $wp_filter ) ) {
-      $wpStaging->set( "wp_filter", function() use(&$wp_filter) {
-         return $wp_filter;
-      } );
-   }
+    /**
+     * Load a few important WP globals into WPStaging class to make them available via dependancy injection
+     */
+    // Wordpress DB Object
+    if( isset( $wpdb ) ) {
+        $wpStaging->set( "wpdb", $wpdb );
+    }
 
-   /**
-    * Inititalize WPStaging
-    */
-   $wpStaging->run();
+    // WordPress Filter Object
+    if( isset( $wp_filter ) ) {
+        $wpStaging->set( "wp_filter", function() use(&$wp_filter) {
+            return $wp_filter;
+        } );
+    }
+
+    /**
+     * Inititalize WPStaging
+     */
+    $wpStaging->run();
 
 
-   /**
-    * Installation Hooks
-    */
-   if( !class_exists( 'WPStaging\Install' ) ) {
-      require_once plugin_dir_path( __FILE__ ) . "/install.php";
-   }
+    /**
+     * Installation Hooks
+     */
+    if( !class_exists( 'WPStaging\Install' ) ) {
+        require_once plugin_dir_path( __FILE__ ) . "/install.php";
+    }
 }
