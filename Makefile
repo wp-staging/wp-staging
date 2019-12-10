@@ -40,4 +40,17 @@ test_multi:
 	php codecept.phar run --env multisite --steps
 test_acceptance:
 	#php codecept.phar run acceptance 001-cloneCest.php --env single --steps
+	#php codecept.phar run acceptance 002-pushCest.php --env single --steps
 	#php codecept.phar run acceptance 003-updatingCest.php --env single --steps
+	#php codecept.phar run acceptance 004-cloneExtDbCest.php --env single --steps
+	#php codecept.phar run acceptance 005-pushExtDbCest.php --env single --steps
+	#php codecept.phar run acceptance 006-cloneExtDirCest.php --env single --steps
+	#php codecept.phar run acceptance 007-pushExtDirCest.php --env single --steps
+
+	#php codecept.phar run acceptance 001-cloneCest.php --env multisite --steps
+	#php codecept.phar run acceptance 002-pushCest.php --env multisite --steps
+	#php codecept.phar run acceptance 003-updatingDbCest.php --env multisite --steps
+	#php codecept.phar run acceptance 004-cloneExtDbCest.php --env multisite --steps
+	#php codecept.phar run acceptance 005-pushExtDbCest.php --env multisite --steps
+	#php codecept.phar run acceptance 006-cloneExtDirCest.php --env multisite --steps
+	#php codecept.phar run acceptance 007-pushExtDirCest.php --env multisite --steps
