@@ -39,7 +39,7 @@ final class WPStaging {
     /**
      * Plugin slug
      */
-    const SLUG = "wp-staging";
+    //const SLUG = "wp-staging";
 
     /**
      * Compatible WP Version
@@ -433,7 +433,7 @@ final class WPStaging {
      * Load language file
      */
     public function loadLanguages() {
-        $languagesDirectory = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . self::SLUG . DIRECTORY_SEPARATOR . "languages" . DIRECTORY_SEPARATOR;
+        $languagesDirectory = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . $this->slug . DIRECTORY_SEPARATOR . "languages" . DIRECTORY_SEPARATOR;
 
         // Set filter for plugins languages directory
         $languagesDirectory = apply_filters( "wpstg_languages_directory", $languagesDirectory );
