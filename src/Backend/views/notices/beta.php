@@ -11,7 +11,7 @@
     </p>
     <ul>
         <li>
-            <a href="javascript:void(0);" class="wpstg_hide_beta" title="I understand" data-url="<?php echo admin_url("admin-ajax.php")?>" style="font-weight:bold;color:#00a0d2;">
+            <a href="javascript:void(0);" class="wpstg_hide_beta" title="I understand" data-url="<?php echo admin_url("admin-ajax.php")?>" style="font-weight:bold;">
                 I understand! (Do not show this again)
             </a>
         </li>

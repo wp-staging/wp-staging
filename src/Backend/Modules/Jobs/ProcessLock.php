@@ -18,7 +18,7 @@ class ProcessLock extends JobExecutable {
      */
     public function isRunning() {
         // Another process is running
-        if( isset( $this->options->isRunning ) ) {
+        if (parent::isRunning()) {
 
             $this->log( "Another process is running" );
 
@@ -47,7 +47,7 @@ class ProcessLock extends JobExecutable {
      * @return void
      */
     protected function calculateTotalSteps() {
-        
+
     }
 
     /**
@@ -55,7 +55,7 @@ class ProcessLock extends JobExecutable {
      * @return bool
      */
     protected function execute() {
-        
+
     }
 
 }

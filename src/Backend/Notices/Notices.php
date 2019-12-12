@@ -11,7 +11,7 @@ if( !defined( "WPINC" ) ) {
     die;
 }
 
-use WPStaging\WPStaging;
+use WPStaging\Backend\Pro\Notices\Notices as ProNotices;
 
 /**
  * Class Notices
@@ -35,17 +35,16 @@ class Notices {
     }
 
     /**
-    * Check whether the page is admin page or not
+     * Check whether the page is admin page or not
      * @return bool
      */
-    private function isAdminPage() {
+    public function isAdminPage() {
         $currentPage = (isset( $_GET["page"] )) ? $_GET["page"] : null;
 
         $availablePages = array(
             "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone"
         );
 
-        //if( !is_admin() || !did_action( "wp_loaded" ) || !in_array( $currentPage, $availablePages, true ) ) {
         if( !is_admin() || !in_array( $currentPage, $availablePages, true ) ) {
             return false;
         }
@@ -66,7 +65,7 @@ class Notices {
         }
 
         $dbOption = get_option( $option );
-        
+
         // Do not show notice
         if ("no" === $dbOption){
             return false;
@@ -76,12 +75,6 @@ class Notices {
 
         // Check if user clicked on "rate later" button and if there is a valid 'later' date
         if( wpstg_is_valid_date( $dbOption ) ) {
-            // Get days difference
-//            $hideDate   = new \DateTime( $dbOption );
-//            $difference = $now->diff( $hideDate )->days;
-//
-//            if( $days >= $difference )
-//                return true;
             // Do not show before this date
             $show = new \DateTime( $dbOption );
             if ($now < $show){
@@ -107,8 +100,8 @@ class Notices {
      * Get current page
      * @return string | post, page
      */
-    private function getCurrentScreen(){
-        if ( function_exists('get_current_screen')) { 
+    private function getCurrentScreen() {
+        if( function_exists( 'get_current_screen' ) ) {
             return \get_current_screen()->post_type;
         }
     }
@@ -121,33 +114,41 @@ class Notices {
 
         $viewsNoticesPath = "{$this->path}views/notices/";
 
-        // Show notice when free and pro version have been activated at the same time
+        // Free and pro version have been activated at the same time
         $this->plugin_deactivated_notice();
 
+        // Show "rate the plugin". Free version only
+        if (!defined('WPSTGPRO_VERSION')) {
+            if ($this->canShow("wpstg_rating", 7)  && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post') {
+                require_once "{$viewsNoticesPath}rating.php";
+            }
 
-        // Show rating review message on all admin pages except pages and posts
-        if( $this->canShow( "wpstg_rating", 7 ) && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post' ) {
-            require_once "{$viewsNoticesPath}rating.php";
         }
 
+        // Show all pro version notices
+        if (defined('WPSTGPRO_VERSION')) {
+            $proNotices = new ProNotices($this);
+            $proNotices->getNotices();
+        }
 
-        // Display notices below to admins only, only on admin panel
+        // Display notices below in wp staging admin pages only
         if( !current_user_can( "update_plugins" ) || !$this->isAdminPage() ) {
             return;
         }
 
-
+        // Cache directory in uploads is not writable
         $varsDirectory = \WPStaging\WPStaging::getContentDir();
-      if( !is_writable( $varsDirectory ) ) {
+        if( !is_writable( $varsDirectory ) ) {
             require_once "{$viewsNoticesPath}/uploads-cache-directory-permission-problem.php";
         }
+
         // Staging directory is not writable
-      if( !is_writeable( ABSPATH ) ) {
+        if( !is_writeable( ABSPATH ) ) {
             require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
         }
 
         // Version Control
-        if( version_compare( WPStaging::WP_COMPATIBLE, get_bloginfo( "version" ), "<" ) ) {
+        if( version_compare(  WPSTG_COMPATIBLE, get_bloginfo( "version" ), "<" ) ) {
             require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
         }
 
@@ -161,10 +162,6 @@ class Notices {
             require_once "{$viewsNoticesPath}transient.php";
             delete_transient( "wp_staging_deactivated_notice_id" );
         }
-        // Rating
-//        if( $this->canShow( "wpstg_rating", 7 ) ) {
-//            require_once "{$viewsNoticesPath}rating.php";
-//        }
 
         // Different scheme in home and siteurl
         if( $this->isDifferentScheme() ) {
@@ -184,7 +181,6 @@ class Notices {
             return false;
         }
         return true;
-      
     }
 
     /**

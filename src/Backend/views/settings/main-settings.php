@@ -4,7 +4,7 @@
     </span>
 
     <span class="wpstg-version">
-        <?php if( WPStaging\WPStaging::getSlug() === "wp-staging-pro" ) echo "Pro" ?> Version <?php echo \WPStaging\WPStaging::VERSION ?>
+        <?php if( WPStaging\WPStaging::getSlug() === "wp-staging-pro" ) echo "Pro" ?> Version <?php echo WPStaging\WPStaging::getVersion() ?>
     </span>
 
     <div class="wpstg-header">
@@ -94,8 +94,8 @@
                                             ?>
                                             <span class="description">
                                                 <?php _e( "Number of DB rows, that are copied within one ajax query.
-                                               The higher the value the faster the database copy process.
-                                               To find out the highest possible values try a high value like 1.000 or more. If you get timeout issues, lower it
+                                                The higher the value the faster the database copy process.
+                                                To find out the highest possible values try a high value like 1.000 or more. If you get timeout issues, lower it
                                                 until you get no more errors during copying process.", "wp-staging" ); ?>
                                                 <br>
                                                 <strong> Default: 10000 </strong>
@@ -114,7 +114,7 @@
                                             ?>
                                             <span class="description">
                                                 <?php _e( "Number of DB rows, that are processed within one ajax query.
-                                               The higher the value the faster the database search & replace process.
+                                                The higher the value the faster the database search & replace process.
                                                 This is a high memory consumptive process. If you get timeouts lower this value!", "wp-staging" ); ?>
                                                 <br>
                                                 <strong> Default: 5000 </strong>
@@ -134,10 +134,10 @@
                                             ?>
                                             <span class="description">
                                                 <?php _e( "Number of files to copy that will be copied within one ajax request.
-                                               The higher the value the faster the file copy process.
-                                               To find out the highest possible values try a high value like 500 or more. If you get timeout issues, lower it
+                                                The higher the value the faster the file copy process.
+                                                To find out the highest possible values try a high value like 500 or more. If you get timeout issues, lower it
                                                 until you get no more errors during copying process.", "wp-staging" ); ?>
-                                                <br>                                                
+                                                <br>
                                                 <br>
                                                 <?php _e( "<strong>Important:</strong> If CPU Load Priority is <strong>Low</strong> set a file copy limit value of 50 or higher! Otherwise file copying process takes a lot of time.", "wp-staging" ); ?>
                                                 <br>
@@ -174,9 +174,9 @@
                                             <span class="description">
                                                 <?php _e( "Buffer size for the file copy process in megabyte.
                                                The higher the value the faster large files are copied.
-                                               To find out the highest possible values try a high one and lower it until
-                                               you get no errors during file copy process. Usually this value correlates directly
-                                               with the memory consumption of php so make sure that
+                                                To find out the highest possible values try a high one and lower it until
+                                                you get no errors during file copy process. Usually this value correlates directly
+                                                with the memory consumption of php so make sure that
                                                 it does not exceed any php.ini max_memory limits.", "wp-staging" ); ?>
                                                 <br>
                                                 <strong>Default:</strong> 2 MB
@@ -194,8 +194,8 @@
                                             <?php echo $form->label( "wpstg_settings[cpuLoad]" ) ?>
                                             <span class="description">
                                                 <?php _e( "Using high will result in fast as possible processing but the cpu load
-                                               increases and it's also possible that staging process gets interrupted because of too many ajax requests
-                                               (e.g. <strong>authorization error</strong>).
+                                                increases and it's also possible that staging process gets interrupted because of too many ajax requests
+                                                (e.g. <strong>authorization error</strong>).
                                                 Using a lower value results in lower cpu load on your server but also slower staging site creation.", "wp-staging" ); ?>
                                                 <br>
                                                 <strong>Default: </strong> Low
@@ -221,28 +221,54 @@
                                         <?php echo $form->render( "wpstg_settings[delayRequests]" ) ?>
                                     </td>
                                 </tr>
-                                <tr class="row">
-                                    <td class="row th">
-                                        <div class="col-title">
-                                            <?php echo $form->label( "wpstg_settings[disableAdminLogin]" ) ?>
-                                            <span class="description">
+                                <?php
+                                if(!defined('WPSTGPRO_VERSION')) {
+                                    ?>
+                                    <tr class="row">
+                                        <td class="row th">
+                                            <div class="col-title">
+                                                <?php echo $form->label("wpstg_settings[disableAdminLogin]") ?>
+                                                <span class="description">
                                                 If you want to remove the requirement to login to the staging site you can deactivate it here.
                                                 <strong>Note:</strong> The staging site discourages search engines from indexing the site by setting the 'noindex' tag into header of the staging site.
                                             </span>
-                                        </div>
-                                    </td>
-                                    <td>
-                                        <?php echo $form->render( "wpstg_settings[disableAdminLogin]" ) ?>
-                                    </td>
-                                </tr>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <?php echo $form->render("wpstg_settings[disableAdminLogin]") ?>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
+                                ?>
+                                <?php
+                                if(defined('WPSTGPRO_VERSION')) {
+                                    ?>
+                                    <tr class="row">
+                                        <td class="row th">
+                                            <div class="col-title">
+                                                <?php echo $form->label("wpstg_settings[keepPermalinks]") ?>
+                                                <span class="description">
+                                                <?php echo sprintf(__('Keep permalinks original setting activated and do not disable permalinks on staging site. <br/>Read more: <a href="%1$s" target="_blank">Permalink Settings</a> ', 'wp-staging'),
+                                                    'https://wp-staging.com/docs/activate-permalinks-staging-site/'); ?>
+                                            </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <?php echo $form->render("wpstg_settings[keepPermalinks]") ?>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
+                                ?>
                                 <tr class="row">
                                     <td class="row th">
                                         <div class="col-title">
                                             <?php echo $form->label( "wpstg_settings[debugMode]" ) ?>
                                             <span class="description">
                                                 <?php _e( "This will enable an extended debug mode which creates additional entries
-                                               in <strong>wp-content/uploads/wp-staging/logs/logfile.log</strong>.
-                                                Please enable this when we ask you to do so.", "wp-staging" ); ?>
+                                                in <strong>wp-content/uploads/wp-staging/logs/logfile.log</strong>.
+                                                <strong>Do NOT activate this until we ask you to do so!</strong>", "wp-staging" ); ?>
                                             </span>
                                         </div>
                                     </td>
@@ -285,7 +311,7 @@
                                             <?php echo $form->label( "wpstg_settings[checkDirectorySize]" ) ?>
                                             <span class="description">
                                                 <?php _e( "Check this box if you like WP Staging to check sizes of each directory on scanning process.
-                                               <br>
+                                                <br>
                                                 Warning this may cause timeout problems in big directory / file structures.", "wp-staging" ); ?>
                                             </span>
                                         </div>
@@ -294,6 +320,25 @@
                                         <?php echo $form->render( "wpstg_settings[checkDirectorySize]" ) ?>
                                     </td>
                                 </tr>
+                                <?php
+                                if (defined('WPSTGPRO_VERSION')) {
+                                    ?>
+                                    <tr class="row">
+                                        <td class="row th">
+                                            <div class="col-title">
+                                                <?php echo $form->label("wpstg_settings[userRoles][]") ?>
+                                                <span class="description">
+                                                <?php _e('Select the user role you want to give access to the staging site. You can select multiple roles by holding CTRL or ⌘ Cmd key while clicking. <strong>Change this option on the staging site if you want to change the authentication behavior there.</strong', 'wp-staging'); ?>
+                                            </span>
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <?php echo $form->render("wpstg_settings[userRoles][]") ?>
+                                        </td>
+                                    </tr>
+                                    <?php
+                                }
+                                ?>
                             </tbody>
                         </table>
                     </div>

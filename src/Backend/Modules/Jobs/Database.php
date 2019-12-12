@@ -42,6 +42,9 @@ class Database extends JobExecutable {
      * @return boolean
      */
     private function isExternalDatabase() {
+        if(defined('WPSTGPRO_VERSION')){
+           return;
+        }
         if( !empty( $this->options->databaseUser ) ) {
             $this->returnException( __( "This staging site is located in another database and needs to be edited with <a href='https://wp-staging.com' target='_blank'>WP Staging Pro</a>", "wp-staging" ) );
         }
@@ -50,14 +53,13 @@ class Database extends JobExecutable {
 
     /**
      * Return fatal error and stops here if subfolder already exists
-     * and mainJob is not updating the clone 
+     * and mainJob is not updating the clone
      * @return boolean
      */
     private function isFatalError() {
-        //$path = trailingslashit( get_home_path() ) . $this->options->cloneDirectoryName;
         $path = trailingslashit($this->options->cloneDir);
-        if( isset( $this->options->mainJob ) && $this->options->mainJob !== 'updating' && is_dir( $path ) ) {
-            $this->returnException( " Can not continue! Change the name of the clone or delete existing folder. Then try again. Folder already exists: " . $path );
+        if( isset( $this->options->mainJob ) && $this->options->mainJob !== 'updating' && (is_dir( $path ) && !wpstg_is_empty_dir( $path ) ) ) {
+            $this->returnException( " Can not continue! Change the name of the clone or delete existing folder. Then try again. Folder already exists and is not empty: " . $path );
         }
         return false;
     }
@@ -85,7 +87,7 @@ class Database extends JobExecutable {
         }
 
         // No more steps, finished
-        if( !isset( $this->options->isRunning ) || $this->options->currentStep > $this->total || !isset( $this->options->tables[$this->options->currentStep] ) ) {
+        if (!$this->isRunning() || $this->options->currentStep > $this->total || !isset($this->options->tables[$this->options->currentStep])) {
             $this->prepareResponse( true, false );
             return false;
         }
@@ -119,10 +121,10 @@ class Database extends JobExecutable {
      */
     private function getStagingPrefix() {
         $stagingPrefix = $this->options->prefix;
-        // Make sure prefix of staging site is NEVER identical to prefix of live site! 
+        // Make sure prefix of staging site is NEVER identical to prefix of live site!
         if( $stagingPrefix == $this->db->prefix ) {
             $error = 'Fatal error 7: The new database table prefix ' . $stagingPrefix . ' would be identical to the table prefix of the live site. Please open a support ticket at support@wp-staging.com';
-            $this->returnException( $error );
+            $this->returnException($error);
             wp_die( $error );
         }
         return $stagingPrefix;
@@ -250,7 +252,6 @@ class Database extends JobExecutable {
         }
 
         $this->log( "DB Copy: {$new} already exists, dropping it first" );
-        
         $this->db->query( "SET FOREIGN_KEY_CHECKS=0" );
         $this->db->query( "DROP TABLE {$new}" );
         $this->db->query( "SET FOREIGN_KEY_CHECKS=1" );

@@ -47,6 +47,17 @@ class Strings {
      */
     public function getUrlWithoutScheme( $str ) {
         return preg_replace( '#^https?://#', '', rtrim( $str, '/' ) );
-}
+    }
+
+    /**
+     * Replace backward slash with forward slash directory separator
+     * Escape Windows Backward Slash -  Compatibility Fix
+     * @param string $path Path
+     *
+     * @return string
+     */
+    public function sanitizeDirectorySeparator( $path ) {
+        return preg_replace( '/[\\\\]+/', '/', $path );
+    }
 
 }

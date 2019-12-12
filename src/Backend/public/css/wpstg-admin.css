@@ -31,8 +31,8 @@
 
 
 
-#tab_container .row{ 
-    padding-top:10px; 
+#tab_container .row{
+    padding-top:10px;
     padding-bottom:12px;
 }
 
@@ -86,7 +86,7 @@
 #tab_container span.description{
     display: block;
     font-weight: 400;
-    font-style: normal; 
+    font-style: normal;
     font-size: 13px;
     margin-top: 7px;
     color:#484848;
@@ -102,7 +102,7 @@
     }
     #tab_container .form-table tr > th {
         width:100%;
-    } 
+    }
     #tab_container span.description{
         font-size: 14px;
     }
@@ -162,7 +162,7 @@
 /* End layout of admin table and rows
 */
 #mashtabcontainer > .mashtabs {
-    background-color: #ffffff;       
+    background-color: #ffffff;
 }
 
 #mashtabcontainer ul .active {
@@ -190,14 +190,14 @@
 /* Cloning workflow */
 #wpstg-clonepage-wrapper {
     margin-bottom: 20px;
-    /*width: 690px;    */  
+    /*max-width: 690px;*/
 }
 
 @media screen and (min-width:1090px){
     #wpstg-clonepage-wrapper {
         float: left;
         margin-bottom: 20px;
-        /*width: 690px;*/      
+        /*width: 690px;*/
     }
     .wpstg-sidebar{
         display: none;
@@ -374,7 +374,7 @@
 
 
 #wpstg-loader {
-    content: url('../img/loading.gif'); 
+    content: url('../img/loading.gif');
     margin-top:-5px;
 }
 
@@ -382,7 +382,7 @@
     display:block;
     content:"Finished";
     background-color:#00c89a;
-    color:white; 
+    color:white;
     padding-left:10px;
     padding-right:10px;
     padding-top:2px;
@@ -391,14 +391,14 @@
     border-radius: 3px;
 }
 .wpstg-loader {
-    content: url('../img/loading.gif'); 
+    content: url('../img/loading.gif');
     margin-top:-5px;
 }
 
 .wpstg-loader.wpstg-finished {
     content:"Finished";
     background-color:#00c89a;
-    color:white; 
+    color:white;
     padding:2px;
     margin-top:0px;
     max-width:60px;
@@ -411,9 +411,10 @@
     padding-top:20px;
     float:left;
     min-width: 500px;
-    border-right: 1px solid #DFDFDF;
+    /*border-right: 1px solid #DFDFDF;*/
     min-height: 380px;
     padding-right: 20px;
+    padding-bottom: 20px;
 }
 
 #wpstg-sidebar {
@@ -460,7 +461,7 @@
 
 
 .wpstg-progress-bar {
-    /*max-width: 900px;*/
+    max-width: 900px;
     height: 27px;
     padding: 0;
     background-color: #d6d8d7;
@@ -602,7 +603,7 @@
 }
 
 #wpstg-large-files {
-    display:none;       
+    display:none;
     border: 1px dashed #ccc;
     /*float: right;*/
     padding: 10px 10px 10px;
@@ -833,6 +834,17 @@
     font-style: italic;
 }
 
+#wpstg-footer {
+    clear: both;
+    padding-top: 20px;
+    clear: both;
+    padding-top: 20px;
+    background-color: white;
+    padding: 20px;
+    margin-top: 20px;
+    margin-right: 10px;
+}
+
 #wpstg-footer a{
     text-decoration: none;
 }
@@ -854,7 +866,7 @@
     font-weight: 400px;
     float:left;
 }
-#wpstg-processing-timer {    
+#wpstg-processing-timer {
     margin-top:5px;
     font-size: 13px;
     font-weight: 400px;
@@ -910,7 +922,7 @@
     text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799;
 }
 .wpstg-blue-primary:hover {
-  background-color: #259be6;
+    background-color: #259be6;
 }
 
 
@@ -1002,13 +1014,31 @@
 }
 
 
+.wpstg-warning {
+    display:block;
+    padding: 10px;
+    background-color: #ffb804;
+    color:#ffffff;
+    margin: 10px;
+    margin-left:0px;
+}
+.wpstg-warning a {
+    color:#ffffff;
+    font-weight: bold;
+    text-decoration: underline;
+}
 .wpstg-error {
     display:block;
     padding: 10px;
-    background-color: #f5e0de;
-    color:#b65147;
+    background-color: #fe6501;
+    color:#ffffff;
     margin: 10px;
     margin-left:0px;
+}
+.wpstg-error a {
+    color:#ffffff;
+    font-weight: bold;
+    text-decoration: underline;
 }
 
 #wpstg-resume-cloning {
@@ -1049,4 +1079,22 @@
 #wpstg_select_tables_cloning {
     height: 600px;
     font-size: 13px;
+}
+
+#wpstg-update-notify{
+    background-color: #fe6501;
+    font-size: 14px;
+    color: #ffffff;
+    line-height: normal;
+    padding:10px;
+    margin-right: 10px;
+}
+
+#wpstg-update-notify a{
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.wpstg-pointer {
+    cursor: pointer;
 }

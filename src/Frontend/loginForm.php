@@ -186,9 +186,16 @@ class loginForm {
                             animation: slideIn 0.3s ease;
                             color: #ff4c4c;
                         }
-                        
+
                         .password-lost{
                             padding-top:20px;
+                        }
+
+                        .wpstg-text-center {
+                          text-align: center;
+                        }
+                        .wpstg-text-center img {
+                          margin-top:30px;
                         }
 
                         @-webkit-keyframes slideIn {
@@ -219,7 +226,7 @@ class loginForm {
 
         /**
          * Add footer
-         * 
+         *
          */
         private function getFooter() {
             echo '</html>';
@@ -281,12 +288,15 @@ class loginForm {
 
             $form = '
         <main class="wp-staging-login" >
+            <div class="wpstg-text-center">
+              <img src="' . esc_url(plugins_url('Backend/public/img/logo_clean_small_212_25.png', dirname(__FILE__))) . '" alt="WP Staging Login" />
+            </div>
             <form class="wp-staging-form" name="' . $args['form_id'] . '" id="' . $args['form_id'] . '" action="" method="post">
                 <div class="form-group login-username">
                     <label for="' . esc_attr( $args['id_username'] ) . '">' . esc_html( $args['label_username'] ) . '</label>
                     <input type="text" name="wpstg-username" id="' . esc_attr( $args['id_username'] ) . '" class="input form-control" value="' . esc_attr( $args['value_username'] ) . '" size="20" />
                 </div>
-                <div class=" form-group login-password">
+                <div class="form-group login-password">
                     <label for="' . esc_attr( $args['id_password'] ) . '">' . esc_html( $args['label_password'] ) . '</label>
                     <input type="password" name="wpstg-pass" id="' . esc_attr( $args['id_password'] ) . '" class="input form-control" value="" size="20" />
                 </div>
@@ -313,4 +323,4 @@ class loginForm {
         }
 
     }
-    
+

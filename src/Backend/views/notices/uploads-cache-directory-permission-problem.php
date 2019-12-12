@@ -5,6 +5,6 @@
         is not write and/or readable.
         <br>
         Check if the folder <strong><?php echo \WPStaging\WPStaging::getContentDir()?></strong> exists!
-        Folder permissions should be chmod 755 or higher.
+        Folder permissions should be chmod 755 or 777.
     </p>
 </div>

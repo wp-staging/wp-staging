@@ -133,14 +133,14 @@ class Updating extends Job {
         if( isset( $_POST["cloneHostname"] ) && !empty( $_POST["cloneHostname"] ) ) {
             $this->options->cloneHostname = $_POST["cloneHostname"];
         }
-        
+
         // Directories to Copy
         $this->options->directoriesToCopy = array_merge(
                 $this->options->includedDirectories, $this->options->extraDirectories
         );
 
         array_unshift( $this->options->directoriesToCopy, ABSPATH );
-                
+
         // Process lock state
         $this->options->isRunning = true;
 
@@ -201,7 +201,6 @@ class Updating extends Job {
      * not used but is abstract
      */
     public function start() {
-
-        }
-
     }
+
+}

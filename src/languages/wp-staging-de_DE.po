@@ -349,7 +349,7 @@ msgstr "Mit Übertragen akzeptiere ich die  <a href=\"https://wp-staging.com/pri
 
 #: Backend/views/_main/report-issue.php:12
 msgid "Optional: Submit the <a href=\"%s\" target=\"_blank\">System Log</a>. This helps us to resolve your technical issues."
-msgstr "Optional: Übertrage das <a href=\"%s\" target=\"_blank\">System Log</a>. Das hilft und Dein technisches Anliegen zu lösen."
+msgstr "Optional: Übertrage das <a href=\"%s\" target=\"_blank\">System Log</a>. Das hilft uns Dein technisches Anliegen zu lösen."
 
 #: Backend/views/_main/messages/staging-directory-permission-problem.php:4
 msgid ""

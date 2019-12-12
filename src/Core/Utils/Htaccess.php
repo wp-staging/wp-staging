@@ -48,7 +48,9 @@ class Htaccess {
     }
 
     /**
-     * Create .htaccess file (LiteSpeed)
+     * Create .htaccess file for LiteSpeed webserver
+     * The LiteSpeed web server has been known to kill or stop processes that take more than a few seconds to run.
+     * This will tell LiteSpeed to not abruptly abort requests
      *
      * @param  string  $path Path to file
      * @return boolean

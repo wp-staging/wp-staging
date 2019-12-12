@@ -1,34 +1,40 @@
 <?php
 
 /*
-  Plugin Name: WP Staging Optimizer
-  Plugin URI: https://wp-staging.com
-  Description: Prevents 3rd party plugins from being loaded during WP Staging specific operations
-  Author: René Hermenau
-  Version: 1.1
-  Author URI: https://wp-staging.com
-  Credit: Original version is made by Delicious Brains (WP Migrate DB). Thank you guys!
+ * Plugin Name: WP Staging Optimizer
+ * Plugin URI: https://wp-staging.com
+ * Description: Prevents 3rd party plugins from being loaded during WP Staging specific operations.
+ *
+ * This is a must-use standalone plugin -
+ * Do not use any of these methods in wp staging code base as this plugin can be missing!
+ *
+ * Author: René Hermenau
+ * Version: 1.2
+ * Author URI: https://wp-staging.com
+ * Credit: Original version made by Delicious Brains (WP Migrate DB). Thank you guys!
  */
 
 
-if ( ! defined( 'WPSTG_OPTIMIZER_VERSION' ) ){
-	define( 'WPSTG_OPTIMIZER_VERSION', 1.1 );
+if( !defined( 'WPSTG_OPTIMIZER_VERSION' ) ) {
+    define( 'WPSTG_OPTIMIZER_VERSION', 1.1 );
 }
 
 /**
  * Get plugins dir 
  * @return string
+ * @todo Logic error here. If WP_CONTENT_DIR or WP_PLUGIN_DIR do not exists no value is returned.
+ * Does not throw error because WP_PLUGIN_DIR is defined with default value in WP core.
  */
-function wpstg_get_plugins_dir() {
+function wpstg_get_plugins_dir()
+{
 
-   if( defined( 'WP_PLUGIN_DIR' ) ) {
-      $pluginsDir = trailingslashit( WP_PLUGIN_DIR );
-   } else if( defined( 'WP_CONTENT_DIR' ) ) {
-      $pluginsDir = trailingslashit( WP_CONTENT_DIR ) . 'plugins/';
-   }
-   return $pluginsDir;
+    if (defined('WP_PLUGIN_DIR')) {
+	$pluginsDir = trailingslashit(WP_PLUGIN_DIR);
+    } else if (defined('WP_CONTENT_DIR')) {
+	$pluginsDir = trailingslashit(WP_CONTENT_DIR).'plugins/';
+    }
+    return $pluginsDir;
 }
-
 /*
  * Check if optimizer is enabled
  * @return bool false if it's disabled
@@ -36,7 +42,7 @@ function wpstg_get_plugins_dir() {
  */
 
 function wpstg_is_enabled_optimizer() {
-   $status = ( object ) get_option( 'wpstg_settings' );
+    $status = ( object ) get_option( 'wpstg_settings' );
 
    if( $status && isset( $status->optimizer ) && $status->optimizer == 1 ) {
       return true;

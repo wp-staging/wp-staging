@@ -176,9 +176,9 @@ class SystemInfo extends InjectionAware {
         $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version > 2.0.x" . PHP_EOL . PHP_EOL;
 
         foreach ( $clonesBeta as $key => $clone ) {
-            
+
             $path = !empty( $clone['path'] ) ? $clone['path'] : 'undefined';
-            
+
             $output .= $this->info( "Number:", isset( $clone['number'] ) ? $clone['number'] : 'undefined'  );
             $output .= $this->info( "directoryName:", isset( $clone['directoryName'] ) ? $clone['directoryName'] : 'undefined'  );
             $output .= $this->info( "Path:", $path );
@@ -197,9 +197,11 @@ class SystemInfo extends InjectionAware {
 
         //$output .= PHP_EOL . PHP_EOL;
 
-        $output .= $this->info( "Plugin Version:", get_option( 'wpstg_version', 'undefined' ) );
+        $output .= $this->info( "Plugin Pro Version:", get_option( 'wpstgpro_version', 'undefined' ) );
+        $output .= $this->info( "Plugin Free Version:", get_option( 'wpstg_version', 'undefined' ) );
         $output .= $this->info( "Install Date:", get_option( 'wpstg_installDate', 'undefined' ) );
-        $output .= $this->info( "Upgraded from:", get_option( 'wpstg_version_upgraded_from', 'undefined' ) );
+        $output .= $this->info( "Upgraded from Pro:", get_option( 'wpstgpro_version_upgraded_from', 'undefined' ) );
+        $output .= $this->info( "Upgraded from Free:", get_option( 'wpstg_version_upgraded_from', 'undefined' ) );
         $output .= $this->info( "Is Staging Site:", wpstg_is_stagingsite() ? 'true' : 'false' ) . PHP_EOL . PHP_EOL;
 
 
@@ -253,7 +255,7 @@ class SystemInfo extends InjectionAware {
                 "https://www.paypal.com/cgi-bin/webscr", array(
             "sslverify"  => false,
             "timeout"    => 60,
-            "user-agent" => "WPSTG/" . WPStaging::VERSION,
+            "user-agent" => "WPSTG/" . WPStaging::getVersion(),
             "body"       => array("cmd" => "_notify-validate")
                 )
         );
@@ -445,9 +447,9 @@ class SystemInfo extends InjectionAware {
         $user = '';
 
         if( extension_loaded( 'posix' ) && function_exists('posix_getpwuid') ) {
-            $file = WPSTG_PLUGIN_DIR . 'wp-staging.php';
+            $file = WPSTG_PLUGIN_DIR . 'Core/WPStaging.php';
             $user = posix_getpwuid( fileowner( $file ) );
-            return isset($user['name']) ? $user['name'] : 'can not detect php user name';
+            return isset($user['name']) ? $user['name'] : 'can not detect PHP user name';
         }
 
         if( function_exists( 'exec' ) && @exec('echo EXEC') == 'EXEC') {

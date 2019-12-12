@@ -37,7 +37,7 @@ class Finish extends Job {
             "path"          => trailingslashit( $this->options->destinationDir ),
             "url"           => $this->getDestinationUrl(),
             "number"        => $this->options->cloneNumber,
-            "version"       => \WPStaging\WPStaging::VERSION,
+            "version"       => WPStaging::getVersion(),
             "status"        => 'finished',
             "prefix"        => $this->options->prefix,
             "last_msg"      => $this->logger->getLastLogMsg(),
@@ -47,7 +47,6 @@ class Finish extends Job {
 
         //$this->flush();
         do_action('wpstg_cloning_complete', $this->options);
-
 
         return ( object ) $return;
     }
@@ -94,7 +93,7 @@ class Finish extends Job {
             "path"             => trailingslashit( $this->options->destinationDir ),
             "url"              => $this->getDestinationUrl(),
             "number"           => $this->options->cloneNumber,
-            "version"          => \WPStaging\WPStaging::VERSION,
+            "version"          => WPStaging\WPStaging::getVersion(),
             //"status"           => false,
             "status"           => "finished",
             "prefix"           => $this->options->prefix,
@@ -122,7 +121,7 @@ class Finish extends Job {
 
         if( !empty( $this->options->cloneHostname ) ) {
             return $this->options->cloneHostname;
-}
+        }
 
         return trailingslashit( get_site_url() ) . $this->options->cloneDirectoryName;
     }

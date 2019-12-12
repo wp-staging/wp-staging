@@ -214,17 +214,6 @@ class Scan extends Job {
             return null;
         }
 
-//        $freeSpace = @disk_free_space( \WPStaging\WPStaging::getWPpath() );
-//
-//        if( false === $freeSpace ) {
-//            $data = array(
-//                'freespace' => false,
-//                'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( \WPStaging\WPStaging::getWPpath() ) )
-//            );
-//            echo json_encode( $data );
-//            die();
-//        }
-
 
         $data = array(
             //'freespace' => $this->formatSize( $freeSpace ),
@@ -241,12 +230,14 @@ class Scan extends Job {
     protected function getTables() {
         $wpDB = WPStaging::getInstance()->get( "wpdb" );
 
-        if( strlen( $wpDB->prefix ) > 0 ) {
-            //$prefix = str_replace('_', '', $wpDB->prefix);
-            $sql = "SHOW TABLE STATUS LIKE '{$wpDB->prefix}%'";
-        } else {
-            $sql = "SHOW TABLE STATUS";
-        }
+//      if( strlen( $wpDB->prefix ) > 0 ) {
+//         //$prefix = str_replace('_', '', $wpDB->prefix);
+//         $sql = "SHOW TABLE STATUS LIKE '{$wpDB->prefix}%'";
+//      } else {
+//         $sql = "SHOW TABLE STATUS";
+//      }
+
+        $sql = "SHOW TABLE STATUS";
 
         $tables = $wpDB->get_results( $sql );
 
@@ -256,11 +247,6 @@ class Scan extends Job {
         $this->options->excludedTables = array();
         foreach ( $tables as $table ) {
 
-            // Exclude WP Staging Tables
-//            if (0 === strpos($table->Name, "wp-staging"))
-//            {
-//                continue;
-//            }
             // Create array of unchecked tables
             if( !empty( $wpDB->prefix ) && 0 !== strpos( $table->Name, $wpDB->prefix ) ) {
                 $this->options->excludedTables[] = $table->Name;
@@ -281,8 +267,6 @@ class Scan extends Job {
      */
     protected function getDirectories() {
 
-
-        //$directories = new \DirectoryIterator( \WPStaging\WPStaging::getWPpath() );
         $directories = new Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() );
 
 
@@ -453,11 +437,11 @@ class Scan extends Job {
                 // remove this piece from the basedir: /sites/2
                 $uploadDir = wpstg_replace_first_match( '/sites/' . get_current_blog_id(), null, $baseDir );
                 $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/sites' );
-    }
+            }
 
 
             return $dir;
-}
+        }
         return $baseDir;
     }
 

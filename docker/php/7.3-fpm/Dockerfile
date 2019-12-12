@@ -3,7 +3,7 @@ FROM triplebits/php:7.3-fpm
 USER root
 
 # Required by wp-cli
-RUN apt-get install -y default-mysql-client
+RUN apt-get update && apt-get install -y default-mysql-client
 
 # Extensions and setup required by WP
 RUN set -ex; \

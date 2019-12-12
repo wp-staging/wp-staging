@@ -11,7 +11,7 @@
     if( wpstg_is_stagingsite() ) {
         // Staging site
         require_once($this->path . "views/clone/staging-site/index.php");
-    } elseif( is_multisite() ) {
+    } elseif( !defined('WPSTGPRO_VERSION') && is_multisite() ) {
         require_once($this->path . "views/clone/multi-site/index.php");
     }
     // Single site

@@ -133,7 +133,7 @@ class Files extends JobExecutable {
                 break;
             }
 
-            $file = $this->file->fgets();
+            $file = str_replace(PHP_EOL, null, $this->file->fgets());
 
 
             $this->copyFile( $file );
@@ -155,11 +155,11 @@ class Files extends JobExecutable {
      * @return bool
      */
     private function isFinished() {
-        return (
-                !isset( $this->options->isRunning ) ||
-                $this->options->currentStep > $this->options->totalSteps ||
-                $this->options->copiedFiles >= $this->options->totalFiles
-                );
+        return
+            !$this->isRunning() ||
+            $this->options->currentStep > $this->options->totalSteps ||
+            $this->options->copiedFiles >= $this->options->totalFiles
+        ;
     }
 
     /**
@@ -242,22 +242,22 @@ class Files extends JobExecutable {
     /**
      * Get wp-content and wp-content/uploads destination dir
      * Necessary if these folders were customized and changed from the default ones.
-     * 
+     *
      * @return string
      */
     protected function getWpContentPath( $file ) {
         // Get upload directory information
         $uploads = wp_upload_dir();
-        
+
         // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
         $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
 
         // Get relative path to the uploads folder, e.g assets
         $uploadsRelPath = wpstg_get_rel_upload_dir();
-        
+
         // Get absolute path to wp-content directory e.g srv/www/htdocs/sitename/wp-content
         $wpContentDir = trailingslashit( WP_CONTENT_DIR );
-        
+
         // Check if there is a custom uploads directory, then do a search $ replace. Do this only if custom upload path is not identical to WP_CONTENT_DIR
         if( $uploadsAbsPath != $wpContentDir ) {
             //$file = str_replace( $uploadsAbsPath, ABSPATH . 'wp-content/uploads/', $file, $count );
@@ -344,14 +344,14 @@ class Files extends JobExecutable {
 
     /**
      * Check if certain file is excluded from copying process
-     * 
+     *
      * @param string $file filename including ending without full path
      * @return boolean
      */
     private function isFileExcluded( $file ) {
 
         $excludedFiles = ( array ) $this->options->excludedFiles;
-        
+
         $basenameFile = basename( $file );
 
 
@@ -368,13 +368,13 @@ class Files extends JobExecutable {
         }
 
         // Check for wildcards
-        foreach ($excludedFiles as $pattern){
-            if(fnmatch($pattern, $basenameFile)){
-                return true;          
+        foreach ($excludedFiles as $pattern) {
+            if (wpstg_fnmatch($pattern, $basenameFile)) {
+                return true;
             }
         }
 
-        // Do not copy wp-config.php if the clone gets updated. This is for security purposes, 
+        // Do not copy wp-config.php if the clone gets updated. This is for security purposes,
         // because if the updating process fails, the staging site would not be accessable any longer
         if( isset( $this->options->mainJob ) && $this->options->mainJob == "updating" && stripos( strrev( $file ), strrev( "wp-config.php" ) ) === 0 ) {
             return true;
@@ -421,7 +421,7 @@ class Files extends JobExecutable {
 
     /**
      * Check if certain file is excluded from copying process
-     * 
+     *
      * @param string $file filename including ending + (part) path e.g wp-content/db.php
      * @return boolean
      */
@@ -439,7 +439,7 @@ class Files extends JobExecutable {
     /**
      * Replace backward slash with forward slash directory separator
      * Windows Compatibility Fix
-     * 
+     *
      * @param string $path Path
      * @return string
      */

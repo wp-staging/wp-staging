@@ -1,5 +1,5 @@
 jQuery(document).ready(function ($) {
-    
+
     $(".wpstg_hide_rating").click(function (e) {
         e.preventDefault();
 
@@ -29,7 +29,7 @@ jQuery(document).ready(function ($) {
             }
         });
     });
-    
+
     $(".wpstg_rate_later").click(function (e) {
         e.preventDefault();
 
@@ -60,8 +60,4 @@ jQuery(document).ready(function ($) {
             }
         });
     });
-    
-    
-    
-    
 });

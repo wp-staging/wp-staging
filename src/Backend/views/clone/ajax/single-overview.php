@@ -1,11 +1,4 @@
 <div id="wpstg-step-1">
-    <!--
-    <?php //if (  wpstg_is_stagingsite()) {?>
-    <h3 style="color:red;"><?php //echo __("This is your staging website!", "wp-staging") ?></h3>
-    <p><?php //echo __("You can still clone it. <br>For example, to push another clone to this site for testing purposes.", "wp-staging"); ?> </p>
-    <p><?php //echo __("Go to the Production website > WP Staging > Sites if you want to push this site to live.","wp-staging"); ?></p>
-    <?php //} ?>
-    //-->
     <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-link-btn wpstg-blue-primary wpstg-button" data-action="wpstg_scanning">
         <?php echo __( "Create new staging site", "wp-staging" ) ?>
     </button>
@@ -41,12 +34,12 @@
                     <?php _e( "Delete", "wp-staging" ); ?>
                 </a>
                 <?php echo apply_filters( "wpstg_after_stage_buttons", $html     = '', $name, $data ) ?>
-                <div class="wpstg-staging-info">                   
+                <div class="wpstg-staging-info">
                     <?php
                     $dbname   = !empty( $data['databaseDatabase'] ) ? __( "Database: <span class='wpstg-bold'>" . $data['databaseDatabase'], "wp-staging" ) . '</span>' : 'Database: <span class="wpstg-bold">' . DB_NAME . '</span>';
                     $prefix   = !empty( $data['prefix'] ) ? __( "Database Prefix: <span class='wpstg-bold'>" . $data['prefix'], "wp-staging" ) . '</span> ' : '';
                     $cloneDir = !empty( $data['path'] ) ? __( "Directory: <span class='wpstg-bold'>" . $data['path'], "wp-staging" ) . '</span> ' : 'Directory: ';
-                    $url      = !empty( $data['url'] ) ? __( "URL: <span class='wpstg-bold'>" . $data['url'], "wp-staging" ) . '</span> ' : 'URL: ';
+                    $url      = !empty( $data['url'] ) ? __(sprintf('URL: <a href="%s" target="_blank"><span class="wpstg-bold">%1$s</span></a>', $data['url']), "wp-staging") : 'URL: ';
                     $datetime = !empty( $data['datetime'] ) ? __( "Updated: <span>" . date( "D, d M Y H:i:s T", $data['datetime'] ), "wp-staging" ) . '</span> ' : '&nbsp;&nbsp;&nbsp;';
                     $status   = !empty( $data['status'] ) && $data['status'] !== 'finished' ? "Status: <span class='wpstg-bold' style='color:#ffc2c2;'>" . $data['status'] . "</span>" : '&nbsp;&nbsp;&nbsp;';
 

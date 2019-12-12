@@ -29,7 +29,7 @@ class DatabaseExternal extends JobExecutable {
 
     /**
      * Staging Database
-     * @var \WPDB 
+     * @var \WPDB
      */
     private $stagingDb;
 
@@ -79,7 +79,7 @@ class DatabaseExternal extends JobExecutable {
     /**
      * Add wp_users and wp_usermeta to the tables if they do not exist
      * because they are not available in MU installation but we need them on the staging site
-     * 
+     *
      * return void
      */
     private function getTables() {
@@ -96,13 +96,13 @@ class DatabaseExternal extends JobExecutable {
 
     /**
      * Return fatal error and stops here if subfolder already exists & is not empty
-     * and mainJob is not updating the clone 
+     * and mainJob is not updating the clone
      * @return boolean
      */
     private function isFatalError() {
         //$path = trailingslashit( get_home_path() ) . $this->options->cloneDirectoryName;
-        $path = trailingslashit($this->options->cloneDir);
-        if( isset( $this->options->mainJob ) && $this->options->mainJob !== 'updating' && (is_dir( $path ) && !wpstg_is_empty_dir( $path ) )  ) {
+        $path = trailingslashit( $this->options->cloneDir );
+        if( isset( $this->options->mainJob ) && $this->options->mainJob !== 'updating' && (is_dir( $path ) && !wpstg_is_empty_dir( $path ) ) ) {
             $this->returnException( " Can not continue! Change the name of the clone or delete existing folder. Then try again. Folder already exists and is not empty: " . $path );
         }
         return false;
@@ -133,7 +133,7 @@ class DatabaseExternal extends JobExecutable {
         }
 
         // No more steps, finished
-        if( !isset( $this->options->isRunning ) || $this->options->currentStep > $this->total ) {
+        if (!$this->isRunning() || $this->options->currentStep > $this->total) {
             $this->prepareResponse( true, false );
             return false;
         }
@@ -253,14 +253,17 @@ class DatabaseExternal extends JobExecutable {
 
         // Replace table prefix to the new one
         $sql = str_replace( "CREATE TABLE `{$search}`", "CREATE TABLE `{$new}`", $sql );
-        
-        $this->stagingDb->query('SET FOREIGN_KEY_CHECKS=0;');
+
+        // Make constraint unique to prevent error:(errno: 121 "Duplicate key on write or update")
+        $sql = wpstg_unique_constraint($sql);
+
+        $this->stagingDb->query( 'SET FOREIGN_KEY_CHECKS=0;' );
 
         if( false === $this->stagingDb->query( $sql ) ) {
             $this->returnException( "DB External Copy - Fatal Error: {$this->stagingDb->last_error} Query: {$sql}" );
         }
 
-        
+
         // Count amount of rows to insert with next step
         $this->options->job->total = 0;
         $this->options->job->total = ( int ) $this->db->get_var( "SELECT COUNT(1) FROM `{$this->db->dbname}`.`{$old}`" );
@@ -284,19 +287,20 @@ class DatabaseExternal extends JobExecutable {
      */
     private function getCreateStatement( $tableName ) {
 
-        // Query: Default
+        // Get the CREATE statement
         $row = $this->db->get_results( "SHOW CREATE TABLE `{$tableName}`", ARRAY_A );
 
+        // Convert prefix and entire table name to lowercase to prevent capitalization issues:
+        // https://dev.mysql.com/doc/refman/5.7/en/identifier-case-sensitivity.html
+        // @todo Testing! Can lead to issues with CONSTRAINTS
+        $row[0] = str_replace($tableName, strtolower( $tableName ), $row[0]);
+
         // Query: Get wp_users from main site
-        if( 'users' === $this->strings->str_replace_first( $this->db->base_prefix, null, $tableName ) ) {
-            //$tableName = $this->db->base_prefix . 'users';
-            //$row = $this->db->get_results( "SHOW CREATE TABLE `{$tableName}`", ARRAY_A );
+        if( 'users' === $this->strings->str_replace_first( strtolower($this->db->base_prefix), null, $tableName ) ) {
             $row[0] = str_replace( $tableName, $this->db->prefix . 'users', $row[0] );
         }
         // Query: Get wp_usermeta from main site
-        if( 'usermeta' === $this->strings->str_replace_first( $this->db->base_prefix, null, $tableName ) ) {
-            //$tableName = $this->db->base_prefix . 'usermeta';
-            //$row = $this->db->get_results( "SHOW CREATE TABLE `{$tableName}`", ARRAY_A );
+        if( 'usermeta' === $this->strings->str_replace_first( strtolower($this->db->base_prefix), null, $tableName ) ) {
             $row[0] = str_replace( $tableName, $this->db->prefix . 'usermeta', $row[0] );
         }
 
@@ -330,14 +334,17 @@ class DatabaseExternal extends JobExecutable {
 
         // Start transaction
         $this->stagingDb->query( 'SET autocommit=0;' );
-        $this->stagingDb->query('SET FOREIGN_KEY_CHECKS=0;');
+        $this->stagingDb->query( 'SET FOREIGN_KEY_CHECKS=0;' );
         $this->stagingDb->query( 'START TRANSACTION;' );
 
         // Copy into staging site
         foreach ( $rows as $row ) {
             $escaped_values = $this->mysqlEscapeMimic( array_values( $row ) );
             $values         = implode( "', '", $escaped_values );
-            $this->stagingDb->query( "INSERT INTO `{$new}` VALUES ('{$values}')" );
+            if (false === $this->stagingDb->query( "INSERT INTO `{$new}` VALUES ('{$values}')" )){
+                $this->log("Can not insert data into table {$new}", \WPStaging\Utils\Logger::TYPE_INFO);
+            }
+            //$this->stagingDb->query( "INSERT INTO `{$new}` VALUES ('{$values}')" );
         }
         // Commit transaction
         $this->stagingDb->query( 'COMMIT;' );

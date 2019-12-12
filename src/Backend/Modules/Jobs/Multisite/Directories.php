@@ -75,12 +75,6 @@ class Directories extends JobExecutable {
      */
     private function getWpRootFiles() {
 
-        // Skip it
-        if( $this->isDirectoryExcluded( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR ) ) {
-            $this->log( "Skip " . \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
-            return true;
-        }
-
         // open file handle
         $files = $this->open( $this->filename, 'a' );
 

@@ -14,7 +14,7 @@ class thirdPartyCompatibility extends InjectionAware {
     /**
      * Define a list of tables which should not run through search & replace method
      * @param string table name e.g. wpsptg1_cerber_files or wpstgtmp_4_cerber_files
-     * @return array
+     * @return boolean
      */
     public function isSearchReplaceExcluded( $table ) {
         $excludedTables = array(
@@ -22,7 +22,6 @@ class thirdPartyCompatibility extends InjectionAware {
         );
 
         $excludedTables = apply_filters( 'wpstg_searchreplace_excl_tables', $excludedTables );
-
 
         foreach ( $excludedTables as $excludedTable ) {
             if( false !== strpos( $table, $excludedTable ) ) {
