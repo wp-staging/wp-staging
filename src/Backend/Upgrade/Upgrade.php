@@ -246,9 +246,9 @@ class Upgrade {
      */
     private function setVersion() {
         // Check if version number in DB is lower than version number in current plugin
-        if( version_compare( $this->previousVersion, \WPStaging\WPStaging::VERSION, '<' ) ) {
+        if( version_compare( $this->previousVersion, WPStaging::getVersion(), '<' ) ) {
             // Update Version number
-            update_option( 'wpstg_version', preg_replace( '/[^0-9.].*/', '', \WPStaging\WPStaging::VERSION ) );
+            update_option( 'wpstg_version', preg_replace( '/[^0-9.].*/', '', WPStaging::getVersion() ) );
             // Update "upgraded from" version number
             update_option( 'wpstg_version_upgraded_from', preg_replace( '/[^0-9.].*/', '', $this->previousVersion ) );
 
@@ -284,12 +284,11 @@ class Upgrade {
             $new[$value]['url']           = $helper->get_home_url() . "/" . $value;
             $new[$value]['number']        = $key + 1;
             $new[$value]['version']       = $this->previousVersion;
-            //$new[$value]['prefix'] = $value;
         }
         unset( $value );
 
         if( empty( $new ) || false === update_option( 'wpstg_existing_clones_beta', $new ) ) {
-            $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . \WPStaging\WPStaging::VERSION );
+            $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . WPStaging::getVersion() );
         }
     }
 

@@ -19,57 +19,39 @@
     </a>
 
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
-            <?php do_action( "wpstg_scanning_db" ) ?>
+        <?php do_action("wpstg_scanning_db") ?>
         <h4 style="margin:0">
             <?php
             echo __(
-                    "Select the tables to copy. Tables beginning with the prefix '{$scan->prefix}' have already been selected.", "wp-staging"
+                "Select the tables to copy. Tables beginning with the prefix '{$scan->prefix}' have already been selected.", "wp-staging"
             );
             ?>
             <p></p>
             <?php
             echo __(
-                    "Select multiple tables by pressing left mouse button and moving or by pressing STRG+Left Mouse button. (Mac ⌘+Left Mouse Button)", "wp-staging"
+                "Select multiple tables by pressing left mouse button and moving or by pressing STRG+Left Mouse button. (Mac ⌘+Left Mouse Button)", "wp-staging"
             );
             ?>
         </h4>
         <div style="margin-top:10px;margin-bottom:10px;">
-            <a href="#" class="wpstg-button-unselect button"><?php _e('Unselect All','wp-staging'); ?></a>
-            <a href="#" class="wpstg-button-select button"> <?php _e( WPStaging\WPStaging::getTablePrefix(), 'wp-staging' ); ?> </a>
+            <a href="#" class="wpstg-button-unselect button"><?php _e('Unselect All', 'wp-staging'); ?></a>
+            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
         </div>
         <select multiple="multiple" id="wpstg_select_tables_cloning">
-        <?php
-        foreach ( $options->tables as $table ):
-                $attributes =  !in_array( $table->name, $options->excludedTables ) && (strpos( $table->name, $db->prefix ) === 0) ? "selected='selected'" : "";
-                $attributes .= in_array( $table->name, $options->clonedTables ) ? "disabled" : '';
-            ?>
+            <?php
+            foreach ($options->tables as $table):
+                $attributes = !in_array($table->name, $options->excludedTables) && (strpos($table->name, $db->prefix) === 0) ? "selected='selected'" : "";
+                $attributes .= in_array($table->name, $options->clonedTables) ? "disabled" : '';
+                ?>
                 <option class="wpstg-db-table" value="<?php echo $table->name ?>" name="<?php echo $table->name ?>" <?php echo $attributes ?>>
-                    <?php echo $table->name ?>           - <?php echo $scan->formatSize( $table->size ) ?>
+                    <?php echo $table->name ?> - <?php echo $scan->formatSize($table->size) ?>
                 </option>
             <?php endforeach ?>
         </select>
 
-
-
-        <?php
-//        foreach ( $options->tables as $table ):
-//            $attributes = in_array( $table->name, $options->excludedTables ) ? '' : "checked";
-//            $attributes .= in_array( $table->name, $options->clonedTables ) ? " disabled" : '';
-            ?>
-<!--            <div class="wpstg-db-table">
-                <label>
-                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php // echo $table->name ?>" <?php // echo $attributes ?>>
-                    <?php // echo $table->name ?>
-                </label>
-                <span class="wpstg-size-info">
-                    <?php // echo $scan->formatSize( $table->size ) ?>
-                </span>
-            </div>-->
-        <?php // endforeach ?>
-        
         <div style="margin-top:10px;">
-            <a href="#" class="wpstg-button-unselect button"> <?php _e('Unselect All','wp-staging'); ?> </a>
-            <a href="#" class="wpstg-button-select button"> <?php _e( WPStaging\WPStaging::getTablePrefix(), 'wp-staging' ); ?> </a>
+            <a href="#" class="wpstg-button-unselect button"> <?php _e('Unselect All', 'wp-staging'); ?> </a>
+            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
         </div>
     </div>
 
@@ -112,20 +94,26 @@
         </p>
     </div>
 
-    <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings" style="display:block;">
-        <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __( "Advanced Settings / Pro", "wp-staging" ); ?>
+    <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
+        <span class="wpstg-tab-triangle"><input type="checkbox" name="wpstg-advanced" value="true"></span>
+        <?php
+            $pro = defined('WPSTGPRO_VERSION') ? ' ' : ' / Pro';
+            echo __( "Advanced Settings " . $pro, "wp-staging" ); ?>
     </a>
 
-    <div class="wpstg-tab-section" id="wpstg-advanced-settings" style="display:none;">
+    <div class="wpstg-tab-section" id="wpstg-advanced-settings">
 
         <?php
-        require_once (__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
-        require_once (__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
+        if (defined('WPSTGPRO_VERSION')) {
+            require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/external-database.php');
+            require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/custom-directory.php');
+        } else {
+            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
+            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
+        }
         ?>
 
     </div>
-
 </div>
 
 <strong>Important:</strong><a href="#" id="wpstg-check-space"><?php _e( 'Check required disk space', 'wp-staging' ); ?></a>

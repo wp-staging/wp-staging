@@ -106,7 +106,7 @@ class Logger
             "type"      => $type,
             "date"      => date("Y/m/d H:i:s"),
             "message"   => $message
-        );
+                );
     }
 
     /**

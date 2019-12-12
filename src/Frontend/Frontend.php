@@ -11,162 +11,196 @@ use WPStaging\Frontend\loginForm;
  */
 class Frontend extends InjectionAware {
 
-   /**
-    * @var object
-    */
-   private $settings;
-   
-   /**
-    *
-    * @var string
-    */
-   private $loginSlug;
+    /**
+     * @var object
+     */
+    private $settings;
 
-   /**
-    * Frontend initialization.
-    */
-   public function initialize() {
-      $this->defineHooks();
+    /**
+     *
+     * @var string
+     */
+    private $loginSlug;
 
-      $this->settings = json_decode( json_encode( get_option( "wpstg_settings", array() ) ) );
-      
-      $this->loginSlug = isset( $this->settings->loginSlug ) ? $this->settings->loginSlug : '';
-   }
+    /**
+     * Frontend initialization.
+     */
+    public function initialize() {
+        $this->defineHooks();
 
-   /**
-    * Define Hooks
-    */
-   private function defineHooks() {
-      // Get loader
-      $loader = $this->di->get( "loader" );
-      $loader->addAction( "init", $this, "checkPermissions" );
-      $loader->addFilter( "wp_before_admin_bar_render", $this, "changeSiteName" );
-   }
+        $this->settings = json_decode( json_encode( get_option( "wpstg_settings", array() ) ) );
 
-   /**
-    * Change admin_bar site_name
-    * 
-    * @global object $wp_admin_bar
-    * @return void
-    */
-   public function changeSiteName() {
-      global $wp_admin_bar;
-      if( $this->isStagingSite() ) {
-         // Main Title
-         $wp_admin_bar->add_menu( array(
-             'id' => 'site-name',
-             'title' => is_admin() ? ('STAGING - ' . get_bloginfo( 'name' ) ) : ( 'STAGING - ' . get_bloginfo( 'name' ) . ' Dashboard' ),
-             'href' => is_admin() ? home_url( '/' ) : admin_url(),
-         ) );
-      }
-   }
+        $this->loginSlug = isset( $this->settings->loginSlug ) ? $this->settings->loginSlug : '';
+    }
 
-   /**
-    * Check permissions for the page to decide whether or not to disable the page
-    */
+    /**
+     * Define Hooks
+     */
+    private function defineHooks() {
+        // Get loader
+        $loader = $this->di->get( "loader" );
+        $loader->addAction( "init", $this, "checkPermissions" );
+        $loader->addFilter( "wp_before_admin_bar_render", $this, "changeSiteName" );
+    }
 
-   public function checkPermissions() {
-      $this->resetPermaLinks();
+    /**
+     * Change admin_bar site_name
+     *
+     * @global object $wp_admin_bar
+     * @return void
+     */
+    public function changeSiteName() {
+        global $wp_admin_bar;
+        if( $this->isStagingSite() ) {
+            // Main Title
+            $wp_admin_bar->add_menu( array(
+                'id'    => 'site-name',
+                'title' => is_admin() ? ('STAGING - ' . get_bloginfo( 'name' ) ) : ( 'STAGING - ' . get_bloginfo( 'name' ) . ' Dashboard' ),
+                'href'  => is_admin() ? home_url( '/' ) : admin_url(),
+            ) );
+        }
+    }
 
-      if($this->disableLogin() ) {
-         //wp_die( sprintf( __( 'Access denied. <a href="%1$s">Login</a> first to access this site', 'wp-staging' ), $this->getLoginUrl() ) );
-         //}
-         	$args = array(
-		'echo' => true,
-		// Default 'redirect' value takes the user back to the request URI.
-		'redirect' => ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
-		'form_id' => 'loginform',
-		'label_username' => __( 'Username or Email Address' ),
-		'label_password' => __( 'Password' ),
-		'label_remember' => __( 'Remember Me' ),
-		'label_log_in' => __( 'Log In' ),
-		'id_username' => 'user_login',
-		'id_password' => 'user_pass',
-		'id_remember' => 'rememberme',
-		'id_submit' => 'wp-submit',
-		'remember' => true,
-		'value_username' => '',
-		// Set 'value_remember' to true to default the "Remember me" checkbox to checked.
-		'value_remember' => false,
-                  );
+    /**
+     * Check permissions for the page to decide whether or not to disable the page
+     */
+    public function checkPermissions() {
+        $this->resetPermaLinks();
+
+        if( $this->disableLogin() ) {
+
+            $args = array(
+                'echo'           => true,
+                // Default 'redirect' value takes the user back to the request URI.
+                'redirect'       => ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
+                'form_id'        => 'loginform',
+                'label_username' => __( 'Username or Email Address' ),
+                'label_password' => __( 'Password' ),
+                'label_remember' => __( 'Remember Me' ),
+                'label_log_in'   => __( 'Log In' ),
+                'id_username'    => 'user_login',
+                'id_password'    => 'user_pass',
+                'id_remember'    => 'rememberme',
+                'id_submit'      => 'wp-submit',
+                'remember'       => true,
+                'value_username' => '',
+                // Set 'value_remember' to true to default the "Remember me" checkbox to checked.
+                'value_remember' => false,
+            );
 
 
-         /**
-          * Lines below are not used at the moment but are fully functional
-          */
-         $login = new loginForm();
-         $login->renderForm($args);
-         die();
-      }
-   }
+            /**
+             * Lines below are not used at the moment but are fully functional
+             */
+            $login = new loginForm();
+            $login->renderForm( $args );
+            die();
+        }
+    }
 
-   /**
-    * Get path to wp-login.php
-    * @return string
-    */
-   private function getLoginUrl() {
-      return get_site_url() . '/wp-login.php';
-      }
+    /**
+     * Get path to wp-login.php
+     * @return string
+     */
+    private function getLoginUrl() {
+        return get_site_url() . '/wp-login.php';
+    }
 
-   /**
-    * Check if the page should be blocked
-    * @return bool
-    */
-   private function disableLogin() {
-      // Is not staging site
-        if( !wpstg_is_stagingsite() ) {
-         return false;
-      }
+    /**
+     * Check if the page should be blocked
+     * @return bool
+     */
+    private function disableLogin()
+    {
+        // Is not staging site
+        if (!wpstg_is_stagingsite()) {
+            return false;
+        }
 
         // Allow access for user role administrator in any case
-      if( current_user_can( 'manage_options' ) ) {
-      //if( current_user_can( 'administrator' ) ) {
-         return false;
-      }
-      
+        if (current_user_can('manage_options')) {
+            return false;
+        }
 
-      return (
-              (!isset( $this->settings->disableAdminLogin ) || '1' !== $this->settings->disableAdminLogin) &&
-              (!current_user_can( "manage_options" ) && !$this->isLoginPage() && !is_admin())
-              );
-   }
+        // Simple check for free version only
+        if (!defined('WPSTGPRO_VERSION')) {
+            return (
+                (!isset($this->settings->disableAdminLogin) || '1' !== $this->settings->disableAdminLogin) &&
+                (!current_user_can("manage_options") && !$this->isLoginPage() && !is_admin())
+            );
+        }
 
-   /**
-    * Check if it is a staging site
-    * @return bool
-    */
-   private function isStagingSite() {
-      return ("true" === get_option( "wpstg_is_staging_site" ));
-   }
+        // Allow access for special wp staging role "all"
+        if (!empty($this->settings->userRoles) &&
+            (in_array('all', $this->settings->userRoles) && !$this->isLoginPage() && !is_admin())
+        ) {
+            return false;
+        }
 
-   /**
-    * Check if it is the login page
-    * @return bool
-    */
-   private function isLoginPage() {
-      
-      return (
-              in_array( $GLOBALS["pagenow"], array("wp-login.php") ) ||
-              in_array( $this->loginSlug, $_GET ) ||
-              array_key_exists( $this->loginSlug, $_GET )
-              );
-   }
+        // If user roles are not defined, disable login for all user except administrator roles
+        if (
+            (!isset($this->settings->userRoles) || !is_array($this->settings->userRoles)) &&
+            (!current_user_can('manage_options') && !$this->isLoginPage() && !is_admin())
+        ) {
+            return true;
+        }
 
-   /**
-    * Reset permalink structure of the clone to default; index.php?p=123
-    */
-   private function resetPermaLinks() {
+
+        // Disable access if current user is not allowed
+        $currentUser = wp_get_current_user();
+        $userRoles = $currentUser->roles;
+
+        $result = isset($this->settings->userRoles) && is_array($this->settings->userRoles) ? array_intersect($userRoles, $this->settings->userRoles) : array();
+        if (empty($result) && !$this->isLoginPage() && !is_admin()) {
+            return true;
+        }
+
+    }
+
+    /**
+     * Check if it is a staging site
+     * @return bool
+     */
+    private function isStagingSite() {
+        return ("true" === get_option( "wpstg_is_staging_site" ));
+    }
+
+    /**
+     * Check if it is the login page
+     * @return bool
+     */
+    private function isLoginPage() {
+
+        return (
+                in_array( $GLOBALS["pagenow"], array("wp-login.php") ) ||
+                in_array( $this->loginSlug, $_GET ) ||
+                array_key_exists( $this->loginSlug, $_GET )
+                );
+    }
+
+    /**
+     * Reset permalink structure of the clone to default; index.php?p=123
+     */
+    private function resetPermaLinks() {
         // Do nothing 
-      if( !$this->isStagingSite() || "true" === get_option( "wpstg_rmpermalinks_executed" ) ) {
-         return;
-      }
-      // $wp_rewrite is not available before the init hook. So we need to use the global declaration
-      global $wp_rewrite;
-      $wp_rewrite->set_permalink_structure( null );
+        if( !$this->isStagingSite() || "true" === get_option( "wpstg_rmpermalinks_executed" ) ) {
+            return;
+        }
 
-      flush_rewrite_rules();
+        // Do nothing
+        if(defined('WPSTGPRO_VERSION')) {
+            if (isset($this->settings->keepPermalinks) && $this->settings->keepPermalinks === "1") {
+                return;
+            }
+        }
 
-      update_option( "wpstg_rmpermalinks_executed", "true" );
-   }
+        // $wp_rewrite is not available before the init hook. So we need to use the global declaration
+        global $wp_rewrite;
+        $wp_rewrite->set_permalink_structure( null );
+
+        flush_rewrite_rules();
+
+        update_option( "wpstg_rmpermalinks_executed", "true" );
+    }
 
 }

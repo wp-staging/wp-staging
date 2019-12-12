@@ -27,28 +27,13 @@ use WPStaging\Cron\Cron;
 final class WPStaging {
 
     /**
-     * Plugin version
-     */
-    const VERSION = "2.6.4";
-
-    /**
      * Plugin name
      */
     const NAME = "WP Staging";
 
     /**
-     * Plugin slug
-     */
-    //const SLUG = "wp-staging";
-
-    /**
-     * Compatible WP Version
-     */
-    const WP_COMPATIBLE = "5.2.4";
-
-    /**
      * Slug: Either wp-staging or wp-staging-pro
-     * @var string 
+     * @var string
      */
     public $slug;
 
@@ -80,10 +65,19 @@ final class WPStaging {
         $this->loadLanguages();
         $this->loadDependencies();
         $this->defineHooks();
-        // Licensing stuff be loaded in wpstg core to make cron hook available from frontpage
+        $this->initCron();
+        // Load license class in wpstg core to allow executing cron jobs by regular frontpage visitors
         $this->initLicensing();
+        $this->initVersion();
+        $this->initActions();
+    }
 
-        //wpstg_setup_environment();
+    /**
+     * Initialize cron jobs
+     */
+    private function initCron() {
+        // Register cron job and add new interval 'weekly'
+        $cron = new \WPStaging\Cron\Cron;
     }
 
     /**
@@ -101,12 +95,12 @@ final class WPStaging {
      */
     public function registerMain() {
         // Slug of the plugin
-        $this->slug = plugin_basename( dirname( dirname( dirname( __FILE__ ) ) ) );
+        $this->slug = plugin_basename(  dirname( dirname( __FILE__ ) ) );
 
         // absolute path to the main plugin dir
         $this->pluginPath = plugin_dir_path( dirname( __FILE__ ) );
 
-        // URL to root plugin folder
+        // URL to main plugin folder
         $this->url = plugin_dir_url( dirname( __FILE__ ) );
 
         // URL to backend public folder folder
@@ -124,7 +118,6 @@ final class WPStaging {
         $loader->addAction( "admin_enqueue_scripts", $this, "enqueueElements", 100 );
         $loader->addAction( "admin_enqueue_scripts", $this, "removeWPCoreJs", 5 );
         $loader->addAction( "wp_enqueue_scripts", $this, "enqueueElements", 100 );
-        $this->addIntervals();
     }
 
     /**
@@ -133,29 +126,16 @@ final class WPStaging {
      * @return type
      */
     public function removeWPCoreJs( $hook ) {
-        $availablePages = array(
-            "toplevel_page_wpstg_clone",
-            "wp-staging-pro_page_wpstg-settings",
-            "wp-staging-pro_page_wpstg-tools",
-            "wp-staging-pro_page_wpstg-license"
-        );
 
-        // Load these css and js files only on wp staging admin pages
-        if( !in_array( $hook, $availablePages ) || !is_admin() ) {
+        if( $this->isDisabledAssets($hook)) {
             return;
         }
 
         // Disable user login status check
         remove_action( 'admin_enqueue_scripts', 'wp_auth_check_load' );
+
         // Disable heartbeat check for cloning and pushing
         wp_deregister_script( 'heartbeat' );
-    }
-
-    /**
-     * Add new cron time event "weekly"
-     */
-    public function addIntervals() {
-        $interval = new Cron();
     }
 
     /**
@@ -179,8 +159,8 @@ final class WPStaging {
             wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", array(), $this->getVersion() );
         }
 
-        // Load js file on page plugins.php
-        if( $this->isPluginsPage() ) {
+        // Load js file on page plugins.php in free version only
+        if( !defined('WPSTGPRO_VERSION') && $this->isPluginsPage() ) {
             wp_enqueue_script(
                     "wpstg-admin-script", $this->backend_url . "js/wpstg-admin-plugins.js", array("jquery"), $this->getVersion(), false
             );
@@ -189,16 +169,7 @@ final class WPStaging {
             );
         }
 
-        $availablePages = array(
-            "toplevel_page_wpstg_clone",
-            "wp-staging_page_wpstg-settings",
-            "wp-staging_page_wpstg-tools",
-            "wp-staging_page_wpstg-license",
-            "wp-staging_page_wpstg-welcome",
-        );
-
-        // Load these css and js files only on wp staging admin pages
-        if( !in_array( $hook, $availablePages ) || !is_admin() ) {
+        if( $this->isDisabledAssets($hook)) {
             return;
         }
 
@@ -208,7 +179,12 @@ final class WPStaging {
                 "wpstg-admin-script", $this->backend_url . "js/wpstg-admin.js", array("jquery"), $this->getVersion(), false
         );
 
-
+        // Load admin js pro files
+        if(defined('WPSTGPRO_VERSION')) {
+            wp_enqueue_script(
+                "wpstg-admin-pro-script", $this->url . "Backend/Pro/public/js/wpstg-admin-pro.js", array("jquery"), $this->getVersion(), false
+            );
+        }
 
         // Load admin css files
         wp_enqueue_style(
@@ -226,6 +202,34 @@ final class WPStaging {
     }
 
     /**
+     * Load css and js files only on wp staging admin pages
+     * @param $page string slug of the current page
+     * @return bool
+     */
+    private function isDisabledAssets($page)
+    {
+        if (defined('WPSTGPRO_VERSION')) {
+            $availablePages = array(
+                "toplevel_page_wpstg_clone",
+                "wp-staging-pro_page_wpstg-settings",
+                "wp-staging-pro_page_wpstg-tools",
+                "wp-staging-pro_page_wpstg-license"
+            );
+        } else {
+            $availablePages = array(
+                "toplevel_page_wpstg_clone",
+                "wp-staging_page_wpstg-settings",
+                "wp-staging_page_wpstg-tools",
+            );
+        }
+
+        if( !in_array( $page, $availablePages ) || !is_admin() ) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
      * Get table prefix of the current site
      * @return string
      */
@@ -236,14 +240,14 @@ final class WPStaging {
 
     /**
      * Caching and logging folder
-     * 
+     *
      * @return string
      */
     public static function getContentDir() {
         $wp_upload_dir = wp_upload_dir();
         $path          = $wp_upload_dir['basedir'] . '/wp-staging';
         wp_mkdir_p( $path );
-        return apply_filters( 'wpstg_get_upload_dir', $path . DIRECTORY_SEPARATOR );
+        return apply_filters( 'wpstg_get_upload_dir', $path . '/' );
     }
 
     /**
@@ -260,6 +264,7 @@ final class WPStaging {
                 $this->pluginPath . 'Core' . DIRECTORY_SEPARATOR,
                 $this->pluginPath . 'Core' . DIRECTORY_SEPARATOR . 'Iterators' . DIRECTORY_SEPARATOR,
             ),
+            // @todo remove as it is not used any longer
             "splitbrain" => array(
                 $this->pluginPath . 'vendor' . DIRECTORY_SEPARATOR . 'splitbrain' . DIRECTORY_SEPARATOR
             )
@@ -286,7 +291,7 @@ final class WPStaging {
      * @return void
      */
     private function __clone() {
-        
+
     }
 
     /**
@@ -294,29 +299,24 @@ final class WPStaging {
      * @return void
      */
     private function __wakeup() {
-        
+
     }
 
     /**
      * Load Dependencies
      */
     private function loadDependencies() {
-        // Set loader
-        $this->set( "loader", new Loader() );
-
-        // Set cache
-        $this->set( "cache", new Cache() );
-
-        // Set logger
-        $this->set( "logger", new Logger() );
-
-        // Set settings
-        $this->set( "settings", new Settings() );
-
         // Load globally available functions
         require_once $this->pluginPath . 'Core/Utils/functions.php';
 
-        // Set Administrator
+        $this->set( "loader", new Loader() );
+
+        $this->set( "cache", new Cache() );
+
+        $this->set( "logger", new Logger() );
+
+        $this->set( "settings", new Settings() );
+
         if( is_admin() ) {
             new Administrator( $this );
         } else {
@@ -360,8 +360,16 @@ final class WPStaging {
     /**
      * @return string
      */
-    public function getVersion() {
-        return self::VERSION;
+    public static function getVersion() {
+
+        if(defined('WPSTGPRO_VERSION'))
+        {
+            return WPSTGPRO_VERSION;
+        }
+        if(defined('WPSTG_VERSION'))
+        {
+            return WPSTG_VERSION;
+        }
     }
 
     /**
@@ -374,8 +382,9 @@ final class WPStaging {
     /**
      * @return string
      */
-    public static function getSlug() {
-        return plugin_basename( dirname( dirname( dirname( __FILE__ ) ) ) );
+    public static function getSlug()
+    {
+        return plugin_basename(dirname(dirname(__FILE__)));
     }
 
     /**
@@ -446,7 +455,7 @@ final class WPStaging {
         $moFileLocal  = $languagesDirectory . $moFile;
         $moFileGlobal = WP_LANG_DIR . DIRECTORY_SEPARATOR . "wp-staging" . DIRECTORY_SEPARATOR . $moFile;
 
-        // Global file (/wp-content/languages/wpstg)
+        // Global file (/wp-content/languages/wp-staging/wpstg)
         if( file_exists( $moFileGlobal ) ) {
             load_textdomain( "wp-staging", $moFileGlobal );
         }
@@ -461,14 +470,6 @@ final class WPStaging {
     }
 
     /**
-     * Check if it is a staging site
-     * @return bool
-     */
-//    private function isStagingSite() {
-//        return ("true" === get_option( "wpstg_is_staging_site" ));
-//    }
-
-    /**
      * Initialize licensing functions
      * @return boolean
      */
@@ -478,6 +479,32 @@ final class WPStaging {
             $licensing = new Backend\Pro\Licensing\Licensing();
         }
         return false;
+    }
+
+    /**
+     * Initialize Version Check
+     * @return boolean
+     */
+    public function initVersion() {
+        // Add licensing stuff if class exists
+        if( class_exists( 'WPStaging\Backend\Pro\Licensing\Version' ) ) {
+            $licensing = new Backend\Pro\Licensing\Version();
+        }
+        return false;
+    }
+
+    /**
+     * Initialize several actions which can be hooked in by custom functions
+     */
+    private function initActions() {
+        // Load one-time if current site is staging site and if it is loaded initially
+        if( wpstg_is_stagingsite() ) {
+            $execute = get_option( 'wpstg_execute' );
+            if( false !== $execute ) {
+                do_action( 'wpstg_clone_action_staging' );
+                delete_option('wpstg_execute');
+            }
+        }
     }
 
 }

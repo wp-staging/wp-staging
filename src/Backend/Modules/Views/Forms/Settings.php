@@ -88,7 +88,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "File Copy Limit" )->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : '50' )
+              $element->setLabel( "File Copy Limit" )->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : '50'  )
       );
 
 
@@ -104,9 +104,9 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "Maximum File Size (MB)" )
-                      ->setDefault( isset( $settings->maxFileSize ) ? $settings->maxFileSize : 8 )
+                      ->setDefault( isset( $settings->maxFileSize ) ? $settings->maxFileSize : 8  )
       );
-      
+
       // File Copy Batch Size
       $element = new Numerical(
               "wpstg_settings[batchSize]", array(
@@ -119,7 +119,7 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "File Copy Batch Size" )
-                      ->setDefault( isset( $settings->batchSize ) ? $settings->batchSize : 2 )
+                      ->setDefault( isset( $settings->batchSize ) ? $settings->batchSize : 2  )
       );
 
       // CPU load priority
@@ -162,6 +162,7 @@ class Settings {
                       ->setDefault( (isset( $settings->optimizer )) ? $settings->optimizer : null  )
       );
 
+/*
       // Plugins
       $plugins = array();
 
@@ -171,28 +172,32 @@ class Settings {
          }
 
          $plugins[$key] = $data["Name"];
-      }
+      }*/
 
-      $element = new Select(
-              "wpstg_settings[blackListedPlugins][]", $plugins, array(
-          "multiple" => "multiple",
-          "style" => "min-height:400px;"
-              )
-      );
+       // Disable admin authorization
+       if (!defined('WPSTGPRO_VERSION')) {
 
-      $this->form["general"]->add(
-              $element->setDefault( (isset( $settings->blackListedPlugins )) ? $settings->blackListedPlugins : null )
-      );
+           $element = new Check(
+               "wpstg_settings[disableAdminLogin]", array('1' => '')
+           );
 
-      // Disable admin authorization
-      $element = new Check(
-              "wpstg_settings[disableAdminLogin]", array('1' => '')
-      );
 
-      $this->form["general"]->add(
-              $element->setLabel( "Disable admin authorization" )
-                      ->setDefault( (isset( $settings->disableAdminLogin )) ? $settings->disableAdminLogin : null )
-      );
+           $this->form["general"]->add(
+               $element->setLabel("Disable admin authorization")
+                   ->setDefault((isset($settings->disableAdminLogin)) ? $settings->disableAdminLogin : null)
+           );
+       }
+       // Keep permalinks
+       if (defined('WPSTGPRO_VERSION')) {
+           $element = new Check(
+               "wpstg_settings[keepPermalinks]", array('1' => '')
+           );
+
+           $this->form["general"]->add(
+               $element->setLabel("Keep Permalinks")
+                   ->setDefault((isset($settings->keepPermalinks)) ? $settings->keepPermalinks : null)
+           );
+       }
 
       // Debug Mode
       $element = new Check(
@@ -201,7 +206,7 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "Debug Mode" )
-                      ->setDefault( (isset( $settings->debugMode )) ? $settings->debugMode : null )
+                      ->setDefault( (isset( $settings->debugMode )) ? $settings->debugMode : null  )
       );
 
       // Remove Data on Uninstall?
@@ -221,14 +226,34 @@ class Settings {
 
       $this->form["general"]->add(
               $element->setLabel( "Check Directory Size" )
-                      ->setDefault( (isset( $settings->checkDirectorySize )) ? $settings->checkDirectorySize : null )
+                      ->setDefault( (isset( $settings->checkDirectorySize )) ? $settings->checkDirectorySize : null  )
       );
 
-      // Set login post id
-      $element = new Text( 'wpstg_settings[loginSlug]', array() );
-      $this->form["general"]->add(
-              $element->setLabel( "Login Custom Link" )->setDefault( isset( $settings->loginSlug ) ? $settings->loginSlug : ''  )
-      );
+       // Get user roles
+       if (defined('WPSTGPRO_VERSION')) {
+           $this->form["general"]->add(
+               $element->setLabel("Access Permissions")
+                   ->setDefault((isset($settings->userRoles)) ? $settings->userRoles : 'administrator')
+           );
+
+           $element = new SelectMultiple('wpstg_settings[userRoles][]', $this->getUserRoles());
+       }
+
+
+
+
+   }
+
+   /**
+    * Get available user Roles
+    * @return array
+    */
+   private function getUserRoles() {
+      $userRoles = array();
+      foreach ( get_editable_roles() as $key => $value ) {
+         $userRoles[$key] = $key;
+      }
+      return array_merge( array('all' => 'Allow access from all visitors'), $userRoles );
    }
 
    /**

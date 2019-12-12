@@ -13,6 +13,9 @@ use WPStaging\WPStaging;
 use WPStaging\Utils\Cache;
 use WPStaging\Utils\Multisite;
 use WPStaging\thirdParty\thirdPartyCompatibility;
+use DateTime;
+use DateInterval;
+use Exception;
 
 
 /**
@@ -83,24 +86,24 @@ abstract class Job implements JobInterface {
 
    /**
     * Multisite Home Url without Scheme
-    * @var string 
+    * @var string
     */
    protected $multisiteHomeUrlWithoutScheme;
 
    /**
     * Multisite home domain without scheme
-    * @var string 
+    * @var string
     */
    protected $multisiteDomainWithoutScheme;
-   
+
    /**
     * Multisite home domain without scheme
-    * @var string 
+    * @var string
     */
    protected $multisiteHomeDomain;
-   
+
    /**
-    * 
+    *
     * @var object
     */
    protected $thirdParty;
@@ -162,8 +165,8 @@ abstract class Job implements JobInterface {
       $this->maxRecursionLimit = ( int ) ini_get( "xdebug.max_nesting_level" );
 
       /*
-       * This is needed to make sure that maxRecursionLimit = -1 
-       * if xdebug is not used in production env. 
+       * This is needed to make sure that maxRecursionLimit = -1
+       * if xdebug is not used in production env.
        * For using xdebug, maxRecursionLimit must be larger
        * otherwise xdebug is throwing an error 500 while debugging
        */
@@ -238,13 +241,16 @@ abstract class Job implements JobInterface {
     */
    protected function saveOptions( $options = null ) {
       // Get default options
-      if( null === $options ) {
+      if (null === $options) {
          $options = $this->options;
       }
 
+      $now = new DateTime;
+      $options->expiresAt = $now->add(new DateInterval('P1D'))->format('Y-m-d H:i:s');
+
       // Ensure that it is an object
-      $options = json_decode( json_encode( $options ) );
-      return $this->cache->save( "clone_options", $options );
+      $options = json_decode(json_encode($options));
+      return $this->cache->save('clone_options', $options);
    }
 
    /**
@@ -346,7 +352,6 @@ abstract class Job implements JobInterface {
       return false;
    }
 
-
    /**
     * Checks if calls are over recursion limit
     * @return bool
@@ -407,4 +412,22 @@ abstract class Job implements JobInterface {
       ) ) );
    }
 
+    /**
+     * @return bool
+     */
+    protected function isRunning()
+    {
+        if (!isset($this->options) || !isset($this->options->isRunning) || !isset($this->options->expiresAt)) {
+            return false;
+        }
+
+        try {
+            $now = new DateTime;
+            $expiresAt = new DateTime($this->options->expiresAt);
+            return true === $this->options->isRunning && $now < $expiresAt;
+        }
+        catch (Exception $e) {}
+
+        return false;
+    }
 }

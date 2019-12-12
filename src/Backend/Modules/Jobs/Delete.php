@@ -154,12 +154,12 @@ class Delete extends Job {
 
         // no results
         if( null !== $tables ) {
-        foreach ( $tables as $table ) {
-            $this->tables[] = array(
-                "name" => $table->Name,
-                "size" => $this->formatSize( ($table->Data_length + $table->Index_length ) )
-            );
-        }
+            foreach ( $tables as $table ) {
+                $this->tables[] = array(
+                    "name" => $table->Name,
+                    "size" => $this->formatSize( ($table->Data_length + $table->Index_length ) )
+                );
+            }
         }
 
         $this->tables = json_decode( json_encode( $this->tables ) );
@@ -381,15 +381,15 @@ class Delete extends Job {
         }
 
         if( $this->isNotEmpty( $this->deleteDir ) ) {
-        $di = new \RecursiveDirectoryIterator( $this->deleteDir, \FilesystemIterator::SKIP_DOTS );
-        $ri = new \RecursiveIteratorIterator( $di, \RecursiveIteratorIterator::CHILD_FIRST );
-        foreach ( $ri as $file ) {
-            $this->deleteFile( $file );
-            if( $this->isOverThreshold() ) {
-                //$this->returnException('Maximum PHP execution time exceeded. Run again and repeat the deletion process until it is sucessfully finished.');
-                return;
+            $di = new \RecursiveDirectoryIterator( $this->deleteDir, \FilesystemIterator::SKIP_DOTS );
+            $ri = new \RecursiveIteratorIterator( $di, \RecursiveIteratorIterator::CHILD_FIRST );
+            foreach ( $ri as $file ) {
+                $this->deleteFile( $file );
+                if( $this->isOverThreshold() ) {
+                    //$this->returnException('Maximum PHP execution time exceeded. Run again and repeat the deletion process until it is sucessfully finished.');
+                    return;
+                }
             }
-        }
         }
 
         // Delete left over staging site root folder
@@ -504,4 +504,4 @@ class Delete extends Job {
         wp_die( json_encode( $response ) );
     }
 
-    }
+}

@@ -50,12 +50,24 @@ var WPStaging = (function ($)
         cache.get("#wpstg-try-again").css("display", "inline-block");
         cache.get("#wpstg-cancel-cloning").text("Reset");
         cache.get("#wpstg-resume-cloning").show();
-        //cache.get("#wpstg-cloning-result").text("Fail");
-        //cache.get("#wpstg-processing-status").text("Process Failed");
         cache.get("#wpstg-error-wrapper").show();
         cache.get("#wpstg-error-details").show().html(message);
         cache.get("#wpstg-removing-clone").removeClass("loading");
         cache.get("#wpstg-loader").hide();
+    };
+
+    var slugify = function(url) {
+      return url.toString()
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g,'')
+        .replace(/\s+/g,'-')
+        .replace(/&/g,'-and-')
+        .replace(/[^a-z0-9\-]/g,'')
+        .replace(/-+/g,'-')
+        .replace(/^-*/,'')
+        .replace(/-*$/,'')
+      ;
     };
 
     /**
@@ -76,6 +88,14 @@ var WPStaging = (function ($)
         urlSpinner += ".gif";
 
         ajaxSpinner = "<img src=''" + urlSpinner + "' alt='' class='ajax-spinner general-spinner' />";
+
+        var getBaseValues = function() {
+          var path = $('#wpstg-use-target-dir').data('base-path');
+          var uri = $('#wpstg-use-target-hostname').data('base-uri');
+          return {
+            path
+          };
+        };
 
         $workFlow
                 // Check / Un-check All Database Tables
@@ -160,15 +180,14 @@ var WPStaging = (function ($)
                         }
 
                         if (wpstg.isMultisite == 0) {
-                        if ($(this).attr('name').match("^" + wpstg.tblprefix)) {
+                            if ($(this).attr('name').match("^" + wpstg.tblprefix)) {
                                 $(this).prop("selected", "selected");
-                        } else {
+                            } else {
                                 $(this).prop("selected", false);
+                            }
                         }
-                        }
+                    })
                 })
-                })
-
                 // Expand Directories
                 .on("click", ".wpstg-expand-dirs", function (e) {
                     e.preventDefault();
@@ -263,10 +282,38 @@ var WPStaging = (function ($)
                     that.getLogs = false;
                     that.progressBar = 0;
                 })
+                .on('input', '#wpstg-new-clone-id', function() {
+                  if ($('#wpstg-clone-directory').length < 1) {
+                    return;
+                  }
+
+                  var slug = slugify(this.value);
+                  var $targetDir = $('#wpstg-use-target-dir');
+                  var $targetUri = $('#wpstg-use-target-hostname');
+                  var path = $targetDir.data('base-path');
+                  var uri = $targetUri.data('base-uri');
+
+                  if (path) {
+                    path = path.replace(/\/+$/g, '') + '/' + slug + '/';
+                  }
+
+                  if (uri) {
+                    uri = uri.replace(/\/+$/g, '') + '/' + slug;
+                  }
+
+
+                  $('.wpstg-use-target-dir--value').text(path);
+                  $('.wpstg-use-target-hostname--value').text(uri);
+
+                  $targetDir.attr('data-path', path);
+                  $targetUri.attr('data-uri', uri);
+                  $('#wpstg_clone_dir').attr('placeholder', path);
+                  $('#wpstg_clone_hostname').attr('placeholder', uri);
+                })
+      ;
 
         cloneActions();
     };
-
 
     /**
      * Clone actions
@@ -428,7 +475,6 @@ var WPStaging = (function ($)
                 });
     };
 
-
     /**
      * Ajax Requests
      * @param {Object} data
@@ -447,11 +493,11 @@ var WPStaging = (function ($)
         {
             showErrors = true;
         }
-        
+
         var tryCount = "undefined" === typeof (tryCount) ? 0 : tryCount;
-        
+
         var retryLimit = 10;
-        
+
         var retryTimeout = 10000 * tryCount;
 
         $.ajax({
@@ -472,10 +518,10 @@ var WPStaging = (function ($)
                     }, retryTimeout);
 
                 } else {
-                var errorCode = "undefined" === typeof (xhr.status) ? "Unknown" : xhr.status;
-                showError(
-                        "Fatal Error:  " + errorCode + " Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
-                        );
+                    var errorCode = "undefined" === typeof (xhr.status) ? "Unknown" : xhr.status;
+                    showError(
+                            "Fatal Error:  " + errorCode + " Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report."
+                            );
                 }
 
 
@@ -490,7 +536,7 @@ var WPStaging = (function ($)
             statusCode: {
                 404: function (data) {
                     if (tryCount >= retryLimit) {
-                    showError("Error 404 - Can't find ajax request URL! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.");
+                        showError("Error 404 - Can't find ajax request URL! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.");
                     }
                 },
                 500: function () {
@@ -504,7 +550,7 @@ var WPStaging = (function ($)
                 },
                 504: function () {
                     if (tryCount > retryLimit) {
-                    showError("Error 504 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
+                        showError("Error 504 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
                     }
 
                 },
@@ -520,18 +566,17 @@ var WPStaging = (function ($)
                 },
                 429: function () {
                     if (tryCount >= retryLimit) {
-                    showError("Error 429 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
-                }
+                        showError("Error 429 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report.\n\ ");
+                    }
                 },
                 403: function () {
                     if (tryCount >= retryLimit) {
-                    showError("Refresh page or login again! The process should be finished successfully. \n\ ");
-            }
-            }
+                        showError("Refresh page or login again! The process should be finished successfully. \n\ ");
+                    }
+                }
             }
         });
     };
-
 
     /**
      * Next / Previous Step Clicks to Navigate Through Staging Job
@@ -647,6 +692,7 @@ var WPStaging = (function ($)
 
         return includedTables;
     };
+
     /**
      * Get Excluded (Unchecked) Database Tables
      * Not used anymore!
@@ -656,12 +702,12 @@ var WPStaging = (function ($)
     {
         var excludedTables = [];
 
-//        $(".wpstg-db-table input:not(:checked)").each(function () {
-//            excludedTables.push(this.name);
-//        });
-        $("#wpstg_select_tables_cloning option:not(:selected)").each(function () {
+        $(".wpstg-db-table input:not(:checked)").each(function () {
             excludedTables.push(this.name);
         });
+//        $("#wpstg_select_tables_cloning option:not(:selected)").each(function () {
+//            excludedTables.push(this.name);
+//        });
 
         return excludedTables;
     };
@@ -697,6 +743,7 @@ var WPStaging = (function ($)
 
         return excludedDirectories;
     };
+
     /**
      * Get included extra directories of the root level
      * All directories except wp-content, wp-admin, wp-includes
@@ -711,16 +758,15 @@ var WPStaging = (function ($)
             extraDirectories.push(encodeURIComponent($this.val()));
         });
 
-        // Add any other custom selected extra directories 
+        // Add any other custom selected extra directories
         if (!$("#wpstg_extraDirectories").val()) {
-        return extraDirectories;
+            return extraDirectories;
         }
-        
+
         var extraCustomDirectories = encodeURIComponent($("#wpstg_extraDirectories").val().split(/\r?\n/));
 
         return extraDirectories.concat(extraCustomDirectories);
     };
-
 
     /**
      * Get Included Extra Directories
@@ -741,8 +787,6 @@ var WPStaging = (function ($)
 //
 //        return extraDirectories;
 //    };
-
-
 
     /**
      * Get Cloning Step Data
@@ -766,7 +810,8 @@ var WPStaging = (function ($)
         that.data.databasePassword = $("#wpstg_db_password").val();
         that.data.databaseDatabase = $("#wpstg_db_database").val();
         that.data.databasePrefix = $("#wpstg_db_prefix").val();
-        that.data.cloneDir = encodeURIComponent($("#wpstg_clone_dir").val());
+        var cloneDir = $("#wpstg_clone_dir").val();
+        that.data.cloneDir = encodeURIComponent($.trim(cloneDir));
         that.data.cloneHostname = $("#wpstg_clone_hostname").val();
         //console.log(that.data);
 
@@ -933,6 +978,7 @@ var WPStaging = (function ($)
         }
         );
     };
+
     /**
      * Cancel Cloning Process
      */
@@ -971,6 +1017,7 @@ var WPStaging = (function ($)
         }
         );
     };
+
     /**
      * Cancel Cloning Process
      */
@@ -1009,7 +1056,6 @@ var WPStaging = (function ($)
         }
         );
     };
-
 
     /**
      * Scroll the window log to bottom
@@ -1066,20 +1112,20 @@ var WPStaging = (function ($)
             {
                 if (false === response)
                 {
-                    cache.get("#wpstg-clone-id-error").text('Can not detect disk space').show();
+                    cache.get("#wpstg-clone-id-error").text('Can not detect required disk space').show();
                     cache.get("#wpstg-loader").hide();
                     return;
                 }
 
-                // Not enough disk space
-                cache.get("#wpstg-clone-id-error").text('Available free disk space ' + response.freespace + ' | Estimated necessary disk space: ' + response.usedspace).show();
+                // Show required disk space
+                //cache.get("#wpstg-clone-id-error").text('Available free disk space ' + response.freespace + ' | Estimated necessary disk space: ' + response.usedspace).show();
+                cache.get("#wpstg-clone-id-error").html('Estimated necessary disk space: ' + response.usedspace + '<br> <span style="color:#444;">Before you proceed ensure your account has enough free disk space to hold the entire instance of the production site. You can check the available space from your hosting account (cPanel or similar).</span>').show();
                 cache.get("#wpstg-loader").hide();
             },
                     "json",
                     false
                     );
         });
-
     }
 
 
@@ -1109,6 +1155,7 @@ var WPStaging = (function ($)
             }
         }, 1000);
     };
+
     /**
      * Convert seconds to hourly format
      * @param int seconds
@@ -1118,8 +1165,7 @@ var WPStaging = (function ($)
         var date = new Date(null);
         date.setSeconds(seconds); // specify value for SECONDS here
         return date.toISOString().substr(11, 8);
-    }
-
+    };
 
     /**
      * Start Cloning Process
@@ -1134,7 +1180,7 @@ var WPStaging = (function ($)
         {
             return;
         }
-        
+
         that.isCancelled = false;
 
         // Start the process
@@ -1309,7 +1355,7 @@ var WPStaging = (function ($)
                 return false;
 
 //            //if (restart){
-//                cache.get("#wpstg-db-progress").width('1%'); 
+//                cache.get("#wpstg-db-progress").width('1%');
 //            //}
 
             if (response.job === 'database') {
@@ -1345,7 +1391,6 @@ var WPStaging = (function ($)
 
 
     });
-
 
     /**
      * Initiation
@@ -1389,14 +1434,14 @@ jQuery(document).ready(function ($) {
         $('.wpstg-report-issue-form').removeClass('wpstg-report-show');
         e.preventDefault();
     });
-    
+
     /*
      * Close Success Modal
      */
-    
+
     $('body').on('click', '#wpstg-success-button', function (e) {
-       e.preventDefault();
-       $('.wpstg-report-issue-form').removeClass('wpstg-report-show');
+        e.preventDefault();
+        $('.wpstg-report-issue-form').removeClass('wpstg-report-show');
     });
 
     $('#wpstg-report-submit').click(function (e) {

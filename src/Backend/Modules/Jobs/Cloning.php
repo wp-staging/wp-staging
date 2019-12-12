@@ -2,8 +2,17 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\WPStaging;
+use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
+use WPStaging\Backend\Modules\Jobs\Multisite\Database as muDatabase;
+use WPStaging\Backend\Modules\Jobs\Multisite\DatabaseExternal as muDatabaseExternal;
+use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplace as muSearchReplace;
+use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplaceExternal as muSearchReplaceExternal;
+use WPStaging\Backend\Modules\Jobs\Multisite\Data as muData;
+use WPStaging\Backend\Modules\Jobs\Multisite\DataExternal as muDataExternal;
+use WPStaging\Backend\Modules\Jobs\Multisite\Finish as muFinish;
+use WPStaging\Backend\Modules\Jobs\Multisite\Directories as muDirectories;
+use WPStaging\Backend\Modules\Jobs\Multisite\Files as muFiles;
 use WPStaging\Utils\Helper;
 
 /**
@@ -76,7 +85,6 @@ class Cloning extends Job {
         // Get data and increment it
         elseif( !empty( $this->options->existingClones ) ) {
             $this->options->cloneNumber = count( $this->options->existingClones ) + 1;
-            //$this->options->prefix      = $this->setStagingPrefix();
         }
 
         // Included Tables
@@ -143,11 +151,11 @@ class Cloning extends Job {
         }
         $this->options->cloneDir = '';
         if( isset( $_POST["cloneDir"] ) && !empty( $_POST["cloneDir"] ) ) {
-            $this->options->cloneDir = wpstg_urldecode( trailingslashit( $_POST["cloneDir"] ) );
+            $this->options->cloneDir = trailingslashit( wpstg_urldecode( $_POST["cloneDir"] ) );
         }
         $this->options->cloneHostname = '';
         if( isset( $_POST["cloneHostname"] ) && !empty( $_POST["cloneHostname"] ) ) {
-            $this->options->cloneHostname = $_POST["cloneHostname"];
+            $this->options->cloneHostname = trim( $_POST["cloneHostname"] );
         }
 
         $this->options->destinationHostname = $this->getDestinationHostname();
@@ -159,18 +167,18 @@ class Cloning extends Job {
         // Process lock state
         $this->options->isRunning = true;
 
-        
         // Save Clone data
         $this->saveClone();
-        
+
         return $this->saveOptions();
     }
+
 
     /**
      * Save clone data initially
      * @return boolean
      */
-    private function saveClone(){
+    private function saveClone() {
         // Save new clone data
         $this->log( "Cloning: {$this->options->clone}'s clone job's data is not in database, generating data" );
 
@@ -179,8 +187,7 @@ class Cloning extends Job {
             "path"             => trailingslashit( $this->options->destinationDir ),
             "url"              => $this->getDestinationUrl(),
             "number"           => $this->options->cloneNumber,
-            "version"          => \WPStaging\WPStaging::VERSION,
-            //"status"           => false,
+            "version"          => WPStaging::getVersion(),
             "status"           => "unfinished or broken",
             "prefix"           => $this->options->prefix,
             "datetime"         => time(),
@@ -194,13 +201,12 @@ class Cloning extends Job {
         if( false === update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) ) {
             $this->log( "Cloning: Failed to save {$this->options->clone}'s clone job data to database'" );
             return false;
-        } 
-        
+        }
+
         return true;
     }
-    
-    
-        /**
+
+    /**
      * Get destination Hostname depending on wheather WP has been installed in sub dir or not
      * @return type
      */
@@ -212,7 +218,6 @@ class Cloning extends Job {
 
         return trailingslashit( get_site_url() ) . $this->options->cloneDirectoryName;
     }
-    
 
     /**
      * Return target hostname
@@ -240,11 +245,17 @@ class Cloning extends Job {
      * @return type
      */
     private function getDestinationDir() {
-        // No custom clone dir or clone dir equals abspath of main wordpress site
-        if( empty( $this->options->cloneDir ) || $this->options->cloneDir == ( string ) \WPStaging\WPStaging::getWPpath() ) {
+        // Throw fatal error
+        if( !empty( $this->options->cloneDir ) & (trailingslashit( $this->options->cloneDir ) === ( string ) trailingslashit( \WPStaging\WPStaging::getWPpath() )) ) {
+            $this->returnException('Error: Target Directory must be different from the root of the production website.' );
+            die();
+        }
+
+        // No custom clone dir so clone path will be in subfolder of root
+        if( empty( $this->options->cloneDir ) ) {
             $this->options->cloneDir = trailingslashit( \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName );
+            return $this->options->cloneDir;
             //return trailingslashit( \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName );
-            return $this->options->cloneDir;        
         }
         return trailingslashit( $this->options->cloneDir );
     }
@@ -350,7 +361,25 @@ class Cloning extends Job {
      * @return object
      */
     public function jobDatabase() {
-        $database = new Database();
+
+        // Could be written more elegant
+        // but for xdebug purposes and breakpoints its cleaner to have separate if blocks
+        if( defined('WPSTGPRO_VERSION') && is_multisite() ) {
+            // Is Multisite
+            if( empty( $this->options->databaseUser ) && empty( $this->options->databasePassword ) ) {
+                $database = new muDatabase();
+            } else {
+                $database = new muDatabaseExternal();
+            }
+        } else {
+
+            // No Multisite
+            if( empty( $this->options->databaseUser ) && empty( $this->options->databasePassword ) ) {
+                $database = new Database();
+            } else {
+                $database = new DatabaseExternal();
+            }
+        }
         return $this->handleJobResponse( $database->start(), "SearchReplace" );
     }
 
@@ -359,7 +388,19 @@ class Cloning extends Job {
      * @return object
      */
     public function jobSearchReplace() {
-        $searchReplace = new SearchReplace();
+        if( defined('WPSTGPRO_VERSION') && is_multisite() ) {
+            if( empty( $this->options->databaseUser ) && empty( $this->options->databasePassword ) ) {
+                $searchReplace = new muSearchReplace();
+            } else {
+                $searchReplace = new muSearchReplaceExternal();
+            }
+        } else {
+            if( empty( $this->options->databaseUser ) && empty( $this->options->databasePassword ) ) {
+                $searchReplace = new SearchReplace();
+            } else {
+                $searchReplace = new SearchReplaceExternal();
+            }
+        }
         return $this->handleJobResponse( $searchReplace->start(), "directories" );
     }
 
@@ -368,7 +409,11 @@ class Cloning extends Job {
      * @return object
      */
     public function jobDirectories() {
-        $directories = new Directories();
+        if( defined('WPSTGPRO_VERSION') && is_multisite() ) {
+            $directories = new muDirectories();
+        } else {
+            $directories = new Directories();
+        }
         return $this->handleJobResponse( $directories->start(), "files" );
     }
 
@@ -377,16 +422,34 @@ class Cloning extends Job {
      * @return object
      */
     public function jobFiles() {
-        $files = new Files();
+        if( defined('WPSTGPRO_VERSION') && is_multisite() ) {
+            $files = new muFiles();
+        } else {
+            $files = new Files();
+        }
         return $this->handleJobResponse( $files->start(), "data" );
     }
+
 
     /**
      * Replace Data
      * @return object
      */
     public function jobData() {
-        $data = new Data();
+        if( defined('WPSTGPRO_VERSION') && is_multisite() ) {
+            if( empty( $this->options->databaseUser ) && empty( $this->options->databasePassword ) ) {
+                $data = new muData();
+            } else {
+                $data = new muDataExternal();
+            }
+        } else {
+
+            if( empty( $this->options->databaseUser ) && empty( $this->options->databasePassword ) ) {
+                $data = new Data();
+            } else {
+                $data = new DataExternal();
+            }
+        }
         return $this->handleJobResponse( $data->start(), "finish" );
     }
 
@@ -395,7 +458,11 @@ class Cloning extends Job {
      * @return object
      */
     public function jobFinish() {
-        $finish = new Finish();
+        if( defined('WPSTGPRO_VERSION') && is_multisite() ) {
+            $finish = new muFinish();
+        } else {
+            $finish = new Finish();
+        }
         return $this->handleJobResponse( $finish->start(), '' );
     }
 

@@ -17,6 +17,7 @@ use WPStaging\Utils\Helper;
  */
 class SearchReplace extends JobExecutable
 {
+
     /**
      * @var int
      */
@@ -26,7 +27,8 @@ class SearchReplace extends JobExecutable
      * Site DB
      * @var \WPDB
      */
-    public $db;
+    public $productionDb;
+
 
     /**
      *
@@ -48,7 +50,7 @@ class SearchReplace extends JobExecutable
 
     /**
      * The prefix of the new database tables which are used for the live site after updating tables
-     * @var string 
+     * @var string
      */
     public $tmpPrefix;
 
@@ -57,13 +59,14 @@ class SearchReplace extends JobExecutable
      */
     public function initialize()
     {
-        $this->total               = count($this->options->tables);
-        $this->db                  = WPStaging::getInstance()->get("wpdb");
-        $this->tmpPrefix           = $this->options->prefix;
-        $this->strings             = new Strings();
-        $this->sourceHostname      = $this->getSourceHostname();
+        $this->total = count($this->options->tables);
+        $this->productionDb = WPStaging::getInstance()->get("wpdb");
+        $this->tmpPrefix = $this->options->prefix;
+        $this->strings = new Strings();
+        $this->sourceHostname = $this->getSourceHostname();
         $this->destinationHostname = $this->getDestinationHostname();
     }
+
 
     public function start()
     {
@@ -139,8 +142,8 @@ class SearchReplace extends JobExecutable
      */
     private function stopExecution()
     {
-        if ($this->db->prefix == $this->tmpPrefix) {
-            $this->returnException('Fatal Error 9: Prefix '.$this->db->prefix.' is used for the live site hence it can not be used for the staging site as well. Please ask support@wp-staging.com how to resolve this.');
+        if ($this->productionDb->prefix == $this->tmpPrefix) {
+            $this->returnException('Fatal Error 9: Prefix ' . $this->productionDb->prefix . ' is used for the live site hence it can not be used for the staging site as well. Please ask support@wp-staging.com how to resolve this.');
         }
         return false;
     }
@@ -152,9 +155,9 @@ class SearchReplace extends JobExecutable
      */
     private function updateTable($tableName)
     {
-        $strings      = new Strings();
-        $table        = $strings->str_replace_first($this->db->prefix, '', $tableName);
-        $newTableName = $this->tmpPrefix.$table;
+        $strings = new Strings();
+        $table = $strings->str_replace_first($this->productionDb->prefix, '', $tableName);
+        $newTableName = $this->tmpPrefix . $table;
 
         // Save current job
         $this->setJob($newTableName);
@@ -180,7 +183,7 @@ class SearchReplace extends JobExecutable
         $host = $this->options->homeHostname;
 
         if ($this->isSubDir()) {
-            $host = trailingslashit($this->options->homeHostname).$this->getSubDir();
+            $host = trailingslashit($this->options->homeHostname) . $this->getSubDir();
         }
         return $this->strings->getUrlWithoutScheme($host);
     }
@@ -192,14 +195,14 @@ class SearchReplace extends JobExecutable
     private function getDestinationHostname()
     {
         // default
-        $host = trailingslashit($this->options->destinationHostname).$this->options->cloneDirectoryName;
+        $host = trailingslashit($this->options->destinationHostname) . $this->options->cloneDirectoryName;
 
         if (!empty($this->options->cloneHostname)) {
             $host = $this->options->cloneHostname;
         }
 
         if ($this->isSubDir()) {
-            $host = trailingslashit($this->options->destinationHostname).$this->getSubDir().'/'.$this->options->cloneDirectoryName;
+            $host = trailingslashit($this->options->destinationHostname) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName;
         }
         return $this->strings->getUrlWithoutScheme($host);
     }
@@ -210,7 +213,7 @@ class SearchReplace extends JobExecutable
      */
     private function getSubDir()
     {
-        $home    = get_option('home');
+        $home = get_option('home');
         $siteurl = get_option('siteurl');
 
         if (empty($home) || empty($siteurl)) {
@@ -239,37 +242,18 @@ class SearchReplace extends JobExecutable
         // Set new offset
         $this->options->job->start += $this->settings->querySRLimit;
     }
-    /**
-     * Returns the number of pages in a table.
-     * @access public
-     * @return int
-     */
-//    private function get_pages_in_table( $table ) {
-//
-//        // Table does not exist
-//        $table  = str_replace( $this->options->prefix . '.', null, $table );
-//        $result = $this->db->query( "SHOW TABLES LIKE '{$table}'" );
-//        if( !$result || 0 === $result ) {
-//            return 0;
-//        }
-//
-//        $table = esc_sql( $table );
-//        $rows  = $this->db->get_var( "SELECT COUNT(*) FROM $table" );
-//        $pages = ceil( $rows / $this->settings->querySRLimit );
-//        return absint( $pages );
-//    }
 
     /**
      * Gets the columns in a table.
      * @access public
-     * @param  string $table The table to check.
+     * @param string $table The table to check.
      * @return array
      */
     private function get_columns($table)
     {
         $primary_key = null;
-        $columns     = array();
-        $fields      = $this->db->get_results('DESCRIBE '.$table);
+        $columns = array();
+        $fields = $this->productionDb->get_results('DESCRIBE ' . $table);
         if (is_array($fields)) {
             foreach ($fields as $column) {
                 $columns[] = $column->Field;
@@ -282,7 +266,7 @@ class SearchReplace extends JobExecutable
     }
 
     /**
-     * Adapated from interconnect/it's search/replace script, adapted from Better Search Replace
+     * Adapted from interconnect/it's search/replace script, adapted from Better Search Replace
      *
      * Modified to use WordPress wpdb functions instead of PHP's native mysql/pdo functions,
      * and to be compatible with batch processing.
@@ -290,38 +274,33 @@ class SearchReplace extends JobExecutable
      * @link https://interconnectit.com/products/search-and-replace-for-wordpress-databases/
      *
      * @access public
-     * @param  string 	$table 	The table to run the replacement on.
-     * @param  int          $page  	The page/block to begin the query on.
-     * @param  array 	$args         An associative array containing arguments for this run.
+     * @param string $table The table to run the replacement on.
+     * @param int $page The page/block to begin the query on.
+     * @param array $args An associative array containing arguments for this run.
      * @return array
      */
     private function searchReplace($table, $page, $args)
     {
 
         if ($this->thirdParty->isSearchReplaceExcluded($table)) {
-            $this->log("DB Search & Replace: Skip {$table}", \WPStaging\Utils\Logger::TYPE_INFO);
+            $this->log("DB Search & Replace: Skip {$table}",
+                \WPStaging\Utils\Logger::TYPE_INFO);
             return true;
         }
 
-        // Load up the default settings for this chunk.
         $table = esc_sql($table);
-        //$current_page = $this->options->job->start + $this->settings->querySRLimit;
-        //$pages        = $this->get_pages_in_table( $table );
-
 
         $args['search_for'] = array(
-            '%2F%2F'.str_replace('/', '%2F', $this->sourceHostname), // HTML entitity for WP Backery Page Builder Plugin
-            '\/\/'.str_replace('/', '\/', $this->sourceHostname), // Escaped \/ used by revslider and several visual editors
-            '//'.$this->sourceHostname,
-            //rtrim( ABSPATH, '/' ), // This lead to errors if ABSPATH is /www/ because this would break external links like https://www.domain.com to https://www/replace-string/domain.com
+            '%2F%2F' . str_replace('/', '%2F', $this->sourceHostname), // HTML entitity for WP Backery Page Builder Plugin
+            '\/\/' . str_replace('/', '\/', $this->sourceHostname), // Escaped \/ used by revslider and several visual editors
+            '//' . $this->sourceHostname, // //example.com
             ABSPATH
         );
 
         $args['replace_with'] = array(
-            '%2F%2F'.str_replace('/', '%2F', $this->destinationHostname),
-            '\/\/'.str_replace('/', '\/', $this->destinationHostname),
-            '//'.$this->destinationHostname,
-            //rtrim( $this->options->destinationDir, '/' ),
+            '%2F%2F' . str_replace('/', '%2F', $this->destinationHostname),
+            '\/\/' . str_replace('/', '\/', $this->destinationHostname),
+            '//' . $this->destinationHostname,
             $this->options->destinationDir
         );
 
@@ -329,21 +308,20 @@ class SearchReplace extends JobExecutable
         $this->debugLog("DB Search & Replace: Replace: {$args['replace_with'][0]}", \WPStaging\Utils\Logger::TYPE_INFO);
 
 
-        $args['replace_guids']    = 'off';
-        $args['dry_run']          = 'off';
+        $args['replace_guids'] = 'off';
+        $args['dry_run'] = 'off';
         $args['case_insensitive'] = false;
-        //$args['replace_mails']    = 'off';
-        $args['skip_transients']  = 'on';
+        $args['skip_transients'] = 'on';
 
 
         // Allow filtering of search & replace parameters
         $args = apply_filters('wpstg_clone_searchreplace_params', $args);
 
-        // Get a list of columns in this table.
-        list( $primary_key, $columns ) = $this->get_columns($table);
+        // Get columns and primary keys
+        list($primary_key, $columns) = $this->get_columns($table);
 
         // Bail out early if there isn't a primary key.
-        // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides
+        // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides (failure in their db design?)
         // @todo test this carefully. If it causes (performance) issues we need to activate it again!
         // @since 2.4.4
         //      if( null === $primary_key ) {
@@ -351,40 +329,12 @@ class SearchReplace extends JobExecutable
         //      }
 
         $current_row = 0;
-        $start       = $this->options->job->start;
-
-        //Make sure value is never smaller than 1 or greater than 20000
-        //$end = $this->settings->querySRLimit == '0' || empty( $this->settings->querySRLimit ) ? 1 : $this->settings->querySRLimit > 20000 ? 20000 : $this->settings->querySRLimit;
+        $start = $this->options->job->start;
         $end = $this->settings->querySRLimit;
 
-        // Grab the content of the current table.
-        $data = $this->db->get_results("SELECT * FROM $table LIMIT $start, $end", ARRAY_A);
+        $data = $this->productionDb->get_results("SELECT * FROM $table LIMIT $start, $end", ARRAY_A);
 
-//        // Current memory usage
-//        $memUsage = memory_get_usage();
-//
-//        // 80% Memory Limit
-//        $memLimit = wpstg_get_memory_in_bytes( ini_get( 'memory_limit' ) ) * 0.8;
-//        //$memLimit = 10;
-//
-//        // Memory limit higher than 80% - reduce the numbers and try again
-//        if( $memUsage >= $memLimit ) {
-//            unset( $data );
-//            $end                 = ceil( $end - 100 );
-//            $this->settings->querySRLimit = $end;
-//            update_option( 'wpstg_settings', $this->settings );
-//            // Grab again the content of the current table.
-//            $data = $this->db->get_results( "SELECT * FROM $table LIMIT $start, $end", ARRAY_A );
-//        }
-//
-//        // If memory limit lower than 50% - increase the numbers for the next batch to get more speed
-//        $memLimit = wpstg_get_memory_in_bytes( ini_get( 'memory_limit' ) ) * 0.5;
-//        if( $memUsage < $memLimit ) {
-//            $end                          = ceil( $end + 100 );
-//            $this->settings->querySRLimit = $end;
-//            update_option( 'wpstg_settings', $this->settings );
-//        }
-        // Filter certain rows (of other plugins)
+        // Do not search & replace certain option_names and their values
         $filter = array(
             'Admin_custome_login_Slidshow',
             'Admin_custome_login_Social',
@@ -394,48 +344,53 @@ class SearchReplace extends JobExecutable
             'Admin_custome_login_top',
             'Admin_custome_login_dashboard',
             'Admin_custome_login_Version',
-            'upload_path'
+            'upload_path',
+            'wpstg_existing_clones_beta',
+            'wpstg_existing_clones',
+            'wpstg_settings',
+            'wpstg_license_status',
+            'siteurl',
+            'home'
         );
 
         $filter = apply_filters('wpstg_clone_searchreplace_excl_rows', $filter);
 
-        // Loop through the data.
+        // Go through the table rows
         foreach ($data as $row) {
             $current_row++;
             $update_sql = array();
-            $where_sql  = array();
-            $upd        = false;
+            $where_sql = array();
+            $upd = false;
 
-            // Skip rows below
+            // Skip rows
             if (isset($row['option_name']) && in_array($row['option_name'], $filter)) {
                 continue;
             }
 
-            // Skip rows with transients (They can store huge data and we need to save memory)
+            // Skip transients (There can be thousands of them. Save memory and increase performance)
             if (isset($row['option_name']) && 'on' === $args['skip_transients'] && false
                 !== strpos($row['option_name'], '_transient')) {
                 continue;
             }
-            // Skip rows with more than 5MB to save memory
+            // Skip rows with more than 5MB to save memory. These rows contain log data or something similiar but never site relevant data
             if (isset($row['option_value']) && strlen($row['option_value']) >= 5000000) {
                 continue;
             }
 
-
+            // Go through the columns
             foreach ($columns as $column) {
 
                 $dataRow = $row[$column];
 
-
-                // Skip rows larger than 5MB                
+                // Skip column larger than 5MB
                 $size = strlen($dataRow);
                 if ($size >= 5000000) {
                     continue;
                 }
 
-                // Skip Primary key
+                // Skip primary key column
                 if ($column == $primary_key) {
-                    $where_sql[] = $column.' = "'.$this->mysql_escape_mimic($dataRow).'"';
+                    $where_sql[] = $column . ' = "' . $this->mysql_escape_mimic($dataRow) . '"';
                     continue;
                 }
 
@@ -444,60 +399,18 @@ class SearchReplace extends JobExecutable
                     continue;
                 }
 
-                // Skip mail addresses
-//                if( 'off' === $args['replace_mails'] && false !== strpos( $dataRow, '@' . $this->options->homeHostname ) ) {
-//                    continue;
-//                }
-                // Check options table
-                if ($this->options->prefix.'options' === $table) {
 
-                    // Skip certain options
-//                    if( isset( $should_skip ) && true === $should_skip ) {
-//                        $should_skip = false;
-//                        continue;
-//                    }
-                    // Skip this row
-                    if ('wpstg_existing_clones_beta' === $dataRow ||
-                        'wpstg_existing_clones' === $dataRow ||
-                        'wpstg_settings' === $dataRow ||
-                        'wpstg_license_status' === $dataRow ||
-                        'siteurl' === $dataRow ||
-                        'home' === $dataRow
-                    ) {
-                        //$should_skip = true;
-                        continue;
-                    }
-                }
-
-                // Check the path delimiter for / or \/ and remove one of those which prevents from resulting in wrong syntax like domain.com/staging\/.
-                // 1. local.wordpress.test -> local.wordpress.test/staging
-                // 2. local.wordpress.test\/ -> local.wordpress.test\/staging\/
-                $tmp = $args;
-                if (false === strpos($dataRow, $tmp['search_for'][0])) {
-                    array_shift($tmp['search_for']); // rtrim( $this->options->homeHostname, '/' ),
-                    array_shift($tmp['replace_with']); // rtrim( $this->options->homeHostname, '/' ) . '/' . $this->options->cloneDirectoryName,
-                } else {
-                    unset($tmp['search_for'][1]);
-                    unset($tmp['replace_with'][1]);
-                    // recount array
-                    $tmp['search_for']   = array_values($tmp['search_for']);
-                    $tmp['replace_with'] = array_values($tmp['replace_with']);
-                }
-
-                // Run a search replace on the data row and respect the serialisation.
                 $i = 0;
-                foreach ($tmp['search_for'] as $replace) {
-                    $dataRow = $this->recursive_unserialize_replace($tmp['search_for'][$i], $tmp['replace_with'][$i], $dataRow, false, $args['case_insensitive']);
+                foreach ($args['search_for'] as $replace) {
+                    $dataRow = $this->recursive_unserialize_replace($args['search_for'][$i], $args['replace_with'][$i], $dataRow, false, $args['case_insensitive']);
                     $i++;
                 }
-                unset($replace);
-                unset($i);
-                unset($tmp);
+                unset($replace, $i);
 
                 // Something was changed
                 if ($row[$column] != $dataRow) {
-                    $update_sql[] = $column.' = "'.$this->mysql_escape_mimic($dataRow).'"';
-                    $upd          = true;
+                    $update_sql[] = $column . ' = "' . $this->mysql_escape_mimic($dataRow) . '"';
+                    $upd = true;
                 }
             }
 
@@ -506,11 +419,12 @@ class SearchReplace extends JobExecutable
                 // Don't do anything if a dry run
             } elseif ($upd && !empty($where_sql)) {
                 // If there are changes to make, run the query.
-                $sql    = 'UPDATE '.$table.' SET '.implode(', ', $update_sql).' WHERE '.implode(' AND ', array_filter($where_sql));
-                $result = $this->db->query($sql);
+                $sql = 'UPDATE ' . $table . ' SET ' . implode(', ', $update_sql) . ' WHERE ' . implode(' AND ', array_filter($where_sql));
+                $result = $this->productionDb->query($sql);
 
-                if (!$result) {
-                    $this->log("Error updating row {$current_row} SQL: {$sql}", \WPStaging\Utils\Logger::TYPE_ERROR);
+                if (false === $result) {
+                    $this->log("Error updating row {$current_row} SQL: {$sql}",
+                        \WPStaging\Utils\Logger::TYPE_ERROR);
                 }
             }
         } // end row loop
@@ -520,9 +434,8 @@ class SearchReplace extends JobExecutable
         unset($sql);
         unset($current_row);
 
-
         // DB Flush
-        $this->db->flush();
+        $this->productionDb->flush();
         return true;
     }
 
@@ -535,16 +448,15 @@ class SearchReplace extends JobExecutable
      * unserialising any subordinate arrays and performing the replace on those too.
      *
      * @access private
-     * @param  string 			$from       		String we're looking to replace.
-     * @param  string 			$to         		What we want it to be replaced with
-     * @param  array  			$data       		Used to pass any subordinate arrays back to in.
-     * @param  boolean 			$serialized 		Does the array passed via $data need serialising.
-     * @param  sting|boolean              $case_insensitive 	Set to 'on' if we should ignore case, false otherwise.
+     * @param string $from String we're looking to replace.
+     * @param string $to What we want it to be replaced with
+     * @param array $data Used to pass any subordinate arrays back to in.
+     * @param boolean $serialized Does the array passed via $data need serialising.
+     * @param sting|boolean $case_insensitive Set to 'on' if we should ignore case, false otherwise.
      *
-     * @return string|array	The original array with all elements replaced as needed.
+     * @return string|array    The original array with all elements replaced as needed.
      */
-    private function recursive_unserialize_replace($from = '', $to = '', $data = '', $serialized
-    = false, $case_insensitive = false)
+    private function recursive_unserialize_replace($from = '', $to = '', $data = '', $serialized = false, $case_insensitive = false)
     {
         try {
             // PDO instances can not be serialized or unserialized
@@ -558,7 +470,7 @@ class SearchReplace extends JobExecutable
                 return $data;
             }
             // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
-            if (is_serialized($data) && ( $unserialized = @unserialize($data) ) !== false) {
+            if (is_serialized($data) && ($unserialized = @unserialize($data)) !== false) {
                 $data = $this->recursive_unserialize_replace($from, $to, $unserialized, true, $case_insensitive);
             } elseif (is_array($data)) {
                 $tmp = array();
@@ -571,7 +483,7 @@ class SearchReplace extends JobExecutable
             } elseif (is_object($data)) {
                 $props = get_object_vars($data);
 
-                // Do a search & replace                
+                // Do a search & replace
                 if (empty($props['__PHP_Incomplete_Class_Name'])) {
                     $tmp = $data;
                     foreach ($props as $key => $value) {
@@ -580,8 +492,8 @@ class SearchReplace extends JobExecutable
                         }
                         $tmp->$key = $this->recursive_unserialize_replace($from, $to, $value, false, $case_insensitive);
                     }
-                    $data  = $tmp;
-                    $tmp   = '';
+                    $data = $tmp;
+                    $tmp = '';
                     $props = '';
                     unset($tmp);
                     unset($props);
@@ -598,43 +510,17 @@ class SearchReplace extends JobExecutable
                 return serialize($data);
             }
         } catch (Exception $error) {
-            
+
         }
 
         return $data;
     }
-    /**
-     * Check if the object is a valid one and not __PHP_Incomplete_Class_Name
-     * Can not use is_object alone because in php 7.2 it's returning true even though object is __PHP_Incomplete_Class_Name
-     * @return boolean
-     */
-//   private function isValidObject($data){
-//      if( !is_object( $data ) || gettype( $data ) != 'object' ) {
-//         return false;
-//      }
-//      
-//      $invalid_class_props = get_object_vars( $data );
-//      
-//      if (!isset($invalid_class_props['__PHP_Incomplete_Class_Name'])){
-//         // Assume it must be an valid object
-//         return true;
-//      }
-//      
-//      $invalid_object_class = $invalid_class_props['__PHP_Incomplete_Class_Name'];
-//
-//      if( !empty( $invalid_object_class ) ) {
-//         return false;
-//      }
-//      
-//      // Assume it must be an valid object
-//      return true;
-//   }
 
     /**
      * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
      * @link   http://php.net/manual/en/function.mysql-real-escape-string.php#101248
      * @access public
-     * @param  string $input The string to escape.
+     * @param string $input The string to escape.
      * @return string
      */
     private function mysql_escape_mimic($input)
@@ -643,8 +529,7 @@ class SearchReplace extends JobExecutable
             return array_map(__METHOD__, $input);
         }
         if (!empty($input) && is_string($input)) {
-            return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array(
-                '\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $input);
+            return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $input);
         }
 
         return $input;
@@ -654,7 +539,7 @@ class SearchReplace extends JobExecutable
      * Return unserialized object or array
      *
      * @param string $serialized_string Serialized string.
-     * @param string $method            The name of the caller method.
+     * @param string $method The name of the caller method.
      *
      * @return mixed, false on failure
      */
@@ -664,7 +549,7 @@ class SearchReplace extends JobExecutable
             return false;
         }
 
-        $serialized_string   = trim($serialized_string);
+        $serialized_string = trim($serialized_string);
         $unserialized_string = @unserialize($serialized_string);
 
         return $unserialized_string;
@@ -689,15 +574,15 @@ class SearchReplace extends JobExecutable
         // Build pattern
         $regexExclude = '';
         foreach ($excludes as $exclude) {
-            $regexExclude .= $exclude.'(*SKIP)(FAIL)|';
+            $regexExclude .= $exclude . '(*SKIP)(FAIL)|';
         }
 
         if ('on' === $case_insensitive) {
             //$data = str_ireplace( $from, $to, $data );
-            $data = preg_replace('#'.$regexExclude.preg_quote($from).'#i', $to, $data);
+            $data = preg_replace('#' . $regexExclude . preg_quote($from) . '#i', $to, $data);
         } else {
             //$data = str_replace( $from, $to, $data );
-            $data = preg_replace('#'.$regexExclude.preg_quote($from).'#', $to, $data);
+            $data = preg_replace('#' . $regexExclude . preg_quote($from) . '#', $to, $data);
         }
 
         return $data;
@@ -714,7 +599,7 @@ class SearchReplace extends JobExecutable
         }
 
         $this->options->job->current = $table;
-        $this->options->job->start   = 0;
+        $this->options->job->start = 0;
     }
 
     /**
@@ -731,7 +616,7 @@ class SearchReplace extends JobExecutable
         }
 
         // Table does not exist
-        $result = $this->db->query("SHOW TABLES LIKE '{$old}'");
+        $result = $this->productionDb->query("SHOW TABLES LIKE '{$old}'");
         if (!$result || 0 === $result) {
             return false;
         }
@@ -740,7 +625,7 @@ class SearchReplace extends JobExecutable
             return true;
         }
 
-        $this->options->job->total = (int) $this->db->get_var("SELECT COUNT(1) FROM {$old}");
+        $this->options->job->total = ( int )$this->productionDb->get_var("SELECT COUNT(1) FROM {$old}");
 
         if (0 == $this->options->job->total) {
             $this->finishStep();
@@ -758,14 +643,14 @@ class SearchReplace extends JobExecutable
     private function isExcludedTable($table)
     {
 
-        $customTables  = apply_filters('wpstg_clone_searchreplace_tables_exclude', array());
+        $customTables = apply_filters('wpstg_clone_searchreplace_tables_exclude', array());
         $defaultTables = array('blogs');
 
         $tables = array_merge($customTables, $defaultTables);
 
         $excludedTables = array();
         foreach ($tables as $key => $value) {
-            $excludedTables[] = $this->options->prefix.$value;
+            $excludedTables[] = $this->options->prefix . $value;
         }
 
         if (in_array($table, $excludedTables)) {
@@ -799,14 +684,14 @@ class SearchReplace extends JobExecutable
      */
     private function dropTable($new)
     {
-        $old = $this->db->get_var($this->db->prepare("SHOW TABLES LIKE %s", $new));
+        $old = $this->productionDb->get_var($this->productionDb->prepare("SHOW TABLES LIKE %s", $new));
 
         if (!$this->shouldDropTable($new, $old)) {
             return;
         }
 
         $this->log("DB Search & Replace: {$new} already exists, dropping it first");
-        $this->db->query("DROP TABLE {$new}");
+        $this->productionDb->query("DROP TABLE {$new}");
     }
 
     /**
@@ -820,11 +705,11 @@ class SearchReplace extends JobExecutable
         return (
             $old == $new &&
             (
-            !isset($this->options->job->current) ||
-            !isset($this->options->job->start) ||
-            0 == $this->options->job->start
+                !isset($this->options->job->current) ||
+                !isset($this->options->job->start) ||
+                0 == $this->options->job->start
             )
-            );
+        );
     }
 
     /**
@@ -836,11 +721,12 @@ class SearchReplace extends JobExecutable
         // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
         // This is happening much more often than you would expect
         $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
-        $home    = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
+        $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
 
         if ($home !== $siteurl) {
             return true;
         }
         return false;
     }
+
 }

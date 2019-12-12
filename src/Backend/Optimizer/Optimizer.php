@@ -57,7 +57,7 @@ class Optimizer {
        
        if (false === $isVersionNumber){
            return true;
-}
+       }
        
        $mustVersionNumber = defined('WPSTG_OPTIMIZER_MUVERSION') ? WPSTG_OPTIMIZER_MUVERSION : false;
        

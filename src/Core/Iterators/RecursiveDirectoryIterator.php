@@ -9,13 +9,15 @@ if (!defined("WPINC")) {
 
 class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator {
 
-	protected $exclude = array();
+	protected $excludeFolders = array();
+
 
 	public function __construct( $path ) {
 		parent::__construct( $path );
 
 		// Skip current and parent directory
 		$this->skipdots();
+
 	}
 
 	public function rewind() {

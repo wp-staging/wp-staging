@@ -70,12 +70,13 @@ class Helper {
    }
 
    /**
-    * Return home url without scheme
+    * Return home url without scheme e.h. host.com or www.host.com
     * @param string $str
     * @return string
     */
    public function get_home_url_without_scheme() {
       return preg_replace( '#^https?://#', '', rtrim( $this->get_home_url(), '/' ) );
    }
+
 
 }
