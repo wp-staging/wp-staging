@@ -1,18 +1,18 @@
 <div class="wpstg_beta_notice wpstg-error" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
     <p>
-        WP Staging is well tested and we did a lot to catch every possible error but
+        <?php _e("WP Staging is well tested and we did a lot to catch every possible error but
         we can not handle all possible combinations of server, plugins and themes. <br>
         <strong>BEFORE</strong> you create your first staging site it´s highly recommended
-        <strong>to make a full backup of your website</strong> first!
+        <strong>to make a full backup of your website</strong> first!", "wp-staging") ?>
     </p>
     <p>
-        A good plugin for an entire WordPress backup is the free one
+        <?php _e("A good plugin for an entire WordPress backup is the free one", "wp-staging") ?>
         <a href="https://wordpress.org/plugins/backwpup/" target="_blank">BackWPup</a>
     </p>
     <ul>
         <li>
             <a href="javascript:void(0);" class="wpstg_hide_beta" title="I understand" data-url="<?php echo admin_url("admin-ajax.php")?>" style="font-weight:bold;">
-                I understand! (Do not show this again)
+                <?php _e("I understand! (Do not show this again)", "wp-staging") ?>
             </a>
         </li>
     </ul>
