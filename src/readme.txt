@@ -164,6 +164,7 @@ https://wp-staging.com
 * Fix: Add missing string language location
 * Fix: Function fnmatch() not available in all systems
 * Fix: Warning in staging site after initial cloning in db row rewrite_rules
+* Fix: Wrong staging site is selected when delete function is executed and there are more then 10 staging sites
 
 = 2.6.4 =
 * Fix: Broken image folder with duplicate leading slash after cloning
