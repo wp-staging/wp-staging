@@ -40,6 +40,27 @@ module.exports = function (grunt) {
         },
         // Copy files
         copy: {
+            // Copy shared files of pro version into free version for deployment of latest features
+            pro: {
+                files: [
+                    {
+                        expand: true,
+                        src: [
+                            '**',
+                            '!Backend/Pro/**',
+                            '!readme.txt',
+                            '!wp-staging-pro.php',
+                            '!Backend/Optimizer/Optimizer.php',
+                            '!Backend/Optimizer/wp-staging-optimizer.php',
+                            '!Backend/PluginMeta/Meta.php',
+                            '!Core/Utils/Hash.php',
+
+                        ],
+                        cwd: '../wp-staging-pro/src/',
+                        dest: './src',
+                    }
+                ]
+            },
             build: {
                 files: [
                     {
@@ -155,31 +176,6 @@ module.exports = function (grunt) {
                 expand: true
             }
         },
-
-        // Merge shared files of pro version into free version for deployment of latest features
-        copy: {
-            pro: {
-                files: [
-                    {
-                        expand: true,
-                        src: [
-                            '**',
-                            '!Backend/Pro/**',
-                            '!readme.txt',
-                            '!wp-staging-pro.php',
-                            '!Backend/Optimizer/Optimizer.php',
-                            '!Backend/Optimizer/wp-staging-optimizer.php',
-                            '!Backend/PluginMeta/Meta.php',
-                            '!Core/Utils/Hash.php',
-
-                        ],
-                        cwd: '../wp-staging-pro/src/',
-                        dest: './src',
-                    }
-                ]
-            },
-
-        }
 
     });
 
