@@ -855,6 +855,9 @@
     color:white;
     font-size: 12px;
 }
+.wpstg-staging-info a {
+    color:white;
+}
 
 .wpstg-bold{
     font-weight: 600;
