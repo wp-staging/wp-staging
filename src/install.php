@@ -9,7 +9,6 @@ use WPStaging\Utils\IISWebConfig;
 use WPStaging\Utils\Htaccess;
 use WPStaging\Utils\Filesystem;
 
-
 // Exit if accessed directly
 if (!defined('ABSPATH'))
     exit;

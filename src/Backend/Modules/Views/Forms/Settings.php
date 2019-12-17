@@ -58,7 +58,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "DB Copy Query Limit" )
+              $element->setLabel(__("DB Copy Query Limit", "wp-staging"))
                       ->setDefault( isset( $settings->queryLimit ) ? $settings->queryLimit : 10000  )
       );
       // DB Search & Replace Query Limit
@@ -72,7 +72,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "DB Search & Replace Limit" )
+              $element->setLabel(__("DB Search & Replace Limit", "wp-staging"))
                       ->setDefault( isset( $settings->querySRLimit ) ? $settings->querySRLimit : 5000  )
       );
 
@@ -88,7 +88,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "File Copy Limit" )->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : '50'  )
+              $element->setLabel(__("File Copy Limit" , "wp-staging"))->setDefault( isset( $settings->fileLimit ) ? $settings->fileLimit : '50'  )
       );
 
 
@@ -103,7 +103,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "Maximum File Size (MB)" )
+              $element->setLabel(__("Maximum File Size (MB)", "wp-staging"))
                       ->setDefault( isset( $settings->maxFileSize ) ? $settings->maxFileSize : 8  )
       );
 
@@ -118,22 +118,22 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "File Copy Batch Size" )
+              $element->setLabel(__("File Copy Batch Size", "wp-staging"))
                       ->setDefault( isset( $settings->batchSize ) ? $settings->batchSize : 2  )
       );
 
       // CPU load priority
       $element = new Select(
               "wpstg_settings[cpuLoad]", array(
-          "high" => "High (fast)",
-          "medium" => "Medium (average)",
-          "low" => "Low (slow)"
+          "high" => __("High (fast)", "wp-staging"),
+          "medium" => __("Medium (average)", "wp-staging"),
+          "low" => __("Low (slow)", "wp-staging")
               )
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "CPU Load Priority" )
-                      ->setDefault( isset( $settings->cpuLoad ) ? $settings->cpuLoad : "low" )
+              $element->setLabel(__("CPU Load Priority", "wp-staging"))
+                      ->setDefault( isset( $settings->cpuLoad ) ? $settings->cpuLoad : "low"  )
       );
 
       // Delay Between Requests
@@ -147,7 +147,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "Delay Between Requests" )
+              $element->setLabel(__("Delay Between Requests", "wp-staging"))
                       ->setDefault( (isset( $settings->delayRequests )) ? $settings->delayRequests : 0  )
       );
 
@@ -158,7 +158,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "Optimizer" )
+              $element->setLabel(__("Optimizer", "wp-staging"))
                       ->setDefault( (isset( $settings->optimizer )) ? $settings->optimizer : null  )
       );
 
@@ -176,14 +176,12 @@ class Settings {
 
        // Disable admin authorization
        if (!defined('WPSTGPRO_VERSION')) {
-
            $element = new Check(
                "wpstg_settings[disableAdminLogin]", array('1' => '')
            );
 
-
            $this->form["general"]->add(
-               $element->setLabel("Disable admin authorization")
+               $element->setLabel(__("Disable admin authorization", "wp-staging"))
                    ->setDefault((isset($settings->disableAdminLogin)) ? $settings->disableAdminLogin : null)
            );
        }
@@ -194,10 +192,11 @@ class Settings {
            );
 
            $this->form["general"]->add(
-               $element->setLabel("Keep Permalinks")
+               $element->setLabel(__("Keep Permalinks", "wp-staging"))
                    ->setDefault((isset($settings->keepPermalinks)) ? $settings->keepPermalinks : null)
            );
        }
+
 
       // Debug Mode
       $element = new Check(
@@ -205,7 +204,7 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "Debug Mode" )
+              $element->setLabel(__("Debug Mode", "wp-staging"))
                       ->setDefault( (isset( $settings->debugMode )) ? $settings->debugMode : null  )
       );
 
@@ -215,8 +214,8 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "Remove Data on Uninstall?" )
-                      ->setDefault( (isset( $settings->unInstallOnDelete )) ? $settings->unInstallOnDelete : null )
+              $element->setLabel(__("Remove Data on Uninstall?", "wp-staging"))
+                      ->setDefault( (isset( $settings->unInstallOnDelete )) ? $settings->unInstallOnDelete : null  )
       );
 
       // Check Directory Sizes
@@ -225,21 +224,19 @@ class Settings {
       );
 
       $this->form["general"]->add(
-              $element->setLabel( "Check Directory Size" )
+              $element->setLabel(__("Check Directory Size", "wp-staging"))
                       ->setDefault( (isset( $settings->checkDirectorySize )) ? $settings->checkDirectorySize : null  )
       );
 
        // Get user roles
        if (defined('WPSTGPRO_VERSION')) {
-           $this->form["general"]->add(
-               $element->setLabel("Access Permissions")
-                   ->setDefault((isset($settings->userRoles)) ? $settings->userRoles : 'administrator')
-           );
+            $this->form["general"]->add(
+                    $element->setLabel(__("Access Permissions", "wp-staging"))
+                            ->setDefault( (isset( $settings->userRoles )) ? $settings->userRoles : 'administrator'  )
+            );
 
            $element = new SelectMultiple('wpstg_settings[userRoles][]', $this->getUserRoles());
        }
-
-
 
 
    }
@@ -253,7 +250,7 @@ class Settings {
       foreach ( get_editable_roles() as $key => $value ) {
          $userRoles[$key] = $key;
       }
-      return array_merge( array('all' => 'Allow access from all visitors'), $userRoles );
+      return array_merge( array('all' => __('Allow access from all visitors', 'wp-staging')), $userRoles );
    }
 
    /**

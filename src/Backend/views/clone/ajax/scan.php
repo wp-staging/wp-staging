@@ -21,11 +21,7 @@
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
         <?php do_action("wpstg_scanning_db") ?>
         <h4 style="margin:0">
-            <?php
-            echo __(
-                "Select the tables to copy. Tables beginning with the prefix '{$scan->prefix}' have already been selected.", "wp-staging"
-            );
-            ?>
+            <p><?php printf( __( "Select the tables to copy. Tables beginning with the prefix '%s' have already been selected.", "wp-staging" ), $scan->prefix ); ?></p>
             <p></p>
             <?php
             echo __(

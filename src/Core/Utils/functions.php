@@ -589,7 +589,7 @@ function wpstg_is_local()
 /**
  * Get absolute path to plugins dir.
  * Take into account custom user made path modifications
- * A function with the name wpstg_get_plugins_dir() already exists in
+ * A function with the name wpstg_get_plugins_dir() already exists in 
  * must-use plugin wp-staging-optimizer.php so we've created this one that does the same job.
  *
  * @return string
@@ -600,9 +600,9 @@ function wpstg_is_local()
 function wpstg_get_plugins_dir_core()
 {
     if (defined('WP_PLUGIN_DIR')) {
-        $pluginsDir = trailingslashit(WP_PLUGIN_DIR);
+	$pluginsDir = trailingslashit(WP_PLUGIN_DIR);
     } else if (defined('WP_CONTENT_DIR')) {
-        $pluginsDir = trailingslashit(WP_CONTENT_DIR) . 'plugins/';
+	$pluginsDir = trailingslashit(WP_CONTENT_DIR).'plugins/';
     }
     return $pluginsDir;
 }
