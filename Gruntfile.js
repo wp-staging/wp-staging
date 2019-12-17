@@ -52,7 +52,7 @@ module.exports = function (grunt) {
                             '!wp-staging-pro.php',
                             '!Backend/Optimizer/Optimizer.php',
                             '!Backend/Optimizer/wp-staging-optimizer.php',
-                            '!Backend/PluginMeta/Meta.php',
+                            '!Backend/Pluginmeta/Meta.php',
                             '!Core/Utils/Hash.php',
 
                         ],
