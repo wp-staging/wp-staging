@@ -10,7 +10,7 @@
  *
  * Makes use of the grunt taskrunner based on npm
  * Install grunt https://gruntjs.com/installing-grunt
- * 
+ *
  * How to use:
  *
  * 1. Change the version number in package.json
@@ -77,7 +77,7 @@ module.exports = function (grunt) {
                         ],
                         cwd: 'src/',
                         dest: '<%= paths.releaseDirTags %>',
-                    },                    {
+                    }, {
                         // Copy to trunk folder
                         expand: true,
                         src: [
@@ -125,9 +125,9 @@ module.exports = function (grunt) {
                 },
                 options: {
                     replacements: [{
-                            pattern: /{{version}}/g,
-                            replacement: '<%= pkg.version %>'
-                        }]
+                        pattern: /{{version}}/g,
+                        replacement: '<%= pkg.version %>'
+                    }]
                 }
             }
         },
@@ -154,8 +154,33 @@ module.exports = function (grunt) {
                 src: ['**/*'],
                 expand: true
             }
-        }
+        },
 
+        // Merge shared files of pro version into free version for deployment of latest features
+        copy: {
+            pro: {
+                files: [
+                    {
+                        // Copy to tags folder
+                        expand: true,
+                        src: [
+                            '**',
+                            'Backend/Pro/**',
+                            '!readme.txt',
+                            '!wp-staging-pro.php',
+                            '!Backend/Optimizer/Optimizer.php',
+                            '!Backend/Optimizer/wp-staging-optimizer.php',
+                            '!Backend/PluginMeta/Meta.php',
+                            '!Core/Utils/Hash.php',
+
+                        ],
+                        cwd: '../wp-staging-pro/src/',
+                        dest: './src/',
+                    }
+                ]
+            },
+
+        }
 
     });
 
@@ -167,7 +192,12 @@ module.exports = function (grunt) {
 
     // Build task
     grunt.registerTask(
-            'build',
-            ['clean:build', 'copy:build', 'string-replace:version', 'compress:build']
-            );
+        'build',
+        ['clean:build', 'copy:build', 'string-replace:version', 'compress:build']
+    );
+
+    grunt.registerTask(
+        'free',
+        ['copy:pro']
+    );
 };
