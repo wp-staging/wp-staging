@@ -10,7 +10,7 @@ if( !defined( "WPINC" ) ) {
 class Strings {
 
     /**
-     * Replace first occurance of certain string
+     * Replace first occurrence of certain string
      * @param string $search
      * @param string $replace
      * @param string $subject
