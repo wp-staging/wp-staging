@@ -15,7 +15,7 @@
             </td></tr>
         <tr><th>Database Prefix</th><td><input type="text" name="wpstg_db_prefix" id="wpstg_db_prefix" value="" placeholder="<?php echo $db->prefix; ?>" autocapitalize="off" readonly>
             </td></tr>
-        <tr><th></th><td><a href="#" id="wpstg-db-connect">Test Database Connection</a></td></tr>
+        <tr><th></th> <td><a href="#" id="wpstg-db-connect"><?php _e("Test Database Connection", "wp-staging")?></a></td></tr>
     </tbody>
 </table>
 </fieldset>

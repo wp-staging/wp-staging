@@ -455,9 +455,9 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
         $result = $this->db->query(
-            $this->db->prepare(
-                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'rewrite_rules'", array()
-            )
+                $this->db->prepare(
+                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'rewrite_rules'", array()
+                )
         );
 
         // All good

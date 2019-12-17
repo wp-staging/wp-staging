@@ -26,7 +26,7 @@ use WPStaging\Cron\Cron;
  */
 final class WPStaging {
 
-    /**
+    /*
      * Plugin name
      */
     const NAME = "WP Staging";
