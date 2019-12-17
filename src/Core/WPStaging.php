@@ -220,6 +220,7 @@ final class WPStaging {
                 "toplevel_page_wpstg_clone",
                 "wp-staging_page_wpstg-settings",
                 "wp-staging_page_wpstg-tools",
+                "wp-staging_page_wpstg-welcome",
             );
         }
 

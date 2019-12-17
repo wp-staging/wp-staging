@@ -155,8 +155,11 @@ https://wp-staging.com
 
 = 2.6.5 =
 * New: Support for WordPress 5.3.1
-* New: Refactoring code base
+* New: Refactoring code base and remove app folder
 * New: Add french language files
+* New: Add WP Staging logo to login form
+* New: Set 24 hours expiration date to process lock
+* New: Add link URL to staging site title
 * Fix: Fatal error: Invalid serialization data for DateTime object #91
 * Fix: Add missing string language location
 * Fix: Function fnmatch() not available in all systems

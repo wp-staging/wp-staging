@@ -40,6 +40,27 @@ module.exports = function (grunt) {
         },
         // Copy files
         copy: {
+            // Copy shared files of pro version into free version for deployment of latest features
+            pro: {
+                files: [
+                    {
+                        expand: true,
+                        src: [
+                            '**',
+                            '!Backend/Pro/**',
+                            '!readme.txt',
+                            '!wp-staging-pro.php',
+                            '!Backend/Optimizer/Optimizer.php',
+                            '!Backend/Optimizer/wp-staging-optimizer.php',
+                            '!Backend/PluginMeta/Meta.php',
+                            '!Core/Utils/Hash.php',
+
+                        ],
+                        cwd: '../wp-staging-pro/src/',
+                        dest: './src',
+                    }
+                ]
+            },
             build: {
                 files: [
                     {
@@ -122,6 +143,9 @@ module.exports = function (grunt) {
                     '<%= paths.releaseDirTags %>wp-staging.php': '<%= paths.releaseDirTags %>wp-staging.php',
                     '<%= paths.releaseDirTags %>readme.txt': '<%= paths.releaseDirTags %>readme.txt',
                     '<%= paths.releaseDirTags %>Core/WPStaging.php': '<%= paths.releaseDirTags %>Core/WPStaging.php',
+                    '<%= paths.releaseDirTrunk %>wp-staging.php': '<%= paths.releaseDirTrunk %>wp-staging.php',
+                    '<%= paths.releaseDirTrunk %>readme.txt': '<%= paths.releaseDirTrunk %>readme.txt',
+                    '<%= paths.releaseDirTrunk %>Core/WPStaging.php': '<%= paths.releaseDirTrunk %>Core/WPStaging.php',
                 },
                 options: {
                     replacements: [{
@@ -150,36 +174,11 @@ module.exports = function (grunt) {
                 options: {
                     archive: '<%= paths.zipDir %><%= pkg.name %>.zip' //target
                 },
-                cwd: '<%= paths.zipDir %>',
+                cwd: '<%= paths.releaseDirTrunk %>',
                 src: ['**/*'],
                 expand: true
             }
         },
-
-        // Merge shared files of pro version into free version for deployment of latest features
-        copy: {
-            pro: {
-                files: [
-                    {
-                        expand: true,
-                        src: [
-                            '**',
-                            '!Backend/Pro/**',
-                            '!readme.txt',
-                            '!wp-staging-pro.php',
-                            '!Backend/Optimizer/Optimizer.php',
-                            '!Backend/Optimizer/wp-staging-optimizer.php',
-                            '!Backend/PluginMeta/Meta.php',
-                            '!Core/Utils/Hash.php',
-
-                        ],
-                        cwd: '../wp-staging-pro/src/',
-                        dest: './src',
-                    }
-                ]
-            },
-
-        }
 
     });
 
