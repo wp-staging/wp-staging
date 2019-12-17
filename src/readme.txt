@@ -8,7 +8,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
-Tested up to: 5.2
+Tested up to: 5.3
 Stable tag: {{version}}
 Requires PHP: 5.3
 
@@ -154,7 +154,13 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.6.5 =
+* New: Support for WordPress 5.3.1
+* New: Refactoring code base
+* New: Add french language files
 * Fix: Fatal error: Invalid serialization data for DateTime object #91
+* Fix: Add missing string language location
+* Fix: Function fnmatch() not available in all systems
+* Fix: Warning in staging site after initial cloning in db row rewrite_rules
 
 = 2.6.4 =
 * Fix: Broken image folder with duplicate leading slash after cloning
