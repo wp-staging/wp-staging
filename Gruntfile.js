@@ -161,11 +161,10 @@ module.exports = function (grunt) {
             pro: {
                 files: [
                     {
-                        // Copy to tags folder
                         expand: true,
                         src: [
                             '**',
-                            'Backend/Pro/**',
+                            '!Backend/Pro/**',
                             '!readme.txt',
                             '!wp-staging-pro.php',
                             '!Backend/Optimizer/Optimizer.php',
@@ -175,7 +174,7 @@ module.exports = function (grunt) {
 
                         ],
                         cwd: '../wp-staging-pro/src/',
-                        dest: './src/',
+                        dest: './src',
                     }
                 ]
             },
@@ -196,8 +195,9 @@ module.exports = function (grunt) {
         ['clean:build', 'copy:build', 'string-replace:version', 'compress:build']
     );
 
+    // Copy shared files of pro version into free version for deployment of latest features
     grunt.registerTask(
-        'free',
+        'buildfree',
         ['copy:pro']
     );
 };
