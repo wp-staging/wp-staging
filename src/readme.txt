@@ -218,72 +218,19 @@ https://wp-staging.com
 * Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way
 * Fix: Strip whitespaces in cloning site internal names
 
-= 2.5.8 =
-* Fix: Remove admin notice that wp staging is not compatible with latest wp version
-
-= 2.5.7 =
-* Fix: Fatal Error: Remove previous implemented action to not search & replace over incomplete classes. This lead to high memory consumption and error 500 in step 2 of the cloning
-* Fix: Cloning process interupts if there is not data to change in last step of cloning 
-
-= 2.5.6 =
-* New: Compatible to WordPress 5.2
-* New: Allow adding file .wp-staging to root of website to determine if it's a staging or production website
-* New: Add extended data about a staging site in list overview of staging sites
-* New: Show unfinished or interrupted clones and allow deletion of them
-* Tweak:  Move admin notices templates to views/notices
-* Fix: Rating notice appears again after using review later button
-* Fix: Can not find staging site when staging site has been created with old version of wp staging
-* Fix: Do not search & replace over incomplete classes in database to prevent warnings
-
-= 2.5.5 =
-* Fix: Fatal error, undefined function wpstg_validate_data()
-
-= 2.5.4 =
-* Fix: WordFence firewall rule 'local file inclusion' blocks wp staging initial starting cloning sequence
-* Fix: Values of form Extra directories to copy are ignored
-
-= 2.5.3 =
-* Fix: Disable the WP-Spamshield Plugin on staging site because it prevents login to the staging site
-* Fix: Lower the memory consumption when the cloning scan process is started
-* New: Show PHP user in system info log
-
-= 2.5.2 =
-* New: Tested up to WordPress 5.1.1
-
-= 2.5.1 =
-* Fix: WP Staging > Tools > System Info does not open 
-* New: Open system info log file directly via wp staging > tools
-
-= 2.5.0 =
-* Fix: Do not exclude db.php if it is not located in the wp-content folder
-* Fix: Select All button for DB tables not working properly
-* New: Add Filter to exclude certain tables from search & replace operation
-* New: Show PHP user in system info
-* New: Check if there is already one process running before executing the cloning process
-* New: Support up to WordPress 5.1
-
-= 2.4.9 =
-* New: Add new DB table selection manager
-* Fix: Better warning notices before updating a staging site
-* Fix: Stop delete process if staging site has been deleted manually before
-* Fix: Log file folder does not have correct permission 0755
-* Fix: Continue cloning if siteurl & home in wp_options could not be changed
-* Tweak: Better warning for the update method
-* Tweak: DB tables and file verification opened as default option
-* Tweak: Skip rows larger than 5MB for search & replace operations to keep memory consumption low
-* Tweak: clean up search & replace method
-* Tweak: Better FAQ
-
-
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
 * Install this version for supporting latest WordPress version
 
-* New: Allow wildcards for excluding files
-* New: Add hook "wpstg_clone_action_staging" to execute code on staging site after cloning 
-* Tweak: Improved support for custom uploads folder if user customized UPLOADS constant or upload_path in DB
-* Fix: Better compatibility with Windows IIS server
-* Fix: External links are broken after cloning if ABSPATH is equal to /www/
-* Fix: use an alternative method for file_put_contents as it is not supported on all systems due to file permission issues
-* Fix: Redundant and duplicated update comments in wp-config.php in staging site
+* New: Support for WordPress 5.3.1
+* New: Refactoring code base and remove app folder
+* New: Add french language files
+* New: Add WP Staging logo to login form
+* New: Set 24 hours expiration date to process lock
+* New: Add link URL to staging site title
+* Fix: Fatal error: Invalid serialization data for DateTime object #91
+* Fix: Add missing string language location
+* Fix: Function fnmatch() not available in all systems
+* Fix: Warning in staging site after initial cloning in db row rewrite_rules
+* Fix: Wrong staging site is selected when delete function is executed and there are more then 10 staging sites
