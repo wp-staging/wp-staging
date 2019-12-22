@@ -153,6 +153,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.6 =
+* Fix: Fatal error: Cannot redeclare wpstgpro_overwrite_nonce() and wpstg_overwrite_nonce() after activating pro version on top of this free one
+
 = 2.6.5 =
 * New: Support for WordPress 5.3.1
 * New: Refactoring code base and remove app folder
@@ -234,3 +237,4 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 * Fix: Function fnmatch() not available in all systems
 * Fix: Warning in staging site after initial cloning in db row rewrite_rules
 * Fix: Wrong staging site is selected when delete function is executed and there are more then 10 staging sites
+* Fix: Fatal error: Cannot redeclare wpstgpro_overwrite_nonce() and wpstg_overwrite_nonce() after activating pro version on top of this free one
