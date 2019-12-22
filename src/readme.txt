@@ -155,6 +155,7 @@ https://wp-staging.com
 
 = 2.6.6 =
 * Fix: Fatal error: Cannot redeclare wpstgpro_overwrite_nonce() and wpstg_overwrite_nonce() after activating pro version on top of this free one
+* Fix: wpdb->prepare() warning after initial cloning
 
 = 2.6.5 =
 * New: Support for WordPress 5.3.1
