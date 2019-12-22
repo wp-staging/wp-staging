@@ -69,12 +69,13 @@ if( !defined( 'WPSTG_PLUGIN_URL' ) ) {
  * @param int $seconds
  * @return int
  */
-function wpstgpro_overwrite_nonce($seconds)
-{
-    return 86400;
+if ( !function_exists( 'wpstg_overwrite_nonce')){
+    function wpstg_overwrite_nonce( $seconds ) {
+        return 86400;
+    }
 }
 
-add_filter('nonce_life', 'wpstgpro_overwrite_nonce', 99999);
+add_filter( 'nonce_life', 'wpstg_overwrite_nonce', 99999 );
 
 /**
  * Do not show update notifications for WP Staging Pro on the staging site
@@ -82,14 +83,16 @@ add_filter('nonce_life', 'wpstgpro_overwrite_nonce', 99999);
  * @param type object
  * @return object
  */
-function wpstg_filter_plugin_updates($value)
-{
-    if (wpstg_is_stagingsite()) {
-        if (isset($value->response['wp-staging-pro/wp-staging-pro.php'])) {
-            unset($value->response['wp-staging-pro/wp-staging-pro.php']);
+if ( !function_exists( 'wpstg_filter_plugin_updates')) {
+    function wpstg_filter_plugin_updates($value)
+    {
+        if (wpstg_is_stagingsite()) {
+            if (isset($value->response['wp-staging-pro/wp-staging-pro.php'])) {
+                unset($value->response['wp-staging-pro/wp-staging-pro.php']);
+            }
         }
+        return $value;
     }
-    return $value;
 }
 
 add_filter('site_transient_update_plugins', 'wpstg_filter_plugin_updates');
