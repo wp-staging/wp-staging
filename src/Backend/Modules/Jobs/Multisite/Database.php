@@ -58,10 +58,9 @@ class Database extends JobExecutable {
      * @return boolean
      */
     private function isFatalError() {
-        //$path = trailingslashit( get_home_path() ) . $this->options->cloneDirectoryName;
         $path = trailingslashit($this->options->cloneDir);
         if( isset( $this->options->mainJob ) && $this->options->mainJob !== 'updating' && is_dir( $path ) && !wpstg_is_empty_dir( $path) ) {
-            $this->returnException( " Can not continue! Change the name of the clone or delete existing folder. Then try again. Folder already exists and is not empty: " . $path );
+            $this->returnException(" Can not continue for security purposes. Directory {$path} is not empty! Use FTP or a file manager plugin and make sure it does not contain any files. ");
         }
         return false;
     }
