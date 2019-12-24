@@ -33,7 +33,7 @@ reset: down stop
 	make install
 	sudo chown $(USER):$(USER) ./var -R
 test_up: # Tests require selenium server running
-	java -jar selenium-server-standalone-3.141.5.jar
+	java -jar selenium-server-standalone-3.141.59.jar
 test_single:
 	php codecept.phar run --env single --steps
 test_multi:

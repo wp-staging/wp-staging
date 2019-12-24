@@ -14,7 +14,7 @@ modules:
             window_size: 1024x1300
             capabilities:
                 chromeOptions:
-                    args: ["--headless", "--disable-gpu"]
+                    #args: ["--headless", "--disable-gpu"]
                     binary: "/usr/bin/google-chrome"
                     w3c: false
                 unexpectedAlertBehaviour: 'accept'
