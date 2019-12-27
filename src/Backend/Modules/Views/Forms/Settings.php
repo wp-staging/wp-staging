@@ -230,12 +230,13 @@ class Settings {
 
        // Get user roles
        if (defined('WPSTGPRO_VERSION')) {
-            $this->form["general"]->add(
-                    $element->setLabel(__("Access Permissions", "wp-staging"))
-                            ->setDefault( (isset( $settings->userRoles )) ? $settings->userRoles : 'administrator'  )
-            );
-
            $element = new SelectMultiple('wpstg_settings[userRoles][]', $this->getUserRoles());
+           $this->form["general"]->add(
+               $element->setLabel(__("Access Permissions", "wp-staging"))
+                   ->setDefault((isset($settings->userRoles)) ? $settings->userRoles : 'administrator')
+           );
+
+
        }
 
 
