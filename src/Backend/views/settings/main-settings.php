@@ -142,7 +142,7 @@
                                                 <?php _e( "<strong>Important:</strong> If CPU Load Priority is <strong>Low</strong> set a file copy limit value of 50 or higher! Otherwise file copying process takes a lot of time.", "wp-staging" ); ?>
                                                 <br>
                                                 <br>
-                                                <strong> Default: 1 </strong>
+                                                <strong> Default: 50 </strong>
                                             </span>
                                         </div>
                                     </td>
