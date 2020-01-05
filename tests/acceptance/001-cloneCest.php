@@ -58,7 +58,7 @@ class cloningCest {
 	$I->see('Dashboard');
 	$I->amOnPage('/staging/wp-admin/admin.php?page=wpstg_clone');
 	//$I->wait( 2 );
-	$I->see('This staging site can be pushed with the WP Staging Pro Plugin installed on your production site', '.wpstg-notice-alert');
+	$I->see('This staging site can be pushed and modified with WP Staging Pro plugin', '.wpstg-notice-alert');
     }
 
 }
