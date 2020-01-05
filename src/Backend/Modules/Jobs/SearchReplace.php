@@ -80,7 +80,7 @@ class SearchReplace extends JobExecutable
         // Save option, progress
         $this->saveOptions();
 
-        return (object) $this->response;
+        return (object)$this->response;
     }
 
     /**
@@ -189,22 +189,34 @@ class SearchReplace extends JobExecutable
     }
 
     /**
-     * Get destination Hostname depending on wheather WP has been installed in sub dir or not
-     * @return type
+     * Get destination Hostname depending on WP installed in sub dir or not
+     * @return string
      */
     private function getDestinationHostname()
     {
-        // default
-        $host = trailingslashit($this->options->destinationHostname) . $this->options->cloneDirectoryName;
 
+        // Staging site is updated so do not change hostname
+        if ($this->options->mainJob === 'updating') {
+            // If target hostname is defined in advanced settings prefer its use (pro only)
+            if (!empty($this->options->cloneHostname)) {
+                return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
+            } else {
+                return $this->strings->getUrlWithoutScheme($this->options->destinationHostname);
+            }
+        }
+
+        // Target hostname defined in advanced settings (pro only)
         if (!empty($this->options->cloneHostname)) {
-            $host = $this->options->cloneHostname;
+            return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
         }
 
+        // WP installed in sub directory under root
         if ($this->isSubDir()) {
-            $host = trailingslashit($this->options->destinationHostname) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName;
+            return $this->strings->getUrlWithoutScheme(trailingslashit($this->options->destinationHostname) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName);
         }
-        return $this->strings->getUrlWithoutScheme($host);
+
+        // Default destination hostname
+        return $this->strings->getUrlWithoutScheme(trailingslashit($this->options->destinationHostname) . $this->options->cloneDirectoryName);
     }
 
     /**
