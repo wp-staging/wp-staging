@@ -148,7 +148,10 @@ class Delete extends Job {
 
         $stagingPrefix = $this->getStagingPrefix();
 
-        $tables = $this->wpdb->get_results( "SHOW TABLE STATUS LIKE '{$stagingPrefix}%'" );
+        // Escape "_" to allow searching for that character
+        $prefix = wpstg_replace_last_match('_', '\_', $stagingPrefix);
+
+        $tables = $this->wpdb->get_results( "SHOW TABLE STATUS LIKE '{$prefix}%'" );
 
         $this->tables = array();
 

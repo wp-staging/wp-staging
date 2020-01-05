@@ -151,7 +151,7 @@ class Administrator extends InjectionAware {
      */
     public function upgrade()
     {
-        if (defined('WPSTGPRO_VERSION')) {
+        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backend\Pro\Upgrade\Upgrade')) {
             $upgrade = new Pro\Upgrade\Upgrade();
         } else {
             $upgrade = new Upgrade\Upgrade();

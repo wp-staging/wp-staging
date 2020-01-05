@@ -9,7 +9,7 @@
  * Do not use any of these methods in wp staging code base as this plugin can be missing!
  *
  * Author: René Hermenau
- * Version: 1.2
+ * Version: 1.1
  * Author URI: https://wp-staging.com
  * Credit: Original version made by Delicious Brains (WP Migrate DB). Thank you guys!
  */
