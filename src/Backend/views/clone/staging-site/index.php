@@ -1,5 +1,5 @@
 <span class="wpstg-notice-alert" style="margin-top:20px;">
-    <?php echo __("This staging site can be pushed with the WP Staging Pro Plugin installed on your production site! Open WP Staging Pro on your production site and start the pushing process from there!", "wp-staging")?>
+    <?php echo __("This staging site can be pushed and modified with WP Staging Pro plugin installed on your production site! Open WP Staging Pro on your production site and start the pushing process from there!", "wp-staging")?>
     <br/>
     <?php echo sprintf(__("<a href='%s' target='_new'>Open WP Staging Pro on Live Site</a>"), wpstg_get_production_hostname() . '/wp-admin/admin.php?page=wpstg_clone'); ?>
     <br/>
