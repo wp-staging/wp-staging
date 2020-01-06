@@ -52,9 +52,9 @@ if (!defined('WPSTG_PLUGIN_DIR')) {
     define('WPSTG_PLUGIN_DIR', plugin_dir_path(__FILE__));
 }
 
-// Version number of the must-use plugin 'optimizer'
+// Expected version number of the must-use plugin 'optimizer'. Used for automatic updates of the mu-plugin
 if (!defined('WPSTG_OPTIMIZER_MUVERSION')) {
-    define('WPSTG_OPTIMIZER_MUVERSION', 1.1);
+    define('WPSTG_OPTIMIZER_MUVERSION', 1.2);
 }
 
 // URL of the base folder
