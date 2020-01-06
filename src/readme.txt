@@ -153,6 +153,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.7 =
+* Fix: Update function adds duplicate string to internal urls like https://example.com/staging/staging/wp-content/*
+* New: Support for WP 5.3.2
+
 = 2.6.6 =
 * Fix: Fatal error: Cannot redeclare wpstgpro_overwrite_nonce() and wpstg_overwrite_nonce() after activating pro version on top of this free one
 * Fix: wpdb->prepare() warning after initial cloning
