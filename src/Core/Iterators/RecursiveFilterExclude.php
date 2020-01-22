@@ -20,11 +20,11 @@ class RecursiveFilterExclude extends RecursiveFilterIterator
         $subPath = $this->getInnerIterator()->getSubPathname();
 
         //  new line character on linux
-        if (false !== strpos($subPath, '\n')) {
+        if (false !== strpos($subPath, "\n")) {
             return false;
         }
         // new line character on Windows
-        if (false !== strpos($subPath, '\r')) {
+        if (false !== strpos($subPath, "\r")) {
             return false;
         }
 
