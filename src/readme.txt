@@ -153,6 +153,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.8 =
+* Fix: If server is windows it will result in missing files after cloning and can lead to fatal errors of the staging site
+
 = 2.6.7 =
 * Fix: Update function adds duplicate string to internal urls like https://example.com/staging/staging/wp-content/*
 * New: Support for WP 5.3.2
