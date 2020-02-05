@@ -523,52 +523,6 @@ function wpstg_chown($file, $owner)
     return true;
 }
 
-/**
- * Checks if the passed string would match the given shell wildcard pattern.
- * This function emulates [[fnmatch()]], which may be unavailable at certain environment, using PCRE.
- * @param string $pattern the shell wildcard pattern.
- * @param string $string the tested string.
- * @param array $options options for matching. Valid options are:
- *
- * - caseSensitive: bool, whether pattern should be case sensitive. Defaults to `true`.
- * - escape: bool, whether backslash escaping is enabled. Defaults to `true`.
- * - filePath: bool, whether slashes in string only matches slashes in the given pattern. Defaults to `false`.
- *
- * @return bool whether the string matches pattern or not.
- */
-function wpstg_fnmatch($pattern, $string, $options = array())
-{
-    if ($pattern === '*' && empty($options['filePath'])) {
-        return true;
-    }
-    $replacements = array(
-        '\\\\\\\\' => '\\\\',
-        '\\\\\\*' => '[*]',
-        '\\\\\\?' => '[?]',
-        '\*' => '.*',
-        '\?' => '.',
-        '\[\!' => '[^',
-        '\[' => '[',
-        '\]' => ']',
-        '\-' => '-',
-    );
-    if (isset($options['escape']) && !$options['escape']) {
-        unset($replacements['\\\\\\\\']);
-        unset($replacements['\\\\\\*']);
-        unset($replacements['\\\\\\?']);
-    }
-    if (!empty($options['filePath'])) {
-        $replacements['\*'] = '[^/\\\\]*';
-        $replacements['\?'] = '[^/\\\\]';
-    }
-    $pattern = strtr(preg_quote($pattern, '#'), $replacements);
-    $pattern = '#^' . $pattern . '$#us';
-    if (isset($options['caseSensitive']) && !$options['caseSensitive']) {
-        $pattern .= 'i';
-    }
-    return preg_match($pattern, $string) === 1;
-}
-
 /*
  * Check if website is installed locally
  * @return boolean
@@ -589,7 +543,7 @@ function wpstg_is_local()
 /**
  * Get absolute path to plugins dir.
  * Take into account custom user made path modifications
- * A function with the name wpstg_get_plugins_dir() already exists in 
+ * A function with the name wpstg_get_plugins_dir() already exists in
  * must-use plugin wp-staging-optimizer.php so we've created this one that does the same job.
  *
  * @return string

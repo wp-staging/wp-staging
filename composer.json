@@ -1,0 +1,7 @@
+{
+    "name": "wp-staging/pro",
+    "description": "WordPress plugin for creating staging sites",
+    "require-dev": {
+        "codeception/codeception": "^2.5"
+    }
+}
