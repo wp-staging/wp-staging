@@ -3,6 +3,8 @@
 namespace WPStaging\Backend\Modules\Jobs\Multisite;
 
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
+use WPStaging\Forms\Elements\File;
+use WPStaging\Service\Utils\FileSystem;
 // No Direct Access
 use WPStaging\Utils\Logger;
 
@@ -30,6 +32,11 @@ class Files extends JobExecutable
      * @var string
      */
     private $destination;
+
+    /**
+     * @var object
+     */
+    private $fileSystem;
 
     /**
      * Initialization
@@ -167,8 +174,7 @@ class Files extends JobExecutable
 
         // Directory is excluded
         if ($this->isDirectoryExcluded($directory)) {
-            $this->debugLog("Skipping directory by rule: {$file}",
-                Logger::TYPE_INFO);
+            $this->debugLog("Skipping directory by rule: {$file}",Logger::TYPE_INFO);
             return false;
         }
 
@@ -264,8 +270,7 @@ class Files extends JobExecutable
         $destinationPath      = $this->destination.$relativePath;
         $destinationDirectory = dirname($destinationPath);
 
-        if (!is_dir($destinationDirectory) && !@mkdir($destinationDirectory,
-                wpstg_get_permissions_for_directory(), true)) {
+        if (!is_dir($destinationDirectory) && !@mkdir($destinationDirectory, wpstg_get_permissions_for_directory(), true)) {
             $this->log("Files: Can not create directory {$destinationDirectory}",
                 Logger::TYPE_ERROR);
             return false;
@@ -338,7 +343,7 @@ class Files extends JobExecutable
     /**
      * Check if certain file is excluded from copying process
      *
-     * @param string $file filename including ending without full path
+     * @param string $file full path + filename
      * @return boolean
      */
     private function isFileExcluded($file)
@@ -346,26 +351,16 @@ class Files extends JobExecutable
 
         $excludedFiles = (array) $this->options->excludedFiles;
 
-        $basenameFile = basename($file);
-
         // Remove .htaccess and web.config from 'excludedFiles' if staging site is copied to a subdomain
         if (false === $this->isIdenticalHostname()) {
             $excludedFiles = \array_diff($excludedFiles,
                 array("web.config", ".htaccess"));
         }
 
-
-        // Check for file name
-        if (in_array($basenameFile, $excludedFiles)) {
+        $fileSystem = new FileSystem();
+        if ($fileSystem->isFilenameExcluded( $file, $excludedFiles  )){
             return true;
         }
-
-        // Check for wildcard patterns like *.log or *-log* 
-            foreach ($excludedFiles as $pattern) {
-                if (wpstg_fnmatch($pattern, $basenameFile)) {
-                    return true;
-                }
-            }
 
         // Do not copy wp-config.php if the clone gets updated. This is for security purposes,
         // because if the updating process fails, the staging site would not be accessable any longer
@@ -373,7 +368,6 @@ class Files extends JobExecutable
             && stripos(strrev($file), strrev("wp-config.php")) === 0) {
             return true;
         }
-
 
         return false;
     }
@@ -440,8 +434,7 @@ class Files extends JobExecutable
     private function isDirectoryExcluded($directory)
     {
         // Make sure that wp-staging-pro directory / plugin is never excluded
-        if (false !== strpos($directory, 'wp-staging') || false !== strpos($directory,
-                'wp-staging-pro')) {
+        if (false !== strpos($directory, 'wp-staging') || false !== strpos($directory,'wp-staging-pro')) {
             return false;
         }
 

@@ -3,10 +3,10 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 // No Direct Access
-use WPStaging\WPStaging;
+use WPStaging\Service\Utils\FileSystem;
 use WPStaging\Utils\Logger;
 
-if( !defined( "WPINC" ) ) {
+if (!defined("WPINC")) {
     die;
 }
 
@@ -14,7 +14,8 @@ if( !defined( "WPINC" ) ) {
  * Class Files
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Files extends JobExecutable {
+class Files extends JobExecutable
+{
 
     /**
      * @var \SplFileObject
@@ -34,23 +35,24 @@ class Files extends JobExecutable {
     /**
      * Initialization
      */
-    public function initialize() {
+    public function initialize()
+    {
 
         $this->destination = $this->options->destinationDir;
 
         $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
-        if( is_file( $filePath ) ) {
-            $this->file = new \SplFileObject( $filePath, 'r' );
+        if (is_file($filePath)) {
+            $this->file = new \SplFileObject($filePath, 'r');
         }
 
         // Informational logs
-        if( 0 == $this->options->currentStep ) {
-            $this->log( "Copying files..." );
+        if (0 == $this->options->currentStep) {
+            $this->log("Copying files...");
         }
 
         $this->settings->batchSize = $this->settings->batchSize * 1000000;
-        $this->maxFilesPerRun      = $this->settings->fileLimit;
+        $this->maxFilesPerRun = $this->settings->fileLimit;
         //$this->maxFilesPerRun = ($this->settings->cpuLoad === 'low') ? 50 : 1;
     }
 
@@ -58,8 +60,9 @@ class Files extends JobExecutable {
      * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
      * @return void
      */
-    protected function calculateTotalSteps() {
-        $this->options->totalSteps = ceil( $this->options->totalFiles / $this->maxFilesPerRun );
+    protected function calculateTotalSteps()
+    {
+        $this->options->totalSteps = ceil($this->options->totalFiles / $this->maxFilesPerRun);
     }
 
     /**
@@ -67,17 +70,18 @@ class Files extends JobExecutable {
      * Returns false when over threshold limits are hit or when the job is done, true otherwise
      * @return bool
      */
-    protected function execute() {
+    protected function execute()
+    {
         // Finished
-        if( $this->isFinished() ) {
-            $this->log( "Copying files finished" );
-            $this->prepareResponse( true, false );
+        if ($this->isFinished()) {
+            $this->log("Copying files finished");
+            $this->prepareResponse(true, false);
             return false;
         }
 
         // Get files and copy'em
-        if( !$this->getFilesAndCopy() ) {
-            $this->prepareResponse( false, false );
+        if (!$this->getFilesAndCopy()) {
+            $this->prepareResponse(false, false);
             return false;
         }
 
@@ -92,59 +96,46 @@ class Files extends JobExecutable {
      * Get files and copy
      * @return bool
      */
-    private function getFilesAndCopy() {
+    private function getFilesAndCopy()
+    {
         // Over limits threshold
-        if( $this->isOverThreshold() ) {
+        if ($this->isOverThreshold()) {
             // Prepare response and save current progress
-            $this->prepareResponse( false, false );
+            $this->prepareResponse(false, false);
             $this->saveOptions();
             return false;
         }
 
         // Go to last copied line and than to next one
         //if ($this->options->copiedFiles != 0) {
-        if( isset( $this->options->copiedFiles ) && $this->options->copiedFiles != 0 ) {
-            $this->file->seek( $this->options->copiedFiles - 1 );
+        if (isset($this->options->copiedFiles) && $this->options->copiedFiles != 0) {
+            $this->file->seek($this->options->copiedFiles - 1);
         }
 
-        $this->file->setFlags( \SplFileObject::SKIP_EMPTY | \SplFileObject::READ_AHEAD );
+        $this->file->setFlags(\SplFileObject::SKIP_EMPTY | \SplFileObject::READ_AHEAD);
 
-        // Start time
-        //$start = microtime( true );
-        // Loop x files at a time
-        //$this->maxFilesPerRun = 300;
-        for ( $i = 0; $i < $this->maxFilesPerRun; $i++ ) {
+        for ($i = 0; $i < $this->maxFilesPerRun; $i++) {
 
-            // Reached timeout
-//            if( ( $timeout = apply_filters( 'wpstg_job_timeout', 10 ) ) ) {
-//                if( ( \microtime( true ) - $start ) > $timeout ) {
-//                    // Prepare response and save current progress
-//                    $this->prepareResponse( false, true );
-//                    $this->saveOptions();
-//                    return false;
-//                }
-//            }
             // Increment copied files
             // Do this anytime to make sure to not stuck in the same step / files
             $this->options->copiedFiles++;
 
             // End of file
-            if( $this->file->eof() ) {
+            if ($this->file->eof()) {
                 break;
             }
 
             $file = str_replace(PHP_EOL, null, $this->file->fgets());
 
 
-            $this->copyFile( $file );
+            $this->copyFile($file);
         }
-
 
 
         $totalFiles = $this->options->copiedFiles;
         // Log this only every 50 entries to keep the log small and to not block the rendering browser
-        if( $this->options->copiedFiles % 50 == 0 ) {
-            $this->log( "Total {$totalFiles} files processed" );
+        if ($this->options->copiedFiles % 50 == 0) {
+            $this->log("Total {$totalFiles} files processed");
         }
 
         return true;
@@ -154,87 +145,88 @@ class Files extends JobExecutable {
      * Checks Whether There is Any Job to Execute or Not
      * @return bool
      */
-    private function isFinished() {
+    private function isFinished()
+    {
         return
             !$this->isRunning() ||
             $this->options->currentStep > $this->options->totalSteps ||
-            $this->options->copiedFiles >= $this->options->totalFiles
-        ;
+            $this->options->copiedFiles >= $this->options->totalFiles;
     }
 
     /**
      * @param string $file
      * @return bool
      */
-    private function copyFile( $file ) {
+    private function copyFile($file)
+    {
 
-        $file = trim( \WPStaging\WPStaging::getWPpath() . $file );
+        $file = trim(\WPStaging\WPStaging::getWPpath() . $file);
 
         $file = wpstg_replace_windows_directory_separator($file);
 
-        $directory = dirname( $file );
+        $directory = dirname($file);
 
         // Directory is excluded
-        if( $this->isDirectoryExcluded( $directory ) ) {
-            $this->debugLog( "Skipping directory by rule: {$file}", Logger::TYPE_INFO );
+        if ($this->isDirectoryExcluded($directory)) {
+            $this->debugLog("Skipping directory by rule: {$file}", Logger::TYPE_INFO);
             return false;
         }
 
         // File is excluded
-        if( $this->isFileExcluded( $file ) ) {
-            $this->debugLog( "Skipping file by rule: {$file}", Logger::TYPE_INFO );
+        if ($this->isFileExcluded($file)) {
+            $this->debugLog("Skipping file by rule: {$file}", Logger::TYPE_INFO);
             return false;
         }
         // Path + File is excluded
-        if( $this->isFileExcludedFullPath( $file ) ) {
-            $this->debugLog( "Skipping file by rule: {$file}", Logger::TYPE_INFO );
+        if ($this->isFileExcludedFullPath($file)) {
+            $this->debugLog("Skipping file by rule: {$file}", Logger::TYPE_INFO);
             return false;
         }
 
         // Invalid file, skipping it as if succeeded
-        if( !is_file( $file ) ) {
-            $this->log( "File doesn't exist {$file}", Logger::TYPE_WARNING );
+        if (!is_file($file)) {
+            $this->log("File doesn't exist {$file}", Logger::TYPE_WARNING);
             return true;
         }
         // Invalid file, skipping it as if succeeded
-        if( !is_readable( $file ) ) {
-            $this->log( "Can't read file {$file}", Logger::TYPE_WARNING );
+        if (!is_readable($file)) {
+            $this->log("Can't read file {$file}", Logger::TYPE_WARNING);
             return true;
         }
 
 
         // Get file size
-        $fileSize = filesize( $file );
+        $fileSize = filesize($file);
 
         // File is over maximum allowed file size (8MB)
-        if( $fileSize >= $this->settings->maxFileSize * 1000000 ) {
-            $this->log( "Skipping big file: {$file}", Logger::TYPE_INFO );
+        if ($fileSize >= $this->settings->maxFileSize * 1000000) {
+            $this->log("Skipping big file: {$file}", Logger::TYPE_INFO);
             return false;
         }
 
         // Failed to get destination
-        if( false === ($destination = $this->getDestination( $file )) ) {
-            $this->log( "Can't get the destination of {$file}", Logger::TYPE_WARNING );
+        if (false === ($destination = $this->getDestination($file))) {
+            $this->log("Can't get the destination of {$file}", Logger::TYPE_WARNING);
             return false;
         }
 
         // File is over batch size
-        if( $fileSize >= $this->settings->batchSize ) {
-            $this->log( "Trying to copy big file: {$file} -> {$destination}", Logger::TYPE_INFO );
-            return $this->copyBig( $file, $destination, $this->settings->batchSize );
+        if ($fileSize >= $this->settings->batchSize) {
+            $this->log("Trying to copy big file: {$file} -> {$destination}", Logger::TYPE_INFO);
+            return $this->copyBig($file, $destination, $this->settings->batchSize);
         }
 
         // Attempt to copy
-        if( !@copy( $file, $destination ) ) {
+        if (!@copy($file, $destination)) {
             $errors = error_get_last();
-            $this->log( "Files: Failed to copy file to destination. Error: {$errors['message']} {$file} -> {$destination}", Logger::TYPE_ERROR );
+            $this->log("Files: Failed to copy file to destination. Error: {$errors['message']} {$file} -> {$destination}", Logger::TYPE_ERROR);
             return false;
         }
 
         // Set file permissions
-        @chmod( $destination, wpstg_get_permissions_for_file() );
+        @chmod($destination, wpstg_get_permissions_for_file());
 
-        $this->setDirPermissions( $destination );
+        $this->setDirPermissions($destination);
 
         return true;
     }
@@ -245,28 +237,29 @@ class Files extends JobExecutable {
      *
      * @return string
      */
-    protected function getWpContentPath( $file ) {
+    protected function getWpContentPath($file)
+    {
         // Get upload directory information
         $uploads = wp_upload_dir();
 
         // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
-        $uploadsAbsPath = trailingslashit( $uploads['basedir'] );
+        $uploadsAbsPath = trailingslashit($uploads['basedir']);
 
         // Get relative path to the uploads folder, e.g assets
         $uploadsRelPath = wpstg_get_rel_upload_dir();
 
         // Get absolute path to wp-content directory e.g srv/www/htdocs/sitename/wp-content
-        $wpContentDir = trailingslashit( WP_CONTENT_DIR );
+        $wpContentDir = trailingslashit(WP_CONTENT_DIR);
 
         // Check if there is a custom uploads directory, then do a search $ replace. Do this only if custom upload path is not identical to WP_CONTENT_DIR
-        if( $uploadsAbsPath != $wpContentDir ) {
+        if ($uploadsAbsPath != $wpContentDir) {
             //$file = str_replace( $uploadsAbsPath, ABSPATH . 'wp-content/uploads/', $file, $count );
-            $file = str_replace( $uploadsAbsPath, ABSPATH . $uploadsRelPath, $file, $count );
+            $file = str_replace($uploadsAbsPath, ABSPATH . $uploadsRelPath, $file, $count);
         }
         // If there is no custom upload directory do a search & replace of the custom wp-content directory
-        if( empty( $count ) || $count === 0 ) {
+        if (empty($count) || $count === 0) {
             //$file = str_replace( $wpContentDir, ABSPATH . 'wp-content/', $file );
-            $file = str_replace( $wpContentDir, ABSPATH . 'wp-content/', $file );
+            $file = str_replace($wpContentDir, ABSPATH . 'wp-content/', $file);
         }
 
 
@@ -278,10 +271,11 @@ class Files extends JobExecutable {
      * @param type $file
      * @return boolean
      */
-    private function setDirPermissions( $file ) {
-        $dir = dirname( $file );
-        if( is_dir( $dir ) ) {
-            @chmod( $dir, wpstg_get_permissions_for_directory() );
+    private function setDirPermissions($file)
+    {
+        $dir = dirname($file);
+        if (is_dir($dir)) {
+            @chmod($dir, wpstg_get_permissions_for_directory());
         }
         return false;
     }
@@ -292,20 +286,21 @@ class Files extends JobExecutable {
      * @param string $file
      * @return bool|string
      */
-    private function getDestination( $file ) {
+    private function getDestination($file)
+    {
         //$file                 = $this->getMultisiteUploadFolder( $file );
         $file = wpstg_replace_windows_directory_separator($file);
         $rootPath = wpstg_replace_windows_directory_separator(\WPStaging\WPStaging::getWPpath());
-        $relativePath         = str_replace( $rootPath, null, $file );
-        $destinationPath      = $this->destination . $relativePath;
-        $destinationDirectory = dirname( $destinationPath );
+        $relativePath = str_replace($rootPath, null, $file);
+        $destinationPath = $this->destination . $relativePath;
+        $destinationDirectory = dirname($destinationPath);
 
-        if( !is_dir( $destinationDirectory ) && !@mkdir( $destinationDirectory, wpstg_get_permissions_for_directory(), true ) ) {
-            $this->log( "Files: Can not create directory {$destinationDirectory}", Logger::TYPE_ERROR );
+        if (!is_dir($destinationDirectory) && !@mkdir($destinationDirectory, wpstg_get_permissions_for_directory(), true)) {
+            $this->log("Files: Can not create directory {$destinationDirectory}", Logger::TYPE_ERROR);
             return false;
         }
 
-        return $this->sanitizeDirectorySeparator( $destinationPath );
+        return $this->sanitizeDirectorySeparator($destinationPath);
     }
 
     /**
@@ -315,105 +310,85 @@ class Files extends JobExecutable {
      * @param int $buffersize
      * @return boolean
      */
-    private function copyBig( $src, $dst, $buffersize ) {
-        $src  = fopen( $src, 'r' );
-        $dest = fopen( $dst, 'w' );
+    private function copyBig($src, $dst, $buffersize)
+    {
+        $src = fopen($src, 'r');
+        $dest = fopen($dst, 'w');
 
         // Try first method:
-        while ( !feof( $src ) ) {
-            if( false === fwrite( $dest, fread( $src, $buffersize ) ) ) {
+        while (!feof($src)) {
+            if (false === fwrite($dest, fread($src, $buffersize))) {
                 $error = true;
             }
         }
         // Try second method if first one failed
-        if( isset( $error ) && ($error === true) ) {
-            while ( !feof( $src ) ) {
-                if( false === stream_copy_to_stream( $src, $dest, 1024 ) ) {
-                    $this->log( "Can not copy file; {$src} -> {$dest}" );
-                    fclose( $src );
-                    fclose( $dest );
+        if (isset($error) && ($error === true)) {
+            while (!feof($src)) {
+                if (false === stream_copy_to_stream($src, $dest, 1024)) {
+                    $this->log("Can not copy file; {$src} -> {$dest}");
+                    fclose($src);
+                    fclose($dest);
                     return false;
                 }
             }
         }
         // Close any open handler
-        fclose( $src );
-        fclose( $dest );
+        fclose($src);
+        fclose($dest);
         return true;
     }
 
     /**
      * Check if certain file is excluded from copying process
      *
-     * @param string $file filename including ending without full path
+     * @param string $file full path + filename
      * @return boolean
      */
-    private function isFileExcluded( $file ) {
+    private function isFileExcluded($file)
+    {
 
-        $excludedFiles = ( array ) $this->options->excludedFiles;
+        $excludedFiles = (array) $this->options->excludedFiles;
 
-        $basenameFile = basename( $file );
-
-
-        // Remove .htaccess and web.config from array excludedFiles if staging site is copied to a subdomain
-        //if( $this->isCustomDirectory() ) {
-        if( false === $this->isIdenticalHostname() ) {
-            $excludedFiles = \array_diff( $excludedFiles, array("web.config", ".htaccess") );
+        // Remove .htaccess and web.config from 'excludedFiles' if staging site is copied to a subdomain
+        if (false === $this->isIdenticalHostname()) {
+            $excludedFiles = \array_diff($excludedFiles,
+                array("web.config", ".htaccess"));
         }
 
-
-        // If file name exists
-        if( in_array( $basenameFile, $excludedFiles ) ) {
+        $fileSystem = new FileSystem();
+        if ($fileSystem->isFilenameExcluded( $file, $excludedFiles  )){
             return true;
-        }
-
-        // Check for wildcards
-        foreach ($excludedFiles as $pattern) {
-            if (wpstg_fnmatch($pattern, $basenameFile)) {
-                return true;
-            }
         }
 
         // Do not copy wp-config.php if the clone gets updated. This is for security purposes,
         // because if the updating process fails, the staging site would not be accessable any longer
-        if( isset( $this->options->mainJob ) && $this->options->mainJob == "updating" && stripos( strrev( $file ), strrev( "wp-config.php" ) ) === 0 ) {
+        if (isset($this->options->mainJob) && $this->options->mainJob == "updating"
+            && stripos(strrev($file), strrev("wp-config.php")) === 0) {
             return true;
         }
 
-
         return false;
     }
-
-    /**
-     * Check if custom target directory is used
-     * @return boolean
-     */
-//    private function isCustomDirectory() {
-//
-//        if( empty( $this->options->cloneDir ) ) {
-//            return false;
-//        }
-//        return true;
-//    }
 
     /**
      * Check if production and staging hostname are identical
      * If they are not identical we assume website is cloned to a subdomain and not into a subfolder
      * @return boolean
      */
-    private function isIdenticalHostname() {
+    private function isIdenticalHostname()
+    {
         // hostname of production site without scheme
-        $siteurl            = get_site_url();
-        $url                = parse_url( $siteurl );
+        $siteurl = get_site_url();
+        $url = parse_url($siteurl);
         $productionHostname = $url['host'];
 
         // hostname of staging site without scheme
-        $cloneUrl       = empty($this->options->cloneHostname) ? $url : parse_url( $this->options->cloneHostname );
+        $cloneUrl = empty($this->options->cloneHostname) ? $url : parse_url($this->options->cloneHostname);
         $targetHostname = $cloneUrl['host'];
 
         // Check if target hostname beginns with the production hostname
         // Only compare the hostname without path
-        if( wpstg_starts_with( $productionHostname, $targetHostname ) ) {
+        if (wpstg_starts_with($productionHostname, $targetHostname)) {
             return true;
         }
         return false;
@@ -425,10 +400,11 @@ class Files extends JobExecutable {
      * @param string $file filename including ending + (part) path e.g wp-content/db.php
      * @return boolean
      */
-    private function isFileExcludedFullPath( $file ) {
+    private function isFileExcludedFullPath($file)
+    {
         // If path + file exists
-        foreach ( $this->options->excludedFilesFullPath as $excludedFile ) {
-            if( false !== strpos( $file, $excludedFile ) ) {
+        foreach ($this->options->excludedFilesFullPath as $excludedFile) {
+            if (false !== strpos($file, $excludedFile)) {
                 return true;
             }
         }
@@ -443,8 +419,9 @@ class Files extends JobExecutable {
      * @param string $path Path
      * @return string
      */
-    private function sanitizeDirectorySeparator( $path ) {
-        return preg_replace( '/[\\\\]+/', '/', $path );
+    private function sanitizeDirectorySeparator($path)
+    {
+        return preg_replace('/[\\\\]+/', '/', $path);
     }
 
     /**
@@ -452,17 +429,18 @@ class Files extends JobExecutable {
      * @param string $directory
      * @return bool
      */
-    private function isDirectoryExcluded( $directory ) {
+    private function isDirectoryExcluded($directory)
+    {
         // Make sure that wp-staging-pro directory / plugin is never excluded
-        if( false !== strpos( $directory, 'wp-staging' ) || false !== strpos( $directory, 'wp-staging-pro' ) ) {
+        if (false !== strpos($directory, 'wp-staging') || false !== strpos($directory, 'wp-staging-pro')) {
             return false;
         }
 
-        $directory = trailingslashit( $this->sanitizeDirectorySeparator( $directory ) );
+        $directory = trailingslashit($this->sanitizeDirectorySeparator($directory));
 
-        foreach ( $this->options->excludedDirectories as $excludedDirectory ) {
-            $excludedDirectory = trailingslashit( $this->sanitizeDirectorySeparator( $excludedDirectory ) );
-            if( strpos( $directory, $excludedDirectory ) === 0 && !$this->isExtraDirectory( $directory ) ) {
+        foreach ($this->options->excludedDirectories as $excludedDirectory) {
+            $excludedDirectory = trailingslashit($this->sanitizeDirectorySeparator($excludedDirectory));
+            if (strpos($directory, $excludedDirectory) === 0 && !$this->isExtraDirectory($directory)) {
                 return true;
             }
         }
@@ -475,11 +453,12 @@ class Files extends JobExecutable {
      * @param string $directory
      * @return boolean
      */
-    private function isExtraDirectory( $directory ) {
-        $directory = $this->sanitizeDirectorySeparator( $directory );
+    private function isExtraDirectory($directory)
+    {
+        $directory = $this->sanitizeDirectorySeparator($directory);
 
-        foreach ( $this->options->extraDirectories as $extraDirectory ) {
-            if( strpos( $directory, $this->sanitizeDirectorySeparator( $extraDirectory ) ) === 0 ) {
+        foreach ($this->options->extraDirectories as $extraDirectory) {
+            if (strpos($directory, $this->sanitizeDirectorySeparator($extraDirectory)) === 0) {
                 return true;
             }
         }

@@ -1,0 +1,27 @@
+{
+  "name": "wp-staging/pro",
+  "license": "proprietary",
+  "type": "project",
+  "authors": [
+    {
+      "name": "René Hermenau",
+      "email": "support@wp-staging.com",
+      "role": "Founder",
+      "homepage": "https://wp-staging.com"
+    },
+    {
+      "name": "Ilgıt Yıldırım",
+      "email": "ilgit.yildirim@triplebits.com",
+      "role": "Sr. Full-Stack Software Developer",
+      "homepage": "https://triplebits.com"
+    }
+  ],
+  "require": {
+    "psr/log": "^1.1"
+  },
+  "autoload": {
+    "psr-4": {
+      "WPStaging\\": ""
+    }
+  }
+}

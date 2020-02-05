@@ -204,16 +204,22 @@ class SearchReplace extends JobExecutable
     }
 
     /**
-     * Get destination Hostname depending on WP installed in sub dir or not
-     * Return host name without scheme
+     * Get destination hostname without scheme e.g example.com/staging or staging.example.com
+     *
+     * Conditions:
+     * - Main job is 'update'
+     * - WP installed in sub dir
+     * - Target hostname in advanced settings defined (Pro version only)
+     *
+     * @todo Complex conditions. Might need refactor
      * @return string
      */
     private function getDestinationHostname()
     {
 
-        // Staging site is updated so do not change hostname
+        // Update process: Neither 'push' nor 'clone'
         if ($this->options->mainJob === 'updating') {
-            // If target hostname is defined in advanced settings prefer its use (pro only)
+            // Defined and created in advanced settings with pro version
             if (!empty($this->options->cloneHostname)) {
                 return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
             } else {
@@ -221,17 +227,17 @@ class SearchReplace extends JobExecutable
             }
         }
 
-        // Target hostname defined in advanced settings (pro only)
+        // Clone process: Defined and created in advanced settings with pro version
         if (!empty($this->options->cloneHostname)) {
             return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
         }
 
-        // WP installed in sub directory under root
+        // Clone process: WP installed in sub directory under root
         if ($this->isSubDir()) {
             return trailingslashit($this->strings->getUrlWithoutScheme(get_home_url())) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName;
         }
 
-        // Path to root of main multisite without leading or trailing slash e.g.: wordpress
+        // Clone process: DefaultPath to root of main multisite without leading or trailing slash e.g.: wordpress
         $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
         return rtrim($this->strings->getUrlWithoutScheme(get_home_url()), '/\\') . $multisitePath . $this->options->cloneDirectoryName;
     }

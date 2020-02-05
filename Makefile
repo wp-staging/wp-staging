@@ -38,6 +38,8 @@ test_single:
 	php codecept.phar run --env single --steps
 test_multi:
 	php codecept.phar run --env multisite --steps
+test_unit:
+	php vendor/bin/codecept run unit
 test_acceptance:
 	#php codecept.phar run acceptance 001-cloneCest.php --env single --steps
 	#php codecept.phar run acceptance 002-pushCest.php --env single --steps
