@@ -3,7 +3,6 @@
 namespace WPStaging\Backend\Modules\Jobs\Multisite;
 
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
-use WPStaging\Forms\Elements\File;
 use WPStaging\Service\Utils\FileSystem;
 // No Direct Access
 use WPStaging\Utils\Logger;
