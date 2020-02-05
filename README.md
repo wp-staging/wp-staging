@@ -1,3 +1,5 @@
+![PHPUnit](https://github.com/WP-Staging/wp-staging/workflows/PHPUnit/badge.svg?branch=feat%2Fgithub-ci)
+
 ### Welcome to the WP Staging repository
 
 ## Note ##

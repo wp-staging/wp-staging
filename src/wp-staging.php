@@ -47,7 +47,7 @@ if (!defined('WPSTG_COMPATIBLE')) {
     define('WPSTG_COMPATIBLE', '5.3.2');
 }
 
-// Folder Path
+// Absolute path to plugin
 if (!defined('WPSTG_PLUGIN_DIR')) {
     define('WPSTG_PLUGIN_DIR', plugin_dir_path(__FILE__));
 }
@@ -117,6 +117,9 @@ $plugin_requirements = new Wpstg_Requirements_Check(array(
 ));
 
 if ($plugin_requirements->passes()) {
+
+    // TODO; remove previous auto-loader, use composer based instead!
+    require_once __DIR__ .'/vendor/autoload.php';
 
     $wpStaging = \WPStaging\WPStaging::getInstance();
 
