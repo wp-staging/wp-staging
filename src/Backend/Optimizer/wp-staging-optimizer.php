@@ -45,11 +45,6 @@ function wpstg_get_plugins_dir()
 function wpstg_is_enabled_optimizer()
 {
 
-    // Activate the Optimizer all the times.
-    // Until now we never had any issue with the Optimizer so keep the optimizer activated to make sure user does not disable it accidentally
-    // @todo remove this function in wp staging settings
-    return true;
-
     $status = ( object )get_option('wpstg_settings');
 
     if ($status && isset($status->optimizer) && $status->optimizer == 1) {
