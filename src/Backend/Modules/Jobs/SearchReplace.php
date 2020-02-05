@@ -175,7 +175,7 @@ class SearchReplace extends JobExecutable
 
     /**
      * Get source Hostname depending on wheather WP has been installed in sub dir or not
-     * @return type
+     * @return string
      */
     private function getSourceHostname()
     {
@@ -189,15 +189,21 @@ class SearchReplace extends JobExecutable
     }
 
     /**
-     * Get destination Hostname depending on WP installed in sub dir or not
+     * Get destination hostname without scheme e.g example.com/staging or staging.example.com
+     *
+     * Conditions:
+     * - Main job is 'update'
+     * - WP installed in sub dir
+     * - Target hostname in advanced settings defined (Pro version only)
+     *
+     * @todo Complex conditions. Might need refactor
      * @return string
      */
     private function getDestinationHostname()
     {
-
-        // Staging site is updated so do not change hostname
+        // Update process: Neither 'push' nor 'clone'
         if ($this->options->mainJob === 'updating') {
-            // If target hostname is defined in advanced settings prefer its use (pro only)
+            // Defined and created in advanced settings with pro version
             if (!empty($this->options->cloneHostname)) {
                 return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
             } else {
@@ -205,17 +211,17 @@ class SearchReplace extends JobExecutable
             }
         }
 
-        // Target hostname defined in advanced settings (pro only)
+        // Clone process: Defined and created in advanced settings with pro version
         if (!empty($this->options->cloneHostname)) {
             return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
         }
 
-        // WP installed in sub directory under root
+        // Clone process: WP installed in sub directory under root
         if ($this->isSubDir()) {
             return $this->strings->getUrlWithoutScheme(trailingslashit($this->options->destinationHostname) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName);
         }
 
-        // Default destination hostname
+        // Clone process: Default
         return $this->strings->getUrlWithoutScheme(trailingslashit($this->options->destinationHostname) . $this->options->cloneDirectoryName);
     }
 
