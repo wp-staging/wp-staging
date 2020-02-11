@@ -16,9 +16,6 @@
             <i class="wpstg-icon-issue"></i><?php echo __( "Report Issue", "wp-staging" ); ?>
         </button>
     </li>
-    <li>
-        <span id="wpstg-loader" style="display:none;"></span>
-    </li>
 </ul>
 
 <div id="wpstg-workflow"></div>

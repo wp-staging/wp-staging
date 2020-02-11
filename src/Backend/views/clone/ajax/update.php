@@ -30,4 +30,4 @@
     <div id="wpstg-error-details"></div>
 </div>
 
-<div id="wpstg-log-details"></div>
+<div class="wpstg-log-details"></div>

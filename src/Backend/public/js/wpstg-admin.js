@@ -1062,7 +1062,7 @@ var WPStaging = (function ($)
      * @returns void
      */
     var logscroll = function () {
-        var $div = cache.get("#wpstg-log-details");
+        var $div = cache.get(".wpstg-log-details");
         if ("undefined" !== typeof ($div[0])) {
             $div.scrollTop($div[0].scrollHeight);
         }
