@@ -367,11 +367,14 @@
     width: 500px;
 }
 
-#wpstg-home-link,
+
 #wpstg-try-again {
     display: none;
 }
 
+#wpstg-home-link {
+    float: right;
+}
 
 #wpstg-loader {
     content: url('../img/loading.gif');
