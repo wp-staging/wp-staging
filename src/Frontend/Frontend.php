@@ -17,12 +17,6 @@ class Frontend extends InjectionAware {
     private $settings;
 
     /**
-     *
-     * @var string
-     */
-    private $loginSlug;
-
-    /**
      * Frontend initialization.
      */
     public function initialize() {
@@ -30,7 +24,6 @@ class Frontend extends InjectionAware {
 
         $this->settings = json_decode( json_encode( get_option( "wpstg_settings", array() ) ) );
 
-        $this->loginSlug = isset( $this->settings->loginSlug ) ? $this->settings->loginSlug : '';
     }
 
     /**
@@ -67,7 +60,7 @@ class Frontend extends InjectionAware {
     public function checkPermissions() {
         $this->resetPermaLinks();
 
-        if( $this->disableLogin() ) {
+        if( $this->isLoginRequired() ) {
 
             $args = array(
                 'echo'           => true,
@@ -110,38 +103,34 @@ class Frontend extends InjectionAware {
      * Check if the page should be blocked
      * @return bool
      */
-    private function disableLogin()
+    private function isLoginRequired()
     {
-        // Is not staging site
+
+        if($this->isLoginPage() || is_admin()){
+            return false;
+        }
+
         if (!wpstg_is_stagingsite()) {
             return false;
         }
 
-        // Allow access for user role administrator in any case
+        // Allow access for administrator
         if (current_user_can('manage_options')) {
             return false;
         }
 
-        // Simple check for free version only
+        // Simple check (free version only)
         if (!defined('WPSTGPRO_VERSION')) {
-            return (
-                (!isset($this->settings->disableAdminLogin) || '1' !== $this->settings->disableAdminLogin) &&
-                (!current_user_can("manage_options") && !$this->isLoginPage() && !is_admin())
-            );
+            return (!isset($this->settings->disableAdminLogin) || '1' !== $this->settings->disableAdminLogin);
         }
 
-        // Allow access for special wp staging role "all"
-        if (!empty($this->settings->userRoles) &&
-            (in_array('all', $this->settings->userRoles) && !$this->isLoginPage() && !is_admin())
-        ) {
+        // Allow access for wp staging user role "all"
+        if (!empty($this->settings->userRoles) && in_array('all', $this->settings->userRoles)) {
             return false;
         }
 
-        // If user roles are not defined, disable login for all user except administrator roles
-        if (
-            (!isset($this->settings->userRoles) || !is_array($this->settings->userRoles)) &&
-            (!current_user_can('manage_options') && !$this->isLoginPage() && !is_admin())
-        ) {
+        // Allow access only for administratorss if no user roles are defined
+        if (!isset($this->settings->userRoles) || !is_array($this->settings->userRoles)) {
             return true;
         }
 
@@ -171,18 +160,14 @@ class Frontend extends InjectionAware {
      */
     private function isLoginPage() {
 
-        return (
-                in_array( $GLOBALS["pagenow"], array("wp-login.php") ) ||
-                in_array( $this->loginSlug, $_GET ) ||
-                array_key_exists( $this->loginSlug, $_GET )
-                );
+        return (in_array( $GLOBALS["pagenow"], array("wp-login.php") ));
     }
 
     /**
      * Reset permalink structure of the clone to default; index.php?p=123
      */
     private function resetPermaLinks() {
-        // Do nothing 
+        // Do nothing
         if( !$this->isStagingSite() || "true" === get_option( "wpstg_rmpermalinks_executed" ) ) {
             return;
         }
