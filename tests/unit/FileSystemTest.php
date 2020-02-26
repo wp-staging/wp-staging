@@ -38,30 +38,4 @@ class FileSystemTest extends \Codeception\Test\Unit
     {
         $this->assertEquals($this->fileSystem->replaceWindowsDirSeparator('\wp-content\uploads'), '/wp-content/uploads');
     }
-
-    public function testExcludedFiles()
-    {
-
-        $file1 = '/var/www/htdocs/domain.com/wp-content/uploads/data.logger.php';
-        $file2 = '/var/www/htdocs/domain.com/wp-content/uploads/datalogger.log';
-        $file3 = '/var/www/htdocs/domain.com/wp-content/uploads/logger.php';
-        $file4 = '/var/www/htdocs/domain.com/wp-content/uploads/.htaccess';
-        $file5 = '/var/www/htdocs/domain.com/wp-content/uploads/.git';
-        $file6 = '/var/www/htdocs/domain.com/wp-content/uploads/.log.test';
-
-        $excludedFiles = array(
-            '*.log',
-            '.log',
-            '.htaccess',
-            '.git',
-        );
-
-        $this->assertFalse($this->fileSystem->isFilenameExcluded($file1, $excludedFiles));
-        $this->assertTrue($this->fileSystem->isFilenameExcluded($file2, $excludedFiles));
-        $this->assertFalse($this->fileSystem->isFilenameExcluded($file3, $excludedFiles));
-        $this->assertTrue($this->fileSystem->isFilenameExcluded($file4, $excludedFiles));
-        $this->assertTrue($this->fileSystem->isFilenameExcluded($file5, $excludedFiles));
-        $this->assertFalse($this->fileSystem->isFilenameExcluded($file6, $excludedFiles));
-
-    }
 }

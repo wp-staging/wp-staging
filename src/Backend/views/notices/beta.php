@@ -1,3 +1,4 @@
+<!-- Not used any longer. So can be used for other purposes in the future //-->
 <div class="wpstg_beta_notice wpstg-error" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
     <p>
         <?php _e("WP Staging is well tested and we did a lot to catch every possible error but

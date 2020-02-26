@@ -13,12 +13,14 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . "Utils" . DIRECTORY_SEPARATOR . "Au
 use WPStaging\Backend\Administrator;
 use WPStaging\DTO\Settings;
 use WPStaging\Frontend\Frontend;
+use WPStaging\Service\Container\Container;
 use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
 use WPStaging\Utils\Loader;
 use WPStaging\Utils\Logger;
 use WPStaging\DI\InjectionAware;
 use WPStaging\Cron\Cron;
+use WPStaging\Service\PluginFactory;
 
 /**
  * Class WPStaging
@@ -318,6 +320,12 @@ final class WPStaging {
 
         $this->set( "settings", new Settings() );
 
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $plugin = PluginFactory::make(Plugin::class);
+        $plugin->init();
+        $this->set(Plugin::class, $plugin);
+
+        // Set Administrator
         if( is_admin() ) {
             new Administrator( $this );
         } else {
@@ -356,6 +364,15 @@ final class WPStaging {
      */
     public function get( $name ) {
         return (isset( $this->services[$name] )) ? $this->services[$name] : null;
+    }
+
+    /**
+     * @return Container
+     */
+    public static function getContainer()
+    {
+        /** @noinspection NullPointerExceptionInspection */
+        return self::$instance->get(Plugin::class)->getContainer();
     }
 
     /**

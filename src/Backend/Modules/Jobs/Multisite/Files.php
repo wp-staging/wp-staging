@@ -3,13 +3,8 @@
 namespace WPStaging\Backend\Modules\Jobs\Multisite;
 
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
-use WPStaging\Service\Utils\FileSystem;
-// No Direct Access
+use WPStaging\Manager\FileSystem\FileManager;
 use WPStaging\Utils\Logger;
-
-if (!defined("WPINC")) {
-    die;
-}
 
 /**
  * Class Files
@@ -356,8 +351,7 @@ class Files extends JobExecutable
                 array("web.config", ".htaccess"));
         }
 
-        $fileSystem = new FileSystem();
-        if ($fileSystem->isFilenameExcluded( $file, $excludedFiles  )){
+        if ((new FileManager)->isFilenameExcluded($file, $excludedFiles)) {
             return true;
         }
 

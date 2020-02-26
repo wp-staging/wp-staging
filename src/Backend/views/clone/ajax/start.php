@@ -39,50 +39,46 @@
     echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging' ), $url );
     ?>
     <br>
-    <?php //echo __('Open and access the staging site: ', 'wp-staging')?>
     <br>
-    <a href="<?php echo $url; ?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn button-primary">
-        Open staging site <span style="font-size: 10px;">(login with your admin credentials)</span>
+    <a href="" class="wpstg-link-btn wpstg-blue-primary" id="wpstg-home-link">
+        <?php echo __("BACK", "wp-staging")?>
     </a>
-    <!--<a href="" class="wpstg-link-btn button-primary" id="wpstg-remove-cloning">
-        <?php //echo __("Remove", "wp-staging")?>
-    </a>//-->
-    <a href="" class="wpstg-link-btn button-primary" id="wpstg-home-link">
-        <?php echo __("Start again", "wp-staging")?>
+    <a href="<?php echo $url; ?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn wpstg-blue-primary">
+        <?php _e('Open Staging Site', 'wp-staging') ?><span style="font-size: 10px;"><?php _e('(Login with your admin credentials)', 'wp-staging') ?></span>
     </a>
     <div id="wpstg-success-notice">
-        <h3 style="margin-top:0px;">
-            <?php _e("Important Notes:", "wp-staging")?>
+        <h3>
+            <?php _e("Please read this first:", "wp-staging")?>
         </h3>
         <ul>
             <li>
-                <strong>1. Search friendly permalinks on your <span style="font-style:italic;">staging site</span> have been disabled as default option for technical reasons. </strong>
+                <strong>1. Post name permalinks on your <span style="font-style:italic;">staging site</span> have been disabled for technical reasons. </strong>
                 <br>
-                Usually that's perfectly okay for a staging website. In 99% of all cases you do not need to activate permalinks.
+                Usually this will not affect your staging website. In 99% of all cases you do not need to activate permalinks.
                 <br>
                 <p>
-                    If Apache runs on your webserver there is a good chance that permalinks still work. Try to activate the permalinks from <br/>
+                    If Apache is the webserver there is a good chance that permalinks can be activated without further modifications. Try to activate them from <br/>
                     <br>
                     <strong>Staging Site > wp-admin > Settings > Permalinks</strong></a>
                     <br/><br/>
-                    If that does not work or you are using Nginx webserver there are modifications needed in the .htaccess (Apache) or *.conf (Nginx).
+                    If this does not work or Nginx webserver is used there might be some modifications needed in the files .htaccess (Apache) or *.conf (Nginx).
                 </p>
                 <p>
-                    <strong><a href="https://wp-staging.com/docs/activate-permalinks-staging-site/?utm_source=wpstg_admin&utm_medium=finish_screen&utm_campaign=tutorial" target="_blank">Read here</a> to see that modifications and learn how to enable permalinks on the staging site.</strong>
+                    <strong><a href="https://wp-staging.com/docs/activate-permalinks-staging-site/?utm_source=wpstg_admin&utm_medium=finish_screen&utm_campaign=tutorial" target="_blank">Read this tutorial</a> to learn how to enable permalinks on the staging site.</strong>
                 </p>
             </li>
             <li>
-                <strong>2. Verify that you are REALLY working on your staging site and NOT on your production site if you are uncertain! </strong>
+                <strong>2. Verify that you are REALLY working on your staging site and NOT on your production site if you are not 100% sure! </strong>
                 <br>
                 Your main and your staging site are both reachable under the same domain so
                 <br>
-                it´s easy to get confused.
+                this can be confusing.
                 <p>
-                    To assist you we changed the color of the admin bar:
+                    To make it more clear when you work on the staging site WP Staging changed the color of the admin bar:
                     <br><br>
                     <img src="<?php echo $this->url . "/img/admin_dashboard.png" ?>">
                     <br>
-                    On the fronpage the name also changed to <br>
+                    On the fronpage the site name also changed to <br>
                     <strong style="font-style:italic;">
                         "STAGING - <span class="wpstg-clone-name"><?php echo get_bloginfo("name")?></span>"
                     </strong>.
@@ -96,4 +92,4 @@
     <div id="wpstg-error-details"></div>
 </div>
 
-<div id="wpstg-log-details"></div>
+<div class="wpstg-log-details"></div>

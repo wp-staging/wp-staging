@@ -169,7 +169,7 @@ class updateCest
 	$I->click('//*[@id="wpstg-start-updating"]');
 	$I->acceptPopup();
 
-	$I->waitForText('The job finished!', 300, '#wpstg-log-details');
+	$I->waitForText('The job finished!', 300, '.wpstg-log-details');
 
 	// Verify updated staging site
 	$I->amOnPage('/staging');

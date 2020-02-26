@@ -245,11 +245,17 @@
     color: #eee;
 }
 
+.wpstg-box {
+    margin: 10px 0;
+    padding: 10px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color .2s ease-in-out;
+}
+
 .wpstg-clone {
-    border: 5px solid #ffffff;
-    margin-bottom: 5px;
-    padding: 5px 10px;
-    width: 400px;
+    margin-bottom: 1px;
+    padding: 10px 10px;
     position: relative;
     overflow: hidden;
     transition: border-color .2s ease-in-out;
@@ -367,7 +373,6 @@
     width: 500px;
 }
 
-
 #wpstg-try-again {
     display: none;
 }
@@ -376,12 +381,13 @@
     float: right;
 }
 
-#wpstg-loader {
+.wpstg-loader {
     content: url('../img/loading.gif');
-    margin-top:-5px;
+    margin-top:5px;
+    display: none;
 }
 
-#wpstg-loader.wpstg-finished {
+.wpstg-loader.wpstg-finished {
     display:block;
     content:"Finished";
     background-color:#00c89a;
@@ -392,19 +398,6 @@
     padding-bottom:2px;
     margin-top:0px;
     border-radius: 3px;
-}
-.wpstg-loader {
-    content: url('../img/loading.gif');
-    margin-top:-5px;
-}
-
-.wpstg-loader.wpstg-finished {
-    content:"Finished";
-    background-color:#00c89a;
-    color:white;
-    padding:2px;
-    margin-top:0px;
-    max-width:60px;
 }
 
 #wpstg-workflow {
@@ -542,6 +535,10 @@
     top: 2px;
 }
 
+.wpstg-db-table:hover{
+    background-color:#f0f8ff;
+}
+
 #wpstg-workflow #wpstg-start-cloning {
     display: inline-block;
     margin-left: 5px;
@@ -651,6 +648,7 @@
     padding:20px;
     border: 1px solid #fff;
     max-width: 600px;
+    margin-top:10px;
 }
 
 .wpstg-header{
@@ -667,7 +665,7 @@
     font-weight: bold;
 }
 
-#wpstg-log-details{
+.wpstg-log-details{
     height: 300px;
     overflow: scroll;
     max-width: 650px;
@@ -860,6 +858,10 @@
 }
 .wpstg-staging-info a {
     color:white;
+}
+
+.wpstg-staging-info li{
+    margin-bottom: 2px;
 }
 
 .wpstg-bold{
@@ -1104,3 +1106,113 @@
 .wpstg-pointer {
     cursor: pointer;
 }
+
+
+.wpstg--tab--header ul {
+    display: flex;
+}
+
+.wpstg--tab--header ul li {
+    margin-right: 1em;
+}
+
+.wpstg--tab--header ul li:last-child {
+    margin-right: 0;
+}
+
+.wpstg--tab--header a {
+    min-width: 150px;
+    text-align: center;
+    cursor: pointer;
+    display: inline-block;
+    padding: 1em 1.25em;
+    border-bottom: .5em solid transparent;
+    border: solid 1px;
+}
+
+.wpstg--tab--header a.wpstg--tab--active {
+    border-bottom: .5em solid #25A1F0;
+    color: #25A1F0;
+}
+
+.wpstg--tab--content {
+    display: none;
+}
+
+.wpstg--tab--active {
+    display: block;
+}
+
+.wpstg--text--strong,
+.wpstg--text--strong * {
+    font-weight: bold !important;
+}
+
+.wpstg--text--danger {
+    color: #a94442;
+}
+
+.wpstg--tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+    margin-left: 10px;
+}
+
+.wpstg--tooltip .wpstg--tooltiptext {
+    visibility: hidden;
+    width: 300px;
+    background-color: #ffffff;
+    color: #505050;
+    text-align: left;
+    padding: 20px;
+    border: 1px solid #e8e8e8;
+    border-radius: 3px;
+    position: absolute;
+    z-index: 1;
+    -webkit-box-shadow: -1px 1px 5px 0px rgba(0,0,0,0.75);
+    -moz-box-shadow: -1px 1px 5px 0px rgba(0,0,0,0.75);
+    box-shadow: -1px 1px 5px 0px rgba(0,0,0,0.75);
+}
+
+.wpstg--tooltip:hover .wpstg--tooltiptext {
+    visibility: visible;
+}
+
+.wpstg--tooltiptext-snapshots {
+    width: 120px;
+    top: 100%;
+    left: -150%;
+    margin-left: -60px; /* Use half of the width (120/2 = 60), to center the tooltip */
+    margin-top:10px;
+}
+/**
+Tooltip top arrow
+ */
+.wpstg--tooltip .wpstg--tooltiptext-snapshots::after {
+    content: " ";
+    position: absolute;
+    bottom: 100%;  /* At the top of the tooltip */
+    left: 50%;
+    margin-left: 25px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: transparent transparent white transparent;
+}
+
+.wpstg--snaphot-restore-table tr {
+    line-height: 12px;
+}
+
+.wpstg-float-left{
+    float: left;
+}
+
+.wpstg-beta-notice{
+    background-color: #b0e8b0;
+    border-radius: 3px;
+    padding: 7px;
+    margin-bottom: 20px;
+}
+
+
