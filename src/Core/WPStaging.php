@@ -64,7 +64,6 @@ final class WPStaging {
 
         $this->registerMain();
         $this->registerNamespaces();
-        $this->loadLanguages();
         $this->loadDependencies();
         $this->defineHooks();
         $this->initCron();
@@ -454,37 +453,6 @@ final class WPStaging {
         }
 
         return $delay;
-    }
-
-    /**
-     * Load language file
-     */
-    public function loadLanguages() {
-        $languagesDirectory = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . $this->slug . DIRECTORY_SEPARATOR . "languages" . DIRECTORY_SEPARATOR;
-
-        // Set filter for plugins languages directory
-        $languagesDirectory = apply_filters( "wpstg_languages_directory", $languagesDirectory );
-
-        // Traditional WP plugin locale filter
-        $locale = apply_filters( "plugin_locale", get_locale(), "wp-staging" );
-        $moFile = sprintf( '%1$s-%2$s.mo', "wp-staging", $locale );
-
-        // Setup paths to current locale file
-        $moFileLocal  = $languagesDirectory . $moFile;
-        $moFileGlobal = WP_LANG_DIR . DIRECTORY_SEPARATOR . "wp-staging" . DIRECTORY_SEPARATOR . $moFile;
-
-        // Global file (/wp-content/languages/wp-staging/wpstg)
-        if( file_exists( $moFileGlobal ) ) {
-            load_textdomain( "wp-staging", $moFileGlobal );
-        }
-        // Local file (/wp-content/plugins/wp-staging/languages/)
-        elseif( file_exists( $moFileLocal ) ) {
-            load_textdomain( "wp-staging", $moFileLocal );
-        }
-        // Default file
-        else {
-            load_plugin_textdomain( "wp-staging", false, $languagesDirectory );
-        }
     }
 
     /**
