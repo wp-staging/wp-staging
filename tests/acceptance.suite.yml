@@ -13,6 +13,7 @@ modules:
             browser: chrome
             window_size: 1024x1300
             capabilities:
+                acceptInsecureCerts: true
                 chromeOptions:
                     #args: ["--headless", "--disable-gpu"]
                     binary: "/usr/bin/google-chrome"
