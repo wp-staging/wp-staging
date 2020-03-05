@@ -1,19 +1,20 @@
 <?php
+
+/**
+ * This class is not PSR-3 compliant. Currently just added the basic functionality to make the "change" easier
+ * in the future. For now, there are just few things to make transition easy.
+ */
+
 namespace WPStaging\Utils;
 
-// No Direct Access
-if (!defined("WPINC"))
-{
-    die;
-}
-
-use WPStaging\WPStaging;
+use Psr\Log\LoggerInterface;
+use Psr\Log\LogLevel;
 
 /**
  * Class Logger
  * @package WPStaging\Utils
  */
-class Logger
+class Logger implements LoggerInterface
 {
     const TYPE_ERROR    = "ERROR";
 
@@ -24,18 +25,18 @@ class Logger
     const TYPE_WARNING  = "WARNING";
 
     const TYPE_INFO     = "INFO";
-    
+
     const TYPE_DEBUG     = "DEBUG";
 
     /**
      * Log directory (full path)
-     * @var string
+     * @var Strings
      */
     private $logDir;
 
     /**
      * Log file extension
-     * @var string
+     * @var Strings
      */
     private $logExtension   = "log";
 
@@ -47,14 +48,16 @@ class Logger
 
     /**
      * Forced filename for the log
-     * @var null|string
+     * @var null|Strings
      */
     private $fileName       = null;
 
     /**
      * Logger constructor.
-     * @param null|string $logDir
-     * @param null|string $logExtension
+     *
+     * @param null|Strings $logDir
+     * @param null|Strings $logExtension
+     *
      * @throws \Exception
      */
     public function __construct($logDir = null, $logExtension = null)
@@ -69,7 +72,7 @@ class Logger
         {
 
             $this->logDir = \WPStaging\WPStaging::getContentDir() . "logs" . DIRECTORY_SEPARATOR;
-            
+
         }
 
         // Set log extension
@@ -86,31 +89,33 @@ class Logger
     }
 
     /**
-     * @param string $message
-     * @param string $type
+     * @param Strings $level
+     * @param Strings $message
+     * @param array $context
+     *
+     * @return void
      */
-    public function log($message, $type = self::TYPE_ERROR)
+    public function log($level, $message, array $context = [])
     {
-        $this->add($message, $type);
+        $this->add($message, $level);
         $this->commit();
     }
 
     /**
-     * @param string $message
-     * @param string $type
+     * @param Strings $message
+     * @param Strings $type
      */
     public function add($message, $type = self::TYPE_ERROR)
-    {  
-  
+    {
         $this->messages[] = array(
             "type"      => $type,
             "date"      => date("Y/m/d H:i:s"),
             "message"   => $message
-                );
+        );
     }
 
     /**
-     * @return null|string
+     * @return null|Strings
      */
     public function getFileName()
     {
@@ -118,7 +123,7 @@ class Logger
     }
 
     /**
-     * @param string $fileName
+     * @param Strings $fileName
      */
     public function setFileName($fileName)
     {
@@ -151,8 +156,9 @@ class Logger
     }
 
     /**
-     * @param null|string $file
-     * @return string
+     * @param null|Strings $file
+     *
+     * @return Strings
      */
     public function read($file = null)
     {
@@ -160,8 +166,9 @@ class Logger
     }
 
     /**
-     * @param null|string $fileName
-     * @return string
+     * @param null|Strings $fileName
+     *
+     * @return Strings
      */
     public function getLogFile($fileName = null)
     {
@@ -176,7 +183,9 @@ class Logger
 
     /**
      * Delete a log file
-     * @param string $logFileName
+     *
+     * @param Strings $logFileName
+     *
      * @return bool
      * @throws \Exception
      */
@@ -193,7 +202,7 @@ class Logger
     }
 
     /**
-     * @return string
+     * @return Strings
      */
     public function getLogDir()
     {
@@ -201,13 +210,13 @@ class Logger
     }
 
     /**
-     * @return string
+     * @return Strings
      */
     public function getLogExtension()
     {
         return $this->logExtension;
     }
-    
+
     /**
      * Get last element of logging data array
      * @return string
@@ -222,13 +231,78 @@ class Logger
             return $this->messages[]=array_pop($this->messages);
         }
     }
-    
+
     /**
      * Get running time in seconds
      * @return int
      */
-    public function getRunningTime(){
+    public function getRunningTime()
+    {
         $str_time = $this->messages[0]["date"];
         return $str_time;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function emergency($message, array $context = [])
+    {
+        $this->add($message, LogLevel::EMERGENCY);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function alert($message, array $context = [])
+    {
+        $this->add($message, LogLevel::ALERT);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function critical($message, array $context = [])
+    {
+        $this->add($message, LogLevel::CRITICAL);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function error($message, array $context = [])
+    {
+        $this->add($message, LogLevel::ERROR);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function warning($message, array $context = [])
+    {
+        $this->add($message, LogLevel::WARNING);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function notice($message, array $context = [])
+    {
+        $this->add($message, LogLevel::NOTICE);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function info($message, array $context = [])
+    {
+        $this->add($message, LogLevel::INFO);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function debug($message, array $context = [])
+    {
+        $this->add($message, LogLevel::DEBUG);
     }
 }

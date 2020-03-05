@@ -13,12 +13,14 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . "Utils" . DIRECTORY_SEPARATOR . "Au
 use WPStaging\Backend\Administrator;
 use WPStaging\DTO\Settings;
 use WPStaging\Frontend\Frontend;
+use WPStaging\Service\Container\Container;
 use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
 use WPStaging\Utils\Loader;
 use WPStaging\Utils\Logger;
 use WPStaging\DI\InjectionAware;
 use WPStaging\Cron\Cron;
+use WPStaging\Service\PluginFactory;
 
 /**
  * Class WPStaging
@@ -62,7 +64,6 @@ final class WPStaging {
 
         $this->registerMain();
         $this->registerNamespaces();
-        $this->loadLanguages();
         $this->loadDependencies();
         $this->defineHooks();
         $this->initCron();
@@ -318,6 +319,12 @@ final class WPStaging {
 
         $this->set( "settings", new Settings() );
 
+        /** @noinspection PhpUnhandledExceptionInspection */
+        $plugin = PluginFactory::make(Plugin::class);
+        $plugin->init();
+        $this->set(Plugin::class, $plugin);
+
+        // Set Administrator
         if( is_admin() ) {
             new Administrator( $this );
         } else {
@@ -356,6 +363,15 @@ final class WPStaging {
      */
     public function get( $name ) {
         return (isset( $this->services[$name] )) ? $this->services[$name] : null;
+    }
+
+    /**
+     * @return Container
+     */
+    public static function getContainer()
+    {
+        /** @noinspection NullPointerExceptionInspection */
+        return self::$instance->get(Plugin::class)->getContainer();
     }
 
     /**
@@ -437,37 +453,6 @@ final class WPStaging {
         }
 
         return $delay;
-    }
-
-    /**
-     * Load language file
-     */
-    public function loadLanguages() {
-        $languagesDirectory = WP_PLUGIN_DIR . DIRECTORY_SEPARATOR . $this->slug . DIRECTORY_SEPARATOR . "languages" . DIRECTORY_SEPARATOR;
-
-        // Set filter for plugins languages directory
-        $languagesDirectory = apply_filters( "wpstg_languages_directory", $languagesDirectory );
-
-        // Traditional WP plugin locale filter
-        $locale = apply_filters( "plugin_locale", get_locale(), "wp-staging" );
-        $moFile = sprintf( '%1$s-%2$s.mo', "wp-staging", $locale );
-
-        // Setup paths to current locale file
-        $moFileLocal  = $languagesDirectory . $moFile;
-        $moFileGlobal = WP_LANG_DIR . DIRECTORY_SEPARATOR . "wp-staging" . DIRECTORY_SEPARATOR . $moFile;
-
-        // Global file (/wp-content/languages/wp-staging/wpstg)
-        if( file_exists( $moFileGlobal ) ) {
-            load_textdomain( "wp-staging", $moFileGlobal );
-        }
-        // Local file (/wp-content/plugins/wp-staging/languages/)
-        elseif( file_exists( $moFileLocal ) ) {
-            load_textdomain( "wp-staging", $moFileLocal );
-        }
-        // Default file
-        else {
-            load_plugin_textdomain( "wp-staging", false, $languagesDirectory );
-        }
     }
 
     /**

@@ -153,9 +153,9 @@ class Notices {
         }
 
         // Beta
-        if( false === get_option( "wpstg_beta" ) || "no" !== get_option( "wpstg_beta" ) ) {
+        /*if( false === get_option( "wpstg_beta" ) || "no" !== get_option( "wpstg_beta" ) ) {
             require_once "{$viewsNoticesPath}beta.php";
-        }
+        }*/
 
         // WP Staging Pro and Free can not be activated both
         if( false !== ( $deactivatedNoticeID = get_transient( "wp_staging_deactivated_notice_id" ) ) ) {

@@ -18,6 +18,20 @@ Run `make init` will create docker containers with NGINX, mariaDB, PHP5.3.
 It will download latest WordPress version and will create a single and a network activated WordPress site
 You can access them via `single.wp-staging.local` and `multi.wp-staging.local`  
 
+## Credentials 
+####WordPress admin user
+
+U: admin
+P: password
+
+####Database
+
+U: admin
+P: Password
+
+Mysql Root Password: 123456
+
+
 ## Executing Acceptance Tests
 
 ### Requirements
