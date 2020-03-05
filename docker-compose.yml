@@ -55,6 +55,7 @@ services:
       - php-fpm
     volumes:
       - ./var/www:/var/www
+      - ./docker/nginx/sites-enabled/.:/etc/nginx/sites-enabled
       - ./src/.:/var/www/single/wp-content/plugins/wp-staging
       - ./src/.:/var/www/multi/wp-content/plugins/wp-staging
     ports:
