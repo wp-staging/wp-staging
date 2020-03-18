@@ -272,6 +272,10 @@ class Container implements ContainerInterface
             return $this->getConstructorParamValue($options[$param->getName()]);
         }
 
+        if (isset($this->parameters[$param->getName()])) {
+            return $this->getConstructorParamValue($this->parameters[$param->getName()]);
+        }
+
 
         if ($param->isDefaultValueAvailable()) {
             return $param->getDefaultValue();

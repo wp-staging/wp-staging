@@ -23,6 +23,13 @@ class TemplateEngine implements TemplateEngineInterface
     /** @var string */
     private $domain;
 
+    /**
+     * TemplateEngine constructor.
+     *
+     * @param Directory $directory
+     * @param string $slug
+     * @param string $domain
+     */
     public function __construct(Directory $directory, $slug, $domain)
     {
         $this->slug = $slug;

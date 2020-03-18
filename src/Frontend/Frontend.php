@@ -9,7 +9,8 @@ use WPStaging\Frontend\loginForm;
  * Class Frontend
  * @package WPStaging\Frontend
  */
-class Frontend extends InjectionAware {
+class Frontend extends InjectionAware
+{
 
     /**
      * @var object
@@ -19,63 +20,67 @@ class Frontend extends InjectionAware {
     /**
      * Frontend initialization.
      */
-    public function initialize() {
+    public function initialize()
+    {
         $this->defineHooks();
 
-        $this->settings = json_decode( json_encode( get_option( "wpstg_settings", array() ) ) );
+        $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
 
     }
 
     /**
      * Define Hooks
      */
-    private function defineHooks() {
+    private function defineHooks()
+    {
         // Get loader
-        $loader = $this->di->get( "loader" );
-        $loader->addAction( "init", $this, "checkPermissions" );
-        $loader->addFilter( "wp_before_admin_bar_render", $this, "changeSiteName" );
+        $loader = $this->di->get("loader");
+        $loader->addAction("init", $this, "checkPermissions");
+        $loader->addFilter("wp_before_admin_bar_render", $this, "changeSiteName");
     }
 
     /**
      * Change admin_bar site_name
      *
-     * @global object $wp_admin_bar
      * @return void
+     * @global object $wp_admin_bar
      */
-    public function changeSiteName() {
+    public function changeSiteName()
+    {
         global $wp_admin_bar;
-        if( $this->isStagingSite() ) {
+        if ($this->isStagingSite()) {
             // Main Title
-            $wp_admin_bar->add_menu( array(
-                'id'    => 'site-name',
-                'title' => is_admin() ? ('STAGING - ' . get_bloginfo( 'name' ) ) : ( 'STAGING - ' . get_bloginfo( 'name' ) . ' Dashboard' ),
-                'href'  => is_admin() ? home_url( '/' ) : admin_url(),
-            ) );
+            $wp_admin_bar->add_menu(array(
+                'id' => 'site-name',
+                'title' => is_admin() ? ('STAGING - ' . get_bloginfo('name')) : ('STAGING - ' . get_bloginfo('name') . ' Dashboard'),
+                'href' => is_admin() ? home_url('/') : admin_url(),
+            ));
         }
     }
 
     /**
      * Check permissions for the page to decide whether or not to disable the page
      */
-    public function checkPermissions() {
+    public function checkPermissions()
+    {
         $this->resetPermaLinks();
 
-        if( $this->isLoginRequired() ) {
+        if ($this->isLoginRequired()) {
 
             $args = array(
-                'echo'           => true,
+                'echo' => true,
                 // Default 'redirect' value takes the user back to the request URI.
-                'redirect'       => ( is_ssl() ? 'https://' : 'http://' ) . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
-                'form_id'        => 'loginform',
-                'label_username' => __( 'Username or Email Address' ),
-                'label_password' => __( 'Password' ),
-                'label_remember' => __( 'Remember Me' ),
-                'label_log_in'   => __( 'Log In' ),
-                'id_username'    => 'user_login',
-                'id_password'    => 'user_pass',
-                'id_remember'    => 'rememberme',
-                'id_submit'      => 'wp-submit',
-                'remember'       => true,
+                'redirect' => (is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
+                'form_id' => 'loginform',
+                'label_username' => __('Username or Email Address'),
+                'label_password' => __('Password'),
+                'label_remember' => __('Remember Me'),
+                'label_log_in' => __('Log In'),
+                'id_username' => 'user_login',
+                'id_password' => 'user_pass',
+                'id_remember' => 'rememberme',
+                'id_submit' => 'wp-submit',
+                'remember' => true,
                 'value_username' => '',
                 // Set 'value_remember' to true to default the "Remember me" checkbox to checked.
                 'value_remember' => false,
@@ -86,7 +91,7 @@ class Frontend extends InjectionAware {
              * Lines below are not used at the moment but are fully functional
              */
             $login = new loginForm();
-            $login->renderForm( $args );
+            $login->renderForm($args);
             die();
         }
     }
@@ -95,7 +100,8 @@ class Frontend extends InjectionAware {
      * Get path to wp-login.php
      * @return string
      */
-    private function getLoginUrl() {
+    private function getLoginUrl()
+    {
         return get_site_url() . '/wp-login.php';
     }
 
@@ -106,7 +112,7 @@ class Frontend extends InjectionAware {
     private function isLoginRequired()
     {
 
-        if($this->isLoginPage() || is_admin()){
+        if ($this->isLoginPage() || is_admin()) {
             return false;
         }
 
@@ -150,42 +156,45 @@ class Frontend extends InjectionAware {
      * Check if it is a staging site
      * @return bool
      */
-    private function isStagingSite() {
-        return ("true" === get_option( "wpstg_is_staging_site" ));
+    private function isStagingSite()
+    {
+        return ("true" === get_option("wpstg_is_staging_site"));
     }
 
     /**
      * Check if it is the login page
      * @return bool
      */
-    private function isLoginPage() {
+    private function isLoginPage()
+    {
 
-        return (in_array( $GLOBALS["pagenow"], array("wp-login.php") ));
+        return (in_array($GLOBALS["pagenow"], array("wp-login.php")));
     }
 
     /**
      * Reset permalink structure of the clone to default; index.php?p=123
      */
-    private function resetPermaLinks() {
+    private function resetPermaLinks()
+    {
         // Do nothing
-        if( !$this->isStagingSite() || "true" === get_option( "wpstg_rmpermalinks_executed" ) ) {
+        if (!$this->isStagingSite() || "true" === get_option("wpstg_rmpermalinks_executed")) {
             return;
         }
 
         // Do nothing
-        if(defined('WPSTGPRO_VERSION')) {
+        if (defined('WPSTGPRO_VERSION')) {
             if (isset($this->settings->keepPermalinks) && $this->settings->keepPermalinks === "1") {
                 return;
             }
         }
 
-        // $wp_rewrite is not available before the init hook. So we need to use the global declaration
+        // $wp_rewrite is not available before the init hook. So we need to use the global variable
         global $wp_rewrite;
-        $wp_rewrite->set_permalink_structure( null );
+        $wp_rewrite->set_permalink_structure(null);
 
         flush_rewrite_rules();
 
-        update_option( "wpstg_rmpermalinks_executed", "true" );
+        update_option("wpstg_rmpermalinks_executed", "true");
     }
 
 }

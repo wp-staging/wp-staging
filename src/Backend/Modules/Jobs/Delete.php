@@ -451,15 +451,6 @@ class Delete extends Job {
         }
     }
 
-    /**
-     * @return bool
-     */
-//    public function isDirectoryDeletingFinished() {
-//        return (
-//                (false === $this->forceDeleteDirectories && (!isset( $_POST["deleteDir"] ) || '1' !== $_POST["deleteDir"])) ||
-//                !is_dir( $this->clone->path ) || ABSPATH === $this->job->nextDirectoryToDelete
-//                );
-//    }
 
     /**
      * 
@@ -490,9 +481,6 @@ class Delete extends Job {
             if( $clone["path"] == $this->clone->path ) {
                 unset( $existingClones[$name] );
             }
-//            if( !is_dir( $clone["path"] ) ) {
-//                unset( $existingClones[$name] );
-//            }
         }
 
         if( false === update_option( "wpstg_existing_clones_beta", $existingClones ) ) {

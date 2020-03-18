@@ -1215,4 +1215,9 @@ Tooltip top arrow
     margin-bottom: 20px;
 }
 
+#wpstg-snapshot-name {
+    font-size: 1.875em;
+    font-weight: 600;
+}
+
 

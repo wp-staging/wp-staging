@@ -88,8 +88,13 @@ abstract class AbstractPlugin implements PluginInterface
         return $this->container->getParameter('slug');
     }
 
+    public function getDomain()
+    {
+        return $this->container->getParameter('domain');
+    }
+
     /**
-     * WPStaging Version Number
+     * WP Staging Version Number
      * @return string|null
      */
     public function getVersion()
@@ -103,8 +108,8 @@ abstract class AbstractPlugin implements PluginInterface
         $pluginFile = $directory->getPluginDirectory() . $this->getSlug() . '.php';
         $data = get_plugin_data($pluginFile);
 
-        // TODO PHP7.0; return $data['Version'] ?? WPStaging::VERSION;
-        return isset($data['Version']) && $data['Version']? $data['Version'] : WPStaging::VERSION;
+        // TODO PHP7.0; return $data['Version'] ?? WPStaging::getVersion();
+        return isset($data['Version']) && $data['Version']? $data['Version'] : WPStaging::getVersion();
     }
 
     /**

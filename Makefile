@@ -1,4 +1,4 @@
-.PHONY: up stop down build install start restart init
+.PHONY: up stop down build install test start restart init
 
 include .env
 export $(shell sed 's/=.*//' .env)
@@ -17,6 +17,10 @@ build:
 
 install:
 	docker exec --user root -it $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "install"
+
+test:
+	php -d max_execution_time=60 ./src/vendor/bin/phpunit -c ./
+#	php -d max_execution_time=60 ./src/vendor/bin/phpunit -c ./ --debug
 
 
 
