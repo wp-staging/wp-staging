@@ -42,7 +42,7 @@ rm -f $PATH_SINGLE"wp-config.php"
 echo "Creating config..."
 su www-data -c "wp --path=$PATH_SINGLE core config --dbname=$MYSQL_DATABASE_SINGLE --dbuser=$MYSQL_USER --dbpass=$MYSQL_PASSWORD --dbhost=database <<PHP
 define('WP_DEBUG', true);
-define('WP_DEBUG_LOG', true);
+define('WP_DEBUG_LOG', \$_ENV['WP_DEBUG_LOG']);
 define('WP_DEBUG_DISPLAY', true);
 define('WP_MEMORY_LIMIT', '512M');
 PHP"

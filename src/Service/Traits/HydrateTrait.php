@@ -36,6 +36,10 @@ trait HydrateTrait
      */
     private function hydrateByMethod($method, $value)
     {
+        if (!method_exists($this, $method)) {
+            return;
+        }
+
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
         $method = new ReflectionMethod($this, $method);
 
@@ -53,7 +57,7 @@ trait HydrateTrait
 
         if ($value && !$value instanceof DateTime && $param->getClass() && 'DateTime' === $param->getClass()->getName()) {
             /** @noinspection PhpUnhandledExceptionInspection */
-            $value = new DateTime($value);
+            $value = new DateTime(str_replace(',', null, $value));
         }
 
         $method->invoke($this, $value);

@@ -18,4 +18,6 @@ else
   source /usr/local/bin/multi
 fi
 
+source /usr/local/bin/test
+
 cd /var/www || exit 1

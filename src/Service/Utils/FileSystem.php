@@ -25,75 +25,40 @@ class FileSystem
     }
 
     /**
-     * Checks if the passed string would match the given shell wildcard pattern.
-     * This function emulates [[fnmatch()]], which may be unavailable at certain environment, using PCRE.
-     * @param string $pattern the shell wildcard pattern.
-     * @param string $string the tested string.
-     * @param array $options options for matching. Valid options are:
-     *
-     * - caseSensitive: bool, whether pattern should be case sensitive. Defaults to `true`.
-     * - escape: bool, whether backslash escaping is enabled. Defaults to `true`.
-     * - filePath: bool, whether slashes in string only matches slashes in the given pattern. Defaults to `false`.
-     *
-     * @return bool whether the string matches pattern or not.
+     * @param string $dir
+     * @return bool True if directory is empty. False if empty or does not exist
      */
-    public function wpstg_fnmatch($pattern, $string, $options = array())
+    public function isEmptyDir($dir)
     {
-        if ($pattern === '*' && empty($options['filePath'])) {
-            return true;
+        if (!is_dir($dir)) {
+            return false;
         }
-        $replacements = array(
-            '\\\\\\\\' => '\\\\',
-            '\\\\\\*' => '[*]',
-            '\\\\\\?' => '[?]',
-            '\*' => '.*',
-            '\?' => '.',
-            '\[\!' => '[^',
-            '\[' => '[',
-            '\]' => ']',
-            '\-' => '-',
-        );
-        if (isset($options['escape']) && !$options['escape']) {
-            unset($replacements['\\\\\\\\']);
-            unset($replacements['\\\\\\*']);
-            unset($replacements['\\\\\\?']);
-        }
-        if (!empty($options['filePath'])) {
-            $replacements['\*'] = '[^/\\\\]*';
-            $replacements['\?'] = '[^/\\\\]';
-        }
-        $pattern = strtr(preg_quote($pattern, '#'), $replacements);
-        $pattern = '#^' . $pattern . '$#us';
-        if (isset($options['caseSensitive']) && !$options['caseSensitive']) {
-            $pattern .= 'i';
-        }
-        if (preg_match($pattern, $string) === 1){
-            return true;
-        }
-        return false;
+
+        return false === (new FilesystemIterator($dir))->valid();
     }
 
-
     /**
-     * @param string $file full path + filename
-     * @param array $excludedFiles List of filenames. Can be wildcard pattern like data.php, data*.php, *.php, .php
-     * @return boolean
+     * Delete files and folder. Deals with directories recursively
+     *
+     * @param string $fullPath
      */
-    public function isFilenameExcluded($file, $excludedFiles)
+    public function deleteFiles($fullPath)
     {
-        $filename = basename($file);
-
-        // Regular filenames
-        if (in_array($filename, $excludedFiles)) {
-            return true;
+        if (is_file($fullPath)) {
+            unlink($fullPath);
+            return;
         }
 
-        // Wildcards
-        foreach ($excludedFiles as $pattern) {
-            if ($this->wpstg_fnmatch($pattern, $filename)) {
-                return true;
-            }
+        if (!is_dir($fullPath) || $this->isEmptyDir($fullPath)) {
+            return;
         }
-        return false;
+
+        $di = new RecursiveDirectoryIterator($fullPath, FilesystemIterator::SKIP_DOTS);
+        $ri = new RecursiveIteratorIterator($di, RecursiveIteratorIterator::CHILD_FIRST);
+        foreach ($ri as $file) {
+            $this->deleteFiles($file);
+        }
+
+        rmdir($fullPath);
     }
 }

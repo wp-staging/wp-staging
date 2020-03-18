@@ -6,7 +6,7 @@
 namespace WPStaging\Service\Collection;
 
 use JsonSerializable;
-use WPStaging\Component\Pro\Job\Database\JobCreateSnapshot;
+use WPStaging\Pro\Component\Job\Database\JobCreateSnapshot;
 use WPStaging\Service\Entity\AbstractEntity;
 use WPStaging\Service\Entity\IdentifyableEntityInterface;
 

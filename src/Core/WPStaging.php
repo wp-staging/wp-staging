@@ -18,8 +18,6 @@ use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
 use WPStaging\Utils\Loader;
 use WPStaging\Utils\Logger;
-use WPStaging\DI\InjectionAware;
-use WPStaging\Cron\Cron;
 use WPStaging\Service\PluginFactory;
 
 /**
@@ -184,6 +182,22 @@ final class WPStaging {
         if(defined('WPSTGPRO_VERSION')) {
             wp_enqueue_script(
                 "wpstg-admin-pro-script", $this->url . "Backend/Pro/public/js/wpstg-admin-pro.js", array("jquery"), $this->getVersion(), false
+            );
+
+            // Sweet Alert
+            wp_enqueue_script(
+                'wpstg-admin-pro-sweetalerts',
+                $this->url . 'Backend/Pro/public/vendor/sweetalert2/sweetalert2.all.min.js',
+                [],
+                $this->getVersion(),
+                true
+            );
+
+            wp_enqueue_style(
+                'wpstg-admin-pro-sweetalerts',
+                $this->url . 'Backend/Pro/public/vendor/sweetalert2/wordpress-admin.min.css',
+                [],
+                $this->getVersion()
             );
         }
 

@@ -13,6 +13,9 @@ use WPStaging\Utils\Filesystem;
 if (!defined('ABSPATH'))
     exit;
 
+// TODO; remove previous auto-loader, use composer based instead!
+require_once __DIR__ . '/vendor/autoload.php';
+
 /**
  * Install Class
  *
@@ -47,7 +50,7 @@ class Install
     private function installOptimizer()
     {
 
-        // Install Optimizer 
+        // Install Optimizer
         $optimizer = new Optimizer();
         $optimizer->installOptimizer();
 

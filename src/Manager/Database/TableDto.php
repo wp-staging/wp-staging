@@ -32,17 +32,20 @@ class TableDto implements HydrateableInterface
     public function hydrate(array $data = [])
     {
         $this->setName($data['Name']);
-        $this->setRows((int) $data['Rows']);
-        $this->setAutoIncrement($data['Auto_increment']);
+
+        $this->setRows(isset($data['Rows'])? (int) $data['Rows'] : 0);
+        $this->setAutoIncrement(isset($data['Auto_increment'])? $data['Auto_increment'] : null);
         /** @noinspection PhpUnhandledExceptionInspection */
-        $this->setCreatedAt(new DateTime($data['Create_time']));
-        if ($data['Update_time']) {
+        $this->setCreatedAt(new DateTime(isset($data['Create_time'])? $data['Create_time'] : ''));
+        if (isset($data['Update_time']) && $data['Update_time']) {
             /** @noinspection PhpUnhandledExceptionInspection */
             $this->setUpdatedAt(new DateTime($data['Update_time']));
         }
 
-        $size = (int) $data['Data_length'] + (int) $data['Index_length'];
-        $this->setSize($size);
+        if (isset($data['Data_length'], $data['Index_length'])) {
+            $size = (int) $data['Data_length'] + (int) $data['Index_length'];
+            $this->setSize($size);
+        }
 
         return $this;
     }

@@ -12,14 +12,16 @@
  */
 
 use Psr\Log\LoggerInterface;
-use WPStaging\Component\Backend\Snapshot\AjaxConfirmDelete as SnapshotAjaxConfirmDelete;
-use WPStaging\Component\Backend\Snapshot\AjaxConfirmRestore as SnapshotAjaxConfirmRestore;
-use WPStaging\Component\Backend\Snapshot\AjaxCreate as SnapshotAjaxCreate;
-use WPStaging\Component\Backend\Snapshot\AjaxCreateProgress as SnapshotAjaxCreateProgress;
-use WPStaging\Component\Backend\Snapshot\AjaxDelete as SnapshotAjaxDelete;
-use WPStaging\Component\Backend\Snapshot\AjaxListing as SnapshotAjaxListing;
-use WPStaging\Component\Backend\Snapshot\AjaxRestore as SnapshotAjaxRestore;
-use WPStaging\Component\Backend\Snapshot\AjaxRestoreProgress as SnapshotAjaxRestoreProgress;
+use WPStaging\Component\Snapshot\AjaxConfirmDelete as SnapshotAjaxConfirmDelete;
+use WPStaging\Component\Snapshot\AjaxConfirmRestore as SnapshotAjaxConfirmRestore;
+use WPStaging\Component\Snapshot\AjaxCreate as SnapshotAjaxCreate;
+use WPStaging\Component\Snapshot\AjaxCreateProgress as SnapshotAjaxCreateProgress;
+use WPStaging\Component\Snapshot\AjaxDelete as SnapshotAjaxDelete;
+use WPStaging\Component\Snapshot\AjaxEdit as SnapshotAjaxEdit;
+use WPStaging\Component\Snapshot\AjaxExport as SnapshotAjaxExport;
+use WPStaging\Component\Snapshot\AjaxListing as SnapshotAjaxListing;
+use WPStaging\Component\Snapshot\AjaxRestore as SnapshotAjaxRestore;
+use WPStaging\Component\Snapshot\AjaxRestoreProgress as SnapshotAjaxRestoreProgress;
 use WPStaging\Service\TemplateEngine\TemplateEngine;
 use WPStaging\Utils\Logger;
 
@@ -32,10 +34,7 @@ return [
     // Services are not initialized, they are only initialized once when they are requested. If they are already
     // initialized when requested, the same instance would be used.
     'services' => [
-        TemplateEngine::class => [
-            'slug' => 'slug',
-            'domain' => 'domain',
-        ],
+        TemplateEngine::class,
     ],
     // Components are initialized upon plugin init / as soon as the Container is set; such as a class that sets;
     // Ajax Request, Adds a Menu, Form etc. needs to be initialized without being requested hence they go here!
@@ -48,6 +47,8 @@ return [
         SnapshotAjaxConfirmRestore::class,
         SnapshotAjaxRestoreProgress::class,
         SnapshotAjaxRestore::class,
+        SnapshotAjaxExport::class,
+        SnapshotAjaxEdit::class,
     ],
     // Map specific interfaces to specific classes.
     // If you map LoggerInterface::class to Logger::class, when you use LoggerInterface as a dependency,

@@ -18,6 +18,9 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
+// TODO; remove previous auto-loader, use composer based instead!
+require_once __DIR__ . '/vendor/autoload.php';
+
 class uninstall
 {
 

@@ -42,21 +42,29 @@ services:
       - ./src/.:/var/www/multi/wp-content/plugins/wp-staging
       - ./src/.:/var/www/custom/wp-content/plugins/wp-staging
       - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
+      - ./docker/php/uploads.ini:/usr/local/etc/php/php.ini
       - ./docker/install/install:/usr/local/bin/install:ro
       - ./docker/install/databases:/usr/local/bin/databases:ro
       - ./docker/install/single:/usr/local/bin/multi:ro
       - ./docker/install/multi:/usr/local/bin/single:ro
+      - ./docker/install/test:/usr/local/bin/test:ro
   nginx:
-    image: nginx
-    build: ./docker/nginx
+    image: triplebits/nginx:latest
     tty: true
     depends_on:
       - database
       - php-fpm
     volumes:
       - ./var/www:/var/www
+      - ./docker/nginx/sites-enabled/.:/etc/nginx/sites-enabled
       - ./src/.:/var/www/single/wp-content/plugins/wp-staging
       - ./src/.:/var/www/multi/wp-content/plugins/wp-staging
     ports:
       - ${DOCKER_GATEWAY_IP}:80:80
       - ${DOCKER_GATEWAY_IP}:443:443
+  composer:
+    image: triplebits/composer:latest
+    env_file:
+      - .env
+    volumes:
+      - ./src/.:/var/www
