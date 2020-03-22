@@ -153,6 +153,14 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.6.9 =
+* Fix: Can not login to staging site under certain circumstances
+* Fix: Use user selected language setting instead global site based one
+* Fix: Fatal Error: curl_version() not defined in SystemInfo.php
+* New: Refactored structure for easier maintenance
+* New: Core support for WP Staging snapshots
+* New: Implementing of UnitTests
+
 = 2.6.8 =
 * Fix: If server is windows it will result in missing files after cloning and can lead to fatal errors of the staging site
 
