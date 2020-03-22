@@ -242,15 +242,9 @@ Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-sta
 == Upgrade Notice ==
 * Install this version for supporting latest WordPress version
 
-* New: Support for WordPress 5.3.1
-* New: Refactoring code base and remove app folder
-* New: Add french language files
-* New: Add WP Staging logo to login form
-* New: Set 24 hours expiration date to process lock
-* New: Add link URL to staging site title
-* Fix: Fatal error: Invalid serialization data for DateTime object #91
-* Fix: Add missing string language location
-* Fix: Function fnmatch() not available in all systems
-* Fix: Warning in staging site after initial cloning in db row rewrite_rules
-* Fix: Wrong staging site is selected when delete function is executed and there are more then 10 staging sites
-* Fix: Fatal error: Cannot redeclare wpstgpro_overwrite_nonce() and wpstg_overwrite_nonce() after activating pro version on top of this free one
+* Fix: Can not login to staging site under certain circumstances
+* Fix: Use user selected language setting instead global site based one
+* Fix: Fatal Error: curl_version() not defined in SystemInfo.php
+* New: Refactored structure for easier maintenance
+* New: Core support for WP Staging snapshots
+* New: Implementing of UnitTests
