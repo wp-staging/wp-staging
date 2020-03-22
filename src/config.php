@@ -28,7 +28,7 @@ use WPStaging\Utils\Logger;
 return [
     // Params we can use all around the application with easy access and without duplication / WET; keep it DRY!
     'params' => [
-        'slug' => 'wp-staging-pro',
+        'slug' => 'wp-staging',
         'domain' => 'wp-staging',
     ],
     // Services are not initialized, they are only initialized once when they are requested. If they are already
