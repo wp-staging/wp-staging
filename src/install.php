@@ -2,9 +2,7 @@
 
 namespace WPStaging;
 
-use WPStaging\WPStaging;
 use WPStaging\Backend\Optimizer\Optimizer;
-use WPStaging\Cron\Cron;
 use WPStaging\Utils\IISWebConfig;
 use WPStaging\Utils\Htaccess;
 use WPStaging\Utils\Filesystem;
