@@ -1,9 +1,12 @@
 <?php
 
-use Codeception\Test\Unit;
+use PHPUnit\Framework\TestCase;
 use WPStaging\Manager\FileSystem\FileManager;
 
-class FileManagerTest extends Unit
+/**
+ * @small
+ */
+class FileManagerTest extends TestCase
 {
     /** @var FileManager */
     private $object;
