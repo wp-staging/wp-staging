@@ -7,7 +7,6 @@ namespace WPStaging\Service\Traits;
 use DateTime;
 use ReflectionClass;
 use ReflectionProperty;
-use WPStaging\Service\Adapter\DateTimeAdapter;
 
 trait ArrayableTrait
 {
@@ -30,7 +29,7 @@ trait ArrayableTrait
             $value = $prop->getValue($this);
 
             if ($value instanceof DateTime) {
-                $value = (new DateTimeAdapter)->transformToWpFormat($value);
+                $value = $value->format('U');
             }
 
             $data[$prop->getName()] = $value;

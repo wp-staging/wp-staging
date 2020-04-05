@@ -8,6 +8,7 @@ namespace WPStaging\Service\Traits;
 use DateTime;
 use ReflectionException;
 use ReflectionMethod;
+use WPStaging\Service\Adapter\DateTimeAdapter;
 use WPStaging\Service\Entity\EntityException;
 
 trait HydrateTrait
@@ -56,8 +57,7 @@ trait HydrateTrait
         $param = $params[0];
 
         if ($value && !$value instanceof DateTime && $param->getClass() && 'DateTime' === $param->getClass()->getName()) {
-            /** @noinspection PhpUnhandledExceptionInspection */
-            $value = new DateTime(str_replace(',', null, $value));
+            $value = (new DateTimeAdapter)->getDateTime($value);
         }
 
         $method->invoke($this, $value);
