@@ -1,6 +1,6 @@
 {
   "name": "wp-staging",
-  "version": "2.6.9",
+  "version": "2.6.9.1",
   "js": "assets/js/wpstg-admin.js",
   "jsmin": "assets/js/wpstg-admin.min.js",
   "css": "assets/css/wpstg-admin.css",
