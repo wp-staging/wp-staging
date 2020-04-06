@@ -542,7 +542,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Reset index.php to original file
+     * Reset index.php to WordPress default
      * This is needed if live site is located in subfolder
      * Check first if main wordpress is used in subfolder and index.php in parent directory
      * @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
@@ -551,42 +551,48 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     protected function step6()
     {
 
+        $step = "Preparing Data Step6: ";
+
         if (!$this->isSubDir()) {
-            $this->debugLog("Preparing Data Step6: WP installation is not in a subdirectory! All good, skipping this step");
+            $this->debugLog($step . ": WP installation is not in a subdirectory! All good, skipping this step");
             return true;
         }
+
+        $this->log($step . "WP installation is in a subdirectory");
 
         $path = $this->options->destinationDir . "index.php";
 
         if (false === ($content = file_get_contents($path))) {
-            $this->log("Preparing Data Step6: Failed to reset {$path} for sub directory; can't read contents", Logger::TYPE_ERROR);
+            $this->log($step . ": Failed to reset {$path}. Error: Can't read contents", Logger::TYPE_ERROR);
             return false;
         }
 
+        /*
+         * Before WordPress 5.4: require( dirname( __FILE__ ) . '/wp-blog-header.php' );
+         * Since WordPress 5.4:  require __DIR__ . '/wp-blog-header.php';
+         */
+        $pattern = "/require(.*)wp-blog-header.php(.*)/";
 
-        if (!preg_match("/(require(.*)wp-blog-header.php' \);)/", $content, $matches)) {
+        if (preg_match($pattern, $content, $matches)) {
+            $replace = "require __DIR__ . '/wp-blog-header.php'; // " . $matches[0] . " Changed by WP-Staging";
+
+            if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
+                $this->log($step . "Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
+                return false;
+            }
+        } else {
             $this->log(
-                "Preparing Data Step6: Failed to reset index.php for sub directory. Can not find line 'require(.*)wp-blog-header.php' in index.php", Logger::TYPE_ERROR
+                $step . "Failed to reset index.php for sub directory. Can not find code 'require(.*)wp-blog-header.php' or require __DIR__ . '/wp-blog-header.php'; in index.php", Logger::TYPE_ERROR
             );
-            return false;
-        }
-        $this->log("Preparing Data: WP installation is in a subdirectory. Progressing...");
-
-        $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);.*/";
-
-        $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0] . " Changed by WP-Staging";
-
-
-        if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
-            $this->log("Preparing Data: Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
             return false;
         }
 
         if (false === @wpstg_put_contents($path, $content)) {
-            $this->log("Preparing Data: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
+            $this->log($step . "Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
             return false;
         }
-        $this->Log("Preparing Data Step6: Finished successfully");
+
+        $this->Log($step . "Finished successfully");
         return true;
     }
 

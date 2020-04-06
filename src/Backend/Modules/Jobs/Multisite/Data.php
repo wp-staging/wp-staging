@@ -9,8 +9,6 @@ if (!defined("WPINC")) {
 
 use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
-use WPStaging\Utils\Helper;
-use WPStaging\Utils\Multisite;
 use WPStaging\Utils\Strings;
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
 
@@ -558,7 +556,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Reset index.php to original file
+     * Reset index.php to WordPress default
      * This is needed if live site is located in subfolder
      * Check first if main wordpress is used in subfolder and index.php in parent directory
      * @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
@@ -567,43 +565,48 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     protected function step6()
     {
 
+        $step = "Preparing Data Step6: ";
+
         if (!$this->isSubDir()) {
-            $this->debugLog("Preparing Data Step6: WP installation is not in a subdirectory! All good, skipping this step");
+            $this->debugLog($step . ": WP installation is not in a subdirectory! All good, skipping this step");
             return true;
         }
+
+        $this->log($step . "WP installation is in a subdirectory");
 
         $path = $this->options->destinationDir . "index.php";
 
         if (false === ($content = file_get_contents($path))) {
-            $this->log("Preparing Data Step6: Failed to reset {$path} for sub directory; can't read contents", Logger::TYPE_ERROR);
+            $this->log($step . ": Failed to reset {$path}. Error: Can't read contents", Logger::TYPE_ERROR);
             return false;
         }
 
+        /*
+         * Before WordPress 5.4: require( dirname( __FILE__ ) . '/wp-blog-header.php' );
+         * Since WordPress 5.4:  require __DIR__ . '/wp-blog-header.php';
+         */
+        $pattern = "/require(.*)wp-blog-header.php(.*)/";
 
-        if (!preg_match("/(require(.*)wp-blog-header.php' \);)/", $content, $matches)) {
+        if (preg_match($pattern, $content, $matches)) {
+            $replace = "require __DIR__ . '/wp-blog-header.php'; // " . $matches[0] . " Changed by WP-Staging";
+
+            if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
+                $this->log($step . "Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
+                return false;
+            }
+        } else {
             $this->log(
-                "Preparing Data Step6: Failed to reset index.php for sub directory; wp-blog-header.php is missing", Logger::TYPE_ERROR
+                $step . "Failed to reset index.php for sub directory. Can not find code 'require(.*)wp-blog-header.php' or require __DIR__ . '/wp-blog-header.php'; in index.php", Logger::TYPE_ERROR
             );
-            return false;
-        }
-        $this->log("Preparing Data: WP installation is in a subdirectory. Progressing...");
-
-        $pattern = "/require(.*) dirname(.*) __FILE__ (.*) \. '(.*)wp-blog-header.php'(.*);.*/";
-
-        $replace = "require( dirname( __FILE__ ) . '/wp-blog-header.php' ); // " . $matches[0];
-        //$replace .= " // Changed by WP-Staging";
-
-
-        if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
-            $this->log("Preparing Data: Failed to reset index.php for sub directory; replacement failed", Logger::TYPE_ERROR);
             return false;
         }
 
         if (false === @wpstg_put_contents($path, $content)) {
-            $this->log("Preparing Data: Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
+            $this->log($step . "Failed to reset index.php for sub directory; can't save contents", Logger::TYPE_ERROR);
             return false;
         }
-        $this->Log("Preparing Data Step6: Finished successfully");
+
+        $this->Log($step . "Finished successfully");
         return true;
     }
 
@@ -618,6 +621,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         // Skip - Table does not exist
         if (false === $this->isTable($this->prefix . 'options')) {
+            $this->log("Preparing Data Step7: Skipping Table {$this->prefix}'options' does not exist");
             return true;
         }
 
@@ -633,6 +637,12 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             )
         );
 
+        // All good
+        if (false === $result) {
+            $this->log("Failed to update wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_WARNING);
+            return true;
+        }
+
         $this->Log("Preparing Data Step7: Finished successfully");
         return true;
     }
@@ -647,14 +657,14 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step8: Updating permalink_structure in {$this->prefix}options {$this->db->last_error}");
 
         // Keep Permalinks
-        if (isset($this->settings->keepPermalinks) && $this->settings->keepPermalinks
-            === "1") {
+        if (isset($this->settings->keepPermalinks) && $this->settings->keepPermalinks === "1") {
             $this->log("Preparing Data Step8: Skipping");
             return true;
         }
 
         // Skip - Table does not exist
         if (false === $this->isTable($this->prefix . 'options')) {
+            $this->log("Preparing Data Step8: Skipping");
             return true;
         }
 
@@ -671,12 +681,12 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         );
 
         // All good
-        if ($result) {
-            $this->Log("Preparing Data Step8: Finished successfully");
+        if (false === $result) {
+            $this->log("Failed to update permalink_structure in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
             return true;
         }
 
-        $this->log("Failed to update permalink_structure in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_ERROR);
+        $this->Log("Preparing Data Step8: Finished successfully");
         return true;
     }
 
@@ -706,12 +716,12 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         );
 
         // All good
-        if ($result) {
-            $this->Log("Preparing Data Step9: Finished successfully");
+        if (false === $result) {
+            $this->log("Can not update staging site to noindex. Possible already done!", Logger::TYPE_WARNING);
             return true;
         }
 
-        $this->log("Can not update staging site to noindex. Possible already done!", Logger::TYPE_WARNING);
+        $this->Log("Preparing Data Step9: Finished successfully");
         return true;
     }
 
@@ -739,8 +749,8 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
             $pattern = "/define\s*\(\s*['\"]WP_HOME['\"]\s*,\s*(.*)\s*\);.*/";
 
-            $replace = "define('WP_HOME','" . $this->getStagingSiteUrl() . "'); // " . $matches[1];
-            //$replace .= " // Changed by WP-Staging";
+            $replace = "define('WP_HOME','" . $this->getStagingSiteUrl() . "'); // " . $matches[1] . " Changed by WP-Staging";
+            //$replace.= " // Changed by WP-Staging";
 
             if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
                 $this->log("Preparing Data: Failed to update WP_HOME", Logger::TYPE_ERROR);
@@ -754,7 +764,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             $this->log("Preparing Data Step10: Failed to update WP_HOME. Can't save contents", Logger::TYPE_ERROR);
             return false;
         }
-        $this->Log("Preparing Data Step 10: Finished successfully");
+        $this->Log("Preparing Data Step10: Finished successfully");
         return true;
     }
 
@@ -782,11 +792,11 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
             $pattern = "/define\s*\(\s*['\"]WP_SITEURL['\"]\s*,\s*(.*)\s*\);.*/";
 
-            $replace = "define('WP_SITEURL','" . $this->getStagingSiteUrl() . "'); // " . $matches[1];
-            //$replace .= " // Changed by WP-Staging";
+            $replace = "define('WP_SITEURL','" . $this->getStagingSiteUrl() . "'); // " . $matches[1] . " Changed by WP-Staging";
+            //$replace.= " // Changed by WP-Staging";
 
             if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
-                $this->log("Preparing Data Step11: Failed to update WP_SITEURL", Logger::TYPE_ERROR);
+                $this->log("Preparing Data Step11: Failed to update WP_SITEURL to " . $this->getStagingSiteUrl(), Logger::TYPE_ERROR);
                 return false;
             }
         } else {
@@ -795,10 +805,10 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
 
         if (false === @wpstg_put_contents($path, $content)) {
-            $this->log("Preparing Data Step11: Failed to update WP_SITEURL. Can't save contents", Logger::TYPE_ERROR);
+            $this->log("Preparing Data Step11: Failed to update WP_SITEURL to " . $this->getStagingSiteUrl() . " Can't save contents", Logger::TYPE_ERROR);
             return false;
         }
-        $this->Log("Preparing Data Step 11: Finished successfully");
+        $this->Log("Preparing Data Step11: Finished successfully");
         return true;
     }
 
