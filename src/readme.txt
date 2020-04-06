@@ -153,6 +153,12 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.7.1 =
+* HotFix: Prefix hotfix failed
+
+= 2.7.0 =
+* HotFix: Fix fatal error in step 6 after updating to WordPress 5.4
+
 = 2.6.9 =
 * Fix: Can not login to staging site under certain circumstances
 * Fix: Use user selected language setting instead global site based one
