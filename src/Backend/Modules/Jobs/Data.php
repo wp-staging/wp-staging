@@ -554,7 +554,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $step = "Preparing Data Step6: ";
 
         if (!$this->isSubDir()) {
-            $this->debugLog($step . ": WP installation is not in a subdirectory! All good, skipping this step");
+            $this->log($step . "WP installation is not in a subdirectory! Skipping this step");
             return true;
         }
 
