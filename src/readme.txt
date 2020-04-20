@@ -153,6 +153,10 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.7.2 =
+* New: Update for WP 5.4
+* Fix: Fatal error on WordPress 4.6 and older
+
 = 2.7.1 =
 * HotFix: Prefix hotfix failed
 
@@ -246,11 +250,6 @@ https://wp-staging.com
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
+* New: Update for WP 5.4
 * Install this version for supporting latest WordPress version
-
-* Fix: Can not login to staging site under certain circumstances
-* Fix: Use user selected language setting instead global site based one
-* Fix: Fatal Error: curl_version() not defined in SystemInfo.php
-* New: Refactored structure for easier maintenance
-* New: Core support for WP Staging snapshots
-* New: Implementing of UnitTests
+* Fix: Fatal error on WordPress 4.6 and older
