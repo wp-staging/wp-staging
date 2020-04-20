@@ -1,5 +1,5 @@
 ![PHPUnit](https://github.com/WP-Staging/wp-staging/workflows/PHPUnit/badge.svg)
-
+![Deploy to WordPress.org](https://github.com/WP-Staging/wp-staging/workflows/Deploy%20to%20WordPress.org/badge.svg?branch=master)
 ### Welcome to the WP Staging repository
 
 ## Note ##

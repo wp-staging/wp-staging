@@ -1,10 +1,9 @@
 name: Deploy to WordPress.org
 
-on: [push]
-#on:
-  #push:
-    #tags:
-    #- "*"
+on:
+  push:
+    tags:
+    - "*"
 jobs:
   tag:
     name: New release
