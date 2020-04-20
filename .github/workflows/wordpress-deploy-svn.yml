@@ -1,11 +1,12 @@
 name: Deploy to WordPress.org
+
 on:
   push:
     tags:
     - "*"
 jobs:
   tag:
-    name: New tag
+    name: New release
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
@@ -24,3 +25,6 @@ jobs:
         SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
         SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
         SLUG: wp-staging
+
+
+

@@ -14,3 +14,5 @@ tests/_support/_generated/AcceptanceTesterActions.php
 tests/_support/_generated/FunctionalTesterActions.php
 tests/_support/_generated/UnitTesterActions.php
 wp-staging-svn
+!wp-staging-svn/trunk/.gitattributes
+

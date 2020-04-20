@@ -154,7 +154,6 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.7.2 =
-* New: Update for WP 5.4
 * Fix: Fatal error on WordPress 4.6 and older
 
 = 2.7.1 =
@@ -250,6 +249,5 @@ https://wp-staging.com
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-* New: Update for WP 5.4
 * Install this version for supporting latest WordPress version
 * Fix: Fatal error on WordPress 4.6 and older

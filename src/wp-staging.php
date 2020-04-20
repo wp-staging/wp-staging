@@ -44,7 +44,7 @@ if (!defined('WPSTG_VERSION')) {
 
 // Compatible up to WordPress Version
 if (!defined('WPSTG_COMPATIBLE')) {
-    define('WPSTG_COMPATIBLE', '5.4');
+    define('WPSTG_COMPATIBLE', '5.3.3');
 }
 
 // Absolute path to plugin
