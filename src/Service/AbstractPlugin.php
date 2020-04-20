@@ -121,6 +121,18 @@ abstract class AbstractPlugin implements PluginInterface
         return $this->container;
     }
 
+    /**
+     * get_user_locale exists since WP 4.8 only
+     * @return string
+     */
+    private function get_user_locale(){
+        if (function_exists('get_user_locale')){
+            return get_user_locale();
+        }
+
+        return get_locale();
+    }
+
     private function loadLanguages()
     {
         /** @noinspection NullPointerExceptionInspection */
@@ -130,7 +142,7 @@ abstract class AbstractPlugin implements PluginInterface
         $languagesDirectory = apply_filters($this->getSlug() . '_languages_directory', $languagesDirectory);
 
         // Traditional WP plugin locale filter
-        $locale = apply_filters('plugin_locale', get_user_locale(), 'wp-staging');
+        $locale = apply_filters('plugin_locale', $this->get_user_locale(), 'wp-staging');
         $moFile = sprintf('%1$s-%2$s.mo', 'wp-staging', $locale);
 
         // Setup paths to current locale file
