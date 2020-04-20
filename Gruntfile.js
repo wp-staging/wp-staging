@@ -3,9 +3,9 @@
  *
  * What it does:
  *
- * - Copy source files into folder ../../releases/wp-staging-svn/tags/x.x.x/
- * - Copy source files into folder ../../releases/wp-staging-svn/trunk/
- * - Creates zip file ../../releases/wp-staging-svn/x.x.x/wp-staging-pro.zip ready to be uploaded into WordPress
+ * - Copy source files into folder ./wp-staging-svn/tags/x.x.x/
+ * - Copy source files into folder ./wp-staging-svn/trunk/
+ * - Creates zip file ./wp-staging-svn/x.x.x/wp-staging-pro.zip ready to be uploaded into WordPress
  * - String replace of {{version}} in source code files with version number
  *
  * Makes use of the grunt taskrunner based on npm
@@ -24,10 +24,10 @@ module.exports = function (grunt) {
         pkg: grunt.file.readJSON('package.json'),
         paths: {
             // Destination of tagged releases
-            releaseDirTags: '../../releases/wp-staging-svn/tags/<%= pkg.version %>/',
-            releaseDirTrunk: '../../releases/wp-staging-svn/trunk/',
+            releaseDirTags: './wp-staging-svn/tags/<%= pkg.version %>/',
+            releaseDirTrunk: './wp-staging-svn/trunk/',
             // Files in this folder will be compressed
-            zipDir: '../../releases/wp-staging-svn/<%= pkg.version %>/',
+            zipDir: './wp-staging-svn/<%= pkg.version %>/',
         },
         // minify js
         uglify: {
