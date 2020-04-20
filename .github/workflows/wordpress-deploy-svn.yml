@@ -8,15 +8,15 @@ jobs:
     name: New tag
     runs-on: ubuntu-latest
     steps:
+    - name: Install dependencies
+      working-directory: ./src
+      run: composer install --no-dev
+
     - uses: actions/checkout@master
     - name: Build
       run: |
         npm install
         grunt build
-
-    - name: Install dependencies
-      working-directory: ./src
-      run: composer install --no-dev
 
     - name: WordPress Plugin Deploy
       uses: WP-Staging/action-wordpress-plugin-deploy@master
