@@ -1,7 +1,5 @@
-# Create a new tag/release in github and this github action workflow will be executed to deploy a new release of WP Staging on wordpress.org
-
 name: Deploy to WordPress.org
-
+# Create a new tag/release in github and this github action workflow will be executed to deploy a new release of WP Staging on wordpress.org
 on:
   push:
     tags:
