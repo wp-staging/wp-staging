@@ -8,7 +8,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testing, backup, post, admin, administration, duplicate posts
 Requires at least: 3.6+
-Tested up to: 5.3
+Tested up to: 5.4
 Stable tag: {{version}}
 Requires PHP: 5.3
 
@@ -154,6 +154,7 @@ https://wp-staging.com
 == Changelog ==
 
 = 2.7.2 =
+* New: Compatible up to WordPress 5.4
 * Fix: Fatal error on WordPress 4.6 and older
 
 = 2.7.1 =
