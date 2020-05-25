@@ -48,11 +48,12 @@ class Frontend extends InjectionAware
     public function changeSiteName()
     {
         global $wp_admin_bar;
+        $siteTitle = apply_filters('wpstg_staging_site_title', 'STAGING');
         if ($this->isStagingSite()) {
             // Main Title
             $wp_admin_bar->add_menu(array(
                 'id' => 'site-name',
-                'title' => is_admin() ? ('STAGING - ' . get_bloginfo('name')) : ('STAGING - ' . get_bloginfo('name') . ' Dashboard'),
+                'title' => is_admin() ? ($siteTitle . ' - ' . get_bloginfo('name')) : ($siteTitle .' - ' . get_bloginfo('name') . ' Dashboard'),
                 'href' => is_admin() ? home_url('/') : admin_url(),
             ));
         }
