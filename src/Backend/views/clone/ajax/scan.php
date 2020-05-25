@@ -112,8 +112,9 @@
     </div>
 </div>
 
-<strong>Important:</strong><a href="#" id="wpstg-check-space"><?php _e( 'Check required disk space', 'wp-staging' ); ?></a>
-<p></p>
+<div style="line-height: 40px;">
+    <strong>Important:</strong><a href="#" id="wpstg-check-space"><?php _e( 'Check required disk space', 'wp-staging' ); ?></a><span class="wpstg-loader" style="margin-left:6px;vertical-align:middle;"></span>
+</div>
 
 <button type="button" class="wpstg-prev-step-link wpstg-link-btn wpstg-blue-primary wpstg-button">
     <?php _e( "Back", "wp-staging" ) ?>

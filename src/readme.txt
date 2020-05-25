@@ -10,7 +10,7 @@ Tags: staging, duplication, cloning, clone, migration, sandbox, test site, testi
 Requires at least: 3.6+
 Tested up to: 5.4
 Stable tag: {{version}}
-Requires PHP: 5.3
+Requires PHP: 5.5
 
 A duplicator plugin - clone/move, duplicate & migrate live websites to independent staging and development sites that are accessible​ by authorized users only.
 
@@ -152,6 +152,13 @@ https://wp-staging.com
 4. Finish!
 
 == Changelog ==
+
+= 2.7.3 =
+* New: Compatible up to WordPress 5.4.1
+* New: Allow filtering of staging site title
+* Fix: Since WordPress WP 5.4 cloning fails if WordPress is installed in subfolder
+* Fix: Loading icon not shown when disk space is checked
+* Fix: Can not copy tables if prefix is capitalized & has no underscore
 
 = 2.7.2 =
 * New: Compatible up to WordPress 5.4

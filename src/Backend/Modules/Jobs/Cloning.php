@@ -150,7 +150,7 @@ class Cloning extends Job
         }
         $this->options->databasePrefix = '';
         if (isset($_POST["databasePrefix"]) && !empty($_POST["databasePrefix"])) {
-            $this->options->databasePrefix = strtolower($this->sanitizePrefix($_POST["databasePrefix"]));
+            $this->options->databasePrefix = $this->sanitizePrefix($_POST["databasePrefix"]);
         }
         $this->options->cloneDir = '';
         if (isset($_POST["cloneDir"]) && !empty($_POST["cloneDir"])) {
@@ -263,7 +263,6 @@ class Cloning extends Job
         if (empty($this->options->cloneDir)) {
             $this->options->cloneDir = trailingslashit(\WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName);
             return $this->options->cloneDir;
-            //return trailingslashit( \WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName );
         }
         return trailingslashit($this->options->cloneDir);
     }
@@ -301,7 +300,7 @@ class Cloning extends Job
 
             // Prefix does not exist. We can use it
             if (!$tables) {
-                return strtolower($this->options->prefix);
+                return $this->options->prefix;
             }
         }
         $this->returnException("Fatal Error: Can not create staging prefix. '{$this->options->prefix}' already exists! Stopping for security reasons. Contact support@wp-staging.com");
@@ -343,7 +342,6 @@ class Cloning extends Job
         }
 
         // Call the job
-        //$this->log("execute job: Job's method {$methodName}");
         return $this->{$methodName}();
     }
 
@@ -375,7 +373,6 @@ class Cloning extends Job
      */
     public function jobDatabase()
     {
-
         // Could be written more elegant
         // but for xdebug purposes and breakpoints its cleaner to have separate if blocks
         if (defined('WPSTGPRO_VERSION') && is_multisite()) {
@@ -386,7 +383,6 @@ class Cloning extends Job
                 $database = new muDatabaseExternal();
             }
         } else {
-
             // No Multisite
             if (empty($this->options->databaseUser) && empty($this->options->databasePassword)) {
                 $database = new Database();
