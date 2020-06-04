@@ -41,7 +41,13 @@
                     $cloneDir = !empty( $data['path'] ) ? __( "Directory: <span class='wpstg-bold'>" . $data['path'], "wp-staging" ) . '</span> ' : 'Directory: ';
                     $url      = !empty( $data['url'] ) ? __(sprintf('URL: <a href="%s" target="_blank"><span class="wpstg-bold">%1$s</span></a>', $data['url']), "wp-staging") : 'URL: ';
                     $datetime = !empty( $data['datetime'] ) ? __( "Updated: <span>" . date( "D, d M Y H:i:s T", $data['datetime'] ), "wp-staging" ) . '</span> ' : '&nbsp;&nbsp;&nbsp;';
-                    $status   = !empty( $data['status'] ) && $data['status'] !== 'finished' ? "Status: <span class='wpstg-bold' style='color:#ffc2c2;'>" . $data['status'] . "</span>" : '&nbsp;&nbsp;&nbsp;';
+                    $statusTooltip = "This clone is incomplete and does not work. Clone or update it again! \n\n".
+                                     "Important: Keep the browser open until the cloning is finished. \n".
+                                     "It will not proceed if your browser is not open.\n\n".
+                                     "If you have an unstable internet connection and cloning breaks due to that, clone again only the folders wp-admin, wp-includes, and all database tables.\n\n".
+                                     "That will not take much time. Then, you can proceed with the wp-content folder that usually needs the most disk space. ".
+                                     "If it interrupts again, at least it will not break the existing staging site again, and you can repeat and resume the last operation.";
+                    $status   = !empty( $data['status'] ) && $data['status'] !== 'finished' ? "Status: <span class='wpstg-bold' style='color:#ffc2c2;' title='$statusTooltip'>" . $data['status'] . "</span>" : '&nbsp;&nbsp;&nbsp;';
 
                     echo $dbname;
                     echo '</br>';

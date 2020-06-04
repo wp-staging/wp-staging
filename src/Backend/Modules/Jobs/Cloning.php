@@ -192,7 +192,7 @@ class Cloning extends Job
             "url" => $this->getDestinationUrl(),
             "number" => $this->options->cloneNumber,
             "version" => WPStaging::getVersion(),
-            "status" => "unfinished or broken",
+            "status" => "unfinished or broken (?)",
             "prefix" => $this->options->prefix,
             "datetime" => time(),
             "databaseUser" => $this->options->databaseUser,
@@ -288,7 +288,7 @@ class Cloning extends Job
     private function setStagingPrefix()
     {
 
-        // Get & find a new prefix that does not already exist in database. 
+        // Get & find a new prefix that does not already exist in database.
         // Loop through up to 1000 different possible prefixes should be enough here;)
         for ($i = 0; $i <= 10000; $i++) {
             $this->options->prefix = isset($this->options->existingClones) ?
