@@ -383,6 +383,12 @@ var WPStaging = (function ($) {
                         $existingClones.children("img").remove();
 
                         cache.get(".wpstg-loader").hide();
+
+                        $('html, body').animate({
+                            //This logic is meant to be a "scrollBottom"
+                            scrollTop:  $("#wpstg-remove-clone").offset().top - $(window).height() +
+                                $("#wpstg-remove-clone").height() + 10
+                        }, 1000);
                     },
                     "HTML"
                 );
