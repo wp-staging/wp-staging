@@ -310,6 +310,10 @@ class Files extends JobExecutable
         $src = fopen($src, 'r');
         $dest = fopen($dst, 'w');
 
+        if (!src || !$dest){
+            return false;
+        }
+
         // Try first method:
         while (!feof($src)) {
             if (false === fwrite($dest, fread($src, $buffersize))) {
