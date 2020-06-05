@@ -310,7 +310,7 @@ class Files extends JobExecutable
         $src = fopen($src, 'r');
         $dest = fopen($dst, 'w');
 
-        if (!src || !$dest){
+        if (!$src || !$dest) {
             return false;
         }
 
