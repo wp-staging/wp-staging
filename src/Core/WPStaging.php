@@ -19,6 +19,7 @@ use WPStaging\Utils\Cache;
 use WPStaging\Utils\Loader;
 use WPStaging\Utils\Logger;
 use WPStaging\Service\PluginFactory;
+use WPStaging\Cron\Cron;
 
 /**
  * Class WPStaging
@@ -41,7 +42,7 @@ final class WPStaging {
      * Absolute plugin path
      * @var string
      */
-    public $pluginPath;
+    private $pluginPath;
 
     /**
      * Services
@@ -54,6 +55,16 @@ final class WPStaging {
      * @var WPStaging
      */
     private static $instance;
+
+    /*
+     * @var string
+     */
+    private $backend_url;
+
+    /**
+     * @var string
+     */
+    private $url;
 
     /**
      * WPStaging constructor.
@@ -76,14 +87,14 @@ final class WPStaging {
      */
     private function initCron() {
         // Register cron job and add new interval 'weekly'
-        $cron = new \WPStaging\Cron\Cron;
+        new Cron;
     }
 
     /**
      * Get root WP root path -
      * Changed ABSPATH trailingslash for windows compatibility
 
-     * @return type
+     * @return string
      */
     public static function getWPpath() {
         return str_replace( '/', DIRECTORY_SEPARATOR, ABSPATH );
@@ -94,19 +105,19 @@ final class WPStaging {
      */
     public function registerMain() {
         // Slug of the plugin
-        $this->slug = plugin_basename(  dirname( dirname( __FILE__ ) ) );
+        $this->slug = plugin_basename(  dirname(__DIR__) );
 
         // absolute path to the main plugin dir
-        $this->pluginPath = plugin_dir_path( dirname( __FILE__ ) );
+        $this->pluginPath = plugin_dir_path(__DIR__);
 
         // URL to main plugin folder
-        $this->url = plugin_dir_url( dirname( __FILE__ ) );
+        $this->url = plugin_dir_url(__DIR__);
 
         // URL to backend public folder folder
-        $this->backend_url = plugin_dir_url( dirname( __FILE__ ) ) . "Backend/public/";
+        $this->backend_url = plugin_dir_url(__DIR__) . "Backend/public/";
 
         // URL to frontend public folder folder
-        $this->frontend_url = plugin_dir_url( dirname( __FILE__ ) ) . "Frontend/public/";
+        $this->frontend_url = plugin_dir_url(__DIR__) . "Frontend/public/";
     }
 
     /**
@@ -121,8 +132,7 @@ final class WPStaging {
 
     /**
      * Remove heartbeat api and user login check
-     * @param type $hook
-     * @return type
+     * @param bool $hook
      */
     public function removeWPCoreJs( $hook ) {
 
@@ -155,16 +165,16 @@ final class WPStaging {
 
         // Load this css file on frontend and backend on all pages if current site is a staging site
         if( wpstg_is_stagingsite() ) {
-            wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", array(), $this->getVersion() );
+            wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", array(), self::getVersion() );
         }
 
         // Load js file on page plugins.php in free version only
         if( !defined('WPSTGPRO_VERSION') && $this->isPluginsPage() ) {
             wp_enqueue_script(
-                    "wpstg-admin-script", $this->backend_url . "js/wpstg-admin-plugins.js", array("jquery"), $this->getVersion(), false
+                    "wpstg-admin-script", $this->backend_url . "js/wpstg-admin-plugins.js", array("jquery"), self::getVersion(), false
             );
             wp_enqueue_style(
-                    "wpstg-admin-feedback", $this->backend_url . "css/wpstg-admin-feedback.css", array(), $this->getVersion()
+                    "wpstg-admin-feedback", $this->backend_url . "css/wpstg-admin-feedback.css", array(), self::getVersion()
             );
         }
 
@@ -175,13 +185,13 @@ final class WPStaging {
 
         // Load admin js files
         wp_enqueue_script(
-                "wpstg-admin-script", $this->backend_url . "js/wpstg-admin.js", array("jquery"), $this->getVersion(), false
+                "wpstg-admin-script", $this->backend_url . "js/wpstg-admin.js", array("jquery"), self::getVersion(), false
         );
 
         // Load admin js pro files
         if(defined('WPSTGPRO_VERSION')) {
             wp_enqueue_script(
-                "wpstg-admin-pro-script", $this->url . "Backend/Pro/public/js/wpstg-admin-pro.js", array("jquery"), $this->getVersion(), false
+                "wpstg-admin-pro-script", $this->url . "Backend/Pro/public/js/wpstg-admin-pro.js", array("jquery"), self::getVersion(), false
             );
 
             // Sweet Alert
@@ -189,7 +199,7 @@ final class WPStaging {
                 'wpstg-admin-pro-sweetalerts',
                 $this->url . 'Backend/Pro/public/vendor/sweetalert2/sweetalert2.all.min.js',
                 [],
-                $this->getVersion(),
+                self::getVersion(),
                 true
             );
 
@@ -197,13 +207,13 @@ final class WPStaging {
                 'wpstg-admin-pro-sweetalerts',
                 $this->url . 'Backend/Pro/public/vendor/sweetalert2/wordpress-admin.min.css',
                 [],
-                $this->getVersion()
+                self::getVersion()
             );
         }
 
         // Load admin css files
         wp_enqueue_style(
-                "wpstg-admin", $this->backend_url . "css/wpstg-admin.css", array(), $this->getVersion()
+                "wpstg-admin", $this->backend_url . "css/wpstg-admin.css", array(), self::getVersion()
         );
 
         wp_localize_script( "wpstg-admin-script", "wpstg", array(
@@ -239,10 +249,7 @@ final class WPStaging {
             );
         }
 
-        if( !in_array( $page, $availablePages ) || !is_admin() ) {
-            return true;
-        }
-        return false;
+        return !in_array($page, $availablePages) || !is_admin();
     }
 
     /**
@@ -250,8 +257,7 @@ final class WPStaging {
      * @return string
      */
     public static function getTablePrefix() {
-        $wpDB = WPStaging::getInstance()->get( "wpdb" );
-        return $wpDB->prefix;
+        return WPStaging::getInstance()->get( "wpdb" )->prefix;
     }
 
     /**
@@ -303,27 +309,11 @@ final class WPStaging {
     }
 
     /**
-     * Prevent cloning
-     * @return void
-     */
-    private function __clone() {
-
-    }
-
-    /**
-     * Prevent unserialization
-     * @return void
-     */
-    private function __wakeup() {
-
-    }
-
-    /**
      * Load Dependencies
      */
     private function loadDependencies() {
         // Load globally available functions
-        require_once $this->pluginPath . 'Core/Utils/functions.php';
+        require_once ($this->pluginPath . "Core/Utils/functions.php");
 
         $this->set( "loader", new Loader() );
 
@@ -350,6 +340,7 @@ final class WPStaging {
      * Execute Plugin
      */
     public function run() {
+        /** @noinspection **/
         $this->get( "loader" )->run();
     }
 
@@ -397,10 +388,9 @@ final class WPStaging {
         {
             return WPSTGPRO_VERSION;
         }
-        if(defined('WPSTG_VERSION'))
-        {
-            return WPSTG_VERSION;
-        }
+
+        return WPSTG_VERSION;
+
     }
 
     /**
@@ -415,7 +405,7 @@ final class WPStaging {
      */
     public static function getSlug()
     {
-        return plugin_basename(dirname(dirname(__FILE__)));
+        return plugin_basename(dirname(__DIR__));
     }
 
     /**
@@ -423,15 +413,15 @@ final class WPStaging {
      * @return string
      */
     public function getPath() {
-        return dirname( dirname( __FILE__ ) );
+        return dirname(__DIR__);
     }
 
     /**
      * Get main plugin url
-     * @return type
+     * @return string
      */
     public function getUrl() {
-        return plugin_dir_url( dirname( __FILE__ ) );
+        return plugin_dir_url(__DIR__);
     }
 
     /**
@@ -476,7 +466,7 @@ final class WPStaging {
     public function initLicensing() {
         // Add licensing stuff if class exists
         if( class_exists( 'WPStaging\Backend\Pro\Licensing\Licensing' ) ) {
-            $licensing = new Backend\Pro\Licensing\Licensing();
+            new Backend\Pro\Licensing\Licensing();
         }
         return false;
     }
@@ -488,7 +478,7 @@ final class WPStaging {
     public function initVersion() {
         // Add licensing stuff if class exists
         if( class_exists( 'WPStaging\Backend\Pro\Licensing\Version' ) ) {
-            $licensing = new Backend\Pro\Licensing\Version();
+            new Backend\Pro\Licensing\Version();
         }
         return false;
     }

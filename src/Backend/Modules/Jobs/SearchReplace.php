@@ -9,8 +9,6 @@ if (!defined("WPINC")) {
 
 use WPStaging\WPStaging;
 use WPStaging\Utils\Strings;
-use WPStaging\Utils\Helper;
-
 /**
  * Class Database
  * @package WPStaging\Backend\Modules\Jobs
@@ -44,7 +42,7 @@ class SearchReplace extends JobExecutable
 
     /**
      *
-     * @var Obj
+     * @var object
      */
     private $strings;
 
@@ -367,6 +365,7 @@ class SearchReplace extends JobExecutable
             'wpstg_existing_clones',
             'wpstg_settings',
             'wpstg_license_status',
+            'wpstg_tmp_data',
             'siteurl',
             'home'
         );

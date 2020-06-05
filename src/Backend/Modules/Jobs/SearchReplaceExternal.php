@@ -371,6 +371,7 @@ class SearchReplaceExternal extends JobExecutable
             'wpstg_existing_clones',
             'wpstg_settings',
             'wpstg_license_status',
+            'wpstg_tmp_data',
             'siteurl',
             'home'
         );

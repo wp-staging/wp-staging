@@ -172,69 +172,6 @@ class Database extends JobExecutable {
     }
 
     /**
-     * Copy multisite global user table wp_users to wpstgX_users
-     * @return bool
-     */
-//   private function copyWpUsers() {
-////      $strings = new Strings();
-////      $tableName = $this->db->base_prefix . 'users';
-////      $newTableName = $this->getStagingPrefix() . $strings->str_replace_first( $this->db->base_prefix, null, $tableName );
-//
-//      $tableName = $this->db->base_prefix . 'users';
-//      $newTableName = $this->getStagingPrefix() . 'users';
-//
-//      $this->log( "DB Copy: Try to create table {$newTableName}" );
-//
-//      // Drop table if necessary
-//      $this->dropTable( $newTableName );
-//
-//      // Save current job
-//      $this->setJob( $newTableName );
-//
-//      // Beginning of the job
-//      if( !$this->startJob( $newTableName, $tableName ) ) {
-//         return true;
-//      }
-//
-//      // Copy data
-//      $this->copyData( $newTableName, $tableName );
-//
-//      // Finish the step
-//      return $this->finishStep();
-//   }
-
-    /**
-     * Copy multisite global user table wp_usermeta to wpstgX_users
-     * @return bool
-     */
-//   private function copyWpUsermeta() {
-////      $strings = new Strings();
-////      $tableName = $this->db->base_prefix . 'usermeta';
-////      $newTableName = $this->getStagingPrefix() . $strings->str_replace_first( $this->db->base_prefix, null, $tableName );
-//      $tableName = $this->db->base_prefix . 'usermeta';
-//      $newTableName = $this->getStagingPrefix() . 'usermeta';
-//
-//      $this->log( "DB Copy: Try to create table {$newTableName}" );
-//
-//
-//      // Drop table if necessary
-//      $this->dropTable( $newTableName );
-//
-//      // Save current job
-//      $this->setJob( $newTableName );
-//
-//      // Beginning of the job
-//      if( !$this->startJob( $newTableName, $tableName ) ) {
-//         return true;
-//      }
-//      // Copy data
-//      $this->copyData( $newTableName, $tableName );
-//
-//      // Finish the step
-//      return $this->finishStep();
-//   }
-
-    /**
      * Copy data from old table to new table
      * @param string $new
      * @param string $old

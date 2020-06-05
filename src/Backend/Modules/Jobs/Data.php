@@ -79,7 +79,7 @@ class Data extends JobExecutable
      */
     protected function calculateTotalSteps()
     {
-        $this->options->totalSteps = 19;
+        $this->options->totalSteps = 20;
     }
 
     /**
@@ -181,7 +181,7 @@ class Data extends JobExecutable
      * @param string $table
      * @return boolean
      */
-    protected function isTable($table)
+    protected function tableExists($table)
     {
         if ($this->db->get_var("SHOW TABLES LIKE '{$table}'") != $table) {
             $this->log("Preparing Data: Table {$table} does not exist.", Logger::TYPE_INFO);
@@ -234,8 +234,8 @@ class Data extends JobExecutable
 
     /**
      * Copy files with symlink support
-     * @param type $source
-     * @param type $destination
+     * @param string $source
+     * @param string $destination
      * @return boolean
      */
     protected function copy($source, $destination)
@@ -262,12 +262,11 @@ class Data extends JobExecutable
 
     /**
      * Make sure wp-config.php contains correct db credentials
-     * @param type $source
+     * @param string $source
      * @return boolean
      */
     protected function alterWpConfig($source)
     {
-        $content = file_get_contents($source);
 
         if (false === ($content = file_get_contents($source))) {
             return false;
@@ -300,7 +299,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
     /**
      * Check if wp-config.php contains important constants
-     * @param type $source
+     * @param string $source
      * @return boolean
      */
     protected function isValidWpConfig($source)
@@ -309,8 +308,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         if (!is_file($source) && !is_link($source)) {
             return false;
         }
-
-        $content = file_get_contents($source);
 
         if (false === ($content = file_get_contents($source))) {
             return false;
@@ -355,7 +352,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step1: Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO);
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             return true;
         }
         // Skip - Table is not selected or updated
@@ -392,7 +389,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step2: Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             $this->log("Preparing Data Step2: Skipping");
             return true;
         }
@@ -402,7 +399,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return true;
         }
 
-        $delete = $this->db->query(
+        $this->db->query(
             $this->db->prepare(
                 "DELETE FROM `{$this->prefix}options` WHERE `option_name` = %s;", 'wpstg_is_staging_site'
             )
@@ -410,13 +407,12 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
 
         // No errors but no option name such as wpstg_is_staging_site
-        //if( '' === $this->db->last_error && 0 == $result ) {
         $insert = $this->db->query(
             $this->db->prepare(
                 "INSERT INTO {$this->prefix}options (option_name,option_value) VALUES ('wpstg_is_staging_site',%s)", "true"
             )
         );
-        //}
+
         // All good
         if ($insert) {
             $this->log("Preparing Data Step2: Successful", Logger::TYPE_INFO);
@@ -443,7 +439,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             $this->log("Preparing Data Step3: Skipping");
             return true;
         }
@@ -478,7 +474,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step4: Updating db prefix in {$this->prefix}usermeta. ");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'usermeta')) {
+        if (false === $this->tableExists($this->prefix . 'usermeta')) {
             return true;
         }
 
@@ -534,7 +530,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $content = str_replace($this->homeUrl, $this->getStagingSiteUrl(), $content);
 
         if (false === @wpstg_put_contents($path, $content)) {
-            $this->log("Preparing Data Step5: Failed to update $table_prefix in {$path} to " . $this->prefix . ". Can't save contents", Logger::TYPE_ERROR);
+            $this->log("Preparing Data Step5: Failed to update table_prefix in {$path} to " . $this->prefix . ". Can't save contents", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -606,7 +602,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step7: Updating wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             $this->log("Preparing Data Step7: Skipping Table {$this->prefix}'options' does not exist");
             return true;
         }
@@ -649,7 +645,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             $this->log("Preparing Data Step8: Skipping");
             return true;
         }
@@ -685,7 +681,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         $this->log("Preparing Data Step9: Set staging site to noindex");
 
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             return true;
         }
 
@@ -736,7 +732,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             $pattern = "/define\s*\(\s*['\"]WP_HOME['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('WP_HOME','" . $this->getStagingSiteUrl() . "'); // " . $matches[1] . " Changed by WP-Staging";
-            //$replace.= " // Changed by WP-Staging";
 
             if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
                 $this->log("Preparing Data: Failed to update WP_HOME", Logger::TYPE_ERROR);
@@ -779,7 +774,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             $pattern = "/define\s*\(\s*['\"]WP_SITEURL['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('WP_SITEURL','" . $this->getStagingSiteUrl() . "'); // " . $matches[1] . " Changed by WP-Staging";
-            //$replace.= " // Changed by WP-Staging";
 
             if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
                 $this->log("Preparing Data Step11: Failed to update WP_SITEURL to " . $this->getStagingSiteUrl(), Logger::TYPE_ERROR);
@@ -807,7 +801,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step12: Updating db prefix in {$this->prefix}options.");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             return true;
         }
 
@@ -817,7 +811,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return true;
         }
 
-        $notice = !empty($this->db->last_error) ? 'Last error: ' . $this->db->last_error : '';
 
         // Filter the rows below. Do not update them!
         $filters = array(
@@ -861,7 +854,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step13: Updating upload_path {$this->prefix}options.");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             return true;
         }
 
@@ -882,11 +875,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         $this->log("Updating upload_path in {$this->prefix}options. {$error}");
 
-//        $updateOptions = $this->db->query(
-//                $this->db->prepare(
-//                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'upload_path'", $newUploadPath
-//                )
-//        );
         // remove upload_path value and use UPLOADS constant instead. (upload_path is deprecated and should not be used any longer)
         $updateOptions = $this->db->query(
             $this->db->prepare(
@@ -926,7 +914,6 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             $pattern = "/define\s*\(\s*['\"]WP_CACHE['\"]\s*,\s*(.*)\s*\);.*/";
 
             $replace = "define('WP_CACHE',false); // " . $matches[1] . " Changed by WP-Staging";
-            //$replace.= " // Changed by WP-Staging";
 
             if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
                 $this->log("Preparing Data: Failed to change WP_CACHE", Logger::TYPE_ERROR);
@@ -1118,7 +1105,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $table = $this->prefix . 'options';
 
         // Skip - Table does not exist
-        if (false === $this->isTable($table)) {
+        if (false === $this->tableExists($table)) {
             return true;
         }
 
@@ -1136,76 +1123,31 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Preserve data and prevents data in wp_options from beeing cloned to staging site
+     * Delete all listed staging sites from cloned site in initial cloning. Useful if a cloned site is cloned again. E.g. for dev > staging > production setup
      * @return bool
      */
-//    protected function step20() {
-//        $this->log( "Preparing Data Step20: Preserve Data in " . $this->prefix . "options" );
-//
-//        // Skip - Table does not exist
-//        if( false === $this->isTable( $this->prefix . 'options' ) ) {
-//            return true;
-//        }
-//
-//        // Skip - Table is not selected or updated
-//        if( !in_array( $this->prefix . 'options', $this->tables ) ) {
-//            $this->log( "Preparing Data Step20: Skipped" );
-//            return true;
-//        }
-//
-//        $sql = '';
-//
-//        $preserved_option_names = array('wpstg_existing_clones_beta');
-//
-//        $preserved_option_names    = apply_filters( 'wpstg_preserved_options_cloning', $preserved_option_names );
-//        $preserved_options_escaped = esc_sql( $preserved_option_names );
-//
-//        $preserved_options_data = array();
-//
-//        // Get preserved data in wp_options tables
-//        $table                                             = $this->db->prefix . 'options';
-//        $preserved_options_data[$this->prefix . 'options'] = $this->db->get_results(
-//                sprintf(
-//                        "SELECT * FROM `{$table}` WHERE `option_name` IN ('%s')", implode( "','", $preserved_options_escaped )
-//                ), ARRAY_A
-//        );
-//
-//        // Create preserved data queries for options tables
-//        foreach ( $preserved_options_data as $key => $value ) {
-//            if( false === empty( $value ) ) {
-//                foreach ( $value as $option ) {
-//                    $sql .= $this->db->prepare(
-//                            "DELETE FROM `{$key}` WHERE `option_name` = %s;\n", $option['option_name']
-//                    );
-//
-//                    $sql .= $this->db->prepare(
-//                            "INSERT INTO `{$key}` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s );\n", $option['option_name'], $option['option_value'], $option['autoload']
-//                    );
-//                }
-//            }
-//        }
-//
-//        $this->debugLog( "Preparing Data Step20: Preserve values " . json_encode( $preserved_options_data ), Logger::TYPE_INFO );
-//
-//        $this->executeSql( $sql );
-//
-//        $this->log( "Preparing Data Step20: Successful!" );
-//        return true;
-//    }
+    protected function step20(){
 
-    /**
-     * Execute a batch of sql queries
-     * @param string $sqlbatch
-     */
-    private function executeSql($sqlbatch)
-    {
-        $queries = array_filter(explode(";\n", $sqlbatch));
-
-        foreach ($queries as $query) {
-            if (false === $this->db->query($query)) {
-                $this->log("Data Crunching Warning:  Can not execute query {$query}", Logger::TYPE_WARNING);
-            }
+        if ($this->options->mainJob === 'updating'){
+            return true;
         }
+
+        if( false === $this->tableExists( $this->prefix . 'options' ) ) {
+            return true;
+        }
+
+        $step = "Preparing Data Step20:";
+        $this->log( $step . " Reset wp staging site data" );
+
+        $result = $this->db->query(
+            $this->db->prepare( "UPDATE {$this->prefix}options SET `option_value` = %s WHERE `option_name` = %s", serialize(array()), 'wpstg_existing_clones_beta'
+            )
+        );
+
+        if (false === $result){
+            $this->log( $step . "Failed to reset wp staging site data." );
+        }
+
         return true;
     }
 
@@ -1235,11 +1177,9 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return false;
         }
 
-        $customSlug = str_replace(wpstg_replace_windows_directory_separator(\WPStaging\WPStaging::getWPpath()), '', wpstg_replace_windows_directory_separator($uploadPath));
+        $customSlug = str_replace(wpstg_replace_windows_directory_separator(WPStaging::getWPpath()), '', wpstg_replace_windows_directory_separator($uploadPath));
 
-        $newUploadPath = $this->options->destinationDir . $customSlug;
-
-        return $newUploadPath;
+        return $this->options->destinationDir . $customSlug;
     }
 
     /**
@@ -1269,10 +1209,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
         $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
 
-        if ($home !== $siteurl) {
-            return true;
-        }
-        return false;
+        return $home !== $siteurl;
     }
 
     /**
@@ -1288,8 +1225,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             return '';
         }
 
-        $dir = str_replace($home, '', $siteurl);
-        return str_replace('/', '', $dir);
+        return str_replace(array($home, '/'), '', $siteurl);
     }
 
 }

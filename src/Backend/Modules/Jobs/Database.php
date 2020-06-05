@@ -92,14 +92,6 @@ class Database extends JobExecutable {
             return false;
         }
 
-        // Table is excluded
-//        if (in_array($this->options->tables[$this->options->currentStep]->name, $this->options->excludedTables))
-//        {
-//            $this->prepareResponse();
-//            return true;
-//        }
-        // Copy table
-        //if (!$this->copyTable($this->options->tables[$this->options->currentStep]->name))
         if( !$this->copyTable( $this->options->tables[$this->options->currentStep] ) ) {
             // Prepare Response
             $this->prepareResponse( false, false );

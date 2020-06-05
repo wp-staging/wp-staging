@@ -3,13 +3,16 @@
         <input placeholder="Enter your email address..." type="email" id="wpstg-report-email" class="wpstg-report-email">
     </div>
     <div class="wpstg-field">
+        <input placeholder="(Optional) Enter your hosting provider..." type="text" id="wpstg-report-hosting-provider" class="wpstg-report-hosting-provider">
+    </div>
+    <div class="wpstg-field">
         <textarea rows="3" id="wpstg-report-description" class="wpstg-report-description" placeholder="Describe your issue here..."></textarea>
     </div>
     <div class="wpstg-field wpstg-report-privacy-policy">
         <label for="wpstg-report-syslog">
             <input type="checkbox" class="wpstg-report-syslog" id="wpstg-report-syslog">
             <?php echo sprintf(
-                    __('Optional: Submit the <a href="%s" target="_blank">System Log</a>. This helps us to resolve your technical issues.','wp-staging'), 
+                    __('Optional: Submit the <a href="%s" target="_blank">System Log</a>. This helps us to resolve your technical issues.','wp-staging'),
                     admin_url().'admin.php?page=wpstg-tools&tab=system_info'
                     ); ?>
         </label>
@@ -21,7 +24,7 @@
         </label>
     </div>
     <div class="wpstg-field">
-        <div class="wpstg-buttons">                               
+        <div class="wpstg-buttons">
             <button type="submit" id="wpstg-report-submit" class="wpstg-form-submit button-primary wpstg-button">
                 <?php _e( 'Submit', 'wp-staging' ); ?>
             </button>

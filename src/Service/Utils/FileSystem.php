@@ -4,6 +4,10 @@
 
 namespace WPStaging\Service\Utils;
 
+use FilesystemIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
+
 class FileSystem
 {
     /*

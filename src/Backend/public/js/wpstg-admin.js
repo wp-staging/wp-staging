@@ -274,9 +274,33 @@ var WPStaging = (function ($) {
                 $('#wpstg_clone_dir').attr('placeholder', path);
                 $('#wpstg_clone_hostname').attr('placeholder', uri);
             })
+            .on('input', '#wpstg_clone_hostname', function () {
+                if ($(this).val() === "" || validateTargetHost()) {
+                    $('#wpstg_clone_hostname_error').remove();
+                    return;
+                }
+                if (!validateTargetHost() && !$('#wpstg_clone_hostname_error').length) {
+                    $('#wpstg-clone-directory tr:last-of-type').after('<tr><td>&nbsp;</td><td><p id="wpstg_clone_hostname_error" style="color: red;">&nbsp;Invalid host name. Please provide it in a format like http://example.com</p></td></tr>');
+                }
+            })
         ;
 
         cloneActions();
+    };
+
+    /* @returns {boolean} */
+    var validateTargetHost = function () {
+        var the_domain = $('#wpstg_clone_hostname').val();
+
+        if (the_domain === "") {
+            return true;
+        }
+
+        var reg = /^http(s)?:\/\/.*$/;
+        if (reg.test(the_domain) === false) {
+            return false;
+        }
+        return true;
     };
 
     /**
@@ -383,6 +407,12 @@ var WPStaging = (function ($) {
                         $existingClones.children("img").remove();
 
                         cache.get(".wpstg-loader").hide();
+
+                        $('html, body').animate({
+                            //This logic is meant to be a "scrollBottom"
+                            scrollTop:  $("#wpstg-remove-clone").offset().top - $(window).height() +
+                                $("#wpstg-remove-clone").height() + 10
+                        }, 1000);
                     },
                     "HTML"
                 );
@@ -545,6 +575,11 @@ var WPStaging = (function ($) {
 
                 var $this = $(this);
                 var isScan = false;
+
+                if($('#wpstg_clone_hostname').length && !validateTargetHost()) {
+                    $('#wpstg_clone_hostname').focus();
+                    return false;
+                }
 
                 if ($this.data("action") === "wpstg_update") {
                     // Update Clone - confirmed
@@ -1689,6 +1724,7 @@ jQuery(document).ready(function ($) {
 
         var spinner = self.next();
         var email = $('.wpstg-report-email').val();
+        var hosting_provider = $('.wpstg-report-hosting-provider').val();
         var message = $('.wpstg-report-description').val();
         var syslog = $('.wpstg-report-syslog').is(':checked');
         var terms = $('.wpstg-report-terms').is(':checked');
@@ -1705,6 +1741,7 @@ jQuery(document).ready(function ($) {
                 'action': 'wpstg_send_report',
                 'nonce': wpstg.nonce,
                 'wpstg_email': email,
+                'wpstg_provider': hosting_provider,
                 'wpstg_message': message,
                 'wpstg_syslog': +syslog,
                 'wpstg_terms': +terms

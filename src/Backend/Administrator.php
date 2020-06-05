@@ -42,6 +42,15 @@ class Administrator extends InjectionAware {
      */
     private $url;
 
+	/**
+	 * @var array
+	 * All options here will only be stored in the database as integers. Decimal points and separators will be removed
+	 */
+	private static  $integerOptions = [
+		'queryLimit',
+		'querySRLimit'
+    ];
+
     /**
      * Initialize class
      */
@@ -180,7 +189,16 @@ class Administrator extends InjectionAware {
         $sanitized = array();
 
         foreach ( $data as $key => $value ) {
-            $sanitized[$key] = (is_array( $value )) ? $this->sanitizeData( $value ) : htmlspecialchars( $value );
+        	if (is_array($value)) {
+		        $sanitized[$key] = $this->sanitizeData( $value );
+	        }
+        	//Removing comma separators and decimal points
+        	else if (in_array($key, self::$integerOptions, true)) {
+		        $sanitized[$key] = preg_replace('/\D/', '', htmlspecialchars( $value ));
+	        }
+            else {
+	            $sanitized[$key] = htmlspecialchars( $value );
+            }
         }
 
         return $sanitized;
@@ -779,6 +797,12 @@ class Administrator extends InjectionAware {
             $email = trim( $args['wpstg_email'] );
         }
 
+	    // Set hosting provider
+	    $provider = null;
+	    if( isset( $args['wpstg_provider'] ) ) {
+		    $provider = trim( $args['wpstg_provider'] );
+	    }
+
         // Set message
         $message = null;
         if( isset( $args['wpstg_message'] ) ) {
@@ -798,7 +822,7 @@ class Administrator extends InjectionAware {
         }
 
         $report = new Report( $this->di );
-        $errors = $report->send( $email, $message, $terms, $syslog );
+        $errors = $report->send( $email, $message, $terms, $syslog, $provider );
 
         echo json_encode( array('errors' => $errors) );
         exit;
@@ -808,17 +832,13 @@ class Administrator extends InjectionAware {
      * Connect to external database for testing correct credentials
      */
     public function ajaxDatabaseConnect() {
-        // Set params
-        if( empty( $args ) ) {
-            $args = stripslashes_deep( $_POST );
-        }
-
+        $args = $_POST;
         $user     = !empty( $args['databaseUser'] ) ? $args['databaseUser'] : '';
         $password = !empty( $args['databasePassword'] ) ? $args['databasePassword'] : '';
         $database = !empty( $args['databaseDatabase'] ) ? $args['databaseDatabase'] : '';
         $server   = !empty( $args['databaseServer'] ) ? $args['databaseServer'] : 'localhost';
 
-        $db = new \wpdb( $user, $password, $database, $server );
+        $db = new \wpdb( $user, stripslashes($password), $database, $server );
 
         // Can not connect to mysql
         if( !empty( $db->error->errors['db_connect_fail']['0'] ) ) {

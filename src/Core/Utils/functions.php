@@ -110,9 +110,9 @@ function wpstg_mysql_escape_mimic($input)
 
 /**
  * Search & Replace first occurence of string in haystack
- * @param type $haystack
- * @param type $needle
- * @return type
+ * @param string $haystack
+ * @param string $needle
+ * @return string
  */
 function wpstg_replace_first_match($needle, $replace, $haystack)
 {
