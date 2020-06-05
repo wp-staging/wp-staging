@@ -16,10 +16,11 @@ class Report extends InjectionAware {
     *
     * @return array
     */
-   public function send( $email, $message, $terms, $syslog ) {
+   public function send( $email, $message, $terms, $syslog, $provider = null ) {
       $errors = array();
-      
+
       if( !empty( $syslog ) ) {
+            $message .= "\n\n'Hosting provider: " . $provider;
             $message .= "\n\n'" . $this->getSyslog();
       }
 
@@ -60,7 +61,7 @@ class Report extends InjectionAware {
 
    /**
     * send feedback via email
-    * 
+    *
     * @return boolean
     */
    private function sendMail( $from, $text ) {

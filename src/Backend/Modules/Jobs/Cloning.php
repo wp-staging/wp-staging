@@ -14,13 +14,17 @@ use WPStaging\Backend\Modules\Jobs\Multisite\Finish as muFinish;
 use WPStaging\Backend\Modules\Jobs\Multisite\Directories as muDirectories;
 use WPStaging\Backend\Modules\Jobs\Multisite\Files as muFiles;
 use WPStaging\Utils\Helper;
-
 /**
  * Class Cloning
  * @package WPStaging\Backend\Modules\Jobs
  */
 class Cloning extends Job
 {
+
+    /**
+     * @var object
+     */
+    private $db;
 
     /**
      * Initialize is called in \Job
@@ -105,16 +109,16 @@ class Cloning extends Job
         // Excluded Directories TOTAL
         // Do not copy these folders and plugins
         $excludedDirectories = array(
-            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
-            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
-            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-super-cache',
-            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'peters-login-redirect',
-            \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-spamshield',
+            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
+            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
+            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-super-cache',
+            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'peters-login-redirect',
+            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-spamshield',
         );
 
         $this->options->excludedDirectories = array_merge($excludedDirectories, wpstg_urldecode($this->options->excludedDirectories));
 
-        array_unshift($this->options->directoriesToCopy, \WPStaging\WPStaging::getWPpath());
+        array_unshift($this->options->directoriesToCopy, WPStaging::getWPpath());
 
         // Included Directories
         if (isset($_POST["includedDirectories"]) && is_array($_POST["includedDirectories"])) {
@@ -142,7 +146,7 @@ class Cloning extends Job
         }
         $this->options->databasePassword = '';
         if (isset($_POST["databasePassword"]) && !empty($_POST["databasePassword"])) {
-            $this->options->databasePassword = $_POST["databasePassword"];
+            $this->options->databasePassword = stripslashes($_POST["databasePassword"]);
         }
         $this->options->databaseDatabase = '';
         if (isset($_POST["databaseDatabase"]) && !empty($_POST["databaseDatabase"])) {
@@ -192,7 +196,7 @@ class Cloning extends Job
             "url" => $this->getDestinationUrl(),
             "number" => $this->options->cloneNumber,
             "version" => WPStaging::getVersion(),
-            "status" => "unfinished or broken",
+            "status" => "unfinished or broken (?)",
             "prefix" => $this->options->prefix,
             "datetime" => time(),
             "databaseUser" => $this->options->databaseUser,
@@ -212,7 +216,7 @@ class Cloning extends Job
 
     /**
      * Get destination Hostname depending on wheather WP has been installed in sub dir or not
-     * @return type
+     * @return string
      */
     private function getDestinationUrl()
     {
@@ -249,19 +253,19 @@ class Cloning extends Job
 
     /**
      * Get Destination Directory including staging subdirectory
-     * @return type
+     * @return string
      */
     private function getDestinationDir()
     {
         // Throw fatal error
-        if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === ( string )trailingslashit(\WPStaging\WPStaging::getWPpath()))) {
+        if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === ( string )trailingslashit(WPStaging::getWPpath()))) {
             $this->returnException('Error: Target Directory must be different from the root of the production website.');
             die();
         }
 
         // No custom clone dir so clone path will be in subfolder of root
         if (empty($this->options->cloneDir)) {
-            $this->options->cloneDir = trailingslashit(\WPStaging\WPStaging::getWPpath() . $this->options->cloneDirectoryName);
+            $this->options->cloneDir = trailingslashit(WPStaging::getWPpath() . $this->options->cloneDirectoryName);
             return $this->options->cloneDir;
         }
         return trailingslashit($this->options->cloneDir);
@@ -283,12 +287,12 @@ class Cloning extends Job
     }
 
     /**
-     * Create a new staging prefix which does not already exists in database
+     * Create a new staging prefix that does not already exists in database
      */
     private function setStagingPrefix()
     {
 
-        // Get & find a new prefix that does not already exist in database. 
+        // Get & find a new prefix that does not already exist in database.
         // Loop through up to 1000 different possible prefixes should be enough here;)
         for ($i = 0; $i <= 10000; $i++) {
             $this->options->prefix = isset($this->options->existingClones) ?
@@ -307,22 +311,6 @@ class Cloning extends Job
         wp_die("Fatal Error: Can not create staging prefix. Prefix '{$this->options->prefix}' already exists! Stopping for security reasons. Contact support@wp-staging.com");
     }
 
-    /**
-     * Check if potential new prefix of staging site would be identical with live site.
-     * @return boolean
-     */
-    private function isPrefixIdentical()
-    {
-        $db = WPStaging::getInstance()->get("wpdb");
-
-        $livePrefix = $db->prefix;
-        $stagingPrefix = $this->options->prefix;
-
-        if ($livePrefix == $stagingPrefix) {
-            return true;
-        }
-        return false;
-    }
 
     /**
      * Start the cloning job
@@ -365,6 +353,15 @@ class Cloning extends Job
         $this->saveOptions();
 
         return $response;
+    }
+
+    /**
+     * Copy data from staging site to temporary column to use it later
+     * @return object
+     */
+    public function jobPreserveDataFirstStep(){
+        $preserve = new PreserveDataFirstStep();
+        return $this->handleJobResponse($preserve->start(), 'database');
     }
 
     /**
@@ -412,7 +409,16 @@ class Cloning extends Job
                 $searchReplace = new SearchReplaceExternal();
             }
         }
-        return $this->handleJobResponse($searchReplace->start(), "directories");
+        return $this->handleJobResponse($searchReplace->start(), "PreserveDataSecondStep");
+    }
+
+    /**
+     * Copy tmp data back to staging site
+     * @return object
+     */
+    public function jobPreserveDataSecondStep(){
+        $preserve = new PreserveDataSecondStep();
+        return $this->handleJobResponse($preserve->start(), 'directories');
     }
 
     /**

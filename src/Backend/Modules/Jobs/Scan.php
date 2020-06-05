@@ -54,7 +54,7 @@ class Scan extends Job {
      */
     public function start() {
         // Basic Options
-        $this->options->root           = str_replace( array("\\", '/'), DIRECTORY_SEPARATOR, \WPStaging\WPStaging::getWPpath() );
+        $this->options->root           = str_replace( array("\\", '/'), DIRECTORY_SEPARATOR, WPStaging::getWPpath() );
         $this->options->existingClones = get_option( "wpstg_existing_clones_beta", array() );
         $this->options->current        = null;
 
@@ -81,8 +81,7 @@ class Scan extends Job {
         $this->options->scannedDirectories       = array();
 
         // Job
-        $this->options->currentJob  = "database";
-        //$this->options->currentJob = "directories";
+        $this->options->currentJob  = "PreserveDataFirstStep";
         $this->options->currentStep = 0;
         $this->options->totalSteps  = 0;
 
@@ -109,7 +108,7 @@ class Scan extends Job {
 
     /**
      * Format bytes into human readable form
-     * @param int $bytes
+     * @param float $bytes
      * @param int $precision
      * @return string
      */
@@ -128,7 +127,7 @@ class Scan extends Job {
     }
 
     /**
-     * @param null|string $directories
+     * @param null|array $directories
      * @param bool $forceDisabled
      * @return string
      */
@@ -217,7 +216,7 @@ class Scan extends Job {
 
         $data = array(
             //'freespace' => $this->formatSize( $freeSpace ),
-            'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( \WPStaging\WPStaging::getWPpath() ) )
+            'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( WPStaging::getWPpath() ) )
         );
 
         echo json_encode( $data );
@@ -229,13 +228,6 @@ class Scan extends Job {
      */
     protected function getTables() {
         $wpDB = WPStaging::getInstance()->get( "wpdb" );
-
-//      if( strlen( $wpDB->prefix ) > 0 ) {
-//         //$prefix = str_replace('_', '', $wpDB->prefix);
-//         $sql = "SHOW TABLE STATUS LIKE '{$wpDB->prefix}%'";
-//      } else {
-//         $sql = "SHOW TABLE STATUS";
-//      }
 
         $sql = "SHOW TABLE STATUS";
 
@@ -267,7 +259,7 @@ class Scan extends Job {
      */
     protected function getDirectories() {
 
-        $directories = new Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() );
+        $directories = new Iterators\RecursiveDirectoryIterator( WPStaging::getWPpath() );
 
 
         foreach ( $directories as $directory ) {
@@ -297,6 +289,7 @@ class Scan extends Job {
 
     /**
      * @param string $path
+     * @return bool
      */
     protected function getSubDirectories( $path ) {
 
@@ -324,12 +317,13 @@ class Scan extends Job {
 
             $this->handleDirectory( $path );
         }
+        return false;
     }
 
     /**
      * Get Path from $directory
-     * @param \SplFileInfo $directory
-     * @return string|false
+     * @param string
+     * @return bool
      */
     protected function getPath( $directory ) {
 
@@ -339,10 +333,10 @@ class Scan extends Job {
          * Prevents open base dir restriction fatal errors
          */
 
-        if( strpos( $directory->getRealPath(), \WPStaging\WPStaging::getWPpath() ) !== 0 ) {
+        if( strpos( $directory->getRealPath(), WPStaging::getWPpath() ) !== 0 ) {
             return false;
         }
-        $path = str_replace( \WPStaging\WPStaging::getWPpath(), null, $directory->getRealPath() );
+        $path = str_replace( WPStaging::getWPpath(), null, $directory->getRealPath() );
 
         // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
         if( !$directory->isDir() || strlen( $path ) < 1 ) {
@@ -358,7 +352,7 @@ class Scan extends Job {
      */
     protected function handleDirectory( $path ) {
         $directoryArray = explode( DIRECTORY_SEPARATOR, $path );
-        $total          = is_array( $directoryArray ) || $directoryArray instanceof Countable ? count( $directoryArray ) : 0;
+        $total          = is_array( $directoryArray ) || $directoryArray instanceof \Countable ? count( $directoryArray ) : 0;
 
         if( $total < 1 ) {
             return;
@@ -379,12 +373,12 @@ class Scan extends Job {
                 continue;
             }
 
-            $fullPath = \WPStaging\WPStaging::getWPpath() . $path;
+            $fullPath = WPStaging::getWPpath() . $path;
             $size     = $this->getDirectorySize( $fullPath );
 
             $currentArray["metaData"] = array(
                 "size" => $size,
-                "path" => \WPStaging\WPStaging::getWPpath() . $path,
+                "path" => WPStaging::getWPpath() . $path,
             );
         }
     }

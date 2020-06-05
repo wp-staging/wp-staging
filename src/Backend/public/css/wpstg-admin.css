@@ -960,7 +960,7 @@
     margin-bottom:4px;
 }
 
-.wpstg-report-email {
+.wpstg-report-email, .wpstg-report-hosting-provider {
     width: 100%;
     font-weight: 400;
     font-size: .8rem;
