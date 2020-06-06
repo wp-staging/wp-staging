@@ -189,7 +189,7 @@ class DataExternal extends JobExecutable
      * @param string $table
      * @return boolean
      */
-    protected function isTable($table)
+    protected function tableExists($table)
     {
         if ($this->db->get_var("SHOW TABLES LIKE '{$table}'") != $table) {
             $this->log("Table {$table} does not exist", Logger::TYPE_ERROR);
@@ -361,7 +361,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step1: Updating siteurl and homeurl in {$this->prefix}options {$this->db->last_error}", Logger::TYPE_INFO);
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             return true;
         }
         // Skip - Table is not selected or updated
@@ -398,7 +398,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step2: Updating row wpstg_is_staging_site in {$this->prefix}options {$this->db->last_error}");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             $this->log("Preparing Data Step2: Skipping");
             return true;
         }
@@ -448,7 +448,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             $this->log("Preparing Data Step3: Skipping");
             return true;
         }
@@ -483,7 +483,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step4: Updating db prefix in {$this->prefix}usermeta. ");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'usermeta')) {
+        if (false === $this->tableExists($this->prefix . 'usermeta')) {
             return true;
         }
 
@@ -538,7 +538,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $content = str_replace($this->homeUrl, $this->getStagingSiteUrl(), $content);
 
         if (false === @wpstg_put_contents($path, $content)) {
-            $this->log("Preparing Data Step5: Failed to update $table_prefix in {$path} to " . $this->prefix . ". Can't save contents", Logger::TYPE_ERROR);
+            $this->log("Preparing Data Step5: Failed to update table_prefix in {$path} to " . $this->prefix . ". Can't save contents", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -610,7 +610,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step7: Updating wpstg_rmpermalinks_executed in {$this->prefix}options {$this->db->last_error}");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             $this->log("Preparing Data Step7: Skipping Table {$this->prefix}'options' does not exist");
             return true;
         }
@@ -648,7 +648,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             $this->log("Preparing Data Step8: Skipping");
             return true;
         }
@@ -684,7 +684,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         $this->log("Preparing Data Step9: Set staging site to noindex");
 
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             return true;
         }
 
@@ -807,7 +807,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step12: Updating db prefix in {$this->prefix}options.");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             return true;
         }
 
@@ -864,7 +864,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $this->log("Preparing Data Step13: Updating upload_path {$this->prefix}options.");
 
         // Skip - Table does not exist
-        if (false === $this->isTable($this->prefix . 'options')) {
+        if (false === $this->tableExists($this->prefix . 'options')) {
             return true;
         }
 
@@ -1175,7 +1175,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         $table = $this->prefix . 'options';
 
         // Skip - Table does not exist
-        if (false === $this->isTable($table)) {
+        if (false === $this->tableExists($table)) {
             return true;
         }
 
