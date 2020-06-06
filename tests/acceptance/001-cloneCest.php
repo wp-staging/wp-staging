@@ -23,6 +23,7 @@ class cloningCest {
 	    $I->see('staging', '#staging');
 	    $I->click('#staging .wpstg-remove-clone');
 	    $I->waitForElementVisible("#wpstg-remove-clone", 7);
+        $I->wait(2);
 	    $I->click('#wpstg-remove-clone');
 	    $I->waitForElementNotVisible('#wpstg-removing-clone', 60);
 	    $I->wait(5);

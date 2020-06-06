@@ -1080,7 +1080,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             $this->log("Preparing Data Step16: Failed to update UPLOADS. Can't save contents", Logger::TYPE_ERROR);
             return false;
         }
-        $this->Log("Preparing Data Step 16: Finished successfully");
+        $this->Log("Preparing Data Step16: Finished successfully");
         return true;
     }
 

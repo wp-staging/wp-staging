@@ -34,7 +34,7 @@ class updateCest
 	    $I->click('//*[@id="post-1"]/td[1]/strong/a');
 
 	    // Close the box "welcome to the wonderful world of blocks..."
-	    $I->click('//*[@id="editor"]/div/div/div/div[4]/div/div/div/div/div/button');
+        $I->click('/html/body/div[5]/div/div/div/div/div/div/div/div[1]/button');
 	    $I->wait(1);
 
 	    $I->Click('#post-title-0');
@@ -70,9 +70,6 @@ class updateCest
 	    // Change content of staging site /staging
 	    $I->amOnPage('/staging/wp-admin/edit.php');
 	    $I->click('//*[@id="post-1"]/td[1]/strong/a');
-
-	    // Close the box "welcome to the wonderful world of blocks..."
-	    $I->click('//*[@id="editor"]/div/div/div/div[4]/div/div/div/div/div/button');
 	    $I->wait(1);
 
 	    $I->Click('#post-title-0');
@@ -124,12 +121,7 @@ class updateCest
 	    // Reset content of production site:
 	    $I->amOnPage('/wp-admin/edit.php');
 	    $I->click('//*[@id="post-1"]/td[1]/strong/a');
-
-	    // Close the box "welcome to the wonderful world of blocks..."
-	    $I->click('//*[@id="editor"]/div/div/div/div[4]/div/div/div/div/div/button');
-	    $I->wait(1);
-
-	    $I->Click('#post-title-0');
+        $I->Click('#post-title-0');
 	    /* Select the entire text with ctrl + a and delete it with BACKSPACE.
 	     * This is the only way how it works for WordPress Gutenberg editor as it is written in REACT.
 	     * In REACT the test appends a string to the text field instead replacing it when using fillField. 'clearField' is not working either.
