@@ -6,7 +6,7 @@
 
 actor: AcceptanceTester
 modules:
-    enabled: 
+    enabled:
         - WebDriver:
             url: http://single.wp-staging-free.local
             #browser: firefox
@@ -21,7 +21,11 @@ modules:
                 unexpectedAlertBehaviour: 'accept'
         - \Helper\Acceptance
         - Asserts
-        
+step_decorators:
+    - \Codeception\Step\TryTo
+    - \Codeception\Step\Retry
+    - \Codeception\Step\ConditionalAssertion
+
 env:
     multisite:
         modules:
