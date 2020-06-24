@@ -188,7 +188,7 @@ msgstr "Anzahl der Datenbank Einträge, die zugleich kopiert werden. Je höher d
 
 #: Backend/views/clone/single-site/index.php:16
 msgid "Report Issue"
-msgstr "Fehlermeldung"
+msgstr "Fehler melden"
 
 #: Backend/views/clone/single-site/index.php:12
 msgid "Cloning"
