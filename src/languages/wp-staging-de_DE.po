@@ -348,8 +348,8 @@ msgid "By submitting, I accept the <a href=\"https://wp-staging.com/privacy-poli
 msgstr "Mit Übertragen akzeptiere ich die  <a href=\"https://wp-staging.com/privacy-policy/\" target=\"_blank\">Datenschutz Vereinbarung</a> und erlaube, dass meine E-Mail Adresse gespeichert und verarbeitet wird um meine Support Anfrage zu beantworten."
 
 #: Backend/views/_main/report-issue.php:12
-msgid "Optional: Submit the <a href=\"%s\" target=\"_blank\">System Log</a>. This helps us to resolve your technical issues."
-msgstr "Optional: Übertrage das <a href=\"%s\" target=\"_blank\">System Log</a>. Das hilft uns Dein technisches Anliegen zu lösen."
+msgid "Optional: Submit the <a href=\"%s\" target=\"_blank\">System Log</a> and your WordPress debug log. This helps us to resolve your technical issues."
+msgstr "Optional: Übertrage das <a href=\"%s\" target=\"_blank\">System Log</a> sowie dein WordPress-Debug-Log. Das hilft uns Dein technisches Anliegen zu lösen."
 
 #: Backend/views/_main/messages/staging-directory-permission-problem.php:4
 msgid ""
