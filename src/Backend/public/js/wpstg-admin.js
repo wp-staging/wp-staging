@@ -1276,6 +1276,10 @@ var WPStaging = (function ($) {
             if (response.job === 'SearchReplace') {
                 cache.get("#wpstg-progress-db").css('background-color', '#3bc36b');
                 cache.get("#wpstg-progress-db").html('1. Database');
+                //Assumption: All previous steps are done.
+                //This avoids bugs where some steps are skipped and the progress bar is incomplete as a result
+                cache.get("#wpstg-progress-db").width('20%');
+
                 cache.get("#wpstg-progress-sr").width(response.percentage * 0.1 + '%').html(response.percentage + '%');
                 cache.get("#wpstg-processing-status").html(response.percentage.toFixed(0) + '%' + ' - Step 2 of 4 Preparing Database Data...');
             }
@@ -1283,18 +1287,24 @@ var WPStaging = (function ($) {
             if (response.job === 'directories') {
                 cache.get("#wpstg-progress-sr").css('background-color', '#3bc36b');
                 cache.get("#wpstg-progress-sr").html('2. Data');
+                cache.get("#wpstg-progress-sr").width('10%');
+
                 cache.get("#wpstg-progress-dirs").width(response.percentage * 0.1 + '%').html(response.percentage + '%');
                 cache.get("#wpstg-processing-status").html(response.percentage.toFixed(0) + '%' + ' - Step 3 of 4 Getting files...');
             }
             if (response.job === 'files') {
                 cache.get("#wpstg-progress-dirs").css('background-color', '#3bc36b');
                 cache.get("#wpstg-progress-dirs").html('3. Files');
+                cache.get("#wpstg-progress-dirs").width('10%');
+
                 cache.get("#wpstg-progress-files").width(response.percentage * 0.6 + '%').html(response.percentage + '%');
                 cache.get("#wpstg-processing-status").html(response.percentage.toFixed(0) + '%' + ' - Step 4 of 4 Copy files...');
             }
             if (response.job === 'finish') {
                 cache.get("#wpstg-progress-files").css('background-color', '#3bc36b');
                 cache.get("#wpstg-progress-files").html('4. Copy Files');
+                cache.get("#wpstg-progress-files").width('60%');
+
                 cache.get("#wpstg-processing-status").html(response.percentage.toFixed(0) + '%' + ' - Cloning Process Finished');
             }
         }
