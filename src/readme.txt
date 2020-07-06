@@ -153,6 +153,16 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.7.4 =
+* New: Compatible up to WordPress 5.4.2
+* Fix: Remove beta notice
+* Fix: Error if views are cloned
+* Fix: Fatal error if WordPress is older than 4.5
+* Fix: Merge pro/free version
+* Fix: Step switching logic does not work properly
+* Fix: Fix progress bar when certains steps are skipped
+* Fix: Change german translation for REPORT ISSUE
+
 = 2.7.3 =
 * New: Compatible up to WordPress 5.4.1
 * New: Allow filtering of staging site title
@@ -257,5 +267,11 @@ https://wp-staging.com
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-* Install this version for supporting latest WordPress version
-* Fix: Fatal error on WordPress 4.6 and older
+* New: Compatible up to WordPress 5.4.2
+* Fix: Remove beta notice
+* Fix: Error if views are cloned
+* Fix: Fatal error if WordPress is older than 4.5
+* Fix: Merge pro/free version
+* Fix: Step switching logic does not work properly
+* Fix: Fix progress bar when certains steps are skipped
+* Fix: Change german translation for REPORT ISSUE

@@ -16,11 +16,23 @@ build:
 	docker-compose build
 
 install:
-	docker exec --user root -it $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "install"
+	docker exec --user root -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "install"
 
 test:
 	php -d max_execution_time=60 ./src/vendor/bin/phpunit -c ./
 #	php -d max_execution_time=60 ./src/vendor/bin/phpunit -c ./ --debug
+
+dist:
+	rm -f ./wp-staging.zip
+	docker-compose run --rm composer install --no-dev
+	cp -a ./src/. ./wp-staging/
+	sed -i "s/{{version}}/$(VERSION)/g" ./wp-staging/wp-staging.php
+	sed -i "s/('WPSTG_VERSION',.*'.*')/('WPSTG_VERSION', '$(VERSION)')/g" ./wp-staging/wp-staging.php
+	sed -i "s/{{version}}/$(VERSION)/g" ./wp-staging-pro/readme.txt
+	rm -rf ./wp-staging/var/*
+	rm -rf ./wp-staging/var/
+	zip -r wp-staging.zip ./wp-staging
+	rm -rf ./wp-staging
 
 
 
@@ -36,10 +48,10 @@ reset: down stop
 	sleep $${WAIT_SERVICES_IN_SECONDS}
 	make install
 	sudo chown $(USER):$(USER) ./var -R
-test_up: # Tests require selenium server running
-	java -jar selenium-server-standalone-3.141.59.jar
+test_up:
+	./vendor/bin/chromedriver --url-base=/wd/hub /dev/null 2>&1 &
 test_single:
-	php vendor/bin/codecept run acceptance --env single --steps
+	php vendor/bin/codecept run --debug --xml acceptance --env single --steps
 test_multi:
 	php vendor/bin/codecept run acceptance --env multisite --steps
 test_acceptance:

@@ -8,17 +8,17 @@ actor: AcceptanceTester
 modules:
     enabled:
         - WebDriver:
-            url: http://single.wp-staging-free.local
-            #browser: firefox
-            browser: chrome
-            window_size: 1024x1300
-            capabilities:
-                acceptInsecureCerts: true
-                chromeOptions:
-                    #args: ["--headless", "--disable-gpu"]
-                    binary: "/usr/bin/google-chrome"
-                    w3c: false
-                unexpectedAlertBehaviour: 'accept'
+              url: http://single.wp-staging-free.local
+              browser: chrome
+              port: 9515
+              window_size: 1024x1300
+              capabilities:
+                  acceptInsecureCerts: true
+                  chromeOptions:
+                      #args: ["--headless", "--disable-gpu"]
+                      binary: "/usr/bin/google-chrome"
+                      w3c: false
+                  unexpectedAlertBehaviour: 'accept'
         - \Helper\Acceptance
         - Asserts
 step_decorators:

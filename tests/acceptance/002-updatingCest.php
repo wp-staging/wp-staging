@@ -32,7 +32,7 @@ class updateCest
             $I->click('//*[@id="post-1"]/td[1]/strong/a');
 
             // Close the box "welcome to the wonderful world of blocks..."
-            $I->click('/html/body/div[5]/div/div/div/div/div/div/div/div[1]/button');
+            $I->tryToClick('.components-modal__header button');
             $I->wait(1);
 
             $I->Click('#post-title-0');
