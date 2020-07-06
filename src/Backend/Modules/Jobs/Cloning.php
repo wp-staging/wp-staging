@@ -180,6 +180,13 @@ class Cloning extends Job
         return $this->saveOptions();
     }
 
+    /**
+     * @return bool
+     */
+    private function enteredDatabaseSameAsLiveDatabase()
+    {
+        return $this->options->databaseServer === DB_HOST && $this->options->databaseDatabase == DB_NAME;
+    }
 
     /**
      * Save clone data initially
@@ -327,6 +334,10 @@ class Cloning extends Job
         if (!method_exists($this, $methodName)) {
             $this->log("Can't execute job; Job's method {$methodName} is not found");
             throw new JobNotFoundException($methodName);
+        }
+
+        if ($this->enteredDatabaseSameAsLiveDatabase() && $this->options->databasePrefix === $this->db->prefix) {
+            $this->returnException('Entered table prefix for staging and production database can not be identical! Please start over and change the table prefix.');
         }
 
         // Call the job

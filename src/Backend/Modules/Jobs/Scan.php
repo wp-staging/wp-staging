@@ -7,6 +7,7 @@ if( !defined( "WPINC" ) ) {
     die;
 }
 
+use WPStaging\Command\Database\Snapshot\SnapshotHandler;
 use WPStaging\WPStaging;
 use WPStaging\Utils\Directories;
 use WPStaging\Backend\Optimizer\Optimizer;
@@ -153,9 +154,9 @@ class Scan extends Job {
 
 
             $isChecked = (
-                empty( $this->options->includedDirectories ) ||
-                in_array( $data["path"], $this->options->includedDirectories )
-            );
+                    empty( $this->options->includedDirectories ) ||
+                    in_array( $data["path"], $this->options->includedDirectories )
+                    );
 
             $dataPath = isset( $data["path"] ) ? $data["path"] : '';
             $dataSize = isset( $data["size"] ) ? $data["size"] : '';
@@ -164,12 +165,12 @@ class Scan extends Job {
             // Select all wp core folders and their sub dirs.
             // Unselect all other folders (default setting)
             $isDisabled = ($name !== 'wp-admin' &&
-                           $name !== 'wp-includes' &&
-                           $name !== 'wp-content' &&
-                           $name !== 'sites') &&
-                          false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) &&
-                          false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) &&
-                          false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) ? true : false;
+                    $name !== 'wp-includes' &&
+                    $name !== 'wp-content' &&
+                    $name !== 'sites') &&
+                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) &&
+                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) &&
+                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) ? true : false;
 
             // Extra class to differentiate between wp core and non core folders
             $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
@@ -247,11 +248,14 @@ class Scan extends Job {
                 $this->options->excludedTables[] = $table->Name;
             }
 
-
-            $currentTables[] = array(
-                "name" => $table->Name,
-                "size" => ($table->Data_length + $table->Index_length)
-            );
+            if ((0 !== strpos($table->Name, SnapshotHandler::PREFIX_MANUAL))
+                && (0 !== strpos($table->Name, SnapshotHandler::PREFIX_AUTOMATIC))
+                && ($table->Comment !== "VIEW")) {
+                $currentTables[] = array(
+                    "name" => $table->Name,
+                    "size" => ($table->Data_length + $table->Index_length)
+                );
+            }
         }
 
         $this->options->tables = json_decode( json_encode( $currentTables ) );

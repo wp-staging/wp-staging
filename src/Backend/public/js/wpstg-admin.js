@@ -1473,13 +1473,13 @@ var WPStaging = (function ($) {
                         confirmButtonText: 'Take New Snapshot',
                         showCancelButton: true,
                         preConfirm: () => ({
-                            name: document.getElementById('wpstg-snapshot-name-input').value || null,
-                            notes: document.getElementById('wpstg-snapshot-notes-textarea').value || null,
+                          name: document.getElementById('wpstg-snapshot-name-input').value || null,
+                          notes: document.getElementById('wpstg-snapshot-notes-textarea').value || null,
                         }),
                     });
 
                     if (!formValues) {
-                        return;
+                      return;
                     }
 
                     that.ajax(
@@ -1490,7 +1490,7 @@ var WPStaging = (function ($) {
                         function (response) {
                             showAjaxFatalError(response, '', 'Submit an error report and contact us.');
                             cache.get('#wpstg--tab--snapshot').html(response);
-                            createSnapshot(formValues.name, formValues.notes);
+                          createSnapshot(formValues.name, formValues.notes);
                         },
                     );
                 })
@@ -1648,52 +1648,52 @@ var WPStaging = (function ($) {
         },
         // Edit snapshots name and notes
         edit() {
-            $('#wpstg--tab--snapshot')
-                .off('click', '.wpstg--snapshot--edit[data-id]')
-                .on('click', '.wpstg--snapshot--edit[data-id]', async function(e) {
-                    e.preventDefault();
-                    console.log('edit');
+          $('#wpstg--tab--snapshot')
+            .off('click', '.wpstg--snapshot--edit[data-id]')
+            .on('click', '.wpstg--snapshot--edit[data-id]', async function(e) {
+              e.preventDefault();
+              console.log('edit');
 
-                    const $this = $(this);
-                    const name = $this.data('name');
-                    const notes = $this.data('notes');
+              const $this = $(this);
+              const name = $this.data('name');
+              const notes = $this.data('notes');
 
-                    const { value: formValues } = await Swal.fire({
-                        title: '',
-                        html: `
+              const { value: formValues } = await Swal.fire({
+                title: '',
+                html: `
                     <label id="wpstg-snapshot-name">Snapshot Name</label>
                     <input id="wpstg-snapshot-name-input" class="swal2-input" value="${name}">
                     <label>Additional Notes</label>
                     <textarea id="wpstg-snapshot-notes-textarea" class="swal2-textarea">${notes}</textarea>
                   `,
-                        focusConfirm: false,
-                        confirmButtonText: 'Update Snapshot',
-                        showCancelButton: true,
-                        preConfirm: () => ({
-                            name: document.getElementById('wpstg-snapshot-name-input').value || null,
-                            notes: document.getElementById('wpstg-snapshot-notes-textarea').value || null,
-                        }),
-                    });
+                focusConfirm: false,
+                confirmButtonText: 'Update Snapshot',
+                showCancelButton: true,
+                preConfirm: () => ({
+                  name: document.getElementById('wpstg-snapshot-name-input').value || null,
+                  notes: document.getElementById('wpstg-snapshot-notes-textarea').value || null,
+                }),
+              });
 
-                    if (!formValues) {
-                        return;
-                    }
+              if (!formValues) {
+                return;
+              }
 
-                    that.ajax(
-                        {
-                            action: 'wpstg--snapshots--edit',
-                            nonce: wpstg.nonce,
-                            id: $this.data('id'),
-                            name: formValues.name,
-                            notes: formValues.notes,
-                        },
-                        function(response) {
-                            showAjaxFatalError(response, '', 'Submit an error report.');
-                            that.snapshots.fetchListing();
-                        },
-                    );
-                })
-            ;
+              that.ajax(
+                {
+                  action: 'wpstg--snapshots--edit',
+                  nonce: wpstg.nonce,
+                  id: $this.data('id'),
+                  name: formValues.name,
+                  notes: formValues.notes,
+                },
+                function(response) {
+                  showAjaxFatalError(response, '', 'Submit an error report.');
+                  that.snapshots.fetchListing();
+                },
+              );
+            })
+          ;
         },
     };
 

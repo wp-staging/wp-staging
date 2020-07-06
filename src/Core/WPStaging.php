@@ -13,6 +13,7 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . "Utils" . DIRECTORY_SEPARATOR . "Au
 use WPStaging\Backend\Administrator;
 use WPStaging\DTO\Settings;
 use WPStaging\Frontend\Frontend;
+use WPStaging\Service\Permalinks\PermalinksPurge;
 use WPStaging\Service\Container\Container;
 use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
@@ -80,6 +81,7 @@ final class WPStaging {
         $this->initLicensing();
         $this->initVersion();
         $this->initActions();
+        $this->handleCacheIssues();
     }
 
     /**
@@ -495,6 +497,15 @@ final class WPStaging {
                 delete_option('wpstg_execute');
             }
         }
+    }
+
+    /**
+     * Takes care of cache issues in certain situations
+     */
+    private function handleCacheIssues() {
+        $permalinksPurge = new PermalinksPurge();
+        add_action( 'wpstg_pushing_complete', array( $permalinksPurge, 'executeAfterPushing' ));
+        add_action( 'wp_loaded', array( $permalinksPurge, 'purgePermalinks' ), $permalinksPurge::PLUGINS_LOADED_PRIORITY);
     }
 
 }

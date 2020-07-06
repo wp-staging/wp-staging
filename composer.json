@@ -1,13 +1,23 @@
 {
-    "name": "wp-staging/pro",
-    "license": "GPL-3.0-only",
-    "description": "WordPress plugin for creating staging sites",
-    "require-dev": {
-        "codeception/codeception": "^4.1",
-        "hoa/console": "~3.0",
-        "php-webdriver/webdriver": "1.8.2",
-        "codeception/module-phpbrowser": "^1.0.0",
-        "codeception/module-asserts": "^1.0.0",
-        "codeception/module-webdriver": "^1.1"
+  "name": "wp-staging/pro",
+  "license": "GPL-3.0-only",
+  "description": "WordPress plugin for creating staging sites",
+  "require-dev": {
+    "codeception/codeception": "^4.1",
+    "hoa/console": "~3.0",
+    "php-webdriver/webdriver": "1.8.2",
+    "codeception/module-phpbrowser": "^1.0.0",
+    "codeception/module-asserts": "^1.0.0",
+    "codeception/module-webdriver": "^1.1",
+    "composer-plugin-api": "^1.0",
+    "vaimo/webdriver-binary-downloader": "^2.1.0",
+    "vaimo/binary-chromedriver": "^5.0"
+
+  },
+  "extra": {
+    "vaimo/chromedriver": {
+      "bypass-select": true,
+      "chromedriver-version": "2.35"
     }
+  }
 }
