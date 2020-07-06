@@ -28,7 +28,7 @@ dist:
 	cp -a ./src/. ./wp-staging/
 	sed -i "s/{{version}}/$(VERSION)/g" ./wp-staging/wp-staging.php
 	sed -i "s/('WPSTG_VERSION',.*'.*')/('WPSTG_VERSION', '$(VERSION)')/g" ./wp-staging/wp-staging.php
-	sed -i "s/{{version}}/$(VERSION)/g" ./wp-staging-pro/readme.txt
+	sed -i "s/{{version}}/$(VERSION)/g" ./wp-staging/readme.txt
 	rm -rf ./wp-staging/var/*
 	rm -rf ./wp-staging/var/
 	zip -r wp-staging.zip ./wp-staging
