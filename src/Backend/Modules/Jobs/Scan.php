@@ -50,7 +50,8 @@ class Scan extends Job {
 
     /**
      * Start Module
-     * @return $this
+     * @return $this|object
+     * @throws \Exception
      */
     public function start() {
         // Basic Options
@@ -141,7 +142,7 @@ class Scan extends Job {
 
         $output = '';
         foreach ( $directories as $name => $directory ) {
-            // Not a directory, possibly a symlink, therefore we will skip it           
+            // Not a directory, possibly a symlink, therefore we will skip it
             if( !is_array( $directory ) ) {
                 continue;
             }
@@ -152,23 +153,23 @@ class Scan extends Job {
 
 
             $isChecked = (
-                    empty( $this->options->includedDirectories ) ||
-                    in_array( $data["path"], $this->options->includedDirectories )
-                    );
+                empty( $this->options->includedDirectories ) ||
+                in_array( $data["path"], $this->options->includedDirectories )
+            );
 
             $dataPath = isset( $data["path"] ) ? $data["path"] : '';
             $dataSize = isset( $data["size"] ) ? $data["size"] : '';
 
 
-            // Select all wp core folders and their sub dirs. 
+            // Select all wp core folders and their sub dirs.
             // Unselect all other folders (default setting)
             $isDisabled = ($name !== 'wp-admin' &&
-                    $name !== 'wp-includes' &&
-                    $name !== 'wp-content' &&
-                    $name !== 'sites') &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) ? true : false;
+                           $name !== 'wp-includes' &&
+                           $name !== 'wp-content' &&
+                           $name !== 'sites') &&
+                          false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) &&
+                          false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) &&
+                          false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) ? true : false;
 
             // Extra class to differentiate between wp core and non core folders
             $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
@@ -215,7 +216,6 @@ class Scan extends Job {
 
 
         $data = array(
-            //'freespace' => $this->formatSize( $freeSpace ),
             'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( WPStaging::getWPpath() ) )
         );
 
@@ -240,7 +240,10 @@ class Scan extends Job {
         foreach ( $tables as $table ) {
 
             // Create array of unchecked tables
-            if( !empty( $wpDB->prefix ) && 0 !== strpos( $table->Name, $wpDB->prefix ) ) {
+            // On the main website of a multisite installation, do not select network site tables beginning with wp_1_, wp_2_ etc.
+            // (On network sites, the correct tables are selected anyway)
+            if (( ! empty($wpDB->prefix) && 0 !== strpos($table->Name, $wpDB->prefix))
+                || (is_multisite() && is_main_site() && preg_match('/^wp_\d+_/', $table->Name))) {
                 $this->options->excludedTables[] = $table->Name;
             }
 
@@ -254,13 +257,13 @@ class Scan extends Job {
         $this->options->tables = json_decode( json_encode( $currentTables ) );
     }
 
+
     /**
      * Get directories and main meta data about'em recursively
      */
     protected function getDirectories() {
 
         $directories = new Iterators\RecursiveDirectoryIterator( WPStaging::getWPpath() );
-
 
         foreach ( $directories as $directory ) {
             // Not a valid directory
@@ -282,9 +285,6 @@ class Scan extends Job {
 
         // Gather Custom Uploads Folder if there is one
         $this->getSubDirectories( $this->getUploadDir() );
-
-        // Gather /sites/ or /blogs.dir/ folder if there is one (for multisites)
-        $this->getSubDirectories( $this->getMuUploadSitesDir() );
     }
 
     /**
@@ -301,7 +301,7 @@ class Scan extends Job {
             return false;
         }
 
-        // IMPORTANT: If this is not used and a folder belongs to another user 
+        // IMPORTANT: If this is not used and a folder belongs to another user
         // DirectoryIterator() will throw a fatal error which can not be catched with is_readable()
         if( !opendir( $path ) ) {
             return false;
@@ -323,7 +323,7 @@ class Scan extends Job {
     /**
      * Get Path from $directory
      * @param string
-     * @return bool
+     * @return bool|string
      */
     protected function getPath( $directory ) {
 
@@ -401,7 +401,7 @@ class Scan extends Job {
      * @param string $dir
      * @return int
      */
-    function getDirectorySizeInclSubdirs( $dir ) {
+    protected function getDirectorySizeInclSubdirs( $dir ) {
         $size = 0;
         foreach ( glob( rtrim( $dir, '/' ) . '/*', GLOB_NOSORT ) as $each ) {
             $size += is_file( $each ) ? filesize( $each ) : $this->getDirectorySizeInclSubdirs( $each );
@@ -409,45 +409,15 @@ class Scan extends Job {
         return $size;
     }
 
+
     /**
-     * Get absolute WP uploads path e.g. 
+     * Get absolute WP uploads path e.g.
      * Multisites: /var/www/htdocs/example.com/wp-content/uploads/sites/1 or /var/www/htdocs/example.com/wp-content/blogs.dir/1/files
      * Single sites: /var/www/htdocs/example.com/wp-content/uploads
      * @return string
      */
     protected function getUploadDir() {
         $uploads = wp_upload_dir( null, false );
-
-        $baseDir = wpstg_replace_windows_directory_separator( $uploads['basedir'] );
-
-        // If multisite (and if not the main site in a post-MU network)
-        if( is_multisite() && !( is_main_network() && is_main_site() && defined( 'MULTISITE' ) ) ) {
-            // blogs.dir is used on WP 3.5 and lower
-            if( false !== strpos( $baseDir, 'blogs.dir' ) ) {
-                // remove this piece from the basedir: /blogs.dir/2/files
-                $uploadDir = wpstg_replace_first_match( '/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir );
-                $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/blogs.dir' );
-            } else {
-                // remove this piece from the basedir: /sites/2
-                $uploadDir = wpstg_replace_first_match( '/sites/' . get_current_blog_id(), null, $baseDir );
-                $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/sites' );
-            }
-
-
-            return $dir;
-        }
-        return $baseDir;
-    }
-
-    /**
-     * Get absolute WP uploads path e.g. 
-     * Multisites: /var/www/htdocs/example.com/wp-content/uploads/sites/1 or /var/www/htdocs/example.com/wp-content/blogs.dir/1/files
-     * Single sites: /var/www/htdocs/example.com/wp-content/uploads
-     * @return string
-     */
-    protected function getMuUploadSitesDir() {
-        $uploads = wp_upload_dir( null, false );
-
         $baseDir = wpstg_replace_windows_directory_separator( $uploads['basedir'] );
 
         // If multisite (and if not the main site in a post-MU network)
