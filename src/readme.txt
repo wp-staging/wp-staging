@@ -153,7 +153,7 @@ https://wp-staging.com
 
 == Changelog ==
 
-= 2.7.4 =
+= 2.7.5 =
 * New: Compatible up to WordPress 5.4.2
 * Fix: Remove beta notice
 * Fix: Error if views are cloned
@@ -162,6 +162,9 @@ https://wp-staging.com
 * Fix: Step switching logic does not work properly
 * Fix: Fix progress bar when certains steps are skipped
 * Fix: Change german translation for REPORT ISSUE
+
+= 2.7.4 =
+SKIP VERSION
 
 = 2.7.3 =
 * New: Compatible up to WordPress 5.4.1
