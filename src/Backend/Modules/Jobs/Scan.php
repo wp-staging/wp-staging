@@ -154,9 +154,9 @@ class Scan extends Job {
 
 
             $isChecked = (
-                    empty( $this->options->includedDirectories ) ||
-                    in_array( $data["path"], $this->options->includedDirectories )
-                    );
+                empty( $this->options->includedDirectories ) ||
+                in_array( $data["path"], $this->options->includedDirectories )
+            );
 
             $dataPath = isset( $data["path"] ) ? $data["path"] : '';
             $dataSize = isset( $data["size"] ) ? $data["size"] : '';
@@ -165,12 +165,12 @@ class Scan extends Job {
             // Select all wp core folders and their sub dirs.
             // Unselect all other folders (default setting)
             $isDisabled = ($name !== 'wp-admin' &&
-                    $name !== 'wp-includes' &&
-                    $name !== 'wp-content' &&
-                    $name !== 'sites') &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) ? true : false;
+                $name !== 'wp-includes' &&
+                $name !== 'wp-content' &&
+                $name !== 'sites') &&
+            false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) &&
+            false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) &&
+            false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) ? true : false;
 
             // Extra class to differentiate between wp core and non core folders
             $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
@@ -228,11 +228,11 @@ class Scan extends Job {
      * Get Database Tables
      */
     protected function getTables() {
-        $wpDB = WPStaging::getInstance()->get( "wpdb" );
+        $db = WPStaging::getInstance()->get( "wpdb" );
 
         $sql = "SHOW TABLE STATUS";
 
-        $tables = $wpDB->get_results( $sql );
+        $tables = $db->get_results( $sql );
 
         $currentTables = array();
 
@@ -243,8 +243,8 @@ class Scan extends Job {
             // Create array of unchecked tables
             // On the main website of a multisite installation, do not select network site tables beginning with wp_1_, wp_2_ etc.
             // (On network sites, the correct tables are selected anyway)
-            if (( ! empty($wpDB->prefix) && 0 !== strpos($table->Name, $wpDB->prefix))
-                || (is_multisite() && is_main_site() && preg_match('/^wp_\d+_/', $table->Name))) {
+            if (( ! empty($db->prefix) && 0 !== strpos($table->Name, $db->prefix))
+                || (is_multisite() && is_main_site() && preg_match('/^'.$db->prefix.'\d+_/', $table->Name))) {
                 $this->options->excludedTables[] = $table->Name;
             }
 
