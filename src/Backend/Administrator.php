@@ -267,8 +267,8 @@ class Administrator extends InjectionAware
     {
         // Tabs
         $tabs = new Tabs(array(
-            "general" => __("General", "wp-staging")
-        ));
+                             "general" => __("General", "wp-staging")
+                         ));
 
 
         $this->di
@@ -311,9 +311,9 @@ class Administrator extends InjectionAware
     {
         // Tabs
         $tabs = new Tabs(array(
-            "import_export" => __("Import/Export", "wp-staging"),
-            "system_info" => __("System Info", "wp-staging")
-        ));
+                             "import_export" => __("Import/Export", "wp-staging"),
+                             "system_info" => __("System Info", "wp-staging")
+                         ));
 
         $this->di->set("tabs", $tabs);
 
@@ -468,7 +468,7 @@ class Administrator extends InjectionAware
         // Get db
         $db = WPStaging::getInstance()->get('wpdb');
 
-        if (\WPStaging\WPStaging::getSlug() === 'wp-staging-pro') {
+        if (defined("WPSTGPRO_VERSION")) {
             require_once "{$this->path}Pro/views/single-overview-pro.php";
         } else {
             require_once "{$this->path}views/clone/ajax/single-overview.php";
@@ -516,19 +516,19 @@ class Administrator extends InjectionAware
         // Check clone name length
         if ($cloneNameLength < 1 || $cloneNameLength > 16) {
             echo wp_send_json(array(
-                "status" => "failed",
-                "message" => "Clone name must be between 1 - 16 characters"
-            ));
+                                  "status" => "failed",
+                                  "message" => "Clone name must be between 1 - 16 characters"
+                              ));
         } elseif (array_key_exists($cloneName, $clones)) {
             echo wp_send_json(array(
-                "status" => "failed",
-                "message" => "Clone name is already in use, please choose another clone name."
-            ));
+                                  "status" => "failed",
+                                  "message" => "Clone name is already in use, please choose another clone name."
+                              ));
         } elseif (is_dir($clonePath) && !wpstg_is_empty_dir($clonePath)) {
             echo wp_send_json(array(
-                "status" => "failed",
-                "message" => "Clone directory " . $clonePath . " already exists. Use another clone name."
-            ));
+                                  "status" => "failed",
+                                  "message" => "Clone directory " . $clonePath . " already exists. Use another clone name."
+                              ));
         }
 
         echo wp_send_json(array("status" => "success"));
