@@ -7,9 +7,13 @@
         <span class="wpstg-step-num">2</span>
         <?php echo __( "Scanning", "wp-staging" ) ?>
     </li>
-    <li class="wpstg-step3">
+    <li class="wpstg-step3 wpstg-step3-cloning">
         <span class="wpstg-step-num">3</span>
         <?php echo __( "Cloning", "wp-staging" ) ?>
+    </li>
+    <li class="wpstg-step3 wpstg-step3-pushing" style="display: none;">
+        <span class="wpstg-step-num">3</span>
+        <?php echo __( "Pushing", "wp-staging" ) ?>
     </li>
     <li>
         <button type="button" id="wpstg-report-issue-button" class="wpstg-button">

@@ -796,6 +796,8 @@ var WPStaging = (function ($) {
         );
 
         that.switchStep(1);
+        cache.get(".wpstg-step3-cloning").show();
+        cache.get(".wpstg-step3-pushing").hide();
     };
 
     /**
