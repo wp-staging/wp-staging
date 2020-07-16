@@ -7,10 +7,11 @@ if (!defined("WPINC")) {
     die;
 }
 
-use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 use WPStaging\Utils\Strings;
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
+use WPStaging\Service\CloningProcess\WpConfigEditor;
+use WPStaging\Utils\Logger;
 
 /**
  * Class Data
@@ -1096,53 +1097,13 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Add UPLOADS constant in wp-config.php or change it to correct destination (multisite type /sites/2/)
+     * Add UPLOADS, WP_PLUGIN_DIR, WP_LANG_DIR, and WP_TEMP_DIR constants in wp-config.php or change them to correct destination (multisite type /sites/2/)
      * @return bool
      */
     protected function step18()
     {
-        $path = $this->options->destinationDir . "wp-config.php";
-        $this->log("Preparing Data Step18: Update UPLOADS constant in wp-config.php");
-        if (false === ($content = file_get_contents($path))) {
-            $this->log("Preparing Data Step18: Failed to get UPLOADS in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR);
-            return false;
-        }
-        // Get UPLOADS from wp-config.php if there is already one
-        preg_match("/define\s*\(\s*['\"]UPLOADS['\"]\s*,\s*(.*)\s*\);/", $content, $matches);
-        $uploadFolder = $this->getMultisiteUploadFolder();
-        if (!empty($matches[0])) {
-            $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
-
-            $replace = "define('UPLOADS', '" . $uploadFolder . "');";
-            $this->log("Preparing Data Step18: Change UPLOADS constant in wp-config.php to {$uploadFolder}.");
-            if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
-                $this->log("Preparing Data Step 18: Failed to change UPLOADS", Logger::TYPE_ERROR);
-                return false;
-            }
-        } else {
-            $this->log("Preparing Data Step18: UPLOADS not defined in wp-config.php. Creating new entry.");
-            // Find ABSPATH and add UPLOAD constant above
-            preg_match("/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/", $content, $matches);
-            if (!empty($matches[0])) {
-                $matches[0];
-                $pattern = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
-                $replace = "define('UPLOADS', '" . $uploadFolder . "'); \n" .
-                    "if ( ! defined( 'ABSPATH' ) )";
-                $this->log("Preparing Data Step18: Change UPLOADS constant in wp-config.php to {$uploadFolder}.");
-                if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
-                    $this->log("Preparing Data Step 18: Failed to change UPLOADS", Logger::TYPE_ERROR);
-                    return false;
-                }
-            } else {
-                $this->log("Preparing Data Step 18: Can not add UPLOAD constant to wp-config.php. Can not find free position to add it.", Logger::TYPE_ERROR);
-            }
-        }
-        if (false === @wpstg_put_contents($path, $content)) {
-            $this->log("Preparing Data Step18: Failed to update UPLOADS. Can't save contents", Logger::TYPE_ERROR);
-            return false;
-        }
-        $this->Log("Preparing Data Step18: Finished successfully");
-        return true;
+        $wpConfigEditor = new WpConfigEditor($this, 18, $this->getMultisiteUploadFolder());
+        return $wpConfigEditor->replaceOrAddDefinitions();
     }
 
     /**
@@ -1245,7 +1206,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
             // Add new capability
             $sql .= $this->db->prepare(
                 "INSERT INTO `{$this->prefix}usermeta` ( `umeta_id`, `user_id`, `meta_key`, `meta_value` ) VALUES ( NULL , %s, %s, %s );\n", $userId, $this->prefix . 'capabilities', serialize(array(
-                    'administrator' => true))
+                                                                                                                                                                                                    'administrator' => true))
             );
         }
         if (!empty($sql)) {

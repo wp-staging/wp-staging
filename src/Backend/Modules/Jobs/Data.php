@@ -7,6 +7,7 @@ if (!defined("WPINC")) {
     die;
 }
 
+use WPStaging\Service\CloningProcess\WpConfigEditor;
 use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 use WPStaging\Utils\Helper;
@@ -451,9 +452,9 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
         $result = $this->db->query(
-                $this->db->prepare(
-                        "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'rewrite_rules'", null
-                )
+            $this->db->prepare(
+                "UPDATE {$this->prefix}options SET option_value = %s WHERE option_name = 'rewrite_rules'", null
+            )
         );
 
         // All good
@@ -1014,57 +1015,69 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
     }
 
     /**
-     * Add UPLOADS constant in wp-config.php or change it to correct destination.
-     * This is important when a custom uploads folder is used
+     * Add UPLOADS, WP_PLUGIN_DIR, WP_LANG_DIR, and WP_TEMP_DIR constants in wp-config.php or change them to correct destination.
+     * This is important when custom folders are used
      * @return bool
      */
     protected function step17()
     {
-        $path = $this->options->destinationDir . "wp-config.php";
-        $this->log("Preparing Data Step17: Update UPLOADS constant in wp-config.php");
-        if (false === ($content = file_get_contents($path))) {
-            $this->log("Preparing Data Step17: Failed to get UPLOADS in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR);
-            return false;
-        }
-        // Get UPLOADS from wp-config.php if there is already one
-        preg_match("/define\s*\(\s*['\"]UPLOADS['\"]\s*,\s*(.*)\s*\);/", $content, $matches);
-        // TODO RPoC; DRY
-        $uploadFolder = wpstg_get_rel_upload_dir();
-        $uploadFolder = ltrim($uploadFolder, '/');
-        $uploadFolder = rtrim($uploadFolder, '/');
+        $wpConfigEditor = new WpConfigEditor($this, 17, trim(wpstg_get_rel_upload_dir(), '/'));
+        return $wpConfigEditor->replaceOrAddDefinitions();
+    }
 
-        if (!empty($matches[0])) {
-            $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
-
-            $replace = "define('UPLOADS', '" . $uploadFolder . "');";
-            if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
-                $this->log("Preparing Data Step17: Failed to change UPLOADS", Logger::TYPE_ERROR);
+    /**
+     * Add UPLOADS constant in wp-config.php or change it to correct destination.
+     * This is important when a custom uploads folder is used
+     * @return bool
+     * @todo remove
+     */
+    /*    protected function step17_old()
+        {
+            $path = $this->options->destinationDir . "wp-config.php";
+            $this->log("Preparing Data Step17: Update UPLOADS constant in wp-config.php");
+            if (false === ($content = file_get_contents($path))) {
+                $this->log("Preparing Data Step17: Failed to get UPLOADS in wp-config.php. Can't read wp-config.php", Logger::TYPE_ERROR);
                 return false;
             }
-        } else {
-            $this->log("Preparing Data Step17: UPLOADS not defined in wp-config.php. Creating new entry.");
-            // Find line with ABSPATH and add UPLOADS constant above
-            preg_match("/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/", $content, $matches);
+            // Get UPLOADS from wp-config.php if there is already one
+            preg_match("/define\s*\(\s*['\"]UPLOADS['\"]\s*,\s*(.*)\s*\);/", $content, $matches);
+            // TODO RPoC; DRY
+            $uploadFolder = wpstg_get_rel_upload_dir();
+            $uploadFolder = ltrim($uploadFolder, '/');
+            $uploadFolder = rtrim($uploadFolder, '/');
+
             if (!empty($matches[0])) {
-                $matches[0];
-                $pattern = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
-                $replace = "define('UPLOADS', '" . $uploadFolder . "'); \n" .
-                    "if ( ! defined( 'ABSPATH' ) )";
+                $pattern = "/define\s*\(\s*'UPLOADS'\s*,\s*(.*)\s*\);/";
+
+                $replace = "define('UPLOADS', '" . $uploadFolder . "');";
                 if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
-                    $this->log("Preparing Data Step 17: Failed to change UPLOADS", Logger::TYPE_ERROR);
+                    $this->log("Preparing Data Step17: Failed to change UPLOADS", Logger::TYPE_ERROR);
                     return false;
                 }
             } else {
-                $this->log("Preparing Data Step 17: Can not add UPLOAD constant to wp-config.php. Can not find free position to add it.", Logger::TYPE_ERROR);
+                $this->log("Preparing Data Step17: UPLOADS not defined in wp-config.php. Creating new entry.");
+                // Find line with ABSPATH and add UPLOADS constant above
+                preg_match("/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/", $content, $matches);
+                if (!empty($matches[0])) {
+                    $matches[0];
+                    $pattern = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
+                    $replace = "define('UPLOADS', '" . $uploadFolder . "'); \n" .
+                        "if ( ! defined( 'ABSPATH' ) )";
+                    if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
+                        $this->log("Preparing Data Step 17: Failed to change UPLOADS", Logger::TYPE_ERROR);
+                        return false;
+                    }
+                } else {
+                    $this->log("Preparing Data Step 17: Can not add UPLOAD constant to wp-config.php. Can not find free position to add it.", Logger::TYPE_ERROR);
+                }
             }
-        }
-        if (false === @wpstg_put_contents($path, $content)) {
-            $this->log("Preparing Data Step17: Failed to update UPLOADS. Can't save contents", Logger::TYPE_ERROR);
-            return false;
-        }
-        $this->Log("Preparing Data Step17: Finished successfully");
-        return true;
-    }
+            if (false === @wpstg_put_contents($path, $content)) {
+                $this->log("Preparing Data Step17: Failed to update UPLOADS. Can't save contents", Logger::TYPE_ERROR);
+                return false;
+            }
+            $this->Log("Preparing Data Step17: Finished successfully");
+            return true;
+        }*/
 
     /**
      * Save hostname of parent production site in option_name wpstg_connection
