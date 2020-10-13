@@ -28,11 +28,9 @@ services:
     ports:
       - ${DOCKER_GATEWAY_IP}:3306:3306
   php-fpm:
-    image: wpstaging/php7.3-fpm:firsttry
+    image: wpstaging/php7.3-fpm:ci
     env_file: .env
     depends_on:
-      - database
-    links:
       - database
     volumes:
       - ./var/www:/var/www
@@ -48,8 +46,10 @@ services:
       - ./docker/install/multi:/usr/local/bin/single:ro
       - ./docker/install/single_tests:/usr/local/bin/single_tests:ro
       - ./docker/install/multi_tests:/usr/local/bin/multi_tests:ro
-      - ./codeception.dist.yml:/var/www/tests/codeception.dist.yml
-      - ./.env:/var/www/tests/.env
+      - ./codeception.dist.yml:/var/www/tests/codeception.dist.yml:ro
+      - ./phpstan.dist.neon:/var/www/tests/phpstan.dist.neon:ro
+      - ./phpcs.xml.dist:/var/www/tests/phpcs.xml.dist:ro
+      - ./.env:/var/www/tests/.env:ro
       - ./vendor:/var/www/tests/vendor
       - ./tests:/var/www/tests/tests
   nginx:
@@ -68,11 +68,15 @@ services:
     ports:
       - ${DOCKER_GATEWAY_IP}:80:80
       - ${DOCKER_GATEWAY_IP}:443:443
-  selenium_chromedriver:
-    image: selenium/standalone-chrome:3.141.59
+  hub:
+    image: selenium/hub:3
+  chrome:
+    image: selenium/node-chrome:3
     volumes:
-      - '/dev/shm:/dev/shm'
-    links:
-      - nginx
+      - /dev/shm:/dev/shm
+    depends_on:
+      - hub
+    environment:
+      - HUB_HOST=hub
     extra_hosts:
       - "${HOST_SINGLE_TESTS} ${HOST_MULTI_TESTS}:${DOCKER_GATEWAY_IP}"

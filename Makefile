@@ -1,10 +1,10 @@
-.PHONY: up stop down build install test start restart init
+.PHONY: up stop down build install webdriver webdriver_single_free webdriver_multi_free webdriver_single_pro webdriver_multi_pro webdriver_single_test install_ci enter phpstan phpcs tag_version dist_pro dist_basic start restart init init_ci reset
 
 include .env
 export $(shell sed 's/=.*//' .env)
 
 up:
-	docker-compose up -d
+	docker-compose up -d --scale chrome=2 --remove-orphans
 
 stop:
 	docker-compose stop
@@ -18,55 +18,159 @@ build:
 install:
 	docker exec --user root -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "install"
 
-test:
-	php -d max_execution_time=60 ./src/vendor/bin/phpunit -c ./
-#	php -d max_execution_time=60 ./src/vendor/bin/phpunit -c ./ --debug
+# Run webdriver tests in parallel. Usage: make webdriver_parallel_pro -j 2
+webdriver_parallel_pro: webdriver_single_pro webdriver_multi_pro
 
-dist:
-	rm -f ./wp-staging.zip
-	docker-compose run --rm composer install --no-dev
-	cp -a ./src/. ./wp-staging/
-	sed -i "s/{{version}}/$(VERSION)/g" ./wp-staging/wp-staging.php
-	sed -i "s/('WPSTG_VERSION',.*'.*')/('WPSTG_VERSION', '$(VERSION)')/g" ./wp-staging/wp-staging.php
-	sed -i "s/{{version}}/$(VERSION)/g" ./wp-staging/readme.txt
-	rm -rf ./wp-staging/var/*
-	rm -rf ./wp-staging/var/
-	zip -r wp-staging.zip ./wp-staging
-	rm -rf ./wp-staging
+# Run webdriver tests in parallel. Usage: make webdriver_parallel_free -j 2
+webdriver_parallel_free: webdriver_single_free webdriver_multi_free
+
+# Run webdriver tests for single site for the Free version of WPSTAGING
+webdriver_single_free:
+	docker exec --user www-data -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "cd /var/www/tests && ./vendor/bin/codecept run webdriver --env single --fail-fast Free"
+
+# Run webdriver tests for multi site for the Free version of WPSTAGING
+webdriver_multi_free:
+	docker exec --user www-data -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "cd /var/www/tests && ./vendor/bin/codecept run webdriver --env multi --fail-fast Free"
+
+# Run webdriver tests for single site for the PRO version of WPSTAGING
+webdriver_single_pro:
+	docker exec --user www-data -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "cd /var/www/tests && ./vendor/bin/codecept run webdriver --env single --fail-fast Pro"
+
+# Run webdriver tests for multi site for the PRO version of WPSTAGING
+webdriver_multi_pro:
+	docker exec --user www-data -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "cd /var/www/tests && ./vendor/bin/codecept run webdriver --env multi --fail-fast Pro"
+
+# Run a webdriver for a particular class. Demo!
+webdriver_single_test:
+	docker exec --user www-data -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "cd /var/www/tests && ./vendor/bin/codecept run webdriver --env multi --fail-fast 004-cloneExtDbCest.php"
+
+install_ci:
+	docker exec --user root -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "install tests"
+
+enter:
+	docker exec -it $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash
+
+# Runs PHPStan using "phpstan.dist.neon" configuration
+phpstan:
+	docker exec --user www-data -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "cd /var/www/tests && php -d memory_limit=3G /var/www/tests/vendor/bin/phpstan analyse -c phpstan.dist.neon"
+
+# Runs PHPCS
+phpcs:
+	docker exec --user www-data -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "cd /var/www/tests && php -d memory_limit=3G /var/www/tests/vendor/bin/phpcs"
+
+# Replaces all occurrences of {{wpstgFreeVersion}} with given version number in the codebase.
+# This command should be run as part of the deploy process.
+# After running this command, commit the resulting file changes to the repo.
+tag_version_free:
+	@[ "${VERSION}" ] || ( echo "VERSION is not set. Usage: make tag_version_free VERSION=1.2.3"; exit 1 )
+	grep -rl {{wpstgFreeVersion}} \
+	--include \*.php \
+	--include BASIC-DONT-INCLUDE/readme.txt \
+	./src | xargs --no-run-if-empty sed -i 's/{{wpstgFreeVersion}}/$(VERSION)/g'
 
 
+# Replaces all occurrences of {{wpstgProVersion}} with given version number in the codebase.
+# This command should be run as part of the deploy process.
+# After running this command, commit the resulting file changes to the repo.
+tag_version_pro:
+	@[ "${VERSION}" ] || ( echo "VERSION is not set. Usage: make tag_version_pro VERSION=1.2.3"; exit 1 )
+	grep -rl {{wpstgProVersion}} \
+	--include \*.php \
+	--include readme.txt \
+	./src | xargs --no-run-if-empty sed -i 's/{{wpstgProVersion}}/$(VERSION)/g'
+
+# Builds the distributable Pro version of the plugin based on src.
+# Replaces {{wpstgStaticVersion}} with given version number on-the-fly, only in the generated code.
+dist_pro:
+	@[ "${VERSION}" ] || ( echo "VERSION is not set. Usage: make dist_pro VERSION=1.2.3"; exit 1 )
+    # Dist folder cleanup
+	rm -rf ./dist/wp-staging/
+	rm -rf ./dist/wp-staging-pro/
+	rm -rf ./dist/wp-staging-pro.zip
+	# Skip deleting wp-staging.zip
+
+	# Convert development version into distributable version
+	mkdir -p ./dist/wp-staging-pro/
+	cp -a ./src/. ./dist/wp-staging-pro/
+
+	# Text replacements
+	sed -i "s/{{wpstgStaticVersion}}/$(VERSION)/g" ./dist/wp-staging-pro/wp-staging-pro.php
+	sed -i "s/{{wpstgStaticVersion}}/$(VERSION)/g" ./dist/wp-staging-pro/readme.txt
+	sed -i "s/('WPSTGPRO_VERSION',.*'.*')/('WPSTGPRO_VERSION', '$(VERSION)')/g" ./dist/wp-staging-pro/Pro/constants.php
+
+	# Cleanup
+	rm -rf ./dist/wp-staging-pro/var/
+	rm -rf ./dist/wp-staging-pro/vendor/
+	rm -rf ./dist/wp-staging-pro/BASIC-DONT-INCLUDE/
+
+    # Composer and autoloader
+	composer install -d ./dist/wp-staging-pro --no-dev -o
+	rm -f ./dist/wp-staging-pro/composer.json
+	rm -f ./dist/wp-staging-pro/composer.lock
+
+	# Make distributable .zip file
+	cd dist && zip -qr ./wp-staging-pro.zip ./wp-staging-pro
+
+	# Safety mechanism: Show in the terminal which files are not version-tagged.
+	grep -rl {{wpstgFreeVersion}} --include \*.php ./dist/wp-staging-pro || :
+	grep -rl {{wpstgProVersion}} --include \*.php ./dist/wp-staging-pro || :
+	grep -rl {{wpstgStaticVersion}} --include \*.php ./dist/wp-staging-pro || :
+
+# Builds the distributable Free version of the plugin based on src.
+# Replaces {{wpstgStaticVersion}} with given version number on-the-fly, only in the generated code.
+dist_basic:
+	@[ "${VERSION}" ] || ( echo "VERSION is not set. Usage: make dist_basic VERSION=1.2.3"; exit 1 )
+	# Dist folder cleanup
+	rm -rf ./dist/wp-staging/
+	rm -rf ./dist/wp-staging-pro/
+	rm -rf ./dist/wp-staging.zip
+	# Skip deleting wp-staging-pro.zip
+
+	# Convert development version into distributable version
+	mkdir -p ./dist/wp-staging/
+	cp -a ./src/. ./dist/wp-staging/
+
+	# Plugin entry-file and readme
+	rm -f ./dist/wp-staging/wp-staging-pro.php
+	rm -f ./dist/wp-staging/readme.txt
+	cp -a ./dist/wp-staging/BASIC-DONT-INCLUDE/wp-staging.php ./dist/wp-staging/wp-staging.php
+	cp -a ./dist/wp-staging/BASIC-DONT-INCLUDE/readme.txt ./dist/wp-staging/readme.txt
+
+	# Text replacements
+	sed -i "s/wpstgpro/wpstgfree/g" ./dist/wp-staging/composer.json
+	sed -i "s/{{wpstgStaticVersion}}/$(VERSION)/g" ./dist/wp-staging/wp-staging.php
+	sed -i "s/{{wpstgStaticVersion}}/$(VERSION)/g" ./dist/wp-staging/readme.txt
+	sed -i "s/('WPSTG_VERSION',.*'.*')/('WPSTG_VERSION', '$(VERSION)')/g" ./dist/wp-staging/constants.php
+
+	# Pro code cleanup and general cleanup
+	rm -rf ./dist/wp-staging/var/
+	rm -rf ./dist/wp-staging/vendor/
+	rm -rf ./dist/wp-staging/BASIC-DONT-INCLUDE/
+	rm -rf ./dist/wp-staging/Pro/
+	rm -rf ./dist/wp-staging/Backend/Pro/
+
+    # Composer and autoloader
+	composer install -d ./dist/wp-staging --no-dev -o
+	rm -f ./dist/wp-staging/composer.json
+	rm -f ./dist/wp-staging/composer.lock
+
+	# Make distributable .zip file
+	cd dist && zip -qr ./wp-staging.zip ./wp-staging
+
+	# Safety mechanism: Show in the terminal which files are not version-tagged.
+	grep -rl {{wpstgFreeVersion}} --include \*.php ./dist/wp-staging || :
+	grep -rl {{wpstgProVersion}} --include \*.php ./dist/wp-staging || :
+	grep -rl {{wpstgStaticVersion}} --include \*.php ./dist/wp-staging || :
 
 # Combinations & Aliases
 start: up
 restart: down up
 init: build up install
+init_ci: build up install_ci
 reset: down stop
 	rm -rf ./var/www/*
 	touch ./var/www/.gitkeep
-	docker volume rm wp-staging_database
+	docker volume rm wp-staging-pro_database
 	make up
-	sleep $${WAIT_SERVICES_IN_SECONDS}
 	make install
 	sudo chown $(USER):$(USER) ./var -R
-test_up:
-	./vendor/bin/chromedriver --url-base=/wd/hub /dev/null 2>&1 &
-test_single:
-	php vendor/bin/codecept run --debug --xml acceptance --env single --steps
-test_multi:
-	php vendor/bin/codecept run acceptance --env multisite --steps
-test_acceptance:
-	#php vendor/bin/codecept run acceptance 001-cloneCest.php --env single --steps
-	#php vendor/bin/codecept run acceptance 002-pushCest.php --env single --steps
-	#php vendor/bin/codecept run acceptance 003-updatingCest.php --env single --steps
-	#php vendor/bin/codecept run acceptance 004-cloneExtDbCest.php --env single --steps
-	#php vendor/bin/codecept run acceptance 005-pushExtDbCest.php --env single --steps
-	#php vendor/bin/codecept run acceptance 006-cloneExtDirCest.php --env single --steps
-	#php vendor/bin/codecept run acceptance 007-pushExtDirCest.php --env single --steps
-
-	#php vendor/bin/codecept run acceptance 001-cloneCest.php --env multisite --steps
-	#php vendor/bin/codecept run --debug acceptance 002-pushCest.php --env multisite --steps
-	#php vendor/bin/codecept run acceptance 003-updatingCest.php --env multisite --steps
-	#php vendor/bin/codecept run acceptance 004-cloneExtDbCest.php --env multisite --steps
-	#php vendor/bin/codecept run acceptance 005-pushExtDbCest.php --env multisite --steps
-	#php vendor/bin/codecept run acceptance 006-cloneExtDirCest.php --env multisite --steps
-	#php vendor/bin/codecept run acceptance 007-pushExtDirCest.php --env multisite --steps

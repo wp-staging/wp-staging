@@ -2,22 +2,22 @@
 
 chown www-data:www-data /var/www -R
 
+while ! (mysqladmin ping --host=database --user=root --password=MYSQL_ROOT_PASSWORD > /dev/null 2>&1)
+do
+   sleep 3
+   echo "Waiting till MySQL service is available..."
+done
+
 source /usr/local/bin/databases
 
-if (( WAIT_SERVICES_IN_SECONDS > 0 )); then
-  echo "Waiting for services to kickin for ${WAIT_SERVICES_IN_SECONDS} seconds"
-  sleep "${WAIT_SERVICES_IN_SECONDS}"
-fi
-
-if [[ $1 = "single" ]]; then
-  source /usr/local/bin/single
-elif [[ $1 = "multi" ]]; then
-  source /usr/local/bin/multi
+if [[ $1 = "tests" ]]; then
+  source /usr/local/bin/single_tests
+  source /usr/local/bin/multi_tests
 else
   source /usr/local/bin/single
+  source /usr/local/bin/single_tests
   source /usr/local/bin/multi
+  source /usr/local/bin/multi_tests
 fi
-
-source /usr/local/bin/test
 
 cd /var/www || exit 1

@@ -43,7 +43,8 @@ su www-data -c "wp --path=$PATH_MULTI core install --url=\"https://${HOST_MULTI_
 
 echo "Updating wp-config.php..."
 su www-data -c "wp config set WP_DEBUG true"
-su www-data -c "wp config set WP_DISPLAY true"
+su www-data -c "wp config set WP_DEBUG_LOG true"
+su www-data -c "wp config set WP_DEBUG_DISPLAY true"
 
 chmod 644 "${PATH_MULTI}wp-config.php"
 
@@ -52,9 +53,6 @@ su www-data -c "wp --path=$PATH_MULTI plugin deactivate hello"
 su www-data -c "wp --path=$PATH_MULTI plugin deactivate akismet"
 su www-data -c "wp --path=$PATH_MULTI plugin delete hello"
 su www-data -c "wp --path=$PATH_MULTI plugin delete akismet"
-
-echo "Enabling WP-Staging PRO Plugin: "
-su www-data -c "wp --path=$PATH_MULTI plugin activate wp-staging"
 
 UPLOADS_PATH=$PATH_MULTI"wp-content/uploads"
 if [ ! -d $UPLOADS_PATH ]; then
@@ -65,3 +63,6 @@ fi
 
 echo "Converting to Multi Site"
 su www-data -c "wp --path=$PATH_MULTI core multisite-convert"
+
+echo "Activate WPSTAGING plugin: "
+su www-data -c "wp --path=$PATH_MULTI plugin activate --all --network"

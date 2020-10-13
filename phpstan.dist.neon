@@ -1,0 +1,22 @@
+# Usage: ./vendor/bin/phpstan analyse
+parameters:
+	level: 0
+	reportUnmatchedIgnoredErrors: false
+	paths:
+		- /var/www/single_tests/wp-content/plugins/wp-staging-pro
+	excludes_analyse:
+		- /var/www/single_tests/wp-content/plugins/wp-staging-pro/vendor/*
+	scanDirectories:
+		- /var/www/single_tests
+	ignoreErrors:
+	    -
+	        message: '#Call to protected method transformToWpFormat#'
+	        paths:
+	            - /var/www/single_tests/wp-content/plugins/wp-staging-pro/template/*
+	            - /var/www/single_tests/wp-content/plugins/wp-staging-pro/Pro/Snapshot/template/*
+	            - /var/www/single_tests/wp-content/plugins/wp-staging-pro/Pro/Snapshot/Database/template/*
+	    - '#invoked with \d parameters?, \d required.#'
+	    - '#Constant \w+ not found.#'
+	    - '#^PHPDoc tag#'
+	    - '#Access to (protected|private) property wpdb::\$\w+\.#' # wpdb has __get for protected/private
+	    - '#Variable \$\w+ might not be defined.#'

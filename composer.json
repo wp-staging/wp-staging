@@ -2,22 +2,31 @@
   "name": "wp-staging/pro",
   "license": "GPL-3.0-only",
   "description": "WordPress plugin for creating staging sites",
-  "require-dev": {
-    "codeception/codeception": "^4.1",
-    "hoa/console": "~3.0",
-    "php-webdriver/webdriver": "1.8.2",
-    "codeception/module-phpbrowser": "^1.0.0",
-    "codeception/module-asserts": "^1.0.0",
-    "codeception/module-webdriver": "^1.1",
-    "composer-plugin-api": "^1.0",
-    "vaimo/webdriver-binary-downloader": "^2.1.0",
-    "vaimo/binary-chromedriver": "^5.0"
-
+  "require": {
+    "ext-pdo": "*",
+    "ext-json": "*"
   },
-  "extra": {
-    "vaimo/chromedriver": {
-      "bypass-select": true,
-      "chromedriver-version": "2.35"
+  "autoload": {
+    "psr-4": {
+      "WPStaging\\Tests\\": "tests/_support"
     }
+  },
+  "require-dev": {
+    "hoa/console": "~3.0",
+    "composer-plugin-api": "^1.0",
+    "lucatume/wp-browser": "^2.6",
+    "codeception/codeception": "^4.0",
+    "phpunit/phpunit": "^9.0",
+    "codeception/module-asserts": "^1.0",
+    "codeception/module-phpbrowser": "^1.0",
+    "codeception/module-webdriver": "^1.0",
+    "codeception/module-db": "^1.0",
+    "codeception/module-filesystem": "^1.0",
+    "codeception/module-cli": "^1.0",
+    "codeception/util-universalframework": "^1.0",
+    "phpstan/phpstan": "^0.12.42",
+    "phpcompatibility/phpcompatibility-wp": "^2.0",
+    "dealerdirect/phpcodesniffer-composer-installer": "^0.7.0",
+    "mikey179/vfsstream": "^1.6.8"
   }
 }

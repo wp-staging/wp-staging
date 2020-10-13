@@ -20,7 +20,6 @@ services:
     environment:
       - MYSQL_DATABASE_SINGLE=${MYSQL_DATABASE_SINGLE}
       - MYSQL_DATABASE_MULTI=${MYSQL_DATABASE_MULTI}
-      - MYSQL_DATABASE_EXTERNAL=${MYSQL_DATABASE_EXTERNAL}
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
@@ -29,25 +28,30 @@ services:
     ports:
       - ${DOCKER_GATEWAY_IP}:3306:3306
   php-fpm:
-    image: triplebits/php:7.3-fpm
-    build: ./docker/php/7.3-fpm
+    image:  wpstaging/php7.3-fpm:firsttry
     env_file: .env
     depends_on:
       - database
-    links:
-      - database
     volumes:
       - ./var/www:/var/www
-      - ./src/.:/var/www/single/wp-content/plugins/wp-staging
-      - ./src/.:/var/www/multi/wp-content/plugins/wp-staging
-      - ./src/.:/var/www/custom/wp-content/plugins/wp-staging
+      - ./src/.:/var/www/single/wp-content/plugins/wp-staging-pro
+      - ./src/.:/var/www/single_tests/wp-content/plugins/wp-staging-pro
+      - ./src/.:/var/www/multi/wp-content/plugins/wp-staging-pro
+      - ./src/.:/var/www/multi_tests/wp-content/plugins/wp-staging-pro
       - ./docker/php/www.conf:/usr/local/etc/php-fpm.d/www.conf:ro
-      - ./docker/php/uploads.ini:/usr/local/etc/php/php.ini
+      - ./docker/php/php.ini:/usr/local/etc/php/php.ini
       - ./docker/install/install:/usr/local/bin/install:ro
       - ./docker/install/databases:/usr/local/bin/databases:ro
       - ./docker/install/single:/usr/local/bin/multi:ro
       - ./docker/install/multi:/usr/local/bin/single:ro
-      - ./docker/install/test:/usr/local/bin/test:ro
+      - ./docker/install/single_tests:/usr/local/bin/single_tests:ro
+      - ./docker/install/multi_tests:/usr/local/bin/multi_tests:ro
+      - ./codeception.dist.yml:/var/www/tests/codeception.dist.yml:ro
+      - ./phpstan.dist.neon:/var/www/tests/phpstan.dist.neon:ro
+      - ./phpcs.xml.dist:/var/www/tests/phpcs.xml.dist:ro
+      - ./.env:/var/www/tests/.env:ro
+      - ./vendor:/var/www/tests/vendor
+      - ./tests:/var/www/tests/tests
   nginx:
     image: triplebits/nginx:latest
     tty: true
@@ -57,14 +61,25 @@ services:
     volumes:
       - ./var/www:/var/www
       - ./docker/nginx/sites-enabled/.:/etc/nginx/sites-enabled
-      - ./src/.:/var/www/single/wp-content/plugins/wp-staging
-      - ./src/.:/var/www/multi/wp-content/plugins/wp-staging
+      - ./src/.:/var/www/single/wp-content/plugins/wp-staging-pro
+      - ./src/.:/var/www/single_tests/wp-content/plugins/wp-staging-pro
+      - ./src/.:/var/www/multi/wp-content/plugins/wp-staging-pro
+      - ./src/.:/var/www/multi_tests/wp-content/plugins/wp-staging-pro
     ports:
       - ${DOCKER_GATEWAY_IP}:80:80
       - ${DOCKER_GATEWAY_IP}:443:443
-  composer:
-    image: triplebits/composer:latest
-    env_file:
-      - .env
+  hub:
+    image: selenium/hub:3
+  chrome:
+    image: selenium/node-chrome-debug:3
     volumes:
-      - ./src/.:/var/www
+      - /dev/shm:/dev/shm
+    depends_on:
+      - hub
+    environment:
+      - HUB_HOST=hub
+      - VNC_NO_PASSWORD=1
+    ports:
+      - ${DOCKER_GATEWAY_IP}:5900-5901:5900
+    extra_hosts:
+      - "${HOST_SINGLE_TESTS} ${HOST_MULTI_TESTS}:${DOCKER_GATEWAY_IP}"

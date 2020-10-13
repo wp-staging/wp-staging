@@ -3,7 +3,7 @@ Files in `docker/install/*` must be executable within host (your own) FS (file s
 as permissions will be copied as it is to given destination in container FS.
 
 ### INSTALLATION
-* Copy `.env.dist` as `.env`
+* Copy `.env.example` as `.env`
 * No need to make any changes other than adding your **license key** to `LICENSE_KEY` in `.env` file
 * Make sure to add given IP address in `DOCKER_GATEWAY_IP` value, in `.env` file to your hosts file. Such as;
 ```

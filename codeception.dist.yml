@@ -1,0 +1,98 @@
+paths:
+    tests: tests
+    output: tests/_output
+    data: tests/_data
+    support: tests/_support
+    envs: tests/_envs
+actor_suffix: Tester
+extensions:
+    enabled:
+        - Codeception\Extension\RunFailed
+    commands:
+        - Codeception\Command\GenerateWPUnit
+        - Codeception\Command\GenerateWPRestApi
+        - Codeception\Command\GenerateWPRestController
+        - Codeception\Command\GenerateWPRestPostTypeController
+        - Codeception\Command\GenerateWPAjax
+        - Codeception\Command\GenerateWPCanonical
+        - Codeception\Command\GenerateWPXMLRPC
+params:
+    - .env
+modules:
+    config:
+        WPDb:
+            dsn: 'mysql:host=database;dbname=%MYSQL_DATABASE_SINGLE_TESTS%'
+            user: '%MYSQL_USER%'
+            password: '%MYSQL_PASSWORD%'
+            populate: false
+            cleanup: false
+            waitlock: 10
+            url: 'https://%HOST_SINGLE_TESTS%'
+            urlReplacement: true
+        WPBrowser:
+            url: 'https://%HOST_SINGLE_TESTS%'
+            adminUsername: '%WP_ADMIN_USERNAME%'
+            adminPassword: '%WP_ADMIN_PASSWORD%'
+            adminPath: '/wp-admin'
+            headers:
+                X_TEST_REQUEST: 1
+                X_WPBROWSER_REQUEST: 1
+        WPFilesystem:
+            wpRootFolder: '%WP_ROOT_FOLDER_SINGLE_TESTS%'
+            plugins: '/wp-content/plugins'
+            mu-plugins: '/wp-content/mu-plugins'
+            themes: '/wp-content/themes'
+            uploads: '/wp-content/uploads'
+        WPWebDriver:
+            url: 'https://%HOST_SINGLE_TESTS%'
+            adminUsername: '%WP_ADMIN_USERNAME%'
+            adminPassword: '%WP_ADMIN_PASSWORD%'
+            adminPath: '/wp-admin'
+            browser: chrome
+            host: hub
+            port: 4444
+            window_size: 1024x1300
+            wait: 5
+            capabilities:
+                acceptInsecureCerts: true
+                chromeOptions:
+                    args:
+                        - "--disable-gpu"
+                        - "--ignore-certificate-errors"
+                    w3c: false
+                unexpectedAlertBehaviour: 'accept'
+        WPLoader:
+            wpRootFolder: "%WP_ROOT_FOLDER_SINGLE_TESTS%"
+            dbName: "%MYSQL_DATABASE_WPLOADER_TESTS%"
+            dbHost: "database"
+            dbUser: "%WP_ADMIN_USERNAME%"
+            dbPassword: "%WP_ADMIN_PASSWORD%"
+            tablePrefix: "_wp"
+            domain: "%HOST_SINGLE_TESTS%"
+            adminEmail: "admin@%HOST_SINGLE_TESTS%"
+            title: "Test"
+            plugins:
+                - 'wp-staging-pro/wp-staging-pro.php'
+            activatePlugins:
+                - 'wp-staging-pro/wp-staging-pro.php'
+env:
+    single:
+        # Nothing changes
+    multi:
+        modules:
+            config:
+                WPDb:
+                    dsn: 'mysql:host=database;dbname=%MYSQL_DATABASE_MULTI_TESTS%'
+                    url: 'https://%HOST_MULTI_TESTS%'
+                WPBrowser:
+                    url: 'https://%HOST_MULTI_TESTS%'
+                WPFilesystem:
+                    wpRootFolder: '%WP_ROOT_FOLDER_MULTI_TESTS%'
+                WPWebDriver:
+                    url: 'https://%HOST_MULTI_TESTS%'
+                WPLoader:
+                    wpRootFolder: "%WP_ROOT_FOLDER_MULTI_TESTS%"
+                    dbName: "%MYSQL_DATABASE_WPLOADER_TESTS%"
+                    domain: "%HOST_MULTI_TESTS%"
+                    adminEmail: "admin@%HOST_MULTI_TESTS%"
+                    multisite: true

@@ -16,7 +16,7 @@ if [ -f $PATH_MULTI"wp-config.php" ]; then
   mv $PATH_MULTI"wp-config.php" $PATH_MULTI"wp-config.php.bak"
 fi
 
-RES=$(su www-data -c "wp --path=$PATH_MULTI core config --dbname=$MYSQL_DATABASE_MULTI --dbuser=$MYSQL_USER --dbpass=$MYSQL_PASSWORD --dbhost=database --dbprefix=wpm_")
+RES=$(su www-data -c "wp --path=$PATH_MULTI core config --dbname=$MYSQL_DATABASE_MULTI --dbuser=$MYSQL_USER --dbpass=$MYSQL_PASSWORD --dbhost=database --dbprefix=wp_")
 if [[ $RES != *"Success"* ]]; then
   echo "Failed to create config..."
   if [ -f $PATH_MULTI"wp-config.php.bak" ]; then
@@ -38,20 +38,15 @@ if [[ ! ${#RES} -gt 0 ]]; then
   exit 1
 fi
 
-rm -f $PATH_MULTI"wp-config.php"
-echo "Creating config..."
-su www-data -c "wp --path=$PATH_MULTI core config --dbname=$MYSQL_DATABASE_MULTI --dbuser=$MYSQL_USER --dbpass=$MYSQL_PASSWORD --dbhost=database --dbprefix=wp_ <<PHP
-define('WP_DEBUG', true);
-define('WP_DEBUG_LOG', \$_ENV['WP_DEBUG_LOG']);
-define('WP_DEBUG_DISPLAY', true);
-define('WP_MEMORY_LIMIT', '512M');
-PHP"
-
-
-chmod 644 "${PATH_MULTI}wp-config.php"
-
 echo "Installing WP"
 su www-data -c "wp --path=$PATH_MULTI core install --url=\"https://${HOST_MULTI}\" --title=\"WP Staging Multi\" --admin_user=\"${WP_ADMIN_USERNAME}\" --admin_password=\"${WP_ADMIN_PASSWORD}\" --admin_email=\"${WP_ADMIN_EMAIL}\""
+
+echo "Updating wp-config.php..."
+su www-data -c "wp config set WP_DEBUG true"
+su www-data -c "wp config set WP_DEBUG_DISPLAY false"
+su www-data -c "wp config set WP_DEBUG_LOG true"
+
+chmod 644 "${PATH_MULTI}wp-config.php"
 
 echo "Disabling Unneccessary Plugins"
 su www-data -c "wp --path=$PATH_MULTI plugin deactivate hello"
@@ -59,8 +54,8 @@ su www-data -c "wp --path=$PATH_MULTI plugin deactivate akismet"
 su www-data -c "wp --path=$PATH_MULTI plugin delete hello"
 su www-data -c "wp --path=$PATH_MULTI plugin delete akismet"
 
-echo "Enabling WP-Staging Plugin: "
-su www-data -c "wp --path=$PATH_MULTI plugin activate wp-staging"
+echo "Enabling WP-Staging PRO Plugin: "
+su www-data -c "wp --path=$PATH_MULTI plugin activate wp-staging-pro"
 su www-data -c "wp --path=$PATH_MULTI db query 'INSERT INTO wp_options (option_name, option_value) VALUES(\"wpstg_license_key\", \"${LICENSE_KEY}\");'"
 
 echo "Installing Extra Plugins"
@@ -75,3 +70,18 @@ fi
 
 echo "Converting to Multi Site"
 su www-data -c "wp --path=$PATH_MULTI core multisite-convert"
+
+# Check whether given credentials are valid; exit status 0 if valid, otherwise 1 Used for debugging purposes
+echo "Verify wp credentials"
+#su www-data -c "wp user check-password admin password"
+RES=$(su www-data -c "wp user check-password admin password")
+echo $RES
+if [$RES == 0]; then
+ echo "Valid Credentials!"
+ else
+ echo "Invalid Credentials!"
+fi
+
+echo "Get WP admin meta data"
+su www-data -c "wp db query 'SELECT * FROM wp_usermeta WHERE user_id = 1 AND meta_key = \"wp_capabilities\"' "
+su www-data -c "wp db query ' SELECT * FROM wp_usermeta WHERE user_id = 1 AND meta_key = \"wp_user_level\"' "
