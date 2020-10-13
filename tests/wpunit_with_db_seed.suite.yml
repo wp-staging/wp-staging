@@ -1,0 +1,13 @@
+actor: Wpunit_with_db_seedTester
+modules:
+    enabled:
+        - WPLoader
+        - WPDb
+        - \Helper\Wpunit_with_db_seed
+    config:
+        WPDb:
+            dsn: 'mysql:host=database;dbname=%MYSQL_DATABASE_WPLOADER_TESTS%'
+            populate: true
+            dump: 'tests/_data/seeds/database-export.sql'
+        WPLoader:
+            loadOnly: true

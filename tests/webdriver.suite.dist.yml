@@ -1,0 +1,9 @@
+actor: WebdriverTester
+modules:
+    enabled:
+        - \Helper\Webdriver
+        - WPWebDriver
+step_decorators:
+    - \Codeception\Step\Retry
+    - \Codeception\Step\TryTo
+    - \Codeception\Step\ConditionalAssertion
