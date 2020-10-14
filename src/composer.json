@@ -1,0 +1,36 @@
+{
+  "name": "wp-staging/pro",
+  "license": "proprietary",
+  "description": "WordPress plugin for creating staging sites",
+  "type": "project",
+  "authors": [
+    {
+      "name": "WP STAGING",
+      "email": "support@wp-staging.com",
+      "role": "Founder",
+      "homepage": "https://wp-staging.com"
+    }
+  ],
+  "config": {
+    "platform": {
+      "php": "5.5"
+    },
+    "autoloader-suffix": "wpstgpro"
+  },
+  "require": {
+    "ext-pdo": "*",
+    "ext-json": "*",
+    "psr/log": "^1.1",
+    "symfony/finder": "^2.0",
+    "symfony/filesystem": "^2.0"
+  },
+  "require-dev": {
+    "roave/security-advisories": "dev-master",
+    "mikey179/vfsstream": "1.6.8"
+  },
+  "autoload": {
+    "psr-4": {
+      "WPStaging\\": ""
+    }
+  }
+}
