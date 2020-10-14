@@ -69,53 +69,6 @@ tag_version_free:
 	./src | xargs --no-run-if-empty sed -i 's/{{wpstgFreeVersion}}/$(VERSION)/g'
 
 
-# Replaces all occurrences of {{wpstgProVersion}} with given version number in the codebase.
-# This command should be run as part of the deploy process.
-# After running this command, commit the resulting file changes to the repo.
-tag_version_pro:
-	@[ "${VERSION}" ] || ( echo "VERSION is not set. Usage: make tag_version_pro VERSION=1.2.3"; exit 1 )
-	grep -rl {{wpstgProVersion}} \
-	--include \*.php \
-	--include readme.txt \
-	./src | xargs --no-run-if-empty sed -i 's/{{wpstgProVersion}}/$(VERSION)/g'
-
-# Builds the distributable Pro version of the plugin based on src.
-# Replaces {{wpstgStaticVersion}} with given version number on-the-fly, only in the generated code.
-dist_pro:
-	@[ "${VERSION}" ] || ( echo "VERSION is not set. Usage: make dist_pro VERSION=1.2.3"; exit 1 )
-    # Dist folder cleanup
-	rm -rf ./dist/wp-staging/
-	rm -rf ./dist/wp-staging-pro/
-	rm -rf ./dist/wp-staging-pro.zip
-	# Skip deleting wp-staging.zip
-
-	# Convert development version into distributable version
-	mkdir -p ./dist/wp-staging-pro/
-	cp -a ./src/. ./dist/wp-staging-pro/
-
-	# Text replacements
-	sed -i "s/{{wpstgStaticVersion}}/$(VERSION)/g" ./dist/wp-staging-pro/wp-staging-pro.php
-	sed -i "s/{{wpstgStaticVersion}}/$(VERSION)/g" ./dist/wp-staging-pro/readme.txt
-	sed -i "s/('WPSTGPRO_VERSION',.*'.*')/('WPSTGPRO_VERSION', '$(VERSION)')/g" ./dist/wp-staging-pro/Pro/constants.php
-
-	# Cleanup
-	rm -rf ./dist/wp-staging-pro/var/
-	rm -rf ./dist/wp-staging-pro/vendor/
-	rm -rf ./dist/wp-staging-pro/BASIC-DONT-INCLUDE/
-
-    # Composer and autoloader
-	composer install -d ./dist/wp-staging-pro --no-dev -o
-	rm -f ./dist/wp-staging-pro/composer.json
-	rm -f ./dist/wp-staging-pro/composer.lock
-
-	# Make distributable .zip file
-	cd dist && zip -qr ./wp-staging-pro.zip ./wp-staging-pro
-
-	# Safety mechanism: Show in the terminal which files are not version-tagged.
-	grep -rl {{wpstgFreeVersion}} --include \*.php ./dist/wp-staging-pro || :
-	grep -rl {{wpstgProVersion}} --include \*.php ./dist/wp-staging-pro || :
-	grep -rl {{wpstgStaticVersion}} --include \*.php ./dist/wp-staging-pro || :
-
 # Builds the distributable Free version of the plugin based on src.
 # Replaces {{wpstgStaticVersion}} with given version number on-the-fly, only in the generated code.
 dist_basic:
