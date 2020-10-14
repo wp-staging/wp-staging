@@ -58,17 +58,6 @@ phpstan:
 phpcs:
 	docker exec --user www-data -i $${COMPOSE_PROJECT_NAME}_php-fpm_1 bash -c "cd /var/www/tests && php -d memory_limit=3G /var/www/tests/vendor/bin/phpcs"
 
-# Replaces all occurrences of {{wpstgFreeVersion}} with given version number in the codebase.
-# This command should be run as part of the deploy process.
-# After running this command, commit the resulting file changes to the repo.
-tag_version_free:
-	@[ "${VERSION}" ] || ( echo "VERSION is not set. Usage: make tag_version_free VERSION=1.2.3"; exit 1 )
-	grep -rl {{wpstgFreeVersion}} \
-	--include \*.php \
-	--include BASIC-DONT-INCLUDE/readme.txt \
-	./src | xargs --no-run-if-empty sed -i 's/{{wpstgFreeVersion}}/$(VERSION)/g'
-
-
 # Builds the distributable Free version of the plugin based on src.
 # Replaces {{wpstgStaticVersion}} with given version number on-the-fly, only in the generated code.
 dist_basic:
