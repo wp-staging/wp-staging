@@ -3,8 +3,9 @@ name: Webdriver tests for WPSTAGING FREE.
 on:
   push:
     paths:
-      - 'src/BASIC-DONT-INCLUDE/readme.txt'
-      - 'tests/webdriver/Free/**'
+      - '**'
+      - '!**.md'
+      - '!dev/docs/**'
 
 jobs:
   webdriver_tests_free:
