@@ -72,12 +72,6 @@ dist_basic:
 	mkdir -p ./dist/wp-staging/
 	cp -a ./src/. ./dist/wp-staging/
 
-	# Plugin entry-file and readme
-	rm -f ./dist/wp-staging/wp-staging-pro.php
-	rm -f ./dist/wp-staging/readme.txt
-	cp -a ./dist/wp-staging/BASIC-DONT-INCLUDE/wp-staging.php ./dist/wp-staging/wp-staging.php
-	cp -a ./dist/wp-staging/BASIC-DONT-INCLUDE/readme.txt ./dist/wp-staging/readme.txt
-
 	# Text replacements
 	sed -i "s/wpstgpro/wpstgfree/g" ./dist/wp-staging/composer.json
 	sed -i "s/{{wpstgStaticVersion}}/$(VERSION)/g" ./dist/wp-staging/wp-staging.php
@@ -87,9 +81,6 @@ dist_basic:
 	# Pro code cleanup and general cleanup
 	rm -rf ./dist/wp-staging/var/
 	rm -rf ./dist/wp-staging/vendor/
-	rm -rf ./dist/wp-staging/BASIC-DONT-INCLUDE/
-	rm -rf ./dist/wp-staging/Pro/
-	rm -rf ./dist/wp-staging/Backend/Pro/
 
     # Composer and autoloader
 	composer install -d ./dist/wp-staging --no-dev -o
