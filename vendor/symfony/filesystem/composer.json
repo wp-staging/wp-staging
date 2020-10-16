@@ -17,7 +17,7 @@
     ],
     "require": {
         "php": ">=5.3.9",
-        "symfony/polyfill-ctype": "~1.8"
+        "../../../../wp-staging-pro/vendor/symfony/polyfill-ctype": "~1.8"
     },
     "autoload": {
         "psr-4": { "Symfony\\Component\\Filesystem\\": "" },
