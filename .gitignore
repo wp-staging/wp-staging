@@ -2,8 +2,6 @@ nbproject
 .idea/
 node_modules
 .vscode
-vendor
-!src/Backend/Pro/public/vendor
 .trash
 .env
 var
