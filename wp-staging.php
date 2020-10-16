@@ -43,4 +43,4 @@ if (!defined('WPSTG_PLUGIN_FILE')) {
     define('WPSTG_PLUGIN_FILE', __FILE__);
 }
 
-require_once (__DIR__ . '/_init.php');
+require_once(__DIR__ . '/_init.php');
