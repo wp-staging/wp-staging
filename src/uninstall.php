@@ -3,6 +3,7 @@
 namespace WPStaging\Backend;
 
 use WPStaging\Backend\Optimizer\Optimizer;
+use WPStaging\Framework\Staging\FirstRun;
 
 /**
  * Uninstall WP-Staging
@@ -30,6 +31,13 @@ class uninstall
         // Plugin Folder Path
         if (!defined('WPSTG_PLUGIN_DIR')) {
             define('WPSTG_PLUGIN_DIR', plugin_dir_path(__FILE__));
+        }
+
+        // WPSTAGING expects some constants to be defined.
+        if (file_exists(trailingslashit(__DIR__) . 'Pro/constants.php')) {
+            include_once trailingslashit(__DIR__) . 'Pro/constants.php';
+        } else {
+            include_once trailingslashit(__DIR__) . 'constants.php';
         }
 
         /**
@@ -82,7 +90,7 @@ class uninstall
             delete_option("wpstg_rating");
             delete_option("wpstg_beta");
 
-            delete_option("wpstg_execute");
+            delete_option(FirstRun::FIRST_RUN_KEY);
 
             // Delete events
             wp_clear_scheduled_hook('wpstg_weekly_event');

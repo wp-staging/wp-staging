@@ -7,8 +7,8 @@ namespace WPStaging\Command\Database\Export;
 
 use DateTime;
 use Exception;
-use WPStaging\Service\Adapter\Database;
-use WPStaging\Service\Traits\HydrateTrait;
+use WPStaging\Framework\Adapter\Database;
+use WPStaging\Framework\Traits\HydrateTrait;
 
 class ExportDto
 {

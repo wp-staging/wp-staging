@@ -6,14 +6,12 @@
 
 namespace WPStaging\Command\Database\Snapshot;
 
-use WPStaging\Entity\Snapshot;
-use WPStaging\Manager\Database\TableDto;
-use WPStaging\Manager\Database\TableManager;
-use WPStaging\Repository\SnapshotRepository;
-use WPStaging\Service\Adapter\Database;
-use WPStaging\Service\Collection\Collection;
-use WPStaging\Service\Collection\OptionCollection;
-use WPStaging\Service\Command\CommandInterface;
+use WPStaging\Pro\Snapshot\Entity\Snapshot;
+use WPStaging\Pro\Snapshot\Repository\SnapshotRepository;
+use WPStaging\Framework\Adapter\Database;
+use WPStaging\Framework\Collection\Collection;
+use WPStaging\Framework\Collection\OptionCollection;
+use WPStaging\Framework\Command\CommandInterface;
 
 abstract class AbstractSnapshotCommand implements CommandInterface
 {

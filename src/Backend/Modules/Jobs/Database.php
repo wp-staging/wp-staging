@@ -2,19 +2,21 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-// No Direct Access
-if( !defined( "WPINC" ) ) {
-    die;
-}
 
-use WPStaging\WPStaging;
-use WPStaging\Utils\Strings;
+use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
+use WPStaging\Framework\CloningProcess\CloningDto;
+use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
 
 /**
  * Class Database
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Database extends JobExecutable {
+class Database extends CloningProcess
+{
+    /**
+     * @var DatabaseCloningService
+     */
+    private $databaseCloningService;
 
     /**
      * @var int
@@ -22,54 +24,50 @@ class Database extends JobExecutable {
     private $total = 0;
 
     /**
-     * @var \WPDB
-     */
-    private $db;
-
-    /**
      * Initialize
      */
-    public function initialize() {
-        // Variables
-        $this->isExternalDatabase();
-        $this->total = count( $this->options->tables );
-        $this->db    = WPStaging::getInstance()->get( "wpdb" );
-        $this->isFatalError();
-    }
+    public function initialize()
+    {
+        $this->initializeDbObjects();
+        $this->abortIfDirectoryNotEmpty();
+        if (!$this->isExternal()) {
+            $this->abortIfStagingPrefixEqualsProdPrefix();
+        } else {
+            $this->abortIfExternalButNotPro();
+        }
 
-    /**
-     * Check if external database is used
-     * @return boolean
-     */
-    private function isExternalDatabase() {
-        if(defined('WPSTGPRO_VERSION')){
-           return;
-        }
-        if( !empty( $this->options->databaseUser ) ) {
-            $this->returnException( __( "This staging site is located in another database and needs to be edited with <a href='https://wp-staging.com' target='_blank'>WP Staging Pro</a>", "wp-staging" ) );
-        }
-        return false;
-    }
-
-    /**
-     * Return fatal error and stops here if subfolder already exists
-     * and mainJob is not updating the clone
-     * @return boolean
-     */
-    private function isFatalError() {
-        $path = trailingslashit($this->options->cloneDir);
-        if( isset( $this->options->mainJob ) && $this->options->mainJob !== 'updating' && (is_dir( $path ) && !wpstg_is_empty_dir( $path ) ) ) {
-            $this->returnException(" Can not continue for security purposes. Directory {$path} is not empty! Use FTP or a file manager plugin and make sure it does not contain any files. ");
-        }
-        return false;
+        $this->generateDto();
+        $this->addMissingTables();
+        $this->total = count($this->options->tables);
     }
 
     /**
      * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
      * @return void
      */
-    protected function calculateTotalSteps() {
+    protected function calculateTotalSteps()
+    {
         $this->options->totalSteps = $this->total === 0 ? 1 : $this->total;
+    }
+
+    /**
+     *
+     */
+    protected function generateDto()
+    {
+        $this->databaseCloningService = new DatabaseCloningService(
+            new CloningDto(
+                $this,
+                $this->stagingDb,
+                $this->productionDb,
+                $this->isExternal(),
+                $this->isMultisiteAndPro(),
+                $this->isExternal() ? $this->options->databaseServer : null,
+                $this->isExternal() ? $this->options->databaseUser : null,
+                $this->isExternal() ? $this->options->databasePassword : null,
+                $this->isExternal() ? $this->options->databaseDatabase : null
+            )
+        );
     }
 
     /**
@@ -77,30 +75,31 @@ class Database extends JobExecutable {
      * Returns false when over threshold limits are hit or when the job is done, true otherwise
      * @return bool
      */
-    protected function execute() {
+    protected function execute()
+    {
         // Over limits threshold
-        if( $this->isOverThreshold() ) {
+        if ($this->isOverThreshold()) {
             // Prepare response and save current progress
-            $this->prepareResponse( false, false );
+            $this->prepareResponse(false, false);
             $this->saveOptions();
             return false;
         }
 
         // No more steps, finished
-        if (!$this->isRunning() || $this->options->currentStep > $this->total || !isset($this->options->tables[$this->options->currentStep])) {
-            $this->prepareResponse( true, false );
+        if ($this->options->currentStep > $this->total || !$this->isRunning() ) {
+            $this->prepareResponse(true, false);
             return false;
         }
 
-        if( !$this->copyTable( $this->options->tables[$this->options->currentStep] ) ) {
+        // Copy table
+        if (isset($this->options->tables[$this->options->currentStep]) && !$this->copyTable($this->options->tables[$this->options->currentStep])) {
             // Prepare Response
-            $this->prepareResponse( false, false );
+            $this->prepareResponse(false, false);
 
             // Not finished
             return true;
         }
 
-        // Prepare Response
         $this->prepareResponse();
 
         // Not finished
@@ -108,123 +107,33 @@ class Database extends JobExecutable {
     }
 
     /**
-     * Get new prefix for the staging site
-     * @return string
-     */
-    private function getStagingPrefix() {
-        $stagingPrefix = $this->options->prefix;
-        // Make sure prefix of staging site is NEVER identical to prefix of live site!
-        if( $stagingPrefix == $this->db->prefix ) {
-            $error = 'Fatal error 7: The new database table prefix ' . $stagingPrefix . ' would be identical to the table prefix of the live site. Please open a support ticket at support@wp-staging.com';
-            $this->returnException($error);
-            wp_die( $error );
-        }
-        return $stagingPrefix;
-    }
-
-    /**
-     * No worries, SQL queries don't eat from PHP execution time!
-     * @param string $tableName
+     * Check if table already exists
+     * @param string $name
      * @return bool
      */
-    private function copyTable( $tableName ) {
-
-        $strings      = new Strings();
-        $tableName    = is_object( $tableName ) ? $tableName->name : $tableName;
-        $newTableName = $this->getStagingPrefix() . $strings->str_replace_first( $this->db->prefix, null, $tableName );
-
-        // Drop table if necessary
-        $this->dropTable( $newTableName );
-
-        // Save current job
-        $this->setJob( $newTableName );
-
-        // Beginning of the job
-        if( !$this->startJob( $newTableName, $tableName ) ) {
-            return true;
-        }
-
-        // Copy data
-        $this->copyData( $newTableName, $tableName );
-
-        // Finis the step
-        return $this->finishStep();
-    }
-
-    /**
-     * Copy data from old table to new table
-     * @param string $new
-     * @param string $old
-     */
-    private function copyData( $new, $old ) {
-        $rows = $this->options->job->start + $this->settings->queryLimit;
-        $this->log(
-                "DB Copy: {$old} as {$new} from {$this->options->job->start} to {$rows} records"
+    private function shouldDropTable($name)
+    {
+        $old = $this->stagingDb->get_var($this->stagingDb->prepare("SHOW TABLES LIKE %s", $name));
+        return (
+            $old === $name &&
+            (
+                !isset($this->options->job->current, $this->options->job->start) || 0 == $this->options->job->start
+            )
         );
-
-        $limitation = '';
-
-        if( 0 < ( int ) $this->settings->queryLimit ) {
-            $limitation = " LIMIT {$this->settings->queryLimit} OFFSET {$this->options->job->start}";
-        }
-
-        $this->db->query(
-                "INSERT INTO {$new} SELECT * FROM {$old} {$limitation}"
-        );
-
-        // Set new offset
-        $this->options->job->start += $this->settings->queryLimit;
-    }
-
-    /**
-     * Set the job
-     * @param string $table
-     */
-    private function setJob( $table ) {
-        if( isset( $this->options->job->current ) ) {
-            return;
-        }
-
-        $this->options->job->current = $table;
-        $this->options->job->start   = 0;
-    }
-
-    /**
-     * Start Job
-     * @param string $new
-     * @param string $old
-     * @return bool
-     */
-    private function startJob( $new, $old ) {
-        if( 0 != $this->options->job->start ) {
-            return true;
-        }
-
-        $this->log( "DB Copy: Creating table {$new}" );
-
-        $this->db->query( "CREATE TABLE {$new} LIKE {$old}" );
-
-        $this->options->job->total = ( int ) $this->db->get_var( "SELECT COUNT(1) FROM {$old}" );
-
-        if( 0 == $this->options->job->total ) {
-            $this->finishStep();
-            return false;
-        }
-
-        return true;
     }
 
     /**
      * Finish the step
      */
-    private function finishStep() {
+    private function finishStep()
+    {
         // This job is not finished yet
-        if( $this->options->job->total > $this->options->job->start ) {
+        if ($this->options->job->total > $this->options->job->start) {
             return false;
         }
 
         // Add it to cloned tables listing
-        $this->options->clonedTables[] = $this->options->tables[$this->options->currentStep];
+        $this->options->clonedTables[] = isset($this->options->tables[$this->options->currentStep]) ? $this->options->tables[$this->options->currentStep] : false;
 
         // Reset job
         $this->options->job = new \stdClass();
@@ -233,37 +142,195 @@ class Database extends JobExecutable {
     }
 
     /**
-     * Drop table if necessary
-     * @param string $new
+     * Check if external database is used and if its not pro version
+     * @return boolean
      */
-    private function dropTable( $new ) {
-        $old = $this->db->get_var( $this->db->prepare( "SHOW TABLES LIKE %s", $new ) );
-
-        if( !$this->shouldDropTable( $new, $old ) ) {
-            return;
+    private function abortIfExternalButNotPro()
+    {
+        if (defined('WPSTGPRO_VERSION')) {
+            return false;
         }
-
-        $this->log( "DB Copy: {$new} already exists, dropping it first" );
-        $this->db->query( "SET FOREIGN_KEY_CHECKS=0" );
-        $this->db->query( "DROP TABLE {$new}" );
-        $this->db->query( "SET FOREIGN_KEY_CHECKS=1" );
+        $this->returnException(__("This staging site is located in another database and needs to be edited with <a href='https://wp-staging.com' target='_blank'>WP Staging Pro</a>", "wp-staging"));
+        return true;
     }
 
     /**
-     * Check if table needs to be dropped
+     * Set the job
+     * @param string $table
+     */
+    private function setJob($table)
+    {
+        if (isset($this->options->job->current)) {
+            return;
+        }
+
+        $this->options->job->current = $table;
+        $this->options->job->start = 0;
+    }
+
+    /**
+     * Copy data from old table to new table
+     * @param string $new
+     * @param string $old
+     */
+    private function copyData($new, $old)
+    {
+        $this->databaseCloningService->copyData($old, $new, $this->options->job->start, $this->settings->queryLimit);
+        // Set new offset
+        $this->options->job->start += $this->settings->queryLimit;
+    }
+
+    /**
+     * @param mixed string|object $tableName
+     * @return bool
+     */
+    private function copyTable($tableName)
+    {
+        $tableName = is_object($tableName) ? $tableName->name : $tableName;
+        $newTableName = $this->getStagingPrefix() . $this->databaseCloningService->removeDBPrefix($tableName);
+
+        if ($this->isMultisiteAndPro()) {
+            // Get name table users from main site e.g. wp_users
+            if ('users' === $this->databaseCloningService->removeDBPrefix($tableName)) {
+                $tableName = $this->productionDb->base_prefix . 'users';
+            }
+            // Get name of table usermeta from main site e.g. wp_usermeta
+            if ('usermeta' === $this->databaseCloningService->removeDBPrefix($tableName)) {
+                $tableName = $this->productionDb->base_prefix . 'usermeta';
+            }
+        }
+
+        if ($this->shouldDropTable($newTableName)) {
+            $this->databaseCloningService->dropTable($newTableName);
+        }
+
+        $this->setJob($newTableName);
+
+        if (!$this->startJob($newTableName, $tableName)) {
+            return true;
+        }
+
+        $this->copyData($newTableName, $tableName);
+
+        return $this->finishStep();
+    }
+
+    /**
+     * Is table excluded from search replace processing?
+     * @param string $table
+     * @return boolean
+     */
+    private function isExcludedTable($table)
+    {
+        $excludedCustomTables = apply_filters('wpstg_clone_database_tables_exclude', array());
+        $excludedCoreTables = array('blogs', 'blog_versions');
+
+        $excludedtables = array_merge($excludedCustomTables, $excludedCoreTables);
+
+        if (in_array(
+            $table,
+            array_map(
+                function ($tableName) {
+                    return $this->options->prefix . $tableName;
+                },
+                $excludedtables
+            )
+        )) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Start Job and create tables
      * @param string $new
      * @param string $old
      * @return bool
      */
-    private function shouldDropTable( $new, $old ) {
-        return (
-                $old === $new &&
-                (
-                !isset( $this->options->job->current ) ||
-                !isset( $this->options->job->start ) ||
-                0 == $this->options->job->start
-                )
-                );
+    private function startJob($new, $old)
+    {
+        if ($this->isExcludedTable($new)) {
+            return false;
+        }
+        if (0 != $this->options->job->start) {
+            return true;
+        }
+
+        if ($this->databaseCloningService->tableIsMissing($old)) {
+            return true;
+        }
+        try {
+            $this->options->job->total = 0;
+            $this->options->job->total = $this->databaseCloningService->createTable($new, $old);
+        } catch (FatalException $e) {
+            $this->returnException($e->getMessage());
+            return true;
+        }
+        if (0 == $this->options->job->total) {
+            $this->finishStep();
+            return false;
+        }
+        return true;
     }
 
+    /**
+     * Add wp_users and wp_usermeta to the tables if they do not exist
+     * because they are not available in MU installation but we need them on the staging site
+     *
+     * return void
+     */
+    private function addMissingTables()
+    {
+        if (!in_array($this->productionDb->prefix . 'users', $this->options->tables)) {
+            $this->options->tables[] = $this->productionDb->prefix . 'users';
+            $this->saveOptions();
+        }
+        if (!in_array($this->productionDb->prefix . 'usermeta', $this->options->tables)) {
+            $this->options->tables[] = $this->productionDb->prefix . 'usermeta';
+            $this->saveOptions();
+        }
+    }
+
+    /**
+     * @return false
+     */
+    private function abortIfStagingPrefixEqualsProdPrefix()
+    {
+        if ($this->getStagingPrefix() === $this->productionDb->prefix) {
+            $error = 'Fatal error 7: The destination database table prefix ' . $this->getStagingPrefix() . ' would be identical to the table prefix of the production site. Please open a support ticket at support@wp-staging.com';
+            $this->returnException($error);
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Get new prefix for the staging site
+     * @return string
+     */
+    private function getStagingPrefix()
+    {
+        if ($this->isExternal()) {
+            $this->options->prefix = !empty($this->options->databasePrefix) ? $this->options->databasePrefix : $this->productionDb->prefix;
+            return $this->options->prefix;
+        }
+
+        return $this->options->prefix;
+    }
+
+    /**
+     * Return fatal error and stops here if subfolder already exists
+     * and mainJob is not updating the clone
+     * @return boolean
+     */
+    private function abortIfDirectoryNotEmpty()
+    {
+        $path = trailingslashit($this->options->cloneDir);
+        if (isset($this->options->mainJob) && $this->options->mainJob !== 'updating' && is_dir($path) && !wpstg_is_empty_dir($path)) {
+            $this->returnException(" Can not continue for security purposes. Directory {$path} is not empty! Use FTP or a file manager plugin and make sure it does not contain any files. ");
+            return true;
+        }
+        return false;
+    }
 }

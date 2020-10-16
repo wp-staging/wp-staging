@@ -4,7 +4,6 @@ namespace WPStaging\Backend\Upgrade;
 
 use WPStaging\WPStaging;
 use WPStaging\Utils\Logger;
-use WPStaging\Utils\Helper;
 use WPStaging\Utils\IISWebConfig;
 use WPStaging\Utils\Htaccess;
 use WPStaging\Utils\Filesystem;
@@ -29,31 +28,31 @@ class Upgrade {
 
     /**
      * Clone data
-     * @var obj 
+     * @var object
      */
     private $clones;
 
     /**
      * Global settings
-     * @var type obj
+     * @var object
      */
     private $settings;
 
     /**
      * Cron data
-     * @var obj
+     * @var object
      */
     private $cron;
 
     /**
      * Logger
-     * @var obj 
+     * @var object
      */
     private $logger;
 
     /**
      * db object
-     * @var obj 
+     * @var object
      */
     private $db;
 
@@ -204,7 +203,6 @@ class Upgrade {
         // Previous version lower than 2.0.2 or new install
         if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.0.2', '<' ) ) {
             $this->upgradeOptions();
-            $this->upgradeClonesBeta();
             $this->upgradeNotices();
         }
     }
@@ -216,17 +214,18 @@ class Upgrade {
     private function upgrade2_1_2() {
 
         // Current options
-        $this->clonesBeta = get_option( "wpstg_existing_clones_beta", array() );
+        $clonesBeta = get_option( "wpstg_existing_clones_beta", array() );
 
         if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.1.7', '<' ) ) {
-            foreach ( $this->clonesBeta as $key => $value ) {
-                unset( $this->clonesBeta[$key] );
-                $this->clonesBeta[preg_replace( "#\W+#", '-', strtolower( $key ) )] = $value;
+            foreach ($clonesBeta as $key => $value ) {
+                unset( $clonesBeta[$key] );
+                $clonesBeta[preg_replace( "#\W+#", '-', strtolower( $key ) )] = $value;
             }
-            if( empty( $this->clonesBeta ) )
-                return false;
+            if( empty($clonesBeta) ) {
+                return;
+            }
 
-            update_option( 'wpstg_existing_clones_beta', $this->clonesBeta );
+            update_option( 'wpstg_existing_clones_beta', $clonesBeta);
         }
     }
 
@@ -258,41 +257,6 @@ class Upgrade {
     }
 
     /**
-     * Create a new db option for beta version 2.0.2
-     * @return bool
-     */
-    private function upgradeClonesBeta() {
-
-
-        $new = array();
-
-        if( empty( $this->clones ) || count( $this->clones ) === 0 ) {
-            return false;
-        }
-
-
-        foreach ( $this->clones as $key => &$value ) {
-
-            // Skip the rest of the loop if data is already compatible to wpstg 2.0.2
-            if( isset( $value['directoryName'] ) || !empty( $value['directoryName'] ) ) {
-                continue;
-            }
-
-            $new[$value]['directoryName'] = $value;
-            $new[$value]['path']          = get_home_path() . $value;
-            $helper                       = new Helper();
-            $new[$value]['url']           = $helper->get_home_url() . "/" . $value;
-            $new[$value]['number']        = $key + 1;
-            $new[$value]['version']       = $this->previousVersion;
-        }
-        unset( $value );
-
-        if( empty( $new ) || false === update_option( 'wpstg_existing_clones_beta', $new ) ) {
-            $this->logger->log( 'Failed to upgrade clone data from ' . $this->previousVersion . ' to ' . WPStaging::getVersion() );
-        }
-    }
-
-    /**
      * Upgrade Notices db options from wpstg 1.3 -> 2.0.1
      * Fix some logical db options
      */
@@ -310,19 +274,6 @@ class Upgrade {
         if( $rating && $rating === 'yes' ) {
             update_option( 'wpstg_rating', 'no' );
         }
-    }
-
-    /**
-     * Throw a errror message via json and stop further execution
-     * @param string $message
-     */
-    private function returnException( $message = '' ) {
-        wp_die( json_encode( array(
-            'job'     => isset( $this->options->currentJob ) ? $this->options->currentJob : '',
-            'status'  => false,
-            'message' => $message,
-            'error'   => true
-        ) ) );
     }
 
 }

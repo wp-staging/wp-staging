@@ -4,7 +4,7 @@ namespace WPStaging\Backend\Modules\Jobs\Multisite;
 
 use WPStaging\WPStaging;
 use WPStaging\Backend\Modules\Jobs\Job;
-use WPStaging\Utils\Multisite;
+use WPStaging\Utils\Helper;
 
 /**
  * Class Finish
@@ -34,10 +34,6 @@ class Finish extends Job {
 
         $this->options->isRunning = false;
 
-        $multisite = new Multisite;
-
-
-
         $return = array(
             "directoryName" => $this->options->cloneDirectoryName,
             "path"          => trailingslashit( $this->options->destinationDir ),
@@ -51,7 +47,6 @@ class Finish extends Job {
             "percentage"    => 100
         );
 
-        //$this->flush();
         do_action( 'wpstg_cloning_complete', $this->options );
 
 
@@ -121,8 +116,8 @@ class Finish extends Job {
     }
 
     /**
-     * Get destination Hostname depending on wheather WP has been installed in sub dir or not
-     * @return type
+     * Get destination Hostname incl. scheme depending on whether WP has been installed in sub dir or not
+     * @return string
      */
     private function getDestinationUrl() {
 
@@ -130,12 +125,10 @@ class Finish extends Job {
             return $this->options->cloneHostname;
         }
 
-        //return trailingslashit( $this->multisiteHomeDomain ) . $this->options->cloneDirectoryName;
-        // Get the path to the main multisite without appending and trailingslash e.g. wordpress
+        // The relative path to the main multisite without appending a trailingslash e.g. wordpress
         $multisitePath = defined( 'PATH_CURRENT_SITE' ) ? PATH_CURRENT_SITE : '/';
-        return rtrim( $this->multisiteHomeDomain, '/\\' ) . $multisitePath . $this->options->cloneDirectoryName;
-        //$multisitePath = defined( 'PATH_CURRENT_SITE' ) ? str_replace( '/', '', PATH_CURRENT_SITE ) : '';
-        //return trailingslashit( $this->multisiteHomeDomain ) . $multisitePath . '/' . $this->options->cloneDirectoryName;
+
+        return rtrim( (new Helper)->getBaseUrl(), '/\\' ) . $multisitePath . $this->options->cloneDirectoryName;
     }
 
 }

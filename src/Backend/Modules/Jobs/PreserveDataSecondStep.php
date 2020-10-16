@@ -3,7 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\WPStaging;
-use WPStaging\Service\Adapter\SourceDatabase;
+use WPStaging\Framework\Adapter\SourceDatabase;
 
 /**
  * Copy wpstg_tmp_data back to wpstg_existing_clones_beta after cloning with class::PreserveDataSecondStep

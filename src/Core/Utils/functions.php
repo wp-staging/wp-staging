@@ -182,25 +182,16 @@ function wpstg_urldecode($data)
 
 /**
  * Check if it is a staging site
+ *
+ * @deprecated
+ * @see         \WPStaging\Framework\SiteInfo::isStaging Removed in favor of this.
+ * @todo        Remove this in future versions.
+ *
  * @return bool
  */
 function wpstg_is_stagingsite()
 {
-
-    if (file_exists(ABSPATH . '.wp-staging-cloneable')) {
-        return false;
-    }
-
-
-    if ("true" === get_option("wpstg_is_staging_site")) {
-        return true;
-    }
-
-    if (file_exists(ABSPATH . '.wp-staging')) {
-        return true;
-    }
-
-    return false;
+    return (new \WPStaging\Framework\SiteInfo)->isStaging();
 }
 
 /**
@@ -236,8 +227,8 @@ function wpstg_get_memory_in_bytes($memory)
 
 /**
  * Invalidate constraints
- * @param type $query
- * @return type
+ * @param string $query
+ * @return string
  */
 function wpstg_unique_constraint($query)
 {
@@ -319,7 +310,7 @@ function wpstg_starts_with($haystack, $needle)
 
 /**
  * Check if folder is empty
- * @param type $dir
+ * @param string $dir
  * @return boolean
  */
 function wpstg_is_empty_dir($dir)
@@ -543,7 +534,7 @@ function wpstg_is_local()
 /**
  * Get absolute path to plugins dir.
  * Take into account custom user made path modifications
- * A function with the name wpstg_get_plugins_dir() already exists in
+ * A function with the name wpstg_get_plugins_dir() already exists in 
  * must-use plugin wp-staging-optimizer.php so we've created this one that does the same job.
  *
  * @return string

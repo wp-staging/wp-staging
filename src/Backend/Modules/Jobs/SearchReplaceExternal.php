@@ -7,9 +7,9 @@ if (!defined("WPINC")) {
     die;
 }
 
+use Exception;
 use WPStaging\WPStaging;
-use WPStaging\Utils\Strings;
-use WPStaging\Utils\Helper;
+use WPStaging\Framework\Utils\Strings;
 
 /**
  * Class Database
@@ -328,26 +328,16 @@ class SearchReplaceExternal extends JobExecutable
         $this->debugLog("DB Search & Replace: Search: {$args['search_for'][0]}", \WPStaging\Utils\Logger::TYPE_INFO);
         $this->debugLog("DB Search & Replace: Replace: {$args['replace_with'][0]}", \WPStaging\Utils\Logger::TYPE_INFO);
 
-
         $args['replace_guids'] = 'off';
         $args['dry_run'] = 'off';
         $args['case_insensitive'] = false;
         $args['skip_transients'] = 'on';
-
 
         // Allow filtering of search & replace parameters
         $args = apply_filters('wpstg_clone_searchreplace_params', $args);
 
         // Get columns and primary keys
         list($primary_key, $columns) = $this->get_columns($table);
-
-        // Bail out early if there isn't a primary key.
-        // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides (failure in their db design?)
-        // @todo test this carefully. If it causes (performance) issues we need to activate it again!
-        // @since 2.4.4
-        //      if( null === $primary_key ) {
-        //         return false;
-        //      }
 
         $current_row = 0;
         $start = $this->options->job->start;
@@ -421,7 +411,6 @@ class SearchReplaceExternal extends JobExecutable
                 if ('on' !== $args['replace_guids'] && 'guid' == $column) {
                     continue;
                 }
-
 
                 $i = 0;
                 foreach ($args['search_for'] as $replace) {
@@ -566,7 +555,7 @@ class SearchReplaceExternal extends JobExecutable
      *
      * @return mixed, false on failure
      */
-    private static function unserialize($serialized_string)
+/*    private static function unserialize($serialized_string)
     {
         if (!is_serialized($serialized_string)) {
             return false;
@@ -576,7 +565,7 @@ class SearchReplaceExternal extends JobExecutable
         $unserialized_string = @unserialize($serialized_string);
 
         return $unserialized_string;
-    }
+    }*/
 
     /**
      * Wrapper for str_replace
@@ -705,7 +694,7 @@ class SearchReplaceExternal extends JobExecutable
      * Drop table if necessary
      * @param string $new
      */
-    private function dropTable($new)
+/*    private function dropTable($new)
     {
         $old = $this->stagingDb->get_var($this->stagingDb->prepare("SHOW TABLES LIKE %s", $new));
 
@@ -715,7 +704,7 @@ class SearchReplaceExternal extends JobExecutable
 
         $this->log("DB Search & Replace: {$new} already exists, dropping it first");
         $this->stagingDb->query("DROP TABLE {$new}");
-    }
+    }*/
 
     /**
      * Check if table needs to be dropped
@@ -723,7 +712,7 @@ class SearchReplaceExternal extends JobExecutable
      * @param string $old
      * @return bool
      */
-    private function shouldDropTable($new, $old)
+/*    private function shouldDropTable($new, $old)
     {
         return (
             $old == $new &&
@@ -733,7 +722,7 @@ class SearchReplaceExternal extends JobExecutable
                 0 == $this->options->job->start
             )
         );
-    }
+    }*/
 
     /**
      * Check if WP is installed in subdir

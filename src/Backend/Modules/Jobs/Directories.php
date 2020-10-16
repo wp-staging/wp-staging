@@ -7,9 +7,8 @@ if( !defined( "WPINC" ) ) {
     die;
 }
 
-use WPStaging\WPStaging;
-use WPStaging\Utils\Logger;
-use WPStaging\Utils\Strings;
+use Exception;
+use WPStaging\Framework\Utils\Strings;
 use WPStaging\Iterators\RecursiveDirectoryIterator;
 use WPStaging\Iterators\RecursiveFilterExclude;
 
@@ -90,16 +89,11 @@ class Directories extends JobExecutable {
                 if( !$item->isDot() && $item->isFile() ) {
                     if( $this->write( $files, $iterator->getFilename() . PHP_EOL ) ) {
                         $this->options->totalFiles++;
-
-                        // Too much cpu time
-                        //$this->options->totalFileSize += $iterator->getSize();
                     }
                 }
             }
         } catch ( \Exception $e ) {
             $this->returnException( 'Error: ' . $e->getMessage() );
-        } catch ( \Exception $e ) {
-            // Skip bad file permissions
         }
 
         $this->close( $files );
@@ -148,12 +142,10 @@ class Directories extends JobExecutable {
         try {
 
             // Iterate over content directory
-            $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( WP_CONTENT_DIR );
+            $iterator = new RecursiveDirectoryIterator( WP_CONTENT_DIR );
 
-            // Exclude new line file names. Do not use this. Leads to error 500 on some systems
-            // $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
             // Exclude uploads, plugins or themes
-            $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, apply_filters( 'wpstg_clone_excl_folders', $excludePaths ) );
+            $iterator = new RecursiveFilterExclude( $iterator, apply_filters( 'wpstg_clone_excl_folders', $excludePaths ) );
 
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
@@ -167,17 +159,12 @@ class Directories extends JobExecutable {
                     $file = $wpContentDir . '/' . $iterator->getSubPathName() . PHP_EOL;
                     if( $this->write( $files, $file ) ) {
                         $this->options->totalFiles++;
-
-                        // Too much cpu time
-                        //$this->options->totalFileSize += $iterator->getSize();
                     }
                 }
             }
         } catch ( \Exception $e ) {
             $this->returnException( 'Error: ' . $e->getMessage() );
             //throw new \Exception( 'Error: ' . $e->getMessage() );
-        } catch ( \Exception $e ) {
-            // Skip bad file permissions
         }
 
         // close the file handler
@@ -206,8 +193,6 @@ class Directories extends JobExecutable {
             // Iterate over wp-admin directory
             $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
 
-            // Exclude new line file names Do not use this. Leads to error 500 on some systems
-            // $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
             // Recursively iterate over wp-includes directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -255,8 +240,6 @@ class Directories extends JobExecutable {
             // Iterate over wp-admin directory
             $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
 
-            // Exclude new line file names Do not use this. Leads to error 500 on some systems
-            // $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -299,9 +282,6 @@ class Directories extends JobExecutable {
 
             // Iterate over extra directory
             $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( $folder );
-
-            // Exclude new line file names Do not use this. Leads to error 500 on some systems
-            // $iterator = new \WPStaging\Iterators\RecursiveFilterNewLine( $iterator );
 
             $exclude = array();
 
@@ -367,7 +347,6 @@ class Directories extends JobExecutable {
      * @param  resource $handle  File handle to write to
      * @param  string   $content Contents to write to the file
      * @return integer
-     * @throws Exception
      * @throws Exception
      */
     public function write( $handle, $content ) {

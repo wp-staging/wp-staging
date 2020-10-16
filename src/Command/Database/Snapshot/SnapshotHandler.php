@@ -2,8 +2,8 @@
 
 namespace WPStaging\Command\Database\Snapshot;
 
-use WPStaging\Service\Command\CommandInterface;
-use WPStaging\Service\Command\HandlerInterface;
+use WPStaging\Framework\Command\CommandInterface;
+use WPStaging\Framework\Command\HandlerInterface;
 use SplObjectStorage;
 
 class SnapshotHandler implements HandlerInterface

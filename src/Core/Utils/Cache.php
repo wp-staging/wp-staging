@@ -7,7 +7,7 @@ if( !defined( "WPINC" ) ) {
     die;
 }
 
-use WPStaging\WPStaging;
+use Exception;
 
 /**
  * Class Cache
@@ -32,6 +32,12 @@ class Cache {
      * @var int
      */
     private $lifetime = 2592000; // 30 days
+
+    /**
+     * @todo This is referenced by \WPStaging\Utils\Cache::returnException, but doesn't seem to be populated ever. Remove this.
+     * @var array
+     */
+    private $options;
 
     /**
      * Cache constructor.

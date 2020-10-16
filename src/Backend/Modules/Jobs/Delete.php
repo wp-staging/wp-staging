@@ -201,7 +201,7 @@ class Delete extends Job {
         }
 
         // Check if staging prefix is the same as the live prefix
-        if( empty( $this->options->databaseUser ) && $this->wpdb->prefix == $this->clone->prefix ) {
+        if( empty( $this->options->databaseUser ) && $this->wpdb->prefix === $this->clone->prefix ) {
             $this->log( "Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com" );
             $this->returnException( "Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com" );
         }

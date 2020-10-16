@@ -1,3 +1,11 @@
+<?php
+/**
+ * This file is currently being called only for the Free version:
+ * src/Backend/views/clone/ajax/scan.php:113
+ *
+ * @file src/Backend/Pro/views/clone/ajax/external-database.php For the Pro counterpart.
+ */
+?>
 <fieldset disabled style="opacity:0.8;">
     <p><strong style="font-size: 14px;">
         <?php _e('Copy Staging Site to Separate Database', 'wp-staging'); ?></strong>

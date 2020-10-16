@@ -2,14 +2,11 @@
 
 namespace WPStaging\Backend\Modules\Jobs\Multisite;
 
-// No Direct Access
-if (!defined("WPINC")) {
-    die;
-}
-
+use Exception;
 use WPStaging\WPStaging;
-use WPStaging\Utils\Strings;
+use WPStaging\Framework\Utils\Strings;
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
+use WPStaging\Utils\Helper;
 
 /**
  * Class Database
@@ -54,6 +51,11 @@ class SearchReplaceExternal extends JobExecutable
     private $strings;
 
     /**
+     * @var Obj
+     */
+    private $helper;
+
+    /**
      * The prefix of the new database tables which are used for the live site after updating tables
      * @var string
      */
@@ -64,6 +66,7 @@ class SearchReplaceExternal extends JobExecutable
      */
     public function initialize()
     {
+        $this->helper = new Helper();
         $this->total = count($this->options->tables);
         $this->stagingDb = $this->getStagingDB();
         $this->productionDb = WPStaging::getInstance()->get("wpdb");
@@ -71,6 +74,7 @@ class SearchReplaceExternal extends JobExecutable
         $this->strings = new Strings();
         $this->sourceHostname = $this->getSourceHostname();
         $this->destinationHostname = $this->getDestinationHostname();
+
     }
 
     /**
@@ -175,16 +179,17 @@ class SearchReplaceExternal extends JobExecutable
     }
 
     /**
-     * Get source Hostname depending on wheather WP has been installed in sub dir or not
+     * Get source home URL including sub dir if WP is installed in sub dir and not in root
      * @return type
      */
     private function getSourceHostname()
     {
+        $homeUrlWithoutScheme = $this->helper->getHomeUrlWithoutScheme();
 
         if ($this->isSubDir()) {
-            return trailingslashit($this->multisiteHomeUrlWithoutScheme) . $this->getSubDir();
+            return trailingslashit($homeUrlWithoutScheme) . $this->getSubDir();
         }
-        return $this->multisiteHomeUrlWithoutScheme;
+        return $homeUrlWithoutScheme;
     }
 
     /**
@@ -221,9 +226,10 @@ class SearchReplaceExternal extends JobExecutable
             return trailingslashit($this->strings->getUrlWithoutScheme(get_home_url())) . $this->getSubDir() . '/' . $this->options->cloneDirectoryName;
         }
 
-        // Clone process: DefaultPath to root of main multisite without leading or trailing slash e.g.: wordpress
+        // Relative path to root of main multisite without leading or trailing slash e.g.: wordpress
         $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
-        return rtrim($this->strings->getUrlWithoutScheme($this->multisiteDomainWithoutScheme), '/\\') . $multisitePath . $this->options->cloneDirectoryName;
+
+        return rtrim($this->helper->getBaseUrlWithoutScheme(), '/\\') . $multisitePath . $this->options->cloneDirectoryName;
     }
 
     /**
@@ -331,27 +337,17 @@ class SearchReplaceExternal extends JobExecutable
         $args['case_insensitive'] = false;
         $args['skip_transients'] = 'on';
 
-
         // Allow filtering of search & replace parameters
         $args = apply_filters('wpstg_clone_searchreplace_params', $args);
 
         // Get columns and primary keys
         list($primary_key, $columns) = $this->get_columns($table);
 
-        // Bail out early if there isn't a primary key.
-        // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides
-        // @todo test this carefully. If it causes (performance) issues we need to activate it again!
-        // @since 2.4.4
-        //      if( null === $primary_key ) {
-        //         return false;
-        //      }
-
         $current_row = 0;
         $start = $this->options->job->start;
         $end = $this->settings->querySRLimit;
 
         $data = $this->stagingDb->get_results("SELECT * FROM $table LIMIT $start, $end", ARRAY_A);
-
 
         // Filter certain rows (of other plugins)
         $filter = array(
@@ -461,7 +457,7 @@ class SearchReplaceExternal extends JobExecutable
      * Get path to multisite image folder e.g. wp-content/blogs.dir/ID/files or wp-content/uploads/sites/ID
      * @return string
      */
-    private function getImagePathLive()
+/*    private function getImagePathLive()
     {
         // Check first which structure is used 
         $uploads = wp_upload_dir();
@@ -480,16 +476,16 @@ class SearchReplaceExternal extends JobExecutable
                 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
         }
         return $path;
-    }
+    }*/
 
     /**
      * Get path to staging site image path wp-content/uploads
      * @return string
      */
-    private function getImagePathStaging()
+/*    private function getImagePathStaging()
     {
         return 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
-    }
+    }*/
 
     /**
      * Adapted from interconnect/it's search/replace script.
@@ -595,7 +591,7 @@ class SearchReplaceExternal extends JobExecutable
      *
      * @return mixed, false on failure
      */
-    private static function unserialize($serialized_string)
+/*    private static function unserialize($serialized_string)
     {
         if (!is_serialized($serialized_string)) {
             return false;
@@ -605,7 +601,7 @@ class SearchReplaceExternal extends JobExecutable
         $unserialized_string = @unserialize($serialized_string);
 
         return $unserialized_string;
-    }
+    }*/
 
     /**
      * Wrapper for str_replace
@@ -630,10 +626,8 @@ class SearchReplaceExternal extends JobExecutable
         }
 
         if ('on' === $case_insensitive) {
-            //$data = str_ireplace( $from, $to, $data );
             $data = preg_replace('#' . $regexExclude . preg_quote($from) . '#i', $to, $data);
         } else {
-            //$data = str_replace( $from, $to, $data );
             $data = preg_replace('#' . $regexExclude . preg_quote($from) . '#', $to, $data);
         }
 
@@ -734,7 +728,7 @@ class SearchReplaceExternal extends JobExecutable
      * Drop table if necessary
      * @param string $new
      */
-    private function dropTable($new)
+/*    private function dropTable($new)
     {
         $old = $this->stagingDb->get_var($this->stagingDb->prepare("SHOW TABLES LIKE %s", $new));
 
@@ -744,7 +738,7 @@ class SearchReplaceExternal extends JobExecutable
 
         $this->log("DB Search & Replace: {$new} already exists, dropping it first");
         $this->stagingDb->query("DROP TABLE {$new}");
-    }
+    }*/
 
     /**
      * Check if table needs to be dropped
@@ -752,7 +746,7 @@ class SearchReplaceExternal extends JobExecutable
      * @param string $old
      * @return bool
      */
-    private function shouldDropTable($new, $old)
+/*    private function shouldDropTable($new, $old)
     {
         return (
             $old == $new &&
@@ -762,7 +756,7 @@ class SearchReplaceExternal extends JobExecutable
                 0 == $this->options->job->start
             )
         );
-    }
+    }*/
 
     /**
      * Check if WP is installed in subdir

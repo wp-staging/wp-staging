@@ -5,6 +5,8 @@ namespace WPStaging\Utils;
 /**
  * Description of MySQL
  *
+ * @todo Confirm if it's deprecated and remove.
+ * @see \WPStaging\Framework\Adapter\Database\MysqlAdapter Similar class
  */
 class MySQL {
     
@@ -21,6 +23,7 @@ class MySQL {
      * @return resource
      */
     public function query( $input ) {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_query( $input, $this->wpdb->dbh );
     }
 
@@ -31,6 +34,7 @@ class MySQL {
      * @return string
      */
     public function escape( $input ) {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_real_escape_string( $input, $this->wpdb->dbh );
     }
 
@@ -40,6 +44,7 @@ class MySQL {
      * @return integer
      */
     public function errno() {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_errno( $this->wpdb->dbh );
     }
 
@@ -49,6 +54,7 @@ class MySQL {
      * @return string
      */
     public function error() {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_error( $this->wpdb->dbh );
     }
 
@@ -58,6 +64,7 @@ class MySQL {
      * @return string
      */
     public function version() {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_get_server_info( $this->wpdb->dbh );
     }
 
@@ -68,6 +75,7 @@ class MySQL {
      * @return array
      */
     public function fetchAssoc( $result ) {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_fetch_assoc( $result );
     }
 
@@ -78,6 +86,7 @@ class MySQL {
      * @return array
      */
     public function fetchRow( $result ) {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_fetch_row( $result );
     }
 
@@ -88,6 +97,7 @@ class MySQL {
      * @return integer
      */
     public function numRows( $result ) {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_num_rows( $result );
     }
 
@@ -95,10 +105,11 @@ class MySQL {
      * Free MySQL result memory
      *
      * @param  resource $result MySQL resource
-     * @return boolean
+     * @return void
      */
     public function freeResult( $result ) {
-        return mysql_free_result( $result );
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
+        mysql_free_result( $result );
     }
 
 }

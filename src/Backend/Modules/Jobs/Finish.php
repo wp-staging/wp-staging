@@ -66,6 +66,9 @@ class Finish extends Job {
 
     /**
      * Prepare clone records
+     *
+     * @todo check if this is being used, remove otherwise.
+     *
      * @return bool
      */
     protected function prepareCloneDataRecords() {
@@ -77,6 +80,7 @@ class Finish extends Job {
             $this->options->existingClones[$this->options->clone]['datetime'] = time();
             $this->options->existingClones[$this->options->clone]['status'] = 'finished';
             $this->options->existingClones[$this->options->clone]['prefix'] = $this->options->prefix;
+            $this->options->existingClones[$this->options->clone]['emailsDisabled'] = (bool) $this->options->emailsDisabled;
             update_option( "wpstg_existing_clones_beta", $this->options->existingClones );
             $this->log( "Finish: The job finished!" );
             return true;
@@ -93,7 +97,7 @@ class Finish extends Job {
             "path"             => trailingslashit( $this->options->destinationDir ),
             "url"              => $this->getDestinationUrl(),
             "number"           => $this->options->cloneNumber,
-            "version"          => WPStaging\WPStaging::getVersion(),
+            "version"          => WPStaging::getVersion(),
             //"status"           => false,
             "status"           => "finished",
             "prefix"           => $this->options->prefix,
@@ -102,7 +106,8 @@ class Finish extends Job {
             "databasePassword" => $this->options->databasePassword,
             "databaseDatabase" => $this->options->databaseDatabase,
             "databaseServer"   => $this->options->databaseServer,
-            "databasePrefix"   => $this->options->databasePrefix
+            "databasePrefix"   => $this->options->databasePrefix,
+            "emailsDisabled"   => (bool) $this->options->emailsDisabled
         );
 
         if( false === update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) ) {

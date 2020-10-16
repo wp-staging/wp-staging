@@ -7,10 +7,6 @@ if (!defined("WPINC")) {
     die;
 }
 
-use WPStaging\WPStaging;
-//use WPStaging\Backend\Optimizer\Optimizer;
-use WPStaging\Cron\Cron;
-
 class Activation
 {
 

@@ -3,8 +3,8 @@
 namespace WPStaging\Command\Database\Snapshot;
 
 use DateTime;
-use WPStaging\Entity\Snapshot;
-use WPStaging\Manager\Database\TableManager;
+use WPStaging\Pro\Snapshot\Entity\Snapshot;
+use WPStaging\Framework\Database\TableService;
 
 class UpdateSnapshotCommand extends AbstractSnapshotCommand
 {
@@ -16,7 +16,7 @@ class UpdateSnapshotCommand extends AbstractSnapshotCommand
     {
         $this->validateSnapshot();
 
-        $tables = (new TableManager)->findStartsWith();
+        $tables = (new TableService)->findTableNamesStartWith();
         if (!$tables) {
             throw new SnapshotCommandException('UpdateSnapshot failed to get tables');
         }

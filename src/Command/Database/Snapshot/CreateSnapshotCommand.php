@@ -3,9 +3,9 @@
 namespace WPStaging\Command\Database\Snapshot;
 
 use DateTime;
-use WPStaging\Entity\Snapshot;
-use WPStaging\Manager\Database\TableDto;
-use WPStaging\Manager\Database\TableManager;
+use WPStaging\Pro\Snapshot\Entity\Snapshot;
+use WPStaging\Framework\Database\TableDto;
+use WPStaging\Framework\Database\TableService;
 
 class CreateSnapshotCommand extends AbstractSnapshotCommand
 {
@@ -57,7 +57,7 @@ class CreateSnapshotCommand extends AbstractSnapshotCommand
      */
     protected function findTables()
     {
-        $tables = (new TableManager)->findStartsWith($this->dto->getSourcePrefix());
+        $tables = (new TableService)->findTableStatusStartsWith($this->dto->getSourcePrefix());
         if (!$tables) {
             return null;
         }

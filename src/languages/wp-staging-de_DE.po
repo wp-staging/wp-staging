@@ -2,14 +2,17 @@
 # This file is distributed under the same license as the Plugins - WP Staging &#8211; DB &amp; File Duplicator &amp; Migration - Stable (latest release) package.
 msgid ""
 msgstr ""
-"PO-Revision-Date: 2018-08-24 20:55:04+0000\n"
+"PO-Revision-Date: 2020-09-05 15:40+0200\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
-"X-Generator: GlotPress/2.4.0-alpha\n"
+"X-Generator: Poedit 2.4.1\n"
 "Language: de\n"
 "Project-Id-Version: Plugins - WP Staging &#8211; DB &amp; File Duplicator &amp; Migration - Stable (latest release)\n"
+"POT-Creation-Date: \n"
+"Last-Translator: \n"
+"Language-Team: \n"
 
 #. Author URI of the plugin/theme
 msgid "https://wp-staging.com"
@@ -37,7 +40,7 @@ msgstr "Erinnere mich"
 
 #: Frontend/Frontend.php:86 Frontend/loginForm.php:254
 msgid "Password"
-msgstr "Erinnere mich"
+msgstr "Passwort"
 
 #: Frontend/Frontend.php:85 Frontend/loginForm.php:253
 msgid "Username or Email Address"
@@ -45,15 +48,15 @@ msgstr "Benutzername oder E-Mail Adresse"
 
 #: Core/Utils/Report.php:31
 msgid "Please accept our privacy policy."
-msgstr "Bitte akzeptiere unsere Datenschutzvereinbarung"
+msgstr "Bitte akzeptiere unsere Datenschutzvereinbarung."
 
 #: Core/Utils/Report.php:29
 msgid "Please enter your issue."
-msgstr "Bitte beschreibe Dein Problem"
+msgstr "Bitte beschreibe Dein Problem."
 
 #: Core/Utils/Report.php:27
 msgid "Email address is not valid."
-msgstr "E-Mail Addresse ist nicht gültig"
+msgstr "E-Mail Addresse ist nicht gültig."
 
 #: Core/Cron/Cron.php:35
 msgid "Once a month"
@@ -89,7 +92,7 @@ msgstr "Erstelle einen Klon Deiner Webseite mit einem einfachen Klick"
 
 #: Backend/views/welcome/welcome.php:4
 msgid " - Copy Themes & Plugins from Staging to Live Site"
-msgstr "Kopiere Themes & Plugins von der Staging auf die Live Seite"
+msgstr " - Kopiere Themes & Plugins von der Staging auf die Live Seite"
 
 #: Backend/views/welcome/welcome.php:4
 msgid "WP Staging Pro"
@@ -169,14 +172,14 @@ msgid ""
 "                                               The higher the value the faster the file copy process.\n"
 "                                               To find out the highest possible values try a high value like 500 or more. If you get timeout issues, lower it\n"
 "                                                until you get no more errors during copying process."
-msgstr "Anzahl der Dateien, die mit einer Ajax Abfrage kopiert werden. Je höher der Wert, desto schneller ist der Kopiervorgang. "
+msgstr "Anzahl der Dateien, die mit einer Ajax Abfrage kopiert werden. Je höher der Wert, desto schneller ist der Kopiervorgang."
 
 #: Backend/views/settings/main-settings.php:116
 msgid ""
 "Number of DB rows, that are processed within one ajax query.\n"
 "                                               The higher the value the faster the database search & replace process.\n"
 "                                                This is a high memory consumptive process. If you get timeouts lower this value!"
-msgstr "Anzahl der Datenbank Einträge welche zugleich verarbeitet werden. Je grösser der Wert desto schneller ist der Suchen & Ersetzen Prozess."
+msgstr "Anzahl der Datenbankeinträge, welche gleichzeitig verarbeitet werden. Je größer der Wert, desto schneller ist der Suchen & Ersetzen Prozess. Zu große Werte können zu Timeouts durch hohen Speicherverbrauch führen!"
 
 #: Backend/views/settings/main-settings.php:96
 msgid ""
@@ -184,11 +187,11 @@ msgid ""
 "                                               The higher the value the faster the database copy process.\n"
 "                                               To find out the highest possible values try a high value like 1.000 or more. If you get timeout issues, lower it\n"
 "                                                until you get no more errors during copying process."
-msgstr "Anzahl der Datenbank Einträge, die zugleich kopiert werden. Je höher der Wert, desto schneller wird die Datenbank kopiert. "
+msgstr "Anzahl der Datenbank Einträge, die zugleich kopiert werden. Je höher der Wert, desto schneller wird die Datenbank kopiert. Zu hohe Werte können allerdings zu Timeouts führen."
 
 #: Backend/views/clone/single-site/index.php:16
 msgid "Report Issue"
-msgstr "Fehler melden"
+msgstr "Kontaktiere Support"
 
 #: Backend/views/clone/single-site/index.php:12
 msgid "Cloning"
@@ -204,19 +207,19 @@ msgstr "Überblick"
 
 #: Backend/views/clone/multi-site/index.php:2
 msgid "WordPress Multisite is currently not supported!"
-msgstr "WordPress Multisite wird nur WP Staging Pro unterstützt. "
+msgstr "WordPress Multisite wird nur von WP Staging Pro unterstützt!"
 
 #: Backend/views/clone/ajax/update.php:17
 msgid "Cancel Update"
-msgstr "Abbruch Klonvorgang"
+msgstr "Update abbrechen"
 
 #: Backend/views/clone/ajax/start.php:51
 msgid "Important Notes:"
-msgstr "Wichtige Hinweise"
+msgstr "Wichtige Hinweise:"
 
 #: Backend/views/clone/ajax/start.php:47
 msgid "Start again"
-msgstr "Starte Neu"
+msgstr "Starte neu"
 
 #: Backend/views/clone/ajax/start.php:35
 msgid "WP Staging successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href=\"%1$s\" target=\"_blank\" id=\"wpstg-clone-url-1\">%1$s</a></strong>"
@@ -224,13 +227,11 @@ msgstr ""
 "WP Staging hat erfolgreich eine Staging Seite erstellt. Erreichbar über \n"
 "<br><strong><a href=\"%1$s\" target=\"_blank\" id=\"wpstg-clone-url-1\">%1$s</a></strong>"
 
-#: Backend/views/clone/ajax/start.php:21
-#: Backend/views/clone/ajax/update.php:21
+#: Backend/views/clone/ajax/start.php:21 Backend/views/clone/ajax/update.php:21
 msgid "Display working log"
 msgstr "Öffne Log Fenster"
 
-#: Backend/views/clone/ajax/start.php:2
-#: Backend/views/clone/ajax/update.php:2
+#: Backend/views/clone/ajax/start.php:2 Backend/views/clone/ajax/update.php:2
 msgid "Processing, please wait..."
 msgstr "Verarbeite, bitte warten..."
 
@@ -248,11 +249,11 @@ msgstr "Öffnen"
 
 #: Backend/views/clone/ajax/single-overview.php:11
 msgid "Your Staging Sites:"
-msgstr "Deine Staging Seiten"
+msgstr "Deine Staging-Seiten:"
 
 #: Backend/views/clone/ajax/single-overview.php:3
 msgid "Create new staging site"
-msgstr "Erstelle neue Staging Seite"
+msgstr "Erstelle neue Stagingseite"
 
 #: Backend/views/clone/ajax/scan.php:142
 msgid "Check Disk Space"
@@ -260,11 +261,11 @@ msgstr "Überprüfe Speicherplatz"
 
 #: Backend/views/clone/ajax/scan.php:134
 msgid "Start Cloning"
-msgstr "Starte Klonen"
+msgstr "Cloning starten"
 
 #: Backend/views/clone/ajax/scan.php:127
 msgid "Update Clone"
-msgstr "Aktualisiere Klon"
+msgstr "Clone aktualisieren"
 
 #: Backend/views/clone/ajax/scan.php:121
 msgid "Back"
@@ -284,7 +285,7 @@ msgstr "<strong>Wichtig:</strong>Verwendest Du eine benutzerdefinierte Login URL
 
 #: Backend/views/clone/ajax/scan.php:89
 msgid "All files will be copied to: "
-msgstr "Alle Dateien werden kopiert nach:"
+msgstr "Alle Dateien werden kopiert nach: "
 
 #: Backend/views/clone/ajax/scan.php:69
 msgid "Extra directories to copy"
@@ -292,7 +293,7 @@ msgstr "Extra Ordner zum Kopieren"
 
 #: Backend/views/clone/ajax/scan.php:63
 msgid "Select folders to copy. Click on folder name to list subfolders!"
-msgstr "Wähle Ordner zum Kopieren aus. Klicke auf Ordnernamen um Unterordner aufzulisten."
+msgstr "Wähle Ordner zum Kopieren aus. Klicke auf Ordnernamen, um Unterordner aufzulisten."
 
 #: Backend/views/clone/ajax/scan.php:58
 msgid "Files"
@@ -321,11 +322,11 @@ msgstr "Der ausgewählte Ordner und alle Unterordner werden gelöscht. Abwählen
 
 #: Backend/views/clone/ajax/delete-confirmation.php:60
 msgid "Files to remove"
-msgstr "Dateien die entfernt werden"
+msgstr "Zu entfernende Dateien"
 
 #: Backend/views/clone/ajax/delete-confirmation.php:36
 msgid "Unselect database tables you do not want to delete:"
-msgstr "Wähle die Datenbank Tabellen ab, welche nicht gelöscht werden sollen"
+msgstr "Wähle die Datenbank Tabellen ab, welche nicht gelöscht werden sollen:"
 
 #: Backend/views/clone/ajax/delete-confirmation.php:30
 msgid "DB tables to remove"
@@ -333,7 +334,7 @@ msgstr "Datenbank Tabellen die entfernt werden"
 
 #: Backend/views/clone/ajax/delete-confirmation.php:9
 msgid "Clone name:"
-msgstr "Klon Bezeichnung"
+msgstr "Bezeichnung des Clones:"
 
 #: Backend/views/clone/ajax/delete-confirmation.php:4
 msgid "Attention: Check carefully if these database tables and files are safe to delete and do not belong to your live site!"
@@ -410,22 +411,20 @@ msgstr "Tweet #wpstaging"
 
 #: Backend/Pluginmeta/Pluginmeta.php:63
 msgid "Start Now"
-msgstr "Jetzt Starten"
+msgstr "Jetzt starten"
 
-#: Backend/Notices/Notices.php:145
-#: Backend/views/_main/messages/transient.php:7
+#: Backend/Notices/Notices.php:145 Backend/views/_main/messages/transient.php:7
 msgid "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging Pro."
 msgstr "WP Staging und WP Staging Pro können nicht beide gleichzeitig aktiv sein. Wir haben WP Staging Pro daher deaktiviert."
 
-#: Backend/Notices/Notices.php:143
-#: Backend/views/_main/messages/transient.php:6
+#: Backend/Notices/Notices.php:143 Backend/views/_main/messages/transient.php:6
 msgid "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging."
 msgstr "WP Staging und WP Staging Pro können nicht beide gleichzeitig aktiv sein. Wir haben WP Staging daher deaktiviert."
 
 #: Backend/Modules/Jobs/Directories.php:421
 #: Backend/Modules/Jobs/Multisite/Directories.php:485
 msgid "Out of disk space."
-msgstr "Kein freier Speicherplatz verfügbar"
+msgstr "Kein freier Speicherplatz verfügbar."
 
 #: Backend/Modules/Jobs/Directories.php:417
 #: Backend/Modules/Jobs/Multisite/Directories.php:481
@@ -493,7 +492,6 @@ msgstr "Seiten / Start"
 msgid "WP Staging Jobs"
 msgstr "WP Staging Jobs"
 
-#. #-#-#-#-#  wp-staging-code.pot (WP Staging 2.3.5)  #-#-#-#-#
 #. Plugin Name of the plugin/theme
 #: Backend/Administrator.php:172
 msgid "WP Staging"
@@ -501,4 +499,4 @@ msgstr "WP Staging"
 
 #: Backend/Administrator.php:142
 msgid "Settings updated."
-msgstr "Einstellungen aktualisiert"
+msgstr "Einstellungen aktualisiert."

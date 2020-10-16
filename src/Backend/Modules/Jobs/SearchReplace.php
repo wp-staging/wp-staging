@@ -7,8 +7,9 @@ if (!defined("WPINC")) {
     die;
 }
 
+use Exception;
 use WPStaging\WPStaging;
-use WPStaging\Utils\Strings;
+use WPStaging\Framework\Utils\Strings;
 /**
  * Class Database
  * @package WPStaging\Backend\Modules\Jobs
@@ -336,14 +337,6 @@ class SearchReplace extends JobExecutable
         // Get columns and primary keys
         list($primary_key, $columns) = $this->get_columns($table);
 
-        // Bail out early if there isn't a primary key.
-        // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides (failure in their db design?)
-        // @todo test this carefully. If it causes (performance) issues we need to activate it again!
-        // @since 2.4.4
-        //      if( null === $primary_key ) {
-        //         return false;
-        //      }
-
         $current_row = 0;
         $start = $this->options->job->start;
         $end = $this->settings->querySRLimit;
@@ -560,7 +553,7 @@ class SearchReplace extends JobExecutable
      *
      * @return mixed, false on failure
      */
-    private static function unserialize($serialized_string)
+/*    private static function unserialize($serialized_string)
     {
         if (!is_serialized($serialized_string)) {
             return false;
@@ -570,7 +563,7 @@ class SearchReplace extends JobExecutable
         $unserialized_string = @unserialize($serialized_string);
 
         return $unserialized_string;
-    }
+    }*/
 
     /**
      * Wrapper for str_replace
@@ -595,10 +588,8 @@ class SearchReplace extends JobExecutable
         }
 
         if ('on' === $case_insensitive) {
-            //$data = str_ireplace( $from, $to, $data );
             $data = preg_replace('#' . $regexExclude . preg_quote($from) . '#i', $to, $data);
         } else {
-            //$data = str_replace( $from, $to, $data );
             $data = preg_replace('#' . $regexExclude . preg_quote($from) . '#', $to, $data);
         }
 
@@ -699,7 +690,7 @@ class SearchReplace extends JobExecutable
      * Drop table if necessary
      * @param string $new
      */
-    private function dropTable($new)
+/*    private function dropTable($new)
     {
         $old = $this->productionDb->get_var($this->productionDb->prepare("SHOW TABLES LIKE %s", $new));
 
@@ -709,7 +700,7 @@ class SearchReplace extends JobExecutable
 
         $this->log("DB Search & Replace: {$new} already exists, dropping it first");
         $this->productionDb->query("DROP TABLE {$new}");
-    }
+    }*/
 
     /**
      * Check if table needs to be dropped
@@ -717,7 +708,7 @@ class SearchReplace extends JobExecutable
      * @param string $old
      * @return bool
      */
-    private function shouldDropTable($new, $old)
+/*    private function shouldDropTable($new, $old)
     {
         return (
             $old == $new &&
@@ -727,7 +718,7 @@ class SearchReplace extends JobExecutable
                 0 == $this->options->job->start
             )
         );
-    }
+    }*/
 
     /**
      * Check if WP is installed in subdir

@@ -7,9 +7,7 @@ if (!defined("WPINC")) {
     die;
 }
 
-use WPStaging\WPStaging;
-use WPStaging\Utils\Logger;
-use WPStaging\Utils\Strings;
+use WPStaging\Framework\Utils\Strings;
 use WPStaging\Iterators\RecursiveDirectoryIterator;
 use WPStaging\Iterators\RecursiveFilterExclude;
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
@@ -153,10 +151,10 @@ class Directories extends JobExecutable
         try {
 
             // Iterate over content directory
-            $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator(WP_CONTENT_DIR);
+            $iterator = new RecursiveDirectoryIterator(WP_CONTENT_DIR);
 
             // Exclude sites, uploads, plugins or themes
-            $iterator = new \WPStaging\Iterators\RecursiveFilterExclude($iterator, apply_filters('wpstg_clone_mu_excl_folders', $excludePaths));
+            $iterator = new RecursiveFilterExclude($iterator, apply_filters('wpstg_clone_mu_excl_folders', $excludePaths));
 
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator($iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD);
@@ -563,6 +561,8 @@ class Directories extends JobExecutable
         if ($this->options->currentStep >= $this->options->totalSteps) {
             return true;
         }
+
+        return false;
     }
 
     /**

@@ -2,10 +2,9 @@
 
 namespace WPStaging\Backend\Feedback;
 
+use WP_User;
+
 class Feedback {
-//    public function __construct() {
-//
-//    }
 
     /**
      * Current page is plugins.php
@@ -19,6 +18,9 @@ class Feedback {
 
     /**
      * Load feedback form
+     *
+     * @todo check if this is being used, remove otherwise.
+     *
      * @return string
      */
     public function loadForm() {

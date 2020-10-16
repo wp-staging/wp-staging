@@ -12,15 +12,18 @@ require_once __DIR__ . DIRECTORY_SEPARATOR . "Utils" . DIRECTORY_SEPARATOR . "Au
 
 use WPStaging\Backend\Administrator;
 use WPStaging\DTO\Settings;
+use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Frontend\Frontend;
-use WPStaging\Service\Permalinks\PermalinksPurge;
-use WPStaging\Service\Container\Container;
+use WPStaging\Framework\Container\Container;
 use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
 use WPStaging\Utils\Loader;
 use WPStaging\Utils\Logger;
-use WPStaging\Service\PluginFactory;
+use WPStaging\Framework\PluginFactory;
+use WPStaging\Framework\Permalinks\PermalinksPurge;
 use WPStaging\Cron\Cron;
+use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Staging\FirstRun;
 
 /**
  * Class WPStaging
@@ -57,6 +60,11 @@ final class WPStaging {
      */
     private static $instance;
 
+    /**
+     * @var \WPStaging\Framework\SiteInfo
+     */
+    private $siteInfo;
+
     /*
      * @var string
      */
@@ -65,12 +73,25 @@ final class WPStaging {
     /**
      * @var string
      */
+    private $frontend_url;
+
+    /**
+     * @var string
+     */
     private $url;
+
+    /**
+     * @var AccessToken
+     */
+    private $accessToken;
 
     /**
      * WPStaging constructor.
      */
     private function __construct() {
+        // Todo: Inject using DI.
+        $this->accessToken = new AccessToken;
+        $this->siteInfo    = new SiteInfo;
 
         $this->registerMain();
         $this->registerNamespaces();
@@ -80,7 +101,8 @@ final class WPStaging {
         // Load license class in wpstg core to allow executing cron jobs by regular frontpage visitors
         $this->initLicensing();
         $this->initVersion();
-        $this->initActions();
+        $this->cloneSiteFirstRun();
+        $this->maybeLoadPro();
         $this->handleCacheIssues();
     }
 
@@ -143,6 +165,7 @@ final class WPStaging {
         }
 
         // Disable user login status check
+        // Todo: Can we remove this now that we have AccessToken?
         remove_action( 'admin_enqueue_scripts', 'wp_auth_check_load' );
 
         // Disable heartbeat check for cloning and pushing
@@ -219,12 +242,11 @@ final class WPStaging {
         );
 
         wp_localize_script( "wpstg-admin-script", "wpstg", array(
-            "nonce"       => wp_create_nonce( "wpstg_ajax_nonce" ),
-            "noncetick"   => apply_filters( 'nonce_life', DAY_IN_SECONDS ),
-            "delayReq"    => $this->getDelay(),
-            "settings"    => ( object ) array(), // TODO add settings?
-            "tblprefix"   => self::getTablePrefix(),
-            "isMultisite" => is_multisite() ? true : false
+            "delayReq"               => $this->getDelay(),
+            "settings"               => ( object )array(), // TODO add settings?
+            "tblprefix"              => self::getTablePrefix(),
+            "isMultisite"            => is_multisite(),
+            AccessToken::REQUEST_KEY => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
         ) );
     }
 
@@ -486,17 +508,22 @@ final class WPStaging {
     }
 
     /**
-     * Initialize several actions which can be hooked in by custom functions
+     * Load Pro actions if they exist.
      */
-    private function initActions() {
-        // Load one-time if current site is staging site and if it is loaded initially
-        if( wpstg_is_stagingsite() ) {
-            $execute = get_option( 'wpstg_execute' );
-            if( false !== $execute ) {
-                do_action( 'wpstg_clone_action_staging' );
-                delete_option('wpstg_execute');
-            }
+    private function maybeLoadPro()
+    {
+        if (class_exists('\WPStaging\Backend\Pro\ProServiceProvider')) {
+            $proServiceProvider = new \WPStaging\Backend\Pro\ProServiceProvider();
+            $proServiceProvider->enqueueActions();
         }
+    }
+
+    /**
+     * Executes the first time a clone site runs.
+     */
+    private function cloneSiteFirstRun()
+    {
+        (new FirstRun())->init();
     }
 
     /**

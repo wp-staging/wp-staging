@@ -3,6 +3,8 @@
 /**
  * This class is not PSR-3 compliant. Currently just added the basic functionality to make the "change" easier
  * in the future. For now, there are just few things to make transition easy.
+ *
+ * Todo: Replace all instances of Strings with actual "string"
  */
 
 namespace WPStaging\Utils;
@@ -88,6 +90,11 @@ class Logger implements LoggerInterface
         }
     }
 
+    public function __destruct()
+    {
+        $this->commit();
+    }
+
     /**
      * @param Strings $level
      * @param Strings $message
@@ -98,7 +105,6 @@ class Logger implements LoggerInterface
     public function log($level, $message, array $context = [])
     {
         $this->add($message, $level);
-        $this->commit();
     }
 
     /**

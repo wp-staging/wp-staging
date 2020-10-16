@@ -7,10 +7,10 @@ if (!defined("WPINC")) {
     die;
 }
 
+use Exception;
 use WPStaging\WPStaging;
-use WPStaging\Utils\Strings;
+use WPStaging\Framework\Utils\Strings;
 use WPStaging\Utils\Helper;
-use WPStaging\Utils\Multisite;
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
 
 /**
@@ -159,7 +159,7 @@ class SearchReplace extends JobExecutable
      */
     private function stopExecution()
     {
-        if ($this->productionDb->prefix == $this->tmpPrefix) {
+        if ($this->productionDb->prefix === $this->tmpPrefix) {
             $this->returnException('Fatal Error 9: Prefix ' . $this->productionDb->prefix . ' is used for the live site hence it can not be used for the staging site as well. Please ask support@wp-staging.com how to resolve this.');
         }
         return false;
@@ -192,15 +192,16 @@ class SearchReplace extends JobExecutable
 
     /**
      * Get source Hostname depending on wheather WP has been installed in sub dir or not
-     * @return type
+     * @return string
      */
     private function getSourceHostname()
     {
+        $homeUrlWithoutScheme = (new Helper)->getHomeUrlWithoutScheme();
 
         if ($this->isSubDir()) {
-            return trailingslashit($this->multisiteHomeUrlWithoutScheme) . '/' . $this->getSubDir();
+            return trailingslashit($homeUrlWithoutScheme) . '/' . $this->getSubDir();
         }
-        return $this->multisiteHomeUrlWithoutScheme;
+        return $homeUrlWithoutScheme;
     }
 
     /**
@@ -355,14 +356,6 @@ class SearchReplace extends JobExecutable
         // Get columns and primary keys
         list($primary_key, $columns) = $this->get_columns($table);
 
-        // Bail out early if there isn't a primary key.
-        // We commented this to search & replace through tables which have no primary keys like wp_revslider_slides
-        // @todo test this carefully. If it causes (performance) issues we need to activate it again!
-        // @since 2.4.4
-        //      if( null === $primary_key ) {
-        //         return false;
-        //      }
-
         $current_row = 0;
         $start = $this->options->job->start;
         $end = $this->settings->querySRLimit;
@@ -477,7 +470,7 @@ class SearchReplace extends JobExecutable
      * Get path to multisite image folder e.g. wp-content/blogs.dir/ID/files or wp-content/uploads/sites/ID
      * @return string
      */
-    private function getImagePathLive()
+/*    private function getImagePathLive()
     {
         // Check first which structure is used 
         $uploads = wp_upload_dir();
@@ -496,16 +489,16 @@ class SearchReplace extends JobExecutable
                 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
         }
         return $path;
-    }
+    }*/
 
     /**
      * Get path to staging site image path wp-content/uploads
      * @return string
      */
-    private function getImagePathStaging()
+/*    private function getImagePathStaging()
     {
         return 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR;
-    }
+    }*/
 
     /**
      * Adapted from interconnect/it's search/replace script.
@@ -746,7 +739,7 @@ class SearchReplace extends JobExecutable
      * Drop table if necessary
      * @param string $new
      */
-    private function dropTable($new)
+/*    private function dropTable($new)
     {
         $old = $this->productionDb->get_var($this->productionDb->prepare("SHOW TABLES LIKE %s", $new));
 
@@ -756,7 +749,7 @@ class SearchReplace extends JobExecutable
 
         $this->log("DB Search & Replace: {$new} already exists, dropping it first");
         $this->productionDb->query("DROP TABLE {$new}");
-    }
+    }*/
 
     /**
      * Check if table needs to be dropped
@@ -764,7 +757,7 @@ class SearchReplace extends JobExecutable
      * @param string $old
      * @return bool
      */
-    private function shouldDropTable($new, $old)
+/*    private function shouldDropTable($new, $old)
     {
         return (
             $old == $new &&
@@ -774,7 +767,7 @@ class SearchReplace extends JobExecutable
                 0 == $this->options->job->start
             )
         );
-    }
+    }*/
 
     /**
      * Check if WP is installed in subdir

@@ -6,10 +6,10 @@
 namespace WPStaging\Command\Database\Export;
 
 use Exception;
-use WPStaging\Manager\Database\Mysqldump\Mysqldump;
+use WPStaging\Pro\Library\Mysqldump\Mysqldump;
 use Psr\Log\LoggerInterface;
-use WPStaging\Manager\Database\TableManager;
-use WPStaging\Service\Command\CommandInterface;
+use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Command\CommandInterface;
 
 class ExportCommand implements CommandInterface
 {
@@ -21,16 +21,16 @@ class ExportCommand implements CommandInterface
     private $dto;
 
     /** @var TableManager */
-    private $tableManager;
+    private $tableService;
 
     /** @var LoggerInterface */
     private $logger;
 
-    public function __construct(ExportDto $dto, TableManager $tableManager = null, LoggerInterface $logger = null)
+    public function __construct(ExportDto $dto, TableService $tableService = null, LoggerInterface $logger = null)
     {
         $this->dto = $dto;
         $this->logger = $logger;
-        $this->tableManager = $tableManager;
+        $this->tableService = $tableService;
     }
 
     /**
@@ -76,7 +76,7 @@ class ExportCommand implements CommandInterface
 
     protected function getIncludeTables()
     {
-        $tables = $this->tableManager->findStartsWith($this->dto->getPrefix());
+        $tables = $this->tableService->findTableNamesStartWith($this->dto->getPrefix());
         $data = [];
         foreach ($tables as $table) {
             $data[] = $table->getName();

@@ -3,7 +3,7 @@
 namespace WPStaging\Frontend;
 
 use WPStaging\DI\InjectionAware;
-use WPStaging\Frontend\loginForm;
+use WPStaging\Framework\SiteInfo;
 
 /**
  * Class Frontend
@@ -18,6 +18,11 @@ class Frontend extends InjectionAware
     private $settings;
 
     /**
+     * @var bool
+     */
+    private $accessDenied;
+
+    /**
      * Frontend initialization.
      */
     public function initialize()
@@ -25,7 +30,7 @@ class Frontend extends InjectionAware
         $this->defineHooks();
 
         $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
-
+        $this->accessDenied = false;
     }
 
     /**
@@ -51,11 +56,13 @@ class Frontend extends InjectionAware
         $siteTitle = apply_filters('wpstg_staging_site_title', 'STAGING');
         if ($this->isStagingSite()) {
             // Main Title
-            $wp_admin_bar->add_menu(array(
-                'id' => 'site-name',
-                'title' => is_admin() ? ($siteTitle . ' - ' . get_bloginfo('name')) : ($siteTitle .' - ' . get_bloginfo('name') . ' Dashboard'),
-                'href' => is_admin() ? home_url('/') : admin_url(),
-            ));
+            $wp_admin_bar->add_menu(
+                array(
+                    'id' => 'site-name',
+                    'title' => is_admin() ? ($siteTitle . ' - ' . get_bloginfo('name')) : ($siteTitle . ' - ' . get_bloginfo('name') . ' Dashboard'),
+                    'href' => is_admin() ? home_url('/') : admin_url(),
+                )
+            );
         }
     }
 
@@ -66,7 +73,7 @@ class Frontend extends InjectionAware
     {
         $this->resetPermaLinks();
 
-        if ($this->isLoginRequired()) {
+        if ($this->showLoginForm()) {
 
             $args = array(
                 'echo' => true,
@@ -87,37 +94,30 @@ class Frontend extends InjectionAware
                 'value_remember' => false,
             );
 
-
-            /**
-             * Lines below are not used at the moment but are fully functional
-             */
-            $login = new loginForm();
+            $login = new LoginForm();
+            if ($this->accessDenied) {
+                wp_logout();
+                $login->setError(__('Access Denied'));
+            }
             $login->renderForm($args);
             die();
         }
     }
 
-    /**
-     * Get path to wp-login.php
-     * @return string
-     */
-    private function getLoginUrl()
-    {
-        return get_site_url() . '/wp-login.php';
-    }
 
     /**
-     * Check if the page should be blocked
+     * Show a login form if user is not authorized
      * @return bool
      */
-    private function isLoginRequired()
+    private function showLoginForm()
     {
+        $this->accessDenied = false;
 
         if ($this->isLoginPage() || is_admin()) {
             return false;
         }
 
-        if (!wpstg_is_stagingsite()) {
+        if (! $this->isStagingSite() ) {
             return false;
         }
 
@@ -136,21 +136,38 @@ class Frontend extends InjectionAware
             return false;
         }
 
-        // Allow access only for administratorss if no user roles are defined
+        if (defined('WPSTGPRO_VERSION') && !empty($this->settings->usersWithStagingAccess)) {
+            $usersWithStagingAccess = explode(',', $this->settings->usersWithStagingAccess);
+            if (in_array(wp_get_current_user()->user_login, $usersWithStagingAccess, true)) {
+                return false;
+            }
+        }
+
+        if( !is_user_logged_in() ) {
+            return true;
+        }
+
+        // Allow access for administrators if no user roles are defined
         if (!isset($this->settings->userRoles) || !is_array($this->settings->userRoles)) {
+            $this->accessDenied = true;
             return true;
         }
 
-
-        // Disable access if current user is not allowed
+        // Require login form if user is not in specific user role
         $currentUser = wp_get_current_user();
-        $userRoles = $currentUser->roles;
+        $activeUserRoles = $currentUser->roles;
 
-        $result = isset($this->settings->userRoles) && is_array($this->settings->userRoles) ? array_intersect($userRoles, $this->settings->userRoles) : array();
+        $result = isset($this->settings->userRoles) && is_array($this->settings->userRoles) ?
+            array_intersect($activeUserRoles, $this->settings->userRoles) :
+            array();
+
         if (empty($result) && !$this->isLoginPage() && !is_admin()) {
+            $this->accessDenied = true;
             return true;
         }
 
+        // Don't show login form if no other rule apply
+        return false;
     }
 
     /**
@@ -159,7 +176,7 @@ class Frontend extends InjectionAware
      */
     private function isStagingSite()
     {
-        return ("true" === get_option("wpstg_is_staging_site"));
+        return (new SiteInfo())->isStaging();
     }
 
     /**
@@ -168,8 +185,7 @@ class Frontend extends InjectionAware
      */
     private function isLoginPage()
     {
-
-        return (in_array($GLOBALS["pagenow"], array("wp-login.php")));
+        return ($GLOBALS["pagenow"] === "wp-login.php");
     }
 
     /**
@@ -183,10 +199,8 @@ class Frontend extends InjectionAware
         }
 
         // Do nothing
-        if (defined('WPSTGPRO_VERSION')) {
-            if (isset($this->settings->keepPermalinks) && $this->settings->keepPermalinks === "1") {
-                return;
-            }
+        if (defined('WPSTGPRO_VERSION') && isset($this->settings->keepPermalinks) && $this->settings->keepPermalinks === "1") {
+            return;
         }
 
         // $wp_rewrite is not available before the init hook. So we need to use the global variable

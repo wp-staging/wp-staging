@@ -162,17 +162,6 @@ class Settings {
                       ->setDefault( (isset( $settings->optimizer )) ? $settings->optimizer : null  )
       );
 
-/*
-      // Plugins
-      $plugins = array();
-
-      foreach ( get_plugins() as $key => $data ) {
-         if( "wp-staging/wp-staging.php" === $key ) {
-            continue;
-         }
-
-         $plugins[$key] = $data["Name"];
-      }*/
 
        // Disable admin authorization
        if (!defined('WPSTGPRO_VERSION')) {
@@ -236,11 +225,13 @@ class Settings {
                    ->setDefault((isset($settings->userRoles)) ? $settings->userRoles : 'administrator')
            );
 
-
+           $usersWithStagingAccess = new Text('wpstg_settings[usersWithStagingAccess]', []);
+           $this->form["general"]->add(
+               $usersWithStagingAccess->setLabel(__("Users With Staging Access", "wp-staging"))
+                   ->setDefault(isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : '')
+           );
        }
-
-
-   }
+    }
 
    /**
     * Get available user Roles

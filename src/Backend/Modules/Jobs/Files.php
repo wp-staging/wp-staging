@@ -2,18 +2,26 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\Manager\FileSystem\FileManager;
+use SplFileObject;
+use WPStaging\Framework\Filesystem\FileService;
 use WPStaging\Utils\Logger;
 
 /**
  * Class Files
+ *
+ * @todo Can we unify these?
+ *       \WPStaging\Backend\Modules\Jobs\Files (Free single site files)
+ *       \WPStaging\Backend\Modules\Jobs\Multisite\Files (Free multisite files)
+ *       \WPStaging\Backend\Pro\Modules\Jobs\Files (Pro single site files)
+ *       \WPStaging\Backend\Pro\Modules\Jobs\Multisite\Files (Pro multisite files)
+ *
  * @package WPStaging\Backend\Modules\Jobs
  */
 class Files extends JobExecutable
 {
 
     /**
-     * @var \SplFileObject
+     * @var SplFileObject
      */
     private $file;
 
@@ -32,13 +40,12 @@ class Files extends JobExecutable
      */
     public function initialize()
     {
-
         $this->destination = $this->options->destinationDir;
 
         $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
         if (is_file($filePath)) {
-            $this->file = new \SplFileObject($filePath, 'r');
+            $this->file = new SplFileObject($filePath, 'r');
         }
 
         // Informational logs
@@ -107,10 +114,9 @@ class Files extends JobExecutable
             $this->file->seek($this->options->copiedFiles - 1);
         }
 
-        $this->file->setFlags(\SplFileObject::SKIP_EMPTY | \SplFileObject::READ_AHEAD);
+        $this->file->setFlags(SplFileObject::SKIP_EMPTY | SplFileObject::READ_AHEAD);
 
         for ($i = 0; $i < $this->maxFilesPerRun; $i++) {
-
             // Increment copied files
             // Do this anytime to make sure to not stuck in the same step / files
             $this->options->copiedFiles++;
@@ -154,7 +160,6 @@ class Files extends JobExecutable
      */
     private function copyFile($file)
     {
-
         $file = trim(\WPStaging\WPStaging::getWPpath() . $file);
 
         $file = wpstg_replace_windows_directory_separator($file);
@@ -207,7 +212,6 @@ class Files extends JobExecutable
 
         // File is over batch size
         if ($fileSize >= $this->settings->batchSize) {
-            $this->log("Trying to copy big file: {$file} -> {$destination}", Logger::TYPE_INFO);
             return $this->copyBig($file, $destination, $this->settings->batchSize);
         }
 
@@ -345,16 +349,17 @@ class Files extends JobExecutable
      */
     private function isFileExcluded($file)
     {
-
-        $excludedFiles = (array) $this->options->excludedFiles;
+        $excludedFiles = (array)$this->options->excludedFiles;
 
         // Remove .htaccess and web.config from 'excludedFiles' if staging site is copied to a subdomain
         if (false === $this->isIdenticalHostname()) {
-            $excludedFiles = \array_diff($excludedFiles,
-                array("web.config", ".htaccess"));
+            $excludedFiles = \array_diff(
+                $excludedFiles,
+                array("web.config", ".htaccess")
+            );
         }
 
-        if ((new FileManager)->isFilenameExcluded($file, $excludedFiles)) {
+        if ((new FileService)->isFilenameExcluded($file, $excludedFiles)) {
             return true;
         }
 

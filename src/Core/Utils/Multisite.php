@@ -12,18 +12,17 @@ if( !defined( "WPINC" ) ) {
 class Multisite {
 
    /**
-    *
-    * @var object
+    * @var string
     */
    private $url;
 
    public function __construct() {
       $helper = new Helper();
-      $this->url = $helper->get_home_url();
+      $this->url = $helper->getHomeUrl();
    }
 
    /**
-    * Get multisite main site domain e.g. https://blog.domain.com or https://domain.com
+    * Get raw site domain e.g. https://blog.domain.com or https://domain.com without any subfolder
     * @return string
     */
    public function getHomeDomain() {
@@ -41,7 +40,7 @@ class Multisite {
    }
 /**
  * Get home url e.g. blog.domain.com
- * @return type
+ * @return string
  */
    public function getHomeUrl() {
       return $this->url;

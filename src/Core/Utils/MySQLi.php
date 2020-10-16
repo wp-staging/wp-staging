@@ -4,7 +4,8 @@ namespace WPStaging\Utils;
 
 /**
  * Description of MySQL
- * 
+ *
+ * @todo Confirm if it's deprecated and remove.
  */
 class MySQLi {
 
@@ -95,10 +96,10 @@ class MySQLi {
      * Free MySQL result memory
      *
      * @param  resource $result MySQL resource
-     * @return boolean
+     * @return void
      */
     public function freeResult( $result ) {
-        return mysqli_free_result( $result );
+        mysqli_free_result( $result );
     }
 
 }

@@ -35,7 +35,7 @@
     <?php
     $subDirectory = str_replace( get_home_path(), '', ABSPATH ); 
     $helper = new \WPStaging\Utils\Helper();
-    $url = $helper->get_home_url() . str_replace('/', '', $subDirectory);
+    $url = $helper->getHomeUrl() . str_replace('/', '', $subDirectory);
     echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging' ), $url );
     ?>
     <br>

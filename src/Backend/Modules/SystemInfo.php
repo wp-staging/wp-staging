@@ -7,6 +7,7 @@ use WPStaging\Utils\Browser;
 use WPStaging\WPStaging;
 use WPStaging\Utils;
 use WPStaging\Utils\Multisite;
+use WPStaging\Utils\Helper;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -126,7 +127,7 @@ class SystemInfo extends InjectionAware
     {
         $output = $this->header("-- Site Info");
         $output .= $this->info("Site URL:", site_url());
-        $output .= $this->info("Home URL:", $this->helper->get_home_url());
+        $output .= $this->info("Home URL:", $this->helper->getHomeUrl());
         $output .= $this->info("Home Path:", get_home_path());
         $output .= $this->info("ABSPATH:", ABSPATH);
         $output .= $this->info("Installed in subdir:", ($this->isSubDir() ? 'Yes' : 'No'));
@@ -489,6 +490,7 @@ class SystemInfo extends InjectionAware
     {
         return (
             version_compare(PHP_VERSION, "5.4.0", '<') &&
+            // phpcs:ignore PHPCompatibility.IniDirectives.RemovedIniDirectives.safe_modeDeprecatedRemoved
             @ini_get("safe_mode")
         );
     }

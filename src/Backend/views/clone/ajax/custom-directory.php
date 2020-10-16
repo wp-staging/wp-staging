@@ -1,3 +1,11 @@
+<?php
+/**
+ * This file is currently being called only for the Free version:
+ * src/Backend/views/clone/ajax/scan.php:113
+ *
+ * @file src/Backend/Pro/views/clone/ajax/custom-directory.php For the Pro counterpart.
+ */
+?>
 <fieldset disabled style="opacity:0.8;border-top: 1px solid white;margin-top: 20px;">
 
 
@@ -29,8 +37,4 @@
        </tbody>
    </table>
 </fieldset>
-<p style="font-weight:bold;background-color:#e6e6e6;padding:15px;border-top: 1px solid white;margin-top: 20px;"><?php _e('That\'s a Pro Feature', 'wp-staging'); ?>
-    <br>
-    <a href="https://wp-staging.com/?utm_source=wp-admin&utm_medium=wp-admin&utm_campaign=db-external&utm_term=db-external" target="_blank" class="quads-button green wpstg-button" style="border-radius:3px;font-size: 14px;border: 1px solid white;"><?php _e("Get WP Staging Pro", "wp-staging"); ?></a>
-</p>
 

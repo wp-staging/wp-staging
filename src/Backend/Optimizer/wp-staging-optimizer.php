@@ -1,33 +1,28 @@
 <?php
 
 /*
- * Plugin Name: WP Staging Optimizer
+ * Plugin Name: WP STAGING Optimizer
  * Plugin URI: https://wp-staging.com
- * Description: Prevents 3rd party plugins from being loaded during WP Staging specific operations.
+ * Description: Prevents 3rd party plugins from being loaded during WP STAGING specific operations.
  *
  * This is a must-use standalone plugin -
- * Do not use any of these methods in wp staging code base as this plugin can be missing!
+ * Do not use any of these methods in WP STAGING code base as this mu-plugin can be missing!
  *
  * Author: René Hermenau
- * Version: 1.2
+ * Version: 1.3
  * Author URI: https://wp-staging.com
- * Credit: Original version made by Delicious Brains (WP Migrate DB). Thank you guys!
  */
 
 // Version number of this mu-plugin. Important for automatic updates
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', 1.2);
+    define('WPSTG_OPTIMIZER_VERSION', 1.3);
 }
 
-/**
- * Get plugins dir
- * @return string
- * @todo Logic error here. If WP_CONTENT_DIR or WP_PLUGIN_DIR do not exists no value is returned.
- * Does not throw error because WP_PLUGIN_DIR is defined with default value in WP core.
- */
-function wpstg_get_plugins_dir()
+/** @return string */
+function wpstgGetPluginsDir()
 {
 
+    $pluginsDir = '';
     if (defined('WP_PLUGIN_DIR')) {
         $pluginsDir = trailingslashit(WP_PLUGIN_DIR);
     } else if (defined('WP_CONTENT_DIR')) {
@@ -42,7 +37,7 @@ function wpstg_get_plugins_dir()
  *
  */
 
-function wpstg_is_enabled_optimizer()
+function wpstgIsEnabledOptimizer()
 {
 
     $status = ( object )get_option('wpstg_settings');
@@ -58,7 +53,7 @@ function wpstg_is_enabled_optimizer()
  * Check if certain plugins are excluded and still runing during wp staging requests
  * @return boolean
  */
-function pluginIsExcluded($plugin)
+function wpstgIsExcludedPlugin($plugin)
 {
     $excludedPlugins = get_option('wpstg_optimizer_excluded', array());
 
@@ -85,20 +80,20 @@ function pluginIsExcluded($plugin)
  *
  * @return array
  */
-function wpstg_exclude_plugins($plugins)
+function wpstgExcludePlugins($plugins)
 {
     if (!is_array($plugins) || empty($plugins)) {
         return $plugins;
     }
 
-    if (!wpstg_is_compatibility_mode_request()) {
+    if (!wpstgIsCompatibilityModeRequest()) {
         return $plugins;
     }
 
     foreach ($plugins as $key => $plugin) {
 
         // Default filter. Must be at the beginning or wp staging plugin will be filtered and killed
-        if (false !== strpos($plugin, 'wp-staging') || pluginIsExcluded($plugin)) {
+        if (false !== strpos($plugin, 'wp-staging') || wpstgIsExcludedPlugin($plugin)) {
             continue;
         }
         unset($plugins[$key]);
@@ -108,7 +103,7 @@ function wpstg_exclude_plugins($plugins)
     return $plugins;
 }
 
-add_filter('option_active_plugins', 'wpstg_exclude_plugins');
+add_filter('option_active_plugins', 'wpstgExcludePlugins');
 
 /**
  * Remove all plugins except wp-staging and wp-staging-pro from network-active plugins
@@ -117,20 +112,20 @@ add_filter('option_active_plugins', 'wpstg_exclude_plugins');
  *
  * @return array
  */
-function wpstg_exclude_site_plugins($plugins)
+function wpstgExcludeSitePlugins($plugins)
 {
     if (!is_array($plugins) || empty($plugins)) {
         return $plugins;
     }
 
-    if (!wpstg_is_compatibility_mode_request()) {
+    if (!wpstgIsCompatibilityModeRequest()) {
         return $plugins;
     }
 
     foreach ($plugins as $key => $plugin) {
 
         // Default filter. Must be at the beginning or wp staging plugin will be filtered and killed
-        if (false !== strpos($plugin, 'wp-staging') || pluginIsExcluded($plugin)) {
+        if (false !== strpos($plugin, 'wp-staging') || wpstgIsExcludedPlugin($plugin)) {
             continue;
         }
     }
@@ -138,7 +133,7 @@ function wpstg_exclude_site_plugins($plugins)
     return $plugins;
 }
 
-add_filter('site_option_active_sitewide_plugins', 'wpstg_exclude_site_plugins');
+add_filter('site_option_active_sitewide_plugins', 'wpstgExcludeSitePlugins');
 
 /**
  *
@@ -149,13 +144,13 @@ add_filter('site_option_active_sitewide_plugins', 'wpstg_exclude_site_plugins');
  *
  * @return string
  */
-function wpstg_disable_theme($dir)
+function wpstgDisableTheme($dir)
 {
     $enableTheme = apply_filters('wpstg_optimizer_enable_theme', false);
 
-    if (wpstg_is_compatibility_mode_request() && false === $enableTheme) {
-        $wpstgRootPro = wpstg_get_plugins_dir() . 'wp-staging-pro';
-        $wpstgRoot = wpstg_get_plugins_dir() . 'wp-staging';
+    if (wpstgIsCompatibilityModeRequest() && false === $enableTheme) {
+        $wpstgRootPro = wpstgGetPluginsDir() . 'wp-staging-pro';
+        $wpstgRoot = wpstgGetPluginsDir() . 'wp-staging';
 
         $file = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme' . DIRECTORY_SEPARATOR . 'functions.php';
         $theme = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme';
@@ -174,19 +169,19 @@ function wpstg_disable_theme($dir)
     return $dir;
 }
 
-add_filter('stylesheet_directory', 'wpstg_disable_theme');
-add_filter('template_directory', 'wpstg_disable_theme');
+add_filter('stylesheet_directory', 'wpstgDisableTheme');
+add_filter('template_directory', 'wpstgDisableTheme');
 
 /**
  * Should the current request be processed by Compatibility Mode?
  *
  * @return bool
  */
-function wpstg_is_compatibility_mode_request()
+function wpstgIsCompatibilityModeRequest()
 {
 
     // Optimizer not enabled
-    if (!wpstg_is_enabled_optimizer()) {
+    if (!wpstgIsEnabledOptimizer()) {
         return false;
     }
 
@@ -207,7 +202,7 @@ function wpstg_is_compatibility_mode_request()
  *
  * This is to stop excluded plugins being deactivated after a migration, when a theme uses TGMPA to require a plugin to be always active.
  */
-function wpstg_tgmpa_compatibility()
+function wpstgTgmpaCompatibility()
 {
     $remove_function = false;
 
@@ -236,4 +231,66 @@ function wpstg_tgmpa_compatibility()
     }
 }
 
-add_action('admin_init', 'wpstg_tgmpa_compatibility', 1);
+add_action('admin_init', 'wpstgTgmpaCompatibility', 1);
+
+/**
+ * @return bool True if is staging site. False otherwise.
+ */
+function wpstgIsStaging()
+{
+    if (file_exists(ABSPATH . '.wp-staging-cloneable')) {
+        return false;
+    }
+
+    if ("true" === get_option("wpstg_is_staging_site")) {
+        return true;
+    }
+
+    if (file_exists(ABSPATH . '.wp-staging')) {
+        return true;
+    }
+
+    return false;
+}
+
+/**
+ * Disable all outgoing e-mails on Staging site
+ */
+if (((bool)get_option("wpstg_emails_disabled") === true) && wpstgIsStaging()) {
+    if (!function_exists('wp_mail')) {
+        function wp_mail($to, $subject, $message, $headers = '', $attachments = [])
+        {
+            if (defined('WP_DEBUG') && WP_DEBUG) {
+                // Safely cast everything to string
+                $to = is_string($to) ? $to : wp_json_encode($to);
+                $subject = is_string($subject) ? $subject : wp_json_encode($subject);
+                $message = is_string($message) ? $message : wp_json_encode($message);
+                $headers = is_string($headers) ? $headers : wp_json_encode($headers);
+                $attachments = is_string($attachments) ? $attachments : wp_json_encode($attachments);
+
+                $log_entry = <<<LOG_ENTRY
+/***
+* WPSTAGING - Mails are disabled for this Staging site. This e-mail was going to be sent, but was prevented:
+***
+* To: $to
+***
+* Subject: $subject
+***
+* Message: $message
+***
+* Headers: $headers
+***
+* Attachments: $attachments
+***/
+LOG_ENTRY;
+
+                error_log($log_entry);
+            }
+        }
+    } else {
+        if (defined('WP_DEBUG') && WP_DEBUG) {
+            error_log("WPSTAGING: Could not override the wp_mail() function to disable e-mails on staging site, as it was already defined before the optimizer mu-plugin was loaded.");
+        }
+    }
+}
+

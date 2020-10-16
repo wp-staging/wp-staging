@@ -82,7 +82,6 @@ class Install
         $webconfig->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . 'web.config');
         $webconfig->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . 'logs/web.config');
     }
-
 }
 
 new Install();

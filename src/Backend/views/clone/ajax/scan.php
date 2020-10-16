@@ -1,3 +1,14 @@
+
+<?php
+/**
+ * @see \WPStaging\Backend\Administrator::ajaxCloneScan Context where this is included.
+ *
+ * @var \WPStaging\Backend\Modules\Jobs\Scan $scan
+ * @var stdClass $options
+ *
+ * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
+ */
+?>
 <label id="wpstg-clone-label" for="wpstg-new-clone">
     <?php echo __( 'Staging Site Name:', 'wp-staging' ) ?>
     <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if( null !== $options->current ) echo " disabled='disabled'" ?>>
@@ -21,7 +32,7 @@
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
         <?php do_action("wpstg_scanning_db") ?>
         <h4 style="margin:0">
-            <p><?php printf( __( "Select the tables to copy. Tables beginning with the prefix '%s' have already been selected.", "wp-staging" ), $scan->prefix ); ?></p>
+            <p><?php printf( __( "Select the tables to copy. Tables beginning with the prefix '%s' have already been selected.", "wp-staging" ), $db->prefix ); ?></p>
             <p></p>
             <?php
             echo __(
@@ -103,9 +114,11 @@
         if (defined('WPSTGPRO_VERSION')) {
             require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/external-database.php');
             require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/custom-directory.php');
+            require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/mail-setting.php');
         } else {
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
+            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'mail-setting.php');
         }
         ?>
 

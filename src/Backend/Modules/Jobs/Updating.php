@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 use WPStaging\Utils\Helper;
 
@@ -17,6 +18,11 @@ class Updating extends Job
      * @var bool
      */
     public $isExternal;
+
+    /**
+     * @var mixed|null
+     */
+    private $db;
 
     /**
      * Initialize is called in \Job
@@ -85,7 +91,7 @@ class Updating extends Job
             $this->options->destinationHostname = $this->options->existingClones[$this->options->clone]['url'];
             $this->options->prefix = $this->getStagingPrefix();
             $helper = new Helper();
-            $this->options->homeHostname = $helper->get_home_url_without_scheme();
+            $this->options->homeHostname = $helper->getHomeUrlWithoutScheme();
         } else {
             wp_die('Fatal Error: Can not update clone because there is no clone data.');
         }
@@ -136,6 +142,8 @@ class Updating extends Job
         if (isset($_POST["cloneHostname"]) && !empty($_POST["cloneHostname"])) {
             $this->options->cloneHostname = $_POST["cloneHostname"];
         }
+
+        $this->options->emailsDisabled = isset( $_POST['emailsDisabled'] ) && $_POST['emailsDisabled'] !== "false";
 
         // Directories to Copy
         $this->options->directoriesToCopy = array_merge(

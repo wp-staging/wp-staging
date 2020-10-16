@@ -49,7 +49,23 @@ var WPStaging = (function ($) {
         cache.get("#wpstg-error-details").show().html(message);
         cache.get("#wpstg-removing-clone").removeClass("loading");
         cache.get(".wpstg-loader").hide();
+        $('.wpstg--modal--process--generic-problem').show().html(message);
     };
+
+
+    /**
+     *
+     * @param obj
+     * @returns {boolean}
+     */
+    function isEmpty(obj) {
+        for(var prop in obj) {
+            if(obj.hasOwnProperty(prop))
+                return false;
+        }
+
+        return true;
+    }
 
     /**
      *
@@ -73,6 +89,18 @@ var WPStaging = (function ($) {
             showError(prependMessage + ' Error: ' + response.message + appendMessage);
             return;
         }
+    }
+
+    /**
+     *
+     * @param response
+     * @returns {{ok}|*}
+     */
+    var handleFetchErrors = function (response) {
+        if (!response.ok) {
+            showError('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
+        }
+        return response;
     }
 
     /** Hide and reset previous thrown visible errors */
@@ -221,6 +249,7 @@ var WPStaging = (function ($) {
                         ajax(
                             {
                                 action: "wpstg_check_clone",
+                                accessToken: wpstg.accessToken,
                                 cloneID: cloneID
                             },
                             function (response) {
@@ -398,7 +427,7 @@ var WPStaging = (function ($) {
                 ajax(
                     {
                         action: "wpstg_confirm_delete_clone",
-                        nonce: wpstg.nonce,
+                        accessToken: wpstg.accessToken,
                         clone: $(this).data("clone")
                     },
                     function (response) {
@@ -446,7 +475,7 @@ var WPStaging = (function ($) {
                     {
                         action: "wpstg_scanning",
                         clone: clone,
-                        nonce: wpstg.nonce
+                        accessToken: wpstg.accessToken
                     },
                     function (response) {
                         if (response.length < 1) {
@@ -466,12 +495,14 @@ var WPStaging = (function ($) {
 
     /**
      * Ajax Requests
-     * @param {Object} data
-     * @param {Function} callback
-     * @param {String} dataType
-     * @param {Boolean} showErrors
+     * @param Object data
+     * @param Function callback
+     * @param string dataType
+     * @param bool showErrors
+     * @param int tryCount
+     * @param float incrementRatio
      */
-    var ajax = function (data, callback, dataType, showErrors, tryCount) {
+    var ajax = function (data, callback, dataType, showErrors, tryCount, incrementRatio = null) {
         if ("undefined" === typeof (dataType)) {
             dataType = "json";
         }
@@ -480,11 +511,16 @@ var WPStaging = (function ($) {
             showErrors = true;
         }
 
-        var tryCount = "undefined" === typeof (tryCount) ? 0 : tryCount;
+        tryCount = "undefined" === typeof (tryCount) ? 0 : tryCount;
 
         var retryLimit = 10;
 
         var retryTimeout = 10000 * tryCount;
+
+        incrementRatio = parseInt(incrementRatio);
+        if (!isNaN(incrementRatio)) {
+            retryTimeout *= incrementRatio;
+        }
 
         $.ajax({
             url: ajaxurl + '?action=wpstg_processing&_=' + (Date.now() / 1000),
@@ -499,7 +535,7 @@ var WPStaging = (function ($) {
                 tryCount++;
                 if (tryCount <= retryLimit) {
                     setTimeout(function () {
-                        ajax(data, callback, dataType, showErrors, tryCount);
+                        ajax(data, callback, dataType, showErrors, tryCount, incrementRatio);
                         return;
                     }, retryTimeout);
 
@@ -518,7 +554,7 @@ var WPStaging = (function ($) {
                 }
             },
             statusCode: {
-                404: function (data) {
+                404: function () {
                     if (tryCount >= retryLimit) {
                         showError("Error 404 - Can't find ajax request URL! Please try the <a href='https://wp-staging.com/docs/wp-staging-settings-for-small-servers/' target='_blank'>WP Staging Small Server Settings</a> or submit an error report and contact us.");
                     }
@@ -598,7 +634,7 @@ var WPStaging = (function ($) {
                 // Prepare data
                 that.data = {
                     action: $this.data("action"),
-                    nonce: wpstg.nonce
+                    accessToken: wpstg.accessToken
                 };
 
                 // Cloning data
@@ -762,6 +798,7 @@ var WPStaging = (function ($) {
         var cloneDir = $("#wpstg_clone_dir").val();
         that.data.cloneDir = encodeURIComponent($.trim(cloneDir));
         that.data.cloneHostname = $("#wpstg_clone_hostname").val();
+        that.data.emailsDisabled = $("#wpstg_disable_emails").is(':checked');
 
     };
 
@@ -776,7 +813,7 @@ var WPStaging = (function ($) {
         ajax(
             {
                 action: "wpstg_overview",
-                nonce: wpstg.nonce
+                accessToken: wpstg.accessToken
             },
             function (response) {
 
@@ -796,6 +833,8 @@ var WPStaging = (function ($) {
         );
 
         that.switchStep(1);
+        cache.get(".wpstg-step3-cloning").show();
+        cache.get(".wpstg-step3-pushing").hide();
     };
 
     /**
@@ -835,7 +874,7 @@ var WPStaging = (function ($) {
             {
                 action: "wpstg_delete_clone",
                 clone: clone,
-                nonce: wpstg.nonce,
+                accessToken: wpstg.accessToken,
                 excludedTables: getExcludedTables(),
                 deleteDir: deleteDir
             },
@@ -884,7 +923,7 @@ var WPStaging = (function ($) {
             {
                 action: "wpstg_cancel_clone",
                 clone: that.data.cloneID,
-                nonce: wpstg.nonce
+                accessToken: wpstg.accessToken
             },
             function (response) {
 
@@ -920,7 +959,7 @@ var WPStaging = (function ($) {
             {
                 action: "wpstg_cancel_update",
                 clone: that.data.cloneID,
-                nonce: wpstg.nonce
+                accessToken: wpstg.accessToken
             },
             function (response) {
 
@@ -955,7 +994,7 @@ var WPStaging = (function ($) {
             {
                 action: "wpstg_restart",
                 //clone: that.data.cloneID,
-                nonce: wpstg.nonce
+                accessToken: wpstg.accessToken
             },
             function (response) {
 
@@ -1026,7 +1065,7 @@ var WPStaging = (function ($) {
             ajax(
                 {
                     action: "wpstg_check_disk_space",
-                    nonce: wpstg.nonce
+                    accessToken: wpstg.accessToken
                 },
                 function (response) {
                     if (false === response) {
@@ -1175,7 +1214,7 @@ var WPStaging = (function ($) {
             WPStaging.ajax(
                 {
                     action: "wpstg_processing",
-                    nonce: wpstg.nonce,
+                    accessToken: wpstg.accessToken,
                     excludedTables: getExcludedTables(),
                     includedDirectories: getIncludedDirectories(),
                     excludedDirectories: getExcludedDirectories(),
@@ -1338,29 +1377,391 @@ var WPStaging = (function ($) {
     that.getLogs = getLogs;
     that.loadOverview = loadOverview;
 
+    // TODO RPoC (too big, scattered and unorganized)
     that.snapshots = {
+        type: null,
+        isCancelled: false,
+        processInfo: {
+            title: null,
+            interval: null,
+        },
+        modal: {
+            create: {
+                html: null,
+                confirmBtnTxt: null,
+            },
+            process: {
+                html: null,
+                cancelBtnTxt: null,
+                modal: null,
+            },
+            download: {
+                html: null,
+            },
+            import: {
+                html: null,
+                btnTxtNext: null,
+                btnTxtConfirm: null,
+                btnTxtCancel: null,
+                searchReplaceForm: null,
+                file: null,
+                containerUpload: null,
+                containerFilesystem: null,
+                setFile: (file, upload = true) => {
+                    const toUnit = (bytes) => {
+                        const i = Math.floor( Math.log(bytes) / Math.log(1024) );
+                        return (bytes / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
+                    }
+
+                    if (!file) {
+                        return;
+                    }
+
+                    that.snapshots.modal.import.file = file;
+                    that.snapshots.modal.import.data.file = file.name;
+                    console.log(`File ${file.name}`);
+                    $('.wpstg--snapshot--import--selected-file').html(`${file.name} <br /> (${toUnit(file.size)})`).show();
+                    $('.wpstg--drag').hide();
+                    $('.wpstg--drag-or-upload').show();
+
+                    if (upload) {
+                        $('.wpstg--modal--actions .swal2-confirm').prop('disabled', true);
+                        that.snapshots.upload.start();
+                    }
+                },
+                baseDirectory: null,
+                data: {
+                    file: null,
+                    search: [],
+                    replace: [],
+                },
+            },
+        },
+        messages: {
+            WARNING: 'warning',
+            ERROR: 'error',
+            INFO: 'info',
+            DEBUG: 'debug',
+            CRITICAL: 'critical',
+            data: {
+                all: [], // TODO RPoC
+                info: [],
+                error: [],
+                critical: [],
+                warning: [],
+                debug: [],
+            },
+            shouldWarn() {
+              return that.snapshots.messages.data.error.length > 0
+                || that.snapshots.messages.data.critical.length > 0
+              ;
+            },
+            countByType(type = that.snapshots.messages.ERROR) {
+                return that.snapshots.messages.data[type].length;
+            },
+            addMessage(message) {
+                if (Array.isArray(message)) {
+                    message.forEach(item => {
+                        that.snapshots.messages.addMessage(item);
+                    });
+                    return;
+                }
+                const type = message.type.toLowerCase() || 'info';
+                if (!that.snapshots.messages.data[type]) {
+                    that.snapshots.messages.data[type] = [];
+                }
+                that.snapshots.messages.data.all.push(message); // TODO RPoC
+                that.snapshots.messages.data[type].push(message);
+            },
+            reset() {
+                that.snapshots.messages.data = {
+                    all: [],
+                    info: [],
+                    error: [],
+                    critical: [],
+                    warning: [],
+                    debug: [],
+                };
+            },
+        },
+        timer: {
+            totalSeconds: 0,
+            interval: null,
+            start() {
+                if (null !== that.snapshots.timer.interval) {
+                    return;
+                }
+
+                const prettify = (seconds) => {
+                    console.log(`Process running for ${seconds} seconds`);
+                    // If potentially anything can exceed 24h execution time than that;
+                    // const _seconds = parseInt(seconds, 10)
+                    // const hours = Math.floor(_seconds / 3600)
+                    // const minutes = Math.floor(_seconds / 60) % 60
+                    // seconds = _seconds % 60
+                    //
+                    // return [hours, minutes, seconds]
+                    //   .map(v => v < 10 ? '0' + v : v)
+                    //   .filter((v,i) => v !== '00' || i > 0)
+                    //   .join(':')
+                    // ;
+                    // Are we sure we won't create anything that exceeds 24h execution time? If not then this;
+                    return `${(new Date(seconds * 1000)).toISOString().substr(11, 8)}`;
+                };
+
+                that.snapshots.timer.interval = setInterval(() => {
+                    $('.wpstg--modal--process--elapsed-time').text(prettify(that.snapshots.timer.totalSeconds));
+                    that.snapshots.timer.totalSeconds++;
+                }, 1000);
+            },
+            stop() {
+                that.snapshots.timer.totalSeconds = 0;
+                if (that.snapshots.timer.interval) {
+                    clearInterval(that.snapshots.timer.interval);
+                    that.snapshots.timer.interval = null;
+                }
+            },
+        },
+        upload: {
+            reader: null,
+            file: null,
+            iop: 1000 * 1024,
+            uploadInfo(isShow) {
+                const $containerUpload = $('.wpstg--modal--import--upload--process');
+                const $containerUploader = $('.wpstg--uploader');
+                if (isShow) {
+                    $containerUpload.css('display', 'flex');
+                    $containerUploader.hide();
+                    return;
+                }
+
+                $containerUploader.css('display', 'flex');
+                $containerUpload.hide();
+            },
+            start() {
+                console.log(`file ${that.snapshots.modal.import.data.file}`);
+                that.snapshots.upload.reader = new FileReader();
+                that.snapshots.upload.file = that.snapshots.modal.import.file;
+                that.snapshots.upload.uploadInfo(true);
+                that.snapshots.upload.sendChunk();
+            },
+            sendChunk(startsAt = 0) {
+                if (!that.snapshots.upload.file) {
+                    return;
+                }
+                const isReset = startsAt < 1;
+                const endsAt = startsAt + that.snapshots.upload.iop + 1;
+                const blob = that.snapshots.upload.file.slice(startsAt, endsAt);
+                that.snapshots.upload.reader.onloadend = function(event) {
+                    if (event.target.readyState !== FileReader.DONE) {
+                        return;
+                    }
+
+                    const body = new FormData();
+                    body.append('accessToken', wpstg.accessToken);
+                    body.append('data', event.target.result);
+                    body.append('filename', that.snapshots.upload.file.name);
+                    body.append('reset', isReset ? '1' : '0');
+
+
+                    fetch(`${ajaxurl}?action=wpstg--snapshots--import--file-upload`, {
+                        method: 'POST',
+                        body,
+                    }).then(handleFetchErrors)
+                      .then(res => res.json())
+                      .then(res => {
+                          showAjaxFatalError(res, '', 'Submit an error report.');
+                          const writtenBytes = startsAt + that.snapshots.upload.iop;
+                          const percent = Math.floor((writtenBytes / that.snapshots.upload.file.size) * 100);
+                          if (endsAt >= that.snapshots.upload.file.size) {
+                              that.snapshots.upload.uploadInfo(false);
+                              isLoading(false);
+                              $('.wpstg--modal--actions .swal2-confirm').prop('disabled', false);
+                              return;
+                          }
+                          $('.wpstg--modal--import--upload--progress--title > span').text(percent);
+                          $('.wpstg--modal--import--upload--progress').css('width', `${percent}%`)
+                          that.snapshots.upload.sendChunk(endsAt);
+                      })
+                      .catch(e => showAjaxFatalError(e, '', 'Submit an error report.'))
+                    ;
+                };
+                that.snapshots.upload.reader.readAsDataURL(blob);
+            },
+        },
+        status: {
+            hasResponse: null,
+            reTryAfter: 5000,
+        },
         init() {
-            this.fetchListing();
             this.create();
             this.delete();
             this.restore();
-            this.export();
             this.edit();
+
+            // noinspection JSIgnoredPromiseFromCall
+            that.snapshots.fetchListing();
+
+            $('body')
+              .off('change', '#wpstg--snapshots--filter')
+              .on('change', '#wpstg--snapshots--filter', function() {
+                  const $records = $('#wpstg-existing-snapshots').find('> div[id][data-type].wpstg-snapshot');
+                  if (this.value === '') {
+                      $records.show();
+                  } else if (this.value === 'database') {
+                      $records.filter('[data-type="site"]').hide();
+                      $records.filter('[data-type="database"]').show();
+                  } else if (this.value === 'site') {
+                      $records.filter('[data-type="database"]').hide();
+                      $records.filter('[data-type="site"]').show();
+                  }
+              })
+              .on('click', '.wpstg--snapshot--download', function() {
+                const url = this.getAttribute('data-url');
+                if (url.length > 0) {
+                    window.location.href = url;
+                    return;
+                }
+                that.snapshots.downloadModal({
+                    titleExport: this.getAttribute('data-title-export'),
+                    title: this.getAttribute('data-title'),
+                    id: this.getAttribute('data-id'),
+                    btnTxtCancel: this.getAttribute('data-btn-cancel-txt'),
+                    btnTxtConfirm: this.getAttribute('data-btn-download-txt'),
+                });
+            })
+              .off('click', '#wpstg-import-snapshot')
+              .on('click', '#wpstg-import-snapshot', function() {
+                  that.snapshots.importModal();
+              })
+              // Import
+              .off('click', '.wpstg--snapshot--import--choose-option')
+              .on('click', '.wpstg--snapshot--import--choose-option', function() {
+                  const $this = $(this);
+                  const $parent = $this.parent();
+                  if (!$parent.hasClass('wpstg--show-options')) {
+                      $parent.addClass('wpstg--show-options');
+                      $this.text($this.attr('data-txtChoose'));
+                  } else {
+                      $parent.removeClass('wpstg--show-options');
+                      $this.text($this.attr('data-txtOther'));
+                  }
+              })
+              .off('click', '.wpstg--modal--snapshot--import--search-replace--new')
+              .on('click', '.wpstg--modal--snapshot--import--search-replace--new', function(e) {
+                  e.preventDefault();
+                  const $container = $(Swal.getContainer()).find('.wpstg--modal--snapshot--import--search-replace--input--container');
+                  const total = $container.find('.wpstg--modal--snapshot--import--search-replace--input-group').length;
+                  $container.append(that.snapshots.modal.import.searchReplaceForm.replace(/{i}/g, total));
+              })
+              .off('input', '.wpstg--snapshot--import--search')
+              .on('input', '.wpstg--snapshot--import--search', function() {
+                  const index = parseInt(this.getAttribute('data-index'));
+                  if (!isNaN(index)) {
+                      that.snapshots.modal.import.data.search[index] = this.value;
+                  }
+              })
+              .off('input', '.wpstg--snapshot--import--replace')
+              .on('input', '.wpstg--snapshot--import--replace', function() {
+                  const index = parseInt(this.getAttribute('data-index'));
+                  if (!isNaN(index)) {
+                      that.snapshots.modal.import.data.replace[index] = this.value;
+                  }
+              })
+              // Other Options
+              .off('click', '.wpstg--snapshot--import--option[data-option]')
+              .on('click', '.wpstg--snapshot--import--option[data-option]', function() {
+                  const option = this.getAttribute('data-option');
+
+                  if (option === 'file') {
+                      $('input[type="file"][name="wpstg--snapshot--import--upload--file"]').click();
+                      return;
+                  }
+
+                  if (option === 'upload') {
+                      that.snapshots.modal.import.containerFilesystem.hide();
+                      that.snapshots.modal.import.containerUpload.show();
+                      $('.wpstg--snapshot--import--choose-option').click();
+                      $('.wpstg--modal--snapshot--import--search-replace--wrapper').show();
+
+                  }
+
+                  if (option !== 'filesystem') {
+                      return;
+                  }
+
+                  that.snapshots.modal.import.containerUpload.hide();
+                  const $containerFilesystem = that.snapshots.modal.import.containerFilesystem;
+                  $containerFilesystem.show();
+
+                  fetch(`${ajaxurl}?action=wpstg--snapshots--import--file-list&_=${Math.random()}&accessToken=${wpstg.accessToken}`)
+                      .then(handleFetchErrors)
+                    .then(res => res.json())
+                    .then(res => {
+                        const $ul = $('.wpstg--modal--snapshot--import--filesystem ul');
+                        $ul.empty();
+
+                        if (!res || isEmpty(res)) {
+                            $ul.append(`<span id="wpstg--snapshots--import--file-list-empty">No import file found! Upload an import file to the folder above.</span><br />`);
+                            $('.wpstg--modal--snapshot--import--search-replace--wrapper').hide();
+                            return;
+                        }
+
+                        $ul.append(`<span id="wpstg--snapshots--import--file-list">Select file to import:</span><br />`);
+                        res.forEach(function(file, index){
+                            //var checked = (index === 0) ? 'checked' : '';
+                            $ul.append(`<li><label><input name="snapshot_import_file" type="radio" value="${file.fullPath}">${file.name} <br /> ${file.size}</label></li>`);
+                        });
+                        //$('.wpstg--modal--actions .swal2-confirm').prop('disabled', false);
+                        return res;
+                    })
+                    .catch(e => showAjaxFatalError(e, '', 'Submit an error report.'))
+                  ;
+              })
+              .off('change', 'input[type="file"][name="wpstg--snapshot--import--upload--file"]')
+              .on('change', 'input[type="file"][name="wpstg--snapshot--import--upload--file"]', function() {
+                  that.snapshots.modal.import.setFile(this.files[0] || null);
+                  $('.wpstg--snapshot--import--choose-option').click();
+              })
+              .off('change', 'input[type="radio"][name="snapshot_import_file"]')
+              .on('change', 'input[type="radio"][name="snapshot_import_file"]', function() {
+                  $('.wpstg--modal--actions .swal2-confirm').prop('disabled', false);
+                  that.snapshots.modal.import.data.file = this.value;
+              })
+              // Drag & Drop
+              .on('drag dragstart dragend dragover dragenter dragleave drop', '.wpstg--modal--snapshot--import--upload--container', function(e) {
+                  e.preventDefault();
+                  e.stopPropagation();
+              })
+              .on('dragover dragenter', '.wpstg--modal--snapshot--import--upload--container', function() {
+                  $(this).addClass('wpstg--has-dragover');
+              })
+              .on('dragleave dragend drop', '.wpstg--modal--snapshot--import--upload--container', function() {
+                  $(this).removeClass('wpstg--has-dragover');
+              })
+              .on('drop', '.wpstg--modal--snapshot--import--upload--container', function(e) {
+                  that.snapshots.modal.import.setFile(e.originalEvent.dataTransfer.files[0] || null);
+              })
+            ;
         },
-        fetchListing() {
+        fetchListing(isResetErrors = true) {
             isLoading(true);
-            resetErrors();
-            that.ajax(
-                {
-                    action: 'wpstg--snapshots--listing',
-                    nonce: wpstg.nonce,
-                },
-                function (response) {
-                    showAjaxFatalError(response, '', 'Submit an error report.');
-                    cache.get('#wpstg--tab--snapshot').html(response);
-                    isLoading(false);
-                },
-            );
+
+            if (isResetErrors) {
+                resetErrors();
+            }
+
+            return fetch(`${ajaxurl}?action=wpstg--snapshots--listing&_=${Math.random()}&accessToken=${wpstg.accessToken}`)
+                .then(handleFetchErrors)
+              .then(res => res.json())
+              .then(res => {
+                  showAjaxFatalError(res, '', 'Submit an error report.');
+                  cache.get('#wpstg--tab--snapshot').html(res);
+                  isLoading(false);
+                  return res;
+              })
+              .catch(e => showAjaxFatalError(e, '', 'Submit an error report.'))
+            ;
         },
         delete() {
             $('#wpstg--tab--snapshot')
@@ -1375,7 +1776,7 @@ var WPStaging = (function ($) {
                         {
                             action: 'wpstg--snapshots--delete--confirm',
                             id: id,
-                            nonce: wpstg.nonce,
+                            accessToken: wpstg.accessToken,
                         },
                         function (response) {
                             showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
@@ -1395,10 +1796,11 @@ var WPStaging = (function ($) {
                         {
                             action: 'wpstg--snapshots--delete',
                             id: id,
-                            nonce: wpstg.nonce,
+                            accessToken: wpstg.accessToken,
                         },
                         function (response) {
                             showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
+                            // noinspection JSIgnoredPromiseFromCall
                             that.snapshots.fetchListing();
                             isLoading(false);
                         },
@@ -1408,168 +1810,370 @@ var WPStaging = (function ($) {
                 .on('click', '#wpstg-cancel-snapshot-delete', function (e) {
                     e.preventDefault();
                     isLoading(false);
-                    var id = this.getAttribute('data-id');
+                    // noinspection JSIgnoredPromiseFromCall
                     that.snapshots.fetchListing();
                 })
             ;
+
+            // Force delete if snapshot tables do not exist
+            // TODO This is bloated, no need extra ID, use existing one?
+            $('#wpstg-error-wrapper')
+              .off('click', '#wpstg-snapshot-force-delete')
+              .on('click', '#wpstg-snapshot-force-delete', function (e) {
+                  e.preventDefault();
+                  resetErrors();
+                  isLoading(true);
+                  var id = this.getAttribute('data-id');
+
+                  if (!confirm("Do you want to delete this snapshot " + id + " from the listed snapshots?")) {
+                      isLoading(false);
+                      return false;
+                  }
+
+                  that.ajax(
+                    {
+                        action: 'wpstg--snapshots--delete',
+                        id: id,
+                        accessToken: wpstg.accessToken,
+                    },
+                    function (response) {
+                        showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
+                        // noinspection JSIgnoredPromiseFromCall
+                        that.snapshots.fetchListing();
+                        isLoading(false);
+                    },
+                  );
+              })
+            ;
         },
         create() {
-            var createSnapshot = function (name, notes) {
-                isLoading(true);
+            var createSnapshot = function (data) {
                 resetErrors();
+
+                if (that.snapshots.isCancelled) {
+                    // Swal.close();
+                    return;
+                }
+
+                const reset = data['reset'];
+                delete data['reset'];
+                let requestData = Object.assign({}, data);
+                let useResponseTitle = true;
+
+                if (data.type === 'database') {
+                    that.snapshots.type = data.type;
+                    delete requestData['includedDirectories'];
+                    delete requestData['wpContentDir'];
+                    delete requestData['availableDirectories'];
+                    delete requestData['wpStagingDir'];
+                    requestData = that.snapshots.requestData(
+                      'tasks.snapshot.database.create',
+                      { ...requestData, type: 'manual' }
+                    );
+                } else if (data.type === 'site') {
+                    that.snapshots.type = data.type;
+                    requestData = that.snapshots.requestData(
+                      'jobs.snapshot.site.create',
+                      requestData
+                    );
+                    useResponseTitle = false;
+                    requestData.jobs.snapshot.site.create.directories = [
+                      data.wpContentDir,
+                    ];
+                    requestData.jobs.snapshot.site.create.excludedDirectories = data.availableDirectories
+                      .split('|')
+                      .filter(item => !data.includedDirectories.includes(item))
+                      .map(item => `#${item}*#`)
+                    ;
+
+                    requestData.jobs.snapshot.site.create.excludedDirectories.push(`#${data.wpStagingDir}*#`);
+
+                    // delete requestData.jobs.snapshot.site.create.includedDirectories;
+                    delete requestData.jobs.snapshot.site.create.wpContentDir;
+                    delete requestData.jobs.snapshot.site.create.wpStagingDir;
+                    delete requestData.jobs.snapshot.site.create.availableDirectories;
+
+                } else {
+                    that.snapshots.type = null;
+                    Swal.close();
+                    showError('Invalid Snapshot Type');
+                    return;
+                }
+
+                that.snapshots.timer.start();
+
+                const statusStop = () => {
+                    console.log('Status: Stop');
+                    clearInterval(that.snapshots.processInfo.interval);
+                    that.snapshots.processInfo.interval = null;
+                };
+                const status = () => {
+                    if (that.snapshots.processInfo.interval !== null) {
+                        return;
+                    }
+                    console.log('Status: Start');
+                    that.snapshots.processInfo.interval = setInterval(() => {
+                        if (true === that.snapshots.isCancelled) {
+                            statusStop();
+                            return;
+                        }
+
+                        if (that.snapshots.status.hasResponse === false) {
+                            return;
+                        }
+
+                        that.snapshots.status.hasResponse = false;
+                        fetch(`${ajaxurl}?action=wpstg--snapshots--status&accessToken=${wpstg.accessToken}`)
+                          .then(res => res.json())
+                          .then(res => {
+                              that.snapshots.status.hasResponse = true;
+                              if (typeof res === 'undefined') {
+                                  statusStop();
+                              }
+
+                              if (that.snapshots.processInfo.title === res.currentStatusTitle) {
+                                  return;
+                              }
+
+                              that.snapshots.processInfo.title = res.currentStatusTitle;
+                              const $container = $(Swal.getContainer());
+                              $container.find('.wpstg--modal--process--title').text(res.currentStatusTitle);
+                              $container.find('.wpstg--modal--process--percent').text('0');
+                          })
+                          .catch(e => {
+                              that.snapshots.status.hasResponse = true;
+                              showAjaxFatalError(e, '', 'Submit an error report.');
+                          })
+                        ;
+                    }, 5000);
+                };
+
                 WPStaging.ajax(
                     {
                         action: 'wpstg--snapshots--create',
-                        nonce: wpstg.nonce,
-                        name,
-                        notes,
+                        accessToken: wpstg.accessToken,
+                        reset,
+                        wpstg: requestData,
                     },
                     function (response) {
                         if (typeof response === 'undefined') {
                             setTimeout(function () {
-                                createSnapshot(name, notes);
+                                createSnapshot(data);
                             }, wpstg.delayReq);
                             return;
                         }
 
-                        showAjaxFatalError(response, '', 'Submit an error report and contact us.');
-
-                        if (typeof response.last_msg !== 'undefined' && response.last_msg) {
-                            getLogs(response.last_msg);
+                        that.snapshots.processResponse(response, useResponseTitle);
+                        if (!useResponseTitle && !that.snapshots.processInfo.interval) {
+                            status();
                         }
 
-                        if (response.status === false) {
-                            createSnapshot(name, notes);
+                        if (response.status === false){
+                            createSnapshot(data);
                         } else if (response.status === true) {
-                            isLoading(false);
                             $('#wpstg--progress--status').text('Snapshot successfully created!');
-                            that.snapshots.fetchListing();
+                            that.snapshots.type = null;
+                            if (that.snapshots.messages.shouldWarn()) {
+                                // noinspection JSIgnoredPromiseFromCall
+                                that.snapshots.fetchListing();
+                                that.snapshots.logsModal();
+                                return;
+                            }
+                            statusStop();
+                            Swal.close();
+                            that.snapshots.fetchListing()
+                              .then(() => {
+                                  if (!response.snapshotId) {
+                                      showError('Failed to get snapshot ID from response');
+                                      return;
+                                  }
+
+                                  // TODO RPoC
+                                  const $el = $(`.wpstg--snapshot--download[data-id="${response.snapshotId}"]`);
+                                  that.snapshots.downloadModal({
+                                      id: $el.data('id'),
+                                      url: $el.data('url'),
+                                      title: $el.data('title'),
+                                      titleExport: $el.data('title-export'),
+                                      btnTxtCancel: $el.data('btn-cancel-txt'),
+                                      btnTxtConfirm: $el.data('btn-download-txt'),
+                                  })
+                                  $('.wpstg--modal--download--logs--wrapper').show();
+                                  const $logsContainer = $('.wpstg--modal--process--logs');
+                                  that.snapshots.messages.data.all.forEach(message => {
+                                      const msgClass = `wpstg--modal--process--msg--${message.type.toLowerCase()}`;
+                                      $logsContainer
+                                        .append(`<p class="${msgClass}">[${message.type}] - [${message.date}] - ${message.message}</p>`)
+                                      ;
+                                  });
+                              })
+                            ;
                         } else {
                             setTimeout(function () {
-                                createSnapshot(name, notes);
+                                createSnapshot(data);
                             }, wpstg.delayReq);
                         }
                     },
                     'json',
-                    false
+                    false,
+                    0, // Don't retry upon failure
+                    1.25
                 );
             };
-            // Add snapshot name and notes
+
+            const $body = $('body');
+
+            $body
+              .off('click', 'input[name="snapshot_type"]')
+              .on('click', 'input[name="snapshot_type"]', function() {
+                  const $advancedOptions = $('.wpstg-advanced-options');
+                  if (this.value === 'database') {
+                      $advancedOptions.hide();
+                      return;
+                  }
+                  $advancedOptions.show();
+              })
+              .off('click', '.wpstg--tab--toggle')
+              .on('click', '.wpstg--tab--toggle', function() {
+                  const $this = $(this);
+                  const $target = $($this.attr('data-target'));
+                  $target.toggle();
+                  if ($target.is(':visible')) {
+                      $this.find('span').text('▼');
+                  } else {
+                      $this.find('span').text('►');
+                  }
+              })
+              .off('change', '[name="includedDirectories\[\]"], [type="checkbox"][name="export_database"]')
+              .on('change', '[type="checkbox"][name="includedDirectories\[\]"], [type="checkbox"][name="export_database"]', function() {
+                  const totalDirs = $('[type="checkbox"][name="includedDirectories\[\]"]:checked').length;
+                  const isExportDatabase = $('[type="checkbox"][name="export_database"]:checked').length === 1;
+                  if (totalDirs < 1 && !isExportDatabase) {
+                      $('.swal2-confirm').prop('disabled', true);
+                  } else {
+                      $('.swal2-confirm').prop('disabled', false);
+                  }
+              })
+            ;
+
+            // Add backup name and notes
             $('#wpstg--tab--snapshot')
                 .off('click', '#wpstg-new-snapshot')
                 .on('click', '#wpstg-new-snapshot', async function(e) {
                     resetErrors();
                     e.preventDefault();
+                    that.snapshots.isCancelled = false;
+
+                    if (!that.snapshots.modal.create.html || !that.snapshots.modal.create.confirmBtnTxt) {
+                        const $newSnapshotModal = $('#wpstg--modal--snapshot--new');
+                        const html = $newSnapshotModal.html();
+                        const btnTxt = $newSnapshotModal.attr('data-confirmButtonText');
+                        that.snapshots.modal.create.html = html || null;
+                        that.snapshots.modal.create.confirmBtnTxt = btnTxt || null;
+                        $newSnapshotModal.remove();
+                    }
 
                     const { value: formValues } = await Swal.fire({
                         title: '',
-                        html: `
-                          <label id="wpstg-snapshot-name">Snapshot Name</label>
-                          <input id="wpstg-snapshot-name-input" class="swal2-input" placeholder="Name your snapshot for better distinction">
-                          <label>Additional Notes</label>
-                          <textarea id="wpstg-snapshot-notes-textarea" class="swal2-textarea" placeholder="Add an optional description e.g.: 'before push of staging site', 'before updating plugin XY'"></textarea>
-                        `,
+                        html: that.snapshots.modal.create.html,
                         focusConfirm: false,
-                        confirmButtonText: 'Take New Snapshot',
+                        confirmButtonText: that.snapshots.modal.create.confirmBtnTxt,
                         showCancelButton: true,
-                        preConfirm: () => ({
-                          name: document.getElementById('wpstg-snapshot-name-input').value || null,
-                          notes: document.getElementById('wpstg-snapshot-notes-textarea').value || null,
-                        }),
+                        preConfirm: () => {
+                            const container = Swal.getContainer();
+
+                            if(document.getElementById('snapshot_type_database').offsetParent == '') {
+                                var snapshotType = 'database';
+                            } else {
+                                var snapshotType = container.querySelector('input[name="snapshot_type"]:checked').value;
+                            }
+
+                            return {
+                                type: snapshotType || null,
+                                name: container.querySelector('input[name="snapshot_name"]').value || null,
+                                notes: container.querySelector('textarea[name="snapshot_note"]').value || null,
+                                includedDirectories: Array.from((container.querySelectorAll('input[name="includedDirectories\\[\\]"]:checked') || [])).map(i => i.value),
+                                wpContentDir: container.querySelector('input[name="wpContentDir"]').value || null,
+                                availableDirectories: container.querySelector('input[name="availableDirectories"]').value || null,
+                                wpStagingDir: container.querySelector('input[name="wpStagingDir"]').value || null,
+                                exportDatabase: container.querySelector('input[name="export_database"]:checked') !== null,
+                            };
+                        },
                     });
 
                     if (!formValues) {
                       return;
                     }
 
-                    that.ajax(
-                        {
-                            action: 'wpstg--snapshots--create--progress',
-                            nonce: wpstg.nonce,
+                    formValues.reset = true;
+
+                    that.snapshots.process({
+                        execute: () => {
+                            that.snapshots.messages.reset();
+                            createSnapshot(formValues);
                         },
-                        function (response) {
-                            showAjaxFatalError(response, '', 'Submit an error report and contact us.');
-                            cache.get('#wpstg--tab--snapshot').html(response);
-                          createSnapshot(formValues.name, formValues.notes);
-                        },
-                    );
+                    });
                 })
             ;
         },
         restore() {
-            var restoreSnapshot = function (id, isReset) {
+            var restoreSnapshot = function (prefix, reset) {
                 isLoading(true);
                 resetErrors();
 
-                if (typeof isReset === 'undefined') {
-                    isReset = false;
+                if (typeof reset === 'undefined') {
+                    reset = false;
                 }
 
                 WPStaging.ajax(
                     {
                         action: 'wpstg--snapshots--restore',
-                        nonce: wpstg.nonce,
-                        id: id,
-                        isReset: isReset,
+                        accessToken: wpstg.accessToken,
+                        wpstg: {
+                            tasks: {
+                                snapshot: {
+                                    database: {
+                                        create: {
+                                            source: prefix,
+                                            reset,
+                                        },
+                                    },
+                                },
+                            },
+                        },
                     },
                     function (response) {
                         if (typeof response === 'undefined') {
                             setTimeout(function () {
-                                restoreSnapshot(id);
+                                restoreSnapshot(prefix);
                             }, wpstg.delayReq);
                             return;
                         }
 
-                        showAjaxFatalError(response, '', 'Submit an error report and contact us.');
-
-                        if (typeof response.last_msg !== 'undefined' && response.last_msg) {
-                            getLogs(response.last_msg);
-                        }
+                        that.snapshots.processResponse(response);
 
                         if (response.status === false || response.job_done === false) {
-                            restoreSnapshot(id);
+                            restoreSnapshot(prefix);
                         } else if (response.status === true && response.job_done === true) {
                             isLoading(false);
-                            $('#wpstg--progress--status').text('Snapshot successfully restored');
+                            $('.wpstg--modal--process--title').text('Snapshot successfully restored');
+                            setTimeout(() => {
+                                Swal.close();
+                                // noinspection JSIgnoredPromiseFromCall
+                                that.snapshots.fetchListing();
+                            }, 1000);
                         } else {
                             setTimeout(function () {
-                                restoreSnapshot(id);
+                                restoreSnapshot(prefix);
                             }, wpstg.delayReq);
                         }
                     },
                     'json',
-                    false
+                    false,
+                    0,
+                    1.25
                 );
             };
-
-            // Force delete if snapshot tables do not exist
-            $('#wpstg-error-wrapper')
-                .off('click', '#wpstg-snapshot-force-delete')
-                .on('click', '#wpstg-snapshot-force-delete', function (e) {
-                    e.preventDefault();
-                    resetErrors();
-                    isLoading(true);
-                    var id = this.getAttribute('data-id');
-
-                    if (!confirm("Do you want to delete this snapshot " + id + " from the listed snapshots?")) {
-                        isLoading(false);
-                        return false;
-                    }
-
-                    that.ajax(
-                        {
-                            action: 'wpstg--snapshots--delete',
-                            id: id,
-                            force: 1,
-                            nonce: wpstg.nonce,
-                        },
-                        function (response) {
-                            showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
-                            that.snapshots.fetchListing();
-                            isLoading(false);
-                        },
-                    );
-                })
 
             $('#wpstg--tab--snapshot')
                 .off('click', '.wpstg--snapshot--restore[data-id]')
@@ -1579,7 +2183,7 @@ var WPStaging = (function ($) {
                     that.ajax(
                         {
                             action: 'wpstg--snapshots--restore--confirm',
-                            nonce: wpstg.nonce,
+                            accessToken: wpstg.accessToken,
                             id: $(this).data('id'),
                         },
                         function (data) {
@@ -1591,58 +2195,21 @@ var WPStaging = (function ($) {
                 .on('click', '#wpstg--snapshot--restore--cancel', function (e) {
                     resetErrors();
                     e.preventDefault();
+                    // noinspection JSIgnoredPromiseFromCall
                     that.snapshots.fetchListing();
                 })
                 .off('click', '#wpstg--snapshot--restore[data-id]')
                 .on('click', '#wpstg--snapshot--restore[data-id]', function (e) {
                     e.preventDefault();
                     resetErrors();
-                    var id = $(this).data('id');
-
-                    that.ajax(
-                        {
-                            action: 'wpstg--snapshots--restore--progress',
-                            nonce: wpstg.nonce,
-                            id: id,
-                        },
-                        function (response) {
-                            showAjaxFatalError(response, '', 'Submit an error report and contact us.');
-                            cache.get('#wpstg--tab--snapshot').html(response);
+                    const id = this.getAttribute('data-id');
+                    that.snapshots.process({
+                        execute: () => {
+                            that.snapshots.messages.reset();
                             restoreSnapshot(id, true);
                         },
-                    );
-                })
-            ;
-        },
-        export() {
-            function download(url) {
-                var a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = url;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-            }
-
-            $('#wpstg--tab--snapshot')
-                .off('click', '.wpstg--snapshot--export')
-                .on('click', '.wpstg--snapshot--export', function (e) {
-                    e.preventDefault();
-                    isLoading(true);
-                    that.ajax(
-                        {
-                            action: 'wpstg--snapshots--export',
-                            nonce: wpstg.nonce,
-                            id: $(this).data('id'),
-                        },
-                        function (response) {
-                            showAjaxFatalError(response, '', 'Submit an error report and contact us.');
-                            isLoading(false);
-                            if (response && response.success && response.data && response.data.length > 0) {
-                                download(response.data);
-                            }
-                        },
-                    );
+                        isShowCancelButton: false,
+                    });
                 })
             ;
         },
@@ -1652,7 +2219,6 @@ var WPStaging = (function ($) {
             .off('click', '.wpstg--snapshot--edit[data-id]')
             .on('click', '.wpstg--snapshot--edit[data-id]', async function(e) {
               e.preventDefault();
-              console.log('edit');
 
               const $this = $(this);
               const name = $this.data('name');
@@ -1661,17 +2227,17 @@ var WPStaging = (function ($) {
               const { value: formValues } = await Swal.fire({
                 title: '',
                 html: `
-                    <label id="wpstg-snapshot-name">Snapshot Name</label>
-                    <input id="wpstg-snapshot-name-input" class="swal2-input" value="${name}">
+                    <label id="wpstg-snapshot-edit-name">Backup Name</label>
+                    <input id="wpstg-snapshot-edit-name-input" class="swal2-input" value="${name}">
                     <label>Additional Notes</label>
-                    <textarea id="wpstg-snapshot-notes-textarea" class="swal2-textarea">${notes}</textarea>
+                    <textarea id="wpstg-snapshot-edit-notes-textarea" class="swal2-textarea">${notes}</textarea>
                   `,
                 focusConfirm: false,
-                confirmButtonText: 'Update Snapshot',
+                confirmButtonText: 'Update Backup',
                 showCancelButton: true,
                 preConfirm: () => ({
-                  name: document.getElementById('wpstg-snapshot-name-input').value || null,
-                  notes: document.getElementById('wpstg-snapshot-notes-textarea').value || null,
+                  name: document.getElementById('wpstg-snapshot-edit-name-input').value || null,
+                  notes: document.getElementById('wpstg-snapshot-edit-notes-textarea').value || null,
                 }),
               });
 
@@ -1682,18 +2248,553 @@ var WPStaging = (function ($) {
               that.ajax(
                 {
                   action: 'wpstg--snapshots--edit',
-                  nonce: wpstg.nonce,
+                  accessToken: wpstg.accessToken,
                   id: $this.data('id'),
                   name: formValues.name,
                   notes: formValues.notes,
                 },
                 function(response) {
                   showAjaxFatalError(response, '', 'Submit an error report.');
-                  that.snapshots.fetchListing();
+                    // noinspection JSIgnoredPromiseFromCall
+                    that.snapshots.fetchListing();
                 },
               );
             })
           ;
+        },
+        cancel() {
+            that.snapshots.timer.stop();
+            that.snapshots.isCancelled = true;
+            Swal.close();
+            setTimeout(() => that.ajax(
+              {
+                  action: 'wpstg--snapshots--cancel',
+                  accessToken: wpstg.accessToken,
+                  type: that.snapshots.type,
+              },
+              function(response) {
+                  showAjaxFatalError(response, '', 'Submit an error report.');
+              },
+            ), 500);
+        },
+        /**
+         * If process.execute exists, process.data and process.onResponse is not used
+         * process = { data: {}, onResponse: (resp) => {}, onAfterClose: () => {}, execute: () => {}, isShowCancelButton: bool }
+         * @param {object} process
+         */
+        process(process) {
+            if (typeof process.execute !== 'function' && (!process.data || !process.onResponse)) {
+                Swal.close();
+                showError('process.data and / or process.onResponse is not set');
+                return;
+            }
+
+            // TODO move to backend and get the contents as xhr response?
+            if (!that.snapshots.modal.process.html || !that.snapshots.modal.process.cancelBtnTxt) {
+                const $modal = $('#wpstg--modal--snapshot--process');
+                const html = $modal.html();
+                const btnTxt = $modal.attr('data-cancelButtonText');
+                that.snapshots.modal.process.html = html || null;
+                that.snapshots.modal.process.cancelBtnTxt = btnTxt || null;
+                $modal.remove();
+            }
+
+            $('body')
+              .off('click', '.wpstg--modal--process--logs--tail')
+              .on('click', '.wpstg--modal--process--logs--tail', function(e) {
+                  e.preventDefault();
+                  const container = Swal.getContainer();
+                  const $logs = $(container).find('.wpstg--modal--process--logs');
+                  $logs.toggle();
+                  if ($logs.is(':visible')) {
+                      container.childNodes[0].style.width = '100%';
+                      container.style['z-index'] = 9999;
+                  } else {
+                      container.childNodes[0].style.width = '600px';
+                  }
+              })
+            ;
+
+            process.isShowCancelButton = false !== process.isShowCancelButton;
+
+            that.snapshots.modal.process.modal = Swal.mixin({
+                customClass: {
+                    cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
+                    content: 'wpstg--process--content',
+                },
+                buttonsStyling: false,
+            }).fire({
+                html: that.snapshots.modal.process.html,
+                cancelButtonText: that.snapshots.modal.process.cancelBtnTxt,
+                showCancelButton: process.isShowCancelButton,
+                showConfirmButton: false,
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                width: 600,
+                onRender: () => {
+                    const _btnCancel = Swal.getContainer().getElementsByClassName('swal2-cancel wpstg--btn--cancel')[0];
+                    const btnCancel = _btnCancel.cloneNode(true);
+                    _btnCancel.parentNode.replaceChild(btnCancel, _btnCancel);
+
+                    btnCancel.addEventListener('click', function(e) {
+                        if (confirm('Are You Sure? This will cancel the process!')) {
+                            Swal.close();
+                        }
+                    });
+
+                    if (typeof process.execute === 'function') {
+                        process.execute();
+                        return;
+                    }
+
+                    if (!process.data || !process.onResponse) {
+                        Swal.close();
+                        showError('process.data and / or process.onResponse is not set');
+                        return;
+                    }
+
+                    that.ajax(process.data, process.onResponse);
+                },
+                onAfterClose: () => typeof process.onAfterClose === 'function' && process.onAfterClose(),
+                onClose: () => {
+                    console.log('cancelled');
+                    that.snapshots.cancel();
+                }
+            });
+        },
+        processResponse(response, useTitle) {
+            if (response === null) {
+                Swal.close();
+                showError('Invalid Response; null');
+                throw new Error(`Invalid Response; ${response}`);
+            }
+
+            const $container = $(Swal.getContainer());
+            const title = () => {
+                if ((response.title || response.statusTitle) && useTitle === true) {
+                    $container.find('.wpstg--modal--process--title').text(response.title || response.statusTitle);
+                }
+            };
+            const percentage = () => {
+                if (response.percentage) {
+                    $container.find('.wpstg--modal--process--percent').text(response.percentage);
+                }
+            };
+            const logs = () => {
+                if (!response.messages) {
+                    return;
+                }
+                const $logsContainer = $container.find('.wpstg--modal--process--logs');
+                const stoppingTypes = [
+                  that.snapshots.messages.ERROR,
+                  that.snapshots.messages.CRITICAL,
+                ];
+                const appendMessage = (message) => {
+                    if (Array.isArray(message)) {
+                        for (const item of message) {
+                            appendMessage(item);
+                        }
+                        return;
+                    }
+                    const msgClass = `wpstg--modal--process--msg--${message.type.toLowerCase()}`;
+                    $logsContainer.append(`<p class="${msgClass}">[${message.type}] - [${message.date}] - ${message.message}</p>`);
+
+                    if (stoppingTypes.includes(message.type.toLowerCase())) {
+                        that.snapshots.cancel();
+                        setTimeout(that.snapshots.logsModal, 500);
+                    }
+                };
+                for (const message of response.messages) {
+                    if (!message) {
+                        continue;
+                    }
+                    that.snapshots.messages.addMessage(message);
+                    appendMessage(message);
+                }
+
+                if ($logsContainer.is(':visible')) {
+                    $logsContainer.scrollTop($logsContainer[0].scrollHeight);
+                }
+
+                if (!that.snapshots.messages.shouldWarn()) {
+                    return;
+                }
+
+                const $btnShowLogs = $container.find('.wpstg--modal--process--logs--tail');
+                $btnShowLogs.html($btnShowLogs.attr('data-txt-bad'));
+
+                $btnShowLogs
+                  .find('.wpstg--modal--logs--critical-count')
+                  .text(that.snapshots.messages.countByType(that.snapshots.messages.CRITICAL))
+                ;
+
+                $btnShowLogs
+                  .find('.wpstg--modal--logs--error-count')
+                  .text(that.snapshots.messages.countByType(that.snapshots.messages.ERROR))
+                ;
+
+                $btnShowLogs
+                  .find('.wpstg--modal--logs--warning-count')
+                  .text(that.snapshots.messages.countByType(that.snapshots.messages.WARNING))
+                ;
+            };
+
+            title();
+            percentage();
+            logs();
+
+            if (response.status === true && response.job_done === true) {
+                that.snapshots.timer.stop();
+                that.snapshots.isCancelled = true;
+            }
+        },
+        requestData(notation, data) {
+            const obj = {};
+            const keys = notation.split('.');
+            const lastIndex = keys.length - 1;
+            keys.reduce((accumulated, current, index) => {
+                return accumulated[current] = index >= lastIndex? data : {};
+            }, obj);
+            return obj;
+        },
+        logsModal() {
+            Swal.fire({
+                html: `<div class="wpstg--modal--error--logs" style="display:block"></div><div class="wpstg--modal--process--logs" style="display:block"></div>`,
+                width: '95%',
+                onRender: () => {
+                    const $container = $(Swal.getContainer());
+                    $container[0].style['z-index'] = 9999;
+
+                    const $logsContainer = $container.find('.wpstg--modal--process--logs');
+                    const $errorContainer = $container.find('.wpstg--modal--error--logs');
+                    const $translations = $('#wpstg--js--translations');
+                    const messages = that.snapshots.messages;
+                    const title = $translations.attr('data-modal-logs-title')
+                      .replace('{critical}', messages.countByType(messages.CRITICAL))
+                      .replace('{errors}', messages.countByType(messages.ERROR))
+                      .replace('{warnings}', messages.countByType(messages.WARNING))
+                    ;
+
+                    $errorContainer.before(`<h3>${title}</h3>`);
+                    const warnings = [
+                      that.snapshots.messages.CRITICAL,
+                      that.snapshots.messages.ERROR,
+                      that.snapshots.messages.WARNING,
+                    ];
+
+                    if (!that.snapshots.messages.shouldWarn()) {
+                        $errorContainer.hide();
+                    }
+
+                    for (const message of messages.data.all) {
+                        const msgClass = `wpstg--modal--process--msg--${message.type.toLowerCase()}`;
+                        // TODO RPoC
+                        if (warnings.includes(message.type)) {
+                            $errorContainer.append(
+                              `<p class="${msgClass}">[${message.type}] - [${message.date}] - ${message.message}</p>`
+                            );
+                        }
+                        $logsContainer.append(
+                          `<p class="${msgClass}">[${message.type}] - [${message.date}] - ${message.message}</p>`
+                        );
+                    }
+                },
+                onOpen: (container) => {
+                    const $logsContainer = $(container).find('.wpstg--modal--process--logs');
+                    $logsContainer.scrollTop($logsContainer[0].scrollHeight);
+                },
+            });
+        },
+        downloadModal({ title = null, titleExport = null,  id = null, url = null, btnTxtCancel = 'Cancel', btnTxtConfirm = 'Download' }) {
+
+            if (null === that.snapshots.modal.download.html) {
+                const $el = $('#wpstg--modal--snapshot--download');
+                that.snapshots.modal.download.html = $el.html();
+                $el.remove();
+            }
+
+            const exportModal = () => Swal.fire({
+                html: `<h2>${titleExport}</h2><span class="wpstg-loader"></span>`,
+                showCancelButton: false,
+                showConfirmButton: false,
+                onRender: () => {
+                    that.ajax(
+                      {
+                          action: 'wpstg--snapshots--export',
+                          accessToken: wpstg.accessToken,
+                          id,
+                      },
+                      function (response) {
+                          if (!response || !response.success || !response.data || response.data.length < 1) {
+                              return;
+                          }
+
+                          const a = document.createElement('a');
+                          a.style.display = 'none';
+                          a.href = response.data;
+                          document.body.appendChild(a);
+                          a.click();
+                          document.body.removeChild(a);
+
+                          Swal.close();
+                      },
+                    );
+                },
+            });
+
+            Swal.mixin({
+                customClass: {
+                    cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
+                    confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
+                    actions: 'wpstg--modal--actions',
+                },
+                buttonsStyling: false,
+            })
+              .fire({
+                  icon: 'success',
+                  html: that.snapshots.modal.download.html.replace('{title}', title).replace('{btnTxtLog}', 'Show Logs'),
+                  cancelButtonText: btnTxtCancel,
+                  confirmButtonText: btnTxtConfirm,
+                  showCancelButton: true,
+                  showConfirmButton: true,
+              })
+              .then(isConfirm => {
+                  if (!isConfirm || !isConfirm.value) {
+                      return;
+                  }
+
+                  if (url && url.length > 0) {
+                      window.location.href = url;
+                      return;
+                  }
+
+                  exportModal();
+              })
+            ;
+        },
+        importModal() {
+
+            const restoreSiteSnapshot = (data) => {
+                resetErrors();
+
+                if (that.snapshots.isCancelled) {
+                    console.log('cancelled');
+                    // Swal.close();
+                    return;
+                }
+
+                const reset = data['reset'];
+                delete data['reset'];
+                data['mergeMediaFiles'] = 1; // always merge for uploads / media
+                let requestData = Object.assign({}, data);
+
+                requestData = that.snapshots.requestData(
+                  'jobs.snapshot.site.restore',
+                  { ...that.snapshots.modal.import.data }
+                );
+
+                that.snapshots.timer.start();
+
+                const statusStop = () => {
+                    console.log('Status: Stop');
+                    clearInterval(that.snapshots.processInfo.interval);
+                    that.snapshots.processInfo.interval = null;
+                };
+                const status = () => {
+                    if (that.snapshots.processInfo.interval !== null) {
+                        return;
+                    }
+                    console.log('Status: Start');
+                    that.snapshots.processInfo.interval = setInterval(() => {
+                        if (true === that.snapshots.isCancelled) {
+                            statusStop();
+                            return;
+                        }
+
+                        if (that.snapshots.status.hasResponse === false) {
+                            return;
+                        }
+
+                        that.snapshots.status.hasResponse = false;
+                        fetch(`${ajaxurl}?action=wpstg--snapshots--status&process=restore&accessToken=${wpstg.accessToken}`)
+                          .then(res => res.json())
+                          .then(res => {
+                              that.snapshots.status.hasResponse = true;
+                              if (typeof res === 'undefined') {
+                                  statusStop();
+                              }
+
+                              if (that.snapshots.processInfo.title === res.currentStatusTitle) {
+                                  return;
+                              }
+
+                              that.snapshots.processInfo.title = res.currentStatusTitle;
+                              const $container = $(Swal.getContainer());
+                              $container.find('.wpstg--modal--process--title').text(res.currentStatusTitle);
+                              $container.find('.wpstg--modal--process--percent').text('0');
+                          })
+                          .catch(e => {
+                              that.snapshots.status.hasResponse = true;
+                              showAjaxFatalError(e, '', 'Submit an error report.');
+                          })
+                        ;
+                    }, 5000);
+                };
+
+                WPStaging.ajax(
+                  {
+                      action: 'wpstg--snapshots--site--restore',
+                      accessToken: wpstg.accessToken,
+                      reset,
+                      wpstg: requestData,
+                  },
+                  function (response) {
+                      if (typeof response === 'undefined') {
+                          setTimeout(function () {
+                              restoreSiteSnapshot(data);
+                          }, wpstg.delayReq);
+                          return;
+                      }
+
+                      that.snapshots.processResponse(response, true);
+                      if (!that.snapshots.processInfo.interval) {
+                          status();
+                      }
+
+                      if (response.status === false){
+                          restoreSiteSnapshot(data);
+                      } else if (response.status === true) {
+                          $('#wpstg--progress--status').text('Snapshot successfully restored!');
+                          that.snapshots.type = null;
+                          if (that.snapshots.messages.shouldWarn()) {
+                              // noinspection JSIgnoredPromiseFromCall
+                              that.snapshots.fetchListing();
+                              that.snapshots.logsModal();
+                              return;
+                          }
+                          statusStop();
+                          var logEntries = $(".wpstg--modal--process--logs").get(1).innerHTML;
+                          var html = '<div class="wpstg--modal--process--logs">' + logEntries + '</div>';
+                          var issueFound = html.includes('wpstg--modal--process--msg--warning') || html.includes('wpstg--modal--process--msg--error') ? 'Issues(s) found! ' : '';
+                          console.log('errors found: ' + issueFound);
+                          //var errorMessage = html.includes('wpstg--modal--process--msg--error') ? 'Errors(s) found! ' : '';
+                          //var Message = warningMessage + errorMessage;
+
+                          //Swal.close();
+                              Swal.fire({
+                                  icon: 'success',
+                                  title: 'Finished',
+                                  html: 'System restored from snapshot. <br/><span class="wpstg--modal--process--msg-found">'+issueFound+'</span><button class="wpstg--modal--process--logs--tail" data-txt-bad="">Show Logs</button><br/>' + html,
+                              }
+                          );
+
+                          // noinspection JSIgnoredPromiseFromCall
+                          that.snapshots.fetchListing();
+                      } else {
+                          setTimeout(function () {
+                              restoreSiteSnapshot(data);
+                          }, wpstg.delayReq);
+                      }
+                  },
+                  'json',
+                  false,
+                  0, // Don't retry upon failure
+                  1.25
+                );
+            }
+
+            if (!that.snapshots.modal.import.html) {
+                const $modal = $('#wpstg--modal--snapshot--import');
+
+                // Search & Replace Form
+                const $form = $modal.find('.wpstg--modal--snapshot--import--search-replace--input--container');
+                that.snapshots.modal.import.searchReplaceForm = $form.html();
+                $form.find('.wpstg--modal--snapshot--import--search-replace--input-group').remove();
+                $form.html(that.snapshots.modal.import.searchReplaceForm.replace(/{i}/g, 0));
+
+                that.snapshots.modal.import.html = $modal.html();
+                that.snapshots.modal.import.baseDirectory = $modal.attr('data-baseDirectory');
+                that.snapshots.modal.import.btnTxtNext = $modal.attr('data-nextButtonText');
+                that.snapshots.modal.import.btnTxtConfirm = $modal.attr('data-confirmButtonText');
+                that.snapshots.modal.import.btnTxtCancel = $modal.attr('data-cancelButtonText');
+                $modal.remove();
+            }
+
+            that.snapshots.modal.import.data.search = [];
+            that.snapshots.modal.import.data.replace = [];
+
+            let $btnConfirm = null;
+            Swal
+              .mixin({
+                customClass: {
+                    confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
+                    cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
+                    actions: 'wpstg--modal--actions',
+                },
+                buttonsStyling: false,
+                //progressSteps: ['1', '2']
+            })
+              .queue([{
+                  html: that.snapshots.modal.import.html,
+                  confirmButtonText: that.snapshots.modal.import.btnTxtNext,
+                  showCancelButton: false,
+                  showConfirmButton: true,
+                  showLoaderOnConfirm: true,
+                  width: 650,
+                  onRender() {
+                      $btnConfirm = $('.wpstg--modal--actions .swal2-confirm');
+                      $btnConfirm.prop('disabled', true);
+
+                      that.snapshots.modal.import.containerUpload = $('.wpstg--modal--snapshot--import--upload');
+                      that.snapshots.modal.import.containerFilesystem = $('.wpstg--modal--snapshot--import--filesystem');
+                  },
+                  preConfirm() {
+                      const body = new FormData;
+                      body.append('accessToken', wpstg.accessToken);
+                      body.append('filePath', that.snapshots.modal.import.data.file);
+
+                      that.snapshots.modal.import.data.search.forEach((item, index) => {
+                          body.append(`search[${index}]`, item);
+                      });
+                      that.snapshots.modal.import.data.replace.forEach((item, index) => {
+                          body.append(`replace[${index}]`, item);
+                      });
+
+                      return fetch(`${ajaxurl}?action=wpstg--snapshots--import--file-info`, {
+                        method: 'POST',
+                        body,
+                      }).then(handleFetchErrors)
+                        .then(res => res.json())
+                        .then(html => {
+                            return Swal.insertQueueStep({
+                                html: html,
+                                confirmButtonText: that.snapshots.modal.import.btnTxtConfirm,
+                                cancelButtonText: that.snapshots.modal.import.btnTxtCancel,
+                                showCancelButton: true,
+                            });
+                        })
+                        .catch(e => showAjaxFatalError(e, '', 'Submit an error report.'))
+                      ;
+                  },
+              }])
+              .then(res => {
+                  if (!res || !res.value || !res.value[1] || res.value[1] !== true) {
+                      return;
+                  }
+
+                  that.snapshots.isCancelled = false;
+                  const data = that.snapshots.modal.import.data;
+                  data['file'] = that.snapshots.modal.import.baseDirectory + data['file'];
+                  data['reset'] = true;
+
+                  that.snapshots.process({
+                      execute: () => {
+                          that.snapshots.messages.reset();
+                          restoreSiteSnapshot(data);
+                      },
+                  });
+              })
+            ;
         },
     };
 
@@ -1754,7 +2855,7 @@ jQuery(document).ready(function ($) {
             async: true,
             data: {
                 'action': 'wpstg_send_report',
-                'nonce': wpstg.nonce,
+                'accessToken': wpstg.accessToken,
                 'wpstg_email': email,
                 'wpstg_provider': hosting_provider,
                 'wpstg_message': message,

@@ -2,18 +2,16 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Framework\Security\AccessToken;
 use WPStaging\WPStaging;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
-use WPStaging\Backend\Modules\Jobs\Multisite\Database as muDatabase;
-use WPStaging\Backend\Modules\Jobs\Multisite\DatabaseExternal as muDatabaseExternal;
 use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplace as muSearchReplace;
 use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplaceExternal as muSearchReplaceExternal;
-use WPStaging\Backend\Modules\Jobs\Multisite\Data as muData;
-use WPStaging\Backend\Modules\Jobs\Multisite\DataExternal as muDataExternal;
 use WPStaging\Backend\Modules\Jobs\Multisite\Finish as muFinish;
 use WPStaging\Backend\Modules\Jobs\Multisite\Directories as muDirectories;
 use WPStaging\Backend\Modules\Jobs\Multisite\Files as muFiles;
 use WPStaging\Utils\Helper;
+
 /**
  * Class Cloning
  * @package WPStaging\Backend\Modules\Jobs
@@ -81,7 +79,6 @@ class Cloning extends Job
 
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
-
             $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;
 
             $this->options->prefix = isset($this->options->existingClones[$this->options->clone]->prefix) ?
@@ -132,7 +129,8 @@ class Cloning extends Job
 
         // Directories to Copy
         $this->options->directoriesToCopy = array_merge(
-            $this->options->includedDirectories, $this->options->extraDirectories
+            $this->options->includedDirectories,
+            $this->options->extraDirectories
         );
 
 
@@ -154,7 +152,7 @@ class Cloning extends Job
         }
         $this->options->databasePrefix = '';
         if (isset($_POST["databasePrefix"]) && !empty($_POST["databasePrefix"])) {
-            $this->options->databasePrefix = $this->sanitizePrefix($_POST["databasePrefix"]);
+            $this->options->databasePrefix = $this->appendUnderscore($_POST["databasePrefix"]);
         }
         $this->options->cloneDir = '';
         if (isset($_POST["cloneDir"]) && !empty($_POST["cloneDir"])) {
@@ -165,11 +163,13 @@ class Cloning extends Job
             $this->options->cloneHostname = trim($_POST["cloneHostname"]);
         }
 
+        $this->options->emailsDisabled = isset( $_POST['emailsDisabled'] ) && $_POST['emailsDisabled'] !== "false";
+
         $this->options->destinationHostname = $this->getDestinationHostname();
         $this->options->destinationDir = $this->getDestinationDir();
 
         $helper = new Helper();
-        $this->options->homeHostname = $helper->get_home_url_without_scheme();
+        $this->options->homeHostname = $helper->getHomeUrlWithoutScheme();
 
         // Process lock state
         $this->options->isRunning = true;
@@ -227,7 +227,6 @@ class Cloning extends Job
      */
     private function getDestinationUrl()
     {
-
         if (!empty($this->options->cloneHostname)) {
             return $this->options->cloneHostname;
         }
@@ -243,7 +242,7 @@ class Cloning extends Job
     {
         if (empty($this->options->cloneHostname)) {
             $helper = new Helper();
-            return $helper->get_home_url_without_scheme();
+            return $helper->getHomeUrlWithoutScheme();
         }
         return $this->getHostnameWithoutScheme($this->options->cloneHostname);
     }
@@ -284,7 +283,7 @@ class Cloning extends Job
      * @param string $string
      * @return string
      */
-    private function sanitizePrefix($string)
+    private function appendUnderscore($string)
     {
         $lastCharacter = substr($string, -1);
         if ($lastCharacter === '_') {
@@ -298,7 +297,6 @@ class Cloning extends Job
      */
     private function setStagingPrefix()
     {
-
         // Get & find a new prefix that does not already exist in database.
         // Loop through up to 1000 different possible prefixes should be enough here;)
         for ($i = 0; $i <= 10000; $i++) {
@@ -370,7 +368,8 @@ class Cloning extends Job
      * Copy data from staging site to temporary column to use it later
      * @return object
      */
-    public function jobPreserveDataFirstStep(){
+    public function jobPreserveDataFirstStep()
+    {
         $preserve = new PreserveDataFirstStep();
         return $this->handleJobResponse($preserve->start(), 'database');
     }
@@ -381,23 +380,7 @@ class Cloning extends Job
      */
     public function jobDatabase()
     {
-        // Could be written more elegant
-        // but for xdebug purposes and breakpoints its cleaner to have separate if blocks
-        if (defined('WPSTGPRO_VERSION') && is_multisite()) {
-            // Is Multisite
-            if (empty($this->options->databaseUser) && empty($this->options->databasePassword)) {
-                $database = new muDatabase();
-            } else {
-                $database = new muDatabaseExternal();
-            }
-        } else {
-            // No Multisite
-            if (empty($this->options->databaseUser) && empty($this->options->databasePassword)) {
-                $database = new Database();
-            } else {
-                $database = new DatabaseExternal();
-            }
-        }
+        $database = new Database();
         return $this->handleJobResponse($database->start(), "SearchReplace");
     }
 
@@ -427,7 +410,8 @@ class Cloning extends Job
      * Copy tmp data back to staging site
      * @return object
      */
-    public function jobPreserveDataSecondStep(){
+    public function jobPreserveDataSecondStep()
+    {
         $preserve = new PreserveDataSecondStep();
         return $this->handleJobResponse($preserve->start(), 'directories');
     }
@@ -467,21 +451,7 @@ class Cloning extends Job
      */
     public function jobData()
     {
-        if (defined('WPSTGPRO_VERSION') && is_multisite()) {
-            if (empty($this->options->databaseUser) && empty($this->options->databasePassword)) {
-                $data = new muData();
-            } else {
-                $data = new muDataExternal();
-            }
-        } else {
-
-            if (empty($this->options->databaseUser) && empty($this->options->databasePassword)) {
-                $data = new Data();
-            } else {
-                $data = new DataExternal();
-            }
-        }
-        return $this->handleJobResponse($data->start(), "finish");
+        return $this->handleJobResponse((new Data())->start(), "finish");
     }
 
     /**
@@ -490,6 +460,12 @@ class Cloning extends Job
      */
     public function jobFinish()
     {
+        // Re-generate the token when the Clone is complete.
+        // Todo: Consider adding a do_action() on jobFinish to hook here.
+        // Todo: Inject using DI
+        $accessToken = new AccessToken;
+        $accessToken->generateNewToken();
+
         if (defined('WPSTGPRO_VERSION') && is_multisite()) {
             $finish = new muFinish();
         } else {

@@ -19,14 +19,10 @@ use WPStaging\Iterators;
  */
 class Scan extends Job {
 
-    /**
-     * @var array
-     */
+    /** @var array */
     private $directories = array();
 
-    /**
-     * @var Directories
-     */
+    /** @var Directories */
     private $objDirectories;
 
     /**
@@ -35,18 +31,11 @@ class Scan extends Job {
     protected function initialize() {
         $this->objDirectories = new Directories();
 
-        // Database Tables
         $this->getTables();
 
-        // Get directories
         $this->getDirectories();
 
-        // Install Optimizer
         $this->installOptimizer();
-
-
-        $this->db     = WPStaging::getInstance()->get( 'wpdb' );
-        $this->prefix = $this->db->prefix;
     }
 
     /**
@@ -65,7 +54,6 @@ class Scan extends Job {
         }
 
         // Tables
-        //$this->options->excludedTables          = array();
         $this->options->clonedTables = array();
 
         // Files
@@ -94,7 +82,6 @@ class Scan extends Job {
         $this->cache->delete( "files_to_copy" );
         $this->cache->delete( "clone_options" );
 
-        // Save options
         $this->saveOptions();
 
         return $this;
@@ -180,7 +167,6 @@ class Scan extends Job {
 
             if( $isChecked && !$isDisabled && !$forceDisabled )
                 $output .= " checked";
-            //if ($forceDisabled || $isDisabled) $output .= " disabled";
 
             $output .= " name='selectedDirectories[]' value='{$dataPath}'>";
 
@@ -228,11 +214,11 @@ class Scan extends Job {
      * Get Database Tables
      */
     protected function getTables() {
-        $wpDB = WPStaging::getInstance()->get( "wpdb" );
+        $db = WPStaging::getInstance()->get( "wpdb" );
 
         $sql = "SHOW TABLE STATUS";
 
-        $tables = $wpDB->get_results( $sql );
+        $tables = $db->get_results( $sql );
 
         $currentTables = array();
 
@@ -243,8 +229,8 @@ class Scan extends Job {
             // Create array of unchecked tables
             // On the main website of a multisite installation, do not select network site tables beginning with wp_1_, wp_2_ etc.
             // (On network sites, the correct tables are selected anyway)
-            if (( ! empty($wpDB->prefix) && 0 !== strpos($table->Name, $wpDB->prefix))
-                || (is_multisite() && is_main_site() && preg_match('/^wp_\d+_/', $table->Name))) {
+            if (( ! empty($db->prefix) && 0 !== strpos($table->Name, $db->prefix))
+                || (is_multisite() && is_main_site() && preg_match('/^'.$db->prefix.'\d+_/', $table->Name))) {
                 $this->options->excludedTables[] = $table->Name;
             }
 

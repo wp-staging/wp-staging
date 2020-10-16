@@ -3,7 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\WPStaging;
-use WPStaging\Service\Adapter\SourceDatabase;
+use WPStaging\Framework\Adapter\SourceDatabase;
 
 /**
  * Preserve staging sites in wpstg_existing_clones_beta in staging database while updating a site

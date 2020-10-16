@@ -3,12 +3,11 @@
 namespace WPStaging\Command\Database;
 
 use WPStaging\Command\Database\Snapshot\CreateSnapshotCommand;
-use WPStaging\Command\Database\Snapshot\DeleteSnapshotCommand;
 use WPStaging\Command\Database\Snapshot\SnapshotDto;
 use WPStaging\Command\Database\Snapshot\SnapshotHandler;
 use WPStaging\Command\Database\Snapshot\UpdateSnapshotCommand;
-use WPStaging\Service\Command\CommandInterface;
-use WPStaging\Service\Command\HandlerInterface;
+use WPStaging\Framework\Command\CommandInterface;
+use WPStaging\Framework\Command\HandlerInterface;
 use WPStaging\WPStaging;
 
 class SnapshotFactory
@@ -52,7 +51,7 @@ class SnapshotFactory
                 $handler->addCommand(self::getCommand(UpdateSnapshotCommand::class));
                 return;
             case self::DELETE_SNAPSHOT:
-                $handler->addCommand(self::getCommand(DeleteSnapshotCommand::class));
+                // todo Implement Delete Snapshot Command
                 return;
         }
     }
