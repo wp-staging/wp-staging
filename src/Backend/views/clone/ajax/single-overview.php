@@ -30,7 +30,7 @@
                 do_action('wpstg.views.single_overview.before_existing_clones_buttons', $name, $data, $license);
 
                 // Todo: Remove in future versions
-                echo apply_filters_deprecated("wpstg_before_stage_buttons", [$html = '', $name, $data], '{{wpstgFreeVersion}}', 'wpstg.views.single_overview.before_existing_clones_buttons', 'The replacement filter uses do_action()');
+                echo apply_filters_deprecated("wpstg_before_stage_buttons", [$html = '', $name, $data], '2.7.6', 'wpstg.views.single_overview.before_existing_clones_buttons', 'The replacement filter uses do_action()');
                 ?>
 
                 <a href="<?php echo $urlLogin ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank" title="<?php echo __( "Open the staging site in a new tab", "wp-staging" ) ?>">
@@ -49,7 +49,7 @@
                 do_action('wpstg.views.single_overview.after_existing_clones_buttons', $name, $data, $license);
 
                 // Todo: Remove in future versions
-                echo apply_filters_deprecated("wpstg_after_stage_buttons", [$html = '', $name, $data], '{{wpstgFreeVersion}}', 'wpstg.views.single_overview.after_existing_clones_buttons', 'The replacement filter uses do_action()');
+                echo apply_filters_deprecated("wpstg_after_stage_buttons", [$html = '', $name, $data], '2.7.6', 'wpstg.views.single_overview.after_existing_clones_buttons', 'The replacement filter uses do_action()');
                 ?>
 
                 <div class="wpstg-staging-info">

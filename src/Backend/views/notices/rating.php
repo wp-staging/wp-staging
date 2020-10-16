@@ -82,7 +82,7 @@ $file = trailingslashit($this->path) . "public/js/wpstg-admin-rating.js";
 if (file_exists($file)) {
     $version = (string)@filemtime($file);
 } else {
-    $version = '{{wpstgFreeVersion}}';
+    $version = '2.7.6';
 }
 ?>
 <script src="<?php echo esc_url(trailingslashit($this->url) . "js/wpstg-admin-rating.js?v=$version") ?>"></script>

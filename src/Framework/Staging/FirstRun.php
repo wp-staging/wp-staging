@@ -48,7 +48,7 @@ class FirstRun
         do_action('wpstg.clone_first_run');
 
         // Deprecated on Oct-2020.
-        do_action_deprecated('wpstg_clone_action_staging', [], '{{wpstgFreeVersion}}', 'wpstg.clone_first_run');
+        do_action_deprecated('wpstg_clone_action_staging', [], '2.7.6', 'wpstg.clone_first_run');
     }
 
     /**
