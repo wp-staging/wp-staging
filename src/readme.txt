@@ -21,7 +21,7 @@ With this duplicator plugin, you can create an exact copy of your entire website
 (Exact backup time depends on the size of your website)<br /><br />
 It creates a clone of your website into a subfolder of your main WordPress installation including an entire copy of your database.
  <br /> <br />
-<strong>Note: </strong> For pushing & migrating plugins and theme files to production site, check out the pro edition [https://wp-staging.com/](https://wp-staging.com/ "WP Staging Pro")
+<strong>Note: </strong> For pushing & migrating plugins and theme files to production site, check out the pro edition [https://wp-staging.com/](https://wp-staging.com/ "WP STAGING PRO")
 <br /><br />
 All the time-consumptive database and file copying operations are done in the background. The plugin even automatically does an entire search & replace of all serialized links and paths.
  <br /><br />
