@@ -290,7 +290,7 @@ SKIP VERSION
 
 Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
-= 2.7.6 =
+== Upgrade Notice ==
 * New: Compatible up to WordPress 5.5.1
 * New: Add WP_ENVIRONMENT_TYPE constant for staging site
 * New: Better and wider test coverage
