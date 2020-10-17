@@ -111,7 +111,7 @@ abstract class RealIteratorTestCase extends IteratorTestCase
     {
         $f = array();
         foreach ($files as $file) {
-            $f[] = realpath(__DIR__.\DIRECTORY_SEPARATOR.'..'.\DIRECTORY_SEPARATOR.'Fixtures'.\DIRECTORY_SEPARATOR.$file);
+            $f[] = realpath(__DIR__ . \DIRECTORY_SEPARATOR .\DIRECTORY_SEPARATOR.$file);
         }
 
         return $f;
