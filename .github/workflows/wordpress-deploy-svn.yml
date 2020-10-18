@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: Checkout master
-      working-directory: .
+    #- name: Checkout master
+    #working-directory: .
       #run: composer install --no-dev
 
     #- name: Build
