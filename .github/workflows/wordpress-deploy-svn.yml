@@ -10,8 +10,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    #- name: Install dependencies
-      #working-directory: ./src
+    - name: Checkout master
+      working-directory: .
       #run: composer install --no-dev
 
     #- name: Build
@@ -19,8 +19,8 @@ jobs:
         #npm install
         #grunt build
 
-    - name: Checkout master repo
-      uses: actions/checkout@master
+    #- name: Checkout master repo
+    #  uses: actions/checkout@master
 
     - name: WordPress Plugin Deploy
       uses: WP-Staging/action-wordpress-plugin-deploy@master
