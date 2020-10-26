@@ -4,27 +4,22 @@ namespace WPStaging\Framework\Adapter;
 
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
+/**
+ * Class HookedTemplate
+ *
+ * @todo Remove this since Hooks is no more.
+ *
+ * @package WPStaging\Framework\Adapter
+ */
 class HookedTemplate
 {
-
-    /** @var Hooks */
-    private $hooks;
 
     /** @var TemplateEngine */
     private $templateEngine;
 
-    public function __construct(Hooks $hooks, TemplateEngine $templateEngine)
+    public function __construct(TemplateEngine $templateEngine)
     {
-        $this->hooks = $hooks;
         $this->templateEngine = $templateEngine;
-    }
-
-    /**
-     * @return Hooks
-     */
-    public function getHooks()
-    {
-        return $this->hooks;
     }
 
     /**

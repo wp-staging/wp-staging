@@ -485,7 +485,8 @@ var WPStaging = (function ($) {
                         }
 
                         $workFlow.removeClass("loading").html(response);
-
+                        // register check disk space function for clone update process.
+                        checkDiskSpace();
                         that.switchStep(2);
                     },
                     "HTML"

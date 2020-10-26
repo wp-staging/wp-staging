@@ -306,7 +306,7 @@ class DatabaseRestore
 
     private function isShouldStop()
     {
-        return $this->shouldStop && $this->getShouldStop()();
+        return $this->shouldStop;
     }
 
     private function exec($query)

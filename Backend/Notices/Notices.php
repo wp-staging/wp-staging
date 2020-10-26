@@ -114,9 +114,6 @@ class Notices {
 
         $viewsNoticesPath = "{$this->path}views/notices/";
 
-        // Free and pro version have been activated at the same time
-        $this->plugin_deactivated_notice();
-
         // Show "rate the plugin". Free version only
         if (!defined('WPSTGPRO_VERSION')) {
             if ($this->canShow("wpstg_rating", 7)  && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post') {
@@ -157,12 +154,6 @@ class Notices {
             require_once "{$viewsNoticesPath}beta.php";
         }*/
 
-        // WP Staging Pro and Free can not be activated both
-        if( false !== ( $deactivatedNoticeID = get_transient( "wp_staging_deactivated_notice_id" ) ) ) {
-            require_once "{$viewsNoticesPath}transient.php";
-            delete_transient( "wp_staging_deactivated_notice_id" );
-        }
-
         // Different scheme in home and siteurl
         if( $this->isDifferentScheme() ) {
             require_once "{$viewsNoticesPath}wrong-scheme.php";
@@ -181,26 +172,6 @@ class Notices {
             return false;
         }
         return true;
-    }
-
-    /**
-     * Show a message when pro or free plugin becomes deactivated
-     * 
-     * @return void
-     */
-    private function plugin_deactivated_notice() {
-        if( false !== ( $deactivated_notice_id = get_transient( 'wp_staging_deactivated_notice_id' ) ) ) {
-            if( '1' === $deactivated_notice_id ) {
-                $message = __( "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging.", 'wp-staging' );
-            } else {
-                $message = __( "WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging Pro.", 'wp-staging' );
-            }
-            ?>
-            <div class="updated notice is-dismissible" style="border-left: 4px solid #ffba00;">
-                <p><?php echo esc_html( $message ); ?></p>
-            </div> <?php
-            delete_transient( 'wp_staging_deactivated_notice_id' );
-        }
     }
 
 }

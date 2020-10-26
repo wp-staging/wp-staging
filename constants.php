@@ -5,7 +5,7 @@ namespace WPStaging;
 
 // WP STAGING version number
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '2.7.6');
+    define('WPSTG_VERSION', '2.7.7');
 }
 
 // Compatible up to WordPress Version

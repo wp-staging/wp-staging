@@ -17,7 +17,7 @@ abstract class AbstractTemplateComponent extends AbstractComponent implements Re
 
     public function __construct(HookedTemplate $hookedTemplate)
     {
-        parent::__construct($hookedTemplate->getHooks());
+        parent::__construct();
         $this->templateEngine = $hookedTemplate->getTemplateEngine();
     }
 

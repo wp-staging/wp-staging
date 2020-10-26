@@ -17,7 +17,6 @@ use WPStaging\Frontend\Frontend;
 use WPStaging\Framework\Container\Container;
 use WPStaging\Utils\Autoloader;
 use WPStaging\Utils\Cache;
-use WPStaging\Utils\Loader;
 use WPStaging\Utils\Logger;
 use WPStaging\Framework\PluginFactory;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
@@ -148,10 +147,9 @@ final class WPStaging {
      * Define Hooks
      */
     public function defineHooks() {
-        $loader = $this->get( "loader" );
-        $loader->addAction( "admin_enqueue_scripts", $this, "enqueueElements", 100 );
-        $loader->addAction( "admin_enqueue_scripts", $this, "removeWPCoreJs", 5 );
-        $loader->addAction( "wp_enqueue_scripts", $this, "enqueueElements", 100 );
+        add_action('admin_enqueue_scripts', [$this, 'enqueueElements'], 100);
+        add_action('admin_enqueue_scripts', [$this, 'removeWPCoreJs'], 5);
+        add_action('wp_enqueue_scripts', [$this, 'enqueueElements'], 100);
     }
 
     /**
@@ -339,8 +337,6 @@ final class WPStaging {
         // Load globally available functions
         require_once ($this->pluginPath . "Core/Utils/functions.php");
 
-        $this->set( "loader", new Loader() );
-
         $this->set( "cache", new Cache() );
 
         $this->set( "logger", new Logger() );
@@ -358,14 +354,6 @@ final class WPStaging {
         } else {
             new Frontend( $this );
         }
-    }
-
-    /**
-     * Execute Plugin
-     */
-    public function run() {
-        /** @noinspection **/
-        $this->get( "loader" )->run();
     }
 
     /**
