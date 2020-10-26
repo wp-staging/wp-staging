@@ -109,61 +109,55 @@ class Administrator extends InjectionAware
      */
     private function defineHooks()
     {
-        // Get loader
-        $loader = $this->di->get("loader");
-
-        $Activation = new Activation\Activation();
-
         if (!defined('WPSTGPRO_VERSION')) {
             $Welcome = new Activation\Welcome();
         }
 
-        $loader->addAction("activated_plugin", $Activation, 'deactivate_other_instances');
-        $loader->addAction("admin_menu", $this, "addMenu", 10);
-        $loader->addAction("admin_init", $this, "setOptionFormElements");
-        $loader->addAction("admin_init", $this, "upgrade");
-        $loader->addAction("admin_post_wpstg_download_sysinfo", $this, "systemInfoDownload");
-        $loader->addAction("admin_post_wpstg_export", $this, "export");
-        $loader->addAction("admin_post_wpstg_import_settings", $this, "import");
-        $loader->addAction("admin_notices", $this, "messages");
+        add_action("admin_menu", [$this, "addMenu"], 10);
+        add_action("admin_init", [$this, "setOptionFormElements"]);
+        add_action("admin_init", [$this, "upgrade"]);
+        add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]);
+        add_action("admin_post_wpstg_export", [$this, "export"]);
+        add_action("admin_post_wpstg_import_settings", [$this, "import"]);
+        add_action("admin_notices", [$this, "messages"]);
 
         if (!defined('WPSTGPRO_VERSION')) {
             add_filter('admin_footer', array($this, 'loadFeedbackForm'));
         }
 
         // Ajax Requests
-        $loader->addAction("wp_ajax_wpstg_overview", $this, "ajaxOverview");
-        $loader->addAction("wp_ajax_wpstg_scanning", $this, "ajaxCloneScan");
-        $loader->addAction("wp_ajax_wpstg_check_clone", $this, "ajaxcheckCloneName");
-        $loader->addAction("wp_ajax_wpstg_restart", $this, "ajaxRestart");
-        $loader->addAction("wp_ajax_wpstg_update", $this, "ajaxUpdateProcess");
-        $loader->addAction("wp_ajax_wpstg_cloning", $this, "ajaxStartClone");
-        $loader->addAction("wp_ajax_wpstg_processing", $this, "ajaxCloneDatabase");
-        $loader->addAction("wp_ajax_wpstg_database_connect", $this, "ajaxDatabaseConnect");
-        $loader->addAction("wp_ajax_wpstg_clone_prepare_directories", $this, "ajaxPrepareDirectories");
-        $loader->addAction("wp_ajax_wpstg_clone_files", $this, "ajaxCopyFiles");
-        $loader->addAction("wp_ajax_wpstg_clone_replace_data", $this, "ajaxReplaceData");
-        $loader->addAction("wp_ajax_wpstg_clone_finish", $this, "ajaxFinish");
-        $loader->addAction("wp_ajax_wpstg_confirm_delete_clone", $this, "ajaxDeleteConfirmation");
-        $loader->addAction("wp_ajax_wpstg_delete_clone", $this, "ajaxDeleteClone");
-        $loader->addAction("wp_ajax_wpstg_cancel_clone", $this, "ajaxCancelClone");
-        $loader->addAction("wp_ajax_wpstg_cancel_update", $this, "ajaxCancelUpdate");
-        $loader->addAction("wp_ajax_wpstg_hide_poll", $this, "ajaxHidePoll");
-        $loader->addAction("wp_ajax_wpstg_hide_rating", $this, "ajaxHideRating");
-        $loader->addAction("wp_ajax_wpstg_hide_later", $this, "ajaxHideLaterRating");
-        $loader->addAction("wp_ajax_wpstg_hide_beta", $this, "ajaxHideBeta");
-        $loader->addAction("wp_ajax_wpstg_logs", $this, "ajaxLogs");
-        $loader->addAction("wp_ajax_wpstg_check_disk_space", $this, "ajaxCheckFreeSpace");
-        $loader->addAction("wp_ajax_wpstg_send_report", $this, "ajaxSendReport");
-        $loader->addAction("wp_ajax_wpstg_send_feedback", $this, "sendFeedback");
+        add_action("wp_ajax_wpstg_overview", [$this, "ajaxOverview"]);
+        add_action("wp_ajax_wpstg_scanning", [$this, "ajaxCloneScan"]);
+        add_action("wp_ajax_wpstg_check_clone", [$this, "ajaxcheckCloneName"]);
+        add_action("wp_ajax_wpstg_restart", [$this, "ajaxRestart"]);
+        add_action("wp_ajax_wpstg_update", [$this, "ajaxUpdateProcess"]);
+        add_action("wp_ajax_wpstg_cloning", [$this, "ajaxStartClone"]);
+        add_action("wp_ajax_wpstg_processing", [$this, "ajaxCloneDatabase"]);
+        add_action("wp_ajax_wpstg_database_connect", [$this, "ajaxDatabaseConnect"]);
+        add_action("wp_ajax_wpstg_clone_prepare_directories", [$this, "ajaxPrepareDirectories"]);
+        add_action("wp_ajax_wpstg_clone_files", [$this, "ajaxCopyFiles"]);
+        add_action("wp_ajax_wpstg_clone_replace_data", [$this, "ajaxReplaceData"]);
+        add_action("wp_ajax_wpstg_clone_finish", [$this, "ajaxFinish"]);
+        add_action("wp_ajax_wpstg_confirm_delete_clone", [$this, "ajaxDeleteConfirmation"]);
+        add_action("wp_ajax_wpstg_delete_clone", [$this, "ajaxDeleteClone"]);
+        add_action("wp_ajax_wpstg_cancel_clone", [$this, "ajaxCancelClone"]);
+        add_action("wp_ajax_wpstg_cancel_update", [$this, "ajaxCancelUpdate"]);
+        add_action("wp_ajax_wpstg_hide_poll", [$this, "ajaxHidePoll"]);
+        add_action("wp_ajax_wpstg_hide_rating", [$this, "ajaxHideRating"]);
+        add_action("wp_ajax_wpstg_hide_later", [$this, "ajaxHideLaterRating"]);
+        add_action("wp_ajax_wpstg_hide_beta", [$this, "ajaxHideBeta"]);
+        add_action("wp_ajax_wpstg_logs", [$this, "ajaxLogs"]);
+        add_action("wp_ajax_wpstg_check_disk_space", [$this, "ajaxCheckFreeSpace"]);
+        add_action("wp_ajax_wpstg_send_report", [$this, "ajaxSendReport"]);
+        add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]);
 
 
         // Ajax hooks pro Version
-        $loader->addAction("wp_ajax_wpstg_edit_clone_data", $this, "ajaxEditCloneData");
-        $loader->addAction("wp_ajax_wpstg_save_clone_data", $this, "ajaxSaveCloneData");
-        $loader->addAction("wp_ajax_wpstg_scan", $this, "ajaxPushScan");
-        $loader->addAction("wp_ajax_wpstg_push_processing", $this, "ajaxPushProcessing");
-        $loader->addAction("wp_ajax_nopriv_wpstg_push_processing", $this, "ajaxPushProcessing");
+        add_action("wp_ajax_wpstg_edit_clone_data", [$this, "ajaxEditCloneData"]);
+        add_action("wp_ajax_wpstg_save_clone_data", [$this, "ajaxSaveCloneData"]);
+        add_action("wp_ajax_wpstg_scan", [$this, "ajaxPushScan"]);
+        add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
+        add_action("wp_ajax_nopriv_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
     }
 
     /**

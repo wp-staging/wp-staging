@@ -38,10 +38,8 @@ class Frontend extends InjectionAware
      */
     private function defineHooks()
     {
-        // Get loader
-        $loader = $this->di->get("loader");
-        $loader->addAction("init", $this, "checkPermissions");
-        $loader->addFilter("wp_before_admin_bar_render", $this, "changeSiteName");
+        add_action("init", [$this, "checkPermissions"]);
+        add_filter("wp_before_admin_bar_render", [$this, "changeSiteName"]);
     }
 
     /**

@@ -3,7 +3,6 @@
 namespace WPStaging\Framework;
 
 use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\Adapter\Hooks;
 use WPStaging\Framework\Container\Container;
 use WPStaging\WPStaging;
 
@@ -47,14 +46,9 @@ abstract class AbstractPlugin implements PluginInterface
         $this->registerLifeCycle();
         $this->loadLanguages();
 
-        /** @var Hooks $hooks */
-        $hooks = $this->container->get(Hooks::class);
-
         foreach ($this->components as $id => $options) {
             $this->container->setInitialized($id, $options);
         }
-
-        $hooks->init();
     }
 
     /**
@@ -158,7 +152,6 @@ abstract class AbstractPlugin implements PluginInterface
 
     private function initDependencies()
     {
-        $this->container->set(Hooks::class, new Hooks);
         $this->container->set(Directory::class, new Directory($this->getDomain(), $this->getSlug()));
         $this->container->set(PluginInfo::class, new PluginInfo(
             $this->getVersion(), $this->getSlug(), $this->getDomain()

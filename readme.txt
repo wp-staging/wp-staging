@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, staging, duplication, clone, migration
 Requires at least: 3.6+
 Tested up to: 5.5
-Stable tag: 2.7.6
+Stable tag: 2.7.7
 Requires PHP: 5.5
 
 A duplicator plugin - clone/move, duplicate & migrate websites to staging, backup and development sites that only authorized users can access.
@@ -156,6 +156,9 @@ https://wp-staging.com
 4. Finish - Access your backup / staging site
 
 == Changelog ==
+
+= 2.7.7 =
+* Fix: Fatal error on activation if PHP version < 7.x version on some circumstances
 
 = 2.7.6 =
 * New: Compatible up to WordPress 5.5.1

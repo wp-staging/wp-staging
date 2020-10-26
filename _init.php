@@ -36,7 +36,6 @@ if (file_exists(plugin_dir_path(__FILE__) . 'Pro/constants.php')) {
     require_once plugin_dir_path(__FILE__) . 'constants.php';
 }
 
-
 /**
  * Do not show update notifications for WP STAGING Pro on the staging site
  * @param object
@@ -75,7 +74,6 @@ $pluginRequirements = new Wpstg_Requirements_Check(array(
     'file' => __FILE__,
 ));
 
-
 if ($pluginRequirements->passes()) {
 
     // @todo remove legacy custom auto-loader in WPStaging\Utils\Autoloader and use this composer based one instead!
@@ -90,22 +88,11 @@ if ($pluginRequirements->passes()) {
      */
 
     // Wordpress DB Object
-    if (isset($wpdb)) {
+    global $wpdb;
+
+    if ($wpdb instanceof \wpdb) {
         $wpStaging->set("wpdb", $wpdb);
     }
-
-    // WordPress Filter Object
-    if (isset($wp_filter)) {
-        $wpStaging->set("wp_filter", function () use (&$wp_filter) {
-            return $wp_filter;
-        });
-    }
-
-    /**
-     * Inititalize WPStaging
-     */
-    $wpStaging->run();
-
 
     /**
      * Installation Hooks

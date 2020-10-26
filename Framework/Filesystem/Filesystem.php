@@ -130,7 +130,7 @@ class Filesystem
                 continue;
             }
 
-            if ($this->shouldStop && $this->getShouldStop()()) {
+            if ($this->shouldStop) {
                 return false;
             }
         }
@@ -264,7 +264,7 @@ class Filesystem
 
         foreach ($iterator as $file) {
             $this->delete($file->getPathname(), $isUseNotPath);
-            if ($this->shouldStop && $this->getShouldStop()()) {
+            if ($this->shouldStop) {
                 return false;
             }
         }
