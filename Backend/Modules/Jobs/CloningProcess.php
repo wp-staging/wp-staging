@@ -22,23 +22,62 @@ abstract class CloningProcess extends JobExecutable
     protected function initializeDbObjects()
     {
         $this->productionDb = WPStaging::getInstance()->get("wpdb");
+
         if ($this->isExternal()) {
-            $this->stagingDb = new \wpdb($this->options->databaseUser, $this->options->databasePassword, $this->options->databaseDatabase, $this->options->databaseServer);
-            // Can not connect to mysql
-            if (!empty($this->stagingDb->error->errors['db_connect_fail']['0'])) {
-                $this->returnException("Can not connect to external database {$this->options->databaseDatabase}");
+            $this->setExternalDatabase();
+        } else {
+            $this->setLocalDatabase();
+        }
+    }
+
+    protected function setLocalDatabase()
+    {
+        $this->stagingDb = WPStaging::getInstance()->get("wpdb");
+    }
+
+    /**
+     * @return bool
+     */
+    protected function setExternalDatabase()
+    {
+        $this->stagingDb = new \wpdb($this->options->databaseUser, $this->options->databasePassword, $this->options->databaseDatabase, $this->options->databaseServer);
+
+        // Check if there were any error when connecting
+        if (
+            property_exists($this->stagingDb, 'error') &&
+            $this->stagingDb->error instanceof \WP_Error
+        ) {
+            /** @var \WP_Error $wp_error */
+            $wp_error = $this->stagingDb->error;
+            if ($wp_error->get_error_code() === 'db_connect_fail') {
+                $this->returnException(sprintf('Can not connect to external database %s. Reason: %s', $this->options->databaseDatabase, $wp_error->get_error_message()));
                 return false;
             }
-            // Can not connect to database
-            $this->stagingDb->select($this->options->databaseDatabase);
-            if (!$this->stagingDb->ready) {
-                $error = isset($db->error->errors['db_select_fail']) ? $db->error->errors['db_select_fail'] : "Error: Can't select {database} Either it does not exist or you don't have privileges to access it.";
-                $this->returnException($error);
+        }
+
+        $this->stagingDb->select($this->options->databaseDatabase);
+        if (!$this->stagingDb->ready) {
+            if (
+                property_exists($this->stagingDb, 'error') &&
+                $this->stagingDb->error instanceof \WP_Error
+            ) {
+                /** @var \WP_Error $wp_error */
+                $wp_error = $this->stagingDb->error;
+                if ($wp_error->get_error_code() === 'db_select_fail') {
+                    $this->returnException($wp_error->get_error_message());
+                    exit;
+                }
+
+                // Generic error
+                $this->returnException(sprintf('Error: Can\'t select database %s. Either it does not exist or you don\'t have privileges to access it.', $this->options->databaseDatabase));
                 exit;
             }
-        } else {
-            $this->stagingDb = WPStaging::getInstance()->get("wpdb");
+
+            // Generic error
+            $this->returnException(sprintf('Error: Can\'t select database %s. Either it does not exist or you don\'t have privileges to access it.', $this->options->databaseDatabase));
+            exit;
         }
+        return true;
     }
 
     protected function isExternal()

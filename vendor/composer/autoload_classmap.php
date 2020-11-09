@@ -282,4 +282,11 @@ return array(
     'WPStaging\\Utils\\Strings' => $baseDir . '/Core/Utils/Strings.php',
     'WPStaging\\WPStaging' => $baseDir . '/Core/WPStaging.php',
     'WPStaging\\thirdParty\\thirdPartyCompatibility' => $baseDir . '/Core/thirdParty/thirdPartyCompatibility.php',
+    'tad_DI52_Container' => $vendorDir . '/lucatume/di52/src/tad/DI52/Container.php',
+    'tad_DI52_ContainerInterface' => $vendorDir . '/lucatume/di52/src/tad/DI52/ContainerInterface.php',
+    'tad_DI52_ProtectedValue' => $vendorDir . '/lucatume/di52/src/tad/DI52/ProtectedValue.php',
+    'tad_DI52_ServiceProvider' => $vendorDir . '/lucatume/di52/src/tad/DI52/ServiceProvider.php',
+    'tad_DI52_ServiceProviderInterface' => $vendorDir . '/lucatume/di52/src/tad/DI52/ServiceProviderInterface.php',
+    'xrstf\\Composer52\\AutoloadGenerator' => $vendorDir . '/xrstf/composer-php52/lib/xrstf/Composer52/AutoloadGenerator.php',
+    'xrstf\\Composer52\\Generator' => $vendorDir . '/xrstf/composer-php52/lib/xrstf/Composer52/Generator.php',
 );

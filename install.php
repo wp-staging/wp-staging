@@ -7,35 +7,31 @@ use WPStaging\Utils\IISWebConfig;
 use WPStaging\Utils\Htaccess;
 use WPStaging\Utils\Filesystem;
 
-// Exit if accessed directly
-if (!defined('ABSPATH'))
-    exit;
-
-// TODO; remove previous auto-loader, use composer based instead!
-require_once __DIR__ . '/vendor/autoload.php';
-
 /**
  * Install Class
  *
  */
 class Install
 {
+    private $bootstrap;
 
-    public function __construct()
+    public function __construct(\WpstgBootstrapInterface $bootstrap)
     {
-        $file = __DIR__ . DIRECTORY_SEPARATOR . WPSTG_PLUGIN_SLUG . '.php';
-        register_activation_hook($file, array($this, 'activation'));
+        $this->bootstrap = $bootstrap;
     }
 
-    public static function activation()
+    public function activation()
     {
-        $install = new Install();
+        $this->bootstrap->checkRequirements();
+        $this->bootstrap->bootstrap();
 
-        $install->initCron();
-        $install->installOptimizer();
-        $install->createHtaccess();
-        $install->createIndex();
-        $install->createWebConfig();
+        if ($this->bootstrap->passedRequirements()) {
+            $this->initCron();
+            $this->installOptimizer();
+            $this->createHtaccess();
+            $this->createIndex();
+            $this->createWebConfig();
+        }
     }
 
     private function initCron()
@@ -83,5 +79,3 @@ class Install
         $webconfig->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . 'logs/web.config');
     }
 }
-
-new Install();

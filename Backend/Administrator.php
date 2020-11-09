@@ -712,12 +712,12 @@ class Administrator extends InjectionAware
      */
     public function ajaxDeleteConfirmation()
     {
-        if ( ! $this->isAuthenticated()) {
+        if (!$this->isAuthenticated()) {
             return false;
         }
 
         $delete = new Delete();
-        $delete->setData();
+        $isDatabaseConnected = $delete->setData();
 
         $clone = $delete->getClone();
 

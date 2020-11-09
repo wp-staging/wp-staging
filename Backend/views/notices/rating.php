@@ -1,7 +1,7 @@
 <?php
 /**
  * @var $this \WPStaging\Backend\Notices\Notices
- * @see \WPStaging\Backend\Notices\Notices::messages
+ * @see \WPStaging\Backend\Notices\Notices::showNotices
  */
 ?>
 <div class="wpstg_fivestar" style="display:none;box-shadow: 0 1px 1px 0 rgba(0,0,0,.1); border-left:none; background-color:#59a7f7; color:white; padding: 10px; margin: 10px; margin-left: 0px;">

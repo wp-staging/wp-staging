@@ -3,7 +3,6 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\CloneNotFoundException;
-use WPStaging\Utils\Directories;
 use WPStaging\Utils\Logger;
 use WPStaging\WPStaging;
 
@@ -14,13 +13,13 @@ use WPStaging\WPStaging;
 class Delete extends Job {
 
     /**
-     * @var false
+     * @var \stdClass
      */
     private $clone = false;
 
     /**
      * The path to delete
-     * @var type 
+     * @var string
      */
     private $deleteDir = '';
 
@@ -61,22 +60,30 @@ class Delete extends Job {
     /**
      * Sets Clone and Table Records
      * @param null|array $clone
+     * @return bool
      */
-    public function setData( $clone = null ) {
-        if( !is_array( $clone ) ) {
+    public function setData($clone = null) 
+    {
+        if(!is_array($clone)) {
             $this->getCloneRecords();
         } else {
-            $this->clone                  = ( object ) $clone;
+            $this->clone = (object) $clone;
             $this->forceDeleteDirectories = true;
         }
 
-        if( $this->isExternalDatabase() ) {
-            $this->wpdb = $this->getStagingDb();
-        } else {
-            $this->wpdb = WPStaging::getInstance()->get( "wpdb" );
+        if(!$this->isExternalDatabase()) {
+            $this->wpdb = WPStaging::getInstance()->get("wpdb");
+            $this->getTableRecords();
+            return true; 
         }
-
+        
+        if ($this->isExternalDatabaseError()) {
+            return false;
+        }
+       
+        $this->wpdb = $this->getStagingDb();
         $this->getTableRecords();
+        return true;
     }
 
     /**
@@ -88,7 +95,7 @@ class Delete extends Job {
 
     /**
      * Date database name
-     * @return type
+     * @return string
      */
     public function getDbName() {
         return $this->wpdb->dbname;
@@ -117,19 +124,17 @@ class Delete extends Job {
     private function getCloneRecords( $name = null ) {
         if( null === $name && !isset( $_POST["clone"] ) ) {
             $this->log( "Clone name is not set", Logger::TYPE_FATAL );
-            //throw new CloneNotFoundException();
             $this->returnException( "Clone name is not set" );
         }
 
         if( null === $name ) {
-            $name = $_POST["clone"];
+            $name = (string)$_POST["clone"];
         }
 
         $clones = get_option( "wpstg_existing_clones_beta", array() );
 
         if( empty( $clones ) || !isset( $clones[$name] ) ) {
             $this->log( "Couldn't find clone name {$name} or no existing clone", Logger::TYPE_FATAL );
-            //throw new CloneNotFoundException();
             $this->returnException( "Couldn't find clone name {$name} or no existing clone" );
         }
 
@@ -327,9 +332,9 @@ class Delete extends Job {
             if( !$this->isExternalDatabase() && $this->startsWith( $table, $this->wpdb->prefix ) ) {
                 $this->log( "Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL );
                 return false;
-            } else {
-                $this->wpdb->query( "DROP TABLE {$table}" );
             }
+
+            $this->wpdb->query( "DROP TABLE {$table}" );
         }
 
         // Move on to the next
@@ -349,9 +354,9 @@ class Delete extends Job {
     }
 
     /**
+     *
      * Delete complete directory including all files and subfolders
-     * 
-     * @throws InvalidArgumentException
+     * @throws \Exception
      */
     public function deleteDirectory() {
         if( $this->isFatalError() ) {
@@ -379,7 +384,6 @@ class Delete extends Job {
 
         // Check if threshold is reached
         if( $this->isOverThreshold() ) {
-            //$this->returnException('Maximum PHP execution time exceeded. Run again and repeat the deletion process until it is sucessfully finished.');
             return;
         }
 
@@ -389,7 +393,6 @@ class Delete extends Job {
             foreach ( $ri as $file ) {
                 $this->deleteFile( $file );
                 if( $this->isOverThreshold() ) {
-                    //$this->returnException('Maximum PHP execution time exceeded. Run again and repeat the deletion process until it is sucessfully finished.');
                     return;
                 }
             }
@@ -458,10 +461,7 @@ class Delete extends Job {
      */
     public function isFatalError() {
         $homePath = rtrim( get_home_path(), "/" );
-        if( rtrim( $this->deleteDir, "/" ) == $homePath ) {
-            return true;
-        }
-        return false;
+        return rtrim($this->deleteDir, "/") == $homePath;
     }
 
     /**
@@ -493,6 +493,23 @@ class Delete extends Job {
         $this->cache->delete( "clone_options" );
 
         wp_die( json_encode( $response ) );
+    }
+
+    /**
+     * Check if there is error in external database connection
+     * can happen if the external database does not exist or stored credentials are wrong
+     * @return bool
+     * 
+     * @todo replace it logic with DbInfo once collation check PR is merged.
+     */
+    private function isExternalDatabaseError() 
+    {
+        $db = new \mysqli($this->clone->databaseServer, $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase);
+        if ($db->connect_error) {
+            return true;
+        }
+
+        return false;
     }
 
 }

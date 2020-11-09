@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, staging, duplication, clone, migration
 Requires at least: 3.6+
 Tested up to: 5.5
-Stable tag: 2.7.7
+Stable tag: 2.7.8
 Requires PHP: 5.5
 
 A duplicator plugin - clone/move, duplicate & migrate websites to staging, backup and development sites that only authorized users can access.
@@ -157,8 +157,20 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.7.8 =
+* New: Add special admin notice if plugin is not tested with latest WordPress version
+* New: Compatible up to WordPress 5.5.2
+* New: Allow deleting of orphaned staging site entries if staging site was deleted manually before
+
+* Fix: Activation hook is not fired after first time installation and wpstg optimizer and cron tasks are not set up
+* Fix: Staging site does not work if database password contains dollar sign in password
+* Fix: Prevent fatal error when the plugin is activated, but there is no permission to create folder wp-content/uploads/wp-staging or wp-content/uploads/wp-staging/logs.
+
+* Dev: Add new DI container implementation
+* Dev: Add composer 2
+
 = 2.7.7 =
-* Fix: Fatal error on activation if PHP version < 7.x version on some circumstances
+* Fix: Fatal error on activation in pro version (Syntax error)
 
 = 2.7.6 =
 * New: Compatible up to WordPress 5.5.1
@@ -175,7 +187,6 @@ https://wp-staging.com
 * Fix: Remove wp_logout() in staging site login form to prevent multiple login log entries with plugin WP Activity Log
 * Fix: Wrong german translations
 * Fix: Cloning fails if there is no underscore in table prefix
-
 
 = 2.7.5 =
 * New: Compatible up to WordPress 5.4.2
@@ -252,14 +263,12 @@ SKIP VERSION
 * Fix: use an alternative method for file_put_contents as it is not supported on all systems due to file permission issues
 * Fix: Redundant and duplicated update comments in wp-config.php in staging site
 
-
 = 2.6.2 =
 * Fix: Do not show warning "Preparing Data Step3: Failed to update rewrite_rules in wpstg0_options"
 * Fix: Change error "Table wpstgtmp_options does not exist" to warning
 * New: Add arguments for hook wpstg_cloning_complete
 * New: Setup server environment variables per process and not globally (e.g. set_time_limit)
 * New: Add support for custom uploads folder if user customized UPLOADS constant or upload_path in DB
-
 
 = 2.6.1 =
 * New: Improve styling of login form. Thanks to Andy Kennan (Screaming Frog)
@@ -269,8 +278,6 @@ SKIP VERSION
 * Fix: PDO instances can not be serialized or unserialized
 * Fix: Can not update staging site db table if there are constraints in it
 
-
-
 = 2.6.0 =
 * New: Compatible up to WordPress 5.2.2
 * New: Performance improvement for directory iterator using less server ressources
@@ -278,34 +285,17 @@ SKIP VERSION
 * Fix: Error conditions in class Data does not compare type strict (== vs. ==)  resulting in interruption of clone process
 * Fix: Excluded folders under wp-content level are not take into account on microsoft IIS servers
 
-= 2.5.9 =
-* New: Update for WP 5.2.1
-* New: Better corporate identity and more friendly UI colors for staging sites listings and button
-* New: Better warning notices before updating process is executed
-* New: Add tooltips for explaining navigation buttons
-* New: Check if UPLOAD constant is defined and use this value for uploads folder destination
-* New: Show notice if user tries to clone a staging website.
-* Fix: Staging sites listing entries appeared on the cloned website.
-* Fix: Do not search & replace through "__PHP_Incomplete_Class_Name" definitions
-* Fix: Prevent wordfence firewall rule interrupting the clone deletion method
-* Fix: Excluded wp staging directory from deleting process is ignored and will be deleted either way
-* Fix: Strip whitespaces in cloning site internal names
-
-Complete changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
+Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-* New: Compatible up to WordPress 5.5.1
-* New: Add WP_ENVIRONMENT_TYPE constant for staging site
-* New: Better and wider test coverage
-* New: Implementing of automated CI tests
-* New: Huge code base refactor for cleaner code
-* New: Updated authentication mechanism for ajax requests
-* New: Show welcome video message
-* New: Show message asking for admin credentials on login form
-* New: Move WP STAGING menu down below the menu Plugins
-* New: Selected tables are highlighted with a blue background color
-* Fix: Show access denied message if a non but existing user tries to access the staging site
-* Fix: Remove wp_logout() in staging site login form to prevent multiple login log entries with plugin WP Activity Log
-* Fix: Wrong german translations
-* Fix: Cloning fails if there is no underscore in table prefix
+* New: Add special admin notice if plugin is not tested with latest WordPress version
+* New: Compatible up to WordPress 5.5.2
+* New: Allow deleting of orphaned staging site entries if staging site was deleted manually before
+
+* Fix: Activation hook is not fired after first time installation and wpstg optimizer and cron tasks are not set up
+* Fix: Staging site does not work if database password contains dollar sign in password
+* Fix: Prevent fatal error when the plugin is activated, but there is no permission to create folder wp-content/uploads/wp-staging or wp-content/uploads/wp-staging/logs.
+
+* Dev: Add new DI container implementation
+* Dev: Add composer 2
 

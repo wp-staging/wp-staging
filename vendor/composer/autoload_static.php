@@ -50,6 +50,23 @@ class ComposerStaticInitwpstgfree
         ),
     );
 
+    public static $prefixesPsr0 = array (
+        'x' => 
+        array (
+            'xrstf\\Composer52' => 
+            array (
+                0 => __DIR__ . '/..' . '/xrstf/composer-php52/lib',
+            ),
+        ),
+        't' => 
+        array (
+            'tad_DI52_' => 
+            array (
+                0 => __DIR__ . '/..' . '/lucatume/di52/src',
+            ),
+        ),
+    );
+
     public static $classMap = array (
         'Psr\\Log\\AbstractLogger' => __DIR__ . '/..' . '/psr/log/Psr/Log/AbstractLogger.php',
         'Psr\\Log\\InvalidArgumentException' => __DIR__ . '/..' . '/psr/log/Psr/Log/InvalidArgumentException.php',
@@ -327,6 +344,13 @@ class ComposerStaticInitwpstgfree
         'WPStaging\\Utils\\Strings' => __DIR__ . '/../..' . '/Core/Utils/Strings.php',
         'WPStaging\\WPStaging' => __DIR__ . '/../..' . '/Core/WPStaging.php',
         'WPStaging\\thirdParty\\thirdPartyCompatibility' => __DIR__ . '/../..' . '/Core/thirdParty/thirdPartyCompatibility.php',
+        'tad_DI52_Container' => __DIR__ . '/..' . '/lucatume/di52/src/tad/DI52/Container.php',
+        'tad_DI52_ContainerInterface' => __DIR__ . '/..' . '/lucatume/di52/src/tad/DI52/ContainerInterface.php',
+        'tad_DI52_ProtectedValue' => __DIR__ . '/..' . '/lucatume/di52/src/tad/DI52/ProtectedValue.php',
+        'tad_DI52_ServiceProvider' => __DIR__ . '/..' . '/lucatume/di52/src/tad/DI52/ServiceProvider.php',
+        'tad_DI52_ServiceProviderInterface' => __DIR__ . '/..' . '/lucatume/di52/src/tad/DI52/ServiceProviderInterface.php',
+        'xrstf\\Composer52\\AutoloadGenerator' => __DIR__ . '/..' . '/xrstf/composer-php52/lib/xrstf/Composer52/AutoloadGenerator.php',
+        'xrstf\\Composer52\\Generator' => __DIR__ . '/..' . '/xrstf/composer-php52/lib/xrstf/Composer52/Generator.php',
     );
 
     public static function getInitializer(ClassLoader $loader)
@@ -334,6 +358,7 @@ class ComposerStaticInitwpstgfree
         return \Closure::bind(function () use ($loader) {
             $loader->prefixLengthsPsr4 = ComposerStaticInitwpstgfree::$prefixLengthsPsr4;
             $loader->prefixDirsPsr4 = ComposerStaticInitwpstgfree::$prefixDirsPsr4;
+            $loader->prefixesPsr0 = ComposerStaticInitwpstgfree::$prefixesPsr0;
             $loader->classMap = ComposerStaticInitwpstgfree::$classMap;
 
         }, null, ClassLoader::class);

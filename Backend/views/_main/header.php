@@ -49,8 +49,8 @@
     ?>
 
     <div id="wpstg-update-notify" style="display:<?php echo $display; ?>">
-        <strong><?php echo sprintf( __( 'WP Staging Pro %s is available!', 'wp-staging' ), $version ); ?></strong> <br/>
-        <?php echo sprintf( __( 'Important: Please update WP Staging Pro before pushing the staging site to production site. <a href="%s" target="_blank">What\'s New? ', 'wp-staging' ), 'https://wp-staging.com/wp-staging-pro-changelog' ); ?></a>
+        <strong><?php echo sprintf( __( 'WP STAGING Pro %s is available!', 'wp-staging' ), $version ); ?></strong> <br/>
+        <?php echo sprintf( __( 'Important: Please update WP STAGING Pro before pushing the staging site to production site. <a href="%s" target="_blank">What\'s New? ', 'wp-staging' ), 'https://wp-staging.com/wp-staging-pro-changelog' ); ?></a>
     </div>
 
 </div>

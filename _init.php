@@ -2,40 +2,6 @@
 
 use WPStaging\WPStaging;
 
-// Compatible maximum WordPress Version
-if (!defined('WPSTG_COMPATIBLE')) {
-    define('WPSTG_COMPATIBLE', '5.5.1');
-}
-
-// Compatible minimum WordPress version
-if (!defined('WPSTG_MIN_WP_VERSION')) {
-    define('WPSTG_MIN_WP_VERSION', '4.0');
-}
-
-// Compatible up to PHP Version
-if (!defined('WPSTG_PHP_COMPATIBLE')) {
-    define('WPSTG_PHP_COMPATIBLE', '5.5');
-}
-
-// Expected version number of the must-use plugin 'optimizer'. Used for automatic updates of the mu-plugin
-if (!defined('WPSTG_OPTIMIZER_MUVERSION')) {
-    define('WPSTG_OPTIMIZER_MUVERSION', 1.3);
-}
-
-// URL of the base folder
-if (!defined('WPSTG_PLUGIN_URL')) {
-    define('WPSTG_PLUGIN_URL', plugin_dir_url(WPSTG_PLUGIN_FILE));
-}
-
-/**
- * Load Basic/Pro related constants and due to that the rest of the basic or pro version
- */
-if (file_exists(plugin_dir_path(__FILE__) . 'Pro/constants.php')) {
-    require_once plugin_dir_path(__FILE__) . 'Pro/constants.php';
-} else {
-    require_once plugin_dir_path(__FILE__) . 'constants.php';
-}
-
 /**
  * Do not show update notifications for WP STAGING Pro on the staging site
  * @param object
@@ -69,8 +35,8 @@ if (!class_exists('Wpstg_Requirements_Check')) {
 
 $pluginRequirements = new Wpstg_Requirements_Check(array(
     'title' => 'WP STAGING',
-    'php' => WPSTG_PHP_COMPATIBLE,
-    'wp' => WPSTG_MIN_WP_VERSION,
+    'php' => '5.5',
+    'wp' => '4.0',
     'file' => __FILE__,
 ));
 
@@ -81,23 +47,20 @@ if ($pluginRequirements->passes()) {
     // Load composer autoloader
     require_once __DIR__ . '/vendor/autoload.php';
 
+    require_once __DIR__ . '/constants.php';
+
     $wpStaging = WPStaging::getInstance();
 
-    /**
-     * Load important WP globals into WPStaging class to make them available via dependancy injection
+    /*
+     * Set the WPSTG_COMPATIBLE constant in the container,
+     * so that we can change it for testing purposes.
      */
+    $wpStaging->set('WPSTG_COMPATIBLE', WPSTG_COMPATIBLE);
 
     // Wordpress DB Object
     global $wpdb;
 
     if ($wpdb instanceof \wpdb) {
         $wpStaging->set("wpdb", $wpdb);
-    }
-
-    /**
-     * Installation Hooks
-     */
-    if (!class_exists('WPStaging\Install')) {
-        require_once WPSTG_PLUGIN_DIR . "install.php";
     }
 }
