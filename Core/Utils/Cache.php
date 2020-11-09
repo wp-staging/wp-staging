@@ -71,7 +71,13 @@ class Cache {
 
         // If cache directory doesn't exists, create it
         if( !is_dir( $this->cacheDir ) && !@mkdir( $this->cacheDir, 0775, true ) ) {
-            throw new \Exception( "Failed to create cache directory " . $this->cacheDir . '! Make sure folder permission is 755 and owner is correct. Should be www-data or similar.' );
+            /**
+             * There's no need to throw this exception, which causes a fatal,
+             * as a warning is already displayed on:
+             *
+             * @see \WPStaging\Backend\Notices\Notices::messages
+             */
+            //throw new \Exception( "Failed to create cache directory " . $this->cacheDir . '! Make sure folder permission is 755 and owner is correct. Should be www-data or similar.' );
         }
     }
 

@@ -3,8 +3,8 @@
         <?php
         echo esc_html(
             ('1' === $deactivatedNoticeID) ?
-                __("WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging.", "wp-staging"):
-                __("WP Staging and WP Staging Pro cannot both be active. We've automatically deactivated WP Staging Pro.", "wp-staging")
+                __("WP Staging and WP STAGING Pro cannot both be active. We've automatically deactivated WP STAGING.", "wp-staging"):
+                __("WP Staging and WP STAGING Pro cannot both be active. We've automatically deactivated WP STAGING Pro.", "wp-staging")
         )
         ?>
     </p>

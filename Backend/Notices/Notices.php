@@ -7,18 +7,21 @@ namespace WPStaging\Backend\Notices;
  */
 
 // No Direct Access
-if( !defined( "WPINC" ) ) {
+if (!defined("WPINC")) {
     die;
 }
 
 use WPStaging\Backend\Pro\Notices\Notices as ProNotices;
+use WPStaging\Utils\Cache;
+use WPStaging\Utils\Logger;
+use WPStaging\WPStaging;
 
 /**
  * Class Notices
  * @package WPStaging\Backend\Notices
  */
-class Notices {
-
+class Notices 
+{
     /**
      * @var string
      */
@@ -29,23 +32,25 @@ class Notices {
      */
     private $url;
 
-    public function __construct( $path, $url ) {
+    public function __construct($path, $url) 
+    {
         $this->path = $path;
-        $this->url  = $url;
+        $this->url = $url;
     }
 
     /**
      * Check whether the page is admin page or not
      * @return bool
      */
-    public function isAdminPage() {
+    public function isAdminPage() 
+    {
         $currentPage = (isset( $_GET["page"] )) ? $_GET["page"] : null;
 
         $availablePages = array(
             "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone"
         );
 
-        if( !is_admin() || !in_array( $currentPage, $availablePages, true ) ) {
+        if(!is_admin() || !in_array( $currentPage, $availablePages, true)) {
             return false;
         }
 
@@ -53,43 +58,55 @@ class Notices {
     }
 
     /**
+     * check whether the plugin is pro version
+     *
+     * @todo    Implement this in a separate class related to plugin. Then replace it with dependency injection. Add filters
+     *
+     * @return  boolean
+     */
+    protected function isPro() 
+    {
+        return defined('WPSTGPRO_VERSION');
+    }
+
+    /**
      * Check if notice should be shown after certain days of installation
      * @param int $days default 10
      * @return bool
      */
-    private function canShow( $option, $days = 10 ) {
-
+    private function canShow($option, $days = 10) 
+    {
         // Do not show notice
-        if( empty( $option ) ) {
+        if (empty($option)) {
             return false;
         }
 
-        $dbOption = get_option( $option );
+        $dbOption = get_option($option);
 
         // Do not show notice
-        if ("no" === $dbOption){
+        if ("no" === $dbOption) {
             return false;
         }
 
-        $now = new \DateTime( "now" );
+        $now = new \DateTime("now");
 
         // Check if user clicked on "rate later" button and if there is a valid 'later' date
-        if( wpstg_is_valid_date( $dbOption ) ) {
+        if (wpstg_is_valid_date($dbOption)) {
             // Do not show before this date
-            $show = new \DateTime( $dbOption );
-            if ($now < $show){
+            $show = new \DateTime($dbOption);
+            if ($now < $show) {
                 return false;
             }
         }
 
 
         // Show X days after installation
-        $installDate = new \DateTime( get_option( "wpstg_installDate" ) );
+        $installDate = new \DateTime(get_option("wpstg_installDate"));
 
         // get number of days between installation date and today
-        $difference = $now->diff( $installDate )->days;
+        $difference = $now->diff($installDate)->days;
 
-        if( $days <= $difference ) {
+        if ($days <= $difference) {
             return true;
         }
 
@@ -100,8 +117,9 @@ class Notices {
      * Get current page
      * @return string | post, page
      */
-    private function getCurrentScreen() {
-        if( function_exists( 'get_current_screen' ) ) {
+    private function getCurrentScreen() 
+    {
+        if (function_exists('get_current_screen')) {
             return \get_current_screen()->post_type;
         }
     }
@@ -115,47 +133,52 @@ class Notices {
         $viewsNoticesPath = "{$this->path}views/notices/";
 
         // Show "rate the plugin". Free version only
-        if (!defined('WPSTGPRO_VERSION')) {
-            if ($this->canShow("wpstg_rating", 7)  && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post') {
+        if (!$this->isPro()) {
+            if ($this->canShow("wpstg_rating", 7) && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post') {
                 require_once "{$viewsNoticesPath}rating.php";
             }
 
         }
 
         // Show all pro version notices
-        if (defined('WPSTGPRO_VERSION')) {
+        if ($this->isPro()) {
             $proNotices = new ProNotices($this);
             $proNotices->getNotices();
         }
 
         // Display notices below in wp staging admin pages only
-        if( !current_user_can( "update_plugins" ) || !$this->isAdminPage() ) {
+        if (!current_user_can("update_plugins") || !$this->isAdminPage()) {
             return;
         }
 
-        // Cache directory in uploads is not writable
-        $varsDirectory = \WPStaging\WPStaging::getContentDir();
-        if( !is_writable( $varsDirectory ) ) {
-            require_once "{$viewsNoticesPath}/uploads-cache-directory-permission-problem.php";
+        // Cache directory is not writable
+        /** @var Cache $cache */
+        $cache = WPStaging::getInstance()->get("cache");
+        $cacheDir = $cache->getCacheDir();
+        if (!is_dir($cacheDir) || !is_writable($cacheDir)) {
+            require_once "{$viewsNoticesPath}/cache-directory-permission-problem.php";
+        }
+
+        // Logger directory is not writable
+        /** @var Logger $logger */
+        $logger = WPStaging::getInstance()->get("logger");
+        $logsDir = $logger->getLogDir();
+        if (!is_dir($logsDir) || !is_writable($logsDir)) {
+            require_once "{$viewsNoticesPath}/logs-directory-permission-problem.php";
         }
 
         // Staging directory is not writable
-        if( !is_writeable( ABSPATH ) ) {
+        if (!is_writeable(ABSPATH)) {
             require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
         }
 
-        // Version Control
-        if( version_compare(  WPSTG_COMPATIBLE, get_bloginfo( "version" ), "<" ) ) {
+        // Version Control for Free
+        if(!$this->isPro() && version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<")) {
             require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
         }
 
-        // Beta
-        /*if( false === get_option( "wpstg_beta" ) || "no" !== get_option( "wpstg_beta" ) ) {
-            require_once "{$viewsNoticesPath}beta.php";
-        }*/
-
         // Different scheme in home and siteurl
-        if( $this->isDifferentScheme() ) {
+        if ($this->isDifferentScheme()) {
             require_once "{$viewsNoticesPath}wrong-scheme.php";
         }
     }
@@ -164,11 +187,12 @@ class Notices {
      * Check if the url scheme of siteurl and home is identical
      * @return boolean
      */
-    private function isDifferentScheme() {
-        $siteurlScheme = parse_url( get_option( 'siteurl' ), PHP_URL_SCHEME );
-        $homeScheme    = parse_url( get_option( 'home' ), PHP_URL_SCHEME );
+    private function isDifferentScheme() 
+    {
+        $siteurlScheme = parse_url(get_option('siteurl'), PHP_URL_SCHEME);
+        $homeScheme    = parse_url(get_option('home'), PHP_URL_SCHEME);
 
-        if( $siteurlScheme === $homeScheme ) {
+        if ($siteurlScheme === $homeScheme) {
             return false;
         }
         return true;

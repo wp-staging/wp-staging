@@ -150,7 +150,7 @@ class Database extends CloningProcess
         if (defined('WPSTGPRO_VERSION')) {
             return false;
         }
-        $this->returnException(__("This staging site is located in another database and needs to be edited with <a href='https://wp-staging.com' target='_blank'>WP Staging Pro</a>", "wp-staging"));
+        $this->returnException(__("This staging site is located in another database and needs to be edited with <a href='https://wp-staging.com' target='_blank'>WP STAGING Pro</a>", "wp-staging"));
         return true;
     }
 

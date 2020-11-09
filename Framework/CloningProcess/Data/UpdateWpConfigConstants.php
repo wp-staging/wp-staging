@@ -20,8 +20,6 @@ class UpdateWpConfigConstants extends FileCloningService
             "UPLOADS"             => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getUploadFolder())),
             "WP_PLUGIN_DIR"       => '__DIR__ . "/wp-content/plugins"',
             "WP_LANG_DIR"         => '__DIR__ . "/wp-content/languages"',
-            // Below disabled. It can lead to deleting plugins after login to admin dashboard
-            //"WP_TEMP_DIR" => '__DIR__ . "/wp-content/temp"',
             "WP_HOME"             => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_SITEURL"          => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_CACHE"            => 'false',
@@ -98,11 +96,15 @@ class UpdateWpConfigConstants extends FileCloningService
 
         $replace = sprintf("define('%s', %s);", $constant, $newDefinition);
 
-        $content = preg_replace([$pattern], $replace, $content);
+        // escaping dollar sign in the value
+        $replacementEscapedCharacter = addcslashes($replace, '\\$');
+
+        $content = preg_replace([$pattern], $replacementEscapedCharacter, $content);
 
         if ($content === null) {
             throw new \RuntimeException("Failed to change " . $constant);
         }
+
         $this->log("Updated: " . $constant);
         return $content;
     }
@@ -118,14 +120,21 @@ class UpdateWpConfigConstants extends FileCloningService
     {
         preg_match($this->abspathRegex, $content, $matches);
         if (!empty($matches[0])) {
+            
             $replace = "define('" . $constant . "', " . $newDefinition . "); \n" .
                 "if ( ! defined( 'ABSPATH' ) )";
-            if (null === ($content = preg_replace(array($this->abspathRegex), $replace, $content))) {
+
+             // escaping dollar sign in the value
+            $replaceEscaped = addcslashes($replace, '\\$');    
+
+            if (null === ($content = preg_replace(array($this->abspathRegex), $replaceEscaped, $content))) {
                 throw new \RuntimeException("Failed to change " . $constant);
             }
+
         } else {
             throw new \RuntimeException("Can not add " . $constant . " constant to wp-config.php. Can not find free position to add it.");
         }
+
         $this->log("Added:" . $constant);
         return $content;
     }

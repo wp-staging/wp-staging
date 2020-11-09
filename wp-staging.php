@@ -7,7 +7,7 @@
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
  * Contributors: ReneHermi
- * Version: 2.7.7
+ * Version: 2.7.8
  * Text Domain: wp-staging
  * Domain Path: /languages/
  *
@@ -40,8 +40,16 @@ if (!defined('WPSTG_FREE_LOADED')) {
 // Standalone requirement-checking script
 require_once 'Requirements/WpstgFreeRequirements.php';
 
+if (!interface_exists('WpstgBootstrapInterface')) {
+    interface WpstgBootstrapInterface {
+        public function checkRequirements();
+        public function bootstrap();
+        public function passedRequirements();
+    }
+}
+
 if (!class_exists('WpstgFreeBootstrap')) {
-    class WpstgFreeBootstrap
+    class WpstgFreeBootstrap implements WpstgBootstrapInterface
     {
         private $shouldBootstrap = true;
         private $requirements;
@@ -71,17 +79,16 @@ if (!class_exists('WpstgFreeBootstrap')) {
                 return;
             }
 
-            // Absolute path to plugin dir /var/www/.../plugins/wp-staging(-pro)
-            if (!defined('WPSTG_PLUGIN_DIR')) {
-                define('WPSTG_PLUGIN_DIR', plugin_dir_path(__FILE__));
-            }
-
-            // Absolute path and name to main plugin entry file /var/www/.../plugins/wp-staging(-pro)/wp-staging(-pro).php
             if (!defined('WPSTG_PLUGIN_FILE')) {
                 define('WPSTG_PLUGIN_FILE', __FILE__);
             }
 
             require_once(__DIR__ . '/_init.php');
+        }
+
+        public function passedRequirements()
+        {
+            return $this->shouldBootstrap;
         }
     }
 }
@@ -90,3 +97,11 @@ $bootstrap = new WpstgFreeBootstrap(new WpstgFreeRequirements(__FILE__));
 
 add_action('plugins_loaded', [$bootstrap, 'checkRequirements'], 5);
 add_action('plugins_loaded', [$bootstrap, 'bootstrap'], 10);
+
+/** Installation Hooks */
+if (!class_exists('WPStaging\Install')) {
+    require_once __DIR__ . "/install.php";
+
+    $install = new \WPStaging\Install($bootstrap);
+    register_activation_hook(__FILE__, [$install, 'activation']);
+}

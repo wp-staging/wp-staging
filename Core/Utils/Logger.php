@@ -86,7 +86,13 @@ class Logger implements LoggerInterface
         // If cache directory doesn't exists, create it
         if (!is_dir($this->logDir) && !@mkdir($this->logDir, 0755, true))
         {
-            throw new \Exception("Failed to create log directory!");
+            /**
+             * There's no need to throw this exception, which causes a fatal,
+             * as a warning is already displayed on:
+             *
+             * @see \WPStaging\Backend\Notices\Notices::messages
+             */
+            // throw new \Exception("Failed to create log directory!");
         }
     }
 

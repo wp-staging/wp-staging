@@ -126,9 +126,9 @@ function wpstg_replace_first_match($needle, $replace, $haystack)
 
 /**
  * Search & Replace last occurence of string in haystack
- * @param type $haystack
- * @param type $needle
- * @return type
+ * @param string $haystack
+ * @param string $needle
+ * @return string
  */
 function wpstg_replace_last_match($needle, $replace, $haystack)
 {
@@ -142,8 +142,8 @@ function wpstg_replace_last_match($needle, $replace, $haystack)
 
 /**
  * Check if string is valid date
- * @param type $date
- * @param type $format
+ * @param string $date
+ * @param string $format
  * @return bool
  */
 function wpstg_is_valid_date($date, $format = 'Y-m-d')

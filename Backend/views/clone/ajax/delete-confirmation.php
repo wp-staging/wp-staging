@@ -1,9 +1,10 @@
-<div class="wpstg-notice-alert wpstg-failed">
-    <h4 style="margin:0">
+<?php if ($isDatabaseConnected) { ?>
+<div class="wpstg-notice-alert">
+    <h3 style="margin:0;padding-bottom:5px;">
         <?php
-        _e("Note: The selected tables below will be deleted. <br/>Verify that before you delete them.", "wp-staging")
+        _e("This staging site will be deleted:", "wp-staging")
         ?>
-    </h4>
+    </h3>
 
     <p>
         <?php _e('Clone Name:', 'wp-staging'); ?> 
@@ -22,20 +23,22 @@
         ?>
         </span>
     </p>
-
-    <p>
-        <?php
-        _e(
-            'Usually the preselected data can be deleted without any risk '.
-            'but in case something is going wrong you better verify it.',
-            'wp-staging'
-        );
-        ?>
-    </p>
 </div>
+<?php } ?>
+
+<?php if (!$isDatabaseConnected) { ?>
+<div class="wpstg-notice-alert wpstg-failed">
+    <h4 class="wpstg-mb-0"><?php _e('Error: Can not connect to external database: ', 'wp-staging'); echo $clone->databaseDatabase; ?></h4>
+    <ul class="wpstg-mb-0">
+        <li><?php _e('This can happen if the password of the external database has been changed or if the database was deleted', 'wp-staging') ?></li>
+        <li><?php _e('You can still delete this staging site but deleting this site will not delete any table or database. You will have to delete them manually if they exist.', 'wp-staging') ?></li>
+    </ul>
+</div>
+<?php } ?>
 
 <div class="wpstg-tabs-wrapper">
 
+    <?php if ($isDatabaseConnected) { ?>
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
         <span class="wpstg-tab-triangle">&#9658;</span>
         <?php echo __("Database tables to remove", "wp-staging")?>
@@ -48,7 +51,7 @@
         </h4>
         <div style="margin-bottom:6px;margin-top:6px;">
             <a href="#" class="wpstg-button-unselect">
-                Unselect All
+            <?php _e("Unselect All", "wp-staging") ?>
             </a>
         </div>
 
@@ -65,10 +68,11 @@
         <?php endforeach ?>
         <div style="margin-bottom:6px;margin-top:6px;">
             <a href="#" class="wpstg-button-unselect">
-                Unselect All
+            <?php _e("Unselect All", "wp-staging") ?>
             </a>
         </div>
     </div>
+    <?php } ?>
     <!-- /Database -->
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
