@@ -7,9 +7,10 @@ if (!defined("WPINC")) {
     die;
 }
 
+use WPStaging\Framework\Database\DbInfo;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Capabilities;
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 use WPStaging\Backend\Modules\Jobs\Cancel;
 use WPStaging\Backend\Modules\Jobs\CancelUpdate;
 use WPStaging\Backend\Modules\Jobs\Cloning;
@@ -21,18 +22,20 @@ use WPStaging\Backend\Modules\Jobs\ProcessLock;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Notices\Notices;
-use WPStaging\DI\InjectionAware;
+use WPStaging\Backend\Notices\DisabledCacheNotice;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
-use WPStaging\Utils\Report;
+use WPStaging\Core\Utils\Report;
 use WPStaging\Backend\Activation;
 use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
+use WPStaging\Pro\Database\CompareExternalDatabase;
+use WPStaging\Framework\Security\Nonce;
 
 /**
  * Class Administrator
  * @package WPStaging\Backend
  */
-class Administrator extends InjectionAware
+class Administrator
 {
 
     /**
@@ -67,6 +70,11 @@ class Administrator extends InjectionAware
     private $capabilities;
 
     /**
+     * @var Nonce
+     */
+    private $nonce;
+
+    /**
      * @var array
      * All options here will only be stored in the database as integers. Decimal points and separators will be removed
      */
@@ -75,14 +83,12 @@ class Administrator extends InjectionAware
         'querySRLimit'
     ];
 
-    /**
-     * Initialize class
-     */
-    public function initialize()
+    public function __construct()
     {
         // Todo: Inject using DI
         $this->accessToken  = new AccessToken;
         $this->capabilities = new Capabilities;
+        $this->nonce        = new Nonce;
 
         $this->defineHooks();
 
@@ -122,7 +128,7 @@ class Administrator extends InjectionAware
         add_action("admin_notices", [$this, "messages"]);
 
         if (!defined('WPSTGPRO_VERSION')) {
-            add_filter('admin_footer', array($this, 'loadFeedbackForm'));
+            add_filter('admin_footer', [$this, 'loadFeedbackForm']);
         }
 
         // Ajax Requests
@@ -134,6 +140,7 @@ class Administrator extends InjectionAware
         add_action("wp_ajax_wpstg_cloning", [$this, "ajaxStartClone"]);
         add_action("wp_ajax_wpstg_processing", [$this, "ajaxCloneDatabase"]);
         add_action("wp_ajax_wpstg_database_connect", [$this, "ajaxDatabaseConnect"]);
+        add_action("wp_ajax_wpstg_database_verification", [$this, "ajaxDatabaseVerification"]);
         add_action("wp_ajax_wpstg_clone_prepare_directories", [$this, "ajaxPrepareDirectories"]);
         add_action("wp_ajax_wpstg_clone_files", [$this, "ajaxCopyFiles"]);
         add_action("wp_ajax_wpstg_clone_replace_data", [$this, "ajaxReplaceData"]);
@@ -150,6 +157,7 @@ class Administrator extends InjectionAware
         add_action("wp_ajax_wpstg_check_disk_space", [$this, "ajaxCheckFreeSpace"]);
         add_action("wp_ajax_wpstg_send_report", [$this, "ajaxSendReport"]);
         add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]);
+        add_action("wp_ajax_wpstg_hide_cache_notice", [$this, "ajaxHideCacheNotice"]);
 
 
         // Ajax hooks pro Version
@@ -183,7 +191,7 @@ class Administrator extends InjectionAware
      */
     public function setOptionFormElements()
     {
-        register_setting("wpstg_settings", "wpstg_settings", array($this, "sanitizeOptions"));
+        register_setting("wpstg_settings", "wpstg_settings", [$this, "sanitizeOptions"]);
     }
 
     /**
@@ -206,7 +214,7 @@ class Administrator extends InjectionAware
      * @param array $data
      * @return array
      */
-    public function sanitizeOptions($data = array())
+    public function sanitizeOptions($data = [])
     {
         $sanitized = $this->sanitizeData($data);
 
@@ -219,9 +227,9 @@ class Administrator extends InjectionAware
      * @param array $data
      * @return array
      */
-    private function sanitizeData($data = array())
+    private function sanitizeData($data = [])
     {
-        $sanitized = array();
+        $sanitized = [];
 
         foreach ($data as $key => $value) {
             if (is_array($value)) {
@@ -258,35 +266,35 @@ class Administrator extends InjectionAware
 
         // Main WP Staging Menu
         add_menu_page(
-            "WP-Staging", __("WP Staging " . $pro, "wp-staging"), "manage_options", "wpstg_clone", array($this, "getClonePage"), $logo, $pos
+            "WP-Staging", __("WP Staging " . $pro, "wp-staging"), "manage_options", "wpstg_clone", [$this, "getClonePage"], $logo, $pos
         );
 
         // Page: Clone
         add_submenu_page(
-            "wpstg_clone", __("WP Staging Jobs", "wp-staging"), __("Sites / Start", "wp-staging"), "manage_options", "wpstg_clone", array($this, "getClonePage")
+            "wpstg_clone", __("WP Staging Jobs", "wp-staging"), __("Sites / Start", "wp-staging"), "manage_options", "wpstg_clone", [$this, "getClonePage"]
         );
 
         // Page: Settings
         add_submenu_page(
-            "wpstg_clone", __("WP Staging Settings", "wp-staging"), __("Settings", "wp-staging"), "manage_options", "wpstg-settings", array($this, "getSettingsPage")
+            "wpstg_clone", __("WP Staging Settings", "wp-staging"), __("Settings", "wp-staging"), "manage_options", "wpstg-settings", [$this, "getSettingsPage"]
         );
 
         // Page: Tools
         add_submenu_page(
-            "wpstg_clone", __("WP Staging Tools", "wp-staging"), __("Tools", "wp-staging"), "manage_options", "wpstg-tools", array($this, "getToolsPage")
+            "wpstg_clone", __("WP Staging Tools", "wp-staging"), __("Tools", "wp-staging"), "manage_options", "wpstg-tools", [$this, "getToolsPage"]
         );
 
         if (!defined('WPSTGPRO_VERSION')) {
             // Page: Tools
             add_submenu_page(
-                "wpstg_clone", __("WP Staging Welcome", "wp-staging"), __("Get WP Staging Pro", "wp-staging"), "manage_options", "wpstg-welcome", array($this, "getWelcomePage")
+                "wpstg_clone", __("WP Staging Welcome", "wp-staging"), __("Get WP Staging Pro", "wp-staging"), "manage_options", "wpstg-welcome", [$this, "getWelcomePage"]
             );
         }
 
-        if (defined('WPSTGPRO_VERSION') && false === wpstg_is_stagingsite()) {
+        if (defined('WPSTGPRO_VERSION') && wpstg_is_stagingsite() === false) {
             // Page: License
             add_submenu_page(
-                "wpstg_clone", __("WP Staging License", "wp-staging"), __("License", "wp-staging"), "manage_options", "wpstg-license", array($this, "getLicensePage")
+                "wpstg_clone", __("WP Staging License", "wp-staging"), __("License", "wp-staging"), "manage_options", "wpstg-license", [$this, "getLicensePage"]
             );
         }
     }
@@ -297,12 +305,12 @@ class Administrator extends InjectionAware
     public function getSettingsPage()
     {
         // Tabs
-        $tabs = new Tabs(array(
+        $tabs = new Tabs([
             "general" => __("General", "wp-staging")
-        ));
+        ]);
 
 
-        $this->di
+        WPStaging::getInstance()
             // Set tabs
             ->set("tabs", $tabs)
             // Forms
@@ -319,7 +327,7 @@ class Administrator extends InjectionAware
     public function getClonePage()
     {
         // Existing clones
-        $availableClones = get_option("wpstg_existing_clones_beta", array());
+        $availableClones = get_option("wpstg_existing_clones_beta", []);
 
         require_once "{$this->path}views/clone/index.php";
     }
@@ -341,14 +349,14 @@ class Administrator extends InjectionAware
     public function getToolsPage()
     {
         // Tabs
-        $tabs = new Tabs(array(
+        $tabs = new Tabs([
             "import_export" => __("Import/Export", "wp-staging"),
             "system_info" => __("System Info", "wp-staging")
-        ));
+        ]);
 
-        $this->di->set("tabs", $tabs);
+        WPStaging::getInstance()->set("tabs", $tabs);
 
-        $this->di->set("systemInfo", new SystemInfo($this->di));
+        WPStaging::getInstance()->set("systemInfo", new SystemInfo());
 
         require_once "{$this->path}views/tools/index.php";
     }
@@ -365,7 +373,7 @@ class Administrator extends InjectionAware
         nocache_headers();
         header("Content-Type: text/plain");
         header('Content-Disposition: attachment; filename="wpstg-system-info.txt"');
-        echo wp_strip_all_tags(new SystemInfo($this->di));
+        echo wp_strip_all_tags(new SystemInfo());
     }
 
     /**
@@ -387,7 +395,7 @@ class Administrator extends InjectionAware
 
         $fileExtension = explode('.', $_FILES["import_file"]["name"]);
         $fileExtension = end($fileExtension);
-        if ("json" !== $fileExtension) {
+        if ($fileExtension !== "json") {
             wp_die("Please upload a valid .json file", "wp-staging");
         }
 
@@ -422,7 +430,7 @@ class Administrator extends InjectionAware
             return;
         }
 
-        $settings = get_option("wpstg_settings", array());
+        $settings = get_option("wpstg_settings", []);
 
         ignore_user_abort(true);
 
@@ -447,10 +455,10 @@ class Administrator extends InjectionAware
      * @param array $vars
      * @return string
      */
-    public function render($file, $vars = array())
+    public function render($file, $vars = [])
     {
         $fullPath = $this->path . "views" . DIRECTORY_SEPARATOR;
-        $fullPath = str_replace(array('/', "\\"), DIRECTORY_SEPARATOR, $fullPath . $file . ".php");
+        $fullPath = str_replace(['/', "\\"], DIRECTORY_SEPARATOR, $fullPath . $file . ".php");
 
         if (!file_exists($fullPath) || !is_readable($fullPath)) {
             return "Can't render : {$fullPath} either file doesn't exist or can't read it";
@@ -477,15 +485,14 @@ class Administrator extends InjectionAware
      * @return bool Whether the current request is considered to be authenticated.
      */
     private function isAuthenticated() {
-        if ( ! $this->accessToken->requestHasValidToken()) {
-            return false;
+        if (
+            current_user_can($this->capabilities->manageWPSTG()) &&
+            $this->nonce->requestHasValidNonce(Nonce::WPSTG_NONCE)
+        ) {
+            return true;
+        } else {
+            return $this->accessToken->requestHasValidToken();
         }
-
-        if ( ! current_user_can($this->capabilities->manageWPSTG())) {
-            return false;
-        }
-
-        return true;
     }
 
     /**
@@ -511,7 +518,7 @@ class Administrator extends InjectionAware
         }
 
         // Existing clones
-        $availableClones = get_option("wpstg_existing_clones_beta", array());
+        $availableClones = get_option("wpstg_existing_clones_beta", []);
 
         // Get license data
         $license = get_option('wpstg_license_status');
@@ -564,29 +571,29 @@ class Administrator extends InjectionAware
 
         $cloneName = sanitize_key($_POST["cloneID"]);
         $cloneNameLength = strlen($cloneName);
-        $clones = get_option("wpstg_existing_clones_beta", array());
+        $clones = get_option("wpstg_existing_clones_beta", []);
 
         $clonePath = trailingslashit(get_home_path()) . $cloneName;
 
         // Check clone name length
         if ($cloneNameLength < 1 || $cloneNameLength > 16) {
-            echo wp_send_json(array(
+            echo wp_send_json([
                 "status" => "failed",
                 "message" => "Clone name must be between 1 - 16 characters"
-            ));
+            ]);
         } elseif (array_key_exists($cloneName, $clones)) {
-            echo wp_send_json(array(
+            echo wp_send_json([
                 "status" => "failed",
                 "message" => "Clone name is already in use, please choose another clone name."
-            ));
+            ]);
         } elseif (is_dir($clonePath) && !wpstg_is_empty_dir($clonePath)) {
-            echo wp_send_json(array(
+            echo wp_send_json([
                 "status" => "failed",
                 "message" => "Clone directory " . $clonePath . " already exists. Use another clone name."
-            ));
+            ]);
         }
 
-        echo wp_send_json(array("status" => "success"));
+        echo wp_send_json(["status" => "success"]);
     }
 
     /**
@@ -614,7 +621,7 @@ class Administrator extends InjectionAware
      */
     public function ajaxStartClone()
     {
-        if ( ! $this->isAuthenticated()) {
+        if (!$this->isAuthenticated()) {
             return false;
         }
 
@@ -786,7 +793,7 @@ class Administrator extends InjectionAware
      */
     public function ajaxHidePoll()
     {
-        if (false !== update_option("wpstg_poll", "no")) {
+        if (update_option("wpstg_poll", "no") !== false) {
             wp_send_json(true);
         }
         return wp_send_json(null);
@@ -801,7 +808,7 @@ class Administrator extends InjectionAware
      */
     public function ajaxHideRating()
     {
-        if (false !== update_option("wpstg_rating", "no")) {
+        if (update_option("wpstg_rating", "no") !== false) {
             wp_send_json(true);
         }
         return wp_send_json(null);
@@ -817,7 +824,7 @@ class Administrator extends InjectionAware
     public function ajaxHideLaterRating()
     {
         $date = date('Y-m-d', strtotime(date('Y-m-d') . ' + 7 days'));
-        if (false !== update_option('wpstg_rating', $date)) {
+        if (update_option('wpstg_rating', $date) !== false) {
             wp_send_json(true);
         }
         return wp_send_json(false);
@@ -829,6 +836,18 @@ class Administrator extends InjectionAware
     public function ajaxHideBeta()
     {
         wp_send_json(update_option("wpstg_beta", "no"));
+    }
+
+    /**
+     * Ajax Hide Cache Notice shown on staging site
+     * @return mixed boolean | json
+     */
+    public function ajaxHideCacheNotice()
+    {
+        if ((new DisabledCacheNotice())->disable() !== false) {
+            wp_send_json(true);
+        }
+        return wp_send_json(null);
     }
 
     /**
@@ -954,12 +973,9 @@ class Administrator extends InjectionAware
      */
     public function ajaxPushProcessing()
     {
-        if ( ! $this->accessToken->requestHasValidToken()) {
+        if ( ! $this->isAuthenticated()) {
             return false;
         }
-
-        // We explicitly do not check capabilities here, since the DB is going to be replaced.
-        // For authentication, we rely on the AccessToken, only granted to authenticated users.
 
         if (!class_exists('WPStaging\Backend\Pro\Modules\Jobs\Processing')) {
             return false;
@@ -986,7 +1002,7 @@ class Administrator extends InjectionAware
      * Send mail via ajax
      * @param array $args
      */
-    public function ajaxSendReport($args = array())
+    public function ajaxSendReport($args = [])
     {
         if ( ! $this->isAuthenticated()) {
             return false;
@@ -1026,10 +1042,10 @@ class Administrator extends InjectionAware
             $terms = ( bool )$args['wpstg_terms'];
         }
 
-        $report = new Report($this->di);
+        $report = new Report();
         $errors = $report->send($email, $message, $terms, $syslog, $provider);
 
-        echo json_encode(array('errors' => $errors));
+        echo json_encode(['errors' => $errors]);
         exit;
     }
 
@@ -1038,7 +1054,7 @@ class Administrator extends InjectionAware
      */
     public function ajaxDatabaseConnect()
     {
-        if ( ! $this->isAuthenticated()) {
+        if (!$this->isAuthenticated()) {
             return false;
         }
 
@@ -1048,23 +1064,54 @@ class Administrator extends InjectionAware
         $database = !empty($args['databaseDatabase']) ? $args['databaseDatabase'] : '';
         $server = !empty($args['databaseServer']) ? $args['databaseServer'] : 'localhost';
 
-        $db = new \wpdb($user, stripslashes($password), $database, $server);
-
-        // Can not connect to mysql
-        if (!empty($db->error->errors['db_connect_fail']['0'])) {
-            echo json_encode(array('errors' => $db->error->errors['db_connect_fail']['0']));
+        $dbInfo = new DbInfo($server, $user, stripslashes($password), $database);
+        $error = $dbInfo->getError();
+        // Can not connect to mysql database
+        if ($error !== null) {
+            echo json_encode(['success' => 'false', 'errors' => $error]);
             exit;
         }
 
-        // Can not connect to database
-        $db->select($database);
-        if (!$db->ready) {
-            $error = isset($db->error->errors['db_select_fail']) ? $db->error->errors['db_select_fail'] : "Error: Can't select {database} Either it does not exist or you don't have privileges to access it.";
-            echo json_encode(array('errors' => $error));
-            exit;
-        }
-        echo json_encode(array('success' => 'true'));
+        echo json_encode(['success' => 'true']);
         exit;
+    }
+
+    /**
+     * Connect to external database for testing correct credentials
+     */
+    public function ajaxDatabaseVerification()
+    {
+        if (!$this->isAuthenticated()) {
+            return false;
+        }
+
+        if (!$this->isPro()) {
+            return false;
+        }
+
+        $user = !empty($_POST['databaseUser']) ? $_POST['databaseUser'] : '';
+        $password = !empty($_POST['databasePassword']) ? $_POST['databasePassword'] : '';
+        $database = !empty($_POST['databaseDatabase']) ? $_POST['databaseDatabase'] : '';
+        $server = !empty($_POST['databaseServer']) ? $_POST['databaseServer'] : 'localhost';
+
+        $comparison = new CompareExternalDatabase($server, $user, stripslashes($password), $database);
+        $results = $comparison->maybeGetComparison();
+
+        echo json_encode($results);
+        exit();
+    }
+
+    /**
+     * Check if Plugin is Pro version
+     * @return bool
+     */
+    protected function isPro()
+    {
+        if (!defined("WPSTGPRO_VERSION")) {
+            return false;
+        }
+
+        return true;
     }
 
 }

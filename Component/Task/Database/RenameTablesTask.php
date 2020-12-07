@@ -6,13 +6,13 @@
 
 namespace WPStaging\Component\Task\Database;
 
-use Psr\Log\LoggerInterface;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WPStaging\Component\Task\AbstractTask;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Database\TableService;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 class RenameTablesTask extends AbstractTask
 {

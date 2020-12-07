@@ -4,7 +4,7 @@
  * Cron relevant stuff
  */
 
-namespace WPStaging\Cron;
+namespace WPStaging\Core\Cron;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -16,7 +16,7 @@ class Cron
 
     public function __construct()
     {
-        add_filter('cron_schedules', array($this, 'add_new_intervals'));
+        add_filter('cron_schedules', [$this, 'add_new_intervals']);
     }
 
     /**
@@ -27,15 +27,15 @@ class Cron
     public function add_new_intervals($schedules)
     {
         // add weekly and monthly intervals
-        $schedules['weekly'] = array(
+        $schedules['weekly'] = [
             'interval' => 604800,
             'display' => __('Once Weekly')
-        );
+        ];
 
-        $schedules['monthly'] = array(
+        $schedules['monthly'] = [
             'interval' => 2635200,
             'display' => __('Once a month')
-        );
+        ];
 
         return $schedules;
     }

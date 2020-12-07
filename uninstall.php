@@ -44,10 +44,10 @@ class uninstall
          * Path to main WP Staging class
          * Make sure to not redeclare class in case free version has been installed previosly
          */
-        if (!class_exists('WPStaging\WPStaging')) {
+        if (!class_exists('WPStaging\Core\WPStaging')) {
             require_once plugin_dir_path(__FILE__) . "Core/WPStaging.php";
         }
-        $wpStaging = \WPStaging\WPStaging::getInstance();
+        $wpStaging = \WPStaging\Core\WPStaging::getInstance();
 
         // Delete our must use plugin
         $this->deleteMuPlugin();
@@ -57,9 +57,9 @@ class uninstall
 
     private function init()
     {
-        $options = json_decode(json_encode(get_option("wpstg_settings", array())));
+        $options = json_decode(json_encode(get_option("wpstg_settings", [])));
 
-        if (isset($options->unInstallOnDelete) && '1' === $options->unInstallOnDelete) {
+        if (isset($options->unInstallOnDelete) && $options->unInstallOnDelete === '1') {
             // Delete options
             delete_option("wpstg_version_upgraded_from");
             delete_option("wpstg_version");

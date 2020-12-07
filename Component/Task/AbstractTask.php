@@ -2,13 +2,13 @@
 
 namespace WPStaging\Component\Task;
 
-use Psr\Log\LoggerInterface;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Component\Dto\AbstractRequestDto;
 use WPStaging\Framework\Traits\RequestNotationTrait;
 use WPStaging\Framework\Traits\TimerTrait;
 use WPStaging\Framework\Utils\Cache\AbstractCache;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 abstract class AbstractTask implements TaskInterface
 {

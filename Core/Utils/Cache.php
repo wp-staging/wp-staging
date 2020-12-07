@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
 // No Direct Access
 if( !defined( "WPINC" ) ) {
@@ -11,7 +11,7 @@ use Exception;
 
 /**
  * Class Cache
- * @package WPStaging\Utils
+ * @package WPStaging\Core\Utils
  */
 class Cache {
 
@@ -34,7 +34,7 @@ class Cache {
     private $lifetime = 2592000; // 30 days
 
     /**
-     * @todo This is referenced by \WPStaging\Utils\Cache::returnException, but doesn't seem to be populated ever. Remove this.
+     * @todo This is referenced by \WPStaging\Core\Utils\Cache::returnException, but doesn't seem to be populated ever. Remove this.
      * @var array
      */
     private $options;
@@ -61,7 +61,7 @@ class Cache {
         // Set default
         else {
 
-            $this->cacheDir = \WPStaging\WPStaging::getContentDir();
+            $this->cacheDir = \WPStaging\Core\WPStaging::getContentDir();
         }
 
         // Set cache extension
@@ -90,7 +90,7 @@ class Cache {
      */
     public function get( $cacheFileName, $defaultValue = null, $lifetime = null ) {
         // Check if file is valid
-        if( false === ($cacheFile = $this->isValid( $cacheFileName, true, $lifetime )) ) {
+        if( ($cacheFile = $this->isValid( $cacheFileName, true, $lifetime )) === false ) {
             return $defaultValue;
         }
 
@@ -138,7 +138,7 @@ class Cache {
     public function isValid( $cacheFileName, $deleteFileIfInvalid = false, $lifetime = null ) {
         // Lifetime
         $lifetime = ( int ) $lifetime;
-        if( -1 > $lifetime || 0 == $lifetime ) {
+        if( $lifetime < -1 || $lifetime == 0 ) {
             $lifetime = $this->lifetime;
         }
 
@@ -151,12 +151,12 @@ class Cache {
         }
 
         // As long as file exists, don't check lifetime
-        if( -1 == $lifetime ) {
+        if( $lifetime == -1 ) {
             return $cacheFile;
         }
 
         // Time is up, file is invalid
-        if( time() - filemtime( $cacheFile ) >= $lifetime ) {
+        if( $lifetime <= time() - filemtime( $cacheFile ) ) {
 
             // Attempt to delete the file
             if( $deleteFileIfInvalid === true && !@unlink( $cacheFile ) ) {
@@ -177,7 +177,7 @@ class Cache {
      * @throws \Exception
      */
     public function delete( $cacheFileName ) {
-        if( false !== ($cacheFile = $this->isValid( $cacheFileName, true )) && false === @unlink( $cacheFile ) ) {
+        if( ($cacheFile = $this->isValid( $cacheFileName, true )) !== false && @unlink( $cacheFile ) === false ) {
             throw new \Exception( "Couldn't delete cache: {$cacheFileName}. Full Path: {$cacheFile}" );
         }
 
@@ -203,12 +203,12 @@ class Cache {
      * @param string $message
      */
     protected function returnException( $message = '' ) {
-        wp_die( json_encode( array(
+        wp_die( json_encode( [
             'job'     => isset( $this->options->currentJob ) ? $this->options->currentJob : '',
             'status'  => false,
             'message' => $message,
             'error'   => true
-        ) ) );
+        ] ) );
     }
 
 }

@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
 /**
  * Class Finish
@@ -32,7 +32,7 @@ class Finish extends Job {
 
         $this->options->isRunning = false;
 
-        $return = array(
+        $return = [
             "directoryName" => $this->options->cloneDirectoryName,
             "path"          => trailingslashit( $this->options->destinationDir ),
             "url"           => $this->getDestinationUrl(),
@@ -43,7 +43,7 @@ class Finish extends Job {
             "last_msg"      => $this->logger->getLastLogMsg(),
             "job"           => $this->options->currentJob,
             "percentage"    => 100
-        );
+        ];
 
         //$this->flush();
         do_action('wpstg_cloning_complete', $this->options);
@@ -92,7 +92,7 @@ class Finish extends Job {
         // sanitize the clone name before saving
         //$clone = preg_replace("#\W+#", '-', strtolower($this->options->clone));
 
-        $this->options->existingClones[$this->clone] = array(
+        $this->options->existingClones[$this->clone] = [
             "directoryName"    => $this->options->cloneDirectoryName,
             "path"             => trailingslashit( $this->options->destinationDir ),
             "url"              => $this->getDestinationUrl(),
@@ -108,9 +108,9 @@ class Finish extends Job {
             "databaseServer"   => $this->options->databaseServer,
             "databasePrefix"   => $this->options->databasePrefix,
             "emailsDisabled"   => (bool) $this->options->emailsDisabled
-        );
+        ];
 
-        if( false === update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) ) {
+        if( update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) === false ) {
             $this->log( "Finish: Failed to save {$this->options->clone}'s clone job data to database'" );
             return false;
         }

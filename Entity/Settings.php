@@ -122,7 +122,7 @@ class Settings extends AbstractEntity
     {
         $executionTime = (int) ini_get('max_execution_time');
         // TODO don't overwrite when CLI / SAPI and / or add setting to not overwrite for devs
-        if (!$executionTime || self::DEFAULT_MAX_EXECUTION_TIME_IN_SECONDS < $executionTime) {
+        if (!$executionTime || $executionTime > self::DEFAULT_MAX_EXECUTION_TIME_IN_SECONDS) {
             $executionTime = self::DEFAULT_MAX_EXECUTION_TIME_IN_SECONDS;
         }
         return $executionTime - self::EXECUTION_TIME_GAP_IN_SECONDS;
@@ -196,7 +196,7 @@ class Settings extends AbstractEntity
     public function setKeepPermaLinks($keepPermaLinks)
     {
         if (!is_bool($keepPermaLinks)) {
-            $keepPermaLinks = 'true' === $keepPermaLinks || '1' === $keepPermaLinks || 1 === $keepPermaLinks;
+            $keepPermaLinks = $keepPermaLinks === 'true' || $keepPermaLinks === '1' || $keepPermaLinks === 1;
         }
         $this->keepPermaLinks = $keepPermaLinks;
     }
@@ -215,7 +215,7 @@ class Settings extends AbstractEntity
     public function setDebug($debug)
     {
         if (!is_bool($debug)) {
-            $debug = 'true' === $debug || '1' === $debug || 1 === $debug;
+            $debug = $debug === 'true' || $debug === '1' || $debug === 1;
         }
         $this->debug = $debug;
     }
@@ -234,7 +234,7 @@ class Settings extends AbstractEntity
     public function setOptimizer($optimizer)
     {
         if (!is_bool($optimizer)) {
-            $optimizer = 'true' === $optimizer || '1' === $optimizer || 1 === $optimizer;
+            $optimizer = $optimizer === 'true' || $optimizer === '1' || $optimizer === 1;
         }
         $this->optimizer = $optimizer;
     }
@@ -253,7 +253,7 @@ class Settings extends AbstractEntity
     public function setRemoveDataOnUninstall($removeDataOnUninstall)
     {
         if (!is_bool($removeDataOnUninstall)) {
-            $removeDataOnUninstall = 'true' === $removeDataOnUninstall || '1' === $removeDataOnUninstall || 1 === $removeDataOnUninstall;
+            $removeDataOnUninstall = $removeDataOnUninstall === 'true' || $removeDataOnUninstall === '1' || $removeDataOnUninstall === 1;
         }
         $this->removeDataOnUninstall = $removeDataOnUninstall;
     }

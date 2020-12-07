@@ -1,5 +1,5 @@
 <?php
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
 class Info
 {
@@ -11,7 +11,7 @@ class Info
     /**
      * @var array
      */
-    private static $canUse = array();
+    private static $canUse = [];
 
     /**
      * Info constructor.
@@ -26,7 +26,7 @@ class Info
      */
     public function getOS()
     {
-        if (null === self::$OS)
+        if (self::$OS === null)
         {
             self::$OS = strtoupper(substr(PHP_OS, 0, 3)); // WIN, LIN..
         }

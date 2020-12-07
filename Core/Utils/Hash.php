@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
 // No Direct Access
 if( !defined( "WPINC" ) ) {
@@ -121,7 +121,7 @@ class Hash {
             $this->addVars( $a, $b, $c, $d, $A, $B, $C, $D );
         }
         $nonce = '';
-        foreach ( array($a, $b, $c, $d) as $x ) {
+        foreach ( [$a, $b, $c, $d] as $x ) {
             $nonce .= implode( '', array_reverse( str_split( $this->leftpad( $x, 8 ), 2 ) ) );
         }
 
@@ -131,7 +131,7 @@ class Hash {
     /* General functions */
 
     private function hexbin( $str ) {
-        $hexbinmap = array("0" => "0000"
+        $hexbinmap = ["0" => "0000"
             , "1" => "0001"
             , "2" => "0010"
             , "3" => "0011"
@@ -152,7 +152,7 @@ class Hash {
             , "E" => "1110"
             , "e" => "1110"
             , "F" => "1111"
-            , "f" => "1111");
+            , "f" => "1111"];
 
         $bin = "";
         for ( $i = 0; $i < strlen( $str ); $i++ ) {

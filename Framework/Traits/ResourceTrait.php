@@ -19,11 +19,17 @@ trait ResourceTrait
     /** @var int|null */
     protected $timeLimit;
 
+    /**
+     * @return bool
+     */
     public function isThreshold()
     {
         return $this->isMemoryLimit() || $this->isTimeLimit();
     }
 
+    /**
+     * @return bool
+     */
     public function isMemoryLimit()
     {
         $limit = (new Size)->toBytes(ini_get('memory_limit'));
@@ -35,11 +41,14 @@ trait ResourceTrait
         return $allowed <= $this->getMemoryUsage();
     }
 
+    /**
+     * @return bool
+     */
     public function isTimeLimit()
     {
         $timeLimit = $this->getSettings()->findExecutionTimeLimit();
 
-        if (null !== $this->timeLimit) {
+        if ($this->timeLimit !== null) {
             $timeLimit = $this->timeLimit;
         }
         return $timeLimit <= $this->getRunningTime();

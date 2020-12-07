@@ -7,7 +7,7 @@ namespace WPStaging\Framework\Adapter\Database;
  * Class MysqlAdapter
  *
  * @todo check if this is still being used and maybe remove
- * @see \WPStaging\Utils\MySQL Similar class
+ * @see \WPStaging\Core\Utils\MySQL Similar class
  *
  * @package WPStaging\Framework\Adapter\Database
  */
@@ -102,7 +102,7 @@ class MysqlAdapter implements InterfaceDatabaseClient
      */
     public function freeResult($result)
     {
-        if (null === $result) {
+        if ($result === null) {
             return null;
         }
 

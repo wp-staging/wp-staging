@@ -1,4 +1,4 @@
-<div class="wpstg_poll update-nag" style="box-shadow: 0 1px 1px 0 rgba(0,0,0,.1);">
+<div class="wpstg_poll update-nag wpstg-box-shadow">
     <p>
         Great, You are using <strong>WP Staging</strong> for a while.
         Hope you are happy with it.
@@ -24,7 +24,7 @@
 
         René
     <ul>
-        <li class="float:left">
+        <li class="wpstg-float-left">
             <a href="https://docs.google.com/forms/d/e/1FAIpQLScZ-dO5WffV3xObn16LwG05tr1HrADD_8L4wbTxPHqoPssVcg/viewform?c=0&w=1&usp=mail_form_link" class="thankyou button button-primary" target="_new" title="Yes, i am interested" style="color: #ffffff;font-weight: normal;margin-right:10px;float:left;">
                 Yes, i am interested
             </a>

@@ -11,7 +11,7 @@ if( !defined( "WPINC" ) ) {
     die;
 }
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
 
 class Pluginmeta {
@@ -24,8 +24,8 @@ class Pluginmeta {
      * Define Hooks
      */
     public function defineHooks() {
-        add_filter( 'plugin_row_meta', array($this, 'rowMeta'), 10, 2 );
-        add_filter( 'plugin_action_links', array($this,'actionLinks'), 10, 2 );
+        add_filter( 'plugin_row_meta', [$this, 'rowMeta'], 10, 2 );
+        add_filter( 'plugin_action_links', [$this,'actionLinks'], 10, 2 );
 
     }
 
@@ -59,9 +59,9 @@ class Pluginmeta {
             return $input;
         }
 
-        $links = array(
+        $links = [
             '<a href="' . admin_url( 'admin.php?page=wpstg_clone' ) . '">' . esc_html__( 'Start Now', 'wp-staging' ) . '</a>',
-        );
+        ];
         $input = array_merge( $input, $links );
         return $input;
     }

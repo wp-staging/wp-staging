@@ -8,10 +8,10 @@ if( !defined( "WPINC" ) ) {
 }
 
 use WPStaging\Command\Database\Snapshot\SnapshotHandler;
-use WPStaging\WPStaging;
-use WPStaging\Utils\Directories;
+use WPStaging\Core\WPStaging;
+use WPStaging\Core\Utils\Directories;
 use WPStaging\Backend\Optimizer\Optimizer;
-use WPStaging\Iterators;
+use WPStaging\Core\Iterators;
 
 /**
  * Class Scan
@@ -20,7 +20,7 @@ use WPStaging\Iterators;
 class Scan extends Job {
 
     /** @var array */
-    private $directories = array();
+    private $directories = [];
 
     /** @var Directories */
     private $objDirectories;
@@ -45,8 +45,8 @@ class Scan extends Job {
      */
     public function start() {
         // Basic Options
-        $this->options->root           = str_replace( array("\\", '/'), DIRECTORY_SEPARATOR, WPStaging::getWPpath() );
-        $this->options->existingClones = get_option( "wpstg_existing_clones_beta", array() );
+        $this->options->root           = str_replace( ["\\", '/'], DIRECTORY_SEPARATOR, WPStaging::getWPpath() );
+        $this->options->existingClones = get_option( "wpstg_existing_clones_beta", [] );
         $this->options->current        = null;
 
         if( isset( $_POST["clone"] ) && array_key_exists( $_POST["clone"], $this->options->existingClones ) ) {
@@ -54,7 +54,7 @@ class Scan extends Job {
         }
 
         // Tables
-        $this->options->clonedTables = array();
+        $this->options->clonedTables = [];
 
         // Files
         $this->options->totalFiles    = 0;
@@ -63,12 +63,12 @@ class Scan extends Job {
 
 
         // Directories
-        $this->options->includedDirectories      = array();
-        $this->options->includedExtraDirectories = array();
-        $this->options->excludedDirectories      = array();
-        $this->options->extraDirectories         = array();
-        $this->options->directoriesToCopy        = array();
-        $this->options->scannedDirectories       = array();
+        $this->options->includedDirectories      = [];
+        $this->options->includedExtraDirectories = [];
+        $this->options->excludedDirectories      = [];
+        $this->options->extraDirectories         = [];
+        $this->options->directoriesToCopy        = [];
+        $this->options->scannedDirectories       = [];
 
         // Job
         $this->options->currentJob  = "PreserveDataFirstStep";
@@ -106,7 +106,7 @@ class Scan extends Job {
             return '';
         }
 
-        $units = array('B', "KB", "MB", "GB", "TB");
+        $units = ['B', "KB", "MB", "GB", "TB"];
 
         $bytes = ( double ) $bytes;
         $base  = log( $bytes ) / log( 1000 ); // 1024 would be for MiB KiB etc
@@ -121,7 +121,7 @@ class Scan extends Job {
      * @return string
      */
     public function directoryListing( $directories = null, $forceDisabled = false ) {
-        if( null == $directories ) {
+        if( $directories == null ) {
             $directories = $this->directories;
         }
 
@@ -155,9 +155,9 @@ class Scan extends Job {
                     $name !== 'wp-includes' &&
                     $name !== 'wp-content' &&
                     $name !== 'sites') &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) &&
-                    false === strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) ? true : false;
+                    strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-admin" ) ) ) === false &&
+                    strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-includes" ) ) ) === false &&
+                    strpos( strrev( wpstg_replace_windows_directory_separator( $dataPath ) ), strrev( wpstg_replace_windows_directory_separator( ABSPATH . "wp-content" ) ) ) === false ? true : false;
 
             // Extra class to differentiate between wp core and non core folders
             $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
@@ -202,9 +202,9 @@ class Scan extends Job {
         }
 
 
-        $data = array(
+        $data = [
             'usedspace' => $this->formatSize( $this->getDirectorySizeInclSubdirs( WPStaging::getWPpath() ) )
-        );
+        ];
 
         echo json_encode( $data );
         die();
@@ -220,27 +220,27 @@ class Scan extends Job {
 
         $tables = $db->get_results( $sql );
 
-        $currentTables = array();
+        $currentTables = [];
 
         // Reset excluded Tables than loop through all tables
-        $this->options->excludedTables = array();
+        $this->options->excludedTables = [];
         foreach ( $tables as $table ) {
 
             // Create array of unchecked tables
             // On the main website of a multisite installation, do not select network site tables beginning with wp_1_, wp_2_ etc.
             // (On network sites, the correct tables are selected anyway)
-            if (( ! empty($db->prefix) && 0 !== strpos($table->Name, $db->prefix))
+            if (( ! empty($db->prefix) && strpos($table->Name, $db->prefix) !== 0)
                 || (is_multisite() && is_main_site() && preg_match('/^'.$db->prefix.'\d+_/', $table->Name))) {
                 $this->options->excludedTables[] = $table->Name;
             }
 
-            if ((0 !== strpos($table->Name, SnapshotHandler::PREFIX_MANUAL))
-                && (0 !== strpos($table->Name, SnapshotHandler::PREFIX_AUTOMATIC))
+            if ((strpos($table->Name, SnapshotHandler::PREFIX_MANUAL) !== 0)
+                && (strpos($table->Name, SnapshotHandler::PREFIX_AUTOMATIC) !== 0)
                 && ($table->Comment !== "VIEW")) {
-                $currentTables[] = array(
+                $currentTables[] = [
                     "name" => $table->Name,
                     "size" => ($table->Data_length + $table->Index_length)
-                );
+                ];
             }
         }
 
@@ -257,7 +257,7 @@ class Scan extends Job {
 
         foreach ( $directories as $directory ) {
             // Not a valid directory
-            if( false === ($path = $this->getPath( $directory )) ) {
+            if( ($path = $this->getPath( $directory )) === false ) {
                 continue;
             }
 
@@ -301,7 +301,7 @@ class Scan extends Job {
 
         foreach ( $directories as $directory ) {
             // Not a valid directory
-            if( false === ($path = $this->getPath( $directory )) ) {
+            if( ($path = $this->getPath( $directory )) === false ) {
                 continue;
             }
 
@@ -353,7 +353,7 @@ class Scan extends Job {
 
         for ( $i = 0; $i <= $total; $i++ ) {
             if( !isset( $currentArray[$directoryArray[$i]] ) ) {
-                $currentArray[$directoryArray[$i]] = array();
+                $currentArray[$directoryArray[$i]] = [];
             }
 
             $currentArray = &$currentArray[$directoryArray[$i]];
@@ -366,10 +366,10 @@ class Scan extends Job {
             $fullPath = WPStaging::getWPpath() . $path;
             $size     = $this->getDirectorySize( $fullPath );
 
-            $currentArray["metaData"] = array(
+            $currentArray["metaData"] = [
                 "size" => $size,
                 "path" => WPStaging::getWPpath() . $path,
-            );
+            ];
         }
     }
 
@@ -379,7 +379,7 @@ class Scan extends Job {
      * @return int|null
      */
     protected function getDirectorySize( $path ) {
-        if( !isset( $this->settings->checkDirectorySize ) || '1' !== $this->settings->checkDirectorySize ) {
+        if( !isset( $this->settings->checkDirectorySize ) || $this->settings->checkDirectorySize !== '1' ) {
             return null;
         }
 
@@ -413,7 +413,7 @@ class Scan extends Job {
         // If multisite (and if not the main site in a post-MU network)
         if( is_multisite() && !( is_main_network() && is_main_site() && defined( 'MULTISITE' ) ) ) {
             // blogs.dir is used on WP 3.5 and lower
-            if( false !== strpos( $baseDir, 'blogs.dir' ) ) {
+            if( strpos( $baseDir, 'blogs.dir' ) !== false ) {
                 // remove this piece from the basedir: /blogs.dir/2/files
                 $uploadDir = wpstg_replace_first_match( '/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir );
                 $dir       = wpstg_replace_windows_directory_separator( $uploadDir . '/blogs.dir' );

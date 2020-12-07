@@ -1,5 +1,16 @@
 "use strict";
 
+/**
+ * Show warning during cloning or push process when closing tab or browser, or changing page 
+ * @param {beforeunload} event
+ * @return {null}
+ */
+var wpstgWarnIfClose = function (event) {
+    // Only some browsers shows the message below, most say something like "Changes you made may not be saved" (Chrome) or "You have unsaved changes. Exit?"
+    event.returnValue = 'You MUST leave this window open while cloning/pushing. Please wait...';
+    return null;
+};
+
 var WPStaging = (function ($) {
     var that = {
             isCancelled: false,
@@ -81,12 +92,14 @@ var WPStaging = (function ($) {
 
         if (response === false) {
             showError(prependMessage + ' Error: No response.' + appendMessage);
+            window.removeEventListener('beforeunload', wpstgWarnIfClose);
             return;
         }
 
         if (typeof response.error !== 'undefined' && response.error) {
             console.error(response.message);
             showError(prependMessage + ' Error: ' + response.message + appendMessage);
+            window.removeEventListener('beforeunload', wpstgWarnIfClose);
             return;
         }
     }
@@ -250,6 +263,7 @@ var WPStaging = (function ($) {
                             {
                                 action: "wpstg_check_clone",
                                 accessToken: wpstg.accessToken,
+                                nonce: wpstg.nonce,
                                 cloneID: cloneID
                             },
                             function (response) {
@@ -428,6 +442,7 @@ var WPStaging = (function ($) {
                     {
                         action: "wpstg_confirm_delete_clone",
                         accessToken: wpstg.accessToken,
+                        nonce: wpstg.nonce,
                         clone: $(this).data("clone")
                     },
                     function (response) {
@@ -475,7 +490,8 @@ var WPStaging = (function ($) {
                     {
                         action: "wpstg_scanning",
                         clone: clone,
-                        accessToken: wpstg.accessToken
+                        accessToken: wpstg.accessToken,
+                        nonce: wpstg.nonce
                     },
                     function (response) {
                         if (response.length < 1) {
@@ -623,66 +639,21 @@ var WPStaging = (function ($) {
 
                 }
 
-
                 // Button is disabled
                 if ($this.attr("disabled")) {
                     return false;
                 }
 
-                // Add loading overlay
-                $workFlow.addClass("loading");
+                if ($this.data("action") === "wpstg_cloning") {
+                    // Verify External Database If Checked and Not Skipped
+                    if($("#wpstg-ext-db").is(':checked')) {
+                        verifyExternalDatabase($this, $workFlow);
+                        return;
+                    }
 
-                // Prepare data
-                that.data = {
-                    action: $this.data("action"),
-                    accessToken: wpstg.accessToken
-                };
+                }
 
-                // Cloning data
-                getCloningData();
-
-                console.log(that.data);
-
-                isScan = ("wpstg_scanning" === that.action);
-
-                // Send ajax request
-                ajax(
-                    that.data,
-                    function (response) {
-
-                        // Undefined Error
-                        if (false === response) {
-                            showError(
-                                "Something went wrong!<br/><br/> Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low '" +
-                                "and try again. If that does not help, " +
-                                "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
-                            );
-                        }
-
-
-                        if (response.length < 1) {
-                            showError(
-                                "Something went wrong! No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low '" +
-                                "and try again. If that does not help, " +
-                                "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
-                            );
-                        }
-
-                        // Styling of elements
-                        $workFlow.removeClass("loading").html(response);
-
-                        if ($this.data("action") === "wpstg_scanning") {
-                            that.switchStep(2);
-                        } else if ($this.data("action") === "wpstg_cloning" || $this.data("action") === "wpstg_update") {
-                            that.switchStep(3);
-                        }
-
-                        // Start cloning
-                        that.startCloning();
-
-                    },
-                    "HTML"
-                );
+                proceedCloning($this, $workFlow);
             })
             // Previous Button
             .on("click", ".wpstg-prev-step-link", function (e) {
@@ -775,6 +746,93 @@ var WPStaging = (function ($) {
         return extraDirectories.concat(extraCustomDirectories);
     };
 
+    /**
+     * Verify External Database for Cloning
+     */
+    var verifyExternalDatabase = function($this, workflow) {
+        cache.get(".wpstg-loader").show();
+        ajax(
+            {
+                action: "wpstg_database_verification",
+                accessToken: wpstg.accessToken,
+                nonce: wpstg.nonce,
+                databaseUser: cache.get('#wpstg_db_username').val(),
+                databasePassword: cache.get('#wpstg_db_password').val(),
+                databaseServer: cache.get('#wpstg_db_server').val(),
+                databaseDatabase: cache.get('#wpstg_db_database').val(),
+            },
+            function (response)
+            {
+                // Undefined Error
+                if (false === response)
+                {
+                    showError(
+                        "Something went wrong! Error: No response." +
+                        "Please try again. If that does not help, " +
+                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                    );
+                    cache.get(".wpstg-loader").hide();
+                    return;
+                }
+
+                // Throw Error
+                if ("undefined" === typeof (response.success)) {
+                    showError(
+                        "Something went wrong! Error: Invalid response." +
+                        "Please try again. If that does not help, " +
+                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                    );
+                    cache.get(".wpstg-loader").hide();
+                    return;
+                }
+
+                if (response.success) {
+                    cache.get(".wpstg-loader").hide();
+                    proceedCloning($this, workflow);
+                    return;
+                }
+
+                if (response.error_type === 'comparison') {
+                    cache.get(".wpstg-loader").hide();
+                    var render = '<table style="width: 100%;"><thead><tr><th>Property</th><th>Production DB</th><th>Staging DB</th><th>Status</th></tr></thead><tbody>';
+                    response.checks.forEach(x=>{
+                        var icon = '<i style="color: #00ff00">✔</i>';
+                        if (x.production !== x.staging) {
+                            icon = '<i style="color: #ff0000">❌</i>'
+                        }
+                        render += "<tr><td>"+x.name+"</td><td>"+x.production+"</td><td>"+x.staging+"</td><td>"+icon+"</td></tr>";
+                    });
+                    render += '</tbody></table><p>Note: Some mySQL properties do not match. You may proceed but the staging site may not work as expected.</p>';
+                    Swal.fire({
+                        title: 'Different Database Properties',
+                        icon: 'warning',
+                        html: render,
+                        width: '650px',
+                        focusConfirm: false,
+                        confirmButtonText: 'Proceed Anyway',
+                        showCancelButton: true,
+                    }).then(function(result) {
+                        if (result.value) {
+                            proceedCloning($this, workflow);
+                        }
+                    });
+                    return;
+                }
+
+                Swal.fire({
+                    title: 'Different Database Properties',
+                    icon: 'error',
+                    html: response.message,
+                    focusConfirm: true,
+                    confirmButtonText: 'Ok',
+                    showCancelButton: false,
+                });
+                cache.get(".wpstg-loader").hide();
+            },
+            "json",
+            false
+        );
+    };
 
     /**
      * Get Cloning Step Data
@@ -803,6 +861,62 @@ var WPStaging = (function ($) {
 
     };
 
+    var proceedCloning = function($this, workflow) {
+        // Add loading overlay
+        workflow.addClass("loading");
+
+        // Prepare data
+        that.data = {
+            action: $this.data("action"),
+            accessToken: wpstg.accessToken,
+            nonce: wpstg.nonce
+        };
+
+        // Cloning data
+        getCloningData();
+
+        console.log(that.data);
+
+        // Send ajax request
+        ajax(
+            that.data,
+            function (response) {
+
+                // Undefined Error
+                if (false === response) {
+                    showError(
+                        "Something went wrong!<br/><br/> Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low '" +
+                        "and try again. If that does not help, " +
+                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                    );
+                }
+
+
+                if (response.length < 1) {
+                    showError(
+                        "Something went wrong! No response.  Go to WP Staging > Settings and lower 'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low '" +
+                        "and try again. If that does not help, " +
+                        "<a href='https://wp-staging.com/support/' target='_blank'>open a support ticket</a> "
+                    );
+                }
+
+                // Styling of elements
+                workflow.removeClass("loading").html(response);
+
+                if ($this.data("action") === "wpstg_scanning") {
+                    that.switchStep(2);
+                } else if ($this.data("action") === "wpstg_cloning" || $this.data("action") === "wpstg_update") {
+                    that.switchStep(3);
+                }
+
+                // Start cloning
+                that.startCloning();
+
+            },
+            "HTML"
+        );
+    };
+
     /**
      * Loads Overview (first step) of Staging Job
      */
@@ -814,7 +928,8 @@ var WPStaging = (function ($) {
         ajax(
             {
                 action: "wpstg_overview",
-                accessToken: wpstg.accessToken
+                accessToken: wpstg.accessToken,
+                nonce: wpstg.nonce
             },
             function (response) {
 
@@ -876,6 +991,7 @@ var WPStaging = (function ($) {
                 action: "wpstg_delete_clone",
                 clone: clone,
                 accessToken: wpstg.accessToken,
+                nonce: wpstg.nonce,
                 excludedTables: getExcludedTables(),
                 deleteDir: deleteDir
             },
@@ -924,7 +1040,8 @@ var WPStaging = (function ($) {
             {
                 action: "wpstg_cancel_clone",
                 clone: that.data.cloneID,
-                accessToken: wpstg.accessToken
+                accessToken: wpstg.accessToken,
+                nonce: wpstg.nonce
             },
             function (response) {
 
@@ -960,7 +1077,8 @@ var WPStaging = (function ($) {
             {
                 action: "wpstg_cancel_update",
                 clone: that.data.cloneID,
-                accessToken: wpstg.accessToken
+                accessToken: wpstg.accessToken,
+                nonce: wpstg.nonce
             },
             function (response) {
 
@@ -995,7 +1113,8 @@ var WPStaging = (function ($) {
             {
                 action: "wpstg_restart",
                 //clone: that.data.cloneID,
-                accessToken: wpstg.accessToken
+                accessToken: wpstg.accessToken,
+                nonce: wpstg.nonce
             },
             function (response) {
 
@@ -1066,7 +1185,8 @@ var WPStaging = (function ($) {
             ajax(
                 {
                     action: "wpstg_check_disk_space",
-                    accessToken: wpstg.accessToken
+                    accessToken: wpstg.accessToken,
+                    nonce: wpstg.nonce
                 },
                 function (response) {
                     if (false === response) {
@@ -1189,6 +1309,7 @@ var WPStaging = (function ($) {
             // Clone Database
             setTimeout(function () {
                 //cloneDatabase();
+                window.addEventListener('beforeunload', wpstgWarnIfClose);
                 processing();
             }, wpstg.delayReq);
 
@@ -1204,6 +1325,7 @@ var WPStaging = (function ($) {
         var processing = function () {
 
             if (true === that.isCancelled) {
+                window.removeEventListener('beforeunload', wpstgWarnIfClose);
                 return false;
             }
 
@@ -1216,6 +1338,7 @@ var WPStaging = (function ($) {
                 {
                     action: "wpstg_processing",
                     accessToken: wpstg.accessToken,
+                    nonce: wpstg.nonce,
                     excludedTables: getExcludedTables(),
                     includedDirectories: getIncludedDirectories(),
                     excludedDirectories: getExcludedDirectories(),
@@ -1244,6 +1367,7 @@ var WPStaging = (function ($) {
                         progressBar(response, true);
                         processing();
                     } else if ('finished' === response.status || ("undefined" !== typeof (response.job_done) && response.job_done)) {
+                        window.removeEventListener('beforeunload', wpstgWarnIfClose);
                         finish(response);
                     }
                     ;
@@ -1560,6 +1684,7 @@ var WPStaging = (function ($) {
 
                     const body = new FormData();
                     body.append('accessToken', wpstg.accessToken);
+                    body.append('nonce', wpstg.nonce);
                     body.append('data', event.target.result);
                     body.append('filename', that.snapshots.upload.file.name);
                     body.append('reset', isReset ? '1' : '0');
@@ -1695,7 +1820,7 @@ var WPStaging = (function ($) {
                   const $containerFilesystem = that.snapshots.modal.import.containerFilesystem;
                   $containerFilesystem.show();
 
-                  fetch(`${ajaxurl}?action=wpstg--snapshots--import--file-list&_=${Math.random()}&accessToken=${wpstg.accessToken}`)
+                  fetch(`${ajaxurl}?action=wpstg--snapshots--import--file-list&_=${Math.random()}&accessToken=${wpstg.accessToken}&nonce=${wpstg.nonce}`)
                       .then(handleFetchErrors)
                     .then(res => res.json())
                     .then(res => {
@@ -1752,7 +1877,7 @@ var WPStaging = (function ($) {
                 resetErrors();
             }
 
-            return fetch(`${ajaxurl}?action=wpstg--snapshots--listing&_=${Math.random()}&accessToken=${wpstg.accessToken}`)
+            return fetch(`${ajaxurl}?action=wpstg--snapshots--listing&_=${Math.random()}&accessToken=${wpstg.accessToken}&nonce=${wpstg.nonce}`)
                 .then(handleFetchErrors)
               .then(res => res.json())
               .then(res => {
@@ -1778,6 +1903,7 @@ var WPStaging = (function ($) {
                             action: 'wpstg--snapshots--delete--confirm',
                             id: id,
                             accessToken: wpstg.accessToken,
+                            nonce: wpstg.nonce
                         },
                         function (response) {
                             showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
@@ -1798,6 +1924,7 @@ var WPStaging = (function ($) {
                             action: 'wpstg--snapshots--delete',
                             id: id,
                             accessToken: wpstg.accessToken,
+                            nonce: wpstg.nonce
                         },
                         function (response) {
                             showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
@@ -1836,6 +1963,7 @@ var WPStaging = (function ($) {
                         action: 'wpstg--snapshots--delete',
                         id: id,
                         accessToken: wpstg.accessToken,
+                        nonce: wpstg.nonce
                     },
                     function (response) {
                         showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
@@ -1924,7 +2052,7 @@ var WPStaging = (function ($) {
                         }
 
                         that.snapshots.status.hasResponse = false;
-                        fetch(`${ajaxurl}?action=wpstg--snapshots--status&accessToken=${wpstg.accessToken}`)
+                        fetch(`${ajaxurl}?action=wpstg--snapshots--status&accessToken=${wpstg.accessToken}&nonce=${wpstg.nonce}`)
                           .then(res => res.json())
                           .then(res => {
                               that.snapshots.status.hasResponse = true;
@@ -1953,6 +2081,7 @@ var WPStaging = (function ($) {
                     {
                         action: 'wpstg--snapshots--create',
                         accessToken: wpstg.accessToken,
+                        nonce: wpstg.nonce,
                         reset,
                         wpstg: requestData,
                     },
@@ -2130,6 +2259,7 @@ var WPStaging = (function ($) {
                     {
                         action: 'wpstg--snapshots--restore',
                         accessToken: wpstg.accessToken,
+                        nonce: wpstg.nonce,
                         wpstg: {
                             tasks: {
                                 snapshot: {
@@ -2185,6 +2315,7 @@ var WPStaging = (function ($) {
                         {
                             action: 'wpstg--snapshots--restore--confirm',
                             accessToken: wpstg.accessToken,
+                            nonce: wpstg.nonce,
                             id: $(this).data('id'),
                         },
                         function (data) {
@@ -2250,6 +2381,7 @@ var WPStaging = (function ($) {
                 {
                   action: 'wpstg--snapshots--edit',
                   accessToken: wpstg.accessToken,
+                  nonce: wpstg.nonce,
                   id: $this.data('id'),
                   name: formValues.name,
                   notes: formValues.notes,
@@ -2271,6 +2403,7 @@ var WPStaging = (function ($) {
               {
                   action: 'wpstg--snapshots--cancel',
                   accessToken: wpstg.accessToken,
+                  nonce: wpstg.nonce,
                   type: that.snapshots.type,
               },
               function(response) {
@@ -2523,6 +2656,7 @@ var WPStaging = (function ($) {
                       {
                           action: 'wpstg--snapshots--export',
                           accessToken: wpstg.accessToken,
+                          nonce: wpstg.nonce,
                           id,
                       },
                       function (response) {
@@ -2617,7 +2751,7 @@ var WPStaging = (function ($) {
                         }
 
                         that.snapshots.status.hasResponse = false;
-                        fetch(`${ajaxurl}?action=wpstg--snapshots--status&process=restore&accessToken=${wpstg.accessToken}`)
+                        fetch(`${ajaxurl}?action=wpstg--snapshots--status&process=restore&accessToken=${wpstg.accessToken}&nonce=${wpstg.nonce}`)
                           .then(res => res.json())
                           .then(res => {
                               that.snapshots.status.hasResponse = true;
@@ -2646,6 +2780,7 @@ var WPStaging = (function ($) {
                   {
                       action: 'wpstg--snapshots--site--restore',
                       accessToken: wpstg.accessToken,
+                      nonce: wpstg.nonce,
                       reset,
                       wpstg: requestData,
                   },
@@ -2752,6 +2887,7 @@ var WPStaging = (function ($) {
                   preConfirm() {
                       const body = new FormData;
                       body.append('accessToken', wpstg.accessToken);
+                      body.append('nonce', wpstg.nonce);
                       body.append('filePath', that.snapshots.modal.import.data.file);
 
                       that.snapshots.modal.import.data.search.forEach((item, index) => {
@@ -2857,6 +2993,7 @@ jQuery(document).ready(function ($) {
             data: {
                 'action': 'wpstg_send_report',
                 'accessToken': wpstg.accessToken,
+                'nonce': wpstg.nonce,
                 'wpstg_email': email,
                 'wpstg_provider': hosting_provider,
                 'wpstg_message': message,

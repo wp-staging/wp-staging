@@ -8,10 +8,10 @@ if (!defined("WPINC")) {
 }
 
 use WPStaging\Backend\Modules\Jobs\Interfaces\JobInterface;
-use WPStaging\Utils\Logger;
-use WPStaging\WPStaging;
-use WPStaging\Utils\Cache;
-use WPStaging\thirdParty\thirdPartyCompatibility;
+use WPStaging\Core\Utils\Logger;
+use WPStaging\Core\WPStaging;
+use WPStaging\Core\Utils\Cache;
+use WPStaging\Core\thirdParty\thirdPartyCompatibility;
 use DateTime;
 use DateInterval;
 use Exception;
@@ -120,7 +120,7 @@ abstract class Job implements JobInterface
         // Get max limits
         $this->start = $this->time();
         $this->maxMemoryLimit = $this->getMemoryInBytes(@ini_get("memory_limit"));
-        $this->thirdParty = new thirdPartyCompatibility($this);
+        $this->thirdParty = new thirdPartyCompatibility();
 
         //$multisite = new Multisite;
         //$this->multisiteHomeUrlWithoutScheme = $multisite->getHomeUrlWithoutScheme();
@@ -129,13 +129,13 @@ abstract class Job implements JobInterface
         $this->maxExecutionTime = ( int )10;
 
         // Services
-        $this->cache = new Cache(-1, \WPStaging\WPStaging::getContentDir());
+        $this->cache = new Cache(-1, \WPStaging\Core\WPStaging::getContentDir());
         $this->logger = WPStaging::getInstance()->get("logger");
 
         // Settings and Options
         $this->options = $this->cache->get("clone_options");
 
-        $this->settings = ( object )get_option("wpstg_settings", array());
+        $this->settings = ( object )get_option("wpstg_settings", []);
 
         if (!$this->options) {
             $this->options = new \stdClass();
@@ -241,7 +241,7 @@ abstract class Job implements JobInterface
     protected function saveOptions($options = null)
     {
         // Get default options
-        if (null === $options) {
+        if ($options === null) {
             $options = $this->options;
         }
 
@@ -268,7 +268,7 @@ abstract class Job implements JobInterface
     protected function getMemoryInBytes($memory)
     {
         // Handle unlimited ones
-        if (1 > ( int )$memory) {
+        if (( int )$memory < 1) {
             // 128 MB default value
             return ( int )134217728;
         }
@@ -302,7 +302,7 @@ abstract class Job implements JobInterface
             return '';
         }
 
-        $units = array('B', 'K', 'M', 'G'); // G since PHP 5.1.x so we are good!
+        $units = ['B', 'K', 'M', 'G']; // G since PHP 5.1.x so we are good!
 
         $bytes = ( int )$bytes;
         $base = log($bytes) / log(1000);
@@ -326,7 +326,7 @@ abstract class Job implements JobInterface
     /**
      * @return bool
      */
-    protected function isOverThreshold()
+    public function isOverThreshold()
     {
         // Check if the memory is over threshold
         $usedMemory = ( int )@memory_get_usage(true);
@@ -371,7 +371,7 @@ abstract class Job implements JobInterface
             $this->options->clone = date(DATE_ATOM, mktime(0, 0, 0, 7, 1, 2000));
         }
 
-        if (false === $this->hasLoggedFileNameSet && 0 < strlen($this->options->clone)) {
+        if ($this->hasLoggedFileNameSet === false && strlen($this->options->clone) > 0) {
             $this->logger->setFileName($this->options->clone);
             $this->hasLoggedFileNameSet = true;
         }
@@ -389,7 +389,7 @@ abstract class Job implements JobInterface
             $this->options->clone = date(DATE_ATOM, mktime(0, 0, 0, 7, 1, 2000));
         }
 
-        if (false === $this->hasLoggedFileNameSet && 0 < strlen($this->options->clone)) {
+        if ($this->hasLoggedFileNameSet === false && strlen($this->options->clone) > 0) {
             $this->logger->setFileName($this->options->clone);
             $this->hasLoggedFileNameSet = true;
         }
@@ -408,12 +408,12 @@ abstract class Job implements JobInterface
     {
         wp_die(
             json_encode(
-                array(
+                [
                     'job' => isset($this->options->currentJob) ? $this->options->currentJob : '',
                     'status' => false,
                     'message' => $message,
                     'error' => true
-                )
+                ]
             )
         );
     }
@@ -430,7 +430,7 @@ abstract class Job implements JobInterface
         try {
             $now = new DateTime;
             $expiresAt = new DateTime($this->options->expiresAt);
-            return true === $this->options->isRunning && $now < $expiresAt;
+            return $this->options->isRunning === true && $now < $expiresAt;
         } catch (Exception $e) {
         }
 

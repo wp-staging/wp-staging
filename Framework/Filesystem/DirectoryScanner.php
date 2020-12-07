@@ -7,7 +7,7 @@
 namespace WPStaging\Framework\Filesystem;
 
 use RuntimeException;
-use Symfony\Component\Finder\Finder;
+use WPStaging\Vendor\Symfony\Component\Finder\Finder;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\Queue;
 use WPStaging\Framework\Queue\Storage\BufferedCacheStorage;
@@ -66,7 +66,7 @@ class DirectoryScanner
     public function scanCurrentPath(array $excluded = null, $depth = 0)
     {
         $path = $this->getPathFromQueue();
-        if (null === $path) {
+        if ($path === null) {
             throw new FinishedQueueException('Directory Scanner Queue is Finished');
         }
 
@@ -79,7 +79,7 @@ class DirectoryScanner
      */
     public function getPathFromQueue()
     {
-        if (0 < $this->queue->count()) {
+        if ($this->queue->count() > 0) {
             return $this->queue->pop();
         }
 

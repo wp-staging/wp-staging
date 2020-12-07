@@ -7,8 +7,4 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'WPStaging\\' => array($baseDir . '/'),
-    'Symfony\\Polyfill\\Ctype\\' => array($vendorDir . '/symfony/polyfill-ctype'),
-    'Symfony\\Component\\Finder\\' => array($vendorDir . '/symfony/finder'),
-    'Symfony\\Component\\Filesystem\\' => array($vendorDir . '/symfony/filesystem'),
-    'Psr\\Log\\' => array($vendorDir . '/psr/log/Psr/Log'),
 );

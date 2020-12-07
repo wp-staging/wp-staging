@@ -55,7 +55,7 @@ function wpstgIsEnabledOptimizer()
  */
 function wpstgIsExcludedPlugin($plugin)
 {
-    $excludedPlugins = get_option('wpstg_optimizer_excluded', array());
+    $excludedPlugins = get_option('wpstg_optimizer_excluded', []);
 
     if (empty($excludedPlugins)) {
         return false;
@@ -63,7 +63,7 @@ function wpstgIsExcludedPlugin($plugin)
 
     // Check for custom excluded plugins
     foreach ($excludedPlugins as $excludedPlugin) {
-        if (false !== strpos($plugin, $excludedPlugin)) {
+        if (strpos($plugin, $excludedPlugin) !== false) {
             return true;
         } else {
             continue;
@@ -93,7 +93,7 @@ function wpstgExcludePlugins($plugins)
     foreach ($plugins as $key => $plugin) {
 
         // Default filter. Must be at the beginning or wp staging plugin will be filtered and killed
-        if (false !== strpos($plugin, 'wp-staging') || wpstgIsExcludedPlugin($plugin)) {
+        if (strpos($plugin, 'wp-staging') !== false || wpstgIsExcludedPlugin($plugin)) {
             continue;
         }
         unset($plugins[$key]);
@@ -125,7 +125,7 @@ function wpstgExcludeSitePlugins($plugins)
     foreach ($plugins as $key => $plugin) {
 
         // Default filter. Must be at the beginning or wp staging plugin will be filtered and killed
-        if (false !== strpos($plugin, 'wp-staging') || wpstgIsExcludedPlugin($plugin)) {
+        if (strpos($plugin, 'wp-staging') !== false || wpstgIsExcludedPlugin($plugin)) {
             continue;
         }
     }
@@ -148,7 +148,7 @@ function wpstgDisableTheme($dir)
 {
     $enableTheme = apply_filters('wpstg_optimizer_enable_theme', false);
 
-    if (wpstgIsCompatibilityModeRequest() && false === $enableTheme) {
+    if (wpstgIsCompatibilityModeRequest() && $enableTheme === false) {
         $wpstgRootPro = wpstgGetPluginsDir() . 'wp-staging-pro';
         $wpstgRoot = wpstgGetPluginsDir() . 'wp-staging';
 
@@ -188,7 +188,7 @@ function wpstgIsCompatibilityModeRequest()
     if (!defined('DOING_AJAX') ||
         !DOING_AJAX ||
         !isset($_POST['action']) ||
-        false === strpos($_POST['action'], 'wpstg')
+        strpos($_POST['action'], 'wpstg') === false
     ) {
 
         return false;
@@ -207,11 +207,11 @@ function wpstgTgmpaCompatibility()
     $remove_function = false;
 
     // run on wpstg page
-    if (isset($_GET['page']) && 'wpstg_clone' == $_GET['page']) {
+    if (isset($_GET['page']) && $_GET['page'] == 'wpstg_clone') {
         $remove_function = true;
     }
     // run on wpstg ajax requests
-    if (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && false !== strpos($_POST['action'], 'wpstg')) {
+    if (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && strpos($_POST['action'], 'wpstg') !== false) {
         $remove_function = true;
     }
 
@@ -221,7 +221,7 @@ function wpstgTgmpaCompatibility()
         foreach ($admin_init_functions as $priority => $functions) {
             foreach ($functions as $key => $function) {
                 // searching for function this way as can't rely on the calling class being named TGM_Plugin_Activation
-                if (false !== strpos($key, 'force_activation')) {
+                if (strpos($key, 'force_activation') !== false) {
                     unset($wp_filter['admin_init'][$priority][$key]);
 
                     return;
@@ -242,7 +242,7 @@ function wpstgIsStaging()
         return false;
     }
 
-    if ("true" === get_option("wpstg_is_staging_site")) {
+    if (get_option("wpstg_is_staging_site") === "true") {
         return true;
     }
 

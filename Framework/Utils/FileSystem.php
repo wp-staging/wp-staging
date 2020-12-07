@@ -23,7 +23,7 @@ class FileSystem
      */
     public function replaceWindowsDirSeparator($path)
     {
-        if ('/' === DIRECTORY_SEPARATOR) {
+        if (DIRECTORY_SEPARATOR === '/') {
             return $path;
         }
 
@@ -52,6 +52,6 @@ class FileSystem
             return false;
         }
 
-        return false === (new FilesystemIterator($dir))->valid();
+        return (new FilesystemIterator($dir))->valid() === false;
     }
 }

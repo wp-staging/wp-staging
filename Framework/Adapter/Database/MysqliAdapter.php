@@ -101,7 +101,7 @@ class MysqliAdapter implements InterfaceDatabaseClient
      */
     public function freeResult($result)
     {
-        if (null === $result) {
+        if ($result === null) {
             return null;
         }
 

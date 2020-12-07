@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 
 /**
@@ -99,13 +99,13 @@ class PreserveDataFirstStep extends JobExecutable
             )
         );
 
-        if (false === $delete) {
+        if ($delete === false) {
             $this->log("Preserve Data: Failed to delete wpstg_tmp_data");
         }
-        if (false === $result) {
+        if ($result === false) {
             $this->log("Preserve Data: Failed to get wpstg_existing_clones_beta");
         }
-        if (false === $insert) {
+        if ($insert === false) {
             $this->log("Preserve Data: Failed to insert wpstg_existing_clones_beta to wpstg_tmp_data");
         }
         return true;
@@ -118,7 +118,7 @@ class PreserveDataFirstStep extends JobExecutable
      */
     private function tableExists($table)
     {
-        return !($this->stagingDb->get_var("SHOW TABLES LIKE '{$table}'") != $table);
+        return !($table != $this->stagingDb->get_var("SHOW TABLES LIKE '{$table}'"));
     }
 
 

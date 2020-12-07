@@ -1,8 +1,8 @@
 <?php
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
-use WPStaging\Utils\Filesystem;
+use WPStaging\Core\Utils\Filesystem;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -34,7 +34,7 @@ class Htaccess {
      * @return boolean
      */
     public function create( $path ) {
-        return $this->filesystem->create( $path, implode( PHP_EOL, array(
+        return $this->filesystem->create( $path, implode( PHP_EOL, [
                     '<IfModule mod_mime.c>',
                     'AddType application/octet-stream .log',
                     '</IfModule>',
@@ -44,7 +44,7 @@ class Htaccess {
                     '<IfModule mod_autoindex.c>',
                     'Options -Indexes',
                     '</IfModule>',
-                ) ) );
+                ] ) );
     }
 
     /**
@@ -56,11 +56,11 @@ class Htaccess {
      * @return boolean
      */
     public function createLitespeed( $path ) {
-        return $this->filesystem->createWithMarkers( $path, 'LiteSpeed', array(
+        return $this->filesystem->createWithMarkers( $path, 'LiteSpeed', [
                     '<IfModule Litespeed>',
                     'SetEnv noabort 1',
                     '</IfModule>',
-                ) );
+                ] );
     }
 
 }

@@ -6,7 +6,7 @@ namespace WPStaging\Framework\CloningProcess\Database;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Framework\CloningProcess\CloningDto;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Utils\Strings;
 
 class DatabaseCloningService
@@ -35,7 +35,7 @@ class DatabaseCloningService
     {
         $rows = $offset + $limit;
         $limitation = '';
-        if (0 < ( int )$limit) {
+        if (( int )$limit > 0) {
             $limitation = " LIMIT {$limit} OFFSET {$offset}";
         }
         if ($this->dto->isExternal()) {
@@ -53,7 +53,7 @@ class DatabaseCloningService
             foreach ($rows as $row) {
                 $escaped_values = $this->mysqlEscapeMimic(array_values($row));
                 $values = implode("', '", $escaped_values);
-                if (false === $stagingDb->query("INSERT INTO `{$new}` VALUES ('{$values}')")) {
+                if ($stagingDb->query("INSERT INTO `{$new}` VALUES ('{$values}')") === false) {
                     $this->log("Can not insert data into table {$new}");
                 }
             }
@@ -89,7 +89,7 @@ class DatabaseCloningService
     public function tableIsMissing($tableName)
     {
         $result = $this->dto->getProductionDb()->query("SHOW TABLES LIKE '{$tableName}'");
-        if (false === $result || 0 === $result) {
+        if ($result === false || $result === 0) {
             $this->log("Table {$this->dto->getExternalDatabaseName()}.{$tableName} doesn't exist. Skipping");
             return true;
         }
@@ -111,11 +111,11 @@ class DatabaseCloningService
             if ($this->dto->isMultisite()) {
                 $search = '';
                 // Get name table users from main site e.g. wp_users
-                if ('users' === $this->removeDBBasePrefix($old)) {
+                if ($this->removeDBBasePrefix($old) === 'users') {
                     $search = $productionDb->prefix . 'users';
                 }
                 // Get name of table usermeta from main site e.g. wp_usermeta
-                if ('usermeta' === $this->removeDBBasePrefix($old)) {
+                if ($this->removeDBBasePrefix($old) === 'usermeta') {
                     $search = $productionDb->prefix . 'usermeta';
                 }
                 // Replace table prefix to the destination prefix
@@ -126,7 +126,7 @@ class DatabaseCloningService
             // Make constraint unique to prevent error:(errno: 121 "Duplicate key on write or update")
             $sql = wpstg_unique_constraint($sql);
             $stagingDb->query('SET FOREIGN_KEY_CHECKS=0;');
-            if (false === $stagingDb->query($sql)) {
+            if ($stagingDb->query($sql) === false) {
                 throw new FatalException("DB External Copy - Fatal Error: {$stagingDb->last_error} Query: {$sql}");
             }
         } else {
@@ -179,7 +179,7 @@ class DatabaseCloningService
             return array_map(__METHOD__, $input);
         }
         if (!empty($input) && is_string($input)) {
-            return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $input);
+            return str_replace(['\\', "\0", "\n", "\r", "'", '"', "\x1a"], ['\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'], $input);
         }
 
         return $input;
@@ -208,11 +208,11 @@ class DatabaseCloningService
             //$row[0] = str_replace($tableName, strtolower($tableName), $row[0]);
 
             // Get name table users from main site e.g. wp_users
-            if ('users' === $this->removeDBBasePrefix($tableName)) {
+            if ($this->removeDBBasePrefix($tableName) === 'users') {
                 $statement = str_replace($tableName, $productionDb->prefix . 'users', $statement);
             }
             // Get name of table usermeta from main site e.g. wp_usermeta
-            if ('usermeta' === $this->removeDBBasePrefix($tableName)) {
+            if ($this->removeDBBasePrefix($tableName) === 'usermeta') {
                 $statement = str_replace($tableName, $productionDb->prefix . 'usermeta', $statement);
             }
         }
@@ -221,7 +221,7 @@ class DatabaseCloningService
         if (isset($statement['Create Table'])) {
             return $statement['Create Table'];
         }
-        return array();
+        return [];
     }
 
 }

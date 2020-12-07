@@ -1,11 +1,11 @@
 <?php
-namespace WPStaging\Forms;
+namespace WPStaging\Core\Forms;
 
-use WPStaging\Forms\Elements\Interfaces\InterfaceElementWithOptions;
+use WPStaging\Core\Forms\Elements\Interfaces\InterfaceElementWithOptions;
 
 /**
  * Class Elements
- * @package WPStaging\Forms
+ * @package WPStaging\Core\Forms
  */
 abstract class ElementsWithOptions extends Elements implements InterfaceElementWithOptions
 {
@@ -13,7 +13,7 @@ abstract class ElementsWithOptions extends Elements implements InterfaceElementW
     /**
      * @var array
      */
-    protected $options = array();
+    protected $options = [];
 
     /**
      * Text constructor.
@@ -21,11 +21,10 @@ abstract class ElementsWithOptions extends Elements implements InterfaceElementW
      * @param array $options
      * @param array $attributes
      */
-    public function __construct($name, $options = array(), $attributes = array())
+    public function __construct($name, $options = [], $attributes = [])
     {
-        $this->setName($name);
+        parent::__construct($name, $attributes);
         $this->addOptions($options);
-        $this->setAttributes($attributes);
     }
 
     /**

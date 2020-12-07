@@ -19,13 +19,13 @@ abstract class JobExecutable extends Job
     /**
      * @var array
      */
-    protected $response = array(
+    protected $response = [
         "status"        => false,
         "percentage"    => 0,
         "total"         => 0,
         "step"          => 0,
         "last_msg"      => '',
-    );
+    ];
 
     /**
      * JobExecutable constructor.
@@ -57,10 +57,10 @@ abstract class JobExecutable extends Job
         $percentage = 0;
         if (isset($this->options->currentStep) && isset($this->options->totalSteps) && $this->options->totalSteps > 0){
             $percentage = round(($this->options->currentStep / $this->options->totalSteps) * 100);
-            $percentage = (100 < $percentage) ? 100 : $percentage;
+            $percentage = ($percentage > 100) ? 100 : $percentage;
         }
 
-        return $this->response = array(
+        return $this->response = [
             "status"        => $status,
             "percentage"    => $percentage,
             "total"         => $this->options->totalSteps,
@@ -69,7 +69,7 @@ abstract class JobExecutable extends Job
             "last_msg"      => $this->logger->getLastLogMsg(),
             "running_time"  => $this->time() - time(),
             "job_done"      => $status
-        );
+        ];
     }
 
     /**

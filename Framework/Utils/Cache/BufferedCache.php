@@ -8,7 +8,7 @@ namespace WPStaging\Framework\Utils\Cache;
 
 use LimitIterator;
 use SplFileObject;
-use Symfony\Component\Filesystem\Exception\IOException;
+use WPStaging\Vendor\Symfony\Component\Filesystem\Exception\IOException;
 use WPStaging\Framework\Filesystem\File;
 use WPStaging\Framework\Filesystem\Filesystem;
 
@@ -42,7 +42,7 @@ class BufferedCache extends AbstractCache
         $offset = 0;
         clearstatcache();
         $len = filesize($this->filePath);
-        while (false !== ($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH))) {
+        while (($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
             if (!$first) {
                 $first = $buffer;
                 $offset = strlen($first);
@@ -83,7 +83,7 @@ class BufferedCache extends AbstractCache
 
         $i = 0;
         $data = $value;
-        while (false !== ($buffer = fread($handle, self::AVERAGE_LINE_LENGTH))) {
+        while (($buffer = fread($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
             fseek($handle, $i * $length);
             fwrite($handle, $data);
             $data = $buffer;
@@ -114,7 +114,7 @@ class BufferedCache extends AbstractCache
             return $default;
         }
 
-        if (self::POSITION_BOTTOM === $position) {
+        if ($position === self::POSITION_BOTTOM) {
             return $this->readBottomLine($lines);
         }
         return $this->readTopLine($lines);
@@ -145,7 +145,7 @@ class BufferedCache extends AbstractCache
         clearstatcache();
         $size = filesize($this->filePath);
         $totalLines = 0;
-        while (false !== ($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH))) {
+        while (($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
             $bufferSize = strlen($buffer);
             if ($totalLines < $lines) {
                 $offset += $bufferSize;
@@ -235,7 +235,7 @@ class BufferedCache extends AbstractCache
         $file->seek(PHP_INT_MAX);
         $lastLine = $file->key();
         $offset = $lastLine - $lines;
-        if (0 > $offset) {
+        if ($offset < 0) {
             $offset = 0;
         }
 
@@ -256,7 +256,7 @@ class BufferedCache extends AbstractCache
 
         $data = [];
         $i = 0;
-        while (false !== ($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH))) {
+        while (($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
             $data[]= trim($buffer);
             $i++;
             if ($i >= $lines) {
@@ -285,7 +285,7 @@ class BufferedCache extends AbstractCache
             $_bytesWritten = fwrite($target, $chunk);
 
             // Failed to write
-            if (false === $_bytesWritten) {
+            if ($_bytesWritten === false) {
                 // TODO Custom Exception
                 throw new IOException('Failed to append stoppable file');
             }
@@ -311,14 +311,14 @@ class BufferedCache extends AbstractCache
             $_bytesWritten = fwrite($target, $chunk);
 
             // Failed to write
-            if (false === $_bytesWritten) {
+            if ($_bytesWritten === false) {
                 // TODO Custom Exception
                 throw new IOException('Failed to append stoppable file');
             }
 
             // Finished writing, nothing more to write!
             $bytesWritten += $_bytesWritten;
-            if (0 === $_bytesWritten || $stats['size'] <= $bytesWritten) {
+            if ($_bytesWritten === 0 || $stats['size'] <= $bytesWritten) {
                 break;
             }
         }

@@ -1,7 +1,7 @@
 <div id="wpstg-error-wrapper">
     <div id="wpstg-error-details"></div>
 </div>
-<div id='wpstg-footer' style="clear:both;padding-top:20px;">
+<div id='wpstg-footer'>
     <br/>
     <strong>&nbsp;&nbsp;<?php _e("FAQ", "wp-staging")?></strong><br/>
     - <a href="https://wp-staging.com/docs/staging-site-redirects-live-site/" target="_blank" rel="external"><?php _e("Can not login to staging site", "wp-staging")?></a>    <br/>

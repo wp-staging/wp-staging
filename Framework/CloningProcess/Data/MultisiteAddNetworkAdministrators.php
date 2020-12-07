@@ -4,7 +4,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 class MultisiteAddNetworkAdministrators extends DBCloningService
 {
@@ -45,9 +45,9 @@ class MultisiteAddNetworkAdministrators extends DBCloningService
                 $userId,
                 $prefix . 'capabilities',
                 serialize(
-                    array(
+                    [
                         'administrator' => true
-                    )
+                    ]
                 )
             );
         }
@@ -68,7 +68,7 @@ class MultisiteAddNetworkAdministrators extends DBCloningService
         $queries = array_filter(explode(";\n", $sqlbatch));
 
         foreach ($queries as $query) {
-            if (false === $db->query($query)) {
+            if ($db->query($query) === false) {
                 $this->log("Could not execute query {$query}", Logger::TYPE_WARNING);
             }
         }

@@ -5,20 +5,26 @@
 
 namespace WPStaging\Framework\Component;
 
-use WPStaging\Framework\Adapter\HookedTemplate;
+use WPStaging\Framework\Security\AccessToken;
+use WPStaging\Framework\Security\Capabilities;
+use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
-abstract class AbstractTemplateComponent extends AbstractComponent implements RenderableComponentInterface
+abstract class AbstractTemplateComponent
 {
-    use AjaxTrait;
-
     /** @var TemplateEngine */
     protected $templateEngine;
 
-    public function __construct(HookedTemplate $hookedTemplate)
+    private $accessToken;
+    private $nonce;
+
+    public function __construct(TemplateEngine $templateEngine)
     {
-        parent::__construct();
-        $this->templateEngine = $hookedTemplate->getTemplateEngine();
+        $this->templateEngine = $templateEngine;
+
+        // Todo: Inject using DI
+        $this->accessToken = new AccessToken;
+        $this->nonce       = new Nonce;
     }
 
     /**
@@ -33,10 +39,14 @@ abstract class AbstractTemplateComponent extends AbstractComponent implements Re
     }
 
     /**
-     * @return string
+     * @return bool Whether the current request should render this template.
      */
-    public function getSlug()
+    protected function canRenderAjax()
     {
-        return $this->templateEngine->getSlug();
+        $isAjax          = wp_doing_ajax();
+        $hasToken        = $this->accessToken->requestHasValidToken();
+        $isAuthenticated = current_user_can((new Capabilities())->manageWPSTG()) && $this->nonce->requestHasValidNonce(Nonce::WPSTG_NONCE);
+
+        return $isAjax && ($hasToken || $isAuthenticated);
     }
 }

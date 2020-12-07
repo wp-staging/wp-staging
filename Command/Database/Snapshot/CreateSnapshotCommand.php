@@ -15,7 +15,7 @@ class CreateSnapshotCommand extends AbstractSnapshotCommand
     {
         $this->validateSnapshot();
 
-        if (null === $this->dto->getStep()) {
+        if ($this->dto->getStep() === null) {
             $this->executeAll();
             return;
         }

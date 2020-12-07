@@ -37,7 +37,7 @@ class UpdateTablePrefix extends DBCloningService
             )
         );
 
-        if (false === $update) {
+        if ($update === false) {
             throw new FatalException("Failed to update {$prefix}usermeta meta_key database table prefixes {$db->last_error}");
         }
 

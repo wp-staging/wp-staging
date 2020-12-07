@@ -76,7 +76,7 @@ trait HydrateTrait
     private function getClassAsValue(ReflectionClass $class, $value)
     {
         $className = $class->getName();
-        if (!$value instanceof DateTime && 'DateTime' === $className) {
+        if (!$value instanceof DateTime && $className === 'DateTime') {
             return (new DateTimeAdapter)->getDateTime($value);
         }
 

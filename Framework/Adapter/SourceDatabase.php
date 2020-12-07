@@ -4,7 +4,7 @@
 namespace WPStaging\Framework\Adapter;
 
 use stdClass;
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
 class SourceDatabase
 {

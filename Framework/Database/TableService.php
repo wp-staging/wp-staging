@@ -108,7 +108,7 @@ class TableService
      */
     private function getFilteredResult($data, $startsWith)
     {
-        $result = array();
+        $result = [];
         foreach ($data as $value) {
             if (strpos($value, $startsWith) === 0) {
                 $result[] = $value;

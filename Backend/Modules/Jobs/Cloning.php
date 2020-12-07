@@ -3,14 +3,12 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Framework\Security\AccessToken;
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
-use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplace as muSearchReplace;
-use WPStaging\Backend\Modules\Jobs\Multisite\SearchReplaceExternal as muSearchReplaceExternal;
 use WPStaging\Backend\Modules\Jobs\Multisite\Finish as muFinish;
 use WPStaging\Backend\Modules\Jobs\Multisite\Directories as muDirectories;
 use WPStaging\Backend\Modules\Jobs\Multisite\Files as muFiles;
-use WPStaging\Utils\Helper;
+use WPStaging\Core\Utils\Helper;
 
 /**
  * Class Cloning
@@ -32,9 +30,11 @@ class Cloning extends Job
         $this->db = WPStaging::getInstance()->get("wpdb");
     }
 
+
     /**
      * Save Chosen Cloning Settings
      * @return bool
+     * @throws \Exception
      */
     public function save()
     {
@@ -46,16 +46,14 @@ class Cloning extends Job
         $this->cache->delete("files_to_copy");
 
         // Generate Options
-        // Clone
-        //$this->options->clone                 = $_POST["cloneID"];
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($_POST["cloneID"]));
         $this->options->cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($this->options->clone));
         $this->options->cloneNumber = 1;
         $this->options->prefix = $this->setStagingPrefix();
-        $this->options->includedDirectories = array();
-        $this->options->excludedDirectories = array();
-        $this->options->extraDirectories = array();
-        $this->options->excludedFiles = array(
+        $this->options->includedDirectories = [];
+        $this->options->excludedDirectories = [];
+        $this->options->extraDirectories = [];
+        $this->options->excludedFiles = [
             '.htaccess',
             '.DS_Store',
             '*.git',
@@ -66,12 +64,12 @@ class Cloning extends Job
             '*.log',
             'web.config', // Important: Windows IIS configuration file. Must not be in the staging site!
             '.wp-staging' // Determines if a site is a staging site
-        );
-        $this->options->excludedFilesFullPath = array(
+        ];
+        $this->options->excludedFilesFullPath = [
             'wp-content' . DIRECTORY_SEPARATOR . 'db.php',
             'wp-content' . DIRECTORY_SEPARATOR . 'object-cache.php',
             'wp-content' . DIRECTORY_SEPARATOR . 'advanced-cache.php'
-        );
+        ];
         $this->options->currentStep = 0;
 
         // Job
@@ -95,7 +93,7 @@ class Cloning extends Job
         if (isset($_POST["includedTables"]) && is_array($_POST["includedTables"])) {
             $this->options->tables = $_POST["includedTables"];
         } else {
-            $this->options->tables = array();
+            $this->options->tables = [];
         }
 
         // Excluded Directories
@@ -105,13 +103,13 @@ class Cloning extends Job
 
         // Excluded Directories TOTAL
         // Do not copy these folders and plugins
-        $excludedDirectories = array(
+        $excludedDirectories = [
             WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
             WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
             WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-super-cache',
             WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'peters-login-redirect',
             WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-spamshield',
-        );
+        ];
 
         $this->options->excludedDirectories = array_merge($excludedDirectories, wpstg_urldecode($this->options->excludedDirectories));
 
@@ -185,7 +183,7 @@ class Cloning extends Job
      */
     private function enteredDatabaseSameAsLiveDatabase()
     {
-        return $this->options->databaseServer === DB_HOST && $this->options->databaseDatabase == DB_NAME;
+        return $this->options->databaseServer === DB_HOST && $this->options->databaseDatabase === DB_NAME;
     }
 
     /**
@@ -197,7 +195,7 @@ class Cloning extends Job
         // Save new clone data
         $this->log("Cloning: {$this->options->clone}'s clone job's data is not in database, generating data");
 
-        $this->options->existingClones[$this->options->clone] = array(
+        $this->options->existingClones[$this->options->clone] = [
             "directoryName" => $this->options->cloneDirectoryName,
             "path" => trailingslashit($this->options->destinationDir),
             "url" => $this->getDestinationUrl(),
@@ -211,9 +209,9 @@ class Cloning extends Job
             "databaseDatabase" => $this->options->databaseDatabase,
             "databaseServer" => $this->options->databaseServer,
             "databasePrefix" => $this->options->databasePrefix
-        );
+        ];
 
-        if (false === update_option("wpstg_existing_clones_beta", $this->options->existingClones)) {
+        if (update_option("wpstg_existing_clones_beta", $this->options->existingClones) === false) {
             $this->log("Cloning: Failed to save {$this->options->clone}'s clone job data to database'");
             return false;
         }
@@ -249,7 +247,7 @@ class Cloning extends Job
 
     /**
      * Return Hostname without scheme
-     * @param string $str
+     * @param string $string
      * @return string
      */
     private function getHostnameWithoutScheme($string)
@@ -319,10 +317,11 @@ class Cloning extends Job
 
     /**
      * Start the cloning job
+     * @throws JobNotFoundException
      */
     public function start()
     {
-        if (!property_exists($this->options, 'currentJob') || null === $this->options->currentJob) {
+        if (!property_exists($this->options, 'currentJob') || $this->options->currentJob === null) {
             $this->log("Cloning job finished");
             return true;
         }
@@ -334,7 +333,7 @@ class Cloning extends Job
             throw new JobNotFoundException($methodName);
         }
 
-        if ($this->enteredDatabaseSameAsLiveDatabase() && $this->options->databasePrefix === $this->db->prefix) {
+        if ($this->options->databasePrefix === $this->db->prefix && $this->enteredDatabaseSameAsLiveDatabase()) {
             $this->returnException('Entered table prefix for staging and production database can not be identical! Please start over and change the table prefix.');
         }
 
@@ -350,7 +349,7 @@ class Cloning extends Job
     private function handleJobResponse($response, $nextJob)
     {
         // Job is not done
-        if (true !== $response->status) {
+        if ($response->status !== true) {
             return $response;
         }
 
@@ -390,19 +389,7 @@ class Cloning extends Job
      */
     public function jobSearchReplace()
     {
-        if (defined('WPSTGPRO_VERSION') && is_multisite()) {
-            if (empty($this->options->databaseUser) && empty($this->options->databasePassword)) {
-                $searchReplace = new muSearchReplace();
-            } else {
-                $searchReplace = new muSearchReplaceExternal();
-            }
-        } else {
-            if (empty($this->options->databaseUser) && empty($this->options->databasePassword)) {
-                $searchReplace = new SearchReplace();
-            } else {
-                $searchReplace = new SearchReplaceExternal();
-            }
-        }
+        $searchReplace = new SearchReplace();
         return $this->handleJobResponse($searchReplace->start(), "PreserveDataSecondStep");
     }
 

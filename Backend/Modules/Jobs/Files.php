@@ -4,7 +4,8 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use SplFileObject;
 use WPStaging\Framework\Filesystem\FileService;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
+use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
  * Class Files
@@ -49,7 +50,7 @@ class Files extends JobExecutable
         }
 
         // Informational logs
-        if (0 == $this->options->currentStep) {
+        if ($this->options->currentStep == 0) {
             $this->log("Copying files...");
         }
 
@@ -160,7 +161,7 @@ class Files extends JobExecutable
      */
     private function copyFile($file)
     {
-        $file = trim(\WPStaging\WPStaging::getWPpath() . $file);
+        $file = trim(\WPStaging\Core\WPStaging::getWPpath() . $file);
 
         $file = wpstg_replace_windows_directory_separator($file);
 
@@ -205,7 +206,7 @@ class Files extends JobExecutable
         }
 
         // Failed to get destination
-        if (false === ($destination = $this->getDestination($file))) {
+        if (($destination = $this->getDestination($file)) === false) {
             $this->log("Can't get the destination of {$file}", Logger::TYPE_WARNING);
             return false;
         }
@@ -244,20 +245,18 @@ class Files extends JobExecutable
         // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
         $uploadsAbsPath = trailingslashit($uploads['basedir']);
 
-        // Get relative path to the uploads folder, e.g assets
-        $uploadsRelPath = wpstg_get_rel_upload_dir();
+        // Get relative path to the uploads folder, e.g assets or wp-content/uploads
+        $uploadsRelPath = (new WpDefaultDirectories())->getRelativeUploadPath();
 
         // Get absolute path to wp-content directory e.g srv/www/htdocs/sitename/wp-content
         $wpContentDir = trailingslashit(WP_CONTENT_DIR);
 
         // Check if there is a custom uploads directory, then do a search $ replace. Do this only if custom upload path is not identical to WP_CONTENT_DIR
         if ($uploadsAbsPath != $wpContentDir) {
-            //$file = str_replace( $uploadsAbsPath, ABSPATH . 'wp-content/uploads/', $file, $count );
             $file = str_replace($uploadsAbsPath, ABSPATH . $uploadsRelPath, $file, $count);
         }
         // If there is no custom upload directory do a search & replace of the custom wp-content directory
         if (empty($count) || $count === 0) {
-            //$file = str_replace( $wpContentDir, ABSPATH . 'wp-content/', $file );
             $file = str_replace($wpContentDir, ABSPATH . 'wp-content/', $file);
         }
 
@@ -287,15 +286,14 @@ class Files extends JobExecutable
      */
     private function getDestination($file)
     {
-        //$file                 = $this->getMultisiteUploadFolder( $file );
         $file = wpstg_replace_windows_directory_separator($file);
-        $rootPath = wpstg_replace_windows_directory_separator(\WPStaging\WPStaging::getWPpath());
+        $rootPath = wpstg_replace_windows_directory_separator(\WPStaging\Core\WPStaging::getWPpath());
         $relativePath = str_replace($rootPath, null, $file);
         $destinationPath = $this->destination . $relativePath;
         $destinationDirectory = dirname($destinationPath);
 
-        if (!is_dir($destinationDirectory) && !@mkdir($destinationDirectory, wpstg_get_permissions_for_directory(), true)) {
-            $this->log("Files: Can not create directory {$destinationDirectory}", Logger::TYPE_ERROR);
+        if (!is_dir($destinationDirectory) && !mkdir($destinationDirectory, wpstg_get_permissions_for_directory(), true) && !is_dir($destinationDirectory)) {
+            $this->log("Files: Can not create directory {$destinationDirectory}. Possible write permission error!", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -320,14 +318,14 @@ class Files extends JobExecutable
 
         // Try first method:
         while (!feof($src)) {
-            if (false === fwrite($dest, fread($src, $buffersize))) {
+            if (fwrite($dest, fread($src, $buffersize)) === false) {
                 $error = true;
             }
         }
         // Try second method if first one failed
         if (isset($error) && ($error === true)) {
             while (!feof($src)) {
-                if (false === stream_copy_to_stream($src, $dest, 1024)) {
+                if (stream_copy_to_stream($src, $dest, 1024) === false) {
                     $this->log("Can not copy file; {$src} -> {$dest}");
                     fclose($src);
                     fclose($dest);
@@ -352,10 +350,10 @@ class Files extends JobExecutable
         $excludedFiles = (array)$this->options->excludedFiles;
 
         // Remove .htaccess and web.config from 'excludedFiles' if staging site is copied to a subdomain
-        if (false === $this->isIdenticalHostname()) {
+        if ($this->isIdenticalHostname() === false) {
             $excludedFiles = \array_diff(
                 $excludedFiles,
-                array("web.config", ".htaccess")
+                ["web.config", ".htaccess"]
             );
         }
 
@@ -407,7 +405,7 @@ class Files extends JobExecutable
     {
         // If path + file exists
         foreach ($this->options->excludedFilesFullPath as $excludedFile) {
-            if (false !== strpos($file, $excludedFile)) {
+            if (strpos($file, $excludedFile) !== false) {
                 return true;
             }
         }
@@ -435,7 +433,7 @@ class Files extends JobExecutable
     private function isDirectoryExcluded($directory)
     {
         // Make sure that wp-staging-pro directory / plugin is never excluded
-        if (false !== strpos($directory, 'wp-staging') || false !== strpos($directory, 'wp-staging-pro')) {
+        if (strpos($directory, 'wp-staging') !== false || strpos($directory, 'wp-staging-pro') !== false) {
             return false;
         }
 

@@ -24,7 +24,7 @@ class Optimizer {
    }
 
    public function installOptimizer() {
-      if (file_exists( $this->dest ) && false === $this->mustUpdateOptimizer()){
+      if (file_exists( $this->dest ) && $this->mustUpdateOptimizer() === false){
          return false;
       }
       
@@ -55,7 +55,7 @@ class Optimizer {
       
        $update = false;
        
-       if (false === $isVersionNumber){
+       if ($isVersionNumber === false){
            return true;
        }
        

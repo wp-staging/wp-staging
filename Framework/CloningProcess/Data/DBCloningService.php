@@ -12,7 +12,7 @@ abstract class DBCloningService extends CloningService
      */
     protected function tableExists($table)
     {
-        if ($this->dto->getStagingDb()->get_var("SHOW TABLES LIKE '{$table}'") != $table) {
+        if ($table != $this->dto->getStagingDb()->get_var("SHOW TABLES LIKE '{$table}'")) {
             $this->log("Table {$table} does not exist.");
             return false;
         }

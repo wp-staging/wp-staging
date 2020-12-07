@@ -4,7 +4,7 @@ namespace WPStaging\Backend\Modules\Jobs\Multisite;
 
 use WPStaging\Backend\Modules\Jobs\JobExecutable;
 use WPStaging\Framework\Filesystem\FileService;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 /**
  * Class Files
@@ -48,7 +48,7 @@ class Files extends JobExecutable
         }
 
         // Informational logs
-        if (0 == $this->options->currentStep) {
+        if ($this->options->currentStep == 0) {
             $this->log("Copying files...");
         }
 
@@ -157,7 +157,7 @@ class Files extends JobExecutable
      */
     private function copyFile($file)
     {
-        $file = trim(\WPStaging\WPStaging::getWPpath() . $file);
+        $file = trim(\WPStaging\Core\WPStaging::getWPpath() . $file);
 
         $file = wpstg_replace_windows_directory_separator($file);
 
@@ -202,7 +202,7 @@ class Files extends JobExecutable
         }
 
         // Failed to get destination
-        if (false === ($destination = $this->getDestination($file))) {
+        if (($destination = $this->getDestination($file)) === false) {
             $this->log(
                 "Can't get the destination of {$file}",
                 Logger::TYPE_WARNING
@@ -261,7 +261,7 @@ class Files extends JobExecutable
     {
         //$file                 = $this->getMultisiteUploadFolder( $file );
         $file = wpstg_replace_windows_directory_separator($file);
-        $rootPath = wpstg_replace_windows_directory_separator(\WPStaging\WPStaging::getWPpath());
+        $rootPath = wpstg_replace_windows_directory_separator(\WPStaging\Core\WPStaging::getWPpath());
         $relativePath = str_replace($rootPath, null, $file);
         $destinationPath = $this->destination . $relativePath;
         $destinationDirectory = dirname($destinationPath);
@@ -288,7 +288,7 @@ class Files extends JobExecutable
         $uploads = wp_upload_dir();
         $basedir = $uploads['basedir'];
 
-        if (false === strpos($basedir, 'blogs.dir')) {
+        if (strpos($basedir, 'blogs.dir') === false) {
             // Since WP 3.5
             $search = 'wp-content' . DIRECTORY_SEPARATOR . 'uploads' . DIRECTORY_SEPARATOR . 'sites' . DIRECTORY_SEPARATOR . get_current_blog_id();
             $replace = 'wp-content' . DIRECTORY_SEPARATOR . 'uploads';
@@ -321,14 +321,14 @@ class Files extends JobExecutable
 
         // Try first method:
         while (!feof($src)) {
-            if (false === fwrite($dest, fread($src, $buffersize))) {
+            if (fwrite($dest, fread($src, $buffersize)) === false) {
                 $error = true;
             }
         }
         // Try second method if first one failed
         if (isset($error) && ($error === true)) {
             while (!feof($src)) {
-                if (false === stream_copy_to_stream($src, $dest, 1024)) {
+                if (stream_copy_to_stream($src, $dest, 1024) === false) {
                     $this->log("Can not copy file; {$src} -> {$dest}");
                     fclose($src);
                     fclose($dest);
@@ -353,10 +353,10 @@ class Files extends JobExecutable
         $excludedFiles = (array)$this->options->excludedFiles;
 
         // Remove .htaccess and web.config from 'excludedFiles' if staging site is copied to a subdomain
-        if (false === $this->isIdenticalHostname()) {
+        if ($this->isIdenticalHostname() === false) {
             $excludedFiles = \array_diff(
                 $excludedFiles,
-                array("web.config", ".htaccess")
+                ["web.config", ".htaccess"]
             );
         }
 
@@ -408,7 +408,7 @@ class Files extends JobExecutable
     {
         // If path + file exists
         foreach ($this->options->excludedFilesFullPath as $excludedFile) {
-            if (false !== strpos($file, $excludedFile)) {
+            if (strpos($file, $excludedFile) !== false) {
                 return true;
             }
         }
@@ -436,7 +436,7 @@ class Files extends JobExecutable
     private function isDirectoryExcluded($directory)
     {
         // Make sure that wp-staging-pro directory / plugin is never excluded
-        if (false !== strpos($directory, 'wp-staging') || false !== strpos($directory, 'wp-staging-pro')) {
+        if (strpos($directory, 'wp-staging') !== false || strpos($directory, 'wp-staging-pro') !== false) {
             return false;
         }
 

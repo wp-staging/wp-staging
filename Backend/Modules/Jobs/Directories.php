@@ -9,8 +9,8 @@ if( !defined( "WPINC" ) ) {
 
 use Exception;
 use WPStaging\Framework\Utils\Strings;
-use WPStaging\Iterators\RecursiveDirectoryIterator;
-use WPStaging\Iterators\RecursiveFilterExclude;
+use WPStaging\Core\Iterators\RecursiveDirectoryIterator;
+use WPStaging\Core\Iterators\RecursiveFilterExclude;
 
 /**
  * Class Files
@@ -21,7 +21,7 @@ class Directories extends JobExecutable {
     /**
      * @var array
      */
-    private $files = array();
+    private $files = [];
 
     /**
      * Total steps to do
@@ -80,7 +80,7 @@ class Directories extends JobExecutable {
         try {
 
             // Iterate over wp root directory
-            $iterator = new \DirectoryIterator( \WPStaging\WPStaging::getWPpath() );
+            $iterator = new \DirectoryIterator( \WPStaging\Core\WPStaging::getWPpath() );
 
             $this->log( "Scanning / for files" );
 
@@ -108,7 +108,7 @@ class Directories extends JobExecutable {
 
         // Skip it
         if( $this->isDirectoryExcluded( WP_CONTENT_DIR ) ) {
-            $this->log( "Skip " . \WPStaging\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR );
+            $this->log( "Skip " . \WPStaging\Core\WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR );
             return true;
         }
         // open file handle
@@ -117,16 +117,16 @@ class Directories extends JobExecutable {
         /**
          * Excluded folders relative to the folder to iterate
          */
-        $excludePaths = array(
+        $excludePaths = [
             'cache',
             'plugins/wps-hide-login',
             'uploads/sites'
-        );
+        ];
 
         /**
          * Get user excluded folders
          */
-        $directory = array();
+        $directory = [];
         foreach ( $this->options->excludedDirectories as $dir ) {
           // Windows compatibility fix
          $dir = wpstg_replace_windows_directory_separator($dir);
@@ -180,8 +180,8 @@ class Directories extends JobExecutable {
     private function getWpIncludesFiles() {
 
         // Skip it
-        if( $this->isDirectoryExcluded( \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR ) ) {
-            $this->log( "Skip " . \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
+        if( $this->isDirectoryExcluded( \WPStaging\Core\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR ) ) {
+            $this->log( "Skip " . \WPStaging\Core\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
             return true;
         }
 
@@ -191,7 +191,7 @@ class Directories extends JobExecutable {
         try {
 
             // Iterate over wp-admin directory
-            $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
+            $iterator = new \WPStaging\Core\Iterators\RecursiveDirectoryIterator( \WPStaging\Core\WPStaging::getWPpath() . 'wp-includes' . DIRECTORY_SEPARATOR );
 
             // Recursively iterate over wp-includes directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
@@ -227,8 +227,8 @@ class Directories extends JobExecutable {
     private function getWpAdminFiles() {
 
         // Skip it
-        if( $this->isDirectoryExcluded( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR ) ) {
-            $this->log( "Skip " . \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
+        if( $this->isDirectoryExcluded( \WPStaging\Core\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR ) ) {
+            $this->log( "Skip " . \WPStaging\Core\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
             return true;
         }
 
@@ -238,7 +238,7 @@ class Directories extends JobExecutable {
         try {
 
             // Iterate over wp-admin directory
-            $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( \WPStaging\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
+            $iterator = new \WPStaging\Core\Iterators\RecursiveDirectoryIterator( \WPStaging\Core\WPStaging::getWPpath() . 'wp-admin' . DIRECTORY_SEPARATOR );
 
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
@@ -281,11 +281,11 @@ class Directories extends JobExecutable {
         try {
 
             // Iterate over extra directory
-            $iterator = new \WPStaging\Iterators\RecursiveDirectoryIterator( $folder );
+            $iterator = new \WPStaging\Core\Iterators\RecursiveDirectoryIterator( $folder );
 
-            $exclude = array();
+            $exclude = [];
 
-            $iterator = new \WPStaging\Iterators\RecursiveFilterExclude( $iterator, $exclude );
+            $iterator = new \WPStaging\Core\Iterators\RecursiveFilterExclude( $iterator, $exclude );
             // Recursively iterate over content directory
             $iterator = new \RecursiveIteratorIterator( $iterator, \RecursiveIteratorIterator::LEAVES_ONLY, \RecursiveIteratorIterator::CATCH_GET_CHILD );
 
@@ -296,7 +296,7 @@ class Directories extends JobExecutable {
             foreach ( $iterator as $item ) {
                 if( $item->isFile() ) {
                     //if( $this->write( $files, $strings->getLastElemAfterString( '/', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
-                    if( $this->write( $files, str_replace( wpstg_replace_windows_directory_separator(\WPStaging\WPStaging::getWPpath()), '', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
+                    if( $this->write( $files, str_replace( wpstg_replace_windows_directory_separator(\WPStaging\Core\WPStaging::getWPpath()), '', $folder ) . DIRECTORY_SEPARATOR . $iterator->getSubPathName() . PHP_EOL ) ) {
                         $this->options->totalFiles++;
                         // Too much cpu time
                         //$this->options->totalFileSize += $iterator->getSize();
@@ -333,7 +333,7 @@ class Directories extends JobExecutable {
     public function open( $file, $mode ) {
 
         $file_handle = @fopen( $file, $mode );
-        if( false === $file_handle ) {
+        if( $file_handle === false ) {
             $this->returnException( sprintf( __( 'Unable to open %s with mode %s', 'wp-staging' ), $file, $mode ) );
             //throw new Exception(sprintf(__('Unable to open %s with mode %s', 'wp-staging'), $file, $mode));
         }
@@ -351,12 +351,12 @@ class Directories extends JobExecutable {
      */
     public function write( $handle, $content ) {
         $write_result = @fwrite( $handle, $content );
-        if( false === $write_result ) {
+        if( $write_result === false ) {
             if( ( $meta = \stream_get_meta_data( $handle ) ) ) {
                 //$this->returnException(sprintf(__('Unable to write to: %s', 'wp-staging'), $meta['uri']));
                 throw new \Exception( sprintf( __( 'Unable to write to: %s', 'wp-staging' ), $meta['uri'] ) );
             }
-        } elseif( strlen( $content ) !== $write_result ) {
+        } elseif( $write_result !== strlen( $content ) ) {
             //$this->returnException(__('Out of disk space.', 'wp-staging'));
             throw new \Exception( __( 'Out of disk space.', 'wp-staging' ) );
         }
@@ -440,8 +440,8 @@ class Directories extends JobExecutable {
     protected function getFiles() {
         $fileName = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
-        if( false === ($this->files = @file_get_contents( $fileName )) ) {
-            $this->files = array();
+        if( ($this->files = @file_get_contents( $fileName )) === false ) {
+            $this->files = [];
             return;
         }
 

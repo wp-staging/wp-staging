@@ -25,7 +25,7 @@ class MultisiteUpdateTablePrefix extends UpdateTablePrefix
             )
         );
 
-        if (false === $update) {
+        if ($update === false) {
             $this->log("Failed updating {$prefix}usermeta meta_key database base_prefix {$db->last_error}");
         } else {
             //$this->log("Done");
