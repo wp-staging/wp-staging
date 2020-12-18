@@ -8,16 +8,11 @@ namespace WPStaging\Backend\Modules\Jobs\Exceptions;
 class JobNotFoundException extends \Exception
 {
     /**
-     * @var string
-     */
-    protected $message = "Can't execute te job; Job's method %s is not found";
-
-    /**
      * JobNotFoundException constructor.
      * @param string $className
      */
     public function __construct($className = "")
     {
-        $this->message = sprintf($this->message, $className);
+        parent::__construct(sprintf("Can't execute job; Job's method %s is not found", $className));
     }
 }

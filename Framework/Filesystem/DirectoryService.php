@@ -5,7 +5,7 @@
 
 namespace WPStaging\Framework\Filesystem;
 
-use Symfony\Component\Finder\Finder;
+use WPStaging\Vendor\Symfony\Component\Finder\Finder;
 use WPStaging\Framework\Adapter\Directory;
 
 class DirectoryService
@@ -42,7 +42,7 @@ class DirectoryService
             }
         }
 
-        if (null !== $depth) {
+        if ($depth !== null) {
             $finder->depth($depth);
         }
 

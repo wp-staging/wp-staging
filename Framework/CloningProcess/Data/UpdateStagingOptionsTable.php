@@ -4,7 +4,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Framework\Staging\FirstRun;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 class UpdateStagingOptionsTable extends DBCloningService
 {
@@ -33,7 +33,7 @@ class UpdateStagingOptionsTable extends DBCloningService
 
         $update = [
             'upload_path' => '',
-            'wpstg_connection' => json_encode(array('prodHostname' => get_site_url())),
+            'wpstg_connection' => json_encode(['prodHostname' => get_site_url()]),
         ];
         if ($this->dto->getMainJob() !== 'updating') {
             $update['wpstg_existing_clones_beta'] = serialize([]);
@@ -56,7 +56,7 @@ class UpdateStagingOptionsTable extends DBCloningService
     protected function updateOptions($options) {
         foreach($options as $name => $value) {
             $this->debugLog("Updating $name to $value");
-            if (false === $this->updateDbOption($name, $value)) {
+            if ($this->updateDbOption($name, $value) === false) {
                 $this->log("Failed to update $name {$this->dto->getStagingDb()->last_error}", Logger::TYPE_WARNING);
             }
         }

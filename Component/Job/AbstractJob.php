@@ -7,20 +7,11 @@ namespace WPStaging\Component\Job;
 
 use WPStaging\Component\Task\TaskResponseDto;
 use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\Container\Container;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Core\WPStaging;
 
 abstract class AbstractJob implements JobInterface
 {
-
-    /** @var Container */
-    protected $container;
-
-    public function __construct(Container $container)
-    {
-        $this->container = $container;
-    }
-
     /**
      * @return object
      */
@@ -54,7 +45,7 @@ abstract class AbstractJob implements JobInterface
     protected function clean()
     {
         /** @var Directory $directory */
-        $directory = $this->get(Directory::class);
+        $directory = WPStaging::getInstance()->get(Directory::class);
         (new Filesystem)->delete($directory->getCacheDirectory() . $this->getJobName());
     }
 
@@ -91,15 +82,5 @@ abstract class AbstractJob implements JobInterface
         }
 
         $data = array_merge($data, $value);
-    }
-
-    /**
-     * @param string $service
-     *
-     * @return object|null
-     */
-    protected function get($service)
-    {
-        return $this->container->get($service);
     }
 }

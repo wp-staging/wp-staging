@@ -3,7 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 // No Direct Access
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 if (!defined("WPINC")) {
     die;
@@ -18,12 +18,12 @@ class Verify extends JobExecutable {
     /**
      * @var \SplFileObject
      */
-    private $files = array();
+    private $files = [];
 
     /**
      * @var \SplFileObject
      */
-    private $verifyFiles = array();
+    private $verifyFiles = [];
 
     /**
      * @var int
@@ -45,7 +45,7 @@ class Verify extends JobExecutable {
         $this->getVerifyFiles();
 
         // Informational logs
-        if (0 == $this->options->currentStep) {
+        if ($this->options->currentStep == 0) {
             $this->log("Verifying files...");
         }
 
@@ -115,8 +115,8 @@ class Verify extends JobExecutable {
     protected function getVerifyFiles() {
         $file = $this->cache->getCacheDir() . "files_to_verify." . $this->cache->getCacheExtension();
 
-        if (false === ($this->verifyFiles = @file_get_contents($file))) {
-            $this->verifyFiles = array();
+        if (($this->verifyFiles = @file_get_contents($file)) === false) {
+            $this->verifyFiles = [];
             return;
         }
 
@@ -130,8 +130,8 @@ class Verify extends JobExecutable {
     protected function getCopyFiles() {
         $file = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
-        if (false === ($this->verifyFiles = @file_get_contents($file))) {
-            $this->verifyFiles = array();
+        if (($this->verifyFiles = @file_get_contents($file)) === false) {
+            $this->verifyFiles = [];
             return;
         }
 
@@ -150,7 +150,7 @@ class Verify extends JobExecutable {
         $fileName = $this->cache->getCacheDir() . "files_verified" . $this->cache->getCacheExtension();
         $files = implode(PHP_EOL, $filesVerified);
 
-        return (false !== @wpstg_put_contents($fileName, $files));
+        return (@wpstg_put_contents($fileName, $files) !== false);
     }
 
     /**

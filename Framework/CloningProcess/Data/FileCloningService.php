@@ -15,7 +15,7 @@ abstract class FileCloningService extends CloningService
     protected function readFile($file)
     {
         $path = $this->dto->getDestinationDir() . $file;
-        if (false === ($content = file_get_contents($path))) {
+        if (($content = file_get_contents($path)) === false) {
             throw new FatalException("Error - can't read " . $file);
         }
         return $content;
@@ -27,7 +27,7 @@ abstract class FileCloningService extends CloningService
     protected function writeFile($file, $content)
     {
         $path = $this->dto->getDestinationDir() . $file;
-        if (false === @wpstg_put_contents($path, $content)) {
+        if (@wpstg_put_contents($path, $content) === false) {
             throw new FatalException("Error - can't write to " . $file);
         }
     }

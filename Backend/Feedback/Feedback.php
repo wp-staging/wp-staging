@@ -13,7 +13,7 @@ class Feedback {
      */
     private function isPluginsPage() {
         global $pagenow;
-        return ( 'plugins.php' === $pagenow );
+        return ( $pagenow === 'plugins.php' );
     }
 
     /**
@@ -51,7 +51,7 @@ class Feedback {
             $text = implode( "\n\r", $form['wpstg_disable_text'] );
         }
 
-        $headers = array();
+        $headers = [];
 
         $from = isset( $form['wpstg_disable_from'] ) ? $form['wpstg_disable_from'] : '';
         if( $from ) {

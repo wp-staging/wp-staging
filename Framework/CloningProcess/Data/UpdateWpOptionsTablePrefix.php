@@ -5,7 +5,7 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 class UpdateWpOptionsTablePrefix extends DBCloningService
 {
@@ -27,11 +27,11 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
         }
 
         // Filter the rows below. Do not update them!
-        $filters = array(
+        $filters = [
             'wp_mail_smtp',
             'wp_mail_smtp_version',
             'wp_mail_smtp_debug',
-        );
+        ];
 
         $filters = apply_filters('wpstg_data_excl_rows', $filters);
 
@@ -51,7 +51,7 @@ class UpdateWpOptionsTablePrefix extends DBCloningService
             )
         );
 
-        if (false === $updateOptions) {
+        if ($updateOptions === false) {
             $this->log("Error on Query: UPDATE IGNORE {$prefix}options SET option_name= replace(option_name, {$productionDb->prefix}, {$prefix}) WHERE option_name LIKE {$productionDb->prefix} {$where}", Logger::TYPE_ERROR);
             throw new FatalException("Failed to update db option_names in {$prefix}options. Error: {$productionDb->last_error}");
         }

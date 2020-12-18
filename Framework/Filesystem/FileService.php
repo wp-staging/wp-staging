@@ -5,7 +5,7 @@
 
 namespace WPStaging\Framework\Filesystem;
 
-use Symfony\Component\Finder\Finder;
+use WPStaging\Vendor\Symfony\Component\Finder\Finder;
 
 class FileService
 {
@@ -28,7 +28,7 @@ class FileService
             $finder->notName($excludedFileNames);
         }
 
-        if (null !== $depth) {
+        if ($depth !== null) {
             $finder->depth($depth);
         }
 
@@ -110,6 +110,6 @@ class FileService
             $pattern .= 'i';
         }
 
-        return 1 === preg_match($pattern, $string);
+        return preg_match($pattern, $string) === 1;
     }
 }

@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Staging;
 
 use WPStaging\Frontend\LoginNotice;
+use WPStaging\Backend\Notices\DisabledCacheNotice;
 use WPStaging\Framework\SiteInfo;
 
 /**
@@ -43,6 +44,9 @@ class FirstRun
     {
         // Show one time login notice on staging site.
         (new LoginNotice())->setTransient();
+
+        // Enable the disabled cache notice to be shown on the staging site admin.
+        (new DisabledCacheNotice())->enable();
 
         // Allow users to attach custom actions by using this hook
         do_action('wpstg.clone_first_run');

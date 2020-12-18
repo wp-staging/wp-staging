@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, staging, duplication, clone, migration
 Requires at least: 3.6+
 Tested up to: 5.5
-Stable tag: 2.7.8
+Stable tag: 2.7.9
 Requires PHP: 5.5
 
 A duplicator plugin - clone/move, duplicate & migrate websites to staging, backup and development sites that only authorized users can access.
@@ -17,43 +17,41 @@ A duplicator plugin - clone/move, duplicate & migrate websites to staging, backu
 == Description ==
 
 <h3>WP STAGING for WordPress Migration & Cloning </h3>
-With this duplicator plugin, you can create an exact copy of your entire website in seconds for staging, backup or development purposes.
-(Exact backup time depends on the size of your website)<br /><br />
-It creates a clone of your website into a subfolder of your main WordPress installation including an entire copy of your database.
+This duplicator, staging and backup plugin can create an exact copy of your entire website in seconds.* Great for staging, backup or development purposes.
+(Cloning and Backup time depends on the size of your website)<br /><br />
+This clone plugin creates a clone of your website into a subfolder or subdomain (Pro) of your main WordPress installation. The clone includes an entire copy of your database.
  <br /> <br />
 <strong>Note: </strong> For pushing & migrating plugins and theme files to production site, check out the pro edition [https://wp-staging.com/](https://wp-staging.com/ "WP STAGING PRO")
 <br /><br />
-All the time-consumptive database and file copying operations are done in the background. The plugin even automatically does an entire search & replace of all serialized links and paths.
+All the time-consumptive database and file cloning operations are done in the background. The plugin even automatically does an entire search & replace of all serialized links and paths.
  <br /><br />
-This staging and backup plugin works even on the smallest shared hosting servers.
+This staging and backup plugin can clone your website even if it runs on a weak shared hosting server.
  <br /><br />
  <br /><br />
-WP Staging can protect your website from being broken or unavailable because of installing untested plugin updates!
+WP STAGING can help you to prevent your website from being broken or unavailable because of installing untested plugin updates!
 
 [youtube https://www.youtube.com/watch?v=Ye3fC6cdB3A]
 
-<p>Note: WordPress 5.x has been shipped with a new visual editor called Gutenberg. Use WP Staging to check if Gutenberg editor is working as intended on your website and that all used plugins are compatible with that new editor.</p>
-
 = Main Features =
 
-* WP STAGING creates the staging website into a subfolder of your production site like example.com/staging-site.
-* No SASS service. All data belongs to you and stays on your server.
+* WP STAGING clones the whole production site into a subfolder like example.com/staging-site.
 * Easy to use! Create a clone of your site by clicking one button "CREATE NEW STAGING SITE".
+* No Software as a Service - No account needed! All data belong to you only and stay on your server.
 * No server timeouts on huge websites or/and small hosting servers
-* Very fast - Migration process takes only a few seconds or minutes, depending on the website's size and server I/O power.
-* Only administrators can access the staging website. (Login with the same credentials you use on your production site)
-* SEO friendly: The staging website is unavailable to search engines due to a custom login prompt and no-index header.
+* Very fast - Migration and clone process takes only a few seconds or minutes, depending on the website's size and server I/O power.
+* Use the clone as part of your backup strategy
+* Only administrators can access the clone website. (Login with the same credentials you use on your production site)
+* SEO friendly: The clone website is unavailable to search engines due to a custom login prompt and gets the meta entry no-index.
 * The admin bar on the staging website is orange colored and shows clearly when you work on the staging site.
-* All duplicated database tables get a new prefix beginning with wpstg(int)_.
 * Extensive logging features
-* Supports all main web servers including Apache, Nginx, and Microsoft IIS
+* Supports all popular web servers: Apache, Nginx, and Microsoft IIS
 * <strong>[Premium]: </strong>Choose a separate database and select a custom directory for cloning
-* <strong>[Premium]: </strong>Make the staging website available from a subdomain like dev.example.com
-* <strong>[Premium]: </strong>Push & migrate entire staging site inc. all plugins, themes, and media files to production website.
-* <strong>[Premium]: </strong>Define user roles that get access to the staging site only. For instance, clients or external developers.
+* <strong>[Premium]: </strong>Make the clone website available from a subdomain like dev.example.com
+* <strong>[Premium]: </strong>Push & migrate entire clone site inc. all plugins, themes, and media files to production website.
+* <strong>[Premium]: </strong>Define user roles that get access to the clone site only. For instance, clients or external developers.
 * <strong>[Premium]: </strong>Migration and cloning of WordPress multisites
 
-> Note: Some features are Premium. Which means you need WP Staging Pro to use those features. You can [get WP Staging Premium here](https://wp-staging.com)!
+> Note: Some features are Premium. Which means you need WP STAGING Pro to use those features. You can [get WP STAGING Premium here](https://wp-staging.com)!
 
 * New: Compatible with WordFence & All In One WP Security & Firewall
 
@@ -67,7 +65,7 @@ WP Staging can protect your website from being broken or unavailable because of 
 
 <strong>Change your workflow of updating themes and plugins data:</strong>
 
-1. Use WP Staging to clone a production website for staging, testing or backup purposes
+1. Use WP STAGING to clone a production website for staging, testing or backup purposes
 2. Create a backup of your website
 3. Customize theme, configuration, update or install new plugins
 4. Test everything on your staging site and keep a backup of the original site
@@ -87,7 +85,7 @@ an up-to-date copy of your website.
 Some of you might be afraid of installing plugins updates because Your follow the rule "never touch a running system" with having in mind that untested updates are increasing the risk of breaking Your site.
 This is one of the main reasons why WordPress installations are often outdated, not updated at all and insecure because of this non-update behavior.
 
-<strong> It's time to change this, so use "WP Staging" for cloning, backup and migration of WordPress websites</strong>
+<strong> It's time to change this, so use "WP STAGING" for cloning, backup and migration of WordPress websites</strong>
 
 <h3> Can´t I just use my local wordpress development system like xampp / lampp for testing and backup purposes? </h3>
 
@@ -95,17 +93,17 @@ You can test your website locally but if your local hardware and software enviro
 There are some obvious things like differences in the config of PHP and the server you are running but even such non-obvious settings like the amount of RAM or the CPU performance can lead to unexpected results on your production website.
 There are dozens of other possible cause of failure which can not be handled well when you are testing your changes on a local platform only without creating a backup staging site.
 
-This is were WP Staging jumps in... Site cloning, backup and staging site creation simplified!
+This is were WP STAGING jumps in... Site cloning, backup and staging site creation simplified!
 
 <h3>I just want to migrate the database from one installation to another</h3>
 If you want to migrate your local database to an already existing production site you can use a tool like WP Migrate DB.
-WP Staging is intended for creating a staging site with latest data from your production site or creating a backup of it. So it goes the opposite way of WP Migrate DB.
+WP STAGING is intended for creating a staging site with latest data from your production site or creating a backup of it. So it goes the opposite way of WP Migrate DB.
 Both tools are excellent cooperating each other.
 
 <h3>What are the benefits compared to a plugin like Duplicator?</h3>
 I really the Duplicator plugin. It is a great tool for migrating from a development site to production one or from production site to development one and a good tool to create a backup of your WordPress website.
 The downside is that before you can even create an export or backup file with Duplicator a lot of adjustments, manually interventions and requirements are needed before you can start the backup process.
-Duplicator also needs some skills to be able to create a backup and development/staging site, where WP Staging does not need more than a click from you.
+Duplicator also needs some skills to be able to create a backup and development/staging site, where WP STAGING does not need more than a click from you.
 Duplicator is best placed to be a tool for first-time creation of your production site. This is something where it is very handy and powerful.
 
 If you have created a local or web-hosted development site and you need to migrate this site the first time to your production domain than you are doing nothing wrong with using
@@ -136,7 +134,7 @@ After installation, go to the settings page 'Staging' and do your adjustments th
 
 * I can not log in to the staging / backup site
 If you are using a security plugin like All In One WP Security & Firewall you need to install the latest version of WP STAGING to access your cloned backup site.
-Go to WP Staging > Settings and add the slug to the custom login page which you set up in All In One WP Security & Firewall plugin.
+Go to WP STAGING > Settings and add the slug to the custom login page which you set up in All In One WP Security & Firewall plugin.
 
 
 
@@ -156,6 +154,18 @@ https://wp-staging.com
 4. Finish - Access your backup / staging site
 
 == Changelog ==
+
+= 2.7.9 =
+* New: Compatible up to WordPress 5.6
+* Fix: Uninstall function can throw fatal error
+* Fix: Do not write sensitive information into debug.log if debug mode is active
+* Fix: Update notification shown even if there is no more recent version
+* Dev: Memory exhausted during tests
+* Dev: Prefix composer vendor libraries with PHP-Scoper
+* Dev: Add more unit and webdriver tests to improve QA
+* Enh: Change authentication to a combination of nonces and access tokens
+* Enh: Improve tests performance
+* Enh: Add tests for database export and restore
 
 = 2.7.8 =
 * New: Add special admin notice if plugin is not tested with latest WordPress version
@@ -288,14 +298,14 @@ SKIP VERSION
 Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-* New: Add special admin notice if plugin is not tested with latest WordPress version
-* New: Compatible up to WordPress 5.5.2
-* New: Allow deleting of orphaned staging site entries if staging site was deleted manually before
-
-* Fix: Activation hook is not fired after first time installation and wpstg optimizer and cron tasks are not set up
-* Fix: Staging site does not work if database password contains dollar sign in password
-* Fix: Prevent fatal error when the plugin is activated, but there is no permission to create folder wp-content/uploads/wp-staging or wp-content/uploads/wp-staging/logs.
-
-* Dev: Add new DI container implementation
-* Dev: Add composer 2
+* New: Compatible up to WordPress 5.6
+* Fix: Uninstall function can throw fatal error
+* Fix: Do not write sensitive information into debug.log if debug mode is active
+* Fix: Update notification shown even if there is no more recent version
+* Dev: Memory exhausted during tests
+* Dev: Prefix composer vendor libraries with PHP-Scoper
+* Dev: Add more unit and webdriver tests to improve QA
+* Enh: Change authentication to a combination of nonces and access tokens
+* Enh: Improve tests performance
+* Enh: Add tests for database export and restore
 

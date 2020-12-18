@@ -6,8 +6,8 @@ namespace WPStaging\Component\Job;
 
 use DateTime;
 use Exception;
-use WPStaging\Utils\Cache;
-use WPStaging\WPStaging;
+use WPStaging\Core\Utils\Cache;
+use WPStaging\Core\WPStaging;
 
 class ProcessLock
 {
@@ -34,7 +34,7 @@ class ProcessLock
         try {
             $now = new DateTime;
             $expiresAt = new DateTime($this->options->expiresAt);
-            return true === $this->options->isRunning && $now < $expiresAt;
+            return $this->options->isRunning === true && $now < $expiresAt;
         }
         catch (Exception $e) {
             return false;

@@ -1,16 +1,16 @@
 <div class=successfullying-section">
     <h2 id="wpstg-processing-header"><?php echo __("Processing, please wait...", "wp-staging")?></h2>
     <div class="wpstg-progress-bar">
-        <div class="wpstg-progress" id="wpstg-progress-db" style="width:0;overflow: hidden;"></div>
-        <div class="wpstg-progress" id="wpstg-progress-sr" style="width:0;background-color:#3c9ee4;overflow: hidden;"></div>
-        <div class="wpstg-progress" id="wpstg-progress-dirs" style="width:0;background-color:#3a96d7;overflow: hidden;"></div>
-        <div class="wpstg-progress" id="wpstg-progress-files" style="width:0;background-color:#378cc9;overflow: hidden;"></div>
+        <div class="wpstg-progress" id="wpstg-progress-db"></div>
+        <div class="wpstg-progress" id="wpstg-progress-sr"></div>
+        <div class="wpstg-progress" id="wpstg-progress-dirs"></div>
+        <div class="wpstg-progress" id="wpstg-progress-files"></div>
     </div>
-    <div style="clear:both;">
+    <div class="wpstg-clear-both">
         <div id="wpstg-processing-status"></div>
         <div id="wpstg-processing-timer"></div>
     </div>
-    <div style="clear: both;"></div>
+    <div class="wpstg-clear-both"></div>
 </div>
 
 <button type="button" id="wpstg-cancel-cloning" class="wpstg-button wpstg-link-btn wpstg-blue-primary">
@@ -34,7 +34,7 @@
     </h3>
     <?php
     $subDirectory = str_replace( get_home_path(), '', ABSPATH ); 
-    $helper = new \WPStaging\Utils\Helper();
+    $helper = new \WPStaging\Core\Utils\Helper();
     $url = $helper->getHomeUrl() . str_replace('/', '', $subDirectory);
     echo sprintf( __( 'WP Staging successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging' ), $url );
     ?>
@@ -44,7 +44,7 @@
         <?php echo __("BACK", "wp-staging")?>
     </a>
     <a href="<?php echo $url; ?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn wpstg-blue-primary">
-        <?php _e('Open Staging Site', 'wp-staging') ?><span style="font-size: 10px;"><?php _e('(Login with your admin credentials)', 'wp-staging') ?></span>
+        <?php _e('Open Staging Site', 'wp-staging') ?><span style="wpstg-fs-10px"><?php _e('(Login with your admin credentials)', 'wp-staging') ?></span>
     </a>
     <div id="wpstg-success-notice">
         <h3>
@@ -52,7 +52,7 @@
         </h3>
         <ul>
             <li>
-                <strong>1. Post name permalinks on your <span style="font-style:italic;">staging site</span> have been disabled for technical reasons. </strong>
+                <strong>1. Post name permalinks on your <span class="wpstg-font-italic">staging site</span> have been disabled for technical reasons. </strong>
                 <br>
                 Usually this will not affect your staging website. In 99% of all cases you do not need to activate permalinks.
                 <br>
@@ -79,7 +79,7 @@
                     <img src="<?php echo $this->url . "/img/admin_dashboard.png" ?>">
                     <br>
                     On the fronpage the site name also changed to <br>
-                    <strong style="font-style:italic;">
+                    <strong class="wpstg-font-italic">
                         "STAGING - <span class="wpstg-clone-name"><?php echo get_bloginfo("name")?></span>"
                     </strong>.
                 </p>

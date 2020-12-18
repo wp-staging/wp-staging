@@ -2,11 +2,11 @@
 
 namespace WPStaging\Backend\Upgrade;
 
-use WPStaging\WPStaging;
-use WPStaging\Utils\Logger;
-use WPStaging\Utils\IISWebConfig;
-use WPStaging\Utils\Htaccess;
-use WPStaging\Utils\Filesystem;
+use WPStaging\Core\WPStaging;
+use WPStaging\Core\Utils\Logger;
+use WPStaging\Core\Utils\IISWebConfig;
+use WPStaging\Core\Utils\Htaccess;
+use WPStaging\Core\Utils\Filesystem;
 
 /**
  * Upgrade Class
@@ -59,12 +59,12 @@ class Upgrade {
     public function __construct() {
 
         // add wpstg_weekly_event to cron events
-        $this->cron = new \WPStaging\Cron\Cron;
+        $this->cron = new \WPStaging\Core\Cron\Cron;
 
         // Previous version
         $this->previousVersion = preg_replace( '/[^0-9.].*/', '', get_option( 'wpstg_version' ) );
 
-        $this->settings = ( object ) get_option( "wpstg_settings", array() );
+        $this->settings = ( object ) get_option( "wpstg_settings", [] );
 
         // Logger
         $this->logger = new Logger;
@@ -91,9 +91,9 @@ class Upgrade {
         if( version_compare( $this->previousVersion, '2.5.9', '<' ) ) {
 
             // Current options
-            $sites = get_option( "wpstg_existing_clones_beta", array() );
+            $sites = get_option( "wpstg_existing_clones_beta", [] );
 
-            $new = array();
+            $new = [];
 
             // Fix keys. Replace white spaces with dash character
             foreach ( $sites as $oldKey => $site ) {
@@ -109,8 +109,8 @@ class Upgrade {
         if( version_compare( $this->previousVersion, '2.4.4', '<' ) ) {
             // Add htaccess to wp staging uploads folder
             $htaccess = new Htaccess();
-            $htaccess->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . '.htaccess' );
-            $htaccess->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'logs/.htaccess' );
+            $htaccess->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . '.htaccess' );
+            $htaccess->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'logs/.htaccess' );
 
             // Add litespeed htaccess to wp root folder
             if( extension_loaded( 'litespeed' ) ) {
@@ -119,13 +119,13 @@ class Upgrade {
 
             // Create empty index.php in wp staging uploads folder
             $filesystem = new Filesystem();
-            $filesystem->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'index.php', "<?php // silence" );
-            $filesystem->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'logs/index.php', "<?php // silence" );
+            $filesystem->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'index.php', "<?php // silence" );
+            $filesystem->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'logs/index.php', "<?php // silence" );
 
             // create web.config file for IIS in wp staging uploads folder
             $webconfig = new IISWebConfig();
-            $webconfig->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'web.config' );
-            $webconfig->create( trailingslashit( \WPStaging\WPStaging::getContentDir() ) . 'logs/web.config' );
+            $webconfig->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'web.config' );
+            $webconfig->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'logs/web.config' );
         }
     }
 
@@ -144,9 +144,9 @@ class Upgrade {
      */
     private function upgradeElements() {
         // Current options
-        $sites = get_option( "wpstg_existing_clones_beta", array() );
+        $sites = get_option( "wpstg_existing_clones_beta", [] );
 
-        if( false === $sites || count( $sites ) === 0 ) {
+        if( $sites === false || count( $sites ) === 0 ) {
             return;
         }
 
@@ -175,7 +175,7 @@ class Upgrade {
         // Try to get staging prefix from wp-config.php of staging site
 
         $path    = ABSPATH . $directory . "/wp-config.php";
-        if( false === ($content = @file_get_contents( $path )) ) {
+        if( ($content = @file_get_contents( $path )) === false ) {
             $prefix = "";
         } else {
             // Get prefix from wp-config.php
@@ -201,7 +201,7 @@ class Upgrade {
      */
     public function upgrade2_0_3() {
         // Previous version lower than 2.0.2 or new install
-        if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.0.2', '<' ) ) {
+        if( $this->previousVersion === false || version_compare( $this->previousVersion, '2.0.2', '<' ) ) {
             $this->upgradeOptions();
             $this->upgradeNotices();
         }
@@ -214,9 +214,9 @@ class Upgrade {
     private function upgrade2_1_2() {
 
         // Current options
-        $clonesBeta = get_option( "wpstg_existing_clones_beta", array() );
+        $clonesBeta = get_option( "wpstg_existing_clones_beta", [] );
 
-        if( false === $this->previousVersion || version_compare( $this->previousVersion, '2.1.7', '<' ) ) {
+        if( $this->previousVersion === false || version_compare( $this->previousVersion, '2.1.7', '<' ) ) {
             foreach ($clonesBeta as $key => $value ) {
                 unset( $clonesBeta[$key] );
                 $clonesBeta[preg_replace( "#\W+#", '-', strtolower( $key ) )] = $value;

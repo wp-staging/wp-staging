@@ -2,12 +2,12 @@
 
 namespace WPStaging\Backend\Modules;
 
-use WPStaging\DI\InjectionAware;
-use WPStaging\Utils\Browser;
-use WPStaging\WPStaging;
-use WPStaging\Utils;
-use WPStaging\Utils\Multisite;
-use WPStaging\Utils\Helper;
+use WPStaging\Core\DI\InjectionAware;
+use WPStaging\Core\Utils\Browser;
+use WPStaging\Core\WPStaging;
+use WPStaging\Core\Utils;
+use WPStaging\Core\Utils\Multisite;
+use WPStaging\Core\Utils\Helper;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -18,7 +18,7 @@ if (!defined("WPINC")) {
  * Class SystemInfo
  * @package WPStaging\Backend\Modules
  */
-class SystemInfo extends InjectionAware
+class SystemInfo
 {
 
     /**
@@ -32,10 +32,7 @@ class SystemInfo extends InjectionAware
      */
     private $helper;
 
-    /**
-     * Initialize class
-     */
-    public function initialize()
+    public function __construct()
     {
         $this->isMultiSite = is_multisite();
         $this->helper = new Utils\Helper();
@@ -163,12 +160,12 @@ class SystemInfo extends InjectionAware
     public function wpstaging()
     {
         // Get wpstg settings
-        $settings = ( object )get_option('wpstg_settings', array());
+        $settings = ( object )get_option('wpstg_settings', []);
 
         // Clones data < 1.1.6.x
-        $clones = ( object )get_option('wpstg_existing_clones', array());
+        $clones = ( object )get_option('wpstg_existing_clones', []);
         // Clones data version > 2.x
-        $clonesBeta = get_option('wpstg_existing_clones_beta', array());
+        $clonesBeta = get_option('wpstg_existing_clones_beta', []);
 
 
         $output = "-- WP Staging Settings" . PHP_EOL . PHP_EOL;
@@ -267,16 +264,16 @@ class SystemInfo extends InjectionAware
 
         // Send request
         $response = wp_remote_post(
-            "https://www.paypal.com/cgi-bin/webscr", array(
+            "https://www.paypal.com/cgi-bin/webscr", [
                 "sslverify" => false,
                 "timeout" => 60,
                 "user-agent" => "WPSTG/" . WPStaging::getVersion(),
-                "body" => array("cmd" => "_notify-validate")
-            )
+                "body" => ["cmd" => "_notify-validate"]
+            ]
         );
 
         // Validate it worked
-        if (!is_wp_error($response) && 200 <= $response["response"]["code"] && 300 > $response["response"]["code"]) {
+        if (!is_wp_error($response) && $response["response"]["code"] >= 200 && $response["response"]["code"] < 300) {
             $wpRemotePost = "wp_remote_post() works";
         }
 
@@ -306,7 +303,7 @@ class SystemInfo extends InjectionAware
         $output .= $this->wpRemotePost();
 
         // Table Prefix
-        $wpDB = $this->di->get("wpdb");
+        $wpDB = WPStaging::getInstance()->get("wpdb");
         $tablePrefix = "DB Prefix: " . $wpDB->prefix . ' ';
         $tablePrefix .= "Length: " . strlen($wpDB->prefix) . "   Status: ";
         $tablePrefix .= (strlen($wpDB->prefix) > 16) ? " ERROR: Too long" : " Acceptable";
@@ -381,7 +378,7 @@ class SystemInfo extends InjectionAware
     {
         // Get plugins and active plugins
         $plugins = get_plugins();
-        $activePlugins = get_option("active_plugins", array());
+        $activePlugins = get_option("active_plugins", []);
 
         // Active plugins
         $output = $this->activePlugins($plugins, $activePlugins);
@@ -403,7 +400,7 @@ class SystemInfo extends InjectionAware
         $output = $this->header("Network Active Plugins");
 
         $plugins = wp_get_active_network_plugins();
-        $activePlugins = get_site_option("active_sitewide_plugins", array());
+        $activePlugins = get_site_option("active_sitewide_plugins", []);
 
         foreach ($plugins as $pluginPath) {
             $pluginBase = plugin_basename($pluginPath);
@@ -431,7 +428,7 @@ class SystemInfo extends InjectionAware
         $output = $this->header("Webserver Configuration");
 
         $output .= $this->info("PHP Version:", PHP_VERSION);
-        $output .= $this->info("MySQL Version:", $this->di->get("wpdb")->db_version());
+        $output .= $this->info("MySQL Version:", WPStaging::getInstance()->get("wpdb")->db_version());
         $output .= $this->info("Webserver Info:", $_SERVER["SERVER_SOFTWARE"]);
 
         return apply_filters("wpstg_sysinfo_after_webserver_config", $output);
@@ -513,7 +510,7 @@ class SystemInfo extends InjectionAware
      */
     public function isInstalled($name, $isClass = true)
     {
-        if (true === $isClass) {
+        if ($isClass === true) {
             return (class_exists($name)) ? "Installed" : "Not Installed";
         } else {
             return (extension_loaded($name)) ? "Installed" : "Not Installed";
@@ -527,14 +524,14 @@ class SystemInfo extends InjectionAware
     public function phpExtensions()
     {
         // Important PHP Extensions
-        $version = function_exists('curl_version') ? curl_version() : array('version' => 'Error: not available', 'ssl_version' => 'Error: not available', 'host' => 'Error: not available', 'protocols' => array(), 'features' => array());
+        $version = function_exists('curl_version') ? curl_version() : ['version' => 'Error: not available', 'ssl_version' => 'Error: not available', 'host' => 'Error: not available', 'protocols' => [], 'features' => []];
 
-        $bitfields = Array(
+        $bitfields = [
             'CURL_VERSION_IPV6',
             'CURL_VERSION_KERBEROS4',
             'CURL_VERSION_SSL',
             'CURL_VERSION_LIBZ'
-        );
+        ];
 
         $output = $this->header("PHP Extensions");
 
@@ -585,11 +582,11 @@ class SystemInfo extends InjectionAware
      * @param array $clone
      * @return sting
      */
-    private function getStagingPrefix($clone = array())
+    private function getStagingPrefix($clone = [])
     {
         // Throw error
         $path = ABSPATH . $clone['directoryName'] . DIRECTORY_SEPARATOR . "wp-config.php";
-        if (false === ($content = @file_get_contents($path))) {
+        if (($content = @file_get_contents($path)) === false) {
             return 'Can\'t find staging wp-config.php';
         } else {
 
@@ -619,13 +616,15 @@ class SystemInfo extends InjectionAware
 
         // Get version number of wp staging
         $file = trailingslashit($path) . 'wp-includes/version.php';
-        $versionStaging = file_get_contents($file);
+
+        $version = @file_get_contents($file);
+
+        $versionStaging = empty($version) ? 'unknown' : $version;
 
         preg_match("/\\\$wp_version.*=.*'(.*)';/", $versionStaging, $matches);
 
-        $error = '';
         if (empty($matches[1])) {
-            $error .= "Error: Cannot detect WP version";
+            return "Error: Cannot detect WP version";
         }
         return $matches[1];
     }

@@ -13,6 +13,8 @@ use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
  */
 class Database extends CloningProcess
 {
+    use TotalStepsAreNumberOfTables;
+
     /**
      * @var DatabaseCloningService
      */
@@ -30,7 +32,7 @@ class Database extends CloningProcess
     {
         $this->initializeDbObjects();
         $this->abortIfDirectoryNotEmpty();
-        if (!$this->isExternal()) {
+        if (!$this->isExternalDatabase()) {
             $this->abortIfStagingPrefixEqualsProdPrefix();
         } else {
             $this->abortIfExternalButNotPro();
@@ -39,15 +41,6 @@ class Database extends CloningProcess
         $this->generateDto();
         $this->addMissingTables();
         $this->total = count($this->options->tables);
-    }
-
-    /**
-     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
-     * @return void
-     */
-    protected function calculateTotalSteps()
-    {
-        $this->options->totalSteps = $this->total === 0 ? 1 : $this->total;
     }
 
     /**
@@ -60,12 +53,12 @@ class Database extends CloningProcess
                 $this,
                 $this->stagingDb,
                 $this->productionDb,
-                $this->isExternal(),
+                $this->isExternalDatabase(),
                 $this->isMultisiteAndPro(),
-                $this->isExternal() ? $this->options->databaseServer : null,
-                $this->isExternal() ? $this->options->databaseUser : null,
-                $this->isExternal() ? $this->options->databasePassword : null,
-                $this->isExternal() ? $this->options->databaseDatabase : null
+                $this->isExternalDatabase() ? $this->options->databaseServer : null,
+                $this->isExternalDatabase() ? $this->options->databaseUser : null,
+                $this->isExternalDatabase() ? $this->options->databasePassword : null,
+                $this->isExternalDatabase() ? $this->options->databaseDatabase : null
             )
         );
     }
@@ -86,7 +79,7 @@ class Database extends CloningProcess
         }
 
         // No more steps, finished
-        if ($this->options->currentStep > $this->total || !$this->isRunning() ) {
+        if ($this->options->currentStep > $this->total || !$this->isRunning()) {
             $this->prepareResponse(true, false);
             return false;
         }
@@ -117,7 +110,7 @@ class Database extends CloningProcess
         return (
             $old === $name &&
             (
-                !isset($this->options->job->current, $this->options->job->start) || 0 == $this->options->job->start
+                !isset($this->options->job->current, $this->options->job->start) || $this->options->job->start == 0
             )
         );
     }
@@ -191,11 +184,11 @@ class Database extends CloningProcess
 
         if ($this->isMultisiteAndPro()) {
             // Get name table users from main site e.g. wp_users
-            if ('users' === $this->databaseCloningService->removeDBPrefix($tableName)) {
+            if ($this->databaseCloningService->removeDBPrefix($tableName) === 'users') {
                 $tableName = $this->productionDb->base_prefix . 'users';
             }
             // Get name of table usermeta from main site e.g. wp_usermeta
-            if ('usermeta' === $this->databaseCloningService->removeDBPrefix($tableName)) {
+            if ($this->databaseCloningService->removeDBPrefix($tableName) === 'usermeta') {
                 $tableName = $this->productionDb->base_prefix . 'usermeta';
             }
         }
@@ -222,8 +215,8 @@ class Database extends CloningProcess
      */
     private function isExcludedTable($table)
     {
-        $excludedCustomTables = apply_filters('wpstg_clone_database_tables_exclude', array());
-        $excludedCoreTables = array('blogs', 'blog_versions');
+        $excludedCustomTables = apply_filters('wpstg_clone_database_tables_exclude', []);
+        $excludedCoreTables = ['blogs', 'blog_versions'];
 
         $excludedtables = array_merge($excludedCustomTables, $excludedCoreTables);
 
@@ -252,7 +245,7 @@ class Database extends CloningProcess
         if ($this->isExcludedTable($new)) {
             return false;
         }
-        if (0 != $this->options->job->start) {
+        if ($this->options->job->start != 0) {
             return true;
         }
 
@@ -266,7 +259,7 @@ class Database extends CloningProcess
             $this->returnException($e->getMessage());
             return true;
         }
-        if (0 == $this->options->job->total) {
+        if ($this->options->job->total == 0) {
             $this->finishStep();
             return false;
         }
@@ -296,7 +289,7 @@ class Database extends CloningProcess
      */
     private function abortIfStagingPrefixEqualsProdPrefix()
     {
-        if ($this->getStagingPrefix() === $this->productionDb->prefix) {
+        if ($this->productionDb->prefix === $this->getStagingPrefix()) {
             $error = 'Fatal error 7: The destination database table prefix ' . $this->getStagingPrefix() . ' would be identical to the table prefix of the production site. Please open a support ticket at support@wp-staging.com';
             $this->returnException($error);
             return true;
@@ -311,7 +304,7 @@ class Database extends CloningProcess
      */
     private function getStagingPrefix()
     {
-        if ($this->isExternal()) {
+        if ($this->isExternalDatabase()) {
             $this->options->prefix = !empty($this->options->databasePrefix) ? $this->options->databasePrefix : $this->productionDb->prefix;
             return $this->options->prefix;
         }

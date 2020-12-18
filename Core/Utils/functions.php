@@ -57,33 +57,16 @@ function wpstg_setup_environment()
     // Set maximum backtracking steps
     @ini_set('pcre.backtrack_limit', PHP_INT_MAX);
 
-    // Set binary safe encoding
-//	if ( @function_exists( 'mb_internal_encoding' ) && ( @ini_get( 'mbstring.func_overload' ) & 2 ) ) {
-//		@mb_internal_encoding( 'ISO-8859-1' );
-//	}
 }
 
 /**
- * Escape Windows directory separator
- *
- * @param string $path Path
- *
- * @return string
- */
-function wpstg_escape_windows_directory_separator($path)
-{
-    return preg_replace('/[\\\\]+/', '\\\\\\\\', $path);
-}
-
-/**
- * Replace Windows directory separator
- * Replace backward slash with forward slash directory separator
  * Windows Compatibility Fix
+ * Replace Windows directory separator (Backward slash)
+ * Replace backward slash with forward slash directory separator
+ * Reason: Windows understands backward and forward slash while linux only understands forward slash
  *
- * @param string $path Path
- *
- * @return string
- */
+ * @param string
+ **/
 function wpstg_replace_windows_directory_separator($path)
 {
     return preg_replace('/[\\\\]+/', '/', $path);
@@ -102,7 +85,7 @@ function wpstg_mysql_escape_mimic($input)
         return array_map(__METHOD__, $input);
     }
     if (!empty($input) && is_string($input)) {
-        return str_replace(array('\\', "\0", "\n", "\r", "'", '"', "\x1a"), array('\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'), $input);
+        return str_replace(['\\', "\0", "\n", "\r", "'", '"', "\x1a"], ['\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'], $input);
     }
 
     return $input;
@@ -150,7 +133,7 @@ function wpstg_is_valid_date($date, $format = 'Y-m-d')
 {
     $d = DateTime::createFromFormat($format, $date);
     // The Y ( 4 digits year ) returns TRUE for any integer with any number of digits so changing the comparison from == to === fixes the issue.
-    return $d && $d->format($format) === $date;
+    return $d && $date === $d->format($format);
 }
 
 /**
@@ -170,7 +153,7 @@ function wpstg_urldecode($data)
     }
 
     if (is_array($data)) {
-        $array = array();
+        $array = [];
         foreach ($data as $string) {
             $array[] = urldecode($string);
         }
@@ -201,7 +184,7 @@ function wpstg_is_stagingsite()
 function wpstg_get_memory_in_bytes($memory)
 {
     // Handle unlimited ones
-    if (1 > (int)$memory) {
+    if ((int)$memory < 1) {
         //return (int) $memory;
         // 128 MB default value
         return (int)134217728;
@@ -241,10 +224,11 @@ function wpstg_unique_constraint($query)
 }
 
 /**
- * Get relative path to the uploads folder, can be a custom folder e.g assets or default folder wp-content/uploads
+ * Get root relative path to the uploads folder, can be a custom folder e.g 'assets' or default folder 'wp-content/uploads'
  * @return string
+ * @todo delete
  */
-function wpstg_get_rel_upload_dir()
+/*function wpstg_get_rel_upload_dir()
 {
     // Get upload directory information. Default is ABSPATH . 'wp-content/uploads'
     // Can be customized by populating the db option upload_path or the constant UPLOADS
@@ -255,25 +239,23 @@ function wpstg_get_rel_upload_dir()
     $uploadsAbsPath = trailingslashit($uploads['basedir']);
 
     // Get relative path to the uploads folder, e.g assets
-    //$relPath = rtrim(str_replace( ABSPATH, null, $uploadsAbsPath ), "/\\");
     $relPath = str_replace(ABSPATH, null, $uploadsAbsPath);
 
     return $relPath;
-}
+}*/
 
 /**
  * Get relative path to the uploads folder, can be a custom folder e.g assets or default folder wp-content/uploads
+ *
+ * @deprecated
+ * @see         \WPStaging\Framework\Utils\WpDefaultDirectories::getUploadPath Removed in favor of this.
+ * @todo        Remove this in future versions.
+ *
  * @return string
  */
 function wpstg_get_abs_upload_dir()
 {
-    // Get upload directory information. 
-    $uploads = wp_upload_dir();
-
-    // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
-    $uploadsAbsPath = trailingslashit($uploads['basedir']);
-
-    return $uploadsAbsPath;
+    return (new \WPStaging\Framework\Utils\WpDefaultDirectories())->getUploadPath();
 }
 
 /**
@@ -305,7 +287,7 @@ function wpstg_get_production_hostname()
 function wpstg_starts_with($haystack, $needle)
 {
     $length = strlen($needle);
-    return (substr($haystack, 0, $length) === $needle);
+    return ($needle === substr($haystack, 0, $length));
 }
 
 /**
@@ -340,7 +322,7 @@ function wpstg_get_upload_dir()
     // If multisite (and if not the main site in a post-MU network)
     if (is_multisite() && !(is_main_network() && is_main_site() && defined('MULTISITE'))) {
         // blogs.dir is used on WP 3.5 and earlier
-        if (false !== strpos($baseDir, 'blogs.dir')) {
+        if (strpos($baseDir, 'blogs.dir') !== false) {
             // remove this piece from the basedir: /blogs.dir/2/files
             $uploadDir = wpstg_replace_first_match('/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir);
             $dir = wpstg_replace_windows_directory_separator($uploadDir . '/blogs.dir');
@@ -520,34 +502,13 @@ function wpstg_chown($file, $owner)
  */
 function wpstg_is_local()
 {
-    $localHostname = array('.local', '.test', 'localhost');
+    $localHostname = ['.local', '.test', 'localhost'];
 
     foreach ($localHostname as $hostname) {
-        if (false !== strpos(get_site_url(), $hostname)) {
+        if (strpos(get_site_url(), $hostname) !== false) {
             return true;
         }
     }
 
     return false;
-}
-
-/**
- * Get absolute path to plugins dir.
- * Take into account custom user made path modifications
- * A function with the name wpstg_get_plugins_dir() already exists in 
- * must-use plugin wp-staging-optimizer.php so we've created this one that does the same job.
- *
- * @return string
- * @todo Logic error here. If WP_CONTENT_DIR or WP_PLUGIN_DIR do not exists no value is returned.
- * Does not throw error because WP_PLUGIN_DIR is defined with default value in WP core.
- *
- */
-function wpstg_get_plugins_dir_core()
-{
-    if (defined('WP_PLUGIN_DIR')) {
-	$pluginsDir = trailingslashit(WP_PLUGIN_DIR);
-    } else if (defined('WP_CONTENT_DIR')) {
-	$pluginsDir = trailingslashit(WP_CONTENT_DIR).'plugins/';
-    }
-    return $pluginsDir;
 }

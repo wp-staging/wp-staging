@@ -25,7 +25,7 @@ class Logs extends Job
      */
     protected function getCloneFileName()
     {
-        return (null === $this->clone) ? $this->options->clone : $this->clone;
+        return ($this->clone === null) ? $this->options->clone : $this->clone;
     }
 
     /**

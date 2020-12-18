@@ -45,7 +45,7 @@ class BufferedCacheStorage implements StorageInterface
             return;
         }
 
-        if (0 === $this->size()) {
+        if ($this->size() === 0) {
             $this->cache->delete();
         }
     }

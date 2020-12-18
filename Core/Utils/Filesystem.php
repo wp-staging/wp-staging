@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
 // No Direct Access
 if( !defined( "WPINC" ) ) {

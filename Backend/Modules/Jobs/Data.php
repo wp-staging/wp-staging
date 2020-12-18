@@ -15,8 +15,10 @@ use WPStaging\Framework\CloningProcess\Data\UpdateWpConfigConstants;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpConfigTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpOptionsTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable;
-use WPStaging\Utils\Helper;
+use WPStaging\Core\Utils\Helper;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
  * Class Data
@@ -53,7 +55,7 @@ class Data extends CloningProcess
     public function initialize()
     {
         $this->initializeDbObjects();
-        //$this->stagingDb->prefix = $this->options->databasePrefix;
+
         $this->prefix = $this->options->prefix;
 
         $this->getTables();
@@ -63,7 +65,7 @@ class Data extends CloningProcess
         $this->baseUrl = (new Helper())->getBaseUrl();
 
         // Reset current step
-        if (0 == $this->options->currentStep) {
+        if ($this->options->currentStep == 0) {
             $this->options->currentStep = 0;
         }
     }
@@ -93,18 +95,18 @@ class Data extends CloningProcess
             $this,
             $this->stagingDb,
             $this->productionDb,
-            $this->isExternal(),
+            $this->isExternalDatabase(),
             $this->isMultisiteAndPro(),
-            $this->isExternal() ? $this->options->databaseServer : null,
-            $this->isExternal() ? $this->options->databaseUser : null,
-            $this->isExternal() ? $this->options->databasePassword : null,
-            $this->isExternal() ? $this->options->databaseDatabase : null,
+            $this->isExternalDatabase() ? $this->options->databaseServer : null,
+            $this->isExternalDatabase() ? $this->options->databaseUser : null,
+            $this->isExternalDatabase() ? $this->options->databasePassword : null,
+            $this->isExternalDatabase() ? $this->options->databaseDatabase : null,
             $stepNumber,
             $this->prefix,
             $this->tables,
             $this->getOptions()->destinationDir,
             $this->getStagingSiteUrl(),
-            $this->getUploadFolder(),
+            (new WpDefaultDirectories())->getRelativeUploadPath(),
             $this->settings,
             $this->homeUrl,
             $this->baseUrl,
@@ -118,7 +120,7 @@ class Data extends CloningProcess
     private function getTables()
     {
         $strings = new Strings();
-        $this->tables = array();
+        $this->tables = [];
         foreach ($this->options->tables as $table) {
             $this->tables[] = $this->options->prefix . $strings->str_replace_first($this->productionDb->prefix, null, $table);
         }
@@ -226,9 +228,9 @@ class Data extends CloningProcess
     {
         if ($this->isMultisiteAndPro()) {
             return (new MultisiteUpdateTablePrefix($this->getCloningDto(3)))->execute();
-        } else {
-            return (new UpdateTablePrefix($this->getCloningDto(3)))->execute();
         }
+
+        return (new UpdateTablePrefix($this->getCloningDto(3)))->execute();
     }
 
     /**
@@ -279,9 +281,9 @@ class Data extends CloningProcess
     {
         if ($this->isMultisiteAndPro()) {
             return (new MultisiteUpdateActivePlugins($this->getCloningDto(8)))->execute();
-        } else {
-            return true;
         }
+
+        return true;
     }
 
     /**
@@ -293,9 +295,9 @@ class Data extends CloningProcess
     {
         if ($this->isMultisiteAndPro()) {
             return (new MultisiteAddNetworkAdministrators($this->getCloningDto(9)))->execute();
-        } else {
-            return true;
         }
+
+        return true;
     }
 
 
@@ -305,19 +307,14 @@ class Data extends CloningProcess
      */
     protected function isSubDir()
     {
-        // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
-        // This is happening much more often than you would expect
-        $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
-        $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
-
-        return $home !== $siteurl;
+        return (new SiteInfo())->isInstalledInSubDir();
     }
 
     /**
      * Get the install sub directory if WP is installed in sub directory
      * @return string
      */
-    protected function getSubDir()
+    protected function getInstallSubDir()
     {
         $home = get_option('home');
         $siteurl = get_option('siteurl');
@@ -326,11 +323,11 @@ class Data extends CloningProcess
             return '';
         }
 
-        return str_replace(array($home, '/'), '', $siteurl);
+        return str_replace([$home, '/'], '', $siteurl);
     }
 
     /**
-     * Return URL to staging site
+     * Return URL of staging site
      * @return string
      */
     protected function getStagingSiteUrl()
@@ -340,33 +337,35 @@ class Data extends CloningProcess
         }
         if ($this->isMultisiteAndPro()) {
             if ($this->isSubDir()) {
-                return trailingslashit($this->baseUrl) . trailingslashit($this->getSubDir()) . $this->options->cloneDirectoryName;
+                return trailingslashit($this->baseUrl) . trailingslashit($this->getInstallSubDir()) . $this->options->cloneDirectoryName;
             }
 
-            // Get the path to the main multisite without appending and trailingslash e.g. wordpress
+            // Get the path to the main multisite without a trailingslash e.g. wordpress
             $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
-            $url = rtrim($this->baseUrl, '/\\') . $multisitePath . $this->options->cloneDirectoryName;
-            return $url;
-        } else {
-            if ($this->isSubDir()) {
-                return trailingslashit($this->homeUrl) . trailingslashit($this->getSubDir()) . $this->options->cloneDirectoryName;
-            }
-
-            return trailingslashit($this->homeUrl) . $this->options->cloneDirectoryName;
+            return rtrim($this->baseUrl, '/\\') . $multisitePath . $this->options->cloneDirectoryName;
         }
+
+        if ($this->isSubDir()) {
+            return trailingslashit($this->homeUrl) . trailingslashit($this->getInstallSubDir()) . $this->options->cloneDirectoryName;
+        }
+
+        return trailingslashit($this->homeUrl) . $this->options->cloneDirectoryName;
     }
 
-    protected function getUploadFolder()
+    /**
+     * @return string|string[]
+     * @todo delete
+     */
+/*    protected function getUploadFolder()
     {
         if ($this->isMultisiteAndPro()) {
             // Get absolute path to uploads folder
             $uploads = wp_upload_dir();
             $basedir = $uploads['basedir'];
             // Get relative upload path
-            $relDir = str_replace(wpstg_replace_windows_directory_separator(ABSPATH), null, wpstg_replace_windows_directory_separator($basedir));
-            return $relDir;
-        } else {
-            return trim(wpstg_get_rel_upload_dir(), '/');
+            return str_replace(wpstg_replace_windows_directory_separator(ABSPATH), null, wpstg_replace_windows_directory_separator($basedir));
         }
-    }
+
+        return trim((new WpDefaultDirectories())->getRelativeUploadDir(), '/');
+    }*/
 }

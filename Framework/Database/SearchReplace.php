@@ -7,19 +7,30 @@ use RuntimeException;
 class SearchReplace
 {
     /** @var array */
-    private $search = [];
+    private $search;
 
     /** @var array */
-    private $replace = [];
+    private $replace;
+
+    /** @var array */
+    private $exclude;
 
     /** @var bool */
-    private $caseSensitive = true;
+    private $caseSensitive;
 
     /** @var string */
     private $currentSearch;
 
     /** @var string */
     private $currentReplace;
+
+    public function __construct(array $search = [], array $replace = [], $caseSensitive = true, array $exclude = [])
+    {
+        $this->search = $search;
+        $this->replace = $replace;
+        $this->caseSensitive = $caseSensitive;
+        $this->exclude = $exclude;
+    }
 
     /**
      * @param array|object|string $data
@@ -34,16 +45,18 @@ class SearchReplace
         $totalSearch = count($this->search);
         $totalReplace = count($this->replace);
         if ($totalSearch !== $totalReplace) {
-            throw new RuntimeException(sprintf(
-                'Can not search and replace. There are %d items to search and %d items to replace',
-                $totalSearch,
-                $totalReplace
-            ));
+            throw new RuntimeException(
+                sprintf(
+                    'Can not search and replace. There are %d items to search and %d items to replace',
+                    $totalSearch,
+                    $totalReplace
+                )
+            );
         }
 
         for ($i = 0; $i < $totalSearch; $i++) {
-            $this->currentSearch = (string) $this->search[$i];
-            $this->currentReplace = (string) $this->replace[$i];
+            $this->currentSearch = (string)$this->search[$i];
+            $this->currentReplace = (string)$this->replace[$i];
             $data = $this->walker($data);
         }
 
@@ -65,6 +78,12 @@ class SearchReplace
     public function setCaseSensitive($caseSensitive)
     {
         $this->caseSensitive = $caseSensitive;
+        return $this;
+    }
+
+    public function setExclude(array $exclude)
+    {
+        $this->exclude = $exclude;
         return $this;
     }
 
@@ -97,20 +116,20 @@ class SearchReplace
         }
 
         // PDO instances can not be serialized or unserialized
-        if (false !== strpos($data, 'O:3:"PDO":0:')) {
+        if (strpos($data, 'O:3:"PDO":0:') !== false) {
             return $data;
         }
 
         // DateTime object can not be unserialized.
         // Would throw PHP Fatal error:  Uncaught Error: Invalid serialization data for DateTime object in
         // Bug PHP https://bugs.php.net/bug.php?id=68889&thanks=6 and https://github.com/WP-Staging/wp-staging-pro/issues/74
-        if (false !== strpos($data, 'O:8:"DateTime":0:')) {
+        if (strpos($data, 'O:8:"DateTime":0:') !== false) {
             return $data;
         }
 
         // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
         $unserialized = @unserialize($data);
-        if (false !== $unserialized) {
+        if ($unserialized !== false) {
             return serialize($this->walker($unserialized));
         }
 
@@ -147,12 +166,13 @@ class SearchReplace
 
     private function strReplace($data)
     {
-        // Add filter
-        $excludes = apply_filters('wpstg_clone_searchreplace_excl', []);
+        // TODO: This filter doesn't really belong in a universally-used class, but usages of the class may need to be checked on whether they need to apply it
+        // $excludes = apply_filters('wpstg_clone_searchreplace_excl', []);
 
         $regexExclude = '';
-        foreach ($excludes as $exclude) {
-            $regexExclude .= $exclude . '(*SKIP)(FAIL)|';
+        foreach ($this->exclude as $excludeString) {
+            //TODO: I changed (FAIL) to (*FAIL) because that's what tutorials say is the right syntax. This may need testing
+            $regexExclude .= $excludeString . '(*SKIP)(*FAIL)|';
         }
 
         $pattern = '#' . $regexExclude . preg_quote($this->currentSearch, null) . '#';

@@ -127,7 +127,7 @@ class UpdateWpConfigConstants extends FileCloningService
              // escaping dollar sign in the value
             $replaceEscaped = addcslashes($replace, '\\$');    
 
-            if (null === ($content = preg_replace(array($this->abspathRegex), $replaceEscaped, $content))) {
+            if (($content = preg_replace([$this->abspathRegex], $replaceEscaped, $content)) === null) {
                 throw new \RuntimeException("Failed to change " . $constant);
             }
 
@@ -155,7 +155,7 @@ class UpdateWpConfigConstants extends FileCloningService
             return $content;
         }
         $replace = "";
-        if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
+        if (($content = preg_replace([$pattern], $replace, $content)) === null) {
             throw new \RuntimeException("Failed to change " . $constant);
         }
         $this->log("Deleted: " . $constant);

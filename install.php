@@ -3,9 +3,10 @@
 namespace WPStaging;
 
 use WPStaging\Backend\Optimizer\Optimizer;
-use WPStaging\Utils\IISWebConfig;
-use WPStaging\Utils\Htaccess;
-use WPStaging\Utils\Filesystem;
+use WPStaging\Bootstrap\V1\WpstgBootstrap;
+use WPStaging\Core\Utils\IISWebConfig;
+use WPStaging\Core\Utils\Htaccess;
+use WPStaging\Core\Utils\Filesystem;
 
 /**
  * Install Class
@@ -15,7 +16,7 @@ class Install
 {
     private $bootstrap;
 
-    public function __construct(\WpstgBootstrapInterface $bootstrap)
+    public function __construct(WpstgBootstrap $bootstrap)
     {
         $this->bootstrap = $bootstrap;
     }
@@ -37,7 +38,7 @@ class Install
     private function initCron()
     {
         // Register cron job.
-        $cron = new \WPStaging\Cron\Cron;
+        $cron = new \WPStaging\Core\Cron\Cron;
         $cron->schedule_event();
     }
 
@@ -57,8 +58,8 @@ class Install
     private function createHtaccess()
     {
         $htaccess = new Htaccess();
-        $htaccess->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . '.htaccess');
-        $htaccess->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . 'logs/.htaccess');
+        $htaccess->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . '.htaccess');
+        $htaccess->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'logs/.htaccess');
 
         if (extension_loaded('litespeed')) {
             $htaccess->createLitespeed(ABSPATH . '.htaccess');
@@ -68,14 +69,14 @@ class Install
     private function createIndex()
     {
         $filesystem = new Filesystem();
-        $filesystem->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . 'index.php', "<?php // silence");
-        $filesystem->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . 'logs/index.php', "<?php // silence");
+        $filesystem->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'index.php', "<?php // silence");
+        $filesystem->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'logs/index.php', "<?php // silence");
     }
 
     private function createWebConfig()
     {
         $webconfig = new IISWebConfig();
-        $webconfig->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . 'web.config');
-        $webconfig->create(trailingslashit(\WPStaging\WPStaging::getContentDir()) . 'logs/web.config');
+        $webconfig->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'web.config');
+        $webconfig->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'logs/web.config');
     }
 }

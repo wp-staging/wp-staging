@@ -2,7 +2,7 @@
 <p>
     <strong style="font-size: 14px;"> <?php _e( 'Mail Delivery Setting', 'wp-staging' ); ?></strong>
     <br/>
-    <?php _e( 'Check to prevent staging site from sending emails.', 'wp-staging' ); ?>
+    <?php _e( 'Prevent staging site from sending emails.', 'wp-staging' ); ?>
 </p>
 <div class="wpstg-form-group">
     <label for="wpstg_disable_emails">

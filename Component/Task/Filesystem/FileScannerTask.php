@@ -7,7 +7,7 @@
 namespace WPStaging\Component\Task\Filesystem;
 
 use Exception;
-use Psr\Log\LoggerInterface;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WPStaging\Component\Task\AbstractTask;
 use WPStaging\Framework\Queue\FinishedQueueException;
@@ -128,7 +128,7 @@ class FileScannerTask extends AbstractTask
         }
 
         // No directories found here, skip it
-        if (null === $files || 1 > $files->count()) {
+        if ($files === null || $files->count() < 1) {
             return;
         }
 
@@ -145,7 +145,7 @@ class FileScannerTask extends AbstractTask
     {
         parent::findRequestDto();
 
-        if (0 < $this->requestDto->getSteps()->getTotal()) {
+        if ($this->requestDto->getSteps()->getTotal() > 0) {
             return;
         }
 
@@ -154,7 +154,7 @@ class FileScannerTask extends AbstractTask
         }, $this->requestDto->getIncluded()));
 
         /** @noinspection NullPointerExceptionInspection */
-        if (1 > $this->scanner->getQueue()->count()) {
+        if ($this->scanner->getQueue()->count() < 1) {
             $this->initiateQueue();
         }
 
@@ -207,7 +207,7 @@ class FileScannerTask extends AbstractTask
         $steps->setTotal($steps->getTotal() + count($this->files));
 
         /** @noinspection NullPointerExceptionInspection */
-        if (0 < $this->scanner->getQueue()->count()) {
+        if ($this->scanner->getQueue()->count() > 0) {
             return;
         }
 

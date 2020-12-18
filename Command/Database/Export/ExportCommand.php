@@ -7,7 +7,7 @@ namespace WPStaging\Command\Database\Export;
 
 use Exception;
 use WPStaging\Pro\Library\Mysqldump\Mysqldump;
-use Psr\Log\LoggerInterface;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Command\CommandInterface;
 

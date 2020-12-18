@@ -5,7 +5,7 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 class UpdateWpConfigTablePrefix extends FileCloningService
 {
@@ -26,7 +26,7 @@ class UpdateWpConfigTablePrefix extends FileCloningService
         $replacement = '$table_prefix = \'' . $prefix . '\'; // Changed by WP Staging';
         $content = preg_replace($pattern, $replacement, $content);
 
-        if (null === $content) {
+        if ($content === null) {
             throw new FatalException("Failed to update table_prefix in {$path}. Regex error", Logger::TYPE_ERROR);
         }
 

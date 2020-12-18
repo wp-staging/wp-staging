@@ -1,5 +1,5 @@
 <?php
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -7,11 +7,11 @@ if (!defined("WPINC"))
     die;
 }
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
 /**
  * Class Directories
- * @package WPStaging\Utils
+ * @package WPStaging\Core\Utils
  */
 class Directories
 {
@@ -49,7 +49,7 @@ class Directories
         $path       = realpath($path);
 
         // Invalid path
-        if (false === $path)
+        if ($path === false)
         {
             return null;
         }

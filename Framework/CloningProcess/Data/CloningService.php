@@ -5,7 +5,7 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 abstract class CloningService
 {

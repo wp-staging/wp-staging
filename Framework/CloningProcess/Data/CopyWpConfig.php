@@ -5,7 +5,7 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 class CopyWpConfig extends FileCloningService
 {
@@ -93,7 +93,7 @@ class CopyWpConfig extends FileCloningService
      */
     protected function alterWpConfig($source)
     {
-        if (false === ($content = file_get_contents($source))) {
+        if (($content = file_get_contents($source)) === false) {
             return false;
         }
 
@@ -114,7 +114,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         $content = str_replace($search, $replace, $content);
 
-        if (false === @wpstg_put_contents($source, $content)) {
+        if (@wpstg_put_contents($source, $content) === false) {
             $this->log("Can't save wp-config.php", Logger::TYPE_ERROR);
             return false;
         }
@@ -135,7 +135,7 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
         }
 
 
-        if (false === ($content = file_get_contents($source))) {
+        if (($content = file_get_contents($source)) === false) {
             $this->log("Can not read {$source}", Logger::TYPE_INFO);
             return false;
         }

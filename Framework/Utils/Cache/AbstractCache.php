@@ -7,7 +7,7 @@
 namespace WPStaging\Framework\Utils\Cache;
 
 
-use Symfony\Component\Filesystem\Exception\IOException;
+use WPStaging\Vendor\Symfony\Component\Filesystem\Exception\IOException;
 use WPStaging\Framework\Adapter\Directory;
 
 abstract class AbstractCache
@@ -140,11 +140,11 @@ abstract class AbstractCache
      */
     protected function isExpired()
     {
-        if (-1 === $this->lifetime) {
+        if ($this->lifetime === -1) {
             return false;
         }
 
-        return time() - filemtime($this->filePath) >= $this->lifetime;
+        return $this->lifetime <= time() - filemtime($this->filePath);
     }
 
     private function initializeFilePath()

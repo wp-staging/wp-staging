@@ -3,7 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
 abstract class CloningProcess extends JobExecutable
 {
@@ -23,7 +23,7 @@ abstract class CloningProcess extends JobExecutable
     {
         $this->productionDb = WPStaging::getInstance()->get("wpdb");
 
-        if ($this->isExternal()) {
+        if ($this->isExternalDatabase()) {
             $this->setExternalDatabase();
         } else {
             $this->setLocalDatabase();
@@ -80,11 +80,17 @@ abstract class CloningProcess extends JobExecutable
         return true;
     }
 
-    protected function isExternal()
+    /**
+     * @return bool
+     */
+    protected function isExternalDatabase()
     {
         return !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
     }
 
+    /**
+     * @return bool
+     */
     protected function isMultisiteAndPro()
     {
         return defined('WPSTGPRO_VERSION') && is_multisite();

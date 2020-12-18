@@ -6,36 +6,8 @@ use RuntimeException;
 
 class Directory
 {
-
-    /** @var string */
-    private $domain;
-
-    /** @var string */
-    private $slug;
-
     /** @var string|null */
     private $uploadDir;
-
-    /**
-     * Domain: wp-staging
-     * Slug: wp-staging | wp-staging-pro
-     *
-     * @param string $domain
-     * @param string $slug
-     */
-    public function __construct($domain, $slug)
-    {
-        $this->domain = $domain;
-        $this->slug = $slug;
-    }
-
-    /**
-     * @return string
-     */
-    public function getPluginDirectory()
-    {
-        return sprintf('%s/%s/', WP_PLUGIN_DIR, $this->slug);
-    }
 
     /**
      * @noinspection PhpUnused
@@ -43,8 +15,7 @@ class Directory
      */
     public function getCacheDirectory()
     {
-        $directory = sprintf('%scache', $this->getPluginUploadsDirectory());
-        return trailingslashit($directory);
+        return $this->getPluginUploadsDirectory() . 'cache/';
     }
 
     /**
@@ -53,13 +24,12 @@ class Directory
      */
     public function getLogDirectory()
     {
-        $directory = sprintf('%s%s/logs', $this->getUploadsDirectory(), $this->domain);
-        return trailingslashit($directory);
+        return $this->getPluginUploadsDirectory() . $this->getDomain() . 'logs/';
     }
 
     public function getPluginUploadsDirectory()
     {
-        return trailingslashit($this->getUploadsDirectory() . $this->domain);
+        return trailingslashit($this->getUploadsDirectory() . $this->getDomain());
     }
 
     /**
@@ -89,18 +59,11 @@ class Directory
 
     public function getDomain()
     {
-        return $this->domain;
+        return WPSTG_PLUGIN_DOMAIN;
     }
 
     public function getSlug()
     {
-        return $this->slug;
-    }
-
-    public function findPluginDirectoryName()
-    {
-        $dir = ltrim(str_replace([WP_PLUGIN_DIR, '\\'], [null, '/'], __DIR__), '/');
-        $parts = explode('/', $dir);
-        return $parts && isset($parts[0])? $parts[0] : null;
+	    return WPSTG_PLUGIN_SLUG;
     }
 }

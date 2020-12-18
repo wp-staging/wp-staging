@@ -8,12 +8,12 @@ namespace WPStaging\Component\Job;
 use WPStaging\Component\Task\AbstractTask;
 use WPStaging\Component\Task\TaskInterface;
 use WPStaging\Component\Task\TaskResponseDto;
-use WPStaging\Framework\Container\Container;
 use WPStaging\Framework\Queue\Queue;
 use WPStaging\Framework\Queue\Storage\CacheStorage;
 use WPStaging\Framework\Queue\Storage\StorageInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Repository\SettingsRepository;
+use WPStaging\Core\WPStaging;
 
 abstract class AbstractQueueJob extends AbstractJob
 {
@@ -29,12 +29,11 @@ abstract class AbstractQueueJob extends AbstractJob
     /** @var TaskInterface */
     protected $currentTask;
 
-    public function __construct(Container $container)
+    public function __construct()
     {
-        parent::__construct($container);
         $this->setQueue();
 
-        $this->cache = clone $container->get(Cache::class);
+        $this->cache = clone WPStaging::getInstance()->get(Cache::class);
         $this->cache->setLifetime(HOUR_IN_SECONDS);
         $this->cache->setFilename('job_' . $this->getJobName());
         $this->cache->setPath(trailingslashit($this->cache->getPath() . $this->getJobName()));
@@ -95,7 +94,7 @@ abstract class AbstractQueueJob extends AbstractJob
 
     protected function setUp()
     {
-        if (!empty($_POST['reset']) && (true === $_POST['reset'] || 'true' === $_POST['reset'])) {
+        if (!empty($_POST['reset']) && ($_POST['reset'] === true || $_POST['reset'] === 'true')) {
             /** @noinspection DynamicInvocationViaScopeResolutionInspection */
             AbstractJob::clean();
         }
@@ -112,13 +111,13 @@ abstract class AbstractQueueJob extends AbstractJob
         }
 
         // TODO RPoC Hack
-        $this->dto->setStatusCheck(!empty($_GET['action']) && 'wpstg--snapshots--status' === $_GET['action']);
+        $this->dto->setStatusCheck(!empty($_GET['action']) && $_GET['action'] === 'wpstg--snapshots--status');
 
         if ($this->dto->isStatusCheck()) {
             return;
         }
 
-        if (null === $this->dto->getId()) {
+        if ($this->dto->getId() === null) {
             $this->dto->setId(time());
         }
 
@@ -133,7 +132,7 @@ abstract class AbstractQueueJob extends AbstractJob
 
         $this->dto->setInit(false);
         /** @var AbstractTask currentTask */
-        $this->currentTask = $this->get($this->queue->pop());
+        $this->currentTask = WPStaging::getInstance()->get($this->queue->pop());
         if (!$this->currentTask) {
             return;
         }
@@ -141,7 +140,7 @@ abstract class AbstractQueueJob extends AbstractJob
         $this->currentTask->setJobName($this->getJobName());
 
         /** @var SettingsRepository $repoSettings */
-        $repoSettings = $this->get(SettingsRepository::class);
+        $repoSettings = WPStaging::getInstance()->get(SettingsRepository::class);
         $settings = $repoSettings->find();
         $this->currentTask->setDebug($settings ? $settings->isDebug() : false);
     }
@@ -159,7 +158,7 @@ abstract class AbstractQueueJob extends AbstractJob
     protected function provideQueueStorage()
     {
         /** @var CacheStorage $cacheStorage */
-        $cacheStorage = $this->get(CacheStorage::class);
+        $cacheStorage = WPStaging::getInstance()->get(CacheStorage::class);
         $cache = $cacheStorage->getCache();
         /** @noinspection NullPointerExceptionInspection */
         $cache->setPath(trailingslashit($cache->getPath() . $this->getJobName()));
@@ -188,7 +187,7 @@ abstract class AbstractQueueJob extends AbstractJob
             $this->queue->prepend($className);
         }
 
-        if ($response->isStatus() && 0 === $this->queue->count()) {
+        if ($response->isStatus() && $this->queue->count() === 0) {
             $this->dto->setFinished(true);
             return $response;
         }

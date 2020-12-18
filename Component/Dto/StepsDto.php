@@ -55,7 +55,7 @@ class StepsDto extends AbstractDto
         }
 
         $percentage = (int) round(($this->current / $this->total) * 100);
-        return (100 < $percentage) ? 100 : $percentage;
+        return ($percentage > 100) ? 100 : $percentage;
     }
 
     public function incrementCurrentStep()
