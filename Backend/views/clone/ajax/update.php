@@ -1,16 +1,16 @@
 <div class=successfullying-section">
     <h2 id="wpstg-processing-header"><?php echo __("Processing, please wait...", "wp-staging")?></h2>
     <div class="wpstg-progress-bar">
-        <div class="wpstg-progress" id="wpstg-progress-db" style="width:0;overflow: hidden;"></div>
-        <div class="wpstg-progress" id="wpstg-progress-sr" style="width:0;background-color:#3c9ee4;overflow: hidden;"></div>
-        <div class="wpstg-progress" id="wpstg-progress-dirs" style="width:0;background-color:#3a96d7;overflow: hidden;"></div>
-        <div class="wpstg-progress" id="wpstg-progress-files" style="width:0;background-color:#378cc9;overflow: hidden;"></div>
+        <div class="wpstg-progress" id="wpstg-progress-db"></div>
+        <div class="wpstg-progress" id="wpstg-progress-sr"></div>
+        <div class="wpstg-progress" id="wpstg-progress-dirs"></div>
+        <div class="wpstg-progress" id="wpstg-progress-files"></div>
     </div>
-    <div style="clear:both;">
+    <div class="wpstg-clear-both">
         <div id="wpstg-processing-status"></div>
         <div id="wpstg-processing-timer"></div>
     </div>
-    <div style="clear: both;"></div>
+    <div class="wpstg-clear-both"></div>
 </div>
 
 <button type="button" id="wpstg-cancel-cloning-update" class="wpstg-link-btn button-primary">

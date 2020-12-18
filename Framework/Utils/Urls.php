@@ -22,7 +22,7 @@ class Urls {
             restore_current_blog();
         }
 
-        if( !in_array( $scheme, array('http', 'https', 'relative') ) ) {
+        if( !in_array( $scheme, ['http', 'https', 'relative'] ) ) {
             if( is_ssl())
                 $scheme = 'https';
             else

@@ -34,7 +34,7 @@ class File extends SplFileObject
     {
         mbstring_binary_safe_encoding();
         $strLen = strlen($str);
-        $writtenBytes = null !== $length ? $this->fwrite($str, $length) : $this->fwrite($str);
+        $writtenBytes = $length !== null ? $this->fwrite($str, $length) : $this->fwrite($str);
         reset_mbstring_encoding();
 
         if ($strLen !== $writtenBytes) {
@@ -53,7 +53,7 @@ class File extends SplFileObject
         $this->seek(PHP_INT_MAX);
         $lastLine = $this->key();
         $offset = $lastLine - $lines;
-        if (0 > $offset) {
+        if ($offset < 0) {
             $offset = 0;
         }
 

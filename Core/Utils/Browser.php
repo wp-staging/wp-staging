@@ -1,5 +1,5 @@
 <?php
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
 	/**
 	 * Modified to remove var
@@ -249,7 +249,7 @@ namespace WPStaging\Utils;
 		* @param string $browserName
 		* @return True if the browser is the specified browser
 		*/
-		function isBrowser($browserName) { return( 0 == strcasecmp($this->_browser_name, trim($browserName))); }
+		function isBrowser($browserName) { return( strcasecmp($this->_browser_name, trim($browserName)) == 0); }
 
 		/**
 		* The name of the browser.  All return types are from the class contants
@@ -564,12 +564,12 @@ namespace WPStaging\Utils;
 		    	if( stripos($this->_agent,'msnb') !== false ) {
 			    	$aresult = explode(' ',stristr(str_replace(';','; ',$this->_agent),'MSN'));
 				    $this->setBrowser( $this->BROWSER_MSN );
-				    $this->setVersion(str_replace(array('(',')',';'),'',$aresult[1]));
+				    $this->setVersion(str_replace(['(',')',';'],'',$aresult[1]));
 				    return true;
 		    	}
 		    	$aresult = explode(' ',stristr(str_replace(';','; ',$this->_agent),'msie'));
 		    	$this->setBrowser( $this->BROWSER_IE );
-		    	$this->setVersion(str_replace(array('(',')',';'),'',$aresult[1]));
+		    	$this->setVersion(str_replace(['(',')',';'],'',$aresult[1]));
 		    	return true;
 		    }
 		    // Test for Pocket IE
@@ -670,7 +670,7 @@ namespace WPStaging\Utils;
 		    if( stripos($this->_agent,'NetPositive') !== false ) {
 			    $aresult = explode('/',stristr($this->_agent,'NetPositive'));
 			    $aversion = explode(' ',$aresult[1]);
-			    $this->setVersion(str_replace(array('(',')',';'),'',$aversion[0]));
+			    $this->setVersion(str_replace(['(',')',';'],'',$aversion[0]));
 			    $this->setBrowser($this->BROWSER_NETPOSITIVE);
 			    return true;
 		    }

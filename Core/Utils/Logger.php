@@ -7,14 +7,14 @@
  * Todo: Replace all instances of Strings with actual "string"
  */
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
-use Psr\Log\LoggerInterface;
-use Psr\Log\LogLevel;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
+use WPStaging\Vendor\Psr\Log\LogLevel;
 
 /**
  * Class Logger
- * @package WPStaging\Utils
+ * @package WPStaging\Core\Utils
  */
 class Logger implements LoggerInterface
 {
@@ -46,7 +46,7 @@ class Logger implements LoggerInterface
      * Messages to log
      * @var array
      */
-    private $messages       = array();
+    private $messages       = [];
 
     /**
      * Forced filename for the log
@@ -73,7 +73,7 @@ class Logger implements LoggerInterface
         else
         {
 
-            $this->logDir = \WPStaging\WPStaging::getContentDir() . "logs" . DIRECTORY_SEPARATOR;
+            $this->logDir = \WPStaging\Core\WPStaging::getContentDir() . "logs" . DIRECTORY_SEPARATOR;
 
         }
 
@@ -119,11 +119,11 @@ class Logger implements LoggerInterface
      */
     public function add($message, $type = self::TYPE_ERROR)
     {
-        $this->messages[] = array(
+        $this->messages[] = [
             "type"      => $type,
             "date"      => date("Y/m/d H:i:s"),
             "message"   => $message
-        );
+        ];
     }
 
     /**
@@ -155,10 +155,12 @@ class Logger implements LoggerInterface
         $messageString = '';
         foreach ($this->messages as $message)
         {
-            $messageString .= "[{$message["type"]}]-[{$message["date"]}] {$message["message"]}".PHP_EOL;
+            if (is_array($message)) {
+                $messageString .= "[{$message["type"]}]-[{$message["date"]}] {$message["message"]}" . PHP_EOL;
+            }
         }
 
-        if (1 > strlen($messageString))
+        if (strlen($messageString) < 1)
         {
             return true;
         }
@@ -185,9 +187,9 @@ class Logger implements LoggerInterface
     public function getLogFile($fileName = null)
     {
         // Default
-        if (null === $fileName)
+        if ($fileName === null)
         {
-            $fileName = (null !== $this->fileName) ? $this->fileName : date("Y_m_d");
+            $fileName = ($this->fileName !== null) ? $this->fileName : date("Y_m_d");
         }
 
         return $this->logDir . $fileName . '.' . $this->logExtension;
@@ -205,7 +207,7 @@ class Logger implements LoggerInterface
     {
         $logFile = $this->logDir . $logFileName . '.' . $this->logExtension;
 
-        if (false === @unlink($logFile))
+        if (@unlink($logFile) === false)
         {
             throw new \Exception("Couldn't delete cache: {$logFileName}. Full Path: {$logFile}");
         }

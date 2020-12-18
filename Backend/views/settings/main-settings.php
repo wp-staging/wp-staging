@@ -1,62 +1,19 @@
 <div class="wpstg_admin">
-    <span class="wp-staginglogo">
-        <img src="<?php
-        echo $this->url . "img/logo_clean_small_212_25.png" ?>">
-    </span>
-
-    <span class="wpstg-version">
-        <?php
-        if (WPStaging\WPStaging::getSlug() === "wp-staging-pro") echo "Pro" ?> Version <?php
-        echo WPStaging\WPStaging::getVersion() ?>
-    </span>
-
-    <div class="wpstg-header">
-        <div class='wpstg-share-button-container'>
-            <div class='wpstg-share-button wpstg-share-button-twitter'
-                 data-share-url="https://wordpress.org/plugins/wp-staging">
-                <div clas='box'>
-                    <a href="https://twitter.com/intent/tweet?button_hashtag=wpstaging&text=Check%20out%20this%20plugin%20for%20creating%20a%20one%20click%20WordPress%20testing%20site&via=wpstg"
-                       target='_blank'>
-                        <span class='wpstg-share'><?php
-                            echo __('Tweet #wpstaging', 'wp-staging'); ?></span>
-                    </a>
-                </div>
-            </div>
-            <div class="wpstg-share-button wpstg-share-button-twitter">
-                <div class="box">
-                    <a href="https://twitter.com/intent/follow?original_referer=http%3A%2F%2Fsrc.wordpress-develop.dev%2Fwp-admin%2Fadmin.php%3Fpage%3Dwpstg-settings&ref_src=twsrc%5Etfw&region=follow_link&screen_name=renehermenau&tw_p=followbutton"
-                       target="_blank">
-                        <span class='wpstg-share'><?php
-                            echo __('Follow @wpstaging', 'wp-staging'); ?></span>
-                    </a>
-                </div>
-            </div>
-            <div class="wpstg-share-button wpstg-share-button-facebook"
-                 data-share-url="https://wordpress.org/plugins/wp-staging">
-                <div class="box">
-                    <a href="https://www.facebook.com/sharer/sharer.php?u=https%3A%2F%2Fwordpress.org%2Fplugins%2Fwp-staging"
-                       target="_blank">
-                        <span class='wpstg-share'><?php
-                            echo __('Share on Facebook', 'wp-staging'); ?></span>
-                    </a>
-                </div>
-            </div>
-        </div>
-    </div>
+    <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>
 
     <ul class="nav-tab-wrapper">
         <?php
-        $tabs = $this->di->get("tabs")->get();
+        $tabs = \WPStaging\Core\WPStaging::getInstance()->get("tabs")->get();
         $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "general";
 
         # Loop through tabs
         foreach ($tabs as $id => $name):
             $url = esc_url(
                 add_query_arg(
-                    array(
+                    [
                         "settings-updated" => false,
                         "tab" => $id
-                    )
+                    ]
                 )
             );
 
@@ -78,22 +35,22 @@
     </ul>
     <h2 class="nav-tab-wrapper"></h2>
 
-    <div id="tab_container" class="tab_container">
+    <div id="wpstg-tab-container" class="tab_container">
         <div class="panel-container">
             <form method="post" action="options.php">
                 <?php
                 settings_fields("wpstg_settings");
 
                 foreach ($tabs as $id => $name):
-                    $form = $this->di->get("forms")->get($id);
+                    $form = \WPStaging\Core\WPStaging::getInstance()->get("forms")->get($id);
 
-                    if (null === $form) {
+                    if ($form === null) {
                         continue;
                     }
                     ?>
                     <div id="<?php
                     echo $id ?>__wpstg_header">
-                        <table class="form-table">
+                        <table class="wpstg-form-table">
                             <thead>
                             <tr class="row">
                                 <th class="row th" colspan="2">

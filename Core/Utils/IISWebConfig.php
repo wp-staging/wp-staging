@@ -1,8 +1,8 @@
 <?php
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
-use WPStaging\Utils\Filesystem;
+use WPStaging\Core\Utils\Filesystem;
 
 // No Direct Access
 if( !defined( "WPINC" ) ) {
@@ -33,7 +33,7 @@ class IISWebConfig {
      * @return boolean
      */
     public function create( $path ) {
-        return $this->filesystem->create( $path, implode( PHP_EOL, array(
+        return $this->filesystem->create( $path, implode( PHP_EOL, [
                     '<configuration>',
                     '<system.webServer>',
                     '<staticContent>',
@@ -47,7 +47,7 @@ class IISWebConfig {
                     '<directoryBrowse enabled="false" />',
                     '</system.webServer>',
                     '</configuration>',
-                ) ) );
+                ] ) );
     }
 
 }

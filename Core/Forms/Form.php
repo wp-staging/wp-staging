@@ -1,17 +1,17 @@
 <?php
-namespace WPStaging\Forms;
+namespace WPStaging\Core\Forms;
 
-use WPStaging\Forms\Elements\Interfaces\InterfaceElement;
-use WPStaging\Forms\Elements\Interfaces\InterfaceElementWithOptions;
+use WPStaging\Core\Forms\Elements\Interfaces\InterfaceElement;
+use WPStaging\Core\Forms\Elements\Interfaces\InterfaceElementWithOptions;
 
 /**
  * Class Form
- * @package WPStaging\Forms
+ * @package WPStaging\Core\Forms
  */
 class Form
 {
 
-    protected $elements = array();
+    protected $elements = [];
 
     public function __construct()
     {

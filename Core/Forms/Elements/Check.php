@@ -1,12 +1,12 @@
 <?php
-namespace WPStaging\Forms\Elements;
+namespace WPStaging\Core\Forms\Elements;
 
 
-use WPStaging\Forms\ElementsWithOptions;
+use WPStaging\Core\Forms\ElementsWithOptions;
 
 /**
  * Class Check
- * @package WPStaging\Forms\Elements
+ * @package WPStaging\Core\Forms\Elements
  */
 class Check extends ElementsWithOptions
 {
@@ -45,7 +45,7 @@ class Check extends ElementsWithOptions
             $this->default &&
             (
                 (is_string($this->default) && $this->default === $value) ||
-                (is_int($value) && (int) $this->default == $value) ||
+                (is_int($value) && $value == (int) $this->default) ||
                 (is_array($this->default) && in_array($value, $this->default))
             )
         )

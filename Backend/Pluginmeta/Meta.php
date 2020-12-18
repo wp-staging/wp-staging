@@ -11,7 +11,7 @@ if( !defined( "WPINC" ) ) {
     die;
 }
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
 
 class Meta {
@@ -24,14 +24,14 @@ class Meta {
     }
     
     public function get(){
-        $hash = new \WPStaging\Utils\Hash($this->get, true);
+        $hash = new \WPStaging\Core\Utils\Hash($this->get, true);
         $get = $hash->getHash();
         return $get;
     }
     
     public function save(){
         $var = '';
-        if('97226140ae745eb0ef4f780c2d40448f' !== ($var = $this->get())){
+        if(($var = $this->get()) !== '97226140ae745eb0ef4f780c2d40448f'){
             update_option($var, true);
         }
         

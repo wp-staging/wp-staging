@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 
 /**
@@ -92,13 +92,13 @@ class PreserveDataSecondStep extends JobExecutable
             )
         );
 
-        if (false === $delete) {
+        if ($delete === false) {
             $this->log("Preserve Data Second Step: Failed to delete wpstg_tmp_data");
         }
-        if (false === $result) {
+        if ($result === false) {
             $this->log("Preserve Data Second Step: Failed to get wpstg_existing_clones_beta");
         }
-        if (false === $insert) {
+        if ($insert === false) {
             $this->log("Preserve Data Second Step: Failed to insert wpstg_tmp_data to wpstg_existing_clones_beta");
         }
         return true;

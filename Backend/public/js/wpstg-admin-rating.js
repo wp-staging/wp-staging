@@ -95,7 +95,6 @@ function wpstgRegisterRatingEvents() {
                 console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
                 console.log(textStatus);
 
-
                 alert(
                     "Unknown error. Please get in contact with us to solve it support@wp-staging.com"
                 );

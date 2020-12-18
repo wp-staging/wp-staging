@@ -31,7 +31,7 @@ class Cancel extends Job {
     * @return array
     */
    protected function createCloneData() {
-      $clone = array();
+      $clone = [];
 
       if( !$this->check() ) {
          return $clone;
@@ -70,13 +70,13 @@ class Cancel extends Job {
     */
    private function returnFinish( $message = '' ) {
 
-      wp_die( json_encode( array(
+      wp_die( json_encode( [
           'job' => 'delete',
           'status' => true,
           'message' => $message,
           'error' => false,
           'delete' => 'finished'
-      ) ) );
+      ] ) );
    }
 
 }

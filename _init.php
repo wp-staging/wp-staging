@@ -1,6 +1,6 @@
 <?php
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
 /**
  * Do not show update notifications for WP STAGING Pro on the staging site
@@ -21,35 +21,26 @@ if (!function_exists('wpstg_filter_plugin_updates')) {
 }
 add_filter('site_transient_update_plugins', 'wpstg_filter_plugin_updates');
 
-/**
- * Path to main WP Staging class
- * Make sure to not redeclare class in case free version has been installed previously
- */
-if (!class_exists('WPStaging\WPStaging')) {
+// Todo: Rename class to WPStaging\Core\WPStaging to comply with PSR-4
+if (!class_exists('WPStaging\Core\WPStaging')) {
     require_once plugin_dir_path(__FILE__) . "Core/WPStaging.php";
 }
 
+// Todo: Rename class to WPStaging\Core\Utils\WPSTG_Requirements_Check to comply with PSR-4
 if (!class_exists('Wpstg_Requirements_Check')) {
     include(__DIR__ . '/Core/Utils/requirements-check.php');
 }
 
-$pluginRequirements = new Wpstg_Requirements_Check(array(
+$pluginRequirements = new Wpstg_Requirements_Check([
     'title' => 'WP STAGING',
     'php' => '5.5',
     'wp' => '4.0',
     'file' => __FILE__,
-));
+]);
 
 if ($pluginRequirements->passes()) {
 
-    // @todo remove legacy custom auto-loader in WPStaging\Utils\Autoloader and use this composer based one instead!
-
-    // Load composer autoloader
-    require_once __DIR__ . '/vendor/autoload.php';
-
-    require_once __DIR__ . '/constants.php';
-
-    $wpStaging = WPStaging::getInstance();
+    $wpStaging = WPStaging::getInstance(new \WPStaging\Framework\DI\Container);
 
     /*
      * Set the WPSTG_COMPATIBLE constant in the container,

@@ -6,8 +6,8 @@
  * @file src/Backend/Pro/views/clone/ajax/external-database.php For the Pro counterpart.
  */
 ?>
-<fieldset disabled style="opacity:0.8;">
-    <p><strong style="font-size: 14px;">
+<fieldset disabled class="wpstg-opacity-80">
+    <p><strong class="wpstg-fs-14">
         <?php _e('Copy Staging Site to Separate Database', 'wp-staging'); ?></strong>
         <br><?php _e('Database must be created manually in advance!', 'wp-staging'); ?>
     </p>

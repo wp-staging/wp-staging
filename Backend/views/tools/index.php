@@ -1,15 +1,17 @@
+<?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>
+    
 <div class="wrap" id="wpstg-tools">
     <ul class="nav-tab-wrapper">
         <?php
-        $tabs       = $this->di->get("tabs")->get();
+        $tabs       = \WPStaging\Core\WPStaging::getInstance()->get("tabs")->get();
         $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "system_info";
 
         # Loop through tabs
         foreach ($tabs as $id => $name):
-            $url = esc_url(add_query_arg(array(
+            $url = esc_url(add_query_arg([
                 "settings-updated"  => false,
                 "tab"               => $id
-            )));
+            ]));
 
             $activeClass = ($activeTab === $id) ? " nav-tab-active" : '';
             ?>

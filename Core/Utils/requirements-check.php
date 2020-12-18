@@ -51,21 +51,21 @@ class Wpstg_Requirements_Check {
 
 		$this->args = wp_parse_args(
 			$args,
-			array(
+			[
 				'title' => '',
 				'php'   => '5.2.4',
 				'wp'    => '3.8',
 				'file'  => null,
-				'i18n'  => array()
-			)
+				'i18n'  => []
+			]
 		);
 
 		$this->args['i18n'] = wp_parse_args(
 			$this->args['i18n'],
-			array(
+			[
 				'php' => 'The &#8220;%1$s&#8221; plugin cannot run on PHP versions older than %2$s. Please contact your host and ask them to upgrade.',
 				'wp'  => 'The &#8220;%1$s&#8221; plugin cannot run on WordPress versions older than %2$s. Please update your WordPress.',
-			)
+			]
 		);
 	}
 
@@ -81,7 +81,7 @@ class Wpstg_Requirements_Check {
 		$passes = $this->php_passes() && $this->wp_passes();
 
 		if ( ! $passes ) {
-			add_action( 'admin_notices', array( $this, 'deactivate' ) );
+			add_action( 'admin_notices', [ $this, 'deactivate' ] );
 		}
 
 		return $passes;
@@ -94,7 +94,7 @@ class Wpstg_Requirements_Check {
 	 * @access public
 	 */
 	public function deactivate() {
-		if ( null !== $this->args['file'] ) {
+		if ( $this->args['file'] !== null ) {
 			deactivate_plugins( plugin_basename( $this->args['file'] ) );
 		}
 	}
@@ -112,7 +112,7 @@ class Wpstg_Requirements_Check {
 			return true;
 		}
 
-		add_action( 'admin_notices', array( $this, 'php_version_notice' ) );
+		add_action( 'admin_notices', [ $this, 'php_version_notice' ] );
 
 		return false;
 	}
@@ -167,7 +167,7 @@ class Wpstg_Requirements_Check {
 			return true;
 		}
 
-		add_action( 'admin_notices', array( $this, 'wp_version_notice' ) );
+		add_action( 'admin_notices', [ $this, 'wp_version_notice' ] );
 
 		return false;
 	}

@@ -76,7 +76,7 @@ class ExportDto
         }
 
         $parts = explode(':', DB_HOST);
-        if (isset($parts[1]) && 0 < (int) $parts[1]) {
+        if (isset($parts[1]) && (int) $parts[1] > 0) {
             return (int) $parts[1];
         }
 

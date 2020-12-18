@@ -2,12 +2,12 @@
 
 namespace WPStaging\Framework\Database;
 
-use Psr\Log\LoggerInterface;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Filesystem\File;
-use WPStaging\Utils\Logger;
+use WPStaging\Core\Utils\Logger;
 
 class DatabaseRestore
 {
@@ -78,6 +78,7 @@ class DatabaseRestore
         while(!$this->stopExecution()) {
             $result = $this->execute();
         }
+
         return $result;
     }
 
@@ -199,11 +200,11 @@ class DatabaseRestore
                 $this->client->error()
             ));
         }
-        if ($isTransactionQuery && false !== $result) {
+        if ($isTransactionQuery && $result !== false) {
             $this->isTransactionStarted = true;
         }
 
-        if ($isCommitQuery && false !== $result) {
+        if ($isCommitQuery && $result !== false) {
             $this->isCommitted = true;
             $this->isTransactionStarted = false;
         }
@@ -294,7 +295,7 @@ class DatabaseRestore
 
         // Line starts with -- or # (to the end of the line) comments
         $first2Chars = substr($query, 0, 2);
-        if ('--' === $first2Chars || strpos($query, '#') === 0) {
+        if ($first2Chars === '--' || strpos($query, '#') === 0) {
             return false;
         }
 
@@ -328,7 +329,7 @@ class DatabaseRestore
      */
     private function maybeStartTransaction($query)
     {
-        if ($this->isTransactionStarted || 0 !== strpos($query, 'INSERT INTO')) {
+        if ($this->isTransactionStarted || strpos($query, 'INSERT INTO') !== 0) {
             return;
         }
 
@@ -373,22 +374,22 @@ class DatabaseRestore
      * @return string
      */
     private function replaceTableCollations($input ) {
-        static $search  = array();
-        static $replace = array();
+        static $search  = [];
+        static $replace = [];
 
         // Replace table collations
         if ( empty( $search ) || empty( $replace ) ) {
             if ( ! $this->wpdb->getClient()->has_cap( 'utf8mb4_520' ) ) {
                 if ( ! $this->wpdb->getClient()->has_cap( 'utf8mb4' ) ) {
-                    $search  = array( 'utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci', 'utf8mb4' );
-                    $replace = array( 'utf8_unicode_ci', 'utf8_unicode_ci', 'utf8' );
+                    $search  = [ 'utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci', 'utf8mb4' ];
+                    $replace = [ 'utf8_unicode_ci', 'utf8_unicode_ci', 'utf8' ];
                 } else {
-                    $search  = array( 'utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci' );
-                    $replace = array( 'utf8mb4_unicode_ci', 'utf8mb4_unicode_ci' );
+                    $search  = [ 'utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci' ];
+                    $replace = [ 'utf8mb4_unicode_ci', 'utf8mb4_unicode_ci' ];
                 }
             } else {
-                $search  = array( 'utf8mb4_0900_ai_ci' );
-                $replace = array( 'utf8mb4_unicode_520_ci' );
+                $search  = [ 'utf8mb4_0900_ai_ci' ];
+                $replace = [ 'utf8mb4_unicode_520_ci' ];
             }
         }
 
@@ -403,14 +404,14 @@ class DatabaseRestore
      */
     protected function replaceTableEngines( $input ) {
         // Set table replace engines
-        $search  = array(
+        $search  = [
             'ENGINE=MyISAM',
             'ENGINE=Aria',
-        );
-        $replace = array(
+        ];
+        $replace = [
             'ENGINE=InnoDB',
             'ENGINE=InnoDB',
-        );
+        ];
 
         return str_ireplace( $search, $replace, $input );
     }
@@ -423,14 +424,14 @@ class DatabaseRestore
      */
     protected function replaceTableRowFormat( $input ) {
         // Set table replace row format
-        $search  = array(
+        $search  = [
             'ENGINE=InnoDB',
             'ENGINE=MyISAM',
-        );
-        $replace = array(
+        ];
+        $replace = [
             'ENGINE=InnoDB ROW_FORMAT=DYNAMIC',
             'ENGINE=MyISAM ROW_FORMAT=DYNAMIC',
-        );
+        ];
 
         return str_ireplace( $search, $replace, $input );
     }

@@ -2,13 +2,13 @@
 
 namespace WPStaging\Framework\Filesystem;
 
-use Psr\Log\LoggerInterface;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
-use Symfony\Component\Filesystem\Exception\IOException;
-use Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
-use Symfony\Component\Finder\Finder;
+use WPStaging\Vendor\Symfony\Component\Filesystem\Exception\IOException;
+use WPStaging\Vendor\Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
+use WPStaging\Vendor\Symfony\Component\Finder\Finder;
 
-class Filesystem
+class Filesystem extends FilterableDirectoryIterator
 {
     /** @var string|null */
     private $path;
@@ -40,7 +40,7 @@ class Filesystem
             ->in($this->findPath($directory))
         ;
 
-        if (null !== $this->depth) {
+        if ($this->depth !== null) {
             $finder = $finder->depth((string) $this->depth);
         }
 
@@ -109,9 +109,7 @@ class Filesystem
         $basePath = trailingslashit($newPath);
         foreach ($finder as $item) {
             if (!$this->exists($item->getPathname())) {
-                if ($this->logger instanceof LoggerInterface) {
-                    $this->logger->warning('Failed to move directory. Directory does not exists' . $item->getPathname());
-                }
+                $this->log('Failed to move directory. Directory does not exists' . $item->getPathname());
                 continue;
             }
 
@@ -135,7 +133,7 @@ class Filesystem
             }
         }
 
-        // Due to rename all files should be deleted so just empty directories left, make sure all of them are deleted.
+        // Due to rename, all files should be deleted so just empty directories left, make sure all of them are deleted.
         // Due to setting shouldStop, this might return false till everything is deleted.
         // This might not be just empty dirs as we can exclude some directories using notPath()
         return $this->delete(null, false);
@@ -157,9 +155,7 @@ class Filesystem
         $renamed = @rename($source, $target);
 
         if (!$renamed) {
-            if ($this->logger instanceof LoggerInterface) {
-                $this->logger->warning(sprintf('Failed to move %s to %s', $source, $target));
-            }
+            $this->log(sprintf('Failed to move %s to %s', $source, $target));
         }
 
         return $renamed;
@@ -202,7 +198,7 @@ class Filesystem
      * @param string $dir
      * @return bool
      */
-   public function isEmptyDir($dir)
+    public function isEmptyDir($dir)
     {
         if (is_dir($dir)) {
             $iterator = new \FilesystemIterator($dir);
@@ -212,23 +208,26 @@ class Filesystem
     }
 
     /**
-     * Delete entire folder including all subfolders and containing files
+     * Delete single file or entire folder including all subfolders and containing files
      * @param null $path
      * @param bool $isUseNotPath
      * @return bool
+     * @todo Make it deprecated and switch it with $this->>deleteNew() as it is more performant and unit tested
      */
     public function delete($path = null, $isUseNotPath = true)
     {
         $path = $this->findPath($path);
         if (!$path) {
+            $this->log('You need to define path to delete');
             throw new RuntimeException('You need to define path to delete');
         }
 
-        if (ABSPATH === $path) {
+        if ($path === ABSPATH) {
+            $this->log('You can not delete WP Root directory');
             throw new RuntimeException('You can not delete WP Root directory');
         }
 
-        if (is_file($path)) {
+        if (is_link($path) || is_file($path)) {
             return unlink($path);
         }
 
@@ -252,11 +251,11 @@ class Filesystem
             }
         }
 
-       foreach ($this->getFileNames() as $fileName) {
+        foreach ($this->getFileNames() as $fileName) {
             $iterator->name($fileName);
         }
 
-       $iteratorHasResults = count($iterator) > 0;
+        $iteratorHasResults = count($iterator) > 0;
 
         if (is_dir($path) && !$iteratorHasResults && $this->isEmptyDir($path)) {
             return rmdir($path);
@@ -269,9 +268,72 @@ class Filesystem
             }
         }
 
-        if(is_dir($path)){
+        if (is_dir($path)){
             return rmdir($path);
         }
+    }
+
+    /**
+     * Delete a whole directory including all sub directories or a file.
+     * A new faster method than $this->delete()
+     * $this->delete() uses the finder method which seems to be very slow compared to native RecursiveIteratorIterator!
+     * @todo replace $this->>delete() with this method if this can fulfill all requirements
+     *
+     * @param string $path
+     * @param bool $deleteSelf making it optional to delete the parent itself, useful during file and dir exclusion
+     * @return bool True if folder or file is deleted or file is empty ($deleteSelf = false); Return False if folder is not empty and execution should be continued
+     */
+    public function deleteNew($path, $deleteSelf = true)
+    {
+        // if $path is link or file, delete it and stop execution
+        if(is_link($path) || is_file($path))
+        {
+            if (!unlink($path)){
+                $this->log('Permission Error: Can not delete file ' . $path);
+                return false;
+            }
+            return true;
+        }
+
+
+        $this->setDirectory($path);
+        $iterator = null;
+        try {
+            $iterator = $this->setIteratorMode(\RecursiveIteratorIterator::CHILD_FIRST)->get();
+        } catch (FilesystemExceptions $e) {
+            $this->log('Permission Error: Can not create recursive iterator for ' . $path);
+            return false;
+        }
+
+        foreach ($iterator as $item) {
+            $result = $this->deleteItem($item);
+            if (!$result || !is_callable($this->shouldStop)) {
+                continue;
+            }
+
+            if (call_user_func($this->shouldStop)) {
+                return false;
+            }
+        }
+
+        // Don't delete the parent main dir itself and finish execution
+        if (!$deleteSelf) {
+            return true;
+        }
+
+        // Folder is not empty. Return false and continue execution if requested
+        if (!$this->isEmptyDir($path)) {
+            return false;
+        }
+        
+        // Delete the empty directory itself and finish execution
+        if (is_dir($path)){
+            if (!rmdir($path)){
+                $this->log('Permission Error: Can not delete directory ' . $path);
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -394,14 +456,6 @@ class Filesystem
     }
 
     /**
-     * @return LoggerInterface|null
-     */
-    public function getLogger()
-    {
-        return $this->logger;
-    }
-
-    /**
      * @param LoggerInterface|null $logger
      * @return self
      */
@@ -410,4 +464,52 @@ class Filesystem
         $this->logger = $logger;
         return $this;
     }
+
+    /**
+     * Delete file or directory
+     * @param \SplFileInfo $item
+     * @return bool
+     */
+    protected function deleteItem($item)
+    {
+        $path = $item->getPathname();
+        // Checks whether that file or directory exists
+        if (!file_exists($path)) {
+            return true;
+        }
+
+        if ($item->isLink()) {
+            if(!unlink($path)) {
+                $this->log('Permission Error: Can not delete link ' . $path);
+                throw new RuntimeException('Permission Error: Can not delete link ' . $path);
+            }
+        } elseif ($item->isDir()) {
+            if (!$this->isEmptyDir($path)) {
+                return false;
+            }
+
+            if (!@rmdir($path)) {
+                $this->log('Permission Error: Can not delete folder ' . $path);
+                throw new RuntimeException('Permission Error: Can not delete folder ' . $path);
+            }
+        } elseif (!$item->isFile()) {
+            return false;
+        } elseif (!unlink($path)) {
+            $this->log('Permission Error: Can not delete file ' . $path);
+            throw new RuntimeException('Permission Error: Can not delete file ' . $path);
+        }
+
+        return true;
+    }
+
+    /**
+     * @param $string
+     */
+    protected function log($string){
+        if ($this->logger instanceof LoggerInterface) {
+            $this->logger->warning($string);
+        }
+    }
+
+
 }

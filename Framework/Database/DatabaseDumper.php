@@ -592,7 +592,7 @@ class DatabaseDumper
                     $this->file->fwrite("START TRANSACTION;\n");
                 }
 
-                $items = array();
+                $items = [];
                 foreach ($row as $key => $value) {
                     $items[] = $this->prepareTableValues($value, $tableColumns[strtolower($key)]);
                 }

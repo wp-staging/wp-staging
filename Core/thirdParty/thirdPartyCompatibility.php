@@ -1,15 +1,13 @@
 <?php
 
-namespace WPStaging\thirdParty;
-
-use WPStaging\DI\InjectionAware;
+namespace WPStaging\Core\thirdParty;
 
 /**
  * Methods to use for third party plugin compatibility
  *
  * @author IronMan
  */
-class thirdPartyCompatibility extends InjectionAware {
+class thirdPartyCompatibility {
 
     /**
      * Define a list of tables which should not run through search & replace method
@@ -17,14 +15,14 @@ class thirdPartyCompatibility extends InjectionAware {
      * @return boolean
      */
     public function isSearchReplaceExcluded( $table ) {
-        $excludedTables = array(
+        $excludedTables = [
             '_cerber_files', // Cerber Security Plugin
-        );
+        ];
 
         $excludedTables = apply_filters( 'wpstg_searchreplace_excl_tables', $excludedTables );
 
         foreach ( $excludedTables as $excludedTable ) {
-            if( false !== strpos( $table, $excludedTable ) ) {
+            if( strpos( $table, $excludedTable ) !== false ) {
                 return true;
             }
         }

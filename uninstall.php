@@ -2,7 +2,6 @@
 
 namespace WPStaging\Backend;
 
-use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Framework\Staging\FirstRun;
 
 /**
@@ -19,37 +18,10 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
-// TODO; remove previous auto-loader, use composer based instead!
-require_once __DIR__ . '/vendor/autoload.php';
-
 class uninstall
 {
-
     public function __construct()
     {
-
-        // Plugin Folder Path
-        if (!defined('WPSTG_PLUGIN_DIR')) {
-            define('WPSTG_PLUGIN_DIR', plugin_dir_path(__FILE__));
-        }
-
-        // WPSTAGING expects some constants to be defined.
-        if (file_exists(trailingslashit(__DIR__) . 'Pro/constants.php')) {
-            include_once trailingslashit(__DIR__) . 'Pro/constants.php';
-        } else {
-            include_once trailingslashit(__DIR__) . 'constants.php';
-        }
-
-        /**
-         * Path to main WP Staging class
-         * Make sure to not redeclare class in case free version has been installed previosly
-         */
-        if (!class_exists('WPStaging\WPStaging')) {
-            require_once plugin_dir_path(__FILE__) . "Core/WPStaging.php";
-        }
-        $wpStaging = \WPStaging\WPStaging::getInstance();
-
-        // Delete our must use plugin
         $this->deleteMuPlugin();
 
         $this->init();
@@ -57,9 +29,9 @@ class uninstall
 
     private function init()
     {
-        $options = json_decode(json_encode(get_option("wpstg_settings", array())));
+        $options = json_decode(json_encode(get_option("wpstg_settings", [])));
 
-        if (isset($options->unInstallOnDelete) && '1' === $options->unInstallOnDelete) {
+        if (isset($options->unInstallOnDelete) && $options->unInstallOnDelete === '1') {
             // Delete options
             delete_option("wpstg_version_upgraded_from");
             delete_option("wpstg_version");
@@ -103,8 +75,14 @@ class uninstall
      */
     private function deleteMuPlugin()
     {
-        $optimizer = new Optimizer;
-        $optimizer->uninstallOptimizer();
+        $muDir = (defined('WPMU_PLUGIN_DIR')) ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
+        $dest = trailingslashit( $muDir ) . 'wp-staging-optimizer.php';
+
+        if( file_exists( $dest ) && !unlink( $dest ) ) {
+            return false;
+        } else {
+            return true;
+        }
     }
 
 }

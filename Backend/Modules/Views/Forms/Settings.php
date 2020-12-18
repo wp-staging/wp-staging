@@ -2,12 +2,12 @@
 
 namespace WPStaging\Backend\Modules\Views\Forms;
 
-use WPStaging\Forms\Elements\Check;
-use WPStaging\Forms\Elements\Numerical;
-use WPStaging\Forms\Elements\Select;
-use WPStaging\Forms\Elements\SelectMultiple;
-use WPStaging\Forms\Elements\Text;
-use WPStaging\Forms\Form;
+use WPStaging\Core\Forms\Elements\Check;
+use WPStaging\Core\Forms\Elements\Numerical;
+use WPStaging\Core\Forms\Elements\Select;
+use WPStaging\Core\Forms\Elements\SelectMultiple;
+use WPStaging\Core\Forms\Elements\Text;
+use WPStaging\Core\Forms\Form;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 
 /**
@@ -19,7 +19,7 @@ class Settings {
    /**
     * @var array
     */
-   private $form = array();
+   private $form = [];
 
    /**
     * @var Tabs
@@ -45,16 +45,16 @@ class Settings {
    private function general() {
       $this->form["general"] = new Form();
 
-      $settings = json_decode( json_encode( get_option( "wpstg_settings", array() ) ) );
+      $settings = json_decode( json_encode( get_option( "wpstg_settings", [] ) ) );
 
       // DB Copy Query Limit
       $element = new Numerical(
-              "wpstg_settings[queryLimit]", array(
+              "wpstg_settings[queryLimit]", [
           "class" => "medium-text",
           "step" => 1,
           "max" => 999999,
           "min" => 0
-              )
+              ]
       );
 
       $this->form["general"]->add(
@@ -63,12 +63,12 @@ class Settings {
       );
       // DB Search & Replace Query Limit
       $element = new Numerical(
-              "wpstg_settings[querySRLimit]", array(
+              "wpstg_settings[querySRLimit]", [
           "class" => "medium-text",
           "step" => 1,
           "max" => 999999,
           "min" => 0
-              )
+              ]
       );
 
       $this->form["general"]->add(
@@ -76,15 +76,15 @@ class Settings {
                       ->setDefault( isset( $settings->querySRLimit ) ? $settings->querySRLimit : 5000  )
       );
 
-      $options = array('1' => '1', '10' => '10', '50' => '50', '250' => '250', '500' => '500', '1000' => '1000');
+      $options = ['1' => '1', '10' => '10', '50' => '50', '250' => '250', '500' => '500', '1000' => '1000'];
       // DB Copy Query Limit
       $element = new Select(
-              "wpstg_settings[fileLimit]", $options, array(
+              "wpstg_settings[fileLimit]", $options, [
           "class" => "medium-text",
           "step" => 1,
           "max" => 999999,
           "min" => 0
-              )
+              ]
       );
 
       $this->form["general"]->add(
@@ -94,12 +94,12 @@ class Settings {
 
       // File Copy Batch Size
       $element = new Numerical(
-              "wpstg_settings[maxFileSize]", array(
+              "wpstg_settings[maxFileSize]", [
           "class" => "medium-text",
           "step" => 1,
           "max" => 999999,
           "min" => 0
-              )
+              ]
       );
 
       $this->form["general"]->add(
@@ -109,12 +109,12 @@ class Settings {
 
       // File Copy Batch Size
       $element = new Numerical(
-              "wpstg_settings[batchSize]", array(
+              "wpstg_settings[batchSize]", [
           "class" => "medium-text",
           "step" => 1,
           "max" => 999999,
           "min" => 0
-              )
+              ]
       );
 
       $this->form["general"]->add(
@@ -124,11 +124,11 @@ class Settings {
 
       // CPU load priority
       $element = new Select(
-              "wpstg_settings[cpuLoad]", array(
+              "wpstg_settings[cpuLoad]", [
           "high" => __("High (fast)", "wp-staging"),
           "medium" => __("Medium (average)", "wp-staging"),
           "low" => __("Low (slow)", "wp-staging")
-              )
+              ]
       );
 
       $this->form["general"]->add(
@@ -138,12 +138,12 @@ class Settings {
 
       // Delay Between Requests
       $element = new Numerical(
-              "wpstg_settings[delayRequests]", array(
+              "wpstg_settings[delayRequests]", [
           "class" => "medium-text",
           "step" => 1,
           "max" => 5,
           "min" => 0
-              )
+              ]
       );
 
       $this->form["general"]->add(
@@ -154,7 +154,7 @@ class Settings {
 
       // Optimizer
       $element = new Check(
-              "wpstg_settings[optimizer]", array('1' => "")
+              "wpstg_settings[optimizer]", ['1' => ""]
       );
 
       $this->form["general"]->add(
@@ -166,7 +166,7 @@ class Settings {
        // Disable admin authorization
        if (!defined('WPSTGPRO_VERSION')) {
            $element = new Check(
-               "wpstg_settings[disableAdminLogin]", array('1' => '')
+               "wpstg_settings[disableAdminLogin]", ['1' => '']
            );
 
            $this->form["general"]->add(
@@ -177,7 +177,7 @@ class Settings {
        // Keep permalinks
        if (defined('WPSTGPRO_VERSION')) {
            $element = new Check(
-               "wpstg_settings[keepPermalinks]", array('1' => '')
+               "wpstg_settings[keepPermalinks]", ['1' => '']
            );
 
            $this->form["general"]->add(
@@ -189,7 +189,7 @@ class Settings {
 
       // Debug Mode
       $element = new Check(
-              "wpstg_settings[debugMode]", array('1' => '')
+              "wpstg_settings[debugMode]", ['1' => '']
       );
 
       $this->form["general"]->add(
@@ -199,7 +199,7 @@ class Settings {
 
       // Remove Data on Uninstall?
       $element = new Check(
-              "wpstg_settings[unInstallOnDelete]", array('1' => '')
+              "wpstg_settings[unInstallOnDelete]", ['1' => '']
       );
 
       $this->form["general"]->add(
@@ -209,7 +209,7 @@ class Settings {
 
       // Check Directory Sizes
       $element = new Check(
-              "wpstg_settings[checkDirectorySize]", array('1' => '')
+              "wpstg_settings[checkDirectorySize]", ['1' => '']
       );
 
       $this->form["general"]->add(
@@ -238,11 +238,11 @@ class Settings {
     * @return array
     */
    private function getUserRoles() {
-      $userRoles = array();
+      $userRoles = [];
       foreach ( get_editable_roles() as $key => $value ) {
          $userRoles[$key] = $key;
       }
-      return array_merge( array('all' => __('Allow access from all visitors', 'wp-staging')), $userRoles );
+      return array_merge( ['all' => __('Allow access from all visitors', 'wp-staging')], $userRoles );
    }
 
    /**
@@ -250,7 +250,7 @@ class Settings {
     * @return array|Form
     */
    public function get( $name = null ) {
-      return (null === $name) ? $this->form : $this->form[$name];
+      return ($name === null) ? $this->form : $this->form[$name];
    }
 
 }

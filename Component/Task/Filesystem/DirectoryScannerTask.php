@@ -8,7 +8,7 @@ namespace WPStaging\Component\Task\Filesystem;
 
 use Exception;
 use InvalidArgumentException;
-use Psr\Log\LoggerInterface;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Component\Task\AbstractTask;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Traits\ResourceTrait;
@@ -121,7 +121,7 @@ class DirectoryScannerTask extends AbstractTask
         }
 
         // No directories found here, skip it
-        if (null === $directories || 1 > $directories->count()) {
+        if ($directories === null || $directories->count() < 1) {
             return;
         }
 
@@ -143,7 +143,7 @@ class DirectoryScannerTask extends AbstractTask
             $this->requestDto->setIncluded([ ABSPATH ]);
         }
 
-        if (0 < $this->requestDto->getSteps()->getTotal()) {
+        if ($this->requestDto->getSteps()->getTotal() > 0) {
             return;
         }
 
@@ -152,12 +152,12 @@ class DirectoryScannerTask extends AbstractTask
         }, $this->requestDto->getIncluded());
 
         /** @noinspection NullPointerExceptionInspection */
-        if (1 > $this->scanner->getQueue()->count()) {
+        if ($this->scanner->getQueue()->count() < 1) {
             $this->scanner->setNewQueueItems($this->directories);
         }
 
         $totalSteps = count($this->requestDto->getIncluded());
-        if (0 > $totalSteps) {
+        if ($totalSteps < 0) {
             $totalSteps = 0;
         }
         $this->requestDto->getSteps()->setTotal($totalSteps);
@@ -170,7 +170,7 @@ class DirectoryScannerTask extends AbstractTask
             $excludedDirs = [];
         }
         $adapter = $this->scanner->getService()->getDirectory();
-        $excludedDirs[] = WP_PLUGIN_DIR . '/' . $adapter->findPluginDirectoryName();
+        $excludedDirs[] = WPSTG_PLUGIN_DIR;
         $excludedDirs[] = $adapter->getPluginUploadsDirectory();
         $excludedDirs[] = WP_CONTENT_DIR . '/cache';
         $this->requestDto->setExcluded($excludedDirs);
@@ -201,7 +201,7 @@ class DirectoryScannerTask extends AbstractTask
         $steps->setTotal($steps->getTotal() + count($this->directories));
 
         /** @noinspection NullPointerExceptionInspection */
-        if (0 < $this->scanner->getQueue()->count()) {
+        if ($this->scanner->getQueue()->count() > 0) {
             return;
         }
         

@@ -1,11 +1,11 @@
 <?php
-namespace WPStaging\Forms\Elements;
+namespace WPStaging\Core\Forms\Elements;
 
-use WPStaging\Forms\ElementsWithOptions;
+use WPStaging\Core\Forms\ElementsWithOptions;
 
 /**
  * Class Select
- * @package WPStaging\Forms\Elements
+ * @package WPStaging\Core\Forms\Elements
  */
 class SelectMultiple extends ElementsWithOptions
 {

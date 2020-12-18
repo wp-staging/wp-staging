@@ -12,15 +12,15 @@ if (!defined("WPINC")) {
 }
 
 use WPStaging\Backend\Pro\Notices\Notices as ProNotices;
-use WPStaging\Utils\Cache;
-use WPStaging\Utils\Logger;
-use WPStaging\WPStaging;
+use WPStaging\Core\Utils\Cache;
+use WPStaging\Core\Utils\Logger;
+use WPStaging\Core\WPStaging;
 
 /**
  * Class Notices
  * @package WPStaging\Backend\Notices
  */
-class Notices 
+class Notices
 {
     /**
      * @var string
@@ -32,7 +32,7 @@ class Notices
      */
     private $url;
 
-    public function __construct($path, $url) 
+    public function __construct($path, $url)
     {
         $this->path = $path;
         $this->url = $url;
@@ -42,19 +42,15 @@ class Notices
      * Check whether the page is admin page or not
      * @return bool
      */
-    public function isAdminPage() 
+    public function isAdminPage()
     {
-        $currentPage = (isset( $_GET["page"] )) ? $_GET["page"] : null;
+        $currentPage = (isset($_GET["page"])) ? $_GET["page"] : null;
 
-        $availablePages = array(
+        $availablePages = [
             "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone"
-        );
+        ];
 
-        if(!is_admin() || !in_array( $currentPage, $availablePages, true)) {
-            return false;
-        }
-
-        return true;
+        return !(!is_admin() || !in_array($currentPage, $availablePages, true));
     }
 
     /**
@@ -64,7 +60,7 @@ class Notices
      *
      * @return  boolean
      */
-    protected function isPro() 
+    protected function isPro()
     {
         return defined('WPSTGPRO_VERSION');
     }
@@ -74,7 +70,7 @@ class Notices
      * @param int $days default 10
      * @return bool
      */
-    private function canShow($option, $days = 10) 
+    private function canShow($option, $days = 10)
     {
         // Do not show notice
         if (empty($option)) {
@@ -84,7 +80,7 @@ class Notices
         $dbOption = get_option($option);
 
         // Do not show notice
-        if ("no" === $dbOption) {
+        if ($dbOption === "no") {
             return false;
         }
 
@@ -106,30 +102,28 @@ class Notices
         // get number of days between installation date and today
         $difference = $now->diff($installDate)->days;
 
-        if ($days <= $difference) {
-            return true;
-        }
-
-
-        return false;
+        return $days <= $difference;
     }
     /**
      * Get current page
-     * @return string | post, page
+     * @return string post, page
      */
-    private function getCurrentScreen() 
+    private function getCurrentScreen()
     {
         if (function_exists('get_current_screen')) {
             return \get_current_screen()->post_type;
         }
+
+        throw new \Exception('Function get_current_screen does not exist. WP < 3.0.1.');
     }
+
 
     /**
      * Load admin notices
-     * @return string
+     * @throws \Exception
      */
-    public function messages() {
-
+    public function messages()
+    {
         $viewsNoticesPath = "{$this->path}views/notices/";
 
         // Show "rate the plugin". Free version only
@@ -137,13 +131,17 @@ class Notices
             if ($this->canShow("wpstg_rating", 7) && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post') {
                 require_once "{$viewsNoticesPath}rating.php";
             }
-
         }
 
         // Show all pro version notices
         if ($this->isPro()) {
             $proNotices = new ProNotices($this);
             $proNotices->getNotices();
+        }
+
+        // Show notice about cache being disabled in the staging site. (Show only on staging site)
+        if ((new DisabledCacheNotice())->isEnabled()) {
+            require_once "{$viewsNoticesPath}disabled-cache.php";
         }
 
         // Display notices below in wp staging admin pages only
@@ -168,7 +166,7 @@ class Notices
         }
 
         // Staging directory is not writable
-        if (!is_writeable(ABSPATH)) {
+        if (!is_writable(ABSPATH)) {
             require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
         }
 
@@ -192,10 +190,7 @@ class Notices
         $siteurlScheme = parse_url(get_option('siteurl'), PHP_URL_SCHEME);
         $homeScheme    = parse_url(get_option('home'), PHP_URL_SCHEME);
 
-        if ($siteurlScheme === $homeScheme) {
-            return false;
-        }
-        return true;
+        return !($siteurlScheme === $homeScheme);
     }
 
 }

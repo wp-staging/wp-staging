@@ -1,6 +1,6 @@
 <?php if ($isDatabaseConnected) { ?>
 <div class="wpstg-notice-alert">
-    <h3 style="margin:0;padding-bottom:5px;">
+    <h3 class="wpstg-m-0 wpstg-pb-5px">
         <?php
         _e("This staging site will be deleted:", "wp-staging")
         ?>
@@ -8,7 +8,7 @@
 
     <p>
         <?php _e('Clone Name:', 'wp-staging'); ?> 
-        <span style="background-color:#5b9dd9;color:#fff;padding: 2px;border-radius: 3px;">
+        <span class="wpstg-confirmation-label">
         <?php 
         echo $clone->directoryName; 
         ?>
@@ -16,7 +16,7 @@
     </p>
     <p>
         <?php _e('Database Name:', 'wp-staging'); ?> 
-        <span style="background-color:#5b9dd9;color:#fff;padding: 2px;border-radius: 3px;">
+        <span class="wpstg-confirmation-label">
         <?php 
         $database = empty($clone->databaseDatabase) ? "{$dbname} / Main Database)" : $clone->databaseDatabase;
         echo $database; 
@@ -46,10 +46,10 @@
 
     <!-- Database -->
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
-        <h4 style="margin:0;">
+        <h4 class="wpstg-m-0">
             <?php _e("Unselect all database tables you do not want to delete:", "wp-staging")?>
         </h4>
-        <div style="margin-bottom:6px;margin-top:6px;">
+        <div class="wpstg-my-6px">
             <a href="#" class="wpstg-button-unselect">
             <?php _e("Unselect All", "wp-staging") ?>
             </a>
@@ -66,7 +66,7 @@
 			</span>
             </div>
         <?php endforeach ?>
-        <div style="margin-bottom:6px;margin-top:6px;">
+        <div class="wpstg-my-6px">
             <a href="#" class="wpstg-button-unselect">
             <?php _e("Unselect All", "wp-staging") ?>
             </a>
@@ -82,7 +82,7 @@
 
     <!-- Files -->
     <div class="wpstg-tab-section" id="wpstg-scanning-files">
-        <h4 style="margin:0;margin-bottom:10px;">
+        <h4 class="wpstg-m-0 wpstg-mb-10px">
             <?php _e("Selected folder and all of its subfolders and files will be deleted. <br/>Unselect it if you want to keep the staging site file data.", "wp-staging") ?>
         </h4>
 

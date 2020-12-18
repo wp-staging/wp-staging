@@ -16,6 +16,11 @@ class Optimizer {
    private $source;
    private $dest;
 
+    /**
+     * Optimizer constructor.
+     *
+     * If changes are made to this, also check uninstall.php!
+     */
    public function __construct() {
       $this->mudir = ( defined( 'WPMU_PLUGIN_DIR' ) && defined( 'WPMU_PLUGIN_URL' ) ) ? WPMU_PLUGIN_DIR : trailingslashit( WP_CONTENT_DIR ) . 'mu-plugins';
  
@@ -24,7 +29,7 @@ class Optimizer {
    }
 
    public function installOptimizer() {
-      if (file_exists( $this->dest ) && false === $this->mustUpdateOptimizer()){
+      if (file_exists( $this->dest ) && $this->mustUpdateOptimizer() === false){
          return false;
       }
       
@@ -32,12 +37,6 @@ class Optimizer {
          $this->copy();
       } 
       return false;
-   }
-
-   public function uninstallOptimizer() {
-      if( file_exists( $this->dest ) && !unlink( $this->dest ) ) {
-         return false;
-      }
    }
 
    private function copy() {
@@ -55,7 +54,7 @@ class Optimizer {
       
        $update = false;
        
-       if (false === $isVersionNumber){
+       if ($isVersionNumber === false){
            return true;
        }
        

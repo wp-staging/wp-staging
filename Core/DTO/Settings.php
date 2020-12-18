@@ -1,10 +1,10 @@
 <?php
 
-namespace WPStaging\DTO;
+namespace WPStaging\Core\DTO;
 
 /**
  * Class Settings
- * @package WPStaging\DTO
+ * @package WPStaging\Core\DTO
  */
 class Settings
 {
@@ -75,7 +75,7 @@ class Settings
      * User roles to access the staging site
      * @var type array
      */
-    protected $userRoles = array();
+    protected $userRoles = [];
 
     /**
      * Users with access to staging site regardless of role (comma-separated list)
@@ -88,7 +88,7 @@ class Settings
      */
     public function __construct()
     {
-        $this->_raw = get_option("wpstg_settings", array());
+        $this->_raw = get_option("wpstg_settings", []);
 
         if (!empty($this->_raw)) {
             $this->hydrate($this->_raw);
@@ -99,7 +99,7 @@ class Settings
      * @param array $settings
      * @return $this
      */
-    public function hydrate($settings = array())
+    public function hydrate($settings = [])
     {
         $this->_raw = $settings;
 
@@ -196,7 +196,7 @@ class Settings
      */
     public function isUnInstallOnDelete()
     {
-        return ('1' === $this->unInstallOnDelete);
+        return ($this->unInstallOnDelete === '1');
     }
 
     /**
@@ -212,7 +212,7 @@ class Settings
      */
     public function isOptimizer()
     {
-        return ('1' === $this->optimizer);
+        return ($this->optimizer === '1');
     }
 
     /**
@@ -228,7 +228,7 @@ class Settings
      */
     public function isDisableAdminLogin()
     {
-        return ('1' === $this->disableAdminLogin);
+        return ($this->disableAdminLogin === '1');
     }
 
     /**
@@ -245,7 +245,7 @@ class Settings
      */
     public function isCheckDirectorySize()
     {
-        return ('1' === $this->checkDirectorySize);
+        return ($this->checkDirectorySize === '1');
     }
 
     /**
@@ -261,7 +261,7 @@ class Settings
      */
     public function isDebugMode()
     {
-        return ('1' === $this->debugMode);
+        return ($this->debugMode === '1');
     }
 
     /**

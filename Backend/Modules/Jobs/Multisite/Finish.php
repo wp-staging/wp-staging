@@ -2,9 +2,9 @@
 
 namespace WPStaging\Backend\Modules\Jobs\Multisite;
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 use WPStaging\Backend\Modules\Jobs\Job;
-use WPStaging\Utils\Helper;
+use WPStaging\Core\Utils\Helper;
 
 /**
  * Class Finish
@@ -34,7 +34,7 @@ class Finish extends Job {
 
         $this->options->isRunning = false;
 
-        $return = array(
+        $return = [
             "directoryName" => $this->options->cloneDirectoryName,
             "path"          => trailingslashit( $this->options->destinationDir ),
             "url"           => $this->getDestinationUrl(),
@@ -45,7 +45,7 @@ class Finish extends Job {
             "last_msg"      => $this->logger->getLastLogMsg(),
             "job"           => $this->options->currentJob,
             "percentage"    => 100
-        );
+        ];
 
         do_action( 'wpstg_cloning_complete', $this->options );
 
@@ -80,6 +80,7 @@ class Finish extends Job {
             $this->options->existingClones[$this->options->clone]['url']      = $this->getDestinationUrl();
             $this->options->existingClones[$this->options->clone]['status']   = 'finished';
             $this->options->existingClones[$this->options->clone]['prefix']   = $this->options->prefix;
+            $this->options->existingClones[$this->options->clone]['uploadsSymlinked']   = $this->options->uploadsSymlinked;
             update_option( "wpstg_existing_clones_beta", $this->options->existingClones );
             $this->log( "Finish: The job finished!" );
             return true;
@@ -88,10 +89,7 @@ class Finish extends Job {
         // Save new clone data
         $this->log( "Finish: {$this->options->clone}'s clone job's data is not in database, generating data" );
 
-        // sanitize the clone name before saving
-        //$clone = preg_replace("#\W+#", '-', strtolower($this->options->clone));
-
-        $this->options->existingClones[$this->clone] = array(
+        $this->options->existingClones[$this->clone] = [
             "directoryName"    => $this->options->cloneDirectoryName,
             "path"             => trailingslashit( $this->options->destinationDir ),
             "url"              => $this->getDestinationUrl(),
@@ -105,9 +103,11 @@ class Finish extends Job {
             "databaseDatabase" => $this->options->databaseDatabase,
             "databaseServer"   => $this->options->databaseServer,
             "databasePrefix"   => $this->options->databasePrefix,
-        );
+            "emailsDisabled"   => (bool) $this->options->emailsDisabled,
+            "uploadsSymlinked"   => (bool)$this->options->uploadsSymlinked
+        ];
 
-        if( false === update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) ) {
+        if( update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) === false ) {
             $this->log( "Finish: Failed to save {$this->options->clone}'s clone job data to database'" );
             return false;
         }

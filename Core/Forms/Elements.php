@@ -1,11 +1,11 @@
 <?php
-namespace WPStaging\Forms;
+namespace WPStaging\Core\Forms;
 
-use WPStaging\Forms\Elements\Interfaces\InterfaceElement;
+use WPStaging\Core\Forms\Elements\Interfaces\InterfaceElement;
 
 /**
  * Class Elements
- * @package WPStaging\Forms
+ * @package WPStaging\Core\Forms
  */
 abstract class Elements implements InterfaceElement
 {
@@ -18,7 +18,7 @@ abstract class Elements implements InterfaceElement
     /**
      * @var array
      */
-    protected $attributes = array();
+    protected $attributes = [];
 
     /**
      * @var null|string
@@ -33,12 +33,12 @@ abstract class Elements implements InterfaceElement
     /**
      * @var array
      */
-    protected $filters = array();
+    protected $filters = [];
 
     /**
      * @var array
      */
-    protected $validations = array();
+    protected $validations = [];
 
     /**
      * @var string
@@ -250,7 +250,7 @@ abstract class Elements implements InterfaceElement
      */
     public function getId($name = null)
     {
-        if (null === $name)
+        if ($name === null)
         {
             $name = $this->name;
         }

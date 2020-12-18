@@ -12,7 +12,7 @@ class Welcome
 
     public function __construct()
     {
-        add_action('admin_init', array($this, 'welcome'));
+        add_action('admin_init', [$this, 'welcome']);
     }
 
 
@@ -27,7 +27,7 @@ class Welcome
     public function welcome()
     {
         // Bail if no activation redirect
-        if (false === get_transient('wpstg_activation_redirect')) {
+        if (get_transient('wpstg_activation_redirect') === false) {
             return;
         }
 

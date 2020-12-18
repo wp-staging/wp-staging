@@ -11,7 +11,7 @@
 ?>
 <label id="wpstg-clone-label" for="wpstg-new-clone">
     <?php echo __( 'Staging Site Name:', 'wp-staging' ) ?>
-    <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if( null !== $options->current ) echo " disabled='disabled'" ?>>
+    <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if( $options->current !== null ) echo " disabled='disabled'" ?>>
 </label>
 
 <span class="wpstg-error-msg" id="wpstg-clone-id-error" style="display:none;">
@@ -42,7 +42,7 @@
         </h4>
         <div style="margin-top:10px;margin-bottom:10px;">
             <a href="#" class="wpstg-button-unselect button"><?php _e('Unselect All', 'wp-staging'); ?></a>
-            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
+            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\Core\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
         </div>
         <select multiple="multiple" id="wpstg_select_tables_cloning">
             <?php
@@ -58,7 +58,7 @@
 
         <div style="margin-top:10px;">
             <a href="#" class="wpstg-button-unselect button"> <?php _e('Unselect All', 'wp-staging'); ?> </a>
-            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
+            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\Core\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
         </div>
     </div>
 
@@ -133,7 +133,7 @@
 </button>
 
 <?php
-if( null !== $options->current ) {
+if( $options->current !== null ) {
     $label  = __( "Update Clone", "wp-staging" );
     $action = 'wpstg_update';
 

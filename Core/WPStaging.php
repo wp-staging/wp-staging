@@ -1,26 +1,23 @@
 <?php
 
-namespace WPStaging;
+namespace WPStaging\Core;
 
 // No Direct Access
 if( !defined( "WPINC" ) ) {
     die;
 }
 
-// Ensure to include autoloader class
-require_once __DIR__ . DIRECTORY_SEPARATOR . "Utils" . DIRECTORY_SEPARATOR . "Autoloader.php";
-
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
+use WPStaging\Framework\DI\Container;
 use WPStaging\Backend\Administrator;
-use WPStaging\DTO\Settings;
+use WPStaging\Core\DTO\Settings;
 use WPStaging\Framework\Security\AccessToken;
+use WPStaging\Framework\Security\Nonce;
 use WPStaging\Frontend\Frontend;
-use WPStaging\Framework\Container\Container;
-use WPStaging\Utils\Autoloader;
-use WPStaging\Utils\Cache;
-use WPStaging\Utils\Logger;
-use WPStaging\Framework\PluginFactory;
+use WPStaging\Core\Utils\Cache;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
-use WPStaging\Cron\Cron;
+use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Staging\FirstRun;
 
@@ -29,11 +26,6 @@ use WPStaging\Framework\Staging\FirstRun;
  * @package WPStaging
  */
 final class WPStaging {
-
-    /*
-     * Plugin name
-     */
-    const NAME = "WP Staging";
 
     /**
      * Slug: Either wp-staging or wp-staging-pro
@@ -46,12 +38,6 @@ final class WPStaging {
      * @var string
      */
     private $pluginPath;
-
-    /**
-     * Services
-     * @var array
-     */
-    private $services;
 
     /**
      * Singleton instance
@@ -84,22 +70,28 @@ final class WPStaging {
      */
     private $accessToken;
 
+    private $container;
+
     /**
      * WPStaging constructor.
      */
-    private function __construct() {
-        // Todo: Inject using DI.
+    private function __construct(Container $container) {
+	    $this->container   = $container;
+
+	    // Todo: Move this to a common service Provider for both Free and Pro. Do not register anything else here.
+	    $this->container->bind(LoggerInterface::class, Logger::class);
+
+        /*
+         * @todo Before injecting these using DI, we have to register them in a Service Provider.
+         *       Therefore, we don't inject them using DI here.
+         */
         $this->accessToken = new AccessToken;
         $this->siteInfo    = new SiteInfo;
 
         $this->registerMain();
-        $this->registerNamespaces();
         $this->loadDependencies();
         $this->defineHooks();
         $this->initCron();
-        // Load license class in wpstg core to allow executing cron jobs by regular frontpage visitors
-        $this->initLicensing();
-        $this->initVersion();
         $this->cloneSiteFirstRun();
         $this->maybeLoadPro();
         $this->handleCacheIssues();
@@ -177,7 +169,7 @@ final class WPStaging {
      */
     private function isPluginsPage() {
         global $pagenow;
-        return ( 'plugins.php' === $pagenow );
+        return ( $pagenow === 'plugins.php' );
     }
 
     /**
@@ -188,16 +180,16 @@ final class WPStaging {
 
         // Load this css file on frontend and backend on all pages if current site is a staging site
         if( wpstg_is_stagingsite() ) {
-            wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", array(), self::getVersion() );
+            wp_enqueue_style( "wpstg-admin-bar", $this->backend_url . "css/wpstg-admin-bar.css", [], self::getVersion() );
         }
 
         // Load js file on page plugins.php in free version only
         if( !defined('WPSTGPRO_VERSION') && $this->isPluginsPage() ) {
             wp_enqueue_script(
-                    "wpstg-admin-script", $this->backend_url . "js/wpstg-admin-plugins.js", array("jquery"), self::getVersion(), false
+                    "wpstg-admin-script", $this->backend_url . "js/wpstg-admin-plugins.js", ["jquery"], self::getVersion(), false
             );
             wp_enqueue_style(
-                    "wpstg-admin-feedback", $this->backend_url . "css/wpstg-admin-feedback.css", array(), self::getVersion()
+                    "wpstg-admin-feedback", $this->backend_url . "css/wpstg-admin-feedback.css", [], self::getVersion()
             );
         }
 
@@ -208,13 +200,13 @@ final class WPStaging {
 
         // Load admin js files
         wp_enqueue_script(
-                "wpstg-admin-script", $this->backend_url . "js/wpstg-admin.js", array("jquery"), self::getVersion(), false
+                "wpstg-admin-script", $this->backend_url . "js/wpstg-admin.js", ["jquery"], self::getVersion(), false
         );
 
         // Load admin js pro files
         if(defined('WPSTGPRO_VERSION')) {
             wp_enqueue_script(
-                "wpstg-admin-pro-script", $this->url . "Backend/Pro/public/js/wpstg-admin-pro.js", array("jquery"), self::getVersion(), false
+                "wpstg-admin-pro-script", $this->url . "Backend/Pro/public/js/wpstg-admin-pro.js", ["jquery"], self::getVersion(), false
             );
 
             // Sweet Alert
@@ -236,16 +228,17 @@ final class WPStaging {
 
         // Load admin css files
         wp_enqueue_style(
-                "wpstg-admin", $this->backend_url . "css/wpstg-admin.css", array(), self::getVersion()
+                "wpstg-admin", $this->backend_url . "css/wpstg-admin.css", [], self::getVersion()
         );
 
-        wp_localize_script( "wpstg-admin-script", "wpstg", array(
+        wp_localize_script( "wpstg-admin-script", "wpstg", [
             "delayReq"               => $this->getDelay(),
-            "settings"               => ( object )array(), // TODO add settings?
+            "settings"               => ( object )[], // TODO add settings?
             "tblprefix"              => self::getTablePrefix(),
             "isMultisite"            => is_multisite(),
             AccessToken::REQUEST_KEY => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
-        ) );
+            'nonce'                  => wp_create_nonce(Nonce::WPSTG_NONCE),
+        ] );
     }
 
     /**
@@ -256,19 +249,19 @@ final class WPStaging {
     private function isDisabledAssets($page)
     {
         if (defined('WPSTGPRO_VERSION')) {
-            $availablePages = array(
+            $availablePages = [
                 "toplevel_page_wpstg_clone",
                 "wp-staging-pro_page_wpstg-settings",
                 "wp-staging-pro_page_wpstg-tools",
                 "wp-staging-pro_page_wpstg-license"
-            );
+            ];
         } else {
-            $availablePages = array(
+            $availablePages = [
                 "toplevel_page_wpstg_clone",
                 "wp-staging_page_wpstg-settings",
                 "wp-staging_page_wpstg-tools",
                 "wp-staging_page_wpstg-welcome",
-            );
+            ];
         }
 
         return !in_array($page, $availablePages) || !is_admin();
@@ -295,36 +288,22 @@ final class WPStaging {
     }
 
     /**
-     * Register used namespaces
-     */
-    private function registerNamespaces() {
-        $autoloader = new Autoloader();
-        $this->set( "autoloader", $autoloader );
-
-        // Autoloader
-        $autoloader->registerNamespaces( array(
-            "WPStaging"  => array(
-                $this->pluginPath,
-                $this->pluginPath . 'Core' . DIRECTORY_SEPARATOR,
-                $this->pluginPath . 'Core' . DIRECTORY_SEPARATOR . 'Iterators' . DIRECTORY_SEPARATOR,
-            ),
-            // @todo remove as it is not used any longer
-            "splitbrain" => array(
-                $this->pluginPath . 'vendor' . DIRECTORY_SEPARATOR . 'splitbrain' . DIRECTORY_SEPARATOR
-            )
-        ) );
-
-        // Register namespaces
-        $autoloader->register();
-    }
-
-    /**
      * Get Instance
+     *
+     * @param Container|null $container
+     *
      * @return WPStaging
      */
-    public static function getInstance() {
-        if( null === static::$instance ) {
-            static::$instance = new static();
+    public static function getInstance(Container $container = null) {
+        if( static::$instance === null ) {
+            if ($container === null) {
+                $container = new Container;
+                if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+                    error_log('A Container instance should be set when requiring this class for the first time.');
+                }
+            }
+
+            static::$instance = new static($container);
         }
 
         return static::$instance;
@@ -343,52 +322,83 @@ final class WPStaging {
 
         $this->set( "settings", new Settings() );
 
-        /** @noinspection PhpUnhandledExceptionInspection */
-        $plugin = PluginFactory::make(Plugin::class);
-        $plugin->init();
-        $this->set(Plugin::class, $plugin);
+        $this->loadLanguages();
 
         // Set Administrator
         if( is_admin() ) {
-            new Administrator( $this );
+            new Administrator();
         } else {
-            new Frontend( $this );
+            new Frontend();
         }
     }
+
+	private function loadLanguages()
+	{
+		/** @noinspection NullPointerExceptionInspection */
+		$languagesDirectory = WPSTG_PLUGIN_DIR . 'languages/';
+
+		if (function_exists('get_user_locale')){
+			$locale = get_user_locale();
+		} else {
+			$locale = get_locale();
+		}
+
+		// Traditional WP plugin locale filter
+		$locale = apply_filters('plugin_locale', $locale, 'wp-staging');
+		$moFile = sprintf('%1$s-%2$s.mo', 'wp-staging', $locale);
+
+		// Setup paths to current locale file
+		$moFileLocal = $languagesDirectory . $moFile;
+		$moFileGlobal = sprintf('%s/wp-staging/%s', WP_LANG_DIR, $moFile);
+
+		if (file_exists($moFileGlobal)) {
+			load_textdomain('wp-staging', $moFileGlobal);
+		}
+		elseif (file_exists($moFileLocal)) {
+			load_textdomain('wp-staging', $moFileLocal);
+		}
+		else {
+			load_plugin_textdomain('wp-staging', false, $languagesDirectory);
+		}
+	}
 
     /**
      * Set a variable to DI with given name
      * @param string $name
      * @param mixed $variable
+     *
+     * @deprecated Refactor implementations of this method to use the Container instead.
+     *
      * @return $this
      */
     public function set( $name, $variable ) {
-        // It is a function
-        if( is_callable( $variable ) )
-            $variable = $variable();
+	    $this->container->setVar( $name, $variable );
 
-        // Add it to services
-        $this->services[$name] = $variable;
-
-        return $this;
+	    return $this;
     }
 
     /**
      * Get given name index from DI
      * @param string $name
+     *
+     * @deprecated Refactor implementations of this method to use the Container instead.
+     *
      * @return mixed|null
      */
     public function get( $name ) {
-        return (isset( $this->services[$name] )) ? $this->services[$name] : null;
+	    return $this->container->_get( $name );
     }
 
     /**
-     * @return Container
+     * Get given name index from DI
+     * @param string $name
+     *
+     * @deprecated Refactor implementations of this method to use Dependency Injection instead.
+     *
+     * @return mixed|null
      */
-    public static function getContainer()
-    {
-        /** @noinspection NullPointerExceptionInspection */
-        return self::$instance->get(Plugin::class)->getContainer();
+    public function _make( $name ) {
+	    return $this->container->make( $name );
     }
 
     /**
@@ -403,37 +413,6 @@ final class WPStaging {
 
         return WPSTG_VERSION;
 
-    }
-
-    /**
-     * @return string
-     */
-    public function getName() {
-        return self::NAME;
-    }
-
-    /**
-     * @return string
-     */
-    public static function getSlug()
-    {
-        return plugin_basename(dirname(__DIR__));
-    }
-
-    /**
-     * Get path to main plugin file
-     * @return string
-     */
-    public function getPath() {
-        return dirname(__DIR__);
-    }
-
-    /**
-     * Get main plugin url
-     * @return string
-     */
-    public function getUrl() {
-        return plugin_dir_url(__DIR__);
     }
 
     /**
@@ -472,37 +451,12 @@ final class WPStaging {
     }
 
     /**
-     * Initialize licensing functions
-     * @return boolean
-     */
-    public function initLicensing() {
-        // Add licensing stuff if class exists
-        if( class_exists( 'WPStaging\Backend\Pro\Licensing\Licensing' ) ) {
-            new Backend\Pro\Licensing\Licensing();
-        }
-        return false;
-    }
-
-    /**
-     * Initialize Version Check
-     * @return boolean
-     */
-    public function initVersion() {
-        // Add licensing stuff if class exists
-        if( class_exists( 'WPStaging\Backend\Pro\Licensing\Version' ) ) {
-            new Backend\Pro\Licensing\Version();
-        }
-        return false;
-    }
-
-    /**
      * Load Pro actions if they exist.
      */
     private function maybeLoadPro()
     {
-        if (class_exists('\WPStaging\Backend\Pro\ProServiceProvider')) {
-            $proServiceProvider = new \WPStaging\Backend\Pro\ProServiceProvider();
-            $proServiceProvider->enqueueActions();
+        if (class_exists('\WPStaging\Pro\ProServiceProvider')) {
+            $this->container->register(\WPStaging\Pro\ProServiceProvider::class);
         }
     }
 
@@ -519,8 +473,8 @@ final class WPStaging {
      */
     private function handleCacheIssues() {
         $permalinksPurge = new PermalinksPurge();
-        add_action( 'wpstg_pushing_complete', array( $permalinksPurge, 'executeAfterPushing' ));
-        add_action( 'wp_loaded', array( $permalinksPurge, 'purgePermalinks' ), $permalinksPurge::PLUGINS_LOADED_PRIORITY);
+        add_action( 'wpstg_pushing_complete', [ $permalinksPurge, 'executeAfterPushing' ]);
+        add_action( 'wp_loaded', [ $permalinksPurge, 'purgePermalinks' ], $permalinksPurge::PLUGINS_LOADED_PRIORITY);
     }
 
 }

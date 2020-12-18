@@ -1,5 +1,5 @@
 <?php 
-$reasons = array(
+$reasons = [
     		1 => '<li><label><input type="radio" name="wpstg_disable_reason" value="temporary"/>' . __('Only temporary', 'wp-staging') . '</label></li>',
 		//2 => '<li><label><input type="radio" name="wpstg_disable_reason" value="stopped showing social buttons"/>' . __('I do not use it any longer ', 'wp-staging') . '</label></li>',
 		3 => '<li><label><input type="radio" name="wpstg_disable_reason" value="missing feature"/>' . __('Miss a feature', 'wp-staging') . '</label></li>
@@ -10,7 +10,7 @@ $reasons = array(
 		<li><input type="text" name="wpstg_disable_text[]" value="" placeholder="Name of the plugin"/></li>',
 		6 => '<li><label><input type="radio" name="wpstg_disable_reason" value="other"/>' . __('Other reason', 'wp-staging') . '</label></li>
 		<li><textarea name="wpstg_disable_text[]" placeholder="' . __('Please specify, if possible', 'wp-staging') . '"></textarea></li>',
-    );
+    ];
 shuffle($reasons);
 ?>
 

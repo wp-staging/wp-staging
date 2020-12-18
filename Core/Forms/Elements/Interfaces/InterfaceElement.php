@@ -1,9 +1,9 @@
 <?php
-namespace WPStaging\Forms\Elements\Interfaces;
+namespace WPStaging\Core\Forms\Elements\Interfaces;
 
 /**
  * Interface InterfaceElement
- * @package WPStaging\Forms\Elements\Interfaces
+ * @package WPStaging\Core\Forms\Elements\Interfaces
  */
 interface InterfaceElement
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
-use WPStaging\Utils\Filesystem;
+use WPStaging\Core\Utils\Filesystem;
 
 // No Direct Access
 if (!defined("WPINC"))
@@ -33,10 +33,10 @@ class RobotsTxt {
      * @return boolean
      */
     public function create( $path ) {
-        return $this->filesystem->create( $path, implode( PHP_EOL, array(
+        return $this->filesystem->create( $path, implode( PHP_EOL, [
                     'User-agent: *',
                     'Disallow: /',
-                ) ) );
+                ] ) );
     }
 
 }

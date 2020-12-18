@@ -28,7 +28,7 @@ class UpdateSiteUrlAndHome extends DBCloningService
             )
         );
 
-        if (false === $result) {
+        if ($result === false) {
             throw new FatalException("Failed to update siteurl and homeurl in {$this->dto->getPrefix()}options. {$this->dto->getStagingDb()->last_error}");
         } else {
             //$this->log("Done");

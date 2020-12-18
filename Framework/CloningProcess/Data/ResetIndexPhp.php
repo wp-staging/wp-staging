@@ -29,7 +29,7 @@ class ResetIndexPhp extends FileCloningService
         $pattern = "/require(.*)wp-blog-header.php(.*)/";
         if (preg_match($pattern, $content, $matches)) {
             $replace = "require __DIR__ . '/wp-blog-header.php'; // " . $matches[0] . " Changed by WP-Staging";
-            if (null === ($content = preg_replace(array($pattern), $replace, $content))) {
+            if (($content = preg_replace([$pattern], $replace, $content)) === null) {
                 throw new FatalException("Failed to reset index.php for sub directory: regex error");
             }
         } else {

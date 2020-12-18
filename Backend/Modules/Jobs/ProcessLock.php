@@ -2,9 +2,9 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
-//use WPStaging\Utils\Cache;
+//use WPStaging\Core\Utils\Cache;
 
 /**
  * Class Cloning

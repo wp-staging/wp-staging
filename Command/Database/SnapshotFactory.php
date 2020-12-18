@@ -6,9 +6,8 @@ use WPStaging\Command\Database\Snapshot\CreateSnapshotCommand;
 use WPStaging\Command\Database\Snapshot\SnapshotDto;
 use WPStaging\Command\Database\Snapshot\SnapshotHandler;
 use WPStaging\Command\Database\Snapshot\UpdateSnapshotCommand;
-use WPStaging\Framework\Command\CommandInterface;
 use WPStaging\Framework\Command\HandlerInterface;
-use WPStaging\WPStaging;
+use WPStaging\Core\WPStaging;
 
 class SnapshotFactory
 {
@@ -16,8 +15,6 @@ class SnapshotFactory
     const CREATE_SNAPSHOT = 'create';
     const UPDATE_SNAPSHOT = 'update';
     const DELETE_SNAPSHOT = 'delete';
-
-    private static $container;
 
     /**
      * @param SnapshotDto $dto
@@ -45,32 +42,14 @@ class SnapshotFactory
     {
         switch($action) {
             case self::CREATE_SNAPSHOT:
-                $handler->addCommand(self::getCommand(CreateSnapshotCommand::class));
+                $handler->addCommand(WPStaging::getInstance()->get(CreateSnapshotCommand::class));
                 return;
             case self::UPDATE_SNAPSHOT:
-                $handler->addCommand(self::getCommand(UpdateSnapshotCommand::class));
+                $handler->addCommand(WPStaging::getInstance()->get(UpdateSnapshotCommand::class));
                 return;
             case self::DELETE_SNAPSHOT:
                 // todo Implement Delete Snapshot Command
                 return;
         }
-    }
-
-    /**
-     * @param string $command
-     *
-     * @return CommandInterface|null
-     */
-    private static function getCommand($command)
-    {
-        // TODO RPoC v3.0.0
-        if (!self::$container) {
-            self::$container = WPStaging::getContainer();
-        }
-
-        /** @var CommandInterface|null $command */
-        /** @noinspection CallableParameterUseCaseInTypeContextInspection */
-        $command = self::$container->get($command);
-        return $command;
     }
 }

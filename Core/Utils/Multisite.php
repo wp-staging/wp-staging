@@ -1,8 +1,8 @@
 <?php
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
-use WPStaging\Utils\Helper;
+use WPStaging\Core\Utils\Helper;
 
 // No Direct Access
 if( !defined( "WPINC" ) ) {

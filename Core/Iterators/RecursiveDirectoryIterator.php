@@ -1,15 +1,15 @@
 <?php
 
-namespace WPStaging\Iterators;
+namespace WPStaging\Core\Iterators;
 
 // No Direct Access
 if (!defined("WPINC")) {
     die;
 }
-
+// todo remove this class, use \RecursiveDirectoryIterator instead
 class RecursiveDirectoryIterator extends \RecursiveDirectoryIterator {
 
-	protected $excludeFolders = array();
+	protected $excludeFolders = [];
 
 
 	public function __construct( $path ) {

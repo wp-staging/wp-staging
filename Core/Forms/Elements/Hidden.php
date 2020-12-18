@@ -1,12 +1,12 @@
 <?php
-namespace WPStaging\Forms\Elements;
+namespace WPStaging\Core\Forms\Elements;
 
 
-use WPStaging\Forms\Elements;
+use WPStaging\Core\Forms\Elements;
 
 /**
  * Class Hidden
- * @package WPStaging\Forms\Elements
+ * @package WPStaging\Core\Forms\Elements
  */
 class Hidden extends Elements
 {

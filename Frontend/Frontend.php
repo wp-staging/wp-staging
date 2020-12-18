@@ -2,14 +2,13 @@
 
 namespace WPStaging\Frontend;
 
-use WPStaging\DI\InjectionAware;
 use WPStaging\Framework\SiteInfo;
 
 /**
  * Class Frontend
  * @package WPStaging\Frontend
  */
-class Frontend extends InjectionAware
+class Frontend
 {
 
     /**
@@ -20,17 +19,13 @@ class Frontend extends InjectionAware
     /**
      * @var bool
      */
-    private $accessDenied;
+    private $accessDenied = false;
 
-    /**
-     * Frontend initialization.
-     */
-    public function initialize()
+    public function __construct()
     {
         $this->defineHooks();
 
-        $this->settings = json_decode(json_encode(get_option("wpstg_settings", array())));
-        $this->accessDenied = false;
+        $this->settings = json_decode(json_encode(get_option("wpstg_settings", [])));
     }
 
     /**
@@ -55,11 +50,11 @@ class Frontend extends InjectionAware
         if ($this->isStagingSite()) {
             // Main Title
             $wp_admin_bar->add_menu(
-                array(
+                [
                     'id' => 'site-name',
                     'title' => is_admin() ? ($siteTitle . ' - ' . get_bloginfo('name')) : ($siteTitle . ' - ' . get_bloginfo('name') . ' Dashboard'),
                     'href' => is_admin() ? home_url('/') : admin_url(),
-                )
+                ]
             );
         }
     }
@@ -73,7 +68,7 @@ class Frontend extends InjectionAware
 
         if ($this->showLoginForm()) {
 
-            $args = array(
+            $args = [
                 'echo' => true,
                 // Default 'redirect' value takes the user back to the request URI.
                 'redirect' => (is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
@@ -90,7 +85,7 @@ class Frontend extends InjectionAware
                 'value_username' => '',
                 // Set 'value_remember' to true to default the "Remember me" checkbox to checked.
                 'value_remember' => false,
-            );
+            ];
 
             $login = new LoginForm();
             if ($this->accessDenied) {
@@ -126,7 +121,7 @@ class Frontend extends InjectionAware
 
         // Simple check (free version only)
         if (!defined('WPSTGPRO_VERSION')) {
-            return (!isset($this->settings->disableAdminLogin) || '1' !== $this->settings->disableAdminLogin);
+            return (!isset($this->settings->disableAdminLogin) || $this->settings->disableAdminLogin !== '1');
         }
 
         // Allow access for wp staging user role "all"
@@ -157,7 +152,7 @@ class Frontend extends InjectionAware
 
         $result = isset($this->settings->userRoles) && is_array($this->settings->userRoles) ?
             array_intersect($activeUserRoles, $this->settings->userRoles) :
-            array();
+            [];
 
         if (empty($result) && !$this->isLoginPage() && !is_admin()) {
             $this->accessDenied = true;
@@ -192,7 +187,7 @@ class Frontend extends InjectionAware
     private function resetPermaLinks()
     {
         // Do nothing
-        if (!$this->isStagingSite() || "true" === get_option("wpstg_rmpermalinks_executed")) {
+        if (!$this->isStagingSite() || get_option("wpstg_rmpermalinks_executed") === "true") {
             return;
         }
 

@@ -1,11 +1,10 @@
 <?php
 
-namespace WPStaging\Utils;
+namespace WPStaging\Core\Utils;
 
 use WPStaging\Backend\Modules\SystemInfo;
-use WPStaging\DI\InjectionAware;
 
-class Report extends InjectionAware
+class Report
 {
 
     /**
@@ -19,8 +18,8 @@ class Report extends InjectionAware
      */
     public function send($email, $message, $terms, $syslog, $provider = null)
     {
-        $errors      = array();
-        $attachments = array();
+        $errors      = [];
+        $attachments = [];
         $maxFileSize = 512 * 1024;
         $message     .= "\n\n'Hosting provider: " . $provider;
 
@@ -28,7 +27,7 @@ class Report extends InjectionAware
             $message .= "\n\n'" . $this->getSyslog();
 
             $debugLogFile = WP_CONTENT_DIR . '/debug.log';
-            if (filesize($debugLogFile) && filesize($debugLogFile) < $maxFileSize) {
+            if (filesize($debugLogFile) && $maxFileSize > filesize($debugLogFile)) {
                 $attachments[] = $debugLogFile;
             }
         }
@@ -41,7 +40,7 @@ class Report extends InjectionAware
             $errors[] = __('Please accept our privacy policy.', 'wp-staging');
         } else {
 
-            if (false === $this->sendMail($email, $message, $attachments)) {
+            if ($this->sendMail($email, $message, $attachments) === false) {
                 $errors[] = 'Can not send report. <br>Please send us a mail to<br>support@wp-staging.com';
             }
         }
@@ -52,7 +51,7 @@ class Report extends InjectionAware
     private function getSyslog()
     {
 
-        $syslog = new SystemInfo($this->di);
+        $syslog = new SystemInfo();
 
         return $syslog->get();
     }
@@ -65,7 +64,7 @@ class Report extends InjectionAware
     private function sendMail($from, $text, $attachments)
     {
 
-        $headers = array();
+        $headers = [];
 
         $headers[] = "From: $from";
         $headers[] = "Reply-To: $from";
