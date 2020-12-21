@@ -7,7 +7,7 @@
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
  * Contributors: ReneHermi
- * Version: 2.7.9
+ * Version: 2.8.0
  * Text Domain: wp-staging
  * Domain Path: /languages/
  *
@@ -53,7 +53,7 @@ if (!class_exists(WpstgFreeBootstrap::class)) {
 
             // WP STAGING version number
             if (!defined('WPSTG_VERSION')) {
-                define('WPSTG_VERSION', '2.7.9');
+                define('WPSTG_VERSION', '2.8.0');
             }
 
             // Compatible up to WordPress Version

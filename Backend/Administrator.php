@@ -24,11 +24,11 @@ use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Notices\Notices;
 use WPStaging\Backend\Notices\DisabledCacheNotice;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
-use WPStaging\Core\Utils\Report;
 use WPStaging\Backend\Activation;
 use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Pro\Database\CompareExternalDatabase;
+use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\Security\Nonce;
 
 /**
@@ -1042,8 +1042,11 @@ class Administrator
             $terms = ( bool )$args['wpstg_terms'];
         }
 
+        // Set forceSend
+        $forceSend = isset($_POST['wpstg_force_send']) && $_POST['wpstg_force_send'] !== "false";
+
         $report = new Report();
-        $errors = $report->send($email, $message, $terms, $syslog, $provider);
+        $errors = $report->send($email, $message, $terms, $syslog, $provider, $forceSend);
 
         echo json_encode(['errors' => $errors]);
         exit;
