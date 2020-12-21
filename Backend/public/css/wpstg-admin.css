@@ -1927,3 +1927,7 @@ span.wpstg--drag-or-upload {
 #wpstg-progress-finishing {
     background-color: #378cc9;
 }
+
+.wpstg-issue-resubmit-confirmation.swal2-container {
+    z-index: 10500;
+}

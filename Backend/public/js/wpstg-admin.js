@@ -2973,17 +2973,15 @@ jQuery(document).ready(function ($) {
         $('.wpstg-report-issue-form').removeClass('wpstg-report-show');
     });
 
-    $('#wpstg-report-submit').click(function (e) {
-        var self = $(this);
-
-        var spinner = self.next();
+    function sendIssueReport(button, forceSend = 'false') {
+        var spinner = button.next();
         var email = $('.wpstg-report-email').val();
         var hosting_provider = $('.wpstg-report-hosting-provider').val();
         var message = $('.wpstg-report-description').val();
         var syslog = $('.wpstg-report-syslog').is(':checked');
         var terms = $('.wpstg-report-terms').is(':checked');
 
-        self.attr('disabled', true);
+        button.attr('disabled', true);
         spinner.css('visibility', 'visible');
 
         $.ajax({
@@ -2999,10 +2997,11 @@ jQuery(document).ready(function ($) {
                 'wpstg_provider': hosting_provider,
                 'wpstg_message': message,
                 'wpstg_syslog': +syslog,
-                'wpstg_terms': +terms
+                'wpstg_terms': +terms,
+                'wpstg_force_send': forceSend
             },
         }).done(function (data) {
-            self.attr('disabled', false);
+            button.attr('disabled', false);
             spinner.css('visibility', 'hidden');
 
             if (data.errors.length > 0) {
@@ -3010,7 +3009,28 @@ jQuery(document).ready(function ($) {
 
                 var errorMessage = $('<div />').addClass('wpstg-message wpstg-error-message');
                 $.each(data.errors, function (key, value) {
-                    errorMessage.append('<p>' + value + '</p>');
+                    if (value.status === 'already_submitted') {
+                        errorMessage = '';
+                        Swal.fire({
+                            title: '',
+                            customClass: {
+                                container: 'wpstg-issue-resubmit-confirmation'
+                            },
+                            icon: 'warning',
+                            html: value.message,
+                            showCloseButton: true,
+                            showCancelButton: true,
+                            focusConfirm: false,
+                            confirmButtonText: 'Yes',
+                            cancelButtonText: 'No'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                sendIssueReport(button, 'true');
+                            }
+                        })
+                    } else {
+                        errorMessage.append('<p>' + value + '</p>');
+                    }                    
                 });
 
                 $('.wpstg-report-issue-form').prepend(errorMessage);
@@ -3027,7 +3047,11 @@ jQuery(document).ready(function ($) {
                 }, 2000);
             }
         });
+    }
 
+    $('#wpstg-report-submit').click(function (e) {
+        var self = $(this);
+        sendIssueReport(self, 'false');
         e.preventDefault();
     });
 

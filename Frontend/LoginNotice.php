@@ -2,15 +2,21 @@
 
 namespace WPStaging\Frontend;
 
+use WPStaging\Framework\Interfaces\TransientInterface;
+use WPStaging\Framework\Traits\BooleanTransientTrait;
+
 /**
  * Class LoginNotice
  *
  * This class is used to show notice on staging login form one time or with a maximum of 300sec
  *
  * @package WPStaging\Frontend
+ * @todo can be DRY using new Transient interface and trait
  */
-class LoginNotice
+class LoginNotice implements TransientInterface
 {
+    use BooleanTransientTrait;
+
     /**
      * The transient option_name that is used for showing notice on login form on staging site.
      */
@@ -22,22 +28,19 @@ class LoginNotice
     const TIME_IN_SEC = 300;
 
     /**
-     * Set the initial transient to show notice
+     * @return string
      */
-    public function setTransient()
+    public function getTransientName()
     {
-        set_transient(static::NOTICE_TRANSIENT_NAME, true, static::TIME_IN_SEC);
+        return self::NOTICE_TRANSIENT_NAME;
     }
 
-    /** @return bool */
-    public function getTransient()
+    /**
+     * @return int expiry time in seconds
+     */
+    public function getExpiryTime()
     {
-        return get_transient(static::NOTICE_TRANSIENT_NAME);
-    }
-
-    public function deleteTransient()
-    {
-        delete_transient(static::NOTICE_TRANSIENT_NAME);
+        return self::TIME_IN_SEC;
     }
 
     /**
