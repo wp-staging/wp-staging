@@ -32,7 +32,7 @@ class uninstall
         $options = json_decode(json_encode(get_option("wpstg_settings", [])));
 
         if (isset($options->unInstallOnDelete) && $options->unInstallOnDelete === '1') {
-            // Delete options
+            // Options
             delete_option("wpstg_version_upgraded_from");
             delete_option("wpstg_version");
             delete_option("wpstgpro_version_upgraded_from");
@@ -43,6 +43,7 @@ class uninstall
             delete_option("wpstg_settings");
             delete_option("wpstg_rmpermalinks_executed");
             delete_option("wpstg_activation_redirect");
+            delete_option("wpstg_emails_disabled");
 
 
             /* Do not delete these fields without actually deleting the staging site
@@ -66,6 +67,9 @@ class uninstall
 
             // Delete events
             wp_clear_scheduled_hook('wpstg_weekly_event');
+
+            // Transients
+            delete_transient("wpstg_issue_report_submitted");
 
         }
     }

@@ -203,26 +203,26 @@ final class WPStaging {
                 "wpstg-admin-script", $this->backend_url . "js/wpstg-admin.js", ["jquery"], self::getVersion(), false
         );
 
+        // Sweet Alert
+        wp_enqueue_script(
+            'wpstg-admin-sweetalerts',
+            $this->url . 'Backend/public/vendor/sweetalert2/sweetalert2.all.min.js',
+            [],
+            self::getVersion(),
+            true
+        );
+
+        wp_enqueue_style(
+            'wpstg-admin-sweetalerts',
+            $this->url . 'Backend/public/vendor/sweetalert2/wordpress-admin.min.css',
+            [],
+            self::getVersion()
+        );
+
         // Load admin js pro files
         if(defined('WPSTGPRO_VERSION')) {
             wp_enqueue_script(
                 "wpstg-admin-pro-script", $this->url . "Backend/Pro/public/js/wpstg-admin-pro.js", ["jquery"], self::getVersion(), false
-            );
-
-            // Sweet Alert
-            wp_enqueue_script(
-                'wpstg-admin-pro-sweetalerts',
-                $this->url . 'Backend/Pro/public/vendor/sweetalert2/sweetalert2.all.min.js',
-                [],
-                self::getVersion(),
-                true
-            );
-
-            wp_enqueue_style(
-                'wpstg-admin-pro-sweetalerts',
-                $this->url . 'Backend/Pro/public/vendor/sweetalert2/wordpress-admin.min.css',
-                [],
-                self::getVersion()
             );
         }
 

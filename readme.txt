@@ -6,10 +6,10 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wordpress.org/plugins/wp-staging
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, staging, duplication, clone, migration
+Tags: clone, backup, staging, duplication, migration
 Requires at least: 3.6+
-Tested up to: 5.5
-Stable tag: 2.7.9
+Tested up to: 5.6
+Stable tag: 2.8.0
 Requires PHP: 5.5
 
 A duplicator plugin - clone/move, duplicate & migrate websites to staging, backup and development sites that only authorized users can access.
@@ -154,6 +154,10 @@ https://wp-staging.com
 4. Finish - Access your backup / staging site
 
 == Changelog ==
+
+= 2.8.0 =
+* Fix: Latest supported WP version is not reflected on wordpress.org plugin repo
+* Enh: Show confirmation popup if user tries to send another support request within an hour
 
 = 2.7.9 =
 * New: Compatible up to WordPress 5.6
@@ -302,10 +306,11 @@ Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging
 * Fix: Uninstall function can throw fatal error
 * Fix: Do not write sensitive information into debug.log if debug mode is active
 * Fix: Update notification shown even if there is no more recent version
+* Enh: Change authentication to a combination of nonces and access tokens
+* Enh: Show confirmation popup if user tries to send another support request within an hour
+* Dev: Improve tests performance
+* Dev: Add tests for database export and restore
 * Dev: Memory exhausted during tests
 * Dev: Prefix composer vendor libraries with PHP-Scoper
 * Dev: Add more unit and webdriver tests to improve QA
-* Enh: Change authentication to a combination of nonces and access tokens
-* Enh: Improve tests performance
-* Enh: Add tests for database export and restore
 
