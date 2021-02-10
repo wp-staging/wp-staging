@@ -4,7 +4,7 @@ namespace WPStaging\Component\Job;
 
 use WPStaging\Component\Dto\AbstractDto;
 
-class QueueJobDto extends AbstractDto
+abstract class QueueJobDto extends AbstractDto
 {
     /** @var string|int|null */
     protected $id;

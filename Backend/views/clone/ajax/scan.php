@@ -109,22 +109,38 @@
     </a>
 
     <div class="wpstg-tab-section" id="wpstg-advanced-settings">
-
         <?php
         if (defined('WPSTGPRO_VERSION')) {
             require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/external-database.php');
             require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/custom-directory.php');
-            require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/mail-setting.php');
         } else {
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'mail-setting.php');
         }
         ?>
-
     </div>
 </div>
 
+<?php
+if (defined('WPSTGPRO_VERSION')) {
+    require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/mail-setting.php');
+}
+
+if( $options->current !== null ) {
+    $uploadsSymlinked = isset($options->existingClones[$options->current]['uploadsSymlinked']) ? (bool)$options->existingClones[$options->current]['uploadsSymlinked'] : false;
+?>
+<p><label>
+    <input type="checkbox" id="wpstg-clean-plugins-themes" name="wpstg-clean-plugins-themes">
+    <?php echo __("Delete all plugins & themes on staging site before starting copy process.", "wp-staging"); ?>
+</label></p>
+<p><label> <?php echo ($uploadsSymlinked ? "<b>" . __("Note: This option is disabled as uploads directory is symlinked", "wp-staging") . "</b><br/>": '') ?>
+    <input type="checkbox" id="wpstg-clean-uploads" name="wpstg-clean-uploads" <?php echo ($uploadsSymlinked ? 'disabled' : '') ?>>
+    <?php echo __("Delete entire folder wp-content/uploads on staging site including all images before starting copy process.", "wp-staging"); ?>
+</label></p>
+<?php
+}
+?>
 <strong>Important:</strong><a href="#" id="wpstg-check-space"><?php _e( 'Check required disk space', 'wp-staging' ); ?></a>
 <p></p>
 

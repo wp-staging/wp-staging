@@ -6,7 +6,6 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\Utils\Htaccess;
-use WPStaging\Core\Utils\Filesystem;
 
 /**
  * Upgrade Class
@@ -116,11 +115,6 @@ class Upgrade {
             if( extension_loaded( 'litespeed' ) ) {
                 $htaccess->createLitespeed( ABSPATH . '.htaccess' );
             }
-
-            // Create empty index.php in wp staging uploads folder
-            $filesystem = new Filesystem();
-            $filesystem->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'index.php', "<?php // silence" );
-            $filesystem->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'logs/index.php', "<?php // silence" );
 
             // create web.config file for IIS in wp staging uploads folder
             $webconfig = new IISWebConfig();

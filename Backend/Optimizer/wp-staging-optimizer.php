@@ -86,7 +86,7 @@ function wpstgExcludePlugins($plugins)
         return $plugins;
     }
 
-    if (!wpstgIsCompatibilityModeRequest()) {
+    if (!wpstgIsOptimizerRequest()) {
         return $plugins;
     }
 
@@ -118,7 +118,7 @@ function wpstgExcludeSitePlugins($plugins)
         return $plugins;
     }
 
-    if (!wpstgIsCompatibilityModeRequest()) {
+    if (!wpstgIsOptimizerRequest()) {
         return $plugins;
     }
 
@@ -148,7 +148,7 @@ function wpstgDisableTheme($dir)
 {
     $enableTheme = apply_filters('wpstg_optimizer_enable_theme', false);
 
-    if (wpstgIsCompatibilityModeRequest() && $enableTheme === false) {
+    if (wpstgIsOptimizerRequest() && $enableTheme === false) {
         $wpstgRootPro = wpstgGetPluginsDir() . 'wp-staging-pro';
         $wpstgRoot = wpstgGetPluginsDir() . 'wp-staging';
 
@@ -173,28 +173,28 @@ add_filter('stylesheet_directory', 'wpstgDisableTheme');
 add_filter('template_directory', 'wpstgDisableTheme');
 
 /**
- * Should the current request be processed by Compatibility Mode?
+ * Should the current request be processed by optimizer?
  *
  * @return bool
  */
-function wpstgIsCompatibilityModeRequest()
+function wpstgIsOptimizerRequest()
 {
 
-    // Optimizer not enabled
     if (!wpstgIsEnabledOptimizer()) {
         return false;
     }
 
-    if (!defined('DOING_AJAX') ||
-        !DOING_AJAX ||
-        !isset($_POST['action']) ||
-        strpos($_POST['action'], 'wpstg') === false
+    if (defined('DOING_AJAX') &&
+        DOING_AJAX &&
+        isset($_POST['action']) &&
+        strpos($_POST['action'], 'wpstg_send_report') === false &&
+        strpos($_POST['action'], 'wpstg') === 0
     ) {
 
-        return false;
+        return true;
     }
 
-    return true;
+    return false;
 }
 
 /**

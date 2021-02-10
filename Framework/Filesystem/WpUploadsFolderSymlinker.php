@@ -60,9 +60,9 @@ class WpUploadsFolderSymlinker
 
         $uploadPath = $this->wpDirectories->getUploadPath();
 
-        $this->createDirectory($this->stagingUploadPath);
+        (new Filesystem)->mkdir(dirname($this->stagingUploadPath));
 
-        if (false === symlink($uploadPath, $this->stagingUploadPath)) {
+        if (!symlink($uploadPath, $this->stagingUploadPath)) {
             $this->error = "Can not symlink  " . $uploadPath . "to " . $this->stagingUploadPath;
             return false;
         }
@@ -77,22 +77,5 @@ class WpUploadsFolderSymlinker
     public function getError() 
     {
         return $this->error;
-    }
-
-    /**
-     * Create staging sites upload directory ready to be connected via symlink to the production site
-     * Directory must exist before i
-     */
-    protected function createDirectory($path)
-    {
-        $dirname = dirname($path);
-        $directories = explode(DIRECTORY_SEPARATOR, $dirname);
-        $currentDirectory = '';
-        foreach ($directories as $directory) {
-            $currentDirectory .= $directory . DIRECTORY_SEPARATOR;
-            if (!file_exists($currentDirectory)) {
-                mkdir($currentDirectory, 0755);
-            }
-        }
     }
 }

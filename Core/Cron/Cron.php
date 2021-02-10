@@ -16,15 +16,15 @@ class Cron
 
     public function __construct()
     {
-        add_filter('cron_schedules', [$this, 'add_new_intervals']);
+        add_filter('cron_schedules', [$this, 'addIntervals']);
     }
 
     /**
      * Add new intervals for wp cron jobs
-     * @param type $schedules
-     * @return type
+     * @param array $schedules
+     * @return array
      */
-    public function add_new_intervals($schedules)
+    public function addIntervals($schedules)
     {
         // add weekly and monthly intervals
         $schedules['weekly'] = [
@@ -40,7 +40,10 @@ class Cron
         return $schedules;
     }
 
-    public function schedule_event()
+    /**
+     * @return bool
+     */
+    public function scheduleEvent()
     {
         if (!wp_next_scheduled('wpstg_weekly_event')) {
             wp_schedule_event(time(), 'weekly', 'wpstg_weekly_event');
@@ -48,6 +51,8 @@ class Cron
         if (!wp_next_scheduled('wpstg_daily_event')) {
             wp_schedule_event(time(), 'daily', 'wpstg_daily_event');
         }
+
+        return true;
     }
 
 }

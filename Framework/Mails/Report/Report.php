@@ -21,6 +21,14 @@ class Report
     const EMAIL_SUBJECT = "Report Issue!";
 
     /**
+     * Maximum attachment file size of 5MB
+     *
+     * @var int
+     *
+     */
+    const ATTACHMENT_MAX_FILE_SIZE = 5242880;
+
+    /**
      * Send customer issue report
      *
      * @param string $email User e-mail
@@ -55,7 +63,6 @@ class Report
         }
 
         $attachments = [];
-        $maxFileSize = 512 * 1024;
         if ($provider) {
             $message .= "\n\n'Hosting provider: " . $provider;
         }
@@ -63,13 +70,13 @@ class Report
         if (!empty($syslog)) {
             $message .= "\n\n'" . $this->getSyslog();
             $debugLogFile = WP_CONTENT_DIR . '/debug.log';
-            if (filesize($debugLogFile) && $maxFileSize > filesize($debugLogFile)) {
+            if (file_exists($debugLogFile) && self::ATTACHMENT_MAX_FILE_SIZE > filesize($debugLogFile)) {
                 $attachments[] = $debugLogFile;
             }
         }
 
         $transient = new ReportSubmitTransient();
-        if ($transient->getTransient() && !$forceSend) {
+        if (!$forceSend && $transient->getTransient() ) {
             // to show alert using js
             $errors[] = [
                 "status" => 'already_submitted',

@@ -30,7 +30,10 @@
                 do_action('wpstg.views.single_overview.before_existing_clones_buttons', $name, $data, $license);
 
                 // Todo: Remove in future versions
-                echo apply_filters_deprecated("wpstg_before_stage_buttons", [$html = '', $name, $data], '2.7.6', 'wpstg.views.single_overview.before_existing_clones_buttons', 'The replacement filter uses do_action()');
+                if (function_exists('apply_filters_deprecated')) {
+                    // apply_filters_deprecated exists since WP 4.6
+                    echo apply_filters_deprecated("wpstg_before_stage_buttons", [$html = '', $name, $data], '2.7.6', 'wpstg.views.single_overview.before_existing_clones_buttons', 'The replacement filter uses do_action()');
+                }
                 ?>
 
                 <a href="<?php echo $urlLogin ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank" title="<?php echo __( "Open the staging site in a new tab", "wp-staging" ) ?>">
@@ -49,7 +52,10 @@
                 do_action('wpstg.views.single_overview.after_existing_clones_buttons', $name, $data, $license);
 
                 // Todo: Remove in future versions
-                echo apply_filters_deprecated("wpstg_after_stage_buttons", [$html = '', $name, $data], '2.7.6', 'wpstg.views.single_overview.after_existing_clones_buttons', 'The replacement filter uses do_action()');
+                if (function_exists('apply_filters_deprecated')) {
+                    // apply_filters_deprecated exists since WP 4.6
+                    echo apply_filters_deprecated("wpstg_after_stage_buttons", [$html = '', $name, $data], '2.7.6', 'wpstg.views.single_overview.after_existing_clones_buttons', 'The replacement filter uses do_action()');
+                }
                 ?>
 
                 <div class="wpstg-staging-info">
@@ -59,7 +65,8 @@
                     $cloneDir = ! empty($data['path']) ? $data['path'] : '';
                     $url      = ! empty($data['url']) ? sprintf('<a href="%1$s" target="_blank">%1$s</a>', $data['url']) : '';
                     $datetime = ! empty($data['datetime']) ? date("D, d M Y H:i:s T", $data['datetime']) : '&nbsp;&nbsp;&nbsp;';
-
+                    $owner    = ! empty($data['ownerId']) ? get_userdata($data['ownerId']) : null;
+                    $ownerName = ($owner !== null) ? $owner->user_login : 'N/A';
                     $statusTooltip = "This clone is incomplete and does not work. Clone or update it again! \n\n".
                                       "Important: Keep the browser open until the cloning is finished. \n".
                                       "It will not proceed if your browser is not open.\n\n".
@@ -85,6 +92,8 @@
                     echo sprintf(__('Directory: <span class="wpstg-bold">%s</span>', 'wp-staging'), $cloneDir);
                     echo '</br>';
                     echo sprintf(__('URL: <span class="wpstg-bold">%s</span>', 'wp-staging'), $url);
+                    echo '</br>';
+                    echo sprintf(__('Created By: <span class="wpstg-bold">%s</span>', 'wp-staging'), $ownerName);
                     echo '</br>';
                     echo $status;
                     echo '</br>';

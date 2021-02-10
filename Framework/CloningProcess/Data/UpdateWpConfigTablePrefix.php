@@ -21,8 +21,9 @@ class UpdateWpConfigTablePrefix extends FileCloningService
 
         $oldUrl = (!$this->dto->isMultisite()) ? $this->dto->getHomeUrl() : $this->dto->getBaseUrl();
 
-        // Replace table prefix
-        $pattern = '/\$table_prefix\s*=\s*(.*)/';
+        // Don't update the table prefix if the line starts with //, /* or * (ignoring space before them),
+        // Otherwise replace table prefix
+        $pattern = '/^\s*((?!\/\/|\/\*|\*))\$table_prefix\s*=\s*(.*)/m';
         $replacement = '$table_prefix = \'' . $prefix . '\'; // Changed by WP Staging';
         $content = preg_replace($pattern, $replacement, $content);
 

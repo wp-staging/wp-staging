@@ -7,6 +7,8 @@ if( !defined( "WPINC" ) ) {
     die;
 }
 
+use WPStaging\Framework\Filesystem\DirectoryListing;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\DI\Container;
 use WPStaging\Backend\Administrator;
@@ -70,16 +72,28 @@ final class WPStaging {
      */
     private $accessToken;
 
+    /**
+     * @var Container
+     */
     private $container;
+
+    /**
+     * @var bool Whether this Singleton instance has bootstrapped already.
+     */
+    private $isBootstrapped = false;
 
     /**
      * WPStaging constructor.
      */
     private function __construct(Container $container) {
-	    $this->container   = $container;
+        $this->container = $container;
+    }
 
-	    // Todo: Move this to a common service Provider for both Free and Pro. Do not register anything else here.
-	    $this->container->bind(LoggerInterface::class, Logger::class);
+    public function bootstrap() {
+        $this->isBootstrapped = true;
+
+        // Todo: Move this to a common service Provider for both Free and Pro. Do not register anything else here.
+        $this->container->bind(LoggerInterface::class, Logger::class);
 
         /*
          * @todo Before injecting these using DI, we have to register them in a Service Provider.
@@ -95,6 +109,7 @@ final class WPStaging {
         $this->cloneSiteFirstRun();
         $this->maybeLoadPro();
         $this->handleCacheIssues();
+        $this->preventDirectoryListing();
     }
 
     /**
@@ -283,27 +298,24 @@ final class WPStaging {
     public static function getContentDir() {
         $wp_upload_dir = wp_upload_dir();
         $path          = $wp_upload_dir['basedir'] . '/wp-staging';
-        wp_mkdir_p( $path );
+        (new Filesystem)->mkdir($path);
         return apply_filters( 'wpstg_get_upload_dir', $path . '/' );
     }
 
     /**
      * Get Instance
      *
-     * @param Container|null $container
-     *
      * @return WPStaging
      */
-    public static function getInstance(Container $container = null) {
-        if( static::$instance === null ) {
-            if ($container === null) {
-                $container = new Container;
-                if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                    error_log('A Container instance should be set when requiring this class for the first time.');
-                }
-            }
+    public static function getInstance()
+    {
+        if (static::$instance === null) {
+            static::$instance = new WPStaging(new Container);
+            self::getInstance();
+        }
 
-            static::$instance = new static($container);
+        if (!static::$instance->isBootstrapped) {
+            static::$instance->bootstrap();
         }
 
         return static::$instance;
@@ -402,19 +414,42 @@ final class WPStaging {
     }
 
     /**
+     * Returns the Container. Use this wisely!
+     *
+     * Acceptable example:
+     * - Using the Container as a cache that lives during the request to avoid doing multiple operations.
+     *
+     * Avoid example:
+     * - Using the Container to build instances of classes outside the __construct
+     *
+     * @return Container
+     */
+    public function getContainer()
+    {
+        return $this->container;
+    }
+
+    /**
      * @return string
      */
-    public static function getVersion() {
-
-        if(defined('WPSTGPRO_VERSION'))
-        {
+    public static function getVersion()
+    {
+        if (self::isPro()) {
             return WPSTGPRO_VERSION;
         }
 
         return WPSTG_VERSION;
-
     }
 
+    /**
+     * @return bool
+     * 
+     * @todo find a better place to make it mockable or add filter for mocking
+     */
+    public static function isPro()
+    {
+        return defined('WPSTGPRO_VERSION');
+    }
     /**
      * @return array|mixed|object
      */
@@ -475,6 +510,18 @@ final class WPStaging {
         $permalinksPurge = new PermalinksPurge();
         add_action( 'wpstg_pushing_complete', [ $permalinksPurge, 'executeAfterPushing' ]);
         add_action( 'wp_loaded', [ $permalinksPurge, 'purgePermalinks' ], $permalinksPurge::PLUGINS_LOADED_PRIORITY);
+    }
+
+    /**
+     * @todo Move this to a base service provider shared between Free and Pro
+     */
+    private function preventDirectoryListing()
+    {
+        if (is_admin() && !wp_doing_ajax()) {
+            /** @var DirectoryListing $directoryListing */
+            $directoryListing = $this->getContainer()->make(DirectoryListing::class);
+            $directoryListing->protectPluginUploadDirectory();
+        }
     }
 
 }

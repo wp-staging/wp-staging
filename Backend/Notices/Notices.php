@@ -32,6 +32,11 @@ class Notices
      */
     private $url;
 
+    /**
+     * @var string The key that holds directory listing errors in the container.
+     */
+    public static $directoryListingErrors = 'directoryListingErrors';
+
     public function __construct($path, $url)
     {
         $this->path = $path;
@@ -170,7 +175,7 @@ class Notices
             require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
         }
 
-        // Version Control for Free
+        // WPSTAGING is not tested with current WordPress version
         if(!$this->isPro() && version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<")) {
             require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
         }
@@ -179,6 +184,37 @@ class Notices
         if ($this->isDifferentScheme()) {
             require_once "{$viewsNoticesPath}wrong-scheme.php";
         }
+
+        $this->showDirectoryListingWarningNotice($viewsNoticesPath);
+    }
+
+    /**
+     * Displays the notice that we could not prevent
+     * directory listing on a sensitive folder for some reason.
+     *
+     * @see \WPStaging\Framework\Filesystem\Filesystem::mkdir The place where all errors are enqueued
+     *                                                        to be displayed as a single notice here.
+     *
+     * Note: When refactoring this, keep in mind this code should be
+     * called only once, otherwise the message would be enqueued multiple times.
+     *
+     * @param string $viewsNoticesPath The path to the views folder.
+     */
+    private function showDirectoryListingWarningNotice($viewsNoticesPath)
+    {
+        $directoryListingErrors = WPStaging::getInstance()->getContainer()->getFromArray(static::$directoryListingErrors);
+
+        // Early bail: No errors to show
+        if (empty($directoryListingErrors)) {
+            return;
+        }
+
+        // Early bail: These warnings were disabled by the user.
+        if ((bool)apply_filters('wpstg.notices.hideDirectoryListingWarnings', false)) {
+            return;
+        }
+
+        require_once "{$viewsNoticesPath}directory-listing-could-not-be-prevented.php";
     }
 
     /**
@@ -191,6 +227,24 @@ class Notices
         $homeScheme    = parse_url(get_option('home'), PHP_URL_SCHEME);
 
         return !($siteurlScheme === $homeScheme);
+    }
+
+    /**
+     * Get the path of plugin
+     * @return string
+     */
+    public function getPluginPath()
+    {
+        return $this->path;
+    }
+
+    /**
+     * Get the path of plugin
+     * @return string
+     */
+    public function getPluginUrl()
+    {
+        return $this->url;
     }
 
 }

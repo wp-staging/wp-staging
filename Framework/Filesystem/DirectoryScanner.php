@@ -1,133 +1,60 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
-// TODO PHP7.1; constant visibility
+// TODO PHP7.x; declare(strict_types=1);
+// TODO PHP7.x; return types && type-hints
 
 namespace WPStaging\Framework\Filesystem;
 
-use RuntimeException;
-use WPStaging\Vendor\Symfony\Component\Finder\Finder;
-use WPStaging\Framework\Queue\FinishedQueueException;
-use WPStaging\Framework\Queue\Queue;
-use WPStaging\Framework\Queue\Storage\BufferedCacheStorage;
-use WPStaging\Framework\Utils\Cache\BufferedCache;
-
 class DirectoryScanner
 {
-    const DATA_CACHE_FILE = 'filesystem_scanner_directory_data';
-    const QUEUE_CACHE_FILE = 'directory_scanner';
-
-    /** @var BufferedCache */
-    private $cache;
-
-    /** @var BufferedCacheStorage */
-    private $storage;
-
-    /** @var DirectoryService */
-    private $service;
-
-    /** @var Queue|null */
-    private $queue;
-
-    /** @var array */
-    private $newQueueItems;
-
-    public function __construct(BufferedCache $cache, BufferedCacheStorage $storage, DirectoryService $service)
-    {
-        $this->newQueueItems = [];
-        $this->cache = clone $cache;
-        $this->storage = clone $storage;
-        $this->service = $service;
-    }
-
-    public function __destruct()
-    {
-        if ($this->newQueueItems && $this->queue) {
-            $this->queue->pushAsArray($this->newQueueItems);
-        }
-    }
-
     /**
-     * @param string $name
+     * @param string $directory
+     * @param array  $excludedDirectories
+     *
+     * @return array
      */
-    public function setQueueByName($name = self::QUEUE_CACHE_FILE)
+    public function scan($directory, array $excludedDirectories = [])
     {
-        $this->queue = new Queue;
-        $this->queue->setName($name);
-        $this->queue->setStorage($this->storage);
-    }
-
-    /**
-     * @param array|null $excluded
-     * @param int $depth
-     * @return Finder|null
-     */
-    public function scanCurrentPath(array $excluded = null, $depth = 0)
-    {
-        $path = $this->getPathFromQueue();
-        if ($path === null) {
-            throw new FinishedQueueException('Directory Scanner Queue is Finished');
+        try {
+            $it = new \DirectoryIterator($directory);
+        } catch (\Exception $e) {
+            return [];
         }
 
-        $path = ABSPATH . $path;
-        return $this->service->scan($path, $depth, $excluded);
-    }
+        /*
+         * Normalize the excluded directories to maximize the chances
+         * of matching a excluded directory if we mean to.
+         *
+         * Exclusion: /var/www/single/wp-content/plugins/WooCommerce/
+         * Becomes:   /var/www/single/wp-content/plugins/woocommerce
+         *
+         * So that any of these exclusions matches:
+         * /var/www/single/wp-content/plugins/woocommerce
+         * /var/www/single/wp-content/plugins/woocommerce/
+         * /var/www/single/wp-content/plugins/WooCommerce
+         * /var/www/single/wp-content/plugins/WooCommerce/
+         */
+        $excludedDirectories = array_map(function ($item) {
+            return untrailingslashit(strtolower($item));
+        }, $excludedDirectories);
 
-    /**
-     * @return string|null
-     */
-    public function getPathFromQueue()
-    {
-        if ($this->queue->count() > 0) {
-            return $this->queue->pop();
+        /**
+         * Allow user to filter the excluded directories in a site export.
+         * @todo Should we add UI for this?
+         */
+        $excludedDirectories = (array)apply_filters('wpstg.export.site.directory.excluded', $excludedDirectories);
+
+        $dirs = [];
+
+        /** @var \SplFileInfo $item */
+        foreach ($it as $item) {
+            if ($item->isDir() && $item->getFilename() != "." && $item->getFilename() != "..") {
+                if (!in_array(untrailingslashit(strtolower($item->getRealPath())), $excludedDirectories)) {
+                    $dirs[] = $item->getRealPath();
+                }
+            }
         }
 
-        if ($this->newQueueItems) {
-            return array_shift($this->newQueueItems);
-        }
-
-        return null;
-    }
-
-    /**
-     * @param string $item
-     */
-    public function addToNewQueue($item)
-    {
-        $this->newQueueItems[] = $item;
-    }
-
-    /**
-     * @return BufferedCache
-     */
-    public function getCache()
-    {
-        return $this->cache;
-    }
-
-    /**
-     * @return Queue
-     */
-    public function getQueue()
-    {
-        if (!$this->queue) {
-            // TODO Custom Exception
-            throw new RuntimeException('DirectoryScanner Queue is not set');
-        }
-        return $this->queue;
-    }
-
-    public function setNewQueueItems(array $items = null)
-    {
-        $this->newQueueItems = $items;
-    }
-
-    /**
-     * @return DirectoryService
-     */
-    public function getService()
-    {
-        return $this->service;
+        return $dirs;
     }
 }

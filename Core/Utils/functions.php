@@ -10,35 +10,6 @@
  */
 
 /**
- * Get directory permissions
- *
- * @return int
- */
-function wpstg_get_permissions_for_directory()
-{
-    $octal = 0755;
-    if (defined('FS_CHMOD_DIR')) {
-        $octal = FS_CHMOD_DIR;
-    }
-
-    return apply_filters('wpstg_folder_permission', $octal);
-}
-
-/**
- * Get file permissions
- *
- * @return int
- */
-function wpstg_get_permissions_for_file()
-{
-    if (defined('FS_CHMOD_FILE')) {
-        return FS_CHMOD_FILE;
-    }
-
-    return 0644;
-}
-
-/**
  * PHP setup environment
  *
  * @return void
@@ -437,38 +408,6 @@ function wpstg_chmod($file, $mode = false)
 
     if (!@is_dir($file)) {
         return @chmod($file, $mode);
-    }
-
-    return true;
-}
-
-/**
- * Create file if it does not exist
- *
- * @param string $path
- * @param (int|false) $chmod The permissions as octal number (or false to skip chmod)
- * @param (string|int) $chown A user name or number (or false to skip chown).
- * @return boolean true on success, false on failure.
- */
-function wpstg_mkdir($path, $chmod = false, $chown = false)
-{
-    // Safe mode fails with a trailing slash under certain PHP versions.
-    $path = untrailingslashit($path);
-    if (empty($path)) {
-        return false;
-    }
-
-    if (!$chmod) {
-        $chmod = FS_CHMOD_DIR;
-    }
-
-    if (!@mkdir($path)) {
-        return false;
-    }
-    wpstg_chmod($path, $chmod);
-
-    if ($chown) {
-        wpstg_chown($path, $chown);
     }
 
     return true;

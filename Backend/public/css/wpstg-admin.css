@@ -34,7 +34,7 @@
     padding-bottom: 12px;
 }
 
-#wpstg-tools .nav-tab-wrapper {
+.wpstg-tabs-container .nav-tab-wrapper {
     padding: 0;
 }
 
@@ -56,12 +56,7 @@
     display: none;
 }
 
-
-/* Layout of admin table and rows
-*/
-
-#wpstg-tab-container .panel-container {
-    background: #FFF;
+#wpstg-tab-container .wpstg-settings-panel {
     padding: 0 20px 20px 20px;
     overflow: auto;
 }
@@ -758,18 +753,33 @@
 
 .wpstg-button.green {
     display: inline-block;
-    background-color: #83c11f;
     padding: 10px;
     min-width: 170px;
-    color: white;
     font-size: 16px;
     text-decoration: none;
     text-align: center;
     margin-top: 20px;
+    background-color: #83c11f;
+    color: white;
 }
 
 .wpstg-button.green:hover {
     background-color: #8ed122;
+}
+
+.wpstg-button.wpstg-save {
+    background-color: #1687A7;
+    color: white;
+}
+
+.wpstg-button.wpstg-save:hover {
+    background-color: #276678;
+}
+
+.wpstg-button.wpstg-bordered {
+    border-radius:3px;
+    font-size: 14px;
+    border: 1px solid white;
 }
 
 #wpstg-welcome li {
@@ -1073,6 +1083,12 @@
     text-align: center;
 }
 
+.wpstg-text-field>#wpstg-db-status {
+    margin-top: 8px;
+    margin-left: 25%;
+    min-width: 350px;
+}
+
 .wpstg-success {
     color: #3c763d;
     background-color: #dff0d8;
@@ -1295,11 +1311,11 @@ Tooltip top arrow
     color: #f56363;
 }
 
-.swal2-modal .swal2-cancel.wpstg--btn--cancel {
+body.toplevel_page_wpstg_clone .swal2-modal .swal2-cancel.wpstg--btn--cancel {
     margin-bottom: 0;
 }
 
-.swal2-modal .swal2-confirm.wpstg--btn--confirm {
+body.toplevel_page_wpstg_clone .swal2-modal .swal2-confirm.wpstg--btn--confirm {
     font-size: 16px;
     padding: .5em;
     line-height: normal;
@@ -1307,7 +1323,7 @@ Tooltip top arrow
     margin-right: 10px;
 }
 
-.swal2-modal .wpstg-loader {
+body.toplevel_page_wpstg_clone .swal2-modal .wpstg-loader {
     display: inline-block !important;
 }
 
@@ -1657,7 +1673,7 @@ span.wpstg--drag-or-upload {
     color: #a8a8a8;
 }
 
-#wpstg_disable_emails {
+#wpstg_allow_emails {
     margin-left: 10px;
 }
 
@@ -1930,4 +1946,8 @@ span.wpstg--drag-or-upload {
 
 .wpstg-issue-resubmit-confirmation.swal2-container {
     z-index: 10500;
+}
+
+body.toplevel_page_wpstg_clone .swal2-container .swal2-content {
+    z-index:2;
 }

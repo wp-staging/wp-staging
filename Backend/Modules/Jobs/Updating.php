@@ -119,6 +119,16 @@ class Updating extends Job
             $excludedDirectories[] = rtrim($wpUploadsFolder, '/\\');
         }
 
+        // delete uploads folder before copying if uploads is not symlinked
+        $this->options->deleteUploadsFolder = !$this->options->uploadsSymlinked && isset($_POST['cleanUploadsDir']) && $_POST['cleanUploadsDir'] === 'true';
+        // should not backup uploads during update process
+        $this->options->backupUploadsFolder = false;
+        // clean plugins and themes dir before updating
+        $this->options->deletePluginsAndThemes = isset($_POST['cleanPluginsThemes']) && $_POST['cleanPluginsThemes'] === 'true';
+        // set default statuses for backup of uploads dir and cleaning of uploads, themes and plugins dirs
+        $this->options->statusBackupUploadsDir = 'skipped';
+        $this->options->statusContentCleaner = 'pending';
+
         // Excluded Directories
         if (isset($_POST["excludedDirectories"]) && is_array($_POST["excludedDirectories"])) {
             $this->options->excludedDirectories = wpstg_urldecode($_POST["excludedDirectories"]);
@@ -154,7 +164,11 @@ class Updating extends Job
 
         $this->options->cloneHostname = $this->options->destinationHostname;
 
-        $this->options->emailsDisabled = isset( $_POST['emailsDisabled'] ) && $_POST['emailsDisabled'] !== "false";
+        // Make sure it is always enabled for free version
+        $this->options->emailsAllowed = true;
+        if (defined('WPSTGPRO_VERSION')) {
+            $this->options->emailsAllowed = isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false";
+        }
 
         // Directories to Copy
         $this->options->directoriesToCopy = array_merge(

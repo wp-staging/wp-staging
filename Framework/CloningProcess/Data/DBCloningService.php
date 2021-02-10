@@ -38,18 +38,22 @@ abstract class DBCloningService extends CloningService
      */
     protected function skipTable($table)
     {
+        // during cloning process we are appending underscore to the staging prefix if it is not there
+        // @see WPStaging/Backend/Modules/Jobs/Cloning.php#L293
+        // code below solves this issue https://github.com/WP-Staging/wp-staging-pro/issues/385
+        $prefix = rtrim($this->dto->getPrefix(), '_') . '_';
         // Skip - Table does not exist
-        if (!$this->tableExists($this->dto->getPrefix() . $table)) {
-            $this->log("Table " . $this->dto->getPrefix() . $table . ' not found. Skipping');
+        if (!$this->tableExists($prefix . $table)) {
+            $this->log("Table " . $prefix . $table . ' not found. Skipping');
             return true;
         }
-        //TODO: This check may not be necessary because a non-selected table isn't copied and thus shouldn't exist
-        // Skip - Table is not selected or updated.
-        //Removed due to issue https://github.com/WP-Staging/wp-staging-pro/issues/385. @todo Delete this later!
-/*        if (!in_array($this->dto->getPrefix() . $table, $this->dto->getTables())) {
-            $this->log("Table " . $this->dto->getPrefix() . $table . ' not selected/updated. Skipping');
+        // during update process option table was not skipped even though it was not selected
+        // that was causing problem if staging site prefix is basically something string appended to,
+        // production site prefix i.e. staging prefix: wp_stagging_ and production prefix: wp_ 
+        if (!in_array($prefix . $table, $this->dto->getTables())) {
+            $this->log("Table " . $prefix . $table . ' not selected/updated. Skipping');
             return true;
-        }*/
+        }
 
         return false;
     }

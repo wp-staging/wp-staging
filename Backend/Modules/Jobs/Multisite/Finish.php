@@ -80,7 +80,8 @@ class Finish extends Job {
             $this->options->existingClones[$this->options->clone]['url']      = $this->getDestinationUrl();
             $this->options->existingClones[$this->options->clone]['status']   = 'finished';
             $this->options->existingClones[$this->options->clone]['prefix']   = $this->options->prefix;
-            $this->options->existingClones[$this->options->clone]['uploadsSymlinked']   = $this->options->uploadsSymlinked;
+            $this->options->existingClones[$this->options->clone]['emailsAllowed'] = (bool) $this->options->emailsAllowed;
+            $this->options->existingClones[$this->options->clone]['uploadsSymlinked'] = (bool) $this->options->uploadsSymlinked;
             update_option( "wpstg_existing_clones_beta", $this->options->existingClones );
             $this->log( "Finish: The job finished!" );
             return true;
@@ -103,8 +104,8 @@ class Finish extends Job {
             "databaseDatabase" => $this->options->databaseDatabase,
             "databaseServer"   => $this->options->databaseServer,
             "databasePrefix"   => $this->options->databasePrefix,
-            "emailsDisabled"   => (bool) $this->options->emailsDisabled,
-            "uploadsSymlinked"   => (bool)$this->options->uploadsSymlinked
+            "emailsAllowed"    => (bool) $this->options->emailsAllowed,
+            "uploadsSymlinked" => (bool)$this->options->uploadsSymlinked
         ];
 
         if( update_option( "wpstg_existing_clones_beta", $this->options->existingClones ) === false ) {

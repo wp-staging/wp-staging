@@ -9,6 +9,7 @@
 
 namespace WPStaging\Core\Utils;
 
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Vendor\Psr\Log\LogLevel;
 
@@ -83,17 +84,11 @@ class Logger implements LoggerInterface
             $this->logExtension = $logExtension;
         }
 
-        // If cache directory doesn't exists, create it
-        if (!is_dir($this->logDir) && !@mkdir($this->logDir, 0755, true))
-        {
-            /**
-             * There's no need to throw this exception, which causes a fatal,
-             * as a warning is already displayed on:
-             *
-             * @see \WPStaging\Backend\Notices\Notices::messages
-             */
-            // throw new \Exception("Failed to create log directory!");
-        }
+        /**
+         * If log directory doesn't exists, create it.
+         * @see \WPStaging\Backend\Notices\Notices::messages Notice that shows if log directory couldn't be created.
+         */
+        (new Filesystem)->mkdir($this->logDir);
     }
 
     public function __destruct()
@@ -135,7 +130,7 @@ class Logger implements LoggerInterface
     }
 
     /**
-     * @param Strings $fileName
+     * @param string $fileName
      */
     public function setFileName($fileName)
     {

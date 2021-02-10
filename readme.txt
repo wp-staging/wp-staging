@@ -1,4 +1,4 @@
-=== WP STAGING - DB & File Duplicator & Migration  ===
+=== WP STAGING - Backup Duplicator & Migration  ===
 
 Author URL: https://wordpress.org/plugins/wp-staging
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -6,13 +6,13 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wordpress.org/plugins/wp-staging
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: clone, backup, staging, duplication, migration
+Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.6
-Stable tag: 2.8.0
+Stable tag: 2.8.1
 Requires PHP: 5.5
 
-A duplicator plugin - clone/move, duplicate & migrate websites to staging, backup and development sites that only authorized users can access.
+A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup and development sites for authorized users only.
 
 == Description ==
 
@@ -34,7 +34,7 @@ WP STAGING can help you to prevent your website from being broken or unavailable
 
 = Main Features =
 
-* WP STAGING clones the whole production site into a subfolder like example.com/staging-site.
+* WPSTAGING clones the whole production site into a subfolder like example.com/staging-site.
 * Easy to use! Create a clone of your site by clicking one button "CREATE NEW STAGING SITE".
 * No Software as a Service - No account needed! All data belong to you only and stay on your server.
 * No server timeouts on huge websites or/and small hosting servers
@@ -132,6 +132,17 @@ After installation, go to the settings page 'Staging' and do your adjustments th
 
 == Frequently Asked Questions ==
 
+* What is the Difference between WP STAGING and a Regular Backup Plugin?
+You may have heard about other popular backup plugins like BackWPUp, BackupWordPress, Simple Backup, WordPress Backup to Dropbox or similar WordPress backup plugins and now wonder about the difference between WP STAGING and those backup tools.
+Other backup plugins usually create a backup of your WordPress filesystem and a database backup which you can use to restore your website in case it became corrupted or you want to go back in time to a previous state.
+The backup files are compressed and can not be executed directly. WP STAGING on the other hand creates a full backup of the whole file system and the database in a working state that you can open like your original production website.
+
+Even though WP STAGING comes with some backup capabilities it's main purpose is to create a clone of your website which you can work on. It harmonies very well with all the mentioned backup plugins above and we recommend that you use it in conjunction with these backup plugins.
+
+Note, that some free backup plugins are not able to support custom tables. (For instance the free version of Updraft plus backup plugin). In that case, your backup plugin is not able to create a backup of your staging site when it is executed on the production site.
+The reason is that the tables created by WP STAGING are kind of custom tables beginning with another table prefix.
+To bypass this limitation and to be able to create a backup of your staging site, you can setup your backup plugin on the staging site and create the backup from that location. This works well with every available WordPress backup plugin.
+
 * I can not log in to the staging / backup site
 If you are using a security plugin like All In One WP Security & Firewall you need to install the latest version of WP STAGING to access your cloned backup site.
 Go to WP STAGING > Settings and add the slug to the custom login page which you set up in All In One WP Security & Firewall plugin.
@@ -154,6 +165,17 @@ https://wp-staging.com
 4. Finish - Access your backup / staging site
 
 == Changelog ==
+
+= 2.8.1 =
+* Feat: Show creator user name of staging site
+* Enh: Show notice if sending mails are disabled
+* Enh: Show message and stop execution if php version is lower than 5.5
+* Enh: Abort cloning process if table already exists in external database
+* Fix: Can not update database credentials in staging sites wp-config.php under rare circumstances
+* Fix: During the update process if options table was not selected it didn't get skipped
+* Fix: Error if WP is lower than 4.6
+* Fix: Can not delete entire staging site on error
+* Fix: Activating pro version does not properly disable free version
 
 = 2.8.0 =
 * Fix: Latest supported WP version is not reflected on wordpress.org plugin repo
@@ -292,25 +314,16 @@ SKIP VERSION
 * Fix: PDO instances can not be serialized or unserialized
 * Fix: Can not update staging site db table if there are constraints in it
 
-= 2.6.0 =
-* New: Compatible up to WordPress 5.2.2
-* New: Performance improvement for directory iterator using less server ressources
-* New: Add filter wpstg_folder_permission to set a custom folder permission like 0755, allows to overwrite FS_CHMOD_DIR if it has been defined.
-* Fix: Error conditions in class Data does not compare type strict (== vs. ==)  resulting in interruption of clone process
-* Fix: Excluded folders under wp-content level are not take into account on microsoft IIS servers
-
 Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-* New: Compatible up to WordPress 5.6
-* Fix: Uninstall function can throw fatal error
-* Fix: Do not write sensitive information into debug.log if debug mode is active
-* Fix: Update notification shown even if there is no more recent version
-* Enh: Change authentication to a combination of nonces and access tokens
-* Enh: Show confirmation popup if user tries to send another support request within an hour
-* Dev: Improve tests performance
-* Dev: Add tests for database export and restore
-* Dev: Memory exhausted during tests
-* Dev: Prefix composer vendor libraries with PHP-Scoper
-* Dev: Add more unit and webdriver tests to improve QA
+* Feat: Show creator user name of staging site
+* Enh: Show notice if sending mails are disabled
+* Enh: Show message and stop execution if php version is lower than 5.5
+* Enh: Abort cloning process if table already exists in external database
+* Fix: Can not update database credentials in staging sites wp-config.php under rare circumstances
+* Fix: During the update process if options table was not selected it didn't get skipped
+* Fix: Error if WP is lower than 4.6
+* Fix: Can not delete entire staging site on error
+* Fix: Activating pro version does not properly disable free version
 

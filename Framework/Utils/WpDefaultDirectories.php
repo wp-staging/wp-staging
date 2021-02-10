@@ -15,6 +15,17 @@ class WpDefaultDirectories
     const MULTI_UPLOADS_DIR = 'sites';
 
     /**
+     * @var Strings
+     */
+    private $strUtils;
+
+    public function __construct()
+    {
+        // @todo inject using DI
+        $this->strUtils = new Strings();
+    }
+
+    /**
      * Get path to the uploads folder, relatively to the wp root folder.
      * Allows custom uploads folders.
      * For instance, returned strings can be:
@@ -29,7 +40,7 @@ class WpDefaultDirectories
      */
     public function getRelativeUploadPath()
     {
-        $relPath = str_replace(wpstg_replace_windows_directory_separator(ABSPATH), null, $this->getUploadPath());
+        $relPath = str_replace($this->strUtils->sanitizeDirectorySeparator(ABSPATH), null, $this->getUploadPath());
 
         return trim($relPath, '/');
     }
@@ -50,8 +61,39 @@ class WpDefaultDirectories
         // Adding slashes at before and end of absolute path to WordPress uploads directory
         $uploadsAbsPath = trailingslashit($uploads['basedir']);
 
-        return wpstg_replace_windows_directory_separator($uploadsAbsPath);
+        return $this->strUtils->sanitizeDirectorySeparator($uploadsAbsPath);
     }
 
+    /**
+     * Get the relative path of wp content directory
+     * @return string
+     */
+    public function getRelativeWpContentPath()
+    {
+        $relPath = str_replace($this->strUtils->sanitizeDirectorySeparator(ABSPATH), null, WP_CONTENT_DIR);
 
+        return trim($relPath, '/');
+    }
+
+    /**
+     * Get the relative path of plugins directory
+     * @return string
+     */
+    public function getRelativePluginPath()
+    {
+        $relPath = str_replace($this->strUtils->sanitizeDirectorySeparator(ABSPATH), null, WP_PLUGIN_DIR);
+
+        return trim($relPath, '/');
+    }
+
+    /**
+     * Get the relative path of themes directory
+     * @return string
+     */
+    public function getRelativeThemePath()
+    {
+        $relWpContentPath = $this->getRelativeWpContentPath();
+        $relPath = $relWpContentPath . "/" . "themes";
+        return $this->strUtils->sanitizeDirectorySeparator($relPath);
+    }
 }

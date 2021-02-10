@@ -10,15 +10,13 @@ use WPStaging\Component\Task\TaskInterface;
 use WPStaging\Component\Task\TaskResponseDto;
 use WPStaging\Framework\Queue\Queue;
 use WPStaging\Framework\Queue\Storage\CacheStorage;
-use WPStaging\Framework\Queue\Storage\StorageInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Repository\SettingsRepository;
 use WPStaging\Core\WPStaging;
 
 abstract class AbstractQueueJob extends AbstractJob
 {
     /** @var Cache */
-    protected $cache;
+    private $jobCache;
 
     /** @var QueueJobDto */
     protected $dto;
@@ -26,17 +24,20 @@ abstract class AbstractQueueJob extends AbstractJob
     /** @var Queue */
     protected $queue;
 
+    /**
+     * @var CacheStorage $queueCache Controls the cache file for the queue.
+     */
+    protected $queueCache;
+
     /** @var TaskInterface */
     protected $currentTask;
 
-    public function __construct()
+    public function __construct(Cache $jobCache, Queue $queue, CacheStorage $queueCache, QueueJobDto $dto)
     {
-        $this->setQueue();
-
-        $this->cache = clone WPStaging::getInstance()->get(Cache::class);
-        $this->cache->setLifetime(HOUR_IN_SECONDS);
-        $this->cache->setFilename('job_' . $this->getJobName());
-        $this->cache->setPath(trailingslashit($this->cache->getPath() . $this->getJobName()));
+        $this->queue      = $queue;
+        $this->jobCache   = $jobCache;
+        $this->queueCache = $queueCache;
+        $this->dto        = $dto;
 
         $this->setUp();
     }
@@ -49,10 +50,11 @@ abstract class AbstractQueueJob extends AbstractJob
 
         if ($this->dto->isFinished()) {
             $this->clean();
+
             return;
         }
 
-        $this->cache->save($this->dto->toArray());
+        $this->jobCache->save($this->dto->toArray());
     }
 
     abstract protected function initiateTasks();
@@ -71,14 +73,6 @@ abstract class AbstractQueueJob extends AbstractJob
         $this->queue->reset();
     }
 
-    /**
-     * @return string
-     */
-    protected function getDtoClass()
-    {
-        return QueueJobDto::class;
-    }
-
     protected function prepare()
     {
         if (method_exists($this, 'provideRequestDto')) {
@@ -94,18 +88,21 @@ abstract class AbstractQueueJob extends AbstractJob
 
     protected function setUp()
     {
+        $this->setQueue();
+
+        $this->jobCache->setLifetime(HOUR_IN_SECONDS);
+        $this->jobCache->setFilename('job_' . $this->getJobName());
+        $this->jobCache->setPath(trailingslashit($this->jobCache->getPath() . $this->getJobName()));
+
         if (!empty($_POST['reset']) && ($_POST['reset'] === true || $_POST['reset'] === 'true')) {
             /** @noinspection DynamicInvocationViaScopeResolutionInspection */
             AbstractJob::clean();
         }
 
-        $dtoClass = $this->getDtoClass();
-        /** @var QueueJobDto $dto */
-        $this->dto = (new $dtoClass);
         $this->dto->setInit(true);
         $this->dto->setFinished(false);
 
-        $data = $this->cache->get([]);
+        $data = $this->jobCache->get([]);
         if ($data) {
             $this->dto->hydrate($data);
         }
@@ -138,31 +135,18 @@ abstract class AbstractQueueJob extends AbstractJob
         }
         $this->currentTask->setJobId($this->dto->getId());
         $this->currentTask->setJobName($this->getJobName());
-
-        /** @var SettingsRepository $repoSettings */
-        $repoSettings = WPStaging::getInstance()->get(SettingsRepository::class);
-        $settings = $repoSettings->find();
-        $this->currentTask->setDebug($settings ? $settings->isDebug() : false);
+        $this->currentTask->setDebug(defined('WPSTG_DEBUG') && WPSTG_DEBUG);
     }
 
     protected function setQueue()
     {
-        $this->queue = new Queue;
         $this->queue->setName($this->findCurrentJob());
-        $this->queue->setStorage($this->provideQueueStorage());
-    }
 
-    /**
-     * @return StorageInterface
-     */
-    protected function provideQueueStorage()
-    {
-        /** @var CacheStorage $cacheStorage */
-        $cacheStorage = WPStaging::getInstance()->get(CacheStorage::class);
-        $cache = $cacheStorage->getCache();
-        /** @noinspection NullPointerExceptionInspection */
-        $cache->setPath(trailingslashit($cache->getPath() . $this->getJobName()));
-        return $cacheStorage;
+        $this->queueCache->getCache()->setPath(
+            trailingslashit($this->queueCache->getCache()->getPath() . $this->getJobName())
+        );
+
+        $this->queue->setStorage($this->queueCache);
     }
 
     protected function addTasks(array $tasks = [])
@@ -189,10 +173,12 @@ abstract class AbstractQueueJob extends AbstractJob
 
         if ($response->isStatus() && $this->queue->count() === 0) {
             $this->dto->setFinished(true);
+
             return $response;
         }
 
         $response->setStatus(false);
+
         return $response;
     }
 
@@ -213,9 +199,9 @@ abstract class AbstractQueueJob extends AbstractJob
             return;
         }
 
-        $args = $this->findCurrentStatusTitleArgs();
+        $args  = $this->findCurrentStatusTitleArgs();
         $title = $this->currentTask->getStatusTitle($args);
         $this->dto->setCurrentStatusTitle($title);
-        $this->cache->save($this->dto->toArray());
+        $this->jobCache->save($this->dto->toArray());
     }
 }

@@ -44,6 +44,7 @@ class uninstall
             delete_option("wpstg_rmpermalinks_executed");
             delete_option("wpstg_activation_redirect");
             delete_option("wpstg_emails_disabled");
+            delete_option("wpstg_disabled_cache_notice");
 
 
             /* Do not delete these fields without actually deleting the staging site

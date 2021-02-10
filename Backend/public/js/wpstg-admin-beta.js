@@ -2,7 +2,7 @@ jQuery(document).ready(function($){
     $(".wpstg_hide_beta").click(function(e) {
         e.preventDefault();
 
-        WPStaging.ajax(
+        window.WPStaging.ajax(
             {action: "wpstg_hide_beta"},
             function(response)
             {

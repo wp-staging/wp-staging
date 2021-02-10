@@ -20,14 +20,19 @@ class FirstRun
      */
     const FIRST_RUN_KEY = 'wpstg_execute';
 
+    /**
+     * The option_name that is stored in the database to check whether mails are disabled or not
+     */
+    const MAILS_DISABLED_KEY = 'wpstg_emails_disabled';
+
 
     public function init()
     {
-        if ( ! (new SiteInfo)->isStaging()) {
+        if (!(new SiteInfo)->isStaging()) {
             return;
         }
 
-        if ( ! get_option(self::FIRST_RUN_KEY)) {
+        if (!get_option(self::FIRST_RUN_KEY)) {
             return;
         }
 
@@ -47,6 +52,11 @@ class FirstRun
 
         // Enable the disabled cache notice to be shown on the staging site admin.
         (new DisabledCacheNotice())->enable();
+
+        // Enable the disabled mail notice to be shown on the staging site admin.
+        if (defined('WPSTGPRO_VERSION')) {
+            (new \WPStaging\Backend\Pro\Notices\DisabledMailNotice())->enable();
+        }
 
         // Allow users to attach custom actions by using this hook
         do_action('wpstg.clone_first_run');

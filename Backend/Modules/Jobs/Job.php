@@ -186,7 +186,13 @@ abstract class Job implements JobInterface
     public function __destruct()
     {
         // Commit logs
-        $this->logger->commit();
+        if ($this->logger instanceof Logger) {
+            $this->logger->commit();
+        } else {
+            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+                error_log('Tried to commit log, but $this->logger was not a logger. May be a __destruct problem.');
+            }
+        }
     }
 
     /**
@@ -238,7 +244,7 @@ abstract class Job implements JobInterface
      * @param null|array|object $options
      * @return bool
      */
-    protected function saveOptions($options = null)
+    public function saveOptions($options = null)
     {
         // Get default options
         if ($options === null) {

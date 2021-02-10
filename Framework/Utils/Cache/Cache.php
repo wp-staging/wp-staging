@@ -7,7 +7,6 @@
 namespace WPStaging\Framework\Utils\Cache;
 
 use WPStaging\Framework\Filesystem\File;
-use WPStaging\Framework\Filesystem\Filesystem;
 
 class Cache extends AbstractCache
 {
