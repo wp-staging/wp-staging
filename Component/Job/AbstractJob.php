@@ -1,8 +1,5 @@
 <?php
 
-// If child class has `init` method, it will be executed with constructor to prepare the class for job execution
-// Such as setting -if needed- total steps, current step etc.
-
 namespace WPStaging\Component\Job;
 
 use WPStaging\Component\Task\TaskResponseDto;

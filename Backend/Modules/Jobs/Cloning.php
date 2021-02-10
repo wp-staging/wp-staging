@@ -168,7 +168,12 @@ class Cloning extends Job
             $this->options->cloneHostname = trim($_POST["cloneHostname"]);
         }
 
-        $this->options->emailsDisabled = isset( $_POST['emailsDisabled'] ) && $_POST['emailsDisabled'] !== "false";
+        // Make sure it is always enabled for free version
+        $this->options->emailsAllowed = true;
+        if (defined('WPSTGPRO_VERSION')) {
+            $this->options->emailsAllowed = apply_filters('wpstg_cloning_email_allowed', 
+                isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false");
+        }
 
         $this->options->destinationHostname = $this->getDestinationHostname();
         $this->options->destinationDir = $this->getDestinationDir();
@@ -178,6 +183,9 @@ class Cloning extends Job
 
         // Process lock state
         $this->options->isRunning = true;
+
+        // id of the user creating the clone
+        $this->options->ownerId = get_current_user_id();
 
         // Save Clone data
         $this->saveClone();
@@ -216,8 +224,9 @@ class Cloning extends Job
             "databaseDatabase" => $this->options->databaseDatabase,
             "databaseServer" => $this->options->databaseServer,
             "databasePrefix" => $this->options->databasePrefix,
-            "emailsDisabled"   => (bool) $this->options->emailsDisabled,
-            "uploadsSymlinked" => (bool)$this->options->uploadsSymlinked
+            "emailsAllowed"   => (bool)$this->options->emailsAllowed,
+            "uploadsSymlinked" => (bool)$this->options->uploadsSymlinked,
+            "ownerId" => $this->options->ownerId,
         ];
 
         if (update_option("wpstg_existing_clones_beta", $this->options->existingClones) === false) {

@@ -1,82 +1,36 @@
 <?php
-
-namespace WPStaging;
+/**
+ * This file is hooked as the \register_activation_hook of the plugin,
+ * therefore it runs as a standalone script that needs to be bootstrapped.
+ *
+ * @var string $pluginFilePath The absolute path to the main file of this plugin.
+ */
 
 use WPStaging\Backend\Optimizer\Optimizer;
-use WPStaging\Bootstrap\V1\WpstgBootstrap;
-use WPStaging\Core\Utils\IISWebConfig;
+use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Htaccess;
-use WPStaging\Core\Utils\Filesystem;
 
 /**
- * Install Class
- *
+ * Register Cron Events
  */
-class Install
-{
-    private $bootstrap;
+$cron = (new Cron)->scheduleEvent();
 
-    public function __construct(WpstgBootstrap $bootstrap)
-    {
-        $this->bootstrap = $bootstrap;
-    }
+/**
+ * Install the Optimizer
+ */
+$optimizer = (new Optimizer)->installOptimizer();
 
-    public function activation()
-    {
-        $this->bootstrap->checkRequirements();
-        $this->bootstrap->bootstrap();
+/**
+ * Add the transient to redirect for class Welcome (Not for multisites) and not for Pro version
+ */
+if (!defined('WPSTGPRO_VERSION')) {
+    set_transient('wpstg_activation_redirect', true, 3600);
+}
 
-        if ($this->bootstrap->passedRequirements()) {
-            $this->initCron();
-            $this->installOptimizer();
-            $this->createHtaccess();
-            $this->createIndex();
-            $this->createWebConfig();
-        }
-    }
-
-    private function initCron()
-    {
-        // Register cron job.
-        $cron = new \WPStaging\Core\Cron\Cron;
-        $cron->schedule_event();
-    }
-
-    private function installOptimizer()
-    {
-
-        // Install Optimizer
-        $optimizer = new Optimizer();
-        $optimizer->installOptimizer();
-
-        if (!defined('WPSTGPRO_VERSION')) {
-            // Add the transient to redirect for class Welcome (not for multisites) and not for Pro version
-            set_transient('wpstg_activation_redirect', true, 3600);
-        }
-    }
-
-    private function createHtaccess()
-    {
-        $htaccess = new Htaccess();
-        $htaccess->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . '.htaccess');
-        $htaccess->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'logs/.htaccess');
-
-        if (extension_loaded('litespeed')) {
-            $htaccess->createLitespeed(ABSPATH . '.htaccess');
-        }
-    }
-
-    private function createIndex()
-    {
-        $filesystem = new Filesystem();
-        $filesystem->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'index.php', "<?php // silence");
-        $filesystem->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'logs/index.php', "<?php // silence");
-    }
-
-    private function createWebConfig()
-    {
-        $webconfig = new IISWebConfig();
-        $webconfig->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'web.config');
-        $webconfig->create(trailingslashit(\WPStaging\Core\WPStaging::getContentDir()) . 'logs/web.config');
-    }
+/**
+ * Create Htaccess
+ */
+$htaccess = new Htaccess();
+if (extension_loaded('litespeed')) {
+    $htaccess->createLitespeed(ABSPATH . '.htaccess');
 }

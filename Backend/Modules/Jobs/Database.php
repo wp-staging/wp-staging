@@ -104,7 +104,7 @@ class Database extends CloningProcess
      * @param string $name
      * @return bool
      */
-    private function shouldDropTable($name)
+    private function isTableExist($name)
     {
         $old = $this->stagingDb->get_var($this->stagingDb->prepare("SHOW TABLES LIKE %s", $name));
         return (
@@ -113,6 +113,16 @@ class Database extends CloningProcess
                 !isset($this->options->job->current, $this->options->job->start) || $this->options->job->start == 0
             )
         );
+    }
+
+    /**
+     * Check if table already exists and the main job is not updating
+     * @param string $name
+     * @return bool
+     */
+    private function shouldAbortIfTableExist($name)
+    {
+        return isset($this->options->mainJob) && $this->options->mainJob !== 'updating' && $this->isTableExist($name);
     }
 
     /**
@@ -193,7 +203,12 @@ class Database extends CloningProcess
             }
         }
 
-        if ($this->shouldDropTable($newTableName)) {
+        if ($this->shouldAbortIfTableExist($newTableName)) {
+            $this->returnException(sprintf(__("Can not proceed. Tables beginning with the prefix '%s' already exist in the database. Choose another table prefix and try again.", "wp-staging"), $this->getStagingPrefix()));
+            return true;
+        }
+
+        if ($this->isTableExist($newTableName)) {
             $this->databaseCloningService->dropTable($newTableName);
         }
 

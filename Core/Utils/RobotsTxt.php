@@ -2,7 +2,7 @@
 
 namespace WPStaging\Core\Utils;
 
-use WPStaging\Core\Utils\Filesystem;
+use WPStaging\Framework\Filesystem\Filesystem;
 
 // No Direct Access
 if (!defined("WPINC"))

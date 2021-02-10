@@ -2,6 +2,8 @@
 namespace WPStaging\Backend\Optimizer;
 
 // No Direct Access
+use WPStaging\Framework\Filesystem\Filesystem;
+
 if( !defined( "WPINC" ) ) {
    die;
 }
@@ -33,7 +35,7 @@ class Optimizer {
          return false;
       }
       
-      if( wp_mkdir_p( $this->mudir ) ) {
+      if( (new Filesystem)->mkdir( $this->mudir ) ) {
          $this->copy();
       } 
       return false;

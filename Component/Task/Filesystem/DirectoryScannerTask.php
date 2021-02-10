@@ -14,8 +14,15 @@ use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Framework\Filesystem\DirectoryScanner;
+use WPStaging\Framework\Filesystem\DirectoryScannerControl;
 
+/**
+ * Class DirectoryScannerTask
+ *
+ * @see DirectoryScannerControl
+ *
+ * @package WPStaging\Component\Task\Filesystem
+ */
 class DirectoryScannerTask extends AbstractTask
 {
     use ResourceTrait;
@@ -28,8 +35,8 @@ class DirectoryScannerTask extends AbstractTask
     /** @var DirectoryScannerRequestDto */
     public $requestDto;
 
-    /** @var DirectoryScanner */
-    private $scanner;
+    /** @var DirectoryScannerControl */
+    private $scannerControl;
 
     /** @var BufferedCache */
     private $directoryCache;
@@ -37,17 +44,17 @@ class DirectoryScannerTask extends AbstractTask
     /** @var array */
     private $directories;
 
-    public function __construct(DirectoryScanner $scanner, LoggerInterface $logger, Cache $cache)
+    public function __construct(DirectoryScannerControl $scannerControl, LoggerInterface $logger, Cache $cache)
     {
         parent::__construct($logger, $cache);
         $this->directories = [];
 
-        $scanner->setQueueByName();
-        $this->scanner = $scanner;
+        $scannerControl->setQueueByName();
+        $this->scannerControl = $scannerControl;
 
-        $this->directoryCache = clone $scanner->getCache();
+        $this->directoryCache = clone $scannerControl->getCache();
         $this->directoryCache->setLifetime(DAY_IN_SECONDS);
-        $this->directoryCache->setFilename(DirectoryScanner::DATA_CACHE_FILE);
+        $this->directoryCache->setFilename(DirectoryScannerControl::DATA_CACHE_FILE);
     }
 
     public function __destruct()
@@ -109,7 +116,7 @@ class DirectoryScannerTask extends AbstractTask
     {
         $directories = null;
         try {
-            $directories = $this->scanner->scanCurrentPath($this->requestDto->getExcluded());
+            $directories = $this->scannerControl->scanCurrentPath($this->requestDto->getExcluded());
         } catch (FinishedQueueException $e) {
             $this->logger->info('Finished scanning directories');
             $this->requestDto->getSteps()->finish();
@@ -121,7 +128,7 @@ class DirectoryScannerTask extends AbstractTask
         }
 
         // No directories found here, skip it
-        if ($directories === null || $directories->count() < 1) {
+        if (empty($directories)) {
             return;
         }
 
@@ -129,10 +136,11 @@ class DirectoryScannerTask extends AbstractTask
             if ($this->isThreshold()) {
                 return;
             }
-            $relativePath = str_replace(ABSPATH, null, $directory->getPathname());
-            $this->scanner->addToNewQueue($relativePath);
+            $relativePath = str_replace(ABSPATH, null, $directory);
+            $this->scannerControl->addToNewQueue($relativePath);
             $this->directories[] = $relativePath;
         }
+        $this->directories = array_unique($this->directories);
     }
 
     protected function findRequestDto()
@@ -152,8 +160,8 @@ class DirectoryScannerTask extends AbstractTask
         }, $this->requestDto->getIncluded());
 
         /** @noinspection NullPointerExceptionInspection */
-        if ($this->scanner->getQueue()->count() < 1) {
-            $this->scanner->setNewQueueItems($this->directories);
+        if ($this->scannerControl->getQueue()->count() < 1) {
+            $this->scannerControl->setNewQueueItems($this->directories);
         }
 
         $totalSteps = count($this->requestDto->getIncluded());
@@ -166,10 +174,9 @@ class DirectoryScannerTask extends AbstractTask
         // There is no need to backup WP Staging as you shouldn't restore WPSTG backup without WPSTG having installed
         // Don't backup / restore cache as it can be problematic
         $excludedDirs = $this->requestDto->getExcluded();
-        if (!$excludedDirs) {
-            $excludedDirs = [];
-        }
-        $adapter = $this->scanner->getService()->getDirectory();
+
+        $adapter = $this->scannerControl->getDirectory();
+
         $excludedDirs[] = WPSTG_PLUGIN_DIR;
         $excludedDirs[] = $adapter->getPluginUploadsDirectory();
         $excludedDirs[] = WP_CONTENT_DIR . '/cache';
@@ -180,9 +187,9 @@ class DirectoryScannerTask extends AbstractTask
     {
         $caches = parent::getCaches();
         $caches[] = $this->directoryCache;
-        $caches[] = $this->scanner->getCache();
+        $caches[] = $this->scannerControl->getCache();
         /** @noinspection NullPointerExceptionInspection */
-        $caches[] = $this->scanner->getQueue()->getStorage()->getCache();
+        $caches[] = $this->scannerControl->getQueue()->getStorage()->getCache();
         return $caches;
     }
 
@@ -201,7 +208,7 @@ class DirectoryScannerTask extends AbstractTask
         $steps->setTotal($steps->getTotal() + count($this->directories));
 
         /** @noinspection NullPointerExceptionInspection */
-        if ($this->scanner->getQueue()->count() > 0) {
+        if ($this->scannerControl->getQueue()->count() > 0) {
             return;
         }
         

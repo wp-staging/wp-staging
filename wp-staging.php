@@ -7,7 +7,7 @@
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
  * Contributors: ReneHermi
- * Version: 2.8.0
+ * Version: 2.8.1
  * Text Domain: wp-staging
  * Domain Path: /languages/
  *
@@ -24,59 +24,28 @@
  * You should have received a copy of the GNU General Public License
  * along with Staging. If not, see <http://www.gnu.org/licenses/>.
  *
- * @package WPSTG
+ * @package  WPSTG
  * @category Development, Migrating, Staging
- * @author WP STAGING
+ * @author   WP STAGING
  */
-
-namespace WPStaging\Bootstrap\V1;
 
 if (!defined("WPINC")) {
     die;
 }
 
-if (!defined('WPSTG_FREE_LOADED')) {
-    define('WPSTG_FREE_LOADED', __FILE__);
-}
-
-require_once __DIR__ . '/Bootstrap/V1/Requirements/WpstgFreeRequirements.php';
-require_once __DIR__ . '/Bootstrap/V1/WpstgBootstrap.php';
-
-if (!class_exists(WpstgFreeBootstrap::class)) {
-    class WpstgFreeBootstrap extends WpstgBootstrap
-    {
-        protected function afterBootstrap()
+if (version_compare(phpversion(), '5.5.0', '>=')) {
+    // The absolute path to the main file of this plugin.
+    $pluginFilePath = __FILE__;
+    include_once dirname(__FILE__) . '/freeBootstrap.php';
+} else {
+    if (!function_exists('wpstg_unsupported_php_version')) {
+        function wpstg_unsupported_php_version()
         {
-            if (!defined('WPSTG_PLUGIN_FILE')) {
-                define('WPSTG_PLUGIN_FILE', __FILE__);
-            }
-
-            // WP STAGING version number
-            if (!defined('WPSTG_VERSION')) {
-                define('WPSTG_VERSION', '2.8.0');
-            }
-
-            // Compatible up to WordPress Version
-            if (!defined('WPSTG_COMPATIBLE')) {
-                define('WPSTG_COMPATIBLE', '5.6');
-            }
-
-            require_once __DIR__ . '/constants.php';
-
-            require_once(__DIR__ . '/_init.php');
+            echo '<div class="notice-warning notice is-dismissible">';
+            echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING') . '</p>';
+            echo '<p>' . esc_html__(sprintf('WPSTAGING requires PHP %s or higher. Your site is running an outdated version of PHP (%s), which requires an update.', '5.5', phpversion()), 'wp-staging') . '</p>';
+            echo '</div>';
         }
     }
-}
-
-$bootstrap = new WpstgFreeBootstrap(__DIR__, new WpstgFreeRequirements(__FILE__));
-
-add_action('plugins_loaded', [$bootstrap, 'checkRequirements'], 5);
-add_action('plugins_loaded', [$bootstrap, 'bootstrap'], 10);
-
-/** Installation Hooks */
-if (!class_exists('WPStaging\Install')) {
-    require_once __DIR__ . "/install.php";
-
-    $install = new \WPStaging\Install($bootstrap);
-    register_activation_hook(__FILE__, [$install, 'activation']);
+    add_action('admin_notices', 'wpstg_unsupported_php_version');
 }

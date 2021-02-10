@@ -857,9 +857,10 @@ var WPStaging = (function ($) {
         var cloneDir = $("#wpstg_clone_dir").val();
         that.data.cloneDir = encodeURIComponent($.trim(cloneDir));
         that.data.cloneHostname = $("#wpstg_clone_hostname").val();
-        that.data.emailsDisabled = $("#wpstg_disable_emails").is(':checked');
+        that.data.emailsAllowed = $("#wpstg_allow_emails").is(':checked');
         that.data.uploadsSymlinked = $("#wpstg_symlink_upload").is(':checked');
-
+        that.data.cleanPluginsThemes = $('#wpstg-clean-plugins-themes').is(':checked');
+        that.data.cleanUploadsDir = $('#wpstg-clean-uploads').is(':checked');
     };
 
     var proceedCloning = function($this, workflow) {
@@ -1001,11 +1002,13 @@ var WPStaging = (function ($) {
                     showAjaxFatalError(response);
 
                     // Finished
-                    if ("undefined" !== typeof response.delete && response.delete === 'finished') {
+                    if ("undefined" !== typeof response.delete && (response.delete === 'finished' || response.delete === 'unfinished')) {
 
                         cache.get("#wpstg-removing-clone").removeClass("loading").html('');
 
-                        $(".wpstg-clone#" + clone).remove();
+                        if (response.delete === 'finished') {
+                            $(".wpstg-clone#" + clone).remove();
+                        }
 
                         if ($(".wpstg-clone").length < 1) {
                             cache.get("#wpstg-existing-clones").find("h3").text('');
@@ -1992,16 +1995,27 @@ var WPStaging = (function ($) {
 
                 if (data.type === 'database') {
                     that.snapshots.type = data.type;
+
+                    // Only send to back-end what BE is expecting to receive.
+                    // Prevent error: Trying to hydrate DTO with value that does not exist.
                     delete requestData['includedDirectories'];
                     delete requestData['wpContentDir'];
                     delete requestData['availableDirectories'];
                     delete requestData['wpStagingDir'];
+                    delete requestData['exportDatabase'];
+                    delete requestData['includeOtherFilesInWpContent'];
+
                     requestData = that.snapshots.requestData(
                       'tasks.snapshot.database.create',
                       { ...requestData, type: 'manual' }
                     );
                 } else if (data.type === 'site') {
                     that.snapshots.type = data.type;
+
+                    // Only send to back-end what BE is expecting to receive.
+                    // Prevent error: Trying to hydrate DTO with value that does not exist.
+                    delete requestData['type'];
+
                     requestData = that.snapshots.requestData(
                       'jobs.snapshot.site.create',
                       requestData
@@ -2013,10 +2027,15 @@ var WPStaging = (function ($) {
                     requestData.jobs.snapshot.site.create.excludedDirectories = data.availableDirectories
                       .split('|')
                       .filter(item => !data.includedDirectories.includes(item))
-                      .map(item => `#${item}*#`)
+                      .map(item => item)
                     ;
+                    requestData.jobs.snapshot.site.create.includeOtherFilesInWpContent = [
+                        data.includeOtherFilesInWpContent,
+                    ];
 
-                    requestData.jobs.snapshot.site.create.excludedDirectories.push(`#${data.wpStagingDir}*#`);
+                    // Do not exclude the wp-content/uploads/wp-staging using regex by default
+                    // This folder is excluded by PHP without REGEX.
+                    //requestData.jobs.snapshot.site.create.excludedDirectories.push(`#${data.wpStagingDir}*#`);
 
                     // delete requestData.jobs.snapshot.site.create.includedDirectories;
                     delete requestData.jobs.snapshot.site.create.wpContentDir;
@@ -2228,6 +2247,7 @@ var WPStaging = (function ($) {
                                 availableDirectories: container.querySelector('input[name="availableDirectories"]').value || null,
                                 wpStagingDir: container.querySelector('input[name="wpStagingDir"]').value || null,
                                 exportDatabase: container.querySelector('input[name="export_database"]:checked') !== null,
+                                includeOtherFilesInWpContent: container.querySelector('input[name="includeOtherFilesInWpContent"]:checked') !== null,
                             };
                         },
                     });

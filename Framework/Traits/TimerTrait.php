@@ -2,9 +2,6 @@
 
 namespace WPStaging\Framework\Traits;
 
-use WPStaging\Entity\Settings;
-use WPStaging\Repository\SettingsRepository;
-
 trait TimerTrait
 {
     /** @var float */

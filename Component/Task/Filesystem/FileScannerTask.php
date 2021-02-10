@@ -16,8 +16,8 @@ use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Cache\AbstractCache;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Framework\Filesystem\DirectoryScanner;
-use WPStaging\Framework\Filesystem\FileScanner;
+use WPStaging\Framework\Filesystem\DirectoryScannerControl;
+use WPStaging\Framework\Filesystem\FileScannerControl;
 use WPStaging\Framework\Filesystem\Filesystem;
 
 class FileScannerTask extends AbstractTask
@@ -32,8 +32,8 @@ class FileScannerTask extends AbstractTask
     /** @var FileScannerRequestDto */
     public $requestDto;
 
-    /** @var FileScanner */
-    private $scanner;
+    /** @var FileScannerControl */
+    private $scannerControl;
 
     /** @var BufferedCache */
     private $fileCache;
@@ -41,17 +41,17 @@ class FileScannerTask extends AbstractTask
     /** @var array */
     private $files;
 
-    public function __construct(FileScanner $scanner, LoggerInterface $logger, Cache $cache)
+    public function __construct(FileScannerControl $scannerControl, LoggerInterface $logger, Cache $cache)
     {
         parent::__construct($logger, $cache);
         $this->files = [];
 
-        $scanner->setQueueByName();
-        $this->scanner = $scanner;
+        $scannerControl->setQueueByName();
+        $this->scannerControl = $scannerControl;
 
-        $this->fileCache = clone $scanner->getCache();
+        $this->fileCache = clone $scannerControl->getCache();
         $this->fileCache->setLifetime(DAY_IN_SECONDS);
-        $this->fileCache->setFilename(FileScanner::DATA_CACHE_FILE);
+        $this->fileCache->setFilename(FileScannerControl::DATA_CACHE_FILE);
     }
 
     public function __destruct()
@@ -118,7 +118,7 @@ class FileScannerTask extends AbstractTask
     {
         $files = null;
         try {
-            $files = $this->scanner->scanCurrentPath($this->requestDto->getExcluded());
+            $files = $this->scannerControl->scanCurrentPath($this->requestDto->getIncludeOtherFilesInWpContent());
         } catch (FinishedQueueException $e) {
             $this->logger->info('Finished scanning files');
             $this->requestDto->getSteps()->finish();
@@ -127,8 +127,8 @@ class FileScannerTask extends AbstractTask
             $this->logger->warning($e->getMessage());
         }
 
-        // No directories found here, skip it
-        if ($files === null || $files->count() < 1) {
+        // No files found here, skip it
+        if (empty($files)) {
             return;
         }
 
@@ -136,9 +136,10 @@ class FileScannerTask extends AbstractTask
             if ($this->isThreshold()) {
                 return;
             }
-            $relativePath = str_replace(ABSPATH, null, $file->getPathname());
+            $relativePath = str_replace(ABSPATH, null, $file);
             $this->files[] = $relativePath;
         }
+        $this->files = array_unique($this->files);
     }
 
     protected function findRequestDto()
@@ -154,7 +155,7 @@ class FileScannerTask extends AbstractTask
         }, $this->requestDto->getIncluded()));
 
         /** @noinspection NullPointerExceptionInspection */
-        if ($this->scanner->getQueue()->count() < 1) {
+        if ($this->scannerControl->getQueue()->count() < 1) {
             $this->initiateQueue();
         }
 
@@ -166,17 +167,17 @@ class FileScannerTask extends AbstractTask
         $caches = parent::getCaches();
         $caches[] = $this->fileCache;
         /** @noinspection NullPointerExceptionInspection */
-        $caches[] = $this->scanner->getQueue()->getStorage()->getCache();
+        $caches[] = $this->scannerControl->getQueue()->getStorage()->getCache();
         return $caches;
     }
 
     private function initiateQueue()
     {
         if ($this->requestDto->getIncluded()) {
-            $this->scanner->setNewQueueItems($this->requestDto->getIncluded());
+            $this->scannerControl->setNewQueueItems($this->requestDto->getIncluded());
         }
 
-        $directoryData = $this->cache->getPath() . DirectoryScanner::DATA_CACHE_FILE . '.' . AbstractCache::EXTENSION;
+        $directoryData = $this->cache->getPath() . DirectoryScannerControl::DATA_CACHE_FILE . '.' . AbstractCache::EXTENSION;
         if (!file_exists($directoryData)) {
             throw new RuntimeException(sprintf(
                 'File %s does not exists. Need to Scan Directories first',
@@ -184,7 +185,7 @@ class FileScannerTask extends AbstractTask
             ));
         }
 
-        $queueFile = $this->cache->getPath() . BufferedCacheStorage::FILE_PREFIX . FileScanner::QUEUE_CACHE_FILE;
+        $queueFile = $this->cache->getPath() . BufferedCacheStorage::FILE_PREFIX . FileScannerControl::QUEUE_CACHE_FILE;
         $queueFile .= '.' . AbstractCache::EXTENSION;
 
         if (!(new Filesystem)->copy($directoryData, $queueFile)) {
@@ -207,7 +208,7 @@ class FileScannerTask extends AbstractTask
         $steps->setTotal($steps->getTotal() + count($this->files));
 
         /** @noinspection NullPointerExceptionInspection */
-        if ($this->scanner->getQueue()->count() > 0) {
+        if ($this->scannerControl->getQueue()->count() > 0) {
             return;
         }
 

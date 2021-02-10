@@ -6,7 +6,7 @@
 
 namespace WPStaging\Framework\Utils\Cache;
 
-
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Vendor\Symfony\Component\Filesystem\Exception\IOException;
 use WPStaging\Framework\Adapter\Directory;
 
@@ -90,6 +90,9 @@ abstract class AbstractCache
     public function setPath($path)
     {
         $this->path = $path;
+
+        (new Filesystem)->mkdir($path);
+
         $this->initializeFilePath();
     }
 

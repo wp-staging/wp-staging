@@ -10,20 +10,20 @@ use WPStaging\Component\Dto\AbstractRequestDto;
 class DirectoryScannerRequestDto extends AbstractRequestDto
 {
     /** @var array */
-    private $included;
+    private $included = [];
 
     /** @var array */
-    private $excluded;
+    private $excluded = [];
 
     /**
      * @return array
      */
     public function getIncluded()
     {
-        return $this->included;
+        return (array)$this->included;
     }
 
-    public function setIncluded(array $included = null)
+    public function setIncluded(array $included = [])
     {
         $this->included = $included;
     }
@@ -33,7 +33,7 @@ class DirectoryScannerRequestDto extends AbstractRequestDto
      */
     public function getExcluded()
     {
-        return $this->excluded;
+        return (array)$this->excluded;
     }
 
     public function setExcluded(array $excluded = null)
@@ -41,6 +41,6 @@ class DirectoryScannerRequestDto extends AbstractRequestDto
 //        $this->excluded = array_map(static function($dir) {
 //            return str_replace(ABSPATH, null, $dir);
 //        }, $excluded);
-        $this->excluded = $excluded;
+        $this->excluded = (array)$excluded;
     }
 }

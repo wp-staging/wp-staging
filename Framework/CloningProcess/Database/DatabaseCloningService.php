@@ -53,8 +53,10 @@ class DatabaseCloningService
             foreach ($rows as $row) {
                 $escaped_values = $this->mysqlEscapeMimic(array_values($row));
                 $values = implode("', '", $escaped_values);
-                if ($stagingDb->query("INSERT INTO `{$new}` VALUES ('{$values}')") === false) {
+                $query = "INSERT INTO `{$new}` VALUES ('{$values}')";
+                if ($stagingDb->query($query) === false) {
                     $this->log("Can not insert data into table {$new}");
+                    $this->debugLog("Failed Query: "  . $query . " Error: " . $stagingDb->last_error);
                 }
             }
             // Commit transaction
@@ -164,6 +166,17 @@ class DatabaseCloningService
     {
         $prependString = $this->dto->isExternal() ? "DB External Copy: " : "DB Copy: ";
         $this->dto->getJob()->log($prependString . $message, $type);
+    }
+
+
+    /**
+     * @param string $message
+     * @param string $type
+     */
+    protected function debugLog($message, $type = Logger::TYPE_INFO)
+    {
+        $prependString = $this->dto->isExternal() ? "DB External Copy: " : "DB Copy: ";
+        $this->dto->getJob()->debugLog($prependString . $message, $type);
     }
 
     /**

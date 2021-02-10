@@ -1,34 +1,34 @@
-<?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>
-    
-<div class="wrap" id="wpstg-tools">
-    <ul class="nav-tab-wrapper">
-        <?php
-        $tabs       = \WPStaging\Core\WPStaging::getInstance()->get("tabs")->get();
-        $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "system_info";
+<div class="wpstg_admin">
+    <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>    
 
-        # Loop through tabs
-        foreach ($tabs as $id => $name):
-            $url = esc_url(add_query_arg([
-                "settings-updated"  => false,
-                "tab"               => $id
-            ]));
-
-            $activeClass = ($activeTab === $id) ? " nav-tab-active" : '';
-            ?>
-            <li>
-                <a href="<?php echo $url?>" title="<?php echo esc_attr($name)?>" class="nav-tab<?php echo $activeClass?>">
-                    <?php echo esc_html($name)?>
-                </a>
-            </li>
+    <div class="wpstg-tabs-container" id="wpstg-tools">
+        <ul class="nav-tab-wrapper">
             <?php
-            unset($url, $activeClass);
-        endforeach;
-        ?>
-    </ul>
+            $tabs       = \WPStaging\Core\WPStaging::getInstance()->get("tabs")->get();
+            $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "system_info";
 
-    <h2 class="wpstg-nav-tab-wrapper"></h2>
+            # Loop through tabs
+            foreach ($tabs as $id => $name):
+                $url = esc_url(add_query_arg([
+                    "settings-updated"  => false,
+                    "tab"               => $id
+                ]));
 
-    <div class="metabox-holder">
-        <?php require_once $this->path . "views/tools/tabs/" . $activeTab . ".php"?>
+                $activeClass = ($activeTab === $id) ? " nav-tab-active" : '';
+                ?>
+                <li>
+                    <a href="<?php echo $url?>" title="<?php echo esc_attr($name)?>" class="nav-tab<?php echo $activeClass?>">
+                        <?php echo esc_html($name)?>
+                    </a>
+                </li>
+                <?php
+                unset($url, $activeClass);
+            endforeach;
+            ?>
+        </ul>
+
+        <div class="wpstg-metabox-holder">
+            <?php require_once $this->path . "views/tools/tabs/" . $activeTab . ".php"?>
+        </div>
     </div>
 </div>

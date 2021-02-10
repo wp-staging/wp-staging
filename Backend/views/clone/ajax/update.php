@@ -1,3 +1,9 @@
+<?php
+/**
+ * @see \WPStaging\Backend\Administrator::ajaxUpdateProcess A place where this view is being called.
+ * @var \WPStaging\Backend\Modules\Jobs\Cloning $cloning
+ */
+?>
 <div class=successfullying-section">
     <h2 id="wpstg-processing-header"><?php echo __("Processing, please wait...", "wp-staging")?></h2>
     <div class="wpstg-progress-bar">

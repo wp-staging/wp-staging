@@ -390,23 +390,30 @@ class Delete extends Job {
             return;
         }
 
+        $clone = (string)$this->clone->path;
+        $errorMessage = __(sprintf("Could not delete the entire staging site. The folder %s still exists and is not empty. <br/> Try to empty this folder manually by using FTP or file manager plugin and then try to delete again the staging site here.<br/> If this happens again please contact us at support@wp-staging.com", $clone), "wp-staging");
+        $deleteStatus = "finished";
         if ($this->isNotEmpty($this->deleteDir)) {
             $fs = (new Filesystem())
                 ->setShouldStop([$this, 'isOverThreshold'])
                 ->setRecursive();
-            if (!$fs->deleteNew($this->deleteDir)) {
-                return;
+            try {
+                if (!$fs->deleteNew($this->deleteDir)) {
+                    return;
+                }
+            } catch (\RuntimeException $ex) {
+                $errorMessage = $ex->getMessage();
+                $deleteStatus = "unfinished";
             }
         }
 
         // Throw fatal error if the folder has still not been deleted and there are files in it
         if ($this->isNotEmpty($this->deleteDir)) {
-            $clone = (string) $this->clone->path;
             $response = [
                 'job'     => 'delete',
                 'status'  => true,
-                'delete'  => 'finished',
-                'message' => "Could not delete the entire staging site. The folder {$clone} still exists and is not empty. <br/> Try to empty this folder manually by using FTP or file manager plugin and then try to delete again the staging site here.<br/> If this happens again please contact us at support@wp-staging.com",
+                'delete'  => $deleteStatus,
+                'message' => $errorMessage,
                 'error'   => true,
             ];
             wp_die(json_encode($response));

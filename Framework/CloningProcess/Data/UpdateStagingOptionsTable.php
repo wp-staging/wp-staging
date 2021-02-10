@@ -23,7 +23,7 @@ class UpdateStagingOptionsTable extends DBCloningService
             'wpstg_rmpermalinks_executed' => ' ',
             'blog_public' => 0,
             FirstRun::FIRST_RUN_KEY => 'true',
-            'wpstg_emails_disabled' => (bool) $this->dto->getJob()->getOptions()->emailsDisabled,
+            FirstRun::MAILS_DISABLED_KEY => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
         ];
         if(!$this->keepPermalinks()) {
             $updateOrInsert['rewrite_rules'] = null;

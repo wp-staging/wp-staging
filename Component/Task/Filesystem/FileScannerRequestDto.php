@@ -9,22 +9,24 @@ use WPStaging\Component\Dto\AbstractRequestDto;
 
 class FileScannerRequestDto extends AbstractRequestDto
 {
+    /** @var array */
+    private $included = [];
 
     /** @var array */
-    private $included;
+    private $excluded = [];
 
-    /** @var array */
-    private $excluded;
+    /** @var bool */
+    private $includeOtherFilesInWpContent;
 
     /**
      * @return array
      */
     public function getIncluded()
     {
-        return $this->included?: [];
+        return (array)$this->included;
     }
 
-    public function setIncluded(array $included = null)
+    public function setIncluded(array $included = [])
     {
         $this->included = $included;
     }
@@ -34,11 +36,24 @@ class FileScannerRequestDto extends AbstractRequestDto
      */
     public function getExcluded()
     {
-        return $this->excluded;
+        return (array)$this->excluded;
     }
 
-    public function setExcluded(array $excluded = null)
+    public function setExcluded(array $excluded = [])
     {
         $this->excluded = $excluded;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIncludeOtherFilesInWpContent()
+    {
+        return (bool)$this->includeOtherFilesInWpContent;
+    }
+
+    public function setIncludeOtherFilesInWpContent($includeOtherFilesInWpContent)
+    {
+        $this->includeOtherFilesInWpContent = $includeOtherFilesInWpContent;
     }
 }

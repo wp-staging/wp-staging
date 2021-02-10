@@ -2,7 +2,7 @@ jQuery(document).ready(function ($) {
     $(".wpstg_hide_poll").click(function (e) {
         e.preventDefault();
 
-        WPStaging.ajax(
+        window.WPStaging.ajax(
                 {action: "wpstg_hide_poll"},
         function (response)
         {
