@@ -54,5 +54,4 @@ class Cron
 
         return true;
     }
-
 }

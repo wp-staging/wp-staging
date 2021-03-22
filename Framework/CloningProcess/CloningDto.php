@@ -1,8 +1,6 @@
 <?php
 
-
 namespace WPStaging\Framework\CloningProcess;
-
 
 use WPStaging\Backend\Modules\Jobs\Job;
 
@@ -149,5 +147,4 @@ class CloningDto
     {
         return $this->externalDatabaseName;
     }
-
 }

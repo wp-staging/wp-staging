@@ -7,11 +7,12 @@ if (!defined("WPINC")) {
     die;
 }
 
-use WPStaging\Backend\Modules\Jobs\Interfaces\JobInterface;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\thirdParty\thirdPartyCompatibility;
+use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\Utils\WpDefaultDirectories;
 use DateTime;
 use DateInterval;
 use Exception;
@@ -20,7 +21,7 @@ use Exception;
  * Class Job
  * @package WPStaging\Backend\Modules\Jobs
  */
-abstract class Job implements JobInterface
+abstract class Job
 {
 
     const EXECUTION_TIME_RATIO = 0.8;
@@ -84,18 +85,6 @@ abstract class Job implements JobInterface
     protected $maxRecursionLimit;
 
     /**
-     * Multisite Home Url without Scheme
-     * @var string
-     */
-    //protected $multisiteHomeUrlWithoutScheme;
-
-    /**
-     * Multisite home domain without scheme
-     * @var string
-     */
-    //protected $multisiteDomainWithoutScheme;
-
-    /**
      * Multisite home domain without scheme
      * @var string
      */
@@ -114,28 +103,26 @@ abstract class Job implements JobInterface
 
     /**
      * Job constructor.
+     * @throws Exception
      */
     public function __construct()
     {
-        // Get max limits
         $this->start = $this->time();
+
         $this->maxMemoryLimit = $this->getMemoryInBytes(@ini_get("memory_limit"));
+
         $this->thirdParty = new thirdPartyCompatibility();
 
-        //$multisite = new Multisite;
-        //$this->multisiteHomeUrlWithoutScheme = $multisite->getHomeUrlWithoutScheme();
-        //$this->baseUrl = (new Helper)->getBaseUrl();
-        //$this->multisiteDomainWithoutScheme = $multisite->getHomeDomainWithoutScheme();
-        $this->maxExecutionTime = ( int )10;
+        $this->maxExecutionTime = 10;
 
         // Services
-        $this->cache = new Cache(-1, \WPStaging\Core\WPStaging::getContentDir());
+        $this->cache = new Cache(-1, WPStaging::getContentDir());
         $this->logger = WPStaging::getInstance()->get("logger");
 
         // Settings and Options
         $this->options = $this->cache->get("clone_options");
 
-        $this->settings = ( object )get_option("wpstg_settings", []);
+        $this->settings = (object)get_option("wpstg_settings", []);
 
         if (!$this->options) {
             $this->options = new \stdClass();
@@ -146,7 +133,8 @@ abstract class Job implements JobInterface
         }
 
         // check default options
-        if (!isset($this->settings) ||
+        if (
+            !isset($this->settings) ||
             !isset($this->settings->queryLimit) ||
             !isset($this->settings->querySRLimit) ||
             !isset($this->settings->batchSize) ||
@@ -161,7 +149,7 @@ abstract class Job implements JobInterface
         // Set limits accordingly to CPU LIMITS
         $this->setLimits();
 
-        $this->maxRecursionLimit = ( int )ini_get("xdebug.max_nesting_level");
+        $this->maxRecursionLimit = (int)ini_get("xdebug.max_nesting_level");
 
         /*
          * This is needed to make sure that maxRecursionLimit = -1
@@ -202,9 +190,16 @@ abstract class Job implements JobInterface
     {
         $this->settings->queryLimit = "10000";
         $this->settings->querySRLimit = "5000";
-        $this->settings->fileLimit = "50";
+
+        if (defined('WPSTG_DEV') && WPSTG_DEV) {
+            $this->settings->fileLimit = "500";
+            $this->settings->cpuLoad = 'high';
+        } else {
+            $this->settings->fileLimit = "50";
+            $this->settings->cpuLoad = 'low';
+        }
+
         $this->settings->batchSize = "2";
-        $this->settings->cpuLoad = 'low';
         $this->settings->maxFileSize = 8;
         $this->settings->optimizer = "1";
         update_option('wpstg_settings', $this->settings);
@@ -251,7 +246,7 @@ abstract class Job implements JobInterface
             $options = $this->options;
         }
 
-        $now = new DateTime;
+        $now = new DateTime();
         $options->expiresAt = $now->add(new DateInterval('P1D'))->format('Y-m-d H:i:s');
 
         // Ensure that it is an object
@@ -274,12 +269,12 @@ abstract class Job implements JobInterface
     protected function getMemoryInBytes($memory)
     {
         // Handle unlimited ones
-        if (( int )$memory < 1) {
+        if ((int)$memory < 1) {
             // 128 MB default value
-            return ( int )134217728;
+            return (int)134217728;
         }
 
-        $bytes = ( int )$memory; // grab only the number
+        $bytes = (int)$memory; // grab only the number
         $size = trim(str_replace($bytes, null, strtolower($memory))); // strip away number and lower-case it
         // Actual calculation
         switch ($size) {
@@ -304,17 +299,17 @@ abstract class Job implements JobInterface
      */
     protected function formatBytes($bytes)
     {
-        if (( int )$bytes < 1) {
+        if ((int)$bytes < 1) {
             return '';
         }
 
         $units = ['B', 'K', 'M', 'G']; // G since PHP 5.1.x so we are good!
 
-        $bytes = ( int )$bytes;
+        $bytes = (int)$bytes;
         $base = log($bytes) / log(1000);
         $pow = pow(1000, $base - floor($base));
 
-        return round($pow, 0) . $units[( int )floor($base)];
+        return round($pow, 0) . $units[(int)floor($base)];
     }
 
     /**
@@ -335,7 +330,7 @@ abstract class Job implements JobInterface
     public function isOverThreshold()
     {
         // Check if the memory is over threshold
-        $usedMemory = ( int )@memory_get_usage(true);
+        $usedMemory = (int)@memory_get_usage(true);
 
         $this->debugLog('Used Memory: ' . $this->formatBytes($usedMemory) . ' Max Memory Limit: ' . $this->formatBytes($this->maxMemoryLimit) . ' Max Script Memory Limit: ' . $this->formatBytes($this->memoryLimit), Logger::TYPE_DEBUG);
 
@@ -395,7 +390,7 @@ abstract class Job implements JobInterface
             $this->options->clone = date(DATE_ATOM, mktime(0, 0, 0, 7, 1, 2000));
         }
 
-        if ($this->hasLoggedFileNameSet === false && strlen($this->options->clone) > 0) {
+        if ($this->hasLoggedFileNameSet === false && $this->options->clone != '') {
             $this->logger->setFileName($this->options->clone);
             $this->hasLoggedFileNameSet = true;
         }
@@ -434,12 +429,29 @@ abstract class Job implements JobInterface
         }
 
         try {
-            $now = new DateTime;
+            $now = new DateTime();
             $expiresAt = new DateTime($this->options->expiresAt);
             return $this->options->isRunning === true && $now < $expiresAt;
         } catch (Exception $e) {
         }
 
         return false;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isMultisiteAndPro()
+    {
+        return defined('WPSTGPRO_VERSION') && is_multisite();
+    }
+
+    /**
+     * Check if external database is used
+     * @return boolean
+     */
+    protected function isExternalDatabase()
+    {
+        return !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
     }
 }

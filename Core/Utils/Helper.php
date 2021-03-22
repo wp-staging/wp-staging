@@ -3,12 +3,12 @@
 namespace WPStaging\Core\Utils;
 
 // No Direct Access
-if (!defined("WPINC"))
-{
+if (!defined("WPINC")) {
     die;
 }
 
-class Helper {
+class Helper
+{
 
 
    /**
@@ -19,44 +19,48 @@ class Helper {
     * If `$scheme` is 'http' or 'https', is_ssl() is overridden.
 
     */
-   public function getHomeUrl($blog_id = null, $scheme = null ) {
+    public function getHomeUrl($blog_id = null, $scheme = null)
+    {
 
-      if( empty( $blog_id ) || !is_multisite() ) {
-         $url = get_option( 'home' );
-      } else {
-         switch_to_blog( $blog_id );
-         $url = get_option( 'home' );
-         restore_current_blog();
-      }
+        if (empty($blog_id) || !is_multisite()) {
+            $url = get_option('home');
+        } else {
+            switch_to_blog($blog_id);
+            $url = get_option('home');
+            restore_current_blog();
+        }
 
-      if( !in_array( $scheme, ['http', 'https', 'relative'] ) ) {
-         if( is_ssl())
-            $scheme = 'https';
-         else
-            $scheme = parse_url( $url, PHP_URL_SCHEME );
-      }
+        if (!in_array($scheme, ['http', 'https', 'relative'])) {
+            if (is_ssl()) {
+                $scheme = 'https';
+            } else {
+                $scheme = parse_url($url, PHP_URL_SCHEME);
+            }
+        }
 
-      $url = set_url_scheme( $url, $scheme );
+        $url = set_url_scheme($url, $scheme);
 
-      return $url;
-   }
+        return $url;
+    }
 
    /**
     * Return WordPress home url without scheme e.h. host.com or www.host.com
     * @param string $str
     * @return string
     */
-   public function getHomeUrlWithoutScheme() {
-      return preg_replace( '#^https?://#', '', rtrim( $this->getHomeUrl(), '/' ) );
-   }
+    public function getHomeUrlWithoutScheme()
+    {
+        return preg_replace('#^https?://#', '', rtrim($this->getHomeUrl(), '/'));
+    }
 
 
     /**
      * Get raw base URL e.g. https://blog.domain.com or https://domain.com without any subfolder
      * @return string
      */
-    public function getBaseUrl() {
-        $result = parse_url( $this->getHomeUrl() );
+    public function getBaseUrl()
+    {
+        $result = parse_url($this->getHomeUrl());
         return $result['scheme'] . "://" . $result['host'];
     }
 
@@ -66,10 +70,8 @@ class Helper {
      * @param string $str
      * @return string
      */
-    public function getBaseUrlWithoutScheme() {
-        return preg_replace( '#^https?://#', '', rtrim( $this->getBaseUrl(), '/' ) );
+    public function getBaseUrlWithoutScheme()
+    {
+        return preg_replace('#^https?://#', '', rtrim($this->getBaseUrl(), '/'));
     }
-
-
-
 }

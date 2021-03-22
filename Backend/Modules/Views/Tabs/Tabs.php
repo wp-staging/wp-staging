@@ -1,4 +1,5 @@
 <?php
+
 namespace WPStaging\Backend\Modules\Views\Tabs;
 
 /**
@@ -19,8 +20,7 @@ class Tabs
      */
     public function __construct($tabs)
     {
-        if (is_array($tabs))
-        {
+        if (is_array($tabs)) {
             self::$tabs = $tabs;
         }
     }

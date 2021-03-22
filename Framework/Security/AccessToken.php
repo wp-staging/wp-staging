@@ -39,7 +39,7 @@ class AccessToken
     public function generateNewToken()
     {
         // Early bail: Not enough privilege to generate a token. Todo: Remove "new" once we have DI
-        if ( ! current_user_can((new Capabilities)->manageWPSTG())) {
+        if (! current_user_can((new Capabilities())->manageWPSTG())) {
             return false;
         }
 
@@ -64,7 +64,7 @@ class AccessToken
     public function getToken()
     {
         // Early bail: Not enough privilege to get a token. Todo: Remove "new" once we have DI
-        if ( ! current_user_can((new Capabilities)->manageWPSTG())) {
+        if (! current_user_can((new Capabilities())->manageWPSTG())) {
             return false;
         }
 

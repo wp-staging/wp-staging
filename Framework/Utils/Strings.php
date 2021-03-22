@@ -31,14 +31,16 @@ class Strings
      * @param string $subject
      * @return string
      */
-    public function str_replace_first( $search, $replace, $subject ) {
+    public function str_replace_first($search, $replace, $subject)
+    {
 
-        if( empty( $search ) )
+        if (empty($search)) {
             return $subject;
+        }
 
-        $pos = strpos( $subject, $search );
-        if( $pos !== false ) {
-            return substr_replace( $subject, $replace, $pos, strlen( $search ) );
+        $pos = strpos($subject, $search);
+        if ($pos !== false) {
+            return substr_replace($subject, $replace, $pos, strlen($search));
         }
         return $subject;
     }
@@ -50,9 +52,10 @@ class Strings
      * @param string $haystack
      * @return string
      */
-    public function getLastElemAfterString( $needle, $haystack ) {
-        $pos = strrpos( $haystack, $needle );
-        return $pos === false ? $haystack : substr( $haystack, $pos + 1 );
+    public function getLastElemAfterString($needle, $haystack)
+    {
+        $pos = strrpos($haystack, $needle);
+        return $pos === false ? $haystack : substr($haystack, $pos + 1);
     }
 
     /**
@@ -60,8 +63,9 @@ class Strings
      * @param string $str
      * @return string
      */
-    public function getUrlWithoutScheme( $str ) {
-        return preg_replace( '#^https?://#', '', rtrim( $str, '/' ) );
+    public function getUrlWithoutScheme($str)
+    {
+        return preg_replace('#^https?://#', '', rtrim($str, '/'));
     }
 
     /**
@@ -71,7 +75,21 @@ class Strings
      *
      * @return string
      */
-    public function sanitizeDirectorySeparator( $path ) {
-        return preg_replace( '/[\\\\]+/', '/', $path );
+    public function sanitizeDirectorySeparator($path)
+    {
+        $string = preg_replace('/[\\\\]+/', '/', $path);
+        return str_replace('//', '/', $string);
+    }
+
+    /**
+     * Check if a strings start with a specific string
+     * @param string $haystack
+     * @param string $needle
+     * @return bool
+     */
+    public function startsWith($haystack, $needle)
+    {
+        $length = strlen($needle);
+        return ($needle === substr($haystack, 0, $length));
     }
 }

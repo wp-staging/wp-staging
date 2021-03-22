@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @var string $pluginFilePath The absolute path to the main file of this plugin.
  */
@@ -33,7 +34,7 @@ if (!defined('WPSTG_PLUGIN_URL')) {
 
 // Expected version number of the must-use plugin 'optimizer'. Used for automatic updates of the mu-plugin
 if (!defined('WPSTG_OPTIMIZER_MUVERSION')) {
-    define('WPSTG_OPTIMIZER_MUVERSION', 1.4);
+    define('WPSTG_OPTIMIZER_MUVERSION', '1.4.1');
 }
 
 // /var/www/single/wp-content/plugins/wp-staging-pro/wp-staging-pro.php => wp-staging-pro
@@ -44,6 +45,12 @@ if (!defined('WPSTG_PLUGIN_SLUG')) {
 // An identifier that is the same both for WPSTAGING Free and WPSTAGING Pro
 if (!defined('WPSTG_PLUGIN_DOMAIN')) {
     define('WPSTG_PLUGIN_DOMAIN', 'wp-staging');
+}
+
+// Features
+if (!defined('WPSTG_FEATURE_ENABLE_BACKUP')) {
+    // This feature is under active development, NOT READY FOR PUBLIC USAGE.
+    define('WPSTG_FEATURE_ENABLE_BACKUP', false);
 }
 
 /**

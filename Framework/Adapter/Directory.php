@@ -57,6 +57,6 @@ class Directory
 
     public function getSlug()
     {
-	    return WPSTG_PLUGIN_SLUG;
+        return WPSTG_PLUGIN_SLUG;
     }
 }

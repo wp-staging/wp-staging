@@ -1,4 +1,5 @@
 <?php
+
 // Register the autoloader for the plugin source code, and for the prefixed vendors.
 $class_map = array_merge(
     include_once __DIR__ . '/vendor_wpstg/autoload/src.php',

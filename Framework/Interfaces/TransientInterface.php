@@ -19,8 +19,8 @@ interface TransientInterface
      */
     public function setTransient();
 
-    /** 
-     * @return bool 
+    /**
+     * @return bool
      */
     public function getTransient();
 
