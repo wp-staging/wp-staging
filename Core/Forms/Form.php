@@ -1,4 +1,5 @@
 <?php
+
 namespace WPStaging\Core\Forms;
 
 use WPStaging\Core\Forms\Elements\Interfaces\InterfaceElement;
@@ -15,13 +16,11 @@ class Form
 
     public function __construct()
     {
-
     }
 
     public function add($element)
     {
-        if (!($element instanceof InterfaceElement) && !($element instanceof InterfaceElementWithOptions))
-        {
+        if (!($element instanceof InterfaceElement) && !($element instanceof InterfaceElementWithOptions)) {
             return;
         }
 
@@ -30,8 +29,7 @@ class Form
 
     public function render($name)
     {
-        if (!isset($this->elements[$name]))
-        {
+        if (!isset($this->elements[$name])) {
             return false;
         }
 
@@ -40,8 +38,7 @@ class Form
 
     public function label($name)
     {
-        if (!isset($this->elements[$name]))
-        {
+        if (!isset($this->elements[$name])) {
             return false;
         }
 

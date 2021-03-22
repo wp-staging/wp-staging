@@ -34,8 +34,8 @@ class WpDbAdapter extends AbstractDatabase
             return null;
         }
 
-        $collection = new SplObjectStorage;
-        foreach($records as $record) {
+        $collection = new SplObjectStorage();
+        foreach ($records as $record) {
             $collection->attach($record);
         }
 
@@ -92,8 +92,7 @@ class WpDbAdapter extends AbstractDatabase
     {
         if (!$conditions) {
             $response = $this->client->get_results($sql);
-        }
-        else {
+        } else {
             $response = $this->client->get_results($this->client->prepare($sql, $conditions));
         }
 

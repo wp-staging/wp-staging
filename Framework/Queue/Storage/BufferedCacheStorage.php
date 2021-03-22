@@ -27,6 +27,8 @@ class BufferedCacheStorage implements StorageInterface
     /** @var bool */
     private $isUsePrefix;
 
+    private $commited = false;
+
     public function __construct(BufferedCache $cache)
     {
         $this->isUsePrefix = true;
@@ -35,6 +37,13 @@ class BufferedCacheStorage implements StorageInterface
     }
 
     public function __destruct()
+    {
+        if (!$this->commited) {
+            $this->commit();
+        }
+    }
+
+    public function commit()
     {
         if (!$this->key) {
             return;
@@ -46,7 +55,7 @@ class BufferedCacheStorage implements StorageInterface
         }
 
         if ($this->size() === 0) {
-            $this->cache->delete();
+            #$this->cache->delete();
         }
     }
 

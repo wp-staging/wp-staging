@@ -46,7 +46,7 @@ class Collection extends SplObjectStorage implements JsonSerializable
             }
 
             /** @var HydrateableInterface $object */
-            $object = new $this->storedClass;
+            $object = new $this->storedClass();
             $object->hydrate((array) $item);
             $this->attach($object);
         }

@@ -23,8 +23,8 @@ abstract class AbstractTemplateComponent
         $this->templateEngine = $templateEngine;
 
         // Todo: Inject using DI
-        $this->accessToken = new AccessToken;
-        $this->nonce       = new Nonce;
+        $this->accessToken = new AccessToken();
+        $this->nonce       = new Nonce();
     }
 
     /**

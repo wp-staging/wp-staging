@@ -1,6 +1,5 @@
 <?php
 
-
 namespace WPStaging\Framework\CloningProcess\Data;
 
 class UpdateWpConfigConstants extends FileCloningService
@@ -120,17 +119,15 @@ class UpdateWpConfigConstants extends FileCloningService
     {
         preg_match($this->abspathRegex, $content, $matches);
         if (!empty($matches[0])) {
-            
             $replace = "define('" . $constant . "', " . $newDefinition . "); \n" .
                 "if ( ! defined( 'ABSPATH' ) )";
 
              // escaping dollar sign in the value
-            $replaceEscaped = addcslashes($replace, '\\$');    
+            $replaceEscaped = addcslashes($replace, '\\$');
 
             if (($content = preg_replace([$this->abspathRegex], $replaceEscaped, $content)) === null) {
                 throw new \RuntimeException("Failed to change " . $constant);
             }
-
         } else {
             throw new \RuntimeException("Can not add " . $constant . " constant to wp-config.php. Can not find free position to add it.");
         }

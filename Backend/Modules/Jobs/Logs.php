@@ -1,4 +1,5 @@
 <?php
+
 namespace WPStaging\Backend\Modules\Jobs;
 
 /**
@@ -14,8 +15,7 @@ class Logs extends Job
      */
     public function initialize()
     {
-        if (isset($_POST["clone"]))
-        {
+        if (isset($_POST["clone"])) {
             $this->clone = $_POST["clone"];
         }
     }

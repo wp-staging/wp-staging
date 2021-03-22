@@ -3,7 +3,7 @@
    
 
 <button type="button" class="wpstg-prev-step-link wpstg-link-btn button-primary wpstg-button">
-    <?php _e( "Back", "wp-staging" ) ?>
+    <?php _e("Back", "wp-staging") ?>
 </button>
 
 <button type="button" id="wpstg-restart-cloning" class="wpstg-link-btn button-primary wpstg-button">

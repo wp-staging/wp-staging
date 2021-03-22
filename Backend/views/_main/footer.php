@@ -12,7 +12,7 @@
     - <a href="https://wp-staging.com/docs/can-not-update-wp-staging-staging-site/" target="_blank" rel="external"><?php _e("Can not update WP Staging plugin", "wp-staging")?></a>    <br/>
     - <a href="https://wp-staging.com/docs/page-not-found-error-404-after-pushing/" target="_blank" rel="external"><?php _e("Page not found – Error 404 after Pushing", "wp-staging")?></a>    <br/>
     - <a href="https://wp-staging.com/docs/troubleshooting-try-this-first/" target="_blank" rel="external"><?php _e("More", "wp-staging")?></a><br/><br/>
-    <?php echo __('Did not find a solution?','wp-staging');?>
+    <?php echo __('Did not find a solution?', 'wp-staging');?>
     <br>
-    <?php echo sprintf (__('Open a <a href="%s" target="_blank" rel="external nofollow">support ticket</a> and we will resolve it quickly.', 'wp-staging'), 'https://wp-staging.com/support');?>
+    <?php echo sprintf(__('Open a <a href="%s" target="_blank" rel="external nofollow">support ticket</a> and we will resolve it quickly.', 'wp-staging'), 'https://wp-staging.com/support');?>
 </div>

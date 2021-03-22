@@ -1,8 +1,6 @@
 <?php
 
-
 namespace WPStaging\Framework\Filesystem;
-
 
 class Permissions
 {
@@ -30,6 +28,4 @@ class Permissions
 
         return 0644;
     }
-
-
 }

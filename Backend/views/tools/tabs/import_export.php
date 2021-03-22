@@ -9,7 +9,7 @@
     <div class="inside">
         <p>
             <?php _e(
-                "Export the WP-Staging settings for this site as a .json file. ".
+                "Export the WP-Staging settings for this site as a .json file. " .
                 "This allows you to easily import the configuration into another site.",
                 "wp-staging"
             )?>
@@ -37,7 +37,7 @@
     <div class="inside">
         <p>
             <?php _e(
-                "Import the WP-Staging settings from a .json file. This file can be obtained ".
+                "Import the WP-Staging settings from a .json file. This file can be obtained " .
                 "by exporting the settings on another site using the form above.",
                 "wp-staging"
             )?>

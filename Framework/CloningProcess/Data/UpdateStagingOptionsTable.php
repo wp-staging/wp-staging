@@ -1,8 +1,9 @@
 <?php
 
-
 namespace WPStaging\Framework\CloningProcess\Data;
 
+use WPStaging\Framework\CloningProcess\ExcludedPlugins;
+use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Core\Utils\Logger;
 
@@ -23,9 +24,12 @@ class UpdateStagingOptionsTable extends DBCloningService
             'wpstg_rmpermalinks_executed' => ' ',
             'blog_public' => 0,
             FirstRun::FIRST_RUN_KEY => 'true',
-            FirstRun::MAILS_DISABLED_KEY => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
+            CloneOptions::WPSTG_CLONE_SETTINGS_KEY => serialize((object) [
+                FirstRun::MAILS_DISABLED_KEY => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
+                ExcludedPlugins::EXCLUDED_PLUGINS_KEY => (new ExcludedPlugins())->getFilteredPluginsToExclude(),
+            ]),
         ];
-        if(!$this->keepPermalinks()) {
+        if (!$this->keepPermalinks()) {
             $updateOrInsert['rewrite_rules'] = null;
             $updateOrInsert['permalink_structure'] = ' ';
         }
@@ -40,12 +44,12 @@ class UpdateStagingOptionsTable extends DBCloningService
         }
         $this->updateOptions($update);
 
-        //$this->log("Done");
         return true;
     }
 
-    protected function updateOrInsertOptions($options) {
-        foreach($options as $name => $value) {
+    protected function updateOrInsertOptions($options)
+    {
+        foreach ($options as $name => $value) {
             $this->debugLog("Updating/inserting $name to $value");
             if (!$this->insertDbOption($name, $value)) {
                 $this->log("Failed to update/insert $name {$this->dto->getStagingDb()->last_error}", Logger::TYPE_WARNING);
@@ -53,8 +57,9 @@ class UpdateStagingOptionsTable extends DBCloningService
         }
     }
 
-    protected function updateOptions($options) {
-        foreach($options as $name => $value) {
+    protected function updateOptions($options)
+    {
+        foreach ($options as $name => $value) {
             $this->debugLog("Updating $name to $value");
             if ($this->updateDbOption($name, $value) === false) {
                 $this->log("Failed to update $name {$this->dto->getStagingDb()->last_error}", Logger::TYPE_WARNING);

@@ -3,10 +3,7 @@
 namespace WPStaging\Framework\Filesystem;
 
 use WPStaging\Backend\Notices\Notices;
-use WPStaging\Core\Utils\Htaccess;
-use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\DI\Container;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WPStaging\Vendor\Symfony\Component\Filesystem\Filesystem as SymfonyFilesystem;
@@ -38,7 +35,7 @@ class Filesystem extends FilterableDirectoryIterator
      */
     public function findFiles($directory = null)
     {
-        $finder = (new Finder)
+        $finder = (new Finder())
             ->ignoreUnreadableDirs()
             ->files()
             ->in($this->findPath($directory))
@@ -88,7 +85,7 @@ class Filesystem extends FilterableDirectoryIterator
      */
     public function exists($fullPath)
     {
-        return (new SymfonyFilesystem)->exists($fullPath);
+        return (new SymfonyFilesystem())->exists($fullPath);
     }
 
     /**
@@ -103,7 +100,7 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         // Get all files and dirs
-        $finder = (new Finder)->ignoreUnreadableDirs()->in($this->getPath());
+        $finder = (new Finder())->ignoreUnreadableDirs()->in($this->getPath());
         if ($this->getNotPath()) {
             foreach ($this->getNotPath() as $notPath) {
                 $finder->notPath($notPath);
@@ -154,7 +151,7 @@ class Filesystem extends FilterableDirectoryIterator
     public function move($source, $target)
     {
         // if $source is link or file, move it and stop execution
-        if(is_link($source) || is_file($source)) {
+        if (is_link($source) || is_file($source)) {
             return $this->renameDirect($source, $target);
         }
 
@@ -257,7 +254,7 @@ class Filesystem extends FilterableDirectoryIterator
             $directoryListing = WPStaging::getInstance()->getContainer()->make(DirectoryListing::class);
             try {
                 $directoryListing->preventDirectoryListing($path);
-            } catch(\Exception $e) {
+            } catch (\Exception $e) {
                 /**
                  * Enqueue this error. All enqueued errors will be shown as a single notice.
                  *
@@ -276,12 +273,12 @@ class Filesystem extends FilterableDirectoryIterator
      * @param string $source
      * @param string $destination
      * @return boolean
-     * 
+     *
      * @todo update this to allow copying big files
      */
     public function copy($source, $destination)
     {
-        $fs = new SymfonyFilesystem;
+        $fs = new SymfonyFilesystem();
         // TODO perhaps use stream_set_chunk_size()?
         $fs->copy($source, $destination);
         return $fs->exists($destination);
@@ -297,7 +294,7 @@ class Filesystem extends FilterableDirectoryIterator
     public function copyNew($source, $target)
     {
         // if $source is link or file, move it and stop execution
-        if(is_link($source) || is_file($source)) {
+        if (is_link($source) || is_file($source)) {
             return $this->copy($source, $target);
         }
 
@@ -330,7 +327,7 @@ class Filesystem extends FilterableDirectoryIterator
             if (file_exists($destination)) {
                 continue;
             }
-            
+
             $result = false;
             // if empty dir
             if ($item->isDir()) {
@@ -402,7 +399,7 @@ class Filesystem extends FilterableDirectoryIterator
             return true;
         }
 
-        $iterator = (new Finder)
+        $iterator = (new Finder())
             ->ignoreUnreadableDirs()
             ->ignoreDotFiles(false)
             ->in($this->findPath($path))
@@ -435,7 +432,7 @@ class Filesystem extends FilterableDirectoryIterator
             }
         }
 
-        if (is_dir($path)){
+        if (is_dir($path)) {
             return rmdir($path);
         }
     }
@@ -450,12 +447,11 @@ class Filesystem extends FilterableDirectoryIterator
      * @param bool $deleteSelf making it optional to delete the parent itself, useful during file and dir exclusion
      * @return bool True if folder or file is deleted or file is empty ($deleteSelf = false); Return False if folder is not empty and execution should be continued
      */
-    public function deleteNew($path, $deleteSelf = true)
+    public function deleteNew($path, $deleteSelf = true, $throw = false)
     {
         // if $path is link or file, delete it and stop execution
-        if(is_link($path) || is_file($path))
-        {
-            if (!unlink($path)){
+        if (is_link($path) || is_file($path)) {
+            if (!unlink($path)) {
                 $this->log('Permission Error: Can not delete file ' . $path);
                 return false;
             }
@@ -464,20 +460,20 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         // Assume it is already deleted
-        if (!is_dir($path)){
+        if (!is_dir($path)) {
             return true;
         }
 
         // delete the directory if it is empty and deleteSelf was true
         if (is_dir($path) && $this->isEmptyDir($path) && $deleteSelf) {
-            if (!@rmdir($path)){
+            if (!@rmdir($path)) {
                 $this->log('Permission Error: Can not delete directory ' . $path);
                 return false;
             }
 
             return true;
         }
-        
+
         // return since directory was empty and deleteSelf was false
         if (is_dir($path) && $this->isEmptyDir($path) && !$deleteSelf) {
             return true;
@@ -490,7 +486,12 @@ class Filesystem extends FilterableDirectoryIterator
             $iterator = $this->setIteratorMode(\RecursiveIteratorIterator::CHILD_FIRST)->get();
         } catch (FilesystemExceptions $e) {
             $this->log('Permission Error: Can not create recursive iterator for ' . $path);
-            return false;
+            if ($throw) {
+                // This allows us to know that Filesystem FAILED and should not continue;
+                throw $e;
+            } else {
+                return false;
+            }
         }
 
         foreach ($iterator as $item) {
@@ -515,8 +516,8 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         // Delete the empty directory itself and finish execution
-        if (is_dir($path)){
-            if (!rmdir($path)){
+        if (is_dir($path)) {
+            if (!rmdir($path)) {
                 $this->log('Permission Error: Can not delete directory ' . $path);
             }
         }
@@ -606,7 +607,7 @@ class Filesystem extends FilterableDirectoryIterator
             // only delete the dir if empty
             // helpful when we exclude path(s) during delete
             if (is_dir($path) && $this->isEmptyDir($path)) {
-                if (!@rmdir($path)){
+                if (!@rmdir($path)) {
                     $this->log('Permission Error: Can not delete directory ' . $path);
                     throw new RuntimeException('Permission Error: Can not delete directory ' . $path);
                 }
@@ -629,7 +630,7 @@ class Filesystem extends FilterableDirectoryIterator
      */
     public function findPath($path)
     {
-        return $path?: $this->path;
+        return $path ?: $this->path;
     }
 
     /**
@@ -673,7 +674,7 @@ class Filesystem extends FilterableDirectoryIterator
      */
     public function getNotPath()
     {
-        return $this->notPath?: [];
+        return $this->notPath ?: [];
     }
 
     /**
@@ -719,7 +720,7 @@ class Filesystem extends FilterableDirectoryIterator
      */
     public function getFileNames()
     {
-        return $this->fileNames?: [];
+        return $this->fileNames ?: [];
     }
 
     /**
@@ -765,7 +766,7 @@ class Filesystem extends FilterableDirectoryIterator
         $this->log('Permission Error: Can not delete link ' . $perms);
 
         if ($item->isLink()) {
-            if(!unlink($path)) {
+            if (!unlink($path)) {
                 $this->log('Permission Error: Can not delete link ' . $path);
                 throw new RuntimeException('Permission Error: Can not delete link ' . $path);
             }
@@ -812,26 +813,27 @@ class Filesystem extends FilterableDirectoryIterator
      * @param  string $content Content of the file
      * @return boolean
      */
-    public function create( $path, $content ) {
-        if( !@file_exists( $path ) ) {
-            if( !@is_writable( dirname( $path ) ) ) {
+    public function create($path, $content)
+    {
+        if (!@file_exists($path)) {
+            if (!@is_writable(dirname($path))) {
                 return false;
             }
 
-            if( !@touch( $path ) ) {
+            if (!@touch($path)) {
                 return false;
             }
-        } elseif( !@is_writable( $path ) ) {
+        } elseif (!@is_writable($path)) {
             return false;
         }
 
         $written = false;
-        if( ( $handle     = @fopen( $path, 'w' ) ) !== false ) {
-            if( @fwrite( $handle, $content ) !== false ) {
+        if (( $handle     = @fopen($path, 'w') ) !== false) {
+            if (@fwrite($handle, $content) !== false) {
                 $written = true;
             }
 
-            @fclose( $handle );
+            @fclose($handle);
         }
 
         return $written;
@@ -845,9 +847,8 @@ class Filesystem extends FilterableDirectoryIterator
      * @param  string $content Content of the file
      * @return boolean
      */
-    public function createWithMarkers( $path, $marker, $content ) {
-        return @insert_with_markers( $path, $marker, $content );
+    public function createWithMarkers($path, $marker, $content)
+    {
+        return @insert_with_markers($path, $marker, $content);
     }
-
-
 }

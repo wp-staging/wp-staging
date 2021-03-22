@@ -9,8 +9,7 @@ trait TimerTrait
 
     protected function initiateStartTime()
     {
-        $time = explode(' ', microtime());
-        $this->startTime = (float) $time[1] + (float) $time[0];
+        $this->startTime = microtime(true);
     }
 
     /**
@@ -18,6 +17,14 @@ trait TimerTrait
      */
     protected function getRunningTime()
     {
-        return time() - $this->startTime;
+        if ($this->startTime === null) {
+            throw new \LogicException(
+                sprintf(
+                    'You must call the "%s::initiateStartTime" method before trying to get the current run time.',
+                    __TRAIT__
+                )
+            );
+        }
+        return microtime(true) - $this->startTime;
     }
 }

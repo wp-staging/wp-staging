@@ -1,9 +1,11 @@
 <span class="wpstg-logo">
-    <img src="<?php echo $this->url . "img/logo_clean_small_212_25.png" ?>">
+    <img src="<?php echo $this->assets->getAssetsUrl("img/logo_clean_small_212_25.png") ?>">
 </span>
 
 <span class="wpstg-version">
-    <?php if (defined('WPSTGPRO_VERSION')) echo "Pro" ?> Version <?php echo WPStaging\Core\WPStaging::getVersion() ?>
+    <?php if (defined('WPSTGPRO_VERSION')) {
+        echo "Pro";
+    } ?> Version <?php echo WPStaging\Core\WPStaging::getVersion() ?>
 </span>
 
 <div class="wpstg-header">
@@ -32,7 +34,6 @@
     </div>
 
     <?php if ($_GET['page'] === 'wpstg_clone') { ?>
-
         <div class="wpstg-fs-14">
             <?php _e("Tutorial:", "wp-staging") ?> <a href="https://wp-staging.com/docs/copy-staging-site-to-live-site/" target="_blank"><?php _e("Push staging site to production website", "wp-staging") ?></a>
         </div>
