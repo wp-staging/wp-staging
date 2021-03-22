@@ -1,6 +1,8 @@
 <?php
 
+
 namespace WPStaging\Framework\CloningProcess\Database;
+
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Framework\CloningProcess\CloningDto;
@@ -33,7 +35,7 @@ class DatabaseCloningService
     {
         $rows = $offset + $limit;
         $limitation = '';
-        if ((int)$limit > 0) {
+        if (( int )$limit > 0) {
             $limitation = " LIMIT {$limit} OFFSET {$offset}";
         }
         if ($this->dto->isExternal()) {
@@ -133,7 +135,7 @@ class DatabaseCloningService
             $this->log("Creating table {$new}");
             $stagingDb->query("CREATE TABLE {$new} LIKE {$old}");
         }
-        $rowsInTable = (int)$productionDb->get_var("SELECT COUNT(1) FROM `{$productionDb->dbname}`.`{$old}`");
+        $rowsInTable = ( int )$productionDb->get_var("SELECT COUNT(1) FROM `{$productionDb->dbname}`.`{$old}`");
         $this->log("Table {$old} contains {$rowsInTable} rows ");
         return $rowsInTable;
     }
@@ -234,4 +236,5 @@ class DatabaseCloningService
         }
         return [];
     }
+
 }

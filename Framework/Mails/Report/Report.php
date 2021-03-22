@@ -9,14 +9,14 @@ class Report
     /**
      * WP Staging Support Email
      *
-     * @var string
+     * @var string 
      */
     const WPSTG_SUPPORT_EMAIL = "support@wp-staging.com";
 
     /**
      * Email Subject for Issue Email
      *
-     * @var string
+     * @var string 
      */
     const EMAIL_SUBJECT = "Report Issue!";
 
@@ -49,14 +49,14 @@ class Report
         } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $errors[] = __('Email address is not valid.', 'wp-staging');
         }
-
+        
         if (empty($message)) {
             $errors[] = __('Please enter your issue.', 'wp-staging');
         }
-
+        
         if (empty($terms)) {
             $errors[] = __('Please accept our privacy policy.', 'wp-staging');
-        }
+        } 
 
         if (count($errors) !== 0) {
             return $errors;
@@ -66,7 +66,7 @@ class Report
         if ($provider) {
             $message .= "\n\n'Hosting provider: " . $provider;
         }
-
+        
         if (!empty($syslog)) {
             $message .= "\n\n'" . $this->getSyslog();
             $debugLogFile = WP_CONTENT_DIR . '/debug.log';
@@ -76,7 +76,7 @@ class Report
         }
 
         $transient = new ReportSubmitTransient();
-        if (!$forceSend && $transient->getTransient()) {
+        if (!$forceSend && $transient->getTransient() ) {
             // to show alert using js
             $errors[] = [
                 "status" => 'already_submitted',
@@ -121,8 +121,9 @@ class Report
 
         if ($success) {
             return true;
-        }
+        } 
 
         return false;
     }
+
 }

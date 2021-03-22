@@ -6,20 +6,19 @@ namespace WPStaging\Backend\Notices;
  *  Admin Notices | Warnings | Messages
  */
 
+// No Direct Access
+if (!defined("WPINC")) {
+    die;
+}
+
 use WPStaging\Backend\Pro\Notices\Notices as ProNotices;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Assets\Assets;
-use WPStaging\Framework\CloningProcess\ExcludedPlugins;
-use WPStaging\Framework\Staging\CloneOptions;
-use WPStaging\Framework\Staging\FirstRun;
 
 /**
  * Class Notices
  * @package WPStaging\Backend\Notices
- *
- * @todo Have NoticeServiceProvider?
  */
 class Notices
 {
@@ -29,19 +28,19 @@ class Notices
     private $path;
 
     /**
-     * @var Assets
+     * @var string
      */
-    private $assets;
+    private $url;
 
     /**
      * @var string The key that holds directory listing errors in the container.
      */
     public static $directoryListingErrors = 'directoryListingErrors';
 
-    public function __construct($path, $assets)
+    public function __construct($path, $url)
     {
         $this->path = $path;
-        $this->assets = $assets;
+        $this->url = $url;
     }
 
     /**
@@ -139,25 +138,15 @@ class Notices
             }
         }
 
-        // Never show disable mail message if free version
-        $outgoingMailsDisabled = false;
-
         // Show all pro version notices
         if ($this->isPro()) {
             $proNotices = new ProNotices($this);
-            // TODO: inject CloneOptions using DI
-            // Check mails disabled against both the old and new way of emails disabled option
-            $outgoingMailsDisabled = (bool)(new CloneOptions())->get(FirstRun::MAILS_DISABLED_KEY) || ((bool)get_option(FirstRun::MAILS_DISABLED_KEY, false));
             $proNotices->getNotices();
         }
 
-        // Show notice about what disabled in the staging site. (Show only on staging site)
-        if ((new DisabledItemsNotice())->isEnabled()) {
-            // TODO: inject ExcludedPlugins using DI
-            $excludedPlugins = (array)(new ExcludedPlugins())->getExcludedPlugins();
-            // use require here instead of require_once otherwise unit tests will always fail,
-            // as this notice is tested multiple times.
-            require "{$viewsNoticesPath}disabled-items-notice.php";
+        // Show notice about cache being disabled in the staging site. (Show only on staging site)
+        if ((new DisabledCacheNotice())->isEnabled()) {
+            require_once "{$viewsNoticesPath}disabled-cache.php";
         }
 
         // Display notices below in wp staging admin pages only
@@ -187,18 +176,13 @@ class Notices
         }
 
         // WPSTAGING is not tested with current WordPress version
-        if (!$this->isPro() && version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<")) {
+        if(!$this->isPro() && version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<")) {
             require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
         }
 
         // Different scheme in home and siteurl
         if ($this->isDifferentScheme()) {
             require_once "{$viewsNoticesPath}wrong-scheme.php";
-        }
-
-        // Outdated version of WP Staging Hooks
-        if ($this->isUsingOutdatedWpstgHooksPlugin()) {
-            require_once "{$viewsNoticesPath}outdated-wp-staging-hooks.php";
         }
 
         $this->showDirectoryListingWarningNotice($viewsNoticesPath);
@@ -237,44 +221,12 @@ class Notices
      * Check if the url scheme of siteurl and home is identical
      * @return boolean
      */
-    private function isDifferentScheme()
+    private function isDifferentScheme() 
     {
         $siteurlScheme = parse_url(get_option('siteurl'), PHP_URL_SCHEME);
         $homeScheme    = parse_url(get_option('home'), PHP_URL_SCHEME);
 
         return !($siteurlScheme === $homeScheme);
-    }
-
-    /**
-     * Check if the user is using an outdated version of WP Staging Hooks plugin
-     * @return boolean
-     */
-    private function isUsingOutdatedWpstgHooksPlugin()
-    {
-        // Minimum version to check
-        $versionToCheck = '0.0.2';
-
-        // Path to WP Staging Hooks plugins in a directory
-        $wpstgHooksPath = 'wp-staging-hooks/wp-staging-hooks.php';
-
-        // Plugin doesn't exist, so no need to show notice
-        if (file_exists(WP_PLUGIN_DIR . '/' . $wpstgHooksPath)) {
-            $wpstgHooksData = get_plugin_data(WP_PLUGIN_DIR . '/' . $wpstgHooksPath);
-            // Only show notice if current version is below required min version.
-            return version_compare($wpstgHooksData['Version'], $versionToCheck, '>=') ? false : true;
-        }
-
-        // Path to WP Staging Hooks plugins directly in plugins dir
-        $wpstgHooksPath = 'wp-staging-hooks.php';
-
-        // Plugin doesn't exist, so no need to show notice
-        if (file_exists(WP_PLUGIN_DIR . '/' . $wpstgHooksPath)) {
-            $wpstgHooksData = get_plugin_data(WP_PLUGIN_DIR . '/' . $wpstgHooksPath);
-            // Only show notice if current version is below required min version.
-            return version_compare($wpstgHooksData['Version'], $versionToCheck, '>=') ? false : true;
-        }
-
-        return false;
     }
 
     /**
@@ -287,11 +239,12 @@ class Notices
     }
 
     /**
-     * Get the assets helper
-     * @return Assets
+     * Get the path of plugin
+     * @return string
      */
-    public function getAssets()
+    public function getPluginUrl()
     {
-        return $this->assets;
+        return $this->url;
     }
+
 }

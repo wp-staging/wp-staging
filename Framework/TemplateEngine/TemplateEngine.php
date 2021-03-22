@@ -1,5 +1,4 @@
 <?php
-
 // TODO PHP7.x; declare(strict_types=1);
 // TODO PHP7.x; type-hints & return types;
 
@@ -39,7 +38,7 @@ class TemplateEngine implements TemplateEngineInterface
      */
     protected function getDateTimeFormat()
     {
-        return (new DateTimeAdapter())->getDateTimeFormat();
+        return (new DateTimeAdapter)->getDateTimeFormat();
     }
 
     /**
@@ -53,6 +52,6 @@ class TemplateEngine implements TemplateEngineInterface
             return '';
         }
 
-        return (new DateTimeAdapter())->transformToWpFormat($dateTime);
+        return (new DateTimeAdapter)->transformToWpFormat($dateTime);
     }
 }

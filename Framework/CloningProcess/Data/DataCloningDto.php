@@ -1,6 +1,8 @@
 <?php
 
+
 namespace WPStaging\Framework\CloningProcess\Data;
+
 
 use WPStaging\Backend\Modules\Jobs\Job;
 use WPStaging\Framework\CloningProcess\CloningDto;

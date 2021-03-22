@@ -10,20 +10,19 @@ use WPStaging\Core\WPStaging;
  * Class Cloning
  * @package WPStaging\Backend\Modules\Jobs
  */
-class ProcessLock extends JobExecutable
-{
+class ProcessLock extends JobExecutable {
 
     /**
      * Check if any process is already running
      * @return boolean
      */
-    public function isRunning()
-    {
+    public function isRunning() {
         // Another process is running
         if (parent::isRunning()) {
-            $this->log("Another process is running");
 
-            $message = __('Hold on, another WP Staging process is already running...', 'wp-staging');
+            $this->log( "Another process is running" );
+
+            $message = __( 'Hold on, another WP Staging process is already running...', 'wp-staging' );
 
             require_once WPSTG_PLUGIN_DIR . "Backend/views/clone/ajax/process-lock.php";
 
@@ -37,26 +36,26 @@ class ProcessLock extends JobExecutable
     /**
      * remove process lock value
      */
-    public function restart()
-    {
-        unset($this->options->isRunning);
-        $this->cache->delete("clone_options");
-        $this->cache->delete("files_to_copy");
+    public function restart() {
+        unset( $this->options->isRunning );
+        $this->cache->delete( "clone_options" );
+        $this->cache->delete( "files_to_copy" );
     }
 
     /**
      * abstract
      * @return void
      */
-    protected function calculateTotalSteps()
-    {
+    protected function calculateTotalSteps() {
+
     }
 
     /**
      * abstract
      * @return bool
      */
-    protected function execute()
-    {
+    protected function execute() {
+
     }
+
 }

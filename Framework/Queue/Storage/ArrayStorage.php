@@ -12,11 +12,6 @@ class ArrayStorage implements StorageInterface
     /** @var array|null */
     private $items;
 
-    public function commit()
-    {
-        error_log('ArrayStorage does not implement commit.');
-    }
-
     /**
      * This does nothing due to nature of ArrayStorage
      * @inheritDoc

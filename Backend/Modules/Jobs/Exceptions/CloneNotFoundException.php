@@ -1,5 +1,4 @@
 <?php
-
 namespace WPStaging\Backend\Modules\Jobs\Exceptions;
 
 /**

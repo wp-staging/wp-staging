@@ -1,5 +1,4 @@
 <?php
-
 /**
  * The purpose of the pre-bootstrap process is to make sure the environment is able to run
  * the plugin without any errors, such as making sure there are no other WPSTAGING instances
@@ -29,7 +28,7 @@ register_activation_hook($pluginFilePath, function () use ($pluginFilePath) {
     if (is_multisite()) {
         foreach (wp_get_active_network_plugins() as $networkActivePlugin) {
             if (strpos($networkActivePlugin, 'wp-staging-pro.php') !== false) {
-                set_site_transient('wpstgActivatingFreeWhileProIsActive', true, 1 * HOUR_IN_SECONDS);
+                set_site_transient('wpstgActivatingFreeWhileProIsActive', true);
                 wp_safe_redirect(self_admin_url('plugins.php'));
                 exit;
             }
@@ -38,7 +37,7 @@ register_activation_hook($pluginFilePath, function () use ($pluginFilePath) {
     foreach (wp_get_active_and_valid_plugins() as $sitewidePlugin) {
         if (strpos($sitewidePlugin, 'wp-staging-pro.php') !== false) {
             // Set a transient that Pro picks up to render a notice to the user.
-            set_site_transient('wpstgActivatingFreeWhileProIsActive', true, 1 * HOUR_IN_SECONDS);
+            set_site_transient('wpstgActivatingFreeWhileProIsActive', true);
 
             // Redirects to prevent "Plugin could not be activated because it triggered a fatal error notice".
             wp_safe_redirect(self_admin_url('plugins.php'));

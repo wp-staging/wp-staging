@@ -1,6 +1,8 @@
 <?php
 
+
 namespace WPStaging\Framework\CloningProcess\Data;
+
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\Utils\Logger;

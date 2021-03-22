@@ -35,7 +35,7 @@ class PreserveDataSecondStep extends JobExecutable
 
         $this->saveOptions();
 
-        return (object)$this->response;
+        return ( object )$this->response;
     }
 
     /**
@@ -51,7 +51,7 @@ class PreserveDataSecondStep extends JobExecutable
 
         $this->stagingPrefix = $this->options->prefix;
 
-        if ($db->isExternalDatabase()) {
+        if($db->isExternalDatabase()){
             $this->stagingPrefix = $this->options->databasePrefix;
         }
 
@@ -70,28 +70,25 @@ class PreserveDataSecondStep extends JobExecutable
         // Get wpstg_tmp_data from production database
         $result = $this->productionDb->get_var(
             $this->productionDb->prepare(
-                "SELECT `option_value` FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s",
-                "wpstg_tmp_data"
+                "SELECT `option_value` FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s", "wpstg_tmp_data"
             )
         );
 
         // Nothing to do
-        if (!$result) {
+        if (!$result){
             return true;
         }
 
         // Delete wpstg_tmp_data
         $delete = $this->stagingDb->query(
-            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", "wpstg_existing_clones_beta")
+            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", "wpstg_existing_clones_beta"
+            )
         );
 
         // Insert wpstg_existing_clones_beta in staging database
         $insert = $this->stagingDb->query(
             $this->stagingDb->prepare(
-                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
-                "wpstg_existing_clones_beta",
-                $result,
-                "no"
+                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )", "wpstg_existing_clones_beta", $result, "no"
             )
         );
 
@@ -106,4 +103,6 @@ class PreserveDataSecondStep extends JobExecutable
         }
         return true;
     }
+
+
 }

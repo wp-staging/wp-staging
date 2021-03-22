@@ -126,7 +126,7 @@ class Settings
      */
     public function getQueryLimit()
     {
-        return (int)$this->queryLimit;
+        return ( int )$this->queryLimit;
     }
 
     /**
@@ -142,7 +142,7 @@ class Settings
      */
     public function getFileLimit()
     {
-        return (int)$this->fileLimit;
+        return ( int )$this->fileLimit;
     }
 
     /**
@@ -158,7 +158,7 @@ class Settings
      */
     public function getBatchSize()
     {
-        return (int)$this->batchSize;
+        return ( int )$this->batchSize;
     }
 
     /**
@@ -282,4 +282,5 @@ class Settings
     {
         $this->usersWithStagingAccess = $usersWithStagingAccess;
     }
+
 }

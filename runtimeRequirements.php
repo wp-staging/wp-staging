@@ -1,5 +1,4 @@
 <?php
-
 /**
  * @var string $pluginFilePath The absolute path to the main file of this plugin.
  */
@@ -12,9 +11,8 @@
  *
  *             Covers both clicking on the "Activate" button and selecting the "Activate" bulk-action.
  */
-
 if (isset($_REQUEST['action'])) {
-    switch ($_REQUEST['action']) :
+    switch ($_REQUEST['action']):
         case 'activate':
         case 'error_scrape':
             if (isset($_REQUEST['plugin'])) {
@@ -49,8 +47,7 @@ if (isset($_REQUEST['action'])) {
 /**
  * Early bail: Another instance of WPSTAGING active.
  */
-if (
-// WPSTAGING <= 2.7.5
+if (// WPSTAGING <= 2.7.5
     class_exists('\WPStaging\WPStaging') ||
     // WPSTAGING >= 2.7.6
     class_exists('\WPStaging\Core\WPStaging')
@@ -79,3 +76,4 @@ if (!version_compare($currentWordPressVersion = get_bloginfo('version'), $minimu
 
     throw new Exception("Unsupported WordPress version. Plugin that bailed bootstrapping: $pluginFilePath");
 }
+

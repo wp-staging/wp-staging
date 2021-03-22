@@ -1,6 +1,6 @@
 <?php
-
 namespace WPStaging\Core\Forms\Elements;
+
 
 use WPStaging\Core\Forms\ElementsWithOptions;
 
@@ -18,7 +18,8 @@ class Radio extends ElementsWithOptions
     {
         $output = '';
 
-        foreach ($this->options as $id => $value) {
+        foreach ($this->options as $id => $value)
+        {
             $checked = ($this->default && $this->default === $value) ? " checked=''" : '';
 
             $attributeId = $this->getId($id);

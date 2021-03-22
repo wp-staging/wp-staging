@@ -4,7 +4,7 @@
         <?php
         settings_fields("wpstg_settings");
 
-        foreach ($tabs as $id => $name) :
+        foreach ($tabs as $id => $name):
             if ($id === 'mail-settings') {
                 continue;
             }
@@ -389,23 +389,8 @@
                     </tbody>
                 </table>
             </div>
-            <?php
+        <?php
         endforeach;
-        // show this option only on the staging site
-        if ($this->siteInfo->isStaging()) :
-            ?>
-        <div class="wpstg-settings-row">
-            <b class="wpstg-settings-title"><?php _e('Allow Cloning (Staging Site Only)', 'wp-staging') ?></b>
-            <div class="wpstg-settings-form-group">
-                <p class="wpstg-settings-message">
-                    <?php _e('Check this box to make this staging site cloneable.', 'wp-staging') ?>
-                    <?php echo sprintf(__("If you would like to know more about cloning staging sites check out <a href='%s' target='_new'>this article</a>.", 'wp-staging'), 'https://wp-staging.com/docs/cloning-a-staging-site-testing-push-method/'); ?>
-                </p>
-                <input type="checkbox" id="wpstg-is-staging-cloneable" name="wpstg_settings[isStagingSiteCloneable]" class="wpstg-checkbox wpstg-settings-field" value="true" <?php echo $this->siteInfo->isCloneable() ? 'checked' : '' ?> />
-            </div>
-        </div>
-            <?php
-        endif;
         // Show submit button any tab but add-ons
         if ($activeTab !== "add-ons") {
             submit_button();

@@ -1,7 +1,6 @@
 <?php
 /**
  * @see \WPStaging\Backend\Administrator::ajaxUpdateProcess A place where this view is being called.
- * @see \WPStaging\Backend\Administrator::ajaxResetProcess A place where this view is being called.
  * @var \WPStaging\Backend\Modules\Jobs\Cloning $cloning
  */
 ?>
@@ -20,14 +19,8 @@
     <div class="wpstg-clear-both"></div>
 </div>
 
-<button type="button" id="wpstg-cancel-cloning-update" data-job="<?php echo $cloning->getOptions()->mainJob; ?>" class="wpstg-link-btn button-primary">
-    <?php
-    if ($cloning->getOptions()->mainJob === 'resetting') {
-        _e("Cancel Reset", "wp-staging");
-    } else {
-        _e("Cancel Update", "wp-staging");
-    }
-    ?>
+<button type="button" id="wpstg-cancel-cloning-update" class="wpstg-link-btn button-primary">
+    <?php echo __("Cancel Update", "wp-staging")?>
 </button>
 
 <button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;display:none;">

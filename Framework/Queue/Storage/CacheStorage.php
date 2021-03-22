@@ -19,31 +19,19 @@ class CacheStorage implements StorageInterface
     /** @var array|null */
     private $items;
 
-    private $commited = false;
-
     public function __construct(Cache $cache)
     {
-        $this->cache = $cache;
+        $this->cache = clone $cache;
     }
 
     public function __destruct()
     {
-        if (!$this->commited) {
-            $this->commit();
-        }
-    }
-
-    public function commit()
-    {
-        $this->commited = true;
-
         if (!$this->key) {
             return;
         }
 
         if (!$this->items) {
             $this->cache->delete();
-
             return;
         }
 
@@ -66,7 +54,7 @@ class CacheStorage implements StorageInterface
      */
     public function count()
     {
-        return count((array)$this->items);
+        return count((array) $this->items);
     }
 
     /**

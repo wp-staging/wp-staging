@@ -5,17 +5,8 @@
 
 namespace WPStaging\Framework\Filesystem;
 
-use WPStaging\Vendor\Psr\Log\LoggerInterface;
-
 class DirectoryScanner
 {
-    private $logger;
-
-    public function __construct(LoggerInterface $logger)
-    {
-        $this->logger = $logger;
-    }
-
     /**
      * @param string $directory
      * @param array  $excludedDirectories
@@ -30,25 +21,37 @@ class DirectoryScanner
             return [];
         }
 
+        /*
+         * Normalize the excluded directories to maximize the chances
+         * of matching a excluded directory if we mean to.
+         *
+         * Exclusion: /var/www/single/wp-content/plugins/WooCommerce/
+         * Becomes:   /var/www/single/wp-content/plugins/woocommerce
+         *
+         * So that any of these exclusions matches:
+         * /var/www/single/wp-content/plugins/woocommerce
+         * /var/www/single/wp-content/plugins/woocommerce/
+         * /var/www/single/wp-content/plugins/WooCommerce
+         * /var/www/single/wp-content/plugins/WooCommerce/
+         */
         $excludedDirectories = array_map(function ($item) {
-            return trailingslashit($item);
+            return untrailingslashit(strtolower($item));
         }, $excludedDirectories);
+
+        /**
+         * Allow user to filter the excluded directories in a site export.
+         * @todo Should we add UI for this?
+         */
+        $excludedDirectories = (array)apply_filters('wpstg.export.site.directory.excluded', $excludedDirectories);
 
         $dirs = [];
 
         /** @var \SplFileInfo $item */
         foreach ($it as $item) {
             if ($item->isDir() && $item->getFilename() != "." && $item->getFilename() != "..") {
-                if (in_array(trailingslashit($item->getRealPath()), $excludedDirectories)) {
-                    // Early bail: Directory is ignored
-                    $this->logger->info(sprintf(
-                        __('%s: Ignored directory "%s" because it\'s in the ignored directories list.', 'wp-staging'),
-                        __('Directory Scanner', 'wp-staging'),
-                        $item->getRealPath()
-                    ));
-                    continue;
+                if (!in_array(untrailingslashit(strtolower($item->getRealPath())), $excludedDirectories)) {
+                    $dirs[] = $item->getRealPath();
                 }
-                $dirs[] = $item->getRealPath();
             }
         }
 
