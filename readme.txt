@@ -185,6 +185,10 @@ https://wp-staging.com
 * Fix: Lost password link generation in staging sites #697
 * Fix: Fix cloning on multisite for PHP 5 #725
 * Fix: Skip symlink scanning during directory scan #736
+* Fix: Replace deprecated jQuery click method #730
+* Fix: Fix overlapping of sweetalert confirmation on push with sidebar #742
+* Fix: Exclude wp staging content folder during staging #741
+* Fix: Add sanitizing for path to fix comparing for Windows paths #751
 * Dev: Internal refactoring of database backup to avoid long-lived branch #624
 * Dev: Enforced changelog entries in CI #695
 * Dev: Refactored webdriver tests to make them faster #656
@@ -195,6 +199,8 @@ https://wp-staging.com
 * Dev: Add helper to manage clone settings #717
 * Dev: Internal code refactoring, renaming classes for better readability #721
 * Dev: Add infrastructure support for wp-cli and background processing #728
+* Dev: Update php-scoper and other development dependencies #744
+* Dev: Build javascript when building the distributable version of the plugin #750
 
 = 2.8.1 =
 * Feat: Show creator user name of staging site
