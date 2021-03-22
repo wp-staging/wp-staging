@@ -7,7 +7,7 @@
 namespace WPStaging\Framework\Filesystem;
 
 use RuntimeException;
-use WPStaging\Component\Task\Filesystem\DirectoryScannerTask;
+use WPStaging\Pro\Backup\Task\Tasks\JobExport\DirectoryScannerTask;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\Queue;
@@ -65,7 +65,7 @@ class DirectoryScannerControl
      */
     public function setQueueByName($name = self::QUEUE_CACHE_FILE)
     {
-        $this->queue = new Queue;
+        $this->queue = new Queue();
         $this->queue->setName($name);
         $this->queue->setStorage($this->storage);
     }

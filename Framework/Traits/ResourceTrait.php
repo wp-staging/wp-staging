@@ -2,8 +2,6 @@
 
 namespace WPStaging\Framework\Traits;
 
-use WPStaging\Framework\Utils\Size;
-
 trait ResourceTrait
 {
     use TimerTrait;
@@ -36,9 +34,9 @@ trait ResourceTrait
             return false;
         }
 
-        $limit = (new Size)->toBytes(ini_get('memory_limit'));
+        $limit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
 
-        if (!is_int($limit) || $limit < 64000000){
+        if (!is_int($limit) || $limit < 64000000) {
             $limit = 64000000;
         }
         $allowed = $limit - 1024;

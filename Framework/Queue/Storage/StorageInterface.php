@@ -19,6 +19,13 @@ interface StorageInterface
     public function setKey($key);
 
     /**
+     * Persist the data
+     *
+     * @return void
+     */
+    public function commit();
+
+    /**
      * Count all items in the given queue
      * @return int
      */

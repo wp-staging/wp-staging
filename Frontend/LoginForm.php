@@ -51,7 +51,6 @@ class LoginForm
 
         // Validate provided password and login
         if (wp_check_password($_POST['wpstg-pass'], $user_data->user_pass, $user_data->ID)) {
-
             $rememberme = isset($_POST['rememberme']) ? true : false;
 
             wp_set_auth_cookie($user_data->ID, $rememberme);
@@ -125,27 +124,7 @@ class LoginForm
      */
     private function getLoginForm()
     {
-        $arguments = [
-            'echo' => true,
-            // Default 'redirect' value takes the user back to the request URI.
-            'redirect' => (is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'],
-            'form_id' => 'loginform',
-            'label_username' => __('Username'),
-            'label_password' => __('Password'),
-            'label_remember' => __('Remember Me'),
-            'label_log_in' => __('Log In'),
-            'id_username' => 'user_login',
-            'id_password' => 'user_pass',
-            'id_remember' => 'rememberme',
-            'id_submit' => 'wp-submit',
-            'remember' => true,
-            'value_username' => '',
-            // Set 'value_remember' to true to default the "Remember me" checkbox to checked.
-            'value_remember' => false,
-        ];
-
-
-        $args = empty($this->args) ? $arguments : $this->args;
+        $args = empty($this->args) ? $this->getDefaultArguments() : $this->args;
 
         // Don't delete! This is used in the views below
         $notice = __('Enter your administrator credentials to access the cloned site. (This message will be displayed only once!)', 'wp-staging');
@@ -170,5 +149,42 @@ class LoginForm
         $this->error = $error;
     }
 
-}
+    /**
+     * Returns the default set of arguments used to render the Login Form.
+     *
+     * @since TBD
+     *
+     * @param array<string,mixed> $overrides A set of values to override the default ones.
+     *
+     * @return array<string,mixed> The default set of arguments used to render the login form.
+     */
+    public function getDefaultArguments(array $overrides = [])
+    {
+        // Default 'redirect' value takes the user back to the request URI.
+        $redirect = (is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        $lostPasswordUrl = wp_lostpassword_url($redirect);
+        $arguments = wp_parse_args(
+            $overrides,
+            [
+                'echo' => true,
+                'redirect' => $redirect,
+                'lost_password_url' => $lostPasswordUrl,
+                'form_id' => 'loginform',
+                'label_username' => __('Username'),
+                'label_password' => __('Password'),
+                'label_remember' => __('Remember Me'),
+                'label_log_in' => __('Log In'),
+                'id_username' => 'user_login',
+                'id_password' => 'user_pass',
+                'id_remember' => 'rememberme',
+                'id_submit' => 'wp-submit',
+                'remember' => true,
+                'value_username' => '',
+                // Set 'value_remember' to true to default the "Remember me" checkbox to checked.
+                'value_remember' => false,
+            ]
+        );
 
+        return $arguments;
+    }
+}

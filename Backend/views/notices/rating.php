@@ -72,17 +72,4 @@
         'regards': "<?php _e("Your WP STAGING Team") ?>"
     };
 </script>
-<?php
-/*
- * Cache-burst mechanism to ensure the browser cache will not get in the way
- * of the script working properly when there's updates.
- */
-$file = trailingslashit($this->path) . "public/js/wpstg-admin-rating.js";
-
-if (file_exists($file)) {
-    $version = (string)@filemtime($file);
-} else {
-    $version = '2.7.6';
-}
-?>
-<script src="<?php echo esc_url(trailingslashit($this->url) . "js/wpstg-admin-rating.js?v=$version") ?>"></script>
+<script src="<?php echo esc_url($this->assets->getAssetsUrlWithVersion("js/dist/wpstg-admin-rating.js", '2.7.6')) ?>"></script>

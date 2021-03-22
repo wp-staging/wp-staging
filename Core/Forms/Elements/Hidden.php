@@ -1,6 +1,6 @@
 <?php
-namespace WPStaging\Core\Forms\Elements;
 
+namespace WPStaging\Core\Forms\Elements;
 
 use WPStaging\Core\Forms\Elements;
 

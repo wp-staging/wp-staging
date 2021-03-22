@@ -1,6 +1,5 @@
 <?php
 
-
 namespace WPStaging\Framework\Adapter;
 
 use stdClass;

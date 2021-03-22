@@ -1,8 +1,6 @@
 <?php
 
-
 namespace WPStaging\Framework\CloningProcess\SearchReplace;
-
 
 class SearchReplaceService
 {

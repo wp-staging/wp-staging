@@ -2,41 +2,38 @@
 
 namespace WPStaging\Framework\Filesystem;
 
-use WPStaging\Core\Iterators\RecursiveFilterExclude;
+use DirectoryIterator;
+use FilesystemIterator;
+use IteratorIterator;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use WPStaging\Framework\Filesystem\Filters\DirectoryDotFilter;
 use WPStaging\Framework\Filesystem\Filters\PathExcludeFilter;
-use WPStaging\Framework\Filesystem\Filters\ExtensionExcludeFilter;
-use WPStaging\Framework\Filesystem\Filters\RecursiveExtensionExcludeFilter;
+use WPStaging\Framework\Filesystem\Filters\RecursivePathExcludeFilter;
 
 class FilterableDirectoryIterator
 {
     /**
      * The directory to iterate
-     * @var string 
+     * @var string
      */
     private $directory;
 
     /**
      * list of files, directories or symlinks paths to be excluded
-     * @var array 
+     * @var array
      */
     private $paths = [];
 
     /**
-     * list of file extensions to be excluded
-     * @var array 
-     */
-    private $extensions = [];
-
-    /**
      * Iterator recursively including sub folders or only items located in root of $this->$directory
-     * @var bool 
+     * @var bool
      */
     private $isRecursive = false;
 
     /**
      * skip dot in non recursive iterator depending on value
-     * @var bool 
+     * @var bool
      */
     private $isDotSkip = true;
 
@@ -53,7 +50,7 @@ class FilterableDirectoryIterator
      */
     public function __construct()
     {
-        $this->iteratorMode = \RecursiveIteratorIterator::LEAVES_ONLY;
+        $this->iteratorMode = RecursiveIteratorIterator::LEAVES_ONLY;
     }
 
     /**
@@ -139,34 +136,6 @@ class FilterableDirectoryIterator
     }
 
     /**
-     * @return array
-     */
-    public function getExcludeExtensions()
-    {
-        return $this->extensions;
-    }
-
-    /**
-     * @param array $extensions
-     * @return self
-     */
-    public function setExcludeExtensions($extensions)
-    {
-        $this->extensions = $extensions;
-        return $this;
-    }
-
-    /** 
-     * @param string $extension
-     * @return self
-     */
-    public function addExcludeExtension($extension)
-    {
-        $this->extensions[] = $extension;
-        return $this;
-    }
-
-    /**
      * @return int
      */
     public function getIteratorMode()
@@ -186,13 +155,13 @@ class FilterableDirectoryIterator
 
     /**
      * Get the final iterator for iterations
-     * @return \RecursiveIteratorIterator|\IteratorIterator
+     * @return RecursiveIteratorIterator|IteratorIterator
      * @throws FilesystemExceptions
      */
-    public function get() 
+    public function get()
     {
         if (!is_dir($this->directory)) {
-            throw new FilesystemExceptions('Directory not found on the given path');
+            throw new FilesystemExceptions(sprintf(__('Directory not found on the given path: %s.', 'wp-staging'), $this->directory));
         }
 
         if ($this->isRecursive) {
@@ -201,56 +170,45 @@ class FilterableDirectoryIterator
 
         return $this->getIterator();
     }
-	
-	/**
+
+    /**
      * Get recursive iterator for iterations
-     * @return \RecursiveIteratorIterator
+     * @return RecursiveIteratorIterator
      */
     private function getRecursiveIterator()
-	{
+    {
         // force Dot Skip to avoid unlimited loop iteration.
         $this->isDotSkip = true;
 
-        $iterator = new \RecursiveDirectoryIterator($this->directory, \FilesystemIterator::SKIP_DOTS);
-        
+        $iterator = new RecursiveDirectoryIterator($this->directory, FilesystemIterator::SKIP_DOTS);
+
         if (count($this->paths) !== 0) {
-            $iterator = new RecursiveFilterExclude($iterator, $this->paths);
+            $iterator = new RecursivePathExcludeFilter($iterator, $this->paths);
         }
 
-        if (count($this->extensions) !== 0) {
-            $iterator = new RecursiveExtensionExcludeFilter($iterator, $this->extensions);
-        }
+        $iterator = new RecursiveIteratorIterator($iterator, $this->iteratorMode);
 
-        $iterator = new \RecursiveIteratorIterator($iterator, $this->iteratorMode);
-		
-		return $iterator;
+        return $iterator;
     }
 
     /**
      * Get non recursive iterator for iterations
-     * @return \IteratorIterator
+     * @return IteratorIterator
      */
-	private function getIterator() 
-	{
-        $iterator = new \DirectoryIterator($this->directory);
+    private function getIterator()
+    {
+        $iterator = new DirectoryIterator($this->directory);
 
         if ($this->isDotSkip) {
             $iterator = new DirectoryDotFilter($iterator);
         }
-        
+
         if (count($this->paths) !== 0) {
             $iterator = new PathExcludeFilter($iterator, $this->paths);
         }
 
-        if (count($this->extensions) !== 0) {
-            $iterator = new ExtensionExcludeFilter($iterator, $this->extensions);
-        }
+        $iterator = new IteratorIterator($iterator);
 
-        $iterator = new \IteratorIterator($iterator);
-		
-		return $iterator;
+        return $iterator;
     }
-
-    
-    
 }
