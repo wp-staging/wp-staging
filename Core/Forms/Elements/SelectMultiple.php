@@ -1,4 +1,5 @@
 <?php
+
 namespace WPStaging\Core\Forms\Elements;
 
 use WPStaging\Core\Forms\ElementsWithOptions;
@@ -17,15 +18,14 @@ class SelectMultiple extends ElementsWithOptions
     {
         $output = "<select multiple id='{$this->getId()}' name='{$this->name}' {$this->prepareAttributes()}>";
 
-            foreach ($this->options as $id => $value)
-            {
-                $selected = ($this->isSelected($id)) ? " selected=''" : '';
+        foreach ($this->options as $id => $value) {
+            $selected = ($this->isSelected($id)) ? " selected=''" : '';
 
-                //$output .= "<option value='{$id}'{$selected}>{$value}</option>";
-                $output .= "<option value='{$id}'{$selected}>{$value}</option>";
-            }
+            //$output .= "<option value='{$id}'{$selected}>{$value}</option>";
+            $output .= "<option value='{$id}'{$selected}>{$value}</option>";
+        }
 
-        $output.= "</select>";
+        $output .= "</select>";
 
         return $output;
     }
@@ -42,8 +42,7 @@ class SelectMultiple extends ElementsWithOptions
                 (is_string($this->default) && $this->default === $value) ||
                 (is_array($this->default) && in_array($value, $this->default))
             )
-        )
-        {
+        ) {
             return true;
         }
 

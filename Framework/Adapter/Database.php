@@ -1,7 +1,9 @@
 <?php
+
 /**
  * IMPORTANT use only named queries or WP queries
  */
+
 /** @noinspection PhpUndefinedClassInspection */
 
 namespace WPStaging\Framework\Adapter;
@@ -26,10 +28,21 @@ class Database
     /** @var wpdb */
     private $wpdb;
 
-    public function __construct()
+    /** @var string */
+    private $productionPrefix;
+
+    /**
+     * @param wpdb $wpDatabase
+     */
+    public function __construct($wpDatabase = null)
     {
         global $wpdb;
         $this->wpdb = $wpdb;
+        if ($wpDatabase !== null && $wpDatabase !== $wpdb) {
+            $this->wpdb = $wpDatabase;
+        }
+
+        $this->productionPrefix = $wpdb->prefix;
         $this->wpdba = new WpDbAdapter($this->wpdb);
         $this->client = $this->findClient();
     }
@@ -57,6 +70,22 @@ class Database
     public function getPrefix()
     {
         return $this->wpdb->prefix;
+    }
+
+    /**
+     * @return string
+     */
+    public function getProductionPrefix()
+    {
+        return $this->productionPrefix;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isExternal()
+    {
+        return !($this->wpdb->__get('dbhost') === DB_HOST && $this->wpdb->__get('dbname') === DB_NAME);
     }
 
     /**

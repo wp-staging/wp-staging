@@ -47,8 +47,6 @@ class WpContentCleaner
      * can also be used to give path of staging site
      * @param string $directory Root directory of target WordPress Installation
      * @return bool
-     * 
-     * @todo update for clone when clone is network after merging that PR
      */
     public function tryCleanWpContent($directory)
     {
@@ -62,7 +60,7 @@ class WpContentCleaner
         if (!is_dir($directory)) {
             return true;
         }
-        
+
         $wpDirectories = new WpDefaultDirectories();
         $directory = trailingslashit($directory);
         $paths = [];
@@ -92,14 +90,17 @@ class WpContentCleaner
         }
 
         $excludePaths = [
-            "wp-staging",
-            "wp-staging-1",
-            "wp-staging-pro",
-            "wp-staging-pro-1",
-            "wp-staging-dev",
-            'cache',
-            'wps-hide-login',
-            'wp-staging-hooks',
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging",
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging_1",
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging_2",
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging-pro",
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging-pro_1",
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging-pro_2",
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging-dev",
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . 'wp-staging-hooks',
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . 'wp-staging-hooks_1',
+            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . 'wp-staging-hooks_2',
+            trailingslashit($directory . $wpDirectories->getRelativeUploadPath()) . 'wp-staging', // exclude wp-staging from uploads dir too.
         ];
         $fs = (new Filesystem())
             ->setShouldStop([$this->job, 'isOverThreshold'])

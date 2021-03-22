@@ -7,7 +7,6 @@ namespace WPStaging\Framework\Database;
 
 use DateTime;
 use WPStaging\Framework\Interfaces\HydrateableInterface;
-use WPStaging\Framework\Utils\Size;
 
 class TableDto implements HydrateableInterface
 {
@@ -33,10 +32,10 @@ class TableDto implements HydrateableInterface
     {
         $this->setName($data['Name']);
 
-        $this->setRows(isset($data['Rows'])? (int) $data['Rows'] : 0);
-        $this->setAutoIncrement(isset($data['Auto_increment'])? $data['Auto_increment'] : null);
+        $this->setRows(isset($data['Rows']) ? (int) $data['Rows'] : 0);
+        $this->setAutoIncrement(isset($data['Auto_increment']) ? $data['Auto_increment'] : null);
         /** @noinspection PhpUnhandledExceptionInspection */
-        $this->setCreatedAt(new DateTime(isset($data['Create_time'])? $data['Create_time'] : ''));
+        $this->setCreatedAt(new DateTime(isset($data['Create_time']) ? $data['Create_time'] : ''));
         if (isset($data['Update_time']) && $data['Update_time']) {
             /** @noinspection PhpUnhandledExceptionInspection */
             $this->setUpdatedAt(new DateTime($data['Update_time']));
@@ -151,6 +150,6 @@ class TableDto implements HydrateableInterface
      */
     public function getHumanReadableSize()
     {
-        return (new Size)->toUnit($this->size);
+        return size_format($this->size);
     }
 }

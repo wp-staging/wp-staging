@@ -7,7 +7,7 @@
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
  * Contributors: ReneHermi
- * Version: 2.8.1
+ * Version: 2.8.2
  * Text Domain: wp-staging
  * Domain Path: /languages/
  *
@@ -33,9 +33,31 @@ if (!defined("WPINC")) {
     die;
 }
 
+/**
+ * Welcome to WPSTAGING.
+ *
+ * If you're reading this, you are a curious person that likes
+ * to understand how things works, and that's awesome!
+ *
+ * The philosophy of this file is to work on all PHP versions.
+ *
+ * Before PHP can understand conditionals such as "if, else",
+ * it has to parse this file and split it into "tokens". This
+ * process is called "lexical analysis", and exists in almost
+ * all programming languages.
+ *
+ * This file uses only syntax that works with all PHP versions,
+ * so that any PHP version can parse it and run our version check
+ * conditional.
+ *
+ * Then we include other PHP files to be parsed, this time, certain
+ * to be executing in a PHP version that is capable of parsing the
+ * the syntax we are using.
+ */
 if (version_compare(phpversion(), '5.5.0', '>=')) {
     // The absolute path to the main file of this plugin.
     $pluginFilePath = __FILE__;
+    include dirname(__FILE__) . '/opcacheBootstrap.php';
     include_once dirname(__FILE__) . '/freeBootstrap.php';
 } else {
     if (!function_exists('wpstg_unsupported_php_version')) {

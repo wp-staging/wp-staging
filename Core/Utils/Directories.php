@@ -1,9 +1,9 @@
 <?php
+
 namespace WPStaging\Core\Utils;
 
 // No Direct Access
-if (!defined("WPINC"))
-{
+if (!defined("WPINC")) {
     die;
 }
 
@@ -49,8 +49,7 @@ class Directories
         $path       = realpath($path);
 
         // Invalid path
-        if ($path === false)
-        {
+        if ($path === false) {
             return null;
         }
 
@@ -74,15 +73,12 @@ class Directories
         $totalBytes = 0;
 
         // Loop & add file size
-        foreach ($iterator as $file)
-        {
-            try
-            {
+        foreach ($iterator as $file) {
+            try {
                 $totalBytes += $file->getSize();
             }
             // Some invalid symbolik links can cause issues in *nix systems
-            catch(\Exception $e)
-            {
+            catch (\Exception $e) {
                 $this->log->add("{$file} is a symbolic link or for some reason its size is invalid");
             }
         }

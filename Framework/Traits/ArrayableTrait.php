@@ -24,7 +24,7 @@ trait ArrayableTrait
 
         $data = [];
         /** @var ReflectionProperty $prop */
-        foreach($props as $prop) {
+        foreach ($props as $prop) {
             $prop->setAccessible(true);
             $value = $prop->getValue($this);
 

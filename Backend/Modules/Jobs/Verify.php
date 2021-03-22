@@ -13,7 +13,8 @@ if (!defined("WPINC")) {
  * Class Files
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Verify extends JobExecutable {
+class Verify extends JobExecutable
+{
 
     /**
      * @var \SplFileObject
@@ -38,7 +39,8 @@ class Verify extends JobExecutable {
     /**
      * Initialization
      */
-    public function initialize() {
+    public function initialize()
+    {
         $this->destination = ABSPATH . $this->options->cloneDirectoryName . DIRECTORY_SEPARATOR;
 
         $this->getCopyFiles();
@@ -58,7 +60,8 @@ class Verify extends JobExecutable {
      * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
      * @return void
      */
-    protected function calculateTotalSteps() {
+    protected function calculateTotalSteps()
+    {
         $this->options->totalSteps = ceil($this->options->totalFiles / $this->maxFilesPerRun);
     }
 
@@ -67,7 +70,8 @@ class Verify extends JobExecutable {
      * Returns false when over threshold limits are hit or when the job is done, true otherwise
      * @return bool
      */
-    protected function execute() {
+    protected function execute()
+    {
         // Finished
         if ($this->isFinished()) {
             $this->log("Verifying files finished");
@@ -93,7 +97,8 @@ class Verify extends JobExecutable {
      * Get files and copy
      * @return bool
      */
-    private function getFilesAndVerify() {
+    private function getFilesAndVerify()
+    {
         // Over limits threshold
         if ($this->isOverThreshold()) {
             // Prepare response and save current progress
@@ -112,7 +117,8 @@ class Verify extends JobExecutable {
      * Get files
      * @return void
      */
-    protected function getVerifyFiles() {
+    protected function getVerifyFiles()
+    {
         $file = $this->cache->getCacheDir() . "files_to_verify." . $this->cache->getCacheExtension();
 
         if (($this->verifyFiles = @file_get_contents($file)) === false) {
@@ -127,7 +133,8 @@ class Verify extends JobExecutable {
      * Get files
      * @return void
      */
-    protected function getCopyFiles() {
+    protected function getCopyFiles()
+    {
         $file = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
         if (($this->verifyFiles = @file_get_contents($file)) === false) {
@@ -142,11 +149,12 @@ class Verify extends JobExecutable {
      * Save Result of File Verification
      * @return bool
      */
-    protected function saveVerifyFiles() {
+    protected function saveVerifyFiles()
+    {
 
         // Get file copy differences
         $filesVerified = array_diff($this->files, $this->verifyFiles);
-        
+
         $fileName = $this->cache->getCacheDir() . "files_verified" . $this->cache->getCacheExtension();
         $files = implode(PHP_EOL, $filesVerified);
 
@@ -157,11 +165,11 @@ class Verify extends JobExecutable {
      * Checks Whether There is Any Job to Execute or Not
      * @return bool
      */
-    private function isFinished() {
+    private function isFinished()
+    {
         return (
                 $this->options->currentStep > $this->options->totalSteps ||
                 $this->options->verifiedFiles >= $this->options->totalFiles
                 );
     }
-
 }

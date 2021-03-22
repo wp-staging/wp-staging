@@ -16,8 +16,8 @@ trait BooleanTransientTrait
         set_transient($this->getTransientName(), true, $this->getExpiryTime());
     }
 
-    /** 
-     * @return bool 
+    /**
+     * @return bool
      */
     public function getTransient()
     {

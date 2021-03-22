@@ -23,7 +23,7 @@ class File extends SplFileObject
     {
 
         if (!file_exists($fullPath)) {
-            (new Filesystem)->mkdir(dirname($fullPath));
+            (new Filesystem())->mkdir(dirname($fullPath));
         }
 
         parent::__construct($fullPath, $openMode);

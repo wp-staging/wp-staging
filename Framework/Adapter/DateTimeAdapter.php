@@ -79,7 +79,7 @@ class DateTimeAdapter
             }
         }
 
-        return $date?: null;
+        return $date ?: null;
     }
 
     // TODO

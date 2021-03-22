@@ -1,10 +1,12 @@
 <?php
+
 /**
  * This file is currently being called only for the Free version:
  * src/Backend/views/clone/ajax/scan.php:113
  *
  * @file src/Backend/Pro/views/clone/ajax/external-database.php For the Pro counterpart.
  */
+
 ?>
 <fieldset disabled class="wpstg-opacity-80">
     <p><strong class="wpstg-fs-14">
