@@ -91,7 +91,7 @@ abstract class AbstractCache
     {
         $this->path = $path;
 
-        (new Filesystem())->mkdir($path, true);
+        (new Filesystem)->mkdir($path);
 
         $this->initializeFilePath();
     }
@@ -119,16 +119,6 @@ abstract class AbstractCache
     public function getFilePath()
     {
         return $this->filePath;
-    }
-
-    /**
-     * @param $fileName
-     *
-     * @return bool
-     */
-    public function cacheExists($fileName)
-    {
-        return is_file(trailingslashit($this->getPath()) . $fileName . '.' . static::EXTENSION);
     }
 
     /**

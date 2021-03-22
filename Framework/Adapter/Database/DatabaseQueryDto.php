@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Adapter\Database;
 
+
 class DatabaseQueryDto
 {
     /** @var string */

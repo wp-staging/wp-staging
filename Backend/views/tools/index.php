@@ -8,7 +8,7 @@
             $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "system_info";
 
             # Loop through tabs
-            foreach ($tabs as $id => $name) :
+            foreach ($tabs as $id => $name):
                 $url = esc_url(add_query_arg([
                     "settings-updated"  => false,
                     "tab"               => $id

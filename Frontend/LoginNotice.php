@@ -54,4 +54,5 @@ class LoginNotice implements TransientInterface
 
         return $expiredOrNot;
     }
+
 }

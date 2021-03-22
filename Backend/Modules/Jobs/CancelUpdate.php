@@ -6,15 +6,13 @@ namespace WPStaging\Backend\Modules\Jobs;
  * Class Cancel Update Processing
  * @package WPStaging\Backend\Modules\Jobs
  */
-class CancelUpdate extends Job
-{
+class CancelUpdate extends Job {
 
     /**
      * Start Module
      * @return bool
      */
-    public function start()
-    {
+    public function start() {
         $cloneData = $this->createCloneData();
 
         if (empty($cloneData)) {
@@ -22,15 +20,15 @@ class CancelUpdate extends Job
         }
         // Delete Cache Files
         $this->deleteCacheFiles();
-
+       
         $this->returnFinish();
+        
     }
 
     /**
      * @return array
      */
-    protected function createCloneData()
-    {
+    protected function createCloneData() {
         $clone = [];
 
         if (!$this->check()) {
@@ -48,8 +46,7 @@ class CancelUpdate extends Job
     /**
      * @return bool
      */
-    public function check()
-    {
+    public function check() {
         return (
                 isset($this->options) &&
                 isset($this->options->clone) &&
@@ -64,8 +61,7 @@ class CancelUpdate extends Job
      * Get json response
      * return json
      */
-    private function returnFinish($message = '')
-    {
+    private function returnFinish($message = '') {
 
         wp_die(json_encode([
             'job' => 'delete',
@@ -75,8 +71,8 @@ class CancelUpdate extends Job
             'delete' => 'finished'
         ]));
     }
-
-
+    
+    
     /**
      * Delete Cache Files
      */
@@ -90,4 +86,5 @@ class CancelUpdate extends Job
 
         $this->log("Updating process canceled");
     }
+
 }

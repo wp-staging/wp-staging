@@ -1,5 +1,4 @@
 <?php
-
 /**
  * Globally applicable very tiny functions that have only one specific use case but that are needed more than one time.
  * We use snake case prefix 'wpstg_' to differentiate them with the rest of our code base
@@ -28,6 +27,7 @@ function wpstg_setup_environment()
 
     // Set maximum backtracking steps
     @ini_set('pcre.backtrack_limit', PHP_INT_MAX);
+
 }
 
 /**
@@ -145,7 +145,7 @@ function wpstg_urldecode($data)
  */
 function wpstg_is_stagingsite()
 {
-    return (new \WPStaging\Framework\SiteInfo())->isStaging();
+    return (new \WPStaging\Framework\SiteInfo)->isStaging();
 }
 
 /**
@@ -186,7 +186,7 @@ function wpstg_get_memory_in_bytes($memory)
  */
 function wpstg_unique_constraint($query)
 {
-    // Change name to random in all constraints, if there, to prevent trouble with existing
+    // Change name to random in all constraints, if there, to prevent trouble with existing  
     $query = preg_replace_callback("/CONSTRAINT\s`(\w+)`/", function () {
         return "CONSTRAINT `" . uniqid() . "`";
     }, $query);
@@ -218,15 +218,15 @@ function wpstg_unique_constraint($query)
 /**
  * Get relative path to the uploads folder, can be a custom folder e.g assets or default folder wp-content/uploads
  *
- * @return string
- *@see         \WPStaging\Framework\Utils\WpDefaultDirectories::getUploadsPath Removed in favor of this.
+ * @deprecated
+ * @see         \WPStaging\Framework\Utils\WpDefaultDirectories::getUploadPath Removed in favor of this.
  * @todo        Remove this in future versions.
  *
- * @deprecated
+ * @return string
  */
 function wpstg_get_abs_upload_dir()
 {
-    return (new \WPStaging\Framework\Utils\WpDefaultDirectories())->getUploadsPath();
+    return (new \WPStaging\Framework\Utils\WpDefaultDirectories())->getUploadPath();
 }
 
 /**

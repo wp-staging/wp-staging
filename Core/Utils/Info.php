@@ -1,5 +1,4 @@
 <?php
-
 namespace WPStaging\Core\Utils;
 
 class Info
@@ -27,7 +26,8 @@ class Info
      */
     public function getOS()
     {
-        if (self::$OS === null) {
+        if (self::$OS === null)
+        {
             self::$OS = strtoupper(substr(PHP_OS, 0, 3)); // WIN, LIN..
         }
 
@@ -41,12 +41,14 @@ class Info
     public function canUse($functionName)
     {
         // Set
-        if (isset(self::$canUse[$functionName])) {
+        if (isset(self::$canUse[$functionName]))
+        {
             return self::$canUse[$functionName];
         }
 
         // Function doesn't exist
-        if (!function_exists($functionName)) {
+        if (!function_exists($functionName))
+        {
             return self::$canUse[$functionName] = false;
         }
 

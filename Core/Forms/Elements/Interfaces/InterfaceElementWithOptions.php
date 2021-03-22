@@ -1,5 +1,4 @@
 <?php
-
 namespace WPStaging\Core\Forms\Elements\Interfaces;
 
 /**

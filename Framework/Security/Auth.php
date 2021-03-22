@@ -52,11 +52,12 @@ class Auth
      * @param string $nonce
      * @return bool
      */
-    public function isAuthenticatedRequest($nonce = Nonce::WPSTG_NONCE)
+    public function isValid($nonce = Nonce::WPSTG_NONCE)
     {
         if (
             $this->nonce->requestHasValidNonce($nonce) &&
             current_user_can($this->capabilities->manageWPSTG())
+
         ) {
             return true;
         }

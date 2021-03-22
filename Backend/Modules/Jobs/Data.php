@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+
 use WPStaging\Framework\CloningProcess\Data\DataCloningDto;
 use WPStaging\Framework\CloningProcess\Data\CopyWpConfig;
 use WPStaging\Framework\CloningProcess\Data\MultisiteAddNetworkAdministrators;
@@ -81,7 +82,7 @@ class Data extends CloningProcess
         // Save option, progress
         $this->saveOptions();
 
-        return (object)$this->response;
+        return ( object )$this->response;
     }
 
     /**

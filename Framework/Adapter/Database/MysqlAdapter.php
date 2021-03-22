@@ -1,5 +1,4 @@
 <?php
-
 /** @noinspection PhpComposerExtensionStubsInspection */
 
 namespace WPStaging\Framework\Adapter\Database;
@@ -112,4 +111,5 @@ class MysqlAdapter implements InterfaceDatabaseClient
 
         return null;
     }
+
 }

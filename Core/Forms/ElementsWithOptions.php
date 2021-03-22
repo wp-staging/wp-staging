@@ -1,5 +1,4 @@
 <?php
-
 namespace WPStaging\Core\Forms;
 
 use WPStaging\Core\Forms\Elements\Interfaces\InterfaceElementWithOptions;
@@ -46,7 +45,8 @@ abstract class ElementsWithOptions extends Elements implements InterfaceElementW
      */
     public function removeOption($id)
     {
-        if (isset($this->options[$id])) {
+        if (isset($this->options[$id]))
+        {
             unset($this->options[$id]);
         }
 
@@ -59,7 +59,8 @@ abstract class ElementsWithOptions extends Elements implements InterfaceElementW
      */
     public function addOptions($options)
     {
-        foreach ($options as $id => $name) {
+        foreach ($options as $id => $name)
+        {
             $this->addOption($id, $name);
         }
 

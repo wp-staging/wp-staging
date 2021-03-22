@@ -5,7 +5,8 @@ namespace WPStaging\Core\Utils;
 use WPStaging\Framework\Filesystem\Filesystem;
 
 // No Direct Access
-if (!defined("WPINC")) {
+if (!defined("WPINC"))
+{
     die;
 }
 
@@ -14,17 +15,15 @@ if (!defined("WPINC")) {
  *
  * @author IronMan
  */
-class Htaccess
-{
-
+class Htaccess {
+    
     /**
-     *
+     * 
      * @var obj
      */
     public $filesystem;
-
-    public function __construct()
-    {
+    
+    public function __construct() {
         $this->filesystem = new Filesystem();
     }
 
@@ -34,9 +33,8 @@ class Htaccess
      * @param  string  $path Path to file
      * @return boolean
      */
-    public function create($path)
-    {
-        return $this->filesystem->create($path, implode(PHP_EOL, [
+    public function create( $path ) {
+        return $this->filesystem->create( $path, implode( PHP_EOL, [
                     '<IfModule mod_mime.c>',
                     'AddType application/octet-stream .log',
                     '</IfModule>',
@@ -46,7 +44,7 @@ class Htaccess
                     '<IfModule mod_autoindex.c>',
                     'Options -Indexes',
                     '</IfModule>',
-                ]));
+                ] ) );
     }
 
     /**
@@ -57,12 +55,12 @@ class Htaccess
      * @param  string  $path Path to file
      * @return boolean
      */
-    public function createLitespeed($path)
-    {
-        return $this->filesystem->createWithMarkers($path, 'LiteSpeed', [
+    public function createLitespeed( $path ) {
+        return $this->filesystem->createWithMarkers( $path, 'LiteSpeed', [
                     '<IfModule Litespeed>',
                     'SetEnv noabort 1',
                     '</IfModule>',
-                ]);
+                ] );
     }
+
 }

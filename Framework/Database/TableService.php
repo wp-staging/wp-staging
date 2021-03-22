@@ -7,7 +7,6 @@ namespace WPStaging\Framework\Database;
 
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Collection\Collection;
-use WPStaging\Framework\Utils\Strings;
 
 class TableService
 {
@@ -17,42 +16,10 @@ class TableService
     /** @var Database\InterfaceDatabase|Database\InterfaceDatabaseClient|Database\MysqlAdapter|Database\MysqliAdapter|null */
     private $client;
 
-    /** @var callable|null */
-    private $shouldStop;
-
-    /** @var array */
-    private $errors = [];
-
     public function __construct(Database $database = null)
     {
-        $this->database = $database ?: new Database();
+        $this->database = $database ?: new Database;
         $this->client = $this->database->getClient();
-    }
-
-    /**
-     * @return array
-     */
-    public function getErrors()
-    {
-        return $this->errors;
-    }
-
-    /**
-     * @return callable|null
-     */
-    public function getShouldStop()
-    {
-        return $this->shouldStop;
-    }
-
-    /**
-     * @param callable|null $shouldStop
-     * @return self
-     */
-    public function setShouldStop(callable $shouldStop = null)
-    {
-        $this->shouldStop = $shouldStop;
-        return $this;
     }
 
     /**
@@ -70,23 +37,9 @@ class TableService
 
         $collection = new Collection(TableDto::class);
         foreach ($tables as $table) {
-            $collection->attach((new TableDto())->hydrate((array) $table));
+            $collection->attach((new TableDto)->hydrate((array) $table));
         }
-
         return $collection;
-    }
-
-    /**
-     * Get names of all table only
-     * @param array $tables
-     *
-     * @return array
-     */
-    public function getTablesName($tables)
-    {
-        return (!is_array($tables)) ? [] : array_map(function ($table) {
-            return ($table->getName());
-        }, $tables);
     }
 
     /**
@@ -145,65 +98,6 @@ class TableService
         }
 
         return $this->getFilteredResult($views, $prefix);
-    }
-
-    /**
-     * Delete all the tables or views that starts with $startsWith
-     * @param string $startsWith
-     * @param array $excludedTables
-     * @return bool
-     */
-    public function deleteTablesStartWith($startsWith = null, $excludedTables = [])
-    {
-        $prefix = $this->provideSqlPrefix($startsWith);
-        $tables = $this->findTableStatusStartsWith($prefix);
-        if ($tables === null) {
-            return true;
-        }
-
-        $tables = $this->getTablesName($tables->toArray());
-
-        $tablesToRemove = array_diff($tables, $excludedTables);
-        if ($tablesToRemove === []) {
-            return true;
-        }
-
-        if (!$this->deleteTables($tablesToRemove)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * Delete Tables
-     * @param array $tables
-     * @param string $prefix
-     *
-     * @return bool
-     */
-    public function deleteTables($tables)
-    {
-        foreach ($tables as $table) {
-            // PROTECTION: Never delete any table that beginns with wp prefix of live site
-            // TODO: inject class Strings using DI
-            if (!$this->database->isExternal() && (new Strings())->startsWith($table, $this->database->getProductionPrefix())) {
-                $this->errors[] = sprintf(__("Fatal Error: Trying to delete table %s of main WP installation!", 'wp-staging'), $table);
-                return false;
-            }
-
-            $this->database->getWpdba()->exec("DROP TABLE {$table}");
-
-            if (!is_callable($this->shouldStop)) {
-                continue;
-            }
-
-            if (call_user_func($this->shouldStop)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 
     /**

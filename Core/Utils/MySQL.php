@@ -8,13 +8,11 @@ namespace WPStaging\Core\Utils;
  * @todo Confirm if it's deprecated and remove.
  * @see \WPStaging\Framework\Adapter\Database\MysqlAdapter Similar class
  */
-class MySQL
-{
-
+class MySQL {
+    
     private $wpdb;
-
-    public function __construct($wpdb)
-    {
+    
+    public function __construct($wpdb){
         $this->wpdb = $wpdb;
     }
 
@@ -24,10 +22,9 @@ class MySQL
      * @param  string   $input SQL query
      * @return resource
      */
-    public function query($input)
-    {
+    public function query( $input ) {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        return mysql_query($input, $this->wpdb->dbh);
+        return mysql_query( $input, $this->wpdb->dbh );
     }
 
     /**
@@ -36,10 +33,9 @@ class MySQL
      * @param  string $input String to escape
      * @return string
      */
-    public function escape($input)
-    {
+    public function escape( $input ) {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        return mysql_real_escape_string($input, $this->wpdb->dbh);
+        return mysql_real_escape_string( $input, $this->wpdb->dbh );
     }
 
     /**
@@ -47,10 +43,9 @@ class MySQL
      *
      * @return integer
      */
-    public function errno()
-    {
+    public function errno() {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        return mysql_errno($this->wpdb->dbh);
+        return mysql_errno( $this->wpdb->dbh );
     }
 
     /**
@@ -58,10 +53,9 @@ class MySQL
      *
      * @return string
      */
-    public function error()
-    {
+    public function error() {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        return mysql_error($this->wpdb->dbh);
+        return mysql_error( $this->wpdb->dbh );
     }
 
     /**
@@ -69,10 +63,9 @@ class MySQL
      *
      * @return string
      */
-    public function version()
-    {
+    public function version() {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        return mysql_get_server_info($this->wpdb->dbh);
+        return mysql_get_server_info( $this->wpdb->dbh );
     }
 
     /**
@@ -81,10 +74,9 @@ class MySQL
      * @param  resource $result MySQL resource
      * @return array
      */
-    public function fetchAssoc($result)
-    {
+    public function fetchAssoc( $result ) {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        return mysql_fetch_assoc($result);
+        return mysql_fetch_assoc( $result );
     }
 
     /**
@@ -93,10 +85,9 @@ class MySQL
      * @param  resource $result MySQL resource
      * @return array
      */
-    public function fetchRow($result)
-    {
+    public function fetchRow( $result ) {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        return mysql_fetch_row($result);
+        return mysql_fetch_row( $result );
     }
 
     /**
@@ -105,10 +96,9 @@ class MySQL
      * @param  resource $result MySQL resource
      * @return integer
      */
-    public function numRows($result)
-    {
+    public function numRows( $result ) {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        return mysql_num_rows($result);
+        return mysql_num_rows( $result );
     }
 
     /**
@@ -117,9 +107,9 @@ class MySQL
      * @param  resource $result MySQL resource
      * @return void
      */
-    public function freeResult($result)
-    {
+    public function freeResult( $result ) {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
-        mysql_free_result($result);
+        mysql_free_result( $result );
     }
+
 }

@@ -55,4 +55,5 @@ interface InterfaceDatabase
      * @return bool|int
      */
     public function exec($sql);
+
 }

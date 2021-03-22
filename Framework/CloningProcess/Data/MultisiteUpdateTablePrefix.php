@@ -1,6 +1,8 @@
 <?php
 
+
 namespace WPStaging\Framework\CloningProcess\Data;
+
 
 class MultisiteUpdateTablePrefix extends UpdateTablePrefix
 {

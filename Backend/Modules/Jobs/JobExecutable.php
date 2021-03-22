@@ -1,11 +1,9 @@
 <?php
-
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\Framework\Utils\Strings;
-
 // No Direct Access
-if (!defined("WPINC")) {
+if (!defined("WPINC"))
+{
     die;
 }
 
@@ -17,10 +15,6 @@ if (!defined("WPINC")) {
  */
 abstract class JobExecutable extends Job
 {
-    /**
-     * @var Strings
-     */
-    protected $strUtil;
 
     /**
      * @var array
@@ -45,9 +39,6 @@ abstract class JobExecutable extends Job
 
         // Set server settings (Do not set this globally. HS Ticket #9061)
         wpstg_setup_environment();
-
-        // TODO: inject using DI
-        $this->strUtil = new Strings();
     }
 
     /**
@@ -58,12 +49,13 @@ abstract class JobExecutable extends Job
      */
     protected function prepareResponse($status = false, $incrementCurrentStep = true)
     {
-        if ($incrementCurrentStep) {
+        if ($incrementCurrentStep)
+        {
             $this->options->currentStep++;
         }
 
         $percentage = 0;
-        if (isset($this->options->currentStep) && isset($this->options->totalSteps) && $this->options->totalSteps > 0) {
+        if (isset($this->options->currentStep) && isset($this->options->totalSteps) && $this->options->totalSteps > 0){
             $percentage = round(($this->options->currentStep / $this->options->totalSteps) * 100);
             $percentage = ($percentage > 100) ? 100 : $percentage;
         }
@@ -101,16 +93,18 @@ abstract class JobExecutable extends Job
     protected function run()
     {
         // Execute steps
-        for ($i = 0; $i < $this->options->totalSteps; $i++) {
+        for ($i = 0; $i < $this->options->totalSteps; $i++)
+        {
             // Job is finished or over threshold limits was hit
-            if (!$this->execute()) {
+            if (!$this->execute())
+            {
                 break;
             }
             // Return after every step to create lower batches
             // This also gets a smoother progress bar and to a less consumptive php cpu load
             // This decrease performance tremendous but also lowers memory consumption
-            if ($this->settings->cpuLoad === 'low') {
-                return (object) $this->response;
+            if ($this->settings->cpuLoad === 'low'){
+               return (object) $this->response;
             }
         }
     }

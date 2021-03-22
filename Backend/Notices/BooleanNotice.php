@@ -13,7 +13,7 @@ abstract class BooleanNotice
 {
     /**
      * The name of option on which the visibility of this notice is stored in db
-     *
+     * 
      * @return string
      */
     abstract function getOptionName();
@@ -23,13 +23,13 @@ abstract class BooleanNotice
      */
     public function enable()
     {
-        return add_option($this->getOptionName(), true);
+        return add_option($this->getOptionName(), true);  
     }
 
-    /**
-     * Check whether to show this notice or not
-     *
-     * @return bool
+    /** 
+     * Check whether to show this notice or not 
+     *  
+     * @return bool 
      */
     public function isEnabled()
     {
@@ -38,8 +38,8 @@ abstract class BooleanNotice
 
     /**
      * Delete the option in database to disable showing the notice
-     *
-     * @return bool
+     * 
+     * @return bool 
      */
     public function disable()
     {

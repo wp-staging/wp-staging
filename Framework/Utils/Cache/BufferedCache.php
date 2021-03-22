@@ -50,7 +50,7 @@ class BufferedCache extends AbstractCache
             }
 
             $pos = ftell($handle);
-            fseek($handle, $pos - strlen($buffer) - $offset);
+            fseek($handle,$pos - strlen($buffer) - $offset);
             fwrite($handle, $buffer);
             fseek($handle, $pos);
         }
@@ -138,10 +138,10 @@ class BufferedCache extends AbstractCache
 
         if (!flock($handle, LOCK_EX)) {
             fclose($handle);
-            throw new IOException('Failed to lock file: ' . $this->filePath);
+            throw new IOException('Failed to lock file: '. $this->filePath);
         }
 
-        $offset = 0;
+        $offset= 0;
         clearstatcache();
         $size = filesize($this->filePath);
         $totalLines = 0;
@@ -178,7 +178,7 @@ class BufferedCache extends AbstractCache
 
         if (!flock($handle, LOCK_EX)) {
             fclose($handle);
-            throw new IOException('Failed to lock file: ' . $this->filePath);
+            throw new IOException('Failed to lock file: '. $this->filePath);
         }
 
         $stats = fstat($handle);
@@ -257,7 +257,7 @@ class BufferedCache extends AbstractCache
         $data = [];
         $i = 0;
         while (($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
-            $data[] = trim($buffer);
+            $data[]= trim($buffer);
             $i++;
             if ($i >= $lines) {
                 break;

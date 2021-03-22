@@ -1,4 +1,3 @@
-<?php settings_errors(); ?>
 <div class="wpstg_admin">
     <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>
 
@@ -9,7 +8,7 @@
             $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "general";
 
             # Loop through tabs
-            foreach ($tabs as $id => $name) :
+            foreach ($tabs as $id => $name):
                 $url = esc_url(
                     add_query_arg(
                         [

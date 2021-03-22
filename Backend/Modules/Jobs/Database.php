@@ -2,11 +2,10 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
-use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
-use WPStaging\Framework\Database\TableService;
 
 /**
  * Class Database
@@ -42,10 +41,6 @@ class Database extends CloningProcess
         $this->generateDto();
         $this->addMissingTables();
         $this->total = count($this->options->tables);
-        // if mainJob is resetting add one extra pre step for deleting all tables
-        if ($this->options->mainJob === 'resetting') {
-            $this->total++;
-        }
     }
 
     /**
@@ -89,22 +84,8 @@ class Database extends CloningProcess
             return false;
         }
 
-        if (!$this->deleteAllTables()) {
-            // Prepare Response
-            $this->prepareResponse(false, false);
-
-            // Not finished
-            return true;
-        }
-
-        // decrement the tableIndex if mainJob was resetting
-        $tableIndex = $this->options->currentStep;
-        if ($this->options->mainJob === 'resetting') {
-            $tableIndex--;
-        }
-
         // Copy table
-        if (isset($this->options->tables[$tableIndex]) && !$this->copyTable($this->options->tables[$tableIndex])) {
+        if (isset($this->options->tables[$this->options->currentStep]) && !$this->copyTable($this->options->tables[$this->options->currentStep])) {
             // Prepare Response
             $this->prepareResponse(false, false);
 
@@ -115,50 +96,6 @@ class Database extends CloningProcess
         $this->prepareResponse();
 
         // Not finished
-        return true;
-    }
-
-    /**
-     * Delete all tables in staging site if the mainJob is resetting
-     *
-     * @return bool
-     */
-    private function deleteAllTables()
-    {
-        if ($this->options->mainJob !== 'resetting') {
-            return true;
-        }
-
-        if ($this->options->currentStep !== 0) {
-            return true;
-        }
-
-        if (!isset($this->options->databaseResettingStatus)) {
-            $this->options->databaseResettingStatus = 'pending';
-            $this->saveOptions();
-        }
-
-        if ($this->options->databaseResettingStatus === 'finished') {
-            return true;
-        }
-
-        if ($this->options->databaseResettingStatus === 'pending') {
-            $this->log(__('DB: Removing all clone database tables.', 'wp-staging'));
-            $this->options->databaseResettingStatus = 'processing';
-            $this->saveOptions();
-        }
-
-        // TODO: inject using DI
-        $tableService = new TableService(new DatabaseAdapter($this->stagingDb));
-        $tableService->setShouldStop([$this, 'isOverThreshold']);
-        if (!$tableService->deleteTablesStartWith($this->getStagingPrefix())) {
-            return false;
-        }
-
-        $this->options->databaseResettingStatus = 'finished';
-        $this->saveOptions();
-
-        $this->prepareResponse();
         return true;
     }
 
@@ -298,17 +235,15 @@ class Database extends CloningProcess
 
         $excludedtables = array_merge($excludedCustomTables, $excludedCoreTables);
 
-        if (
-            in_array(
-                $table,
-                array_map(
-                    function ($tableName) {
-                        return $this->options->prefix . $tableName;
-                    },
-                    $excludedtables
-                )
+        if (in_array(
+            $table,
+            array_map(
+                function ($tableName) {
+                    return $this->options->prefix . $tableName;
+                },
+                $excludedtables
             )
-        ) {
+        )) {
             return true;
         }
         return false;
@@ -370,7 +305,7 @@ class Database extends CloningProcess
     private function abortIfStagingPrefixEqualsProdPrefix()
     {
         if ($this->productionDb->prefix === $this->getStagingPrefix()) {
-            $error = 'Fatal error 7: The destination database table prefix ' . $this->getStagingPrefix() . ' is identical to the table prefix of the production site. Go to Sites > Actions > Edit Data and correct the table prefix or contact us.';
+            $error = 'Fatal error 7: The destination database table prefix ' . $this->getStagingPrefix() . ' would be identical to the table prefix of the production site. Please open a support ticket at support@wp-staging.com';
             $this->returnException($error);
             return true;
         }
@@ -382,7 +317,7 @@ class Database extends CloningProcess
      * Get new prefix for the staging site
      * @return string
      */
-    protected function getStagingPrefix()
+    private function getStagingPrefix()
     {
         if ($this->isExternalDatabase()) {
             $this->options->prefix = !empty($this->options->databasePrefix) ? $this->options->databasePrefix : $this->productionDb->prefix;
@@ -394,13 +329,13 @@ class Database extends CloningProcess
 
     /**
      * Return fatal error and stops here if subfolder already exists
-     * and mainJob is not updating and resetting the clone
+     * and mainJob is not updating the clone
      * @return boolean
      */
     private function abortIfDirectoryNotEmpty()
     {
         $path = trailingslashit($this->options->cloneDir);
-        if (isset($this->options->mainJob) && $this->options->mainJob !== 'resetting' && $this->options->mainJob !== 'updating' && is_dir($path) && !wpstg_is_empty_dir($path)) {
+        if (isset($this->options->mainJob) && $this->options->mainJob !== 'updating' && is_dir($path) && !wpstg_is_empty_dir($path)) {
             $this->returnException(" Can not continue for security purposes. Directory {$path} is not empty! Use FTP or a file manager plugin and make sure it does not contain any files. ");
             return true;
         }
