@@ -8,7 +8,10 @@ if (!defined("WPINC")) {
 }
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Core\Utils\Cache;
+use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Database\DbInfo;
+use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Capabilities;
@@ -25,12 +28,13 @@ use WPStaging\Backend\Modules\Jobs\ProcessLock;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Notices\Notices;
-use WPStaging\Backend\Notices\DisabledCacheNotice;
+use WPStaging\Backend\Notices\DisabledItemsNotice;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 use WPStaging\Backend\Activation;
 use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
+use WPStaging\Core\DTO\Settings;
 use WPStaging\Pro\Database\CompareExternalDatabase;
 
 /**
@@ -52,19 +56,25 @@ class Administrator
 
 
     /**
+     * Path to plugin's Backend Dir
      * @var string
      */
     private $path;
 
     /**
-     * @var string
+     * @var Assets
      */
-    private $url;
+    private $assets;
 
     /**
      * @var Auth
      */
     private $auth;
+
+    /**
+     * @var SiteInfo
+     */
+    private $siteInfo;
 
     /**
      * @var array
@@ -77,16 +87,18 @@ class Administrator
 
     public function __construct()
     {
+        // TODO: Inject using DI
+        $this->auth = new Auth(new Capabilities(), new AccessToken(), new Nonce());
+        // TODO: Inject using DI
+        $this->assets = new Assets(new AccessToken(), new Settings());
+
         // Todo: Inject using DI
-        $this->auth = new Auth(new Capabilities, new AccessToken, new Nonce);
+        $this->siteInfo = new SiteInfo();
 
         $this->defineHooks();
 
         // Path to backend
         $this->path = plugin_dir_path(__FILE__);
-
-        // URL to public backend folder
-        $this->url = plugin_dir_url(__FILE__) . "public/";
 
         // Load plugins meta data
         $this->loadMeta();
@@ -127,6 +139,7 @@ class Administrator
         add_action("wp_ajax_wpstg_check_clone", [$this, "ajaxcheckCloneName"]);
         add_action("wp_ajax_wpstg_restart", [$this, "ajaxRestart"]);
         add_action("wp_ajax_wpstg_update", [$this, "ajaxUpdateProcess"]);
+        add_action("wp_ajax_wpstg_reset", [$this, "ajaxResetProcess"]);
         add_action("wp_ajax_wpstg_cloning", [$this, "ajaxStartClone"]);
         add_action("wp_ajax_wpstg_processing", [$this, "ajaxCloneDatabase"]);
         add_action("wp_ajax_wpstg_database_connect", [$this, "ajaxDatabaseConnect"]);
@@ -147,10 +160,12 @@ class Administrator
         add_action("wp_ajax_wpstg_check_disk_space", [$this, "ajaxCheckFreeSpace"]);
         add_action("wp_ajax_wpstg_send_report", [$this, "ajaxSendReport"]);
         add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]);
-        add_action("wp_ajax_wpstg_hide_cache_notice", [$this, "ajaxHideCacheNotice"]);
+        add_action("wp_ajax_wpstg_hide_disabled_items_notice", [$this, "ajaxHideDisabledItemsNotice"]);
+        add_action("wp_ajax_wpstg_enable_staging_cloning", [$this, "ajaxEnableStagingCloning"]);
 
 
         // Ajax hooks pro Version
+        // TODO: move all below actions to pro service provider?
         add_action("wp_ajax_wpstg_edit_clone_data", [$this, "ajaxEditCloneData"]);
         add_action("wp_ajax_wpstg_save_clone_data", [$this, "ajaxSaveCloneData"]);
         add_action("wp_ajax_wpstg_scan", [$this, "ajaxPushScan"]);
@@ -206,9 +221,21 @@ class Administrator
      */
     public function sanitizeOptions($data = [])
     {
+        $error = false;
+        // is_array() is required otherwise new clone will fail.
+        if ($this->siteInfo->isStaging() && is_array($data)) {
+            $isStagingCloneable = $data['isStagingSiteCloneable'];
+            unset($data['isStagingSiteCloneable']);
+            $error = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
+        }
+
         $sanitized = $this->sanitizeData($data);
 
-        add_settings_error("wpstg-notices", '', __("Settings updated.", "wp-staging"), "updated");
+        if ($error) {
+            add_settings_error("wpstg-notices", '', __("Settings updated. But unable to toggle cloning feature!", "wp-staging"), "warning");
+        } else {
+            add_settings_error("wpstg-notices", '', __("Settings updated.", "wp-staging"), "updated");
+        }
 
         return apply_filters("wpstg-settings", $sanitized, $data);
     }
@@ -225,7 +252,7 @@ class Administrator
             if (is_array($value)) {
                 $sanitized[$key] = $this->sanitizeData($value);
             } //Removing comma separators and decimal points
-            else if (in_array($key, self::$integerOptions, true)) {
+            elseif (in_array($key, self::$integerOptions, true)) {
                 $sanitized[$key] = preg_replace('/\D/', '', htmlspecialchars($value));
             } else {
                 $sanitized[$key] = htmlspecialchars($value);
@@ -256,35 +283,66 @@ class Administrator
 
         // Main WP Staging Menu
         add_menu_page(
-            "WP-Staging", __("WP Staging " . $pro, "wp-staging"), "manage_options", "wpstg_clone", [$this, "getClonePage"], $logo, $pos
+            "WP-Staging",
+            __("WP Staging " . $pro, "wp-staging"),
+            "manage_options",
+            "wpstg_clone",
+            [$this, "getClonePage"],
+            $logo,
+            $pos
         );
 
         // Page: Clone
         add_submenu_page(
-            "wpstg_clone", __("WP Staging Jobs", "wp-staging"), __("Sites / Start", "wp-staging"), "manage_options", "wpstg_clone", [$this, "getClonePage"]
+            "wpstg_clone",
+            __("WP Staging Jobs", "wp-staging"),
+            __("Sites / Start", "wp-staging"),
+            "manage_options",
+            "wpstg_clone",
+            [$this, "getClonePage"]
         );
 
         // Page: Settings
         add_submenu_page(
-            "wpstg_clone", __("WP Staging Settings", "wp-staging"), __("Settings", "wp-staging"), "manage_options", "wpstg-settings", [$this, "getSettingsPage"]
+            "wpstg_clone",
+            __("WP Staging Settings", "wp-staging"),
+            __("Settings", "wp-staging"),
+            "manage_options",
+            "wpstg-settings",
+            [$this, "getSettingsPage"]
         );
 
         // Page: Tools
         add_submenu_page(
-            "wpstg_clone", __("WP Staging Tools", "wp-staging"), __("Tools", "wp-staging"), "manage_options", "wpstg-tools", [$this, "getToolsPage"]
+            "wpstg_clone",
+            __("WP Staging Tools", "wp-staging"),
+            __("Tools", "wp-staging"),
+            "manage_options",
+            "wpstg-tools",
+            [$this, "getToolsPage"]
         );
 
         if (!defined('WPSTGPRO_VERSION')) {
             // Page: Tools
             add_submenu_page(
-                "wpstg_clone", __("WP Staging Welcome", "wp-staging"), __("Get WP Staging Pro", "wp-staging"), "manage_options", "wpstg-welcome", [$this, "getWelcomePage"]
+                "wpstg_clone",
+                __("WP Staging Welcome", "wp-staging"),
+                __("Get WP Staging Pro", "wp-staging"),
+                "manage_options",
+                "wpstg-welcome",
+                [$this, "getWelcomePage"]
             );
         }
 
-        if (defined('WPSTGPRO_VERSION') && wpstg_is_stagingsite() === false) {
+        if (defined('WPSTGPRO_VERSION') && $this->siteInfo->isStaging() === false) {
             // Page: License
             add_submenu_page(
-                "wpstg_clone", __("WP Staging License", "wp-staging"), __("License", "wp-staging"), "manage_options", "wpstg-license", [$this, "getLicensePage"]
+                "wpstg_clone",
+                __("WP Staging License", "wp-staging"),
+                __("License", "wp-staging"),
+                "manage_options",
+                "wpstg-license",
+                [$this, "getLicensePage"]
             );
         }
     }
@@ -458,8 +516,8 @@ class Administrator
             $vars = array_combine(
                 array_map(function ($key) {
                     return "{{" . $key . "}}";
-                }, array_keys($vars)
-                ), $vars
+                }, array_keys($vars)),
+                $vars
             );
 
             $contents = str_replace(array_keys($vars), array_values($vars), $contents);
@@ -473,7 +531,7 @@ class Administrator
      */
     private function isAuthenticated()
     {
-        return $this->auth->isValid();
+        return $this->auth->isAuthenticatedRequest();
     }
 
     /**
@@ -598,6 +656,30 @@ class Administrator
     }
 
     /**
+     * Ajax Start Resetting Clone
+     */
+    public function ajaxResetProcess()
+    {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
+        // TODO: inject this using DI
+        // remove clone options cache before initializing reset clone process
+        $cache = new Cache(-1, WPStaging::getContentDir());
+        $cache->delete("clone_options");
+
+        $cloning = new Updating();
+        $cloning->setMainJob(Updating::RESET_UPDATE);
+        if (!$cloning->save()) {
+            wp_die('can not save clone data');
+        }
+
+        require_once "{$this->path}views/clone/ajax/update.php";
+        wp_die();
+    }
+
+    /**
      * Ajax Start Clone (Basically just layout and saving data)
      */
     public function ajaxStartClone()
@@ -630,7 +712,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning)->start());
+        wp_send_json((new Cloning())->start());
     }
 
     /**
@@ -642,7 +724,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning)->start());
+        wp_send_json((new Cloning())->start());
     }
 
     /**
@@ -654,7 +736,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning)->start());
+        wp_send_json((new Cloning())->start());
     }
 
     /**
@@ -666,7 +748,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning)->start());
+        wp_send_json((new Cloning())->start());
     }
 
     /**
@@ -678,7 +760,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning)->start());
+        wp_send_json((new Cloning())->start());
     }
 
     /**
@@ -712,7 +794,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Delete)->start());
+        wp_send_json((new Delete())->start());
     }
 
     /**
@@ -724,7 +806,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cancel)->start());
+        wp_send_json((new Cancel())->start());
     }
 
     /**
@@ -736,7 +818,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new CancelUpdate)->start());
+        wp_send_json((new CancelUpdate())->start());
     }
 
     /**
@@ -744,7 +826,7 @@ class Administrator
      */
     public function messages()
     {
-        (new Notices($this->path, $this->url))->messages();
+        (new Notices($this->path, $this->assets))->messages();
     }
 
     /**
@@ -798,13 +880,14 @@ class Administrator
     }
 
     /**
-     * Ajax Hide Cache Notice shown on staging site
+     * Ajax hide disabled items notice shown on staging site
      */
-    public function ajaxHideCacheNotice()
+    public function ajaxHideDisabledItemsNotice()
     {
         // @todo inject with dependency injection
-        if ((new DisabledCacheNotice())->disable() !== false) {
+        if ((new DisabledItemsNotice())->disable() !== false) {
             wp_send_json(true);
+            return;
         }
 
         wp_send_json(null);
@@ -819,7 +902,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Logs)->start());
+        wp_send_json((new Logs())->start());
     }
 
     /**
@@ -941,7 +1024,7 @@ class Administrator
         }
 
         // Start the process
-        wp_send_json((new Processing)->start());
+        wp_send_json((new Processing())->start());
     }
 
     /**
@@ -990,13 +1073,13 @@ class Administrator
         // Set syslog
         $syslog = false;
         if (isset($args['wpstg_syslog'])) {
-            $syslog = ( bool )$args['wpstg_syslog'];
+            $syslog = (bool)$args['wpstg_syslog'];
         }
 
         // Set terms
         $terms = false;
         if (isset($args['wpstg_terms'])) {
-            $terms = ( bool )$args['wpstg_terms'];
+            $terms = (bool)$args['wpstg_terms'];
         }
 
         // Set forceSend
@@ -1024,6 +1107,8 @@ class Administrator
         $database = !empty($args['databaseDatabase']) ? $args['databaseDatabase'] : '';
         $server = !empty($args['databaseServer']) ? $args['databaseServer'] : 'localhost';
         $prefix = !empty($args['databasePrefix']) ? $args['databasePrefix'] : 'wp_';
+        // ensure tables with the given prefix exist, default false
+        $ensurePrefixTableExist = !empty($args['databaseEnsurePrefixTableExist']) ? filter_var($args['databaseEnsurePrefixTableExist'], FILTER_VALIDATE_BOOLEAN) : false;
 
         $dbInfo = new DbInfo($server, $user, stripslashes($password), $database);
         $wpdb = $dbInfo->connect();
@@ -1037,8 +1122,38 @@ class Administrator
 
         // Check if any table with provided prefix already exist
         $existingTables = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $prefix . '%'));
-        if ($existingTables !== null) {
-            echo json_encode(['success' => 'false', 'errors' => 'Tables with prefix ' . $prefix . ' already exist in database. Select another prefix.']);
+        // used in new clone
+        if ($existingTables !== null && !$ensurePrefixTableExist) {
+            echo json_encode(['success' => 'false', 'errors' => __('Tables with prefix ' . $prefix . ' already exist in database. Select another prefix.', 'wp-staging')]);
+            exit;
+        }
+
+        // used in edit and update of clone
+        if ($existingTables === null && $ensurePrefixTableExist) {
+            echo json_encode(['success' => 'true', 'errors' => __('Tables with prefix "' . $prefix . '" not exist in database. Make sure it exists.', 'wp-staging')]);
+            exit;
+        }
+
+        // get production db
+        $productionDb = WPStaging::getInstance()->get('wpdb');
+
+        $queryToFindAddress = "SELECT SUBSTRING_INDEX(host,':',1) AS 'ip' FROM information_schema.processlist WHERE ID=connection_id();";
+        $queryToFindPort = "SHOW VARIABLES WHERE Variable_name = 'port';";
+
+        $stagingSiteAddress = $wpdb->get_var($wpdb->prepare($queryToFindAddress));
+        $productionSiteAddress = $productionDb->get_var($productionDb->prepare($queryToFindAddress));
+        if ($stagingSiteAddress === null || $productionSiteAddress === null) {
+            echo json_encode(['success' => 'false', 'errors' => __('Unable to find database server hostname of the staging or the production site.', 'wp-staging')]);
+            exit;
+        }
+
+        $isSameAddress = $productionSiteAddress === $stagingSiteAddress;
+        $isSamePort = $wpdb->get_var($wpdb->prepare($queryToFindPort)) === $productionDb->get_var($productionDb->prepare($queryToFindPort));
+
+        $isSameServer = ($isSameAddress && $isSamePort) || $server === DB_HOST;
+
+        if ($database === DB_NAME && $prefix === $productionDb->prefix && $isSameServer) {
+            echo json_encode(['success' => 'false', 'errors' => __('Cannot use production site database. Use another database.', 'wp-staging')]);
             exit;
         }
 
@@ -1072,6 +1187,40 @@ class Administrator
     }
 
     /**
+     * Enable cloning on staging site if it is not enabled already
+     */
+    public function ajaxEnableStagingCloning()
+    {
+        if ($this->siteInfo->enableStagingSiteCloning()) {
+            echo json_encode(['success' => 'true']);
+            exit();
+        }
+
+        echo json_encode(['success' => 'false', 'message' => __('Unable to enable cloning in the staging site', 'wp-staging')]);
+        exit();
+    }
+
+    /**
+     * Toggle staging site cloning
+     *
+     * @param bool $isCloneable
+     * 
+     * @return bool
+     */
+    protected function toggleStagingSiteCloning($isCloneable)
+    {
+        if ($isCloneable && $this->siteInfo->enableStagingSiteCloning()) {
+            return true;
+        }
+
+        if (!$isCloneable && $this->siteInfo->disableStagingSiteCloning()) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * Check if Plugin is Pro version
      * @return bool
      */
@@ -1083,5 +1232,4 @@ class Administrator
 
         return true;
     }
-
 }

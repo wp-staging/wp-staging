@@ -18,7 +18,7 @@ class ReportSubmitTransient implements TransientInterface
      * Set expiry time to 3600 seconds = 1 hour
      */
     const EXPIRY_TIME_IN_SEC = 3600;
-    
+
     /**
      * @return string
      */

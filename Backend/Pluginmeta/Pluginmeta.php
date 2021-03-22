@@ -7,7 +7,7 @@ namespace WPStaging\Backend\Pluginmeta;
  */
 
 // No Direct Access
-if( !defined( "WPINC" ) ) {
+if (!defined("WPINC")) {
     die;
 }
 
@@ -18,18 +18,19 @@ class Pluginmeta
 {
     // Link to Upgrade WP Staging
     const UPGRADE_LINK = "https://wp-staging.com/premium-upgrade";
-    
-    public function __construct() {
+
+    public function __construct()
+    {
         $this->defineHooks();
     }
 
     /**
      * Define Hooks
      */
-    public function defineHooks() {
-        add_filter( 'plugin_row_meta', [$this, 'rowMeta'], 10, 2 );
-        add_filter( 'plugin_action_links', [$this,'actionLinks'], 10, 2 );
-
+    public function defineHooks()
+    {
+        add_filter('plugin_row_meta', [$this, 'rowMeta'], 10, 2);
+        add_filter('plugin_action_links', [$this,'actionLinks'], 10, 2);
     }
 
     /**
@@ -41,7 +42,7 @@ class Pluginmeta
      * @param string $file plugin file path and name being processed
      * @return array $links
      */
-    public function actionLinks($links, $file) 
+    public function actionLinks($links, $file)
     {
         $upgrade_link = '<a style="color: #27ae60;" target="_blank" href="' . self::UPGRADE_LINK . '">' . esc_html__('Premium Upgrade', 'wp-staging') . '</a>';
         $freePlugins = [
@@ -53,8 +54,8 @@ class Pluginmeta
         if (in_array($file, $freePlugins)) {
             array_unshift($links, $upgrade_link);
         }
-        
-        $settings_link = '<a href="' . admin_url( 'admin.php?page=wpstg-settings' ) . '">' . esc_html__( 'Settings', 'wp-staging' ) . '</a>';
+
+        $settings_link = '<a href="' . admin_url('admin.php?page=wpstg-settings') . '">' . esc_html__('Settings', 'wp-staging') . '</a>';
         // show on both free and pro version
         // as WPSTG_PLUGIN_FILE is common for both free and pro version
         // defined during requirement bootstrapping
@@ -76,16 +77,16 @@ class Pluginmeta
      * @param string $file plugin file path and name being processed
      * @return array $input
      */
-    public function rowMeta( $input, $file ) {
-        if( $file != 'wp-staging/wp-staging.php' && $file != 'wp-staging-pro/wp-staging-pro.php'){
+    public function rowMeta($input, $file)
+    {
+        if ($file != 'wp-staging/wp-staging.php' && $file != 'wp-staging-pro/wp-staging-pro.php') {
             return $input;
         }
 
         $links = [
-            '<a href="' . admin_url( 'admin.php?page=wpstg_clone' ) . '">' . esc_html__( 'Start Now', 'wp-staging' ) . '</a>',
+            '<a href="' . admin_url('admin.php?page=wpstg_clone') . '">' . esc_html__('Start Now', 'wp-staging') . '</a>',
         ];
-        $input = array_merge( $input, $links );
+        $input = array_merge($input, $links);
         return $input;
     }
-
 }

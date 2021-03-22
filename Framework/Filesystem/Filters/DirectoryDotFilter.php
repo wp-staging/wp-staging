@@ -13,9 +13,9 @@ class DirectoryDotFilter extends \FilterIterator
     {
         $current = $this->getInnerIterator()->current();
 
-		if ($current->isDot()) {
-			return false;
-		}
+        if ($current->isDot()) {
+            return false;
+        }
 
         return true;
     }

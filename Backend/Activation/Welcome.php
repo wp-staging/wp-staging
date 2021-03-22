@@ -42,6 +42,4 @@ class Welcome
         wp_safe_redirect(admin_url('admin.php?page=wpstg-welcome'));
         exit;
     }
-
-
 }

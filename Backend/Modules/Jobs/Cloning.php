@@ -2,13 +2,10 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\Framework\Security\AccessToken;
-use WPStaging\Core\WPStaging;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
-use WPStaging\Backend\Modules\Jobs\Multisite\Finish as muFinish;
-use WPStaging\Backend\Modules\Jobs\Multisite\Directories as muDirectories;
-use WPStaging\Backend\Modules\Jobs\Multisite\Files as muFiles;
 use WPStaging\Core\Utils\Helper;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
@@ -64,7 +61,8 @@ class Cloning extends Job
             '.gitignore',
             '*.log',
             'web.config', // Important: Windows IIS configuration file. Must not be in the staging site!
-            '.wp-staging' // Determines if a site is a staging site
+            '.wp-staging', // Determines if a site is a staging site
+            '.wp-staging-cloneable', // File which make staging site to be cloneable
         ];
         $this->options->excludedFilesFullPath = [
             'wp-content' . DIRECTORY_SEPARATOR . 'db.php',
@@ -97,11 +95,6 @@ class Cloning extends Job
             $this->options->tables = [];
         }
 
-        // Excluded Directories
-        if (isset($_POST["excludedDirectories"]) && is_array($_POST["excludedDirectories"])) {
-            $this->options->excludedDirectories = wpstg_urldecode($_POST["excludedDirectories"]);
-        }
-
         $this->options->uploadsSymlinked = isset($_POST['uploadsSymlinked']) && $_POST['uploadsSymlinked'] === 'true';
 
         // Excluded Directories TOTAL
@@ -116,29 +109,29 @@ class Cloning extends Job
 
         // Add upload folder to list of excluded directories for push if symlink option is enabled
         if ($this->options->uploadsSymlinked) {
-            $wpUploadsFolder = (new WpDefaultDirectories())->getUploadPath();
+            $wpUploadsFolder = (new WpDefaultDirectories())->getUploadsPath();
             $excludedDirectories[] = rtrim($wpUploadsFolder, '/\\');
         }
 
-        $this->options->excludedDirectories = array_merge($excludedDirectories, wpstg_urldecode($this->options->excludedDirectories));
+        $this->options->excludedDirectories = $excludedDirectories;
 
-        array_unshift($this->options->directoriesToCopy, WPStaging::getWPpath());
+        $this->options->areDirectoriesIncluded = isset($_POST['areDirectoriesIncluded']) && $_POST['areDirectoriesIncluded'] === 'true';
 
+        $directories = '';
         // Included Directories
-        if (isset($_POST["includedDirectories"]) && is_array($_POST["includedDirectories"])) {
-            $this->options->includedDirectories = wpstg_urldecode($_POST["includedDirectories"]);
+        if ($this->options->areDirectoriesIncluded) {
+            $directories = isset($_POST["includedDirectories"]) ? $_POST["includedDirectories"] : '';
+        } else { // Get Included Directories from Excluded Directories
+            $directories = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
         }
+
+        $this->options->includedDirectories = (new WpDefaultDirectories())->getSelectedDirectories($directories, $this->options->areDirectoriesIncluded);
 
         // Extra Directories
-        if (isset($_POST["extraDirectories"]) && !empty($_POST["extraDirectories"])) {
-            $this->options->extraDirectories = wpstg_urldecode($_POST["extraDirectories"]);
+        if (isset($_POST["extraDirectories"])) {
+            $this->options->extraDirectories = wpstg_urldecode(explode(Scan::DIRECTORIES_SEPARATOR, $_POST["extraDirectories"]));
         }
 
-        // Directories to Copy
-        $this->options->directoriesToCopy = array_merge(
-            $this->options->includedDirectories,
-            $this->options->extraDirectories
-        );
         $this->options->databaseServer = 'localhost';
         if (isset($_POST["databaseServer"]) && !empty($_POST["databaseServer"])) {
             $this->options->databaseServer = $_POST["databaseServer"];
@@ -171,8 +164,10 @@ class Cloning extends Job
         // Make sure it is always enabled for free version
         $this->options->emailsAllowed = true;
         if (defined('WPSTGPRO_VERSION')) {
-            $this->options->emailsAllowed = apply_filters('wpstg_cloning_email_allowed', 
-                isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false");
+            $this->options->emailsAllowed = apply_filters(
+                'wpstg_cloning_email_allowed',
+                isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false"
+            );
         }
 
         $this->options->destinationHostname = $this->getDestinationHostname();
@@ -280,7 +275,7 @@ class Cloning extends Job
     private function getDestinationDir()
     {
         // Throw fatal error
-        if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === ( string )trailingslashit(WPStaging::getWPpath()))) {
+        if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === (string)trailingslashit(WPStaging::getWPpath()))) {
             $this->returnException('Error: Target Directory must be different from the root of the production website.');
             die();
         }
@@ -294,7 +289,7 @@ class Cloning extends Job
     }
 
     /**
-     * Make sure prefix contains appending underscore
+     * Make sure prefix ends with underscore
      *
      * @param string $string
      * @return string
@@ -427,11 +422,7 @@ class Cloning extends Job
      */
     public function jobDirectories()
     {
-        if (defined('WPSTGPRO_VERSION') && is_multisite()) {
-            $directories = new muDirectories();
-        } else {
-            $directories = new Directories();
-        }
+        $directories = new Directories();
         return $this->handleJobResponse($directories->start(), "files");
     }
 
@@ -441,11 +432,7 @@ class Cloning extends Job
      */
     public function jobFiles()
     {
-        if (defined('WPSTGPRO_VERSION') && is_multisite()) {
-            $files = new muFiles();
-        } else {
-            $files = new Files();
-        }
+        $files = new Files();
         return $this->handleJobResponse($files->start(), "data");
     }
 
@@ -468,15 +455,10 @@ class Cloning extends Job
         // Re-generate the token when the Clone is complete.
         // Todo: Consider adding a do_action() on jobFinish to hook here.
         // Todo: Inject using DI
-        $accessToken = new AccessToken;
+        $accessToken = new AccessToken();
         $accessToken->generateNewToken();
 
-        if (defined('WPSTGPRO_VERSION') && is_multisite()) {
-            $finish = new muFinish();
-        } else {
-            $finish = new Finish();
-        }
+        $finish = new Finish();
         return $this->handleJobResponse($finish->start(), '');
     }
-
 }

@@ -723,15 +723,23 @@ class tad_DI52_Container implements \ArrayAccess
     }
     public function _getParameter(\ReflectionParameter $parameter)
     {
-        $class = $parameter->getClass();
+        if (\defined('PHP_VERSION_ID') && \PHP_VERSION_ID >= 80000) {
+            $class = $parameter->getType() && !$parameter->getType()->isBuiltin() ? new \ReflectionClass($parameter->getType()->getName()) : null;
+        } else {
+            $class = $parameter->getClass();
+        }
         if (null === $class) {
             if (!$parameter->isDefaultValueAvailable()) {
                 throw new \ReflectionException("parameter '{$parameter->name}' of '{$this->resolving}::__construct' does not have a default value.");
             }
             return $parameter->getDefaultValue();
         }
-        $parameterClass = $parameter->getClass()->getName();
-        if (!$this->isBound($parameterClass) && !$parameter->getClass()->isInstantiable()) {
+        if (\defined('PHP_VERSION_ID') && \PHP_VERSION_ID >= 80000) {
+            $parameterClass = $parameter->getType() && !$parameter->getType()->isBuiltin() ? $parameter->getType()->getName() : null;
+        } else {
+            $parameterClass = $parameter->getClass()->getName();
+        }
+        if (!$this->isBound($parameterClass) && !$class->isInstantiable()) {
             if (!$parameter->isDefaultValueAvailable()) {
                 throw new \ReflectionException("parameter '{$parameter->name}' of '{$this->resolving}::__construct' does not have a default value.");
             }

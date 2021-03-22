@@ -5,7 +5,7 @@ namespace WPStaging\Core\Utils;
 use WPStaging\Framework\Filesystem\Filesystem;
 
 // No Direct Access
-if( !defined( "WPINC" ) ) {
+if (!defined("WPINC")) {
     die;
 }
 
@@ -14,15 +14,17 @@ if( !defined( "WPINC" ) ) {
  *
  * @author IronMan
  */
-class IISWebConfig {
+class IISWebConfig
+{
 
     /**
-     * 
+     *
      * @var obj
      */
     private $filesystem;
 
-    public function __construct() {
+    public function __construct()
+    {
         $this->filesystem = new Filesystem();
     }
 
@@ -32,8 +34,9 @@ class IISWebConfig {
      * @param  string  $path Path to file
      * @return boolean
      */
-    public function create( $path ) {
-        return $this->filesystem->create( $path, implode( PHP_EOL, [
+    public function create($path)
+    {
+        return $this->filesystem->create($path, implode(PHP_EOL, [
                     '<configuration>',
                     '<system.webServer>',
                     '<staticContent>',
@@ -47,7 +50,6 @@ class IISWebConfig {
                     '<directoryBrowse enabled="false" />',
                     '</system.webServer>',
                     '</configuration>',
-                ] ) );
+                ]));
     }
-
 }

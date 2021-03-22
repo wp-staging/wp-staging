@@ -1,6 +1,5 @@
 <?php
 
-
 namespace WPStaging\Framework\CloningProcess\Data;
 
 abstract class DBCloningService extends CloningService
@@ -49,7 +48,7 @@ abstract class DBCloningService extends CloningService
         }
         // during update process option table was not skipped even though it was not selected
         // that was causing problem if staging site prefix is basically something string appended to,
-        // production site prefix i.e. staging prefix: wp_stagging_ and production prefix: wp_ 
+        // production site prefix i.e. staging prefix: wp_stagging_ and production prefix: wp_
         if (!in_array($prefix . $table, $this->dto->getTables())) {
             $this->log("Table " . $prefix . $table . ' not selected/updated. Skipping');
             return true;

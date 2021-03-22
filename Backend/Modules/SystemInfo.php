@@ -160,10 +160,10 @@ class SystemInfo
     public function wpstaging()
     {
         // Get wpstg settings
-        $settings = ( object )get_option('wpstg_settings', []);
+        $settings = (object)get_option('wpstg_settings', []);
 
         // Clones data < 1.1.6.x
-        $clones = ( object )get_option('wpstg_existing_clones', []);
+        $clones = (object)get_option('wpstg_existing_clones', []);
         // Clones data version > 2.x
         $clonesBeta = get_option('wpstg_existing_clones_beta', []);
 
@@ -184,7 +184,6 @@ class SystemInfo
         $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version > 2.0.x" . PHP_EOL . PHP_EOL;
 
         foreach ($clonesBeta as $key => $clone) {
-
             $path = !empty($clone['path']) ? $clone['path'] : 'undefined';
 
             $output .= $this->info("Number:", isset($clone['number']) ? $clone['number'] : 'undefined');
@@ -206,8 +205,8 @@ class SystemInfo
         //$output .= PHP_EOL . PHP_EOL;
 
         $output .= $this->info("Plugin Pro Version:", get_option('wpstgpro_version', 'undefined'));
-	    $output .= $this->info("Plugin Pro License Key:", get_option('wpstg_license_key'));
-	    $output .= $this->info("Plugin Free Version:", get_option('wpstg_version', 'undefined'));
+        $output .= $this->info("Plugin Pro License Key:", get_option('wpstg_license_key'));
+        $output .= $this->info("Plugin Free Version:", get_option('wpstg_version', 'undefined'));
         $output .= $this->info("Install Date:", get_option('wpstg_installDate', 'undefined'));
         $output .= $this->info("Upgraded from Pro:", get_option('wpstgpro_version_upgraded_from', 'undefined'));
         $output .= $this->info("Upgraded from Free:", get_option('wpstg_version_upgraded_from', 'undefined'));
@@ -224,7 +223,7 @@ class SystemInfo
     public function browser()
     {
         $output = $this->header("User Browser");
-        $output .= (new Browser);
+        $output .= (new Browser());
 
         return apply_filters("wpstg_sysinfo_after_user_browser", $output);
     }
@@ -264,7 +263,8 @@ class SystemInfo
 
         // Send request
         $response = wp_remote_post(
-            "https://www.paypal.com/cgi-bin/webscr", [
+            "https://www.paypal.com/cgi-bin/webscr",
+            [
                 "sslverify" => false,
                 "timeout" => 60,
                 "user-agent" => "WPSTG/" . WPStaging::getVersion(),
@@ -290,7 +290,8 @@ class SystemInfo
         $output .= $this->info("Version:", get_bloginfo("version"));
         $output .= $this->info("Language:", (defined("WPLANG") && WPLANG) ? WPLANG : "en_US");
 
-        $permalinkStructure = get_option("permalink_structure");;
+        $permalinkStructure = get_option("permalink_structure");
+        ;
         $output .= $this->info("Permalink Structure:", ($permalinkStructure) ? $permalinkStructure : "Default");
 
         $output .= $this->info("Active Theme:", $this->theme());
@@ -313,12 +314,14 @@ class SystemInfo
         // Constants
         $output .= $this->info("WP Content Path:", WP_CONTENT_DIR);
         $output .= $this->info("WP Plugin Dir:", WP_PLUGIN_DIR);
-        if (defined('UPLOADS'))
+        if (defined('UPLOADS')) {
             $output .= $this->info("WP UPLOADS CONST:", UPLOADS);
+        }
         $uploads = wp_upload_dir();
         $output .= $this->info("WP Uploads Dir:", $uploads['basedir']);
-        if (defined('WP_TEMP_DIR'))
+        if (defined('WP_TEMP_DIR')) {
             $output .= $this->info("WP Temp Dir:", WP_TEMP_DIR);
+        }
 
         // WP Debug
         $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? WP_DEBUG ? "Enabled" : "Disabled" : "Not set");
@@ -589,7 +592,6 @@ class SystemInfo
         if (($content = @file_get_contents($path)) === false) {
             return 'Can\'t find staging wp-config.php';
         } else {
-
             // Get prefix from wp-config.php
             //preg_match_all("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
             preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
@@ -628,5 +630,4 @@ class SystemInfo
         }
         return $matches[1];
     }
-
 }

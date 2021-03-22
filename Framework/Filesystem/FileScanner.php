@@ -7,25 +7,29 @@
 namespace WPStaging\Framework\Filesystem;
 
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class FileScanner
 {
     private $directory;
     private $filesystem;
+    private $logger;
 
-    public function __construct(Directory $directory, Filesystem $filesystem)
+    public function __construct(Directory $directory, Filesystem $filesystem, LoggerInterface $logger)
     {
         $this->directory  = $directory;
         $this->filesystem = $filesystem;
+        $this->logger     = $logger;
     }
 
     /**
      * @param string $directory
      * @param bool   $includeOtherFilesInWpContent
+     * @param array  $excludedDirectories
      *
      * @return array
      */
-    public function scan($directory, $includeOtherFilesInWpContent)
+    public function scan($directory, $includeOtherFilesInWpContent, $excludedDirectories = [])
     {
         try {
             $it = new \DirectoryIterator($directory);
@@ -36,18 +40,25 @@ class FileScanner
         /**
          * Allow user to exclude certain file extensions from being exported.
          */
-        $excludedFileExtensions = (array)apply_filters('wpstg.export.site.file_extension.excluded', []);
+        $ignoreFileExtensions = (array)apply_filters('wpstg.export.site.ignore.file_extension', [
+            'log',
+        ]);
 
         /**
          * Allow user to exclude files larger than given size from being exported.
          */
-        $ignoreFilesBiggerThan = (int)apply_filters('wpstg.export.site.file.max_size_in_bytes', PHP_INT_MAX);
+        $ignoreFileBiggerThan = (int)apply_filters('wpstg.export.site.ignore.max_size_in_bytes', 200 * MB_IN_BYTES);
+
+        /**
+         * Allow user to exclude files with extension larger than given size from being exported.
+         */
+        $ignoreFileExtensionFilesBiggerThan = (array)apply_filters('wpstg.export.site.ignore.file_extension_max_size_in_bytes', [
+            'zip' => 10 * MB_IN_BYTES,
+        ]);
 
         /*
          * If "Include Other Files in WP Content" is false, only the files inside
          * these folders will be added to the export.
-         *
-         * @todo: Do we want to add the commitment of a filter for this?
          */
         $defaultWpContentFolders = [
             WP_PLUGIN_DIR,
@@ -66,17 +77,62 @@ class FileScanner
                           $item->getFilename() != "..";
 
             if ($shouldScan) {
-                if (in_array($item->getExtension(), $excludedFileExtensions)) {
+                if (in_array($item->getExtension(), $ignoreFileExtensions)) {
                     // Early bail: File has an ignored extension
+                    $this->logger->info(sprintf(
+                        __('%s: Ignored file "%s" because the extension "%s" is ignored.', 'wp-staging'),
+                        /*
+                             * We can't use FileScanerTask::TASK_NAME due to an architectural problem.
+                             * It's not a trully static method. It uses sprintf that relies on the state of the class,
+                             * thus it can only be used inside the context of the task itself.
+                             */
+                        __('File Scanner', 'wp-staging'),
+                        $item->getPathname(),
+                        $item->getExtension()
+                    ));
                     continue;
                 }
 
-                if ($item->getSize() > $ignoreFilesBiggerThan) {
+                if ($item->getSize() > $ignoreFileBiggerThan) {
                     // Early bail: File is larger than max allowed size.
+                    $this->logger->info(sprintf(
+                        __('%s: Ignored file "%s" because it exceeds the maximum file size for exporting (%s).', 'wp-staging'),
+                        __('File Scanner', 'wp-staging'),
+                        $item->getPathname(),
+                        size_format($item->getSize())
+                    ));
+                    continue;
+                }
+
+                if (
+                    array_key_exists($item->getExtension(), $ignoreFileExtensionFilesBiggerThan) &&
+                    $item->getSize() > $ignoreFileExtensionFilesBiggerThan[$item->getExtension()]
+                ) {
+                    // Early bail: File bigger than expected for given extension
+                    $this->logger->info(sprintf(
+                        __('%s: Ignored file "%s" because it exceeds the maximum file size for exporting (%s) for files with the "%s" extension.', 'wp-staging'),
+                        __('File Scanner', 'wp-staging'),
+                        $item->getPathname(),
+                        size_format($item->getSize()),
+                        $item->getExtension()
+                    ));
                     continue;
                 }
 
                 $path = $this->filesystem->safePath($item->getPathname());
+
+                foreach ($excludedDirectories as $excludedDirectory) {
+                    if (strpos($path, trailingslashit($excludedDirectory)) === 0) {
+                        // Early bail: File is inside an ignored folder
+                        $this->logger->info(sprintf(
+                            __('%s: Ignored file "%s" because it is inside an ignored directory (%s).', 'wp-staging'),
+                            __('File Scanner', 'wp-staging'),
+                            $item->getPathname(),
+                            $excludedDirectory
+                        ));
+                        continue;
+                    }
+                }
 
                 if (!$includeOtherFilesInWpContent) {
                     foreach ($defaultWpContentFolders as $defaultFolder) {

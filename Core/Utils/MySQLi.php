@@ -7,11 +7,13 @@ namespace WPStaging\Core\Utils;
  *
  * @todo Confirm if it's deprecated and remove.
  */
-class MySQLi {
+class MySQLi
+{
 
     private $wpdb;
 
-    public function __construct( $wpdb ) {
+    public function __construct($wpdb)
+    {
         $this->wpdb = $wpdb;
     }
 
@@ -21,8 +23,9 @@ class MySQLi {
      * @param  string   $input SQL query
      * @return resource
      */
-    public function query( $input ) {
-        return mysqli_query( $this->wpdb->dbh, $input, MYSQLI_STORE_RESULT );
+    public function query($input)
+    {
+        return mysqli_query($this->wpdb->dbh, $input, MYSQLI_STORE_RESULT);
     }
 
     /**
@@ -31,8 +34,9 @@ class MySQLi {
      * @param  string $input String to escape
      * @return string
      */
-    public function escape( $input ) {
-        return mysqli_real_escape_string( $this->wpdb->dbh, $input );
+    public function escape($input)
+    {
+        return mysqli_real_escape_string($this->wpdb->dbh, $input);
     }
 
     /**
@@ -40,8 +44,9 @@ class MySQLi {
      *
      * @return integer
      */
-    public function errno() {
-        return mysqli_errno( $this->wpdb->dbh );
+    public function errno()
+    {
+        return mysqli_errno($this->wpdb->dbh);
     }
 
     /**
@@ -49,8 +54,9 @@ class MySQLi {
      *
      * @return string
      */
-    public function error() {
-        return mysqli_error( $this->wpdb->dbh );
+    public function error()
+    {
+        return mysqli_error($this->wpdb->dbh);
     }
 
     /**
@@ -58,8 +64,9 @@ class MySQLi {
      *
      * @return string
      */
-    public function version() {
-        return mysqli_get_server_info( $this->wpdb->dbh );
+    public function version()
+    {
+        return mysqli_get_server_info($this->wpdb->dbh);
     }
 
     /**
@@ -68,8 +75,9 @@ class MySQLi {
      * @param  resource $result MySQL resource
      * @return array
      */
-    public function fetchAssoc( $result ) {
-        return mysqli_fetch_assoc( $result );
+    public function fetchAssoc($result)
+    {
+        return mysqli_fetch_assoc($result);
     }
 
     /**
@@ -78,8 +86,9 @@ class MySQLi {
      * @param  resource $result MySQL resource
      * @return array
      */
-    public function fetchRow( $result ) {
-        return mysqli_fetch_row( $result );
+    public function fetchRow($result)
+    {
+        return mysqli_fetch_row($result);
     }
 
     /**
@@ -88,8 +97,9 @@ class MySQLi {
      * @param  resource $result MySQL resource
      * @return integer
      */
-    public function numRows( $result ) {
-        return mysqli_num_rows( $result );
+    public function numRows($result)
+    {
+        return mysqli_num_rows($result);
     }
 
     /**
@@ -98,8 +108,8 @@ class MySQLi {
      * @param  resource $result MySQL resource
      * @return void
      */
-    public function freeResult( $result ) {
-        mysqli_free_result( $result );
+    public function freeResult($result)
+    {
+        mysqli_free_result($result);
     }
-
 }

@@ -8,7 +8,7 @@ trait MaintenanceTrait
 {
     public function enableMaintenance($isMaintenance)
     {
-        (new Maintenance)->enableMaintenance($isMaintenance);
+        (new Maintenance())->enableMaintenance($isMaintenance);
     }
 
     public function skipMaintenanceMode()

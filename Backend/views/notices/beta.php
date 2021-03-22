@@ -18,4 +18,4 @@
         </li>
     </ul>
 </div>
-<script type="text/javascript" src="<?php echo $this->url . "js/wpstg-admin-beta.js"?>"></script>
+<script type="text/javascript" src="<?php echo $this->assets->getAssetUrl("js/dist/wpstg-admin-beta.js") ?>"></script>

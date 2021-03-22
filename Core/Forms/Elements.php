@@ -1,4 +1,5 @@
 <?php
+
 namespace WPStaging\Core\Forms;
 
 use WPStaging\Core\Forms\Elements\Interfaces\InterfaceElement;
@@ -72,7 +73,7 @@ abstract class Elements implements InterfaceElement
      */
     public function getName()
     {
-       return $this->name;
+        return $this->name;
     }
 
     /**
@@ -93,8 +94,7 @@ abstract class Elements implements InterfaceElement
      */
     public function setAttributes($attributes)
     {
-        foreach ($attributes as $name => $value)
-        {
+        foreach ($attributes as $name => $value) {
             $this->setAttribute($name, $value);
         }
 
@@ -107,8 +107,7 @@ abstract class Elements implements InterfaceElement
     public function prepareAttributes()
     {
         $attributes = '';
-        foreach ($this->attributes as $name => $value)
-        {
+        foreach ($this->attributes as $name => $value) {
             $attributes .= "{$name}='{$value}' ";
         }
 
@@ -156,12 +155,9 @@ abstract class Elements implements InterfaceElement
      */
     public function setFilters($filters)
     {
-        if (is_string($filters))
-        {
+        if (is_string($filters)) {
             $this->filters[] = $filters;
-        }
-        else
-        {
+        } else {
             array_merge($this->filters, $filters);
         }
 
@@ -220,8 +216,7 @@ abstract class Elements implements InterfaceElement
      */
     public function setRenderFile($file)
     {
-        if (file_exists($file) && is_readable($file))
-        {
+        if (file_exists($file) && is_readable($file)) {
             $this->renderFile = $file;
         }
 
@@ -250,13 +245,11 @@ abstract class Elements implements InterfaceElement
      */
     public function getId($name = null)
     {
-        if ($name === null)
-        {
+        if ($name === null) {
             $name = $this->name;
         }
 
-        if (!$name)
-        {
+        if (!$name) {
             return '';
         }
 

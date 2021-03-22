@@ -4,7 +4,7 @@ namespace WPStaging\Framework\DI;
 
 abstract class ServiceProvider extends \WPStaging\Vendor\tad_DI52_ServiceProvider
 {
-    final public function register()
+    public function register()
     {
         $this->registerClasses();
         $this->addHooks();
@@ -15,12 +15,18 @@ abstract class ServiceProvider extends \WPStaging\Vendor\tad_DI52_ServiceProvide
      *
      * @return void
      */
-    abstract public function registerClasses();
+    protected function registerClasses()
+    {
+        // No-op by default.
+    }
 
     /**
      * Enqueue hooks.
      *
      * @return void
      */
-    abstract public function addHooks();
+    protected function addHooks()
+    {
+        // No-op by default.
+    }
 }
