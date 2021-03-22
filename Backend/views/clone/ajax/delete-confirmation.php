@@ -2,24 +2,24 @@
 <div class="wpstg-notice-alert">
     <h3 class="wpstg-m-0 wpstg-pb-5px">
         <?php
-        _e("This staging site will be deleted:", "wp-staging")
+        _e("Do you really want to delete the staging site? This can not be undone:", "wp-staging")
         ?>
     </h3>
 
     <p>
-        <?php _e('Clone Name:', 'wp-staging'); ?> 
+        <?php _e('Staging Site:', 'wp-staging'); ?>
         <span class="wpstg-confirmation-label">
-        <?php 
-        echo $clone->directoryName; 
+        <?php
+        echo $clone->directoryName;
         ?>
         </span>
     </p>
     <p>
-        <?php _e('Database Name:', 'wp-staging'); ?> 
+        <?php _e('Database:', 'wp-staging'); ?>
         <span class="wpstg-confirmation-label">
-        <?php 
+        <?php
         $database = empty($clone->databaseDatabase) ? "{$dbname} / Main Database)" : $clone->databaseDatabase;
-        echo $database; 
+        echo $database;
         ?>
         </span>
     </p>
@@ -28,7 +28,8 @@
 
 <?php if (!$isDatabaseConnected) { ?>
 <div class="wpstg-notice-alert wpstg-failed">
-    <h4 class="wpstg-mb-0"><?php _e('Error: Can not connect to external database: ', 'wp-staging'); echo $clone->databaseDatabase; ?></h4>
+    <h4 class="wpstg-mb-0"><?php _e('Error: Can not connect to external database: ', 'wp-staging');
+    echo $clone->databaseDatabase; ?></h4>
     <ul class="wpstg-mb-0">
         <li><?php _e('This can happen if the password of the external database has been changed or if the database was deleted', 'wp-staging') ?></li>
         <li><?php _e('You can still delete this staging site but deleting this site will not delete any table or database. You will have to delete them manually if they exist.', 'wp-staging') ?></li>
@@ -55,15 +56,15 @@
             </a>
         </div>
 
-        <?php foreach ($delete->getTables() as $table):?>
+        <?php foreach ($delete->getTables() as $table) :?>
             <div class="wpstg-db-table">
                 <label>
                     <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->name?>" checked>
                     <?php echo $table->name?>
                 </label>
                 <span class="wpstg-size-info">
-				<?php echo isset($table->size) ? $table->size : '';?>
-			</span>
+                <?php echo isset($table->size) ? $table->size : '';?>
+            </span>
             </div>
         <?php endforeach ?>
         <div class="wpstg-my-6px">

@@ -11,6 +11,7 @@ use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\Queue;
 use WPStaging\Framework\Queue\Storage\BufferedCacheStorage;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class FileScannerControl
 {
@@ -52,17 +53,18 @@ class FileScannerControl
      */
     public function setQueueByName($name = self::QUEUE_CACHE_FILE)
     {
-        $this->queue = new Queue;
+        $this->queue = new Queue();
         $this->queue->setName($name);
         $this->queue->setStorage($this->storage);
     }
 
     /**
-     * @param bool $includeOtherFilesInWpContent
+     * @param bool  $includeOtherFilesInWpContent
+     * @param array $excludedDirectories
      *
      * @return array
      */
-    public function scanCurrentPath($includeOtherFilesInWpContent)
+    public function scanCurrentPath($includeOtherFilesInWpContent, $excludedDirectories = [])
     {
         $path = $this->getPathFromQueue();
         if ($path === null) {
@@ -71,7 +73,7 @@ class FileScannerControl
 
         $path = ABSPATH . $path;
 
-        return $this->scanner->scan($path, $includeOtherFilesInWpContent);
+        return $this->scanner->scan($path, $includeOtherFilesInWpContent, $excludedDirectories);
     }
 
     /**

@@ -10,7 +10,7 @@ use WPStaging\Framework\Utils\WpDefaultDirectories;
  * to staging site
  * Symlink will only work if staging site is on same hosting as production site
  */
-class WpUploadsFolderSymlinker 
+class WpUploadsFolderSymlinker
 {
     /**
      * @var string
@@ -35,7 +35,7 @@ class WpUploadsFolderSymlinker
     /**
      * @param string $stagingWpPath
      */
-    public function __construct($stagingWpPath) 
+    public function __construct($stagingWpPath)
     {
         $this->stagingWpPath = $stagingWpPath;
         // todo inject using dependency injection if possible
@@ -58,9 +58,9 @@ class WpUploadsFolderSymlinker
             return false;
         }
 
-        $uploadPath = $this->wpDirectories->getUploadPath();
+        $uploadPath = $this->wpDirectories->getUploadsPath();
 
-        (new Filesystem)->mkdir(dirname($this->stagingUploadPath));
+        (new Filesystem())->mkdir(dirname($this->stagingUploadPath));
 
         if (!symlink($uploadPath, $this->stagingUploadPath)) {
             $this->error = "Can not symlink  " . $uploadPath . "to " . $this->stagingUploadPath;
@@ -74,7 +74,7 @@ class WpUploadsFolderSymlinker
     /**
      * Return error
      */
-    public function getError() 
+    public function getError()
     {
         return $this->error;
     }

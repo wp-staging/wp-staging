@@ -31,6 +31,12 @@ class Container extends \WPStaging\Vendor\tad_DI52_Container
         }
     }
 
+    public function offsetUnset($offset)
+    {
+        parent::offsetUnset($offset);
+        unset($this->reflections[$offset]);
+    }
+
     /**
      * You can use this to store an array of data in the container, without having to worry
      * if the array was already initialized or not.

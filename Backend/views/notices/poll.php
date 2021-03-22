@@ -37,4 +37,4 @@
     </ul>
 </div>
 
-<script type="text/javascript" src="<?php echo $this->url . "js/wpstg-admin-poll.js"?>"></script>
+<script type="text/javascript" src="<?php echo $this->assets->getAssetUrl("js/wpstg-admin-poll.js") ?>"></script>

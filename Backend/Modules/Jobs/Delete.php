@@ -6,13 +6,14 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\CloneNotFoundException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
-use WPStaging\Framework\Filesystem\DirectoryDeleter;
+use WPStaging\Framework\Utils\Strings;
 
 /**
  * Class Delete
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Delete extends Job {
+class Delete extends Job
+{
 
     /**
      * @var \stdClass
@@ -42,7 +43,7 @@ class Delete extends Job {
 
     /**
      *
-     * @var object 
+     * @var object
      */
     public $wpdb;
 
@@ -50,13 +51,14 @@ class Delete extends Job {
      *
      * @var bool
      */
-    private $isExternal;
+    private $isExternalDb;
 
-    public function __construct( $isExternal = false ) {
+    public function __construct($isExternal = false)
+    {
         parent::__construct();
-        $this->isExternal = $isExternal;
+        $this->isExternalDb = $isExternal;
 
-        $this->deleteDir = !empty( $_POST['deleteDir'] ) ? urldecode( $_POST['deleteDir'] ) : '';
+        $this->deleteDir = !empty($_POST['deleteDir']) ? urldecode($_POST['deleteDir']) : '';
     }
 
     /**
@@ -64,25 +66,25 @@ class Delete extends Job {
      * @param null|array $clone
      * @return bool
      */
-    public function setData($clone = null) 
+    public function setData($clone = null)
     {
-        if(!is_array($clone)) {
+        if (!is_array($clone)) {
             $this->getCloneRecords();
         } else {
-            $this->clone = (object) $clone;
+            $this->clone = (object)$clone;
             $this->forceDeleteDirectories = true;
         }
 
-        if(!$this->isExternalDatabase()) {
+        if (!$this->isExternalDatabase()) {
             $this->wpdb = WPStaging::getInstance()->get("wpdb");
             $this->getTableRecords();
-            return true; 
+            return true;
         }
-        
+
         if ($this->isExternalDatabaseError()) {
             return false;
         }
-       
+
         $this->wpdb = $this->getStagingDb();
         $this->getTableRecords();
         return true;
@@ -91,15 +93,17 @@ class Delete extends Job {
     /**
      * Get database object to interact with
      */
-    private function getStagingDb() {
-        return new \wpdb( $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase, $this->clone->databaseServer );
+    private function getStagingDb()
+    {
+        return new \wpdb($this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase, $this->clone->databaseServer);
     }
 
     /**
      * Date database name
      * @return string
      */
-    public function getDbName() {
+    public function getDbName()
+    {
         return $this->wpdb->dbname;
     }
 
@@ -107,14 +111,16 @@ class Delete extends Job {
      * Check if external database is used
      * @return boolean
      */
-    private function isExternalDatabase() {
-        if( $this->isExternal ) {
+    protected function isExternalDatabase()
+    {
+        if ($this->isExternalDb) {
             return true;
         }
 
-        if( !empty( $this->clone->databaseUser ) ) {
+        if (!empty($this->clone->databaseUser)) {
             return true;
         }
+
         return false;
     }
 
@@ -123,97 +129,95 @@ class Delete extends Job {
      * @param null|string $name
      * @throws CloneNotFoundException
      */
-    private function getCloneRecords( $name = null ) {
-        if( $name === null && !isset( $_POST["clone"] ) ) {
-            $this->log( "Clone name is not set", Logger::TYPE_FATAL );
-            $this->returnException( "Clone name is not set" );
+    private function getCloneRecords($name = null)
+    {
+        if ($name === null && !isset($_POST["clone"])) {
+            $this->log("Clone name is not set", Logger::TYPE_FATAL);
+            $this->returnException("Clone name is not set");
         }
 
-        if( $name === null ) {
+        if ($name === null) {
             $name = (string)$_POST["clone"];
         }
 
-        $clones = get_option( "wpstg_existing_clones_beta", [] );
+        $clones = get_option("wpstg_existing_clones_beta", []);
 
-        if( empty( $clones ) || !isset( $clones[$name] ) ) {
-            $this->log( "Couldn't find clone name {$name} or no existing clone", Logger::TYPE_FATAL );
-            $this->returnException( "Couldn't find clone name {$name} or no existing clone" );
+        if (empty($clones) || !isset($clones[$name])) {
+            $this->log("Couldn't find clone name {$name} or no existing clone", Logger::TYPE_FATAL);
+            $this->returnException("Couldn't find clone name {$name} or no existing clone");
         }
 
-        $this->clone         = $clones[$name];
+        $this->clone = $clones[$name];
         $this->clone["name"] = $name;
 
-        $this->clone = ( object ) $this->clone;
+        $this->clone = (object)$this->clone;
 
-        unset( $clones );
+        unset($clones);
     }
 
     /**
      * Get Tables
      */
-    private function getTableRecords() {
+    private function getTableRecords()
+    {
 
-        $stagingPrefix = $this->getStagingPrefix();
+        $stagingPrefix = $this->getStagingPrefix($this->isExternalDatabase(), $this->clone);
 
         // Escape "_" to allow searching for that character
         $prefix = wpstg_replace_last_match('_', '\_', $stagingPrefix);
 
-        $tables = $this->wpdb->get_results( "SHOW TABLE STATUS LIKE '{$prefix}%'" );
+        $tables = $this->wpdb->get_results("SHOW TABLE STATUS LIKE '{$prefix}%'");
 
         $this->tables = [];
 
         // no results
-        if( $tables !== null ) {
-            foreach ( $tables as $table ) {
+        if ($tables !== null) {
+            foreach ($tables as $table) {
                 $this->tables[] = [
                     "name" => $table->Name,
-                    "size" => $this->formatSize( ($table->Data_length + $table->Index_length ) )
+                    "size" => $this->formatSize(($table->Data_length + $table->Index_length))
                 ];
             }
         }
 
-        $this->tables = json_decode( json_encode( $this->tables ) );
+        $this->tables = json_decode(json_encode($this->tables));
     }
 
     /**
      * Check and return prefix of the staging site
      */
-    public function getStagingPrefix() {
-
-        if( $this->isExternalDatabase() && !empty( $this->clone->prefix ) ) {
+    private function getStagingPrefix()
+    {
+        if ($this->isExternalDatabase() && !empty($this->clone->prefix)) {
             return $this->clone->prefix;
         }
 
         // Prefix not defined! Happens if staging site has been generated with older version of wpstg
         // Try to get staging prefix from wp-config.php of staging site
-        if( empty( $this->clone->prefix ) ) {
-            // Throw error
-            $path    = ABSPATH . $this->clone->directoryName . "/wp-config.php";
-            if( ($content = @file_get_contents( $path )) === false ) {
-                $this->log( "Can not open {$path}. Can't read contents", Logger::TYPE_ERROR );
-            } else {
-                // Try to get prefix from wp-config.php
-                preg_match( "/table_prefix\s*=\s*'(\w*)';/", $content, $matches );
+        if (empty($this->clone->prefix)) {
+            $path = ABSPATH . $this->clone->directoryName . "/wp-config.php";
+            if (($content = @file_get_contents($path)) === false) {
+                $this->log("Can not open {$path}. Can't read contents", Logger::TYPE_ERROR);
+            }
+            preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
 
-                if( !empty( $matches[1] ) ) {
-                    $this->clone->prefix = $matches[1];
-                } else {
-                    $this->returnException( "Fatal Error: Can not delete staging site. Can not find Prefix. '{$matches[1]}'. Stopping for security reasons. Creating a new staging site will likely resolve this the next time. Contact support@wp-staging.com" );
-                }
+            if (!empty($matches[1])) {
+                $this->clone->prefix = $matches[1];
+            } else {
+                $this->returnException("Fatal Error: Can not delete staging site. Can not find Prefix. '{$matches[1]}'. Stopping for security reasons. Creating a new staging site will likely resolve this the next time. Contact support@wp-staging.com");
             }
         }
 
-        if( empty( $this->clone->prefix ) ) {
-            $this->returnException( "Fatal Error: Can not delete staging site. Can not find table prefix. Contact support@wp-staging.com" );
+        if (empty($this->clone->prefix)) {
+            $this->returnException("Fatal Error: Can not delete staging site. Can not find table prefix. Contact support@wp-staging.com");
         }
 
         // Check if staging prefix is the same as the live prefix
-        if( empty( $this->options->databaseUser ) && $this->wpdb->prefix === $this->clone->prefix ) {
-            $this->log( "Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com" );
-            $this->returnException( "Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the live site. Creating a new staging site will likely resolve this the next time. Stopping for security reasons. Contact support@wp-staging.com" );
+        if (empty($this->options->databaseUser) && $this->wpdb->prefix === $this->clone->prefix) {
+            $this->log("Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the production site. Stopping for security reasons. Go to Sites > Actions > Edit Data and correct the table prefix or contact us.");
+            $this->returnException("Fatal Error: Can not delete staging site. Prefix. '{$this->clone->prefix}' is used for the production site. Stopping for security reasons. Go to Sites > Actions > Edit Data and correct the table prefix or contact us");
         }
 
-        // Else
         return $this->clone->prefix;
     }
 
@@ -223,31 +227,34 @@ class Delete extends Job {
      * @param int $precision
      * @return string
      */
-    public function formatSize( $bytes, $precision = 2 ) {
-        if( ( int ) $bytes < 1 ) {
+    public function formatSize($bytes, $precision = 2)
+    {
+        if ((int)$bytes < 1) {
             return '';
         }
 
         $units = ['B', "KB", "MB", "GB", "TB"];
 
-        $bytes = ( int ) $bytes;
-        $base  = log( $bytes ) / log( 1000 ); // 1024 would be for MiB KiB etc
-        $pow   = pow( 1000, $base - floor( $base ) ); // Same rule for 1000
+        $bytes = (int)$bytes;
+        $base = log($bytes) / log(1000); // 1024 would be for MiB KiB etc
+        $pow = pow(1000, $base - floor($base)); // Same rule for 1000
 
-        return round( $pow, $precision ) . ' ' . $units[( int ) floor( $base )];
+        return round($pow, $precision) . ' ' . $units[(int)floor($base)];
     }
 
     /**
      * @return false
      */
-    public function getClone() {
+    public function getClone()
+    {
         return $this->clone;
     }
 
     /**
      * @return null|object
      */
-    public function getTables() {
+    public function getTables()
+    {
         return $this->tables;
     }
 
@@ -256,87 +263,95 @@ class Delete extends Job {
      * @param null|array $clone
      * @return bool
      */
-    public function start( $clone = null ) {
+    public function start($clone = null)
+    {
         // Set data
-        $this->setData( $clone );
+        $this->setData($clone);
 
         // Get the job first
         $this->getJob();
 
-        $method = "delete" . ucwords( $this->job->current );
+        $method = "delete" . ucwords($this->job->current);
         return $this->{$method}();
     }
 
     /**
      * Get job data
      */
-    private function getJob() {
-        $this->job = $this->cache->get( "delete_job_{$this->clone->name}" );
+    private function getJob()
+    {
+        $this->job = $this->cache->get("delete_job_{$this->clone->name}");
 
 
-        if( $this->job !== null ) {
+        if ($this->job !== null) {
             return;
         }
 
         // Generate JOB
-        $this->job = ( object ) [
-                    "current"               => "tables",
-                    "nextDirectoryToDelete" => $this->clone->path,
-                    "name"                  => $this->clone->name
+        $this->job = (object)[
+            "current" => "tables",
+            "nextDirectoryToDelete" => $this->clone->path,
+            "name" => $this->clone->name
         ];
 
-        $this->cache->save( "delete_job_{$this->clone->name}", $this->job );
+        $this->cache->save("delete_job_{$this->clone->name}", $this->job);
     }
 
     /**
      * @return bool
      */
-    private function updateJob() {
-        $this->job->nextDirectoryToDelete = trim( $this->job->nextDirectoryToDelete );
-        return $this->cache->save( "delete_job_{$this->clone->name}", $this->job );
+    private function updateJob()
+    {
+        $this->job->nextDirectoryToDelete = trim($this->job->nextDirectoryToDelete);
+        return $this->cache->save("delete_job_{$this->clone->name}", $this->job);
     }
 
     /**
      * @return array
      */
-    private function getTablesToRemove() {
+    private function getTablesToRemove()
+    {
         $tables = $this->getTableNames();
 
-        if( !isset( $_POST["excludedTables"] ) || !is_array( $_POST["excludedTables"] ) || empty( $_POST["excludedTables"] ) ) {
+        if (!isset($_POST["excludedTables"]) || !is_array($_POST["excludedTables"]) || empty($_POST["excludedTables"])) {
             return $tables;
         }
 
-        return array_diff( $tables, $_POST["excludedTables"] );
+        return array_diff($tables, $_POST["excludedTables"]);
     }
 
     /**
      * @return array
      */
-    private function getTableNames() {
-        return (!is_array( $this->tables )) ? [] : array_map( function($value) {
-                    return ($value->name);
-                }, $this->tables );
+    private function getTableNames()
+    {
+        return (!is_array($this->tables)) ? [] : array_map(function ($value) {
+            return ($value->name);
+        }, $this->tables);
     }
 
     /**
      * Delete Tables
+     *
+     * @todo DRY the code by implementing through WPStaging\Framework\Database\TableService::deleteTablesStartWith
      */
-    public function deleteTables() {
-        if( $this->isOverThreshold() ) {
-            $this->log( "Deleting: Is over threshold", Logger::TYPE_INFO );
+    public function deleteTables()
+    {
+        if ($this->isOverThreshold()) {
+            $this->log("Deleting: Is over threshold", Logger::TYPE_INFO);
             return;
         }
 
         $tables = $this->getTablesToRemove();
 
-        foreach ( $tables as $table ) {
+        foreach ($tables as $table) {
             // PROTECTION: Never delete any table that beginns with wp prefix of live site
-            if( !$this->isExternalDatabase() && $this->startsWith( $table, $this->wpdb->prefix ) ) {
-                $this->log( "Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL );
+            if (!$this->isExternalDatabase() && (new Strings())->startsWith($table, $this->wpdb->prefix)) {
+                $this->log("Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL);
                 return false;
             }
 
-            $this->wpdb->query( "DROP TABLE {$table}" );
+            $this->wpdb->query("DROP TABLE {$table}");
         }
 
         // Move on to the next
@@ -345,22 +360,11 @@ class Delete extends Job {
     }
 
     /**
-     * Check if a strings start with a specific string
-     * @param string $haystack
-     * @param string $needle
-     * @return bool
-     */
-    protected function startsWith( $haystack, $needle ) {
-        $length = strlen( $needle );
-        return ($needle === substr( $haystack, 0, $length ));
-    }
-
-    /**
      *
      * Delete complete directory including all files and sub folders
      * @throws \Exception
      */
-    public function deleteDirectory() 
+    public function deleteDirectory()
     {
         if ($this->isFatalError()) {
             $this->returnException('Can not delete directory: ' . $this->deleteDir . '. This seems to be the root directory. Exclude this directory from deleting and try again.');
@@ -368,10 +372,11 @@ class Delete extends Job {
         }
 
         // Finished or path does not exist
-        if (empty( $this->deleteDir ) ||
+        if (
+            empty($this->deleteDir) ||
             $this->deleteDir == get_home_path() ||
-            !is_dir( $this->deleteDir)) {
-
+            !is_dir($this->deleteDir)
+        ) {
             $this->job->current = "finish";
             $this->updateJob();
             return $this->deleteFinish();
@@ -380,7 +385,7 @@ class Delete extends Job {
         $this->log("Delete staging site: " . $this->clone->path, Logger::TYPE_INFO);
 
         // Make sure the root dir is never deleted!
-        if($this->deleteDir == get_home_path()) {
+        if ($this->deleteDir == get_home_path()) {
             $this->log("Fatal Error 8: Trying to delete root of WP installation!", Logger::TYPE_CRITICAL);
             $this->returnException('Fatal Error 8: Trying to delete root of WP installation!');
         }
@@ -410,11 +415,11 @@ class Delete extends Job {
         // Throw fatal error if the folder has still not been deleted and there are files in it
         if ($this->isNotEmpty($this->deleteDir)) {
             $response = [
-                'job'     => 'delete',
-                'status'  => true,
-                'delete'  => $deleteStatus,
+                'job' => 'delete',
+                'status' => true,
+                'delete' => $deleteStatus,
                 'message' => $errorMessage,
-                'error'   => true,
+                'error' => true,
             ];
             wp_die(json_encode($response));
         }
@@ -428,64 +433,67 @@ class Delete extends Job {
      * @param string $dir
      * @return bool
      */
-    private function isNotEmpty( $dir ) {
+    private function isNotEmpty($dir)
+    {
         // Throw fatal error if the folder has still not been deleted and there are files in it
         $isDirNotEmpty = false;
-        if( is_dir( $dir ) ) {
-            $iterator      = new \FilesystemIterator( $dir );
+        if (is_dir($dir)) {
+            $iterator = new \FilesystemIterator($dir);
             $isDirNotEmpty = $iterator->valid();
         }
         return $isDirNotEmpty;
     }
 
     /**
-     * 
+     *
      * @return boolean
      */
-    public function isFatalError() {
-        $homePath = rtrim( get_home_path(), "/" );
+    public function isFatalError()
+    {
+        $homePath = rtrim(get_home_path(), "/");
         return $homePath == rtrim($this->deleteDir, "/");
     }
 
     /**
      * Finish / Update Existing Clones
      */
-    public function deleteFinish() {
+    public function deleteFinish()
+    {
 
         $response = [
             'delete' => 'finished',
         ];
 
-        $existingClones = get_option( "wpstg_existing_clones_beta", [] );
+        $existingClones = get_option("wpstg_existing_clones_beta", []);
 
         // Check if clone exist and then remove it from options
-        $this->log( "Verifying existing clones..." );
-        foreach ( $existingClones as $name => $clone ) {
-            if( $clone["path"] == $this->clone->path ) {
-                unset( $existingClones[$name] );
+        $this->log("Verifying existing clones...");
+        foreach ($existingClones as $name => $clone) {
+            if ($clone["path"] == $this->clone->path) {
+                unset($existingClones[$name]);
             }
         }
 
-        if( update_option( "wpstg_existing_clones_beta", $existingClones ) === false ) {
-            $this->log( "Delete: Nothing to save.'" );
+        if (update_option("wpstg_existing_clones_beta", $existingClones) === false) {
+            $this->log("Delete: Nothing to save.'");
         }
 
         // Delete cached file
-        $this->cache->delete( "delete_job_{$this->clone->name}" );
-        $this->cache->delete( "delete_directories_{$this->clone->name}" );
-        $this->cache->delete( "clone_options" );
+        $this->cache->delete("delete_job_{$this->clone->name}");
+        $this->cache->delete("delete_directories_{$this->clone->name}");
+        $this->cache->delete("clone_options");
 
-        wp_die( json_encode( $response ) );
+        wp_die(json_encode($response));
     }
 
     /**
      * Check if there is error in external database connection
      * can happen if the external database does not exist or stored credentials are wrong
      * @return bool
-     * 
+     *
      * @todo replace it logic with DbInfo once collation check PR is merged.
      */
-    private function isExternalDatabaseError() 
+    private function isExternalDatabaseError()
     {
         $db = new \mysqli($this->clone->databaseServer, $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase);
         if ($db->connect_error) {
@@ -494,5 +502,4 @@ class Delete extends Job {
 
         return false;
     }
-
 }

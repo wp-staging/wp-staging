@@ -27,7 +27,7 @@ trait HydrateTrait
             /** @noinspection PhpUnhandledExceptionInspection */
             try {
                 $this->hydrateByMethod('set' . ucfirst($key), $value);
-            } catch(Exception $e) {
+            } catch (Exception $e) {
                 if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
                     error_log($e->getMessage());
                 }
@@ -58,7 +58,7 @@ trait HydrateTrait
         $params = $method->getParameters();
 
         if (!isset($params[0]) || count($params) > 1) {
-            throw new EntityException(sprintf(
+            throw new Exception(sprintf(
                 'Class %s setter method %s does not have a first parameter or has more than one parameter',
                 static::class,
                 $method
@@ -86,10 +86,10 @@ trait HydrateTrait
     {
         $className = $class->getName();
         if (!$value instanceof DateTime && $className === 'DateTime') {
-            return (new DateTimeAdapter)->getDateTime($value);
+            return (new DateTimeAdapter())->getDateTime($value);
         }
 
-        $obj = new $className;
+        $obj = new $className();
         if (is_array($value) && method_exists($obj, 'hydrate')) {
             $obj->hydrate($value);
         }

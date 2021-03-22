@@ -1,6 +1,6 @@
 <?php
-namespace WPStaging\Core\Forms\Elements;
 
+namespace WPStaging\Core\Forms\Elements;
 
 use WPStaging\Core\Forms\ElementsWithOptions;
 
@@ -18,16 +18,14 @@ class Check extends ElementsWithOptions
     {
         $output = '';
 
-        foreach ($this->options as $id => $value)
-        {
+        foreach ($this->options as $id => $value) {
             $checked = ($this->isChecked($id)) ? " checked=''" : '';
 
             $attributeId = $this->getId() . '_' . $this->getId($id);
 
             $output .= "<input type='checkbox' name='{$this->getId()}' id='{$attributeId}' value='{$id}' {$checked}/>";
 
-            if ($value)
-            {
+            if ($value) {
                 $output .= "<label for='{$attributeId}'>{$value}</label>";
             }
         }
@@ -48,8 +46,7 @@ class Check extends ElementsWithOptions
                 (is_int($value) && $value == (int) $this->default) ||
                 (is_array($this->default) && in_array($value, $this->default))
             )
-        )
-        {
+        ) {
             return true;
         }
 

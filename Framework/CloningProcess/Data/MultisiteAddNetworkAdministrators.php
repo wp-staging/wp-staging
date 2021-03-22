@@ -1,8 +1,6 @@
 <?php
 
-
 namespace WPStaging\Framework\CloningProcess\Data;
-
 
 use WPStaging\Core\Utils\Logger;
 

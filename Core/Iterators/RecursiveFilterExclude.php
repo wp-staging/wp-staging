@@ -5,14 +5,16 @@ namespace WPStaging\Core\Iterators;
 use RecursiveFilterIterator;
 use RecursiveIterator;
 
-// todo refactor this class and its tests to RecursivePathExcludeFilter, move this class and its tests to WPStaging\Framework\Filesystem\Filters  
+/**
+ * @deprecated Use WPStaging\Framework\Filesystem\Filters\RecursivePathExcludeFilter, which have more features and well tested
+ */
 class RecursiveFilterExclude extends RecursiveFilterIterator
 {
     protected $exclude = [];
 
     public function __construct(RecursiveIterator $iterator, $exclude = [])
     {
-        parent::__construct( $iterator );
+        parent::__construct($iterator);
         $this->exclude = $exclude;
     }
 
@@ -40,5 +42,4 @@ class RecursiveFilterExclude extends RecursiveFilterIterator
     {
         return new self($this->getInnerIterator()->getChildren(), $this->exclude);
     }
-
 }

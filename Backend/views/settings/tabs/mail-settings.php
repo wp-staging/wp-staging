@@ -1,5 +1,5 @@
 <form class="wpstg-mail-settings-form" method="post">
-    <?php $emailsAllowed = !((bool)get_option(\WPStaging\Framework\Staging\FirstRun::MAILS_DISABLED_KEY, false)); ?>        
+    <?php $emailsAllowed = !((bool)wpstgGetCloneSettings(\WPStaging\Framework\Staging\FirstRun::MAILS_DISABLED_KEY)); ?>        
     <p>
         <strong class="wpstg-fs-14"> <?php _e('Mail Delivery Setting', 'wp-staging'); ?></strong>
         <br/>

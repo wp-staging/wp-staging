@@ -7,11 +7,12 @@ if (!defined("WPINC")) {
     die;
 }
 
-use WPStaging\Framework\CloningProcess\SearchReplace\SearchReplaceService;
-use WPStaging\Framework\Utils\Strings;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\Utils\Multisite;
+use WPStaging\Framework\CloningProcess\SearchReplace\SearchReplaceService;
+use WPStaging\Framework\Traits\DbRowsGeneratorTrait;
+use WPStaging\Framework\Utils\Strings;
 
 /**
  * Class Database
@@ -20,6 +21,21 @@ use WPStaging\Core\Utils\Multisite;
 class SearchReplace extends CloningProcess
 {
     use TotalStepsAreNumberOfTables;
+    use DbRowsGeneratorTrait;
+
+    /**
+     * The maximum number of failed attempts after which the Job should just move on.
+     *
+     * @var int
+     */
+    protected $maxFailedAttempts = 10;
+
+    /**
+     * The number of processed items, or `null` if the job did not run yet.
+     *
+     * @var int|null
+     */
+    protected $processed;
 
     /**
      * @var int
@@ -87,7 +103,7 @@ class SearchReplace extends CloningProcess
         // Save option, progress
         $this->saveOptions();
 
-        return ( object )$this->response;
+        return (object)$this->response;
     }
 
     /**
@@ -225,22 +241,26 @@ class SearchReplace extends CloningProcess
 
         // Search & Replace
         $this->searchReplace($table, []);
-
-        // Set new offset
-        $this->options->job->start += $this->settings->querySRLimit;
     }
 
     /**
      * Gets the columns in a table.
      * @access public
      * @param string $table The table to check.
-     * @return array
+     * @return array|false Either the primary key and columns structures, or `false` to indicate the query
+     *                     failed or the table is not describe-able.
      */
-    private function get_columns($table)
+    protected function get_columns($table)
     {
         $primary_key = null;
         $columns = [];
         $fields = $this->stagingDb->get_results('DESCRIBE ' . $table);
+
+        if (empty($fields)) {
+            // Either there was an error or the table has no columns.
+            return false;
+        }
+
         if (is_array($fields)) {
             foreach ($fields as $column) {
                 $columns[] = $column->Field;
@@ -256,7 +276,7 @@ class SearchReplace extends CloningProcess
      *
      * @param string $table The table to run the replacement on.
      * @param array $args An associative array containing arguments for this run.
-     * @return bool
+     * @return bool Whether the search-replace operation was successful or not.
      */
     private function searchReplace($table, $args)
     {
@@ -285,21 +305,32 @@ class SearchReplace extends CloningProcess
         $args = apply_filters('wpstg_clone_searchreplace_params', $args);
 
         // Get columns and primary keys
-        list($primary_key, $columns) = $this->get_columns($table);
+        $primaryKeyAndColumns = $this->get_columns($table);
+
+        if (false === $primaryKeyAndColumns) {
+            // Stop here: for some reason the table cannot be described or there was an error.
+            ++$this->options->job->failedAttempts;
+            return false;
+        }
+
+        list($primary_key, $columns) = $primaryKeyAndColumns;
 
         $currentRow = 0;
-        $start = $this->options->job->start;
-        $end = $this->settings->querySRLimit;
+        $offset = $this->options->job->start;
+        $limit = $this->settings->querySRLimit;
 
-        $data = $this->stagingDb->get_results("SELECT * FROM $table LIMIT $start, $end", ARRAY_A);
+        $data = $this->rowsGenerator($table, $offset, $limit, $this->stagingDb);
 
         // Filter certain rows (of other plugins)
         $filter = $this->searchReplaceService->excludedStrings();
 
         $filter = apply_filters('wpstg_clone_searchreplace_excl_rows', $filter);
 
+        $processed = 0;
+
         // Go through the table rows
         foreach ($data as $row) {
+            $processed++;
             $currentRow++;
             $updateSql = [];
             $whereSql = [];
@@ -311,8 +342,10 @@ class SearchReplace extends CloningProcess
             }
 
             // Skip transients (There can be thousands of them. Save memory and increase performance)
-            if (isset($row['option_name']) && $args['skip_transients'] === 'on' && strpos($row['option_name'], '_transient')
-                !== false) {
+            if (
+                isset($row['option_name']) && $args['skip_transients'] === 'on' && strpos($row['option_name'], '_transient')
+                !== false
+            ) {
                 continue;
             }
             // Skip rows with more than 5MB to save memory. These rows contain log data or something similiar but never site relevant data
@@ -368,11 +401,9 @@ class SearchReplace extends CloningProcess
                 }
             }
         } // end row loop
-        unset($row);
-        unset($updateSql);
-        unset($whereSql);
-        unset($sql);
-        unset($currentRow);
+        unset($row,$updateSql,$whereSql,$sql,$currentRow);
+
+        $this->updateJobStart($processed);
 
         // DB Flush
         $this->stagingDb->flush();
@@ -411,11 +442,17 @@ class SearchReplace extends CloningProcess
             return false;
         }
 
-        if ($this->options->job->start != 0) {
-            return true;
+        if (!isset($this->options->job->failedAttempts)) {
+            $this->options->job->failedAttempts = 0;
         }
 
-        $this->options->job->total = ( int )$this->productionDb->get_var("SELECT COUNT(1) FROM {$old}");
+        if ($this->options->job->start != 0) {
+            // The job was attempted too many times and should be skipped now.
+            return !($this->options->job->failedAttempts > $this->maxFailedAttempts);
+        }
+
+        $this->options->job->total = (int)$this->productionDb->get_var("SELECT COUNT(1) FROM {$old}");
+        $this->options->job->failedAttempts = 0;
 
         if ($this->options->job->total == 0) {
             $this->finishStep();
@@ -451,7 +488,7 @@ class SearchReplace extends CloningProcess
     /**
      * Finish the step
      */
-    private function finishStep()
+    protected function finishStep()
     {
         // This job is not finished yet
         if ($this->options->job->total > $this->options->job->start) {
@@ -495,5 +532,31 @@ class SearchReplace extends CloningProcess
         }
 
         return str_replace([$home, '/'], '', $siteurl);
+    }
+
+    /**
+     * Updates the (next) job start to reflect the number of actually processed rows.
+     *
+     * If nothing was processed, then the job start  will be ticked by 1.
+     *
+     * @param int $processed The  number of actually processed rows in this run.
+    t
+     * @return void The method does not return any value.
+     */
+    protected function updateJobStart($processed)
+    {
+        $this->processed = absint($processed);
+        $this->options->job->start += max($processed, 1);
+    }
+
+    /**
+     * Returns the number of rows processed by the job.
+     *
+     * @return int|null Either the number of rows processed by the Job, or `null` if the Job did
+     *                  not run yet.
+     */
+    public function getProcessed()
+    {
+        return $this->processed;
     }
 }

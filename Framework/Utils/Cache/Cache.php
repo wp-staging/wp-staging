@@ -10,7 +10,6 @@ use WPStaging\Framework\Filesystem\File;
 
 class Cache extends AbstractCache
 {
-
     /**
      * @inheritDoc
      */
@@ -20,16 +19,18 @@ class Cache extends AbstractCache
             return $default;
         }
 
-        // unserialize() is not safe, vulnerable to remote code execution via PHP Object Injection
-        // see https://owasp.org/www-community/vulnerabilities/PHP_Object_Injection
         return json_decode(file_get_contents($this->filePath), true);
     }
 
     /**
      * @inheritDoc
      */
-    public function save($value)
+    public function save($value, $pretty = false)
     {
-        return (new File($this->filePath, File::MODE_WRITE))->fwriteSafe(json_encode($value));
+        if ($pretty) {
+            return (new File($this->filePath, File::MODE_WRITE))->fwriteSafe(json_encode($value, JSON_PRETTY_PRINT));
+        } else {
+            return (new File($this->filePath, File::MODE_WRITE))->fwriteSafe(json_encode($value));
+        }
     }
 }
