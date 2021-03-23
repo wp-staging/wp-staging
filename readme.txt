@@ -8,7 +8,7 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
-Tested up to: 5.6
+Tested up to: 5.7
 Stable tag: 2.8.2
 Requires PHP: 5.5
 
@@ -182,6 +182,7 @@ https://wp-staging.com
 * Enh: Move Backend/public/img to assets/img #719
 * Enh: Unify Single and Multisite Classes #713
 * Enh: Keep other staging behavior when the staging site is cloneable #722
+* Enh: Refactor search and replace jobs to use memory and time-consumption aware trait #702
 * Fix: Lost password link generation in staging sites #697
 * Fix: Fix cloning on multisite for PHP 5 #725
 * Fix: Skip symlink scanning during directory scan #736
@@ -189,11 +190,11 @@ https://wp-staging.com
 * Fix: Fix overlapping of sweetalert confirmation on push with sidebar #742
 * Fix: Exclude wp staging content folder during staging #741
 * Fix: Add sanitizing for path to fix comparing for Windows paths #751
+* Fix: Uninstall not possible if "delete all settings is activated" #756
 * Dev: Internal refactoring of database backup to avoid long-lived branch #624
 * Dev: Enforced changelog entries in CI #695
 * Dev: Refactored webdriver tests to make them faster #656
 * Dev: Refactor how the automated test workflows are generated. Add new webdriver test before release with default settings #712
-* Enh: Refactor search and replace jobs to use memory and time-consumption aware trait #702
 * Dev: Increased default file batch limits for faster development environment and CI #706
 * Dev: Renamed all code and UI references of Snapshot to Backup #715
 * Dev: Add helper to manage clone settings #717

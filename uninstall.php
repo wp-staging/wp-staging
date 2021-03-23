@@ -2,8 +2,6 @@
 
 namespace WPStaging\Backend;
 
-use WPStaging\Framework\Staging\FirstRun;
-
 /**
  * Uninstall WP-Staging
  *
@@ -68,7 +66,8 @@ class uninstall
             delete_option("wpstg_rating");
             delete_option("wpstg_beta");
 
-            delete_option(FirstRun::FIRST_RUN_KEY);
+            /* @see \WPStaging\Framework\Staging\FirstRun::FIRST_RUN_KEY */
+            delete_option('wpstg_execute');
 
             // Delete events
             wp_clear_scheduled_hook('wpstg_weekly_event');
