@@ -3,9 +3,6 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use Exception;
-use RecursiveIteratorIterator;
-use WPStaging\Core\Iterators\RecursiveDirectoryIterator;
-use WPStaging\Core\Iterators\RecursiveFilterExclude;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Traits\FileScanToCacheTrait;
@@ -279,28 +276,11 @@ class Directories extends JobExecutable
 
         // open file handle and attach data to end of file
         $files = $this->open($this->filename, 'a');
+        $strUtil = new Strings();
+        $this->log("Scanning {$strUtil->getLastElemAfterString( '/', $folder )} for its sub-directories and files");
 
         try {
-            // Iterate over extra directory
-            $iterator = new RecursiveDirectoryIterator($folder);
-
-            $exclude = [];
-
-            $iterator = new RecursiveFilterExclude($iterator, $exclude);
-            // Recursively iterate over content directory
-            $iterator = new RecursiveIteratorIterator($iterator, RecursiveIteratorIterator::LEAVES_ONLY, RecursiveIteratorIterator::CATCH_GET_CHILD);
-
-            $this->log("Scanning {$this->strUtil->getLastElemAfterString( '/', $folder )} for its sub-directories and files");
-
-            // Write path line
-            foreach ($iterator as $item) {
-                if ($item->isFile()) {
-                    $path = str_replace($this->strUtil->sanitizeDirectorySeparator(ABSPATH), '', $this->strUtil->sanitizeDirectorySeparator($folder)) . DIRECTORY_SEPARATOR . $item->getSubPathname() . PHP_EOL;
-                    if ($this->write($files, $path)) {
-                        $this->options->totalFiles++;
-                    }
-                }
-            }
+            $this->options->totalFiles += $this->scanToCacheFile($files, $folder, true, []);
         } catch (Exception $e) {
             $this->returnException('Error: ' . $e->getMessage());
         }

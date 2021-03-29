@@ -337,6 +337,7 @@ class Delete extends Job
      */
     public function deleteTables()
     {
+
         if ($this->isOverThreshold()) {
             $this->log("Deleting: Is over threshold", Logger::TYPE_INFO);
             return;

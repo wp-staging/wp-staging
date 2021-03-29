@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.7
-Stable tag: 2.8.2
+Stable tag: 2.8.3
 Requires PHP: 5.5
 
 A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup and development sites for authorized users only.
@@ -165,6 +165,21 @@ https://wp-staging.com
 4. Finish - Access your backup / staging site
 
 == Changelog ==
+
+= 2.8.3 =
+* Enh: Add Shutdownable interface to replace usages of __destruct in the code #729
+* Enh: Refactor on how the plugin keeps track of a request running time #766
+* Fix: Replace deprecated jQuery click method #730
+* Fix: Fix overlapping of sweetalert confirmation on push with sidebar #742
+* Fix: Exclude wp staging content folder during staging #741
+* Fix: Add sanitizing for path to fix comparing for Windows paths #751
+* Fix: _cerber_files tables are excluded and could not be copied Fix #770
+* Fix: Replaced jQuery assignment with an IIFE wrapper #761
+* Dev: Update php-scoper and other development dependencies #744
+* Dev: Build javascript when building the distributable version of the plugin #750
+* Dev: Internal helper CLI command to order the changelog notes according to type #749
+* Dev: Refactor Job(s) implementation to use the Resources Trait #765
+* Dev: Add internal documentation to versioning and hotfixes #780
 
 = 2.8.2 =
 * Feat: Compatible up to WP 5.7

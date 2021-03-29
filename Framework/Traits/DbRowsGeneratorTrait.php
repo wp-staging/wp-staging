@@ -38,12 +38,28 @@ trait DbRowsGeneratorTrait
      */
     protected function rowsGenerator($table, $offset, $limit, \wpdb $db = null)
     {
-        $this->initiateStartTime();
+        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+            error_log(
+                sprintf(
+                    'DbRowsGeneratorTrait: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
+                    $this->getMaxMemoryLimit(),
+                    $this->getScriptMemoryLimit(),
+                    $this->getMemoryUsage(),
+                    $this->findExecutionTimeLimit(),
+                    $this->getRunningTime(),
+                    ($this->isThreshold() ? 'yes' : 'no')
+                )
+            );
+        }
+
 
         if (null === $db) {
             global $wpdb;
             $db = $wpdb;
         }
+
+        $suppressErrorsOriginal = $db->suppress_errors;
+        $db->suppress_errors(false);
 
         // Sets the execution time limit to either a detected value below 10s and above 1s, or a safe 10s value.
         $this->setTimeLimit(min(10, max((int)$this->findExecutionTimeLimit(), 1)));
@@ -60,11 +76,25 @@ trait DbRowsGeneratorTrait
                     break;
                 }
 
+                $batchSize = ceil($batchSize);
+
                 $rows = $db->get_results("SELECT * FROM {$table} LIMIT {$offset}, {$batchSize}", ARRAY_A);
 
-                if (null === $rows) {
+                if (!empty($db->last_error)) {
+                    if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+                        error_log($db->last_error);
+                    }
+                }
+
+                if (empty($rows)) {
                     // We're done here.
                     break;
+                }
+
+                if (!is_array($rows)) {
+                    if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+                        error_log(sprintf('$rows is not an array. Actual type: %s', gettype($rows)));
+                    }
                 }
 
                 $offset += $batchSize;
@@ -85,5 +115,7 @@ trait DbRowsGeneratorTrait
             // It's actually processed when the caller code returns the control to the Generator.
             $processed++;
         } while (!$this->isThreshold() && $processed < $limit);
+
+        $db->suppress_errors($suppressErrorsOriginal);
     }
 }
