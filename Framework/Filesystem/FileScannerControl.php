@@ -7,13 +7,14 @@
 namespace WPStaging\Framework\Filesystem;
 
 use RuntimeException;
+use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\Queue;
 use WPStaging\Framework\Queue\Storage\BufferedCacheStorage;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
-class FileScannerControl
+class FileScannerControl implements ShutdownableInterface
 {
     const DATA_CACHE_FILE  = 'filesystem_scanner_file_data';
     const QUEUE_CACHE_FILE = 'file_scanner';
@@ -41,7 +42,7 @@ class FileScannerControl
         $this->scanner       = $scanner;
     }
 
-    public function __destruct()
+    public function onWpShutdown()
     {
         if ($this->newQueueItems && $this->queue) {
             $this->queue->pushAsArray($this->newQueueItems);

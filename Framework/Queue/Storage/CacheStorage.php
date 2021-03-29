@@ -5,10 +5,11 @@
 
 namespace WPStaging\Framework\Queue\Storage;
 
+use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Utils\Cache\AbstractCache;
 use WPStaging\Framework\Utils\Cache\Cache;
 
-class CacheStorage implements StorageInterface
+class CacheStorage implements StorageInterface, ShutdownableInterface
 {
     /** @var string */
     private $key;
@@ -26,7 +27,7 @@ class CacheStorage implements StorageInterface
         $this->cache = $cache;
     }
 
-    public function __destruct()
+    public function onWpShutdown()
     {
         if (!$this->commited) {
             $this->commit();

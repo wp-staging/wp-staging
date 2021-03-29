@@ -7,25 +7,23 @@ if (!defined("WPINC")) {
     die;
 }
 
+use DateInterval;
+use DateTime;
+use Exception;
+use WPStaging\Core\thirdParty\thirdPartyCompatibility;
+use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
-use WPStaging\Core\Utils\Cache;
-use WPStaging\Core\thirdParty\thirdPartyCompatibility;
-use WPStaging\Framework\Utils\Strings;
-use WPStaging\Framework\Utils\WpDefaultDirectories;
-use DateTime;
-use DateInterval;
-use Exception;
+use WPStaging\Framework\Interfaces\ShutdownableInterface;
+use WPStaging\Framework\Traits\ResourceTrait;
 
 /**
  * Class Job
  * @package WPStaging\Backend\Modules\Jobs
  */
-abstract class Job
+abstract class Job implements ShutdownableInterface
 {
-
-    const EXECUTION_TIME_RATIO = 0.8;
-    const MAX_MEMORY_RATIO = 1;
+    use ResourceTrait;
 
     /**
      * @var Cache
@@ -53,38 +51,6 @@ abstract class Job
     protected $settings;
 
     /**
-     * System total maximum memory consumption
-     * @var int
-     */
-    protected $maxMemoryLimit;
-
-    /**
-     * Script maximum memory consumption
-     * @var int
-     */
-    protected $memoryLimit;
-
-    /**
-     * @var int
-     */
-    protected $maxExecutionTime;
-
-    /**
-     * @var int
-     */
-    protected $executionLimit;
-
-    /**
-     * @var int
-     */
-    protected $totalRecursion;
-
-    /**
-     * @var int
-     */
-    protected $maxRecursionLimit;
-
-    /**
      * Multisite home domain without scheme
      * @var string
      */
@@ -97,23 +63,12 @@ abstract class Job
     protected $thirdParty;
 
     /**
-     * @var int
-     */
-    protected $start;
-
-    /**
      * Job constructor.
      * @throws Exception
      */
     public function __construct()
     {
-        $this->start = $this->time();
-
-        $this->maxMemoryLimit = $this->getMemoryInBytes(@ini_get("memory_limit"));
-
         $this->thirdParty = new thirdPartyCompatibility();
-
-        $this->maxExecutionTime = 10;
 
         // Services
         $this->cache = new Cache(-1, WPStaging::getContentDir());
@@ -146,39 +101,19 @@ abstract class Job
             $this->setDefaultSettings();
         }
 
-        // Set limits accordingly to CPU LIMITS
-        $this->setLimits();
-
-        $this->maxRecursionLimit = (int)ini_get("xdebug.max_nesting_level");
-
-        /*
-         * This is needed to make sure that maxRecursionLimit = -1
-         * if xdebug is not used in production env.
-         * For using xdebug, maxRecursionLimit must be larger
-         * otherwise xdebug is throwing an error 500 while debugging
-         */
-        if ($this->maxRecursionLimit < 1) {
-            $this->maxRecursionLimit = -1;
-        } else {
-            $this->maxRecursionLimit = $this->maxRecursionLimit - 50; // just to make sure
-        }
-
         if (method_exists($this, "initialize")) {
             $this->initialize();
         }
     }
 
-    /**
-     * Job destructor
-     */
-    public function __destruct()
+    public function onWpShutdown()
     {
         // Commit logs
         if ($this->logger instanceof Logger) {
             $this->logger->commit();
         } else {
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                error_log('Tried to commit log, but $this->logger was not a logger. May be a __destruct problem.');
+                error_log('Tried to commit log, but $this->logger was not a logger.');
             }
         }
     }
@@ -203,35 +138,6 @@ abstract class Job
         $this->settings->maxFileSize = 8;
         $this->settings->optimizer = "1";
         update_option('wpstg_settings', $this->settings);
-    }
-
-    /**
-     * Set limits accordingly to
-     */
-    protected function setLimits()
-    {
-        if (!isset($this->settings->cpuLoad)) {
-            $this->settings->cpuLoad = "low";
-        }
-
-        $memoryLimit = self::MAX_MEMORY_RATIO;
-        $timeLimit = self::EXECUTION_TIME_RATIO;
-
-        switch ($this->settings->cpuLoad) {
-            case "medium":
-                $timeLimit = $timeLimit / 2;
-                break;
-            case "low":
-                $timeLimit = $timeLimit / 4;
-                break;
-
-            case "fast":
-            default:
-                break;
-        }
-
-        $this->memoryLimit = $this->maxMemoryLimit * $memoryLimit;
-        $this->executionLimit = $this->maxExecutionTime * $timeLimit;
     }
 
     /**
@@ -263,56 +169,6 @@ abstract class Job
     }
 
     /**
-     * @param string $memory
-     * @return int
-     */
-    protected function getMemoryInBytes($memory)
-    {
-        // Handle unlimited ones
-        if ((int)$memory < 1) {
-            // 128 MB default value
-            return (int)134217728;
-        }
-
-        $bytes = (int)$memory; // grab only the number
-        $size = trim(str_replace($bytes, null, strtolower($memory))); // strip away number and lower-case it
-        // Actual calculation
-        switch ($size) {
-            case 'k':
-                $bytes *= 1024;
-                break;
-            case 'm':
-                $bytes *= (1024 * 1024);
-                break;
-            case 'g':
-                $bytes *= (1024 * 1024 * 1024);
-                break;
-        }
-
-        return $bytes;
-    }
-
-    /**
-     * Format bytes into ini_set favorable form
-     * @param int $bytes
-     * @return string
-     */
-    protected function formatBytes($bytes)
-    {
-        if ((int)$bytes < 1) {
-            return '';
-        }
-
-        $units = ['B', 'K', 'M', 'G']; // G since PHP 5.1.x so we are good!
-
-        $bytes = (int)$bytes;
-        $base = log($bytes) / log(1000);
-        $pow = pow(1000, $base - floor($base));
-
-        return round($pow, 0) . $units[(int)floor($base)];
-    }
-
-    /**
      * Get current time in seconds
      * @return float
      */
@@ -330,36 +186,48 @@ abstract class Job
     public function isOverThreshold()
     {
         // Check if the memory is over threshold
-        $usedMemory = (int)@memory_get_usage(true);
+        $usedMemory = $this->getMemoryPeakUsage(true);
+        $maxMemoryLimit = $this->getMaxMemoryLimit();
+        $scriptMemoryLimit = $this->getScriptMemoryLimit();
 
-        $this->debugLog('Used Memory: ' . $this->formatBytes($usedMemory) . ' Max Memory Limit: ' . $this->formatBytes($this->maxMemoryLimit) . ' Max Script Memory Limit: ' . $this->formatBytes($this->memoryLimit), Logger::TYPE_DEBUG);
+        $this->debugLog(
+            sprintf(
+                "Used Memory: %s Max Memory Limit: %s Max Script Memory Limit: %s",
+                size_format($usedMemory),
+                size_format($maxMemoryLimit),
+                size_format($scriptMemoryLimit)
+            ),
+            Logger::TYPE_DEBUG
+        );
 
-        if ($usedMemory >= $this->memoryLimit) {
-            $this->log('Used Memory: ' . $this->formatBytes($usedMemory) . ' Memory Limit: ' . $this->formatBytes($this->maxMemoryLimit) . ' Max Script memory limit: ' . $this->formatBytes($this->memoryLimit), Logger::TYPE_ERROR);
-            return true;
-        }
+        if ($this->isMemoryLimit()) {
+            $this->log(
+                sprintf(
+                    "Used Memory: %s Memory Limit: %s Max Script memory limit: %s",
+                    size_format($usedMemory),
+                    size_format($maxMemoryLimit),
+                    size_format($scriptMemoryLimit)
+                ),
+                Logger::TYPE_ERROR
+            );
 
-        if ($this->isRecursionLimit()) {
             return true;
         }
 
         // Check if execution time is over threshold
-        $time = round($this->time() - $this->start, 4);
-        if ($time >= $this->executionLimit) {
-            $this->debugLog('RESET TIME: current time: ' . $time . ', Start Time: ' . $this->start . ', exec time limit: ' . $this->executionLimit);
+        if ($this->isTimeLimit()) {
+            $this->debugLog(
+                sprintf(
+                    "RESET TIME: current time: %s, Start Time: %d, exec time limit: %s",
+                    $this->getRunningTime(),
+                    WPStaging::getInstance()->getStartTime(),
+                    $this->findExecutionTimeLimit()
+                )
+            );
             return true;
         }
 
         return false;
-    }
-
-    /**
-     * Checks if calls are over recursion limit
-     * @return bool
-     */
-    protected function isRecursionLimit()
-    {
-        return ($this->maxRecursionLimit > 0 && $this->totalRecursion >= $this->maxRecursionLimit);
     }
 
     /**
