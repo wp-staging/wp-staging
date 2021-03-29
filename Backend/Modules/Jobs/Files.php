@@ -154,7 +154,9 @@ class Files extends JobExecutable
 
         // Finished or path does not exist
         if (empty($this->destination) || !is_dir($this->destination)) {
-            error_log('Destination is not a directory: ' . $this->destination);
+            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+                error_log('Destination is not a directory: ' . $this->destination);
+            }
             $this->log(sprintf(__('Fail! Destination is not a directory! %s', 'wp-staging'), $this->destination));
             return true;
         }

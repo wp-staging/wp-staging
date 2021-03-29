@@ -38,6 +38,11 @@ final class WPStaging
     private $isBootstrapped = false;
 
     /**
+     * @var int The microtime where the Container was bootstraped. Used to identify the time where the application started running.
+     */
+    private $startTime;
+
+    /**
      * WPStaging constructor.
      */
     private function __construct(Container $container)
@@ -48,6 +53,8 @@ final class WPStaging
     public function bootstrap()
     {
         $this->isBootstrapped = true;
+
+        $this->startTime = microtime(true);
 
         // Todo: Move this to a common service Provider for both Free and Pro. Do not register anything else here.
         $this->container->bind(LoggerInterface::class, Logger::class);
@@ -63,6 +70,11 @@ final class WPStaging
 
         $this->handleCacheIssues();
         $this->preventDirectoryListing();
+    }
+
+    public function getStartTime()
+    {
+        return $this->startTime;
     }
 
     /**

@@ -5,13 +5,14 @@
 
 namespace WPStaging\Framework\Queue\Storage;
 
+use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Utils\Cache\AbstractCache;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 
 // This does not use $items like other cache
 // $items are to append to the end of the cache when it is destructed
 // Buffered Cache does not read entire file, it read the file partially
-class BufferedCacheStorage implements StorageInterface
+class BufferedCacheStorage implements StorageInterface, ShutdownableInterface
 {
     const FILE_PREFIX = 'queue_';
 
@@ -36,7 +37,7 @@ class BufferedCacheStorage implements StorageInterface
         $this->items = [];
     }
 
-    public function __destruct()
+    public function onWpShutdown()
     {
         if (!$this->commited) {
             $this->commit();

@@ -204,6 +204,7 @@ return array(
     'WPStaging\\Framework\\Filesystem\\WpUploadsFolderSymlinker' => $baseDir . '/Framework/Filesystem/WpUploadsFolderSymlinker.php',
     'WPStaging\\Framework\\Interfaces\\ArrayableInterface' => $baseDir . '/Framework/Interfaces/ArrayableInterface.php',
     'WPStaging\\Framework\\Interfaces\\HydrateableInterface' => $baseDir . '/Framework/Interfaces/HydrateableInterface.php',
+    'WPStaging\\Framework\\Interfaces\\ShutdownableInterface' => $baseDir . '/Framework/Interfaces/ShutdownableInterface.php',
     'WPStaging\\Framework\\Interfaces\\TransientInterface' => $baseDir . '/Framework/Interfaces/TransientInterface.php',
     'WPStaging\\Framework\\Mails\\Report\\Report' => $baseDir . '/Framework/Mails/Report/Report.php',
     'WPStaging\\Framework\\Mails\\Report\\ReportSubmitTransient' => $baseDir . '/Framework/Mails/Report/ReportSubmitTransient.php',

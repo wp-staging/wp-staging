@@ -11,6 +11,7 @@ namespace WPStaging\Core\Utils;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Vendor\Psr\Log\LogLevel;
 
@@ -18,7 +19,7 @@ use WPStaging\Vendor\Psr\Log\LogLevel;
  * Class Logger
  * @package WPStaging\Core\Utils
  */
-class Logger implements LoggerInterface
+class Logger implements LoggerInterface, ShutdownableInterface
 {
     const TYPE_ERROR    = "ERROR";
 
@@ -87,7 +88,7 @@ class Logger implements LoggerInterface
         (new Filesystem())->mkdir($this->logDir);
     }
 
-    public function __destruct()
+    public function onWpShutdown()
     {
         $this->commit();
     }

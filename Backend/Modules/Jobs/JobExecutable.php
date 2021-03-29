@@ -75,7 +75,6 @@ abstract class JobExecutable extends Job
             "step"          => $this->options->currentStep,
             "job"           => $this->options->currentJob,
             "last_msg"      => $this->logger->getLastLogMsg(),
-            "running_time"  => $this->time() - time(),
             "job_done"      => $status
         ];
     }
