@@ -6,6 +6,12 @@
 
 This is the latest release of WP STAGING BASIC for WordPress that you can find on [wordpress.org](https://wordpress.org/plugins/wp-staging/)
 
+## Note for Developers ##
+
+This repository is for the Free version of WPSTAGING, which is **built automatically** as part of a build process that happens in the real WPSTAGING repository, which includes the Pro version, therefore, it's private.
+
+In the real repository, we run thousands of quality tests using GitHub actions during development, such as code style (PHPCS), static code analysis checks (PHPSTAN), and automated unit tests (PHPUnit) and webdriver tests (Selenium), powered by wp-browser.
+
 ## Bugs ##
 If you find an issue, let us know [here](https://github.com/WP-Staging/wp-staging/issues?state=open)!
 
