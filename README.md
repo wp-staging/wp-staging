@@ -8,7 +8,7 @@ This is the latest release of WP STAGING BASIC for WordPress that you can find o
 
 ## Note for Developers ##
 
-This repository is for the Free version of WPSTAGING, which is **built automatically** as part of a build process that happens in the real WPSTAGING repository, which includes the Pro version, therefore, it's private.
+This is the repository for the Free version of WPSTAGING. It is **generated automatically** as part of a build process that happens in private repository for WPSTAGING that contains the Pro version, where the real development happens.
 
 In the real repository, we run thousands of quality tests using GitHub actions during development, such as code style (PHPCS), static code analysis checks (PHPSTAN), and automated unit tests (PHPUnit) and webdriver tests (Selenium), powered by wp-browser.
 
