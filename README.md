@@ -6,7 +6,7 @@
 
 This is the latest release of WP STAGING BASIC for WordPress that you can find on [wordpress.org](https://wordpress.org/plugins/wp-staging/)
 
-## Note for Developers ##
+## About This Repository ##
 
 This is the repository for WPSTAGING Basic. It is **generated automatically** as part of a build process that happens in the private repository of WPSTAGING Pro, where the real development happens.
 
