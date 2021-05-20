@@ -10,9 +10,17 @@ use RecursiveIteratorIterator;
 use WPStaging\Framework\Filesystem\Filters\DirectoryDotFilter;
 use WPStaging\Framework\Filesystem\Filters\PathExcludeFilter;
 use WPStaging\Framework\Filesystem\Filters\RecursivePathExcludeFilter;
+use WPStaging\Framework\Filesystem\Filters\FileSizeFilter;
+use WPStaging\Framework\Filesystem\Filters\RecursiveFileSizeFilter;
 
 class FilterableDirectoryIterator
 {
+    /**
+     * Root path of WP
+     * @var string
+     */
+    private $wpRootPath;
+
     /**
      * The directory to iterate
      * @var string
@@ -26,10 +34,16 @@ class FilterableDirectoryIterator
     private $paths = [];
 
     /**
-     * Iterator recursively including sub folders or only items located in root of $this->$directory
-     * @var bool
+     * list of files sizes exclude rules
+     * @var array
      */
-    private $isRecursive = false;
+    private $sizes = [];
+
+    /**
+     * Iterator recursively including sub folders or only items located in root of $this->$directory
+     * @var bool|null
+     */
+    private $isRecursive = null;
 
     /**
      * skip dot in non recursive iterator depending on value
@@ -51,6 +65,25 @@ class FilterableDirectoryIterator
     public function __construct()
     {
         $this->iteratorMode = RecursiveIteratorIterator::LEAVES_ONLY;
+        $this->wpRootPath = ABSPATH;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWpRootPath()
+    {
+        return $this->wpRootPath;
+    }
+
+    /**
+     * @param string $wpRootPath
+     * @return self
+     */
+    public function setWpRootPath($wpRootPath)
+    {
+        $this->wpRootPath = $wpRootPath;
+        return $this;
     }
 
     /**
@@ -136,6 +169,34 @@ class FilterableDirectoryIterator
     }
 
     /**
+     * @return array
+     */
+    public function getExcludeSizeRules()
+    {
+        return $this->sizes;
+    }
+
+    /**
+     * @param array $rules
+     * @return self
+     */
+    public function setExcludeSizeRules($rules)
+    {
+        $this->sizes = $rules;
+        return $this;
+    }
+
+    /**
+     * @param string $rule
+     * @return self
+     */
+    public function addExcludeSizeRule($rule)
+    {
+        $this->sizes[] = $rule;
+        return $this;
+    }
+
+    /**
      * @return int
      */
     public function getIteratorMode()
@@ -182,8 +243,12 @@ class FilterableDirectoryIterator
 
         $iterator = new RecursiveDirectoryIterator($this->directory, FilesystemIterator::SKIP_DOTS);
 
+        if (count($this->sizes) !== 0) {
+            $iterator = new RecursiveFileSizeFilter($iterator, $this->sizes);
+        }
+
         if (count($this->paths) !== 0) {
-            $iterator = new RecursivePathExcludeFilter($iterator, $this->paths);
+            $iterator = new RecursivePathExcludeFilter($iterator, $this->paths, $this->wpRootPath);
         }
 
         $iterator = new RecursiveIteratorIterator($iterator, $this->iteratorMode);
@@ -203,8 +268,12 @@ class FilterableDirectoryIterator
             $iterator = new DirectoryDotFilter($iterator);
         }
 
+        if (count($this->sizes) !== 0) {
+            $iterator = new FileSizeFilter($iterator, $this->sizes);
+        }
+
         if (count($this->paths) !== 0) {
-            $iterator = new PathExcludeFilter($iterator, $this->paths);
+            $iterator = new PathExcludeFilter($iterator, $this->paths, $this->wpRootPath);
         }
 
         $iterator = new IteratorIterator($iterator);

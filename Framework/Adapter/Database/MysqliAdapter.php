@@ -110,4 +110,20 @@ class MysqliAdapter implements InterfaceDatabaseClient
 
         return null;
     }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function insertId()
+    {
+        return mysqli_insert_id($this->link);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function foundRows()
+    {
+        return mysqli_affected_rows($this->link);
+    }
 }

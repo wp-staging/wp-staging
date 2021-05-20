@@ -11,7 +11,7 @@ class Maintenance
 
     public function isMaintenance()
     {
-        return (new Filesystem())->exists($this->findMaintenanceFilePath());
+        return file_exists($this->findMaintenanceFilePath());
     }
 
     public function enableMaintenance($isMaintenance)

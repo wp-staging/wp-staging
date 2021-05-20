@@ -5,7 +5,9 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
+use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
@@ -41,12 +43,18 @@ class Updating extends Job
     private $mainJob;
 
     /**
+     * @var WpDefaultDirectories
+     */
+    private $dirUtils;
+
+    /**
      * Initialize is called in \Job
      */
     public function initialize()
     {
         $this->db = WPStaging::getInstance()->get("wpdb");
         $this->mainJob = self::NORMAL_UPDATE;
+        $this->dirUtils = new WpDefaultDirectories();
     }
 
     /**
@@ -86,6 +94,8 @@ class Updating extends Job
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
         $this->options->extraDirectories = [];
+        $this->options->excludeGlobRules = [];
+        $this->options->excludeSizeRules = [];
         $this->options->excludedFiles = [
             '.htaccess',
             '.DS_Store',
@@ -101,9 +111,9 @@ class Updating extends Job
         ];
 
         $this->options->excludedFilesFullPath = [
-            'wp-content' . DIRECTORY_SEPARATOR . 'db.php',
-            'wp-content' . DIRECTORY_SEPARATOR . 'object-cache.php',
-            'wp-content' . DIRECTORY_SEPARATOR . 'advanced-cache.php'
+            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'db.php',
+            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'object-cache.php',
+            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'advanced-cache.php'
         ];
 
         // Define mainJob to differentiate between cloning, updating and pushing
@@ -111,11 +121,6 @@ class Updating extends Job
 
         // Job
         $this->options->job = new \stdClass();
-
-        // This is required for reset job because Jobs/Scan was not run for reset
-        if ($this->mainJob === self::RESET_UPDATE) {
-            $this->options->existingClones = get_option("wpstg_existing_clones_beta", []);
-        }
 
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
@@ -143,51 +148,32 @@ class Updating extends Job
 
         $this->isExternalDb = !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
 
-        // Excluded Directories TOTAL
-        // Do not copy these folders and plugins
+        /**
+         * @see /WPStaging/Framework/CloningProcess/ExcludedPlugins.php to exclude plugins
+         * Only add other directories here
+         */
         $excludedDirectories = [
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-super-cache',
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'peters-login-redirect',
+            $this->dirUtils->getRelativeWpContentPath(SlashMode::BOTH_SLASHES) . 'cache',
         ];
 
         // Add upload folder to list of excluded directories for push if symlink option is enabled
         if ($this->options->uploadsSymlinked) {
-            $wpUploadsFolder = (new WpDefaultDirectories())->getUploadsPath();
-            $excludedDirectories[] = rtrim($wpUploadsFolder, '/\\');
+            $excludedDirectories[] = $this->dirUtils->getRelativeUploadPath(SlashMode::LEADING_SLASH);
         }
 
         $this->options->excludedDirectories = $excludedDirectories;
 
-        if ($this->mainJob === self::RESET_UPDATE) {
-            $this->setTablesForResetJob();
-            $this->options->includedDirectories = (new WpDefaultDirectories())->getWpCoreDirectories();
-            // Files
-            $this->options->totalFiles    = 0;
-            $this->options->totalFileSize = 0;
-            $this->options->copiedFiles   = 0;
-            // Job
-            $this->options->currentJob  = "PreserveDataFirstStep";
-            $this->options->currentStep = 0;
-            $this->options->totalSteps  = 0;
-        } else {
-            $this->setTablesForUpdateJob();
-            $this->setDirectoriesForUpdateJob();
-            // Make sure it is always enabled for free version
-            $this->options->emailsAllowed = true;
-            if (defined('WPSTGPRO_VERSION')) {
-                $this->options->emailsAllowed = isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false";
-            }
+        $this->setTablesForUpdateJob();
+        $this->setDirectoriesForUpdateJob();
+
+        // Make sure it is always enabled for free version
+        $this->options->emailsAllowed = true;
+        if (defined('WPSTGPRO_VERSION')) {
+            $this->options->emailsAllowed = isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false";
         }
 
-        $this->options->cloneDir = '';
-        if (isset($_POST["cloneDir"]) && !empty($_POST["cloneDir"])) {
-            $this->options->cloneDir = wpstg_urldecode(trailingslashit($_POST["cloneDir"]));
-        }
-
+        $this->options->cloneDir = $this->options->existingClones[$this->options->clone]['path'];
         $this->options->destinationDir = $this->getDestinationDir();
-
         $this->options->cloneHostname = $this->options->destinationHostname;
 
         // Process lock state
@@ -210,31 +196,25 @@ class Updating extends Job
 
     private function setDirectoriesForUpdateJob()
     {
-        $this->options->areDirectoriesIncluded = isset($_POST['areDirectoriesIncluded']) && $_POST['areDirectoriesIncluded'] === 'true';
-
-        $directories = '';
-        // Included Directories
-        if ($this->options->areDirectoriesIncluded) {
-            $directories = isset($_POST["includedDirectories"]) ? $_POST["includedDirectories"] : '';
-        } else { // Get Included Directories from Excluded Directories
-            $directories = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
+        // Exclude Glob Rules
+        $this->options->excludeGlobRules = [];
+        if (isset($_POST["excludeGlobRules"]) && !empty($_POST["excludeGlobRules"])) {
+            $this->options->excludeGlobRules = wpstg_urldecode(explode(',', $_POST["excludeGlobRules"]));
         }
 
-        $this->options->includedDirectories = (new WpDefaultDirectories())->getSelectedDirectories($directories, $this->options->areDirectoriesIncluded);
+        // Exclude File Size Rules
+        $this->options->excludeSizeRules = [];
+        if (isset($_POST["excludeSizeRules"]) && !empty($_POST["excludeSizeRules"])) {
+            $this->options->excludeSizeRules = wpstg_urldecode(explode(',', $_POST["excludeSizeRules"]));
+        }
 
+        // Excluded Directories
+        $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
+        $excludedDirectoriesRequest = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
+        $this->options->excludedDirectories = array_merge($this->options->excludedDirectories, $excludedDirectoriesRequest);
         // Extra Directories
         if (isset($_POST["extraDirectories"])) {
-            $this->options->extraDirectories = wpstg_urldecode(explode(Scan::DIRECTORIES_SEPARATOR, $_POST["extraDirectories"]));
-        }
-    }
-
-    private function setTablesForUpdateJob()
-    {
-        // Included Tables
-        if (isset($_POST["includedTables"]) && is_array($_POST["includedTables"])) {
-            $this->options->tables = $_POST["includedTables"];
-        } else {
-            $this->options->tables = [];
+            $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode($_POST["extraDirectories"]));
         }
 
         // delete uploads folder before copying if uploads is not symlinked
@@ -248,13 +228,63 @@ class Updating extends Job
         $this->options->statusContentCleaner = 'pending';
     }
 
-    private function setTablesForResetJob()
+    private function setTablesForUpdateJob()
+    {
+        // Included Tables
+        if (isset($_POST["includedTables"]) && is_array($_POST["includedTables"])) {
+            $this->options->tables = $_POST["includedTables"];
+        } else {
+            $this->options->tables = [];
+        }
+    }
+
+    /**
+     * @param bool $preserveExcludes
+     */
+    private function setDirectoriesForResetJob($preserveExcludes = false)
+    {
+        $wpDirectories = new WpDefaultDirectories();
+        $coreDirectories = $wpDirectories->getWpCoreDirectories();
+
+        if ($preserveExcludes) {
+            $this->options->includedDirectories = $coreDirectories;
+            return;
+        }
+
+        $existingClone = $this->options->existingClones[$this->options->clone];
+        $this->options->includedDirectories = [];
+        foreach ($coreDirectories as $coreDir) {
+            if (in_array($coreDir, $existingClone['includedDirectories'])) {
+                $this->options->includedDirectories[] = $coreDir;
+            }
+        }
+
+        $this->options->excludedDirectories = $existingClone['excludedDirectories'];
+        $this->options->excludeSizeRules = $existingClone['excludeSizeRules'];
+        // should preserve extra directories?
+        // $this->options->extraDirectories = $existingClone['extraDirectories'];
+    }
+
+    /**
+     * @param bool $preserveExcludes
+     */
+    private function setTablesForResetJob($preserveExcludes = false)
     {
         $tableService = new TableService(new DatabaseAdapter());
         $tables = $tableService->findTableStatusStartsWith();
         $tables = $tableService->getTablesName($tables->toArray());
-        $this->options->tables = $tables;
-        $this->options->excludedTables = [];
+        if ($preserveExcludes) {
+            $this->options->tables = $tables;
+            return;
+        }
+
+        $selectedTables = $this->options->existingClones[$this->options->clone]["includedTables"];
+        $this->options->tables = [];
+        foreach ($tables as $table) {
+            if (in_array($table, $selectedTables)) {
+                $this->options->tables[] = $table;
+            }
+        }
     }
 
     /**

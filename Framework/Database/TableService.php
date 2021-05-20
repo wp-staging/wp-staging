@@ -63,7 +63,8 @@ class TableService
      */
     public function findTableStatusStartsWith($prefix = null)
     {
-        $tables = $this->database->find('SHOW TABLE STATUS LIKE "' . $this->provideSqlPrefix($prefix) . '%"');
+        // eg: SHOW TABLE STATUS LIKE 'wp\_%';
+        $tables = $this->database->find("SHOW TABLE STATUS LIKE '{$this->provideSqlPrefix($prefix)}%'");
         if (!$tables) {
             return null;
         }

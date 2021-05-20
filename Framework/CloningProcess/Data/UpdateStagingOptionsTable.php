@@ -24,15 +24,21 @@ class UpdateStagingOptionsTable extends DBCloningService
             'wpstg_rmpermalinks_executed' => ' ',
             'blog_public' => 0,
             FirstRun::FIRST_RUN_KEY => 'true',
-            CloneOptions::WPSTG_CLONE_SETTINGS_KEY => serialize((object) [
+        ];
+        // only insert or update clone option if job is not updating
+        // during update this data will be preserved
+        if ($this->dto->getMainJob() !== 'updating') {
+            $update[CloneOptions::WPSTG_CLONE_SETTINGS_KEY] = serialize((object) [
                 FirstRun::MAILS_DISABLED_KEY => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
                 ExcludedPlugins::EXCLUDED_PLUGINS_KEY => (new ExcludedPlugins())->getFilteredPluginsToExclude(),
-            ]),
-        ];
+            ]);
+        }
+
         if (!$this->keepPermalinks()) {
             $updateOrInsert['rewrite_rules'] = null;
             $updateOrInsert['permalink_structure'] = ' ';
         }
+
         $this->updateOrInsertOptions($updateOrInsert);
 
         $update = [
@@ -42,6 +48,7 @@ class UpdateStagingOptionsTable extends DBCloningService
         if ($this->dto->getMainJob() !== 'updating') {
             $update['wpstg_existing_clones_beta'] = serialize([]);
         }
+
         $this->updateOptions($update);
 
         return true;

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.7
-Stable tag: 2.8.3
+Stable tag: 2.8.4
 Requires PHP: 5.5
 
 A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup and development sites for authorized users only.
@@ -165,6 +165,19 @@ https://wp-staging.com
 4. Finish - Access your backup / staging site
 
 == Changelog ==
+
+= 2.8.4 =
+* Feat: Compatible up to WordPress 5.7.2
+* Enh: Preserve directories/tables selection and excludes rules for RESET and UPDATE process #809
+* Enh: If any wpstg process is running allow to stop that process within RESET modal #942
+* Fix: Fix multisite subsite capabilities on the staging site #852
+* Fix: Properly resets the properties between Cloning tasks #896
+* Fix: Avoid PHP warning when building version of missing asset file #929
+* Fix: Make RESET modal show error message within modal on failed response instead of browser logs #942
+* Fix: Replace wpstgGetCloneSettings() in mail-settings.php with CloneOption::get() #956
+* Fix: Little typo changed effect to affect #963
+* Fix: Made node_modules dir to be only excluded from WP Staging's Plugins #963
+* Fix: Fix UPDATE and RESET for old wpstg clones which are without appended underscore db prefix #958
 
 = 2.8.3 =
 * Enh: Add Shutdownable interface to replace usages of __destruct in the code #729
@@ -369,32 +382,14 @@ SKIP VERSION
 Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-* Feat: Compatible up to WP 5.7
-* Feat: Check database connection in clone data edit #650
-* Feat: Exclude .wp-staging-cloneable file from cloning and update #718
-* Feat: Show notice if a user is using an outdated version of WP Staging Hooks plugin #716
-* Feat: Add single disabled items notice with better message #717
-* Feat: Add options to enable/disable staging sites cloning from UI #722
-* Enh: Use included directories instead of excluded directories to increase cloning speed #671
-* Enh: Stringify directories array var in $_POST to reduce $_POST size during cloning #671
-* Enh: Replace relative paths exclude to absolute and wildcard paths exclude during cloning #671
-* Enh: Detect snapshot tables using regex #694
-* Enh: Enable disable save button in clone data edit during database connection #700
-* Enh: Improve exclude filters for Push process #720
-* Enh: Move Backend/public/img to assets/img #719
-* Enh: Unify Single and Multisite Classes #713
-* Enh: Keep other staging behavior when the staging site is cloneable #722
-* Fix: Lost password link generation in staging sites #697
-* Fix: Fix cloning on multisite for PHP 5 #725
-* Fix: Skip symlink scanning during directory scan #736
-* Dev: Internal refactoring of database backup to avoid long-lived branch #624
-* Dev: Enforced changelog entries in CI #695
-* Dev: Refactored webdriver tests to make them faster #656
-* Dev: Refactor how the automated test workflows are generated. Add new webdriver test before release with default settings #712
-* Enh: Refactor search and replace jobs to use memory and time-consumption aware trait #702
-* Dev: Increased default file batch limits for faster development environment and CI #706
-* Dev: Renamed all code and UI references of Snapshot to Backup #715
-* Dev: Add helper to manage clone settings #717
-* Dev: Internal code refactoring, renaming classes for better readability #721
-* Dev: Add infrastructure support for wp-cli and background processing #728
-
+* Feat: Compatible up to WordPress 5.7.2
+* Enh: Preserve directories/tables selection and excludes rules for RESET and UPDATE process #809
+* Enh: If any wpstg process is running allow to stop that process within RESET modal #942
+* Fix: Fix multisite subsite capabilities on the staging site #852
+* Fix: Properly resets the properties between Cloning tasks #896
+* Fix: Avoid PHP warning when building version of missing asset file #929
+* Fix: Make RESET modal show error message within modal on failed response instead of browser logs #942
+* Fix: Replace wpstgGetCloneSettings() in mail-settings.php with CloneOption::get() #956
+* Fix: Little typo changed effect to affect #963
+* Fix: Made node_modules dir to be only excluded from WP Staging's Plugins #963
+* Fix: Fix UPDATE and RESET for old wpstg clones which are without appended underscore db prefix #958

@@ -4,6 +4,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
+use WPStaging\Framework\Staging\CloneOptions;
 
 /**
  * Copy wpstg_tmp_data back to wpstg_existing_clones_beta after cloning with class::PreserveDataSecondStep
@@ -80,30 +81,90 @@ class PreserveDataSecondStep extends JobExecutable
             return true;
         }
 
-        // Delete wpstg_tmp_data
-        $delete = $this->stagingDb->query(
+        // Delete wpstg_tmp_data from the production site
+        $deleteTmpData = $this->productionDb->query(
+            $this->productionDb->prepare("DELETE FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s", "wpstg_tmp_data")
+        );
+
+        // Delete wpstg_existing_clones_beta from the staging site
+        $deleteStagingSites = $this->stagingDb->query(
             $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", "wpstg_existing_clones_beta")
         );
 
+        // Delete wpstg_settings from the staging site
+        $deleteSettings = $this->stagingDb->query(
+            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", "wpstg_settings")
+        );
+
+        // Delete wpstg_clone_options from the staging site
+        $deleteCloneOptions = $this->stagingDb->query(
+            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", CloneOptions::WPSTG_CLONE_SETTINGS_KEY)
+        );
+
+        $tempData = maybe_unserialize($result);
+
         // Insert wpstg_existing_clones_beta in staging database
-        $insert = $this->stagingDb->query(
+        $insertStagingSites = $this->stagingDb->query(
             $this->stagingDb->prepare(
                 "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
                 "wpstg_existing_clones_beta",
-                $result,
+                $tempData->stagingSites,
                 "no"
             )
         );
 
-        if ($delete === false) {
-            $this->log("Preserve Data Second Step: Failed to delete wpstg_tmp_data");
+        // Insert wpstg_settings in staging database
+        $insertSettings = $this->stagingDb->query(
+            $this->stagingDb->prepare(
+                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
+                "wpstg_settings",
+                $tempData->settings,
+                "no"
+            )
+        );
+
+        // Insert wpstg_clone_options in staging database
+        $insertCloneOptions = $this->stagingDb->query(
+            $this->stagingDb->prepare(
+                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
+                CloneOptions::WPSTG_CLONE_SETTINGS_KEY,
+                $tempData->cloneOptions,
+                "no"
+            )
+        );
+
+        if ($deleteTmpData === false) {
+            $this->log("Preserve Data Second Step: Failed to delete wpstg_tmp_data from the production site");
         }
+
+        if ($deleteStagingSites === false) {
+            $this->log("Preserve Data Second Step: Failed to delete wpstg_existing_clones_beta from the staging site");
+        }
+
+        if ($deleteSettings === false) {
+            $this->log("Preserve Data Second Step: Failed to delete wpstg_settings from the staging site");
+        }
+
+        if ($deleteCloneOptions === false) {
+            $this->log("Preserve Data Second Step: Failed to delete wpstg_clone_options from the staging site");
+        }
+
         if ($result === false) {
-            $this->log("Preserve Data Second Step: Failed to get wpstg_existing_clones_beta");
+            $this->log("Preserve Data Second Step: Failed to get wpstg_tmp_data from the production site");
         }
-        if ($insert === false) {
-            $this->log("Preserve Data Second Step: Failed to insert wpstg_tmp_data to wpstg_existing_clones_beta");
+
+        if ($insertStagingSites === false) {
+            $this->log("Preserve Data Second Step: Failed to insert preserved existing clones into wpstg_existing_clones_beta of the staging site");
         }
+
+        if ($insertSettings === false) {
+            $this->log("Preserve Data Second Step: Failed to insert preserved settings into wpstg_settings of the staging site");
+        }
+
+        if ($insertCloneOptions === false) {
+            $this->log("Preserve Data Second Step: Failed to insert preserved clone options into wpstg_settings of the staging site");
+        }
+
         return true;
     }
 }

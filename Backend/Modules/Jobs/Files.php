@@ -148,10 +148,6 @@ class Files extends JobExecutable
             throw new \Exception('Can not delete directory: ' . $this->destination . ' This seems to be the root directory. Exclude this directory from deleting and try again.');
         }
 
-        // Make sure destination is inside WordPress
-        $wpRoot = (new Strings())->sanitizeDirectorySeparator(ABSPATH);
-        $this->destination = $wpRoot . str_replace($wpRoot, '', $this->destination);
-
         // Finished or path does not exist
         if (empty($this->destination) || !is_dir($this->destination)) {
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
@@ -180,7 +176,7 @@ class Files extends JobExecutable
             ->setShouldStop([$this, 'isOverThreshold'])
             ->setRecursive(true);
         try {
-            if (!$fs->deleteNew($this->destination)) {
+            if (!$fs->delete($this->destination)) {
                 return false;
             }
         } catch (\RuntimeException $ex) {
@@ -292,17 +288,17 @@ class Files extends JobExecutable
         }
 
         if (!$this->options->uploadsSymlinked) {
-            $this->log("Skipped symlinking Wp Uploads Folder");
+            $this->log(__("Skipped symlinking Wp Uploads Folder", 'wp-staging'));
             return true;
         }
 
         $symlinker = new WpUploadsFolderSymlinker($this->options->destinationDir);
         if ($symlinker->trySymlink()) {
-            $this->log("Uploads Folder symlinked with the production site");
+            $this->log(__("Uploads Folder symlinked with the production site", 'wp-staging'));
             return true;
         }
 
-        $this->returnException('Unable to symlink uploads folder. Maybe a file, folder or a link exists in the symlink path.');
+        $this->returnException($symlinker->getError());
         return false;
     }
 
@@ -624,6 +620,12 @@ class Files extends JobExecutable
         $directory = $this->sanitizeDirectorySeparator($directory);
 
         foreach ($this->options->extraDirectories as $extraDirectory) {
+            $extraDirectory = trim($extraDirectory);
+
+            if (empty($extraDirectory)) {
+                continue;
+            }
+
             if (strpos($directory, $this->sanitizeDirectorySeparator($extraDirectory)) === 0) {
                 return true;
             }

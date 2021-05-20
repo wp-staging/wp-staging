@@ -38,7 +38,7 @@ trait DbRowsGeneratorTrait
      */
     protected function rowsGenerator($table, $offset, $limit, \wpdb $db = null)
     {
-        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+/*        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             error_log(
                 sprintf(
                     'DbRowsGeneratorTrait: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
@@ -50,7 +50,7 @@ trait DbRowsGeneratorTrait
                     ($this->isThreshold() ? 'yes' : 'no')
                 )
             );
-        }
+        }*/
 
 
         if (null === $db) {

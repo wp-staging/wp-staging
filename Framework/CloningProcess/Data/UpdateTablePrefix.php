@@ -22,8 +22,6 @@ class UpdateTablePrefix extends DBCloningService
             return true;
         }
 
-        $this->updateBaseTablePrefix();
-
         $this->debugLog("SQL: UPDATE {$prefix}usermeta SET meta_key = replace(meta_key, {$productionDb->prefix}, {$prefix}) WHERE meta_key LIKE {$productionDb->prefix}%");
 
         $update = $db->query(
@@ -40,13 +38,5 @@ class UpdateTablePrefix extends DBCloningService
         }
 
         return true;
-    }
-
-    /**
-     * This function is overwritten for the multisite service
-     */
-    protected function updateBaseTablePrefix()
-    {
-        //Do nothing since this is the single-site class
     }
 }

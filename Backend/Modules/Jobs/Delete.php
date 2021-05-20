@@ -404,7 +404,7 @@ class Delete extends Job
                 ->setShouldStop([$this, 'isOverThreshold'])
                 ->setRecursive();
             try {
-                if (!$fs->deleteNew($this->deleteDir)) {
+                if (!$fs->delete($this->deleteDir)) {
                     return;
                 }
             } catch (\RuntimeException $ex) {

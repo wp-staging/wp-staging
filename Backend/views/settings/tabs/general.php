@@ -383,6 +383,25 @@
                                 echo $form->render("wpstg_settings[usersWithStagingAccess]") ?>
                             </td>
                         </tr>
+                        <tr class="row">
+                            <td class="row th">
+                                <div class="col-title">
+                                    <?php
+                                    echo $form->label("wpstg_settings[adminBarColor]") ?>
+                                    <span class="description">
+                                        <?php
+                                        _e(
+                                            'Specify the color of staging site admin bar.</strong>',
+                                            'wp-staging'
+                                        ); ?>
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <?php
+                                echo $form->render("wpstg_settings[adminBarColor]") ?>
+                            </td>
+                        </tr>
                         <?php
                     }
                     ?>

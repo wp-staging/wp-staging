@@ -41,6 +41,16 @@ abstract class DBCloningService extends CloningService
         // @see WPStaging/Backend/Modules/Jobs/Cloning.php#L293
         // code below solves this issue https://github.com/WP-Staging/wp-staging-pro/issues/385
         $prefix = rtrim($this->dto->getPrefix(), '_') . '_';
+
+        // But if the the clone was created with old WP STAGING version where we were not forcing underscore in prefix,
+        // this could to let to unwanted results. As we are force copying users and usermeta table into the staging site,
+        // It will be good to check against users that without forced appending underscore
+        // Code below solves this issue https://github.com/WP-Staging/wp-staging-pro/issues/925
+        // If the main job is UPDATE or RESET and users table without post underscore exists then use prefix without post underscore
+        if ($this->dto->getMainJob() !== 'cloning' && $this->tableExists($this->dto->getPrefix() . 'users')) {
+            $prefix = $this->dto->getPrefix();
+        }
+
         // Skip - Table does not exist
         if (!$this->tableExists($prefix . $table)) {
             $this->log("Table " . $prefix . $table . ' not found. Skipping');

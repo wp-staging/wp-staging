@@ -2,14 +2,21 @@
 
 namespace WPStaging\Framework\Assets;
 
-use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Filesystem\Scanning\ScanConst;
+use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Nonce;
 
 class Assets
 {
+    /**
+     * Default admin bar background color for staging site
+     * @var string
+     */
+    const DEFAULT_ADMIN_BAR_BG = "#ff8d00";
+
     private $accessToken;
 
     private $settings;
@@ -65,7 +72,8 @@ class Assets
      */
     public function getAssetsVersion($assetsFile, $assetsVersion = '')
     {
-        $filemtime = @filemtime($this->getAssetsPath($assetsFile));
+        $filename = $this->getAssetsPath($assetsFile);
+        $filemtime = file_exists($filename) ? @filemtime($filename) : false;
 
         if ($filemtime !== false) {
             return $filemtime;
@@ -80,20 +88,21 @@ class Assets
      */
     public function enqueueElements($hook)
     {
+
         // Load this css file on frontend and backend on all pages if current site is a staging site
         if (wpstg_is_stagingsite()) {
-            $asset = 'css/src/frontend/wpstg-admin-bar.css';
-            wp_enqueue_style(
-                "wpstg-admin-bar",
-                $this->getAssetsUrl($asset),
-                [],
-                $this->getAssetsVersion($asset)
-            );
+            wp_register_style('wpstg-admin-bar', false);
+            wp_enqueue_style('wpstg-admin-bar');
+            wp_add_inline_style('wpstg-admin-bar', $this->getStagingAdminBarColor());
         }
 
         // Load js file on page plugins.php in free version only
         if (!defined('WPSTGPRO_VERSION') && $this->isPluginsPage()) {
-            $asset = 'js/dist/wpstg-admin-plugins.js';
+            $asset = 'js/dist/wpstg-admin-plugins.min.js';
+            if ($this->isDebugOrDevMode()) {
+                $asset = 'js/dist/wpstg-admin-plugins.js';
+            }
+
             wp_enqueue_script(
                 "wpstg-admin-script",
                 $this->getAssetsUrl($asset),
@@ -102,7 +111,11 @@ class Assets
                 false
             );
 
-            $asset = 'css/src/wpstg-admin-feedback.css';
+            $asset = 'css/dist/wpstg-admin-feedback.min.css';
+            if ($this->isDebugOrDevMode()) {
+                $asset = 'css/dist/wpstg-admin-feedback.css';
+            }
+
             wp_enqueue_style(
                 "wpstg-admin-feedback",
                 $this->getAssetsUrl($asset),
@@ -116,7 +129,11 @@ class Assets
         }
 
         // Load admin js files
-        $asset = 'js/dist/wpstg-admin.js';
+        $asset = 'js/dist/wpstg-admin.min.js';
+        if ($this->isDebugOrDevMode()) {
+            $asset = 'js/dist/wpstg-admin.js';
+        }
+
         wp_enqueue_script(
             "wpstg-admin-script",
             $this->getAssetsUrl($asset),
@@ -126,7 +143,11 @@ class Assets
         );
 
         // Load admin js files
-        $asset = 'js/dist/wpstg-legacy-database.js';
+        $asset = 'js/dist/wpstg-legacy-database.min.js';
+        if ($this->isDebugOrDevMode()) {
+            $asset = 'js/dist/wpstg-legacy-database.js';
+        }
+
         wp_enqueue_script(
             "wpstg-legacy-database",
             $this->getAssetsUrl($asset),
@@ -172,7 +193,11 @@ class Assets
 
         // Load admin js pro files
         if (defined('WPSTGPRO_VERSION')) {
-            $asset = 'js/dist/pro/wpstg-admin-pro.js';
+            $asset = 'js/dist/pro/wpstg-admin-pro.min.js';
+            if ($this->isDebugOrDevMode()) {
+                $asset = 'js/dist/pro/wpstg-admin-pro.js';
+            }
+
             wp_enqueue_script(
                 "wpstg-admin-pro-script",
                 $this->getAssetsUrl($asset),
@@ -183,7 +208,11 @@ class Assets
         }
 
         // Load admin css files
-        $asset = 'css/src/wpstg-admin.css';
+        $asset = 'css/dist/wpstg-admin.min.css';
+        if ($this->isDebugOrDevMode()) {
+            $asset = 'css/dist/wpstg-admin.css';
+        }
+
         wp_enqueue_style(
             "wpstg-admin",
             $this->getAssetsUrl($asset),
@@ -196,21 +225,27 @@ class Assets
 
         wp_localize_script("wpstg-admin-script", "wpstg", [
             "delayReq"               => $this->getDelay(),
+            // TODO: move directorySeparator to consts?
             "settings"               => (object)[
-                "directorySeparator"  => Scan::DIRECTORIES_SEPARATOR,
+                "directorySeparator"         => ScanConst::DIRECTORIES_SEPARATOR
             ],
             "tblprefix"              => WPStaging::getTablePrefix(),
             "isMultisite"            => is_multisite(),
             AccessToken::REQUEST_KEY => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
             'nonce'                  => wp_create_nonce(Nonce::WPSTG_NONCE),
             'ajaxUrl'                => admin_url('admin-ajax.php'),
+            'wpstgIcon'              => $this->getAssetsUrl('img/wpstaging-icon.png'),
             // TODO: handle i18n translations through Class/Service Provider?
             'i18n'                   => [
                 'dbConnectionSuccess' => esc_html__('Database Connection - Success', 'wp-staging'),
                 'dbConnectionFailed'  => esc_html__('Database Connection - Failed', 'wp-staging'),
                 'somethingWentWrong'  => esc_html__('Something went wrong.', 'wp-staging'),
-                'noImportFileFound'  => esc_html__('No import file found.', 'wp-staging'),
-                'selectFileToImport' => esc_html__('Select file to import.', 'wp-staging'),
+                'noImportFileFound'   => esc_html__('No import file found.', 'wp-staging'),
+                'selectFileToImport'  => esc_html__('Select file to import.', 'wp-staging'),
+                'cloneResetComplete'  => esc_html__('Clone Reset Complete!', 'wp-staging'),
+                'cloneUpdateComplete' => esc_html__('Clone Update Complete!', 'wp-staging'),
+                'success'    => esc_html__('Success', 'wp-staging'),
+                'resetClone' => esc_html__('Reset Clone', 'wp-staging'),
             ],
         ]);
     }
@@ -310,6 +345,11 @@ class Assets
         return $delay;
     }
 
+    /**
+     * @param string $tag
+     * @param string $handle
+     * @param string $source
+     */
     public function makeScriptsES6($tag, $handle, $source)
     {
         if ($handle === 'wpstg-admin-pro-script' || $handle === 'wpstg-admin-script') {
@@ -317,5 +357,28 @@ class Assets
         }
 
         return $tag;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStagingAdminBarColor()
+    {
+        $barColor = $this->settings->getAdminBarColor();
+        if (!preg_match("/#([a-f0-9]{3}){1,2}\b/i", $barColor)) {
+            $barColor = self::DEFAULT_ADMIN_BAR_BG;
+        }
+
+        return "#wpadminbar { background-color: {$barColor} !important; }";
+    }
+
+    /**
+     * Check whether app is in debug mode or in dev mode
+     *
+     * @return boolean
+     */
+    private function isDebugOrDevMode()
+    {
+        return ($this->settings->isDebugMode() || (defined('WPSTG_DEV') && WPSTG_DEV === true));
     }
 }

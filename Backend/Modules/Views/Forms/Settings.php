@@ -3,12 +3,14 @@
 namespace WPStaging\Backend\Modules\Views\Forms;
 
 use WPStaging\Core\Forms\Elements\Check;
+use WPStaging\Core\Forms\Elements\Color;
 use WPStaging\Core\Forms\Elements\Numerical;
 use WPStaging\Core\Forms\Elements\Select;
 use WPStaging\Core\Forms\Elements\SelectMultiple;
 use WPStaging\Core\Forms\Elements\Text;
 use WPStaging\Core\Forms\Form;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
+use WPStaging\Framework\Assets\Assets;
 
 /**
  * Class Settings
@@ -252,6 +254,16 @@ class Settings
                    ->setDefault(isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : '')
             );
         }
+
+        $element = new Color(
+            "wpstg_settings[adminBarColor]",
+            []
+        );
+
+        $this->form["general"]->add(
+            $element->setLabel(__("Admin Bar Background Color", "wp-staging"))
+                      ->setDefault((isset($settings->adminBarColor)) ? $settings->adminBarColor : Assets::DEFAULT_ADMIN_BAR_BG)
+        );
     }
 
    /**
