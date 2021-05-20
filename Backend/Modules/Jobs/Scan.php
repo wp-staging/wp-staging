@@ -11,12 +11,12 @@ use Countable;
 use DirectoryIterator;
 use Exception;
 use WPStaging\Backend\Optimizer\Optimizer;
-use WPStaging\Core\Iterators;
 use WPStaging\Core\Utils\Directories as DirectoriesUtil;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Database\LegacyDatabaseInfo;
-use WPStaging\Framework\Utils\WpDefaultDirectories;
+use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
  * Class Scan
@@ -26,29 +26,22 @@ use WPStaging\Framework\Utils\Strings;
  */
 class Scan extends Job
 {
+
     /**
-     * separator to separate directory path and its is scanned flag
+     * Class to use for WordPress core directories like wp-content, wp-admin, wp-includes
+     * This doesn't contains class selector prefix
+     *
      * @var string
      */
-    const DIRECTORY_PATH_FLAG_SEPARATOR = '::';
+    const WP_CORE_DIR = "wpstg-wp-core-dir";
 
     /**
-     * separator to separate directories
+     * Class to use for WordPress non core directories
+     * This doesn't contains class selector prefix
+     *
      * @var string
      */
-    const DIRECTORIES_SEPARATOR = ',';
-
-    /**
-     * const to use when directory is scanned
-     * @var int
-     */
-    const IS_RECURSIVE = '1';
-
-    /**
-     * const to use when directory is not scanned
-     * @var int
-     */
-    const IS_NON_RECURSIVE = '0';
+    const WP_NON_CORE_DIR = "wpstg-wp-non-core-dir";
 
     /** @var array */
     private $directories = [];
@@ -57,11 +50,46 @@ class Scan extends Job
     private $objDirectories;
 
     /**
+     * @var string
+     */
+    private $directoryToScanOnly;
+
+    /**
+     * @var string Path to gif loader for directory loading
+     */
+    private $gifLoaderPath;
+
+    public function __construct($directoryToScanOnly = null)
+    {
+        // Accept both the absolute path or relative path with respect to wp root
+        // Santized the path to make comparing works for windows platform too.
+        $this->directoryToScanOnly = null;
+        if ($directoryToScanOnly !== null) {
+            $this->directoryToScanOnly = $directoryToScanOnly;
+        }
+
+        parent::__construct();
+    }
+
+    /**
+     * @param $string $gifLoaderPath
+     */
+    public function setGifLoaderPath($gifLoaderPath)
+    {
+        $this->gifLoaderPath = $gifLoaderPath;
+    }
+
+    /**
      * Upon class initialization
      */
     protected function initialize()
     {
         $this->objDirectories = new DirectoriesUtil();
+
+        if ($this->directoryToScanOnly !== null) {
+            $this->getDirectories($this->directoryToScanOnly);
+            return;
+        }
 
         $this->getTables();
 
@@ -84,6 +112,7 @@ class Scan extends Job
 
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $this->options->existingClones)) {
             $this->options->current = $_POST["clone"];
+            $this->options->currentClone = $this->options->existingClones[$this->options->current];
         }
 
         // Tables
@@ -109,8 +138,14 @@ class Scan extends Job
 
         // Define mainJob to differentiate between cloning, updating and pushing
         $this->options->mainJob = 'cloning';
+        $job = '';
+        if (isset($_POST["job"])) {
+            $job = $_POST['job'];
+        }
 
-        if ($this->options->current !== null) {
+        if ($this->options->current !== null && $job === 'resetting') {
+            $this->options->mainJob = 'resetting';
+        } elseif ($this->options->current !== null) {
             $this->options->mainJob = 'updating';
         }
 
@@ -154,18 +189,29 @@ class Scan extends Job
     }
 
     /**
-     * @param null|array $directories
-     * @param bool $forceDisabled
+     * @param null|bool $parentChecked  Is parent folder selected
+     * @param bool $forceDefault        Default false. Set it to true,
+     *                                  when default button on ui is clicked,
+     *                                  to ignore previous selected option for UPDATE and RESET process.
+     *
      * @return string
+     *
+     * @todo create a template for ui
      */
-    public function directoryListing($directories = null, $forceDisabled = false)
+    public function directoryListing($parentChecked = null, $forceDefault = false)
     {
-        if ($directories == null) {
-            $directories = $this->directories;
-        }
-
+        $directories = $this->directories;
         // Sort results
         uksort($directories, 'strcasecmp');
+
+        $excludedDirectories = [];
+        $extraDirectories    = [];
+
+        if ($this->isUpdateOrResetJob()) {
+            $currentClone        = json_decode(json_encode($this->options->currentClone));
+            $excludedDirectories = isset($currentClone->excludedDirectories) ? $currentClone->excludedDirectories : [];
+            $extraDirectories    = isset($currentClone->extraDirectories) ? $currentClone->extraDirectories : [];
+        }
 
         $output = '';
         foreach ($directories as $name => $directory) {
@@ -178,17 +224,13 @@ class Scan extends Job
             $data = reset($directory);
             unset($directory[key($directory)]);
 
-
-            $isChecked = (
-                    empty($this->options->includedDirectories) ||
-                    in_array($data["path"], $this->options->includedDirectories)
-                    );
-
             $dataPath = isset($data["path"]) ? $data["path"] : '';
             $dataSize = isset($data["size"]) ? $data["size"] : '';
             $strUtils = new Strings();
-            $path = $strUtils->sanitizeDirectorySeparator($dataPath);
-            $wpRoot = $strUtils->sanitizeDirectorySeparator(ABSPATH);
+            $path     = $strUtils->sanitizeDirectorySeparator($dataPath);
+            $wpRoot   = $strUtils->sanitizeDirectorySeparator(ABSPATH);
+            $relPath  = str_replace($wpRoot, '', $path);
+            $dirPath  = '/' . $relPath;
 
             // Select all wp core folders and their sub dirs.
             // Unselect all other folders (default setting)
@@ -200,41 +242,47 @@ class Scan extends Job
                     strpos(strrev($path), strrev($wpRoot . "wp-includes")) === false &&
                     strpos(strrev($path), strrev($wpRoot . "wp-content")) === false;
 
-            // Extra class to differentiate between wp core and non core folders
-            $class = !$isDisabled ? 'wpstg-root' : 'wpstg-extra';
+            // make only wp-includes and wp-admin dirs not navigateable
+            $isNavigateable = true;
+            if ($strUtils->startsWith($path, $wpRoot . "wp-admin") !== false || $strUtils->startsWith($path, $wpRoot . "wp-includes") !== false) {
+                $isNavigateable = false;
+            }
+
+            $isNavigateable = $isNavigateable ? 'true' : 'false';
+
+            // class to differentiate between wp core and non core folders
+            $class = !$isDisabled ? self::WP_CORE_DIR : self::WP_NON_CORE_DIR;
 
             $output .= "<div class='wpstg-dir'>";
             $output .= "<input type='checkbox' class='wpstg-check-dir " . $class . "'";
 
-            if ($isChecked && !$isDisabled && !$forceDisabled) {
+            $shouldBeChecked = $parentChecked !== null ? $parentChecked : !$isDisabled;
+            if (!$forceDefault && $this->isUpdateOrResetJob() && (!$this->isPathInDirectories($dirPath, $excludedDirectories))) {
+                $shouldBeChecked = true;
+            } elseif (!$forceDefault && $this->isUpdateOrResetJob()) {
+                $shouldBeChecked = false;
+            }
+
+            if (!$forceDefault && $this->isUpdateOrResetJob() && $class === self::WP_NON_CORE_DIR && !$this->isPathInDirectories($relPath, $extraDirectories)) {
+                $shouldBeChecked = false;
+            }
+
+            if ($shouldBeChecked && ($parentChecked !== false)) {
                 $output .= " checked";
             }
 
-            // append recursive flag to dataPath value for only wp root directories
-            $isScanned = !empty($directory);
-            $dirPath = $dataPath;
-            if ($class === 'wpstg-root') {
-                $dirPath = $this->appendRecursiveFlag($dirPath, $isScanned);
-            }
-
-            $output .= " name='selectedDirectories[]' value='{$dirPath}'>";
+            $output .= " name='selectedDirectories[]' value='{$relPath}' data-scanned='false' data-navigateable='{$isNavigateable}'>";
 
             $output .= "<a href='#' class='wpstg-expand-dirs ";
-            if (!$isChecked || $isDisabled) {
+            if ($isDisabled) {
                 $output .= " disabled";
             }
 
             $output .= "'>{$name}";
             $output .= "</a>";
+            $output .= ($this->gifLoaderPath !== '' && $isNavigateable === 'true') ? "<img src='{$this->gifLoaderPath}' class='wpstg-is-dir-loading' alt='loading' />" : "";
             $output .= "<span class='wpstg-size-info'>{$this->formatSize( $dataSize )}</span>";
             $output .= isset($this->settings->debugMode) ? "<span class='wpstg-size-info'> {$dataPath}</span>" : "";
-
-            if ($isScanned) {
-                $output .= "<div class='wpstg-dir wpstg-subdir'>";
-                $output .= $this->directoryListing($directory, $isDisabled);
-                $output .= "</div>";
-            }
-
             $output .= "</div>";
         }
 
@@ -242,19 +290,44 @@ class Scan extends Job
     }
 
     /**
-     * Checks if there is enough free disk space to create staging site
+     * Checks if there is enough free disk space to create staging site according to selected directories
      * Returns null when can't run disk_free_space function one way or another
+     * @param string    $excludedDirectories
+     * @param string    $extraDirectories
+     *
      * @return bool|null
      */
-    public function hasFreeDiskSpace()
+    public function hasFreeDiskSpace($excludedDirectories, $extraDirectories)
     {
         if (!function_exists("disk_free_space")) {
             return null;
         }
 
+        $dirUtils = new WpDefaultDirectories();
+        $selectedDirectories = $dirUtils->getWpCoreDirectories();
+        $excludedDirectories = $dirUtils->getExcludedDirectories($excludedDirectories);
+
+        $size = 0;
+        // Scan WP Root path for size (only files)
+        $size += $this->getDirectorySizeExcludingSubdirs(ABSPATH);
+        // Scan selected directories for size (wp-core)
+        foreach ($selectedDirectories as $directory) {
+            if ($this->isPathInDirectories($directory, $excludedDirectories)) {
+                continue;
+            }
+
+            $size += $this->getDirectorySizeInclSubdirs($directory, $excludedDirectories);
+        }
+
+        if (!empty($extraDirectories) && $extraDirectories !== '') {
+            $extraDirectories = wpstg_urldecode(explode(ScanConst::DIRECTORIES_SEPARATOR, $extraDirectories));
+            foreach ($extraDirectories as $directory) {
+                $size += $this->getDirectorySizeInclSubdirs(ABSPATH . $directory, $excludedDirectories);
+            }
+        }
 
         $data = [
-            'usedspace' => $this->formatSize($this->getDirectorySizeInclSubdirs(WPStaging::getWPpath()))
+            'usedspace' => $this->formatSize($size)
         ];
 
         echo json_encode($data);
@@ -299,12 +372,16 @@ class Scan extends Job
     }
 
     /**
-     * Get directories and main meta data about'em recursively
+     * Get directories and main meta data about given directory path
+     * @param string $dirPath - Optional - Default ABSPATH
      */
-    protected function getDirectories()
+    protected function getDirectories($dirPath = ABSPATH)
     {
+        if (!is_dir($dirPath)) {
+            return;
+        }
 
-        $directories = new Iterators\RecursiveDirectoryIterator(WPStaging::getWPpath());
+        $directories = new DirectoryIterator($dirPath);
 
         foreach ($directories as $directory) {
             // Not a valid directory
@@ -312,54 +389,18 @@ class Scan extends Job
                 continue;
             }
 
-            $this->handleDirectory($path);
-
-            // Get Sub-directories
-            $this->getSubDirectories($directory->getRealPath());
-        }
-
-        // Gather Plugins
-        $this->getSubDirectories(WP_PLUGIN_DIR);
-
-        // Gather Themes
-        $this->getSubDirectories(WP_CONTENT_DIR . DIRECTORY_SEPARATOR . "themes");
-
-        // Gather Custom Uploads Folder if there is one
-        $this->getSubDirectories((new WpDefaultDirectories())->getSiteUploadsPath());
-    }
-
-    /**
-     * @param string $path
-     * @return bool
-     */
-    protected function getSubDirectories($path)
-    {
-
-        if (!is_readable($path)) {
-            return false;
-        }
-
-        if (!is_dir($path)) {
-            return false;
-        }
-
-        // IMPORTANT: This is necessary if directory does not belongs to current php user
-        // DirectoryIterator() will throw a fatal error which can not be catched with is_readable()
-        if (!opendir($path)) {
-            return false;
-        }
-
-        $directories = new DirectoryIterator($path);
-
-        foreach ($directories as $directory) {
-            // Not a valid directory
-            if (($path = $this->getPath($directory)) === false) {
+            if ($directory->isDot()) {
                 continue;
             }
 
-            $this->handleDirectory($path);
+            $fullPath = WPStaging::getWPpath() . $path;
+            $size     = $this->getDirectorySize($fullPath);
+
+            $this->directories[$directory->getFilename()]['metaData'] = [
+                "size" => $size,
+                "path" => $fullPath,
+            ];
         }
-        return false;
     }
 
     /**
@@ -369,16 +410,15 @@ class Scan extends Job
      */
     protected function getPath($directory)
     {
-
         /*
          * Do not follow root path like src/web/..
          * This must be done before \SplFileInfo->isDir() is used!
          * Prevents open base dir restriction fatal errors
          */
-
         if (strpos($directory->getRealPath(), WPStaging::getWPpath()) !== 0) {
             return false;
         }
+
         $path = str_replace(WPStaging::getWPpath(), null, $directory->getRealPath());
         // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
         if (!$directory->isDir() || strlen($path) < 1) {
@@ -443,40 +483,75 @@ class Scan extends Job
     /**
      * Get total size of a directory including all its subdirectories
      * @param string $dir
+     * @param array $excludedDirectories
      * @return int
      */
-    protected function getDirectorySizeInclSubdirs($dir)
+    protected function getDirectorySizeInclSubdirs($dir, $excludedDirectories)
     {
         $size = 0;
         foreach (glob(rtrim($dir, '/') . '/*', GLOB_NOSORT) as $each) {
-            $size += is_file($each) ? filesize($each) : $this->getDirectorySizeInclSubdirs($each);
+            if (is_file($each)) {
+                $size += filesize($each);
+                continue;
+            }
+
+            if ($this->isPathInDirectories($each, $excludedDirectories)) {
+                continue;
+            }
+
+            $size += $this->getDirectorySizeInclSubdirs($each, $excludedDirectories);
         }
+
         return $size;
     }
 
     /**
-     * Append recursive flag to directoryPath
-     * If directory is scanned then there is no need to recursively scan it,
-     * since all its direct child directories will be in the list already,
-     * so append IS_NON_RECURSIVE flag i.e. 0 to it.
-     * And we only need IS_RECURSIVE flag i.e. 1 for non scanned directories
-     * to custom recursive iterator over all it sub directories.
-     * Also remove wp root path from the directory path.
-     * @param string $directoryPath
-     * @param bool $isScanned
-     * @return string
+     * Get total size of a directory excluding all its subdirectories
+     * @param string $dir
+     * @return int
      */
-    protected function appendRecursiveFlag($directoryPath, $isScanned)
+    protected function getDirectorySizeExcludingSubdirs($dir)
     {
-        // use relative path for core directories
-        $filteredPath["directoryPath"] = str_replace(ABSPATH, '', $directoryPath);
-        $filteredPath["isRecursive"] = self::IS_RECURSIVE;
-        // no need to recursively iterate in directory job if already scanned
-        if ($isScanned) {
-            $filteredPath["isRecursive"] = self::IS_NON_RECURSIVE;
+        $size = 0;
+        foreach (glob(rtrim($dir, '/') . '/*', GLOB_NOSORT) as $each) {
+            $size += is_file($each) ? filesize($each) : 0;
         }
 
-        // Don't use json_encode as it will increase the size of post request
-        return implode(self::DIRECTORY_PATH_FLAG_SEPARATOR, $filteredPath);
+        return $size;
+    }
+
+    /**
+     * Is the path present is given list of directories
+     * @param string $path
+     * @param array $directories
+     *
+     * @return boolean
+     */
+    protected function isPathInDirectories($path, $directories)
+    {
+        // Check whether directory is itself is a part of excluded directories
+        if (in_array($path, $directories)) {
+            return true;
+        }
+
+        // Check whether directory a child of any excluded directories
+        $strUtils = new Strings();
+        foreach ($directories as $directory) {
+            if ($strUtils->startsWith($path, $directory . '/')) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Is the current main job UPDATE or RESET
+     *
+     * @return boolean
+     */
+    protected function isUpdateOrResetJob()
+    {
+        return isset($this->options->mainJob) && ($this->options->mainJob === 'updating' || $this->options->mainJob === 'resetting');
     }
 }

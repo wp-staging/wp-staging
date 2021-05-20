@@ -49,26 +49,25 @@ class WpUploadsFolderSymlinker
     public function trySymlink()
     {
         if (is_link($this->stagingUploadPath)) {
-            $this->error = "Link already exists";
+            $this->error = __("Link already exists", 'wp-staging');
             return false;
         }
 
         if (file_exists($this->stagingUploadPath)) {
-            $this->error = "Directory already exists";
+            $this->error = __("Path exists at link path", 'wp-staging');
             return false;
         }
 
-        $uploadPath = $this->wpDirectories->getUploadsPath();
+        $uploadPath = rtrim($this->wpDirectories->getUploadsPath(), '/\\');
 
         (new Filesystem())->mkdir(dirname($this->stagingUploadPath));
 
-        if (!symlink($uploadPath, $this->stagingUploadPath)) {
-            $this->error = "Can not symlink  " . $uploadPath . "to " . $this->stagingUploadPath;
-            return false;
+        // try symlink with exec(ln) if exec is enabled and user is on windows
+        if ((stripos(PHP_OS, 'WIN') === 0) && $this->isExecEnabled()) {
+            return $this->linkWithExec($uploadPath, $this->stagingUploadPath);
         }
 
-        $this->error = "";
-        return true;
+        return $this->link($uploadPath, $this->stagingUploadPath);
     }
 
     /**
@@ -77,5 +76,51 @@ class WpUploadsFolderSymlinker
     public function getError()
     {
         return $this->error;
+    }
+
+    /**
+     * Try symlinking with exec
+     *
+     * @param string $source
+     * @param string $destination
+     * @return boolean
+     */
+    private function linkWithExec($source, $destination)
+    {
+        try {
+            exec('ln -s ' . $source . ' ' . $destination);
+            return true;
+        } catch (FatalException $ex) {
+            $this->error = sprintf(__("Can not symlink %s. Error: ", 'wp-staging'), $destination, $ex->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * Try symlinking with php function
+     *
+     * @param string $source
+     * @param string $destination
+     * @return boolean
+     */
+    private function link($source, $destination)
+    {
+        try {
+            symlink($source, $destination);
+            return true;
+        } catch (FatalException $ex) {
+            $this->error = sprintf(__("Can not symlink %s. Error: ", 'wp-staging'), $destination, $ex->getMessage());
+            return false;
+        }
+    }
+
+    private function isExecEnabled()
+    {
+        if (!function_exists('exec')) {
+            return false;
+        }
+
+        $disabled = explode(',', ini_get('disable_functions'));
+        return !in_array('exec', $disabled);
     }
 }

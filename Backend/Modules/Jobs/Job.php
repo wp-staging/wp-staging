@@ -10,10 +10,10 @@ if (!defined("WPINC")) {
 use DateInterval;
 use DateTime;
 use Exception;
-use WPStaging\Core\thirdParty\thirdPartyCompatibility;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Database\ExcludedTables;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
 
@@ -57,10 +57,9 @@ abstract class Job implements ShutdownableInterface
     protected $baseUrl;
 
     /**
-     *
-     * @var object
+     * @var ExcludedTables
      */
-    protected $thirdParty;
+    protected $excludedTableService;
 
     /**
      * Job constructor.
@@ -68,7 +67,8 @@ abstract class Job implements ShutdownableInterface
      */
     public function __construct()
     {
-        $this->thirdParty = new thirdPartyCompatibility();
+        // TODO: inject using DI
+        $this->excludedTableService = new ExcludedTables();
 
         // Services
         $this->cache = new Cache(-1, WPStaging::getContentDir());

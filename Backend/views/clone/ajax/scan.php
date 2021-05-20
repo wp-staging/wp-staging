@@ -5,6 +5,7 @@
  *
  * @var \WPStaging\Backend\Modules\Jobs\Scan $scan
  * @var stdClass $options
+ * @var \WPStaging\Framework\Filesystem\Filters\ExcludeFilter $excludeUtils
  *
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
@@ -33,37 +34,7 @@
     </a>
 
     <fieldset class="wpstg-tab-section" id="wpstg-scanning-db">
-        <?php do_action("wpstg_scanning_db") ?>
-        <h4 style="margin:0">
-            <p><?php printf(__("Select the tables to copy. Tables beginning with the prefix '%s' have already been selected.", "wp-staging"), $db->prefix); ?></p>
-            <p></p>
-            <?php
-            echo __(
-                "Select multiple tables by pressing left mouse button and moving or by pressing STRG+Left Mouse button. (Mac ⌘+Left Mouse Button)",
-                "wp-staging"
-            );
-            ?>
-        </h4>
-        <div style="margin-top:10px;margin-bottom:10px;">
-            <a href="#" class="wpstg-button-unselect button"><?php _e('Unselect All', 'wp-staging'); ?></a>
-            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\Core\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
-        </div>
-        <select multiple="multiple" id="wpstg_select_tables_cloning">
-            <?php
-            foreach ($options->tables as $table) :
-                $attributes = !in_array($table->name, $options->excludedTables) && (strpos($table->name, $db->prefix) === 0) ? "selected='selected'" : "";
-                $attributes .= in_array($table->name, $options->clonedTables) ? "disabled" : '';
-                ?>
-                <option class="wpstg-db-table" value="<?php echo $table->name ?>" name="<?php echo $table->name ?>" <?php echo $attributes ?>>
-                    <?php echo $table->name ?> - <?php echo $scan->formatSize($table->size) ?>
-                </option>
-            <?php endforeach ?>
-        </select>
-
-        <div style="margin-top:10px;">
-            <a href="#" class="wpstg-button-unselect button"> <?php _e('Unselect All', 'wp-staging'); ?> </a>
-            <a href="#" class="wpstg-button-select button"> <?php _e(WPStaging\Core\WPStaging::getTablePrefix(), 'wp-staging'); ?> </a>
-        </div>
+        <?php require(WPSTG_PLUGIN_DIR . 'Backend/views/selections/database-tables.php'); ?>
     </fieldset>
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
@@ -72,38 +43,7 @@
     </a>
 
     <fieldset class="wpstg-tab-section" id="wpstg-scanning-files">
-        <h4 style="margin:0">
-            <?php echo __("Select folders to copy. Click on folder name to list subfolders!", "wp-staging") ?>
-        </h4>
-
-        <?php echo $scan->directoryListing() ?>
-
-        <h4 style="margin:10px 0 10px 0">
-            <?php echo __("Extra directories to copy", "wp-staging") ?>
-        </h4>
-
-        <textarea id="wpstg_extraDirectories" name="wpstg_extraDirectories" style="width:100%;height:100px;"></textarea>
-        <p>
-            <span>
-                <?php
-                echo __(
-                    "Enter one folder path per line.<br>" .
-                        "Folders must start with absolute path: " . $options->root,
-                    "wp-staging"
-                )
-                ?>
-            </span>
-        </p>
-
-        <p>
-            <span>
-                <?php
-                if (isset($options->clone)) {
-                    echo __("All files will be copied to: ", "wp-staging") . $options->root . $options->clone;
-                }
-                ?>
-            </span>
-        </p>
+        <?php require(WPSTG_PLUGIN_DIR . 'Backend/views/selections/files.php'); ?>
     </fieldset>
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">

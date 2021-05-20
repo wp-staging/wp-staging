@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\CloningProcess;
 
 use WPStaging\Framework\Staging\CloneOptions;
+use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
  * Add here the list of excluded plugins to make sure code remain DRY
@@ -19,11 +20,18 @@ class ExcludedPlugins
      */
     private $excludedPlugins;
 
+    /**
+     * Place below the list of plugins to exclude
+     * If any of these below plugins are installed in user site they will be skipped during cloning
+     * And a message will be shown to them about their exclusion
+     */
     public function __construct()
     {
-        // list of excluded plugins defined by WP Staging
         $this->excludedPlugins = [
-            'wps-hide-login'
+            'wps-hide-login',
+            'wp-super-cache',
+            'peters-login-redirect',
+            'wp-spamshield',
         ];
     }
 
@@ -45,14 +53,14 @@ class ExcludedPlugins
     }
 
     /**
-     * Get list of excluded plugins with absolute path to them
+     * Get list of excluded plugins with relative path to wp root
      *
      * @return array
      */
-    public function getPluginsToExcludeWithAbsolutePaths()
+    public function getPluginsToExcludeWithRelativePath()
     {
         return array_map(function ($plugin) {
-            return trailingslashit(WP_PLUGIN_DIR) . $plugin;
+            return '/' . trailingslashit((new WpDefaultDirectories())->getRelativePluginPath()) . $plugin;
         }, $this->excludedPlugins);
     }
 
@@ -67,9 +75,9 @@ class ExcludedPlugins
     {
         // Apply filter
         if (is_multisite()) {
-            $filteredExcludedPlugins = apply_filters('wpstg_clone_mu_excl_folders', $this->getPluginsToExcludeWithAbsolutePaths());
+            $filteredExcludedPlugins = apply_filters('wpstg_clone_mu_excl_folders', $this->getPluginsToExcludeWithRelativePath());
         } else {
-            $filteredExcludedPlugins = apply_filters('wpstg_clone_excl_folders', $this->getPluginsToExcludeWithAbsolutePaths());
+            $filteredExcludedPlugins = apply_filters('wpstg_clone_excl_folders', $this->getPluginsToExcludeWithRelativePath());
         }
 
         if ($installedPlugins === []) {
@@ -80,7 +88,7 @@ class ExcludedPlugins
         // Remove all paths other than plugins not in installed plugins
         $filteredExcludedPlugins = array_filter($filteredExcludedPlugins, function ($path) use ($installedPlugins) {
             foreach ($installedPlugins as $plugin) {
-                $plugin = trailingslashit(WP_PLUGIN_DIR) . explode('/', $plugin)[0];
+                $plugin = '/' . trailingslashit((new WpDefaultDirectories())->getRelativePluginPath()) . explode('/', $plugin)[0];
                 if (strpos($path, $plugin) !== false) {
                     return true;
                 }
@@ -94,12 +102,12 @@ class ExcludedPlugins
         /*
          * Remove plugins dir from the paths and
          * only return plugin dir if inside directory otherwise return file
-         * path/to/site/wp-content/plugins/some-plugin/some-plugin.php will return some-plugin
-         * path/to/site/wp-content/plugins/single-file-plugin.php will return single-file-plugin.php
-         * path/to/site/wp-content/plugins/plugin-dir will return plugin-dir
+         * /wp-content/plugins/some-plugin/some-plugin.php will return some-plugin
+         * /wp-content/plugins/single-file-plugin.php will return single-file-plugin.php
+         * /wp-content/plugins/plugin-dir will return plugin-dir
          */
         return array_map(function ($path) {
-            $plugin = str_replace(trailingslashit(WP_PLUGIN_DIR), '', $path);
+            $plugin = str_replace('/' . trailingslashit((new WpDefaultDirectories())->getRelativePluginPath()), '', $path);
             return explode('/', $plugin)[0];
         }, $filteredExcludedPlugins);
     }

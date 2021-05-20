@@ -4,6 +4,7 @@ namespace WPStaging\Backend\Modules\Jobs\Cleaners;
 
 use WPStaging\Backend\Modules\Jobs\Files;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
+use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Core\Utils\Logger;
 
@@ -90,21 +91,13 @@ class WpContentCleaner
         }
 
         $excludePaths = [
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging",
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging_1",
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging_2",
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging-pro",
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging-pro_1",
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging-pro_2",
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . "wp-staging-dev",
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . 'wp-staging-hooks',
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . 'wp-staging-hooks_1',
-            trailingslashit($directory . $wpDirectories->getRelativePluginPath()) . 'wp-staging-hooks_2',
-            trailingslashit($directory . $wpDirectories->getRelativeUploadPath()) . 'wp-staging', // exclude wp-staging from uploads dir too.
+            $wpDirectories->getRelativePluginPath(SlashMode::BOTH_SLASHES) . "wp-staging*",
+            $wpDirectories->getRelativeUploadPath(SlashMode::BOTH_SLASHES) . 'wp-staging', // exclude wp-staging from uploads dir too.
         ];
         $fs = (new Filesystem())
             ->setShouldStop([$this->job, 'isOverThreshold'])
             ->setExcludePaths($excludePaths)
+            ->setWpRootPath($directory)
             ->setRecursive();
         try {
             if (!$fs->deletePaths($paths)) {

@@ -2,18 +2,18 @@
 
 namespace WPStaging\Core;
 
-use WPStaging\Framework\AssetServiceProvider;
-use WPStaging\Framework\Filesystem\DirectoryListing;
-use WPStaging\Framework\Filesystem\Filesystem;
-use WPStaging\Vendor\Psr\Log\LoggerInterface;
-use WPStaging\Framework\DI\Container;
 use WPStaging\Backend\Administrator;
-use WPStaging\Frontend\Frontend;
+use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Framework\AssetServiceProvider;
+use WPStaging\Framework\DI\Container;
+use WPStaging\Framework\Filesystem\DirectoryListing;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
-use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\Staging\FirstRun;
+use WPStaging\Frontend\Frontend;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 /**
  * Class WPStaging
@@ -56,10 +56,13 @@ final class WPStaging
 
         $this->startTime = microtime(true);
 
-        // Todo: Move this to a common service Provider for both Free and Pro. Do not register anything else here.
-        $this->container->bind(LoggerInterface::class, Logger::class);
+        $this->container->register(CoreServiceProvider::class);
 
         $this->loadDependencies();
+
+        // Boot the container after dependencies are loaded.
+        $this->container->boot();
+
         $this->container->register(AssetServiceProvider::class);
         $this->initCron();
         $this->cloneSiteFirstRun();

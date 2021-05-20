@@ -33,6 +33,7 @@ class Database extends CloningProcess
     {
         $this->initializeDbObjects();
         $this->abortIfDirectoryNotEmpty();
+        $this->abortIfPrefixContainsInvalidCharacter();
         if (!$this->isExternalDatabase()) {
             $this->abortIfStagingPrefixEqualsProdPrefix();
         } else {
@@ -170,6 +171,7 @@ class Database extends CloningProcess
     private function isTableExist($name)
     {
         $old = $this->stagingDb->get_var($this->stagingDb->prepare("SHOW TABLES LIKE %s", $name));
+
         return (
             $old === $name &&
             (
@@ -216,7 +218,9 @@ class Database extends CloningProcess
         if (defined('WPSTGPRO_VERSION')) {
             return false;
         }
+
         $this->returnException(__("This staging site is located in another database and needs to be edited with <a href='https://wp-staging.com' target='_blank'>WP STAGING Pro</a>", "wp-staging"));
+
         return true;
     }
 
@@ -266,8 +270,8 @@ class Database extends CloningProcess
             }
         }
 
-        if ($this->shouldAbortIfTableExist($newTableName)) {
-            $this->returnException(sprintf(__("Can not proceed. Tables beginning with the prefix '%s' already exist in the database. Choose another table prefix and try again.", "wp-staging"), $this->getStagingPrefix()));
+        if (!$this->isCopyProcessStarted() && $this->shouldAbortIfTableExist($newTableName)) {
+            $this->returnException(sprintf(__("Can not proceed. Tables beginning with the prefix '%s' already exist in the database i.e. %s. Choose another table prefix and try again.", "wp-staging"), $this->getStagingPrefix(), $newTableName));
             return true;
         }
 
@@ -287,16 +291,12 @@ class Database extends CloningProcess
     }
 
     /**
-     * Is table excluded from search replace processing?
+     * Is table excluded from database copying processing?
      * @param string $table
      * @return boolean
      */
     private function isExcludedTable($table)
     {
-        $excludedCustomTables = apply_filters('wpstg_clone_database_tables_exclude', []);
-        $excludedCoreTables = ['blogs', 'blog_versions'];
-
-        $excludedtables = array_merge($excludedCustomTables, $excludedCoreTables);
 
         if (
             in_array(
@@ -305,12 +305,13 @@ class Database extends CloningProcess
                     function ($tableName) {
                         return $this->options->prefix . $tableName;
                     },
-                    $excludedtables
+                    $this->excludedTableService->getExcludedTables()
                 )
             )
         ) {
             return true;
         }
+
         return false;
     }
 
@@ -325,6 +326,7 @@ class Database extends CloningProcess
         if ($this->isExcludedTable($new)) {
             return false;
         }
+
         if ($this->options->job->start != 0) {
             return true;
         }
@@ -332,6 +334,7 @@ class Database extends CloningProcess
         if ($this->databaseCloningService->tableIsMissing($old)) {
             return true;
         }
+
         try {
             $this->options->job->total = 0;
             $this->options->job->total = $this->databaseCloningService->createTable($new, $old);
@@ -339,10 +342,14 @@ class Database extends CloningProcess
             $this->returnException($e->getMessage());
             return true;
         }
+
         if ($this->options->job->total == 0) {
             $this->finishStep();
             return false;
         }
+
+        $this->options->job->copyProcessStarted = true;
+        $this->saveOptions();
         return true;
     }
 
@@ -358,6 +365,7 @@ class Database extends CloningProcess
             $this->options->tables[] = $this->productionDb->prefix . 'users';
             $this->saveOptions();
         }
+
         if (!in_array($this->productionDb->prefix . 'usermeta', $this->options->tables)) {
             $this->options->tables[] = $this->productionDb->prefix . 'usermeta';
             $this->saveOptions();
@@ -404,6 +412,32 @@ class Database extends CloningProcess
             $this->returnException(" Can not continue for security purposes. Directory {$path} is not empty! Use FTP or a file manager plugin and make sure it does not contain any files. ");
             return true;
         }
+
         return false;
+    }
+
+    /**
+     * Stop cloning if database prefix contains hypen
+     * @return boolean
+     */
+    private function abortIfPrefixContainsInvalidCharacter()
+    {
+        // make sure prefix doesn't contains any invalid character
+        // same condition as in WordPress wpdb::set_prefix() method
+        if (preg_match('|[^a-z0-9_]|i', $this->options->databasePrefix)) {
+            $this->returnException(__("Table prefix contains invalid character(s). Use different prefix with valid characters.", 'wp-staging'));
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the copy process started or not.
+     * @return boolean
+     */
+    private function isCopyProcessStarted()
+    {
+        return isset($this->options->job) && isset($this->options->job->copyProcessStarted) && $this->options->job->copyProcessStarted === true;
     }
 }

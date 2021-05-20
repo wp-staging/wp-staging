@@ -5,7 +5,9 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
+use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
@@ -21,11 +23,17 @@ class Cloning extends Job
     private $db;
 
     /**
+     * @var WpDefaultDirectories
+     */
+    private $dirUtils;
+
+    /**
      * Initialize is called in \Job
      */
     public function initialize()
     {
         $this->db = WPStaging::getInstance()->get("wpdb");
+        $this->dirUtils = new WpDefaultDirectories();
     }
 
 
@@ -64,10 +72,11 @@ class Cloning extends Job
             '.wp-staging', // Determines if a site is a staging site
             '.wp-staging-cloneable', // File which make staging site to be cloneable
         ];
+
         $this->options->excludedFilesFullPath = [
-            'wp-content' . DIRECTORY_SEPARATOR . 'db.php',
-            'wp-content' . DIRECTORY_SEPARATOR . 'object-cache.php',
-            'wp-content' . DIRECTORY_SEPARATOR . 'advanced-cache.php'
+            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'db.php',
+            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'object-cache.php',
+            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'advanced-cache.php'
         ];
         $this->options->currentStep = 0;
 
@@ -95,41 +104,41 @@ class Cloning extends Job
             $this->options->tables = [];
         }
 
+        // Exclude File Size Rules
+        $this->options->excludeSizeRules = [];
+        if (isset($_POST["excludeSizeRules"]) && !empty($_POST["excludeSizeRules"])) {
+            $this->options->excludeSizeRules = explode(',', wpstg_urldecode($_POST["excludeSizeRules"]));
+        }
+
+        // Exclude Glob Rules
+        $this->options->excludeGlobRules = [];
+        if (isset($_POST["excludeGlobRules"]) && !empty($_POST["excludeGlobRules"])) {
+            $this->options->excludeGlobRules = explode(',', wpstg_urldecode($_POST["excludeGlobRules"]));
+        }
+
         $this->options->uploadsSymlinked = isset($_POST['uploadsSymlinked']) && $_POST['uploadsSymlinked'] === 'true';
 
-        // Excluded Directories TOTAL
-        // Do not copy these folders and plugins
+        /**
+         * @see /WPStaging/Framework/CloningProcess/ExcludedPlugins.php to exclude plugins
+         * Only add other directories here
+         */
         $excludedDirectories = [
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'cache',
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wps-hide-login',
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-super-cache',
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'peters-login-redirect',
-            WPStaging::getWPpath() . 'wp-content' . DIRECTORY_SEPARATOR . 'plugins' . DIRECTORY_SEPARATOR . 'wp-spamshield',
+            $this->dirUtils->getRelativeWpContentPath(SlashMode::BOTH_SLASHES) . 'cache',
         ];
 
         // Add upload folder to list of excluded directories for push if symlink option is enabled
         if ($this->options->uploadsSymlinked) {
-            $wpUploadsFolder = (new WpDefaultDirectories())->getUploadsPath();
-            $excludedDirectories[] = rtrim($wpUploadsFolder, '/\\');
+            $excludedDirectories[] = $this->dirUtils->getRelativeUploadPath(SlashMode::LEADING_SLASH);
         }
 
-        $this->options->excludedDirectories = $excludedDirectories;
+        $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
+        $excludedDirectoriesRequest = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
 
-        $this->options->areDirectoriesIncluded = isset($_POST['areDirectoriesIncluded']) && $_POST['areDirectoriesIncluded'] === 'true';
-
-        $directories = '';
-        // Included Directories
-        if ($this->options->areDirectoriesIncluded) {
-            $directories = isset($_POST["includedDirectories"]) ? $_POST["includedDirectories"] : '';
-        } else { // Get Included Directories from Excluded Directories
-            $directories = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
-        }
-
-        $this->options->includedDirectories = (new WpDefaultDirectories())->getSelectedDirectories($directories, $this->options->areDirectoriesIncluded);
+        $this->options->excludedDirectories = array_merge($excludedDirectories, $excludedDirectoriesRequest);
 
         // Extra Directories
         if (isset($_POST["extraDirectories"])) {
-            $this->options->extraDirectories = wpstg_urldecode(explode(Scan::DIRECTORIES_SEPARATOR, $_POST["extraDirectories"]));
+            $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode($_POST["extraDirectories"]));
         }
 
         $this->options->databaseServer = 'localhost';
@@ -222,6 +231,11 @@ class Cloning extends Job
             "emailsAllowed"   => (bool)$this->options->emailsAllowed,
             "uploadsSymlinked" => (bool)$this->options->uploadsSymlinked,
             "ownerId" => $this->options->ownerId,
+            "includedTables"        => $this->options->tables,
+            "excludeSizeRules"      => $this->options->excludeSizeRules,
+            "excludeGlobRules"      => $this->options->excludeGlobRules,
+            "excludedDirectories"   => $this->options->excludedDirectories,
+            "extraDirectories"      => $this->options->extraDirectories,
         ];
 
         if (update_option("wpstg_existing_clones_beta", $this->options->existingClones) === false) {
@@ -366,6 +380,7 @@ class Cloning extends Job
             return $response;
         }
 
+        $this->options->job = new \stdClass();
         $this->options->currentJob = $nextJob;
         $this->options->currentStep = 0;
         $this->options->totalSteps = 0;

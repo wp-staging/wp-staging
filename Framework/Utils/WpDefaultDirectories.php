@@ -5,7 +5,8 @@
 namespace WPStaging\Framework\Utils;
 
 use DirectoryIterator;
-use WPStaging\Backend\Modules\Jobs\Scan;
+use WPStaging\Framework\Filesystem\Scanning\ScanConst;
+use WPStaging\Framework\Utils\SlashMode;
 
 // TODO PHP7.1; constant visibility
 class WpDefaultDirectories
@@ -64,15 +65,21 @@ class WpDefaultDirectories
      * `wp-content/uploads`
      * `wp-content/uploads/sites/2`
      *
-     * Result will not have any appending or prepending slashes! Directory separator will be forward slash always for Microsoft IIS compatibility
+     * Directory separator will be forward slash always for Microsoft IIS compatibility
+     *
+     * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
+     *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.
+     *                      Use SlashMode::TRAILING_SLASH, if you want trailing forward slash.
+     *                      Use SlashMode::LEADING_SLASH, if you want leading forward slash.
+     *                      Use SlashMode::BOTH_SLASHES, if you want both trailing and leading forward slash.
      *
      * @return string
      */
-    public function getRelativeUploadPath()
+    public function getRelativeUploadPath($mode = SlashMode::NO_SLASH)
     {
         $relPath = str_replace($this->wpRoot, null, $this->getUploadsPath());
 
-        return trim($relPath, '/');
+        return $this->slashit($relPath, $mode);
     }
 
     /*
@@ -126,41 +133,57 @@ class WpDefaultDirectories
 
     /**
      * Get the relative path of wp content directory
+     * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
+     *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.
+     *                      Use SlashMode::TRAILING_SLASH, if you want trailing forward slash.
+     *                      Use SlashMode::LEADING_SLASH, if you want leading forward slash.
+     *                      Use SlashMode::BOTH_SLASHES, if you want both trailing and leading forward slash.
      * @return string
      */
-    public function getRelativeWpContentPath()
+    public function getRelativeWpContentPath($mode = SlashMode::NO_SLASH)
     {
         $wpContentDir = $this->strUtils->sanitizeDirectorySeparator(WP_CONTENT_DIR);
         $relPath = str_replace($this->wpRoot, null, $wpContentDir);
 
-        return trim($relPath, '/');
+        return $this->slashit($relPath, $mode);
     }
 
     /**
      * Get the relative path of plugins directory
+     * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
+     *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.
+     *                      Use SlashMode::TRAILING_SLASH, if you want trailing forward slash.
+     *                      Use SlashMode::LEADING_SLASH, if you want leading forward slash.
+     *                      Use SlashMode::BOTH_SLASHES, if you want both trailing and leading forward slash.
      * @return string
      */
-    public function getRelativePluginPath()
+    public function getRelativePluginPath($mode = SlashMode::NO_SLASH)
     {
         $wpPluginDir = $this->strUtils->sanitizeDirectorySeparator(WP_PLUGIN_DIR);
         $relPath = str_replace($this->wpRoot, null, $wpPluginDir);
 
-        return trim($relPath, '/');
+        return $this->slashit($relPath, $mode);
     }
 
     /**
      * Get the relative path of themes directory
+     * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
+     *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.
+     *                      Use SlashMode::TRAILING_SLASH, if you want trailing forward slash.
+     *                      Use SlashMode::LEADING_SLASH, if you want leading forward slash.
+     *                      Use SlashMode::BOTH_SLASHES, if you want both trailing and leading forward slash.
      * @return string
      */
-    public function getRelativeThemePath()
+    public function getRelativeThemePath($mode = SlashMode::NO_SLASH)
     {
-        $relWpContentPath = $this->getRelativeWpContentPath();
-        return trailingslashit($relWpContentPath) . "themes";
+        $relPath = $this->getRelativeWpContentPath() . '/themes';
+
+        return $this->slashit($relPath, $mode);
     }
 
     /**
-     * Get array of wp core directories and their one level sub dir with flag 0|1
-     * i.e. wp-content, wp-admin, wp-includes, plugins etc
+     * Get array of wp core directories with flag 0|1
+     * i.e. wp-content, wp-admin, wp-includes
      *
      * @return array
      */
@@ -190,115 +213,60 @@ class WpDefaultDirectories
                 continue;
             }
 
-            $this->handleSelfAndSubDirs($path);
+            $path = untrailingslashit($this->strUtils->sanitizeDirectorySeparator($path));
+            $this->coreDirectories[] = $path;
         }
-
-        // Gather Plugins
-        $pluginsDir = $this->wpRoot . $this->getRelativePluginPath();
-        $this->handleSelfAndSubDirs($pluginsDir);
-
-        // Gather Themes
-        $themesDir = $this->wpRoot . $this->getRelativeThemePath();
-        $this->handleSelfAndSubDirs($themesDir);
-
-        // Gather Uploads
-        $this->handleSelfAndSubDirs($this->getUploadsPath());
 
         return $this->coreDirectories;
     }
 
     /**
-     * Add directory and it subdirectories to included directory list if not already added
-     *
-     * @param string $path
-     */
-    protected function handleSelfAndSubDirs($path)
-    {
-        $this->addDirectoryToList($path, Scan::IS_NON_RECURSIVE);
-        $directories = new DirectoryIterator($path);
-        foreach ($directories as $directory) {
-            if ($directory->isDot() || $directory->isFile() || $directory->isLink()) {
-                continue;
-            }
-
-            $this->addDirectoryToList($directory->getPathname(), Scan::IS_RECURSIVE);
-        }
-    }
-
-    /**
-     * Add directory if not already exist
-     * Override the flag value with scanned only if directory already present and was scanned
-     *
-     * @param string $path
-     * @param int $flag
-     */
-    protected function addDirectoryToList($path, $flag)
-    {
-        $path = untrailingslashit($this->strUtils->sanitizeDirectorySeparator($path));
-        $dirInfo = $path . Scan::DIRECTORY_PATH_FLAG_SEPARATOR . $flag;
-
-        if (in_array($dirInfo, $this->coreDirectories)) {
-            return;
-        }
-
-        if (in_array($path . Scan::DIRECTORY_PATH_FLAG_SEPARATOR . Scan::IS_NON_RECURSIVE, $this->coreDirectories)) {
-            return;
-        }
-
-        if ($flag === Scan::IS_NON_RECURSIVE) {
-            for ($i = 0, $iMax = count($this->coreDirectories); $i < $iMax; $i++) {
-                if ($this->coreDirectories[$i] === $path . Scan::DIRECTORY_PATH_FLAG_SEPARATOR . Scan::IS_RECURSIVE) {
-                    $this->coreDirectories[$i] = $dirInfo;
-                    return;
-                }
-            }
-        }
-
-        $this->coreDirectories[] = $dirInfo;
-    }
-
-    /**
-     * Get selected directories according to the flag and filter them
+     * Get excluded directories and map it to array
      *
      * @param string $directoriesRequest
-     * @param boolean $areDirectoriesIncluded default false
      * @return array
      *
      * @todo find a better place
      */
-    public function getSelectedDirectories($directoriesRequest, $areDirectoriesIncluded = false)
+    public function getExcludedDirectories($directoriesRequest)
     {
-        $directories = $this->getWpCoreDirectories();
-        if (empty($directoriesRequest) || $directoriesRequest === '') {
-            return $directories;
+        if ((empty($directoriesRequest) || $directoriesRequest === '')) {
+            return [];
         }
 
-        if ($areDirectoriesIncluded) {
-            $directories = wpstg_urldecode(explode(Scan::DIRECTORIES_SEPARATOR, $directoriesRequest));
-            $directories = array_map(function ($directory) {
-                return $this->wpRoot . $directory;
-            }, $directories);
-
-            return $directories;
-        }
-
-        $excludedDirectories = wpstg_urldecode(explode(Scan::DIRECTORIES_SEPARATOR, $directoriesRequest));
+        $excludedDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode($directoriesRequest));
         $excludedDirectories = array_map(function ($directory) {
-            return $this->wpRoot . $directory;
+            return $this->slashit($directory, SlashMode::LEADING_SLASH);
         }, $excludedDirectories);
 
-        $directories = array_filter($directories, function ($directory) use ($excludedDirectories) {
-            $directory = explode(Scan::DIRECTORY_PATH_FLAG_SEPARATOR, $directory)[0];
-            foreach ($excludedDirectories as $excludedDirectory) {
-                $excludedDirectory = explode(Scan::DIRECTORY_PATH_FLAG_SEPARATOR, $excludedDirectory)[0];
-                if ($directory === $excludedDirectory) {
-                    return false;
-                }
-            }
+        return $excludedDirectories;
+    }
 
-            return true;
-        });
+    /**
+     * Different slash mode for path
+     * @param string $path
+     * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
+     *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.
+     *                      Use SlashMode::TRAILING_SLASH, if you want trailing forward slash.
+     *                      Use SlashMode::LEADING_SLASH, if you want leading forward slash.
+     *                      Use SlashMode::BOTH_SLASHES, if you want both trailing and leading forward slash.
+     * @return string
+     */
+    private function slashit($path, $mode = SlashMode::NO_SLASH)
+    {
+        $path = trim(trim($path, '\\'), '/');
+        if ($mode === SlashMode::BOTH_SLASHES) {
+            return '/' . $path . '/';
+        }
 
-        return array_values($directories);
+        if ($mode === SlashMode::TRAILING_SLASH) {
+            return $path . '/';
+        }
+
+        if ($mode === SlashMode::LEADING_SLASH) {
+            return '/' . $path;
+        }
+
+        return $path;
     }
 }

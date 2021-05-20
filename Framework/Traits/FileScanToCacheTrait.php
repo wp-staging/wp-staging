@@ -4,7 +4,7 @@ namespace WPStaging\Framework\Traits;
 
 use Exception;
 use stdClass;
-use WPStaging\Backend\Modules\Jobs\Scan;
+use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
 use WPStaging\Framework\Utils\Strings;
 
@@ -27,11 +27,12 @@ trait FileScanToCacheTrait
      * @param string $path
      * @param bool $isRecursive
      * @param array $excludePaths absolute path of dir/files to exclude
+     * @param array $excludeSizeRules exclude files by different size comparing rules
      * @param string $wpRootPath
      *
      * @return int count of files path written to cache file
      */
-    public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $wpRootPath = ABSPATH)
+    public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $excludeSizeRules = [], $wpRootPath = ABSPATH)
     {
         if (is_link($path)) {
             return 0;
@@ -53,7 +54,11 @@ trait FileScanToCacheTrait
                         ->setRecursive(false)
                         ->setDotSkip()
                         ->setExcludePaths($excludePaths)
+                        ->setExcludeSizeRules($excludeSizeRules)
+                        ->setWpRootPath($wpRootPath)
                         ->get();
+
+        $strUtil = new Strings();
         foreach ($iterator as $item) {
             // Always check link first otherwise it may be treated as directory
             if ($item->isLink()) {
@@ -61,7 +66,7 @@ trait FileScanToCacheTrait
             }
 
             if ($isRecursive && $item->isDir()) {
-                $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $item->getPathname(), $isRecursive, $excludePaths, $wpRootPath);
+                $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $item->getPathname(), $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
             }
 
             if ($item->isFile()) {
@@ -73,41 +78,5 @@ trait FileScanToCacheTrait
         }
 
         return $filesWrittenToCache;
-    }
-
-    /**
-     * Filtered directories according to the directory given
-     * @param string $directoryPath
-     * @param array $directories list of selected directories in the form of directoryPath . separatorConst . scanFlag e.g. /var/www/wp-content/plugins/::1
-     *
-     * @return array
-     */
-    public function filteredSelectedDirectories($directoryPath, $directories)
-    {
-        $strUtil = new Strings();
-        $directoryPath = $strUtil->sanitizeDirectorySeparator($directoryPath);
-        return array_filter($this->mapSelectedDirectories($directories), function ($directory) use ($directoryPath, $strUtil) {
-            if ($strUtil->startsWith($strUtil->sanitizeDirectorySeparator($directory->path), $directoryPath)) {
-                return true;
-            }
-        });
-    }
-
-    /**
-     * Map included directories to object
-     * @param array $directories list of selected directories in the form of directoryPath . separatorConst . scanFlag
-     *
-     * @return array array of objects which contains information about directory path and whether it is scanned or not
-     */
-    protected function mapSelectedDirectories($directories)
-    {
-        return array_map(function ($directory) {
-            $directory = trim($directory, ' ');
-            list($directoryPath, $flag) = explode(Scan::DIRECTORY_PATH_FLAG_SEPARATOR, $directory);
-            $directoryInfo = new stdClass();
-            $directoryInfo->path = trim($directoryPath, ' ');
-            $directoryInfo->flag = trim($flag, ' ');
-            return $directoryInfo;
-        }, $directories);
     }
 }

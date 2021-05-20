@@ -230,8 +230,7 @@ class SearchReplace extends CloningProcess
 
     /**
      * Start search replace job
-     * @param string $new
-     * @param string $old
+     * @param string $table
      */
     private function startReplace($table)
     {
@@ -333,7 +332,7 @@ class SearchReplace extends CloningProcess
         $limit = $this->settings->querySRLimit;
 
         /// DEBUG
-        $this->logDebug(
+/*        $this->logDebug(
             sprintf(
                 'SearchReplace-beforeRowsGenerator: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
                 $this->getMaxMemoryLimit(),
@@ -343,7 +342,7 @@ class SearchReplace extends CloningProcess
                 $this->getRunningTime(),
                 ($this->isThreshold() ? 'yes' : 'no')
             )
-        );
+        );*/
         /// DEBUG
 
         if (defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') && WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR) {
@@ -466,7 +465,7 @@ class SearchReplace extends CloningProcess
 
         if (
             !defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') ||
-            defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') && !WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR
+            (defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') && !WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR)
         ) {
             $this->updateJobStart($processed, $this->stagingDb, $table);
         }
@@ -535,26 +534,19 @@ class SearchReplace extends CloningProcess
      */
     private function isExcludedTable($table)
     {
-        $excludedCustomTables = apply_filters('wpstg_clone_searchreplace_tables_exclude', []);
 
-        $excludedDefaultTables = ['blogs'];
-
-        // @todo remove isSearchReplaceExcluded() if SearchReplace() is made DRY and provide a simple list of excluded table names
-        if ($this->thirdParty->isSearchReplaceExcluded($table)) {
-            $excludedDefaultTables[] = str_replace($this->options->prefix, '', $table);
-        }
-
-        $tables = array_merge($excludedCustomTables, $excludedDefaultTables);
+        $tables = $this->excludedTableService->getExcludedTablesForSearchReplace();
 
         $excludedAllTables = [];
         foreach ($tables as $key => $value) {
-            $excludedAllTables[] = $this->options->prefix . $value;
+            $excludedAllTables[] = $this->options->prefix . ltrim($value, '_');
         }
 
         if (in_array($table, $excludedAllTables)) {
             $this->log("DB Search & Replace: Table {$table} excluded by WP STAGING", Logger::TYPE_INFO);
             return true;
         }
+
         return false;
     }
 

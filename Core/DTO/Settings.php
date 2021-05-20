@@ -84,6 +84,12 @@ class Settings
     protected $usersWithStagingAccess = "";
 
     /**
+     * Color of the admin bar in hexadecimal format
+     * @var string
+     */
+    protected $adminBarColor = "";
+
+    /**
      * Settings constructor.
      */
     public function __construct()
@@ -177,7 +183,9 @@ class Settings
         return $this->cpuLoad;
     }
 
-
+    /**
+     * @return int
+     */
     public function getDelayRequests()
     {
         return $this->delayRequests;
@@ -272,14 +280,35 @@ class Settings
         $this->debugMode = $debugMode;
     }
 
-
+    /**
+     * @param array $userRoles
+     */
     public function setUserRoles($userRoles)
     {
         $this->userRoles = $userRoles;
     }
 
+    /**
+     * @param string $usersWithStagingAccess
+     */
     public function setUsersWithStagingAccess($usersWithStagingAccess)
     {
         $this->usersWithStagingAccess = $usersWithStagingAccess;
+    }
+
+    /**
+     * @param string $adminBarColor
+     */
+    public function setAdminBarColor($adminBarColor)
+    {
+        $this->adminBarColor = $adminBarColor;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAdminBarColor()
+    {
+        return $this->adminBarColor;
     }
 }

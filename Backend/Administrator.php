@@ -2,13 +2,7 @@
 
 namespace WPStaging\Backend;
 
-// No Direct Access
-if (!defined("WPINC")) {
-    die;
-}
-
 use WPStaging\Core\WPStaging;
-use WPStaging\Core\Utils\Cache;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Database\DbInfo;
 use WPStaging\Framework\SiteInfo;
@@ -35,6 +29,8 @@ use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Core\DTO\Settings;
+use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
+use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Pro\Database\CompareExternalDatabase;
 
 /**
@@ -162,6 +158,9 @@ class Administrator
         add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]);
         add_action("wp_ajax_wpstg_hide_disabled_items_notice", [$this, "ajaxHideDisabledItemsNotice"]);
         add_action("wp_ajax_wpstg_enable_staging_cloning", [$this, "ajaxEnableStagingCloning"]);
+        add_action("wp_ajax_wpstg_clone_excludes_settings", [$this, "ajaxCloneExcludesSettings"]);
+        add_action("wp_ajax_wpstg_fetch_dir_childrens", [$this, "ajaxFetchDirChildrens"]);
+        add_action("wp_ajax_wpstg_modal_error", [$this, "ajaxModalError"]);
 
 
         // Ajax hooks pro Version
@@ -224,7 +223,7 @@ class Administrator
         $error = false;
         // is_array() is required otherwise new clone will fail.
         if ($this->siteInfo->isStaging() && is_array($data)) {
-            $isStagingCloneable = $data['isStagingSiteCloneable'];
+            $isStagingCloneable = isset($data['isStagingSiteCloneable']) ? $data['isStagingSiteCloneable'] : 'false';
             unset($data['isStagingSiteCloneable']);
             $error = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
         }
@@ -582,21 +581,49 @@ class Administrator
         }
 
         // Check first if there is already a process running
-        $processLock = new ProcessLock();
-        $processLock->isRunning();
+        $response = (new ProcessLock())->ajaxIsRunning(); 
+        if ($response !== false)
+        {
+            echo $response;
+
+            exit();
+        }
 
         $db = WPStaging::getInstance()->get('wpdb');
 
         // Scan
         $scan = new Scan();
+        $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
         $scan->start();
 
         // Get Options
         $options = $scan->getOptions();
-
+        $excludeUtils = new ExcludeFilter();
         require_once "{$this->path}views/clone/ajax/scan.php";
 
         wp_die();
+    }
+
+    /**
+     * Fetch children of the given directory
+     */
+    public function ajaxFetchDirChildrens()
+    {
+        if (!$this->isAuthenticated()) {
+            wp_send_json(['success' => false]);
+            return;
+        }
+
+        $isChecked = isset($_POST['isChecked']) ? $_POST['isChecked'] === 'true' : false;
+        $forceDefault = isset($_POST['forceDefault']) ? $_POST['forceDefault'] === 'true' : false;
+        $path = isset($_POST['dirPath']) ? $_POST['dirPath'] : "";
+        $path = ABSPATH . $path;
+        $scan = new Scan($path);
+        $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
+        wp_send_json([
+            "success" => true,
+            "directoryListing" => json_encode($scan->directoryListing($isChecked, $forceDefault)),
+        ]);
     }
 
     /**
@@ -663,11 +690,6 @@ class Administrator
         if (!$this->isAuthenticated()) {
             return;
         }
-
-        // TODO: inject this using DI
-        // remove clone options cache before initializing reset clone process
-        $cache = new Cache(-1, WPStaging::getContentDir());
-        $cache->delete("clone_options");
 
         $cloning = new Updating();
         $cloning->setMainJob(Updating::RESET_UPDATE);
@@ -914,8 +936,11 @@ class Administrator
             return false;
         }
 
+        $excludedDirectories = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
+        $extraDirectories = isset($_POST["extraDirectories"]) ? $_POST["extraDirectories"] : '';
+
         $scan = new Scan();
-        return $scan->hasFreeDiskSpace();
+        return $scan->hasFreeDiskSpace($excludedDirectories, $extraDirectories);
     }
 
     /**
@@ -1107,6 +1132,13 @@ class Administrator
         $database = !empty($args['databaseDatabase']) ? $args['databaseDatabase'] : '';
         $server = !empty($args['databaseServer']) ? $args['databaseServer'] : 'localhost';
         $prefix = !empty($args['databasePrefix']) ? $args['databasePrefix'] : 'wp_';
+        // make sure prefix doesn't contains any invalid character
+        // same condition as in WordPress wpdb::set_prefix() method
+        if (preg_match('|[^a-z0-9_]|i', $prefix)) {
+            echo json_encode(['success' => 'false', 'errors' => __('Table prefix contains an invalid character.', 'wp-staging')]);
+            exit;
+        }
+
         // ensure tables with the given prefix exist, default false
         $ensurePrefixTableExist = !empty($args['databaseEnsurePrefixTableExist']) ? filter_var($args['databaseEnsurePrefixTableExist'], FILTER_VALIDATE_BOOLEAN) : false;
 
@@ -1128,6 +1160,12 @@ class Administrator
             exit;
         }
 
+        // no need to check further for new clone
+        if ($existingTables === null && !$ensurePrefixTableExist) {
+            echo json_encode(['success' => 'true']);
+            exit;
+        }
+
         // used in edit and update of clone
         if ($existingTables === null && $ensurePrefixTableExist) {
             echo json_encode(['success' => 'true', 'errors' => __('Tables with prefix "' . $prefix . '" not exist in database. Make sure it exists.', 'wp-staging')]);
@@ -1137,18 +1175,18 @@ class Administrator
         // get production db
         $productionDb = WPStaging::getInstance()->get('wpdb');
 
-        $queryToFindAddress = "SELECT SUBSTRING_INDEX(host,':',1) AS 'ip' FROM information_schema.processlist WHERE ID=connection_id();";
+        $queryToFindHost = "SHOW VARIABLES WHERE Variable_name = 'hostname';";
         $queryToFindPort = "SHOW VARIABLES WHERE Variable_name = 'port';";
 
-        $stagingSiteAddress = $wpdb->get_var($wpdb->prepare($queryToFindAddress));
-        $productionSiteAddress = $productionDb->get_var($productionDb->prepare($queryToFindAddress));
+        $stagingSiteAddress = gethostbyname($wpdb->get_var($wpdb->prepare($queryToFindHost), 1));
+        $productionSiteAddress = gethostbyname($productionDb->get_var($productionDb->prepare($queryToFindHost), 1));
         if ($stagingSiteAddress === null || $productionSiteAddress === null) {
             echo json_encode(['success' => 'false', 'errors' => __('Unable to find database server hostname of the staging or the production site.', 'wp-staging')]);
             exit;
         }
 
         $isSameAddress = $productionSiteAddress === $stagingSiteAddress;
-        $isSamePort = $wpdb->get_var($wpdb->prepare($queryToFindPort)) === $productionDb->get_var($productionDb->prepare($queryToFindPort));
+        $isSamePort = $wpdb->get_var($wpdb->prepare($queryToFindPort), 1) === $productionDb->get_var($productionDb->prepare($queryToFindPort), 1);
 
         $isSameServer = ($isSameAddress && $isSamePort) || $server === DB_HOST;
 
@@ -1162,7 +1200,63 @@ class Administrator
     }
 
     /**
-     * Connect to external database for testing correct credentials
+     * Action to perform when error modal confirm button is clicked
+     * 
+     * @todo use constants instead of hardcoded strings for error types
+     */
+    public function ajaxModalError()
+    {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
+        $type = isset($_POST['type']) ? $_POST['type'] : null;
+        if ($type === 'processLock') {
+            $process = new ProcessLock();
+            $process->restart();
+
+            exit();
+        }
+    }
+
+    /**
+     * Render tables and files selection for RESET function
+     */
+    public function ajaxCloneExcludesSettings()
+    {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
+        $response = (new ProcessLock())->ajaxIsRunning(); 
+        if ($response !== false)
+        {
+            echo $response;
+
+            exit();
+        }
+
+        $templateEngine = new TemplateEngine();
+
+        // Scan
+        $scan = new Scan();
+        $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
+        $scan->start();
+
+        echo json_encode([
+            'success' => true,
+            "html" => $templateEngine->render("/Backend/views/clone/ajax/exclude-settings.php", [
+                'scan' => $scan,
+                'options' => $scan->getOptions(),
+                'excludeUtils' => new ExcludeFilter(),
+            ])
+        ]);
+
+        exit();
+    }
+
+    /**
+     * Compare database and table properties of separate db with local db
      */
     public function ajaxDatabaseVerification()
     {

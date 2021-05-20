@@ -8,7 +8,7 @@ namespace WPStaging\Framework\Utils\Cache;
 
 use LimitIterator;
 use SplFileObject;
-use WPStaging\Vendor\Symfony\Component\Filesystem\Exception\IOException;
+use WPStaging\Framework\Exceptions\IOException;
 use WPStaging\Framework\Filesystem\File;
 use WPStaging\Framework\Filesystem\Filesystem;
 
