@@ -5,7 +5,6 @@ namespace WPStaging\Framework\Utils;
 class Urls
 {
 
-
     /**
      * Retrieves the URL for a given site where the front end is accessible.
      *
@@ -47,7 +46,6 @@ class Urls
         return preg_replace('#^https?://#', '', rtrim($this->getHomeUrl(), '/'));
     }
 
-
     /**
      * Get raw base URL e.g. https://blog.domain.com or https://domain.com without any subfolder
      * @return string
@@ -58,7 +56,6 @@ class Urls
         return $result['scheme'] . "://" . $result['host'];
     }
 
-
     /**
      * Return base URL (domain) without scheme e.g. blog.domain.com or domain.com
      * @param string $str
@@ -67,5 +64,25 @@ class Urls
     public function getBaseUrlWithoutScheme()
     {
         return preg_replace('#^https?://#', '', rtrim($this->getBaseUrl(), '/'));
+    }
+
+    /**
+     * Get hostname of production site including scheme
+     * @return string
+     */
+    public function getProductionHostname()
+    {
+
+        $connection = get_option('wpstg_connection');
+
+        // Get the stored hostname
+        if (!empty($connection['prodHostname'])) {
+            return $connection['prodHostname'];
+        }
+
+        // Default. Try to get the hostname from the main domain (Workaround for WP Staging Pro older < 2.9.1)
+        $siteurl = get_site_url();
+        $result = parse_url($siteurl);
+        return $result['scheme'] . "://" . $result['host'];
     }
 }

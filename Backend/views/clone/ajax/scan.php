@@ -9,12 +9,16 @@
  *
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
+
+$isPro = defined('WPSTGPRO_VERSION');
 ?>
 <label id="wpstg-clone-label" for="wpstg-new-clone">
-    <?php echo __('Staging Site Name:', 'wp-staging') ?>
-    <input type="text" id="wpstg-new-clone-id" value="<?php echo $options->current; ?>"<?php if ($options->current !== null) {
-        echo " disabled='disabled'";
-                                                      } ?>>
+    <input type="text" id="wpstg-new-clone-id" class="wpstg-textbox"
+        placeholder="<?php _e('Enter Site Name (Optional)', 'wp-staging') ?>"
+        value="<?php echo $options->current; ?>"
+        <?php if ($options->current !== null) {
+            echo " disabled='disabled'";
+        } ?> />
 </label>
 
 <span class="wpstg-error-msg" id="wpstg-clone-id-error" style="display:none;">
@@ -49,62 +53,68 @@
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
         <span class="wpstg-tab-triangle"><input type="checkbox" name="wpstg-advanced" value="true"></span>
         <?php
-            $pro = defined('WPSTGPRO_VERSION') ? ' ' : ' / Pro';
+            $pro = $isPro ? ' ' : ' (Requires Pro Version)';
             echo __("Advanced Settings " . $pro, "wp-staging"); ?>
     </a>
 
     <div class="wpstg-tab-section" id="wpstg-advanced-settings">
         <?php
-        if (defined('WPSTGPRO_VERSION')) {
-            require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/external-database.php');
-            require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/custom-directory.php');
-        } else {
-            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
-            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
-            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'mail-setting.php');
-        }
+        require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
+        require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
+        require_once(__DIR__ . DIRECTORY_SEPARATOR . 'mail-setting.php');
         ?>
     </div>
 </div>
 
 <?php
 
-if (defined('WPSTGPRO_VERSION')) {
-    require_once(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/mail-setting.php');
-}
-
 if ($options->current !== null && $options->mainJob === 'updating') {
     $uploadsSymlinked = isset($options->existingClones[$options->current]['uploadsSymlinked']) ? (bool)$options->existingClones[$options->current]['uploadsSymlinked'] : false;
 
     ?>
-<p><label>
-    <input type="checkbox" id="wpstg-clean-plugins-themes" name="wpstg-clean-plugins-themes">
-    <?php echo __("Delete all plugins & themes on staging site before starting copy process.", "wp-staging"); ?>
-</label></p>
-<p><label> <?php echo ($uploadsSymlinked ? "<b>" . __("Note: This option is disabled as uploads directory is symlinked", "wp-staging") . "</b><br/>" : '') ?>
-    <input type="checkbox" id="wpstg-clean-uploads" name="wpstg-clean-uploads" <?php echo ($uploadsSymlinked ? 'disabled' : '') ?>>
-    <?php echo __("Delete entire folder wp-content/uploads on staging site including all images before starting copy process.", "wp-staging"); ?>
-</label></p>
+<fieldset class="wpstg-fieldset" style="margin-left: 16px;">
+    <p class="wpstg--advance-settings--checkbox">
+        <label for="wpstg-clean-plugins-themes"><?php _e('Clean Plugins/Themes'); ?></label>
+        <input type="checkbox" id="wpstg-clean-plugins-themes" name="wpstg-clean-plugins-themes" value="true">
+        <span class="wpstg--tooltip">
+            <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
+            <span class="wpstg--tooltiptext">
+                <?php _e('Delete all plugins & themes on staging site before starting copy process.', 'wp-staging'); ?>
+            </span>
+        </span>
+    </p>
+    <p class="wpstg--advance-settings--checkbox">
+        <label for="wpstg-clean-uploads"><?php _e('Clean Uploads'); ?></label>
+        <input type="checkbox" id="wpstg-clean-uploads" name="wpstg-clean-uploads" value="true">
+        <span class="wpstg--tooltip">
+            <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
+            <span class="wpstg--tooltiptext">
+                <?php _e('Delete entire folder wp-content/uploads on staging site including all images before starting copy process.', 'wp-staging'); ?>
+                <?php echo ($uploadsSymlinked ? "<br/><br/><b>" . __("Note: This option is disabled as uploads directory is symlinked", "wp-staging") . "</b>" : '') ?>
+            </span>
+        </span>
+    </p>
+</fieldset>
+<hr/>
     <?php
 }
 ?>
-<strong>Important:</strong><a href="#" id="wpstg-check-space"><?php _e('Check required disk space', 'wp-staging'); ?></a>
-<p></p>
 
-<button type="button" class="wpstg-prev-step-link wpstg-link-btn wpstg-blue-primary wpstg-button">
+<button type="button" class="wpstg-prev-step-link wpstg-button--primary">
     <?php _e("Back", "wp-staging") ?>
 </button>
 
 <?php
+ $label  = __("Start Cloning", "wp-staging");
+ $action = 'wpstg_cloning';
+ $btnId  = 'wpstg-start-cloning';
 if ($options->current !== null && $options->mainJob === 'updating') {
     $label  = __("Update Clone", "wp-staging");
     $action = 'wpstg_update';
-
-    echo '<button type="button" id="wpstg-start-updating" class="wpstg-next-step-link  wpstg-link-btn wpstg-blue-primary wpstg-button" data-action="' . $action . '">' . $label . '</button>';
-} else {
-    $label  = __("Start Cloning", "wp-staging");
-    $action = 'wpstg_cloning';
-
-    echo '<button type="button" id="wpstg-start-cloning" class="wpstg-next-step-link wpstg-link-btn wpstg-blue-primary wpstg-button" data-action="' . $action . '">' . $label . '</button>';
+    $btnId  = 'wpstg-start-updating';
 }
 ?>
+
+<button type="button" id="<?php echo $btnId; ?>" class="wpstg-next-step-link wpstg-button--primary wpstg-button--blue" data-action="<?php echo $action; ?>"><?php echo $label; ?></button>
+
+<a href="#" id="wpstg-check-space"><?php _e('Check required disk space', 'wp-staging'); ?></a>

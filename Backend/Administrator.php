@@ -27,11 +27,13 @@ use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 use WPStaging\Backend\Activation;
 use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
+use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
-use WPStaging\Pro\Database\CompareExternalDatabase;
+use WPStaging\Framework\CloningProcess\Database\CompareExternalDatabase;
+use WPStaging\Framework\Utils\Math;
 
 /**
  * Class Administrator
@@ -170,6 +172,12 @@ class Administrator
         add_action("wp_ajax_wpstg_scan", [$this, "ajaxPushScan"]);
         add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
         add_action("wp_ajax_nopriv_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
+
+        // TODO: replace uploads backup during push once we have backups PR ready,
+        // Then there will be no need to have any cron to delete those backups
+        if (class_exists('WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir')) {
+            add_action(BackupUploadsDir::BACKUP_DELETE_CRON_HOOK_NAME, [$this, "removeOldUploadsBackup"]);
+        }
     }
 
     /**
@@ -269,21 +277,17 @@ class Administrator
 
         $logo = 'data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz4KPCFET0NUWVBFIHN2ZyBQVUJMSUMgIi0vL1czQy8vRFREIFNWRyAxLjEvL0VOIiAiaHR0cDovL3d3dy53My5vcmcvR3JhcGhpY3MvU1ZHLzEuMS9EVEQvc3ZnMTEuZHRkIj4KPHN2ZyB2ZXJzaW9uPSIxLjEiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyIgeG1sbnM6eGxpbms9Imh0dHA6Ly93d3cudzMub3JnLzE5OTkveGxpbmsiIHg9IjBweCIgeT0iMHB4IiB2aWV3Qm94PSIwIDAgMTAwMCAxMDAwIiBlbmFibGUtYmFja2dyb3VuZD0ibmV3IDAgMCAxMDAwIDEwMDAiIHhtbDpzcGFjZT0icHJlc2VydmUiIGZpbGw9Im5vbmUiPgo8Zz48Zz48cGF0aCBzdHlsZT0iZmlsbDojZmZmIiAgZD0iTTEzNy42LDU2MS4zSDEzLjhIMTB2MzA2LjNsOTAuNy04My40QzE4OS42LDkwOC43LDMzNS4zLDk5MCw1MDAsOTkwYzI0OS45LDAsNDU2LjEtMTg3LjEsNDg2LjItNDI4LjhIODYyLjRDODMzLjMsNzM1LjEsNjgyLjEsODY3LjUsNTAwLDg2Ny41Yy0xMjksMC0yNDIuNS02Ni41LTMwOC4xLTE2Ny4ybDE1MS4zLTEzOS4xSDEzNy42eiIvPjxwYXRoIHN0eWxlPSJmaWxsOiNmZmYiICBkPSJNNTAwLDEwQzI1MC4xLDEwLDQzLjksMTk3LjEsMTMuOCw0MzguOGgxMjMuOEMxNjYuNywyNjQuOSwzMTcuOSwxMzIuNSw1MDAsMTMyLjVjMTMyLjksMCwyNDkuMyw3MC41LDMxMy44LDE3Ni4yTDY4My44LDQzOC44aDEyMi41aDU2LjJoMTIzLjhoMy44VjEzMi41bC04Ny43LDg3LjdDODEzLjgsOTMuMSw2NjYuNiwxMCw1MDAsMTB6Ii8+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjxnPjwvZz48Zz48L2c+PGc+PC9nPjwvZz4KPC9zdmc+';
 
-        if (defined('WPSTGPRO_VERSION')) {
-            $pro = 'Pro';
-        } else {
-            $pro = '';
-        }
-
         $pos = self::MENU_POSITION_ORDER;
         if (is_multisite()) {
             $pos = self::MENU_POSITION_ORDER_MULTISITE;
         }
 
+        $proSlug = defined('WPSTGPRO_VERSION') ? 'Pro' : '';
+
         // Main WP Staging Menu
         add_menu_page(
-            "WP-Staging",
-            __("WP Staging " . $pro, "wp-staging"),
+            "WP STAGING",
+            __("WP Staging " . $proSlug, "wp-staging"),
             "manage_options",
             "wpstg_clone",
             [$this, "getClonePage"],
@@ -295,10 +299,19 @@ class Administrator
         add_submenu_page(
             "wpstg_clone",
             __("WP Staging Jobs", "wp-staging"),
-            __("Sites / Start", "wp-staging"),
+            __("Staging Sites", "wp-staging"),
             "manage_options",
             "wpstg_clone",
             [$this, "getClonePage"]
+        );
+
+        add_submenu_page(
+            "wpstg_clone",
+            __("WP Staging Jobs", "wp-staging"),
+            __("Backup & Migration", "wp-staging"),
+            "manage_options",
+            "wpstg_backup",
+            [$this, "getBackupPage"]
         );
 
         // Page: Settings
@@ -333,7 +346,7 @@ class Administrator
             );
         }
 
-        if (defined('WPSTGPRO_VERSION') && $this->siteInfo->isStaging() === false) {
+        if (defined('WPSTGPRO_VERSION')) {
             // Page: License
             add_submenu_page(
                 "wpstg_clone",
@@ -372,6 +385,19 @@ class Administrator
     {
         // Existing clones
         $availableClones = get_option("wpstg_existing_clones_beta", []);
+
+        require_once "{$this->path}views/clone/index.php";
+    }
+
+    /**
+     * Backup & Migration Page
+     */
+    public function getBackupPage()
+    {
+        // Existing clones
+        $availableClones = get_option("wpstg_existing_clones_beta", []);
+
+        $openBackupPage = true;
 
         require_once "{$this->path}views/clone/index.php";
     }
@@ -564,6 +590,8 @@ class Administrator
         // Get db
         $db = WPStaging::getInstance()->get('wpdb');
 
+        $iconPath = $this->assets->getAssetsUrl('svg/vendor/dashicons/cloud.svg');
+
         require_once "{$this->path}views/clone/ajax/single-overview.php";
 
         wp_die();
@@ -594,6 +622,7 @@ class Administrator
         // Scan
         $scan = new Scan();
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
+        $scan->setInfoIcon($this->assets->getAssetsUrl('svg/vendor/dashicons/info-outline.svg'));
         $scan->start();
 
         // Get Options
@@ -671,7 +700,7 @@ class Administrator
             return;
         }
 
-        $cloning = new Updating();
+        $cloning = WPStaging::make(Updating::class);
 
         if (!$cloning->save()) {
             wp_die('Can not save clone data');
@@ -691,7 +720,7 @@ class Administrator
             return;
         }
 
-        $cloning = new Updating();
+        $cloning = WPStaging::make(Updating::class);
         $cloning->setMainJob(Updating::RESET_UPDATE);
         if (!$cloning->save()) {
             wp_die('can not save clone data');
@@ -714,7 +743,7 @@ class Administrator
         $processLock = new ProcessLock();
         $processLock->isRunning();
 
-        $cloning = new Cloning();
+        $cloning = WPStaging::make(Cloning::class);
 
         if (!$cloning->save()) {
             wp_die('can not save clone data');
@@ -734,7 +763,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning())->start());
+        wp_send_json(WPStaging::make(Cloning::class)->start());
     }
 
     /**
@@ -746,7 +775,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning())->start());
+        wp_send_json(WPStaging::make(Cloning::class)->start());
     }
 
     /**
@@ -758,7 +787,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning())->start());
+        wp_send_json(WPStaging::make(Cloning::class)->start());
     }
 
     /**
@@ -770,7 +799,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning())->start());
+        wp_send_json(WPStaging::make(Cloning::class)->start());
     }
 
     /**
@@ -782,7 +811,7 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cloning())->start());
+        wp_send_json(WPStaging::make(Cloning::class)->start());
     }
 
     /**
@@ -1030,6 +1059,9 @@ class Administrator
         // Get Options
         $options = $scan->getOptions();
 
+        // Get Framework\Utils\Math
+        $utilsMath = new Math();
+
         require_once "{$this->path}Pro/views/scan.php";
 
         wp_die();
@@ -1049,7 +1081,7 @@ class Administrator
         }
 
         // Start the process
-        wp_send_json((new Processing())->start());
+        wp_send_json(WPStaging::make(Processing::class)->start());
     }
 
     /**
@@ -1292,6 +1324,15 @@ class Administrator
 
         echo json_encode(['success' => 'false', 'message' => __('Unable to enable cloning in the staging site', 'wp-staging')]);
         exit();
+    }
+
+    /**
+     * Remove uploads backup
+     */
+    public function removeOldUploadsBackup()
+    {
+        $backup = new BackupUploadsDir(null);
+        $backup->removeUploadsBackup();
     }
 
     /**

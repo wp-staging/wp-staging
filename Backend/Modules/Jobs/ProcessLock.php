@@ -49,7 +49,7 @@ class ProcessLock extends JobExecutable
                 // TODO: Create a Swal Response Class and Js library to handle that response or, Implement own Swal alternative
                 'swalOptions'   => [
                     'title'             => __('Error!', 'wp-staging'),
-                    'html'              => __('Hold on, another WP Staging process is already running...', 'wp-staging'),
+                    'html'              => __('Hold on, another WP STAGING process is already running...', 'wp-staging'),
                     'confirmButtonText' => __('Stop other process', 'wp-staging'),
                     'showCancelButton'  => true,
                 ],

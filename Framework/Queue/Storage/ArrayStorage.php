@@ -83,4 +83,15 @@ class ArrayStorage implements StorageInterface
     {
         return null;
     }
+    public function reverse()
+    {
+        $this->items = array_reverse($this->items);
+
+        return $this->items;
+    }
+
+    public function current()
+    {
+        return current($this->items);
+    }
 }

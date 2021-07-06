@@ -11,10 +11,17 @@ interface InterfaceDatabaseClient
     /**
      * Runs given MySQL query
      * @param string $query
+     * @return resource
+     */
+    public function query($query);
+
+    /**
+     * Runs given MySQL query
+     * @param string $query
      * @param bool $isExecOnly
      * @return resource
      */
-    public function query($query, $isExecOnly = false);
+    public function realQuery($query, $isExecOnly = false);
 
     /**
      * Escapes given input for mysql query
@@ -54,6 +61,13 @@ interface InterfaceDatabaseClient
      * @return array
      */
     public function fetchRow($result);
+
+    /**
+     * Returns the result from MySQL query resource as an object
+     * @param resource|mysqli_result $result
+     * @return array
+     */
+    public function fetchObject($result);
 
     /**
      * Returns the number for rows from MySQL results

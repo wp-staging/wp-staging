@@ -2,10 +2,62 @@
 
 namespace WPStaging\Framework\Adapter;
 
+use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Pro\Backup\Job\Jobs\JobImport;
+use WPStaging\Framework\Utils\Strings;
+
 class Directory
 {
-    /** @var string|null */
-    private $uploadDir;
+    /** @var string The directory that holds the uploads, usually wp-content/uploads */
+    protected $uploadDir;
+
+    /** @var string The directory that holds the WPSTAGING cache directory, usually wp-content/uploads/wp-staging/cache */
+    protected $cacheDirectory;
+
+    /** @var string The directory that holds the WPSTAGING tmp directory, usually wp-content/uploads/wp-staging/tmp */
+    protected $tmpDirectory;
+
+    /** @var string The directory that holds the WPSTAGING logs directory, usually wp-content/uploads/wp-staging/logs */
+    protected $logDirectory;
+
+    /** @var string The directory that holds the WPSTAGING data directory, usually wp-content/uploads/wp-staging */
+    protected $pluginUploadsDirectory;
+
+    /** @var string The directory that holds the plugins, usually wp-content/plugins */
+    protected $pluginsDir;
+
+    /** @var string The directory that holds the mu-plugins, usually wp-content/mu-plugins */
+    protected $muPluginsDir;
+
+    /** @var array An array of directories that holds themes, usually ['wp-content/themes'] */
+    protected $themesDirs;
+
+    /** @var string The directory that holds the currently active theme, usually wp-content/themes */
+    protected $activeThemeParentDir;
+
+    /** @var array An array of default directories, such as ['wp-content/themes/', 'wp-content/plugins/', 'wp-content/mu-plugins/', 'wp-content/uploads/'] */
+    protected $defaultWordPressFolders;
+
+    /** @var string The directory that points to the wp-content folder, usually wp-content/ */
+    protected $wpContentDirectory;
+
+    /** @var string The directory that points to the languages folder, usually wp-content/languages/ */
+    protected $langDir;
+
+    /** @var string The directory that points to the ABSPATH folder */
+    protected $absPath;
+
+    /** @var Filesystem */
+    protected $filesystem;
+
+    /** @var Strings */
+    protected $strUtils;
+
+    public function __construct(Filesystem $filesystem, Strings $strings)
+    {
+        $this->filesystem = $filesystem;
+        $this->strUtils = $strings;
+    }
 
     /**
      * @noinspection PhpUnused
@@ -13,21 +65,57 @@ class Directory
      */
     public function getCacheDirectory()
     {
-        return $this->getPluginUploadsDirectory() . 'cache/';
+        if (isset($this->cacheDirectory)) {
+            return $this->cacheDirectory;
+        }
+
+        $this->cacheDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . 'cache'));
+
+        return $this->cacheDirectory;
     }
 
     /**
-     * @noinspection PhpUnused
+     * @return string
+     */
+    public function getTmpDirectory()
+    {
+        if (isset($this->tmpDirectory)) {
+            return $this->tmpDirectory;
+        }
+
+        $this->tmpDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . JobImport::TMP_DIRECTORY));
+
+        wp_mkdir_p($this->tmpDirectory);
+
+        return $this->tmpDirectory;
+    }
+
+    /**
      * @return string
      */
     public function getLogDirectory()
     {
-        return $this->getPluginUploadsDirectory() . $this->getDomain() . 'logs/';
+        if (isset($this->logDirectory)) {
+            return $this->logDirectory;
+        }
+
+        $this->logDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . WPSTG_PLUGIN_DOMAIN . 'logs'));
+
+        return $this->logDirectory;
     }
 
+    /**
+     * @return string
+     */
     public function getPluginUploadsDirectory()
     {
-        return trailingslashit($this->getUploadsDirectory() . $this->getDomain());
+        if (isset($this->pluginUploadsDirectory)) {
+            return $this->pluginUploadsDirectory;
+        }
+
+        $this->pluginUploadsDirectory = trailingslashit(wp_normalize_path($this->getUploadsDirectory() . WPSTG_PLUGIN_DOMAIN));
+
+        return $this->pluginUploadsDirectory;
     }
 
     /**
@@ -43,20 +131,173 @@ class Directory
         // Get absolute path to wordpress uploads directory e.g /var/www/wp-content/uploads/
         // Default is ABSPATH . 'wp-content/uploads', but it can be customized by the db option upload_path or the constant UPLOADS
         $uploadDir = wp_upload_dir(null, false, null)['basedir'];
-        $uploadDir = trim(trailingslashit($uploadDir));
 
-        $this->uploadDir = $uploadDir;
+        $this->uploadDir = trim(trailingslashit(wp_normalize_path($uploadDir)));
 
         return $this->uploadDir;
     }
 
-    public function getDomain()
+    public function getDefaultWordPressFolders()
     {
-        return WPSTG_PLUGIN_DOMAIN;
+        if (!isset($this->defaultWordPressFolders)) {
+            $this->defaultWordPressFolders = array_merge(
+                [
+                    $this->getPluginsDirectory(),
+                    $this->getMuPluginsDirectory(),
+                    $this->getUploadsDirectory(),
+                ],
+                $this->getAllThemesDirectories()
+            );
+        }
+
+        return $this->defaultWordPressFolders;
     }
 
-    public function getSlug()
+    /**
+     * @return string
+     */
+    public function getPluginsDirectory()
     {
-        return WPSTG_PLUGIN_SLUG;
+        if (!isset($this->pluginsDir)) {
+            $this->pluginsDir = $this->filesystem->normalizePath(WP_PLUGIN_DIR);
+        }
+
+        return $this->pluginsDir;
+    }
+
+    /**
+     * @return string
+     */
+    public function getMuPluginsDirectory()
+    {
+        if (!isset($this->muPluginsDir)) {
+            $this->muPluginsDir = $this->filesystem->normalizePath(WPMU_PLUGIN_DIR);
+        }
+
+        return $this->muPluginsDir;
+    }
+
+    /**
+     * @throws \RuntimeException
+     *
+     * @return array
+     */
+    public function getAllThemesDirectories()
+    {
+        if (!isset($this->themesDirs)) {
+            $this->themesDirs = array_map(function ($directory) {
+                return $this->filesystem->normalizePath($directory['theme_root']);
+            }, search_theme_directories(true));
+
+            if (!is_array($this->themesDirs)) {
+                throw new \RuntimeException('Could not get the themes directories.');
+            }
+
+            /*
+             * [
+             *  'foo' => '/var/www/single/wp-content/themes',
+             *  'bar' => '/var/www/single/wp-content/themes',
+             *  'baz' => '/var/themes'
+             * ]
+             *
+             * Becomes:
+             *
+             * [
+             *  '/var/www/single/wp-content/themes',
+             *  '/var/themes',
+             * ]
+             */
+            $this->themesDirs = array_unique($this->themesDirs);
+            $this->themesDirs = array_values($this->themesDirs);
+        }
+
+        return $this->themesDirs;
+    }
+
+    /**
+     * @return string
+     */
+    public function getActiveThemeParentDirectory()
+    {
+        if (!isset($this->activeThemeParentDir)) {
+            $this->activeThemeParentDir = $this->filesystem->normalizePath(get_theme_root(get_template()));
+        }
+
+        return $this->activeThemeParentDir;
+    }
+
+    /**
+     * @return string
+     */
+    public function getLangsDirectory()
+    {
+        if (!isset($this->langDir)) {
+            $this->langDir = $this->filesystem->normalizePath(WP_LANG_DIR);
+        }
+
+        return $this->langDir;
+    }
+
+    /**
+     * @return string
+     */
+    public function getAbsPath()
+    {
+        if (!isset($this->absPath)) {
+            $this->absPath = $this->filesystem->normalizePath(ABSPATH);
+        }
+
+        return $this->absPath;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWpContentDirectory()
+    {
+        if (!isset($this->wpContentDirectory)) {
+            $this->wpContentDirectory = $this->filesystem->normalizePath(WP_CONTENT_DIR);
+        }
+
+        return $this->wpContentDirectory;
+    }
+
+    /**
+     * Check whether the path exists in the list.
+     * If the isRelative flag is checked it will ignore ABSPATH (root path of WP Installation),
+     * from both the paths during checking
+     *
+     * @param string   $path        The path to check
+     * @param array    $list        List of path to check against
+     * @param boolean  $isRelative  Should the ABSPATH be ignored when checking. Default false
+     *
+     * @return boolean
+     */
+    public function isPathInPathsList($path, $list, $isRelative = false)
+    {
+        $path = $this->strUtils->sanitizeDirectorySeparator($path);
+        // remove ABSPATH and add leading slash if not present
+        if ($isRelative) {
+            $path = '/' . ltrim(str_replace($this->getAbsPath(), '', $path), '/');
+        }
+
+        foreach ($list as $pathItem) {
+            $pathItem = $this->strUtils->sanitizeDirectorySeparator($pathItem);
+            // remove ABSPATH and add leading slash if not present
+            if ($isRelative) {
+                $pathItem = '/' . ltrim(str_replace($this->getAbsPath(), '', $pathItem), '/');
+            }
+
+            if ($path === $pathItem) {
+                return true;
+            }
+
+            // Check whether directory a child of any excluded directories
+            if ($this->strUtils->startsWith($path, $pathItem . '/')) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -10,6 +10,7 @@ namespace WPStaging\Framework\Adapter;
 
 use RuntimeException;
 use wpdb;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabase;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Adapter\Database\MysqlAdapter;
@@ -65,10 +66,17 @@ class Database
     }
 
     /**
+     * Will always return prefix in the lowercase for Windows.
+     * In *nix it will return prefix in whatever the case it was written in wp-config.
+     *
      * @return string
      */
     public function getPrefix()
     {
+        if (WPStaging::isWindowsOs()) {
+            return strtolower($this->wpdb->prefix);
+        }
+
         return $this->wpdb->prefix;
     }
 
@@ -90,10 +98,14 @@ class Database
 
     /**
      * Return escaped prefix to use it in sql queries like 'wp\_'
+     *
+     * _ is interpreted as a single-character wildcard when
+     * executed in a LIKE SQL statement.
+     *
      * @param string|null $prefix
      * @return string|string[]
      */
-    public function provideSqlPrefix($prefix = null)
+    public function escapeSqlPrefixForLIKE($prefix = null)
     {
         if (!$prefix) {
             $prefix = $this->getPrefix();

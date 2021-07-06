@@ -5,6 +5,7 @@
 
 namespace WPStaging\Framework\Component;
 
+use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;
@@ -17,6 +18,7 @@ abstract class AbstractTemplateComponent
 
     private $accessToken;
     private $nonce;
+    private $wpAdapter;
 
     public function __construct(TemplateEngine $templateEngine)
     {
@@ -25,6 +27,7 @@ abstract class AbstractTemplateComponent
         // Todo: Inject using DI
         $this->accessToken = new AccessToken();
         $this->nonce       = new Nonce();
+        $this->wpAdapter   = new WpAdapter();
     }
 
     /**
@@ -43,7 +46,7 @@ abstract class AbstractTemplateComponent
      */
     protected function canRenderAjax()
     {
-        $isAjax          = wp_doing_ajax();
+        $isAjax          = $this->wpAdapter->doingAjax();
         $hasToken        = $this->accessToken->requestHasValidToken();
         $isAuthenticated = current_user_can((new Capabilities())->manageWPSTG()) && $this->nonce->requestHasValidNonce(Nonce::WPSTG_NONCE);
 

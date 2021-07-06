@@ -2,10 +2,12 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\Core\Utils\Helper;
+use stdClass;
+use wpdb;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\Utils\Multisite;
-use WPStaging\Framework\CloningProcess\SearchReplace\SearchReplaceService;
+use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Traits\DbRowsGeneratorTrait;
 use WPStaging\Framework\Utils\Strings;
 
@@ -23,6 +25,7 @@ class SearchReplace extends CloningProcess
 {
     use TotalStepsAreNumberOfTables;
     use DbRowsGeneratorTrait;
+    use DatabaseSearchReplaceTrait;
 
     /**
      * The maximum number of failed attempts after which the Job should just move on.
@@ -68,28 +71,16 @@ class SearchReplace extends CloningProcess
     public $tmpPrefix;
 
     /**
-     * @var Helper
-     */
-    private $helper;
-
-    /**
-     * @var SearchReplaceService
-     */
-    private $searchReplaceService;
-
-    /**
      * Initialize
      */
     public function initialize()
     {
         $this->initializeDbObjects();
-        $this->helper = new Helper();
         $this->total = count($this->options->tables);
         $this->tmpPrefix = $this->options->prefix;
         $this->strings = new Strings();
         $this->sourceHostname = $this->getSourceHostname();
         $this->destinationHostname = $this->getDestinationHostname();
-        $this->searchReplaceService = new SearchReplaceService();
     }
 
     public function start()
@@ -151,14 +142,6 @@ class SearchReplace extends CloningProcess
         return true;
     }
 
-    private function getSourceHostname()
-    {
-        if ($this->isSubDir()) {
-            return trailingslashit($this->helper->getHomeUrlWithoutScheme()) . $this->getSubDir();
-        }
-        return $this->helper->getHomeUrlWithoutScheme();
-    }
-
     /**
      * Copy Tables
      * @param string $tableName
@@ -166,8 +149,8 @@ class SearchReplace extends CloningProcess
      */
     private function updateTable($tableName)
     {
-        $strings = new Strings();
-        $table = $strings->str_replace_first($this->productionDb->prefix, '', $tableName);
+        $strings      = new Strings();
+        $table        = $strings->str_replace_first(WPStaging::getTablePrefix(), '', $tableName);
         $newTableName = $this->tmpPrefix . $table;
 
         // Save current job
@@ -295,10 +278,10 @@ class SearchReplace extends CloningProcess
     {
         $table = esc_sql($table);
 
-        $args['search_for'] = $this->searchReplaceService->generateHostnamePatterns($this->sourceHostname);
+        $args['search_for'] = $this->generateHostnamePatterns($this->sourceHostname);
         $args['search_for'][] = ABSPATH;
 
-        $args['replace_with'] = $this->searchReplaceService->generateHostnamePatterns($this->destinationHostname);
+        $args['replace_with'] = $this->generateHostnamePatterns($this->destinationHostname);
         $args['replace_with'][] = $this->options->destinationDir;
 
         $this->debugLog("DB Search & Replace: Search: {$args['search_for'][0]}", Logger::TYPE_INFO);
@@ -323,7 +306,7 @@ class SearchReplace extends CloningProcess
 
         list($primary_key, $columns) = $primaryKeyAndColumns;
 
-        if ($this->options->job->current != $table) {
+        if ($this->options->job->current !== $table) {
             $this->logDebug(sprintf('We are using the LIMITS of a table different than the table we are parsing now. Table being parsed: %s. Table that we are using "start" from: %s. Start: %s', $table, $this->options->job->current, $this->options->job->start));
         }
 
@@ -352,7 +335,7 @@ class SearchReplace extends CloningProcess
         }
 
         // Filter certain rows (of other plugins)
-        $filter = $this->searchReplaceService->excludedStrings();
+        $filter = $this->excludedStrings();
 
         $filter = apply_filters('wpstg_clone_searchreplace_excl_rows', $filter);
 
@@ -408,7 +391,7 @@ class SearchReplace extends CloningProcess
                 }
 
                 // Skip primary key column
-                if ($column == $primary_key) {
+                if ($column === $primary_key) {
                     $whereSql[] = $column . ' = "' . wpstg_mysql_escape_mimic($dataRow) . '"';
                     continue;
                 }
@@ -423,7 +406,7 @@ class SearchReplace extends CloningProcess
                 $dataRow = $searchReplace->replace($dataRow);
 
                 // Something was changed
-                if ($row[$column] != $dataRow) {
+                if ($row[$column] !== $dataRow) {
                     $updateSql[] = $column . ' = "' . wpstg_mysql_escape_mimic($dataRow) . '"';
                     $doUpdate = true;
                 }
@@ -447,7 +430,7 @@ class SearchReplace extends CloningProcess
         } // end row loop
 
         /// DEBUG
-        $this->logDebug(
+/*        $this->logDebug(
             sprintf(
                 'SearchReplace-afterRowsProcessing: processed=%s; max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
                 $processed,
@@ -458,7 +441,7 @@ class SearchReplace extends CloningProcess
                 $this->getRunningTime(),
                 ($this->isThreshold() ? 'yes' : 'no')
             )
-        );
+        );*/
         /// DEBUG
 
         unset($row,$updateSql,$whereSql,$sql,$currentRow);
@@ -511,7 +494,7 @@ class SearchReplace extends CloningProcess
             $this->options->job->failedAttempts = 0;
         }
 
-        if ($this->options->job->start != 0) {
+        if ($this->options->job->start !== 0) {
             // The job was attempted too many times and should be skipped now.
             return !($this->options->job->failedAttempts > $this->maxFailedAttempts);
         }
@@ -519,7 +502,7 @@ class SearchReplace extends CloningProcess
         $this->options->job->total = (int)$this->productionDb->get_var("SELECT COUNT(1) FROM {$oldTableName}");
         $this->options->job->failedAttempts = 0;
 
-        if ($this->options->job->total == 0) {
+        if ($this->options->job->total === 0) {
             $this->finishStep();
             return false;
         }
@@ -564,39 +547,9 @@ class SearchReplace extends CloningProcess
         $this->options->clonedTables[] = $this->options->tables[$this->options->currentStep];
 
         // Reset job
-        $this->options->job = new \stdClass();
+        $this->options->job = new stdClass();
 
         return true;
-    }
-
-    /**
-     * Check if WP is installed in subdir
-     * @return boolean
-     */
-    private function isSubDir()
-    {
-        // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
-        // This is happening much more often than you would expect
-        $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
-        $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
-
-        return $home !== $siteurl;
-    }
-
-    /**
-     * Get the install sub directory if WP is installed in sub directory
-     * @return string
-     */
-    private function getSubDir()
-    {
-        $home = get_option('home');
-        $siteurl = get_option('siteurl');
-
-        if (empty($home) || empty($siteurl)) {
-            return '';
-        }
-
-        return str_replace([$home, '/'], '', $siteurl);
     }
 
     /**
@@ -605,12 +558,12 @@ class SearchReplace extends CloningProcess
      * If nothing was processed, then the job start  will be ticked by 1.
      *
      * @param int   $processed The  number of actually processed rows in this run.
-     * @param \wpdb $db        The wpdb instance being used to process.
+     * @param wpdb $db        The wpdb instance being used to process.
      * @param string $table    The table being processed.
      *
      * @return void The method does not return any value.
      */
-    protected function updateJobStart($processed, \wpdb $db, $table)
+    protected function updateJobStart($processed, wpdb $db, $table)
     {
         $this->processed = absint($processed);
 

@@ -20,7 +20,7 @@
     <div class="wpstg-clear-both"></div>
 </div>
 
-<button type="button" id="wpstg-cancel-cloning-update" data-job="<?php echo $cloning->getOptions()->mainJob; ?>" class="wpstg-link-btn button-primary">
+<button type="button" id="wpstg-cancel-cloning-update" data-job="<?php echo $cloning->getOptions()->mainJob; ?>" class="wpstg-link-btn wpstg-button--primary wpstg-button--red">
     <?php
     if ($cloning->getOptions()->mainJob === 'resetting') {
         _e("Cancel Reset", "wp-staging");

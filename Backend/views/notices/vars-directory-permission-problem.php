@@ -1,7 +1,9 @@
-<div class="wpstg-error">
+<div class="notice notice-error">
     <p>
-        <strong>WP Staging Folder Permission error: </strong> <?php echo "{$varsDirectory}"?> is not write and/or readable.
+        <strong>WP STAGING - Folder Permission error. </strong>
         <br>
-        Check if the folder <strong><?php echo "{$varsDirectory}"?></strong> exists! Folder permissions should be chmod 755 or 777.
+        The folder <code><?php echo "{$varsDirectory}"?></code> is not write and/or readable.
+        <br>
+        Check if this folder exists! Folder permissions should be chmod 755 or 777.
     </p>
 </div>

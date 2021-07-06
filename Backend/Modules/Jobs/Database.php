@@ -2,7 +2,9 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use stdClass;
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
 use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
@@ -175,7 +177,7 @@ class Database extends CloningProcess
         return (
             $old === $name &&
             (
-                !isset($this->options->job->current, $this->options->job->start) || $this->options->job->start == 0
+                !isset($this->options->job->current, $this->options->job->start) || $this->options->job->start === 0
             )
         );
     }
@@ -204,7 +206,7 @@ class Database extends CloningProcess
         $this->options->clonedTables[] = isset($this->options->tables[$this->options->currentStep]) ? $this->options->tables[$this->options->currentStep] : false;
 
         // Reset job
-        $this->options->job = new \stdClass();
+        $this->options->job = new stdClass();
 
         return true;
     }
@@ -327,7 +329,7 @@ class Database extends CloningProcess
             return false;
         }
 
-        if ($this->options->job->start != 0) {
+        if ($this->options->job->start !== 0) {
             return true;
         }
 
@@ -343,7 +345,7 @@ class Database extends CloningProcess
             return true;
         }
 
-        if ($this->options->job->total == 0) {
+        if ($this->options->job->total === 0) {
             $this->finishStep();
             return false;
         }
@@ -361,13 +363,14 @@ class Database extends CloningProcess
      */
     private function addMissingTables()
     {
-        if (!in_array($this->productionDb->prefix . 'users', $this->options->tables)) {
-            $this->options->tables[] = $this->productionDb->prefix . 'users';
+        $dbPrefix = WPStaging::getTablePrefix();
+        if (!in_array($dbPrefix . 'users', $this->options->tables)) {
+            $this->options->tables[] = $dbPrefix . 'users';
             $this->saveOptions();
         }
 
-        if (!in_array($this->productionDb->prefix . 'usermeta', $this->options->tables)) {
-            $this->options->tables[] = $this->productionDb->prefix . 'usermeta';
+        if (!in_array($dbPrefix . 'usermeta', $this->options->tables)) {
+            $this->options->tables[] = $dbPrefix . 'usermeta';
             $this->saveOptions();
         }
     }
@@ -377,7 +380,8 @@ class Database extends CloningProcess
      */
     private function abortIfStagingPrefixEqualsProdPrefix()
     {
-        if ($this->productionDb->prefix === $this->getStagingPrefix()) {
+        $dbPrefix = WPStaging::getTablePrefix();
+        if ($dbPrefix === $this->getStagingPrefix()) {
             $error = 'Fatal error 7: The destination database table prefix ' . $this->getStagingPrefix() . ' is identical to the table prefix of the production site. Go to Sites > Actions > Edit Data and correct the table prefix or contact us.';
             $this->returnException($error);
             return true;
@@ -394,7 +398,10 @@ class Database extends CloningProcess
     {
         if ($this->isExternalDatabase()) {
             $this->options->prefix = !empty($this->options->databasePrefix) ? $this->options->databasePrefix : $this->productionDb->prefix;
-            return $this->options->prefix;
+        }
+
+        if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
+            return strtolower($this->options->prefix);
         }
 
         return $this->options->prefix;

@@ -6,21 +6,24 @@
 
 namespace WPStaging\Framework\Utils\Cache;
 
-use LimitIterator;
 use SplFileObject;
+use LimitIterator;
 use WPStaging\Framework\Exceptions\IOException;
+use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Filesystem\File;
-use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Pro\Backup\Exceptions\ThresholdException;
 
 // TODO DRY; re-use \WPStaging\Framework\Filesystem\File
 // Buffered cache reads the file partially
 class BufferedCache extends AbstractCache
 {
+    use ResourceTrait;
+
     const POSITION_TOP = 'top';
     const POSITION_BOTTOM = 'bottom';
 
     const AVERAGE_LINE_LENGTH = 4096;
-    const MAX_LENGTH_PER_IOP = 512000; // Max Length Per Input Output Operations
 
     public function first()
     {
@@ -68,44 +71,124 @@ class BufferedCache extends AbstractCache
         if (is_array($value)) {
             $value = implode(PHP_EOL, $value);
         }
+
         /** @noinspection UnnecessaryCastingInspection */
-        return (new File($this->filePath, File::MODE_APPEND))->fwriteSafe((string) $value . PHP_EOL);
+        return (new File($this->filePath, File::MODE_APPEND))->fwriteSafe((string)$value . PHP_EOL);
     }
 
-    public function prepend($value)
+    /**
+     * Like array_reverse(), but for files.
+     *
+     * @throws ThresholdException When threshold limit hits.
+     */
+    public function reverse()
     {
-        if (is_array($value)) {
-            $value = implode(PHP_EOL, $value) . PHP_EOL;
+        if (!file_exists($this->filePath . 'tmp')) {
+            copy($this->filePath, $this->filePath . 'tmp');
         }
 
-        $handle = fopen($this->filePath, 'wb+');
-        $length = strlen($value);
+        $existingFile = new SplFileObject($this->filePath, 'rb+');
+        $existingFile->flock(LOCK_EX);
 
-        $i = 0;
-        $data = $value;
-        while (($buffer = fread($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
-            fseek($handle, $i * $length);
-            fwrite($handle, $data);
-            $data = $buffer;
-            $i++;
+        $tempFile = new SplFileObject($this->filePath . 'tmp', 'rb+');
+        $existingFile->flock(LOCK_EX);
+
+        $lastLine = null;
+        $currentLine = null;
+
+        try {
+            $i = 0;
+            while (true) {
+                $i++;
+                // Only check for thresholds every 25 lines
+                if ($i >= 25) {
+                    $i = 0;
+                    if ($this->isThreshold()) {
+                        throw ThresholdException::thresholdHit('');
+                    }
+                }
+
+                $existingFile->seek(PHP_INT_MAX);
+
+                if (!is_null($currentLine)) {
+                    $currentLine--;
+
+                    if ($currentLine < 0) {
+                        throw new \OutOfBoundsException();
+                    }
+
+                    $existingFile->seek($currentLine);
+                }
+
+                if (is_null($lastLine)) {
+                    $lastLine = $existingFile->key();
+                    $currentLine = $lastLine;
+                    $existingFile->seek($lastLine);
+                }
+
+                $line = $existingFile->current();
+                $tempFile->fwrite($line);
+                $existingFile->ftruncate($existingFile->ftell());
+            }
+        } catch (\OutOfBoundsException $e) {
+            // End of file
+        } catch (ThresholdException $e) {
+            // This exception must be handled by the caller.
+            throw $e;
         }
-        fclose($handle);
+
+        unlink($this->filePath);
+        rename($this->filePath . 'tmp', $this->filePath);
+    }
+
+    public function prepend($data)
+    {
+        if (is_array($data)) {
+            $data = implode(PHP_EOL, $data);
+        }
+
+        $data = trim($data) . PHP_EOL;
+
+        // Early bail: First addition
+        if (!file_exists($this->filePath)) {
+            file_put_contents($this->filePath, $data);
+            return;
+        }
+
+        /*
+         * To prepend to a large file, we have to re-write it from scratch,
+         * so let's make a copy of the file, add our data to the beginning of a new file,
+         * and add the data from the existing file into it.
+         */
+
+        copy($this->filePath, $this->filePath . 'tmp');
+
+        $existingFile = new SplFileObject($this->filePath, 'rb');
+        $existingFile->flock(LOCK_EX);
+
+        $tempFile = new SplFileObject($this->filePath . 'tmp', 'wb');
+        $existingFile->flock(LOCK_EX);
+        $tempFile->fwrite($data);
+
+        while (!empty($nextLine = $existingFile->fgets())) {
+            $tempFile->fwrite($nextLine);
+        }
+
+        unlink($this->filePath);
+        copy($this->filePath . 'tmp', $this->filePath);
     }
 
     /**
      * @param resource $source
      * @param int $offset
-     * @param callable|null $shouldStop
+     * @throws DiskNotWritableException
      * @return int
      */
-    public function appendFile($source, $offset = 0, callable $shouldStop = null)
+    public function appendFile($source, $offset = 0)
     {
         $target = fopen($this->filePath, 'ab');
 
-        if (!$shouldStop) {
-            return $this->appendAllFile($source, $target, $offset);
-        }
-        return $this->stoppableAppendFile($source, $target, $offset, $shouldStop);
+        return $this->stoppableAppendFile($source, $target, $offset);
     }
 
     public function readLines($lines = 1, $default = null, $position = self::POSITION_TOP)
@@ -234,13 +317,25 @@ class BufferedCache extends AbstractCache
         $file = new SplFileObject($this->filePath, 'rb');
         $file->seek(PHP_INT_MAX);
         $lastLine = $file->key();
-        $offset = $lastLine - $lines;
-        if ($offset < 0) {
-            $offset = 0;
-        }
+        $offset = max($lastLine - $lines, 0);
 
         $allLines = new LimitIterator($file, $offset, $lastLine);
         return array_reverse(array_values(iterator_to_array($allLines)));
+    }
+
+    public function readLastLine()
+    {
+        $file = new SplFileObject($this->filePath, 'rb');
+        $negativeOffset = 16 * KB_IN_BYTES;
+
+        // Set the pointer to the end of the file, minus the negative offset for which to start looking for the last line.
+        $file->fseek(max($file->getSize() - $negativeOffset, 0), SEEK_SET);
+
+        do {
+            $lastLine = $file->fgets();
+        } while (!$file->eof());
+
+        return $lastLine;
     }
 
     /**
@@ -275,53 +370,34 @@ class BufferedCache extends AbstractCache
      * @param resource $target
      * @param int $offset
      * @return int
-     * @throws IOException
+     * @throws DiskNotWritableException
      */
-    private function appendAllFile($source, $target, $offset)
-    {
-        $bytesWritten = 0;
-        while (!feof($source)) {
-            $chunk = fread($source, self::MAX_LENGTH_PER_IOP);
-            $_bytesWritten = fwrite($target, $chunk);
-
-            // Failed to write
-            if ($_bytesWritten === false) {
-                // TODO Custom Exception
-                throw new IOException('Failed to append stoppable file');
-            }
-            $bytesWritten += $_bytesWritten;
-        }
-        return $bytesWritten;
-    }
-
-    /**
-     * @param resource $source
-     * @param resource $target
-     * @param int $offset
-     * @param callable $shouldStop
-     * @return int
-     * @throws IOException
-     */
-    private function stoppableAppendFile($source, $target, $offset, callable $shouldStop)
+    private function stoppableAppendFile($source, $target, $offset)
     {
         $stats = fstat($source);
-        $bytesWritten = 0;
-        while (!$shouldStop() && !feof($source)) {
-            $chunk = fread($source, self::MAX_LENGTH_PER_IOP);
-            $_bytesWritten = fwrite($target, $chunk);
+        $bytesWrittenTotal = $offset;
+        fseek($source, $offset);
+        while (!$this->isThreshold() && !feof($source)) {
+            $chunk = fread($source, 512 * KB_IN_BYTES);
 
-            // Failed to write
-            if ($_bytesWritten === false) {
-                // TODO Custom Exception
-                throw new IOException('Failed to append stoppable file');
+            if (!empty($chunk)) {
+                $bytesWrittenInThisRequest = fwrite($target, $chunk);
+                unset($chunk);
+
+                // Failed to write
+                if ($bytesWrittenInThisRequest === false || $bytesWrittenInThisRequest <= 0) {
+                    throw DiskNotWritableException::diskNotWritable();
+                }
+            } else {
+                $bytesWrittenInThisRequest = 0;
             }
 
             // Finished writing, nothing more to write!
-            $bytesWritten += $_bytesWritten;
-            if ($_bytesWritten === 0 || $stats['size'] <= $bytesWritten) {
+            $bytesWrittenTotal += $bytesWrittenInThisRequest;
+            if ($bytesWrittenInThisRequest === 0 || $stats['size'] <= $bytesWrittenTotal) {
                 break;
             }
         }
-        return $bytesWritten;
+        return $bytesWrittenTotal;
     }
 }

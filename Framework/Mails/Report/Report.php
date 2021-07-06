@@ -81,7 +81,7 @@ class Report
             $errors[] = [
                 "status" => 'already_submitted',
                 "message" => __("You've already submitted a ticket.<br/>" .
-                    "Do you really want to send another one?", 'wp-staging')
+                    "Do you want to send another one?", 'wp-staging')
             ];
             return  $errors;
         }

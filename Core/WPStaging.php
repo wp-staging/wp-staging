@@ -6,14 +6,16 @@ use WPStaging\Backend\Administrator;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\AssetServiceProvider;
+use WPStaging\Framework\CommonServiceProvider;
 use WPStaging\Framework\DI\Container;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Frontend\Frontend;
-use WPStaging\Vendor\Psr\Log\LoggerInterface;
+use WPStaging\Frontend\FrontendServiceProvider;
 
 /**
  * Class WPStaging
@@ -40,7 +42,7 @@ final class WPStaging
     /**
      * @var int The microtime where the Container was bootstraped. Used to identify the time where the application started running.
      */
-    private $startTime;
+    public static $startTime;
 
     /**
      * WPStaging constructor.
@@ -54,7 +56,7 @@ final class WPStaging
     {
         $this->isBootstrapped = true;
 
-        $this->startTime = microtime(true);
+        WPStaging::$startTime = microtime(true);
 
         $this->container->register(CoreServiceProvider::class);
 
@@ -63,6 +65,7 @@ final class WPStaging
         // Boot the container after dependencies are loaded.
         $this->container->boot();
 
+        $this->container->register(CommonServiceProvider::class);
         $this->container->register(AssetServiceProvider::class);
         $this->initCron();
         $this->cloneSiteFirstRun();
@@ -71,13 +74,12 @@ final class WPStaging
             $this->container->register(\WPStaging\Pro\ProServiceProvider::class);
         }
 
+        if (!is_admin()) {
+            $this->container->register(FrontendServiceProvider::class);
+        }
+
         $this->handleCacheIssues();
         $this->preventDirectoryListing();
-    }
-
-    public function getStartTime()
-    {
-        return $this->startTime;
     }
 
     /**
@@ -101,11 +103,32 @@ final class WPStaging
 
     /**
      * Get table prefix of the current site
+     * Always use lowercase on Windows
      * @return string
      */
     public static function getTablePrefix()
     {
-        return WPStaging::getInstance()->get("wpdb")->prefix;
+        $db = WPStaging::getInstance()->get("wpdb");
+        if (self::isWindowsOs()) {
+            return strtolower($db->prefix);
+        }
+
+        return $db->prefix;
+    }
+
+    /**
+     * Get base prefix of the current wordpress
+     * Always use lowercase on Windows
+     * @return string
+     */
+    public static function getTableBasePrefix()
+    {
+        $db = WPStaging::getInstance()->get("wpdb");
+        if (self::isWindowsOs()) {
+            return strtolower($db->base_prefix);
+        }
+
+        return $db->base_prefix;
     }
 
     /**
@@ -151,6 +174,16 @@ final class WPStaging
             $this->isBootstrapped = false;
             $this->container = new Container();
         }
+    }
+
+    /**
+     * Is the current PHP OS Windows?
+     *
+     * @return boolean
+     */
+    public static function isWindowsOs()
+    {
+        return strncasecmp(PHP_OS, 'WIN', 3) === 0;
     }
 
     /**
@@ -237,6 +270,28 @@ final class WPStaging
     /**
      * Get given name index from DI
      *
+     * USE THIS WISELY. Most of the time the dependencies should be injected through the __construct!
+     * Google for "service locator vs dependency injection"
+     *
+     * @param string $id The bound service identifier, or a class name to build and return.
+     *
+     * @return mixed The built object bound to the id, the requested
+     *               class instance.
+     */
+    public static function make($id)
+    {
+        static $container;
+
+        if ($container === null) {
+            $container = self::getInstance()->getContainer();
+        }
+
+        return $container->make($id);
+    }
+
+    /**
+     * Get given name index from DI
+     *
      * @param string $name
      *
      * @deprecated Refactor implementations of this method to use Dependency Injection instead.
@@ -309,7 +364,8 @@ final class WPStaging
      */
     private function preventDirectoryListing()
     {
-        if (is_admin() && !wp_doing_ajax()) {
+        // TODO: inject WpAdapter using DI
+        if (is_admin() && !(new WpAdapter())->doingAjax()) {
             /** @var DirectoryListing $directoryListing */
             $directoryListing = $this->getContainer()->make(DirectoryListing::class);
             $directoryListing->protectPluginUploadDirectory();

@@ -24,9 +24,9 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
             <option value="<?php echo ExcludeFilter::SIZE_MB ?>" <?php echo isset($size) && strpos($size, ExcludeFilter::SIZE_MB) !== false ? "selected" : '' ?>>MB</option>
             <option value="<?php echo ExcludeFilter::SIZE_GB ?>" <?php echo isset($size) && strpos($size, ExcludeFilter::SIZE_GB) !== false ? "selected" : '' ?>>GB</option>
         </select>
-        <div class="wpstg-popover">
+        <div class="wpstg--tooltip wpstg--exclude-rules--tooltip">
             <button class="wpstg-exclusion-rule-info" type="button">i</button>
-            <p class="wpstg-code-block wpstg-rule-info"><?php echo sprintf(__('Exclude files by size. For example to exclude files greater than 10 MB, select %s and type %s in next input box and select %s.', 'wp-staging'), '<code class="wpstg-code">' . __('GREATER THAN', 'wp-staging') . '</code>', '<code class="wpstg-code">10</code>', '<code class="wpstg-code">MB</code>') ?>
+            <p class="wpstg--tooltiptext has-top-arrow"><?php echo sprintf(__('Exclude files by size. For example to exclude files greater than 10 MB, select %s and type %s in next input box and select %s.', 'wp-staging'), '<code class="wpstg-code">' . __('GREATER THAN', 'wp-staging') . '</code>', '<code class="wpstg-code">10</code>', '<code class="wpstg-code">MB</code>') ?>
             </p>
         </div>
     </td>

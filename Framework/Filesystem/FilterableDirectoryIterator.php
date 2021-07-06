@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Filesystem;
 
 use DirectoryIterator;
+use Exception;
 use FilesystemIterator;
 use IteratorIterator;
 use RecursiveDirectoryIterator;
@@ -225,11 +226,15 @@ class FilterableDirectoryIterator
             throw new FilesystemExceptions(sprintf(__('Directory not found on the given path: %s.', 'wp-staging'), $this->directory));
         }
 
-        if ($this->isRecursive) {
-            return $this->getRecursiveIterator();
-        }
+        try {
+            if ($this->isRecursive) {
+                return $this->getRecursiveIterator();
+            }
 
-        return $this->getIterator();
+            return $this->getIterator();
+        } catch (Exception $e) {
+            throw new FilesystemExceptions($e->getMessage());
+        }
     }
 
     /**

@@ -147,4 +147,36 @@ class SiteInfo
         // So now try disabling through new way
         return (!file_exists($cloneableFile) && $this->cloneOptions->delete(self::IS_CLONEABLE_KEY));
     }
+
+    /**
+     * Ports wp_timezone_string function for compatibility with WordPress < 5.3
+     *
+     * @see wp_timezone_string()
+     *
+     * @return mixed|string|void
+     */
+    public function getSiteTimezone()
+    {
+        // Early bail: Let's use WordPress core function, as it is available.
+        if (function_exists('wp_timezone_string')) {
+            return wp_timezone_string();
+        }
+
+        $timezone_string = get_option('timezone_string');
+
+        if ($timezone_string) {
+            return $timezone_string;
+        }
+
+        $offset = (float)get_option('gmt_offset');
+        $hours = (int)$offset;
+        $minutes = ($offset - $hours);
+
+        $sign = ($offset < 0) ? '-' : '+';
+        $abs_hour = abs($hours);
+        $abs_mins = abs($minutes * 60);
+        $tz_offset = sprintf('%s%02d:%02d', $sign, $abs_hour, $abs_mins);
+
+        return $tz_offset;
+    }
 }

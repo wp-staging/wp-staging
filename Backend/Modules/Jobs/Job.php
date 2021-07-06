@@ -2,20 +2,17 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-// No Direct Access
-if (!defined("WPINC")) {
-    die;
-}
-
 use DateInterval;
 use DateTime;
 use Exception;
+use stdClass;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Database\ExcludedTables;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
+use WPStaging\Framework\Utils\Math;
 
 /**
  * Class Job
@@ -61,12 +58,18 @@ abstract class Job implements ShutdownableInterface
      */
     protected $excludedTableService;
 
+    /** @var \stdClass */
+    protected $utilsMath;
+
     /**
      * Job constructor.
      * @throws Exception
      */
     public function __construct()
     {
+
+        $this->utilsMath = new Math();
+
         // TODO: inject using DI
         $this->excludedTableService = new ExcludedTables();
 
@@ -80,7 +83,7 @@ abstract class Job implements ShutdownableInterface
         $this->settings = (object)get_option("wpstg_settings", []);
 
         if (!$this->options) {
-            $this->options = new \stdClass();
+            $this->options = new stdClass();
         }
 
         if (isset($this->options->existingClones) && is_object($this->options->existingClones)) {
@@ -97,7 +100,7 @@ abstract class Job implements ShutdownableInterface
             !isset($this->settings->maxFileSize) ||
             !isset($this->settings->fileLimit)
         ) {
-            $this->settings = new \stdClass();
+            $this->settings = new stdClass();
             $this->setDefaultSettings();
         }
 
@@ -110,6 +113,11 @@ abstract class Job implements ShutdownableInterface
     {
         // Commit logs
         if ($this->logger instanceof Logger) {
+            if (isset($this->options->mainJob)) {
+                $timestamp = $this->options->existingClones[$this->options->clone]['datetime'];
+                $this->logger->setFileName($this->options->mainJob . '_' . date('Y-m-d_H-i-s', $timestamp));
+            }
+
             $this->logger->commit();
         } else {
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
@@ -141,9 +149,9 @@ abstract class Job implements ShutdownableInterface
     }
 
     /**
-     * Save options
      * @param null|array|object $options
      * @return bool
+     * @throws Exception
      */
     public function saveOptions($options = null)
     {
@@ -220,7 +228,7 @@ abstract class Job implements ShutdownableInterface
                 sprintf(
                     "RESET TIME: current time: %s, Start Time: %d, exec time limit: %s",
                     $this->getRunningTime(),
-                    WPStaging::getInstance()->getStartTime(),
+                    WPStaging::$startTime,
                     $this->findExecutionTimeLimit()
                 )
             );
@@ -270,7 +278,7 @@ abstract class Job implements ShutdownableInterface
     }
 
     /**
-     * Throw a errror message via json and stop further execution
+     * Throw an error message via json and stop further execution
      * @param string $message
      */
     public function returnException($message = '')
@@ -288,6 +296,7 @@ abstract class Job implements ShutdownableInterface
     }
 
     /**
+     * Is job running
      * @return bool
      */
     protected function isRunning()

@@ -64,7 +64,7 @@ class TableService
     public function findTableStatusStartsWith($prefix = null)
     {
         // eg: SHOW TABLE STATUS LIKE 'wp\_%';
-        $tables = $this->database->find("SHOW TABLE STATUS LIKE '{$this->provideSqlPrefix($prefix)}%'");
+        $tables = $this->database->find("SHOW TABLE STATUS LIKE '{$this->database->escapeSqlPrefixForLIKE($prefix)}%'");
         if (!$tables) {
             return null;
         }
@@ -117,12 +117,15 @@ class TableService
             return $tables;
         }
 
-        return $this->getFilteredResult($tables, $prefix);
+        return $this->filterByPrefix($tables, $prefix);
     }
 
 
     /**
      * Get all table views starting with a certain prefix
+     *
+     * @param string|null $prefix
+     *
      * @return array|null
      */
     public function findViewsNamesStartWith($prefix = null)
@@ -145,18 +148,30 @@ class TableService
             return $views;
         }
 
-        return $this->getFilteredResult($views, $prefix);
+        return $this->filterByPrefix($views, $prefix);
     }
 
     /**
      * Delete all the tables or views that starts with $startsWith
-     * @param string $startsWith
-     * @param array $excludedTables
+     *
+     * @param string $prefix
+     * @param array  $excludedTables
+     *
      * @return bool
      */
-    public function deleteTablesStartWith($startsWith = null, $excludedTables = [])
+    public function deleteTablesStartWith($prefix, $excludedTables = [], $deleteViews = false)
     {
-        $prefix = $this->provideSqlPrefix($startsWith);
+        if ($deleteViews) {
+            // Delete VIEWS first
+            $views = $this->findViewsNamesStartWith($prefix);
+            if (is_array($views) && !empty($views)) {
+                $viewsToRemove = array_diff($views, $excludedTables);
+                if (!$this->deleteViews($viewsToRemove)) {
+                    return false;
+                }
+            }
+        }
+
         $tables = $this->findTableStatusStartsWith($prefix);
         if ($tables === null) {
             return true;
@@ -190,18 +205,36 @@ class TableService
             // TODO: inject class Strings using DI
             if (!$this->database->isExternal() && (new Strings())->startsWith($table, $this->database->getProductionPrefix())) {
                 $this->errors[] = sprintf(__("Fatal Error: Trying to delete table %s of main WP installation!", 'wp-staging'), $table);
+
                 return false;
             }
 
-            $this->database->getWpdba()->exec("DROP TABLE {$table}");
+            $this->database->getWpdba()->exec("DROP TABLE {$table};");
+        }
 
-            if (!is_callable($this->shouldStop)) {
-                continue;
-            }
+        return true;
+    }
 
-            if (call_user_func($this->shouldStop)) {
+    /**
+     * Delete Views
+     *
+     * @param array  $views
+     * @param string $prefix
+     *
+     * @return bool
+     */
+    public function deleteViews($views)
+    {
+        foreach ($views as $view) {
+            // PROTECTION: Never delete any table that beginns with wp prefix of live site
+            // TODO: inject class Strings using DI
+            if (!$this->database->isExternal() && (new Strings())->startsWith($view, $this->database->getProductionPrefix())) {
+                $this->errors[] = sprintf(__("Fatal Error: Trying to delete view %s of main WP installation!", 'wp-staging'), $view);
+
                 return false;
             }
+
+            $this->database->getWpdba()->exec("DROP VIEW {$view};");
         }
 
         return true;
@@ -209,19 +242,22 @@ class TableService
 
     /**
      * Get all elements starting with a specific string from an array
-     * @param array $data
+     *
+     * @param array  $data
      * @param string $startsWith
+     *
      * @return array
      */
-    private function getFilteredResult($data, $startsWith)
+    private function filterByPrefix($tablesOrViews, $prefix)
     {
-        $result = [];
-        foreach ($data as $value) {
-            if (strpos($value, $startsWith) === 0) {
-                $result[] = $value;
-            }
-        }
-        return $result;
+        $filteredArray = array_filter($tablesOrViews, function ($tableOrView) use ($prefix) {
+            return strpos($tableOrView, $prefix) === 0;
+        });
+
+        // Re-orders the array eliminating the "key" gaps for filtered out values.
+        $reorderedArray = array_values($filteredArray);
+
+        return $reorderedArray;
     }
 
     /**
@@ -230,14 +266,5 @@ class TableService
     public function getDatabase()
     {
         return $this->database;
-    }
-
-    /**
-     * @param string|null $prefix
-     * @return string
-     */
-    private function provideSqlPrefix($prefix = null)
-    {
-        return $this->database->provideSqlPrefix($prefix);
     }
 }

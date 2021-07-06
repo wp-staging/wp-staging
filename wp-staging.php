@@ -7,7 +7,7 @@
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
  * Contributors: ReneHermi
- * Version: 2.8.4
+ * Version: 2.8.5
  * Text Domain: wp-staging
  * Domain Path: /languages/
  *
@@ -65,7 +65,7 @@ if (version_compare(phpversion(), '5.5.0', '>=')) {
         {
             echo '<div class="notice-warning notice is-dismissible">';
             echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING') . '</p>';
-            echo '<p>' . esc_html__(sprintf('WPSTAGING requires PHP %s or higher. Your site is running an outdated version of PHP (%s), which requires an update.', '5.5', phpversion()), 'wp-staging') . '</p>';
+            echo '<p>' . esc_html__(sprintf('WP STAGING requires PHP %s or higher. Your site is running an outdated version of PHP (%s), which requires an update.', '5.5', phpversion()), 'wp-staging') . '</p>';
             echo '</div>';
         }
     }

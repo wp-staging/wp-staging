@@ -6,9 +6,12 @@
  * Yeah, evil in terms of some best "dogmatic" practices and made by laziness... but effective.
  * As they are prefixed we can easily find and refactor them over time.
  *
- * @todo refactor - Split this file into classes for strings, database, filesystem and so on
+ * @todo refactor! Split this file into classes for strings, database, filesystem and so on. Move everything under /Frameworks
  *
  */
+
+use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
  * PHP setup environment
@@ -145,38 +148,7 @@ function wpstg_urldecode($data)
  */
 function wpstg_is_stagingsite()
 {
-    return (new \WPStaging\Framework\SiteInfo())->isStaging();
-}
-
-/**
- * @param string $memory
- * @return int
- */
-function wpstg_get_memory_in_bytes($memory)
-{
-    // Handle unlimited ones
-    if ((int)$memory < 1) {
-        //return (int) $memory;
-        // 128 MB default value
-        return (int)134217728;
-    }
-
-    $bytes = (int)$memory; // grab only the number
-    $size = trim(str_replace($bytes, null, strtolower($memory))); // strip away number and lower-case it
-    // Actual calculation
-    switch ($size) {
-        case 'k':
-            $bytes *= 1024;
-            break;
-        case 'm':
-            $bytes *= (1024 * 1024);
-            break;
-        case 'g':
-            $bytes *= (1024 * 1024 * 1024);
-            break;
-    }
-
-    return $bytes;
+    return (new SiteInfo())->isStaging();
 }
 
 /**
@@ -195,27 +167,6 @@ function wpstg_unique_constraint($query)
 }
 
 /**
- * Get root relative path to the uploads folder, can be a custom folder e.g 'assets' or default folder 'wp-content/uploads'
- * @return string
- * @todo delete
- */
-/*function wpstg_get_rel_upload_dir()
-{
-    // Get upload directory information. Default is ABSPATH . 'wp-content/uploads'
-    // Can be customized by populating the db option upload_path or the constant UPLOADS
-    // If both are defined WordPress will uses the value of the UPLOADS constant
-    $uploads = wp_upload_dir();
-
-    // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
-    $uploadsAbsPath = trailingslashit($uploads['basedir']);
-
-    // Get relative path to the uploads folder, e.g assets
-    $relPath = str_replace(ABSPATH, null, $uploadsAbsPath);
-
-    return $relPath;
-}*/
-
-/**
  * Get relative path to the uploads folder, can be a custom folder e.g assets or default folder wp-content/uploads
  *
  * @return string
@@ -226,27 +177,7 @@ function wpstg_unique_constraint($query)
  */
 function wpstg_get_abs_upload_dir()
 {
-    return (new \WPStaging\Framework\Utils\WpDefaultDirectories())->getUploadsPath();
-}
-
-/**
- * Get hostname of production site including scheme
- * @return string
- */
-function wpstg_get_production_hostname()
-{
-
-    $connection = get_option('wpstg_connection');
-
-    // Get the stored hostname
-    if (!empty($connection['prodHostname'])) {
-        return $connection['prodHostname'];
-    }
-
-    // Default. Try to get the hostname from the main domain (Workaround for WP Staging Pro older < 2.9.1)
-    $siteurl = get_site_url();
-    $result = parse_url($siteurl);
-    return $result['scheme'] . "://" . $result['host'];
+    return (new WpDefaultDirectories())->getUploadsPath();
 }
 
 /**
@@ -271,7 +202,7 @@ function wpstg_is_empty_dir($dir)
     if (!is_dir($dir)) {
         return true;
     }
-    $iterator = new \FilesystemIterator($dir);
+    $iterator = new FilesystemIterator($dir);
     if ($iterator->valid()) {
         return false;
     }
@@ -311,14 +242,12 @@ function wpstg_get_upload_dir()
 
 /**
  * Get the base of a string
- * @param type $input
- * @return type
+ * @param string $input
+ * @return string
  */
 function wpstg_base($input)
 {
     $keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-    $chr1 = $chr2 = $chr3 = "";
-    $enc1 = $enc2 = $enc3 = $enc4 = "";
     $i = 0;
     $output = "";
     $input = preg_replace("[^A-Za-z0-9\+\/\=]", "", $input);
@@ -337,8 +266,6 @@ function wpstg_base($input)
         if ($enc4 != 64) {
             $output = $output . chr((int)$chr3);
         }
-        $chr1 = $chr2 = $chr3 = "";
-        $enc1 = $enc2 = $enc3 = $enc4 = "";
     } while ($i < strlen($input));
     return urldecode($output);
 }
@@ -383,7 +310,6 @@ function wpstg_put_contents($file, $contents, $mode = false)
  * Change chmod of file or folder
  * @param string $file path to file
  * @param mixed $mode false or specific octal value like 0755
- * @param type $recursive
  * @return boolean
  */
 function wpstg_chmod($file, $mode = false)
@@ -410,28 +336,6 @@ function wpstg_chmod($file, $mode = false)
         return @chmod($file, $mode);
     }
 
-    return true;
-}
-
-/**
- * Changes the owner of a file or directory.
- *
- *
- * @param string $file Path to the file or directory.
- * @param string|int $owner A user name or number.
- * @param bool $recursive Optional. If set to true, changes file owner recursively.
- *                              Default false.
- * @return bool True on success, false on failure.
- */
-function wpstg_chown($file, $owner)
-{
-    if (!@file_exists($file)) {
-        return false;
-    }
-
-    if (!@is_dir($file)) {
-        return @chown($file, $owner);
-    }
     return true;
 }
 

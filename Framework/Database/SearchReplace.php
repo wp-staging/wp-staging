@@ -24,12 +24,29 @@ class SearchReplace
     /** @var string */
     private $currentReplace;
 
+    protected $smallerReplacement = PHP_INT_MAX;
+
     public function __construct(array $search = [], array $replace = [], $caseSensitive = true, array $exclude = [])
     {
         $this->search = $search;
         $this->replace = $replace;
         $this->caseSensitive = $caseSensitive;
         $this->exclude = $exclude;
+    }
+
+    public function getSmallerSearchLength()
+    {
+        if ($this->smallerReplacement < PHP_INT_MAX) {
+            return $this->smallerReplacement;
+        }
+
+        foreach ($this->search as $search) {
+            if (strlen($search) < $this->smallerReplacement) {
+                $this->smallerReplacement = strlen($search);
+            }
+        }
+
+        return $this->smallerReplacement;
     }
 
     /**
@@ -166,9 +183,6 @@ class SearchReplace
 
     private function strReplace($data)
     {
-        // TODO: This filter doesn't really belong in a universally-used class, but usages of the class may need to be checked on whether they need to apply it
-        // $excludes = apply_filters('wpstg_clone_searchreplace_excl', []);
-
         $regexExclude = '';
         foreach ($this->exclude as $excludeString) {
             //TODO: I changed (FAIL) to (*FAIL) because that's what tutorials say is the right syntax. This may need testing

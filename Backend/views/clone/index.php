@@ -1,42 +1,48 @@
+<?php
+
+/**
+ * @see \WPStaging\Backend\Administrator::getClonePage()
+ * @see \WPStaging\Backend\Administrator::getBackupPage()
+ * @var bool $openBackupPage
+ */
+
+?>
+
 <div id="wpstg-clonepage-wrapper">
     <?php
     require_once($this->path . 'views/_main/header.php');
-    require_once($this->path . 'views/_main/report-issue.php');
     do_action('wpstg_notifications');
 
-    $display = '';
-    if (!defined('WPSTGPRO_VERSION')) {
-        $display = 'display:none;';
+    if (isset($openBackupPage)){
+        echo "<script>window.addEventListener('DOMContentLoaded', function() {window.dispatchEvent(new Event('backups-tab'));});</script>";
+        $classStagingPageActive = '';
+        $classBackupPageActive = 'wpstg--tab--active';
+    } else {
+        $classStagingPageActive = 'wpstg--tab--active';
+        $classBackupPageActive = '';
     }
+
     ?>
     <div class="wpstg--tab--wrapper">
         <div class="wpstg--tab--header">
             <ul>
-                <li style="<?php echo $display ?>">
-                    <a class="wpstg--tab--content wpstg--tab--active wpstg-button" data-target="#wpstg--tab--staging">
+                <li>
+                    <a class="wpstg--tab--content <?php echo $classStagingPageActive; ?> wpstg-button" data-target="#wpstg--tab--staging">
                         <?php _e('Staging', 'wp-staging') ?>
                     </a>
                 </li>
-                <?php if(class_exists('\WPStaging\Pro\Backup\BackupServiceProvider') && \WPStaging\Pro\Backup\BackupServiceProvider::isEnabled()): ?>
-                <li style="<?php echo $display ?>">
-                    <a class="wpstg-button" data-target="#wpstg--tab--backup">
-                        <?php _e('Backup & Migrate', 'wp-staging') ?>
+                <li>
+                    <a class="wpstg-button <?php echo $classBackupPageActive; ?>" data-target="#wpstg--tab--backup" id="wpstg--tab--toggle--backup">
+                        <?php _e('Backup & Migration', 'wp-staging') ?>
                     </a>
                 </li>
-                <?php else: ?>
-                <li style="<?php echo $display ?>">
-                    <a class="wpstg-button" data-target="#wpstg--tab--database-backups">
-                        <?php _e('Backups', 'wp-staging') ?>
-                    </a>
-                </li>
-                <?php endif; ?>
                 <li>
                     <span class="wpstg-loader"></span>
                 </li>
             </ul>
         </div>
         <div class="wpstg--tab--contents">
-            <div id="wpstg--tab--staging" class="wpstg--tab--content wpstg--tab--active">
+            <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo $classStagingPageActive; ?>">
                 <?php
                 if (!$this->siteInfo->isCloneable()) {
                     // Staging site but not cloneable
@@ -49,11 +55,14 @@
                 }
                 ?>
             </div>
-            <div id="wpstg--tab--backup" class="wpstg--tab--content">
-                <?php _e('Loading...', 'wp-staging') ?>
-            </div>
-            <div id="wpstg--tab--database-backups" class="wpstg--tab--content">
-                <?php _e('Loading...', 'wp-staging') ?>
+            <div id="wpstg--tab--backup" class="wpstg--tab--content <?php echo $classBackupPageActive; ?>">
+                <?php
+                if (defined('WPSTGPRO_VERSION')) {
+                    _e('Loading...', 'wp-staging');
+                } else {
+                    require_once($this->path . "views/backup/free-version.php");
+                }
+                ?>
             </div>
         </div>
     </div>

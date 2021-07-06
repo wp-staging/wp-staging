@@ -2,10 +2,12 @@
 
 namespace WPStaging\Core\Utils;
 
-// No Direct Access
-if (!defined("WPINC")) {
-    die;
-}
+/**
+ * Class Helper
+ * @package WPStaging\Core\Utils
+ * @todo replace with Framework\Utils\Urls
+ * @deprecated
+ */
 
 class Helper
 {
