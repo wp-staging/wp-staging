@@ -4,10 +4,12 @@
  * @see \WPStaging\Backend\Notices\Notices::messages
  */
 ?>
-<div class="wpstg-error">
+<div class="notice notice-error">
     <p>
-        <strong>WP Staging Folder Permission error: </strong> <?php echo $logsDir; ?> is not write and/or readable.
+        <strong>WP STAGING - Folder Permission error.</strong>
         <br>
-        Check if the folder <strong><?php echo $logsDir; ?></strong> exists! Folder permissions should be chmod 755 or higher.
+        The folder <code><?php echo $logsDir; ?></code> is not write and/or readable.
+        <br>
+        Check if this folder exists! Folder permissions should be chmod 755 or higher.
     </p>
 </div>

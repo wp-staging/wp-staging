@@ -88,7 +88,7 @@ class WpUploadsFolderSymlinker
     private function linkWithExec($source, $destination)
     {
         try {
-            exec('ln -s ' . $source . ' ' . $destination);
+            exec('mklink /D "' . $destination . '" "' . $source . '"');
             return true;
         } catch (FatalException $ex) {
             $this->error = sprintf(__("Can not symlink %s. Error: ", 'wp-staging'), $destination, $ex->getMessage());

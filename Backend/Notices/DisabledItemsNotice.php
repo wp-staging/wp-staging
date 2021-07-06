@@ -9,7 +9,7 @@ use WPStaging\Framework\SiteInfo;
  *
  * This class is used to show notice about what WP Staging has disabled on the staging site
  *
- * @package WPStaging\Backend\Notices;
+ * @see \WPStaging\Backend\Notices\Notices;
  */
 class DisabledItemsNotice extends BooleanNotice
 {

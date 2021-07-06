@@ -56,6 +56,28 @@ class AccessToken
     }
 
     /**
+     * @param string $newToken The new token, a 64-char string.
+     *
+     * @return false|mixed
+     */
+    public function setToken($newToken)
+    {
+        // Early bail: Not enough privilege to generate a token.
+        if (! current_user_can((new Capabilities())->manageWPSTG())) {
+            return false;
+        }
+
+        // Early bail: A token is always a 64-character random string.
+        if (strlen($newToken) !== 64) {
+            return false;
+        }
+
+        update_option(static::OPTION_NAME, $newToken);
+
+        return $newToken;
+    }
+
+    /**
      * Gets the token. Requires user to be logged-in.
      *
      * @return string The access token or an empty string if no token exists.

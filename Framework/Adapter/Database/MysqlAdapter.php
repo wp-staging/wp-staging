@@ -4,6 +4,8 @@
 
 namespace WPStaging\Framework\Adapter\Database;
 
+use mysqli_result;
+
 /**
  * Class MysqlAdapter
  *
@@ -33,6 +35,15 @@ class MysqlAdapter implements InterfaceDatabaseClient
     {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_query($query, $this->link);
+    }
+
+    public function realQuery($query, $isExecOnly = false)
+    {
+        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+            error_log('mysql_real_query() doesn\'t exist in PHP. However, mysqli_real_query() exists.');
+        }
+
+        return $this->query($query, $isExecOnly);
     }
 
     /**
@@ -87,6 +98,12 @@ class MysqlAdapter implements InterfaceDatabaseClient
     {
         // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
         return mysql_fetch_row($result);
+    }
+
+    public function fetchObject($result)
+    {
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
+        return mysql_fetch_object($result);
     }
 
     /**

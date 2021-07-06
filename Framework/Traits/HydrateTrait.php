@@ -10,7 +10,6 @@ use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
-use WPStaging\Framework\Entity\EntityException;
 use WPStaging\Framework\Adapter\DateTimeAdapter;
 
 trait HydrateTrait

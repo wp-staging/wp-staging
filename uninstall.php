@@ -20,8 +20,6 @@ class uninstall
 {
     public function __construct()
     {
-        $this->deleteMuPlugin();
-
         $this->init();
     }
 
@@ -77,22 +75,6 @@ class uninstall
 
         }
     }
-
-    /**
-     * delete MuPlugin
-     */
-    private function deleteMuPlugin()
-    {
-        $muDir = (defined('WPMU_PLUGIN_DIR')) ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
-        $dest = trailingslashit( $muDir ) . 'wp-staging-optimizer.php';
-
-        if( file_exists( $dest ) && !unlink( $dest ) ) {
-            return false;
-        } else {
-            return true;
-        }
-    }
-
 }
 
 new uninstall();

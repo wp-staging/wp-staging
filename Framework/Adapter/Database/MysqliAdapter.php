@@ -13,6 +13,7 @@ class MysqliAdapter implements InterfaceDatabaseClient
 
     /**
      * MysqlAdapter constructor.
+     *
      * @param mysqli|null $link
      */
     public function __construct($link = null)
@@ -23,7 +24,15 @@ class MysqliAdapter implements InterfaceDatabaseClient
     /**
      * @inheritDoc
      */
-    public function query($query, $isExecOnly = false)
+    public function query($query)
+    {
+        return mysqli_query($this->link, $query);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function realQuery($query, $isExecOnly = false)
     {
         if ($isExecOnly) {
             return mysqli_real_query($this->link, $query);
@@ -87,6 +96,14 @@ class MysqliAdapter implements InterfaceDatabaseClient
     public function fetchRow($result)
     {
         return mysqli_fetch_row($result);
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetchObject($result)
+    {
+        return mysqli_fetch_object($result);
     }
 
     /**

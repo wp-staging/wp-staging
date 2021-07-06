@@ -1,7 +1,7 @@
 
 <?php
 /**
- * @see \WPStaging\Backend\Administrator::ajaxCloneExcludeSettings Context where this is included.
+ * @see \WPStaging\Backend\Administrator::ajaxCloneExcludesSettings Context where this is included.
  *
  * @var stdClass $options
  *
@@ -11,9 +11,10 @@
 
 
 <div>
-    <h1 class="wpstg-m-0 wpstg-mt-10px"><?php _e('RESET CLONE'); ?></h1>
-    <p><?php _e('Do you really want to reset this staging site with the current state of the production site? The original selection for tables and files have been preselected. You can adjust and verify them before starting the reset.', 'wp-staging'); ?></p>
-    <p class="wpstg--modal--process--msg--critical"><?php _e('This will delete all your modifications!', 'wp-staging'); ?></p>
+    <h1 class="wpstg-m-0 wpstg-mt-10px swal2-title"><?php _e('Reset Staging Site'); ?></h1>
+    <p style="text-align: justify;"><?php _e('Do you really want to reset this staging site with the current state of the production site?', 'wp-staging'); ?></p>
+    <p style="color: #e01e5a; font-size: 18px;"><?php _e('This will delete your modifications!', 'wp-staging'); ?></p>
+    <p style="text-align: justify;"><?php _e('The original selection for tables and files have been preselected. You can adjust and verify them before starting the reset.', 'wp-staging'); ?></p>
     <div class="wpstg-tabs-wrapper" style="text-align: left;">
         <a href="#" class="wpstg-tab-header wpstg-reset-exclude-tab" data-id="#wpstg-reset-excluded-tables" data-collapsed="true">
             <span class="wpstg-tab-triangle">&#9658;</span>

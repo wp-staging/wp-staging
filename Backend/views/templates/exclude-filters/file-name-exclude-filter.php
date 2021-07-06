@@ -19,9 +19,9 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
             <option value="<?php echo ExcludeFilter::NAME_CONTAINS ?>" <?php echo isset($rule) && $rule === ExcludeFilter::NAME_CONTAINS ? 'selected' : '' ?>><?php _e('CONTAINS', 'wp-staging') ?></option>
         </select>
         <input type="text" class="wpstg-exclude-rule-input" name="wpstgFileNameExcludeRulePath[]" value="<?php echo isset($name) ? $name : '' ?>" />
-        <div class="wpstg-popover">
+        <div class="wpstg--tooltip wpstg--exclude-rules--tooltip">
             <button class="wpstg-exclusion-rule-info" type="button">i</button>
-            <p class="wpstg-code-block wpstg-rule-info"><?php echo sprintf(__('Exclude files by name. For example to exclude all files which have %s at the end of the name, select %s and type %s in the input box.', 'wp-staging'), '<code class="wpstg-code">-class</code>', '<code class="wpstg-code">' . __('ENDS WITH', 'wp-staging') . '</code>', '<code class="wpstg-code">-class</code>') ?>
+            <p class="wpstg--tooltiptext has-top-arrow"><?php echo sprintf(__('Exclude files by name. For example to exclude all files which have %s at the end of the name, select %s and type %s in the input box.', 'wp-staging'), '<code class="wpstg-code">-class</code>', '<code class="wpstg-code">' . __('ENDS WITH', 'wp-staging') . '</code>', '<code class="wpstg-code">-class</code>') ?>
             </p>
         </div>
     </td>

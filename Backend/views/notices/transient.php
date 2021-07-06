@@ -1,4 +1,4 @@
-<div class="updated notice is-dismissible wpstg-warning">
+<div class="updated notice is-dismissible">
     <p>
         <?php
         echo esc_html(

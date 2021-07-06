@@ -10,6 +10,9 @@ use WPStaging\Framework\Adapter\DateTimeAdapter;
 
 class TemplateEngine implements TemplateEngineInterface
 {
+    /** @var string Absolute path to the views directory.  */
+    protected $views;
+
     /**
      * @param string $path
      * @param array  $params
@@ -18,6 +21,10 @@ class TemplateEngine implements TemplateEngineInterface
      */
     public function render($path, array $params = [])
     {
+        if (!isset($this->views)) {
+            $this->views = WPSTG_PLUGIN_DIR . 'Backend/views/';
+        }
+
         $fullPath = WPSTG_PLUGIN_DIR . $path;
         if (!file_exists($fullPath)) {
             throw new TemplateEngineException('Template not found: ' . $fullPath);

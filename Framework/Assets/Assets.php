@@ -5,12 +5,14 @@ namespace WPStaging\Framework\Assets;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
-use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Nonce;
+use WPStaging\Framework\Traits\ResourceTrait;
 
 class Assets
 {
+    use ResourceTrait;
+
     /**
      * Default admin bar background color for staging site
      * @var string
@@ -129,13 +131,9 @@ class Assets
         }
 
         // Load admin js files
-        $asset = 'js/dist/wpstg-admin.min.js';
-        if ($this->isDebugOrDevMode()) {
-            $asset = 'js/dist/wpstg-admin.js';
-        }
-
+        $asset = 'js/dist/wpstg.js';
         wp_enqueue_script(
-            "wpstg-admin-script",
+            "wpstg-common",
             $this->getAssetsUrl($asset),
             ["jquery"],
             $this->getAssetsVersion($asset),
@@ -143,18 +141,18 @@ class Assets
         );
 
         // Load admin js files
-        $asset = 'js/dist/wpstg-legacy-database.min.js';
+        $asset = 'js/dist/wpstg-admin.min.js';
         if ($this->isDebugOrDevMode()) {
-            $asset = 'js/dist/wpstg-legacy-database.js';
+            $asset = 'js/dist/wpstg-admin.js';
         }
-
         wp_enqueue_script(
-            "wpstg-legacy-database",
+            "wpstg-admin-script",
             $this->getAssetsUrl($asset),
-            ["wpstg-admin-script"],
+            ["wpstg-common", "wpstg-admin-notyf", "wpstg-admin-sweetalerts"],
             $this->getAssetsVersion($asset),
             false
         );
+
         // Sweet Alert
         $asset = 'js/vendor/sweetalert2.all.min.js';
         wp_enqueue_script(
@@ -193,6 +191,28 @@ class Assets
 
         // Load admin js pro files
         if (defined('WPSTGPRO_VERSION')) {
+            $asset = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? 'js/vendor/resumable.js' : 'js/vendor/resumable.min.js';
+            wp_enqueue_script(
+                "wpstg-resumable",
+                $this->getAssetsUrl($asset),
+                ["wpstg-common"],
+                $this->getAssetsVersion($asset),
+                false
+            );
+
+            $asset = 'js/dist/pro/wpstg-backup.min.js';
+            if ($this->isDebugOrDevMode()) {
+                $asset = 'js/dist/pro/wpstg-backup.js';
+            }
+
+            wp_enqueue_script(
+                "wpstg-backup",
+                $this->getAssetsUrl($asset),
+                ["wpstg-resumable"],
+                $this->getAssetsVersion($asset),
+                false
+            );
+
             $asset = 'js/dist/pro/wpstg-admin-pro.min.js';
             if ($this->isDebugOrDevMode()) {
                 $asset = 'js/dist/pro/wpstg-admin-pro.js';
@@ -201,7 +221,7 @@ class Assets
             wp_enqueue_script(
                 "wpstg-admin-pro-script",
                 $this->getAssetsUrl($asset),
-                ["jquery"],
+                ["jquery", "wpstg-admin-notyf", "wpstg-admin-sweetalerts"],
                 $this->getAssetsVersion($asset),
                 false
             );
@@ -220,9 +240,6 @@ class Assets
             $this->getAssetsVersion($asset)
         );
 
-        // Add ability to import/export modules to wpstg-admin.js and wpstg-admin-pro.js
-        add_filter('script_loader_tag', [$this, 'makeScriptsES6'], 10, 3);
-
         wp_localize_script("wpstg-admin-script", "wpstg", [
             "delayReq"               => $this->getDelay(),
             // TODO: move directorySeparator to consts?
@@ -233,8 +250,10 @@ class Assets
             "isMultisite"            => is_multisite(),
             AccessToken::REQUEST_KEY => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
             'nonce'                  => wp_create_nonce(Nonce::WPSTG_NONCE),
+            'assetsUrl'              => $this->getAssetsUrl(),
             'ajaxUrl'                => admin_url('admin-ajax.php'),
             'wpstgIcon'              => $this->getAssetsUrl('img/wpstaging-icon.png'),
+            'maxUploadChunkSize'          => $this->getMaxUploadChunkSize(),
             // TODO: handle i18n translations through Class/Service Provider?
             'i18n'                   => [
                 'dbConnectionSuccess' => esc_html__('Database Connection - Success', 'wp-staging'),
@@ -242,12 +261,37 @@ class Assets
                 'somethingWentWrong'  => esc_html__('Something went wrong.', 'wp-staging'),
                 'noImportFileFound'   => esc_html__('No import file found.', 'wp-staging'),
                 'selectFileToImport'  => esc_html__('Select file to import.', 'wp-staging'),
-                'cloneResetComplete'  => esc_html__('Clone Reset Complete!', 'wp-staging'),
-                'cloneUpdateComplete' => esc_html__('Clone Update Complete!', 'wp-staging'),
+                'cloneResetComplete'  => esc_html__('Reset Complete!', 'wp-staging'),
+                'cloneUpdateComplete' => esc_html__('Update Complete!', 'wp-staging'),
                 'success'    => esc_html__('Success', 'wp-staging'),
-                'resetClone' => esc_html__('Reset Clone', 'wp-staging'),
+                'resetClone' => esc_html__('Reset Staging Site', 'wp-staging'),
+                'showLogs'   => esc_html__('Show Logs', 'wp-staging'),
+                'hideLogs'   => esc_html__('Hide Logs', 'wp-staging'),
             ],
         ]);
+    }
+
+    /**
+     * @return int The max upload size for a file.
+     */
+    protected function getMaxUploadChunkSize()
+    {
+        $lowerLimit = 64 * KB_IN_BYTES;
+        $upperLimit = 16 * MB_IN_BYTES;
+
+        $maxPostSize = wp_convert_hr_to_bytes(ini_get('post_max_size'));
+        $uploadMaxFileSize = wp_convert_hr_to_bytes(ini_get('upload_max_filesize'));
+
+        // The real limit, read from the PHP context.
+        $limit = min($maxPostSize, $uploadMaxFileSize) * 0.90;
+
+        // Do not allow to go over upper limit.
+        $limit = min($limit, $upperLimit);
+
+        // Do not allow to go under lower limit.
+        $limit = max($lowerLimit, $limit);
+
+        return (int)$limit;
     }
 
     /**
@@ -262,6 +306,7 @@ class Assets
         if (defined('WPSTGPRO_VERSION')) {
             $availablePages = [
                 "toplevel_page_wpstg_clone",
+                "wp-staging-pro_page_wpstg_backup",
                 "wp-staging-pro_page_wpstg-settings",
                 "wp-staging-pro_page_wpstg-tools",
                 "wp-staging-pro_page_wpstg-license",
@@ -269,6 +314,7 @@ class Assets
         } else {
             $availablePages = [
                 "toplevel_page_wpstg_clone",
+                "wp-staging_page_wpstg_backup",
                 "wp-staging_page_wpstg-settings",
                 "wp-staging_page_wpstg-tools",
                 "wp-staging_page_wpstg-welcome",
@@ -343,20 +389,6 @@ class Assets
         }
 
         return $delay;
-    }
-
-    /**
-     * @param string $tag
-     * @param string $handle
-     * @param string $source
-     */
-    public function makeScriptsES6($tag, $handle, $source)
-    {
-        if ($handle === 'wpstg-admin-pro-script' || $handle === 'wpstg-admin-script') {
-            $tag = '<script src="' . $source . '" type="module"></script>';
-        }
-
-        return $tag;
     }
 
     /**

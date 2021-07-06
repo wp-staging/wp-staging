@@ -2,22 +2,70 @@
 
 namespace WPStaging\Framework\Traits;
 
+use WPStaging\Core\WPStaging;
+
 trait ResourceTrait
 {
-    use TimerTrait;
-
     /** @var int|null */
     protected $timeLimit;
 
+    protected $resourceTraitSettings;
+    protected $executionTimeLimit;
+    protected $memoryLimit;
+    protected $scriptMemoryLimit;
+
     public static $defaultMaxExecutionTimeInSeconds = 30;
-    public static $executionTimeGapInSeconds = 5;
+    public static $executionTimeGapInSeconds        = 5;
+
+    /** @var bool Whether this request is taking place in the context of a unit test. */
+    protected $isUnitTest;
+
+    /** @var bool If it is a unit test, whether to allow resource checks. */
+    protected $allowResourceCheckOnUnitTests;
 
     /**
      * @return bool
      */
     public function isThreshold()
     {
-        return $this->isMemoryLimit() || $this->isTimeLimit();
+        if ($this->isUnitTest() && !$this->allowResourceCheckOnUnitTests) {
+            return false;
+        }
+
+        $isMemoryLimit = $this->isMemoryLimit();
+        $isTimeLimit = $this->isTimeLimit();
+
+        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+            if ($isTimeLimit || $isMemoryLimit) {
+                error_log(wp_json_encode(['class', __CLASS__, 'isTimeLimit' => $isTimeLimit, 'isMemoryLimit' => $isMemoryLimit]));
+            }
+        }
+
+        return $isMemoryLimit || $isTimeLimit;
+    }
+
+    /**
+     * @see \Codeception\Module\WPLoader::_getConstants
+     *
+     * @return bool Whether this request is in the context of a unit test.
+     */
+    protected function isUnitTest()
+    {
+        if (isset($this->isUnitTest)) {
+            return $this->isUnitTest;
+        }
+
+        $this->isUnitTest = defined('WPCEPT_ISOLATED_INSTALL');
+
+        return $this->isUnitTest;
+    }
+
+    /**
+     * @return float
+     */
+    protected function getRunningTime()
+    {
+        return microtime(true) - WPStaging::$startTime;
     }
 
     /**
@@ -25,18 +73,7 @@ trait ResourceTrait
      */
     public function isMemoryLimit()
     {
-        /**
-         * Overriding this filter to return true allows someone to ignore memory limits.
-         */
-        $ignoreMemoryLimit = (bool)apply_filters('wpstg.resources.ignoreMemoryLimit', false);
-
-        if ($ignoreMemoryLimit) {
-            return false;
-        }
-
-        $allowed = $this->getScriptMemoryLimit();
-
-        return $allowed <= $this->getMemoryUsage();
+        return $this->getScriptMemoryLimit() <= $this->getMemoryUsage();
     }
 
     /**
@@ -44,23 +81,13 @@ trait ResourceTrait
      */
     public function isTimeLimit()
     {
-        /**
-         * Overriding this filter to return true allows someone to ignore time limits.
-         * Useful for developers using xdebug, for instance.
-         */
-        $ignoreTimeLimit = (bool)apply_filters('wpstg.resources.ignoreTimeLimit', false);
-
-        if ($ignoreTimeLimit) {
-            return false;
-        }
-
         $timeLimit = $this->findExecutionTimeLimit();
 
-        if ($this->timeLimit !== null) {
+        if (isset($this->timeLimit)) {
             $timeLimit = $this->timeLimit;
         }
 
-        return $timeLimit <= $this->getRunningTime();
+        return $this->getRunningTime() > $timeLimit;
     }
     // TODO Recursion for xDebug? Recursion is bad idea will cause more resource usage, need to avoid it.
 
@@ -69,6 +96,11 @@ trait ResourceTrait
      */
     public function findExecutionTimeLimit()
     {
+        // Early bail: Cache
+        if (isset($this->executionTimeLimit)) {
+            return $this->executionTimeLimit;
+        }
+
         $phpMaxExecutionTime = $this->getPhpMaxExecutionTime();
         $cpuBoundMaxExecutionTime = $this->getCpuBoundMaxExecutionTime();
 
@@ -82,11 +114,19 @@ trait ResourceTrait
             $cpuBoundMaxExecutionTime = min($phpMaxExecutionTime, $cpuBoundMaxExecutionTime);
         }
 
-        return $cpuBoundMaxExecutionTime - static::$executionTimeGapInSeconds;
+        // Set a max of 30 seconds to avoid NGINX 504 timeouts that are beyond PHP's control, with a minimum of 5 seconds
+        $this->executionTimeLimit = max(min($cpuBoundMaxExecutionTime - static::$executionTimeGapInSeconds, 30), 5);
+
+        if ((bool)apply_filters('wpstg.resources.ignoreTimeLimit', false)) {
+            $this->executionTimeLimit = PHP_INT_MAX;
+        }
+
+        return $this->executionTimeLimit;
     }
 
     /**
      * @param bool $realUsage
+     *
      * @return int
      */
     protected function getMemoryUsage($realUsage = true)
@@ -96,6 +136,7 @@ trait ResourceTrait
 
     /**
      * @param bool $realUsage
+     *
      * @return int
      */
     protected function getMemoryPeakUsage($realUsage = true)
@@ -108,6 +149,10 @@ trait ResourceTrait
      */
     public function getTimeLimit()
     {
+        if (!isset($this->timeLimit)) {
+            $this->timeLimit = $this->findExecutionTimeLimit();
+        }
+
         return $this->timeLimit;
     }
 
@@ -120,19 +165,38 @@ trait ResourceTrait
     }
 
     /**
+     * @param bool $isAllowed True to check resources on unit tests. False to not check.
+     */
+    public function resourceCheckOnUnitTests($isAllowed)
+    {
+        $this->allowResourceCheckOnUnitTests = $isAllowed;
+    }
+
+    /**
      * Returns the current PHP memory limit in bytes..
      *
      * @return int The current memory limit in bytes.
      */
-    private function getMaxMemoryLimit()
+    protected function getMaxMemoryLimit()
     {
+        // Early bail: Cache
+        if (isset($this->memoryLimit)) {
+            return $this->memoryLimit;
+        }
+
         $limit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
 
         if (!is_int($limit) || $limit < 64000000) {
             $limit = 64000000;
         }
 
-        return $limit;
+        if ((bool)apply_filters('wpstg.resources.ignoreMemoryLimit', false)) {
+            $limit = PHP_INT_MAX;
+        }
+
+        $this->memoryLimit = $limit;
+
+        return $this->memoryLimit;
     }
 
     /**
@@ -141,11 +205,15 @@ trait ResourceTrait
      * @return int The script memory limit, by definition less then
      *             the maximum memory limit.
      */
-    private function getScriptMemoryLimit()
+    protected function getScriptMemoryLimit()
     {
-        $limit = $this->getMaxMemoryLimit();
+        // Early bail: Cache
+        if (isset($this->scriptMemoryLimit)) {
+            return $this->scriptMemoryLimit;
+        }
 
-        return $limit - 1024;
+        // 80% of max memory limit
+        return $this->scriptMemoryLimit = $this->getMaxMemoryLimit() * 0.8;
     }
 
     /**
@@ -155,13 +223,17 @@ trait ResourceTrait
      *                                    return the max execution time for, or
      *                                    `null` to read the current CPU Load
      *                                    value from the Settings.
+     *
      * @return int The max execution time as bound by the CPU Load setting.
      */
     protected function getCpuBoundMaxExecutionTime($cpuLoadSetting = null)
     {
-        $settings = json_decode(json_encode(get_option('wpstg_settings', [])));
+        // Early bail: Cache
+        if (!isset($this->resourceTraitSettings)) {
+            $this->resourceTraitSettings = json_decode(json_encode(get_option('wpstg_settings', [])));
+        }
         if ($cpuLoadSetting === null) {
-            $cpuLoadSetting = isset($settings->cpuLoad) ? $settings->cpuLoad : 'medium';
+            $cpuLoadSetting = isset($this->resourceTraitSettings->cpuLoad) ? $this->resourceTraitSettings->cpuLoad : 'medium';
         }
         $execution_gap = static::$executionTimeGapInSeconds;
 

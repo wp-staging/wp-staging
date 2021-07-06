@@ -4,7 +4,9 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use Exception;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Traits\FileScanToCacheTrait;
 use WPStaging\Framework\Utils\SlashMode;
@@ -452,25 +454,13 @@ class Directories extends JobExecutable
     /**
      * Check if directory is excluded
      * @param string $directory
-     * @return bool
+     *
+     * @return boolean
      */
     protected function isDirectoryExcluded($directory)
     {
-        $directory = $this->strUtils->sanitizeDirectorySeparator($directory);
-        foreach ($this->options->excludedDirectories as $excludedDirectory) {
-            $excludedDirectory = $this->strUtils->sanitizeDirectorySeparator($excludedDirectory);
-            // Check whether directory is itself is a part of excluded directories
-            if ($excludedDirectory === $directory) {
-                return true;
-            }
-
-            // Check whether directory a child of any excluded directories
-            if ($this->strUtils->startsWith($directory, $excludedDirectory . '/')) {
-                return true;
-            }
-        }
-
-        return false;
+        // TODO: Inject Directory using DI
+        return WPStaging::make(Directory::class)->isPathInPathsList($directory, $this->options->excludedDirectories, true);
     }
 
     /**

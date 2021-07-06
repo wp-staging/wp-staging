@@ -173,4 +173,16 @@ class BufferedCacheStorage implements StorageInterface, ShutdownableInterface
     {
         return $this->cache;
     }
+
+    public function reverse()
+    {
+        $this->items = array_reverse($this->items);
+
+        return $this->items;
+    }
+
+    public function current()
+    {
+        return current($this->items);
+    }
 }

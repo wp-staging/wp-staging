@@ -11,7 +11,7 @@
         </label>
     </div>
     <p>
-        <b><?php _e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(__('Some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>', '<code>wp_mail()</code>', '<strong>WP STAGING</strong>'); ?>
+        <b><?php _e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(__('Some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'); ?>
     </p>
     <button type="button" id="wpstg-update-mail-settings" class="wpstg-link-btn wpstg-blue-primary"><?php _e("Update Settings", "wp-staging") ?></button>
 </form>

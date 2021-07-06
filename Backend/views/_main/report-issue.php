@@ -1,4 +1,5 @@
 <div class="wpstg-report-issue-form">
+    <div class="arrow-up"></div>
     <div class="wpstg-field">
         <input placeholder="Your email address..." type="email" id="wpstg-report-email" class="wpstg-report-email">
     </div>
@@ -29,7 +30,7 @@
                 <?php _e('Submit', 'wp-staging'); ?>
             </button>
             <span class="spinner"></span>
-             <a href="#" id="wpstg-report-cancel" class="wpstg-report-cancel">Close</a>
+             <a href="#" id="wpstg-report-cancel" class="wpstg-report-cancel wpstg--red">CLOSE [X]</a>
             <div class="wpstg-clear"></div>
         </div>
     </div>

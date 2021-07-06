@@ -267,6 +267,8 @@ class Filesystem extends FilterableDirectoryIterator
             throw new RuntimeException('You can not delete WP Root directory');
         }
 
+        clearstatcache();
+
         // if $path is link or file, delete it and stop execution
         if (is_link($path) || is_file($path)) {
             if (!unlink($path)) {
@@ -324,7 +326,18 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         foreach ($iterator as $item) {
-            $result = $this->deleteItem($item);
+            $result = false;
+
+            try {
+                $result = $this->deleteItem($item);
+            } catch (RuntimeException $e) {
+                if ($throw) {
+                    $this->setRecursive($originalIsRecursive);
+
+                    throw $e;
+                }
+            }
+
             if (!$result || !is_callable($this->shouldStop)) {
                 continue;
             }
@@ -567,9 +580,6 @@ class Filesystem extends FilterableDirectoryIterator
     {
         $path = $item->getPathname();
 
-        $perms = substr(sprintf('%o', fileperms($path)), -4);
-        $this->log('Permission Error: Can not delete link ' . $perms);
-
         if ($item->isLink()) {
             if (!$this->removeSymlink($path)) {
                 $this->log('Permission Error: Can not delete link ' . $path);
@@ -670,5 +680,22 @@ class Filesystem extends FilterableDirectoryIterator
     public function createWithMarkers($path, $marker, $content)
     {
         return @insert_with_markers($path, $marker, $content);
+    }
+
+    /**
+     * This normalizes the given path in a specific way,
+     * aiming to compare paths with precision.
+     *
+     * @param $path
+     *
+     * @return string
+     */
+    public function normalizePath($path)
+    {
+        $path = trim($path);
+        $path = wp_normalize_path($path);
+        $path = trailingslashit($path);
+
+        return $path;
     }
 }

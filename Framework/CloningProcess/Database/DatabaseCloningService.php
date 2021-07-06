@@ -3,8 +3,9 @@
 namespace WPStaging\Framework\CloningProcess\Database;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
-use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\Utils\Strings;
 
 class DatabaseCloningService
@@ -84,7 +85,9 @@ class DatabaseCloningService
     }
 
     /**
-     * @param $tableName
+     * @param string $tableName
+     *
+     * @return boolean
      */
     public function tableIsMissing($tableName)
     {
@@ -93,6 +96,7 @@ class DatabaseCloningService
             $this->log("Table {$this->dto->getExternalDatabaseName()}.{$tableName} doesn't exist. Skipping");
             return true;
         }
+
         return false;
     }
 
@@ -144,7 +148,7 @@ class DatabaseCloningService
      */
     public function removeDBPrefix($tableName)
     {
-        return (new Strings())->str_replace_first($this->dto->getProductionDb()->prefix, null, $tableName);
+        return (new Strings())->str_replace_first(WPStaging::getTablePrefix(), null, $tableName);
     }
 
     /**
@@ -153,7 +157,7 @@ class DatabaseCloningService
      */
     public function removeDBBasePrefix($tableName)
     {
-        return (new Strings())->str_replace_first($this->dto->getProductionDb()->base_prefix, null, $tableName);
+        return (new Strings())->str_replace_first(WPStaging::getTableBasePrefix(), null, $tableName);
     }
 
     /**
@@ -200,7 +204,7 @@ class DatabaseCloningService
      * Get MySQL create-table query statement.
      * Only used by external databases
      *
-     * @param string $table_name Table name
+     * @param string $tableName Table name
      * @return array
      */
     private function getTableCreateStatement($tableName)

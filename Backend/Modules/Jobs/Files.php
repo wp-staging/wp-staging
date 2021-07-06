@@ -6,6 +6,7 @@ use SplFileObject;
 use WPStaging\Backend\Modules\Jobs\Cleaners\WpContentCleaner;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
@@ -580,6 +581,8 @@ class Files extends JobExecutable
      *
      * @param string $path Path
      * @return string
+     *
+     * @todo replace usage with Strings::sanitizeDirectorySeparator
      */
     private function sanitizeDirectorySeparator($path)
     {
@@ -590,24 +593,29 @@ class Files extends JobExecutable
      * Check if directory is excluded from copying
      * @param string $directory
      * @return bool
+     *
+     * @todo Check can it be safely replaced with Directories::isDirectoryExcluded
      */
     private function isDirectoryExcluded($directory)
     {
+        $abspath   = $this->sanitizeDirectorySeparator(ABSPATH);
+        $directory = $this->sanitizeDirectorySeparator($directory);
+
+        if ($abspath === $directory . '/') {
+            return false;
+        }
+
         // Make sure that wp-staging-pro directory / plugin is never excluded
         if (strpos($directory, 'wp-staging') !== false || strpos($directory, 'wp-staging-pro') !== false) {
             return false;
         }
 
-        $directory = trailingslashit($this->sanitizeDirectorySeparator($directory));
-
-        foreach ($this->options->excludedDirectories as $excludedDirectory) {
-            $excludedDirectory = trailingslashit($this->sanitizeDirectorySeparator($excludedDirectory));
-            if (strpos($directory, $excludedDirectory) === 0 && !$this->isExtraDirectory($directory)) {
-                return true;
-            }
+        if ($this->isExtraDirectory($directory)) {
+            return false;
         }
 
-        return false;
+        // TODO: Inject Directory using DI.
+        return WPStaging::make(Directory::class)->isPathInPathsList($directory, $this->options->excludedDirectories, true);
     }
 
     /**

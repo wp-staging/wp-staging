@@ -1,11 +1,13 @@
-<div class="wpstg-error">
+<div class="notice notice-error">
     <p>
         <strong>
-        <?php echo sprintf(__('WP Staging Folder Permission error:</strong>
-        %1$s is not write and/or readable.
+        <?php
+        echo sprintf(__('WP STAGING - Folder Permission error.</strong>
         <br>
-        Check if the folder <strong>%1$s</strong> is writeable by php user %2$s or www-data .
+        The folder <code>%1$s</code> is not write and/or readable.
+        <br>
+        Check if this folder is writeable by php user %2$s or www-data .
         File permissions should be chmod 755 or 777.', 'wp-staging'), ABSPATH, getenv('USERNAME') ?: getenv('USER'));
-?>
+        ?>
     </p>
 </div>

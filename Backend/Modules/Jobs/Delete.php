@@ -2,6 +2,12 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use Exception;
+use FilesystemIterator;
+use mysqli;
+use RuntimeException;
+use stdClass;
+use wpdb;
 use WPStaging\Backend\Modules\Jobs\Exceptions\CloneNotFoundException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
@@ -16,7 +22,7 @@ class Delete extends Job
 {
 
     /**
-     * @var \stdClass
+     * @var stdClass
      */
     private $clone = false;
 
@@ -43,7 +49,7 @@ class Delete extends Job
 
     /**
      *
-     * @var object
+     * @var wpdb
      */
     public $wpdb;
 
@@ -95,7 +101,7 @@ class Delete extends Job
      */
     private function getStagingDb()
     {
-        return new \wpdb($this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase, $this->clone->databaseServer);
+        return new wpdb($this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase, $this->clone->databaseServer);
     }
 
     /**
@@ -175,7 +181,7 @@ class Delete extends Job
             foreach ($tables as $table) {
                 $this->tables[] = [
                     "name" => $table->Name,
-                    "size" => $this->formatSize(($table->Data_length + $table->Index_length))
+                    "size" => $this->utilsMath->formatSize($table->Data_length + $table->Index_length)
                 ];
             }
         }
@@ -199,6 +205,7 @@ class Delete extends Job
             if (($content = @file_get_contents($path)) === false) {
                 $this->log("Can not open {$path}. Can't read contents", Logger::TYPE_ERROR);
             }
+
             preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
 
             if (!empty($matches[1])) {
@@ -222,27 +229,6 @@ class Delete extends Job
     }
 
     /**
-     * Format bytes into human readable form
-     * @param int $bytes
-     * @param int $precision
-     * @return string
-     */
-    public function formatSize($bytes, $precision = 2)
-    {
-        if ((int)$bytes < 1) {
-            return '';
-        }
-
-        $units = ['B', "KB", "MB", "GB", "TB"];
-
-        $bytes = (int)$bytes;
-        $base = log($bytes) / log(1000); // 1024 would be for MiB KiB etc
-        $pow = pow(1000, $base - floor($base)); // Same rule for 1000
-
-        return round($pow, $precision) . ' ' . $units[(int)floor($base)];
-    }
-
-    /**
      * @return false
      */
     public function getClone()
@@ -261,7 +247,7 @@ class Delete extends Job
     /**
      * Start Module
      * @param null|array $clone
-     * @return bool
+     * @return boolean
      */
     public function start($clone = null)
     {
@@ -272,7 +258,15 @@ class Delete extends Job
         $this->getJob();
 
         $method = "delete" . ucwords($this->job->current);
-        return $this->{$method}();
+
+        if (method_exists($this, $method)) {
+            return $this->{$method}();
+        }
+
+        // If method doesn't exist probably the cache file was corrupted
+        // Just delete that corrupted cache file and restart itself.
+        $this->cache->delete($this->getJobCacheFileName());
+        return $this->start($clone);
     }
 
     /**
@@ -280,10 +274,10 @@ class Delete extends Job
      */
     private function getJob()
     {
-        $this->job = $this->cache->get("delete_job_{$this->clone->name}");
+        $this->job = $this->cache->get($this->getJobCacheFileName());
 
 
-        if ($this->job !== null) {
+        if ($this->job !== null && isset($this->job->current)) {
             return;
         }
 
@@ -294,7 +288,7 @@ class Delete extends Job
             "name" => $this->clone->name
         ];
 
-        $this->cache->save("delete_job_{$this->clone->name}", $this->job);
+        $this->cache->save($this->getJobCacheFileName(), $this->job);
     }
 
     /**
@@ -303,7 +297,7 @@ class Delete extends Job
     private function updateJob()
     {
         $this->job->nextDirectoryToDelete = trim($this->job->nextDirectoryToDelete);
-        return $this->cache->save("delete_job_{$this->clone->name}", $this->job);
+        return $this->cache->save($this->getJobCacheFileName(), $this->job);
     }
 
     /**
@@ -349,7 +343,6 @@ class Delete extends Job
             // PROTECTION: Never delete any table that beginns with wp prefix of live site
             if (!$this->isExternalDatabase() && (new Strings())->startsWith($table, $this->wpdb->prefix)) {
                 $this->log("Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL);
-                return false;
             }
 
             $this->wpdb->query("DROP TABLE {$table}");
@@ -361,32 +354,32 @@ class Delete extends Job
     }
 
     /**
-     *
      * Delete complete directory including all files and sub folders
-     * @throws \Exception
+     * @throws Exception
      */
     public function deleteDirectory()
     {
         if ($this->isFatalError()) {
             $this->returnException('Can not delete directory: ' . $this->deleteDir . '. This seems to be the root directory. Exclude this directory from deleting and try again.');
-            throw new \Exception('Can not delete directory: ' . $this->deleteDir . ' This seems to be the root directory. Exclude this directory from deleting and try again.');
+            throw new Exception('Can not delete directory: ' . $this->deleteDir . ' This seems to be the root directory. Exclude this directory from deleting and try again.');
         }
 
         // Finished or path does not exist
         if (
             empty($this->deleteDir) ||
-            $this->deleteDir == get_home_path() ||
+            $this->deleteDir === get_home_path() ||
             !is_dir($this->deleteDir)
         ) {
             $this->job->current = "finish";
             $this->updateJob();
-            return $this->deleteFinish();
+            $this->deleteFinish();
+            return;
         }
 
         $this->log("Delete staging site: " . $this->clone->path, Logger::TYPE_INFO);
 
         // Make sure the root dir is never deleted!
-        if ($this->deleteDir == get_home_path()) {
+        if ($this->deleteDir === get_home_path()) {
             $this->log("Fatal Error 8: Trying to delete root of WP installation!", Logger::TYPE_CRITICAL);
             $this->returnException('Fatal Error 8: Trying to delete root of WP installation!');
         }
@@ -407,7 +400,7 @@ class Delete extends Job
                 if (!$fs->delete($this->deleteDir)) {
                     return;
                 }
-            } catch (\RuntimeException $ex) {
+            } catch (RuntimeException $ex) {
                 $errorMessage = $ex->getMessage();
                 $deleteStatus = "unfinished";
             }
@@ -426,7 +419,7 @@ class Delete extends Job
         }
 
         // Successful finish deleting job
-        return $this->deleteFinish();
+        $this->deleteFinish();
     }
 
     /**
@@ -439,9 +432,10 @@ class Delete extends Job
         // Throw fatal error if the folder has still not been deleted and there are files in it
         $isDirNotEmpty = false;
         if (is_dir($dir)) {
-            $iterator = new \FilesystemIterator($dir);
+            $iterator = new FilesystemIterator($dir);
             $isDirNotEmpty = $iterator->valid();
         }
+
         return $isDirNotEmpty;
     }
 
@@ -452,7 +446,7 @@ class Delete extends Job
     public function isFatalError()
     {
         $homePath = rtrim(get_home_path(), "/");
-        return $homePath == rtrim($this->deleteDir, "/");
+        return $homePath === rtrim($this->deleteDir, "/");
     }
 
     /**
@@ -470,7 +464,7 @@ class Delete extends Job
         // Check if clone exist and then remove it from options
         $this->log("Verifying existing clones...");
         foreach ($existingClones as $name => $clone) {
-            if ($clone["path"] == $this->clone->path) {
+            if ($clone["path"] === $this->clone->path) {
                 unset($existingClones[$name]);
             }
         }
@@ -480,7 +474,7 @@ class Delete extends Job
         }
 
         // Delete cached file
-        $this->cache->delete("delete_job_{$this->clone->name}");
+        $this->cache->delete($this->getJobCacheFileName());
         $this->cache->delete("delete_directories_{$this->clone->name}");
         $this->cache->delete("clone_options");
 
@@ -496,11 +490,21 @@ class Delete extends Job
      */
     private function isExternalDatabaseError()
     {
-        $db = new \mysqli($this->clone->databaseServer, $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase);
+        $db = new mysqli($this->clone->databaseServer, $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase);
         if ($db->connect_error) {
             return true;
         }
 
         return false;
+    }
+
+    /**
+     * Return the cache file which contains the info about current job
+     *
+     * @return string
+     */
+    private function getJobCacheFileName()
+    {
+        return "delete_job_{$this->clone->name}";
     }
 }

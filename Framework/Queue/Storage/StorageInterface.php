@@ -56,6 +56,12 @@ interface StorageInterface
     public function first();
 
     /**
+     * Returns the first item of the queue without removing it
+     * @return mixed
+     */
+    public function current();
+
+    /**
      * Removes and returns the last item from the queue
      * @return mixed
      */
@@ -65,6 +71,11 @@ interface StorageInterface
      * Removes all the items from the queue
      */
     public function reset();
+
+    /**
+     * Reverse the items in the queue
+     */
+    public function reverse();
 
     /**
      * @return AbstractCache|null

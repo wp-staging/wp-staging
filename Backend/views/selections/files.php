@@ -5,9 +5,11 @@
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
 ?>
-<h4>
-    <?php _e("Select folders to copy. Click on a folder to expand subfolders!", "wp-staging") ?>
-</h4>
+<p>
+<strong><?php _e("Select Folders to Copy", "wp-staging") ?></strong>
+    <br>
+<?php _e("Click on a folder name to expand it.", "wp-staging") ?>
+</p>
 <div id="wpstg-directories-listing" data-existing-excludes="<?php echo (($options->mainJob === 'updating' || $options->mainJob === 'resetting') && isset($options->currentClone['excludedDirectories'])) ? esc_html(implode(',', $options->currentClone['excludedDirectories'])) : '' ?>">
     <div class="wpstg-mb-8px">
         <button type="button" class="wpstg-unselect-dirs button"><?php _e('Unselect All', 'wp-staging'); ?></button>
@@ -36,8 +38,8 @@
     <p <?php echo !$hasRules ? 'style="display: none;"' : '' ?> class="wpstg-has-exclude-rules"><b><?php _e('Note', 'wp-staging'); ?>:</b> <?php _e('These rules will not affect wp-admin and wp-includes directories!', 'wp-staging')?></p>
     <div class="wpstg-exclude-filters-foot">
         <div class="wpstg-dropdown wpstg-exclude-filter-dropdown">
-            <button class="wpstg-dropdown-toggler transparent">
-                <?php _e("Add Exclude Rule", "wp-staging"); ?> <span class="wpstg-dropdown-symbol">+</span>
+            <button class="wpstg-dropdown-toggler wpstg-button--secondary wpstg-button--blue">
+                <?php _e("Add Exclude Rule + ", "wp-staging"); ?>
             </button>
             <div class="wpstg-dropdown-menu wpstg-menu-dropup">
                 <button class="wpstg-dropdown-action wpstg-file-size-rule"><?php _e('File Size', 'wp-staging'); ?></button>
@@ -46,7 +48,7 @@
                 <button class="wpstg-dropdown-action wpstg-dir-name-rule"><?php _e('Folder Name', 'wp-staging'); ?></button>
             </div>
         </div>
-        <button <?php echo !$hasRules ? 'style="display: none;"' : '' ?> class="wpstg-ml-8px wpstg-button wpstg-clear-all-rules danger wpstg-has-exclude-rules">
+        <button <?php echo !$hasRules ? 'style="display: none;"' : '' ?> class="wpstg-ml-8px wpstg-button--secondary wpstg-clear-all-rules wpstg-has-exclude-rules wpstg-button--red">
             <?php _e("Clear All Rules", "wp-staging"); ?>
         </button>
     </div>
@@ -97,7 +99,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
     <span>
         <?php
         if (isset($options->clone)) {
-            echo __("All files will be copied to: ", "wp-staging") . $options->root . $options->clone;
+            echo __("All files will be copied to: ", "wp-staging") . "<code>" .  $options->root . $options->clone . "</code>";
         }
         ?>
     </span>

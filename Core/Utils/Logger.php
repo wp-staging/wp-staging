@@ -154,7 +154,6 @@ class Logger implements LoggerInterface, ShutdownableInterface
             return true;
         }
 
-        //return (@file_put_contents($this->getLogFile(), $messageString, FILE_APPEND | LOCK_EX));
         return (@file_put_contents($this->getLogFile(), $messageString, FILE_APPEND));
     }
 
@@ -232,17 +231,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
             return $this->messages[] = array_pop($this->messages);
         }
     }
-
-    /**
-     * Get running time in seconds
-     * @return int
-     */
-    public function getRunningTime()
-    {
-        $str_time = $this->messages[0]["date"];
-        return $str_time;
-    }
-
+    
     /**
      * @inheritDoc
      */

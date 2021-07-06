@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Core\Utils\Helper;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\CloningProcess\Data\DataCloningDto;
 use WPStaging\Framework\CloningProcess\Data\CopyWpConfig;
 use WPStaging\Framework\CloningProcess\Data\MultisiteAddNetworkAdministrators;
@@ -13,9 +15,8 @@ use WPStaging\Framework\CloningProcess\Data\UpdateWpConfigConstants;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpConfigTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpOptionsTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable;
-use WPStaging\Core\Utils\Helper;
-use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
@@ -63,7 +64,7 @@ class Data extends CloningProcess
         $this->baseUrl = (new Helper())->getBaseUrl();
 
         // Reset current step
-        if ($this->options->currentStep == 0) {
+        if ($this->options->currentStep === 0) {
             $this->options->currentStep = 0;
         }
     }
@@ -120,8 +121,9 @@ class Data extends CloningProcess
         $strings = new Strings();
         $this->tables = [];
         foreach ($this->options->tables as $table) {
-            $this->tables[] = $this->options->prefix . $strings->str_replace_first($this->productionDb->prefix, null, $table);
+            $this->tables[] = $this->options->prefix . $strings->str_replace_first(WPStaging::getTablePrefix(), null, $table);
         }
+
         if ($this->isMultisiteAndPro()) {
             // Add extra global tables from main multisite (wpstg[x]_users and wpstg[x]_usermeta)
             $this->tables[] = $this->options->prefix . 'users';

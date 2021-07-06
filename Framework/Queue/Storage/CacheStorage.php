@@ -89,6 +89,14 @@ class CacheStorage implements StorageInterface, ShutdownableInterface
     /**
      * @inheritDoc
      */
+    public function current()
+    {
+        return current($this->items);
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function first()
     {
         return array_shift($this->items);
@@ -122,5 +130,12 @@ class CacheStorage implements StorageInterface, ShutdownableInterface
     public function getCache()
     {
         return $this->cache;
+    }
+
+    public function reverse()
+    {
+        $this->items = array_reverse($this->items);
+
+        return $this->items;
     }
 }

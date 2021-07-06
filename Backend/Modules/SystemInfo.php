@@ -463,7 +463,7 @@ class SystemInfo
      *
      * @return string
      */
-    private function getPHPUser()
+    public function getPHPUser()
     {
 
         $user = '';

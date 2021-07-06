@@ -5,14 +5,16 @@
 
 namespace WPStaging\Framework\Queue;
 
+use WPStaging\Framework\Queue\Storage\CacheStorage;
 use WPStaging\Framework\Queue\Storage\StorageInterface;
+use WPStaging\Pro\Backup\Task\AbstractTask;
 
 class Queue implements QueueInterface
 {
     /** @var string */
     private $name;
 
-    /** @var StorageInterface */
+    /** @var StorageInterface|CacheStorage */
     private $storage;
 
     /**
@@ -57,6 +59,16 @@ class Queue implements QueueInterface
     public function count()
     {
         return $this->storage->count();
+    }
+
+    /**
+     * Returns the first element of the storage, without advancing the pointer.
+     *
+     * @return mixed|AbstractTask|null
+     */
+    public function current()
+    {
+        return $this->storage->current();
     }
 
     /**
@@ -112,5 +124,13 @@ class Queue implements QueueInterface
     public function reset()
     {
         $this->storage->reset();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function reverse()
+    {
+        $this->storage->reverse();
     }
 }

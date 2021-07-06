@@ -1,42 +1,6 @@
 (function () {
   'use strict';
 
-  function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
-    try {
-      var info = gen[key](arg);
-      var value = info.value;
-    } catch (error) {
-      reject(error);
-      return;
-    }
-
-    if (info.done) {
-      resolve(value);
-    } else {
-      Promise.resolve(value).then(_next, _throw);
-    }
-  }
-
-  function _asyncToGenerator(fn) {
-    return function () {
-      var self = this,
-          args = arguments;
-      return new Promise(function (resolve, reject) {
-        var gen = fn.apply(self, args);
-
-        function _next(value) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
-        }
-
-        function _throw(err) {
-          asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
-        }
-
-        _next(undefined);
-      });
-    };
-  }
-
   function _extends() {
     _extends = Object.assign || function (target) {
       for (var i = 1; i < arguments.length; i++) {
@@ -55,50 +19,8 @@
     return _extends.apply(this, arguments);
   }
 
-  function _unsupportedIterableToArray(o, minLen) {
-    if (!o) return;
-    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
-    var n = Object.prototype.toString.call(o).slice(8, -1);
-    if (n === "Object" && o.constructor) n = o.constructor.name;
-    if (n === "Map" || n === "Set") return Array.from(o);
-    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
-  }
-
-  function _arrayLikeToArray(arr, len) {
-    if (len == null || len > arr.length) len = arr.length;
-
-    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-
-    return arr2;
-  }
-
-  function _createForOfIteratorHelperLoose(o, allowArrayLike) {
-    var it;
-
-    if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
-      if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-        if (it) o = it;
-        var i = 0;
-        return function () {
-          if (i >= o.length) return {
-            done: true
-          };
-          return {
-            done: false,
-            value: o[i++]
-          };
-        };
-      }
-
-      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
-    }
-
-    it = o[Symbol.iterator]();
-    return it.next.bind(it);
-  }
-
   /**
-   * WP Staging basic jQuery replacement
+   * WP STAGING basic jQuery replacement
    */
 
   /**
@@ -789,6 +711,507 @@
   }();
 
   /**
+   * This is a namespaced port of https://github.com/tristen/hoverintent,
+   * with slight modification to accept selector with dynamically added element in dom,
+   * instead of just already present element.
+   *
+   * @param {HTMLElement} parent
+   * @param {string} selector
+   * @param {CallableFunction} onOver
+   * @param {CallableFunction} onOut
+   *
+   * @return {object}
+   */
+
+  function wpstgHoverIntent (parent, selector, onOver, onOut) {
+    var x;
+    var y;
+    var pX;
+    var pY;
+    var mouseOver = false;
+    var focused = false;
+    var h = {};
+    var state = 0;
+    var timer = 0;
+    var options = {
+      sensitivity: 7,
+      interval: 100,
+      timeout: 0,
+      handleFocus: false
+    };
+
+    function delay(el, e) {
+      if (timer) {
+        timer = clearTimeout(timer);
+      }
+
+      state = 0;
+      return focused ? undefined : onOut(el, e);
+    }
+
+    function tracker(e) {
+      x = e.clientX;
+      y = e.clientY;
+    }
+
+    function compare(el, e) {
+      if (timer) timer = clearTimeout(timer);
+
+      if (Math.abs(pX - x) + Math.abs(pY - y) < options.sensitivity) {
+        state = 1;
+        return focused ? undefined : onOver(el, e);
+      } else {
+        pX = x;
+        pY = y;
+        timer = setTimeout(function () {
+          compare(el, e);
+        }, options.interval);
+      }
+    } // Public methods
+
+
+    h.options = function (opt) {
+      var focusOptionChanged = opt.handleFocus !== options.handleFocus;
+      options = Object.assign({}, options, opt);
+
+      if (focusOptionChanged) {
+        options.handleFocus ? addFocus() : removeFocus();
+      }
+
+      return h;
+    };
+
+    function dispatchOver(el, e) {
+      mouseOver = true;
+
+      if (timer) {
+        timer = clearTimeout(timer);
+      }
+
+      el.removeEventListener('mousemove', tracker, false);
+
+      if (state !== 1) {
+        pX = e.clientX;
+        pY = e.clientY;
+        el.addEventListener('mousemove', tracker, false);
+        timer = setTimeout(function () {
+          compare(el, e);
+        }, options.interval);
+      }
+
+      return this;
+    }
+    /**
+     * Newly added method,
+     * A wrapper around dispatchOver to support dynamically added elements to dom
+     */
+
+
+    function onMouseOver(event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        dispatchOver(event.target.closest(selector), event);
+      }
+    }
+
+    function dispatchOut(el, e) {
+      mouseOver = false;
+
+      if (timer) {
+        timer = clearTimeout(timer);
+      }
+
+      el.removeEventListener('mousemove', tracker, false);
+
+      if (state === 1) {
+        timer = setTimeout(function () {
+          delay(el, e);
+        }, options.timeout);
+      }
+
+      return this;
+    }
+    /**
+     * Newly added method,
+     * A wrapper around dispatchOut to support dynamically added elements to dom
+     */
+
+
+    function onMouseOut(event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        dispatchOut(event.target.closest(selector), event);
+      }
+    }
+
+    function dispatchFocus(el, e) {
+      if (!mouseOver) {
+        focused = true;
+        onOver(el, e);
+      }
+    }
+    /**
+     * Newly added method,
+     * A wrapper around dispatchFocus to support dynamically added elements to dom
+     */
+
+
+    function onFocus(event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        dispatchFocus(event.target.closest(selector), event);
+      }
+    }
+
+    function dispatchBlur(el, e) {
+      if (!mouseOver && focused) {
+        focused = false;
+        onOut(el, e);
+      }
+    }
+    /**
+     * Newly added method,
+     * A wrapper around dispatchBlur to support dynamically added elements to dom
+     */
+
+
+    function onBlur(event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        dispatchBlur(event.target.closest(selector), event);
+      }
+    }
+    /**
+     * Modified to support dynamically added element
+     */
+
+    function addFocus() {
+      parent.addEventListener('focus', onFocus, false);
+      parent.addEventListener('blur', onBlur, false);
+    }
+    /**
+     * Modified to support dynamically added element
+     */
+
+
+    function removeFocus() {
+      parent.removeEventListener('focus', onFocus, false);
+      parent.removeEventListener('blur', onBlur, false);
+    }
+    /**
+     * Modified to support dynamically added element
+     */
+
+
+    h.remove = function () {
+      if (!parent) {
+        return;
+      }
+
+      parent.removeEventListener('mouseover', onMouseOver, false);
+      parent.removeEventListener('mouseout', onMouseOut, false);
+      removeFocus();
+    };
+    /**
+     * Modified to support dynamically added element
+     */
+
+
+    if (parent) {
+      parent.addEventListener('mouseover', onMouseOver, false);
+      parent.addEventListener('mouseout', onMouseOut, false);
+    }
+
+    return h;
+  }
+
+  var WPStagingCommon = (function ($) {
+    var WPStagingCommon = {
+      continueErrorHandle: true,
+      cache: {
+        elements: [],
+        get: function get(selector) {
+          // It is already cached!
+          if ($.inArray(selector, this.elements) !== -1) {
+            return this.elements[selector];
+          } // Create cache and return
+
+
+          this.elements[selector] = $(selector);
+          return this.elements[selector];
+        },
+        refresh: function refresh(selector) {
+          selector.elements[selector] = $(selector);
+        }
+      },
+      listenTooltip: function listenTooltip() {
+        wpstgHoverIntent(document, '.wpstg--tooltip', function (target, event) {
+          target.querySelector('.wpstg--tooltiptext').style.visibility = 'visible';
+        }, function (target, event) {
+          target.querySelector('.wpstg--tooltiptext').style.visibility = 'hidden';
+        });
+      },
+      isEmpty: function isEmpty(obj) {
+        for (var prop in obj) {
+          if (obj.hasOwnProperty(prop)) {
+            return false;
+          }
+        }
+
+        return true;
+      },
+      // Get the custom themed Swal Modal for WP Staging
+      // Easy to maintain now in one place now
+      getSwalModal: function getSwalModal(isContentCentered, customClasses) {
+        if (isContentCentered === void 0) {
+          isContentCentered = false;
+        }
+
+        if (customClasses === void 0) {
+          customClasses = {};
+        }
+
+        // common style for all swal modal used in WP Staging
+        var defaultCustomClasses = {
+          confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-100-width',
+          cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn wpstg-100-width',
+          actions: 'wpstg--modal--actions',
+          popup: isContentCentered ? 'wpstg-swal-popup centered-modal' : 'wpstg-swal-popup'
+        }; // If a attribute exists in both default and additional attributes,
+        // The class(es) of the additional attribute will overrite the default one.
+
+        var options = {
+          customClass: Object.assign(defaultCustomClasses, customClasses),
+          buttonsStyling: false,
+          reverseButtons: true,
+          showClass: {
+            popup: 'swal2-show wpstg-swal-show'
+          }
+        };
+        return Swal.mixin(options);
+      },
+      showSuccessModal: function showSuccessModal(htmlContent) {
+        this.getSwalModal().fire({
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'OK',
+          icon: 'success',
+          title: 'Success!',
+          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
+        });
+      },
+      showWarningModal: function showWarningModal(htmlContent) {
+        this.getSwalModal().fire({
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'OK',
+          icon: 'warning',
+          title: '',
+          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
+        });
+      },
+      showErrorModal: function showErrorModal(htmlContent) {
+        this.getSwalModal().fire({
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'OK',
+          icon: 'error',
+          title: 'Error!',
+          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
+        });
+      },
+
+      /**
+       * Treats a default response object generated by WordPress's
+       * wp_send_json_success() or wp_send_json_error() functions in
+       * PHP, parses it in JavaScript, and either throws if it's an error,
+       * or returns the data if the response is successful.
+       *
+       * @param {object} response
+       * @return {*}
+       */
+      getDataFromWordPressResponse: function getDataFromWordPressResponse(response) {
+        if (typeof response !== 'object') {
+          throw new Error('Unexpected response (ERR 1341)');
+        }
+
+        if (!response.hasOwnProperty('success')) {
+          throw new Error('Unexpected response (ERR 1342)');
+        }
+
+        if (!response.hasOwnProperty('data')) {
+          throw new Error('Unexpected response (ERR 1343)');
+        }
+
+        if (response.success === false) {
+          if (response.data instanceof Array && response.data.length > 0) {
+            throw new Error(response.data.shift());
+          } else {
+            throw new Error('Response was not successful');
+          }
+        } else {
+          // Successful response. Return the data.
+          return response.data;
+        }
+      },
+      isLoading: function isLoading(_isLoading) {
+        if (!_isLoading || _isLoading === false) {
+          WPStagingCommon.cache.get('.wpstg-loader').hide();
+        } else {
+          WPStagingCommon.cache.get('.wpstg-loader').show();
+        }
+      },
+      showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
+        prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
+        appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
+
+        if (response === false) {
+          WPStagingCommon.showErro(prependMessage + ' Error: No response.' + appendMessage);
+          window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+          return;
+        }
+
+        if (typeof response.error !== 'undefined' && response.error) {
+          WPStagingCommon.showError(prependMessage + ' Error: ' + response.message + appendMessage);
+          window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+          return;
+        }
+      },
+      handleFetchErrors: function handleFetchErrors(response) {
+        if (!response.ok) {
+          WPStagingCommon.showErro('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
+        }
+
+        return response;
+      },
+      showError: function showError(message) {
+        WPStagingCommon.cache.get('#wpstg-try-again').css('display', 'inline-block');
+        WPStagingCommon.cache.get('#wpstg-cancel-cloning').text('Reset');
+        WPStagingCommon.cache.get('#wpstg-resume-cloning').show();
+        WPStagingCommon.cache.get('#wpstg-error-wrapper').show();
+        WPStagingCommon.cache.get('#wpstg-error-details').show().html(message);
+        WPStagingCommon.cache.get('#wpstg-removing-clone').removeClass('loading');
+        WPStagingCommon.cache.get('.wpstg-loader').hide();
+        $('.wpstg--modal--process--generic-problem').show().html(message);
+      },
+      resetErrors: function resetErrors() {
+        WPStagingCommon.cache.get('#wpstg-error-details').hide().html('');
+      },
+
+      /**
+       * Ajax Requests
+       * @param {Object} data
+       * @param {Function} callback
+       * @param {string} dataType
+       * @param {bool} showErrors
+       * @param {int} tryCount
+       * @param {float} incrementRatio
+       * @param errorCallback
+       */
+      ajax: function ajax(data, callback, dataType, showErrors, tryCount, incrementRatio, errorCallback) {
+        if (incrementRatio === void 0) {
+          incrementRatio = null;
+        }
+
+        if (errorCallback === void 0) {
+          errorCallback = null;
+        }
+
+        if ('undefined' === typeof dataType) {
+          dataType = 'json';
+        }
+
+        if (false !== showErrors) {
+          showErrors = true;
+        }
+
+        tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
+        var retryLimit = 10;
+        var retryTimeout = 10000 * tryCount;
+        incrementRatio = parseInt(incrementRatio);
+
+        if (!isNaN(incrementRatio)) {
+          retryTimeout *= incrementRatio;
+        }
+
+        $.ajax({
+          url: ajaxurl + '?action=wpstg_processing&_=' + Date.now() / 1000,
+          type: 'POST',
+          dataType: dataType,
+          cache: false,
+          data: data,
+          error: function error(xhr, textStatus, errorThrown) {
+            console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
+
+            if (typeof errorCallback === 'function') {
+              // Custom error handler
+              errorCallback(xhr, textStatus, errorThrown);
+
+              if (!WPStagingCommon.continueErrorHandle) {
+                // Reset state
+                WPStagingCommon.continueErrorHandle = true;
+                return;
+              }
+            } // Default error handler
+
+
+            tryCount++;
+
+            if (tryCount <= retryLimit) {
+              setTimeout(function () {
+                WPStagingCommon.ajax(data, callback, dataType, showErrors, tryCount, incrementRatio);
+                return;
+              }, retryTimeout);
+            } else {
+              var errorCode = 'undefined' === typeof xhr.status ? 'Unknown' : xhr.status;
+              WPStagingCommon.showError('Fatal Error:  ' + errorCode + ' Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+            }
+          },
+          success: function success(data) {
+            if ('function' === typeof callback) {
+              callback(data);
+            }
+          },
+          statusCode: {
+            404: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Error 404 - Can\'t find ajax request URL! Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+              }
+            },
+            500: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Fatal Error 500 - Internal server error while processing the request! Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+              }
+            },
+            504: function _() {
+              if (tryCount > retryLimit) {
+                WPStagingCommon.showError('Error 504 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              }
+            },
+            502: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Error 502 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              }
+            },
+            503: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Error 503 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              }
+            },
+            429: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Error 429 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              }
+            },
+            403: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Refresh page or login again! The process should be finished successfully. \n\ ');
+              }
+            }
+          }
+        });
+      }
+    };
+    return WPStagingCommon;
+  })(jQuery);
+
+  /**
    * Manage RESET MODAL
    */
 
@@ -901,16 +1324,15 @@
     };
 
     _proto.loadModal = function loadModal() {
-      return Swal.fire({
+      return WPStagingCommon.getSwalModal(false, {
+        confirmButton: this.resetButtonClass + ' wpstg-confirm-reset-clone wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
+        container: this.resetModalContainerClass + ' wpstg-swal2-container wpstg-swal2-loading'
+      }).fire({
         title: '',
         icon: 'warning',
         html: this.getAjaxLoader(),
-        width: '300px',
+        width: '400px',
         focusConfirm: false,
-        customClass: {
-          confirmButton: this.resetButtonClass,
-          container: 'wpstg-swal2-container wpstg-swal2-loading ' + this.resetModalContainerClass
-        },
         confirmButtonText: this.wpstgObject.i18n.resetClone,
         showCancelButton: true
       });
@@ -949,7 +1371,15 @@
             html: _this2.wpstgObject.i18n['somethingWentWrong'],
             width: '500px',
             confirmButtonText: 'Ok',
-            showCancelButton: false
+            showCancelButton: false,
+            customClass: {
+              confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
+              cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
+              actions: 'wpstg--modal--actions',
+              popup: 'wpstg-swal-popup centered-modal'
+            },
+            buttonsStyling: false,
+            reverseButtons: true
           }, data.swalOptions), {
             type: data.type
           });
@@ -958,7 +1388,7 @@
 
         var modal = qs('.wpstg-reset-confirmation');
         modal.classList.remove('wpstg-swal2-loading');
-        modal.querySelector('.swal2-popup').style.width = 'auto';
+        modal.querySelector('.swal2-popup').style.width = '500px';
         modal.querySelector('.swal2-content').innerHTML = data.html;
         _this2.directoryNavigator = new WpstgDirectoryNavigation();
         _this2.excludeFilters = new WpstgExcludeFilters();
@@ -1071,7 +1501,109 @@
     return WpstgResetModal;
   }();
 
-  var WPStaging = function ($) {
+  /**
+   * Handle toggle of advance settings checkboxes
+   */
+
+  var WpstgCloningAdvanceSettings = /*#__PURE__*/function () {
+    function WpstgCloningAdvanceSettings(baseContainerSelector) {
+      if (baseContainerSelector === void 0) {
+        baseContainerSelector = '#wpstg-clonepage-wrapper';
+      }
+
+      this.baseContainer = qs(baseContainerSelector);
+      this.checkBoxSettingTogglerSelector = '.wpstg-toggle-advance-settings-section';
+      this.init();
+    }
+    /**
+     * Add events
+     * @return {void}
+     */
+
+
+    var _proto = WpstgCloningAdvanceSettings.prototype;
+
+    _proto.addEvents = function addEvents() {
+      var _this = this;
+
+      if (this.baseContainer === null) {
+        return;
+      }
+
+      addEvent(this.baseContainer, 'change', this.checkBoxSettingTogglerSelector, function (element) {
+        _this.toggleSettings(element);
+      });
+    }
+    /**
+     * @return {void}
+     */
+    ;
+
+    _proto.init = function init() {
+      this.addEvents();
+    }
+    /**
+     * Expand/Collapse checkbox content on change
+     * @return {void}
+     */
+    ;
+
+    _proto.toggleSettings = function toggleSettings(element) {
+      var target = qs('#' + element.getAttribute('data-id'));
+
+      if (element.checked) {
+        slideDown(target);
+      } else {
+        slideUp(target);
+      }
+    };
+
+    return WpstgCloningAdvanceSettings;
+  }();
+
+  var WpstgMainMenu = /*#__PURE__*/function () {
+    function WpstgMainMenu() {
+      this.mainMenu();
+      this.activeTabClass = 'wpstg--tab--active';
+    }
+
+    var _proto = WpstgMainMenu.prototype;
+
+    _proto.mainMenu = function mainMenu() {
+      var _this = this;
+
+      addEvent(qs('.wpstg--tab--header'), 'click', '.wpstg-button', function (element) {
+        var $this = element;
+        var target = $this.getAttribute('data-target');
+        var targetElements = all(target);
+        var menuItems = all('.wpstg--tab--header a[data-target]');
+        var contents = all('.wpstg--tab--contents > .wpstg--tab--content');
+        contents.forEach(function (content) {
+          // active tab class is without the css dot class prefix
+          if (content.matches('.' + _this.activeTabClass + ':not(' + target + ')')) {
+            content.classList.remove(_this.activeTabClass);
+          }
+        });
+        menuItems.forEach(function (menuItem) {
+          if (menuItem !== $this) {
+            menuItem.classList.remove(_this.activeTabClass);
+          }
+        });
+        $this.classList.add(_this.activeTabClass);
+        targetElements.forEach(function (targetElement) {
+          targetElement.classList.add(_this.activeTabClass);
+        });
+
+        if ('#wpstg--tab--backup' === target) {
+          window.dispatchEvent(new Event('backups-tab'));
+        }
+      });
+    };
+
+    return WpstgMainMenu;
+  }();
+
+  var WPStaging$1 = function ($) {
     var that = {
       isCancelled: false,
       isFinished: false,
@@ -1081,19 +1613,7 @@
       progressBar: 0,
       cloneExcludeFilters: null,
       directoryNavigator: null,
-      notyf: new Notyf({
-        duration: 10000,
-        position: {
-          x: 'center',
-          y: 'bottom'
-        },
-        dismissible: true,
-        types: [{
-          type: 'warning',
-          background: 'orange',
-          icon: false
-        }]
-      })
+      notyf: null
     };
     var cache = {
       elements: []
@@ -1154,22 +1674,6 @@
     };
     /**
        *
-       * @param obj
-       * @return {boolean}
-       */
-
-
-    function isEmpty(obj) {
-      for (var prop in obj) {
-        if (obj.hasOwnProperty(prop)) {
-          return false;
-        }
-      }
-
-      return true;
-    }
-    /**
-       *
        * @param response the error object
        * @param prependMessage Overwrite default error message at beginning
        * @param appendMessage Overwrite default error message at end
@@ -1183,30 +1687,16 @@
 
       if (response === false) {
         showError(prependMessage + ' Error: No response.' + appendMessage);
-        window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+        window.removeEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
         return;
       }
 
       if (typeof response.error !== 'undefined' && response.error) {
         console.error(response.message);
         showError(prependMessage + ' Error: ' + response.message + appendMessage);
-        window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+        window.removeEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
         return;
       }
-    };
-    /**
-       *
-       * @param response
-       * @return {{ok}|*}
-       */
-
-
-    var handleFetchErrors = function handleFetchErrors(response) {
-      if (!response.ok) {
-        showError('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
-      }
-
-      return response;
     };
     /** Hide and reset previous thrown visible errors */
 
@@ -1762,7 +2252,7 @@
             render += '<tr><td>' + x.name + '</td><td>' + x.production + '</td><td>' + x.staging + '</td><td>' + icon + '</td></tr>';
           });
           render += '</tbody></table><p>Note: Some mySQL properties do not match. You may proceed but the staging site may not work as expected.</p>';
-          Swal.fire({
+          WPStagingCommon.getSwalModal().fire({
             title: 'Different Database Properties',
             icon: 'warning',
             html: render,
@@ -1778,7 +2268,7 @@
           return;
         }
 
-        Swal.fire({
+        WPStagingCommon.getSwalModal(true).fire({
           title: 'Different Database Properties',
           icon: 'error',
           html: response.message,
@@ -1890,7 +2380,15 @@
         html: wpstg.i18n['somethingWentWrong'],
         width: '500px',
         confirmButtonText: 'Ok',
-        showCancelButton: false
+        showCancelButton: false,
+        customClass: {
+          confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
+          cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
+          actions: 'wpstg--modal--actions',
+          popup: 'wpstg-swal-popup centered-modal'
+        },
+        buttonsStyling: false,
+        reverseButtons: true
       }, response.swalOptions), {
         type: response.type
       });
@@ -1994,10 +2492,13 @@
 
             if (response["delete"] === 'finished') {
               $('.wpstg-clone#' + clone).remove();
-            }
+            } // No staging site message is also of type/class .wpstg-class but hidden
+            // We have just excluded that from search when counting no of clones
 
-            if ($('.wpstg-clone').length < 1) {
+
+            if ($('#wpstg-existing-clones .wpstg-clone').length < 1) {
               cache.get('#wpstg-existing-clones').find('h3').text('');
+              cache.get('#wpstg-no-staging-site-results').show();
             }
 
             cache.get('.wpstg-loader').hide();
@@ -2140,7 +2641,7 @@
             }
 
             if (value.type === 'ERROR') {
-              cache.get('.wpstg-log-details').append('<span style="color:red;">[' + value.type + ']</span>-' + '[' + value.date + '] ' + value.message + '</br>');
+              cache.get('.wpstg-log-details').append('<span class="wpstg--red">[' + value.type + ']</span>-' + '[' + value.date + '] ' + value.message + '</br>');
             } else {
               cache.get('.wpstg-log-details').append('[' + value.type + ']-' + '[' + value.date + '] ' + value.message + '</br>');
             }
@@ -2177,31 +2678,9 @@
           } // Show required disk space
 
 
-          cache.get('#wpstg-clone-id-error').html('Estimated necessary disk space: ' + response.usedspace + '<br> <span style="color:#444;">Before you proceed ensure your account has enough free disk space to hold the entire instance of the production site. You can check the available space from your hosting account (cPanel or similar).</span>').show();
+          cache.get('#wpstg-clone-id-error').html('Estimated necessary disk space: ' + response.requiredSpace + (response.errorMessage !== null ? '<br>' + response.errorMessage : '') + '<br> <span style="color:#444;">Before you proceed ensure your account has enough free disk space to hold the entire instance of the production site. You can check the available space from your hosting account (cPanel or similar).</span>').show();
           cache.get('.wpstg-loader').hide();
         }, 'json', false);
-      });
-    };
-
-    var mainTabs = function mainTabs() {
-      $('.wpstg--tab--header a[data-target]').on('click', function () {
-        var $this = $(this);
-        var target = $this.attr('data-target');
-        var $wrapper = $this.parents('.wpstg--tab--wrapper');
-        var $menuItems = $wrapper.find('.wpstg--tab--header a[data-target]');
-        var $contents = $wrapper.find('.wpstg--tab--contents > .wpstg--tab--content');
-        $contents.filter('.wpstg--tab--active:not(.wpstg--tab--active' + target + ')').removeClass('wpstg--tab--active');
-        $menuItems.not($this).removeClass('wpstg--tab--active');
-        $this.addClass('wpstg--tab--active');
-        $(target).addClass('wpstg--tab--active');
-
-        if ('#wpstg--tab--backup' === target) {
-          that.backups.init();
-        }
-
-        if ('#wpstg--tab--database-backups' === target) {
-          window.dispatchEvent(new Event('database-backups-tab'));
-        }
       });
     };
     /**
@@ -2286,7 +2765,7 @@
 
         setTimeout(function () {
           // cloneDatabase();
-          window.addEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+          window.addEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
           processing();
         }, wpstg.delayReq);
         that.timer('start');
@@ -2299,7 +2778,7 @@
 
       var processing = function processing() {
         if (true === that.isCancelled) {
-          window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+          window.removeEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
           return false;
         }
 
@@ -2314,7 +2793,7 @@
 
 
         cache.get('.wpstg-log-details').show();
-        WPStaging.ajax({
+        WPStaging$1.ajax({
           action: 'wpstg_processing',
           accessToken: wpstg.accessToken,
           nonce: wpstg.nonce,
@@ -2341,7 +2820,7 @@
             progressBar(response);
             processing();
           } else if ('finished' === response.status || 'undefined' !== typeof response.job_done && response.job_done) {
-            window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+            window.removeEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
             finish(response);
           }
         }, 'json', false);
@@ -2386,7 +2865,10 @@
         }
 
         if (that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
-          Swal.fire({
+          // TODO: remove default custom classes
+          WPStagingCommon.getSwalModal(true, {
+            confirmButton: 'wpstg--btn--confirm wpstg-green-button wpstg-button wpstg-link-btn wpstg-100-width'
+          }).fire({
             title: '',
             icon: 'success',
             html: msg,
@@ -2464,8 +2946,23 @@
       elements();
       stepButtons();
       tabs();
-      mainTabs();
+      WPStagingCommon.listenTooltip();
+      new WpstgMainMenu();
       new WpstgCloneStaging();
+      new WpstgCloningAdvanceSettings();
+      that.notyf = new Notyf({
+        duration: 10000,
+        position: {
+          x: 'center',
+          y: 'bottom'
+        },
+        dismissible: true,
+        types: [{
+          type: 'warning',
+          background: 'orange',
+          icon: false
+        }]
+      });
     };
     /**
      * Ajax call
@@ -2476,1330 +2973,36 @@
     that.ajax = ajax;
     that.showError = showError;
     that.getLogs = getLogs;
-    that.loadOverview = loadOverview; // TODO RPoC (too big, scattered and unorganized)
-
-    that.backups = {
-      type: null,
-      isCancelled: false,
-      processInfo: {
-        title: null,
-        interval: null
-      },
-      modal: {
-        create: {
-          html: null,
-          confirmBtnTxt: null
-        },
-        process: {
-          html: null,
-          cancelBtnTxt: null,
-          modal: null
-        },
-        download: {
-          html: null
-        },
-        "import": {
-          html: null,
-          btnTxtNext: null,
-          btnTxtConfirm: null,
-          btnTxtCancel: null,
-          searchReplaceForm: null,
-          file: null,
-          containerUpload: null,
-          containerFilesystem: null,
-          setFile: function setFile(file, upload) {
-            if (upload === void 0) {
-              upload = true;
-            }
-
-            var toUnit = function toUnit(bytes) {
-              var i = Math.floor(Math.log(bytes) / Math.log(1024));
-              return (bytes / Math.pow(1024, i)).toFixed(2) * 1 + ' ' + ['B', 'kB', 'MB', 'GB', 'TB'][i];
-            };
-
-            if (!file) {
-              return;
-            }
-
-            that.backups.modal["import"].file = file;
-            that.backups.modal["import"].data.file = file.name;
-            $('.wpstg--backup--import--selected-file').html(file.name + " <br /> (" + toUnit(file.size) + ")").show();
-            $('.wpstg--drag').hide();
-            $('.wpstg--drag-or-upload').show();
-
-            if (upload) {
-              $('.wpstg--modal--actions .swal2-confirm').prop('disabled', true);
-              that.backups.upload.start();
-            }
-          },
-          baseDirectory: null,
-          data: {
-            file: null,
-            search: [],
-            replace: []
-          }
-        }
-      },
-      messages: {
-        WARNING: 'warning',
-        ERROR: 'error',
-        INFO: 'info',
-        DEBUG: 'debug',
-        CRITICAL: 'critical',
-        data: {
-          all: [],
-          // TODO RPoC
-          info: [],
-          error: [],
-          critical: [],
-          warning: [],
-          debug: []
-        },
-        shouldWarn: function shouldWarn() {
-          return that.backups.messages.data.error.length > 0 || that.backups.messages.data.critical.length > 0;
-        },
-        countByType: function countByType(type) {
-          if (type === void 0) {
-            type = that.backups.messages.ERROR;
-          }
-
-          return that.backups.messages.data[type].length;
-        },
-        addMessage: function addMessage(message) {
-          if (Array.isArray(message)) {
-            message.forEach(function (item) {
-              that.backups.messages.addMessage(item);
-            });
-            return;
-          }
-
-          var type = message.type.toLowerCase() || 'info';
-
-          if (!that.backups.messages.data[type]) {
-            that.backups.messages.data[type] = [];
-          }
-
-          that.backups.messages.data.all.push(message); // TODO RPoC
-
-          that.backups.messages.data[type].push(message);
-        },
-        reset: function reset() {
-          that.backups.messages.data = {
-            all: [],
-            info: [],
-            error: [],
-            critical: [],
-            warning: [],
-            debug: []
-          };
-        }
-      },
-      timer: {
-        totalSeconds: 0,
-        interval: null,
-        start: function start() {
-          if (null !== that.backups.timer.interval) {
-            return;
-          }
-
-          var prettify = function prettify(seconds) {
-            // If potentially anything can exceed 24h execution time than that;
-            // const _seconds = parseInt(seconds, 10)
-            // const hours = Math.floor(_seconds / 3600)
-            // const minutes = Math.floor(_seconds / 60) % 60
-            // seconds = _seconds % 60
-            //
-            // return [hours, minutes, seconds]
-            //   .map(v => v < 10 ? '0' + v : v)
-            //   .filter((v,i) => v !== '00' || i > 0)
-            //   .join(':')
-            // ;
-            // Are we sure we won't create anything that exceeds 24h execution time? If not then this;
-            return "" + new Date(seconds * 1000).toISOString().substr(11, 8);
-          };
-
-          that.backups.timer.interval = setInterval(function () {
-            $('.wpstg--modal--process--elapsed-time').text(prettify(that.backups.timer.totalSeconds));
-            that.backups.timer.totalSeconds++;
-          }, 1000);
-        },
-        stop: function stop() {
-          that.backups.timer.totalSeconds = 0;
-
-          if (that.backups.timer.interval) {
-            clearInterval(that.backups.timer.interval);
-            that.backups.timer.interval = null;
-          }
-        }
-      },
-      upload: {
-        reader: null,
-        file: null,
-        iop: 1000 * 1024,
-        uploadInfo: function uploadInfo(isShow) {
-          var $containerUpload = $('.wpstg--modal--import--upload--process');
-          var $containerUploader = $('.wpstg--uploader');
-
-          if (isShow) {
-            $containerUpload.css('display', 'flex');
-            $containerUploader.hide();
-            return;
-          }
-
-          $containerUploader.css('display', 'flex');
-          $containerUpload.hide();
-        },
-        start: function start() {
-          that.backups.upload.reader = new FileReader();
-          that.backups.upload.file = that.backups.modal["import"].file;
-          that.backups.upload.uploadInfo(true);
-          that.backups.upload.sendChunk();
-        },
-        sendChunk: function sendChunk(startsAt) {
-          if (startsAt === void 0) {
-            startsAt = 0;
-          }
-
-          if (!that.backups.upload.file) {
-            return;
-          }
-
-          var isReset = startsAt < 1;
-          var endsAt = startsAt + that.backups.upload.iop + 1;
-          var blob = that.backups.upload.file.slice(startsAt, endsAt);
-
-          that.backups.upload.reader.onloadend = function (event) {
-            if (event.target.readyState !== FileReader.DONE) {
-              return;
-            }
-
-            var body = new FormData();
-            body.append('accessToken', wpstg.accessToken);
-            body.append('nonce', wpstg.nonce);
-            body.append('data', event.target.result);
-            body.append('filename', that.backups.upload.file.name);
-            body.append('reset', isReset ? '1' : '0');
-            fetch(ajaxurl + "?action=wpstg--backups--import--file-upload", {
-              method: 'POST',
-              body: body
-            }).then(handleFetchErrors).then(function (res) {
-              return res.json();
-            }).then(function (res) {
-              showAjaxFatalError(res, '', 'Submit an error report.');
-              var writtenBytes = startsAt + that.backups.upload.iop;
-              var percent = Math.floor(writtenBytes / that.backups.upload.file.size * 100);
-
-              if (endsAt >= that.backups.upload.file.size) {
-                that.backups.upload.uploadInfo(false);
-                isLoading(false);
-                that.backups.switchModalToConfigure();
-                return;
-              }
-
-              $('.wpstg--modal--import--upload--progress--title > span').text(percent);
-              $('.wpstg--modal--import--upload--progress').css('width', percent + "%");
-              that.backups.upload.sendChunk(endsAt);
-            })["catch"](function (e) {
-              return showAjaxFatalError(e, '', 'Submit an error report.');
-            });
-          };
-
-          that.backups.upload.reader.readAsDataURL(blob);
-        }
-      },
-      status: {
-        hasResponse: null,
-        reTryAfter: 5000
-      },
-      init: function init() {
-        this.create();
-        this["delete"]();
-        this.edit(); // noinspection JSIgnoredPromiseFromCall
-
-        that.backups.fetchListing();
-        $('body').on('click', '.wpstg--backup--download', function () {
-          var url = this.getAttribute('data-url');
-
-          if (url.length > 0) {
-            window.location.href = url;
-            return;
-          }
-
-          that.backups.downloadModal({
-            titleExport: this.getAttribute('data-title-export'),
-            title: this.getAttribute('data-title'),
-            id: this.getAttribute('data-id'),
-            btnTxtCancel: this.getAttribute('data-btn-cancel-txt'),
-            btnTxtConfirm: this.getAttribute('data-btn-download-txt')
-          });
-        }).on('click', '.wpstg--backup--import', function () {
-          // Clicked "Import" on the backup list
-          that.backups.importModal();
-          that.backups.modal["import"].data.file = this.getAttribute('data-filePath');
-          that.backups.switchModalToConfigure(); // $('.wpstg--modal--actions .swal2-confirm').show();
-          // $('.wpstg--modal--actions .swal2-confirm').prop('disabled', false);
-        }).off('click', '#wpstg-import-backup').on('click', '#wpstg-import-backup', function () {
-          that.backups.importModal();
-        }) // Import
-        .off('click', '.wpstg--backup--import--choose-option').on('click', '.wpstg--backup--import--choose-option', function () {
-          var $this = $(this);
-          var $parent = $this.parent();
-
-          if (!$parent.hasClass('wpstg--show-options')) {
-            $parent.addClass('wpstg--show-options');
-            $this.text($this.attr('data-txtChoose'));
-          } else {
-            $parent.removeClass('wpstg--show-options');
-            $this.text($this.attr('data-txtOther'));
-          }
-        }).off('click', '.wpstg--modal--backup--import--search-replace--new').on('click', '.wpstg--modal--backup--import--search-replace--new', function (e) {
-          e.preventDefault();
-          var $container = $(Swal.getContainer()).find('.wpstg--modal--backup--import--search-replace--input--container');
-          var total = $container.find('.wpstg--modal--backup--import--search-replace--input-group').length;
-          $container.append(that.backups.modal["import"].searchReplaceForm.replace(/{i}/g, total));
-        }).off('click', '.wpstg--modal--backup--import--search-replace--remove').on('click', '.wpstg--modal--backup--import--search-replace--remove', function (e) {
-          e.preventDefault();
-          $(e.target).closest('.wpstg--modal--backup--import--search-replace--input-group').remove();
-        }).off('input', '.wpstg--backup--import--search').on('input', '.wpstg--backup--import--search', function () {
-          var index = parseInt(this.getAttribute('data-index'));
-
-          if (!isNaN(index)) {
-            that.backups.modal["import"].data.search[index] = this.value;
-          }
-        }).off('input', '.wpstg--backup--import--replace').on('input', '.wpstg--backup--import--replace', function () {
-          var index = parseInt(this.getAttribute('data-index'));
-
-          if (!isNaN(index)) {
-            that.backups.modal["import"].data.replace[index] = this.value;
-          }
-        }) // Other Options
-        .off('click', '.wpstg--backup--import--option[data-option]').on('click', '.wpstg--backup--import--option[data-option]', function () {
-          var option = this.getAttribute('data-option');
-
-          if (option === 'file') {
-            $('input[type="file"][name="wpstg--backup--import--upload--file"]').trigger('click');
-            return;
-          }
-
-          if (option === 'upload') {
-            that.backups.modal["import"].containerFilesystem.hide();
-            that.backups.modal["import"].containerUpload.show();
-          }
-
-          if (option !== 'filesystem') {
-            return;
-          }
-
-          that.backups.modal["import"].containerUpload.hide();
-          var $containerFilesystem = that.backups.modal["import"].containerFilesystem;
-          $containerFilesystem.show();
-          fetch(ajaxurl + "?action=wpstg--backups--import--file-list&_=" + Math.random() + "&accessToken=" + wpstg.accessToken + "&nonce=" + wpstg.nonce).then(handleFetchErrors).then(function (res) {
-            return res.json();
-          }).then(function (res) {
-            var $ul = $('.wpstg--modal--backup--import--filesystem ul');
-            $ul.empty();
-
-            if (!res || isEmpty(res)) {
-              $ul.append("<span id=\"wpstg--backups--import--file-list-empty\">" + wpstg.i18n.noImportFileFound + "</span><br />");
-              $('.wpstg--modal--backup--import--search-replace--wrapper').hide();
-              return;
-            }
-
-            $ul.append("<span id=\"wpstg--backups--import--file-list\">" + wpstg.i18n.selectFileToImport + "</span><br />");
-            res.forEach(function (file, index) {
-              $ul.append("\n<li data-filepath=\"" + file.fullPath + "\" class=\"wpstg--backups--import--file-list--sigle-item\">\n    <ul class=\"wpstg-import-backup-more-info wpstg-import-backup-more-info-" + index + ("\">\n        <li style=\"font-weight: bold\">" + file.backupName + "</li>\n        <li>Created on: " + file.dateCreatedFormatted + "</li>\n        <li>Size: " + file.size + "</li>\n        <li>\n            <div class=\"wpstg-import-backup-contains-title\">This backup contains:</div>\n            <ul class=\"wpstg-import-backup-contains\">\n            ") + (file.isExportingDatabase ? '<li><span class="dashicons dashicons-database wpstg--tooltip"><div class=\'wpstg--tooltiptext\'>Database</div></span></li>' : '') + "\n            " + (file.isExportingPlugins ? '<li><span class="dashicons dashicons-admin-plugins wpstg--tooltip"><div class=\'wpstg--tooltiptext\'>Plugins</div></span></li>' : '') + "\n            " + (file.isExportingMuPlugins ? '<li><span class="dashicons dashicons-plugins-checked wpstg--tooltip"><div class=\'wpstg--tooltiptext\'>Mu-plugins</div></span></li>' : '') + "\n            " + (file.isExportingThemes ? '<li><span class="dashicons dashicons-layout wpstg--tooltip"><div class=\'wpstg--tooltiptext\'>Themes</div></span></li>' : '') + "\n            " + (file.isExportingUploads ? '<li><span class="dashicons dashicons-images-alt wpstg--tooltip"><div class=\'wpstg--tooltiptext\'>Uploads</div></span></li>' : '') + "\n            " + (file.isExportingOtherWpContentFiles ? '<li><span class="dashicons dashicons-admin-generic wpstg--tooltip"><div class=\'wpstg--tooltiptext\'>Other files in wp-content</div></span></li>' : '') + ("\n            </ul>\n        </li>\n        <li>Filename: " + file.name + "</li>\n    </ul>\n</li>\n"));
-            });
-            return res;
-          })["catch"](function (e) {
-            return showAjaxFatalError(e, '', 'Submit an error report.');
-          });
-        }).off('change', 'input[type="file"][name="wpstg--backup--import--upload--file"]').on('change', 'input[type="file"][name="wpstg--backup--import--upload--file"]', function () {
-          that.backups.modal["import"].setFile(this.files[0] || null);
-        }).off('change', 'input[type="radio"][name="backup_import_file"]').on('change', 'input[type="radio"][name="backup_import_file"]', function () {
-          $('.wpstg--modal--actions .swal2-confirm').show();
-          $('.wpstg--modal--actions .swal2-confirm').prop('disabled', false);
-          that.backups.modal["import"].data.file = this.value;
-        }) // Drag & Drop
-        .on('drag dragstart dragend dragover dragenter dragleave drop', '.wpstg--modal--backup--import--upload--container', function (e) {
-          e.preventDefault();
-          e.stopPropagation();
-        }).on('dragover dragenter', '.wpstg--modal--backup--import--upload--container', function () {
-          $(this).addClass('wpstg--has-dragover');
-        }).on('dragleave dragend drop', '.wpstg--modal--backup--import--upload--container', function () {
-          $(this).removeClass('wpstg--has-dragover');
-        }).on('drop', '.wpstg--modal--backup--import--upload--container', function (e) {
-          // Uploaded a file through the "Import Backup modal"
-          that.backups.modal["import"].setFile(e.originalEvent.dataTransfer.files[0] || null);
-        }).on('click', '.wpstg--modal--backup--import--filesystem li', function (e) {
-          // Selected an existing backup in the Import Backup modal
-          var fullPath = $(e.target).closest('.wpstg--backups--import--file-list--sigle-item').data().filepath;
-
-          if (!fullPath.length) {
-            alert('Error: Could not get file path.');
-            return;
-          }
-
-          that.backups.modal["import"].data.file = fullPath;
-          that.backups.switchModalToConfigure(); // $('.wpstg--modal--actions .swal2-confirm').prop('disabled', false);
-          // that.backups.modal.gotoStart();
-        }).on('change', '.wpstg-advanced-options-site input[type="checkbox"]', function (e) {
-          /*
-                 * We use a timeout here to simulate an "afterChange" event.
-                 * This allows us to read from the DOM whether the checkbox is checked or not,
-                 * instead of having to read from the event, which would require a lengthier code
-                 * to account for all elements we might want to read.
-                 */
-          setTimeout(function (e) {
-            // Reset
-            document.getElementById('exportUploadsWithoutDatabaseWarning').style.display = 'none'; // Exporting Media Library without Database
-
-            var databaseChecked = document.getElementById('includeDatabaseInBackup').checked;
-            var mediaLibraryChecked = document.getElementById('includeMediaLibraryInBackup').checked;
-
-            if (mediaLibraryChecked && !databaseChecked) {
-              document.getElementById('exportUploadsWithoutDatabaseWarning').style.display = 'block';
-            }
-          }, 100);
-        });
-      },
-      fetchListing: function fetchListing(isResetErrors) {
-        if (isResetErrors === void 0) {
-          isResetErrors = true;
-        }
-
-        isLoading(true);
-
-        if (isResetErrors) {
-          resetErrors();
-        }
-
-        return fetch(ajaxurl + "?action=wpstg--backups--listing&_=" + Math.random() + "&accessToken=" + wpstg.accessToken + "&nonce=" + wpstg.nonce).then(handleFetchErrors).then(function (res) {
-          return res.json();
-        }).then(function (res) {
-          showAjaxFatalError(res, '', 'Submit an error report.');
-          cache.get('#wpstg--tab--backup').html(res);
-          isLoading(false);
-          window.dispatchEvent(new Event('backupListingFinished'));
-          return res;
-        })["catch"](function (e) {
-          return showAjaxFatalError(e, '', 'Submit an error report.');
-        });
-      },
-      "delete": function _delete() {
-        $('#wpstg--tab--backup').off('click', '.wpstg-delete-backup[data-md5]').on('click', '.wpstg-delete-backup[data-md5]', function (e) {
-          e.preventDefault();
-          resetErrors();
-
-          if (!confirm('Are you sure you want to delete this backup?')) {
-            return;
-          }
-
-          isLoading(true);
-          cache.get('#wpstg-existing-backups').hide();
-          var md5 = this.getAttribute('data-md5');
-          that.ajax({
-            action: 'wpstg--backups--delete',
-            md5: md5,
-            accessToken: wpstg.accessToken,
-            nonce: wpstg.nonce
-          }, function (response) {
-            showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
-            isLoading(false);
-            that.backups.fetchListing();
-          });
-        }); // Force delete if backup tables do not exist
-        // TODO This is bloated, no need extra ID, use existing one?
-
-        $('#wpstg-error-wrapper').off('click', '#wpstg-backup-force-delete').on('click', '#wpstg-backup-force-delete', function (e) {
-          e.preventDefault();
-          resetErrors();
-          isLoading(true);
-          var id = this.getAttribute('data-id');
-
-          if (!confirm('Do you want to delete this backup ' + id + ' from the listed backups?')) {
-            isLoading(false);
-            return false;
-          }
-
-          that.ajax({
-            action: 'wpstg--backups--delete',
-            id: id,
-            accessToken: wpstg.accessToken,
-            nonce: wpstg.nonce
-          }, function (response) {
-            showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.'); // noinspection JSIgnoredPromiseFromCall
-
-            that.backups.fetchListing();
-            isLoading(false);
-          });
-        });
-      },
-      create: function create() {
-        var prepareBackup = function prepareBackup(data) {
-          WPStaging.ajax({
-            action: 'wpstg--backups--prepare-export',
-            accessToken: wpstg.accessToken,
-            nonce: wpstg.nonce,
-            wpstgExportData: data
-          }, function (response) {
-            if (response.success) {
-              that.backups.timer.start();
-              createBackup();
-            } else {
-              showAjaxFatalError(response.data, '', 'Submit an error report.');
-            }
-          }, 'json', false, 0, 1.25);
-        };
-
-        var createBackup = function createBackup() {
-          resetErrors();
-
-          if (that.backups.isCancelled) {
-            // Swal.close();
-            return;
-          }
-
-          var statusStop = function statusStop() {
-            clearInterval(that.backups.processInfo.interval);
-            that.backups.processInfo.interval = null;
-          };
-
-          var status = function status() {
-            if (that.backups.processInfo.interval !== null) {
-              return;
-            }
-
-            that.backups.processInfo.interval = setInterval(function () {
-              if (true === that.backups.isCancelled) {
-                statusStop();
-                return;
-              }
-
-              if (that.backups.status.hasResponse === false) {
-                return;
-              }
-
-              that.backups.status.hasResponse = false;
-              fetch(ajaxurl + "?action=wpstg--backups--status&accessToken=" + wpstg.accessToken + "&nonce=" + wpstg.nonce).then(function (res) {
-                return res.json();
-              }).then(function (res) {
-                that.backups.status.hasResponse = true;
-
-                if (typeof res === 'undefined') {
-                  statusStop();
-                }
-
-                if (that.backups.processInfo.title === res.currentStatusTitle) {
-                  return;
-                }
-
-                that.backups.processInfo.title = res.currentStatusTitle;
-                var $container = $(Swal.getContainer());
-                $container.find('.wpstg--modal--process--title').text(res.currentStatusTitle);
-                $container.find('.wpstg--modal--process--percent').text('0');
-              })["catch"](function (e) {
-                that.backups.status.hasResponse = true;
-                showAjaxFatalError(e, '', 'Submit an error report.');
-              });
-            }, 5000);
-          };
-
-          WPStaging.ajax({
-            action: 'wpstg--backups--export',
-            accessToken: wpstg.accessToken,
-            nonce: wpstg.nonce
-          }, function (response) {
-            if (typeof response === 'undefined') {
-              setTimeout(function () {
-                createBackup();
-              }, wpstg.delayReq);
-              return;
-            }
-
-            that.backups.processResponse(response);
-
-            if (!that.backups.processInfo.interval) {
-              status();
-            }
-
-            if (response.status === false) {
-              createBackup();
-            } else if (response.status === true) {
-              $('#wpstg--progress--status').text('Backup successfully created!');
-              that.backups.type = null;
-
-              if (that.backups.messages.shouldWarn()) {
-                // noinspection JSIgnoredPromiseFromCall
-                that.backups.fetchListing();
-                that.backups.logsModal();
-                return;
-              }
-
-              statusStop();
-              Swal.close();
-              that.backups.fetchListing().then(function () {
-                if (!response.backupMd5) {
-                  showError('Failed to get backup md5 from response');
-                  return;
-                } // Wait for fetchListing to populate the DOM with the backup data that we want to read
-
-
-                var $el = '';
-                var timesWaited = 0;
-                var intervalWaitForBackupInDom = setInterval(function () {
-                  timesWaited++;
-                  $el = $(".wpstg--backup--download[data-md5=\"" + response.backupMd5 + "\"]"); // Could not find element, let's try again...
-
-                  if (!$el.length) {
-                    if (timesWaited >= 10) {
-                      // Bail: We tried too many times and couldn't find.
-                      clearInterval(intervalWaitForBackupInDom);
-                    }
-
-                    return;
-                  } // Found it. No more need for the interval.
-
-
-                  clearInterval(intervalWaitForBackupInDom);
-                  var backupSize = response.hasOwnProperty('backupSize') ? ' (' + response.backupSize + ')' : '';
-                  that.backups.downloadModal({
-                    id: $el.data('id'),
-                    url: $el.data('url'),
-                    title: $el.data('title'),
-                    titleExport: $el.data('title-export'),
-                    btnTxtCancel: $el.data('btn-cancel-txt'),
-                    btnTxtConfirm: $el.data('btn-download-txt') + backupSize
-                  });
-                  $('.wpstg--modal--download--logs--wrapper').show();
-                  var $logsContainer = $('.wpstg--modal--process--logs');
-                  that.backups.messages.data.all.forEach(function (message) {
-                    var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
-                    $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
-                  });
-                }, 200);
-              });
-            } else {
-              setTimeout(function () {
-                createBackup();
-              }, wpstg.delayReq);
-            }
-          }, 'json', false, 0, // Don't retry upon failure
-          1.25);
-        };
-
-        var $body = $('body');
-        $body.off('click', '.wpstg--tab--toggle').on('click', '.wpstg--tab--toggle', function () {
-          var $this = $(this);
-          var $target = $($this.attr('data-target'));
-          $target.toggle();
-
-          if ($target.is(':visible')) {
-            $this.find('span').text('▼');
-          } else {
-            $this.find('span').text('►');
-          }
-        }).off('change', '[name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent').on('change', '[type="checkbox"][name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent', function () {
-          var isExportingAnyDir = $('[type="checkbox"][name="includedDirectories\[\]"]:checked').length > 0;
-          var isExportingDatabase = $('input#includeDatabaseInBackup:checked').length === 1;
-          var isExportingOtherFilesInWpContent = $('input#includeOtherFilesInWpContent:checked').length === 1;
-
-          if (!isExportingAnyDir && !isExportingDatabase && !isExportingOtherFilesInWpContent) {
-            $('.swal2-confirm').prop('disabled', true);
-          } else {
-            $('.swal2-confirm').prop('disabled', false);
-          }
-        }); // Add backup name and notes
-
-        $('#wpstg--tab--backup').off('click', '#wpstg-new-backup').on('click', '#wpstg-new-backup', /*#__PURE__*/function () {
-          var _ref = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee(e) {
-            var $newBackupModal, html, btnTxt, _yield$Swal$fire, formValues;
-
-            return regeneratorRuntime.wrap(function _callee$(_context) {
-              while (1) {
-                switch (_context.prev = _context.next) {
-                  case 0:
-                    resetErrors();
-                    e.preventDefault();
-                    that.backups.isCancelled = false;
-
-                    if (!that.backups.modal.create.html || !that.backups.modal.create.confirmBtnTxt) {
-                      $newBackupModal = $('#wpstg--modal--backup--new');
-                      html = $newBackupModal.html();
-                      btnTxt = $newBackupModal.attr('data-confirmButtonText');
-                      that.backups.modal.create.html = html || null;
-                      that.backups.modal.create.confirmBtnTxt = btnTxt || null;
-                      $newBackupModal.remove();
-                    }
-
-                    _context.next = 6;
-                    return Swal.fire({
-                      title: '',
-                      html: that.backups.modal.create.html,
-                      focusConfirm: false,
-                      confirmButtonText: that.backups.modal.create.confirmBtnTxt,
-                      showCancelButton: true,
-                      preConfirm: function preConfirm() {
-                        var container = Swal.getContainer();
-                        return {
-                          name: container.querySelector('input[name="backup_name"]').value || null,
-                          isExportingPlugins: container.querySelector('#includePluginsInBackup:checked') !== null,
-                          isExportingMuPlugins: container.querySelector('#includeMuPluginsInBackup:checked') !== null,
-                          isExportingThemes: container.querySelector('#includeThemesInBackup:checked') !== null,
-                          isExportingUploads: container.querySelector('#includeMediaLibraryInBackup:checked') !== null,
-                          isExportingOtherWpContentFiles: container.querySelector('#includeOtherFilesInWpContent:checked') !== null,
-                          isExportingDatabase: container.querySelector('#includeDatabaseInBackup:checked') !== null
-                        };
-                      }
-                    });
-
-                  case 6:
-                    _yield$Swal$fire = _context.sent;
-                    formValues = _yield$Swal$fire.value;
-
-                    if (formValues) {
-                      _context.next = 10;
-                      break;
-                    }
-
-                    return _context.abrupt("return");
-
-                  case 10:
-                    that.backups.process({
-                      execute: function execute() {
-                        that.backups.messages.reset();
-                        prepareBackup(formValues);
-                      }
-                    });
-
-                  case 11:
-                  case "end":
-                    return _context.stop();
-                }
-              }
-            }, _callee);
-          }));
-
-          return function (_x) {
-            return _ref.apply(this, arguments);
-          };
-        }());
-      },
-      switchModalToConfigure: function switchModalToConfigure() {
-        that.backups.modal["import"].containerUpload.hide();
-        that.backups.modal["import"].containerFilesystem.hide();
-        that.backups.modal["import"].containerConfigure.show();
-      },
-      // Edit backups name and notes
-      edit: function edit() {
-        $('#wpstg--tab--backup').off('click', '.wpstg--backup--edit[data-md5]').on('click', '.wpstg--backup--edit[data-md5]', /*#__PURE__*/function () {
-          var _ref2 = _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee2(e) {
-            var $this, name, notes, _yield$Swal$fire2, formValues;
-
-            return regeneratorRuntime.wrap(function _callee2$(_context2) {
-              while (1) {
-                switch (_context2.prev = _context2.next) {
-                  case 0:
-                    e.preventDefault();
-                    $this = $(this);
-                    name = $this.data('name');
-                    notes = $this.data('notes');
-                    _context2.next = 6;
-                    return Swal.fire({
-                      title: '',
-                      html: "\n                    <label id=\"wpstg-backup-edit-name\">Backup Name</label>\n                    <input id=\"wpstg-backup-edit-name-input\" class=\"swal2-input\" value=\"" + name + "\">\n                    <label>Additional Notes</label>\n                    <textarea id=\"wpstg-backup-edit-notes-textarea\" class=\"swal2-textarea\">" + notes + "</textarea>\n                  ",
-                      focusConfirm: false,
-                      confirmButtonText: 'Update Backup',
-                      showCancelButton: true,
-                      preConfirm: function preConfirm() {
-                        return {
-                          name: document.getElementById('wpstg-backup-edit-name-input').value || null,
-                          notes: document.getElementById('wpstg-backup-edit-notes-textarea').value || null
-                        };
-                      }
-                    });
-
-                  case 6:
-                    _yield$Swal$fire2 = _context2.sent;
-                    formValues = _yield$Swal$fire2.value;
-
-                    if (formValues) {
-                      _context2.next = 10;
-                      break;
-                    }
-
-                    return _context2.abrupt("return");
-
-                  case 10:
-                    that.ajax({
-                      action: 'wpstg--backups--edit',
-                      accessToken: wpstg.accessToken,
-                      nonce: wpstg.nonce,
-                      md5: $this.data('md5'),
-                      name: formValues.name,
-                      notes: formValues.notes
-                    }, function (response) {
-                      showAjaxFatalError(response, '', 'Submit an error report.'); // noinspection JSIgnoredPromiseFromCall
-
-                      that.backups.fetchListing();
-                    });
-
-                  case 11:
-                  case "end":
-                    return _context2.stop();
-                }
-              }
-            }, _callee2, this);
-          }));
-
-          return function (_x2) {
-            return _ref2.apply(this, arguments);
-          };
-        }());
-      },
-      cancel: function cancel() {
-        that.backups.timer.stop();
-        that.backups.isCancelled = true;
-        Swal.close();
-        setTimeout(function () {
-          return that.ajax({
-            action: 'wpstg--backups--cancel',
-            accessToken: wpstg.accessToken,
-            nonce: wpstg.nonce,
-            type: that.backups.type
-          }, function (response) {
-            showAjaxFatalError(response, '', 'Submit an error report.');
-          });
-        }, 500);
-      },
-
-      /**
-       * If process.execute exists, process.data and process.onResponse is not used
-       * process = { data: {}, onResponse: (resp) => {}, onAfterClose: () => {}, execute: () => {}, isShowCancelButton: bool }
-       * @param {object} process
-       */
-      process: function process(_process) {
-        if (typeof _process.execute !== 'function' && (!_process.data || !_process.onResponse)) {
-          Swal.close();
-          showError('process.data and / or process.onResponse is not set');
-          return;
-        } // TODO move to backend and get the contents as xhr response?
-
-
-        if (!that.backups.modal.process.html || !that.backups.modal.process.cancelBtnTxt) {
-          var $modal = $('#wpstg--modal--backup--process');
-          var html = $modal.html();
-          var btnTxt = $modal.attr('data-cancelButtonText');
-          that.backups.modal.process.html = html || null;
-          that.backups.modal.process.cancelBtnTxt = btnTxt || null;
-          $modal.remove();
-        }
-
-        $('body').off('click', '.wpstg--modal--process--logs--tail').on('click', '.wpstg--modal--process--logs--tail', function (e) {
-          e.preventDefault();
-          var container = Swal.getContainer();
-          var $logs = $(container).find('.wpstg--modal--process--logs');
-          $logs.toggle();
-
-          if ($logs.is(':visible')) {
-            container.childNodes[0].style.width = '100%';
-            container.style['z-index'] = 9999;
-          } else {
-            container.childNodes[0].style.width = '600px';
-          }
-        });
-        _process.isShowCancelButton = false !== _process.isShowCancelButton;
-        that.backups.modal.process.modal = Swal.mixin({
-          customClass: {
-            cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
-            content: 'wpstg--process--content'
-          },
-          buttonsStyling: false
-        }).fire({
-          html: that.backups.modal.process.html,
-          cancelButtonText: that.backups.modal.process.cancelBtnTxt,
-          showCancelButton: _process.isShowCancelButton,
-          showConfirmButton: false,
-          allowOutsideClick: false,
-          allowEscapeKey: false,
-          width: 600,
-          onRender: function onRender() {
-            var _btnCancel = Swal.getContainer().getElementsByClassName('swal2-cancel wpstg--btn--cancel')[0];
-
-            var btnCancel = _btnCancel.cloneNode(true);
-
-            _btnCancel.parentNode.replaceChild(btnCancel, _btnCancel);
-
-            btnCancel.addEventListener('click', function (e) {
-              if (confirm('Are You Sure? This will cancel the process!')) {
-                Swal.close();
-              }
-            });
-
-            if (typeof _process.execute === 'function') {
-              _process.execute();
-
-              return;
-            }
-
-            if (!_process.data || !_process.onResponse) {
-              Swal.close();
-              showError('process.data and / or process.onResponse is not set');
-              return;
-            }
-
-            that.ajax(_process.data, _process.onResponse);
-          },
-          onAfterClose: function onAfterClose() {
-            return typeof _process.onAfterClose === 'function' && _process.onAfterClose();
-          },
-          onClose: function onClose() {
-            that.backups.cancel();
-          }
-        });
-      },
-      processResponse: function processResponse(response, useTitle) {
-        if (response === null) {
-          Swal.close();
-          showError('Invalid Response; null');
-          throw new Error("Invalid Response; " + response);
-        }
-
-        var $container = $(Swal.getContainer());
-
-        var title = function title() {
-          if ((response.title || response.statusTitle) && useTitle === true) {
-            $container.find('.wpstg--modal--process--title').text(response.title || response.statusTitle);
-          }
-        };
-
-        var percentage = function percentage() {
-          if (response.percentage) {
-            $container.find('.wpstg--modal--process--percent').text(response.percentage);
-          }
-        };
-
-        var logs = function logs() {
-          if (!response.messages) {
-            return;
-          }
-
-          var $logsContainer = $container.find('.wpstg--modal--process--logs');
-          var stoppingTypes = [that.backups.messages.ERROR, that.backups.messages.CRITICAL];
-
-          var appendMessage = function appendMessage(message) {
-            if (Array.isArray(message)) {
-              for (var _iterator = _createForOfIteratorHelperLoose(message), _step; !(_step = _iterator()).done;) {
-                var item = _step.value;
-                appendMessage(item);
-              }
-
-              return;
-            }
-
-            var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
-            $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
-
-            if (stoppingTypes.includes(message.type.toLowerCase())) {
-              that.backups.cancel();
-              setTimeout(that.backups.logsModal, 500);
-            }
-          };
-
-          for (var _iterator2 = _createForOfIteratorHelperLoose(response.messages), _step2; !(_step2 = _iterator2()).done;) {
-            var message = _step2.value;
-
-            if (!message) {
-              continue;
-            }
-
-            that.backups.messages.addMessage(message);
-            appendMessage(message);
-          }
-
-          if ($logsContainer.is(':visible')) {
-            $logsContainer.scrollTop($logsContainer[0].scrollHeight);
-          }
-
-          if (!that.backups.messages.shouldWarn()) {
-            return;
-          }
-
-          var $btnShowLogs = $container.find('.wpstg--modal--process--logs--tail');
-          $btnShowLogs.html($btnShowLogs.attr('data-txt-bad'));
-          $btnShowLogs.find('.wpstg--modal--logs--critical-count').text(that.backups.messages.countByType(that.backups.messages.CRITICAL));
-          $btnShowLogs.find('.wpstg--modal--logs--error-count').text(that.backups.messages.countByType(that.backups.messages.ERROR));
-          $btnShowLogs.find('.wpstg--modal--logs--warning-count').text(that.backups.messages.countByType(that.backups.messages.WARNING));
-        };
-
-        title();
-        percentage();
-        logs();
-
-        if (response.status === true && response.job_done === true) {
-          that.backups.timer.stop();
-          that.backups.isCancelled = true;
-        }
-      },
-      requestData: function requestData(notation, data) {
-        var obj = {};
-        var keys = notation.split('.');
-        var lastIndex = keys.length - 1;
-        keys.reduce(function (accumulated, current, index) {
-          return accumulated[current] = index >= lastIndex ? data : {};
-        }, obj);
-        return obj;
-      },
-      logsModal: function logsModal() {
-        Swal.fire({
-          html: "<div class=\"wpstg--modal--error--logs\" style=\"display:block\"></div><div class=\"wpstg--modal--process--logs\" style=\"display:block\"></div>",
-          width: '95%',
-          onRender: function onRender() {
-            var $container = $(Swal.getContainer());
-            $container[0].style['z-index'] = 9999;
-            var $logsContainer = $container.find('.wpstg--modal--process--logs');
-            var $errorContainer = $container.find('.wpstg--modal--error--logs');
-            var $translations = $('#wpstg--js--translations');
-            var messages = that.backups.messages;
-            var title = $translations.attr('data-modal-logs-title').replace('{critical}', messages.countByType(messages.CRITICAL)).replace('{errors}', messages.countByType(messages.ERROR)).replace('{warnings}', messages.countByType(messages.WARNING));
-            $errorContainer.before("<h3>" + title + "</h3>");
-            var warnings = [that.backups.messages.CRITICAL, that.backups.messages.ERROR, that.backups.messages.WARNING];
-
-            if (!that.backups.messages.shouldWarn()) {
-              $errorContainer.hide();
-            }
-
-            for (var _iterator3 = _createForOfIteratorHelperLoose(messages.data.all), _step3; !(_step3 = _iterator3()).done;) {
-              var message = _step3.value;
-              var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase(); // TODO RPoC
-
-              if (warnings.includes(message.type)) {
-                $errorContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
-              }
-
-              $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
-            }
-          },
-          onOpen: function onOpen(container) {
-            var $logsContainer = $(container).find('.wpstg--modal--process--logs');
-            $logsContainer.scrollTop($logsContainer[0].scrollHeight);
-          }
-        });
-      },
-      downloadModal: function downloadModal(_ref3) {
-        var _ref3$title = _ref3.title,
-            title = _ref3$title === void 0 ? null : _ref3$title,
-            _ref3$titleExport = _ref3.titleExport,
-            titleExport = _ref3$titleExport === void 0 ? null : _ref3$titleExport,
-            _ref3$id = _ref3.id,
-            id = _ref3$id === void 0 ? null : _ref3$id,
-            _ref3$url = _ref3.url,
-            url = _ref3$url === void 0 ? null : _ref3$url,
-            _ref3$btnTxtCancel = _ref3.btnTxtCancel,
-            btnTxtCancel = _ref3$btnTxtCancel === void 0 ? 'Cancel' : _ref3$btnTxtCancel,
-            _ref3$btnTxtConfirm = _ref3.btnTxtConfirm,
-            btnTxtConfirm = _ref3$btnTxtConfirm === void 0 ? 'Download' : _ref3$btnTxtConfirm;
-
-        if (null === that.backups.modal.download.html) {
-          var $el = $('#wpstg--modal--backup--download');
-          that.backups.modal.download.html = $el.html();
-          $el.remove();
-        }
-
-        var exportModal = function exportModal() {
-          return Swal.fire({
-            html: "<h2>" + titleExport + "</h2><span class=\"wpstg-loader\"></span>",
-            showCancelButton: false,
-            showConfirmButton: false,
-            onRender: function onRender() {
-              that.ajax({
-                action: 'wpstg--backups--export',
-                accessToken: wpstg.accessToken,
-                nonce: wpstg.nonce,
-                id: id
-              }, function (response) {
-                if (!response || !response.success || !response.data || response.data.length < 1) {
-                  return;
-                }
-
-                var a = document.createElement('a');
-                a.style.display = 'none';
-                a.href = response.data;
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                Swal.close();
-              });
-            }
-          });
-        };
-
-        Swal.mixin({
-          customClass: {
-            cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
-            confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
-            actions: 'wpstg--modal--actions'
-          },
-          buttonsStyling: false
-        }).fire({
-          icon: 'success',
-          html: that.backups.modal.download.html.replace('{title}', title).replace('{btnTxtLog}', 'Show Logs'),
-          cancelButtonText: btnTxtCancel,
-          confirmButtonText: btnTxtConfirm,
-          showCancelButton: true,
-          showConfirmButton: true
-        }).then(function (isConfirm) {
-          if (!isConfirm || !isConfirm.value) {
-            return;
-          }
-
-          if (url && url.length > 0) {
-            window.location.href = url;
-            return;
-          }
-
-          exportModal();
-        });
-      },
-      importModal: function importModal() {
-        var importSiteBackup = function importSiteBackup(data) {
-          resetErrors();
-
-          if (that.backups.isCancelled) {
-            // Swal.close();
-            return;
-          }
-
-          that.backups.timer.start();
-
-          var statusStop = function statusStop() {
-            clearInterval(that.backups.processInfo.interval);
-            that.backups.processInfo.interval = null;
-          };
-
-          var status = function status() {
-            if (that.backups.processInfo.interval !== null) {
-              return;
-            }
-
-            that.backups.processInfo.interval = setInterval(function () {
-              if (true === that.backups.isCancelled) {
-                statusStop();
-                return;
-              }
-
-              if (that.backups.status.hasResponse === false) {
-                return;
-              }
-
-              that.backups.status.hasResponse = false;
-              fetch(ajaxurl + "?action=wpstg--backups--status&process=restore&accessToken=" + wpstg.accessToken + "&nonce=" + wpstg.nonce).then(function (res) {
-                return res.json();
-              }).then(function (res) {
-                that.backups.status.hasResponse = true;
-
-                if (typeof res === 'undefined') {
-                  statusStop();
-                }
-
-                if (that.backups.processInfo.title === res.currentStatusTitle) {
-                  return;
-                }
-
-                that.backups.processInfo.title = res.currentStatusTitle;
-                var $container = $(Swal.getContainer());
-                $container.find('.wpstg--modal--process--title').text(res.currentStatusTitle);
-                $container.find('.wpstg--modal--process--percent').text('0');
-              })["catch"](function (e) {
-                that.backups.status.hasResponse = true;
-                showAjaxFatalError(e, '', 'Submit an error report.');
-              });
-            }, 5000);
-          };
-
-          WPStaging.ajax({
-            action: 'wpstg--backups--import',
-            accessToken: wpstg.accessToken,
-            nonce: wpstg.nonce
-          }, function (response) {
-            if (typeof response === 'undefined') {
-              setTimeout(function () {
-                importSiteBackup();
-              }, wpstg.delayReq);
-              return;
-            }
-
-            that.backups.processResponse(response, true);
-
-            if (!that.backups.processInfo.interval) {
-              status();
-            }
-
-            if (response.status === false) {
-              importSiteBackup();
-            } else if (response.status === true) {
-              $('#wpstg--progress--status').text('Backup successfully imported!');
-              that.backups.type = null;
-
-              if (that.backups.messages.shouldWarn()) {
-                // noinspection JSIgnoredPromiseFromCall
-                that.backups.fetchListing();
-                that.backups.logsModal();
-                return;
-              }
-
-              statusStop();
-              var logEntries = $('.wpstg--modal--process--logs').get(1).innerHTML;
-              var html = '<div class="wpstg--modal--process--logs">' + logEntries + '</div>';
-              var issueFound = html.includes('wpstg--modal--process--msg--warning') || html.includes('wpstg--modal--process--msg--error') ? 'Issues(s) found! ' : ''; // var errorMessage = html.includes('wpstg--modal--process--msg--error') ? 'Errors(s) found! ' : '';
-              // var Message = warningMessage + errorMessage;
-              // Swal.close();
-
-              Swal.fire({
-                icon: 'success',
-                title: 'Finished',
-                html: 'System imported from backup. <br/><span class="wpstg--modal--process--msg-found">' + issueFound + '</span><button class="wpstg--modal--process--logs--tail" data-txt-bad="">Show Logs</button><br/>' + html
-              }); // noinspection JSIgnoredPromiseFromCall
-
-              that.backups.fetchListing();
-            } else {
-              setTimeout(function () {
-                importSiteBackup();
-              }, wpstg.delayReq);
-            }
-          }, 'json', false, 0, // Don't retry upon failure
-          1.25);
-        };
-
-        if (!that.backups.modal["import"].html) {
-          var $modal = $('#wpstg--modal--backup--import'); // Search & Replace Form
-
-          var $form = $modal.find('.wpstg--modal--backup--import--search-replace--input--container');
-          that.backups.modal["import"].searchReplaceForm = $form.html();
-          $form.find('.wpstg--modal--backup--import--search-replace--input-group').remove();
-          $form.html(that.backups.modal["import"].searchReplaceForm.replace(/{i}/g, 0));
-          that.backups.modal["import"].html = $modal.html();
-          that.backups.modal["import"].baseDirectory = $modal.attr('data-baseDirectory');
-          that.backups.modal["import"].btnTxtNext = $modal.attr('data-nextButtonText');
-          that.backups.modal["import"].btnTxtConfirm = $modal.attr('data-confirmButtonText');
-          that.backups.modal["import"].btnTxtCancel = $modal.attr('data-cancelButtonText');
-          $modal.remove();
-        }
-
-        that.backups.modal["import"].data.search = [];
-        that.backups.modal["import"].data.replace = [];
-        Swal.mixin({
-          customClass: {
-            confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
-            cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
-            actions: 'wpstg--modal--actions'
-          },
-          buttonsStyling: false // progressSteps: ['1', '2']
-
-        }).queue([{
-          html: that.backups.modal["import"].html,
-          confirmButtonText: that.backups.modal["import"].btnTxtNext,
-          showCancelButton: false,
-          showConfirmButton: true,
-          showLoaderOnConfirm: true,
-          width: 650,
-          onRender: function onRender() {
-            // $('.wpstg--modal--actions .swal2-confirm').hide();
-            // todo: hide this again
-            $('.wpstg--modal--actions .swal2-confirm').show();
-            $('.wpstg--modal--actions .swal2-confirm').prop('disabled', false);
-            that.backups.modal["import"].containerUpload = $('.wpstg--modal--backup--import--upload');
-            that.backups.modal["import"].containerFilesystem = $('.wpstg--modal--backup--import--filesystem');
-            that.backups.modal["import"].containerConfigure = $('.wpstg--modal--backup--import--configure');
-          },
-          preConfirm: function preConfirm() {
-            var body = new FormData();
-            body.append('accessToken', wpstg.accessToken);
-            body.append('nonce', wpstg.nonce);
-            body.append('filePath', that.backups.modal["import"].data.file);
-            that.backups.modal["import"].data.search.forEach(function (item, index) {
-              body.append("search[" + index + "]", item);
-            });
-            that.backups.modal["import"].data.replace.forEach(function (item, index) {
-              body.append("replace[" + index + "]", item);
-            });
-            return fetch(ajaxurl + "?action=wpstg--backups--import--file-info", {
-              method: 'POST',
-              body: body
-            }).then(handleFetchErrors).then(function (res) {
-              return res.json();
-            }).then(function (html) {
-              return Swal.insertQueueStep({
-                html: html,
-                confirmButtonText: that.backups.modal["import"].btnTxtConfirm,
-                cancelButtonText: that.backups.modal["import"].btnTxtCancel,
-                showCancelButton: true
-              });
-            })["catch"](function (e) {
-              return showAjaxFatalError(e, '', 'Submit an error report.');
-            });
-          }
-        }]).then(function (res) {
-          if (!res || !res.value || !res.value[1] || res.value[1] !== true) {
-            return;
-          }
-
-          that.backups.isCancelled = false;
-          var data = that.backups.modal["import"].data;
-          data['file'] = that.backups.modal["import"].baseDirectory + data['file'];
-          WPStaging.ajax({
-            action: 'wpstg--backups--prepare-import',
-            accessToken: wpstg.accessToken,
-            nonce: wpstg.nonce,
-            wpstgImportData: data
-          }, function (response) {
-            if (response.success) {
-              that.backups.process({
-                execute: function execute() {
-                  that.backups.messages.reset();
-                  importSiteBackup();
-                }
-              });
-            } else {
-              showAjaxFatalError(response.data, '', 'Submit an error report.');
-            }
-          }, 'json', false, 0, 1.25);
-        });
-      }
-    };
-    window.addEventListener('backupListingFinished', function () {
-      fetch(ajaxurl + "?action=wpstg--backups--import--file-list&_=" + Math.random() + "&accessToken=" + wpstg.accessToken + "&nonce=" + wpstg.nonce + "&withTemplate=true").then(handleFetchErrors).then(function (res) {
-        return res.json();
-      }).then(function (res) {
-        var $ul = $('.wpstg-backup-list ul');
-        $ul.empty();
-        $ul.html(res);
-      })["catch"](function (e) {
-        return showAjaxFatalError(e, '', 'Submit an error report.');
-      });
-    });
+    that.loadOverview = loadOverview;
     return that;
   }(jQuery);
 
   jQuery(document).ready(function () {
-    WPStaging.init(); // This is necessary to make WPStaging var accessibile in WP Staging PRO js script
+    WPStaging$1.init(); // This is necessary to make WPStaging var accessibile in WP Staging PRO js script
 
-    window.WPStaging = WPStaging;
+    window.WPStaging = WPStaging$1;
   });
   /**
    * Report Issue modal
    */
 
   jQuery(document).ready(function ($) {
-    $('#wpstg-report-issue-button').on('click', function (e) {
-      $('.wpstg-report-issue-form').toggleClass('wpstg-report-show');
+    $('body').on('click', '#wpstg-report-issue-button', function (e) {
+      console.log('REPORT');
+      $('.wpstg--tab--active .wpstg-report-issue-form').toggleClass('wpstg-report-show');
       e.preventDefault();
     });
     $('body').on('click', '#wpstg-backups-report-issue-button', function (e) {
-      $('.wpstg-report-issue-form').toggleClass('wpstg-report-show');
+      $('.wpstg--tab--active .wpstg-report-issue-form').toggleClass('wpstg-report-show');
       e.preventDefault();
     });
-    $('#wpstg-report-cancel').on('click', function (e) {
-      $('.wpstg-report-issue-form').removeClass('wpstg-report-show');
+    $('body').on('click', '#wpstg-report-cancel', function (e) {
+      $('.wpstg--tab--active .wpstg-report-issue-form').removeClass('wpstg-report-show');
+      e.preventDefault();
+    });
+    $('body').on('click', '.wpstg--tab--active #wpstg-report-submit', function (e) {
+      var self = $(this);
+      sendIssueReport(self, 'false');
       e.preventDefault();
     });
     /*
@@ -3817,11 +3020,11 @@
       }
 
       var spinner = button.next();
-      var email = $('.wpstg-report-email').val();
-      var hosting_provider = $('.wpstg-report-hosting-provider').val();
-      var message = $('.wpstg-report-description').val();
-      var syslog = $('.wpstg-report-syslog').is(':checked');
-      var terms = $('.wpstg-report-terms').is(':checked');
+      var email = $('.wpstg--tab--active .wpstg-report-email').val();
+      var hosting_provider = $('.wpstg--tab--active .wpstg-report-hosting-provider').val();
+      var message = $('.wpstg--tab--active .wpstg-report-description').val();
+      var syslog = $('.wpstg--tab--active .wpstg-report-syslog').is(':checked');
+      var terms = $('.wpstg--tab--active .wpstg-report-terms').is(':checked');
       button.attr('disabled', true);
       spinner.css('visibility', 'visible');
       $.ajax({
@@ -3845,19 +3048,18 @@
         spinner.css('visibility', 'hidden');
 
         if (data.errors.length > 0) {
-          $('.wpstg-report-issue-form .wpstg-message').remove();
+          $('.wpstg--tab--active .wpstg-report-issue-form .wpstg-message').remove();
           var errorMessage = $('<div />').addClass('wpstg-message wpstg-error-message');
           $.each(data.errors, function (key, value) {
             if (value.status === 'already_submitted') {
-              errorMessage = '';
-              Swal.fire({
+              errorMessage = ''; // TODO: remove default custom classes
+
+              WPStagingCommon.getSwalModal(true, {
+                container: 'wpstg-issue-resubmit-confirmation'
+              }).fire({
                 title: '',
-                customClass: {
-                  container: 'wpstg-issue-resubmit-confirmation'
-                },
                 icon: 'warning',
                 html: value.message,
-                showCloseButton: true,
                 showCancelButton: true,
                 focusConfirm: false,
                 confirmButtonText: 'Yes',
@@ -3871,29 +3073,33 @@
               errorMessage.append('<p>' + value + '</p>');
             }
           });
-          $('.wpstg-report-issue-form').prepend(errorMessage);
+          $('.wpstg--tab--active .wpstg-report-issue-form').prepend(errorMessage);
         } else {
           var successMessage = $('<div />').addClass('wpstg-message wpstg-success-message');
           successMessage.append('<p>Thanks for submitting your request! You should receive an auto reply mail with your ticket ID immediately for confirmation!<br><br>If you do not get that mail please contact us directly at <strong>support@wp-staging.com</strong></p>');
-          $('.wpstg-report-issue-form').html(successMessage);
-          $('.wpstg-success-message').append('<div style="float:right;margin-top:10px;"><a id="wpstg-success-button" href="#">Close</a></div>'); // Hide message
+          $('.wpstg--tab--active .wpstg-report-issue-form').html(successMessage);
+          $('.wpstg--tab--active .wpstg-success-message').append('<div style="float:right;margin-top:10px;"><a id="wpstg-success-button" href="#" class="wpstg--red">[X] CLOSE</a></div>'); // Hide message
 
           setTimeout(function () {
-            $('.wpstg-report-issue-form').removeClass('wpstg-report-active');
+            $('.wpstg--tab--active .wpstg-report-issue-form').removeClass('wpstg-report-active');
           }, 2000);
         }
       });
-    }
+    } // Open/close actions drop down menu
 
-    $('#wpstg-report-submit').on('click', function (e) {
-      var self = $(this);
-      sendIssueReport(self, 'false');
-      e.preventDefault();
-    }); // Open/close actions drop down menu
 
     $(document).on('click', '.wpstg-dropdown>.wpstg-dropdown-toggler', function (e) {
       e.preventDefault();
       $(e.target).next('.wpstg-dropdown-menu').toggleClass('shown');
+      $(e.target).find('.wpstg-caret').toggleClass('wpstg-caret-up');
+    });
+    $(document).on('click', '.wpstg-caret', function (e) {
+      e.preventDefault();
+      var toggler = $(e.target).closest('.wpstg-dropdown-toggler');
+
+      if (toggler) {
+        toggler.trigger('click');
+      }
     }); // Close action drop down menu if clicked anywhere outside
 
     document.addEventListener('click', function (event) {
@@ -3905,6 +3111,8 @@
         for (var i = 0; i < dropDown.length; i++) {
           dropDown[i].classList.remove('shown');
         }
+
+        $('.wpstg-caret').removeClass('wpstg-caret-up');
       }
     });
   });

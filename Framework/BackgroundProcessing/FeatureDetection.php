@@ -9,6 +9,7 @@
 namespace WPStaging\Framework\BackgroundProcessing;
 
 use WP_Error;
+use WPStaging\Framework\Adapter\WpAdapter;
 
 /**
  * Class FeatureDetection
@@ -39,7 +40,8 @@ class FeatureDetection
     {
         if ($this->isAjaxAvailableCache === null) {
             // Run this check only on Admin UI and on PHP initial state.
-            $notRightContext = wp_installing() || (defined('REST_REQUEST') && REST_REQUEST) || wp_doing_ajax()
+            // TODO: inject WpAdapter using DI
+            $notRightContext = wp_installing() || (defined('REST_REQUEST') && REST_REQUEST) || (new WpAdapter())->doingAjax()
                 || wp_doing_cron() || !is_admin();
 
             if ($notRightContext) {

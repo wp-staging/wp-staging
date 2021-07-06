@@ -9,11 +9,13 @@
     do_action("wpstg_scanning_db");
     $dbPrefix = WPStaging\Core\WPStaging::getTablePrefix();
 ?>
-<h4 class="wpstg-m-0">
-    <?php printf(__("Select the tables to copy. Tables beginning with the prefix '%s' have been preselected.", "wp-staging"), $dbPrefix); ?>
-</h4>
 <p>
-    <?php _e("All selected tables will be copied/replaced with the tables from the production site.", "wp-staging"); ?>
+    <strong><?php _e("Select Tables to Copy", "wp-staging"); ?></strong>
+    <br>
+    <?php printf(__("Tables with the production prefix <code>%s</code> have been selected.", "wp-staging"), $dbPrefix); ?>
+</p>
+<p style="display: none;">
+    <?php _e("Selected tables will be copied/replaced with the tables from the production site.", "wp-staging"); ?>
 </p>
 <div class="wpstg-my-10px">
     <a href="#" class="wpstg-button-unselect button"><?php _e('Unselect All', 'wp-staging'); ?></a>
@@ -39,5 +41,5 @@
     <a href="#" class="wpstg-button-select button"> <?php echo $dbPrefix; ?> </a>
 </div>
 <p>
-    <?php _e("You can select multiple tables by pressing left mouse button and moving or by pressing STRG+Left Mouse button. (Mac ⌘+Left Mouse Button)", "wp-staging"); ?>
+    <?php _e("You can select multiple tables. Press left mouse button & move or press STRG+Left mouse button. (Apple: ⌘+Left Mouse Button)", "wp-staging"); ?>
 </p>

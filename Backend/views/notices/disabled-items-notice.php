@@ -1,13 +1,15 @@
 <?php
 /**
  * @var $this \WPStaging\Backend\Notices\Notices
- * @see \WPStaging\Backend\Notices\Notices::showNotices
+ * @see \WPStaging\Backend\Notices\Notices::messages
+ * @var bool $outgoingMailsDisabled
+ * @var array $excludedPlugins
  */
 ?>
-<div class="notice wpstg-disabled-items-notice" style="border-left: 4px solid #ffba00; padding: 8px; padding-left: 16px; padding-top: 12px;">
-    <strong style="margin-bottom: 10px;"><?php _e('WP STAGING Notes:', 'wp-staging'); ?></strong> <br/>
+<div class="notice notice-warning wpstg-disabled-items-notice">
+    <p><strong><?php _e('WP STAGING - Notes:', 'wp-staging'); ?></strong></p>
     <ol style="margin-left: 12px;">
-        <li> <?php echo sprintf(__('Disabled the cache by setting the constant WP_CACHE to FALSE in the wp-config.php and excluding wp-content/cache. <a href="%s" target="_blank">How to activate caching</a>', 'wp-staging'), 'https://wp-staging.com/docs/how-to-activate-caching-on-staging-site/') ?></li>
+        <li> <?php echo sprintf(__('WP STAGING Disabled the cache by setting the constant <code>WP_CACHE</code> to <code>FALSE</code>in the file <code>wp-config.php</code>. <a href="%s" target="_blank"> You can revert this easily</a>', 'wp-staging'), 'https://wp-staging.com/docs/how-to-activate-caching-on-staging-site/') ?></li>
         <?php if ($outgoingMailsDisabled) : ?>
         <li> <?php echo sprintf(__('Disabled outgoing emails. <a href="%s" target="_blank">How to activate mails</a>', 'wp-staging'), 'https://wp-staging.com/docs/how-to-activate-email-sending-on-the-staging-site/')?></li>
         <?php endif; ?>

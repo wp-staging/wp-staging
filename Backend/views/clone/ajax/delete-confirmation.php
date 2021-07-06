@@ -2,26 +2,26 @@
 <div class="wpstg-notice-alert">
     <h3 class="wpstg-m-0 wpstg-pb-5px">
         <?php
-        _e("Do you really want to delete the staging site? This can not be undone:", "wp-staging")
+        _e("Do you want to delete the staging site?", "wp-staging")
         ?>
     </h3>
 
     <p>
-        <?php _e('Staging Site:', 'wp-staging'); ?>
-        <span class="wpstg-confirmation-label">
+        <?php _e('Staging Site Name:', 'wp-staging'); ?>
+        <code>
         <?php
         echo $clone->directoryName;
         ?>
-        </span>
+        </code>
     </p>
     <p>
-        <?php _e('Database:', 'wp-staging'); ?>
-        <span class="wpstg-confirmation-label">
+        <?php _e('Database Location:', 'wp-staging'); ?>
+        <code>
         <?php
-        $database = empty($clone->databaseDatabase) ? "{$dbname} / Main Database)" : $clone->databaseDatabase;
+        $database = empty($clone->databaseDatabase) ? $dbname . "</code> (Production Database)" : $clone->databaseDatabase . "</code> (Separate Database)";
         echo $database;
         ?>
-        </span>
+
     </p>
 </div>
 <?php } ?>
@@ -42,7 +42,7 @@
     <?php if ($isDatabaseConnected) { ?>
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __("Database tables to remove", "wp-staging")?>
+        <?php echo __("Database tables to delete", "wp-staging")?>
     </a>
 
     <!-- Database -->
@@ -78,7 +78,7 @@
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
         <span class="wpstg-tab-triangle">&#9658;</span>
-        <?php echo __("Files to remove", "wp-staging")?>
+        <?php echo __("Files to delete", "wp-staging")?>
     </a>
 
     <!-- Files -->
@@ -98,10 +98,10 @@
     <!-- /Files -->
 </div>
 
-<a href="#" class="wpstg-link-btn button-primary" id="wpstg-cancel-removing">
+<a href="#" class="wpstg-button--primary" id="wpstg-cancel-removing">
     <?php _e("Cancel", "wp-staging")?>
 </a>
 
-<a href="#" class="wpstg-link-btn button-primary" id="wpstg-remove-clone" data-clone="<?php echo $clone->name?>">
-    <?php echo __("Remove", "wp-staging")?>
+<a href="#" class="wpstg-button--primary wpstg-button--red" style="margin-left:5px;" id="wpstg-remove-clone" data-clone="<?php echo $clone->name?>">
+    <?php echo __("Delete", "wp-staging")?>
 </a>

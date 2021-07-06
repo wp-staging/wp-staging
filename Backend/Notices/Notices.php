@@ -6,6 +6,7 @@ namespace WPStaging\Backend\Notices;
  *  Admin Notices | Warnings | Messages
  */
 
+use wpdb;
 use WPStaging\Backend\Pro\Notices\Notices as ProNotices;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
@@ -32,6 +33,9 @@ class Notices
      * @var Assets
      */
     private $assets;
+
+    //** For testing all notices  */
+    const SHOW_ALL_NOTICES = false;
 
     /**
      * @var string The key that holds directory listing errors in the container.
@@ -62,9 +66,9 @@ class Notices
     /**
      * check whether the plugin is pro version
      *
+     * @return  boolean
      * @todo    Implement this in a separate class related to plugin. Then replace it with dependency injection. Add filters
      *
-     * @return  boolean
      */
     protected function isPro()
     {
@@ -110,6 +114,7 @@ class Notices
 
         return $days <= $difference;
     }
+
     /**
      * Get current page
      * @return string post, page
@@ -132,17 +137,15 @@ class Notices
     {
         $viewsNoticesPath = "{$this->path}views/notices/";
 
-        // Show "rate the plugin". Free version only
-        if (!$this->isPro()) {
-            if ($this->canShow("wpstg_rating", 7) && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post') {
-                require_once "{$viewsNoticesPath}rating.php";
-            }
+        // Show notice "rate the plugin". Free version only
+        if (self::SHOW_ALL_NOTICES || (!$this->isPro() && ($this->canShow("wpstg_rating", 7) && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post'))) {
+            require_once "{$viewsNoticesPath}rating.php";
         }
 
-        // Never show disable mail message if free version
+        // Never show disable mail message if it's free version
         $outgoingMailsDisabled = false;
 
-        // Show all pro version notices
+        // Show all notices of the pro version
         if ($this->isPro()) {
             $proNotices = new ProNotices($this);
             // TODO: inject CloneOptions using DI
@@ -152,7 +155,7 @@ class Notices
         }
 
         // Show notice about what disabled in the staging site. (Show only on staging site)
-        if ((new DisabledItemsNotice())->isEnabled()) {
+        if (self::SHOW_ALL_NOTICES || ((new DisabledItemsNotice())->isEnabled())) {
             // TODO: inject ExcludedPlugins using DI
             $excludedPlugins = (array)(new ExcludedPlugins())->getExcludedPlugins();
             // use require here instead of require_once otherwise unit tests will always fail,
@@ -160,72 +163,103 @@ class Notices
             require "{$viewsNoticesPath}disabled-items-notice.php";
         }
 
-        // Display notices below in wp staging admin pages only
+        $db = WPStaging::getInstance()->get('wpdb');
+        $optionTable = $db->prefix . 'options';
+        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && $this->isOptionTablePrimaryKeyMissing($db, $optionTable))) {
+            require "{$viewsNoticesPath}wp-options-missing-pk.php";
+        }
+
+        /**
+         * Display all notices below this line in WP STAGING admin pages only and only to administrators!
+         */
         if (!current_user_can("update_plugins") || !$this->isAdminPage()) {
             return;
         }
 
-        // Cache directory is not writable
+        // Show notice Cache directory is not writable
         /** @var Cache $cache */
         $cache = WPStaging::getInstance()->get("cache");
         $cacheDir = $cache->getCacheDir();
-        if (!is_dir($cacheDir) || !is_writable($cacheDir)) {
+        if (self::SHOW_ALL_NOTICES || (!is_dir($cacheDir) || !is_writable($cacheDir))) {
             require_once "{$viewsNoticesPath}/cache-directory-permission-problem.php";
         }
 
-        // Logger directory is not writable
+        // Show notice Logger directory is not writable
         /** @var Logger $logger */
         $logger = WPStaging::getInstance()->get("logger");
         $logsDir = $logger->getLogDir();
-        if (!is_dir($logsDir) || !is_writable($logsDir)) {
+        if (self::SHOW_ALL_NOTICES || (!is_dir($logsDir) || !is_writable($logsDir))) {
             require_once "{$viewsNoticesPath}/logs-directory-permission-problem.php";
         }
 
-        // Staging directory is not writable
-        if (!is_writable(ABSPATH)) {
+        // Show notice Staging directory is not writable
+        if (self::SHOW_ALL_NOTICES || (!is_writable(ABSPATH))) {
             require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
         }
 
-        // WPSTAGING is not tested with current WordPress version
-        if (!$this->isPro() && version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<")) {
+        // Show notice WP STAGING is not tested with current WordPress version
+        if (self::SHOW_ALL_NOTICES || (!$this->isPro() && version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<"))) {
             require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
         }
 
-        // Different scheme in home and siteurl
-        if ($this->isDifferentScheme()) {
+        // Show notice Different scheme in home and siteurl
+        if (self::SHOW_ALL_NOTICES || ($this->isDifferentScheme())) {
             require_once "{$viewsNoticesPath}wrong-scheme.php";
         }
 
-        // Outdated version of WP Staging Hooks
-        if ($this->isUsingOutdatedWpstgHooksPlugin()) {
+        // Show notice Outdated version of WP Staging Hooks
+        if (self::SHOW_ALL_NOTICES || ($this->isUsingOutdatedWpstgHooksPlugin())) {
             require_once "{$viewsNoticesPath}outdated-wp-staging-hooks.php";
         }
 
+        // Show notice Failed to prevent directory listing
         $this->showDirectoryListingWarningNotice($viewsNoticesPath);
+    }
+
+    /**
+     * Check whether the wp_options table is missing primary key | auto increment
+     * @param wpdb $db
+     * @param string $optionTable
+     *
+     * @return boolean
+     */
+    private function isOptionTablePrimaryKeyMissing($db, $optionTable)
+    {
+        $result = $db->dbh->query("SELECT option_id FROM {$optionTable} LIMIT 1");
+        $fInfo = $result->fetch_field();
+        $result->free_result();
+
+        // Check whether the flag have primary key and auto increment flag
+        if (($fInfo->flags & MYSQLI_PRI_KEY_FLAG) && ($fInfo->flags & MYSQLI_AUTO_INCREMENT_FLAG)) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
      * Displays the notice that we could not prevent
      * directory listing on a sensitive folder for some reason.
      *
+     * @param string $viewsNoticesPath The path to the views folder.
      * @see \WPStaging\Framework\Filesystem\Filesystem::mkdir The place where all errors are enqueued
      *                                                        to be displayed as a single notice here.
      *
      * Note: When refactoring this, keep in mind this code should be
      * called only once, otherwise the message would be enqueued multiple times.
      *
-     * @param string $viewsNoticesPath The path to the views folder.
      */
     private function showDirectoryListingWarningNotice($viewsNoticesPath)
     {
-        $directoryListingErrors = WPStaging::getInstance()->getContainer()->getFromArray(static::$directoryListingErrors);
 
-        // Early bail: No errors to show
-        if (empty($directoryListingErrors)) {
+            $directoryListingErrors = WPStaging::getInstance()->getContainer()->getFromArray(static::$directoryListingErrors);
+
+            // Early bail: No errors to show
+        if (!self::SHOW_ALL_NOTICES && empty($directoryListingErrors)) {
             return;
         }
 
-        // Early bail: These warnings were disabled by the user.
+            // Early bail: These warnings were disabled by the user.
         if ((bool)apply_filters('wpstg.notices.hideDirectoryListingWarnings', false)) {
             return;
         }
@@ -240,7 +274,7 @@ class Notices
     private function isDifferentScheme()
     {
         $siteurlScheme = parse_url(get_option('siteurl'), PHP_URL_SCHEME);
-        $homeScheme    = parse_url(get_option('home'), PHP_URL_SCHEME);
+        $homeScheme = parse_url(get_option('home'), PHP_URL_SCHEME);
 
         return !($siteurlScheme === $homeScheme);
     }
@@ -252,12 +286,12 @@ class Notices
     private function isUsingOutdatedWpstgHooksPlugin()
     {
         // Minimum version to check
-        $versionToCheck = '0.0.2';
+        $versionToCheck = '0.0.4';
 
         // Path to WP Staging Hooks plugins in a directory
         $wpstgHooksPath = 'wp-staging-hooks/wp-staging-hooks.php';
 
-        // Plugin doesn't exist, so no need to show notice
+        // Only show notice if plugin exists for above path
         if (file_exists(WP_PLUGIN_DIR . '/' . $wpstgHooksPath)) {
             $wpstgHooksData = get_plugin_data(WP_PLUGIN_DIR . '/' . $wpstgHooksPath);
             // Only show notice if current version is below required min version.
@@ -267,7 +301,7 @@ class Notices
         // Path to WP Staging Hooks plugins directly in plugins dir
         $wpstgHooksPath = 'wp-staging-hooks.php';
 
-        // Plugin doesn't exist, so no need to show notice
+        // Only show notice if plugin exists for above path
         if (file_exists(WP_PLUGIN_DIR . '/' . $wpstgHooksPath)) {
             $wpstgHooksData = get_plugin_data(WP_PLUGIN_DIR . '/' . $wpstgHooksPath);
             // Only show notice if current version is below required min version.

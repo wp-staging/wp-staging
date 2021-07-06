@@ -9,13 +9,13 @@
  * Do not use any of these methods in WP STAGING code base as this mu-plugin can be missing!
  *
  * Author: René Hermenau
- * Version: 1.4.1
+ * Version: 1.5.1
  * Author URI: https://wp-staging.com
  */
 
 // Version number of this mu-plugin. Important for automatic updates
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.4.1');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.1');
 }
 
 /** @return string */
@@ -76,7 +76,7 @@ function wpstgIsExcludedPlugin($plugin)
 /**
  * Remove all plugins except wp-staging and wp-staging-pro from blog-active plugins
  *
- * @param array $plugins numerically keyed array of plugin names
+ * @param array $plugins numerically keyed array of plugin names (index=>name)
  *
  * @return array
  */
@@ -121,11 +121,13 @@ function wpstgExcludeSitePlugins($plugins)
         return $plugins;
     }
 
-    foreach ($plugins as $key => $plugin) {
+    foreach ($plugins as $plugin => $timestamp) {
         // Default filter. Must be at the beginning or wp staging plugin will be filtered and killed
         if (strpos($plugin, 'wp-staging') !== false || wpstgIsExcludedPlugin($plugin)) {
             continue;
         }
+
+        unset($plugins[$plugin]);
     }
 
     return $plugins;
@@ -172,11 +174,12 @@ add_filter('template_directory', 'wpstgDisableTheme');
 /**
  * Should the current request be processed by optimizer?
  *
+ * For WP STAGING requests that require other plugins to be active, use raw_wpstg_{actionName}
+ *
  * @return bool
  */
 function wpstgIsOptimizerRequest()
 {
-
     if (!wpstgIsEnabledOptimizer()) {
         return false;
     }
@@ -184,9 +187,9 @@ function wpstgIsOptimizerRequest()
     if (
         defined('DOING_AJAX') &&
         DOING_AJAX &&
-        isset($_POST['action']) &&
-        strpos($_POST['action'], 'wpstg_send_report') === false &&
-        strpos($_POST['action'], 'wpstg') === 0
+        isset($_REQUEST['action']) &&
+        strpos($_REQUEST['action'], 'wpstg_send_report') === false &&
+        strpos($_REQUEST['action'], 'wpstg') === 0
     ) {
         return true;
     }

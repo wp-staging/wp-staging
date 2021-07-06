@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Traits;
 
 use Exception;
+use RuntimeException;
 use stdClass;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
@@ -34,10 +35,6 @@ trait FileScanToCacheTrait
      */
     public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $excludeSizeRules = [], $wpRootPath = ABSPATH)
     {
-        if (is_link($path)) {
-            return 0;
-        }
-
         $strUtil = new Strings();
         if (is_file($path)) {
             $file = str_replace($strUtil->sanitizeDirectorySeparator($wpRootPath), '', $strUtil->sanitizeDirectorySeparator($path)) . PHP_EOL;
@@ -49,32 +46,44 @@ trait FileScanToCacheTrait
         }
 
         $filesWrittenToCache = 0;
-        $iterator = (new FilterableDirectoryIterator())
-                        ->setDirectory(trailingslashit($path))
-                        ->setRecursive(false)
-                        ->setDotSkip()
-                        ->setExcludePaths($excludePaths)
-                        ->setExcludeSizeRules($excludeSizeRules)
-                        ->setWpRootPath($wpRootPath)
-                        ->get();
 
-        $strUtil = new Strings();
-        foreach ($iterator as $item) {
-            // Always check link first otherwise it may be treated as directory
-            if ($item->isLink()) {
-                continue;
-            }
+        try {
+            $iterator = (new FilterableDirectoryIterator())
+                            ->setDirectory(trailingslashit($path))
+                            ->setRecursive(false)
+                            ->setDotSkip()
+                            ->setExcludePaths($excludePaths)
+                            ->setExcludeSizeRules($excludeSizeRules)
+                            ->setWpRootPath($wpRootPath)
+                            ->get();
 
-            if ($isRecursive && $item->isDir()) {
-                $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $item->getPathname(), $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
-            }
+            $strUtil = new Strings();
+            foreach ($iterator as $item) {
+                // Always check link first otherwise it may be treated as directory
+                $path = $item->getPathname();
+                if ($item->isLink()) {
+                    // Allow copying of link if the link's source is a directory
+                    if (is_dir($item->getRealPath())) {
+                        $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $path, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
+                    }
 
-            if ($item->isFile()) {
-                $file = str_replace($strUtil->sanitizeDirectorySeparator($wpRootPath), '', $strUtil->sanitizeDirectorySeparator($item->getPathname())) . PHP_EOL;
-                if ($this->write($filesHandle, $file)) {
-                    $filesWrittenToCache++;
+                    continue;
+                }
+
+                if ($isRecursive && $item->isDir()) {
+                    $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $path, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
+                    continue;
+                }
+
+                if ($item->isFile()) {
+                    $file = str_replace($strUtil->sanitizeDirectorySeparator($wpRootPath), '', $strUtil->sanitizeDirectorySeparator($path)) . PHP_EOL;
+                    if ($this->write($filesHandle, $file)) {
+                        $filesWrittenToCache++;
+                    }
                 }
             }
+        } catch (Exception $e) {
+            throw new RuntimeException($e->getMessage());
         }
 
         return $filesWrittenToCache;
