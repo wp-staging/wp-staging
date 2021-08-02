@@ -31,6 +31,7 @@ trait MySQLRowsGeneratorTrait
      * If the current thread is over 80% memory or execution time, then the Generator will yield `null` to stop
      * the processing.
      *
+     * @param string                                $databaseName The database name.
      * @param string                                $table     The prefixed name of the table to pull rows from.
      * @param int                                   $offset    The number of row to start the work from.
      *                                                         processed will depend on the server available memory and max request execution time.
@@ -40,7 +41,7 @@ trait MySQLRowsGeneratorTrait
      *
      * @return Generator  A generator yielding rows one by one; refetching them if and when required.
      */
-    protected function rowsGenerator($table, $numericPrimaryKey, $offset, $requestId, InterfaceDatabaseClient $db, JobDataDto $jobDataDto)
+    protected function rowsGenerator($databaseName, $table, $numericPrimaryKey, $offset, $requestId, InterfaceDatabaseClient $db, JobDataDto $jobDataDto)
     {
 /*        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             error_log(
@@ -65,7 +66,7 @@ trait MySQLRowsGeneratorTrait
 
         // Fetch the average row length of the current table, if need be.
         if (empty($jobDataDto->getTableAverageRowLength())) {
-            $averageRowLength = $db->query("SELECT AVG_ROW_LENGTH FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table';")->fetch_assoc();
+            $averageRowLength = $db->query("SELECT AVG_ROW_LENGTH FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table' AND TABLE_SCHEMA = '$databaseName';")->fetch_assoc();
             if (!empty($averageRowLength) && is_array($averageRowLength) && array_key_exists('AVG_ROW_LENGTH', $averageRowLength)) {
                 $jobDataDto->setTableAverageRowLength(max(absint($averageRowLength['AVG_ROW_LENGTH']), 1));
 

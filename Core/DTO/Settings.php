@@ -22,7 +22,17 @@ class Settings
     /**
      * @var int
      */
+    protected $querySRLimit;
+
+    /**
+     * @var int
+     */
     protected $fileLimit;
+
+    /**
+     * @var int
+     */
+    protected $maxFileSize;
 
     /**
      * @var int
@@ -73,13 +83,13 @@ class Settings
 
     /**
      * User roles to access the staging site
-     * @var type array
+     * @var array
      */
     protected $userRoles = [];
 
     /**
      * Users with access to staging site regardless of role (comma-separated list)
-     * @var type string
+     * @var string
      */
     protected $usersWithStagingAccess = "";
 
@@ -132,7 +142,7 @@ class Settings
      */
     public function getQueryLimit()
     {
-        return (int)$this->queryLimit;
+        return $this->queryLimit;
     }
 
     /**
@@ -148,7 +158,7 @@ class Settings
      */
     public function getFileLimit()
     {
-        return (int)$this->fileLimit;
+        return $this->fileLimit;
     }
 
     /**
@@ -164,7 +174,7 @@ class Settings
      */
     public function getBatchSize()
     {
-        return (int)$this->batchSize;
+        return $this->batchSize;
     }
 
     /**
@@ -204,7 +214,7 @@ class Settings
      */
     public function isUnInstallOnDelete()
     {
-        return ($this->unInstallOnDelete === '1');
+        return ($this->unInstallOnDelete == '1');
     }
 
     /**
@@ -220,7 +230,7 @@ class Settings
      */
     public function isOptimizer()
     {
-        return ($this->optimizer === '1');
+        return ($this->optimizer == '1');
     }
 
     /**
@@ -236,7 +246,7 @@ class Settings
      */
     public function isDisableAdminLogin()
     {
-        return ($this->disableAdminLogin === '1');
+        return ($this->disableAdminLogin == '1');
     }
 
     /**
@@ -253,7 +263,7 @@ class Settings
      */
     public function isCheckDirectorySize()
     {
-        return ($this->checkDirectorySize === '1');
+        return ($this->checkDirectorySize == '1');
     }
 
     /**
@@ -269,7 +279,7 @@ class Settings
      */
     public function isDebugMode()
     {
-        return ($this->debugMode === '1');
+        return ($this->debugMode == '1');
     }
 
     /**
@@ -310,5 +320,46 @@ class Settings
     public function getAdminBarColor()
     {
         return $this->adminBarColor;
+    }
+
+    /**
+     * Set default values for settings
+     */
+    public function setDefault()
+    {
+        if (!isset($this->_raw)) {
+            $this->_raw = [];
+        }
+
+        if (
+            empty($this->queryLimit) ||
+            empty($this->querySRLimit) ||
+            empty($this->batchSize) ||
+            empty($this->cpuLoad) ||
+            empty($this->maxFileSize) ||
+            empty($this->fileLimit)
+        ) {
+            $settings = (object)json_decode(json_encode($this->_raw));
+            $settings->queryLimit = "10000";
+            $settings->querySRLimit = "20000";
+
+            if (defined('WPSTG_DEV') && WPSTG_DEV) {
+                $settings->fileLimit = "500";
+                $settings->cpuLoad = 'high';
+            } else {
+                $settings->fileLimit = "50";
+                $settings->cpuLoad = 'low';
+            }
+
+            $settings->batchSize = "2";
+            $settings->maxFileSize = "8";
+            $settings->optimizer = "1";
+            // Save settings in form on array
+            update_option('wpstg_settings', json_decode(json_encode($settings), true));
+
+            return $this->hydrate($settings)->_raw;
+        }
+
+        return $this->_raw;
     }
 }

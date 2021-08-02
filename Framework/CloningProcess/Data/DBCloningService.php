@@ -119,4 +119,20 @@ abstract class DBCloningService extends CloningService
             )
         );
     }
+
+    /**
+     * @param $name
+     * @return bool|int
+     */
+    protected function deleteDbOption($name)
+    {
+        $db = $this->dto->getStagingDb();
+
+        $db->query(
+            $db->prepare(
+                "DELETE FROM `{$this->dto->getPrefix()}options` WHERE `option_name` = %s;",
+                $name
+            )
+        );
+    }
 }

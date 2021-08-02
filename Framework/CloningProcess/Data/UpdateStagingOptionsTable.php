@@ -6,6 +6,7 @@ use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
 
 class UpdateStagingOptionsTable extends DBCloningService
 {
@@ -28,7 +29,7 @@ class UpdateStagingOptionsTable extends DBCloningService
         // only insert or update clone option if job is not updating
         // during update this data will be preserved
         if ($this->dto->getMainJob() !== 'updating') {
-            $update[CloneOptions::WPSTG_CLONE_SETTINGS_KEY] = serialize((object) [
+            $updateOrInsert[CloneOptions::WPSTG_CLONE_SETTINGS_KEY] = serialize((object) [
                 FirstRun::MAILS_DISABLED_KEY => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
                 ExcludedPlugins::EXCLUDED_PLUGINS_KEY => (new ExcludedPlugins())->getFilteredPluginsToExclude(),
             ]);
@@ -37,6 +38,13 @@ class UpdateStagingOptionsTable extends DBCloningService
         if (!$this->keepPermalinks()) {
             $updateOrInsert['rewrite_rules'] = null;
             $updateOrInsert['permalink_structure'] = ' ';
+        }
+
+        $freemiusHelper = new FreemiusScript();
+        // Only show freemius notice if freemius options exists on the productions site
+        // These freemius options will be deleted from option table, see below.
+        if ($freemiusHelper->hasFreemiusOptions()) {
+            $updateOrInsert[FreemiusScript::NOTICE_OPTION] = true;
         }
 
         $this->updateOrInsertOptions($updateOrInsert);
@@ -50,6 +58,15 @@ class UpdateStagingOptionsTable extends DBCloningService
         }
 
         $this->updateOptions($update);
+
+        // Options to delete on the staging site
+        $toDelete = [];
+
+        if ($freemiusHelper->hasFreemiusOptions()) {
+            $toDelete = array_merge($toDelete, $freemiusHelper->getFreemiusOptions());
+        }
+
+        $this->deleteOptions($toDelete);
 
         return true;
     }
@@ -70,6 +87,21 @@ class UpdateStagingOptionsTable extends DBCloningService
             $this->debugLog("Updating $name to $value");
             if ($this->updateDbOption($name, $value) === false) {
                 $this->log("Failed to update $name {$this->dto->getStagingDb()->last_error}", Logger::TYPE_WARNING);
+            }
+        }
+    }
+
+    /**
+     * Delete given options
+     *
+     * @param array $options
+     */
+    protected function deleteOptions($options)
+    {
+        foreach ($options as $option) {
+            $this->debugLog("Deleting $option");
+            if ($this->deleteDbOption($option) === false) {
+                $this->log("Failed to delete $option {$this->dto->getStagingDb()->last_error}", Logger::TYPE_WARNING);
             }
         }
     }

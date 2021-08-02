@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
+use WPStaging\Framework\SiteInfo;
 
 //TODO: Class may not be needed in the future due to DTO introduction. Remove if unnecessary
 abstract class FileCloningService extends CloningService
@@ -52,11 +53,6 @@ abstract class FileCloningService extends CloningService
      */
     protected function isSubDir()
     {
-        // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
-        // This is happening much more often than you would expect
-        $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
-        $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
-
-        return $home !== $siteurl;
+        return (new SiteInfo())->isInstalledInSubDir();
     }
 }

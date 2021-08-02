@@ -47,6 +47,37 @@ class Urls
     }
 
     /**
+     * Retrieves the URL for a given site where the front end is accessible.
+     *
+     * Returns the 'home' option with the appropriate protocol. The protocol will be 'https'
+     * if is_ssl() evaluates to true; otherwise, it will be the same as the 'home' option.
+     * If `$scheme` is 'http' or 'https', is_ssl() is overridden.
+     */
+    public function getSiteUrl($blog_id = null, $scheme = null)
+    {
+
+        if (empty($blog_id) || !is_multisite()) {
+            $url = get_option('siteurl');
+        } else {
+            switch_to_blog($blog_id);
+            $url = get_option('siteurl');
+            restore_current_blog();
+        }
+
+        if (!in_array($scheme, ['http', 'https', 'relative'])) {
+            if (is_ssl()) {
+                $scheme = 'https';
+            } else {
+                $scheme = parse_url($url, PHP_URL_SCHEME);
+            }
+        }
+
+        $url = set_url_scheme($url, $scheme);
+
+        return $url;
+    }
+
+    /**
      * Get raw base URL e.g. https://blog.domain.com or https://domain.com without any subfolder
      * @return string
      */

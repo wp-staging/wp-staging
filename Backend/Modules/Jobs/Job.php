@@ -6,6 +6,7 @@ use DateInterval;
 use DateTime;
 use Exception;
 use stdClass;
+use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
@@ -70,7 +71,6 @@ abstract class Job implements ShutdownableInterface
 
         $this->utilsMath = new Math();
 
-        // TODO: inject using DI
         $this->excludedTableService = new ExcludedTables();
 
         // Services
@@ -80,7 +80,7 @@ abstract class Job implements ShutdownableInterface
         // Settings and Options
         $this->options = $this->cache->get("clone_options");
 
-        $this->settings = (object)get_option("wpstg_settings", []);
+        $this->settings = (object)((new Settings())->setDefault());
 
         if (!$this->options) {
             $this->options = new stdClass();
@@ -88,20 +88,6 @@ abstract class Job implements ShutdownableInterface
 
         if (isset($this->options->existingClones) && is_object($this->options->existingClones)) {
             $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
-        }
-
-        // check default options
-        if (
-            !isset($this->settings) ||
-            !isset($this->settings->queryLimit) ||
-            !isset($this->settings->querySRLimit) ||
-            !isset($this->settings->batchSize) ||
-            !isset($this->settings->cpuLoad) ||
-            !isset($this->settings->maxFileSize) ||
-            !isset($this->settings->fileLimit)
-        ) {
-            $this->settings = new stdClass();
-            $this->setDefaultSettings();
         }
 
         if (method_exists($this, "initialize")) {
@@ -124,28 +110,6 @@ abstract class Job implements ShutdownableInterface
                 error_log('Tried to commit log, but $this->logger was not a logger.');
             }
         }
-    }
-
-    /**
-     * Set default settings
-     */
-    protected function setDefaultSettings()
-    {
-        $this->settings->queryLimit = "10000";
-        $this->settings->querySRLimit = "5000";
-
-        if (defined('WPSTG_DEV') && WPSTG_DEV) {
-            $this->settings->fileLimit = "500";
-            $this->settings->cpuLoad = 'high';
-        } else {
-            $this->settings->fileLimit = "50";
-            $this->settings->cpuLoad = 'low';
-        }
-
-        $this->settings->batchSize = "2";
-        $this->settings->maxFileSize = 8;
-        $this->settings->optimizer = "1";
-        update_option('wpstg_settings', $this->settings);
     }
 
     /**

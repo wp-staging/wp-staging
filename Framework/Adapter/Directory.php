@@ -300,4 +300,18 @@ class Directory
 
         return false;
     }
+
+    /**
+     * Check whether the given path exists in WordPress Root,
+     * Method will return true if exists in WordPress Root or is relative to WordPress root.
+     *
+     * @param string $path
+     * @return boolean
+     */
+    public function isPathInWpRoot($path)
+    {
+        $path = $this->strUtils->sanitizeDirectorySeparator($path);
+        $path = $this->getAbsPath() . str_replace($this->getAbsPath(), '', $path);
+        return file_exists($path);
+    }
 }

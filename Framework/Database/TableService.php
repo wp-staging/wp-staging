@@ -152,6 +152,46 @@ class TableService
     }
 
     /**
+     * @param string $viewName View name
+     *
+     * @return string
+     */
+    public function getCreateViewQuery($viewName)
+    {
+        $result = $this->client->query("SHOW CREATE VIEW `{$viewName}`");
+        $row = $this->client->fetchAssoc($result);
+
+        $this->client->freeResult($result);
+
+        if (isset($row['Create View'])) {
+            return $row['Create View'];
+        }
+
+        return '';
+    }
+
+    /**
+     * Get MySQL create table query
+     *
+     * @param string $table_name Table name
+     *
+     * @return string
+     */
+    public function getCreateTableQuery($table_name)
+    {
+        $result = $this->client->query("SHOW CREATE TABLE `{$table_name}`");
+        $row = $this->client->fetchAssoc($result);
+
+        $this->client->freeResult($result);
+
+        if (isset($row['Create Table'])) {
+            return $row['Create Table'];
+        }
+
+        return '';
+    }
+
+    /**
      * Delete all the tables or views that starts with $startsWith
      *
      * @param string $prefix

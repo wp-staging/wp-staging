@@ -89,7 +89,6 @@ class Updating extends Job
 
         // Generate Options
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($_POST["cloneID"]));
-        $this->options->cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($this->options->clone));
         $this->options->cloneNumber = 1;
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
@@ -124,6 +123,8 @@ class Updating extends Job
 
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
+            $this->options->cloneName = $this->options->existingClones[$this->options->clone]['cloneName'];
+            $this->options->cloneDirectoryName = $this->options->existingClones[$this->options->clone]['directoryName'];
             $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]['number'];
             $this->options->databaseUser = $this->options->existingClones[$this->options->clone]['databaseUser'];
             $this->options->databasePassword = $this->options->existingClones[$this->options->clone]['databasePassword'];

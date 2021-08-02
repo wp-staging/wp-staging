@@ -6,15 +6,19 @@ namespace WPStaging\Backend\Notices;
  *  Admin Notices | Warnings | Messages
  */
 
+use Exception;
+use DateTime;
 use wpdb;
 use WPStaging\Backend\Pro\Notices\Notices as ProNotices;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
+use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
 
 /**
  * Class Notices
@@ -94,12 +98,12 @@ class Notices
             return false;
         }
 
-        $now = new \DateTime("now");
+        $now = new DateTime("now");
 
         // Check if user clicked on "rate later" button and if there is a valid 'later' date
         if (wpstg_is_valid_date($dbOption)) {
             // Do not show before this date
-            $show = new \DateTime($dbOption);
+            $show = new DateTime($dbOption);
             if ($now < $show) {
                 return false;
             }
@@ -107,7 +111,7 @@ class Notices
 
 
         // Show X days after installation
-        $installDate = new \DateTime(get_option("wpstg_installDate"));
+        $installDate = new DateTime(get_option("wpstg_installDate"));
 
         // get number of days between installation date and today
         $difference = $now->diff($installDate)->days;
@@ -125,13 +129,13 @@ class Notices
             return \get_current_screen()->post_type;
         }
 
-        throw new \Exception('Function get_current_screen does not exist. WP < 3.0.1.');
+        throw new Exception('Function get_current_screen does not exist. WP < 3.0.1.');
     }
 
 
     /**
      * Load admin notices
-     * @throws \Exception
+     * @throws Exception
      */
     public function messages()
     {
@@ -148,7 +152,6 @@ class Notices
         // Show all notices of the pro version
         if ($this->isPro()) {
             $proNotices = new ProNotices($this);
-            // TODO: inject CloneOptions using DI
             // Check mails disabled against both the old and new way of emails disabled option
             $outgoingMailsDisabled = (bool)(new CloneOptions())->get(FirstRun::MAILS_DISABLED_KEY) || ((bool)get_option(FirstRun::MAILS_DISABLED_KEY, false));
             $proNotices->getNotices();
@@ -156,8 +159,9 @@ class Notices
 
         // Show notice about what disabled in the staging site. (Show only on staging site)
         if (self::SHOW_ALL_NOTICES || ((new DisabledItemsNotice())->isEnabled())) {
-            // TODO: inject ExcludedPlugins using DI
             $excludedPlugins = (array)(new ExcludedPlugins())->getExcludedPlugins();
+            // Show freemius notice if freemius options were deleted during cloning.
+            $freemiusOptionsCleared = (new FreemiusScript())->isNoticeEnabled();
             // use require here instead of require_once otherwise unit tests will always fail,
             // as this notice is tested multiple times.
             require "{$viewsNoticesPath}disabled-items-notice.php";
@@ -174,6 +178,13 @@ class Notices
          */
         if (!current_user_can("update_plugins") || !$this->isAdminPage()) {
             return;
+        }
+
+        // Show notice if uploads dir is outside ABSPATH
+        /** @var Directory */
+        $dirUtils = WPStaging::make(Directory::class);
+        if (self::SHOW_ALL_NOTICES || !$dirUtils->isPathInWpRoot($dirUtils->getUploadsDirectory())) {
+            require "{$viewsNoticesPath}uploads-outside-wp-root.php";
         }
 
         // Show notice Cache directory is not writable

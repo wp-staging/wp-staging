@@ -2,7 +2,6 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\CloningProcess\Data\DataCloningDto;
 use WPStaging\Framework\CloningProcess\Data\CopyWpConfig;
@@ -17,6 +16,7 @@ use WPStaging\Framework\CloningProcess\Data\UpdateWpOptionsTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
@@ -35,6 +35,12 @@ class Data extends CloningProcess
      * @var string
      */
     private $homeUrl;
+
+    /**
+     *
+     * @var string
+     */
+    private $siteUrl;
 
     /**
      *
@@ -59,9 +65,9 @@ class Data extends CloningProcess
 
         $this->getTables();
 
-        $this->homeUrl = (new Helper())->getHomeUrl();
-
-        $this->baseUrl = (new Helper())->getBaseUrl();
+        $this->homeUrl = (new Urls())->getHomeUrl();
+        $this->siteUrl = (new Urls())->getSiteUrl();
+        $this->baseUrl = (new Urls())->getBaseUrl();
 
         // Reset current step
         if ($this->options->currentStep === 0) {
@@ -345,23 +351,6 @@ class Data extends CloningProcess
             return trailingslashit($this->homeUrl) . trailingslashit($this->getInstallSubDir()) . $this->options->cloneDirectoryName;
         }
 
-        return trailingslashit($this->homeUrl) . $this->options->cloneDirectoryName;
+        return trailingslashit($this->siteUrl) . $this->options->cloneDirectoryName;
     }
-
-    /**
-     * @return string|string[]
-     * @todo delete
-     */
-/*    protected function getUploadFolder()
-    {
-        if ($this->isMultisiteAndPro()) {
-            // Get absolute path to uploads folder
-            $uploads = wp_upload_dir();
-            $basedir = $uploads['basedir'];
-            // Get relative upload path
-            return str_replace(wpstg_replace_windows_directory_separator(ABSPATH), null, wpstg_replace_windows_directory_separator($basedir));
-        }
-
-        return trim((new WpDefaultDirectories())->getRelativeUploadDir(), '/');
-    }*/
 }

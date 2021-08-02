@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Filesystem;
 
+use SplFileInfo;
 use WPStaging\Backend\Notices\Notices;
 use WPStaging\Core\WPStaging;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -23,6 +24,20 @@ class Filesystem extends FilterableDirectoryIterator
 
     /** @var LoggerInterface|null */
     private $logger;
+
+    /** @var boolean|null */
+    private $bypassPermissionExceptions;
+
+    /** @var array */
+    private $logs = [];
+
+    /**
+     * @return array
+     */
+    public function getLogs()
+    {
+        return $this->logs;
+    }
 
     /**
      * Safe path makes sure given path is within WP root directory
@@ -331,7 +346,7 @@ class Filesystem extends FilterableDirectoryIterator
             try {
                 $result = $this->deleteItem($item);
             } catch (RuntimeException $e) {
-                if ($throw) {
+                if ($this->arePermissionExceptionsBypassed() !== true) {
                     $this->setRecursive($originalIsRecursive);
 
                     throw $e;
@@ -348,16 +363,10 @@ class Filesystem extends FilterableDirectoryIterator
             }
         }
 
-        // Don't delete the parent main dir itself and finish execution
-        if (!$deleteSelf) {
+        // If deleteSelf flag is false or the directory is not empty, stop execution
+        if (!$deleteSelf || !$this->isEmptyDir($path)) {
             $this->setRecursive($originalIsRecursive);
             return true;
-        }
-
-        // Folder is not empty. Return false and continue execution if requested
-        if (!$this->isEmptyDir($path)) {
-            $this->setRecursive($originalIsRecursive);
-            return false;
         }
 
         // Delete the empty directory itself and finish execution
@@ -480,6 +489,24 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
+     * @return boolean|null
+     */
+    public function arePermissionExceptionsBypassed()
+    {
+        return $this->bypassPermissionExceptions;
+    }
+
+    /**
+     * @param boolean|null $flag
+     * @return self
+     */
+    public function shouldPermissionExceptionsBypass($flag)
+    {
+        $this->bypassPermissionExceptions = $flag;
+        return $this;
+    }
+
+    /**
      * @return string|null
      */
     public function getPath()
@@ -573,7 +600,7 @@ class Filesystem extends FilterableDirectoryIterator
 
     /**
      * Delete file or directory
-     * @param \SplFileInfo $item
+     * @param SplFileInfo $item
      * @return bool
      */
     protected function deleteItem($item)
@@ -601,9 +628,15 @@ class Filesystem extends FilterableDirectoryIterator
                 $this->log('Permission Error: Can not delete folder ' . $path);
                 throw new RuntimeException('Permission Error: Can not delete folder ' . $path);
             }
-        } elseif (!$item->isFile()) {
+
+            return true;
+        }
+
+        if (!$item->isFile()) {
             return false;
-        } elseif (!unlink($path)) {
+        }
+
+        if (!@unlink($path)) {
             $this->log('Permission Error: Can not delete file ' . $path);
             throw new RuntimeException('Permission Error: Can not delete file ' . $path);
         }
@@ -620,10 +653,10 @@ class Filesystem extends FilterableDirectoryIterator
     {
         // remove symlink using rmdir if OS is windows
         if (PHP_SHLIB_SUFFIX === 'dll') {
-            return rmdir($path);
+            return @rmdir($path);
         }
 
-        return unlink($path);
+        return @unlink($path);
     }
 
     /**
@@ -633,7 +666,10 @@ class Filesystem extends FilterableDirectoryIterator
     {
         if ($this->logger instanceof LoggerInterface) {
             $this->logger->warning($string);
+            return;
         }
+
+        $this->logs[] = $string;
     }
 
     /**

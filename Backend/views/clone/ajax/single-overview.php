@@ -2,9 +2,9 @@
 /**
  * @see \WPStaging\Backend\Administrator::ajaxOverview
  *
- * @var array   $availableClones
- * @var string  $iconPath
- * @var         $license
+ * @var array  $availableClones
+ * @var string $iconPath
+ * @var        $license
  */
 ?>
 <div id="wpstg-step-1">
@@ -19,12 +19,12 @@
         <h3>
             <?php _e("Your Staging Sites:", "wp-staging") ?>
         </h3>
-        <?php foreach ($availableClones as $name => $data) : ?>
-            <div id="<?php echo $data["directoryName"]; ?>" class="wpstg-clone">
+        <?php foreach ($availableClones as $cloneID => $data) : ?>
+            <div id="<?php echo $data['directoryName']; ?>" class="wpstg-clone">
                 <?php $urlLogin = $data["url"]; ?>
                 <div class="wpstg-clone-header">
                     <a href="<?php echo $urlLogin ?>" class="wpstg-clone-title" target="_blank">
-                        <?php echo $data["directoryName"]; ?>
+                        <?php echo isset($data["cloneName"]) ? $data["cloneName"] : $data["directoryName"]; ?>
                     </a>
                     <div class="wpstg-clone-actions">
                         <div class="wpstg-dropdown wpstg-action-dropdown">
@@ -34,42 +34,22 @@
                             </a>
                             <div class="wpstg-dropdown-menu">
                                 <?php
-                                do_action('wpstg.views.single_overview.before_existing_clones_actions', $name, $data, $license);
-                                // Todo: Remove in future versions
-                                if (function_exists('do_action_deprecated')) {
-                                    // do_action_deprecated exists since WP 4.6
-                                    echo do_action_deprecated("wpstg.views.single_overview.before_existing_clones_buttons", [$name, $data, $license], '2.7.6', 'wpstg.views.single_overview.before_existing_clones_actions', 'The replacement action uses better name according to ui');
-                                }
-                                // Todo: Remove in future versions
-                                if (function_exists('apply_filters_deprecated')) {
-                                    // apply_filters_deprecated exists since WP 4.6
-                                    echo apply_filters_deprecated("wpstg_before_stage_buttons", [$html = '', $name, $data], '2.7.6', 'wpstg.views.single_overview.before_existing_clones_actions', 'The replacement filter uses do_action()');
-                                }
+                                do_action('wpstg.views.single_overview.before_existing_clones_actions', $cloneID, $data, $license);
                                 ?>
                                 <a href="<?php echo $urlLogin ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank" title="<?php echo __("Open the staging site in a new tab", "wp-staging") ?>">
                                     <?php _e("Open", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $name ?>" title="<?php echo __("Update and overwrite this clone. Select folders and database tables in the next step.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Update and overwrite this clone. Select folders and database tables in the next step.", "wp-staging") ?>">
                                     <?php _e("Update", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo $name ?>" title="<?php echo __("Reset this clone with existing production site. Confirm to proceed.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Reset this clone with existing production site. Confirm to proceed.", "wp-staging") ?>">
                                     <?php _e("Reset", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo $name ?>" title="<?php echo __("Delete this clone. Select specific folders and database tables in the next step.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Delete this clone. Select specific folders and database tables in the next step.", "wp-staging") ?>">
                                     <?php _e("Delete", "wp-staging"); ?>
                                 </a>
                                 <?php
-                                do_action('wpstg.views.single_overview.after_existing_clones_actions', $name, $data, $license);
-                                // Todo: Remove in future versions
-                                if (function_exists('do_action_deprecated')) {
-                                    // do_action_deprecated exists since WP 4.6
-                                    echo do_action_deprecated("wpstg.views.single_overview.after_existing_clones_buttons", [$name, $data, $license], '2.7.6', 'wpstg.views.single_overview.after_existing_clones_actions', 'The replacement action uses better name according to ui');
-                                }
-                                // Todo: Remove in future versions
-                                if (function_exists('apply_filters_deprecated')) {
-                                    // apply_filters_deprecated exists since WP 4.6
-                                    echo apply_filters_deprecated("wpstg_after_stage_buttons", [$html = '', $name, $data], '2.7.6', 'wpstg.views.single_overview.after_existing_clones_actions', 'The replacement filter uses do_action()');
-                                }
+                                do_action('wpstg.views.single_overview.after_existing_clones_actions', $cloneID, $data, $license);
                                 ?>
                             </div>
                         </div>
@@ -120,7 +100,7 @@
                     // Todo: Remove in future versions
                     if (function_exists('do_action_deprecated')) {
                         // do_action_deprecated exists since WP 4.6
-                        echo do_action_deprecated("wpstg.views.single_overview.after_existing_clones_details", [$name, $data, $license], '2.7.6', '', 'This will be removed from the future update');
+                        echo do_action_deprecated("wpstg.views.single_overview.after_existing_clones_details", [$cloneID, $data, $license], '2.7.6', '', 'This will be removed from the future update');
                     }
                     ?>
                 </div>

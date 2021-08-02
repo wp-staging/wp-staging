@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use RuntimeException;
 use SplFileObject;
 use WPStaging\Backend\Modules\Jobs\Cleaners\WpContentCleaner;
 use WPStaging\Core\Utils\Logger;
@@ -175,12 +176,21 @@ class Files extends JobExecutable
 
         $fs = (new Filesystem())
             ->setShouldStop([$this, 'isOverThreshold'])
+            ->shouldPermissionExceptionsBypass(true)
             ->setRecursive(true);
         try {
             if (!$fs->delete($this->destination)) {
+                foreach ($fs->getLogs() as $log) {
+                    $this->log($log, Logger::TYPE_WARNING);
+                }
+
                 return false;
             }
-        } catch (\RuntimeException $ex) {
+        } catch (RuntimeException $ex) {
+        }
+
+        foreach ($fs->getLogs() as $log) {
+            $this->log($log, Logger::TYPE_WARNING);
         }
 
         $this->options->filesResettingStatus = 'finished';

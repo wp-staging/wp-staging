@@ -182,6 +182,7 @@ class BufferedCache extends AbstractCache
      * @param resource $source
      * @param int $offset
      * @throws DiskNotWritableException
+     * @throws \RuntimeException
      * @return int
      */
     public function appendFile($source, $offset = 0)
@@ -371,6 +372,7 @@ class BufferedCache extends AbstractCache
      * @param int $offset
      * @return int
      * @throws DiskNotWritableException
+     * @throws \RuntimeException If can't read chunk from file
      */
     private function stoppableAppendFile($source, $target, $offset)
     {
@@ -380,16 +382,15 @@ class BufferedCache extends AbstractCache
         while (!$this->isThreshold() && !feof($source)) {
             $chunk = fread($source, 512 * KB_IN_BYTES);
 
-            if (!empty($chunk)) {
-                $bytesWrittenInThisRequest = fwrite($target, $chunk);
-                unset($chunk);
+            if ($chunk === false) {
+                throw new \RuntimeException('Could not read chunk from file');
+            }
 
-                // Failed to write
-                if ($bytesWrittenInThisRequest === false || $bytesWrittenInThisRequest <= 0) {
-                    throw DiskNotWritableException::diskNotWritable();
-                }
-            } else {
-                $bytesWrittenInThisRequest = 0;
+            $bytesWrittenInThisRequest = fwrite($target, $chunk);
+
+            // Failed to write
+            if ($bytesWrittenInThisRequest === false || ($bytesWrittenInThisRequest <= 0 && strlen($chunk) > 0)) {
+                throw DiskNotWritableException::diskNotWritable();
             }
 
             // Finished writing, nothing more to write!

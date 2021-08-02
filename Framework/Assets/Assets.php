@@ -154,7 +154,10 @@ class Assets
         );
 
         // Sweet Alert
-        $asset = 'js/vendor/sweetalert2.all.min.js';
+        $asset = 'js/dist/wpstg-sweetalert2.min.js';
+        if ($this->isDebugOrDevMode()) {
+            $asset = 'js/dist/wpstg-sweetalert2.js';
+        }
         wp_enqueue_script(
             'wpstg-admin-sweetalerts',
             $this->getAssetsUrl($asset),
@@ -163,7 +166,10 @@ class Assets
             true
         );
 
-        $asset = 'css/vendor/sweetalert2.min.css';
+        $asset = 'css/dist/wpstg-sweetalert2.min.css';
+        if ($this->isDebugOrDevMode()) {
+            $asset = 'css/dist/wpstg-sweetalert2.css';
+        }
         wp_enqueue_style(
             'wpstg-admin-sweetalerts',
             $this->getAssetsUrl($asset),

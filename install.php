@@ -8,6 +8,7 @@
 
 use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\Utils\Htaccess;
 
 /**
@@ -34,3 +35,8 @@ $htaccess = new Htaccess();
 if (extension_loaded('litespeed')) {
     $htaccess->createLitespeed(ABSPATH . '.htaccess');
 }
+
+/**
+ * Set default values for settings
+ */
+$settings = (new Settings())->setDefault();

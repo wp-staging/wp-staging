@@ -186,8 +186,16 @@ trait ResourceTrait
 
         $limit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
 
-        if (!is_int($limit) || $limit < 64000000) {
-            $limit = 64000000;
+        // No memory limit
+        if ($limit == -1) {
+            // 512MB
+            $limit = 512 * 1000000;
+        } else {
+            // Unexpected memory limit
+            if (!is_int($limit) || $limit < 64000000) {
+                // 64MB
+                $limit = 64000000;
+            }
         }
 
         if ((bool)apply_filters('wpstg.resources.ignoreMemoryLimit', false)) {
