@@ -663,7 +663,7 @@
         callback = null;
       }
 
-      Swal.fire(swalOptions).then(function (result) {
+      wpstgSwal.fire(swalOptions).then(function (result) {
         if (result.value && _this.error !== null) {
           _this.triggerConfirmAction(additionalParams, callback);
         }
@@ -981,10 +981,10 @@
           buttonsStyling: false,
           reverseButtons: true,
           showClass: {
-            popup: 'swal2-show wpstg-swal-show'
+            popup: 'wpstg--swal2-show wpstg-swal-show'
           }
         };
-        return Swal.mixin(options);
+        return wpstgSwal.mixin(options);
       },
       showSuccessModal: function showSuccessModal(htmlContent) {
         this.getSwalModal().fire({
@@ -1015,6 +1015,12 @@
           title: 'Error!',
           html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
         });
+      },
+      getSwalContainer: function getSwalContainer() {
+        return wpstgSwal.getContainer();
+      },
+      closeSwalModal: function closeSwalModal() {
+        wpstgSwal.close();
       },
 
       /**
@@ -1057,12 +1063,20 @@
           WPStagingCommon.cache.get('.wpstg-loader').show();
         }
       },
+
+      /**
+       * Convert the given url to make it slug compatible
+       * @param {string} url
+       */
+      slugify: function slugify(url) {
+        return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
+      },
       showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
         prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
         appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
 
         if (response === false) {
-          WPStagingCommon.showErro(prependMessage + ' Error: No response.' + appendMessage);
+          WPStagingCommon.showError(prependMessage + ' Error: No response.' + appendMessage);
           window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
           return;
         }
@@ -1075,7 +1089,7 @@
       },
       handleFetchErrors: function handleFetchErrors(response) {
         if (!response.ok) {
-          WPStagingCommon.showErro('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
+          WPStagingCommon.showError('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
         }
 
         return response;
@@ -1388,8 +1402,8 @@
 
         var modal = qs('.wpstg-reset-confirmation');
         modal.classList.remove('wpstg-swal2-loading');
-        modal.querySelector('.swal2-popup').style.width = '500px';
-        modal.querySelector('.swal2-content').innerHTML = data.html;
+        modal.querySelector('.wpstg--swal2-popup').style.width = '500px';
+        modal.querySelector('.wpstg--swal2-content').innerHTML = data.html;
         _this2.directoryNavigator = new WpstgDirectoryNavigation();
         _this2.excludeFilters = new WpstgExcludeFilters();
       })["catch"](function (error) {
@@ -1563,14 +1577,20 @@
 
   var WpstgMainMenu = /*#__PURE__*/function () {
     function WpstgMainMenu() {
-      this.mainMenu();
       this.activeTabClass = 'wpstg--tab--active';
+      this.mainMenu();
     }
 
     var _proto = WpstgMainMenu.prototype;
 
     _proto.mainMenu = function mainMenu() {
       var _this = this;
+
+      var tabHeader = qs('.wpstg--tab--header'); // Early bail if tab header is not available
+
+      if (tabHeader === null) {
+        return;
+      }
 
       addEvent(qs('.wpstg--tab--header'), 'click', '.wpstg-button', function (element) {
         var $this = element;
@@ -1704,10 +1724,6 @@
     var resetErrors = function resetErrors() {
       cache.get('#wpstg-error-details').hide().html('');
     };
-
-    var slugify = function slugify(url) {
-      return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
-    };
     /**
        * Common Elements
        */
@@ -1804,15 +1820,24 @@
 
         if ('number' === typeof timer) {
           clearInterval(timer);
-        }
+        } // Early bail if site name is empty
 
-        var cloneID = this.value;
+
+        if (this.value === undefined || this.value === '') {
+          cache.get('#wpstg-new-clone-id').removeClass('wpstg-error-input');
+          cache.get('#wpstg-start-cloning').removeAttr('disabled');
+          cache.get('#wpstg-clone-id-error').text('').hide();
+          return;
+        } // Convert the site name to directory name (slugify the site name to create directory name)
+
+
+        var cloneDirectoryName = WPStagingCommon.slugify(this.value);
         timer = setTimeout(function () {
           ajax({
             action: 'wpstg_check_clone',
             accessToken: wpstg.accessToken,
             nonce: wpstg.nonce,
-            cloneID: cloneID
+            directoryName: cloneDirectoryName
           }, function (response) {
             if (response.status === 'success') {
               cache.get('#wpstg-new-clone-id').removeClass('wpstg-error-input');
@@ -1836,7 +1861,7 @@
           return;
         }
 
-        var slug = slugify(this.value);
+        var slug = WPStagingCommon.slugify(this.value);
         var $targetDir = $('#wpstg-use-target-dir');
         var $targetUri = $('#wpstg-use-target-hostname');
         var path = $targetDir.data('base-path');
@@ -2289,7 +2314,13 @@
         return;
       }
 
-      that.data.cloneID = $('#wpstg-new-clone-id').val() || new Date().getTime().toString(); // Remove this to keep &_POST[] small otherwise mod_security will throw error 404
+      that.data.cloneID = new Date().getTime().toString();
+
+      if ('wpstg_update' === that.data.action) {
+        that.data.cloneID = $('#wpstg-new-clone-id').data('clone');
+      }
+
+      that.data.cloneName = $('#wpstg-new-clone-id').val() || that.data.cloneID; // Remove this to keep &_POST[] small otherwise mod_security will throw error 404
       // that.data.excludedTables = getExcludedTables();
 
       if (that.directoryNavigator !== null) {
@@ -2460,11 +2491,14 @@
         var $section = cache.get($this.data('id'));
         $this.toggleClass('expand');
         $section.slideToggle();
+        var tabTriangle = $this.find('.wpstg-tab-triangle');
 
         if ($this.hasClass('expand')) {
-          $this.find('.wpstg-tab-triangle').html('&#9660;');
+          tabTriangle.removeClass('wpstg-no-icon');
+          tabTriangle.text('');
+          tabTriangle.addClass('wpstg-rotate-90');
         } else {
-          $this.find('.wpstg-tab-triangle').html('&#9658;');
+          tabTriangle.removeClass('wpstg-rotate-90');
         }
       });
     };
@@ -2490,7 +2524,7 @@
           if ('undefined' !== typeof response["delete"] && (response["delete"] === 'finished' || response["delete"] === 'unfinished')) {
             cache.get('#wpstg-removing-clone').removeClass('loading').html('');
 
-            if (response["delete"] === 'finished') {
+            if (response["delete"] === 'finished' && response.error === undefined) {
               $('.wpstg-clone#' + clone).remove();
             } // No staging site message is also of type/class .wpstg-class but hidden
             // We have just excluded that from search when counting no of clones
@@ -2865,7 +2899,8 @@
         }
 
         if (that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
-          // TODO: remove default custom classes
+          cache.get('#wpstg-cancel-cloning-update').hide();
+          cache.get('.wpstg-prev-step-link').show();
           WPStagingCommon.getSwalModal(true, {
             confirmButton: 'wpstg--btn--confirm wpstg-green-button wpstg-button wpstg-link-btn wpstg-100-width'
           }).fire({

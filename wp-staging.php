@@ -7,16 +7,16 @@
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
  * Contributors: ReneHermi
- * Version: 2.8.5
+ * Version: 2.8.6
  * Text Domain: wp-staging
  * Domain Path: /languages/
  *
- * WP-Staging is free software: you can redistribute it and/or modify
+ * WP STAGING is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 2 of the License, or
  * any later version.
  *
- * WP-Staging is distributed in the hope that it will be useful,
+ * WP STAGING is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
  * GNU General Public License for more details.

@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
-Tested up to: 5.7
-Stable tag: 2.8.5
+Tested up to: 5.8
+Stable tag: 2.8.6
 Requires PHP: 5.5
 
 A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -167,12 +167,42 @@ https://wp-staging.com
 
 == Screenshots ==
 
-1. Step 1. Create a new WordPress staging / backup site
-2. Step 2. Scanning your website for files and database tables
-3. Step 3. WordPress staging site creation in progress
-4. Finish - Access your backup / staging site
+1. Create new WordPress staging / backup site
+2. Select name for staging / backup site
+3. Select folders to include in staging / backup site
+4. Cloning / backup processing
+5. Listed staging / backup sites
+5. Listed staging / backup sites
+6. Open, edit & delete staging / backup sites
+7. Login to staging / backup site
+4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.8.6 =
+* New: Support WordPress 5.8
+* New: Show notice if uploads dir is outside WP Root #1138
+* Enh: Refactor our wp_login action hook to work with custom calls to this action with different parameter count than the one in WordPress Core #1223
+* Enh: Also show disabled permalink message in disabled items notice on the staging site and show a page builder (DIVI, Elementor etc) not working help link in wpstg page footer #1150
+* Enh: Decouple clone name and clone ID for better usage #1158
+* Enh: Show issue notice if backups is created on version >= 4.0.2 #1198
+* Enh: Remove deprecated hooks call #1209
+* Fix: Fix staging site when site has freemius script #1112
+* Fix: Prefix 'wpstg' to sweetalerts Swal to avoid conflict with its other versions #1125
+* Fix: Set default values for wpstg settings on plugin activate event if wpstg settings not already set #1135
+* Fix: Fix the problem when unable to access the staging site because production site have different siteurl or home url and either one of them is having www. prefix #1136
+* Fix: Restore a backup with VIEWs or TABLEs if there are special MySQL SQL statements such as DEFINER #1139
+* Fix: Fix issue where graphical tab triangle was inconsistent by using css based tab triangle #1148
+* Fix: Reduce time to query INFORMATION_SCHEMA table on some shared hosts from ~10s to one millisecond #1154
+* Fix: Check available free disk space on large disks on 32-bit PHP #1179
+* Fix: Fix a bug where a PHP memory_limit of -1 (Unlimited) would be interpreted as 64MB, now it's interpreted as 512MB #1178
+* Fix: Remove usages of `abstract static` methods that would violate `strict` PHP checks #1185
+* Fix: Cloning a site resets the settings to the default ones #1183
+* Fix: Fix Clone RESET and Clone DELETE when unable to delete file due to permission error #1196
+* Fix: Fix an issue when canceling a push confirm redirects to empty page #1206
+* Fix: Add missing back button and hide cancel button after clone UPDATE and clone RESET #1207
+* Fix: Fix Error in JS console related to registering of main-menu in page where it was not available #1205
+* Dev: Add wrapper methods for deprecated hooks functions to support WordPress < 4.6 #1209
 
 = 2.8.5 =
 * Enh: Preview of the new backup & migration feature in WP STAGING | PRO
@@ -417,28 +447,25 @@ SKIP VERSION
 Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-* Enh: Preview of the new backup & migration feature in WP STAGING | PRO
-* Enh: Replace css based hover with pure js hoverintent for tooltips #1106
-* Enh: Cleanup logs older than 7 days automatically #1116
-* Enh: Update the version to check in Outdated WP Staging Hooks notice #1118
-* Enh: Schedule the uploads backup to be deleted after one week if that option was selected during push #980
-* Enh: Allow copying of only that symlink whose source is a directory #979
-* Enh: Show notice only to user who can manage_options if wp_options table is missing primary key #1009
-* Enh: Delete Optimizer Plugin on WP Staging plugins deactivate instead of uninstall #1096
-* Fix: Fixed conflict with Rank Math Seo PRO when Rank Math Seo PRO is activated network wide in multisites #1111
-* Fix: Make Scan::hasFreeDiskSpace() return other info even if disk_free_space is unavailable #1093
-* Fix: Replace the deprecated of calling a non-static method in daily version check hooks #1092
-* Fix: Try catch all instance of directory iterators #1101
-* Fix: Handle error properly for Filesystem::delete() method #974
-* Fix: Remove loading wpstg scripts as ESM to allow loading them as asynchronous #1007
-* Fix: Properly handle exception while cleaning themes and plugins bak and tmp directories #1017
-* Fix: Delete the clone even if in any case a corrupted delete job cache file existed for delete job #1033
-* Fix: No cloning/pushing logs were written to file. Now fixed. #1040
-* Fix: Wrap wp_doing_ajax in a adapter and use that adapter to call it to make it usable in WP < 4.7  #1047
-* Fix: Fix typo and wrap up text in i18n for src/Backend/views/clone/ajax/start.php #1051
-* Fix: Fix missing clone options warning during scanning process for old clones for UPDATE and RESET #1058
-* Fix: Make isExcludedDirectories condition works for relative directories path too #1054
-* Fix: Set donation link to redirect to WP Staging pricing page #1080
-* Dev: Add a shortcut to allow to use the DI container as a Service Locator easier under some circumstances #1039
-* Dev: Add trait to allow for easier use of the `uopz` extension in tests #1053
-* Dev: Replace const related tests logic with UOPZ for better readability and control #1079
+* New: Support WordPress 5.8
+* New: Show notice if uploads dir is outside WP Root #1138
+* Enh: Also show disabled permalink message in disabled items notice on the staging site and show a page builder (DIVI, Elementor etc) not working help link in wpstg page footer #1150
+* Enh: Decouple clone name and clone ID for better usage #1158
+* Enh: Show issue notice if backups is created on version >= 4.0.2 #1198
+* Enh: Remove deprecated hooks call #1209
+* Fix: Fix staging site when site has freemius script #1112
+* Fix: Prefix 'wpstg' to sweetalerts Swal to avoid conflict with its other versions #1125
+* Fix: Set default values for wpstg settings on plugin activate event if wpstg settings not already set #1135
+* Fix: Fix the problem when unable to access the staging site because production site have different siteurl or home url and either one of them is having www. prefix #1136
+* Fix: Restore a backup with VIEWs or TABLEs if there are special MySQL SQL statements such as DEFINER #1139
+* Fix: Fix issue where graphical tab triangle was inconsistent by using css based tab triangle #1148
+* Fix: Reduce time to query INFORMATION_SCHEMA table on some shared hosts from ~10s to one millisecond #1154
+* Fix: Check available free disk space on large disks on 32-bit PHP #1179
+* Fix: Fix a bug where a PHP memory_limit of -1 (Unlimited) would be interpreted as 64MB, now it's interpreted as 512MB #1178
+* Fix: Remove usages of `abstract static` methods that would violate `strict` PHP checks #1185
+* Fix: Cloning a site resets the settings to the default ones #1183
+* Fix: Fix Clone RESET and Clone DELETE when unable to delete file due to permission error #1196
+* Fix: Fix an issue when canceling a push confirm redirects to empty page #1206
+* Fix: Add missing back button and hide cancel button after clone UPDATE and clone RESET #1207
+* Fix: Fix Error in JS console related to registering of main-menu in page where it was not available #1205
+* Dev: Add wrapper methods for deprecated hooks functions to support WordPress < 4.6 #1209

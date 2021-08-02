@@ -5,13 +5,13 @@ namespace WPStaging\Backend\Modules\Jobs;
 use Exception;
 use FilesystemIterator;
 use mysqli;
-use RuntimeException;
 use stdClass;
 use wpdb;
 use WPStaging\Backend\Modules\Jobs\Exceptions\CloneNotFoundException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Utils\Strings;
 
 /**
@@ -395,12 +395,13 @@ class Delete extends Job
         if ($this->isNotEmpty($this->deleteDir)) {
             $fs = (new Filesystem())
                 ->setShouldStop([$this, 'isOverThreshold'])
+                ->shouldPermissionExceptionsBypass(true)
                 ->setRecursive();
             try {
                 if (!$fs->delete($this->deleteDir)) {
                     return;
                 }
-            } catch (RuntimeException $ex) {
+            } catch (FilesystemExceptions $ex) {
                 $errorMessage = $ex->getMessage();
                 $deleteStatus = "unfinished";
             }

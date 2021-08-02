@@ -1,12 +1,18 @@
 <?php
+
 /**
  * @var \WPStaging\Framework\Adapter\Directory $directory
  */
-$uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', wp_normalize_path($directory->getPluginUploadsDirectory() . \WPStaging\Pro\Backup\Service\Compressor::EXPORT_DIR_NAME));
+
+use WPStaging\Core\WPStaging;
+use WPStaging\Pro\Backup\Service\BackupsFinder;
+
+$uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(BackupsFinder::class)->getBackupsDirectory());
 ?>
 <div
     id="wpstg--modal--backup--upload"
     data-cancelButtonText="<?php esc_attr_e('CANCEL', 'wp-staging'); ?>"
+    data-uploadSuccessMessage="<?php esc_attr_e('The backup file has been successfully uploaded. You can restore your website with this backup.', 'wp-staging'); ?>"
     style="display: none"
 >
     <h2 class="wpstg--modal--backup--import--upload--title wpstg--grey"><?php esc_html_e('Uploading Backup', 'wp-staging') ?></h2>
@@ -31,17 +37,18 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', wp_normalize_path
                 <div id="wpstg-upload-select">
                     <div class="wpstg--modal--backup--import--upload--container resumable-drop resumable-browse">
                         <img src="<?php echo esc_url($urlAssets . 'img/upload.svg'); ?>" alt="Upload Image"/>
-                        <div class="upload-text">
+                        <div class="wpstg-upload-text">
                             <?php
                                 echo wp_kses(
-                                    __(sprintf('Drop the backup file here to upload or <a>select from your computer</a>'), 'wp-staging'),
+                                    __(sprintf('Drop the backup file here to upload or <br><a>select from your computer</a>'), 'wp-staging'),
                                     [
                                     // Allowed HTML
-                                    'a' => []
+                                    'a' => [],
+                                    'br' => []
                                     ]
                                 ) ?>
                         </div>
-                        <div class="dragover-text">
+                        <div class="wpstg-dragover-text">
                             <strong><?php echo esc_html('Drop here to start the upload!') ?></strong>
                         </div>
                     </div>

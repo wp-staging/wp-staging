@@ -39,6 +39,7 @@ class Htaccess
         return $this->filesystem->create($path, implode(PHP_EOL, [
                     '<IfModule mod_mime.c>',
                     'AddType application/octet-stream .log',
+                    'AddType application/octet-stream .wpstg',
                     '</IfModule>',
                     '<IfModule mod_dir.c>',
                     'DirectoryIndex index.php',

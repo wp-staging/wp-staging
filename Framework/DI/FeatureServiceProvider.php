@@ -15,6 +15,8 @@
 
 namespace WPStaging\Framework\DI;
 
+use WPStaging\Framework\Exceptions\WPStagingException;
+
 /**
  * Class FeatureServiceProvider
  *
@@ -33,8 +35,14 @@ abstract class FeatureServiceProvider extends ServiceProvider implements Feature
      *
      * @return string The name of the constant, or environment variable, that will trigger the
      *                feature provider registration when set to truthy values.
+     *
+     * @throws WPStagingException If the method is not overridden by the extending Service Provider class.
      */
-    abstract public static function getFeatureTrigger();
+    public static function getFeatureTrigger()
+    {
+        die('As I should not be invoked.');
+        throw new WPStagingException('Every Feature Service Provider MUST define a feature trigger.');
+    }
 
     /**
      * Returns whether the feature provided by the provider is enabled or not.

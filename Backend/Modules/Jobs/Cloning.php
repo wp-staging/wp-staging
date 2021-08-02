@@ -52,8 +52,12 @@ class Cloning extends Job
         $this->cache->delete("files_to_copy");
 
         // Generate Options
+        // Clone ID -> timestamp (time at which this clone creation initiated)
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($_POST["cloneID"]));
-        $this->options->cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($this->options->clone));
+        // Clone Name -> Site name that user input, if user left it empty it will be Clone ID 
+        $this->options->cloneName = wpstg_urldecode($_POST["cloneName"]);
+        // The slugified version of Clone Name (to use in directory creation)
+        $this->options->cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($this->options->cloneName));
         $this->options->cloneNumber = 1;
         $this->options->prefix = $this->setStagingPrefix();
         $this->options->includedDirectories = [];
@@ -215,6 +219,7 @@ class Cloning extends Job
         $this->log("Cloning: {$this->options->clone}'s clone job's data is not in database, generating data");
 
         $this->options->existingClones[$this->options->clone] = [
+            "cloneName" => $this->options->cloneName,
             "directoryName" => $this->options->cloneDirectoryName,
             "path" => trailingslashit($this->options->destinationDir),
             "url" => $this->getDestinationUrl(),

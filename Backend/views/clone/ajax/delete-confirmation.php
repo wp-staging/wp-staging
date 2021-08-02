@@ -41,7 +41,7 @@
 
     <?php if ($isDatabaseConnected) { ?>
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
-        <span class="wpstg-tab-triangle">&#9658;</span>
+        <span class="wpstg-tab-triangle"></span>
         <?php echo __("Database tables to delete", "wp-staging")?>
     </a>
 
@@ -77,7 +77,7 @@
     <!-- /Database -->
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
-        <span class="wpstg-tab-triangle">&#9658;</span>
+        <span class="wpstg-tab-triangle"></span>
         <?php echo __("Files to delete", "wp-staging")?>
     </a>
 

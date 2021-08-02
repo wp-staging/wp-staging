@@ -3,6 +3,7 @@
 namespace WPStaging\Backend;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Core\DTO\Settings;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Database\DbInfo;
 use WPStaging\Framework\SiteInfo;
@@ -11,6 +12,10 @@ use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Mails\Report\Report;
+use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
+use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use WPStaging\Framework\CloningProcess\Database\CompareExternalDatabase;
+use WPStaging\Framework\Utils\Math;
 use WPStaging\Backend\Modules\Jobs\Cancel;
 use WPStaging\Backend\Modules\Jobs\CancelUpdate;
 use WPStaging\Backend\Modules\Jobs\Cloning;
@@ -26,14 +31,10 @@ use WPStaging\Backend\Notices\DisabledItemsNotice;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 use WPStaging\Backend\Activation;
 use WPStaging\Backend\Feedback;
+use WPStaging\Backend\Pro\Notices\BackupsDifferentPrefixNotice;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
-use WPStaging\Core\DTO\Settings;
-use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
-use WPStaging\Framework\TemplateEngine\TemplateEngine;
-use WPStaging\Framework\CloningProcess\Database\CompareExternalDatabase;
-use WPStaging\Framework\Utils\Math;
 
 /**
  * Class Administrator
@@ -134,7 +135,7 @@ class Administrator
         // Ajax Requests
         add_action("wp_ajax_wpstg_overview", [$this, "ajaxOverview"]);
         add_action("wp_ajax_wpstg_scanning", [$this, "ajaxCloneScan"]);
-        add_action("wp_ajax_wpstg_check_clone", [$this, "ajaxcheckCloneName"]);
+        add_action("wp_ajax_wpstg_check_clone", [$this, "ajaxCheckCloneDirectoryName"]);
         add_action("wp_ajax_wpstg_restart", [$this, "ajaxRestart"]);
         add_action("wp_ajax_wpstg_update", [$this, "ajaxUpdateProcess"]);
         add_action("wp_ajax_wpstg_reset", [$this, "ajaxResetProcess"]);
@@ -158,11 +159,11 @@ class Administrator
         add_action("wp_ajax_wpstg_check_disk_space", [$this, "ajaxCheckFreeSpace"]);
         add_action("wp_ajax_wpstg_send_report", [$this, "ajaxSendReport"]);
         add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]);
-        add_action("wp_ajax_wpstg_hide_disabled_items_notice", [$this, "ajaxHideDisabledItemsNotice"]);
         add_action("wp_ajax_wpstg_enable_staging_cloning", [$this, "ajaxEnableStagingCloning"]);
         add_action("wp_ajax_wpstg_clone_excludes_settings", [$this, "ajaxCloneExcludesSettings"]);
         add_action("wp_ajax_wpstg_fetch_dir_childrens", [$this, "ajaxFetchDirChildrens"]);
         add_action("wp_ajax_wpstg_modal_error", [$this, "ajaxModalError"]);
+        add_action("wp_ajax_wpstg_dismiss_notice", [$this, "ajaxDismissNotice"]);
 
 
         // Ajax hooks pro Version
@@ -658,34 +659,47 @@ class Administrator
     /**
      * Ajax Check Clone Name
      */
-    public function ajaxCheckCloneName()
+    public function ajaxCheckCloneDirectoryName()
     {
         if (!$this->isAuthenticated()) {
             return;
         }
 
-        $cloneName = sanitize_key($_POST["cloneID"]);
-        $cloneNameLength = strlen($cloneName);
-        $clones = get_option("wpstg_existing_clones_beta", []);
+        $cloneDirectoryName = sanitize_key($_POST["directoryName"]);
+        $cloneDirectoryNameLength = strlen($cloneDirectoryName);
+        $existingClones = get_option("wpstg_existing_clones_beta", []);
 
-        $clonePath = trailingslashit(get_home_path()) . $cloneName;
+        $cloneDestDir = trailingslashit(get_home_path()) . $cloneDirectoryName;
 
-        // Check clone name length
-        if ($cloneNameLength < 1 || $cloneNameLength > 16) {
+        // Check clone directory name length
+        if ($cloneDirectoryNameLength < 1 || $cloneDirectoryNameLength > 16) {
             echo wp_send_json([
                 "status" => "failed",
-                "message" => "Clone name must be between 1 - 16 characters"
+                "message" => "Choose a site name below 16 characters"
             ]);
-        } elseif (array_key_exists($cloneName, $clones)) {
+
+            return;
+        }
+        
+        // Check if destination clone dir exists and that it is not empty
+        if (!wpstg_is_empty_dir($cloneDestDir)) {
             echo wp_send_json([
                 "status" => "failed",
-                "message" => "Clone name is already in use, please choose another clone name."
+                "message" => "Warning: Use another site name! Clone destination directory " . $cloneDestDir . " already exists and is not empty. As default, WP STAGING uses the site name as subdirectory for the clone."
             ]);
-        } elseif (is_dir($clonePath) && !wpstg_is_empty_dir($clonePath)) {
-            echo wp_send_json([
-                "status" => "failed",
-                "message" => "Clone directory " . $clonePath . " already exists. Use another clone name."
-            ]);
+
+            return;
+        }
+
+        foreach ($existingClones as $clone) {
+            if ($clone['directoryName'] === $cloneDirectoryName) {
+                echo wp_send_json([
+                    "status" => "failed",
+                    "message" => "Site name is already in use, please choose another name for the staging site."
+                ]);
+
+                return;
+            }
         }
 
         echo wp_send_json(["status" => "success"]);
@@ -930,13 +944,22 @@ class Administrator
         wp_send_json(update_option("wpstg_beta", "no"));
     }
 
-    /**
-     * Ajax hide disabled items notice shown on staging site
-     */
-    public function ajaxHideDisabledItemsNotice()
+    public function ajaxDismissNotice()
     {
-        // @todo inject with dependency injection
-        if ((new DisabledItemsNotice())->disable() !== false) {
+        // Early bail if no notice option available
+        if (!isset($_POST['wpstg_notice'])) {
+            wp_send_json(null);
+            return;
+        }
+
+        // Dismiss backups prefix notice
+        if ($_POST['wpstg_notice'] === 'backups_diff_prefix' && (new BackupsDifferentPrefixNotice())->disable() !== false) {
+            wp_send_json(true);
+            return;
+        }
+
+        // Dismiss disabled item notice
+        if ($_POST['wpstg_notice'] === 'disabled_items' && (new DisabledItemsNotice())->disable() !== false) {
             wp_send_json(true);
             return;
         }
@@ -981,9 +1004,9 @@ class Administrator
             return;
         }
 
-        $listOfClones = get_option("wpstg_existing_clones_beta", []);
-        if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $listOfClones)) {
-            $clone = $listOfClones[$_POST["clone"]];
+        $existingClones = get_option("wpstg_existing_clones_beta", []);
+        if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
+            $clone = $existingClones[$_POST["clone"]];
             require_once "{$this->path}Pro/views/edit-clone-data.php";
         } else {
             echo __("Unknown error. Please reload the page and try again", "wp-staging");
@@ -1001,31 +1024,30 @@ class Administrator
             return;
         }
 
-        $listOfClones = get_option("wpstg_existing_clones_beta", []);
-        if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $listOfClones)) {
+        $existingClones = get_option("wpstg_existing_clones_beta", []);
+        if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
             if (empty($_POST['directoryName'])) {
-                echo __("Directory name is required!");
+                echo __("Site name is required!");
                 wp_die();
             }
 
-            // Use directory name as new array key to maintain existing structure
-            $keys = array_keys($listOfClones);
-            $keys[array_search($_POST["clone"], $keys)] = $_POST["directoryName"];
-            $listOfClones = array_combine($keys, $listOfClones);
+            $cloneId      = $_POST["clone"];
+            $cloneName    = wpstg_urldecode($_POST["cloneName"]);
+            $cloneDirectoryName = wpstg_urldecode($_POST["directoryName"]);
+            $cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($cloneDirectoryName));
 
-            $cloneId = $_POST["directoryName"];
+            $existingClones[$cloneId]["cloneName"] = stripslashes($cloneName);
+            $existingClones[$cloneId]["directoryName"] = stripslashes($cloneDirectoryName);
+            $existingClones[$cloneId]["path"] = stripslashes($_POST["path"]);
+            $existingClones[$cloneId]["url"] = stripslashes($_POST["url"]);
+            $existingClones[$cloneId]["prefix"] = stripslashes($_POST["prefix"]);
+            $existingClones[$cloneId]["databaseUser"] = stripslashes($_POST["externalDBUser"]);
+            $existingClones[$cloneId]["databasePassword"] = stripslashes($_POST["externalDBPassword"]);
+            $existingClones[$cloneId]["databaseDatabase"] = stripslashes($_POST["externalDBDatabase"]);
+            $existingClones[$cloneId]["databaseServer"] = stripslashes($_POST["externalDBHost"]);
+            $existingClones[$cloneId]["databasePrefix"] = stripslashes($_POST["externalDBPrefix"]);
 
-            $listOfClones[$cloneId]["directoryName"] = stripslashes($_POST["directoryName"]);
-            $listOfClones[$cloneId]["path"] = stripslashes($_POST["path"]);
-            $listOfClones[$cloneId]["url"] = stripslashes($_POST["url"]);
-            $listOfClones[$cloneId]["prefix"] = stripslashes($_POST["prefix"]);
-            $listOfClones[$cloneId]["databaseUser"] = stripslashes($_POST["externalDBUser"]);
-            $listOfClones[$cloneId]["databasePassword"] = stripslashes($_POST["externalDBPassword"]);
-            $listOfClones[$cloneId]["databaseDatabase"] = stripslashes($_POST["externalDBDatabase"]);
-            $listOfClones[$cloneId]["databaseServer"] = stripslashes($_POST["externalDBHost"]);
-            $listOfClones[$cloneId]["databasePrefix"] = stripslashes($_POST["externalDBPrefix"]);
-
-            update_option("wpstg_existing_clones_beta", $listOfClones);
+            update_option("wpstg_existing_clones_beta", $existingClones);
 
             echo __("Success");
         } else {

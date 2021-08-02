@@ -169,4 +169,41 @@ PHP
             // We'll not throw if web.config fails to write, as this is just an additional protection layer.
         }
     }
+
+    /**
+     * Previous versions of WP STAGING generated .htaccess and web.config files without the headers
+     * to force browser download when using Apache or IIS. This method converts old .htaccess and web.config
+     * to the new version, with the headers.
+     *
+     * If the .htaccess/web.config is already the new version, does nothing.
+     *
+     * @deprecated This affects only folders protected by Directory Listing before WP STAGING Pro 4.0.2.
+     *             Remove after a reasonable amount of time has passed. (eg: Jan 2023)
+     *
+     * @param $backupDirectory
+     */
+    public function maybeUpdateOldHtaccessWebConfig($backupDirectory)
+    {
+        $backupDirectory = trailingslashit($backupDirectory);
+
+        // Htaccess
+        if (file_exists($backupDirectory . '.htaccess')) {
+            if ($contents = file_get_contents($backupDirectory . '.htaccess')) {
+                if (strpos($contents, 'AddType application/octet-stream .wpstg') === false) {
+                    unlink($backupDirectory . '.htaccess');
+                    $this->htaccess->create($backupDirectory . '.htaccess');
+                }
+            }
+        }
+
+        // IIS Web Config
+        if (file_exists($backupDirectory . 'web.config')) {
+            if ($contents = file_get_contents($backupDirectory . 'web.config')) {
+                if (strpos($contents, '<mimeMap fileExtension=".wpstg" mimeType="application/octet-stream"') === false) {
+                    unlink($backupDirectory . 'web.config');
+                    $this->webConfig->create($backupDirectory . 'web.config');
+                }
+            }
+        }
+    }
 }

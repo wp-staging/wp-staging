@@ -69,8 +69,6 @@ class DiskWriteCheck
             throw new \RuntimeException('disk_free_space returned an unexpected result');
         }
 
-        $freeSpaceInBytes = (int)$freeSpaceInBytes;
-
         if ($freeSpaceInBytes - $bytesToStore < 0) {
             throw DiskNotWritableException::willExceedFreeDiskSpace(abs($freeSpaceInBytes - $bytesToStore));
         }

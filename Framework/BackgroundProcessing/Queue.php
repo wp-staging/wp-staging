@@ -46,6 +46,13 @@ class Queue
     const STATUS_FAILED = 'failed';
     const STATUS_ANY = 'any';
     const STATUS_CANCELED = 'canceled';
+
+    /**
+     * Option name where we store queue table version
+     * @var string
+     */
+    const QUEUE_TABLE_VERSION_KEY = 'wpstg_queue_table_version';
+
     /**
      * A reference to te current Background Processing Feature detection service.
      *
@@ -205,8 +212,7 @@ class Queue
 
         $this->tableState = self::TABLE_NOT_EXIST;
 
-        $options = get_option('wpstg_settings', []);
-        $currentTableVersion = isset($options['queue-table-version']) ? $options['queue-table-version'] : '0.0.0';
+        $currentTableVersion = get_option(self::QUEUE_TABLE_VERSION_KEY, '0.0.0');
 
         // Trigger an update or creation if either the table should be update, or it does not exist.
         if (version_compare($currentTableVersion, $this->getLatestTableVersion(), '<') || !$this->tableExists()) {
@@ -294,9 +300,7 @@ class Queue
      */
     private function updateTableVersionOption($tableVersion)
     {
-        $options = get_option('wpstg_settings', []);
-        $options['queue-table-version'] = $tableVersion;
-        update_option('wpstg_settings', $options);
+        update_option(self::QUEUE_TABLE_VERSION_KEY, $tableVersion);
     }
 
     /**

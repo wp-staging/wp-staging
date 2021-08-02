@@ -16,7 +16,7 @@ $isDatabaseOnlyBackup = $info->getIsExportingDatabase()
 ?>
 <div id="wpstg-confirm-backup-restore-wrapper">
     <div class="wpstg-confirm-backup-restore-header">
-        <h3 class="swal2-title" style="text-align: center;"><?php _e('This will restore your website! </br> Are you sure?', 'wp-staging'); ?></h3>
+        <h3 class="wpstg--swal2-title" style="text-align: center;"><?php _e('This will restore your website! </br> Are you sure?', 'wp-staging'); ?></h3>
     </div>
     <div id="wpstg-confirm-backup-restore-data">
         <ul>

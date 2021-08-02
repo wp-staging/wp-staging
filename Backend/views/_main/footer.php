@@ -11,6 +11,7 @@
         <li><a href="https://wp-staging.com/docs/skip-woocommerce-orders-and-products/" target="_blank" rel="external"><?php _e("Skip WooCommerce Orders and Products", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/can-not-update-wp-staging-staging-site/" target="_blank" rel="external"><?php _e("Can not update WP STAGING plugin", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/page-not-found-error-404-after-pushing/" target="_blank" rel="external"><?php _e("Page not found – Error 404 after Pushing", "wp-staging") ?></a></li>
+        <li><a href="https://wp-staging.com/docs/pagebuilders-do-not-work/" target="_blank" rel="external"><?php _e("Pagebuilders like DIVI or Elementor do not work", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/troubleshooting-try-this-first/" target="_blank" rel="external"><?php _e("All articles", "wp-staging") ?></a></li>
     </ul>
     <br>

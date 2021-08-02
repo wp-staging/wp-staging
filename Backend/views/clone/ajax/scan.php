@@ -15,8 +15,10 @@ $isPro = defined('WPSTGPRO_VERSION');
 <label id="wpstg-clone-label" for="wpstg-new-clone">
     <input type="text" id="wpstg-new-clone-id" class="wpstg-textbox"
         placeholder="<?php _e('Enter Site Name (Optional)', 'wp-staging') ?>"
-        value="<?php echo $options->current; ?>"
+        data-clone="<?php echo $options->current; ?>"
         <?php if ($options->current !== null) {
+            $siteName = isset($options->currentClone['cloneName']) ? $options->currentClone['cloneName'] : $options->currentClone['directoryName'];
+            echo ' value="' . $siteName . '"';
             echo " disabled='disabled'";
         } ?> />
 </label>
@@ -33,7 +35,7 @@ $isPro = defined('WPSTGPRO_VERSION');
 
 <div class="wpstg-tabs-wrapper">
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
-        <span class="wpstg-tab-triangle">&#9658;</span>
+        <span class="wpstg-tab-triangle"></span>
         <?php echo __("Database Tables", "wp-staging") ?>
     </a>
 
@@ -42,7 +44,7 @@ $isPro = defined('WPSTGPRO_VERSION');
     </fieldset>
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
-        <span class="wpstg-tab-triangle">&#9658;</span>
+        <span class="wpstg-tab-triangle"></span>
         <?php echo __("Files", "wp-staging") ?>
     </a>
 
@@ -51,7 +53,7 @@ $isPro = defined('WPSTGPRO_VERSION');
     </fieldset>
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
-        <span class="wpstg-tab-triangle"><input type="checkbox" name="wpstg-advanced" value="true"></span>
+        <span class="wpstg-tab-triangle wpstg-no-icon"><input type="checkbox" name="wpstg-advanced" value="true"></span>
         <?php
             $pro = $isPro ? ' ' : ' (Requires Pro Version)';
             echo __("Advanced Settings " . $pro, "wp-staging"); ?>

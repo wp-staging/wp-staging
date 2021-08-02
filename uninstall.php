@@ -41,6 +41,7 @@ class uninstall
             delete_option("wpstg_activation_redirect");
             delete_option("wpstg_disabled_items_notice");
             delete_option("wpstg_clone_settings");
+            delete_option("wpstg_different_prefix_backup_notice");
             // Old notice used for display cache on staging site.
             delete_option("wpstg_disabled_cache_notice");
             // Old option, now moved inside wpstg_clone_settings
@@ -66,6 +67,9 @@ class uninstall
 
             /* @see \WPStaging\Framework\Staging\FirstRun::FIRST_RUN_KEY */
             delete_option('wpstg_execute');
+
+            /* @see \WPStaging\Framework\BackgroundProcessing\Queue::QUEUE_TABLE_VERSION_KEY */
+            delete_option('wpstg_queue_table_version');
 
             // Delete events
             wp_clear_scheduled_hook('wpstg_weekly_event');

@@ -96,7 +96,12 @@ class SiteInfo
         $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
         $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
 
-        return $home !== $siteurl;
+        if ($home === $siteurl) {
+            return false;
+        }
+
+        // Extended check when siteurl -> www.example.com and home url -> example.com or vice versa
+        return !(($home === 'www.' . $siteurl) || ($siteurl === 'www.' . $home));
     }
 
     /**
@@ -178,5 +183,13 @@ class SiteInfo
         $tz_offset = sprintf('%s%02d:%02d', $sign, $abs_hour, $abs_mins);
 
         return $tz_offset;
+    }
+
+    /**
+     * @return bool True if "short_open_tags" is enabled, false if disabled.
+     */
+    public function isPhpShortTagsEnabled()
+    {
+        return in_array(strtolower(ini_get('short_open_tags')), ['1', 'on', 'true']);
     }
 }

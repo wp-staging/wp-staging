@@ -272,10 +272,10 @@
           buttonsStyling: false,
           reverseButtons: true,
           showClass: {
-            popup: 'swal2-show wpstg-swal-show'
+            popup: 'wpstg--swal2-show wpstg-swal-show'
           }
         };
-        return Swal.mixin(options);
+        return wpstgSwal.mixin(options);
       },
       showSuccessModal: function showSuccessModal(htmlContent) {
         this.getSwalModal().fire({
@@ -306,6 +306,12 @@
           title: 'Error!',
           html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
         });
+      },
+      getSwalContainer: function getSwalContainer() {
+        return wpstgSwal.getContainer();
+      },
+      closeSwalModal: function closeSwalModal() {
+        wpstgSwal.close();
       },
 
       /**
@@ -348,12 +354,20 @@
           WPStagingCommon.cache.get('.wpstg-loader').show();
         }
       },
+
+      /**
+       * Convert the given url to make it slug compatible
+       * @param {string} url
+       */
+      slugify: function slugify(url) {
+        return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
+      },
       showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
         prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
         appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
 
         if (response === false) {
-          WPStagingCommon.showErro(prependMessage + ' Error: No response.' + appendMessage);
+          WPStagingCommon.showError(prependMessage + ' Error: No response.' + appendMessage);
           window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
           return;
         }
@@ -366,7 +380,7 @@
       },
       handleFetchErrors: function handleFetchErrors(response) {
         if (!response.ok) {
-          WPStagingCommon.showErro('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
+          WPStagingCommon.showError('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
         }
 
         return response;
