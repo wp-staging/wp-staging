@@ -390,7 +390,7 @@ class BufferedCache extends AbstractCache
 
             // Failed to write
             if ($bytesWrittenInThisRequest === false || ($bytesWrittenInThisRequest <= 0 && strlen($chunk) > 0)) {
-                throw DiskNotWritableException::diskNotWritable();
+                throw DiskNotWritableException::fileNotWritable($this->filePath);
             }
 
             // Finished writing, nothing more to write!

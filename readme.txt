@@ -9,10 +9,10 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.8
-Stable tag: 2.8.6
+Stable tag: 2.8.7
 Requires PHP: 5.5
 
-A backup & duplicator plugin - Backup, clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
+A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
 
 == Description ==
 
@@ -35,24 +35,21 @@ WP STAGING can help you to prevent your website from being broken or unavailable
 = Main Features =
 
 * WP STAGING clones the whole production site into a subfolder like example.com/staging-site.
-* Easy to use! Create a clone / backup of your site by clicking one button (Pro: Backup feature)
+* Easy to use! Create a clone of your site by clicking one button
 * No Software as a Service - No account needed! All data belong to you only and stay on your server.
 * No server timeouts on huge websites or/and small hosting servers
-* Very fast - Migration, cloning and backup process takes only a few seconds or minutes, depending on the website's size and server I/O power.
+* Very fast - Migration and clone process takes only a few seconds or minutes, depending on the website's size and server I/O power.
 * Use the clone as part of your backup strategy
-* Only administrators can access the cloned staging / backup website.
-* SEO friendly: The staging / backup website is unavailable to search engines due to a custom login prompt and the meta tag no-index.
-* The admin bar on the staging / backup website is orange colored and shows clearly when you work on the staging backup site.
-* Extensive logging for backup and staging creation
-* Supports all popular web servers: Nginx, Apache and Microsoft IIS
-* <strong>[Premium]: </strong>Push & migrate entire clone website to the production website.
-* <strong>[Premium]: </strong>Backup entire WordPress website faster than with other plugins
-* <strong>[Premium]: </strong>Restore a backup very easily and fast
-* <strong>[Premium]: </strong>Migrate and transfer whole backup website to another host / domain
-* <strong>[Premium]: </strong>Choose a separate database and select a custom directory for the staging / backup site
-* <strong>[Premium]: </strong>Make the staging website available from a subdomain like dev.example.com
+* Only administrators can access the clone website.
+* SEO friendly: The clone website is unavailable to search engines due to a custom login prompt and the meta tag no-index.
+* The admin bar on the staging website is orange colored and shows clearly when you work on the staging site.
+* Extensive logging features
+* Supports all popular web servers: Apache, Nginx, and Microsoft IIS
+* <strong>[Premium]: </strong>Choose a separate database and select a custom directory for cloning
+* <strong>[Premium]: </strong>Make the clone website available from a subdomain like dev.example.com
+* <strong>[Premium]: </strong>Push & migrate entire clone site inc. all plugins, themes, and media files to the production website.
 * <strong>[Premium]: </strong>Define user roles that get access to the clone site only. For instance, clients or external developers.
-* <strong>[Premium]: </strong>Cloning and pushing of WordPress multisites
+* <strong>[Premium]: </strong>Migration and cloning of WordPress multisites
 
 > Note: Some features are Premium. This means you need WP STAGING | PRO to use those features. [get WP STAGING | PRO](https://wp-staging.com)!
 
@@ -63,8 +60,8 @@ WP STAGING can help you to prevent your website from being broken or unavailable
 * Cloning and migration of WordPress multisite
 * Define a separate database and a custom directory for cloning
 * Clone your website into a subdomain
-* Specify certain user roles for accessing the backup staging site
-* Copy staging / backup to the production website
+* Specify certain user roles for accessing the staging site
+* Copy all modifications from the staging site to the production website
 
 <strong>Change your workflow of updating themes and plugins data:</strong>
 
@@ -80,8 +77,7 @@ You can test your website locally but if your local hardware and software enviro
 There are some obvious things like differences in the config of PHP and the server you are running but even such non-obvious settings like the amount of RAM or the CPU performance can lead to unexpected results on your production website.
 There are dozens of other possible cause of failure which can not be handled well when you are testing your changes on a local platform only without creating a backup staging site.
 
-This is where WP STAGING outperforms other staging and backup plugins...
-Site cloning, backup, and staging site creation simplified and with enterprise code quality on a new level.!
+This is where WP STAGING comes into play... Site cloning, backup, and staging site creation simplified and with enterprise code quality on a new level.!
 
 
 == Frequently Asked Questions ==
@@ -112,7 +108,7 @@ You can even use it as some kind of backup in case something happens to your pro
 
 [Video: How we run automated tests for WP STAGING](https://www.youtube.com/watch?v=Tf9C9Pgu7Bs)
 
-= What is the difference between WP STAGING and a regular backup plugin? =
+= What is the difference between WP STAGING and other backup plugins? =
 
 ----------------------------------------------
 Note: WP STAGING | PRO provides more advanced backup functionality which can be compared with the below-mentioned backup plugins. The speed and performance of WP STAGING's backup feature often exceed even the biggest and well-established backup plugins.
@@ -154,12 +150,12 @@ If you can still not log in to your staging / backup site, you can go to WP STAG
 Permalinks are disabled on the staging / backup site after first time cloning / backup creation
 [Read here](https://wp-staging.com/docs/activate-permalinks-staging-site/ "activate permalinks on staging site") how to activate permalinks on the staging site.
 
-= Can I give you some Feedback? =
+= Can I give you some feedback? =
 This plugin has been created in thousands of hours and works even with the smallest shared web hosting package.
-We also use enterprise-level approved testing coding structures to make sure that the plugin runs rock-solid on your system.
-If you are a developer you will probably like to hear that we use Codeception and PHPUnit for our software.
+We also use enterprise-level approved testing coding environment to make sure that the cloning and backup process run rock-solid on your system.
+If you are a developer you will probably like to hear that we use Codeception and PHPUnit for our backup software.
 
-As there are infinite numbers of possible server constellations it still can happen that something does not work for you 100%. In that case,
+As there are infinite variations of possible server constellations it still can happen that something does not work for you 100%. In that case,
 please open a [support request](https://wp-staging.com/support/ "support request") and describe your issue.
 
 == Official Site ==
@@ -176,40 +172,54 @@ https://wp-staging.com
 3. Select folders to include in staging / backup site
 4. Cloning / backup processing
 5. Listed staging / backup sites
+5. Listed staging / backup sites
 6. Open, edit & delete staging / backup sites
 7. Login to staging / backup site
-8. Demo of a staging / backup site
+4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.8.7 =
+* Enh: Refactor our wp_login action hook to work with custom calls to this action with different parameter count than the one in WordPress Core #1223
+* Enh: Sort new staging sites in descending order by creation time #1226
+* Enh: Warn if creating a backup in PHP 32 bits #1231
+* Enh: Update the backups upload success message #1221
+* Enh: Show a notice for outdated wp staging on free version of plugin #1250
+* Enh: Refactor wpstg_existing_clones_beta in db option to wpstg_staging_sites #1211
+* Enh: Update the message shown when the entire delete of the staging site fails #1257
+* Fix: Fix a rare issue that could happen when creating a new staging site or restoring a backup when there is a row with primary key with value zero #1271
+* Fix: Try to repair MyISAM table if it's corrupt when creating a Backup #1222
+* Fix: FIx an issue on backup creation that would cause a database export to loop when encountering a table with negative integers or zeros as a primary key value #1251
+* Fix: Lock specific tables while exporting a backup, to prevent a rare duplicated row issue #1245
+* Fix: If the memory exhausts during a database export using the Backup feature, we now lower the memory usage/speed of the export and try again automatically #1230
+* Fix: Prevent failure of adding database to backup from causing a loop #1231
+* Fix: Fix issue when old clones from version 1.1.6 or lower replaces the existing clones from later version when upgrading from FREE to PRO version #1233
+* Fix: Fix inconsistent Unselect All Tables button's action #1243
+* Fix: Replace undefined date with proper formatted date during backups log for some warning and critical messages #1244
+* Fix: Split scanning of wp-content into scanning of plugins, themes, uploads and other directories to reduce timeout issues #1247
+* Fix: Rename .user.ini to .user.ini.bak after cloning into staging site reduce fatal errors on your staging site. Also show a notice about this #1255
+* Fix: Skip scanning the root directory if all other directories are are unselected #1256
+* Dev: fix the version of Selenium containers to 3.141.59-20210713 to avoid issues with broken latest version #1234
 
 = 2.8.6 =
 * New: Support WordPress 5.8
 * New: Show notice if uploads dir is outside WP Root #1138
-* Enh: Show warning during restore if Backup was created on a server with PHP ini "short_open_tags", and restoring on a server with it disabled #1129
 * Enh: Refactor our wp_login action hook to work with custom calls to this action with different parameter count than the one in WordPress Core #1223
 * Enh: Also show disabled permalink message in disabled items notice on the staging site and show a page builder (DIVI, Elementor etc) not working help link in wpstg page footer #1150
-* Enh: Allow filtering the Backup directory using the `wpstg.backup.directory` filter #1167
 * Enh: Decouple clone name and clone ID for better usage #1158
-* Enh: Allow backups on the staging site #1172
 * Enh: Show issue notice if backups is created on version >= 4.0.2 #1198
 * Enh: Remove deprecated hooks call #1209
 * Fix: Fix staging site when site has freemius script #1112
 * Fix: Prefix 'wpstg' to sweetalerts Swal to avoid conflict with its other versions #1125
-* Fix: Fix a bug in the backup export logic that would loop when encountering a file with non-empty contents that PHP would evaluate as false #1126
 * Fix: Set default values for wpstg settings on plugin activate event if wpstg settings not already set #1135
 * Fix: Fix the problem when unable to access the staging site because production site have different siteurl or home url and either one of them is having www. prefix #1136
 * Fix: Restore a backup with VIEWs or TABLEs if there are special MySQL SQL statements such as DEFINER #1139
-* Fix: Fix issue where backup tmp folder cleaning process closes logs modal #1157
 * Fix: Fix issue where graphical tab triangle was inconsistent by using css based tab triangle #1148
 * Fix: Reduce time to query INFORMATION_SCHEMA table on some shared hosts from ~10s to one millisecond #1154
-* Fix: Fix a bug on backup creation that would not prefix the table name if a MySQL View is selecting data from another MySQL View #1155
-* Fix: Fix a bug on backup restore that would fail when trying to create a MySQL View that selects data from another MySQL View that has not been created yet due to order of creation #1155
 * Fix: Check available free disk space on large disks on 32-bit PHP #1179
 * Fix: Fix a bug where a PHP memory_limit of -1 (Unlimited) would be interpreted as 64MB, now it's interpreted as 512MB #1178
 * Fix: Remove usages of `abstract static` methods that would violate `strict` PHP checks #1185
 * Fix: Cloning a site resets the settings to the default ones #1183
-* Fix: Fix a bug on backup creation that would prevent user from logging in after restoring a backup on a site with a different WPDb prefix #1169
-* Fix: Allow backup restore with a warning if file count is different than expected, improve backup file count logic #1189
 * Fix: Fix Clone RESET and Clone DELETE when unable to delete file due to permission error #1196
 * Fix: Fix an issue when canceling a push confirm redirects to empty page #1206
 * Fix: Add missing back button and hide cancel button after clone UPDATE and clone RESET #1207
@@ -459,25 +469,23 @@ SKIP VERSION
 Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-* New: Support WordPress 5.8
-* New: Show notice if uploads dir is outside WP Root #1138
-* Enh: Also show disabled permalink message in disabled items notice on the staging site and show a page builder (DIVI, Elementor etc) not working help link in wpstg page footer #1150
-* Enh: Decouple clone name and clone ID for better usage #1158
-* Enh: Show issue notice if backups is created on version >= 4.0.2 #1198
-* Enh: Remove deprecated hooks call #1209
-* Fix: Fix staging site when site has freemius script #1112
-* Fix: Prefix 'wpstg' to sweetalerts Swal to avoid conflict with its other versions #1125
-* Fix: Set default values for wpstg settings on plugin activate event if wpstg settings not already set #1135
-* Fix: Fix the problem when unable to access the staging site because production site have different siteurl or home url and either one of them is having www. prefix #1136
-* Fix: Restore a backup with VIEWs or TABLEs if there are special MySQL SQL statements such as DEFINER #1139
-* Fix: Fix issue where graphical tab triangle was inconsistent by using css based tab triangle #1148
-* Fix: Reduce time to query INFORMATION_SCHEMA table on some shared hosts from ~10s to one millisecond #1154
-* Fix: Check available free disk space on large disks on 32-bit PHP #1179
-* Fix: Fix a bug where a PHP memory_limit of -1 (Unlimited) would be interpreted as 64MB, now it's interpreted as 512MB #1178
-* Fix: Remove usages of `abstract static` methods that would violate `strict` PHP checks #1185
-* Fix: Cloning a site resets the settings to the default ones #1183
-* Fix: Fix Clone RESET and Clone DELETE when unable to delete file due to permission error #1196
-* Fix: Fix an issue when canceling a push confirm redirects to empty page #1206
-* Fix: Add missing back button and hide cancel button after clone UPDATE and clone RESET #1207
-* Fix: Fix Error in JS console related to registering of main-menu in page where it was not available #1205
-* Dev: Add wrapper methods for deprecated hooks functions to support WordPress < 4.6 #1209
+* Enh: Refactor our wp_login action hook to work with custom calls to this action with different parameter count than the one in WordPress Core #1223
+* Enh: Sort new staging sites in descending order by creation time #1226
+* Enh: Warn if creating a backup in PHP 32 bits #1231
+* Enh: Update the backups upload success message #1221
+* Enh: Show a notice for outdated wp staging on free version of plugin #1250
+* Enh: Refactor wpstg_existing_clones_beta in db option to wpstg_staging_sites #1211
+* Enh: Update the message shown when the entire delete of the staging site fails #1257
+* Fix: Fix a rare issue that could happen when creating a new staging site or restoring a backup when there is a row with primary key with value zero #1271
+* Fix: Try to repair MyISAM table if it's corrupt when creating a Backup #1222
+* Fix: FIx an issue on backup creation that would cause a database export to loop when encountering a table with negative integers or zeros as a primary key value #1251
+* Fix: Lock specific tables while exporting a backup, to prevent a rare duplicated row issue #1245
+* Fix: If the memory exhausts during a database export using the Backup feature, we now lower the memory usage/speed of the export and try again automatically #1230
+* Fix: Prevent failure of adding database to backup from causing a loop #1231
+* Fix: Fix issue when old clones from version 1.1.6 or lower replaces the existing clones from later version when upgrading from FREE to PRO version #1233
+* Fix: Fix inconsistent Unselect All Tables button's action #1243
+* Fix: Replace undefined date with proper formatted date during backups log for some warning and critical messages #1244
+* Fix: Split scanning of wp-content into scanning of plugins, themes, uploads and other directories to reduce timeout issues #1247
+* Fix: Rename .user.ini to .user.ini.bak after cloning into staging site reduce fatal errors on your staging site. Also show a notice about this #1255
+* Fix: Skip scanning the root directory if all other directories are are unselected #1256
+* Dev: fix the version of Selenium containers to 3.141.59-20210713 to avoid issues with broken latest version #1234

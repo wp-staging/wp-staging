@@ -5,9 +5,10 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 use WPStaging\Framework\Staging\CloneOptions;
+use WPStaging\Framework\Staging\Sites;
 
 /**
- * Preserve staging sites in wpstg_existing_clones_beta in staging database while updating a site
+ * Preserve staging sites in wpstg_staging_sites in staging database while updating a site
  * While cloning, copy an existing entry from staging site to wpstg_tmp_data and after cloning restore that data.
  * Mainly used while an existing staging site is updated, not initially cloned
  * @package WPStaging\Backend\Modules\Jobs
@@ -80,11 +81,11 @@ class PreserveDataFirstStep extends JobExecutable
             return true;
         }
 
-        // Get wpstg_existing_clones_beta from staging database
+        // Get wpstg_staging_sites from staging database
         $stagingSites = $this->stagingDb->get_var(
             $this->stagingDb->prepare(
                 "SELECT `option_value` FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s",
-                "wpstg_existing_clones_beta"
+                Sites::STAGING_SITES_OPTION
             )
         );
 
@@ -130,7 +131,7 @@ class PreserveDataFirstStep extends JobExecutable
         }
 
         if ($stagingSites === false) {
-            $this->log("Preserve Data: Failed to get wpstg_existing_clones_beta");
+            $this->log("Preserve Data: Failed to get wpstg_staging_sites");
         }
 
         if ($settings === false) {
@@ -142,7 +143,7 @@ class PreserveDataFirstStep extends JobExecutable
         }
 
         if ($insert === false) {
-            $this->log("Preserve Data: Failed to insert wpstg_existing_clones_beta to wpstg_tmp_data");
+            $this->log("Preserve Data: Failed to insert wpstg_staging_sites to wpstg_tmp_data");
         }
 
         return true;

@@ -2,10 +2,10 @@
 
 namespace WPStaging\Backend\Upgrade;
 
-use WPStaging\Core\WPStaging;
-use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\Utils\Htaccess;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Staging\Sites;
 
 /**
  * Upgrade Class
@@ -17,7 +17,8 @@ if( !defined( "WPINC" ) ) {
     die;
 }
 
-class Upgrade {
+class Upgrade
+{
 
     /**
      * Previous Version number
@@ -26,28 +27,10 @@ class Upgrade {
     private $previousVersion;
 
     /**
-     * Clone data
-     * @var object
-     */
-    private $clones;
-
-    /**
      * Global settings
      * @var object
      */
     private $settings;
-
-    /**
-     * Cron data
-     * @var object
-     */
-    private $cron;
-
-    /**
-     * Logger
-     * @var object
-     */
-    private $logger;
 
     /**
      * db object
@@ -55,80 +38,98 @@ class Upgrade {
      */
     private $db;
 
-    public function __construct() {
+    /**
+     * @var Sites
+     */
+    private $stagingSitesHelper;
 
-        // add wpstg_weekly_event to cron events
-        $this->cron = new \WPStaging\Core\Cron\Cron;
-
+    public function __construct()
+    {
         // Previous version
-        $this->previousVersion = preg_replace( '/[^0-9.].*/', '', get_option( 'wpstg_version' ) );
+        $this->previousVersion = preg_replace('/[^0-9.].*/', '', get_option('wpstg_version'));
 
-        $this->settings = ( object ) get_option( "wpstg_settings", [] );
-
-        // Logger
-        $this->logger = new Logger;
+        $this->settings = (object) get_option("wpstg_settings", []);
 
         // db
-        $this->db = WPStaging::getInstance()->get( "wpdb" );
+        $this->db = WPStaging::getInstance()->get("wpdb");
+
+        /** @var Sites */
+        $this->stagingSitesHelper = WPStaging::make(Sites::class);
     }
 
-    public function doUpgrade() {
+    public function doUpgrade()
+    {
         $this->upgrade2_0_3();
         $this->upgrade2_1_2();
         $this->upgrade2_2_0();
         $this->upgrade2_4_4();
         $this->upgrade2_5_9();
+        $this->upgrade2_8_7();
 
         $this->setVersion();
     }
 
     /**
+     * Move existing staging sites to new option defined in Sites::STAGING_SITES_OPTION
+     */
+    private function upgrade2_8_7()
+    {
+        (new Sites())->upgradeStagingSitesOption();
+    }
+
+    /**
      * Fix array keys of staging sites
      */
-    private function upgrade2_5_9() {
+    private function upgrade2_5_9()
+    {
         // Previous version lower than 2.5.9
-        if( version_compare( $this->previousVersion, '2.5.9', '<' ) ) {
+        if (version_compare($this->previousVersion, '2.5.9', '<')) {
 
             // Current options
-            $sites = get_option( "wpstg_existing_clones_beta", [] );
+            $sites = $this->stagingSitesHelper->tryGettingStagingSites();
 
             $new = [];
 
             // Fix keys. Replace white spaces with dash character
-            foreach ( $sites as $oldKey => $site ) {
-                $key       = preg_replace( "#\W+#", '-', strtolower( $oldKey ) );
+            foreach ($sites as $oldKey => $site) {
+                $key       = preg_replace("#\W+#", '-', strtolower($oldKey));
                 $new[$key] = $sites[$oldKey];
             }
-            update_option( "wpstg_existing_clones_beta", $new );
+
+            if (!empty($new)) {
+                $this->stagingSitesHelper->updateStagingSites($new);
+            }
         }
     }
 
-    private function upgrade2_4_4() {
+    private function upgrade2_4_4()
+    {
         // Previous version lower than 2.4.4
-        if( version_compare( $this->previousVersion, '2.4.4', '<' ) ) {
+        if (version_compare($this->previousVersion, '2.4.4', '<')) {
             // Add htaccess to wp staging uploads folder
             $htaccess = new Htaccess();
-            $htaccess->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . '.htaccess' );
-            $htaccess->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'logs/.htaccess' );
+            $htaccess->create(trailingslashit(WPStaging::getContentDir()) . '.htaccess');
+            $htaccess->create(trailingslashit(WPStaging::getContentDir()) . 'logs/.htaccess');
 
             // Add litespeed htaccess to wp root folder
-            if( extension_loaded( 'litespeed' ) ) {
-                $htaccess->createLitespeed( ABSPATH . '.htaccess' );
+            if (extension_loaded('litespeed')) {
+                $htaccess->createLitespeed(ABSPATH . '.htaccess');
             }
 
             // create web.config file for IIS in wp staging uploads folder
             $webconfig = new IISWebConfig();
-            $webconfig->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'web.config' );
-            $webconfig->create( trailingslashit( \WPStaging\Core\WPStaging::getContentDir() ) . 'logs/web.config' );
+            $webconfig->create(trailingslashit(WPStaging::getContentDir()) . 'web.config');
+            $webconfig->create(trailingslashit(WPStaging::getContentDir()) . 'logs/web.config');
         }
     }
 
     /**
      * Upgrade method 2.2.0
      */
-    public function upgrade2_2_0() {
+    public function upgrade2_2_0()
+    {
         // Previous version lower than 2.2.0
-        if( version_compare( $this->previousVersion, '2.2.0', '<' ) ) {
+        if (version_compare($this->previousVersion, '2.2.0', '<')) {
             $this->upgradeElements();
         }
     }
@@ -136,27 +137,29 @@ class Upgrade {
     /**
      * Add missing elements
      */
-    private function upgradeElements() {
+    private function upgradeElements()
+    {
         // Current options
-        $sites = get_option( "wpstg_existing_clones_beta", [] );
+        $sites = $this->stagingSitesHelper->tryGettingStagingSites();
 
-        if( $sites === false || count( $sites ) === 0 ) {
+        if ($sites === false || count($sites) === 0) {
             return;
         }
 
         // Check if key prefix is missing and add it
-        foreach ( $sites as $key => $value ) {
-            if( empty( $sites[$key]['directoryName'] ) ) {
+        foreach ($sites as $key => $value) {
+            if (empty($sites[$key]['directoryName'])) {
                 continue;
             }
+
             //!empty( $sites[$key]['prefix'] ) ? $sites[$key]['prefix'] = $value['prefix'] : $sites[$key]['prefix'] = $key . '_';        
-            !empty( $sites[$key]['prefix'] ) ?
+            !empty($sites[$key]['prefix']) ?
                             $sites[$key]['prefix'] = $value['prefix'] :
-                            $sites[$key]['prefix'] = $this->getStagingPrefix( $sites[$key]['directoryName'] );
+                            $sites[$key]['prefix'] = $this->getStagingPrefix($sites[$key]['directoryName']);
         }
 
-        if( !empty( $sites ) ) {
-            update_option( 'wpstg_existing_clones_beta', $sites );
+        if (!empty($sites)) {
+            $this->stagingSitesHelper->updateStagingSites($sites);
         }
     }
 
@@ -165,24 +168,26 @@ class Upgrade {
      * @param string $directory
      * @return string
      */
-    private function getStagingPrefix( $directory ) {
+    private function getStagingPrefix($directory)
+    {
         // Try to get staging prefix from wp-config.php of staging site
+        $path = ABSPATH . $directory . "/wp-config.php";
 
-        $path    = ABSPATH . $directory . "/wp-config.php";
-        if( ($content = @file_get_contents( $path )) === false ) {
+        if (($content = @file_get_contents($path)) === false) {
             $prefix = "";
         } else {
             // Get prefix from wp-config.php
-            preg_match( "/table_prefix\s*=\s*'(\w*)';/", $content, $matches );
+            preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
 
-            if( !empty( $matches[1] ) ) {
+            if (!empty($matches[1])) {
                 $prefix = $matches[1];
             } else {
                 $prefix = "";
             }
         }
+
         // return result: Check if staging prefix is the same as the live prefix
-        if( $this->db->prefix != $prefix ) {
+        if ($this->db->prefix != $prefix) {
             return $prefix;
         } else {
             return "";
@@ -190,12 +195,12 @@ class Upgrade {
     }
 
     /**
-     * NEW INSTALLATION
      * Upgrade method 2.0.3
      */
-    public function upgrade2_0_3() {
-        // Previous version lower than 2.0.2 or new install
-        if( $this->previousVersion === false || version_compare( $this->previousVersion, '2.0.2', '<' ) ) {
+    public function upgrade2_0_3()
+    {
+        // Previous version lower than 2.0.2
+        if (version_compare($this->previousVersion, '2.0.2', '<')) {
             $this->upgradeOptions();
             $this->upgradeNotices();
         }
@@ -205,48 +210,50 @@ class Upgrade {
      * Upgrade method 2.1.2
      * Sanitize the clone key value.
      */
-    private function upgrade2_1_2() {
-
-        // Current options
-        $clonesBeta = get_option( "wpstg_existing_clones_beta", [] );
-
-        if( $this->previousVersion === false || version_compare( $this->previousVersion, '2.1.7', '<' ) ) {
-            foreach ($clonesBeta as $key => $value ) {
-                unset( $clonesBeta[$key] );
-                $clonesBeta[preg_replace( "#\W+#", '-', strtolower( $key ) )] = $value;
-            }
-            if( empty($clonesBeta) ) {
-                return;
+    private function upgrade2_1_2()
+    {
+        if ($this->previousVersion === false || version_compare($this->previousVersion, '2.1.2', '<')) {
+            // Current options
+            $clones = $this->stagingSitesHelper->tryGettingStagingSites();
+        
+            foreach ($clones as $key => $value) {
+                unset($clones[$key]);
+                $clones[preg_replace("#\W+#", '-', strtolower($key))] = $value;
             }
 
-            update_option( 'wpstg_existing_clones_beta', $clonesBeta);
+            if (!empty($clones)) {
+                $this->stagingSitesHelper->updateStagingSites($clones);
+            }
         }
     }
 
     /**
      * Upgrade routine for new install
      */
-    private function upgradeOptions() {
+    private function upgradeOptions()
+    {
         // Write some default vars
-        add_option( 'wpstg_installDate', date( 'Y-m-d h:i:s' ) );
+        add_option('wpstg_installDate', date('Y-m-d h:i:s'));
         $this->settings->optimizer = 1;
-        update_option( 'wpstg_settings', $this->settings );
+        update_option('wpstg_settings', $this->settings);
     }
 
     /**
      * Write new version number into db
      * return bool
      */
-    private function setVersion() {
+    private function setVersion()
+    {
         // Check if version number in DB is lower than version number in current plugin
-        if( version_compare( $this->previousVersion, WPStaging::getVersion(), '<' ) ) {
+        if (version_compare($this->previousVersion, WPStaging::getVersion(), '<')) {
             // Update Version number
-            update_option( 'wpstg_version', preg_replace( '/[^0-9.].*/', '', WPStaging::getVersion() ) );
+            update_option('wpstg_version', preg_replace('/[^0-9.].*/', '', WPStaging::getVersion()));
             // Update "upgraded from" version number
-            update_option( 'wpstg_version_upgraded_from', preg_replace( '/[^0-9.].*/', '', $this->previousVersion ) );
+            update_option('wpstg_version_upgraded_from', preg_replace('/[^0-9.].*/', '', $this->previousVersion));
 
             return true;
         }
+
         return false;
     }
 
@@ -254,19 +261,22 @@ class Upgrade {
      * Upgrade Notices db options from wpstg 1.3 -> 2.0.1
      * Fix some logical db options
      */
-    private function upgradeNotices() {
-        $poll   = get_option( "wpstg_start_poll", false );
-        $beta   = get_option( "wpstg_hide_beta", false );
-        $rating = get_option( "wpstg_RatingDiv", false );
+    private function upgradeNotices()
+    {
+        $poll   = get_option("wpstg_start_poll", false);
+        $beta   = get_option("wpstg_hide_beta", false);
+        $rating = get_option("wpstg_RatingDiv", false);
 
-        if( $poll && $poll === "no" ) {
-            update_option( 'wpstg_poll', 'no' );
+        if ($poll && $poll === "no") {
+            update_option('wpstg_poll', 'no');
         }
-        if( $beta && $beta === "yes" ) {
-            update_option( 'wpstg_beta', 'no' );
+
+        if ($beta && $beta === "yes") {
+            update_option('wpstg_beta', 'no');
         }
-        if( $rating && $rating === 'yes' ) {
-            update_option( 'wpstg_rating', 'no' );
+
+        if ($rating && $rating === 'yes') {
+            update_option('wpstg_rating', 'no');
         }
     }
 

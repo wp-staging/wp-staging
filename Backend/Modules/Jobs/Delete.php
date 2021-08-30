@@ -12,6 +12,7 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
+use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Utils\Strings;
 
 /**
@@ -146,7 +147,7 @@ class Delete extends Job
             $name = (string)$_POST["clone"];
         }
 
-        $clones = get_option("wpstg_existing_clones_beta", []);
+        $clones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         if (empty($clones) || !isset($clones[$name])) {
             $this->log("Couldn't find clone name {$name} or no existing clone", Logger::TYPE_FATAL);
@@ -390,7 +391,7 @@ class Delete extends Job
         }
 
         $clone = (string)$this->clone->path;
-        $errorMessage = __(sprintf("Could not delete the entire staging site. The folder %s still exists and is not empty. <br/> Try to empty this folder manually by using FTP or file manager plugin and then try to delete again the staging site here.<br/> If this happens again please contact us at support@wp-staging.com", $clone), "wp-staging");
+        $errorMessage = __(sprintf("We could not delete the staging site completely. There are still files in the folder %s that could not be deleted. This could be a write permission issue. Try to delete the folder manually by using FTP or a file manager plugin.<br/> If this happens again please contact us at support@wp-staging.com", $clone), "wp-staging");
         $deleteStatus = "finished";
         if ($this->isNotEmpty($this->deleteDir)) {
             $fs = (new Filesystem())
@@ -460,7 +461,7 @@ class Delete extends Job
             'delete' => 'finished',
         ];
 
-        $existingClones = get_option("wpstg_existing_clones_beta", []);
+        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         // Check if clone exist and then remove it from options
         $this->log("Verifying existing clones...");
@@ -470,7 +471,7 @@ class Delete extends Job
             }
         }
 
-        if (update_option("wpstg_existing_clones_beta", $existingClones) === false) {
+        if (update_option(Sites::STAGING_SITES_OPTION, $existingClones) === false) {
             $this->log("Delete: Nothing to save.'");
         }
 

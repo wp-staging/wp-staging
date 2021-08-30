@@ -65,9 +65,16 @@ class DatabaseCloningService
             $this->log(
                 "{$old} as {$new} from {$offset} to {$rows} records"
             );
-            $this->dto->getStagingDb()->query(
+
+            $this->dto->getStagingDb()->query("SET SESSION sql_mode='NO_AUTO_VALUE_ON_ZERO'");
+
+            $result = $this->dto->getStagingDb()->query(
                 "INSERT INTO {$new} SELECT * FROM {$old} {$limitation}"
             );
+
+            if (!$result) {
+                $this->log($this->dto->getStagingDb()->last_error, Logger::TYPE_WARNING);
+            }
         }
     }
 

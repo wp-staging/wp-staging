@@ -83,5 +83,6 @@ class ProcessLock extends JobExecutable
      */
     protected function execute()
     {
+        return false;
     }
 }

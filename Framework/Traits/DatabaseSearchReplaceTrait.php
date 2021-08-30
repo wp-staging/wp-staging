@@ -4,6 +4,7 @@ namespace WPStaging\Framework\Traits;
 
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Staging\Sites;
 
 /**
  * Trait DatabaseSearchReplaceTrait
@@ -28,6 +29,7 @@ trait DatabaseSearchReplaceTrait
         'upload_path',
         'wpstg_existing_clones_beta',
         'wpstg_existing_clones',
+        Sites::STAGING_SITES_OPTION,
         'wpstg_settings',
         'wpstg_license_status',
         'wpstg_tmp_data',

@@ -22,8 +22,6 @@ class Feedback
      * Load feedback form
      *
      * @todo check if this is being used, remove otherwise.
-     *
-     * @return string
      */
     public function loadForm()
     {

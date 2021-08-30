@@ -46,6 +46,8 @@ class uninstall
             delete_option("wpstg_disabled_cache_notice");
             // Old option, now moved inside wpstg_clone_settings
             delete_option("wpstg_emails_disabled");
+            // Option related to staging sites shifting from one db option to another
+            delete_option("wpstg_structure_updated");
 
 
             /* Do not delete these fields without actually deleting the staging site
@@ -53,6 +55,7 @@ class uninstall
              */
             //delete_option( "wpstg_existing_clones" );
             //delete_option( "wpstg_existing_clones_beta" );
+            //delete_option( "wpstg_staging_sites" );
             //delete_option( "wpstg_connection" );
 
             // Old wpstg 1.3 options for admin notices

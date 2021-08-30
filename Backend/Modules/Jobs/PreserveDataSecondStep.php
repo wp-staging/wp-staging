@@ -5,9 +5,10 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 use WPStaging\Framework\Staging\CloneOptions;
+use WPStaging\Framework\Staging\Sites;
 
 /**
- * Copy wpstg_tmp_data back to wpstg_existing_clones_beta after cloning with class::PreserveDataSecondStep
+ * Copy wpstg_tmp_data back to wpstg_staging_sites after cloning with class::PreserveDataSecondStep
  * @package WPStaging\Backend\Modules\Jobs
  */
 
@@ -86,9 +87,9 @@ class PreserveDataSecondStep extends JobExecutable
             $this->productionDb->prepare("DELETE FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s", "wpstg_tmp_data")
         );
 
-        // Delete wpstg_existing_clones_beta from the staging site
+        // Delete wpstg_staging_sites from the staging site
         $deleteStagingSites = $this->stagingDb->query(
-            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", "wpstg_existing_clones_beta")
+            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", Sites::STAGING_SITES_OPTION)
         );
 
         // Delete wpstg_settings from the staging site
@@ -103,11 +104,11 @@ class PreserveDataSecondStep extends JobExecutable
 
         $tempData = maybe_unserialize($result);
 
-        // Insert wpstg_existing_clones_beta in staging database
+        // Insert wpstg_staging_sites in staging database
         $insertStagingSites = $this->stagingDb->query(
             $this->stagingDb->prepare(
                 "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
-                "wpstg_existing_clones_beta",
+                Sites::STAGING_SITES_OPTION,
                 $tempData->stagingSites,
                 "no"
             )
@@ -138,7 +139,7 @@ class PreserveDataSecondStep extends JobExecutable
         }
 
         if ($deleteStagingSites === false) {
-            $this->log("Preserve Data Second Step: Failed to delete wpstg_existing_clones_beta from the staging site");
+            $this->log("Preserve Data Second Step: Failed to delete wpstg_staging_sites from the staging site");
         }
 
         if ($deleteSettings === false) {
@@ -154,7 +155,7 @@ class PreserveDataSecondStep extends JobExecutable
         }
 
         if ($insertStagingSites === false) {
-            $this->log("Preserve Data Second Step: Failed to insert preserved existing clones into wpstg_existing_clones_beta of the staging site");
+            $this->log("Preserve Data Second Step: Failed to insert preserved existing clones into wpstg_staging_sites of the staging site");
         }
 
         if ($insertSettings === false) {

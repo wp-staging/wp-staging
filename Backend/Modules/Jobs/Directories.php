@@ -6,7 +6,6 @@ use Exception;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
-use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Traits\FileScanToCacheTrait;
 use WPStaging\Framework\Utils\SlashMode;
@@ -30,7 +29,7 @@ class Directories extends JobExecutable
      * Total steps to do
      * @var int
      */
-    private $total = 4;
+    private $total = 8;
 
     /**
      * path to the cache file
@@ -64,11 +63,6 @@ class Directories extends JobExecutable
      */
     protected function calculateTotalSteps()
     {
-        // Set total to 5 for multisite
-        if ($this->isMultisiteAndPro()) {
-            $this->total = 5;
-        }
-
         $this->options->totalSteps = $this->total + count($this->options->extraDirectories);
     }
 
@@ -94,6 +88,15 @@ class Directories extends JobExecutable
      */
     private function getWpRootFiles()
     {
+        // Skip scanning the root directory if all other directories are unselected
+        if (
+            $this->isDirectoryExcluded(ABSPATH . 'wp-admin') &&
+            $this->isDirectoryExcluded(ABSPATH . 'wp-includes')
+        ) {
+            $this->log("Skipping: /");
+            return true;
+        }
+
         // open file handle
         $files = $this->open($this->filename, 'a');
 
@@ -111,37 +114,46 @@ class Directories extends JobExecutable
     }
 
     /**
-     * Step 1
-     * Get WP Content Files
+     * Step 1-4
+     * Scan plugins, mu-plugins, themes or uploads dir depending upon the input
+     *
+     * @param string $directory
      */
-    private function getWpContentFiles()
+    private function getWpContentSubDirectory($directory)
     {
-        $directory = WP_CONTENT_DIR;
-        // Skip it
-        if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skip " . $directory);
+        // Skip if scanning uploads directory and symlink option selected
+        if ($this->wpDirectories->getUploadsPath() === $directory && $this->options->uploadsSymlinked) {
             return true;
         }
+
+        // Skip it
+        if (!is_dir($directory)) {
+            $this->log("Skipping: {$directory} does not exist.");
+            return true;
+        }
+
+        // Skip it
+        if ($this->isDirectoryExcluded($directory)) {
+            $this->log("Skipping: {$directory}");
+            return true;
+        }
+
+        $relativeDirectory = str_replace($this->strUtils->sanitizeDirectorySeparator(ABSPATH), '', $directory);
+        $this->log("Scanning " . $relativeDirectory . " and its sub-directories and files");
+
         // open file handle
         $files = $this->open($this->filename, 'a');
 
-        $relativeDirectory = str_replace(ABSPATH, '', $directory);
-        $this->log("Scanning " . $relativeDirectory . " for its sub-directories and files");
-
         $excludePaths = [
-            $this->wpDirectories->getRelativeWpContentPath(SlashMode::BOTH_SLASHES) . 'cache',
             '/' . str_replace(ABSPATH, '', rtrim(WPStaging::getContentDir(), '/')),
-            '**/wp-staging*/**/node_modules', // only exclude node modules in WP Staging's plugins
         ];
 
-        if (is_multisite() && !is_main_site()) {
-            $excludePaths[] = $this->wpDirectories->getRelativeUploadPath(SlashMode::LEADING_SLASH);
-        } else {
-            $excludePaths[] = $this->wpDirectories->getRelativeUploadPath(SlashMode::BOTH_SLASHES) . 'sites';
+        // Exclude predefined plugins if given directory is plugins dir
+        if (WP_PLUGIN_DIR === $directory) {
+            $excludePaths[] = '**/wp-staging*/**/node_modules'; // only exclude node modules in WP Staging's plugins
+            // add excluded plugins defined by WP Staging
+            $excludePaths = array_merge((new ExcludedPlugins())->getPluginsToExcludeWithRelativePath(), $excludePaths);
         }
-
-        // add excluded plugins defined by WP Staging
-        $excludePaths = array_merge((new ExcludedPlugins())->getPluginsToExcludeWithRelativePath(), $excludePaths);
 
         $excludePaths = array_merge($this->getFilteredExcludedPaths(), $excludePaths);
 
@@ -157,7 +169,48 @@ class Directories extends JobExecutable
     }
 
     /**
-     * Step 2
+     * Step 5
+     * Get WP Content Files for other files than plugins, mu plugins, themes and uploads.
+     */
+    private function getWpContentFiles()
+    {
+        $directory = WP_CONTENT_DIR;
+        // Skip it
+        if ($this->isDirectoryExcluded($directory)) {
+            $this->log("Skip " . $directory);
+            return true;
+        }
+        // open file handle
+        $files = $this->open($this->filename, 'a');
+
+        $relativeDirectory = str_replace(ABSPATH, '', $directory);
+        $this->log("Scanning " . $relativeDirectory . " for other directories");
+
+        $excludePaths = [
+            $this->wpDirectories->getRelativeWpContentPath(SlashMode::BOTH_SLASHES) . 'cache',
+            '/' . str_replace(ABSPATH, '', rtrim(WPStaging::getContentDir(), '/')),
+            '**/wp-staging*/**/node_modules', // only exclude node modules in WP Staging's plugins
+            $this->wpDirectories->getRelativeUploadPath(SlashMode::LEADING_SLASH),
+            $this->wpDirectories->getRelativePluginPath(SlashMode::LEADING_SLASH),
+            $this->wpDirectories->getRelativeMuPluginPath(SlashMode::LEADING_SLASH),
+            $this->wpDirectories->getRelativeThemePath(SlashMode::LEADING_SLASH),
+        ];
+
+        $excludePaths = array_merge($this->getFilteredExcludedPaths(), $excludePaths);
+
+        try {
+            $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true, $excludePaths, $this->getFilteredExcludedFileSizes());
+        } catch (Exception $e) {
+            $this->returnException('Error: ' . $e->getMessage());
+        }
+
+        // close the file handler
+        $this->close($files);
+        return true;
+    }
+
+    /**
+     * Step 6
      * @return boolean
      * @throws Exception
      */
@@ -187,7 +240,7 @@ class Directories extends JobExecutable
     }
 
     /**
-     * Step 3
+     * Step 7
      * @return boolean
      * @throws Exception
      */
@@ -217,61 +270,7 @@ class Directories extends JobExecutable
     }
 
     /**
-     * Step 4 (Multisite Only)
-     * Get WP Content Uploads Files multisite folder wp-content/uploads/sites or wp-content/blogs.dir/ID/files
-     */
-    private function getWpContentUploadsSites()
-    {
-        // Skip if main site is cloned
-        if (is_main_site()) {
-            return true;
-        }
-
-        // Skip if symlink option selected
-        if ($this->options->uploadsSymlinked) {
-            return true;
-        }
-
-        // Absolute path to uploads folder
-        $directory = $this->wpDirectories->getUploadsPath();
-
-        // Skip it
-        if (!is_dir($directory)) {
-            $this->log("Skipping: {$directory} does not exist.");
-            return true;
-        }
-
-        // Skip it
-        if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skipping: {$directory}");
-            return true;
-        }
-
-
-        // open file handle
-        $files = $this->open($this->filename, 'a');
-
-        $excludePaths = [
-            '/' . str_replace(ABSPATH, ' ', rtrim(WPStaging::getContentDir(), '/')),
-            '**/node_modules',
-        ];
-
-        $excludePaths = array_merge($this->getFilteredExcludedPaths(), $excludePaths);
-
-        try {
-            $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true, $excludePaths, $this->getFilteredExcludedFileSizes());
-        } catch (Exception $e) {
-            $this->returnException('Error: ' . $e->getMessage());
-        }
-
-        // close the file handler
-        $this->close($files);
-        return true;
-    }
-
-    /**
-     * Step 4 - x (Single Site)
-     * Step 5 - x (Multisite)
+     * Step 8 - x
      * Get extra folders of the wp root level
      * Does not collect wp-includes, wp-admin and wp-content folder
      * @param string $folder
@@ -369,33 +368,55 @@ class Directories extends JobExecutable
             return false;
         }
 
-
         if ($this->options->currentStep == 0) {
             $this->getWpRootFiles();
             $this->prepareResponse(false, true);
             return false;
         }
 
+        // Scan Plugins directory
         if ($this->options->currentStep == 1) {
+            $this->getWpContentSubDirectory(WP_PLUGIN_DIR);
+            $this->prepareResponse(false, true);
+            return false;
+        }
+
+        // Scan Mu Plugins directory
+        if ($this->options->currentStep == 2) {
+            $this->getWpContentSubDirectory(WPMU_PLUGIN_DIR);
+            $this->prepareResponse(false, true);
+            return false;
+        }
+
+        // Scan Themes directory
+        if ($this->options->currentStep == 3) {
+            $this->getWpContentSubDirectory(WP_CONTENT_DIR . '/themes');
+            $this->prepareResponse(false, true);
+            return false;
+        }
+
+        // Scan Uploads directory
+        if ($this->options->currentStep == 4) {
+            $this->getWpContentSubDirectory($this->wpDirectories->getUploadsPath());
+            $this->prepareResponse(false, true);
+            return false;
+        }
+
+        // Scan WP Content directory except plugins, mu-plugins, themes and uploads directory
+        if ($this->options->currentStep == 5) {
             $this->getWpContentFiles();
             $this->prepareResponse(false, true);
             return false;
         }
 
-        if ($this->options->currentStep == 2) {
+        if ($this->options->currentStep == 6) {
             $this->getWpIncludesFiles();
             $this->prepareResponse(false, true);
             return false;
         }
 
-        if ($this->options->currentStep == 3) {
+        if ($this->options->currentStep == 7) {
             $this->getWpAdminFiles();
-            $this->prepareResponse(false, true);
-            return false;
-        }
-
-        if ($this->isMultisiteAndPro() && $this->options->currentStep == 4) {
-            $this->getWpContentUploadsSites();
             $this->prepareResponse(false, true);
             return false;
         }
@@ -405,7 +426,6 @@ class Directories extends JobExecutable
             $this->prepareResponse(false, true);
             return false;
         }
-
 
         // Prepare response
         $this->prepareResponse(false, true);

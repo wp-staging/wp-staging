@@ -89,7 +89,7 @@ trait MySQLRowsGeneratorTrait
                 if ($previousRequestId === $requestId) {
                     list($requestId, $table, $offset, $batchSize) = array_replace([$requestId, $table, $offset, $batchSize], $lastQueryInfo);
 
-                    $batchSize = $batchSize / 2;
+                    $batchSize = $batchSize / 3;
 
                     if ($batchSize < 1) {
                         throw new \RuntimeException(sprintf(

@@ -1,11 +1,16 @@
 <?php
+
 /**
  * @var $this \WPStaging\Backend\Notices\Notices
+ * @var $viewsNoticesPath
  * @see \WPStaging\Backend\Notices\Notices::messages
  * @var bool  $outgoingMailsDisabled
  * @var bool  $freemiusOptionsCleared
  * @var array $excludedPlugins
  */
+
+use WPStaging\Backend\Notices\Notices;
+
 ?>
 <div class="notice notice-warning wpstg-disabled-items-notice">
     <p><strong><?php _e('WP STAGING - Notes:', 'wp-staging'); ?></strong></p>
@@ -31,43 +36,13 @@
             </ul>
         </li>
         <?php endif; ?>
-    </ol>
+    </ol>    
     <p>
-        <a href="javascript:void(0);" class="wpstg_hide_disabled_items_notice" title="Close this message"
-            style="font-weight:bold;">
-            <?php _e('Close this message', 'wp-staging') ?>
-        </a>
+      <?php Notices::renderNoticeDismissAction(
+          $viewsNoticesPath,
+          'disabled_items',
+          '.wpstg_dismiss_disabled_items_notice',
+          '.wpstg-disabled-items-notice'
+      ) ?>
     </p>
 </div>
-<script>
-  jQuery(document).ready(function ($) {
-    jQuery(document).on('click', '.wpstg_hide_disabled_items_notice', function (e) {
-      e.preventDefault();
-      jQuery.ajax({
-        url: ajaxurl,
-        type: 'POST',
-        data: {
-          action: 'wpstg_dismiss_notice',
-          wpstg_notice: 'disabled_items'
-        },
-        error: function error(xhr, textStatus, errorThrown) {
-          console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
-          console.log(textStatus);
-          alert('Unknown error. Please get in contact with us to solve it support@wp-staging.com');
-        },
-        success: function success(data) {
-          jQuery('.wpstg-disabled-items-notice').slideUp('fast');
-          return true;
-        },
-        statusCode: {
-          404: function _() {
-            alert('Something went wrong; can\'t find ajax request URL! Please get in contact with us to solve it support@wp-staging.com');
-          },
-          500: function _() {
-            alert('Something went wrong; internal server error while processing the request! Please get in contact with us to solve it support@wp-staging.com');
-          }
-        }
-      });
-    });
-  });
-</script>
