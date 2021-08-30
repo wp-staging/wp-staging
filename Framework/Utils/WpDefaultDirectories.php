@@ -166,6 +166,23 @@ class WpDefaultDirectories
     }
 
     /**
+     * Get the relative path of mu plugins directory
+     * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
+     *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.
+     *                      Use SlashMode::TRAILING_SLASH, if you want trailing forward slash.
+     *                      Use SlashMode::LEADING_SLASH, if you want leading forward slash.
+     *                      Use SlashMode::BOTH_SLASHES, if you want both trailing and leading forward slash.
+     * @return string
+     */
+    public function getRelativeMuPluginPath($mode = SlashMode::NO_SLASH)
+    {
+        $wpPluginDir = $this->strUtils->sanitizeDirectorySeparator(WPMU_PLUGIN_DIR);
+        $relPath = str_replace($this->wpRoot, '', $wpPluginDir);
+
+        return $this->slashit($relPath, $mode);
+    }
+
+    /**
      * Get the relative path of themes directory
      * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
      *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.

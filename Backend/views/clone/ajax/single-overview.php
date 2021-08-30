@@ -20,7 +20,7 @@
             <?php _e("Your Staging Sites:", "wp-staging") ?>
         </h3>
         <?php foreach ($availableClones as $cloneID => $data) : ?>
-            <div id="<?php echo $data['directoryName']; ?>" class="wpstg-clone">
+            <div id="<?php echo $data['directoryName']; ?>" data-clone-id="<?php echo $cloneID; ?>" class="wpstg-clone">
                 <?php $urlLogin = $data["url"]; ?>
                 <div class="wpstg-clone-header">
                     <a href="<?php echo $urlLogin ?>" class="wpstg-clone-title" target="_blank">

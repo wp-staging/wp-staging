@@ -5,6 +5,7 @@ namespace WPStaging\Framework\Staging;
 use WPStaging\Frontend\LoginNotice;
 use WPStaging\Backend\Notices\DisabledItemsNotice;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Support\ThirdParty\WordFence;
 
 /**
  * Class FirstRun
@@ -52,6 +53,9 @@ class FirstRun
 
         // Enable the notice which show what WP Staging Disabled on staging site admin.
         (new DisabledItemsNotice())->enable();
+
+        // If user.ini present rename it to user.ini.bak and enable notice
+        (new WordFence())->renameUserIni();
 
         // Allow users to attach custom actions by using this hook
         do_action('wpstg.clone_first_run');

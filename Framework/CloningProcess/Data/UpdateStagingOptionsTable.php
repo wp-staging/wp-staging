@@ -6,6 +6,7 @@ use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
 
 class UpdateStagingOptionsTable extends DBCloningService
@@ -54,7 +55,7 @@ class UpdateStagingOptionsTable extends DBCloningService
             'wpstg_connection' => json_encode(['prodHostname' => get_site_url()]),
         ];
         if ($this->dto->getMainJob() !== 'updating') {
-            $update['wpstg_existing_clones_beta'] = serialize([]);
+            $update[Sites::STAGING_SITES_OPTION] = serialize([]);
         }
 
         $this->updateOptions($update);

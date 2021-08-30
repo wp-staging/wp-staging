@@ -24,6 +24,8 @@ class CancelUpdate extends Job
         $this->deleteCacheFiles();
 
         $this->returnFinish();
+
+        return true;
     }
 
     /**

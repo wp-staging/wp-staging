@@ -35,6 +35,8 @@ use WPStaging\Backend\Pro\Notices\BackupsDifferentPrefixNotice;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
+use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\Support\ThirdParty\WordFence;
 
 /**
  * Class Administrator
@@ -385,7 +387,7 @@ class Administrator
     public function getClonePage()
     {
         // Existing clones
-        $availableClones = get_option("wpstg_existing_clones_beta", []);
+        $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         require_once "{$this->path}views/clone/index.php";
     }
@@ -396,7 +398,7 @@ class Administrator
     public function getBackupPage()
     {
         // Existing clones
-        $availableClones = get_option("wpstg_existing_clones_beta", []);
+        $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         $openBackupPage = true;
 
@@ -583,7 +585,7 @@ class Administrator
         }
 
         // Existing clones
-        $availableClones = get_option("wpstg_existing_clones_beta", []);
+        $availableClones = (new Sites())->getSortedStagingSites();
 
         // Get license data
         $license = get_option('wpstg_license_status');
@@ -667,7 +669,7 @@ class Administrator
 
         $cloneDirectoryName = sanitize_key($_POST["directoryName"]);
         $cloneDirectoryNameLength = strlen($cloneDirectoryName);
-        $existingClones = get_option("wpstg_existing_clones_beta", []);
+        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         $cloneDestDir = trailingslashit(get_home_path()) . $cloneDirectoryName;
 
@@ -964,6 +966,12 @@ class Administrator
             return;
         }
 
+        // Dismiss wordfence user.ini renamed notice
+        if ($_POST['wpstg_notice'] === WordFence::NOTICE_NAME && (new WordFence())->disable() !== false) {
+            wp_send_json(true);
+            return;
+        }
+
         wp_send_json(null);
     }
 
@@ -1004,7 +1012,7 @@ class Administrator
             return;
         }
 
-        $existingClones = get_option("wpstg_existing_clones_beta", []);
+        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
             $clone = $existingClones[$_POST["clone"]];
             require_once "{$this->path}Pro/views/edit-clone-data.php";
@@ -1024,7 +1032,7 @@ class Administrator
             return;
         }
 
-        $existingClones = get_option("wpstg_existing_clones_beta", []);
+        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
             if (empty($_POST['directoryName'])) {
                 echo __("Site name is required!");
@@ -1047,7 +1055,7 @@ class Administrator
             $existingClones[$cloneId]["databaseServer"] = stripslashes($_POST["externalDBHost"]);
             $existingClones[$cloneId]["databasePrefix"] = stripslashes($_POST["externalDBPrefix"]);
 
-            update_option("wpstg_existing_clones_beta", $existingClones);
+            update_option(Sites::STAGING_SITES_OPTION, $existingClones);
 
             echo __("Success");
         } else {

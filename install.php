@@ -40,3 +40,9 @@ if (extension_loaded('litespeed')) {
  * Set default values for settings
  */
 $settings = (new Settings())->setDefault();
+
+/**
+ * Add a entry for plugin install in wp options table.
+ * If that option already exists not overwrite it.
+ */
+add_option('wpstg_installDate', date('Y-m-d h:i:s'));

@@ -2,7 +2,7 @@
 
 <div>
 <span class="wpstg-logo">
-    <img src="<?php echo $this->assets->getAssetsUrl("img/logo-wp-staging-1468x230.png") ?>" width="212">
+    <img src="<?php echo $this->assets->getAssetsUrl("img/logo.svg") ?>" width="212">
 </span>
 
 <span class="wpstg-version">

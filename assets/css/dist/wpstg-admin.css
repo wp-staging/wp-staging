@@ -47,6 +47,14 @@
 
 /* CSS for Tabs */
 
+body.wp-staging-pro_page_wpstg_backup,
+body.toplevel_page_wpstg_clone,
+body.wp-staging-pro_page_wpstg-settings,
+body.wp-staging-pro_page_wpstg-tools,
+body.wp-staging-pro_page_wpstg-license {
+    background-color: #f3f5f7;
+}
+
 #wpstg-tab-container ul {
     list-style: none;
     margin: 0;
@@ -178,7 +186,7 @@
 
 .wpstg-version {
     display: block;
-    padding-top: 34px;
+    padding-top: 40px;
     color: #9b9b9b;
 }
 
@@ -1544,6 +1552,7 @@ Tooltip top arrow
 }
 
 .wpstg--modal--backup--import--upload--container img {
+    margin-top: 10px;
     width: 4em;
     align-self: center;
     border: none;

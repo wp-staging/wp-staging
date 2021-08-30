@@ -8,6 +8,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils;
 use WPStaging\Core\Utils\Multisite;
 use WPStaging\Core\Utils\Helper;
+use WPStaging\Framework\Staging\Sites;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -165,7 +166,9 @@ class SystemInfo
         // Clones data < 1.1.6.x
         $clones = (object)get_option('wpstg_existing_clones', []);
         // Clones data version > 2.x
-        $clonesBeta = get_option('wpstg_existing_clones_beta', []);
+        // old name wpstg_existing_clones_beta
+        // New name since version 4.0.3
+        $stagingSites = get_option(Sites::STAGING_SITES_OPTION, []);
 
 
         $output = "-- WP Staging Settings" . PHP_EOL . PHP_EOL;
@@ -183,7 +186,7 @@ class SystemInfo
         }
         $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version > 2.0.x" . PHP_EOL . PHP_EOL;
 
-        foreach ($clonesBeta as $key => $clone) {
+        foreach ($stagingSites as $key => $clone) {
             $path = !empty($clone['path']) ? $clone['path'] : 'undefined';
 
             $output .= $this->info("Number:", isset($clone['number']) ? $clone['number'] : 'undefined');
@@ -197,7 +200,7 @@ class SystemInfo
         }
 
 
-        $output .= $this->info("Raw Clones Data:", json_encode(get_option('wpstg_existing_clones_beta', 'undefined')));
+        $output .= $this->info("Raw Clones Data:", json_encode(get_option(Sites::STAGING_SITES_OPTION, 'undefined')));
 
         $output .= '' . PHP_EOL;
 

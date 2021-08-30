@@ -1633,7 +1633,8 @@
       progressBar: 0,
       cloneExcludeFilters: null,
       directoryNavigator: null,
-      notyf: null
+      notyf: null,
+      areAllTablesChecked: true
     };
     var cache = {
       elements: []
@@ -1731,7 +1732,6 @@
 
     var elements = function elements() {
       var $workFlow = cache.get('#wpstg-workflow');
-      var isAllChecked = true;
       var urlSpinner = ajaxurl.replace('/admin-ajax.php', '') + '/images/spinner';
       var timer;
 
@@ -1746,16 +1746,16 @@
       .on('click', '.wpstg-button-unselect', function (e) {
         e.preventDefault();
 
-        if (false === isAllChecked) {
+        if (false === that.areAllTablesChecked) {
           cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', 'selected');
           cache.get('.wpstg-button-unselect').text('Unselect All');
           cache.get('.wpstg-db-table-checkboxes').prop('checked', true);
-          isAllChecked = true;
+          that.areAllTablesChecked = true;
         } else {
           cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', false);
           cache.get('.wpstg-button-unselect').text('Select All');
           cache.get('.wpstg-db-table-checkboxes').prop('checked', false);
-          isAllChecked = false;
+          that.areAllTablesChecked = false;
         }
       })
       /**
@@ -2036,6 +2036,7 @@
         var clone = $(this).data('clone');
         var resetModal = new WpstgResetModal(clone);
         var promise = resetModal.showModal();
+        that.areAllTablesChecked = true;
         promise.then(function (result) {
           if (result.value) {
             var dirNavigator = resetModal.getDirectoryNavigator();
@@ -2391,6 +2392,7 @@
         that.cloneExcludeFilters = null;
 
         if (that.data.action === 'wpstg_scanning') {
+          that.areAllTablesChecked = true;
           that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', wpstg, that.notyf);
           that.switchStep(2);
           that.cloneExcludeFilters = new WpstgExcludeFilters();
@@ -2525,7 +2527,7 @@
             cache.get('#wpstg-removing-clone').removeClass('loading').html('');
 
             if (response["delete"] === 'finished' && response.error === undefined) {
-              $('.wpstg-clone#' + clone).remove();
+              $('.wpstg-clone[data-clone-id="' + clone + '"]').remove();
             } // No staging site message is also of type/class .wpstg-class but hidden
             // We have just excluded that from search when counting no of clones
 

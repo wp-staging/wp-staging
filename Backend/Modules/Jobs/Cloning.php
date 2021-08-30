@@ -7,6 +7,7 @@ use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
+use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
@@ -243,7 +244,7 @@ class Cloning extends Job
             "extraDirectories"      => $this->options->extraDirectories,
         ];
 
-        if (update_option("wpstg_existing_clones_beta", $this->options->existingClones) === false) {
+        if (update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones) === false) {
             $this->log("Cloning: Failed to save {$this->options->clone}'s clone job data to database'");
             return false;
         }

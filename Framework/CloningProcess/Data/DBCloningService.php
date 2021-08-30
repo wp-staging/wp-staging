@@ -128,7 +128,7 @@ abstract class DBCloningService extends CloningService
     {
         $db = $this->dto->getStagingDb();
 
-        $db->query(
+        return $db->query(
             $db->prepare(
                 "DELETE FROM `{$this->dto->getPrefix()}options` WHERE `option_name` = %s;",
                 $name

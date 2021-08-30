@@ -31,7 +31,12 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     const TYPE_INFO     = "INFO";
 
-    const TYPE_DEBUG     = "DEBUG";
+    const TYPE_DEBUG    = "DEBUG";
+
+    /**
+     * @var string 
+     */
+    const LOG_DATETIME_FORMAT = "Y/m/d H:i:s";
 
     /**
      * Log directory (full path)
@@ -113,7 +118,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
     {
         $this->messages[] = [
             "type"      => $type,
-            "date"      => date("Y/m/d H:i:s"),
+            "date"      => date(self::LOG_DATETIME_FORMAT),
             "message"   => $message
         ];
     }

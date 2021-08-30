@@ -1,6 +1,6 @@
         <main class="wp-staging-login" >
             <div class="wpstg-text-center">
-              <img width="220" src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/img/logo-wp-staging-1468x230.png'); ?>" alt="WP Staging Login" />
+              <img width="220" src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/img/logo.svg'); ?>" alt="WP Staging Login" />
             </div>
             <form class="wp-staging-form" name="<?php echo $args['form_id']; ?>" id="<?php echo $args['form_id']; ?>" action="" method="post">
                 <?php if ($showNotice) { ?>

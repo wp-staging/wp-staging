@@ -13,6 +13,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
+use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
@@ -146,7 +147,7 @@ class Scan extends Job
     {
         // Basic Options
         $this->options->root           = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, WPStaging::getWPpath());
-        $this->options->existingClones = get_option("wpstg_existing_clones_beta", []);
+        $this->options->existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         $this->options->current        = null;
 
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $this->options->existingClones)) {

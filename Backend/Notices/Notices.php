@@ -19,6 +19,7 @@ use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
+use WPStaging\Framework\Support\ThirdParty\WordFence;
 
 /**
  * Class Notices
@@ -61,7 +62,7 @@ class Notices
         $currentPage = (isset($_GET["page"])) ? $_GET["page"] : null;
 
         $availablePages = [
-            "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone"
+            "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone", "wpstg_backup"
         ];
 
         return !(!is_admin() || !in_array($currentPage, $availablePages, true));
@@ -173,6 +174,10 @@ class Notices
             require "{$viewsNoticesPath}wp-options-missing-pk.php";
         }
 
+        // Show notice if WordFence Firewall is disabled
+        /** @var WordFence */
+        WPStaging::make(WordFence::class)->showNotice($viewsNoticesPath);
+
         /**
          * Display all notices below this line in WP STAGING admin pages only and only to administrators!
          */
@@ -186,6 +191,13 @@ class Notices
         if (self::SHOW_ALL_NOTICES || !$dirUtils->isPathInWpRoot($dirUtils->getUploadsDirectory())) {
             require "{$viewsNoticesPath}uploads-outside-wp-root.php";
         }
+
+        /**
+         * Display outdated WP Staging version notice (Free Only)
+         */
+        /** @var OutdatedWpStagingNotice */
+        WPStaging::make(OutdatedWpStagingNotice::class)
+            ->showNotice($viewsNoticesPath);
 
         // Show notice Cache directory is not writable
         /** @var Cache $cache */
@@ -338,5 +350,18 @@ class Notices
     public function getAssets()
     {
         return $this->assets;
+    }
+
+    /**
+     * Render the notice dismiss action
+     *
+     * @param string $viewsNoticesPath
+     * @param string $wpstgNotice
+     * @param string $cssClassSelectorDismiss
+     * @param string $cssClassSelectorNotice
+     */
+    public static function renderNoticeDismissAction($viewsNoticesPath, $wpstgNotice, $cssClassSelectorDismiss, $cssClassSelectorNotice)
+    {
+        require "{$viewsNoticesPath}_partial/notice_dismiss_action.php";
     }
 }

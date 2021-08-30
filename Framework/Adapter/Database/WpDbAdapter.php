@@ -62,6 +62,7 @@ class WpDbAdapter extends AbstractDatabase
     public function insert(DatabaseQueryDto $queryDto)
     {
         // TODO: Implement insert() method.
+        return false;
     }
 
     /**
@@ -70,6 +71,7 @@ class WpDbAdapter extends AbstractDatabase
     public function update(DatabaseQueryDto $queryDto)
     {
         // TODO: Implement update() method.
+        return false;
     }
 
     /**
@@ -78,6 +80,7 @@ class WpDbAdapter extends AbstractDatabase
     public function delete($tableName, array $condition = [])
     {
         // TODO: Implement delete() method.
+        return false;
     }
 
     /**
