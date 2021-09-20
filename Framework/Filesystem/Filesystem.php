@@ -156,7 +156,10 @@ class Filesystem extends FilterableDirectoryIterator
     {
         $path = $this->findPath($path);
 
-        if (!wp_mkdir_p($path)) {
+        set_error_handler([$this, 'handleMkdirError']);
+        $result = wp_mkdir_p($path);
+        restore_error_handler();
+        if (!$result) {
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
                 error_log("Failed to create directory $path");
             }
@@ -733,5 +736,10 @@ class Filesystem extends FilterableDirectoryIterator
         $path = trailingslashit($path);
 
         return $path;
+    }
+
+    public function handleMkdirError($errno, $errstr)
+    {
+        $this->logs[] = "Unable to create directory. Reason: " . $errstr;
     }
 }

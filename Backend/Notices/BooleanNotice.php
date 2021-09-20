@@ -5,7 +5,7 @@ namespace WPStaging\Backend\Notices;
 /**
  * Class BooleanNotice
  *
- * This class is used to reduce the boilerplate code for boolean notices
+ * This class is used to reduce the boilerplate code for dismissible boolean notices
  *
  * @package WPStaging\Backend\Notices;
  */

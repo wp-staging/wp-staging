@@ -7,7 +7,7 @@
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
  * Contributors: ReneHermi
- * Version: 2.8.7
+ * Version: 2.8.8
  * Text Domain: wp-staging
  * Domain Path: /languages/
  *

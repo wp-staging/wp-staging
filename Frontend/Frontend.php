@@ -2,6 +2,7 @@
 
 namespace WPStaging\Frontend;
 
+use WPStaging\Framework\Rest\Rest;
 use WPStaging\Framework\SiteInfo;
 
 /**
@@ -88,6 +89,11 @@ class Frontend
     private function showLoginForm()
     {
         $this->accessDenied = false;
+
+        // Dont show login form for rest requests
+        if ((new Rest())->isRestUrl()) {
+            return false;
+        }
 
         if ($this->isLoginPage() || is_admin()) {
             return false;

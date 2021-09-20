@@ -462,8 +462,10 @@ class Files extends JobExecutable
         $destinationPath = $this->destination . $relativePath;
         $destinationDirectory = dirname($destinationPath);
 
-        if (!is_dir($destinationDirectory) && !(new Filesystem())->mkdir($destinationDirectory) && !is_dir($destinationDirectory)) {
-            $this->log("Files: Can not create directory {$destinationDirectory}. Possible write permission error!", Logger::TYPE_ERROR);
+        $fs = new Filesystem();
+        $isDirectoryNotCreated = !is_dir($destinationDirectory) && !$fs->mkdir($destinationDirectory) && !is_dir($destinationDirectory);
+        if ($isDirectoryNotCreated) {
+            $this->log("Files: Can not create directory {$destinationDirectory}." . $fs->getLogs()[0], Logger::TYPE_ERROR);
             return false;
         }
 
