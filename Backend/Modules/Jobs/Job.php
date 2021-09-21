@@ -100,8 +100,14 @@ abstract class Job implements ShutdownableInterface
         // Commit logs
         if ($this->logger instanceof Logger) {
             if (isset($this->options->mainJob)) {
-                $timestamp = $this->options->existingClones[$this->options->clone]['datetime'];
-                $this->logger->setFileName($this->options->mainJob . '_' . date('Y-m-d_H-i-s', $timestamp));
+                if (array_key_exists('datetime', $this->options->existingClones[$this->options->clone])) {
+                    $timestamp = date('Y-m-d_H-i-s', $this->options->existingClones[$this->options->clone]['datetime']);
+                } else {
+                    // This is a fallback for older staging sites that did not have the datetime property.
+                    $timestamp = sanitize_file_name($this->options->clone) . '_' . date('Y-m-d', time());
+                }
+
+                $this->logger->setFileName($this->options->mainJob . '_' . $timestamp);
             }
 
             $this->logger->commit();

@@ -199,6 +199,7 @@ return array(
     'WPStaging\\Framework\\Queue\\Storage\\QueueStorageException' => $baseDir . '/Framework/Queue/Storage/QueueStorageException.php',
     'WPStaging\\Framework\\Queue\\Storage\\SPL\\JsonDoublyLinkedList' => $baseDir . '/Framework/Queue/Storage/SPL/JsonDoublyLinkedList.php',
     'WPStaging\\Framework\\Queue\\Storage\\StorageInterface' => $baseDir . '/Framework/Queue/Storage/StorageInterface.php',
+    'WPStaging\\Framework\\Rest\\Rest' => $baseDir . '/Framework/Rest/Rest.php',
     'WPStaging\\Framework\\Security\\AccessToken' => $baseDir . '/Framework/Security/AccessToken.php',
     'WPStaging\\Framework\\Security\\Auth' => $baseDir . '/Framework/Security/Auth.php',
     'WPStaging\\Framework\\Security\\Capabilities' => $baseDir . '/Framework/Security/Capabilities.php',

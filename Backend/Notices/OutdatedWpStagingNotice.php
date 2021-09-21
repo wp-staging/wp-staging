@@ -7,8 +7,7 @@ use WPStaging\Core\WPStaging;
 /**
  * Class OutdatedWpStagingNotice
  *
- * Check if using an outdated version of WP Staging Plugin
- *
+ * Show a notification if installed WP STAGING free version is outdated and if there is a new plugin update available
  * @see \WPStaging\Backend\Notices\Notices
  */
 class OutdatedWpStagingNotice

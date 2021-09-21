@@ -55,14 +55,17 @@ class DiskWriteCheck
             throw new \RuntimeException('The path must be a directory.');
         }
 
-        set_error_handler(function () {
-            throw new \RuntimeException();
-        });
         $freeSpaceInBytes = @disk_free_space($path);
-        restore_error_handler();
 
         if ($freeSpaceInBytes === false) {
-            throw new \RuntimeException(error_get_last());
+            $message = '';
+            $error = error_get_last();
+
+            if (is_array($error) && array_key_exists('message', $error)) {
+                $message = $error['message'];
+            }
+
+            throw new \RuntimeException($message);
         }
 
         if (!is_numeric($freeSpaceInBytes)) {

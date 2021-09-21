@@ -124,7 +124,7 @@ ORDER BY `{$numericPrimaryKey}` ASC
 LIMIT 0, {$batchSize}
 SQL;
                 } else {
-                    $query = "SELECT * FROM {$table} LIMIT {$offset}, {$batchSize}";
+                    $query = "SELECT * FROM `{$table}` LIMIT {$offset}, {$batchSize}";
                 }
                 $jobDataDto->setLastQueryInfoJSON(json_encode([$requestId, $table, $offset, $batchSize]));
                 $result = $db->query($query);

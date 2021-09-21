@@ -74,7 +74,9 @@ class Upgrade
      */
     private function upgrade2_8_7()
     {
-        (new Sites())->upgradeStagingSitesOption();
+        if (version_compare($this->previousVersion, '2.8.7', '<')) {
+            (new Sites())->upgradeStagingSitesOption();
+        }
     }
 
     /**

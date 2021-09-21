@@ -20,14 +20,9 @@ class Sites
 
     /**
      * The old option that was used to store the staging sites
-     * @deprecated 4.0.4
+     * @deprecated 4.0.5
      */
     const OLD_STAGING_SITES_OPTION = 'wpstg_existing_clones_beta';
-
-    /**
-     * The option that we use to store our existing clone;
-     */
-    const CLONE_STRUCTURE_OPTION = 'wpstg_structure_updated';
 
     /**
      * Return list of staging sites in descending order of their creation time.
@@ -68,33 +63,50 @@ class Sites
     /**
      * Upgrade old existing clone beta option to new staging site option
      *
-     * @see WPStaging\Backend\Upgrade\Upgrade::upgrade2_8_7() (Free version)
-     * @see WPStaging\Backend\Pro\Upgrade\Upgrade::upgrade4_0_4() (Pro version)
+     * @see \WPStaging\Backend\Upgrade\Upgrade::upgrade2_8_7 (Free version)
+     * @see \WPStaging\Backend\Pro\Upgrade\Upgrade::upgrade4_0_5 (Pro version)
      */
     public function upgradeStagingSitesOption()
     {
-        // Early bail if structure is already updated
-        $isStagingSiteStructureUpdated = get_option(self::CLONE_STRUCTURE_OPTION, false);
-        if ($isStagingSiteStructureUpdated !== false) {
-            return;
-        }
-
-        // Get the staging sites from new option
-        $newSites = get_option(self::STAGING_SITES_OPTION, []);
-
         // Get the staging sites from old option
         $oldSites = get_option(self::OLD_STAGING_SITES_OPTION, []);
 
-        // Early bail if old sites option is empty or new sites option is already populated
-        if (empty($oldSites) || !empty($newSites)) {
-            update_option(self::CLONE_STRUCTURE_OPTION, true);
+        // Early bail: No sites to migrate
+        if (empty($oldSites)) {
             return;
         }
 
-        // Update staging sites from old option to new option
-        update_option(self::STAGING_SITES_OPTION, $oldSites);
+        $newSites = get_option(self::STAGING_SITES_OPTION, []);
 
-        update_option(self::CLONE_STRUCTURE_OPTION, true);
+        // Convert old format to new, including when there are staging sites in both formats
+        $allStagingSites = $newSites;
+
+        foreach ($oldSites as $oldSiteSlug => $oldSite) {
+            // Migrate old site to new format
+            if (!array_key_exists($oldSiteSlug, $allStagingSites)) {
+                $allStagingSites[$oldSiteSlug] = $oldSite;
+                continue;
+            }
+
+            // Migrate old site to new format when site slug exists in both options
+            $i = 0;
+
+            do {
+                $oldSiteSlug = $oldSiteSlug . '_' . $i;
+            } while (array_key_exists($oldSiteSlug, $allStagingSites));
+
+            $allStagingSites[$oldSiteSlug] = $oldSite;
+        }
+
+        if (update_option(self::STAGING_SITES_OPTION, $allStagingSites)) {
+            // Keep a backup just in case
+            update_option('wpstg_staging_sites_backup', $oldSites, false);
+            delete_option(self::OLD_STAGING_SITES_OPTION);
+        } else {
+            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+                error_log('WPSTAGING DEBUG: update_option for option renaming of staging sites failed.');
+            }
+        }
     }
 
     /**
