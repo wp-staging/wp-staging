@@ -63,6 +63,10 @@ if (file_exists(__DIR__ . '/constantsPro.php')) {
     include_once __DIR__ . '/constantsFree.php';
 }
 
+if (file_exists(__DIR__ . '/wp-staging-error-handler.php')) {
+    include_once __DIR__ . '/wp-staging-error-handler.php';
+}
+
 $wpStaging = WPStaging::getInstance();
 
 /*

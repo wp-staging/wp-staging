@@ -940,6 +940,12 @@
           selector.elements[selector] = $(selector);
         }
       },
+      setJobId: function setJobId(jobId) {
+        localStorage.setItem('jobIdBeingProcessed', jobId);
+      },
+      getJobId: function getJobId() {
+        return localStorage.getItem('jobIdBeingProcessed');
+      },
       listenTooltip: function listenTooltip() {
         wpstgHoverIntent(document, '.wpstg--tooltip', function (target, event) {
           target.querySelector('.wpstg--tooltiptext').style.visibility = 'visible';
@@ -1679,7 +1685,19 @@
       cache.get('#wpstg-error-details').show().html(message);
       cache.get('#wpstg-removing-clone').removeClass('loading');
       cache.get('.wpstg-loader').hide();
-      $('.wpstg--modal--process--generic-problem').show().html(message);
+      $('.wpstg--modal--process--generic-problem').show().html(message); // Error event information for Staging
+
+      $.ajax({
+        url: ajaxurl,
+        type: 'POST',
+        dataType: 'json',
+        data: {
+          'action': 'wpstg_staging_job_error',
+          'accessToken': wpstg.accessToken,
+          'nonce': wpstg.nonce,
+          'error_message': message
+        }
+      });
     };
     /**
      * Show warning during cloning or push process when closing tab or browser, or changing page
@@ -1742,7 +1760,10 @@
       urlSpinner += '.gif';
       ajaxSpinner = '<img src=\'\'' + urlSpinner + '\' alt=\'\' class=\'ajax-spinner general-spinner\' />';
 
-      $workFlow // Check / Un-check All Database Tables New
+      $workFlow.on('change', '#wpstg_network_clone', function (e) {
+        e.preventDefault();
+        $('.wpstg-button-select').trigger('click');
+      }) // Check / Un-check All Database Tables New
       .on('click', '.wpstg-button-unselect', function (e) {
         e.preventDefault();
 
@@ -1766,20 +1787,16 @@
       .on('click', '.wpstg-button-select', function (e) {
         e.preventDefault();
         $('#wpstg_select_tables_cloning .wpstg-db-table').each(function () {
-          if (wpstg.isMultisite == 1) {
-            if ($(this).attr('name').match('^' + wpstg.tblprefix + '([^0-9])_*')) {
-              $(this).prop('selected', 'selected');
-            } else {
-              $(this).prop('selected', false);
-            }
+          var regex = '^' + wpstg.tblprefix;
+
+          if (wpstg.isMultisite === '1' && !$('#wpstg_network_clone').is(':checked')) {
+            regex += '([^0-9])_*';
           }
 
-          if (wpstg.isMultisite == 0) {
-            if ($(this).attr('name').match('^' + wpstg.tblprefix)) {
-              $(this).prop('selected', 'selected');
-            } else {
-              $(this).prop('selected', false);
-            }
+          if ($(this).attr('name').match(regex)) {
+            $(this).prop('selected', 'selected');
+          } else {
+            $(this).prop('selected', false);
           }
         });
       }) // Expand Directories
@@ -2078,7 +2095,7 @@
       }
 
       tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
-      var retryLimit = 10;
+      var retryLimit = 5;
       var retryTimeout = 10000 * tryCount;
       incrementRatio = parseInt(incrementRatio);
 
@@ -2097,11 +2114,13 @@
           tryCount++;
 
           if (tryCount <= retryLimit) {
+            console.log('RETRYING ' + tryCount + '/' + retryLimit);
             setTimeout(function () {
               ajax(data, callback, dataType, showErrors, tryCount, incrementRatio);
               return;
             }, retryTimeout);
           } else {
+            console.log('RETRYING LIMIT');
             var errorCode = 'undefined' === typeof xhr.status ? 'Unknown' : xhr.status;
             showError('Fatal Error:  ' + errorCode + ' Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
           }
@@ -2267,24 +2286,26 @@
 
         if (response.error_type === 'comparison') {
           cache.get('.wpstg-loader').hide();
-          var render = '<table style="width: 100%;"><thead><tr><th>Property</th><th>Production DB</th><th>Staging DB</th><th>Status</th></tr></thead><tbody>';
+          var render = '<table class="wpstg-db-comparison-table"><thead><tr><th>Property</th><th>Production DB</th><th>Staging DB</th><th>Status</th></tr></thead><tbody>';
           response.checks.forEach(function (x) {
-            var icon = '<i style="color: #00ff00">✔</i>';
+            var icon = '<span class="wpstg-css-tick"></span>';
 
             if (x.production !== x.staging) {
-              icon = '<i style="color: #ff0000">❌</i>';
+              icon = '<span class="wpstg-css-cross"></span>';
             }
 
             render += '<tr><td>' + x.name + '</td><td>' + x.production + '</td><td>' + x.staging + '</td><td>' + icon + '</td></tr>';
           });
-          render += '</tbody></table><p>Note: Some mySQL properties do not match. You may proceed but the staging site may not work as expected.</p>';
-          WPStagingCommon.getSwalModal().fire({
+          render += '</tbody></table><p>Note: Some MySQL/MariaDB properties do not match. You may proceed but the staging site may not work as expected.</p>';
+          WPStagingCommon.getSwalModal(true, {
+            popup: 'wpstg-swal-popup wpstg-db-comparison-modal centered-modal'
+          }).fire({
             title: 'Different Database Properties',
             icon: 'warning',
             html: render,
             width: '650px',
             focusConfirm: false,
-            confirmButtonText: 'Proceed Anyway',
+            confirmButtonText: 'Proceed',
             showCancelButton: true
           }).then(function (result) {
             if (result.value) {
@@ -2348,6 +2369,7 @@
       that.data.cloneDir = encodeURIComponent($.trim(cloneDir));
       that.data.cloneHostname = $('#wpstg_clone_hostname').val();
       that.data.emailsAllowed = $('#wpstg_allow_emails').is(':checked');
+      that.data.networkClone = $('#wpstg_network_clone').is(':checked');
       that.data.uploadsSymlinked = $('#wpstg_symlink_upload').is(':checked');
       that.data.cleanPluginsThemes = $('#wpstg-clean-plugins-themes').is(':checked');
       that.data.cleanUploadsDir = $('#wpstg-clean-uploads').is(':checked');
@@ -3151,6 +3173,21 @@
 
         $('.wpstg-caret').removeClass('wpstg-caret-up');
       }
+    }); // "Event info" for backup errors
+
+    window.addEventListener('finishedProcessWithError', function (customEvent) {
+      $.ajax({
+        url: ajaxurl,
+        type: 'POST',
+        dataType: 'json',
+        data: {
+          'action': 'wpstg_job_error',
+          'accessToken': wpstg.accessToken,
+          'nonce': wpstg.nonce,
+          'error_message': customEvent.detail.error,
+          'job_id': WPStagingCommon.getJobId()
+        }
+      });
     });
   });
 

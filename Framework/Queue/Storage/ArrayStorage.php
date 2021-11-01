@@ -14,7 +14,7 @@ class ArrayStorage implements StorageInterface
 
     public function commit()
     {
-        error_log('ArrayStorage does not implement commit.');
+        \WPStaging\functions\debug_log('ArrayStorage does not implement commit.');
     }
 
     /**
@@ -23,7 +23,7 @@ class ArrayStorage implements StorageInterface
      */
     public function setKey($key)
     {
-        error_log('ArrayStorage does not implement setKey.');
+        \WPStaging\functions\debug_log('ArrayStorage does not implement setKey.');
 
         return $this;
     }

@@ -77,7 +77,7 @@ trait WithQueueAwareness
          * a good response without waiting for it to be processed from the server.
          */
         if ($response instanceof WP_Error) {
-            error_log(json_encode([
+            \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Queue processing admin-ajax request failed.',
                 'class' => get_class($this),
                 'code' => $response->get_error_code(),

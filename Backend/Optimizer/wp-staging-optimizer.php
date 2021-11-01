@@ -319,7 +319,7 @@ LOG_ENTRY;
         }
     } else {
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log("WPSTAGING: Could not override the wp_mail() function to disable e-mails on staging site, as it was already defined before the optimizer mu-plugin was loaded.");
+            error_log("WP STAGING: Could not override the wp_mail() function to disable e-mails on staging site, as it was already defined before the optimizer mu-plugin was loaded.");
         }
     }
 }

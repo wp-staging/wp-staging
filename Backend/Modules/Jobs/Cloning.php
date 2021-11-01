@@ -5,6 +5,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Staging\Sites;
@@ -55,7 +56,7 @@ class Cloning extends Job
         // Generate Options
         // Clone ID -> timestamp (time at which this clone creation initiated)
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($_POST["cloneID"]));
-        // Clone Name -> Site name that user input, if user left it empty it will be Clone ID 
+        // Clone Name -> Site name that user input, if user left it empty it will be Clone ID
         $this->options->cloneName = wpstg_urldecode($_POST["cloneName"]);
         // The slugified version of Clone Name (to use in directory creation)
         $this->options->cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($this->options->cloneName));
@@ -150,26 +151,34 @@ class Cloning extends Job
         if (isset($_POST["databaseServer"]) && !empty($_POST["databaseServer"])) {
             $this->options->databaseServer = $_POST["databaseServer"];
         }
+
         $this->options->databaseUser = '';
         if (isset($_POST["databaseUser"]) && !empty($_POST["databaseUser"])) {
             $this->options->databaseUser = $_POST["databaseUser"];
         }
+
         $this->options->databasePassword = '';
         if (isset($_POST["databasePassword"]) && !empty($_POST["databasePassword"])) {
             $this->options->databasePassword = stripslashes($_POST["databasePassword"]);
         }
+
         $this->options->databaseDatabase = '';
         if (isset($_POST["databaseDatabase"]) && !empty($_POST["databaseDatabase"])) {
             $this->options->databaseDatabase = $_POST["databaseDatabase"];
         }
-        $this->options->databasePrefix = '';
+
+        // isExternalDatabase() depends upon databaseUser and databasePassword,
+        // Make sure they are set before calling this.
+        $this->options->databasePrefix = $this->isExternalDatabase() ? $this->db->prefix : '';
         if (isset($_POST["databasePrefix"]) && !empty($_POST["databasePrefix"])) {
             $this->options->databasePrefix = $this->appendUnderscore($_POST["databasePrefix"]);
         }
+
         $this->options->cloneDir = '';
         if (isset($_POST["cloneDir"]) && !empty($_POST["cloneDir"])) {
             $this->options->cloneDir = trailingslashit(wpstg_urldecode($_POST["cloneDir"]));
         }
+
         $this->options->cloneHostname = '';
         if (isset($_POST["cloneHostname"]) && !empty($_POST["cloneHostname"])) {
             $this->options->cloneHostname = trim($_POST["cloneHostname"]);
@@ -182,6 +191,11 @@ class Cloning extends Job
                 'wpstg_cloning_email_allowed',
                 isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false"
             );
+        }
+
+        $this->options->networkClone = false;
+        if ($this->isMultisiteAndPro() && is_main_site()) {
+            $this->options->networkClone = isset($_POST['networkClone']) && $_POST['networkClone'] !== "false";
         }
 
         $this->options->destinationHostname = $this->getDestinationHostname();
@@ -199,6 +213,8 @@ class Cloning extends Job
         // Save Clone data
         $this->saveClone();
 
+        WPStaging::make(AnalyticsStagingCreate::class)->enqueueStartEvent($this->options->jobIdentifier, $this->options);
+
         return $this->saveOptions();
     }
 
@@ -212,7 +228,7 @@ class Cloning extends Job
 
     /**
      * Save clone data initially
-     * @return boolean
+     * @return void
      */
     private function saveClone()
     {
@@ -242,14 +258,13 @@ class Cloning extends Job
             "excludeGlobRules"      => $this->options->excludeGlobRules,
             "excludedDirectories"   => $this->options->excludedDirectories,
             "extraDirectories"      => $this->options->extraDirectories,
+            "networkClone"          => $this->isNetworkClone(),
         ];
 
         if (update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones) === false) {
             $this->log("Cloning: Failed to save {$this->options->clone}'s clone job data to database'");
-            return false;
+            return;
         }
-
-        return true;
     }
 
     /**
@@ -295,7 +310,7 @@ class Cloning extends Job
     private function getDestinationDir()
     {
         // Throw fatal error
-        if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === (string)trailingslashit(WPStaging::getWPpath()))) {
+        if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === trailingslashit(WPStaging::getWPpath()))) {
             $this->returnException('Error: Target Directory must be different from the root of the production website.');
             die();
         }
@@ -362,7 +377,7 @@ class Cloning extends Job
         $methodName = "job" . ucwords($this->options->currentJob);
 
         if (!method_exists($this, $methodName)) {
-            $this->log("Can't execute job; Job's method {$methodName} is not found");
+            $this->log("Can't execute job; Job's method $methodName is not found");
             throw new JobNotFoundException($methodName);
         }
 
@@ -378,6 +393,7 @@ class Cloning extends Job
      * @param object $response
      * @param string $nextJob
      * @return object
+     * @throws \Exception
      */
     private function handleJobResponse($response, $nextJob)
     {
@@ -400,6 +416,7 @@ class Cloning extends Job
     /**
      * Copy data from staging site to temporary column to use it later
      * @return object
+     * @throws \Exception
      */
     public function jobPreserveDataFirstStep()
     {
@@ -410,6 +427,7 @@ class Cloning extends Job
     /**
      * Clone Database
      * @return object
+     * @throws \Exception
      */
     public function jobDatabase()
     {
@@ -420,6 +438,7 @@ class Cloning extends Job
     /**
      * Search & Replace
      * @return object
+     * @throws \Exception
      */
     public function jobSearchReplace()
     {
@@ -430,6 +449,7 @@ class Cloning extends Job
     /**
      * Copy tmp data back to staging site
      * @return object
+     * @throws \Exception
      */
     public function jobPreserveDataSecondStep()
     {
@@ -440,6 +460,7 @@ class Cloning extends Job
     /**
      * Get All Files From Selected Directories Recursively Into a File
      * @return object
+     * @throws \Exception
      */
     public function jobDirectories()
     {
@@ -450,6 +471,7 @@ class Cloning extends Job
     /**
      * Copy Files
      * @return object
+     * @throws \Exception
      */
     public function jobFiles()
     {
@@ -461,6 +483,7 @@ class Cloning extends Job
     /**
      * Replace Data
      * @return object
+     * @throws \Exception
      */
     public function jobData()
     {
@@ -470,6 +493,7 @@ class Cloning extends Job
     /**
      * Save Clone Data
      * @return object
+     * @throws \Exception
      */
     public function jobFinish()
     {

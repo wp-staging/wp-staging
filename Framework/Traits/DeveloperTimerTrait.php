@@ -52,7 +52,7 @@ trait DeveloperTimerTrait
             return;
         }
 
-        error_log(json_encode($this->timings, JSON_PRETTY_PRINT));
+        \WPStaging\functions\debug_log(json_encode($this->timings, JSON_PRETTY_PRINT));
     }
 
     protected function finishEventTimer($event, $context = [])

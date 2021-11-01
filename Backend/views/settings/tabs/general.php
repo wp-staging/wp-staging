@@ -402,6 +402,32 @@
                                 echo $form->render("wpstg_settings[adminBarColor]") ?>
                             </td>
                         </tr>
+                        <tr class="row">
+                            <td class="row th">
+                                <div class="col-title">
+                                    <strong><?php echo __('Usage Information', 'wp-staging') ?></strong>
+                                    <span class="description">
+                                        <?php
+                                        _e(
+                                            'Allow WP STAGING to send usage information to wp-staging.com.</strong>',
+                                            'wp-staging'
+                                        ); ?>
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <?php
+                                    $analytics = WPStaging\Core\WPStaging::make(\WPStaging\Framework\Analytics\AnalyticsConsent::class);
+                                    $analyticsAllowed = $analytics->hasUserConsent();
+                                    $isAllowed = $analyticsAllowed;
+                                    $isDisallowed = !$analyticsAllowed && !is_null($analyticsAllowed); // "null" means didn't answer, "false" means declined
+                                ?>
+                                <div style="font-weight:<?php echo $isAllowed ? 'bold' : ''; ?>"><a href="<?php echo esc_url($analytics->getConsentLink(true)) ?>"><?php echo esc_html__('Yes, send usage information. I\'d like to help improving this plugin.', 'wp-staging') ?></a></div>
+                                <div style="margin-top:10px;font-weight:<?php echo $isDisallowed ? 'bold' : ''; ?>"><a href="<?php echo esc_url($analytics->getConsentLink(false)) ?>"><?php echo esc_html__('No, Don\'t send any usage information.', 'wp-staging') ?></a></div>
+                                <?php
+                                ?>
+                            </td>
+                        </tr>
                         <?php
                     }
                     ?>
@@ -411,7 +437,7 @@
             <?php
         endforeach;
         // show this option only on the staging site
-        if ($this->siteInfo->isStaging()) :
+        if ($this->siteInfo->isStagingSite()) :
             ?>
         <div class="wpstg-settings-row">
             <b class="wpstg-settings-title"><?php _e('Allow Cloning (Staging Site Only)', 'wp-staging') ?></b>

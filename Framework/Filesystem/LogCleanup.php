@@ -25,9 +25,16 @@ class LogCleanup
         // Delete logs older than 7 days by default
         $deleteOlderThanDays = absint(apply_filters('wpstg.logs.deleteOlderThanDays', 7));
 
+        // Delete logs bigger than 5mb by default
+        $deleteBiggerThan = absint(apply_filters('wpstg.logs.deleteBiggerThanBytes', 5 * MB_IN_BYTES));
+
         /** @var \SplFileInfo $splFileInfo */
         foreach ($it as $splFileInfo) {
             if ($splFileInfo->isFile() && !$splFileInfo->isLink() && $splFileInfo->getExtension() === 'log') {
+                if ($splFileInfo->getSize() > $deleteBiggerThan) {
+                    unlink($splFileInfo->getPathname());
+                    continue;
+                }
                 if ($splFileInfo->getMTime() < strtotime("-$deleteOlderThanDays days")) {
                     // Not silenced nor logged
                     unlink($splFileInfo->getPathname());

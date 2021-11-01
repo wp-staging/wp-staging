@@ -158,8 +158,10 @@ class Notices
             $proNotices->getNotices();
         }
 
+        /** @var DisabledItemsNotice */
+        $disabledItemNotice = WPStaging::make(DisabledItemsNotice::class);
         // Show notice about what disabled in the staging site. (Show only on staging site)
-        if (self::SHOW_ALL_NOTICES || ((new DisabledItemsNotice())->isEnabled())) {
+        if (self::SHOW_ALL_NOTICES || $disabledItemNotice->isEnabled()) {
             $excludedPlugins = (array)(new ExcludedPlugins())->getExcludedPlugins();
             // Show freemius notice if freemius options were deleted during cloning.
             $freemiusOptionsCleared = (new FreemiusScript())->isNoticeEnabled();
@@ -177,6 +179,13 @@ class Notices
         // Show notice if WordFence Firewall is disabled
         /** @var WordFence */
         WPStaging::make(WordFence::class)->showNotice($viewsNoticesPath);
+
+        // Single dismissable notice to show all warning on staging sites
+        /** @var WarningsNotice */
+        $warningsNotice = WPStaging::make(WarningsNotice::class);
+        if ($warningsNotice->isEnabled()) {
+            require "{$viewsNoticesPath}warnings-notice.php";
+        }
 
         /**
          * Display all notices below this line in WP STAGING admin pages only and only to administrators!

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.8
-Stable tag: 2.8.8
+Stable tag: 2.8.9
 Requires PHP: 5.5
 
 A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -35,14 +35,14 @@ WP STAGING can help you to prevent your website from being broken or unavailable
 = Main Features =
 
 * WP STAGING clones the whole production site into a subfolder like example.com/staging-site.
-* Easy to use! Create a clone of your site by clicking one button
+* Easy to use! Create a clone / backup site by clicking one button
 * No Software as a Service - No account needed! All data belong to you only and stay on your server.
 * No server timeouts on huge websites or/and small hosting servers
-* Very fast - Migration and clone process takes only a few seconds or minutes, depending on the website's size and server I/O power.
+* Very fast - Migration and clone / backup process takes only a few seconds or minutes, depending on the website's size and server I/O power.
 * Use the clone as part of your backup strategy
-* Only administrators can access the clone website.
+* Only administrators can access the clone / backup website.
 * SEO friendly: The clone website is unavailable to search engines due to a custom login prompt and the meta tag no-index.
-* The admin bar on the staging website is orange colored and shows clearly when you work on the staging site.
+* The admin bar on the staging / backup website is orange colored and shows clearly when you work on the staging site.
 * Extensive logging features
 * Supports all popular web servers: Apache, Nginx, and Microsoft IIS
 * <strong>[Premium]: </strong>Choose a separate database and select a custom directory for cloning
@@ -55,7 +55,7 @@ WP STAGING can help you to prevent your website from being broken or unavailable
 
 = Additional Features WP STAGING | PRO Edition  =
 
-* Backup entire website, even with millions of database rows extremely fast
+* Backup entire website, even with millions of database rows faster and less resource intensive than with other plugins
 * Migrate and transfer WordPress to another host or domain
 * Cloning and migration of WordPress multisite
 * Define a separate database and a custom directory for cloning
@@ -63,7 +63,7 @@ WP STAGING can help you to prevent your website from being broken or unavailable
 * Specify certain user roles for accessing the staging site
 * Copy all modifications from the staging site to the production website
 
-<strong>Change your workflow of updating themes and plugins data:</strong>
+<strong>Change your workflow of updating themes and plugins:</strong>
 
 1. Use WP STAGING to clone a production website for staging, testing, or backup purposes
 2. Create a backup of your website
@@ -178,6 +178,41 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.8.9 =
+* New: Show a summary of selected tables and plugins in the backup push selection
+* New: Ask user to allow sending non-personalized usage information for improving the backup & staginguser experience
+* New: Adding improved and dedicated WP STAGING debug log for backup and staging.
+* New: Better support for custom ( backup ) tables without a wp core table prefix. Allow cloning / backup of custom tables that do not begin with a WP table prefix to an external database #1304
+* New: Now you can create a staging / backup environment for your entire multisite network #1263
+* New: Add new logic for showing update notification for PRO version, compatible to staged rollout releases #1308
+* New: Show warning notice about not changing wp-content or uploads dir path on staging / backup site #1313
+* Tweak: Disable the notice about not messing with uploads or wp-content directories in backup site #1385
+* Tweak: Lower memory consumption on backup creation #1301
+* Tweak: Fix open staging / backup site button and text #1321
+* Tweak: Layout of database comparison modal #1332
+* Tweak: Make staging / upgrade site upgrade routine run always #1358
+* Fix: Feedback modal not opened after disabling the backup plugin #1373
+* Fix: Prevent cloning error by enclosing table name with backticks in CLONE / BACKUP and PUSH jobs #1388
+* Fix: Duplicate primary key error that could occur on Push a backup / staging site #1322
+* Fix: Dont rename themes/plugins with tmp prefix during push of staging / backup site if content cleaning option is enabled #1305
+* Fix: No search & replace of wp option db_version if table prefix is db_, during CLONE / BACKUP / PUSH #1307
+* Fix: Avoid upgrade error if wp option wpstg_staging_sites is empty or not an array not an array #1331
+* Fix: Show an error if table can not be copied for any reason on cloning / backup process #1302
+* Fix: CSS issue vertical center align finish label after push #1311
+* Fix: Use WordPress local timezone when logging for clone and backups #1323
+* Fix: Better support for custom plugin directories on the staging / backup site #1314
+* Fix: Not all cloning / backup settings are cleaned during uninstall #1325
+* Fix: Staging / backup site does not have orange admin bar after cloning #1329
+* Fix: Warning if array key offset does not exist on search & replace of a backup #1334
+* Fix: Disable WordFence plugin on the staging /backup site to prevent by renaming .user.ini to .user.ini.bak #1338
+* Fix: Prevent empty database prefix in staging / backup site options if site is cloned to external database #1340
+* Fix: List of staging / backup sites contains duplicate entries if staging sites were initially created with wp staging free 2.8.6, then upgraded to pro 4.0.3 and pro 4.0.5 #1349
+* Fix: Show error and stop cloning / backup process if unable to create staging / backup site destination folder #1348
+* Fix: Fix issue about checking rest url on backup / staging site #1354
+* Fix: Fix exclude condition for tables during PUSH of a staging / backup site #1364
+* Fix: Fix PUSH process when no table is selected #1387
+* Fix: Enclose table name with backticks during quering in CLONE / BAKUP and PUSH jobs #1388
 
 = 2.8.8 =
 * New: Compatible up to WordPress 5.8.1
@@ -547,3 +582,4 @@ Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging
 * Fix: Rename .user.ini to .user.ini.bak after cloning into staging site reduce fatal errors on your staging site. Also show a notice about this #1255
 * Fix: Skip scanning the root directory if all other directories are are unselected #1256
 * Dev: fix the version of Selenium containers to 3.141.59-20210713 to avoid issues with broken latest version #1234
+#1300

@@ -7,6 +7,7 @@ use WPStaging\Backend\Notices\Notices;
 use WPStaging\Core\WPStaging;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
+use WPStaging\Backend\Pro\Modules\Jobs\Copiers\Copier;
 
 class Filesystem extends FilterableDirectoryIterator
 {
@@ -160,9 +161,7 @@ class Filesystem extends FilterableDirectoryIterator
         $result = wp_mkdir_p($path);
         restore_error_handler();
         if (!$result) {
-            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                error_log("Failed to create directory $path");
-            }
+            \WPStaging\functions\debug_log("Failed to create directory $path");
 
             return '';
         }
@@ -741,5 +740,31 @@ class Filesystem extends FilterableDirectoryIterator
     public function handleMkdirError($errno, $errstr)
     {
         $this->logs[] = "Unable to create directory. Reason: " . $errstr;
+    }
+
+    /**
+     * Build a temporary path for plugins and themes
+     * Add temporary prefix to plugin or theme main dir during the file copying push process.
+     * E.g. wpstg-tmp-yoast or wpstg-tmp-avada
+     *
+     * @return string
+     */
+    public function tmpDestinationPath($fullPath)
+    {
+        return preg_replace(
+            '#wp-content/(plugins|themes)/([A-Za-z0-9-_]+)#',
+            'wp-content/$1/' . Copier::PREFIX_TEMP . '$2',
+            $fullPath
+        );
+    }
+
+    /**
+     * @param string $filePath The filename to check.
+     *
+     * @return bool Whether the file exists and is readable.
+     */
+    public function isReadableFile($filePath)
+    {
+        return file_exists($filePath) && is_file($filePath) && is_readable($filePath);
     }
 }

@@ -74,9 +74,8 @@ class Upgrade
      */
     private function upgrade2_8_7()
     {
-        if (version_compare($this->previousVersion, '2.8.7', '<')) {
-            (new Sites())->upgradeStagingSitesOption();
-        }
+        $this->stagingSitesHelper->addMissingCloneNameUpgradeStructure();
+        $this->stagingSitesHelper->upgradeStagingSitesOption();
     }
 
     /**

@@ -11,7 +11,6 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
-use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
@@ -152,9 +151,8 @@ class Files extends JobExecutable
 
         // Finished or path does not exist
         if (empty($this->destination) || !is_dir($this->destination)) {
-            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                error_log('Destination is not a directory: ' . $this->destination);
-            }
+            \WPStaging\functions\debug_log('Destination is not a directory: ' . $this->destination);
+
             $this->log(sprintf(__('Fail! Destination is not a directory! %s', 'wp-staging'), $this->destination));
             return true;
         }

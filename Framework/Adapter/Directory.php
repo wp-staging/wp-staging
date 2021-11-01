@@ -99,7 +99,7 @@ class Directory
             return $this->logDirectory;
         }
 
-        $this->logDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . WPSTG_PLUGIN_DOMAIN . 'logs'));
+        $this->logDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . 'logs'));
 
         return $this->logDirectory;
     }

@@ -4,6 +4,8 @@ namespace WPStaging\Backend;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\DTO\Settings;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Database\DbInfo;
 use WPStaging\Framework\SiteInfo;
@@ -27,16 +29,14 @@ use WPStaging\Backend\Modules\Jobs\ProcessLock;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
 use WPStaging\Backend\Notices\Notices;
-use WPStaging\Backend\Notices\DisabledItemsNotice;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 use WPStaging\Backend\Activation;
 use WPStaging\Backend\Feedback;
-use WPStaging\Backend\Pro\Notices\BackupsDifferentPrefixNotice;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
+use WPStaging\Framework\Notices\DismissNotice;
 use WPStaging\Framework\Staging\Sites;
-use WPStaging\Framework\Support\ThirdParty\WordFence;
 
 /**
  * Class Administrator
@@ -173,6 +173,7 @@ class Administrator
         add_action("wp_ajax_wpstg_edit_clone_data", [$this, "ajaxEditCloneData"]);
         add_action("wp_ajax_wpstg_save_clone_data", [$this, "ajaxSaveCloneData"]);
         add_action("wp_ajax_wpstg_scan", [$this, "ajaxPushScan"]);
+        add_action("wp_ajax_wpstg_push_tables", [$this, "ajaxPushTables"]);
         add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
         add_action("wp_ajax_nopriv_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
 
@@ -233,7 +234,7 @@ class Administrator
     {
         $error = false;
         // is_array() is required otherwise new clone will fail.
-        if ($this->siteInfo->isStaging() && is_array($data)) {
+        if ($this->siteInfo->isStagingSite() && is_array($data)) {
             $isStagingCloneable = isset($data['isStagingSiteCloneable']) ? $data['isStagingSiteCloneable'] : 'false';
             unset($data['isStagingSiteCloneable']);
             $error = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
@@ -612,7 +613,7 @@ class Administrator
         }
 
         // Check first if there is already a process running
-        $response = (new ProcessLock())->ajaxIsRunning(); 
+        $response = (new ProcessLock())->ajaxIsRunning();
         if ($response !== false)
         {
             echo $response;
@@ -682,7 +683,7 @@ class Administrator
 
             return;
         }
-        
+
         // Check if destination clone dir exists and that it is not empty
         if (!wpstg_is_empty_dir($cloneDestDir)) {
             echo wp_send_json([
@@ -722,6 +723,9 @@ class Administrator
             wp_die('Can not save clone data');
         }
 
+        $options = $cloning->getOptions();
+        WPStaging::make(AnalyticsStagingUpdate::class)->enqueueStartEvent($options->jobIdentifier, $options);
+
         require_once "{$this->path}views/clone/ajax/update.php";
 
         wp_die();
@@ -741,6 +745,9 @@ class Administrator
         if (!$cloning->save()) {
             wp_die('can not save clone data');
         }
+
+        $options = $cloning->getOptions();
+        WPStaging::make(AnalyticsStagingReset::class)->enqueueStartEvent($options->jobIdentifier, $options);
 
         require_once "{$this->path}views/clone/ajax/update.php";
         wp_die();
@@ -893,7 +900,11 @@ class Administrator
      */
     public function messages()
     {
-        (new Notices($this->path, $this->assets))->messages();
+        $notices = new Notices($this->path, $this->assets);
+        $notices->messages();
+
+        // Return this instance when we request it from the container
+        WPStaging::getInstance()->getContainer()->singleton(Notices::class, $notices);
     }
 
     /**
@@ -954,25 +965,9 @@ class Administrator
             return;
         }
 
-        // Dismiss backups prefix notice
-        if ($_POST['wpstg_notice'] === 'backups_diff_prefix' && (new BackupsDifferentPrefixNotice())->disable() !== false) {
-            wp_send_json(true);
-            return;
-        }
-
-        // Dismiss disabled item notice
-        if ($_POST['wpstg_notice'] === 'disabled_items' && (new DisabledItemsNotice())->disable() !== false) {
-            wp_send_json(true);
-            return;
-        }
-
-        // Dismiss wordfence user.ini renamed notice
-        if ($_POST['wpstg_notice'] === WordFence::NOTICE_NAME && (new WordFence())->disable() !== false) {
-            wp_send_json(true);
-            return;
-        }
-
-        wp_send_json(null);
+        /** @var DismissNotice */
+        $dismissNotice = WPStaging::make(DismissNotice::class);
+        $dismissNotice->dismiss($_POST['wpstg_notice']);
     }
 
     /**
@@ -1098,6 +1093,39 @@ class Administrator
     }
 
     /**
+     * Fetch all tables for push process
+     */
+    public function ajaxPushTables()
+    {
+        if (!$this->isAuthenticated()) {
+            return false;
+        }
+
+        if (!class_exists('WPStaging\Backend\Pro\Modules\Jobs\Scan')) {
+            return false;
+        }
+
+        // Scan
+        $scan = new Pro\Modules\Jobs\Scan();
+
+        $scan->start();
+        
+        $templateEngine = new TemplateEngine();
+
+        echo json_encode([
+            'success' => true,
+            "content" => $templateEngine->render("/Backend/Pro/views/selections/tables.php", [
+                'isNetworkClone' => $scan->isNetworkClone(),
+                'options'  => $scan->getOptions(),
+                'showAll'  => true,
+                'selected' => isset($_POST['tables']) ? explode(',', $_POST['tables']) : false
+            ])
+        ]);
+
+        exit();
+    }
+
+    /**
      * Ajax Start Pushing. Needs WP Staging Pro
      */
     public function ajaxPushProcessing()
@@ -1188,12 +1216,14 @@ class Administrator
             return;
         }
 
+        global $wpdb;
+
         $args = $_POST;
         $user = !empty($args['databaseUser']) ? $args['databaseUser'] : '';
         $password = !empty($args['databasePassword']) ? $args['databasePassword'] : '';
         $database = !empty($args['databaseDatabase']) ? $args['databaseDatabase'] : '';
         $server = !empty($args['databaseServer']) ? $args['databaseServer'] : 'localhost';
-        $prefix = !empty($args['databasePrefix']) ? $args['databasePrefix'] : 'wp_';
+        $prefix = !empty($args['databasePrefix']) ? $args['databasePrefix'] : $wpdb->prefix;
         // make sure prefix doesn't contains any invalid character
         // same condition as in WordPress wpdb::set_prefix() method
         if (preg_match('|[^a-z0-9_]|i', $prefix)) {
@@ -1206,9 +1236,9 @@ class Administrator
 
         $dbInfo = new DbInfo($server, $user, stripslashes($password), $database);
         $wpdb = $dbInfo->connect();
-        $error = $dbInfo->getError();
 
         // Can not connect to mysql database
+        $error = $dbInfo->getError();
         if ($error !== null) {
             echo json_encode(['success' => 'false', 'errors' => $error]);
             exit;
@@ -1263,7 +1293,7 @@ class Administrator
 
     /**
      * Action to perform when error modal confirm button is clicked
-     * 
+     *
      * @todo use constants instead of hardcoded strings for error types
      */
     public function ajaxModalError()
@@ -1290,7 +1320,7 @@ class Administrator
             return;
         }
 
-        $response = (new ProcessLock())->ajaxIsRunning(); 
+        $response = (new ProcessLock())->ajaxIsRunning();
         if ($response !== false)
         {
             echo $response;
@@ -1369,7 +1399,7 @@ class Administrator
      * Toggle staging site cloning
      *
      * @param bool $isCloneable
-     * 
+     *
      * @return bool
      */
     protected function toggleStagingSiteCloning($isCloneable)

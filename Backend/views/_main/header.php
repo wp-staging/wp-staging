@@ -18,7 +18,9 @@
         $display = 'none;';
 
         if (defined('WPSTGPRO_VERSION')) {
-            if (!empty($latestReleasedVersion) && version_compare(WPStaging\Core\WPStaging::getVersion(), $latestReleasedVersion, '<')) {
+            $outdatedVersionCheck = new WPStaging\Backend\Notices\OutdatedWpStagingNotice();
+            $latestReleasedVersion = $outdatedVersionCheck->getLatestWpstgProVersion();
+            if ($outdatedVersionCheck->isOutdatedWpStagingProVersion()) {
                 $display = 'block;';
             }
         }

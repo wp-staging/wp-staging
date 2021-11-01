@@ -2,13 +2,13 @@
 
 namespace WPStaging\Framework\CloningProcess\Data;
 
-use WPStaging\Backend\Modules\Jobs\Job;
+use WPStaging\Backend\Modules\Jobs\Job as CloningJob;
 use WPStaging\Framework\CloningProcess\CloningDto;
 
 class DataCloningDto extends CloningDto
 {
     /**
-     * @var Job
+     * @var CloningJob
      */
     protected $job;
 
@@ -41,6 +41,16 @@ class DataCloningDto extends CloningDto
     /**
      * @var string
      */
+    protected $stagingSiteDomain;
+
+    /**
+     * @var string
+     */
+    protected $stagingSitePath;
+
+    /**
+     * @var string
+     */
     protected $uploadFolder;
 
     /**
@@ -65,7 +75,7 @@ class DataCloningDto extends CloningDto
 
     /**
      * DataCloningDto constructor.
-     * @param Job $job
+     * @param CloningJob $job
      * @param \wpdb $stagingDb
      * @param \wpdb $productionDb
      * @param bool $isExternal
@@ -86,7 +96,7 @@ class DataCloningDto extends CloningDto
      * @param string $mainJob
      */
     public function __construct(
-        Job $job,
+        CloningJob $job,
         \wpdb $stagingDb,
         \wpdb $productionDb,
         $isExternal,
@@ -117,6 +127,8 @@ class DataCloningDto extends CloningDto
         $this->homeUrl = $homeUrl;
         $this->baseUrl = $baseUrl;
         $this->mainJob = $mainJob;
+        $this->stagingSiteDomain = '';
+        $this->stagingSitePath = '';
     }
 
     /**
@@ -165,6 +177,36 @@ class DataCloningDto extends CloningDto
     public function getStagingSiteUrl()
     {
         return $this->stagingSiteUrl;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStagingSiteDomain()
+    {
+        if (!isset($this->stagingSiteDomain) || $this->stagingSiteDomain === '') {
+            $this->stagingSiteDomain = parse_url($this->getStagingSiteUrl())['host'];
+        }
+
+        return $this->stagingSiteDomain;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStagingSitePath()
+    {
+        if (!isset($this->stagingSitePath) || $this->stagingSitePath === '') {
+            $parsedUrl = parse_url($this->getStagingSiteUrl());
+
+            if (isset($parsedUrl['path'])) {
+                $this->stagingSitePath = $parsedUrl['path'];
+            } else {
+                $this->stagingSitePath = '';
+            }
+        }
+
+        return $this->stagingSitePath;
     }
 
     /**

@@ -37,7 +37,7 @@ trait ResourceTrait
 
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             if ($isTimeLimit || $isMemoryLimit) {
-                error_log(wp_json_encode(['class', __CLASS__, 'isTimeLimit' => $isTimeLimit, 'isMemoryLimit' => $isMemoryLimit]));
+                \WPStaging\functions\debug_log(wp_json_encode(['class', __CLASS__, 'isTimeLimit' => $isTimeLimit, 'isMemoryLimit' => $isMemoryLimit]));
             }
         }
 

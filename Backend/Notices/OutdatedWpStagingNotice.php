@@ -7,7 +7,7 @@ use WPStaging\Core\WPStaging;
 /**
  * Class OutdatedWpStagingNotice
  *
- * Show a notification if installed WP STAGING free version is outdated and if there is a new plugin update available
+ * Show a notification if installed WP STAGING free or pro version is outdated and if there is a new plugin update available
  * @see \WPStaging\Backend\Notices\Notices
  */
 class OutdatedWpStagingNotice
@@ -24,7 +24,7 @@ class OutdatedWpStagingNotice
 
     public function showNotice($viewsNoticesPath)
     {
-        // Early bail if PRO version and not an outdated version
+        // Early bail if it's PRO version and not an outdated version
         if (!Notices::SHOW_ALL_NOTICES && (WPStaging::isPro() || !$this->isOutdatedWpStagingVersion())) {
             return;
         }
@@ -57,12 +57,38 @@ class OutdatedWpStagingNotice
     }
 
     /**
+     * @return boolean
+     */
+    public function isOutdatedWpStagingProVersion()
+    {
+        // If latest pro version is not available there is no need to update
+        if ($this->getLatestWpstgProVersion() === null) {
+            return false;
+        }
+
+        return version_compare($this->getLatestWpstgProVersion(), $this->getCurrentWpstgVersion(), '>=') ? true : false;
+    }
+
+    /**
+     * Get the latest available WP STAGING PRO version
+     * @return string
+     */
+    public function getLatestWpstgProVersion()
+    {
+        return $this->getNewestVersionToUpdateBySlug('wp-staging-pro');
+    }
+
+    /**
      * @param string $slug
      * @return null|string
      */
     private function getNewestVersionToUpdateBySlug($slug)
     {
         $plugins = get_site_transient('update_plugins');
+        if (!is_object($plugins)) {
+            return null;
+        }
+
         $plugins = $plugins->response;
         foreach ($plugins as $plugin) {
             if ($plugin->slug === $slug) {
@@ -75,7 +101,7 @@ class OutdatedWpStagingNotice
 
     private function isOutdatedWpStagingVersion()
     {
-        // If latest version is not available that mean to update
+        // If latest version is not available there is no need to update
         if ($this->getLatestWpstgVersion() === null) {
             return false;
         }

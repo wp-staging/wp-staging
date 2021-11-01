@@ -3,7 +3,6 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
-use WPStaging\Core\Utils\Logger;
 
 class MultisiteUpdateActivePlugins extends DBCloningService
 {
@@ -38,7 +37,6 @@ class MultisiteUpdateActivePlugins extends DBCloningService
             throw new FatalException("Can not update option active_plugins in {$this->dto->getPrefix()}options");
         }
 
-        //$this->log("Done");
         return true;
     }
 }

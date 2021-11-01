@@ -4,6 +4,8 @@ namespace WPStaging\Framework\Staging;
 
 use WPStaging\Frontend\LoginNotice;
 use WPStaging\Backend\Notices\DisabledItemsNotice;
+use WPStaging\Backend\Notices\WarningsNotice;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Support\ThirdParty\WordFence;
 
@@ -26,10 +28,9 @@ class FirstRun
      */
     const MAILS_DISABLED_KEY = 'wpstg_emails_disabled';
 
-
     public function init()
     {
-        if (!(new SiteInfo())->isStaging()) {
+        if (!(new SiteInfo())->isStagingSite()) {
             return;
         }
 
@@ -52,10 +53,18 @@ class FirstRun
         (new LoginNotice())->setTransient();
 
         // Enable the notice which show what WP Staging Disabled on staging site admin.
-        (new DisabledItemsNotice())->enable();
+        WPStaging::make(DisabledItemsNotice::class)->enable();
+
+        // Enable the notice which show what WP Staging Disabled on staging site admin.
+        // This notice is disabled at the moment. Code below can be uncommented and notice can be tweaked if needed later.
+        // WPStaging::make(WarningsNotice::class)->enable();
 
         // If user.ini present rename it to user.ini.bak and enable notice
         (new WordFence())->renameUserIni();
+
+        if (class_exists('\WPStaging\Pro\Staging\NetworkClone')) {
+            (new \WPStaging\Pro\Staging\NetworkClone())->init();
+        }
 
         // Allow users to attach custom actions by using this hook
         do_action('wpstg.clone_first_run');

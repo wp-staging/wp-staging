@@ -231,6 +231,12 @@
           selector.elements[selector] = $(selector);
         }
       },
+      setJobId: function setJobId(jobId) {
+        localStorage.setItem('jobIdBeingProcessed', jobId);
+      },
+      getJobId: function getJobId() {
+        return localStorage.getItem('jobIdBeingProcessed');
+      },
       listenTooltip: function listenTooltip() {
         wpstgHoverIntent(document, '.wpstg--tooltip', function (target, event) {
           target.querySelector('.wpstg--tooltiptext').style.visibility = 'visible';

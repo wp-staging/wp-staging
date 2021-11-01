@@ -62,7 +62,7 @@
                     $prefix   = ! empty($data['prefix']) ? $data['prefix'] : '';
                     $cloneDir = ! empty($data['path']) ? $data['path'] : '';
                     $url      = ! empty($data['url']) ? sprintf('<a href="%1$s" target="_blank">%1$s</a>', $data['url']) : '';
-                    $datetime = ! empty($data['datetime']) ? date("D, d M Y H:i:s T", $data['datetime']) : '&nbsp;&nbsp;&nbsp;';
+                    $datetime = ! empty($data['datetime']) ? get_date_from_gmt(date("Y-m-d H:i:s", $data['datetime']), "D, d M Y H:i:s T") : '&nbsp;&nbsp;&nbsp;';
                     $owner    = ! empty($data['ownerId']) ? get_userdata($data['ownerId']) : null;
                     $ownerName = ! empty($owner->user_login) ? $owner->user_login : 'N/A';
                     $statusTooltip = "This clone is incomplete and does not work. Clone or update it again! \n\n" .

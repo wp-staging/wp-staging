@@ -9,6 +9,7 @@ use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
 use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Filesystem\Filesystem;
 
 /**
  * Class Database
@@ -35,6 +36,7 @@ class Database extends CloningProcess
     {
         $this->initializeDbObjects();
         $this->abortIfDirectoryNotEmpty();
+        $this->abortIfDirectoryNotCreated();
         $this->abortIfPrefixContainsInvalidCharacter();
         if (!$this->isExternalDatabase()) {
             $this->abortIfStagingPrefixEqualsProdPrefix();
@@ -242,12 +244,12 @@ class Database extends CloningProcess
 
     /**
      * Copy data from old table to new table
-     * @param string $new
-     * @param string $old
+     * @param string $newTableName
+     * @param string $oldTableName
      */
-    private function copyData($new, $old)
+    private function copyData($newTableName, $oldTableName)
     {
-        $this->databaseCloningService->copyData($old, $new, $this->options->job->start, $this->settings->queryLimit);
+        $this->databaseCloningService->copyData($oldTableName, $newTableName, $this->options->job->start, $this->settings->queryLimit);
         // Set new offset
         $this->options->job->start += $this->settings->queryLimit;
     }
@@ -256,38 +258,35 @@ class Database extends CloningProcess
      * @param mixed string|object $tableName
      * @return bool
      */
-    private function copyTable($tableName)
+    private function copyTable($srcTableName)
     {
-        $tableName = is_object($tableName) ? $tableName->name : $tableName;
-        $newTableName = $this->getStagingPrefix() . $this->databaseCloningService->removeDBPrefix($tableName);
+        $srcTableName = is_object($srcTableName) ? $srcTableName->name : $srcTableName;
+
+        $destTableName = $this->getStagingPrefix() . $this->databaseCloningService->removeDBPrefix($srcTableName);
 
         if ($this->isMultisiteAndPro()) {
-            // Get name table users from main site e.g. wp_users
-            if ($this->databaseCloningService->removeDBPrefix($tableName) === 'users') {
-                $tableName = $this->productionDb->base_prefix . 'users';
+            // Build full name of table 'users' from main site e.g. wp_users
+            if ($this->databaseCloningService->removeDBPrefix($srcTableName) === 'users') {
+                $srcTableName = $this->productionDb->base_prefix . 'users';
             }
-            // Get name of table usermeta from main site e.g. wp_usermeta
-            if ($this->databaseCloningService->removeDBPrefix($tableName) === 'usermeta') {
-                $tableName = $this->productionDb->base_prefix . 'usermeta';
+            // Build full name of table 'usermeta' from main site e.g. wp_usermeta
+            if ($this->databaseCloningService->removeDBPrefix($srcTableName) === 'usermeta') {
+                $srcTableName = $this->productionDb->base_prefix . 'usermeta';
             }
         }
 
-        if (!$this->isCopyProcessStarted() && $this->shouldAbortIfTableExist($newTableName)) {
-            $this->returnException(sprintf(__("Can not proceed. Tables beginning with the prefix '%s' already exist in the database i.e. %s. Choose another table prefix and try again.", "wp-staging"), $this->getStagingPrefix(), $newTableName));
+        if (!$this->isCopyProcessStarted() && $this->shouldAbortIfTableExist($destTableName)) {
+            $this->returnException(sprintf(__("Can not proceed. Tables beginning with the prefix '%s' already exist in the database i.e. %s. Choose another table prefix and try again.", "wp-staging"), $this->getStagingPrefix(), $destTableName));
             return true;
         }
 
-        if ($this->isTableExist($newTableName)) {
-            $this->databaseCloningService->dropTable($newTableName);
-        }
+        $this->setJob($destTableName);
 
-        $this->setJob($newTableName);
-
-        if (!$this->startJob($newTableName, $tableName)) {
+        if (!$this->startJob($destTableName, $srcTableName)) {
             return true;
         }
 
-        $this->copyData($newTableName, $tableName);
+        $this->copyData($destTableName, $srcTableName);
 
         return $this->finishStep();
     }
@@ -307,7 +306,7 @@ class Database extends CloningProcess
                     function ($tableName) {
                         return $this->options->prefix . $tableName;
                     },
-                    $this->excludedTableService->getExcludedTables()
+                    $this->excludedTableService->getExcludedTables($this->isNetworkClone())
                 )
             )
         ) {
@@ -333,13 +332,13 @@ class Database extends CloningProcess
             return true;
         }
 
-        if ($this->databaseCloningService->tableIsMissing($old)) {
+        if ($this->databaseCloningService->isMissingTable($old)) {
             return true;
         }
 
         try {
             $this->options->job->total = 0;
-            $this->options->job->total = $this->databaseCloningService->createTable($new, $old);
+            $this->options->job->total = $this->databaseCloningService->createTable($old, $new);
         } catch (FatalException $e) {
             $this->returnException($e->getMessage());
             return true;
@@ -421,6 +420,32 @@ class Database extends CloningProcess
         }
 
         return false;
+    }
+
+    /**
+     * Return fatal error, if unable to create staging site directory
+     * @return boolean
+     */
+    private function abortIfDirectoryNotCreated()
+    {
+        // Early bail if not a new staging site
+        if (isset($this->options->mainJob) && ($this->options->mainJob === 'resetting' || $this->options->mainJob === 'updating')) {
+            return false;
+        }
+
+        // Early bail if directory already exists
+        $path = trailingslashit($this->options->cloneDir);
+        if (is_dir($path)) {
+            return false;
+        }
+
+        $fs = new Filesystem();
+        if ($fs->mkdir($path)) {
+            return false;
+        }
+
+        $this->returnException(" Unable to create the staging site directory. " . $fs->getLogs()[0]);
+        return true;
     }
 
     /**

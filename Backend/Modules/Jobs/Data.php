@@ -3,8 +3,8 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\CloningProcess\Data\DataCloningDto;
 use WPStaging\Framework\CloningProcess\Data\CopyWpConfig;
+use WPStaging\Framework\CloningProcess\Data\Job as DataJob;
 use WPStaging\Framework\CloningProcess\Data\MultisiteAddNetworkAdministrators;
 use WPStaging\Framework\CloningProcess\Data\MultisiteUpdateActivePlugins;
 use WPStaging\Framework\CloningProcess\Data\ResetIndexPhp;
@@ -14,115 +14,27 @@ use WPStaging\Framework\CloningProcess\Data\UpdateWpConfigConstants;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpConfigTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpOptionsTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable;
-use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Strings;
-use WPStaging\Framework\Utils\Urls;
-use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
  * Class Data
  * @package WPStaging\Backend\Modules\Jobs
  */
-class Data extends CloningProcess
+class Data extends DataJob
 {
-    /**
-     * @var string
-     */
-    private $prefix;
-
-    /**
-     *
-     * @var string
-     */
-    private $homeUrl;
-
-    /**
-     *
-     * @var string
-     */
-    private $siteUrl;
-
-    /**
-     *
-     * @var string
-     */
-    protected $baseUrl;
-
-    /**
-     * Tables e.g wpstg3_options
-     * @var array
-     */
-    private $tables;
-
     /**
      * Initialize
      */
     public function initialize()
     {
-        $this->initializeDbObjects();
-
-        $this->prefix = $this->options->prefix;
-
+        parent::initialize();
         $this->getTables();
-
-        $this->homeUrl = (new Urls())->getHomeUrl();
-        $this->siteUrl = (new Urls())->getSiteUrl();
-        $this->baseUrl = (new Urls())->getBaseUrl();
-
-        // Reset current step
-        if ($this->options->currentStep === 0) {
-            $this->options->currentStep = 0;
-        }
-    }
-
-    /**
-     * Start Module
-     * @return object
-     */
-    public function start()
-    {
-        // Execute steps
-        $this->run();
-
-        // Save option, progress
-        $this->saveOptions();
-
-        return (object)$this->response;
-    }
-
-    /**
-     * @param int $stepNumber
-     * @return DataCloningDto
-     */
-    protected function getCloningDto($stepNumber)
-    {
-        return new DataCloningDto(
-            $this,
-            $this->stagingDb,
-            $this->productionDb,
-            $this->isExternalDatabase(),
-            $this->isMultisiteAndPro(),
-            $this->isExternalDatabase() ? $this->options->databaseServer : null,
-            $this->isExternalDatabase() ? $this->options->databaseUser : null,
-            $this->isExternalDatabase() ? $this->options->databasePassword : null,
-            $this->isExternalDatabase() ? $this->options->databaseDatabase : null,
-            $stepNumber,
-            $this->prefix,
-            $this->tables,
-            $this->getOptions()->destinationDir,
-            $this->getStagingSiteUrl(),
-            (new WpDefaultDirectories())->getRelativeUploadPath(),
-            $this->settings,
-            $this->homeUrl,
-            $this->baseUrl,
-            $this->options->mainJob
-        );
     }
 
     /**
      * Get a list of tables to copy
      */
-    private function getTables()
+    protected function getTables()
     {
         $strings = new Strings();
         $this->tables = [];
@@ -130,7 +42,7 @@ class Data extends CloningProcess
             $this->tables[] = $this->options->prefix . $strings->str_replace_first(WPStaging::getTablePrefix(), null, $table);
         }
 
-        if ($this->isMultisiteAndPro()) {
+        if ($this->isMultisiteAndPro() && !$this->isNetworkClone()) {
             // Add extra global tables from main multisite (wpstg[x]_users and wpstg[x]_usermeta)
             $this->tables[] = $this->options->prefix . 'users';
             $this->tables[] = $this->options->prefix . 'usermeta';
@@ -138,64 +50,16 @@ class Data extends CloningProcess
     }
 
     /**
-     * Calculate Total Steps in This Job and Assign It to $this->options->totalSteps
+     * Calculate total steps in this job and assign it to $this->options->totalSteps
      * @return void
      */
     protected function calculateTotalSteps()
     {
-        if ($this->isMultisiteAndPro()) {
+        $this->options->totalSteps = 7;
+
+        if ($this->isMultisiteAndPro() && !$this->isNetworkClone()) {
             $this->options->totalSteps = 9;
-        } else {
-            $this->options->totalSteps = 7;
         }
-    }
-
-
-    /**
-     * Execute the Current Step
-     * Returns false when over threshold limits are hit or when the job is done, true otherwise
-     * @return bool
-     */
-    protected function execute()
-    {
-        // Over limits threshold
-        if ($this->isOverThreshold()) {
-            // Prepare response and save current progress
-            $this->prepareResponse(false, false);
-            $this->saveOptions();
-            return false;
-        }
-
-        // No more steps, finished
-        if ($this->isFinished()) {
-            $this->prepareResponse(true, false);
-            return false;
-        }
-
-        // Execute step
-        $stepMethodName = "step" . $this->options->currentStep;
-        if (!$this->{$stepMethodName}()) {
-            $this->prepareResponse(false, false);
-            return false;
-        }
-
-        // Prepare Response
-        $this->prepareResponse();
-
-        // Not finished
-        return true;
-    }
-
-    /**
-     * Checks Whether There is Any Job to Execute or Not
-     * @return bool
-     */
-    protected function isFinished()
-    {
-        return
-            !$this->isRunning() ||
-            $this->options->currentStep > $this->options->totalSteps ||
-            !method_exists($this, "step" . $this->options->currentStep);
     }
 
     /**
@@ -281,7 +145,7 @@ class Data extends CloningProcess
      */
     protected function step8()
     {
-        if ($this->isMultisiteAndPro()) {
+        if ($this->isMultisiteAndPro() && !$this->isNetworkClone()) {
             return (new MultisiteUpdateActivePlugins($this->getCloningDto(8)))->execute();
         }
 
@@ -295,62 +159,10 @@ class Data extends CloningProcess
      */
     protected function step9()
     {
-        if ($this->isMultisiteAndPro()) {
+        if ($this->isMultisiteAndPro() && !$this->isNetworkClone()) {
             return (new MultisiteAddNetworkAdministrators($this->getCloningDto(9)))->execute();
         }
 
         return true;
-    }
-
-
-    /**
-     * Check if WP is installed in subdir
-     * @return boolean
-     */
-    protected function isSubDir()
-    {
-        return (new SiteInfo())->isInstalledInSubDir();
-    }
-
-    /**
-     * Get the install sub directory if WP is installed in sub directory
-     * @return string
-     */
-    protected function getInstallSubDir()
-    {
-        $home = get_option('home');
-        $siteurl = get_option('siteurl');
-
-        if (empty($home) || empty($siteurl)) {
-            return '';
-        }
-
-        return str_replace([$home, '/'], '', $siteurl);
-    }
-
-    /**
-     * Return URL of staging site
-     * @return string
-     */
-    protected function getStagingSiteUrl()
-    {
-        if (!empty($this->options->cloneHostname)) {
-            return $this->options->cloneHostname;
-        }
-        if ($this->isMultisiteAndPro()) {
-            if ($this->isSubDir()) {
-                return trailingslashit($this->baseUrl) . trailingslashit($this->getInstallSubDir()) . $this->options->cloneDirectoryName;
-            }
-
-            // Get the path to the main multisite without a trailingslash e.g. wordpress
-            $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
-            return rtrim($this->baseUrl, '/\\') . $multisitePath . $this->options->cloneDirectoryName;
-        }
-
-        if ($this->isSubDir()) {
-            return trailingslashit($this->homeUrl) . trailingslashit($this->getInstallSubDir()) . $this->options->cloneDirectoryName;
-        }
-
-        return trailingslashit($this->siteUrl) . $this->options->cloneDirectoryName;
     }
 }

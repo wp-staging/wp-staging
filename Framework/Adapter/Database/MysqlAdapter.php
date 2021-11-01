@@ -39,9 +39,7 @@ class MysqlAdapter implements InterfaceDatabaseClient
 
     public function realQuery($query, $isExecOnly = false)
     {
-        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log('mysql_real_query() doesn\'t exist in PHP. However, mysqli_real_query() exists.');
-        }
+        \WPStaging\functions\debug_log('mysql_real_query() doesn\'t exist in PHP. However, mysqli_real_query() exists.');
 
         return $this->query($query, $isExecOnly);
     }

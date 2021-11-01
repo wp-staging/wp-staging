@@ -25,9 +25,7 @@ class Container extends \WPStaging\Vendor\tad_DI52_Container
         try {
             return $this->offsetGet($offset);
         } catch (\Exception $e) {
-            if (defined('WP_DEBUG') && WP_DEBUG) {
-                error_log($e->getMessage());
-            }
+            \WPStaging\functions\debug_log($e->getMessage());
 
             return null;
         }

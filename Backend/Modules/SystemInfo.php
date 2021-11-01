@@ -2,13 +2,12 @@
 
 namespace WPStaging\Backend\Modules;
 
-use WPStaging\Core\DI\InjectionAware;
 use WPStaging\Core\Utils\Browser;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils;
 use WPStaging\Core\Utils\Multisite;
-use WPStaging\Core\Utils\Helper;
 use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\SiteInfo;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -29,7 +28,7 @@ class SystemInfo
 
     /**
      *
-     * @var obj
+     * @var object
      */
     private $helper;
 
@@ -145,7 +144,7 @@ class SystemInfo
 
         $multisite = new Multisite();
 
-        $output = $this->info("Multisite:", ($this->isMultiSite ? "Yes" : "No"));
+        $output = $this->info("Multisite:", "Yes");
         $output .= $this->info("Multisite Blog ID:", get_current_blog_id());
         $output .= $this->info("MultiSite URL:", $multisite->getHomeURL());
         $output .= $this->info("MultiSite URL without scheme:", $multisite->getHomeUrlWithoutScheme());
@@ -163,14 +162,6 @@ class SystemInfo
         // Get wpstg settings
         $settings = (object)get_option('wpstg_settings', []);
 
-        // Clones data < 1.1.6.x
-        $clones = (object)get_option('wpstg_existing_clones', []);
-        // Clones data version > 2.x
-        // old name wpstg_existing_clones_beta
-        // New name since version 4.0.3
-        $stagingSites = get_option(Sites::STAGING_SITES_OPTION, []);
-
-
         $output = "-- WP Staging Settings" . PHP_EOL . PHP_EOL;
         $output .= $this->info("Query Limit:", isset($settings->queryLimit) ? $settings->queryLimit : 'undefined');
         $output .= $this->info("DB Search & Replace Limit:", isset($settings->querySRLimit) ? $settings->querySRLimit : 'undefined');
@@ -179,13 +170,19 @@ class SystemInfo
         $output .= $this->info("CPU Load:", isset($settings->cpuLoad) ? $settings->cpuLoad : 'undefined');
         $output .= $this->info("WP in Subdir:", $this->isSubDir() ? 'true' : 'false');
 
-        $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version < 1.1.6.x" . PHP_EOL . PHP_EOL;
+        $output .= PHP_EOL . PHP_EOL . "-- Available Sites. Version < 1.1.6.x" . PHP_EOL . PHP_EOL;
 
+        // Clones data < 1.1.6.x
+        $clones = (object)get_option('wpstg_existing_clones', []);
         foreach ($clones as $key => $value) {
             $output .= $this->info("Site name & subfolder :", $value);
         }
-        $output .= PHP_EOL . PHP_EOL . "-- Available Sites Version > 2.0.x" . PHP_EOL . PHP_EOL;
+        $output .= PHP_EOL . PHP_EOL . "-- Available Sites. Version > 2.0.x" . PHP_EOL . PHP_EOL;
 
+        // Clones data version > 2.x
+        // old name wpstg_existing_clones_beta
+        // New name since version 4.0.3 wpstg_staging_sites
+        $stagingSites = get_option(Sites::STAGING_SITES_OPTION, []);
         foreach ($stagingSites as $key => $clone) {
             $path = !empty($clone['path']) ? $clone['path'] : 'undefined';
 
@@ -199,13 +196,15 @@ class SystemInfo
             $output .= $this->info("WP Version:", $this->getStagingWpVersion($path)) . PHP_EOL . PHP_EOL;
         }
 
-
-        $output .= $this->info("Raw Clones Data:", json_encode(get_option(Sites::STAGING_SITES_OPTION, 'undefined')));
-
+        $output .= $this->info(Sites::STAGING_SITES_OPTION . ": ", serialize(get_option(Sites::STAGING_SITES_OPTION, [])));
         $output .= '' . PHP_EOL;
 
+        $output .= $this->info(Sites::OLD_STAGING_SITES_OPTION . ": ", serialize(get_option(Sites::OLD_STAGING_SITES_OPTION, [])));
+        $output .= '' . PHP_EOL;
 
-        //$output .= PHP_EOL . PHP_EOL;
+        $output .= $this->info(Sites::BACKUP_STAGING_SITES_OPTION . ": ", serialize(get_option(Sites::BACKUP_STAGING_SITES_OPTION, [])));
+        $output .= '' . PHP_EOL;
+
 
         $output .= $this->info("Plugin Pro Version:", get_option('wpstgpro_version', 'undefined'));
         $output .= $this->info("Plugin Pro License Key:", get_option('wpstg_license_key'));
@@ -213,7 +212,7 @@ class SystemInfo
         $output .= $this->info("Install Date:", get_option('wpstg_installDate', 'undefined'));
         $output .= $this->info("Upgraded from Pro:", get_option('wpstgpro_version_upgraded_from', 'undefined'));
         $output .= $this->info("Upgraded from Free:", get_option('wpstg_version_upgraded_from', 'undefined'));
-        $output .= $this->info("Is Staging Site:", wpstg_is_stagingsite() ? 'true' : 'false') . PHP_EOL . PHP_EOL;
+        $output .= $this->info("Is Staging Site:", (new SiteInfo())->isStagingSite() ? 'true' : 'false') . PHP_EOL . PHP_EOL;
 
 
         return apply_filters("wpstg_sysinfo_after_wpstaging_info", $output);
@@ -294,8 +293,7 @@ class SystemInfo
         $output .= $this->info("Language:", (defined("WPLANG") && WPLANG) ? WPLANG : "en_US");
 
         $permalinkStructure = get_option("permalink_structure");
-        ;
-        $output .= $this->info("Permalink Structure:", ($permalinkStructure) ? $permalinkStructure : "Default");
+        $output .= $this->info("Permalink Structure:", ($permalinkStructure) ?: "Default");
 
         $output .= $this->info("Active Theme:", $this->theme());
         $output .= $this->info("Show On Front:", get_option("show_on_front"));
@@ -478,8 +476,7 @@ class SystemInfo
         }
 
         if (function_exists('exec') && @exec('echo EXEC') == 'EXEC') {
-            $user = exec('whoami');
-            return $user;
+            return exec('whoami');
         }
 
         return $user;
@@ -586,7 +583,7 @@ class SystemInfo
     /**
      * Try to get the staging prefix from wp-config.php of staging site
      * @param array $clone
-     * @return sting
+     * @return string
      */
     private function getStagingPrefix($clone = [])
     {

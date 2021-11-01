@@ -27,7 +27,7 @@ $canInvalidate = function_exists('opcache_invalidate')
 // Early bail: OPCache not enabled, or we can't clear it.
 if (!$canInvalidate) {
     if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-        error_log('WPSTaging: Can not clear OPCache.');
+        error_log('WP STAGING: Can not clear OPCache.');
     }
 
     return;
@@ -45,7 +45,7 @@ if (!$canInvalidate) {
  *
  * We use the "Version" from the headers of the main file of the plugin to compare.
  */
-$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '2.8.8';
+$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '2.8.9';
 $lastCheckHappenedAfterInterval          = current_time('timestamp') > (int)get_site_transient('wpstg.bootstrap.opcache.lastCleared') + 5 * MINUTE_IN_SECONDS;
 
 $shouldClearOpCache = apply_filters('wpstg.bootstrap.opcache.shouldClear', $runtimeVersionDifferentFromBuildVersion && $lastCheckHappenedAfterInterval);
@@ -90,15 +90,15 @@ if ($shouldClearOpCache) {
 
     add_action('admin_notices', function () use ($pluginFilePath, $start) {
         echo '<div class="notice-warning notice is-dismissible">';
-        echo '<p style="font-weight: bold;">' . esc_html__('WPSTAGING OPCache') . '</p>';
-        echo '<p>' . wp_kses_post(__(sprintf('WPSTAGING detected that the OPCache was outdated and automatically cleared the OPCache for the <strong>%s</strong> folder to prevent issues. This operation took %s seconds.', plugin_basename($pluginFilePath), number_format(microtime(true) - $start, 4)))) . '</p>';
+        echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING OPCache') . '</p>';
+        echo '<p>' . wp_kses_post(__(sprintf('WP STAGING detected that the OPCache was outdated and automatically cleared the OPCache for the <strong>%s</strong> folder to prevent issues. This operation took %s seconds.', plugin_basename($pluginFilePath), number_format(microtime(true) - $start, 4)))) . '</p>';
         echo '</div>';
     });
 
     if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
         error_log(sprintf('%s files were cleared from OPCache in %s seconds', $success, microtime(true) - $start));
         if (!empty($failures)) {
-            error_log(sprintf('WPSTG could not clear %s files from the OpCache cache upon activation. There may be inconsistencies.', $failures));
+            error_log(sprintf('WP STAGING could not clear %s files from the OpCache cache upon activation. There may be inconsistencies.', $failures));
         }
     }
 }

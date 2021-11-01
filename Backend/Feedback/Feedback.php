@@ -65,8 +65,8 @@ class Feedback
 
         $success = wp_mail('feedback@wp-staging.com', $subject, $text, $headers);
 
-        //error_log(print_r($success, true));
-        //error_log($from . $subject . var_dump($form));
+        //\WPStaging\functions\debug_log(print_r($success, true));
+        //\WPStaging\functions\debug_log($from . $subject . var_dump($form));
 
         if ($success) {
             wp_die(1);
@@ -143,8 +143,8 @@ class Feedback
 //        wp_die( 1 );
 //    }
 //    wp_die( 0 );
-//    //error_log(print_r($success, true));
-//    //error_log($from . $subject . var_dump($form));
+//    //\WPStaging\functions\debug_log(print_r($success, true));
+//    //\WPStaging\functions\debug_log($from . $subject . var_dump($form));
 //    die();
 //}
 //

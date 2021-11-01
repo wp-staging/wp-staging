@@ -121,7 +121,7 @@ class DiskWriteCheck
             $result = $this->setLowLevelDiskFullFlag();
 
             if (!$result) {
-                error_log('WPSTGAGING DiskWriteCheck failed and could not update the option in the database.');
+                \WPStaging\functions\debug_log('WPSTGAGING DiskWriteCheck failed and could not update the option in the database.');
             }
         }
 

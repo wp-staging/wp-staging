@@ -158,7 +158,7 @@ class Frontend
      */
     private function isStagingSite()
     {
-        return (new SiteInfo())->isStaging();
+        return (new SiteInfo())->isStagingSite();
     }
 
     /**

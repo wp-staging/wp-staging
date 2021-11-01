@@ -12,7 +12,7 @@ class MultisiteAddNetworkAdministrators extends DBCloningService
     protected function internalExecute()
     {
         $productionDb = $this->dto->getProductionDb();
-        $db = $this->dto->getStagingDb();
+        $stagingDb = $this->dto->getStagingDb();
         $prefix = $this->dto->getPrefix();
 
         $this->log("Adding network administrators");
@@ -30,7 +30,7 @@ class MultisiteAddNetworkAdministrators extends DBCloningService
             $userId = $productionDb->get_var("SELECT ID FROM {$productionDb->base_prefix}users WHERE user_login = '{$username}' ");
 
             // Check if user capability already exists
-            $capabilityExists = $db->get_var("SELECT user_id FROM {$prefix}usermeta WHERE user_id = '{$userId}' AND meta_key = '{$prefix}capabilities' ");
+            $capabilityExists = $stagingDb->get_var("SELECT user_id FROM {$prefix}usermeta WHERE user_id = '{$userId}' AND meta_key = '{$prefix}capabilities' ");
 
             // Do nothing if already exists
             if (!empty($capabilityExists)) {
@@ -38,7 +38,7 @@ class MultisiteAddNetworkAdministrators extends DBCloningService
             }
 
             // Add new capability
-            $sql .= $db->prepare(
+            $sql .= $stagingDb->prepare(
                 "INSERT INTO `{$prefix}usermeta` ( `umeta_id`, `user_id`, `meta_key`, `meta_value` ) VALUES ( NULL , %s, %s, %s );\n",
                 $userId,
                 $prefix . 'capabilities',
@@ -62,11 +62,11 @@ class MultisiteAddNetworkAdministrators extends DBCloningService
      */
     protected function executeSql($sqlbatch)
     {
-        $db = $this->dto->getStagingDb();
+        $stagingDb = $this->dto->getStagingDb();
         $queries = array_filter(explode(";\n", $sqlbatch));
 
         foreach ($queries as $query) {
-            if ($db->query($query) === false) {
+            if ($stagingDb->query($query) === false) {
                 $this->log("Could not execute query {$query}", Logger::TYPE_WARNING);
             }
         }

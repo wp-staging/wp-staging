@@ -27,9 +27,7 @@ trait HydrateTrait
             try {
                 $this->hydrateByMethod('set' . ucfirst($key), $value);
             } catch (Exception $e) {
-                if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                    error_log($e->getMessage());
-                }
+                \WPStaging\functions\debug_log($e->getMessage());
             }
         }
 

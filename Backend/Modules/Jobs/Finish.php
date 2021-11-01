@@ -4,6 +4,9 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Helper;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
+use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Staging\Sites;
 
 /**
@@ -48,6 +51,18 @@ class Finish extends Job
             "job"           => $this->options->currentJob,
             "percentage"    => 100
         ];
+
+        switch ($this->options->mainJob) {
+            case 'cloning':
+                WPStaging::make(AnalyticsStagingCreate::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
+                break;
+            case 'updating':
+                WPStaging::make(AnalyticsStagingUpdate::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
+                break;
+            case 'resetting':
+                WPStaging::make(AnalyticsStagingReset::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
+                break;
+        }
 
         do_action('wpstg_cloning_complete', $this->options);
 

@@ -74,9 +74,7 @@ class DirectoryListing
                 }
             }
         } catch (\Exception $e) {
-            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                error_log('WPSTAGING: Could not open plugin upload directory to protect from directory listing. ' . $e->getMessage());
-            }
+            \WPStaging\functions\debug_log('WP STAGING: Could not open plugin upload directory to protect from directory listing. ' . $e->getMessage());
         }
     }
 

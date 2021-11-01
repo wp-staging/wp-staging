@@ -24,7 +24,7 @@ class Demo
 
         foreach (range(1, $count) as $k) {
             $queue->enqueueAction(self::class . '::' . 'writeToLog', [$k]);
-            error_log("Enqueued Action {$k}");
+            \WPStaging\functions\debug_log("Enqueued Action {$k}");
         }
     }
 
@@ -33,6 +33,6 @@ class Demo
         $interval = mt_rand(0, 2);
         sleep($interval);
         $pid = getmypid();
-        error_log("Action {$k} done [PID {$pid}]!");
+        \WPStaging\functions\debug_log("Action {$k} done [PID {$pid}]!");
     }
 }

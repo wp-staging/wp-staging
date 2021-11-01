@@ -36,11 +36,29 @@ class WordFence extends BooleanNotice
             return;
         }
 
+        $activePlugins = apply_filters('active_plugins', (array)get_option('active_plugins'));
+        if (!in_array('wordfence/wordfence.php', $activePlugins)) {
+            return;
+        }
+
         // Rename by appending .bak to its name
         rename($absolutePathToUserIni, $absolutePathToUserIni . '.bak');
 
         // Enable the notice
         $this->enable();
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isEnabled()
+    {
+        // Early bail if renamed file not exists.
+        if (!file_exists(ABSPATH . '/.user.ini.bak')) {
+            return false;
+        }
+
+        return parent::isEnabled();
     }
 
     /**

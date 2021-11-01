@@ -34,6 +34,17 @@ $isPro = defined('WPSTGPRO_VERSION');
 </span>
 
 <div class="wpstg-tabs-wrapper">
+    <?php if ($isPro && is_multisite() && is_main_site()) : ?>
+    <a href="#" class="wpstg-tab-header active expand" data-id="#wpstg-network-options">
+        <span class="wpstg-tab-triangle wpstg-rotate-90"></span>
+        <?php echo __("Network Options", "wp-staging") ?>
+    </a>
+
+    <fieldset class="wpstg-tab-section" id="wpstg-network-options" style="display: block;">
+        <?php require(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/clone/ajax/network-options.php'); ?>
+    </fieldset>
+    <?php endif; ?>
+
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
         <span class="wpstg-tab-triangle"></span>
         <?php echo __("Database Tables", "wp-staging") ?>

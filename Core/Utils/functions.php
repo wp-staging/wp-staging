@@ -10,7 +10,6 @@
  *
  */
 
-use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
@@ -50,7 +49,7 @@ function wpstg_replace_windows_directory_separator($path)
  * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
  * @link   http://php.net/manual/en/function.mysql-real-escape-string.php#101248
  * @access public
- * @param string $input The string to escape.
+ * @param string | array $input The string to escape.
  * @return string
  */
 function wpstg_mysql_escape_mimic($input)
@@ -75,22 +74,6 @@ function wpstg_replace_first_match($needle, $replace, $haystack)
 {
     $result = $haystack;
     $pos = strpos($haystack, $needle);
-    if ($pos !== false) {
-        $result = substr_replace($haystack, $replace, $pos, strlen($needle));
-    }
-    return $result;
-}
-
-/**
- * Search & Replace last occurence of string in haystack
- * @param string $haystack
- * @param string $needle
- * @return string
- */
-function wpstg_replace_last_match($needle, $replace, $haystack)
-{
-    $result = $haystack;
-    $pos = strrpos($haystack, $needle);
     if ($pos !== false) {
         $result = substr_replace($haystack, $replace, $pos, strlen($needle));
     }
@@ -135,20 +118,6 @@ function wpstg_urldecode($data)
     }
 
     return $data;
-}
-
-/**
- * Check if it is a staging site
- *
- * @deprecated
- * @see         \WPStaging\Framework\SiteInfo::isStaging Removed in favor of this.
- * @todo        Remove this in future versions.
- *
- * @return bool
- */
-function wpstg_is_stagingsite()
-{
-    return (new SiteInfo())->isStaging();
 }
 
 /**

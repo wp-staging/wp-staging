@@ -33,7 +33,7 @@ class SiteInfo
     const IS_STAGING_KEY = 'wpstg_is_staging_site';
 
     /**
-     * The file which makes site a staging site
+     * The file which makes a site a staging site
      * @var string
      */
     const STAGING_FILE = '.wp-staging';
@@ -52,7 +52,7 @@ class SiteInfo
     /**
      * @return bool True if is staging site. False otherwise.
      */
-    public function isStaging()
+    public function isStagingSite()
     {
         if (get_option(self::IS_STAGING_KEY) === "true") {
             return true;
@@ -69,7 +69,7 @@ class SiteInfo
     public function isCloneable()
     {
         // Site should be cloneable if not staging i.e. production site
-        if (!$this->isStaging()) {
+        if (!$this->isStagingSite()) {
             return true;
         }
 
@@ -79,7 +79,7 @@ class SiteInfo
         }
 
         // New condition for checking whether staging is cloneable or not
-        return $this->cloneOptions->get(self::IS_CLONEABLE_KEY, false);
+        return $this->cloneOptions->get(self::IS_CLONEABLE_KEY);
     }
 
     /**
@@ -112,7 +112,7 @@ class SiteInfo
     public function enableStagingSiteCloning()
     {
         // Early Bail: if site is not staging
-        if (!$this->isStaging()) {
+        if (!$this->isStagingSite()) {
             return false;
         }
 
@@ -132,7 +132,7 @@ class SiteInfo
     public function disableStagingSiteCloning()
     {
         // Early Bail: if site is not staging
-        if (!$this->isStaging()) {
+        if (!$this->isStagingSite()) {
             return false;
         }
 

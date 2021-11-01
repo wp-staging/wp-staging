@@ -160,7 +160,7 @@ class Queue
         $result = $this->database->query($query, true);
 
         if (empty($result)) {
-            error_log(json_encode([
+            \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Error while trying insert Action information.',
                 'class' => get_class($this),
                 'query' => $query,
@@ -173,7 +173,7 @@ class Queue
         $id = $this->database->insertId();
 
         if (empty($id)) {
-            error_log(json_encode([
+            \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Error while trying to fetch last inserted Action ID.',
                 'class' => get_class($this),
                 'query' => $query,
@@ -391,7 +391,7 @@ class Queue
             $result = $this->database->query($query);
 
             if (false === $result) {
-                error_log(json_encode([
+                \WPStaging\functions\debug_log(json_encode([
                     'root' => 'Error while trying to fetch Actions information.',
                     'class' => get_class($this),
                     'query' => $query,
@@ -536,7 +536,7 @@ class Queue
             $error = $this->database->error();
 
             if (!empty($error)) {
-                error_log(json_encode([
+                \WPStaging\functions\debug_log(json_encode([
                     'root' => 'Error while trying to count Actions.',
                     'class' => get_class($this),
                     'query' => $countQuery,
@@ -594,7 +594,7 @@ class Queue
         $updated = $this->database->query($statusUpdateQuery, true);
 
         if (!$updated) {
-            error_log(json_encode([
+            \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Error while trying to update Action status.',
                 'class' => get_class($this),
                 'query' => $statusUpdateQuery,
@@ -789,7 +789,7 @@ class Queue
         $markResult = $this->database->query($markQuery, true);
 
         if ($markResult === false) {
-            error_log(json_encode([
+            \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Error while trying to mark dangling Actions.',
                 'class' => get_class($this),
                 'query' => $markQuery,
@@ -868,7 +868,7 @@ class Queue
         $cancelResult = $this->database->query($cancelQuery, true);
 
         if ($cancelResult === false) {
-            error_log(json_encode([
+            \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Error while trying to cancel Actions.',
                 'class' => get_class($this),
                 'query' => $cancelQuery,
@@ -950,7 +950,7 @@ class Queue
         $updated = $this->database->query($statusUpdateQuery, true);
 
         if (!$updated) {
-            error_log(json_encode([
+            \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Error while trying to update Action field.',
                 'class' => get_class($this),
                 'query' => $statusUpdateQuery,
@@ -1059,7 +1059,7 @@ class Queue
         $cleanupResult = $this->database->query($clenupQuery, true);
 
         if ($cleanupResult === false) {
-            error_log(json_encode([
+            \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Error while trying to cleanup Actions.',
                 'class' => get_class($this),
                 'query' => $clenupQuery,

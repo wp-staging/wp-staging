@@ -36,7 +36,7 @@
                         <?php _e('Backup & Migration', 'wp-staging') ?>
                     </a>
                 </li>
-                <li>
+                <li class="wpstg-tab-item--vert-center">
                     <span class="wpstg-loader"></span>
                 </li>
             </ul>
