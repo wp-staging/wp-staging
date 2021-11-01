@@ -36,15 +36,13 @@ class Pluginmeta
     /**
      * Plugins row action links
      *
-     * @author Michael Cannon <mc@aihr.us>
-     * @since 0.9.0
      * @param array $links already defined action links
      * @param string $file plugin file path and name being processed
      * @return array $links
      */
     public function actionLinks($links, $file)
     {
-        $upgrade_link = '<a style="color: #27ae60;" target="_blank" href="' . self::UPGRADE_LINK . '">' . esc_html__('Premium Upgrade', 'wp-staging') . '</a>';
+        $upgrade_link = '<a style="color: #27ae60;" target="_blank" href="' . self::UPGRADE_LINK . '">' . esc_html__('Upgrade to Premium', 'wp-staging') . '</a>';
         $freePlugins = [
             'wp-staging/wp-staging.php',
             'wp-staging-1/wp-staging.php'

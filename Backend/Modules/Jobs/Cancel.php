@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Framework\Analytics\AnalyticsEventDto;
+
 /**
  * Class Cancel Processing
  * @package WPStaging\Backend\Modules\Jobs
@@ -16,6 +18,10 @@ class Cancel extends Job
     public function start()
     {
         $cloneData = $this->createCloneData();
+
+        if (!empty($this->options->jobIdentifier)) {
+            AnalyticsEventDto::enqueueCancelEvent($this->options->jobIdentifier);
+        }
 
         if (empty($cloneData)) {
             return true;

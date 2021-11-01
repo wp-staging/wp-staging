@@ -7,6 +7,7 @@ use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\WpAdapter;
+use WPStaging\Framework\AnalyticsServiceProvider;
 use WPStaging\Framework\AssetServiceProvider;
 use WPStaging\Framework\CommonServiceProvider;
 use WPStaging\Framework\DI\Container;
@@ -58,6 +59,8 @@ final class WPStaging
 
         WPStaging::$startTime = microtime(true);
 
+        $this->setupDebugLog();
+
         $this->container->register(CoreServiceProvider::class);
 
         $this->loadDependencies();
@@ -70,6 +73,8 @@ final class WPStaging
         $this->initCron();
         $this->cloneSiteFirstRun();
 
+        $this->container->register(AnalyticsServiceProvider::class);
+
         if (class_exists('\WPStaging\Pro\ProServiceProvider')) {
             $this->container->register(\WPStaging\Pro\ProServiceProvider::class);
         }
@@ -78,8 +83,33 @@ final class WPStaging
             $this->container->register(FrontendServiceProvider::class);
         }
 
+
         $this->handleCacheIssues();
         $this->preventDirectoryListing();
+    }
+
+    protected function setupDebugLog()
+    {
+        if (defined('WPSTG_DEBUG_LOG_FILE')) {
+            return;
+        }
+
+        $logsDirectory = trailingslashit(wp_upload_dir()['basedir']) . WPSTG_PLUGIN_DOMAIN . '/logs/';
+
+        if (!file_exists($logsDirectory)) {
+            (new Filesystem())->mkdir($logsDirectory, true);
+
+            $logsDirectoryExists = file_exists($logsDirectory) && is_writable($logsDirectory);
+        } else {
+            $logsDirectoryExists = is_writable($logsDirectory);
+        }
+
+        if ($logsDirectoryExists) {
+            // eg: wpstg_debug_907b4a01db8d244da272601a0491cd5c.log
+            $logFile = sanitize_file_name(sprintf('wpstg_debug_%s.log', strtolower(wp_hash(__FILE__))));
+
+            define('WPSTG_DEBUG_LOG_FILE', $logsDirectory . $logFile);
+        }
     }
 
     /**

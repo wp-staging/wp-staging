@@ -32,14 +32,22 @@ class ExcludedTables
     /**
      * @var array
      */
+    private $networkExcludedTables;
+
+    /**
+     * @var array
+     */
     private $excludedTablesSearchReplaceOnly;
 
     public function __construct()
     {
         $this->excludedTables = [
+            Queue::getTableName(),
+        ];
+
+        $this->networkExcludedTables = [
             'blogs',
             'blog_version',
-            Queue::getTableName(),
         ];
 
         $this->excludedTablesSearchReplaceOnly = [
@@ -53,10 +61,15 @@ class ExcludedTables
      *
      * @return array
      */
-    public function getExcludedTables()
+    public function getExcludedTables($networkClone = false)
     {
         $excludedCustomTables = apply_filters(self::CLONE_DATABASE_TABLES_EXCLUDE_FILTER, []);
-        return array_merge($this->excludedTables, $excludedCustomTables);
+
+        if ($networkClone) {
+            return array_merge($this->excludedTables, $excludedCustomTables);
+        }
+
+        return array_merge($this->excludedTables, $this->networkExcludedTables, $excludedCustomTables);
     }
 
     /**
@@ -65,12 +78,12 @@ class ExcludedTables
      *
      * @return array
      */
-    public function getExcludedTablesForSearchReplace()
+    public function getExcludedTablesForSearchReplace($networkClone = false)
     {
         $excludedCustomCloneTables = apply_filters(self::CLONE_SEARCH_REPLACE_TABLES_EXCLUDE_FILTER, []);
         $excludedCustomClonePushTables = apply_filters(self::SEARCH_REPLACE_TABLES_EXCLUDE_FILTER, $this->excludedTablesSearchReplaceOnly);
         $searchReplaceExcludedTables = array_merge($excludedCustomCloneTables, $excludedCustomClonePushTables);
-        return array_merge($this->getExcludedTables(), $searchReplaceExcludedTables);
+        return array_merge($this->getExcludedTables($networkClone), $searchReplaceExcludedTables);
     }
 
     /**

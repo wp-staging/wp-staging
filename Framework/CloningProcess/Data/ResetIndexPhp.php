@@ -36,7 +36,6 @@ class ResetIndexPhp extends FileCloningService
 
         $this->writeFile('index.php', $content);
 
-        //$this->log("Done");
         return true;
     }
 }

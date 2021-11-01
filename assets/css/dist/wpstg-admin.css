@@ -45,6 +45,10 @@
     color: #1b1b1b;
 }
 
+.wpstg--filter--svg {
+    filter: invert(24%) sepia(11%) saturate(558%) hue-rotate(169deg) brightness(97%) contrast(91%);
+}
+
 /* CSS for Tabs */
 
 body.wp-staging-pro_page_wpstg_backup,
@@ -1001,7 +1005,6 @@ body.wp-staging-pro_page_wpstg-license {
     display: inline-block;
     text-decoration: none;
     font-size: 13px;
-    /*line-height: 26px;*/
     height: 28px;
     margin: 0;
     padding: 0 10px 1px;
@@ -1016,6 +1019,11 @@ body.wp-staging-pro_page_wpstg-license {
     border-color: #2188c9;
     color: #fff;
     text-shadow: 0 -1px 1px #006799, 1px 0 1px #006799, 0 1px 1px #006799, -1px 0 1px #006799;
+}
+
+a.wpstg-blue-primary {
+    padding: 5px 10px;
+    height: auto;
 }
 
 .wpstg-blue-primary:hover {
@@ -1195,6 +1203,11 @@ body.wp-staging-pro_page_wpstg-license {
     font-size: 13px;
 }
 
+#wpstg_select_tables_pushing {
+    height: 400px;
+    font-size: 13px;
+}
+
 #wpstg-update-notify {
     background-color: #E01E5A;
     font-size: 14px;
@@ -1286,6 +1299,11 @@ body.wp-staging-pro_page_wpstg-license {
     margin-left: 10px;
 }
 
+.wpstg--tooltip.wpstg--tooltip-normal {
+    margin-left: 0;
+    border-bottom: 0;
+}
+
 .wpstg--tooltip .wpstg--tooltiptext {
     visibility: hidden;
     width: 300px;
@@ -1296,9 +1314,9 @@ body.wp-staging-pro_page_wpstg-license {
     border-radius: 3px;
     position: absolute;
     z-index: 1;
-    -webkit-box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-    -moz-box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
-    box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16), 0 3px 6px rgba(0, 0, 0, 0.23);
+    -webkit-box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+    -moz-box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+    box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
 }
 
 .wpstg--tooltiptext-backups {
@@ -1369,7 +1387,8 @@ Tooltip top arrow
     font-weight: 600;
 }
 
-#wpstg_select_tables_cloning option:checked {
+#wpstg_select_tables_cloning option:checked,
+#wpstg_select_tables_pushing option:checked {
     /* Cannot use background color here because Chrome and Firefox ignore it even if set to !important */
     -webkit-appearance: menulist-button;
     background-image: linear-gradient(0deg, #1e90ff 0%, #1e90ff 100%);
@@ -3135,6 +3154,73 @@ div#wpstg-restore-wait div {
     100% {
         transform: scale(1);
     }
+}
+
+.wpstg-tab-item--vert-center {
+    display: flex;
+    align-items: center;
+}
+
+.wpstg-db-comparison-modal {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.wpstg-db-comparison-table {
+    font-size: 13px;
+    width: 100%;
+}
+
+.wpstg-db-comparison-table tbody td {
+    padding-top: 6px;
+}
+
+.wpstg-db-comparison-table tr > td:first-child,
+.wpstg-db-comparison-table tr > th:first-child {
+    text-align: left;
+}
+
+.wpstg-css-tick {
+    display: inline-block;
+    transform: rotate(45deg);
+    height: 12px;
+    width: 6px;
+    border-bottom: 3px solid #78b13f;
+    border-right: 3px solid #78b13f;
+}
+
+.wpstg-css-cross {
+    position: relative;
+    top: -8px;
+    left: -2px;
+    width: 16px;
+    height: 16px;
+}
+
+.wpstg-css-cross:before, .wpstg-css-cross:after {
+    position: absolute;
+    content: ' ';
+    height: 17px;
+    width: 3px;
+    background-color: #E01E5A;
+}
+
+.wpstg-css-cross:before {
+    transform: rotate(45deg);
+}
+
+.wpstg-css-cross:after {
+    transform: rotate(-45deg);
+}
+
+.wpstg-selection-preview {
+    font-size: 12px;
+    margin-left: 20px;
+    color: #3216;
+}
+
+.wpstg-selection-preview.danger {
+    color: #E01E5A;
 }
 
 /*# sourceMappingURL=wpstg-admin.css.map */

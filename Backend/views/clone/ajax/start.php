@@ -49,7 +49,7 @@
         <?php echo __("BACK", "wp-staging")?>
     </a>
     <a href="<?php echo $url; ?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn wpstg-blue-primary">
-        <?php _e('Open Staging Site', 'wp-staging') ?><span style="wpstg-fs-10px"><?php _e('(Login with your admin credentials)', 'wp-staging') ?></span>
+        <?php _e('Open Staging Site', 'wp-staging') ?>
     </a>
     <div id="wpstg-success-notice">
         <h3>

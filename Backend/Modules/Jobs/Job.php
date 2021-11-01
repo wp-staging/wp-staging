@@ -112,9 +112,7 @@ abstract class Job implements ShutdownableInterface
 
             $this->logger->commit();
         } else {
-            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                error_log('Tried to commit log, but $this->logger was not a logger.');
-            }
+            \WPStaging\functions\debug_log('Tried to commit log, but $this->logger was not a logger.');
         }
     }
 
@@ -132,6 +130,10 @@ abstract class Job implements ShutdownableInterface
 
         $now = new DateTime();
         $options->expiresAt = $now->add(new DateInterval('P1D'))->format('Y-m-d H:i:s');
+
+        if (!property_exists($options, 'jobIdentifier')) {
+            $options->jobIdentifier = rand(0, 2147483647); // 32 bits int max
+        }
 
         // Ensure that it is an object
         $options = json_decode(json_encode($options));
@@ -291,6 +293,18 @@ abstract class Job implements ShutdownableInterface
     protected function isMultisiteAndPro()
     {
         return defined('WPSTGPRO_VERSION') && is_multisite();
+    }
+
+    /**
+     * @return boolean
+     */
+    public function isNetworkClone()
+    {
+        if (!isset($this->options->networkClone)) {
+            return false;
+        }
+
+        return $this->isMultisiteAndPro() && $this->options->networkClone;
     }
 
     /**

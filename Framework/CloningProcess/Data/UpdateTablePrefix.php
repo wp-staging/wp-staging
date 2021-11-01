@@ -15,6 +15,10 @@ class UpdateTablePrefix extends DBCloningService
         $db = $this->dto->getStagingDb();
         //On non-external jobs, $productionDb is same as $db
         $productionDb = $this->dto->getProductionDb();
+        $productionPrefix = $productionDb->prefix;
+        if ($this->isNetworkClone()) {
+            $productionPrefix = $productionDb->base_prefix;
+        }
 
         $this->log("Updating db prefix in {$prefix}usermeta.");
 
@@ -22,14 +26,20 @@ class UpdateTablePrefix extends DBCloningService
             return true;
         }
 
-        $this->debugLog("SQL: UPDATE {$prefix}usermeta SET meta_key = replace(meta_key, {$productionDb->prefix}, {$prefix}) WHERE meta_key LIKE {$productionDb->prefix}%");
+        // Skip, prefixes are identical. No change needed
+        if ($productionPrefix === $prefix) {
+            $this->log("Prefix already the same - skipping");
+            return true;
+        }
+
+        $this->debugLog("SQL: UPDATE {$prefix}usermeta SET meta_key = replace(meta_key, {$productionPrefix}, {$prefix}) WHERE meta_key LIKE {$productionPrefix}%");
 
         $update = $db->query(
             $db->prepare(
                 "UPDATE {$prefix}usermeta SET meta_key = replace(meta_key, %s, %s) WHERE meta_key LIKE %s",
-                $productionDb->prefix,
+                $productionPrefix,
                 $prefix,
-                $productionDb->prefix . "%"
+                $productionPrefix . "%"
             )
         );
 

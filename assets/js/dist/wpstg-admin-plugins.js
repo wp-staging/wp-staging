@@ -3,11 +3,11 @@
 
   jQuery(document).ready(function ($) {
     /**
-       * DEACTIVATION FEEDBACK FORM
-       */
+     * DEACTIVATION FEEDBACK FORM
+     */
     // show overlay when clicked on "deactivate"
-    wpstg_deactivate_link = $('.wp-admin.plugins-php tr[data-slug="wp-staging"] .row-actions .deactivate a');
-    wpstg_deactivate_link_url = wpstg_deactivate_link.attr('href');
+    var wpstg_deactivate_link = $('.wp-admin.plugins-php tr[data-slug="wp-staging"] .row-actions .deactivate a');
+    var wpstg_deactivate_link_url = wpstg_deactivate_link.attr('href');
     wpstg_deactivate_link.on('click', function (e) {
       e.preventDefault(); // only show feedback form once per 30 days
 

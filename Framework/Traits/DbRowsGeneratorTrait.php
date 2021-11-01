@@ -39,7 +39,7 @@ trait DbRowsGeneratorTrait
     protected function rowsGenerator($table, $offset, $limit, \wpdb $db = null)
     {
 /*        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log(
+            \WPStaging\functions\debug_log(
                 sprintf(
                     'DbRowsGeneratorTrait: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
                     $this->getMaxMemoryLimit(),
@@ -81,9 +81,7 @@ trait DbRowsGeneratorTrait
                 $rows = $db->get_results("SELECT * FROM {$table} LIMIT {$offset}, {$batchSize}", ARRAY_A);
 
                 if (!empty($db->last_error)) {
-                    if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                        error_log($db->last_error);
-                    }
+                    \WPStaging\functions\debug_log($db->last_error);
                 }
 
                 if (empty($rows)) {
@@ -92,9 +90,7 @@ trait DbRowsGeneratorTrait
                 }
 
                 if (!is_array($rows)) {
-                    if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                        error_log(sprintf('$rows is not an array. Actual type: %s', gettype($rows)));
-                    }
+                    \WPStaging\functions\debug_log(sprintf('$rows is not an array. Actual type: %s', gettype($rows)));
                 }
 
                 $offset += $batchSize;

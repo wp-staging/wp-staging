@@ -25,6 +25,18 @@ class Sites
     const OLD_STAGING_SITES_OPTION = 'wpstg_existing_clones_beta';
 
     /**
+     * Before upgrading structure, backup old staging site options
+     * @since 4.0.6
+     */
+    const BACKUP_STAGING_SITES_OPTION = 'wpstg_staging_sites_backup';
+
+    /**
+     * Missing cloneName routine executed
+     * @since 4.0.7
+     */
+    const MISSING_CLONE_NAME_ROUTINE_EXECUTED = 'wpstg_missing_cloneName_routine_executed';
+
+    /**
      * Return list of staging sites in descending order of their creation time.
      *
      * @return array
@@ -61,30 +73,45 @@ class Sites
     }
 
     /**
-     * Upgrade old existing clone beta option to new staging site option
+     * Copy data from old staging site option wpstg_existing_clones_beta to new staging site option wpstg_staging_sites
      *
      * @see \WPStaging\Backend\Upgrade\Upgrade::upgrade2_8_7 (Free version)
      * @see \WPStaging\Backend\Pro\Upgrade\Upgrade::upgrade4_0_5 (Pro version)
      */
     public function upgradeStagingSitesOption()
     {
-        // Get the staging sites from old option
-        $oldSites = get_option(self::OLD_STAGING_SITES_OPTION, []);
+        $newSitesOption = get_option(self::STAGING_SITES_OPTION, []);
 
-        // Early bail: No sites to migrate
-        if (empty($oldSites)) {
+        // Early bail: If it's already populated and not empty do nothing. It has been migrated already.
+        if (!empty($newSiteOption)) {
             return;
         }
 
-        $newSites = get_option(self::STAGING_SITES_OPTION, []);
+        // If its no valid array, it is broken
+        if (!is_array($newSitesOption)) {
+            $newSitesOption = [];
+        }
+
+        // Get the staging sites from old option
+        $oldSitesOption = get_option(self::OLD_STAGING_SITES_OPTION, []);
+
+        // Early bail: No sites to migrate
+        if (empty($oldSitesOption)) {
+            return;
+        }
 
         // Convert old format to new, including when there are staging sites in both formats
-        $allStagingSites = $newSites;
+        $allStagingSites = $newSitesOption;
 
-        foreach ($oldSites as $oldSiteSlug => $oldSite) {
+        foreach ($oldSitesOption as $oldSiteSlug => $oldSite) {
             // Migrate old site to new format
             if (!array_key_exists($oldSiteSlug, $allStagingSites)) {
                 $allStagingSites[$oldSiteSlug] = $oldSite;
+                continue;
+            }
+
+            // If key exists and path matches, skip
+            if ($allStagingSites[$oldSiteSlug]['path'] === $oldSite['path']) {
                 continue;
             }
 
@@ -100,12 +127,8 @@ class Sites
 
         if (update_option(self::STAGING_SITES_OPTION, $allStagingSites)) {
             // Keep a backup just in case
-            update_option('wpstg_staging_sites_backup', $oldSites, false);
+            update_option(self::BACKUP_STAGING_SITES_OPTION, $oldSitesOption, false);
             delete_option(self::OLD_STAGING_SITES_OPTION);
-        } else {
-            if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                error_log('WPSTAGING DEBUG: update_option for option renaming of staging sites failed.');
-            }
         }
     }
 
@@ -134,5 +157,37 @@ class Sites
     public function updateStagingSites($stagingSites)
     {
         return update_option(self::STAGING_SITES_OPTION, $stagingSites);
+    }
+
+    /**
+     * Upgrade the staging site data structure, add the missing cloneName, if not present
+     */
+    public function addMissingCloneNameUpgradeStructure()
+    {
+        $isAdded = get_option(self::MISSING_CLONE_NAME_ROUTINE_EXECUTED, false);
+        if ($isAdded) {
+            return;
+        }
+
+        // Current options
+        $sites = $this->tryGettingStagingSites();
+
+        // Early bail if no sites
+        if (empty($sites)) {
+            update_option(self::MISSING_CLONE_NAME_ROUTINE_EXECUTED, true);
+            return;
+        }
+
+        // Add missing cloneName if not exists
+        foreach ($sites as $key => $site) {
+            if (isset($sites[$key]['cloneName'])) {
+                continue;
+            }
+
+            $sites[$key]['cloneName'] = $sites[$key]['directoryName'];
+        }
+
+        $this->updateStagingSites($sites);
+        update_option(self::MISSING_CLONE_NAME_ROUTINE_EXECUTED, true);
     }
 }

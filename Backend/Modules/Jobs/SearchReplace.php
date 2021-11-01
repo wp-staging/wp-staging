@@ -246,9 +246,9 @@ class SearchReplace extends CloningProcess
      * @return array|false Either the primary key and columns structures, or `false` to indicate the query
      *                     failed or the table is not describe-able.
      */
-    protected function get_columns($table)
+    protected function getColumns($table)
     {
-        $primary_key = null;
+        $primaryKeys = [];
         $columns     = [];
         $fields      = $this->stagingDb->get_results('DESCRIBE ' . $table);
 
@@ -261,11 +261,12 @@ class SearchReplace extends CloningProcess
             foreach ($fields as $column) {
                 $columns[] = $column->Field;
                 if ($column->Key === 'PRI') {
-                    $primary_key = $column->Field;
+                    $primaryKeys[] = $column->Field;
                 }
             }
         }
-        return [$primary_key, $columns];
+
+        return [$primaryKeys, $columns];
     }
 
     /**
@@ -296,7 +297,7 @@ class SearchReplace extends CloningProcess
         $args = apply_filters('wpstg_clone_searchreplace_params', $args);
 
         // Get columns and primary keys
-        $primaryKeyAndColumns = $this->get_columns($table);
+        $primaryKeyAndColumns = $this->getColumns($table);
 
         if (false === $primaryKeyAndColumns) {
             // Stop here: for some reason the table cannot be described or there was an error.
@@ -304,7 +305,7 @@ class SearchReplace extends CloningProcess
             return false;
         }
 
-        list($primary_key, $columns) = $primaryKeyAndColumns;
+        list($primaryKeys, $columns) = $primaryKeyAndColumns;
 
         if ($this->options->job->current !== $table) {
             $this->logDebug(sprintf('We are using the LIMITS of a table different than the table we are parsing now. Table being parsed: %s. Table that we are using "start" from: %s. Start: %s', $table, $this->options->job->current, $this->options->job->start));
@@ -342,6 +343,7 @@ class SearchReplace extends CloningProcess
         $processed = 0;
 
         /// DEBUG
+        /*
         $this->logDebug(
             sprintf(
                 'SearchReplace-beforeRowProcessing: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
@@ -353,6 +355,7 @@ class SearchReplace extends CloningProcess
                 ($this->isThreshold() ? 'yes' : 'no')
             )
         );
+        */
         /// DEBUG
 
         // Go through the table rows
@@ -391,7 +394,7 @@ class SearchReplace extends CloningProcess
                 }
 
                 // Skip primary key column
-                if ($column === $primary_key) {
+                if (in_array($column, $primaryKeys)) {
                     $whereSql[] = $column . ' = "' . wpstg_mysql_escape_mimic($dataRow) . '"';
                     continue;
                 }
@@ -518,7 +521,7 @@ class SearchReplace extends CloningProcess
     private function isExcludedTable($table)
     {
 
-        $tables = $this->excludedTableService->getExcludedTablesForSearchReplace();
+        $tables = $this->excludedTableService->getExcludedTablesForSearchReplace($this->isNetworkClone());
 
         $excludedAllTables = [];
         foreach ($tables as $key => $value) {
@@ -609,8 +612,6 @@ class SearchReplace extends CloningProcess
 
     protected function logDebug($message)
     {
-        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log($message);
-        }
+        \WPStaging\functions\debug_log($message, 'debug');
     }
 }

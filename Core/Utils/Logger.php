@@ -99,8 +99,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
     /**
-     * @param Strings $level
-     * @param Strings $message
+     * @param string $level
+     * @param string $message
      * @param array $context
      *
      * @return void
@@ -118,7 +118,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
     {
         $this->messages[] = [
             "type"      => $type,
-            "date"      => date(self::LOG_DATETIME_FORMAT),
+            "date"      => current_time(self::LOG_DATETIME_FORMAT),
             "message"   => $message
         ];
     }

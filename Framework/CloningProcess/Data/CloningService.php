@@ -48,7 +48,7 @@ abstract class CloningService
      */
     protected function log($message, $type = Logger::TYPE_INFO)
     {
-        $this->dto->getJob()->log("DB Data Step" . $this->dto->getStepNumber() . ": " . $message, $type);
+        $this->dto->getJob()->log("DB Data Step " . $this->dto->getStepNumber() . ": " . $message, $type);
     }
 
     /**
@@ -76,5 +76,30 @@ abstract class CloningService
     protected function getDefineRegex($string)
     {
         return "/define\s*\(\s*['\"]" . $string . "['\"]\s*,\s*(.*)\s*\);/";
+    }
+
+    /**
+     * Get Option Table Without Base Prefix
+     *
+     * @param string $blogID
+     * @return string
+     */
+    protected function getOptionTableWithoutBasePrefix($blogID)
+    {
+        if ($blogID === '0' || $blogID === '1') {
+            return 'options';
+        }
+
+        return $blogID . '_options';
+    }
+
+    /**
+     * Undocumented function
+     *
+     * @return boolean
+     */
+    protected function isNetworkClone()
+    {
+        return $this->dto->getJob()->isNetworkClone();
     }
 }

@@ -4,6 +4,13 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 abstract class DBCloningService extends CloningService
 {
+    private $optionTable = 'options';
+
+    protected function setOptionTable($tableName = 'options')
+    {
+        $this->optionTable = $tableName;
+    }
+
     /**
      * Check if table exists
      * @param string $table
@@ -72,7 +79,7 @@ abstract class DBCloningService extends CloningService
      */
     protected function skipOptionsTable()
     {
-        return $this->skipTable('options');
+        return $this->skipTable($this->optionTable);
     }
 
     /**
@@ -82,19 +89,29 @@ abstract class DBCloningService extends CloningService
      */
     protected function updateDbOption($name, $value)
     {
-        return $this->dto->getStagingDb()->query(
+        $logMessage = "DBCloningService->updateDbOption() SQL: UPDATE FROM {$this->dto->getPrefix()}{$this->optionTable} SET option_value = $value WHERE option_name = $name";
+        $this->debugLog($logMessage);
+
+        $result = $this->dto->getStagingDb()->query(
             $this->dto->getStagingDb()->prepare(
-                "UPDATE {$this->dto->getPrefix()}options SET option_value = %s WHERE option_name = %s",
+                "UPDATE {$this->dto->getPrefix()}{$this->optionTable} SET option_value = %s WHERE option_name = %s",
                 $value,
                 $name
             )
         );
+
+        if ($result === false) {
+            $this->log("DBCloningService->updateDbOption() Error! SQL: " . $logMessage);
+            return false;
+        }
+
+        return true;
     }
 
     /**
      * @param $name
      * @param $value
-     * @return bool|int
+     * @return bool|int Returns false if there is an error. Otherwise the number of inserted tables. Note: It can be 0
      */
     protected function insertDbOption($name, $value)
     {
@@ -105,15 +122,20 @@ abstract class DBCloningService extends CloningService
         // can be messed up and do not have any indexes. This would led to duplicate entries and further issues
         // Instead we remove first and add the row from scratch
 
+        $this->debugLog("DBCloningService->insertDbOption() SQL: DELETE FROM {$prefix}{$this->optionTable} WHERE option_name = $name");
+
         $db->query(
             $db->prepare(
-                "DELETE FROM `{$prefix}options` WHERE `option_name` = %s;",
+                "DELETE FROM `{$prefix}{$this->optionTable}` WHERE `option_name` = %s;",
                 $name
             )
         );
+
+        $this->debugLog("DBCloningService->insertDbOption() SQL: INSERT INTO {$prefix}{$this->optionTable} ($name, $value)");
+
         return $db->query(
             $db->prepare(
-                "INSERT INTO {$prefix}options (option_name,option_value) VALUES (%s,%s)",
+                "INSERT INTO {$prefix}{$this->optionTable} (option_name,option_value) VALUES (%s,%s)",
                 $name,
                 $value
             )
@@ -130,7 +152,7 @@ abstract class DBCloningService extends CloningService
 
         return $db->query(
             $db->prepare(
-                "DELETE FROM `{$this->dto->getPrefix()}options` WHERE `option_name` = %s;",
+                "DELETE FROM `{$this->dto->getPrefix()}{$this->optionTable}` WHERE `option_name` = %s;",
                 $name
             )
         );

@@ -16,24 +16,63 @@ class UpdateStagingOptionsTable extends DBCloningService
      */
     protected function internalExecute()
     {
-        $this->log("Updating {$this->dto->getPrefix()}options {$this->dto->getStagingDb()->last_error}");
-        if ($this->skipOptionsTable()) {
-            return true;
+        if ($this->isNetworkClone()) {
+            return $this->updateAllOptionsTables();
         }
 
+        return $this->updateOptionsTable();
+    }
+
+    /**
+     * @return boolean
+     */
+    private function updateAllOptionsTables()
+    {
+        foreach (get_sites() as $site) {
+            $tableName = $this->getOptionTableWithoutBasePrefix($site->blog_id);
+            $this->setOptionTable($tableName);
+
+            $this->log("Updating {$this->dto->getPrefix()}{$tableName} {$this->dto->getStagingDb()->last_error}");
+            if ($this->skipOptionsTable()) {
+                continue;
+            }
+
+            $this->updateOptionsTable(is_main_site($site->blog_id));
+        }
+
+        return true;
+    }
+
+    /**
+     * @param boolean $isMainSite
+     *
+     * @return boolean
+     */
+    private function updateOptionsTable($isMainSite = false)
+    {
         $updateOrInsert = [
             'wpstg_is_staging_site' => 'true',
             'wpstg_rmpermalinks_executed' => ' ',
             'blog_public' => 0,
             FirstRun::FIRST_RUN_KEY => 'true',
         ];
+
+        $cloneOptions = [
+            FirstRun::MAILS_DISABLED_KEY => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
+            ExcludedPlugins::EXCLUDED_PLUGINS_KEY => (new ExcludedPlugins())->getFilteredPluginsToExclude(),
+        ];
+
+        // Add the base directory path and is network clone when cloning into network
+        // Required to generate .htaccess file on the staging network.
+        if ($this->dto->getJob()->isNetworkClone() && $isMainSite) {
+            $cloneOptions[\WPStaging\Pro\Staging\NetworkClone::NEW_NETWORK_CLONE_KEY] = 'true';
+            $cloneOptions[\WPStaging\Pro\Staging\NetworkClone::NETWORK_BASE_DIR_KEY]  = $this->dto->getStagingSitePath();
+        }
+
         // only insert or update clone option if job is not updating
         // during update this data will be preserved
         if ($this->dto->getMainJob() !== 'updating') {
-            $updateOrInsert[CloneOptions::WPSTG_CLONE_SETTINGS_KEY] = serialize((object) [
-                FirstRun::MAILS_DISABLED_KEY => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
-                ExcludedPlugins::EXCLUDED_PLUGINS_KEY => (new ExcludedPlugins())->getFilteredPluginsToExclude(),
-            ]);
+            $updateOrInsert[CloneOptions::WPSTG_CLONE_SETTINGS_KEY] = serialize((object) $cloneOptions);
         }
 
         if (!$this->keepPermalinks()) {
@@ -76,7 +115,7 @@ class UpdateStagingOptionsTable extends DBCloningService
     {
         foreach ($options as $name => $value) {
             $this->debugLog("Updating/inserting $name to $value");
-            if (!$this->insertDbOption($name, $value)) {
+            if ($this->insertDbOption($name, $value) === false) {
                 $this->log("Failed to update/insert $name {$this->dto->getStagingDb()->last_error}", Logger::TYPE_WARNING);
             }
         }

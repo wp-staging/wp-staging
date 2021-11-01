@@ -92,4 +92,21 @@ class Strings
         $length = strlen($needle);
         return ($needle === substr($haystack, 0, $length));
     }
+
+    /**
+     * Search & Replace last occurrence of string in haystack
+     * @param string $needle
+     * @param string $replace
+     * @param string $haystack
+     * @return string
+     */
+    function replaceLastMatch($needle, $replace, $haystack)
+    {
+        $result = $haystack;
+        $pos = strrpos($haystack, $needle);
+        if ($pos !== false) {
+            $result = substr_replace($haystack, $replace, $pos, strlen($needle));
+        }
+        return $result;
+    }
 }

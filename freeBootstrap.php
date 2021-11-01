@@ -19,7 +19,7 @@ add_action('plugins_loaded', function () use ($pluginFilePath) {
         require_once __DIR__ . '/bootstrap.php';
     } catch (Exception $e) {
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log('WPSTAGING: ' . $e->getMessage());
+            error_log('WP STAGING: ' . $e->getMessage());
         }
     }
 }, 11, 0); // The priority of this hook must be larger than 10 for the runtime requirement check to detect older versions of WPSTAGING.
@@ -54,7 +54,7 @@ register_activation_hook($pluginFilePath, function () use ($pluginFilePath) {
         require_once __DIR__ . '/install.php';
     } catch (Exception $e) {
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log('WPSTAGING: ' . $e->getMessage());
+            error_log('WP STAGING: ' . $e->getMessage());
         }
     }
 });

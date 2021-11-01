@@ -31,7 +31,7 @@ class Delete extends Job
      * The path to delete
      * @var string
      */
-    private $deleteDir = '';
+    private $deleteDir;
 
     /**
      * @var null|object
@@ -46,7 +46,7 @@ class Delete extends Job
     /**
      * @var bool
      */
-    private $forceDeleteDirectories = false;
+    //private $forceDeleteDirectories = false;
 
     /**
      *
@@ -60,12 +60,16 @@ class Delete extends Job
      */
     private $isExternalDb;
 
+    /** @var Strings  */
+    private $strings;
+
     public function __construct($isExternal = false)
     {
         parent::__construct();
-        $this->isExternalDb = $isExternal;
 
+        $this->isExternalDb = $isExternal;
         $this->deleteDir = !empty($_POST['deleteDir']) ? urldecode($_POST['deleteDir']) : '';
+        $this->strings = new Strings();
     }
 
     /**
@@ -79,7 +83,7 @@ class Delete extends Job
             $this->getCloneRecords();
         } else {
             $this->clone = (object)$clone;
-            $this->forceDeleteDirectories = true;
+            //$this->forceDeleteDirectories = true;
         }
 
         if (!$this->isExternalDatabase()) {
@@ -134,7 +138,6 @@ class Delete extends Job
     /**
      * Get clone
      * @param null|string $name
-     * @throws CloneNotFoundException
      */
     private function getCloneRecords($name = null)
     {
@@ -150,8 +153,8 @@ class Delete extends Job
         $clones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         if (empty($clones) || !isset($clones[$name])) {
-            $this->log("Couldn't find clone name {$name} or no existing clone", Logger::TYPE_FATAL);
-            $this->returnException("Couldn't find clone name {$name} or no existing clone");
+            $this->log("Couldn't find clone name $name or no existing clone", Logger::TYPE_FATAL);
+            $this->returnException("Couldn't find clone name $name or no existing clone");
         }
 
         $this->clone = $clones[$name];
@@ -168,12 +171,17 @@ class Delete extends Job
     private function getTableRecords()
     {
 
-        $stagingPrefix = $this->getStagingPrefix($this->isExternalDatabase(), $this->clone);
+        $stagingPrefix = $this->getStagingPrefix();
 
         // Escape "_" to allow searching for that character
-        $prefix = wpstg_replace_last_match('_', '\_', $stagingPrefix);
+        $prefix = $this->strings->replaceLastMatch('_', '\_', $stagingPrefix);
 
-        $tables = $this->wpdb->get_results("SHOW TABLE STATUS LIKE '{$prefix}%'");
+        if ($this->isExternalDatabase()) { // Show all tables if its an external database
+            $tables = $this->wpdb->get_results("SHOW TABLE STATUS");
+        } else {
+            $tables = $this->wpdb->get_results("SHOW TABLE STATUS LIKE '$prefix%'");
+        }
+
 
         $this->tables = [];
 
@@ -204,7 +212,7 @@ class Delete extends Job
         if (empty($this->clone->prefix)) {
             $path = ABSPATH . $this->clone->directoryName . "/wp-config.php";
             if (($content = @file_get_contents($path)) === false) {
-                $this->log("Can not open {$path}. Can't read contents", Logger::TYPE_ERROR);
+                $this->log("Can not open $path. Can't read contents", Logger::TYPE_ERROR);
             }
 
             preg_match("/table_prefix\s*=\s*'(\w*)';/", $content, $matches);
@@ -212,7 +220,7 @@ class Delete extends Job
             if (!empty($matches[1])) {
                 $this->clone->prefix = $matches[1];
             } else {
-                $this->returnException("Fatal Error: Can not delete staging site. Can not find Prefix. '{$matches[1]}'. Stopping for security reasons. Creating a new staging site will likely resolve this the next time. Contact support@wp-staging.com");
+                $this->returnException("Fatal Error: Can not delete staging site. Can not find Prefix. '$matches[1]'. Stopping for security reasons. Creating a new staging site will likely resolve this the next time. Contact support@wp-staging.com");
             }
         }
 
@@ -249,6 +257,8 @@ class Delete extends Job
      * Start Module
      * @param null|array $clone
      * @return boolean
+     * @throws CloneNotFoundException
+     * @throws Exception
      */
     public function start($clone = null)
     {
@@ -272,6 +282,7 @@ class Delete extends Job
 
     /**
      * Get job data
+     * @throws Exception
      */
     private function getJob()
     {
@@ -294,6 +305,7 @@ class Delete extends Job
 
     /**
      * @return bool
+     * @throws Exception
      */
     private function updateJob()
     {
@@ -328,13 +340,14 @@ class Delete extends Job
     /**
      * Delete Tables
      *
+     * @throws Exception
      * @todo DRY the code by implementing through WPStaging\Framework\Database\TableService::deleteTablesStartWith
      */
     public function deleteTables()
     {
 
         if ($this->isOverThreshold()) {
-            $this->log("Deleting: Is over threshold", Logger::TYPE_INFO);
+            $this->log("Deleting: Is over threshold");
             return;
         }
 
@@ -342,11 +355,11 @@ class Delete extends Job
 
         foreach ($tables as $table) {
             // PROTECTION: Never delete any table that beginns with wp prefix of live site
-            if (!$this->isExternalDatabase() && (new Strings())->startsWith($table, $this->wpdb->prefix)) {
-                $this->log("Fatal Error: Trying to delete table {$table} of main WP installation!", Logger::TYPE_CRITICAL);
+            if (!$this->isExternalDatabase() && $this->strings->startsWith($table, $this->wpdb->prefix)) {
+                $this->log("Fatal Error: Trying to delete table $table of main WP installation!", Logger::TYPE_CRITICAL);
             }
 
-            $this->wpdb->query("DROP TABLE {$table}");
+            $this->wpdb->query("DROP TABLE $table");
         }
 
         // Move on to the next
@@ -377,7 +390,7 @@ class Delete extends Job
             return;
         }
 
-        $this->log("Delete staging site: " . $this->clone->path, Logger::TYPE_INFO);
+        $this->log("Delete staging site: " . $this->clone->path);
 
         // Make sure the root dir is never deleted!
         if ($this->deleteDir === get_home_path()) {
@@ -453,6 +466,7 @@ class Delete extends Job
 
     /**
      * Finish / Update Existing Clones
+     * @throws Exception
      */
     public function deleteFinish()
     {

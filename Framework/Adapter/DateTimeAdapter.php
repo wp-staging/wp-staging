@@ -62,7 +62,7 @@ class DateTimeAdapter
      */
     public function transformToWpFormat(DateTime $dateTime)
     {
-        return $dateTime->format($this->getDateTimeFormat());
+        return get_date_from_gmt($dateTime->format('Y-m-d H:i:s'), $this->getDateTimeFormat());
     }
 
     /**

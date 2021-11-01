@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Staging;
 
 use stdClass;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 
 /**
@@ -30,7 +31,7 @@ class CloneOptions
     public function get($option = null)
     {
         // Early bail if not a staging site
-        if (!(new SiteInfo())->isStaging()) {
+        if (!WPStaging::make(SiteInfo::class)->isStagingSite()) {
             return null;
         }
 
@@ -65,7 +66,7 @@ class CloneOptions
     public function set($option, $value)
     {
         // Early bail if not a staging site
-        if (!(new SiteInfo())->isStaging()) {
+        if (!WPStaging::make(SiteInfo::class)->isStagingSite()) {
             return false;
         }
 
@@ -91,7 +92,7 @@ class CloneOptions
     public function delete($option)
     {
         // Early bail if not a staging site
-        if (!(new SiteInfo())->isStaging()) {
+        if (!WPStaging::make(SiteInfo::class)->isStagingSite()) {
             return false;
         }
 

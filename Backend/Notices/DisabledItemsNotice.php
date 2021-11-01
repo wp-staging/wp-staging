@@ -18,6 +18,13 @@ class DisabledItemsNotice extends BooleanNotice
      */
     const OPTION_NAME = 'wpstg_disabled_notice';
 
+    private $siteInfo;
+
+    public function __construct(SiteInfo $siteInfo)
+    {
+        $this->siteInfo = $siteInfo;
+    }
+
     public function getOptionName()
     {
         return self::OPTION_NAME;
@@ -30,9 +37,8 @@ class DisabledItemsNotice extends BooleanNotice
      */
     public function isEnabled()
     {
-        // TODO: inject using DI
         // Early bail if not staging site
-        if (!(new SiteInfo())->isStaging()) {
+        if (!$this->siteInfo->isStagingSite()) {
             return false;
         }
 

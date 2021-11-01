@@ -8,6 +8,7 @@ use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Traits\ResourceTrait;
+use WPStaging\Framework\SiteInfo;
 
 class Assets
 {
@@ -30,7 +31,7 @@ class Assets
     }
 
     /**
-     * Prepand the URL to the assets to the given file
+     * Prepend the URL to the assets to the given file
      *
      * @param string $assetsFile optional
      * @return string
@@ -44,7 +45,7 @@ class Assets
      * Get the version the given file. Use for caching
      *
      * @param string $assetsFile
-     * @param string $assetsVersion, use WPStaging::getVersion() instead if not given
+     * @param string $assetsVersion use WPStaging::getVersion() instead if not given
      * @return string
      */
     public function getAssetsUrlWithVersion($assetsFile, $assetsVersion = '')
@@ -55,7 +56,7 @@ class Assets
     }
 
     /**
-     * Prepand the Path to the assets to the given file
+     * Prepend the Path to the assets to the given file
      *
      * @param string $assetsFile optional
      * @return string
@@ -92,7 +93,7 @@ class Assets
     {
 
         // Load this css file on frontend and backend on all pages if current site is a staging site
-        if (wpstg_is_stagingsite()) {
+        if ((new SiteInfo())->isStagingSite()) {
             wp_register_style('wpstg-admin-bar', false);
             wp_enqueue_style('wpstg-admin-bar');
             wp_add_inline_style('wpstg-admin-bar', $this->getStagingAdminBarColor());
@@ -273,6 +274,10 @@ class Assets
                 'resetClone' => esc_html__('Reset Staging Site', 'wp-staging'),
                 'showLogs'   => esc_html__('Show Logs', 'wp-staging'),
                 'hideLogs'   => esc_html__('Hide Logs', 'wp-staging'),
+                'noTableSelected' => esc_html__('No table selected', 'wp-staging'),
+                'tablesSelected'  => esc_html__('{d} tables(s) selected', 'wp-staging'),
+                'noFileSelected'  => esc_html__('No file selected', 'wp-staging'),
+                'filesSelected'   => esc_html__('{t} theme(s), {p} plugin(s) selected', 'wp-staging'),
             ],
         ]);
     }
@@ -291,10 +296,10 @@ class Assets
         // The real limit, read from the PHP context.
         $limit = min($maxPostSize, $uploadMaxFileSize) * 0.90;
 
-        // Do not allow to go over upper limit.
+        // Do not allow going over upper limit.
         $limit = min($limit, $upperLimit);
 
-        // Do not allow to go under lower limit.
+        // Do not allow going under lower limit.
         $limit = max($lowerLimit, $limit);
 
         return (int)$limit;
@@ -331,22 +336,10 @@ class Assets
     }
 
     /**
-     * Check if current page is plugins.php
-     * @global array $pagenow
-     * @return bool
-     */
-    private function isPluginsPage()
-    {
-        global $pagenow;
-
-        return ($pagenow === 'plugins.php');
-    }
-
-
-    /**
      * Remove heartbeat api and user login check
      *
      * @action admin_enqueue_scripts 100 1
+     * @see AssetServiceProvider.php
      *
      * @param bool $hook
      */
@@ -365,7 +358,19 @@ class Assets
     }
 
     /**
-     * @return array|mixed|object
+     * Check if current page is plugins.php
+     * @global array $pagenow
+     * @return bool
+     */
+    private function isPluginsPage()
+    {
+        global $pagenow;
+
+        return ($pagenow === 'plugins.php');
+    }
+
+    /**
+     * @return int
      */
     public function getDelay()
     {

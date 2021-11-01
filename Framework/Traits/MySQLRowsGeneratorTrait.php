@@ -44,7 +44,7 @@ trait MySQLRowsGeneratorTrait
     protected function rowsGenerator($databaseName, $table, $numericPrimaryKey, $offset, $requestId, InterfaceDatabaseClient $db, JobDataDto $jobDataDto)
     {
 /*        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log(
+            \WPStaging\functions\debug_log(
                 sprintf(
                     'MySQLRowsGeneratorTrait: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
                     size_format($this->getMaxMemoryLimit()),
@@ -137,14 +137,15 @@ SQL;
                 while ($row = $result->fetch_assoc()) {
                     $rows[] = $row;
                 }
-                $rows = array_reverse($rows);
+
                 $db->freeResult($result);
+
+                $rows = array_reverse($rows);
+
                 $jobDataDto->setLastQueryInfoJSON('');
 
                 if (!empty($db->error())) {
-                    if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                        error_log($db->error());
-                    }
+                    \WPStaging\functions\debug_log($db->error());
                 }
 
                 if (empty($rows)) {
@@ -153,9 +154,7 @@ SQL;
                 }
 
                 if (!is_array($rows)) {
-                    if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                        error_log(sprintf('$rows is not an array. Actual type: %s', gettype($rows)));
-                    }
+                    \WPStaging\functions\debug_log(sprintf('$rows is not an array. Actual type: %s', gettype($rows)));
                 }
 
                 // If we got less than the batch size, then this is the last fetch.

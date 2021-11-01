@@ -1,4 +1,15 @@
-<?php if ($isDatabaseConnected) { ?>
+<?php
+
+/**
+ * @see \WPStaging\Backend\Administrator::ajaxDeleteConfirmation()
+ * @var object $delete
+ * @var string $dbname
+ * @var object $clone
+ * @var bool $isDatabaseConnected
+ *
+ */
+
+if ($isDatabaseConnected) { ?>
 <div class="wpstg-notice-alert">
     <h3 class="wpstg-m-0 wpstg-pb-5px">
         <?php
@@ -48,7 +59,7 @@
     <!-- Database -->
     <div class="wpstg-tab-section" id="wpstg-scanning-db">
         <h4 class="wpstg-m-0">
-            <?php _e("Unselect all database tables you do not want to delete:", "wp-staging")?>
+            <?php _e("Select all database tables you want to delete:", "wp-staging")?>
         </h4>
         <div class="wpstg-my-6px">
             <a href="#" class="wpstg-button-unselect">
@@ -59,7 +70,8 @@
         <?php foreach ($delete->getTables() as $table) :?>
             <div class="wpstg-db-table">
                 <label>
-                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->name?>" checked>
+                    <?php $checkedProperty = (strpos($table->name, $clone->prefix) === 0) ? 'checked' : ''; ?>
+                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->name?>" <?php echo $checkedProperty ?>>
                     <?php echo $table->name?>
                 </label>
                 <span class="wpstg-size-info">

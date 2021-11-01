@@ -22,13 +22,13 @@ class Rest
         $url = trailingslashit(get_home_url(get_current_blog_id(), ''));
         // nginx only allows HTTP/1.0 methods when redirecting from / to /index.php.
         // To work around this, we manually add index.php to the URL, avoiding the redirect.
-        if ('index.php' !== substr($url, 9)) {
+        if ('index.php/' !== substr($url, -10)) {
             $url .= 'index.php';
         }
 
         $url = add_query_arg('rest_route', '/', $url);
-        $restPath = trim(parse_url($url, PHP_URL_PATH), '/');
-        if (strpos($requestPath, $restPath) === 0) {
+        $restPath = $this->getApiRequestURI($url);
+        if (!empty($restPath) && strpos($requestPath, $restPath) === 0) {
             return true;
         }
 
@@ -38,8 +38,21 @@ class Rest
         }
 
         $baseRestURL = get_rest_url(get_current_blog_id(), '/');
-        $restPath = trim(parse_url($baseRestURL, PHP_URL_PATH), '/');
+        $restPath = $this->getApiRequestURI($baseRestURL);
+
+        // Early bail if rest path is empty
+        if (empty($restPath)) {
+            return false;
+        }
 
         return strpos($requestPath, $restPath) === 0;
+    }
+
+    private function getApiRequestURI($url)
+    {
+        $path  = trim(parse_url($url, PHP_URL_PATH), '/');
+        $query = trim(parse_url($url, PHP_URL_QUERY), '/');
+
+        return $query === '' ? $path : $path . '?' . $query;
     }
 }

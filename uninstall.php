@@ -34,20 +34,32 @@ class uninstall
             delete_option("wpstgpro_version_upgraded_from");
             delete_option("wpstgpro_version");
             delete_option("wpstg_installDate");
-            delete_option("wpstg_firsttime");
+            delete_option("wpstg_firsttime"); // @deprecated
             delete_option("wpstg_is_staging_site");
             delete_option("wpstg_settings");
             delete_option("wpstg_rmpermalinks_executed");
             delete_option("wpstg_activation_redirect");
-            delete_option("wpstg_disabled_items_notice");
+            delete_option("wpstg_disabled_items_notice"); // @deprecated
             delete_option("wpstg_clone_settings");
             delete_option("wpstg_different_prefix_backup_notice");
+            /* @see \WPStaging\Backend\Pro\Notices\EntireNetworkCloneServerConfigNotice::OPTION_NAME */
+            delete_option("wpstg_entire_network_clone_notice");
             // Old notice used for display cache on staging site.
-            delete_option("wpstg_disabled_cache_notice");
+            delete_option("wpstg_disabled_cache_notice"); // @deprecated
             // Old option, now moved inside wpstg_clone_settings
-            delete_option("wpstg_emails_disabled");
+            delete_option("wpstg_emails_disabled"); // @deprecated
+            delete_option("wpstg_disabled_mail_notice"); // @deprecated
             // Option related to staging sites shifting from one db option to another
-            delete_option("wpstg_structure_updated");
+            delete_option("wpstg_structure_updated"); // @deprecated
+            // Store the latest WP STAGING PRO version
+            delete_option("wpstg_version_latest");
+            // Option that hold the old snapshots
+            delete_option("wpstg_snapshots"); // @deprecated
+            delete_option("wpstg_access_token");
+            delete_option("wpstg_backups");
+            delete_option("wpstg_old_staging_sites_backup"); // @deprecated
+            delete_option("wpstg_staging_sites_backup");
+            delete_option("wpstg_missing_cloneName_routine_executed");
 
 
             /* Do not delete these fields without actually deleting the staging site
@@ -73,6 +85,9 @@ class uninstall
 
             /* @see \WPStaging\Framework\BackgroundProcessing\Queue::QUEUE_TABLE_VERSION_KEY */
             delete_option('wpstg_queue_table_version');
+
+            /** @see \WPStaging\Backend\Notices\WarningsNotice::OPTION_NAME */
+            delete_option('wpstg_warnings_notice');
 
             // Delete events
             wp_clear_scheduled_hook('wpstg_weekly_event');
