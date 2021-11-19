@@ -69,7 +69,7 @@ class DebugLogReader
         }
 
         try {
-            $debugFile = new \SplFileObject($debugLogPath);
+            $debugFile = new FileObject($debugLogPath, 'r');
 
             $negativeOffset = $maxSize;
 

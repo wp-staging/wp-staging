@@ -3,11 +3,11 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use RuntimeException;
-use SplFileObject;
 use WPStaging\Backend\Modules\Jobs\Cleaners\WpContentCleaner;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
@@ -26,7 +26,7 @@ class Files extends JobExecutable
 {
 
     /**
-     * @var SplFileObject
+     * @var FileObject
      */
     private $file;
 
@@ -58,7 +58,7 @@ class Files extends JobExecutable
         $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
         if (is_file($filePath)) {
-            $this->file = new SplFileObject($filePath, 'r');
+            $this->file = new FileObject($filePath, 'r');
         }
 
         $logStep = 0;
@@ -257,7 +257,7 @@ class Files extends JobExecutable
             $this->file->seek($this->options->copiedFiles - 1);
         }
 
-        $this->file->setFlags(SplFileObject::SKIP_EMPTY | SplFileObject::READ_AHEAD);
+        $this->file->setFlags(FileObject::SKIP_EMPTY | FileObject::READ_AHEAD);
 
         for ($i = 0; $i < $this->maxFilesPerRun; $i++) {
             // Increment copied files

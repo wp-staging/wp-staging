@@ -66,7 +66,7 @@ class OutdatedWpStagingNotice
             return false;
         }
 
-        return version_compare($this->getLatestWpstgProVersion(), $this->getCurrentWpstgVersion(), '>=') ? true : false;
+        return version_compare($this->getLatestWpstgProVersion(), $this->getCurrentWpstgVersion(), '>') ? true : false;
     }
 
     /**
@@ -106,6 +106,6 @@ class OutdatedWpStagingNotice
             return false;
         }
 
-        return version_compare($this->getLatestWpstgVersion(), $this->getCurrentWpstgVersion(), '>=') ? true : false;
+        return version_compare($this->getLatestWpstgVersion(), $this->getCurrentWpstgVersion(), '>') ? true : false;
     }
 }

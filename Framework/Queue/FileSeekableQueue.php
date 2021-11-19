@@ -2,8 +2,8 @@
 
 namespace WPStaging\Framework\Queue;
 
-use SplFileObject;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
 
 class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
@@ -11,7 +11,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     /** @var string The string identifier of this task */
     protected $taskName;
 
-    /** @var SplFileObject The file resource that persists this queue */
+    /** @var FileObject The file resource that persists this queue */
     protected $handle;
 
     /** @var \Generator */
@@ -40,7 +40,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
     public function __destruct()
     {
-        if ($this->needsUnlock && $this->handle instanceof \SplFileObject) {
+        if ($this->needsUnlock && $this->handle instanceof FileObject) {
             try {
                 $this->handle->flock(LOCK_UN);
             } catch (\Exception $e) {
@@ -70,8 +70,8 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
             throw new \BadMethodCallException();
         }
 
-        $this->handle = new SplFileObject($path, $queueMode);
-        $this->handle->setFlags(SplFileObject::DROP_NEW_LINE);
+        $this->handle = new FileObject($path, $queueMode);
+        $this->handle->setFlags(FileObject::DROP_NEW_LINE);
         $this->fileGenerator = $this->initializeGenerator();
 
         $this->isWriteOnly = $queueMode === SeekableQueueInterface::MODE_WRITE;

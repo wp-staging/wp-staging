@@ -181,7 +181,7 @@ return array(
     'WPStaging\\Framework\\Filesystem\\DebugLogReader' => $baseDir . '/Framework/Filesystem/DebugLogReader.php',
     'WPStaging\\Framework\\Filesystem\\DirectoryListing' => $baseDir . '/Framework/Filesystem/DirectoryListing.php',
     'WPStaging\\Framework\\Filesystem\\DiskWriteCheck' => $baseDir . '/Framework/Filesystem/DiskWriteCheck.php',
-    'WPStaging\\Framework\\Filesystem\\File' => $baseDir . '/Framework/Filesystem/File.php',
+    'WPStaging\\Framework\\Filesystem\\FileObject' => $baseDir . '/Framework/Filesystem/FileObject.php',
     'WPStaging\\Framework\\Filesystem\\Filesystem' => $baseDir . '/Framework/Filesystem/Filesystem.php',
     'WPStaging\\Framework\\Filesystem\\FilesystemExceptions' => $baseDir . '/Framework/Filesystem/FilesystemExceptions.php',
     'WPStaging\\Framework\\Filesystem\\FilterableDirectoryIterator' => $baseDir . '/Framework/Filesystem/FilterableDirectoryIterator.php',

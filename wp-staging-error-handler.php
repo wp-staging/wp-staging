@@ -1,7 +1,7 @@
 <?php
 
 /*
- * Low-level error handler and debugger for WPSTAGING
+ * Low-level error handler and debugger for WP STAGING
  */
 
 namespace WPStaging\functions;
@@ -34,7 +34,7 @@ function debug_log($message, $logType = 'info')
     }
 
     $message = sprintf(
-        "[WPSTAGING Manual Logging][%s][%s] %s\n",
+        "[WP STAGING Manual Logging][%s][%s] %s\n",
         $logType,
         current_time('mysql'),
         $message
@@ -46,7 +46,7 @@ function debug_log($message, $logType = 'info')
 }
 
 /**
- * Logs fatal errors in the WPSTAGING debug file.
+ * Logs fatal errors in the WP STAGING debug file.
  */
 function shutdown_function()
 {
@@ -104,7 +104,7 @@ function shutdown_function()
         $fileHandler = fopen(WPSTG_DEBUG_LOG_FILE, 'a');
 
         $message = sprintf(
-            "[WPSTAGING Shutdown Function][%s][%s] %s - File: %s Line: %s Fatal? %s Comes from WPStaging? %s\n",
+            "[WP STAGING Shutdown Function][%s][%s] %s - File: %s Line: %s Fatal? %s Comes from WP STAGING? %s\n",
             $allErrorTypes[$error['type']],
             current_time('mysql'),
             $error['message'],

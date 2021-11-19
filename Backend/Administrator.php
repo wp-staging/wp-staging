@@ -669,18 +669,14 @@ class Administrator
         }
 
         $cloneDirectoryName = sanitize_key($_POST["directoryName"]);
+        $cloneDirectoryName = substr($cloneDirectoryName, 0, 16);
+
         $cloneDirectoryNameLength = strlen($cloneDirectoryName);
         $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         $cloneDestDir = trailingslashit(get_home_path()) . $cloneDirectoryName;
 
-        // Check clone directory name length
-        if ($cloneDirectoryNameLength < 1 || $cloneDirectoryNameLength > 16) {
-            echo wp_send_json([
-                "status" => "failed",
-                "message" => "Choose a site name below 16 characters"
-            ]);
-
+        if ($cloneDirectoryNameLength < 1) {
             return;
         }
 
@@ -900,7 +896,9 @@ class Administrator
      */
     public function messages()
     {
-        $notices = new Notices($this->path, $this->assets);
+        /** @var Notices */
+        $notices = WPStaging::make(Notices::class);
+        $notices->setPluginPath($this->path);
         $notices->messages();
 
         // Return this instance when we request it from the container
