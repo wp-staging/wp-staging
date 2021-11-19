@@ -64,13 +64,19 @@ trait HydrateTrait
 
         $param = $params[0];
 
-        if (!$value || !$param->getClass()) {
+        if (defined('PHP_VERSION_ID') && PHP_VERSION_ID >= 80000) {
+            $class = $param->getType() && !$param->getType()->isBuiltin() ? new ReflectionClass($param->getType()->getName()) : null;
+        } else {
+            $class = $param->getClass();
+        }
+
+        if (!$value || !$class) {
             $method->invoke($this, $value);
             return;
         }
 
         /** @noinspection PhpUnhandledExceptionInspection */
-        $method->invoke($this, $this->getClassAsValue($param->getClass(), $value));
+        $method->invoke($this, $this->getClassAsValue($class, $value));
     }
 
     /**

@@ -60,6 +60,7 @@ class Cloning extends Job
         $this->options->cloneName = wpstg_urldecode($_POST["cloneName"]);
         // The slugified version of Clone Name (to use in directory creation)
         $this->options->cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($this->options->cloneName));
+        $this->options->cloneDirectoryName = substr($this->options->cloneDirectoryName, 0, 16);
         $this->options->cloneNumber = 1;
         $this->options->prefix = $this->setStagingPrefix();
         $this->options->includedDirectories = [];

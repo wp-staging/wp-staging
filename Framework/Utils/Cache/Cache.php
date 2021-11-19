@@ -6,7 +6,7 @@
 
 namespace WPStaging\Framework\Utils\Cache;
 
-use WPStaging\Framework\Filesystem\File;
+use WPStaging\Framework\Filesystem\FileObject;
 
 class Cache extends AbstractCache
 {
@@ -28,9 +28,9 @@ class Cache extends AbstractCache
     public function save($value, $pretty = false)
     {
         if ($pretty) {
-            return (new File($this->filePath, File::MODE_WRITE))->fwriteSafe(json_encode($value, JSON_PRETTY_PRINT));
+            return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe(json_encode($value, JSON_PRETTY_PRINT));
         } else {
-            return (new File($this->filePath, File::MODE_WRITE))->fwriteSafe(json_encode($value));
+            return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe(json_encode($value));
         }
     }
 }

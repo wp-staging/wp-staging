@@ -2,7 +2,7 @@
 
 namespace WPStaging\Framework\Adapter;
 
-use WPStaging\Framework\Filesystem\File;
+use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
 
 class Maintenance
@@ -20,7 +20,7 @@ class Maintenance
         $fileExists = $this->isMaintenance();
         if ($isMaintenance && !$fileExists) {
             // Perhaps maintenance.php in WP_CONTENT?
-            (new File($maintenanceFile, File::MODE_WRITE))->fwriteSafe('<?php $upgrading = time() ?>');
+            (new FileObject($maintenanceFile, FileObject::MODE_WRITE))->fwriteSafe('<?php $upgrading = time() ?>');
             return;
         }
 

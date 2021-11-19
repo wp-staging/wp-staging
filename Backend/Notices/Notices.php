@@ -47,9 +47,8 @@ class Notices
      */
     public static $directoryListingErrors = 'directoryListingErrors';
 
-    public function __construct($path, $assets)
+    public function __construct(Assets $assets)
     {
-        $this->path = $path;
         $this->assets = $assets;
     }
 
@@ -341,6 +340,14 @@ class Notices
         }
 
         return false;
+    }
+
+    /**
+     * @param string $path
+     */
+    public function setPluginPath($path)
+    {
+        $this->path = $path;
     }
 
     /**

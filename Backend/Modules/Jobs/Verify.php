@@ -17,12 +17,12 @@ class Verify extends JobExecutable
 {
 
     /**
-     * @var \SplFileObject
+     * @var array
      */
     private $files = [];
 
     /**
-     * @var \SplFileObject
+     * @var array
      */
     private $verifyFiles = [];
 

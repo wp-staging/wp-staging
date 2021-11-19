@@ -6,15 +6,14 @@
 
 namespace WPStaging\Framework\Utils\Cache;
 
-use SplFileObject;
 use LimitIterator;
 use WPStaging\Framework\Exceptions\IOException;
 use WPStaging\Framework\Traits\ResourceTrait;
-use WPStaging\Framework\Filesystem\File;
+use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
 use WPStaging\Pro\Backup\Exceptions\ThresholdException;
 
-// TODO DRY; re-use \WPStaging\Framework\Filesystem\File
+// TODO DRY; re-use \WPStaging\Framework\Filesystem\FileObject
 // Buffered cache reads the file partially
 class BufferedCache extends AbstractCache
 {
@@ -73,7 +72,7 @@ class BufferedCache extends AbstractCache
         }
 
         /** @noinspection UnnecessaryCastingInspection */
-        return (new File($this->filePath, File::MODE_APPEND))->fwriteSafe((string)$value . PHP_EOL);
+        return (new FileObject($this->filePath, FileObject::MODE_APPEND))->fwriteSafe((string)$value . PHP_EOL);
     }
 
     /**
@@ -87,10 +86,10 @@ class BufferedCache extends AbstractCache
             copy($this->filePath, $this->filePath . 'tmp');
         }
 
-        $existingFile = new SplFileObject($this->filePath, 'rb+');
+        $existingFile = new FileObject($this->filePath, 'rb+');
         $existingFile->flock(LOCK_EX);
 
-        $tempFile = new SplFileObject($this->filePath . 'tmp', 'rb+');
+        $tempFile = new FileObject($this->filePath . 'tmp', 'rb+');
         $existingFile->flock(LOCK_EX);
 
         $lastLine = null;
@@ -163,10 +162,10 @@ class BufferedCache extends AbstractCache
 
         copy($this->filePath, $this->filePath . 'tmp');
 
-        $existingFile = new SplFileObject($this->filePath, 'rb');
+        $existingFile = new FileObject($this->filePath, 'rb');
         $existingFile->flock(LOCK_EX);
 
-        $tempFile = new SplFileObject($this->filePath . 'tmp', 'wb');
+        $tempFile = new FileObject($this->filePath . 'tmp', 'wb');
         $existingFile->flock(LOCK_EX);
         $tempFile->fwrite($data);
 
@@ -288,7 +287,7 @@ class BufferedCache extends AbstractCache
      */
     public function save($value)
     {
-        return (new File($this->filePath, File::MODE_WRITE))->fwriteSafe($value);
+        return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe($value);
     }
 
     /**
@@ -308,14 +307,14 @@ class BufferedCache extends AbstractCache
         return $total;
     }
 
-    // TODO DRY \WPStaging\Framework\Filesystem\File::readBottomLines
+    // TODO DRY \WPStaging\Framework\Filesystem\FileObject::readBottomLines
     /**
      * @param int $lines
      * @return array
      */
     private function readBottomLine($lines)
     {
-        $file = new SplFileObject($this->filePath, 'rb');
+        $file = new FileObject($this->filePath, 'rb');
         $file->seek(PHP_INT_MAX);
         $lastLine = $file->key();
         $offset = max($lastLine - $lines, 0);
@@ -326,7 +325,7 @@ class BufferedCache extends AbstractCache
 
     public function readLastLine()
     {
-        $file = new SplFileObject($this->filePath, 'rb');
+        $file = new FileObject($this->filePath, 'rb');
         $negativeOffset = 16 * KB_IN_BYTES;
 
         // Set the pointer to the end of the file, minus the negative offset for which to start looking for the last line.

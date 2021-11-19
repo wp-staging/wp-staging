@@ -9,7 +9,7 @@ use LimitIterator;
 use SplFileObject;
 use WPStaging\Core\WPStaging;
 
-class File extends SplFileObject
+class FileObject extends SplFileObject
 {
     const MODE_READ = 'rb'; // read only, binary
     const MODE_WRITE = 'wb'; // write only, binary
@@ -116,5 +116,25 @@ class File extends SplFileObject
         $total = $this->key();
         $this->seek($currentKey);
         return $total;
+    }
+
+    /**
+     * Override SplFileObject::seek()
+     * To make sure SplFileObject::seek() behaves identical in all PHP Versions. There was a major change in PHP 8.0.1.
+     * @see https://bugs.php.net/bug.php?id=81551
+     * This makes sure that the offset is always incremented by 1
+     *
+     * @param int $offset
+     */
+    public function seek($offset)
+    {
+        if (version_compare(PHP_VERSION, '8.0.1', '>=')) {
+            // SplFileObject::seek() works only for INT offset, this make sure offset remains INT
+            $offset = $offset === PHP_INT_MAX ? PHP_INT_MAX : $offset + 1;
+            parent::seek($offset);
+            return;
+        }
+
+        parent::seek($offset);
     }
 }

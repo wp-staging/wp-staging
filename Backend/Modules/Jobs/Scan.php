@@ -148,6 +148,7 @@ class Scan extends Job
         // Basic Options
         $this->options->root           = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, WPStaging::getWPpath());
         $this->options->existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
+        $this->options->existingClones = is_array($this->options->existingClones) ? $this->options->existingClones : [];
         $this->options->current        = null;
 
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $this->options->existingClones)) {

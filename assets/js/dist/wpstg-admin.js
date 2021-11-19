@@ -1878,7 +1878,7 @@
           return;
         }
 
-        var slug = WPStagingCommon.slugify(this.value);
+        var slug = WPStagingCommon.slugify(this.value).substring(0, 16);
         var $targetDir = $('#wpstg-use-target-dir');
         var $targetUri = $('#wpstg-use-target-hostname');
         var path = $targetDir.data('base-path');
