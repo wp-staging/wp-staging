@@ -5,7 +5,9 @@
 
 namespace WPStaging\Framework\Filesystem;
 
+use Exception;
 use LimitIterator;
+use RuntimeException;
 use SplFileObject;
 use WPStaging\Core\WPStaging;
 
@@ -21,6 +23,15 @@ class FileObject extends SplFileObject
     const AVERAGE_LINE_LENGTH = 4096;
 
     private $existingMetadataPosition;
+
+    /** @var int */
+    private $totalLines = null;
+
+    /**
+     * Lock File Handle for Windows
+     * @var resource
+     */
+    private $lockHandle = null;
 
     public function __construct($fullPath, $openMode = self::MODE_READ)
     {
@@ -111,30 +122,97 @@ class FileObject extends SplFileObject
 
     public function totalLines()
     {
+        if ($this->totalLines !== null) {
+            return $this->totalLines;
+        }
+
         $currentKey = $this->key();
         $this->seek(PHP_INT_MAX);
-        $total = $this->key();
+        $this->totalLines = $this->key();
         $this->seek($currentKey);
-        return $total;
+        return $this->totalLines;
     }
 
     /**
      * Override SplFileObject::seek()
-     * To make sure SplFileObject::seek() behaves identical in all PHP Versions. There was a major change in PHP 8.0.1.
+     * Alternative function for SplFileObject::seek() that behaves identical in all PHP Versions. There was a major change in PHP 8.0.1
      * @see https://bugs.php.net/bug.php?id=81551
-     * This makes sure that the offset is always incremented by 1
      *
-     * @param int $offset
+     * @param int $offset The zero-based line number to seek to.
      */
+    #[\ReturnTypeWillChange]
     public function seek($offset)
     {
-        if (version_compare(PHP_VERSION, '8.0.1', '>=')) {
-            // SplFileObject::seek() works only for INT offset, this make sure offset remains INT
-            $offset = $offset === PHP_INT_MAX ? PHP_INT_MAX : $offset + 1;
-            parent::seek($offset);
+        if ($offset < 0) {
+            throw new Exception("Can't seek file: " . $this->getPathname() . " to negative offset: $offset");
+        }
+
+        if ($offset === 0) {
+            parent::seek(0);
             return;
         }
 
-        parent::seek($offset);
+        if ($offset !== PHP_INT_MAX) {
+            $offset += 1;
+        }
+
+        if ($this->totalLines !== null && $offset >= $this->totalLines) {
+            $offset -= 1;
+        }
+
+        $this->rewind();
+        for ($i = 0; $i < $offset; $i++) {
+            $this->next();
+            $this->fgets();
+            if ($this->eof()) {
+                $this->totalLines = $this->key();
+                break;
+            }
+        }
+    }
+
+    /**
+     * @inheritDoc
+     */
+    #[\ReturnTypeWillChange]
+    public function flock($operation, &$wouldBlock = null)
+    {
+        if (!WPStaging::isWindowsOs()) {
+            return parent::flock($operation, $wouldBlock);
+        }
+
+        // create a lock file for Windows
+        $lockFileName = untrailingslashit($this->getPathname()) . '.lock';
+        $this->lockHandle = fopen($lockFileName, 'c');
+
+        if (!is_resource($this->lockHandle)) {
+            throw new RuntimeException("Could not open lock file {$this->getPathname()}");
+        }
+
+        return flock($this->lockHandle, $operation, $wouldBlock);
+    }
+
+    /**
+     * Release Lock if Windows OS
+     */
+    public function releaseLock()
+    {
+        if (!WPStaging::isWindowsOs() || $this->lockHandle === null) {
+            return;
+        }
+
+        $lockFileName = untrailingslashit($this->getPathname()) . '.lock';
+        if (is_file($lockFileName)) {
+            unlink($lockFileName);
+        }
+
+        flock($this->lockHandle, LOCK_UN);
+        fclose($this->lockHandle);
+        $this->lockHandle = null;
+    }
+
+    public function __destruct()
+    {
+        $this->releaseLock();
     }
 }

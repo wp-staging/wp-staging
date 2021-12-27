@@ -106,6 +106,12 @@ class Finish extends Job
             $this->options->existingClones[$this->options->clone]['prefix'] = $this->options->prefix;
             $this->options->existingClones[$this->options->clone]['emailsAllowed'] = (bool) $this->options->emailsAllowed;
             $this->options->existingClones[$this->options->clone]['uploadsSymlinked'] = (bool) $this->options->uploadsSymlinked;
+            $this->options->existingClones[$this->options->clone]['uploadsSymlinked'] = (bool) $this->options->uploadsSymlinked;
+            $this->options->existingClones[$this->options->clone]['includedTables'] = $this->options->tables;
+            $this->options->existingClones[$this->options->clone]['excludeSizeRules'] = $this->options->excludeSizeRules;
+            $this->options->existingClones[$this->options->clone]['excludeGlobRules'] = $this->options->excludeGlobRules;
+            $this->options->existingClones[$this->options->clone]['excludedDirectories'] = $this->options->excludedDirectories;
+            $this->options->existingClones[$this->options->clone]['extraDirectories'] = $this->options->extraDirectories;
             update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones);
             $this->log("Finish: The job finished!");
             return true;
@@ -128,7 +134,13 @@ class Finish extends Job
             "databaseServer"   => $this->options->databaseServer,
             "databasePrefix"   => $this->options->databasePrefix,
             "emailsAllowed"    => (bool) $this->options->emailsAllowed,
-            "uploadsSymlinked" => (bool) $this->options->uploadsSymlinked
+            "uploadsSymlinked" => (bool) $this->options->uploadsSymlinked,
+            "includedTables"        => $this->options->tables,
+            "excludeSizeRules"      => $this->options->excludeSizeRules,
+            "excludeGlobRules"      => $this->options->excludeGlobRules,
+            "excludedDirectories"   => $this->options->excludedDirectories,
+            "extraDirectories"      => $this->options->extraDirectories,
+            "networkClone"          => $this->isNetworkClone(),
         ];
 
         if (update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones) === false) {

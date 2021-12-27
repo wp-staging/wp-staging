@@ -46,3 +46,8 @@ $settings = (new Settings())->setDefault();
  * If that option already exists not overwrite it.
  */
 add_option('wpstg_installDate', date('Y-m-d h:i:s'));
+
+/**
+ * Register the Cron Events for Scheduled Backups
+ */
+WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\BackupScheduler::class)->reCreateCron();

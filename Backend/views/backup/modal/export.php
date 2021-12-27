@@ -1,8 +1,17 @@
 <?php
+
 /**
  * @var \WPStaging\Framework\Adapter\Directory $directories
  * @var string                                 $urlAssets
  */
+
+use WPStaging\Core\Cron\Cron;
+
+$timeFormatOption = get_option('time_format');
+
+$time = WPStaging\Core\WPStaging::make(\WPStaging\Framework\Utils\Times::class);
+
+$recurrenceTimes = $time->range('midnight', 'tomorrow - 60 minutes', defined('WPSTG_DEV') && WPSTG_DEV ? 'PT1M' : 'PT15M');
 ?>
 <div id="wpstg--modal--backup--new" data-confirmButtonText="<?php esc_attr_e('Start Backup', 'wp-staging') ?>" style="display: none">
     <h3 class="wpstg--swal2-title wpstg-w-100" for="wpstg-backup-name-input"><?php esc_html_e('Create Site Backup', 'wp-staging') ?></h3>
@@ -32,7 +41,7 @@
                 <input type="checkbox" name="includeOtherFilesInWpContent" id="includeOtherFilesInWpContent" value="true" checked/>
                 <?php esc_html_e('Backup Other Files In wp-content', 'wp-staging') ?>
                 <div class="wpstg--tooltip" style="position: absolute;">
-                <img class="wpstg--dashicons wpstg-dashicons-21" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
+                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
                     <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
                             <?php esc_html_e('All files in folder wp-content that are not plugins, themes, mu-plugins and uploads. Recommended for full-site backups.', 'wp-staging') ?>
                     </span>
@@ -49,6 +58,78 @@
             <input type="hidden" name="wpStagingDir" value="<?php echo esc_attr($directories['wpStaging']); ?>"/>
             <?php unset($directories['wpContent'], $directories['wpStaging']) ?>
             <input type="hidden" name="availableDirectories" value="<?php echo esc_attr(implode('|', $directories)); ?>"/>
+
+            <div class="wpstg-backup-options-section">
+                <h4 class="swal2-title wpstg-w-100" >
+                    <?php esc_html_e('Backup plan', 'wp-staging') ?>
+                </h4>
+
+                <div class="wpstg-backup-scheduling-options wpstg-container">
+
+                    <label>
+                        <input type="checkbox" name="repeatBackupOnSchedule" id="repeatBackupOnSchedule" value="1" checked
+                               onchange="WPStaging.handleDisplayDependencies(this)">
+                        <?php esc_html_e('One Time Only', 'wp-staging'); ?>
+                    </label>
+
+                    <div class="hidden" data-show-if-unchecked="repeatBackupOnSchedule">
+                        <label for="backupScheduleRecurrence">
+                            <?php esc_html_e('How often to backup?', 'wp-staging'); ?>
+                        </label>
+                        <select name="backupScheduleRecurrence" id="backupScheduleRecurrence">
+                            <option value="<?php echo esc_attr(Cron::HOURLY); ?>"><?php echo esc_html(Cron::getCronDisplayName(Cron::HOURLY));?></option>
+                            <option value="<?php echo esc_attr(Cron::SIX_HOURS); ?>"><?php echo esc_html(Cron::getCronDisplayName(Cron::SIX_HOURS));?></option>
+                            <option value="<?php echo esc_attr(Cron::TWELVE_HOURS); ?>"><?php echo esc_html(Cron::getCronDisplayName(Cron::TWELVE_HOURS));?></option>
+                            <option value="<?php echo esc_attr(Cron::DAILY); ?>"><?php echo esc_html(Cron::getCronDisplayName(Cron::DAILY));?></option>
+                            <option value="<?php echo esc_attr(Cron::EVERY_TWO_DAYS); ?>"><?php echo esc_html(Cron::getCronDisplayName(Cron::EVERY_TWO_DAYS));?></option>
+                            <option value="<?php echo esc_attr(Cron::WEEKLY); ?>"><?php echo esc_html(Cron::getCronDisplayName(Cron::WEEKLY));?></option>
+                            <option value="<?php echo esc_attr(Cron::EVERY_TWO_WEEKS); ?>"><?php echo esc_html(Cron::getCronDisplayName(Cron::EVERY_TWO_WEEKS));?></option>
+                            <option value="<?php echo esc_attr(Cron::MONTHLY); ?>"><?php echo esc_html(Cron::getCronDisplayName(Cron::MONTHLY));?></option>
+                        </select>
+
+                        <label for="backupScheduleTime">
+                            <?php esc_html_e('At what time should it start?', 'wp-staging'); ?>
+                            <div class="wpstg--tooltip" style="position: absolute;">
+                                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
+                                <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                                    <?php _e(sprintf('Relative to current server time, which you can change in <a href="%s">WordPress Settings</a>.', admin_url('options-general.php#timezone_string'))); ?>
+                                    <br>
+                                    <br>
+                                        <?php _e(sprintf('Current Server Time: %s', (new DateTime('now', wp_timezone()))->format($timeFormatOption)), 'wp-staging'); ?>
+                                        <br>
+                                        <?php _e(sprintf('Site Timezone: %s', wp_timezone_string()), 'wp-staging'); ?>
+                                 </span>
+                            </div>
+                        </label>
+                        <select name="backupScheduleTime" id="backupScheduleTime">
+                            <?php foreach ($recurrenceTimes as $time) : ?>
+                                <option value="<?php echo esc_attr($time->format('H:i')) ?>">
+                                    <?php echo esc_html($time->format($timeFormatOption)) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <span id="backup-schedule-current-time"><?php _e(sprintf('Current Time: %s', (new DateTime('now', wp_timezone()))->format($timeFormatOption)), 'wp-staging'); ?></span>
+                        <label for="backupScheduleRotation">
+                            <?php esc_html_e('How many backups to keep?', 'wp-staging'); ?>
+                            <div class="wpstg--tooltip" style="position: absolute;">
+                                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
+                                <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                                    <?php esc_html_e('Choose how many backups you want to keep before old ones are deleted to free up disk space.', 'wp-staging') ?>
+                                 </span>
+                            </div>
+                        </label>
+                        <select name="backupScheduleRotation" id="backupScheduleRotation">
+                            <?php for ($i = 1; $i <= 10; $i++) : ?>
+                                <option value="<?php echo $i ?>">
+                                    <?php esc_html_e(sprintf('Keep last %d backup%s', $i, ($i > 1 ? 's' : ''))); ?>
+                                </option>
+                            <?php endfor; ?>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
         </div>
 
         <!-- ADVANCED OPTIONS DROPDOWN -->

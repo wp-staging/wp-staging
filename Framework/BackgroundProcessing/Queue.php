@@ -16,7 +16,10 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient as Database;
+use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
+
+use function WPStaging\functions\debug_log;
 
 /**
  * Class Queue
@@ -76,11 +79,11 @@ class Queue
     private $logger;
 
     /**
-     * A set of action stati that will be autoloaded in cache by the queue by default.
+     * A set of action statuses that will be autoloaded in cache by the queue by default.
      *
      * @var array<string>
      */
-    private $defaultHydrateStati = [self::STATUS_READY];
+    private $defaultHydrateStatuses = [self::STATUS_READY];
 
     /**
      * A map from cached actions IDs to their action fields.
@@ -98,6 +101,16 @@ class Queue
     private $database;
 
     /**
+     * A callable that will unlock the tables in some instances.
+     *
+     * @var callable|null
+     */
+    private $unlocker;
+
+    /** @var PhpAdapter */
+    private $phpAdapter;
+
+    /**
      * Queue constructor.
      *
      * @param Database|null $database          A reference to the database adapter instance the class
@@ -110,6 +123,13 @@ class Queue
         $this->database = $database ?: $services->make(DatabaseAdapter::class)->getClient();
         $this->logger = $services->make('logger');
         $this->featureDetection = $services->make(FeatureDetection::class);
+        $this->phpAdapter = $services->make(PhpAdapter::class);
+/*        if (defined('WPSTG_DEV')) {
+            $this->unlocker = static function () {
+                global $wpdb;
+                $wpdb->query('COMMIT;');
+            };
+        }*/
     }
 
     /**
@@ -138,6 +158,11 @@ class Queue
 
         // Create the Action with an id of 0 until it's actually persisted.
         $actionObject = new Action(0, $action, $args, $jobId, $priority);
+
+        if (!$this->tableExists()) {
+            // If the table does not exist, then try and create the table now.
+            $this->checkTable(true);
+        }
 
         if ($this->checkTable() === static::TABLE_NOT_EXIST) {
             // The table does not exist and cannot be created, bail.
@@ -204,7 +229,7 @@ class Queue
      * @return int The value of one of the `TABLE` class constants to indicate the
      *             table status.
      */
-    private function checkTable($force = false)
+    public function checkTable($force = false)
     {
         if (!$force && $this->tableState !== null) {
             return $this->tableState;
@@ -256,17 +281,38 @@ class Queue
      */
     private function updateTable()
     {
-        global $wpdb;
         $tableSql = $this->getCreateTableSql();
 
         require_once(ABSPATH . 'wp-admin/includes/upgrade.php');
 
-        $lastError = $wpdb->last_error;
+        $dbdeltaQueries = [];
 
-        // If the table creation fails, then a db error will be thrown by WordPress.
-        dbDelta($tableSql);
+        // A Closure that will collect, and empty, the SQL queries `dbdelta` would run to, then, run using
+        $collectDbdeltaQueries = static function ($queries) use (&$dbdeltaQueries, &$collectDbdeltaQueries) {
+            // Self remove.
+            remove_filter('dbdelta_queries', $collectDbdeltaQueries);
+            $dbdeltaQueries = $queries;
 
-        if ($lastError !== $wpdb->last_error) {
+            // Return an empty array to avoid dbDelta from actually running the queries.
+            return [];
+        };
+
+        add_filter('dbdelta_queries', $collectDbdeltaQueries);
+        dbDelta($tableSql, false);
+
+        // Run the collected queries in a transaction using the current db adapter.
+        if ($this->database->query('START TRANSACTION') === false) {
+            return self::TABLE_NOT_EXIST;
+        }
+
+        foreach ($dbdeltaQueries as $query) {
+            if ($this->database->query($query) === false) {
+                $this->database->query('ROLLBACK');
+                return self::TABLE_NOT_EXIST;
+            }
+        }
+
+        if ($this->database->query('COMMIT') === false) {
             return self::TABLE_NOT_EXIST;
         }
 
@@ -308,12 +354,18 @@ class Queue
      *
      * @return bool Whether the table exists or not.
      */
-    private function tableExists()
+    public function tableExists()
     {
         $tableName = self::getTableName();
-        $this->database->query("SELECT 1 from {$tableName} LIMIT 1");
+        $result = $this->database->query("SHOW TABLES LIKE '{$tableName}'");
 
-        return $this->database->foundRows() === 1;
+        if ($result === false) {
+            return false;
+        }
+
+        $value = $this->database->fetchRow($result);
+
+        return  $value === [$tableName];
     }
 
     /**
@@ -351,6 +403,7 @@ class Queue
      *                              same type.
      *
      * @return void The method does not return any value and will just hydrate the class caches.
+     * @throws QueueException
      */
     private function hydrateActionCaches(array $actionIds = [])
     {
@@ -384,7 +437,7 @@ class Queue
             } else {
                 $stati = implode(',', array_map(function ($status) {
                     return "'{$this->database->escape($status)}'";
-                }, $this->defaultHydrateStati));
+                }, $this->defaultHydrateStatuses));
                 $query = "SELECT * FROM {$queueTable} WHERE status IN ({$stati}) LIMIT {$offsetAndLimit}";
             }
 
@@ -427,6 +480,7 @@ class Queue
      * @param array<string,mixed> $actionRow The data, as fetched from the database.
      *
      * @return array<string,mixed> The typed and prepared action data.
+     * @throws QueueException
      */
     private function convertDbRowToData(array $actionRow)
     {
@@ -440,18 +494,46 @@ class Queue
      * @return Action|null Either a reference to an object representing the locked
      *                     action, or `null` if there are no actions to process or
      *                     no lock could be acquired on the available ones.
+     * @throws QueueException
      */
     public function getNextAvailable()
     {
         if ($this->checkTable() !== self::TABLE_EXISTS) {
             // No actions if the table either does nto exist or has just been created.
+            debug_log('Queue getNextAvailable: Table does not exist for getting the next available.');
             return null;
         }
 
         $processing = self::STATUS_PROCESSING;
         $ready = self::STATUS_READY;
         $tableName = self::getTableName();
-        $now = date('Y-m-d H:i:s');
+        $now = current_time('mysql');
+
+        $this->unlockQueueTable();
+
+        $this->database->query("LOCK TABLE `$tableName` WRITE");
+        $claimIdQuery = "SELECT id FROM {$tableName}
+                WHERE status='{$ready}'
+                ORDER BY priority, action, jobId ASC
+                LIMIT 1";
+        $claimedId = $this->database->query($claimIdQuery, true);
+
+        if (!$claimedId) {
+            // This is NOT a failure: it just means the process could not lock the row.
+            debug_log('Queue getNextAvailable returns null because claimed Id was empty. This query failed: ' . $claimIdQuery);
+            $this->database->query("UNLOCK TABLES");
+            return null;
+        }
+
+        $claimedId = $claimedId->fetch_assoc();
+
+        if (!is_array($claimedId) || !array_key_exists('id', $claimedId)) {
+            debug_log('Queue getNextAvailable returns null because claimed Id did not had an Id empty. This query failed: ' . $claimIdQuery);
+            $this->database->query("UNLOCK TABLES");
+            return null;
+        }
+
+        $claimedActionId = $claimedId['id'];
 
         /*
          * Find the first available row that is ready, update its status to processing.
@@ -460,31 +542,13 @@ class Queue
          */
         $claimQuery = "UPDATE {$tableName}
             SET status='{$processing}', claimed_at='{$now}'
-            WHERE id=(
-                SELECT id FROM {$tableName}
-                WHERE status='{$ready}'
-                ORDER BY priority, action, jobId ASC
-                LIMIT 1   
-            )
-            AND LAST_INSERT_ID(id);";
+            WHERE id=$claimedActionId;";
         $claimed = $this->database->query($claimQuery, true);
+        $this->database->query("UNLOCK TABLES");
 
         if (!$claimed) {
             // This is NOT a failure: it just means the process could not lock the row.
-            return null;
-        }
-
-        /*
-         * This we get from the `LAST_INSERT_ID(id)` statement in the atomic query.
-         * LAST_INSERT_ID will NOT only apply to INSERTions, but to UPDATEs too.
-         */
-        $claimedActionId = $this->database->insertId();
-
-        if (empty($claimedActionId)) {
-            /*
-             * The previous query might succeed while NOT acquiring the lock, depending
-             * on the db. If we have not acquired a lock, let's bail.
-             */
+            debug_log('Queue getNextAvailable returns null the process could not lock the row. This query failed: ' . $claimQuery);
             return null;
         }
 
@@ -502,7 +566,7 @@ class Queue
     /**
      * Counts, with a query, and returns the number of Actions currently in the Queue.
      *
-     * @param string|array<string>|null $status An optional status, or list of stati,
+     * @param string|array<string>|null $status An optional status, or list of statuses,
      *                                          to count Actions by. If not specified, then
      *                                          the returned value will be that of all Actions
      *                                          in any status.
@@ -515,6 +579,11 @@ class Queue
      */
     public function count($status = null, $jobId = null)
     {
+        if (!$this->tableExists()) {
+            debug_log('Queue count: The table does not exist for count.');
+            return 0;
+        }
+
         $tableName = self::getTableName();
 
         $jobClause = '';
@@ -526,8 +595,8 @@ class Queue
         if (empty($status) || $status === Queue::STATUS_ANY) {
             $countQuery = "SELECT COUNT(id) FROM {$tableName} WHERE 1=1 {$jobClause}";
         } else {
-            $stati = $this->escapeInterval((array)$status);
-            $countQuery = "SELECT COUNT(id) FROM {$tableName} WHERE status IN ({$stati}) {$jobClause}";
+            $statuses = $this->escapeInterval((array)$status);
+            $countQuery = "SELECT COUNT(id) FROM {$tableName} WHERE status IN ({$statuses}) {$jobClause}";
         }
 
         $countResult = $this->database->query($countQuery);
@@ -576,7 +645,9 @@ class Queue
         $actionId = absint($action instanceof Action ? $action->id : (int)$action);
         $tableName = self::getTableName();
         $status = $this->database->escape($newStatus);
-        $now = date('Y-m-d H:m:s');
+        $now = current_time('mysql');
+
+        $this->unlockQueueTable();
 
         if ($status !== self::STATUS_PROCESSING) {
             // Any status update that is not to the processing status, will clean the `claimed_at` column.
@@ -627,6 +698,7 @@ class Queue
             status CHAR(20) NOT NULL DEFAULT 'ready',
             priority BIGINT(20) NOT NULL DEFAULT 0,
             args LONGTEXT DEFAULT NULL,
+            custom LONGTEXT DEFAULT NULL,
             claimed_at DATETIME DEFAULT NULL,
             updated_at DATETIME DEFAULT NULL,
             PRIMARY KEY  (id)
@@ -645,8 +717,9 @@ class Queue
     public function dropTable()
     {
         $tableName = self::getTableName();
-        $query = "DROP TABLE {$tableName}";
+        $query = "DROP TABLE IF EXISTS {$tableName}";
         $this->database->query($query, true);
+        $this->tableState = self::TABLE_NOT_EXIST;
 
         return !$this->tableExists();
     }
@@ -712,8 +785,11 @@ class Queue
      */
     public function getAction($actionId, $force = false)
     {
+        debug_log('Queue getAction is trying to get action ID ' . $actionId, 'debug');
         if ($force || empty($this->actionCaches[$actionId])) {
             $row = $this->fetchActionRow($actionId);
+
+            debug_log(wp_json_encode($row), 'debug');
 
             if ($row !== null) {
                 $this->actionCaches[$actionId] = $row;
@@ -726,7 +802,7 @@ class Queue
     }
 
     /**
-     * Returns a list of stati in which an Action could be.
+     * Returns a list of statuses in which an Action could be.
      *
      * While nothing is preventing other code from assigning different
      * stati to the Actions, these are the ones the Queue is actually
@@ -735,7 +811,7 @@ class Queue
      * @return array<string> A list of the possible stati an Action could
      *                       be in.
      */
-    public function getSupportedActionStati()
+    public function getSupportedActionStatuses()
     {
         return [
             self::STATUS_PROCESSING,
@@ -775,9 +851,11 @@ class Queue
     public function markDanglingAs($newStatus)
     {
         if ($this->checkTable() === static::TABLE_NOT_EXIST) {
-            // The table does not exist so there is nothing to update.
+            debug_log('Queue markDanglingAs: The table does not exist so there is nothing to update.');
             return 0;
         }
+
+        $this->unlockQueueTable();
 
         $tableName = self::getTableName();
         $newStatus = $this->database->escape($newStatus);
@@ -805,6 +883,8 @@ class Queue
             $marked = 0;
         }
 
+        debug_log("Marked $marked actions as dangling.");
+
         return (int)$marked;
     }
 
@@ -818,10 +898,12 @@ class Queue
      */
     public function maybeFireAjaxAction()
     {
+        debug_log('maybeFireAjaxAction start');
         if (!$this->count(self::STATUS_READY)) {
             return false;
         }
 
+        debug_log('maybeFireAjaxAction dispatch');
         return $this->fireAjaxAction();
     }
 
@@ -853,15 +935,17 @@ class Queue
     public function cancelJob($jobId)
     {
         if ($this->checkTable() === static::TABLE_NOT_EXIST) {
-            // The table does not exist so there is nothing to cancel.
+            debug_log('Queue cancelJob: The table does not exist so there is nothing to cancel.');
             return 0;
         }
+
+        $this->unlockQueueTable();
 
         $tableName = self::getTableName();
         $newStatus = self::STATUS_CANCELED;
         $jobIds = (array)$jobId;
         $jobIdsInterval = $this->escapeInterval($jobIds);
-        $now = date('Y-m-d H:m:s');
+        $now = current_time('mysql');
         $cancelQuery = "UPDATE {$tableName} 
             SET status='{$newStatus}', claimed_at=NULL, updated_at='{$now}'
             WHERE jobId in (${jobIdsInterval})";
@@ -947,6 +1031,8 @@ class Queue
         $assignmentsList = $this->buildAssignmentsList($updates);
         $statusUpdateQuery = "UPDATE {$tableName} SET {$assignmentsList} WHERE id={$actionId}";
 
+        $this->unlockQueueTable();
+
         $updated = $this->database->query($statusUpdateQuery, true);
 
         if (!$updated) {
@@ -990,9 +1076,9 @@ class Queue
                 // Keep the numeric value.
                 $escapedValue = (int)$value;
                 $assignmentList[] = "{$escapedKey}={$escapedValue}";
-            } elseif ($key === 'args') {
-                $escapedValue = serialize($value);
-                $assignmentList[] = "{$escapedKey}='{$escapedValue}'";
+            } elseif ($key === 'args' || $key === 'custom') {
+                global $wpdb;
+                $assignmentList[] = $wpdb->prepare("{$escapedKey}=%s", maybe_serialize($value));
             } else {
                 $escapedValue = $this->database->escape($value);
                 $assignmentList[] = "{$escapedKey}='{$escapedValue}'";
@@ -1038,10 +1124,16 @@ class Queue
         return $breakpointDate;
     }
 
+    /**
+     * Deletes completed/failed/cancelled/ready actions that have
+     * been last updated a long time ago. (one week by default)
+     *
+     * @return int How many actions were cleaned up.
+     */
     public function cleanup()
     {
         if ($this->checkTable() === static::TABLE_NOT_EXIST) {
-            // The table does not exist so there is nothing to update.
+            debug_log('Queue Cleanup: The table does not exist so there is nothing to update.');
             return 0;
         }
 
@@ -1074,6 +1166,80 @@ class Queue
             $removed = 0;
         }
 
+        debug_log("Removed $removed actions that were last updated before $cleanupBreakpoint.");
+
         return $removed;
+    }
+
+    /**
+     * @param $jobId
+     *
+     * @return Action|null
+     * @throws QueueException
+     */
+    public function getLatestUpdatedAction($jobId)
+    {
+        if (!is_string($jobId) || $this->tableState === self::TABLE_NOT_EXIST) {
+            return null;
+        }
+
+        $tableName = self::getTableName();
+        $escapedJobId = $this->database->escape(trim($jobId));
+        $query = "SELECT id FROM $tableName WHERE jobId = '$escapedJobId' ORDER BY updated_at DESC, id DESC LIMIT 1";
+
+        $result = $this->database->query($query);
+
+        if (false === $result) {
+            error_log(json_encode([
+                'root' => 'Error while trying to fetch latest updated Action.',
+                'class' => get_class($this),
+                'query' => $query,
+                'error' => $this->database->error(),
+                'jobId' => $jobId
+            ]));
+
+            // There has been an error fetching the results, bail.
+            return null;
+        }
+
+        $row = $this->database->fetchAssoc($result);
+
+        if (!isset($row['id'])) {
+            // Not an error, it could just mean there are not matching Actions.
+            return null;
+        }
+
+        return $this->getAction($row['id']);
+    }
+
+    /**
+     * Sets the unlocker callback the Queue should use for some database operations.
+     *
+     * The unlocker is contextual and will default to `null`.
+     *
+     * @param callable|null $unlocker
+     *
+     * @return Queue A reference to this Queue instance.
+     */
+    public function setUnlocker($unlocker)
+    {
+        $this->unlocker = $unlocker;
+
+        return $this;
+    }
+
+    /**
+     * Unlocks the queue table using the set unlocker, if required.
+     *
+     * @return void This method does not return a value and will have
+     *              the side-effect of running the unlocking routing, if any.
+     */
+    private function unlockQueueTable()
+    {
+        if (!$this->phpAdapter->isCallable($this->unlocker)) {
+            return;
+        }
+
+        call_user_func($this->unlocker);
     }
 }

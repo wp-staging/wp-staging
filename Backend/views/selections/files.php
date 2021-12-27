@@ -98,8 +98,9 @@ if ($options->current !== null && $options->mainJob === 'updating') {
 <p>
     <span>
         <?php
-        if (isset($options->clone)) {
-            echo __("All files will be copied to: ", "wp-staging") . "<code>" .  $options->root . $options->clone . "</code>";
+        if (isset($options->current)) {
+            $destination = isset($options->currentClone['cloneDir']) ? $options->currentClone['cloneDir'] : $options->currentClone['path'];
+            echo __("All files will be copied to: ", "wp-staging") . "<code>" . $destination . "</code>";
         }
         ?>
     </span>

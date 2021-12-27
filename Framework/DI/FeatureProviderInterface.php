@@ -24,7 +24,7 @@ interface FeatureProviderInterface
      *
      * @return bool Whether the feature provided is enabled or not.
      */
-    public static function isEnabled();
+    public static function isEnabledInProduction();
 
     /**
      * Returns the constant, or environment variables, that will trigger the feature provider

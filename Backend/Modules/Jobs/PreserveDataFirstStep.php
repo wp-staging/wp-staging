@@ -25,9 +25,20 @@ class PreserveDataFirstStep extends JobExecutable
     /** @var string */
     private $stagingPrefix;
 
+    /** @var string */
+    private $backupSchedulesOption;
+
     protected function calculateTotalSteps()
     {
         $this->options->totalSteps = 1;
+
+        if (class_exists('\WPStaging\Pro\Backup\BackupScheduler')) {
+            $this->backupSchedulesOption = \WPStaging\Pro\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES;
+        } else {
+            // Fallback if pro namespace is not available
+            // @see \WPStaging\Pro\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
+            $this->backupSchedulesOption = 'wpstg_backup_schedules';
+        }
     }
 
     /**
@@ -105,8 +116,16 @@ class PreserveDataFirstStep extends JobExecutable
             )
         );
 
+        // Automated backup schedules
+        $backupSchedules = $this->stagingDb->get_var(
+            $this->stagingDb->prepare(
+                "SELECT `option_value` FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s",
+                $this->backupSchedulesOption
+            )
+        );
+
         // Nothing to do
-        if (!$stagingSites && !$settings && !$cloneOptions) {
+        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules) {
             return true;
         }
 
@@ -114,6 +133,7 @@ class PreserveDataFirstStep extends JobExecutable
             'stagingSites' => $stagingSites,
             'settings' => $settings,
             'cloneOptions' => $cloneOptions,
+            'backupSchedules' => $backupSchedules,
         ]);
 
         // Insert staging site preserved data into wpstg_tmp_data in production database
@@ -140,6 +160,10 @@ class PreserveDataFirstStep extends JobExecutable
 
         if ($cloneOptions === false) {
             $this->log("Preserve Data: Failed to get wpstg_clone_options");
+        }
+
+        if ($backupSchedules === false) {
+            $this->log("Preserve Data: Failed to get " . $this->backupSchedulesOption);
         }
 
         if ($insert === false) {

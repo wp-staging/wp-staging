@@ -46,6 +46,7 @@ abstract class FeatureServiceProvider extends ServiceProvider implements Feature
 
     /**
      * Returns whether the feature provided by the provider is enabled or not.
+     * This is used if a feature is ready and activated in production.
      *
      * The check will happen on the feature provider trigger by checking if
      * the feature is available (the trigger constant is defined and true) and, if so,
@@ -53,12 +54,43 @@ abstract class FeatureServiceProvider extends ServiceProvider implements Feature
      *
      * @return bool Whether the feature provided is enabled or not.
      */
-    public static function isEnabled()
+    public static function isEnabledInProduction()
     {
         $trigger = static::getFeatureTrigger();
 
-        if (!(defined($trigger) && constant($trigger) === true)) {
-            // The feature will only be enabled if the constant is set AND `true`.
+        if (defined($trigger) && constant($trigger) === false) {
+            // The feature will be disabled if the constant is set and `false`.
+            return false;
+        }
+
+        if (getenv($trigger) !== false && (bool)getenv($trigger) === false) {
+            // The feature can be disabled by setting an environment variable by the trigger name to a falsy value.
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Returns whether the feature provided by the provider is enabled or not.
+     *
+     * This is used if a feature is still in development and not released in production.
+     * The default value is false and a feature must be explicitely activated by defining the feature constant and setting it to true
+     *
+     * If the feature constant is not set the feature stays disabled.
+     *
+     * @return bool Whether the feature provided is enabled or not.
+     */
+    public static function isEnabledInDevelopment()
+    {
+        $trigger = static::getFeatureTrigger();
+
+        if (!defined($trigger)) {
+            return false;
+        }
+
+        if (defined($trigger) && constant($trigger) === false) {
+            // The feature will be disabled if the constant is set and `false`.
             return false;
         }
 

@@ -19,6 +19,78 @@
     return _extends.apply(this, arguments);
   }
 
+  function _unsupportedIterableToArray(o, minLen) {
+    if (!o) return;
+    if (typeof o === "string") return _arrayLikeToArray(o, minLen);
+    var n = Object.prototype.toString.call(o).slice(8, -1);
+    if (n === "Object" && o.constructor) n = o.constructor.name;
+    if (n === "Map" || n === "Set") return Array.from(o);
+    if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
+  }
+
+  function _arrayLikeToArray(arr, len) {
+    if (len == null || len > arr.length) len = arr.length;
+
+    for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
+
+    return arr2;
+  }
+
+  function _createForOfIteratorHelperLoose(o, allowArrayLike) {
+    var it;
+
+    if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
+      if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+        if (it) o = it;
+        var i = 0;
+        return function () {
+          if (i >= o.length) return {
+            done: true
+          };
+          return {
+            done: false,
+            value: o[i++]
+          };
+        };
+      }
+
+      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+    }
+
+    it = o[Symbol.iterator]();
+    return it.next.bind(it);
+  }
+
+  /**
+   * Polyfills the `Element.prototype.closest` function if not available in the browser.
+   *
+   * @return {Function} A function that will return the closest element, by selector, to this element.
+   */
+  function polyfillClosest() {
+    if (Element.prototype.closest) {
+      if (!Element.prototype.matches) {
+        Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+      }
+
+      Element.prototype.closest = function (s) {
+        var el = this;
+
+        do {
+          if (Element.prototype.matches.call(el, s)) return el;
+          el = el.parentElement || el.parentNode;
+        } while (el !== null && el.nodeType === 1);
+
+        return null;
+      };
+    }
+
+    return function (element, selector) {
+      return element instanceof Element ? element.closest(selector) : null;
+    };
+  }
+
+  var closest = polyfillClosest();
+
   /**
    * WP STAGING basic jQuery replacement
    */
@@ -27,6 +99,7 @@
    * Shortcut for document.querySelector() or jQuery's $()
    * Return single element only
    */
+
   function qs(selector) {
     return document.querySelector(selector);
   }
@@ -43,6 +116,10 @@
    */
 
   function addEvent(parent, evt, selector, handler) {
+    if (!parent instanceof Element) {
+      return;
+    }
+
     parent.addEventListener(evt, function (event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         handler(event.target.closest(selector), event);
@@ -113,6 +190,71 @@
     }
 
     return result;
+  }
+  /**
+   * Dispatches a change on an element that will trigger, depending on the element type,
+   * cascading changes on elements dependant on the one that triggered the change and that
+   * belong in the same container.
+   *
+   * @param {Element} element A reference to the Element the change was triggered from.
+   *
+   * @return {void} The function does not return any value and will have the side-effect of
+   *                hiding or showing dependant elements.
+   */
+
+  function handleDisplayDependencies(element) {
+    if (!element instanceof Element || !element.id) {
+      return;
+    }
+
+    var containerSelector = '.wpstg-container'; // Use the default WordPress CSS class to hide and show the objects.
+
+    var hiddenClass = 'hidden';
+    var elementType = element.getAttribute('type');
+
+    switch (elementType) {
+      case 'checkbox':
+        // Go as high as the container that contains this element.
+        var container = closest(element, containerSelector);
+
+        if (container === null) {
+          return;
+        }
+
+        var showIfChecked = container.querySelectorAll("[data-show-if-checked=\"" + element.id + "\"]");
+        var showIfUnchecked = container.querySelectorAll("[data-show-if-unchecked=\"" + element.id + "\"]");
+        var checked = element.checked;
+
+        if (showIfChecked.length) {
+          for (var _iterator = _createForOfIteratorHelperLoose(showIfChecked), _step; !(_step = _iterator()).done;) {
+            var el = _step.value;
+
+            if (checked) {
+              el.classList.remove(hiddenClass);
+            } else {
+              el.classList.add(hiddenClass);
+            }
+          }
+        }
+
+        if (showIfUnchecked.length) {
+          for (var _iterator2 = _createForOfIteratorHelperLoose(showIfUnchecked), _step2; !(_step2 = _iterator2()).done;) {
+            var _el = _step2.value;
+
+            if (checked) {
+              _el.classList.add(hiddenClass);
+            } else {
+              _el.classList.remove(hiddenClass);
+            }
+          }
+        }
+
+        return;
+
+      default:
+        // Not a type we handle.
+        return;
+    }
   }
 
   /**
@@ -255,6 +397,10 @@
         return;
       }
 
+      addEvent(this.directoryListingContainer, 'change', this.dirCheckboxSelector, function (element, event) {
+        event.preventDefault();
+        console.log(_this.getExcludedDirectories());
+      });
       addEvent(this.directoryListingContainer, 'click', this.dirExpandSelector, function (element, event) {
         event.preventDefault();
 
@@ -364,7 +510,7 @@
         }
       });
       this.existingExcludes.forEach(function (exclude) {
-        if (!_this3.isParentExcluded(exclude) && !_this3.isExcludeScanned(exclude)) {
+        if (!_this3.isParentExcluded(exclude) && !_this3.isScanned(exclude)) {
           _this3.excludedDirectories.push(exclude);
         }
       });
@@ -431,20 +577,32 @@
 
       if (this.existingExcludes === '') {
         this.existingExcludes = [];
+        return;
       }
 
-      if (this.existingExcludes.length !== 0) {
-        this.existingExcludes = this.existingExcludes.split(',');
+      if (this.existingExcludes.length === 0) {
+        this.existingExcludes = [];
+        return;
       }
+
+      var existingExcludes = this.existingExcludes.split(',');
+      this.existingExcludes = existingExcludes.map(function (exclude) {
+        if (exclude.substr(0, 1) === '/') {
+          return exclude.slice(1);
+        }
+
+        return exclude;
+      });
     };
 
-    _proto.isExcludeScanned = function isExcludeScanned(exclude) {
-      this.directoryListingContainer.querySelectorAll('.wpstg-dir input').forEach(function (element) {
-        if (element.value === exclude) {
-          return true;
+    _proto.isScanned = function isScanned(exclude) {
+      var scanned = false;
+      this.directoryListingContainer.querySelectorAll('.wpstg-dir>input').forEach(function (element) {
+        if (element.value == exclude) {
+          scanned = true;
         }
       });
-      return false;
+      return scanned;
     };
 
     return WpstgDirectoryNavigation;
@@ -1640,7 +1798,8 @@
       cloneExcludeFilters: null,
       directoryNavigator: null,
       notyf: null,
-      areAllTablesChecked: true
+      areAllTablesChecked: true,
+      handleDisplayDependencies: handleDisplayDependencies
     };
     var cache = {
       elements: []

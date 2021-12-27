@@ -8,6 +8,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WPStaging\Backend\Pro\Modules\Jobs\Copiers\Copier;
+use WPStaging\Framework\Adapter\PhpAdapter;
 
 class Filesystem extends FilterableDirectoryIterator
 {
@@ -31,6 +32,18 @@ class Filesystem extends FilterableDirectoryIterator
 
     /** @var array */
     private $logs = [];
+
+    /** @var PhpAdapter */
+    private $phpAdapter;
+
+    /**
+     * @todo Inject PhpAdapter and make changes to all instance of Filesystem accordingly :)
+     */
+    public function __construct()
+    {
+        parent::__construct();
+        $this->phpAdapter = new PhpAdapter();
+    }
 
     /**
      * @return array
@@ -109,7 +122,7 @@ class Filesystem extends FilterableDirectoryIterator
                 $result = $this->renameDirect($item->getPathname(), $destination);
             }
 
-            if (!$result || !is_callable($this->shouldStop)) {
+            if (!$result || !$this->phpAdapter->isCallable($this->shouldStop)) {
                 continue;
             }
 
@@ -238,7 +251,7 @@ class Filesystem extends FilterableDirectoryIterator
                 $result = copy($item->getPathname(), $destination);
             }
 
-            if (!$result || !is_callable($this->shouldStop)) {
+            if (!$result || !$this->phpAdapter->isCallable($this->shouldStop)) {
                 continue;
             }
 
@@ -355,7 +368,7 @@ class Filesystem extends FilterableDirectoryIterator
                 }
             }
 
-            if (!$result || !is_callable($this->shouldStop)) {
+            if (!$result || !$this->phpAdapter->isCallable($this->shouldStop)) {
                 continue;
             }
 

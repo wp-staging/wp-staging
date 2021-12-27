@@ -69,7 +69,7 @@ if (
  * Early bail: Unsupported WordPress version.
  *             We check on runtime instead of activation so we can display the notice.
  */
-if (!version_compare($currentWordPressVersion = get_bloginfo('version'), $minimumWordPressVersion = '4.0', '>=')) {
+if (!version_compare($currentWordPressVersion = get_bloginfo('version'), $minimumWordPressVersion = '4.4', '>=')) {
     add_action(is_network_admin() ? 'network_admin_notices' : 'admin_notices', function () use ($currentWordPressVersion, $minimumWordPressVersion) {
         echo '<div class="notice-warning notice is-dismissible">';
         echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING') . '</p>';

@@ -192,4 +192,14 @@ class SiteInfo
     {
         return in_array(strtolower(ini_get('short_open_tags')), ['1', 'on', 'true']);
     }
+
+    /**
+     * Is WP Bakery plugin active?
+     *
+     * @return bool
+     */
+    public function isWpBakeryActive()
+    {
+        return defined('WPB_VC_VERSION');
+    }
 }

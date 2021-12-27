@@ -1,5 +1,5 @@
 <div class="wpstg_admin">
-    <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>    
+    <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>
 
     <div class="wpstg-tabs-container" id="wpstg-tools">
         <ul class="nav-tab-wrapper">

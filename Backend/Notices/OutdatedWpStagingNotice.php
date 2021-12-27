@@ -89,6 +89,10 @@ class OutdatedWpStagingNotice
             return null;
         }
 
+        if (!property_exists($plugins, 'response')) {
+            return null;
+        }
+
         $plugins = $plugins->response;
         foreach ($plugins as $plugin) {
             if ($plugin->slug === $slug) {

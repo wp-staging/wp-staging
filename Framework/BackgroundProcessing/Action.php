@@ -16,14 +16,15 @@ use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
  *
  * @package WPStaging\Framework\BackgroundProcessing
  *
- * @property int    $id            The Action id, the unique, auto-increment value identifying its row.
- * @property string $action        The action name.
- * @property string $jobId         The Job the action belongs to.
- * @property int    $priority      The Action priority, lower is executed first (like WP Filters API).
- * @property array  $args          A set of arguments for the action.
- * @property string $status        The current Action status in the context of the Queue.
- * @property string $claimedAt     The date and time, in the site timezone, the Action was last claimed for processing.
- * @property string $updatedAt     The date and time, in the site timezone, the Action was last updated.
+ * @property int        $id            The Action id, the unique, auto-increment value identifying its row.
+ * @property string     $action        The action name.
+ * @property string     $jobId         The Job the action belongs to.
+ * @property int        $priority      The Action priority, lower is executed first (like WP Filters API).
+ * @property array      $args          A set of arguments for the action.
+ * @property string     $status        The current Action status in the context of the Queue.
+ * @property string     $claimedAt     The date and time, in the site timezone, the Action was last claimed for processing.
+ * @property string     $updatedAt     The date and time, in the site timezone, the Action was last updated.
+ * @property mixed|null $custom        Custom data attached to the Action.
  */
 class Action
 {
@@ -45,7 +46,7 @@ class Action
     private $action;
 
     /**
-     * The name of teh Job, or Group, the Action belongs to.
+     * The name of the Job, or Group, the Action belongs to.
      *
      * @var string
      */
@@ -63,7 +64,7 @@ class Action
      * An optional array of arguments that will be passed to either the WordPress
      * action fired by the Queue or as parameters for the invoked callable.
      *
-     * @var array<mixed>
+     * @var array
      */
     private $args;
 
@@ -92,6 +93,13 @@ class Action
     private $updatedAt;
 
     /**
+     * Custom data attached to the Action.
+     *
+     * @var mixed|null
+     */
+    private $custom;
+
+    /**
      * Action constructor.
      *
      * @param int          $id        The Action id, its unique identifier in the Queue; `0` is a valid id
@@ -99,7 +107,7 @@ class Action
      * @param string       $action    The Action name, it could be a string that will be used to fire a WP
      *                                action, or a string in the format `<class>::<static-method>` that will
      *                                cause that static method to be invoked directly with the Action arguments.
-     * @param array<mixed> $args      An optional set of arguments for the Action that will either be passed to the
+     * @param array $args      An optional set of arguments for the Action that will either be passed to the
      *                                invoked WP action, or to the specified static method as parameters.
      * @param string       $jobId     The Job, or Group, the Action belongs to.
      * @param int          $priority  The Action priority in the context of the Queue, it works like the priority of
@@ -108,6 +116,7 @@ class Action
      * @param string|null  $claimedAt The string representing the date and time, in the site timezone, the Action was last claimed
      *                                for processing.
      * @param string|null  $updatedAt The string representing the date and time, in the site timezone, the Action was last updated.
+     * @param mixed|null  $custom    Custom data attached to the Action.
      *
      * @throws QueueException If any value used to build the Action is not valid.
      */
@@ -119,7 +128,8 @@ class Action
         $priority = 0,
         $status = null,
         $claimedAt = null,
-        $updatedAt = null
+        $updatedAt = null,
+        $custom = null
     ) {
         if (!is_numeric($id) && absint($id) == $id) {
             throw new QueueException('Id MUST be a positive integer.');
@@ -145,6 +155,7 @@ class Action
         $this->status = $status;
         $this->claimedAt = $claimedAt;
         $this->updatedAt = $updatedAt;
+        $this->custom = $custom;
     }
 
     /**
@@ -166,8 +177,9 @@ class Action
         $status = isset($dbRow['status']) ? (string)$dbRow['status'] : Queue::STATUS_READY;
         $claimedAt = isset($dbRow['claimed_at']) ? (string)$dbRow['claimed_at'] : null;
         $updatedAt = isset($dbRow['updated_at']) ? (string)$dbRow['updated_at'] : null;
+        $custom = isset($dbRow['custom']) ? maybe_unserialize($dbRow['custom']) : null;
 
-        return new self($id, $action, $args, $jobId, $priority, $status, $claimedAt, $updatedAt);
+        return new self($id, $action, $args, $jobId, $priority, $status, $claimedAt, $updatedAt, $custom);
     }
 
     /**
@@ -202,7 +214,7 @@ class Action
     }
 
     /**
-     * Returns whether two Actions are the same in regards to relevant properties.
+     * Returns whether two Actions are the same in regard to relevant properties.
      *
      * @param Action        $toCompare            A reference to the Action instance this one should
      *                                            be compared to.
@@ -246,6 +258,7 @@ class Action
             'status' => $this->status,
             'claimedAt' => $this->claimedAt,
             'updatedAt' => $this->updatedAt,
+            'custom' => $this->custom
         ];
     }
 
@@ -253,7 +266,7 @@ class Action
      * Alters the Action instance with a set of alterations. Since the Action is immutable
      * alteration will produce, in fact, a clone of it that will be returned.
      *
-     * @param array<string,mixed> $alterations An map from the alteration keys to their
+     * @param array<string,mixed> $alterations A map from the alteration keys to their
      *                                         values.
      *
      * @return Action A reference to a modified clone of the current Action.
@@ -293,15 +306,15 @@ class Action
         $objectTwo = (object)$actionTwo;
 
         if ($objectOne->priority !== $objectTwo->priority) {
-            return (int)($objectOne->priority > $objectTwo->priority);
+            return $objectOne->priority > $objectTwo->priority ? 1 : -1;
         }
 
         if ($objectOne->action !== $objectTwo->action) {
-            return (int)($objectOne->action > $objectTwo->action);
+            return $objectOne->action > $objectTwo->action ? 1 : -1;
         }
 
         if ($objectOne->jobId !== $objectTwo->jobId) {
-            return (int)($objectOne->jobId > $objectTwo->jobId);
+            return $objectOne->jobId > $objectTwo->jobId ? 1 : -1;
         }
 
         return 0;

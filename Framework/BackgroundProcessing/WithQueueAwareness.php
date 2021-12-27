@@ -10,6 +10,8 @@ namespace WPStaging\Framework\BackgroundProcessing;
 
 use WP_Error;
 
+use function WPStaging\functions\debug_log;
+
 /**
  * Trait WithQueueAwareness
  *
@@ -39,13 +41,13 @@ trait WithQueueAwareness
 
     /**
      * Fires a non-blocking request to the WordPress admin AJAX endpoint that will,
-     * in turn, trigger the procesing of more Actions.
+     * in turn, trigger the processing of more Actions.
      *
      * @param mixed|null $bodyData An optional set of data to customize the processing request
      *                             for. If not provided, then the request will be fired for the
      *                             next available Actions (normal operations).
      *
-     * @return bool A value that will indicate whether the request was correctly dispathed
+     * @return bool A value that will indicate whether the request was correctly dispatched
      *              or not.
      */
     public function fireAjaxAction($bodyData = null)
@@ -70,6 +72,8 @@ trait WithQueueAwareness
             'sslverify' => apply_filters('https_local_ssl_verify', false),
             'body' => $this->normalizeAjaxRequestBody($bodyData),
         ]);
+
+        debug_log('fireAjaxAction: ' . wp_json_encode($response, JSON_PRETTY_PRINT));
 
         /*
          * A non-blocking request will either return a WP_Error instance, or

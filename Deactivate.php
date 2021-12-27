@@ -26,6 +26,8 @@ class Deactivate
         if (!$this->isOtherWPStagingPluginActivated()) {
             $this->deleteMuPlugin();
         }
+
+        $this->deleteBackupSchedulesFromCron();
     }
 
     /**
@@ -61,5 +63,13 @@ class Deactivate
         }
 
         return true;
+    }
+
+    protected function deleteBackupSchedulesFromCron()
+    {
+        if (file_exists(__DIR__ . '/Pro/Backup/BackupScheduler.php')) {
+            require_once __DIR__ . '/Pro/Backup/BackupScheduler.php';
+            \WPStaging\Pro\Backup\BackupScheduler::removeBackupSchedulesFromCron();
+        }
     }
 }

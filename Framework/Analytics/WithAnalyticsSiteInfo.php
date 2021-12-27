@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Analytics;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\SiteInfo;
 
 trait WithAnalyticsSiteInfo
@@ -77,7 +78,7 @@ trait WithAnalyticsSiteInfo
 
             'php_version' => phpversion(),
             'blog_id' => get_current_blog_id(),
-            'network_id' => get_current_network_id(),
+            'network_id' => WPStaging::make(WpAdapter::class)->getCurrentNetworkId(),
             'single_or_multi' => is_multisite() ? 'multi' : 'single',
             'wpstaging_free_or_pro' => WPStaging::isPro() ? 'pro' : 'free',
             'wpstaging_version' => WPStaging::getVersion(),
@@ -102,6 +103,10 @@ trait WithAnalyticsSiteInfo
 
     protected function getActivePlugins()
     {
+        if (!function_exists('get_plugin_data')) {
+            include_once(ABSPATH . 'wp-admin/includes/plugin.php');
+        }
+
         $plugins = [
             'siteActive' => [],
             'muPlugins' => [],

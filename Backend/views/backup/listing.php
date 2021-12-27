@@ -1,7 +1,10 @@
 <?php
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Pro\Backup\BackupProcessLock;
+use WPStaging\Pro\Backup\Exceptions\ProcessLockedException;
 
 /**
  * @see \WPStaging\Pro\Backup\Ajax\Listing::render
@@ -14,33 +17,53 @@ use WPStaging\Framework\Adapter\Directory;
  */
 
 $disabledProperty = $isValidLicense ? '' : 'disabled';
+
+
+$backupProcessLock = WPStaging::make(BackupProcessLock::class);
+try {
+    $backupProcessLock->checkProcessLocked();
+    $isLocked = false;
+    $disabledPropertyCreateBackup = '';
+} catch (ProcessLockedException $e) {
+    $isLocked = true;
+    $disabledPropertyCreateBackup = 'disabled';
+}
 ?>
 
+<?php if (defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) : ?>
+    <div class="notice notice-warning" style="margin-bottom: 10px;">
+        <p><strong><?php esc_html_e('WP STAGING:', 'wp-staging') ?></strong></p>
+        <p><?php echo sprintf(__('The backup background creation depends on WP CRON but %s is set to %s. So backup background processing will not work. You can remove the constant %s or set its value to %s to make background processing work.', 'wp-staging'), '<code>DISABLE_WP_CRON</code>', '<code>true</code>', '<code>DISABLE_WP_CRON</code>', '<code>false</code>') ?></p>
+    </div>
+<?php endif; ?>
+
+<?php if ($isLocked) : ?>
+    <div id="wpstg-backup-locked">
+        <div class="icon"><img width="20" src="<?php echo WPSTG_PLUGIN_URL . "assets/img/wpstaging-icon.png"; ?>"></div>
+        <div class="text"><?php esc_html_e('There is a backup work in progress...', 'wp-staging'); ?></div>
+    </div>
+<?php endif; ?>
+
 <div id="wpstg-step-1">
-    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo $disabledProperty ?>>
+    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo $disabledProperty; ?> <?php echo $disabledPropertyCreateBackup ?>>
         <?php esc_html_e('Create New Backup', 'wp-staging') ?>
     </button>
     <button id="wpstg-upload-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4" <?php echo $disabledProperty ?>>
         <?php esc_html_e('Upload Backup', 'wp-staging') ?>
     </button>
-    <div class="wpstg--tooltip">
-        <img class="wpstg--dashicons wpstg-dashicons-21" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg"></img>
-        <p class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                <?php _e("Upload a WP STAGING backup file (*.wpstg) and restore your site to it at any time. This backup can have been created from this site, or even created on another website. So you can migrate the other site to this one.", "wp-staging")?>
-                <br><br>
-                <?php _e("Videos:", "wp-staging")?>
-                <br>
-                <?php echo sprintf(__('&#8226; <a href="%s" target="_blank">How to backup WordPress</a>', 'wp-staging'), 'https://www.youtube.com/watch?v=q352aYduOUY'); ?>
-                <br>
-                <?php echo sprintf(__('&#8226; <a href="%s" target="_blank">How to migrate WordPress</a>', 'wp-staging'), 'https://www.youtube.com/watch?v=DBaZQg1Efq4'); ?>
-        </p>
-    </div>
+    <button id="wpstg-manage-backup-schedules" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4" <?php echo $disabledProperty ?>>
+        <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
+    </button>
     <div id="wpstg-report-issue-wrapper">
         <button type="button" id="wpstg-report-issue-button" class="wpstg-button">
             <i class="wpstg-icon-issue"></i><?php echo __("Report Issue", "wp-staging"); ?>
         </button>
         <?php require_once($this->views . '_main/report-issue.php'); ?>
     </div>
+</div>
+
+<div id="wpstg-backup-runs-info">
+    <?php \WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Ajax\ScheduleList::class)->renderNextBackupSnippet(); ?>
 </div>
 
 <div id="wpstg-existing-backups">
@@ -56,6 +79,7 @@ $disabledProperty = $isValidLicense ? '' : 'disabled';
 <?php include(__DIR__ . '/modal/progress.php'); ?>
 <?php include(__DIR__ . '/modal/download.php'); ?>
 <?php include(__DIR__ . '/modal/upload.php'); ?>
+<?php include(__DIR__ . '/modal/manage-schedules.php'); ?>
 <?php include(__DIR__ . '/modal/import.php'); ?>
 
 <?php include(__DIR__ . '/restore-wait.php'); ?>

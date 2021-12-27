@@ -13,9 +13,12 @@ trait ResourceTrait
     protected $executionTimeLimit;
     protected $memoryLimit;
     protected $scriptMemoryLimit;
+    protected $isBackupRestoreJob = false;
 
-    public static $defaultMaxExecutionTimeInSeconds = 30;
-    public static $executionTimeGapInSeconds        = 5;
+    public static $defaultMaxExecutionTimeInSeconds  = 30;
+    public static $executionTimeGapInSeconds         = 5;
+    // Using CPU LOAD LOW to avoid 504 errors in large database
+    public static $backupRestoreCpuLoadTimeInSeconds = 10;
 
     /** @var bool Whether this request is taking place in the context of a unit test. */
     protected $isUnitTest;
@@ -236,6 +239,10 @@ trait ResourceTrait
      */
     protected function getCpuBoundMaxExecutionTime($cpuLoadSetting = null)
     {
+        if ($this->isBackupRestoreJob) {
+            return self::$backupRestoreCpuLoadTimeInSeconds;
+        }
+
         // Early bail: Cache
         if (!isset($this->resourceTraitSettings)) {
             $this->resourceTraitSettings = json_decode(json_encode(get_option('wpstg_settings', [])));
@@ -243,8 +250,8 @@ trait ResourceTrait
         if ($cpuLoadSetting === null) {
             $cpuLoadSetting = isset($this->resourceTraitSettings->cpuLoad) ? $this->resourceTraitSettings->cpuLoad : 'medium';
         }
-        $execution_gap = static::$executionTimeGapInSeconds;
 
+        $execution_gap = static::$executionTimeGapInSeconds;
         switch ($cpuLoadSetting) {
             case 'low':
                 $cpuBoundMaxExecutionTime = 10 + $execution_gap;

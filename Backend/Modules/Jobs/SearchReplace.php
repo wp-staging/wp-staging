@@ -8,6 +8,7 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\Utils\Multisite;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\DbRowsGeneratorTrait;
 use WPStaging\Framework\Utils\Strings;
 
@@ -406,7 +407,10 @@ class SearchReplace extends CloningProcess
 
                 $excludes = apply_filters('wpstg_clone_searchreplace_excl', []);
                 $searchReplace = new \WPStaging\Framework\Database\SearchReplace($args['search_for'], $args['replace_with'], $args['case_insensitive'], $excludes);
-                $dataRow = $searchReplace->replace($dataRow);
+                /** @var SiteInfo */
+                $siteInfo = WPStaging::make(SiteInfo::class);
+                $searchReplace->setWpBakeryActive($siteInfo->isWpBakeryActive());
+                $dataRow = $searchReplace->replaceExtended($dataRow);
 
                 // Something was changed
                 if ($row[$column] !== $dataRow) {

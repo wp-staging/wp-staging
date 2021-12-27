@@ -10,9 +10,11 @@
 namespace WPStaging\Framework\BackgroundProcessing;
 
 use ReflectionMethod;
-use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\Traits\ResourceTrait;
+
+use function WPStaging\functions\debug_log;
 
 /**
  * Class QueueProcessor
@@ -42,15 +44,20 @@ class QueueProcessor
      */
     private $queue;
 
+    /** @var PhpAdapter */
+    private $phpAdapter;
+
     /**
      * QueueProcessor constructor.
      *
      * @param Queue $queue A reference to the Queue instance the Processor should use to access
      *                     and run low-level operations on the Queue.
+     * @param PhpAdapter $phpAdapter
      */
-    public function __construct(Queue $queue)
+    public function __construct(Queue $queue, PhpAdapter $phpAdapter)
     {
-        $this->queue = $queue;
+        $this->queue      = $queue;
+        $this->phpAdapter = $phpAdapter;
     }
 
     /**
@@ -62,29 +69,45 @@ class QueueProcessor
      */
     public function process()
     {
+        debug_log('[Background Processing] QueueProcessor::process 1', 'debug');
         if (!$this->doProcess) {
             return 0;
         }
+
+        debug_log('[Background Processing] QueueProcessor::process 2', 'debug');
 
         $processed = 0;
 
         while (!$this->isThreshold()) {
             $action = $this->queue->getNextAvailable();
 
+            debug_log('[Background Processing] QueueProcessor::process Action: ' . wp_json_encode($action), 'debug');
+
             if (!$action instanceof Action) {
-                // No Actions to process or failed to acquire lock, bail.
+                // No READY Actions, no lock or no table.
+                debug_log('[Background Processing] QueueProcessor::process No READY actions', 'debug');
                 break;
             }
 
             $processed++;
 
             $this->dispatch($action);
+
+            debug_log('[Background Processing] QueueProcessor::process After dispatch', 'debug');
         }
 
-        if ($this->queue->count(Queue::STATUS_READY)) {
+        /*
+         * We will continue processing the Queue if we were able to process
+         * at least ONE action. Otherwise, if a MySQL error happens during
+         * the processing of the Queue, this would cause a processing loop.
+         */
+        if ($processed > 0 && $this->queue->count(Queue::STATUS_READY)) {
             // If there are more Actions to process, then keep processing.
             $this->fireAjaxAction();
+            debug_log('[Background Processing] QueueProcessor::process After fireAjaxAction', 'debug');
         }
+
+        debug_log('[Background Processing] QueueProcessor::process Processed: ' . $processed, 'debug');
 
         return $processed;
     }
@@ -129,7 +152,7 @@ class QueueProcessor
         try {
             $actionCallback = $action->action;
 
-            if (is_callable($actionCallback)) {
+            if ($this->phpAdapter->isCallable($actionCallback)) {
                 // Function, static or instance method.
                 if (function_exists($actionCallback)) {
                     // Function, just call it.
@@ -147,8 +170,13 @@ class QueueProcessor
                         call_user_func_array($actionCallback, $action->args);
                     } else {
                         // Instance method: build the instance using the Service Locator, then call the method on it.
-                        $instance = WPStaging::getInstance()->getContainer()->make($class);
-                        call_user_func_array([$instance, $method], $action->args);
+                        $instance = WPStaging::make($class);
+
+                        if (method_exists($instance, 'setCurrentAction')) {
+                            $instance->setCurrentAction($action);
+                        }
+
+                        call_user_func_array([$instance, $method], [$action->args]);
                     }
                 }
             } else {

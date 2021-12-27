@@ -203,12 +203,6 @@ class Updating extends Job
             $this->options->excludeGlobRules = wpstg_urldecode(explode(',', $_POST["excludeGlobRules"]));
         }
 
-        // Exclude File Size Rules
-        $this->options->excludeSizeRules = [];
-        if (isset($_POST["excludeSizeRules"]) && !empty($_POST["excludeSizeRules"])) {
-            $this->options->excludeSizeRules = wpstg_urldecode(explode(',', $_POST["excludeSizeRules"]));
-        }
-
         // Excluded Directories
         $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
         $excludedDirectoriesRequest = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
@@ -236,55 +230,6 @@ class Updating extends Job
             $this->options->tables = $_POST["includedTables"];
         } else {
             $this->options->tables = [];
-        }
-    }
-
-    /**
-     * @param bool $preserveExcludes
-     */
-    private function setDirectoriesForResetJob($preserveExcludes = false)
-    {
-        $wpDirectories = new WpDefaultDirectories();
-        $coreDirectories = $wpDirectories->getWpCoreDirectories();
-
-        if ($preserveExcludes) {
-            $this->options->includedDirectories = $coreDirectories;
-            return;
-        }
-
-        $existingClone = $this->options->existingClones[$this->options->clone];
-        $this->options->includedDirectories = [];
-        foreach ($coreDirectories as $coreDir) {
-            if (in_array($coreDir, $existingClone['includedDirectories'])) {
-                $this->options->includedDirectories[] = $coreDir;
-            }
-        }
-
-        $this->options->excludedDirectories = $existingClone['excludedDirectories'];
-        $this->options->excludeSizeRules = $existingClone['excludeSizeRules'];
-        // should preserve extra directories?
-        // $this->options->extraDirectories = $existingClone['extraDirectories'];
-    }
-
-    /**
-     * @param bool $preserveExcludes
-     */
-    private function setTablesForResetJob($preserveExcludes = false)
-    {
-        $tableService = new TableService(new DatabaseAdapter());
-        $tables = $tableService->findTableStatusStartsWith();
-        $tables = $tableService->getTablesName($tables->toArray());
-        if ($preserveExcludes) {
-            $this->options->tables = $tables;
-            return;
-        }
-
-        $selectedTables = $this->options->existingClones[$this->options->clone]["includedTables"];
-        $this->options->tables = [];
-        foreach ($tables as $table) {
-            if (in_array($table, $selectedTables)) {
-                $this->options->tables[] = $table;
-            }
         }
     }
 

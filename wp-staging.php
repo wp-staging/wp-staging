@@ -7,7 +7,7 @@
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
  * Contributors: ReneHermi
- * Version: 2.9.0
+ * Version: 2.9.1
  * Text Domain: wp-staging
  * Domain Path: /languages/
  *
@@ -54,7 +54,7 @@ if (!defined("WPINC")) {
  * to be executing in a PHP version that is capable of parsing the
  * the syntax we are using.
  */
-if (version_compare(phpversion(), '5.5.0', '>=')) {
+if (version_compare(phpversion(), '5.6.0', '>=')) {
     // The absolute path to the main file of this plugin.
     $pluginFilePath = __FILE__;
     include dirname(__FILE__) . '/opcacheBootstrap.php';
