@@ -108,48 +108,19 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
             </li>
             <li class="single-backup-includes">
                 <strong><?php esc_html_e('Contains: ', 'wp-staging') ?></strong>
-                <ul class="wpstg-import-backup-contains wpstg-listing-single-backup">
-                    <?php if ($backup->isExportingDatabase) : ?>
-                        <li><span class="wpstg--tooltip wpstg-backups-contains">
-                            <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/database.svg" />
-                            <div class='wpstg--tooltiptext'>Database</div>
-                        </span></li>
-                    <?php endif; ?>
-                    <?php if ($backup->isExportingPlugins) : ?>
-                        <li><span class="wpstg--tooltip wpstg-backups-contains">
-                            <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/admin-plugins.svg" />
-                            <div class='wpstg--tooltiptext'>Plugins</div>
-                        </span></li>
-                    <?php endif; ?>
-                    <?php if ($backup->isExportingMuPlugins) : ?>
-                        <li><span class="wpstg--tooltip wpstg-backups-contains">
-                            <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/plugins-checked.svg" />
-                            <div class='wpstg--tooltiptext'>Must-Use Plugins</div>
-                        </span></li>
-                    <?php endif; ?>
-                    <?php if ($backup->isExportingThemes) : ?>
-                        <li><span class="wpstg--tooltip wpstg-backups-contains">
-                            <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/layout.svg" />
-                            <div class='wpstg--tooltiptext'>Themes</div>
-                        </span></li>
-                    <?php endif; ?>
-                    <?php if ($backup->isExportingUploads) : ?>
-                        <li><span class="wpstg--tooltip wpstg-backups-contains">
-                            <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/images-alt.svg" />
-                            <div class='wpstg--tooltiptext'>Uploads</div>
-                        </span></li>
-                    <?php endif; ?>
-                    <?php if ($backup->isExportingOtherWpContentFiles) : ?>
-                        <li><span class="wpstg--tooltip wpstg-backups-contains">
-                            <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/admin-generic.svg" />
-                            <div class='wpstg--tooltiptext'>Other files in wp-content</div>
-                        </span></li>
-                    <?php endif; ?>
-                </ul>
+                <?php
+                $isExportingDatabase = $backup->isExportingDatabase;
+                $isExportingPlugins = $backup->isExportingPlugins;
+                $isExportingMuPlugins = $backup->isExportingMuPlugins;
+                $isExportingThemes = $backup->isExportingThemes;
+                $isExportingUploads = $backup->isExportingUploads;
+                $isExportingOtherWpContentFiles = $backup->isExportingOtherWpContentFiles;
+                include(__DIR__ . '/modal/partials/backup-contains.php');
+                ?>
             </li>
             <?php if ($automatedBackup) : ?>
                 <li style="font-style: italic">
-                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/database.svg" /> <?php esc_html_e('This database backup was automatically created before pushing a staging site to production.', 'wp-staging') ?>
+                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/update.svg" /> <?php esc_html_e('Backup created automatically.', 'wp-staging') ?>
                 </li>
             <?php endif ?>
             <?php if ($legacy) : ?>

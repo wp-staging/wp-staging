@@ -12,6 +12,46 @@ class DebugLogReader
     }
 
     /**
+     * Deletes a log file if requested.
+     */
+    public function listenDeleteLogRequest()
+    {
+        if (isset($_GET['deleteLog']) && isset($_GET['deleteLogNonce'])) {
+            if (current_user_can((new \WPStaging\Framework\Security\Capabilities())->manageWPSTG()) && wp_verify_nonce($_GET['deleteLogNonce'], 'wpstgDeleteLogNonce')) {
+                if ($_GET['deleteLog'] === 'wpstaging') {
+                    $this->deleteWpStagingDebugLogFile();
+                } elseif ($_GET['deleteLog'] === 'php') {
+                    $this->deletePhpDebugLogFile();
+                }
+
+                // Redirect to prevent refresh from deleting the log again
+                wp_redirect(admin_url() . 'admin.php?page=wpstg-tools&tab=system_info');
+                exit;
+            }
+        }
+    }
+
+    public function deletePhpDebugLogFile()
+    {
+        $phpDebugLogFile = ini_get('error_log');
+
+        if (file_exists($phpDebugLogFile) && is_writable($phpDebugLogFile)) {
+            return unlink($phpDebugLogFile);
+        }
+
+        return null;
+    }
+
+    public function deleteWpStagingDebugLogFile()
+    {
+        if (file_exists(WPSTG_DEBUG_LOG_FILE) && is_writable(WPSTG_DEBUG_LOG_FILE)) {
+            return unlink(WPSTG_DEBUG_LOG_FILE);
+        }
+
+        return null;
+    }
+
+    /**
      * @param int  $maxSizeEach Max size in bytes to fetch from each log.
      * @param bool $withWpstgDebugLog Whether to include WP STAGING custom log entries.
      * @param bool $withPhpDebugLog Whether to include PHP error_log entries.
@@ -85,7 +125,7 @@ class DebugLogReader
                 $debugLines[] = $line;
             } while ($debugFile->valid());
 
-            return implode("\n", $debugLines);
+            return implode("\n\n", $debugLines);
         } catch (\Exception $e) {
             return '';
         }

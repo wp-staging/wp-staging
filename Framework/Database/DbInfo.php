@@ -56,10 +56,8 @@ class DbInfo extends WpDbInfo
         $this->error = null;
         $this->connected = true;
         if ($db->connect_error) {
-            $this->error = 'Connect Error (' . $db->connect_errno . ') '
-                . $db->connect_error;
+            $this->error = 'Connect Error (' . $db->connect_errno . ') ' . $db->connect_error;
             $this->connected = false;
-            $db->close();
             return null;
         }
         $db->close();

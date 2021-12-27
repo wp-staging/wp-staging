@@ -70,4 +70,9 @@ interface QueueInterface
      * Removes all the items from the queue
      */
     public function reset();
+
+    /**
+     * Save items in the queue
+     */
+    public function save();
 }

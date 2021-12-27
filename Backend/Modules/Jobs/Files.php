@@ -87,6 +87,12 @@ class Files extends JobExecutable
         if ($this->options->mainJob === 'resetting' || $this->options->mainJob === 'updating') {
             $this->options->totalSteps++;
         }
+
+        // Run this job atleast once if no files selected
+        // Strict comparison doesn't work for 0 neither '0'
+        if ($this->options->totalSteps == 0) {
+            $this->options->totalSteps = 1;
+        }
     }
 
     /**
@@ -172,8 +178,8 @@ class Files extends JobExecutable
             $this->saveOptions();
         }
 
-        $fs = (new Filesystem())
-            ->setShouldStop([$this, 'isOverThreshold'])
+        $fs = new Filesystem();
+        $fs->setShouldStop([$this, 'isOverThreshold'])
             ->shouldPermissionExceptionsBypass(true)
             ->setRecursive(true);
         try {
@@ -257,7 +263,7 @@ class Files extends JobExecutable
             $this->file->seek($this->options->copiedFiles - 1);
         }
 
-        $this->file->setFlags(FileObject::SKIP_EMPTY | FileObject::READ_AHEAD);
+        $this->file->setFlags(FileObject::SKIP_EMPTY | FileObject::READ_AHEAD | FileObject::DROP_NEW_LINE);
 
         for ($i = 0; $i < $this->maxFilesPerRun; $i++) {
             // Increment copied files
@@ -269,8 +275,7 @@ class Files extends JobExecutable
                 break;
             }
 
-            $file = str_replace(PHP_EOL, null, $this->file->fgets());
-
+            $file = trim($this->file->fgets());
 
             $this->copyFile($file);
         }
@@ -456,7 +461,7 @@ class Files extends JobExecutable
     {
         $file = wpstg_replace_windows_directory_separator($file);
         $rootPath = wpstg_replace_windows_directory_separator(WPStaging::getWPpath());
-        $relativePath = str_replace($rootPath, null, $file);
+        $relativePath = str_replace($rootPath, '', $file);
         $destinationPath = $this->destination . $relativePath;
         $destinationDirectory = dirname($destinationPath);
 

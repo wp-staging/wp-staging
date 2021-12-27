@@ -52,6 +52,19 @@ if (!defined('WPSTG_FEATURE_ENABLE_BACKUP')) {
     define('WPSTG_FEATURE_ENABLE_BACKUP', true);
 }
 
+// Define bytes consts if not already defined for backward compatibility
+if (!defined('KB_IN_BYTES')) {
+    define('KB_IN_BYTES', 1024);
+}
+
+if (!defined('MB_IN_BYTES')) {
+    define('MB_IN_BYTES', 1024 * KB_IN_BYTES);
+}
+
+if (!defined('GB_IN_BYTES')) {
+    define('GB_IN_BYTES', 1024 * MB_IN_BYTES);
+}
+
 /**
  * Register specific Pro and Free constants. We register them here instead of on the
  * entrypoint because we want to make sure we are defining constants for the plugins

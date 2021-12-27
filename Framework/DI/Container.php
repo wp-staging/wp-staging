@@ -32,6 +32,21 @@ class Container extends \WPStaging\Vendor\tad_DI52_Container
     }
 
     /**
+     * Add helpful debug notice for developers.
+     */
+    public function _getParameter(\ReflectionParameter $parameter)
+    {
+        try {
+            return parent::_getParameter($parameter);
+        } catch (\ReflectionException $e) {
+            $message = $e->getMessage();
+            $message .= ' (Are you running a development version of WP STAGING without the WPSTG_DEV constant?)';
+
+            throw new \ReflectionException($message);
+        }
+    }
+
+    /**
      * Allows to enqueue the ShutdownableInterface hook
      * on classes resolved by the DI container, such as
      * dependencies injected in the __construct.

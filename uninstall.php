@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backend;
 
+use WPStaging\Pro\Backup\BackupScheduler;
+
 /**
  * Uninstall WP-Staging
  *
@@ -60,6 +62,7 @@ class uninstall
             delete_option("wpstg_old_staging_sites_backup"); // @deprecated
             delete_option("wpstg_staging_sites_backup");
             delete_option("wpstg_missing_cloneName_routine_executed");
+            delete_option(BackupScheduler::OPTION_BACKUP_SCHEDULES);
 
 
             /* Do not delete these fields without actually deleting the staging site
@@ -94,7 +97,6 @@ class uninstall
 
             // Transients
             delete_transient("wpstg_issue_report_submitted");
-
         }
     }
 }

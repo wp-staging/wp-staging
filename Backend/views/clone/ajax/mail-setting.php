@@ -42,9 +42,9 @@ if ($isPro && !empty($options->current)) {
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
-            <?php _e('Disable emails sending for this staging site.', 'wp-staging'); ?>
+            <?php _e('Allow emails sending for this staging site.', 'wp-staging'); ?>
             <br /> <br />
-            <b><?php _e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(__('Some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'); ?>
+            <b><?php _e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(__('Even if email sendings is disabled, some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'); ?>
         </span>
     </span>
 </p>

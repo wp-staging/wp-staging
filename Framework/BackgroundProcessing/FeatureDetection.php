@@ -11,6 +11,8 @@ namespace WPStaging\Framework\BackgroundProcessing;
 use WP_Error;
 use WPStaging\Framework\Adapter\WpAdapter;
 
+use function WPStaging\functions\debug_log;
+
 /**
  * Class FeatureDetection
  *
@@ -38,6 +40,7 @@ class FeatureDetection
      */
     public function isAjaxAvailable($showAdminNotice = true)
     {
+        debug_log('isAjaxAvailable start');
         if ($this->isAjaxAvailableCache === null) {
             // Run this check only on Admin UI and on PHP initial state.
             // TODO: inject WpAdapter using DI
@@ -46,6 +49,14 @@ class FeatureDetection
 
             if ($notRightContext) {
                 // Default to say that it's supported if we cannot exclude it.
+                debug_log(sprintf(
+                    "isAjaxAvailable not right context: Installing? %s \n Rest? %s \n Ajax? %s \n Cron? %s \n Not admin? %s \n",
+                    wp_installing(),
+                    (defined('REST_REQUEST') && REST_REQUEST),
+                    (new WpAdapter())->doingAjax(),
+                    wp_doing_cron(),
+                    !is_admin()
+                ));
                 return true;
             }
 
@@ -54,7 +65,7 @@ class FeatureDetection
             if (!in_array($availableOptionValue, ['y', 'n'], true)) {
                 $available = $this->runAjaxFeatureTest();
                 $availableOptionValue = $available ? 'y' : 'n';
-                update_option(self::AJAX_OPTION_NAME, $availableOptionValue);
+                update_option(self::AJAX_OPTION_NAME, $availableOptionValue, false);
             }
 
             $this->isAjaxAvailableCache = $availableOptionValue === 'y';
@@ -63,6 +74,8 @@ class FeatureDetection
         if (!$this->isAjaxAvailableCache && $showAdminNotice) {
             add_action('admin_notices', [$this, 'ajaxSupportMissingAdminNotice']);
         }
+
+        debug_log('isAjaxAvailable end. Result: ' . $this->isAjaxAvailableCache);
 
         return $this->isAjaxAvailableCache;
     }
@@ -87,12 +100,18 @@ class FeatureDetection
      */
     public function runAjaxFeatureTest()
     {
+        // Start from a clean state.
+        debug_log('Starting from a clean state...');
+        delete_option(self::AJAX_OPTION_NAME);
+
         $ajaxUrl = add_query_arg([
             'action' => self::AJAX_TEST_ACTION,
             '_ajax_nonce' => wp_create_nonce(self::AJAX_TEST_ACTION)
         ], admin_url('admin-ajax.php'));
 
         $hash = md5(uniqid(__CLASS__, true));
+
+        debug_log('Sending request to: ' . $ajaxUrl);
 
         $response = wp_remote_post(esc_url_raw($ajaxUrl), [
             'headers' => [
@@ -105,6 +124,8 @@ class FeatureDetection
             'body' => [self::AJAX_OPTION_NAME => $hash],
         ]);
 
+        debug_log(wp_json_encode($response));
+
         if ($response instanceof WP_Error) {
             return false;
         }
@@ -114,29 +135,35 @@ class FeatureDetection
             global $wpdb;
             $fetched = $wpdb->get_var(
                 $wpdb->prepare(
-                    "SELECT option_value from {$wpdb->options} WHERE option_name = %s AND option_value = 'y'",
+                    "SELECT `option_value` from `{$wpdb->options}` WHERE `option_name` = '%s' AND `option_value` = 'y'",
                     self::AJAX_OPTION_NAME
                 )
             );
+
+            debug_log('Fetched is equal to: ' . $fetched);
+            debug_log('Fetched is equal to (get_option): ' . get_option(self::AJAX_OPTION_NAME));
 
             return $fetched === 'y';
         };
 
         $waited = 0;
-        $waitStep = .5;
-        $timeout = 10;
+        $waitStep = .5 * 1e6; // 0.5 second
+        $timeout = 10 * 1e6; // 10 seconds
 
         do {
+            debug_log('runAjaxFeatureTest waited ' . number_format($waited / 1e6, 1) . ' seconds...');
             $waited += $waitStep;
-            sleep($waitStep);
+            usleep($waitStep);
 
             if ($test()) {
                 // Look no further, it worked.
+                debug_log('runAjaxFeatureTest worked');
                 return true;
             }
         } while ($waited <= $timeout);
 
         // We waited enough: either the AJAX system is not available or is not reliable.
+        debug_log('runAjaxFeatureTest did not work');
         return false;
     }
 
@@ -155,7 +182,14 @@ class FeatureDetection
      */
     public function updateAjaxTestOption()
     {
-        update_option(self::AJAX_OPTION_NAME, 'y');
+        debug_log('Running updateAjaxTestOption');
+        check_ajax_referer(self::AJAX_TEST_ACTION);
+
+        if (!update_option(self::AJAX_OPTION_NAME, 'y', false)) {
+            debug_log('updateAjaxTestOption update_option returned false');
+        }
+
+        debug_log('Complete updateAjaxTestOption. New value: ' . get_option(self::AJAX_OPTION_NAME));
     }
 
     /**

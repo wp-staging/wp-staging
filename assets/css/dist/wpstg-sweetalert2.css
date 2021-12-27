@@ -284,7 +284,7 @@
 
 .wpstg--swal2-actions {
   display: flex;
-  z-index: 1;
+  z-index: 0;
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;

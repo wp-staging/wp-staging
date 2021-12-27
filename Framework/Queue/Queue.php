@@ -133,4 +133,12 @@ class Queue implements QueueInterface
     {
         $this->storage->reverse();
     }
+
+    /**
+     * @inheritDoc
+     */
+    public function save()
+    {
+        $this->storage->commit();
+    }
 }

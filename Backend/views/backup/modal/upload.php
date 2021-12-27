@@ -15,7 +15,21 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
     data-uploadSuccessMessage="<?php esc_attr_e('The backup file has been successfully uploaded. You can restore your website with this backup.', 'wp-staging'); ?>"
     style="display: none"
 >
-    <h2 class="wpstg--modal--backup--import--upload--title wpstg--grey"><?php esc_html_e('Uploading Backup', 'wp-staging') ?></h2>
+    <h2 class="wpstg--modal--backup--import--upload--title">
+        <?php esc_html_e('Uploading Backup', 'wp-staging') ?>
+        <div class="wpstg--tooltip">
+            <img class="wpstg--dashicons wpstg-dashicons-19" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg"></img>
+            <p class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                <?php _e("Upload a WP STAGING backup file (*.wpstg) and restore your site to it at any time. This backup can have been created from this site, or even created on another website. So you can migrate the other site to this one.", "wp-staging")?>
+                <br><br>
+                <?php _e("Videos:", "wp-staging")?>
+                <br>
+                <?php echo sprintf(__('&#8226; <a href="%s" target="_blank">How to backup WordPress</a>', 'wp-staging'), 'https://www.youtube.com/watch?v=q352aYduOUY'); ?>
+                <br>
+                <?php echo sprintf(__('&#8226; <a href="%s" target="_blank">How to migrate WordPress</a>', 'wp-staging'), 'https://www.youtube.com/watch?v=DBaZQg1Efq4'); ?>
+            </p>
+        </div>
+    </h2>
     <div class="wpstg--modal--backup--import--upload--content">
         <?php
         /**

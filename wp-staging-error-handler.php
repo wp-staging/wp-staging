@@ -29,6 +29,11 @@ function debug_log($message, $logType = 'info')
         // Open the file handler once per request, and keep it open, as we might need to write to it multiple times.
         $fileHandler = fopen(WPSTG_DEBUG_LOG_FILE, 'a');
 
+        // On Windows OS we need to remove the lock handle first before locking it again.
+        if (stripos(PHP_OS, "WIN") === 0) {
+            flock($fileHandler, LOCK_UN);
+        }
+
         // Make sure the lock is shared, as we might need to open the handler again if a fatal error occurs.
         flock($fileHandler, LOCK_SH | LOCK_NB);
     }
@@ -110,7 +115,7 @@ function shutdown_function()
             $error['message'],
             $error['file'],
             $error['line'],
-            $isFatalError ? 'Yes' : 'No',
+            $isFatalError ? 'is Fatal Error' : '',
             $comesFromWpStaging ? 'Yes' : 'No'
         );
 

@@ -10,5 +10,8 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
     <p class="submit">
         <?php submit_button("Download System Info File", "primary", "wpstg-download-sysinfo", false)?>
     </p>
-    <textarea class="wpstg-sysinfo" readonly="readonly" id="debug-logs-textarea" name="wpstg-debug-logs"><?php echo esc_textarea(WPStaging::make(DebugLogReader::class)->getLastLogEntries(8 * KB_IN_BYTES)); ?></textarea>
+    <p>WP STAGING Debug Logs <a href="<?php echo esc_url(admin_url() . 'admin.php?page=wpstg-tools&tab=system_info&deleteLog=wpstaging&deleteLogNonce=' . wp_create_nonce('wpstgDeleteLogNonce')); ?>">(<?php esc_html_e('Delete', 'wp-staging'); ?>)</a></p>
+    <textarea class="wpstg-sysinfo" readonly="readonly" id="debug-logs-textarea" name="wpstg-debug-logs"><?php echo esc_textarea(WPStaging::make(DebugLogReader::class)->getLastLogEntries(8 * KB_IN_BYTES, true, false)); ?></textarea>
+    <p>PHP Debug Logs <a href="<?php echo esc_url(admin_url() . 'admin.php?page=wpstg-tools&tab=system_info&deleteLog=php&deleteLogNonce=' . wp_create_nonce('wpstgDeleteLogNonce')); ?>">(<?php esc_html_e('Delete', 'wp-staging'); ?>)</a></p>
+    <textarea class="wpstg-sysinfo" readonly="readonly" id="debug-logs-textarea" name="wpstg-debug-logs"><?php echo esc_textarea(WPStaging::make(DebugLogReader::class)->getLastLogEntries(8 * KB_IN_BYTES, false, true)); ?></textarea>
 </form>

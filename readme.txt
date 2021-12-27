@@ -9,8 +9,8 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.8
-Stable tag: 2.9.0
-Requires PHP: 5.5
+Stable tag: 2.9.1
+Requires PHP: 5.6
 
 A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
 
@@ -50,8 +50,10 @@ WP STAGING can help you to prevent your website from being broken or unavailable
 * <strong>[Premium]: </strong>Push & migrate entire clone site inc. all plugins, themes, and media files to the production website.
 * <strong>[Premium]: </strong>Define user roles that get access to the clone site only. For instance, clients or external developers.
 * <strong>[Premium]: </strong>Migration and cloning of WordPress multisites
+* <strong>[Premium]: </strong>Scheduled Backups running in the background
+* <strong>[Premium]: </strong>Backup of WordPress multisites (Released soon)
 
-> Note: Some features are Premium. This means you need WP STAGING | PRO to use those features. [get WP STAGING | PRO](https://wp-staging.com)!
+> Note: Some features are Premium. You need WP STAGING | PRO to use those features. [Read More about WP STAGING | PRO](https://wp-staging.com)!
 
 = Additional Features WP STAGING | PRO Edition  =
 
@@ -102,13 +104,13 @@ This is one of the main reasons why WordPress installations are often outdated, 
 Install WP STAGING backup via the admin dashboard. Go to  'Plugins', click 'Add New' and search the plugins for 'WP STAGING'. Install the plugin with 'Install Now'.
 After installation, go to WP STAGING > Staging Sites and create your first staging / backup site
 
-= Is this a backup plugin? =
+= Is WP STAGING a backup plugin? =
 Even though you can use WP STAGING for backup purposes, the free version is not a usual backup plugin per general definition. WP STAGING creates a clone of your entire website which you can immediately use for developing and testing.
 You can even use it as some kind of backup in case something happens to your production site but only the WP STAGING | PRO pro version allows you to download the backup to your local computer. There are many other popular backup plugins out there but our goal is to bring the reliability and performance of a backup plugin to a new level. So instead of offering our backup feature free of charge, we think it's time to provide a full-fledged premium backup solution with enterprise code quality affordable for everyone.
 
 [Video: How we run automated tests for WP STAGING](https://www.youtube.com/watch?v=Tf9C9Pgu7Bs)
 
-= What is the difference between WP STAGING and other backup plugins? =
+= What is the difference between WP STAGING backup and other backup plugins? =
 
 ----------------------------------------------
 Note: WP STAGING | PRO provides more advanced backup functionality which can be compared with the below-mentioned backup plugins. The speed and performance of WP STAGING's backup feature often exceed even the biggest and well-established backup plugins.
@@ -119,13 +121,13 @@ You may have heard about other popular backup plugins like All in one Migration,
 Other backup plugins usually create a backup of your WordPress filesystem and a database backup which you can use to restore your website in case it became corrupted or you want to go back in time to a previous state.
 The backup files are compressed and can not be executed directly. WP STAGING on the other hand creates a full backup of the whole file system and the database in a working state that you can open like your original production website.
 
-Even though WP STAGING comes with some backup capabilities its main purpose is to create a clone of your website which you can work on. It harmonies very well with all the mentioned backup plugins above and we recommend that you use it in conjunction with these backup plugins.
+Even though WP STAGING basic version comes with some backup capabilities its main purpose is to create a clone of your website which you can work on. It harmonies very well with all the mentioned backup plugins above and we recommend that you use it in conjunction with these backup plugins.
 
 Note, that some free backup plugins are not able to support custom tables. (For instance the free version of Updraft plus backup plugin). In that case, your backup plugin is not able to create a backup of your staging site when it is executed on the production site.
 The reason is that the tables created by WP STAGING are custom tables beginning with another table prefix.
 To bypass this limitation and to be able to create a backup of your staging site, you can set up your backup plugin on the staging site and create the backup from that location. This works well with every available WordPress backup plugin.
 
-= I want to migrate my local website to another host =
+= I want to backup my local website and copy it to production and another host =
 If you want to migrate your local website to an already existing production site you can use our pro version WP STAGING | PRO or a tool like WP Migrate DB which copies only the database.
 WP STAGING is intended for creating a staging site with the latest data from your production site or creating a backup of it.
 
@@ -144,11 +146,15 @@ If speed, performance, and code quality are a matter for you as well, give WP ST
 If you are using a security plugin like Wordfence, iThemes Security, All In One WP Security & Firewall, or a plugin that hides the WordPress default login URL make sure that you have installed the latest version of WP STAGING to access your cloned backup site.
 If you can still not log in to your staging / backup site, you can go to WP STAGING > settings and disable there the WP STAGING extra authentication. Your admin dashboard will still be protected and not accessible to public users.
 
-
 = Can I activate permalinks on the staging site? =
 
 Permalinks are disabled on the staging / backup site after first time cloning / backup creation
 [Read here](https://wp-staging.com/docs/activate-permalinks-staging-site/ "activate permalinks on staging site") how to activate permalinks on the staging site.
+
+= How to Transfer WordPress to another Host or Domain by Using a WP STAGING Backup
+The pro version of WP STAGING can backup your whole WordPress website. (In the future we are implementing a basic free version of our sophisticated backup feature into this free version as well)
+With this backup function, you can backup and copy your entire WordPress website to another domain, new host, or new server very easily, and often faster and more reliable than with any other existing backup plugins.
+Have a look at [https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/](this article) which gives a good introduction into the backup feature.
 
 = Can I give you some feedback? =
 This plugin has been created in thousands of hours and works even with the smallest shared web hosting package.
@@ -178,6 +184,25 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.1 =
+* New: If cpu load setting is low make use of the file copy limit for pushing / backup process to increase copy speed #1485
+* Enh: Add warning notice if WP_CRON_DISABLED is set to true as backup BG Processing depends upon it #1467
+* Fix: Add own implementation of get_current_network_id() for backward compatibility when creating backup #1438
+* Fix: Updating or resetting staging / backup site skips all WordPress core folders #1435
+* Fix: Prevent 504 Gateway Timeout issue during Backup restore by force a low CPU LOAD (i.e. 10s) #1420
+* Fix: Wrong directory path is displayed when update/reset a staging / backup site #1447
+* Fix: Override SplFileObject::seek to make it consistent across all PHP version including PHP 8 when creating backup #1444
+* Fix: Make FileObject::seek behave exactly as SplFileObject::seek from PHP < 8.0 when creating backup #1480
+* Fix: Search Replace now works for Visual Composer / WP Bakery encoded pages on cloning backup creation #1442
+* Fix: Adjust CSS of the "Backup in Progress" element #1466
+* Fix: Clarify email sending tooltip description #1469
+* Fix: Adjust CSS of the loader icon for showing backup creation #1487
+* Tweak: Retain WP STAGING ( backup ) options during push #1417
+* Tweak: Make PHP 5.6 minimum supported PHP version for backup #1448
+* Tweak: Set WordPress 4.4 as minimum required WordPress version #1449
+* Dev: Fix Queue working in PHP 8 and Add PHP 8 unit tests in backup fast tests #1450
+* Dev: Cancel pending or running github actions backup fast tests if there is a new push on the same PR #1486
 
 = 2.9.0 =
 * New: Compatible up to WordPress 5.8.2
@@ -410,6 +435,24 @@ https://wp-staging.com
 Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
+* New: If cpu load setting is low make use of the file copy limit for pushing process to increase copy speed #1485
+* Enh: Add warning notice if WP_CRON_DISABLED is set to true as BG Processing depends upon it #1467
+* Fix: Add own implementation of get_current_network_id() for backward compatibility #1438
+* Fix: Updating or resetting staging / backup site skips all WordPress core folders #1435
+* Fix: Prevent 504 Gateway Timeout issue during Backup restore by force a low CPU LOAD (i.e. 10s) #1420
+* Fix: Wrong directory path is displayed when update/reset a staging / backup site #1447
+* Fix: Override SplFileObject::seek to make it consistent across all PHP version including PHP 8 #1444
+* Fix: Make FileObject::seek behave exactly as SplFileObject::seek from PHP < 8.0 #1480
+* Fix: Search Replace now works for Visual Composer / WP Bakery encoded pages #1442
+* Fix: Adjust CSS of the "Backup in Progress" element #1466
+* Fix: Clarify email sending tooltip description #1469
+* Fix: Adjust CSS of the loader icon #1487
+* Tweak: Retain WP STAGING ( backup ) options during push #1417
+* Tweak: Make PHP 5.6 minimum supported PHP version #1448
+* Tweak: Set WordPress 4.4 as minimum required WordPress version #1449
+* Dev: Fix Queue working in PHP 8 and Add PHP 8 unit tests in fast tests #1450
+* Dev: Cancel pending or running github actions fast tests if there is a new push on the same PR #1486
+
 * Fix: Update notice is shown even when using latest version #1398
 * Fix: Backup & cloning 100% compatible with PHP 8.0.12 #1281
 * Fix: Skip search replace on backup & cloning query if it's size exceed preg functions limit #1404

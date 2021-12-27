@@ -266,7 +266,7 @@ class TableService
     public function deleteViews($views)
     {
         foreach ($views as $view) {
-            // PROTECTION: Never delete any table that beginns with wp prefix of live site
+            // PROTECTION: Never delete any table that begins with wp prefix of live site
             // TODO: inject class Strings using DI
             if (!$this->database->isExternal() && (new Strings())->startsWith($view, $this->database->getProductionPrefix())) {
                 $this->errors[] = sprintf(__("Fatal Error: Trying to delete view %s of main WP installation!", 'wp-staging'), $view);

@@ -8,7 +8,10 @@
 
 namespace WPStaging\Framework\BackgroundProcessing;
 
+use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\DI\FeatureServiceProvider;
+
+use function WPStaging\functions\debug_log;
 
 /**
  * Class BackgroundProcessingServiceProvider
@@ -33,7 +36,8 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      */
     public function register()
     {
-        if (!static::isEnabled()) {
+        // This allows us to disable or enable the feature by setting WPSTG_FEATURE_ENABLE_BACKGROUND_PROCESSING to false/true in wp-config.php
+        if (!static::isEnabledInProduction()) {
             return false;
         }
 
@@ -46,13 +50,6 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
         $this->scheduleQueueMaintenance();
         $this->setupQueueProcessingEntrypoints();
 
-        /// Demo -- will be removed on release.
-        if (isset($_REQUEST['wpstg_q_demo'])) {
-            $count = (max(100, (int)filter_var($_REQUEST['wpstg_q_demo'], FILTER_SANITIZE_NUMBER_INT)));
-            (new Demo())->run($count);
-        }
-        /// End Demo
-
         return true;
     }
 
@@ -63,6 +60,8 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      */
     public function runQueueMaintenance()
     {
+        debug_log('Running Queue Maintenance.');
+
         /** @var Queue $queue */
         $queue = $this->container->make(Queue::class);
 
@@ -75,7 +74,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
     /**
      * Schedules the Queue mainteance by means of the Cron. The Cron is not
      * a really reliable method to execute timely tasks in WordPress, especially
-     * if not powered by a real cron, but it's fine for addressin the maintenance
+     * if not powered by a real cron, but it's fine for addressing the maintenance
      * operations of the Queue that do not require to be timely and are fine happening
      * when possible.
      *
@@ -86,7 +85,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
     {
         // Once a day fire an action to run the Queue maintenance routines.
         if (!wp_next_scheduled('wpstg_queue_maintain')) {
-            wp_schedule_event(time(), 'daily', 'wpstg_queue_maintain');
+            wp_schedule_event(time(), Cron::DAILY, 'wpstg_queue_maintain');
         }
 
         // When the action fires, run the maintenance routines.
@@ -132,7 +131,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
          * Once every hour (kinda, it's Cron), fire the `wpstg_queue_process` action.
          */
         if (!wp_next_scheduled('wpstg_queue_process')) {
-            wp_schedule_event(time(), 'hourly', QueueProcessor::QUEUE_PROCESS_ACTION);
+            wp_schedule_event(time(), Cron::HOURLY, QueueProcessor::QUEUE_PROCESS_ACTION);
         }
 
         /*
@@ -159,14 +158,15 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
         $updateOption = $this->container->callback(FeatureDetection::class, 'updateAjaxTestOption');
         // Hook on authenticated AJAX endpoint to handle the check.
         add_action('wp_ajax_' . FeatureDetection::AJAX_TEST_ACTION, $updateOption);
+        add_action('wp_ajax_nopriv_' . FeatureDetection::AJAX_TEST_ACTION, $updateOption);
 
         // Once a week re-run the check.
         if (!wp_next_scheduled('wpstg_q_ajax_support_feature_detection')) {
-            wp_schedule_event(time(), 'weekly', 'wpstg_q_ajax_support_feature_detection');
+            wp_schedule_event(time(), Cron::WEEKLY, 'wpstg_q_ajax_support_feature_detection');
         }
 
         $runAjaxFeatureTest = $this->container->callback(FeatureDetection::class, 'runAjaxFeatureTest');
-        add_action('wpstg_ajax_support_feature_detection', $runAjaxFeatureTest);
+        add_action('wpstg_q_ajax_support_feature_detection', $runAjaxFeatureTest);
 
         // Run the test again if requested by link, e.g. from the notice.
         if (

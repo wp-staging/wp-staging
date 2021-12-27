@@ -24,6 +24,9 @@ class SearchReplace
     /** @var string */
     private $currentReplace;
 
+    /** @var bool */
+    private $isWpBakeryActive;
+
     protected $smallerReplacement = PHP_INT_MAX;
 
     public function __construct(array $search = [], array $replace = [], $caseSensitive = true, array $exclude = [])
@@ -32,6 +35,7 @@ class SearchReplace
         $this->replace = $replace;
         $this->caseSensitive = $caseSensitive;
         $this->exclude = $exclude;
+        $this->isWpBakeryActive = false;
     }
 
     public function getSmallerSearchLength()
@@ -80,6 +84,23 @@ class SearchReplace
         return $data;
     }
 
+    // This is extended replace job which support search replace for WP Bakery
+    public function replaceExtended($data)
+    {
+        if ($this->isWpBakeryActive) {
+            $data = preg_replace_callback('/\[vc_raw_html\](.+?)\[\/vc_raw_html\]/S', [$this, 'replaceWpBakeryValues'], $data);
+        }
+
+        return $this->replace($data);
+    }
+
+    public function replaceWpBakeryValues($matched)
+    {
+        $data = base64_decode($matched[1]);
+        $data = $this->replace($data);
+        return '[vc_raw_html]' . base64_encode($data) . '[/vc_raw_html]';
+    }
+
     public function setSearch(array $search)
     {
         $this->search = $search;
@@ -101,6 +122,17 @@ class SearchReplace
     public function setExclude(array $exclude)
     {
         $this->exclude = $exclude;
+        return $this;
+    }
+
+    /**
+     * Set whether WP Bakery active
+     *
+     * @return self
+     */
+    public function setWpBakeryActive($isActive = true)
+    {
+        $this->isWpBakeryActive = $isActive;
         return $this;
     }
 
