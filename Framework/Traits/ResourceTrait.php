@@ -95,6 +95,10 @@ trait ResourceTrait
     // TODO Recursion for xDebug? Recursion is bad idea will cause more resource usage, need to avoid it.
 
     /**
+     * Returns the maximum allowed execution time limit.
+     * The minimum needs to be 10seconds!
+     * @see https://github.com/wp-staging/wp-staging-pro/pull/1492
+     *
      * @return float|int
      */
     public function findExecutionTimeLimit()
@@ -117,8 +121,8 @@ trait ResourceTrait
             $cpuBoundMaxExecutionTime = min($phpMaxExecutionTime, $cpuBoundMaxExecutionTime);
         }
 
-        // Set a max of 30 seconds to avoid NGINX 504 timeouts that are beyond PHP's control, with a minimum of 5 seconds
-        $this->executionTimeLimit = max(min($cpuBoundMaxExecutionTime - static::$executionTimeGapInSeconds, 30), 5);
+        // Set a max of 30 seconds to avoid NGINX 504 timeouts that are beyond PHP's control, with a minimum of 10 seconds
+        $this->executionTimeLimit = max(min($cpuBoundMaxExecutionTime - static::$executionTimeGapInSeconds, 30), 10);
 
         if ((bool)apply_filters('wpstg.resources.ignoreTimeLimit', false)) {
             $this->executionTimeLimit = PHP_INT_MAX;
