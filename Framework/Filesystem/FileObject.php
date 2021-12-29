@@ -10,6 +10,7 @@ use LimitIterator;
 use RuntimeException;
 use SplFileObject;
 use WPStaging\Core\WPStaging;
+use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
 
 class FileObject extends SplFileObject
 {
@@ -33,6 +34,9 @@ class FileObject extends SplFileObject
      */
     private $lockHandle = null;
 
+    /**
+     * @throws DiskNotWritableException
+     */
     public function __construct($fullPath, $openMode = self::MODE_READ)
     {
         $fullPath = untrailingslashit($fullPath);
@@ -43,7 +47,7 @@ class FileObject extends SplFileObject
 
         try {
             parent::__construct($fullPath, $openMode);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // If this fails, it will throw an exception.
             WPStaging::make(DiskWriteCheck::class)->testDiskIsWriteable();
 
@@ -70,6 +74,7 @@ class FileObject extends SplFileObject
     /**
      * @param int $lines
      * @return array
+     * @throws Exception
      */
     public function readBottomLines($lines)
     {
@@ -105,7 +110,7 @@ class FileObject extends SplFileObject
         } while ($this->valid() && !is_array($backupMetadata));
 
         if (!is_array($backupMetadata)) {
-            throw new \RuntimeException('Could not find metadata in the backup.');
+            throw new RuntimeException('Could not find metadata in the backup.');
         }
 
         return $backupMetadata;
@@ -120,6 +125,10 @@ class FileObject extends SplFileObject
         return $this->existingMetadataPosition;
     }
 
+    /**
+     * @return mixed int|null
+     * @throws Exception
+     */
     public function totalLines()
     {
         if ($this->totalLines !== null) {
@@ -135,10 +144,19 @@ class FileObject extends SplFileObject
 
     /**
      * Override SplFileObject::seek()
-     * Alternative function for SplFileObject::seek() that behaves identical in all PHP Versions. There was a major change in PHP 8.0.1
+     * Alternative function for SplFileObject::seek() that behaves identical in all PHP Versions.
+     *
+     * There was a major change in PHP 8.0.1 where after using `SplFileObject::seek($line)`, the first subsequent
+     * call to `SplFileObject::fgets()` does not increase the line pointer anymore as it did in earlier version since PHP 5.x
      * @see https://bugs.php.net/bug.php?id=81551
      *
+     * Note: This will remove READ_AHEAD flag while execution to deliver reliable and identical results as READ_AHEAD tells
+     * SplFileObject to read on next() and rewind() too which our custom seek() makes use of.
+     * This would disturb this seek() implementation and would lead to fatal errors if 'cpu load' setting is 'medium' or 'high'
+     *
+     *
      * @param int $offset The zero-based line number to seek to.
+     * @throws Exception
      */
     #[\ReturnTypeWillChange]
     public function seek($offset)
@@ -160,6 +178,10 @@ class FileObject extends SplFileObject
             $offset -= 1;
         }
 
+        $originalFlags = $this->getFlags();
+        $newFlags = $originalFlags & ~self::READ_AHEAD;
+        $this->setFlags($newFlags);
+
         $this->rewind();
         for ($i = 0; $i < $offset; $i++) {
             $this->next();
@@ -169,6 +191,8 @@ class FileObject extends SplFileObject
                 break;
             }
         }
+
+        $this->setFlags($originalFlags);
     }
 
     /**

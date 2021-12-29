@@ -6,10 +6,10 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wp-staging.com/#pricing
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, database backup, staging, duplication, clone
+Tags: backup, backups, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.8
-Stable tag: 2.9.1
+Stable tag: 2.9.2
 Requires PHP: 5.6
 
 A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -185,6 +185,9 @@ https://wp-staging.com
 
 == Changelog ==
 
+= 2.9.2 =
+* Hotfix: Fix CLONE PUSH BACKUP on Medium and High CPU Load on WP STAGING 2.9.1. Improve Performance of database backup #1492
+
 = 2.9.1 =
 * New: If cpu load setting is low make use of the file copy limit for pushing / backup process to increase copy speed #1485
 * Enh: Add warning notice if WP_CRON_DISABLED is set to true as backup BG Processing depends upon it #1467
@@ -203,6 +206,8 @@ https://wp-staging.com
 * Tweak: Set WordPress 4.4 as minimum required WordPress version #1449
 * Dev: Fix Queue working in PHP 8 and Add PHP 8 unit tests in backup fast tests #1450
 * Dev: Cancel pending or running github actions backup fast tests if there is a new push on the same PR #1486
+* Dev: Fix Queue working in PHP 8 and Add PHP 8 unit tests in fast tests #1450
+* Dev: Cancel pending or running github actions fast tests if there is a new push on the same PR #1486
 
 = 2.9.0 =
 * New: Compatible up to WordPress 5.8.2
