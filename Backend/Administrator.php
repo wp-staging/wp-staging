@@ -18,6 +18,9 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\CloningProcess\Database\CompareExternalDatabase;
 use WPStaging\Framework\Utils\Math;
+use WPStaging\Framework\Utils\WpDefaultDirectories;
+use WPStaging\Framework\Notices\DismissNotice;
+use WPStaging\Framework\Staging\Sites;
 use WPStaging\Backend\Modules\Jobs\Cancel;
 use WPStaging\Backend\Modules\Jobs\CancelUpdate;
 use WPStaging\Backend\Modules\Jobs\Cloning;
@@ -35,8 +38,6 @@ use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
-use WPStaging\Framework\Notices\DismissNotice;
-use WPStaging\Framework\Staging\Sites;
 
 /**
  * Class Administrator
@@ -638,6 +639,7 @@ class Administrator
         // Get Options
         $options = $scan->getOptions();
         $excludeUtils = new ExcludeFilter();
+        $wpDefaultDirectories = new WpDefaultDirectories();
         require_once "{$this->path}views/clone/ajax/scan.php";
 
         wp_die();

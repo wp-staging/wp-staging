@@ -332,7 +332,7 @@ class BufferedCache extends AbstractCache
         $file->fseek(max($file->getSize() - $negativeOffset, 0), SEEK_SET);
 
         do {
-            $lastLine = $file->fgets();
+            $lastLine = $file->readAndMoveNext();
         } while (!$file->eof());
 
         return $lastLine;

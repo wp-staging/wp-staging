@@ -6,13 +6,13 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wp-staging.com/#pricing
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, backups, staging, duplication, clone
+Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.8
-Stable tag: 2.9.2
+Stable tag: 2.9.3
 Requires PHP: 5.6
 
-A backup & duplicator plugin - clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
+Backup & Duplicator Plugin - Clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
 
 == Description ==
 
@@ -140,13 +140,13 @@ Duplicator is best placed to be a tool for the first-time creation of your produ
 If you have created a local or web-hosted development site and you need to migrate this site the first time to your production domain then you are doing nothing wrong with using
 the Duplicator plugin! If you need all your latest production data like posts, updated plugins, theme data, and styles in a testing environment or want to create a quick backup before testing out something then we recommend using WP STAGING instead!
 
-If speed, performance, and code quality are a matter for you as well, give WP STAGING | PRO a try.
+If code quality, speed, backup & cloning performance are important to you, give WP STAGING a try.
 
 = I can not log in to the staging / backup site =
 If you are using a security plugin like Wordfence, iThemes Security, All In One WP Security & Firewall, or a plugin that hides the WordPress default login URL make sure that you have installed the latest version of WP STAGING to access your cloned backup site.
 If you can still not log in to your staging / backup site, you can go to WP STAGING > settings and disable there the WP STAGING extra authentication. Your admin dashboard will still be protected and not accessible to public users.
 
-= Can I activate permalinks on the staging site? =
+= Can I activate permalinks on the staging / backup site? =
 
 Permalinks are disabled on the staging / backup site after first time cloning / backup creation
 [Read here](https://wp-staging.com/docs/activate-permalinks-staging-site/ "activate permalinks on staging site") how to activate permalinks on the staging site.
@@ -156,7 +156,7 @@ The pro version of WP STAGING can backup your whole WordPress website. (In the f
 With this backup function, you can backup and copy your entire WordPress website to another domain, new host, or new server very easily, and often faster and more reliable than with any other existing backup plugins.
 Have a look at [https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/](this article) which gives a good introduction into the backup feature.
 
-= Can I give you some feedback? =
+= Can I give you some feedback for WP STAGING Backup & Cloning? =
 This plugin has been created in thousands of hours and works even with the smallest shared web hosting package.
 We also use enterprise-level approved testing coding environment to make sure that the cloning and backup process run rock-solid on your system.
 If you are a developer you will probably like to hear that we use Codeception and PHPUnit for our backup software.
@@ -168,8 +168,8 @@ please open a [support request](https://wp-staging.com/support/ "support request
 https://wp-staging.com
 
 == Installation ==
-2. Upload and install it via the WordPress plugin backend wp-admin > Plugins > Add New > uploads
-3. Activate the plugin through the 'Plugins' menu in WordPress.
+2. Upload and install the backup & clone plugin WP STAGING on the WordPress plugin page wp-admin > Plugins > Add New > uploads
+3. Activate the WP STAGING backup plugin through the 'Plugins' menu in WordPress.
 
 == Screenshots ==
 
@@ -184,6 +184,19 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.3 =
+* New: Add support for WordPress 5.8.3
+* New: Add filter for excluding files during cloning / backup #1494
+* New: Add filter for overwriting max execution for database backup restore #1512
+* New: Add filter to allow overwriting of the maximum allowed request time to make sure backup restore works for huge files. (19.000.000M database rows) #1510
+* Tweak: Show custom uploads folder in tooltip description and explain better that changing a symlink image will also change the image on the production site. #1495
+* Fix: If cloning a multisite subsite into external database, it does not clone / backup wp_users and wp_usermeta #1515
+* Fix: Skip tmp single file plugin during backup PUSH copy process #1491
+* Fix: Preserve table selection during PUSH and UPDATE even when all backup tables unselected #1488
+* Fix: Make sure maximum memory consumption during cloning or backup is never higher than 256MB #1502
+* Fix: Use custom implementation of wp_timezone() for backward compatibility to WordPress older than 5.3 #1505
+* Fix: Override FileObject::fgets to make them behave exactly from SplFileObject of PHP < 8.0.1 #1506
 
 = 2.9.2 =
 * Hotfix: Fix CLONE PUSH BACKUP on Medium and High CPU Load on WP STAGING 2.9.1. Improve Performance of database backup #1492
@@ -389,57 +402,22 @@ https://wp-staging.com
 * Dev: Refactor Job(s) implementation to use the Resources Trait #765
 * Dev: Add internal documentation to versioning and hotfixes #780
 
-= 2.8.2 =
-* Feat: Compatible up to WP 5.7
-* Feat: Check database connection in clone data edit #650
-* Feat: Exclude .wp-staging-cloneable file from cloning and update #718
-* Feat: Show notice if a user is using an outdated version of WP Staging Hooks plugin #716
-* Feat: Add single disabled items notice with better message #717
-* Feat: Add options to enable/disable staging sites cloning from UI #722
-* Enh: Use included directories instead of excluded directories to increase cloning speed #671
-* Enh: Stringify directories array var in $_POST to reduce $_POST size during cloning #671
-* Enh: Replace relative paths exclude to absolute and wildcard paths exclude during cloning #671
-* Enh: Detect snapshot tables using regex #694
-* Enh: Enable disable save button in clone data edit during database connection #700
-* Enh: Improve exclude filters for Push process #720
-* Enh: Move Backend/public/img to assets/img #719
-* Enh: Unify Single and Multisite Classes #713
-* Enh: Keep other staging behavior when the staging site is cloneable #722
-* Enh: Refactor search and replace jobs to use memory and time-consumption aware trait #702
-* Fix: Lost password link generation in staging sites #697
-* Fix: Fix cloning on multisite for PHP 5 #725
-* Fix: Skip symlink scanning during directory scan #736
-* Fix: Replace deprecated jQuery click method #730
-* Fix: Fix overlapping of sweetalert confirmation on push with sidebar #742
-* Fix: Exclude wp staging content folder during staging #741
-* Fix: Add sanitizing for path to fix comparing for Windows paths #751
-* Fix: Uninstall not possible if "delete all settings is activated" #756
-* Dev: Internal refactoring of database backup to avoid long-lived branch #624
-* Dev: Enforced changelog entries in CI #695
-* Dev: Refactored webdriver tests to make them faster #656
-* Dev: Refactor how the automated test workflows are generated. Add new webdriver test before release with default settings #712
-* Dev: Increased default file batch limits for faster development environment and CI #706
-* Dev: Renamed all code and UI references of Snapshot to Backup #715
-* Dev: Add helper to manage clone settings #717
-* Dev: Internal code refactoring, renaming classes for better readability #721
-* Dev: Add infrastructure support for wp-cli and background processing #728
-* Dev: Update php-scoper and other development dependencies #744
-* Dev: Build javascript when building the distributable version of the plugin #750
-
-= 2.8.1 =
-* Feat: Show creator user name of staging site
-* Enh: Show notice if sending mails are disabled
-* Enh: Show message and stop execution if php version is lower than 5.5
-* Enh: Abort cloning process if table already exists in external database
-* Fix: Can not update database credentials in staging sites wp-config.php under rare circumstances
-* Fix: During the update process if options table was not selected it didn't get skipped
-* Fix: Error if WP is lower than 4.6
-* Fix: Can not delete entire staging site on error
-* Fix: Activating pro version does not properly disable free version
-
-Full changelog: [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
+WP STAGING Backup & Cloning | Full changelog:
+[https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
+* New: Add support for WordPress 5.8.3
+* New: Add filter for excluding files during cloning / backup #1494
+* New: Add filter for overwriting max execution for database backup restore #1512
+* New: Add filter to allow overwriting of the maximum allowed request time to make sure backup restore works for huge files. (19.000.000M database rows) #1510
+* Fix: If cloning a multisite subsite into external database, it does not clone / backup wp_users and wp_usermeta #1515
+* Fix: Skip tmp single file plugin during backup PUSH copy process #1491
+* Fix: Preserve table selection during PUSH and UPDATE even when all backup tables unselected #1488
+* Fix: Make sure maximum memory consumption during cloning or backup is never higher than 256MB #1502
+* Fix: Use custom implementation of wp_timezone() for backward compatibility to WordPress older than 5.3 #1505
+* Fix: Override FileObject::fgets to make them behave exactly from SplFileObject of PHP < 8.0.1 #1506
+* Tweak: Show custom uploads folder in tooltip description and explain better that changing a symlink image will also change the image on the production site. #1495
+
 * New: If cpu load setting is low make use of the file copy limit for pushing process to increase copy speed #1485
 * Enh: Add warning notice if WP_CRON_DISABLED is set to true as BG Processing depends upon it #1467
 * Fix: Add own implementation of get_current_network_id() for backward compatibility #1438

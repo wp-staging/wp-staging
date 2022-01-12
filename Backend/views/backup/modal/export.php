@@ -95,20 +95,20 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 60 minutes', defined('WP
                                     <?php _e(sprintf('Relative to current server time, which you can change in <a href="%s">WordPress Settings</a>.', admin_url('options-general.php#timezone_string'))); ?>
                                     <br>
                                     <br>
-                                        <?php _e(sprintf('Current Server Time: %s', (new DateTime('now', wp_timezone()))->format($timeFormatOption)), 'wp-staging'); ?>
+                                        <?php _e(sprintf('Current Server Time: %s', (new DateTime('now', $time->getSiteTimezoneObject()))->format($timeFormatOption)), 'wp-staging'); ?>
                                         <br>
-                                        <?php _e(sprintf('Site Timezone: %s', wp_timezone_string()), 'wp-staging'); ?>
+                                        <?php _e(sprintf('Site Timezone: %s', $time->getSiteTimezoneString()), 'wp-staging'); ?>
                                  </span>
                             </div>
                         </label>
                         <select name="backupScheduleTime" id="backupScheduleTime">
-                            <?php foreach ($recurrenceTimes as $time) : ?>
-                                <option value="<?php echo esc_attr($time->format('H:i')) ?>">
-                                    <?php echo esc_html($time->format($timeFormatOption)) ?>
+                            <?php foreach ($recurrenceTimes as $recurTime) : ?>
+                                <option value="<?php echo esc_attr($recurTime->format('H:i')) ?>">
+                                    <?php echo esc_html($recurTime->format($timeFormatOption)) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <span id="backup-schedule-current-time"><?php _e(sprintf('Current Time: %s', (new DateTime('now', wp_timezone()))->format($timeFormatOption)), 'wp-staging'); ?></span>
+                        <span id="backup-schedule-current-time"><?php _e(sprintf('Current Time: %s', (new DateTime('now', $time->getSiteTimezoneObject()))->format($timeFormatOption)), 'wp-staging'); ?></span>
                         <label for="backupScheduleRotation">
                             <?php esc_html_e('How many backups to keep?', 'wp-staging'); ?>
                             <div class="wpstg--tooltip" style="position: absolute;">

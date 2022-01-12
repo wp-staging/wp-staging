@@ -13,12 +13,11 @@ trait ResourceTrait
     protected $executionTimeLimit;
     protected $memoryLimit;
     protected $scriptMemoryLimit;
-    protected $isBackupRestoreJob = false;
 
     public static $defaultMaxExecutionTimeInSeconds  = 30;
     public static $executionTimeGapInSeconds         = 5;
-    // Using CPU LOAD LOW to avoid 504 errors in large database
-    public static $backupRestoreCpuLoadTimeInSeconds = 10;
+    // Set lower maximum execution time for backup restore to avoid 504 errors in large database
+    public static $backupRestoreMaxExecutionTimeInSeconds = 10;
 
     /** @var bool Whether this request is taking place in the context of a unit test. */
     protected $isUnitTest;
@@ -45,6 +44,17 @@ trait ResourceTrait
         }
 
         return $isMemoryLimit || $isTimeLimit;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isDatabaseImportThreshold()
+    {
+        if ($this->isMemoryLimit() || $this->isDatabaseRestoreTimeLimit()) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -92,7 +102,16 @@ trait ResourceTrait
 
         return $this->getRunningTime() > $timeLimit;
     }
-    // TODO Recursion for xDebug? Recursion is bad idea will cause more resource usage, need to avoid it.
+
+    /**
+     * @return bool
+     */
+    public function isDatabaseRestoreTimeLimit()
+    {
+        $timeLimit = apply_filters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', self::$backupRestoreMaxExecutionTimeInSeconds);
+        return $this->getRunningTime() > $timeLimit;
+    }
+
 
     /**
      * Returns the maximum allowed execution time limit.
@@ -116,14 +135,19 @@ trait ResourceTrait
             $cpuBoundMaxExecutionTime = static::$defaultMaxExecutionTimeInSeconds;
         }
 
+        // Never go over PHP own execution time limit, if set.
         if ($phpMaxExecutionTime > 0) {
-            // Never go over PHP own execution time limit, if set.
             $cpuBoundMaxExecutionTime = min($phpMaxExecutionTime, $cpuBoundMaxExecutionTime);
         }
 
         // Set a max of 30 seconds to avoid NGINX 504 timeouts that are beyond PHP's control, with a minimum of 10 seconds
         $this->executionTimeLimit = max(min($cpuBoundMaxExecutionTime - static::$executionTimeGapInSeconds, 30), 10);
 
+        // Allow overwriting of the max execution time limit.
+        // Important: Use a value lower than the actual PHP limit. (reduce it by 10seconds or more). Also adjust the nginx/php timeout limit
+        $this->executionTimeLimit = (int)apply_filters('wpstg.resources.executionTimeLimit', $this->executionTimeLimit);
+
+        // Allow disabling of the execution time limit
         if ((bool)apply_filters('wpstg.resources.ignoreTimeLimit', false)) {
             $this->executionTimeLimit = PHP_INT_MAX;
         }
@@ -180,9 +204,9 @@ trait ResourceTrait
     }
 
     /**
-     * Returns the current PHP memory limit in bytes..
+     * Returns the current PHP memory limit in bytes.
      *
-     * @return int The current memory limit in bytes.
+     * @return int
      */
     protected function getMaxMemoryLimit()
     {
@@ -191,25 +215,28 @@ trait ResourceTrait
             return $this->memoryLimit;
         }
 
-        $limit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
+        $memoryLimit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
 
         // No memory limit
-        if ($limit == -1) {
-            // 512MB
-            $limit = 512 * 1000000;
-        } else {
-            // Unexpected memory limit
-            if (!is_int($limit) || $limit < 64000000) {
-                // 64MB
-                $limit = 64000000;
-            }
+        if ($memoryLimit == -1) {
+            $memoryLimit = 256 * MB_IN_BYTES;
         }
 
+        // Allow custom overwriting
+        $this->memoryLimit = apply_filters('wpstg.resources.memoryLimit', $memoryLimit);
+
+        // Unexpected memory limit after filter and also make sure it is never below 64MB
+        if (!is_int($this->memoryLimit) || $this->memoryLimit < (64 * MB_IN_BYTES)) {
+            $this->memoryLimit = 64 * MB_IN_BYTES;
+        }
+
+        // Make sure it never exceeds 256MB
+        $this->memoryLimit = (min($this->memoryLimit, 256 * MB_IN_BYTES));
+
+        // Allow disabling the memory limit
         if ((bool)apply_filters('wpstg.resources.ignoreMemoryLimit', false)) {
-            $limit = PHP_INT_MAX;
+            $this->memoryLimit = PHP_INT_MAX;
         }
-
-        $this->memoryLimit = $limit;
 
         return $this->memoryLimit;
     }
@@ -243,10 +270,6 @@ trait ResourceTrait
      */
     protected function getCpuBoundMaxExecutionTime($cpuLoadSetting = null)
     {
-        if ($this->isBackupRestoreJob) {
-            return self::$backupRestoreCpuLoadTimeInSeconds;
-        }
-
         // Early bail: Cache
         if (!isset($this->resourceTraitSettings)) {
             $this->resourceTraitSettings = json_decode(json_encode(get_option('wpstg_settings', [])));

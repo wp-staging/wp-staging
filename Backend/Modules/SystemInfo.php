@@ -445,12 +445,12 @@ class SystemInfo
     public function php()
     {
         $output = $this->header("PHP Configuration");
-        $output .= $this->info("Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
         $output .= $this->info("PHP Max Memory Limit:", ini_get("memory_limit"));
-        $output .= $this->info("Upload Max Size:", ini_get("upload_max_filesize"));
+        $output .= $this->info("Max Execution Time:", ini_get("max_execution_time"));
+        $output .= $this->info("Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
+        $output .= $this->info("Upload Max File Size:", ini_get("upload_max_filesize"));
         $output .= $this->info("Post Max Size:", ini_get("post_max_size"));
         $output .= $this->info("Upload Max Filesize:", ini_get("upload_max_filesize"));
-        $output .= $this->info("Time Limit:", ini_get("max_execution_time"));
         $output .= $this->info("Max Input Vars:", ini_get("max_input_vars"));
         $output .= $this->info("PHP User:", $this->getPHPUser());
 

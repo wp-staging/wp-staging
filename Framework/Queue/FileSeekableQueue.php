@@ -104,7 +104,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     {
         while ($this->handle->valid()) {
             $this->offsetBefore = $this->handle->ftell();
-            yield $this->handle->fgets();
+            yield $this->handle->readAndMoveNext();
         }
     }
 
