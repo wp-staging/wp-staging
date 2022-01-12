@@ -119,7 +119,7 @@ class DebugLogReader
             $debugLines = [];
 
             do {
-                $line = trim($debugFile->fgets());
+                $line = trim($debugFile->readAndMoveNext());
                 $line = html_entity_decode($line);
                 $line = sanitize_text_field($line);
                 $debugLines[] = $line;

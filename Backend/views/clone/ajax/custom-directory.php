@@ -6,11 +6,12 @@ use WPStaging\Backend\Modules\Jobs\Scan;
 
 /**
  * This file is currently being called for the both FREE and PRO version:
- * src/Backend/views/clone/ajax/scan.php:63
+ * @see src/Backend/views/clone/ajax/scan.php:76
  *
  * @var Scan $scan
  * @var stdClass                             $options
  * @var boolean                              $isPro
+ * @var stdClass $wpDefaultDirectories
  *
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
@@ -33,7 +34,6 @@ if (is_multisite() && !SUBDOMAIN_INSTALL) {
 }
 $customHostname = $hostname;
 
-
 // Apply Filters in only PRO version
 if ($isPro) {
     $hostname = apply_filters('wpstg_cloning_target_hostname', $hostname);
@@ -55,7 +55,8 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     $customDir        = $directory;
     $uploadsSymlinked = isset($options->existingClones[$options->current]['uploadsSymlinked']) && $options->existingClones[$options->current]['uploadsSymlinked'];
     $proSettingsDisabled = true;
-} ?>
+}
+?>
 
 <p class="wpstg--advance-settings--checkbox">
   <label for="wpstg-change-dest"><?php _e('Change Destination'); ?></label>
@@ -113,7 +114,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
-          <?php _e('Activate to symlink the folder <code>wp-content/uploads</code> to the production site. All files including images on the production site\'s uploads folder will be linked to the staging site uploads folder. This will speed up the cloning and pushing process tremendously as no files from the uploads folder are copied between both sites. Note: this can lead to mixed and shared content issues if both site loads (custom) stylesheet files from the same wp-content/uploads folder. Use this with care!', 'wp-staging'); ?>
+          <?php echo sprintf(__('Activate to symlink the folder %s%s%s to the production site. %s All files including images on the production site\'s uploads folder will be linked to the staging site uploads folder. This will speed up the cloning and pushing process tremendously as no files from the uploads folder are copied between both sites. %s Note: this can lead to mixed and shared content issues if both site loads (custom) stylesheet files from the same uploads folder. %s Using this option means changing images on the staging site will change images on the production site as well. Use this with care! %s', 'wp-staging'), '<code>', $wpDefaultDirectories->getRelativeUploadPath(), '</code>', '<br><br>', '<br><br>', '<br><br><strong>', '</strong>');?>
           <br/>
           <br/>
           <?php _e('<strong>This feature only works if the staging site is on the same hosting as the production site.</strong>', 'wp-staging'); ?>

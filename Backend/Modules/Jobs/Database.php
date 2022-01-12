@@ -243,18 +243,6 @@ class Database extends CloningProcess
     }
 
     /**
-     * Copy data from old table to new table
-     * @param string $newTableName
-     * @param string $oldTableName
-     */
-    private function copyData($newTableName, $oldTableName)
-    {
-        $this->databaseCloningService->copyData($oldTableName, $newTableName, $this->options->job->start, $this->settings->queryLimit);
-        // Set new offset
-        $this->options->job->start += $this->settings->queryLimit;
-    }
-
-    /**
      * @param mixed string|object $tableName
      * @return bool
      */
@@ -289,6 +277,18 @@ class Database extends CloningProcess
         $this->copyData($destTableName, $srcTableName);
 
         return $this->finishStep();
+    }
+
+    /**
+     * Copy data from old table to new table
+     * @param string $destTableName
+     * @param string $srcTableName
+     */
+    private function copyData($destTableName, $srcTableName)
+    {
+        $this->databaseCloningService->copyData($srcTableName, $destTableName, $this->options->job->start, $this->settings->queryLimit);
+        // Set new offset
+        $this->options->job->start += $this->settings->queryLimit;
     }
 
     /**
@@ -363,6 +363,11 @@ class Database extends CloningProcess
     private function addMissingTables()
     {
         $dbPrefix = WPStaging::getTablePrefix();
+        // Early bail: if updating
+        if (isset($this->options->mainJob) && $this->options->mainJob === 'updating') {
+            return;
+        }
+
         if (!in_array($dbPrefix . 'users', $this->options->tables)) {
             $this->options->tables[] = $dbPrefix . 'users';
             $this->saveOptions();

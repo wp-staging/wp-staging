@@ -66,7 +66,7 @@ class Cloning extends Job
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
         $this->options->extraDirectories = [];
-        $this->options->excludedFiles = [
+        $this->options->excludedFiles = apply_filters('wpstg_clone_excluded_files' ,[
             '.htaccess',
             '.DS_Store',
             '*.git',
@@ -78,7 +78,7 @@ class Cloning extends Job
             'web.config', // Important: Windows IIS configuration file. Must not be in the staging site!
             '.wp-staging', // Determines if a site is a staging site
             '.wp-staging-cloneable', // File which make staging site to be cloneable
-        ];
+        ]);
 
         $this->options->excludedFilesFullPath = [
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'db.php',

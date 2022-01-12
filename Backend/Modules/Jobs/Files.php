@@ -263,7 +263,7 @@ class Files extends JobExecutable
             $this->file->seek($this->options->copiedFiles - 1);
         }
 
-        $this->file->setFlags(FileObject::DROP_NEW_LINE);
+        $this->file->setFlags(FileObject::READ_AHEAD | FileObject::DROP_NEW_LINE);
 
         for ($i = 0; $i < $this->maxFilesPerRun; $i++) {
             // Increment copied files

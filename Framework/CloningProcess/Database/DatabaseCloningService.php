@@ -40,7 +40,7 @@ class DatabaseCloningService
      */
     public function copyData($srcTableName, $destTableName, $offset, $limit)
     {
-        // Don't replace the table name if the table prefix is a custom one and if it is cloned into external database
+        // Don't replace the table name if the table prefix is a custom prefix and if table is cloned into external database
         if (!$this->shouldRenameTable($srcTableName)) {
             $destTableName = $srcTableName;
         }
@@ -165,15 +165,38 @@ class DatabaseCloningService
     }
 
     /**
+     * If table is not multisite user or usermeta table and does not
      * @param string
      * @return bool
      */
     private function shouldRenameTable($srcTable)
     {
+        if ($this->dto->isExternal() && $this->isMultisiteWpCoreTable($srcTable)) {
+            return true;
+        }
         if ($this->dto->isExternal() && !$this->beginsWithWordPressPrefix($srcTable)) {
             return false;
         }
         return true;
+    }
+
+    /**
+     * @param $tableName
+     * @return bool
+     */
+    private function isMultisiteWpCoreTable($tableName)
+    {
+        $basePrefix = $this->dto->getProductionDb()->base_prefix;
+
+        $coreTables = [
+            $basePrefix . 'users',
+            $basePrefix . 'usermeta'
+        ];
+
+        if (in_array($tableName, $coreTables)) {
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -196,7 +219,7 @@ class DatabaseCloningService
             // Replace whole table name if it begins with WordPress prefix.
             // Don't replace it if it's a custom table beginning with another prefix #1303
             // Prevents bug where $old table prefix contains no underscore | Fix missing underscore issue #251.
-            if ($this->beginsWithWordPressPrefix($srcTableName)) {
+            if ($this->beginsWithWordPressPrefix($srcTableName) || $this->isMultisiteWpCoreTable($srcTableName)) {
                 $sql = str_replace("CREATE TABLE `$srcTableName`", "CREATE TABLE `$destTableName`", $sql);
             }
 
@@ -232,7 +255,7 @@ class DatabaseCloningService
      * @param $tableName
      * @return string
      */
-    public function removeDBBasePrefix($tableName)
+    public function removeDbBasePrefix($tableName)
     {
         return (new Strings())->str_replace_first(WPStaging::getTableBasePrefix(), null, $tableName);
     }
@@ -294,19 +317,21 @@ class DatabaseCloningService
         if ($this->dto->isMultisite()) {
             // Convert prefix and entire table name to lowercase to prevent capitalization issues:
             // https://dev.mysql.com/doc/refman/5.7/en/identifier-case-sensitivity.html
+
             // @todo Testing! Can lead to issues with CONSTRAINTS
+
             // Edit: Disabled as we must not change the capitalization of the prefix any longer!
             // This prevented sites from proper cloning where prefix contains capitalized letters
-            // Keep this here for historical purposes and to make sure no one tries to implement this again!
-            //$row[0] = str_replace($tableName, strtolower($tableName), $row[0]);
+            // Keep this here for reference purposes and to make sure no one EVER tries to implement this again!
+            // $row[0] = str_replace($tableName, strtolower($tableName), $row[0]);
 
             // Build full qualified statement for table [prefix_]users from main site e.g. wp_users
-            if ($this->removeDBBasePrefix($tableName) === 'users') {
-                $statement = str_replace($tableName, $productionDb->prefix . 'users', $statement);
+            if ($this->removeDbBasePrefix($tableName) === 'users') {
+                $statement = str_replace($tableName, $productionDb->base_prefix . 'users', $statement);
             }
             // Build full qualified statement for table [prefix_]usermeta from main site e.g. wp_usermeta
-            if ($this->removeDBBasePrefix($tableName) === 'usermeta') {
-                $statement = str_replace($tableName, $productionDb->prefix . 'usermeta', $statement);
+            if ($this->removeDbBasePrefix($tableName) === 'usermeta') {
+                $statement = str_replace($tableName, $productionDb->base_prefix . 'usermeta', $statement);
             }
         }
 

@@ -137,6 +137,9 @@ class Directory
         return $this->uploadDir;
     }
 
+    /**
+     * @return array
+     */
     public function getDefaultWordPressFolders()
     {
         if (!isset($this->defaultWordPressFolders)) {

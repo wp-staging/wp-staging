@@ -165,34 +165,81 @@ class FileObject extends SplFileObject
             throw new Exception("Can't seek file: " . $this->getPathname() . " to negative offset: $offset");
         }
 
-        if ($offset === 0) {
-            parent::seek(0);
+        if ($offset === 0 || version_compare(PHP_VERSION, '8.0.1', '<')) {
+            parent::seek($offset);
             return;
         }
 
-        if ($offset !== PHP_INT_MAX) {
-            $offset += 1;
-        }
+        $offset -= 1;
 
         if ($this->totalLines !== null && $offset >= $this->totalLines) {
-            $offset -= 1;
+            $offset += 1;
         }
 
         $originalFlags = $this->getFlags();
         $newFlags = $originalFlags & ~self::READ_AHEAD;
         $this->setFlags($newFlags);
 
-        $this->rewind();
-        for ($i = 0; $i < $offset; $i++) {
-            $this->next();
-            $this->fgets();
-            if ($this->eof()) {
-                $this->totalLines = $this->key();
-                break;
-            }
+        parent::seek($offset);
+
+        if ($this->eof()) {
+            $this->current();
+            $this->totalLines = $this->key();
+            return;
         }
 
+        $this->current();
+        $this->next();
+        $this->current();
+
         $this->setFlags($originalFlags);
+    }
+
+    /**
+     * SplFileObject::fgets() is not consistent after SplFileObject::fseek() between php 5.x/7.x and php 8.0.1.
+     * We could either make fgets consistent after SplFileObject::seek() or SplFileObject::fseek()
+     * This implementation makes it consistent after SplFileObject::seek across all PHP versions up to 8.0.1.
+     * Use readAndMoveNext() instead if you want to achieve consistent behavior of SplFileObject::fgets after SplFileObject::fseek.
+     *
+     * @return string
+     */
+    #[\ReturnTypeWillChange]
+    public function fgets()
+    {
+        if ($this->key() === 0 || version_compare(PHP_VERSION, '8.0.1', '<')) {
+            return parent::fgets();
+        }
+
+        $originalFlags = $this->getFlags();
+        $newFlags = $originalFlags & ~self::READ_AHEAD;
+        $this->setFlags($newFlags);
+
+        $this->current();
+        $this->next();
+        $line = $this->current();
+
+        $this->setFlags($originalFlags);
+        return $line;
+    }
+
+    /**
+     * SplFileObject::fgets() is not consistent after SplFileObject::fseek() between php 5.x/7.x and php 8.0.1.
+     * Use this method instead if you want to achieve consistent behavior of SplFileObject::fgets after SplFileObject::fseek across all PHP versions up to PHP 8.0.1.
+     * READ_AHEAD flag will not have any affect on this method. It's disabled.
+     *
+     * @return string
+     */
+    public function readAndMoveNext()
+    {
+        $originalFlags = $this->getFlags();
+        $newFlags = $originalFlags & ~self::READ_AHEAD;
+        $this->setFlags($newFlags);
+
+        $line = $this->current();
+        $this->next();
+
+        $this->setFlags($originalFlags);
+        return $line;
     }
 
     /**
