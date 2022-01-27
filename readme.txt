@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, database backup, staging, duplication, clone
 Requires at least: 3.6+
 Tested up to: 5.8
-Stable tag: 2.9.3
+Stable tag: 2.9.4
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -184,6 +184,14 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.4 =
+* New: Add filter to change the cache folder for creating & restoring backups #1528
+* New: Huge performance improvement for search & replace in cloning / pushing / backup process #1522
+* Fix: Call to undefined function human_readable_duration() on backup creation if WP is older than 5.1 #1527 #1525 #1535
+* Dev: Add unit tests for Times class that is used in backup listing view
+* Dev: Update db_version in SQL dumps to match WordPress 5.9 db version #1539
+* Dev: Add command to get db_version from database
 
 = 2.9.3 =
 * New: Add support for WordPress 5.8.3
