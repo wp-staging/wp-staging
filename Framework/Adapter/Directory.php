@@ -69,7 +69,9 @@ class Directory
             return $this->cacheDirectory;
         }
 
-        $this->cacheDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . 'cache'));
+        $cachePath = apply_filters('wpstg.directory.cacheDirectory', wp_normalize_path($this->getPluginUploadsDirectory() . 'cache'));
+
+        $this->cacheDirectory = trailingslashit($cachePath);
 
         return $this->cacheDirectory;
     }
@@ -113,7 +115,9 @@ class Directory
             return $this->pluginUploadsDirectory;
         }
 
-        $this->pluginUploadsDirectory = trailingslashit(wp_normalize_path($this->getUploadsDirectory() . WPSTG_PLUGIN_DOMAIN));
+        $pluginUploadsDir = apply_filters('wpstg.directory.pluginUploadsDirectory', wp_normalize_path($this->getUploadsDirectory() . WPSTG_PLUGIN_DOMAIN));
+
+        $this->pluginUploadsDirectory = trailingslashit($pluginUploadsDir);
 
         return $this->pluginUploadsDirectory;
     }

@@ -52,7 +52,7 @@ if (!defined('WPSTG_FEATURE_ENABLE_BACKUP')) {
     define('WPSTG_FEATURE_ENABLE_BACKUP', true);
 }
 
-// Define bytes consts if not already defined for backward compatibility
+// Define WordPress default constants if not already defined in outdated WP version for backward compatibility
 if (!defined('KB_IN_BYTES')) {
     define('KB_IN_BYTES', 1024);
 }
@@ -63,6 +63,30 @@ if (!defined('MB_IN_BYTES')) {
 
 if (!defined('GB_IN_BYTES')) {
     define('GB_IN_BYTES', 1024 * MB_IN_BYTES);
+}
+
+if (!defined('MINUTE_IN_SECONDS')) {
+    define('MINUTE_IN_SECONDS', 60);
+}
+
+if (!defined('HOUR_IN_SECONDS')) {
+    define('HOUR_IN_SECONDS', 60 * MINUTE_IN_SECONDS);
+}
+
+if (!defined('DAY_IN_SECONDS')) {
+    define('DAY_IN_SECONDS', 24 * HOUR_IN_SECONDS);
+}
+
+if (!defined('WEEK_IN_SECONDS')) {
+    define('WEEK_IN_SECONDS', 7 * DAY_IN_SECONDS);
+}
+
+if (!defined('MONTH_IN_SECONDS')) {
+    define('MONTH_IN_SECONDS', 30 * DAY_IN_SECONDS);
+}
+
+if (!defined('YEAR_IN_SECONDS')) {
+    define('YEAR_IN_SECONDS', 365 * DAY_IN_SECONDS);
 }
 
 /**

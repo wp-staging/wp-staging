@@ -4,6 +4,8 @@ namespace WPStaging\Framework\Database;
 
 use RuntimeException;
 
+use function WPStaging\functions\debug_log;
+
 class SearchReplace
 {
     /** @var array */
@@ -38,6 +40,9 @@ class SearchReplace
         $this->isWpBakeryActive = false;
     }
 
+    /**
+     * @return int
+     */
     public function getSmallerSearchLength()
     {
         if ($this->smallerReplacement < PHP_INT_MAX) {
@@ -59,6 +64,10 @@ class SearchReplace
      */
     public function replace($data)
     {
+        if (defined('DISABLE_WPSTG_SEARCH_REPLACE') && DISABLE_WPSTG_SEARCH_REPLACE) {
+            return $data;
+        }
+
         if (!$this->search || !$this->replace) {
             return $data;
         }
@@ -177,7 +186,12 @@ class SearchReplace
         }
 
         // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
-        $unserialized = @unserialize($data);
+        try {
+            $unserialized = @unserialize($data);
+        } catch (\Exception $e) {
+            debug_log('replaceString. Can not unserialize data. Error: ' . $e->getMessage() . ' Data: ' . $data);
+        }
+
         if ($unserialized !== false) {
             return serialize($this->walker($unserialized));
         }
@@ -213,7 +227,7 @@ class SearchReplace
         return $data;
     }
 
-    private function strReplace($data)
+    private function strReplace($data = '')
     {
         $regexExclude = '';
         foreach ($this->exclude as $excludeString) {

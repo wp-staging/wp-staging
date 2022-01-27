@@ -4,6 +4,16 @@ namespace WPStaging\Framework\Filesystem;
 
 use WPStaging\Framework\Adapter\Directory;
 
+/**
+ * This class is used to shorten the full file path
+ * to reduce the overall file size of the backup file.
+ *
+ * A file like wp-content/uploads/wp-staging-pro/wp-staging-pro.zip turn into
+ * wpstg_p_/wp-staging-pro/wp-staging.zip
+ *
+ * @todo rename this class to PathShortener
+ */
+
 class PathIdentifier
 {
     const IDENTIFIER_WP_CONTENT = 'wpstg_c_';
