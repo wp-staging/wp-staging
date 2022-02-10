@@ -25,51 +25,69 @@ trait DbRowsGeneratorTrait
     /** @var object */
     private $stagingSiteDb;
 
-    /** @var null  */
-    public $hasNumericPrimaryKey = true;
+    /** @var int|bool */
+    public $lastFetchedPrimaryKeyValue = false;
+
+    /** @var string */
+    public $numericPrimaryKey = null;
 
     /**
-     * @return string The primary key of the current table, if any.
+     * Used by unit tests
+     * @var bool
      */
-    protected function getPrimaryKey()
+    public $executeNumericPrimaryKeyQuery = true;
+
+
+    /**
+     * Get the numeric primary key.
+     * Return false if there is more than one primary key in the table or the table is not describeable or the primary key is non numeric
+     * @return string|false
+     */
+    protected function getNumericPrimaryKey()
     {
-
-        if (!$this->hasNumericPrimaryKey) {
+        // Used by unit tests
+        if (!$this->executeNumericPrimaryKeyQuery) {
             return false;
         }
 
-        $dbname = $this->stagingSiteDb->dbname;
+        $primaryKeys = [];
+        $fields      = $this->stagingSiteDb->get_results('DESCRIBE ' . $this->tableName);
 
-        $query = "SELECT COLUMN_NAME 
-                  FROM INFORMATION_SCHEMA.COLUMNS
-                  WHERE TABLE_NAME = '$this->tableName'
-                  AND TABLE_SCHEMA = '$dbname'
-                  AND IS_NULLABLE = 'NO'
-                  AND DATA_TYPE IN ('int', 'bigint', 'smallint', 'mediumint')
-                  AND COLUMN_KEY = 'PRI'
-                  AND EXTRA like '%auto_increment%';";
-
-        $primaryKey = $this->stagingSiteDb->get_results($query, ARRAY_A);
-
-        $this->stagingSiteDb->flush();
-
-        if (!$primaryKey) {
+        // Either there was an error or the table has no columns.
+        if (empty($fields)) {
             return false;
         }
 
-        if (!is_array($primaryKey[0])) {
+        if (is_array($fields)) {
+            foreach ($fields as $column) {
+                if ($column->Key === 'PRI') {
+                    $primaryKeys[] = $column;
+                }
+            }
+        }
+
+        if (empty($primaryKeys)) {
             return false;
         }
 
-        if (!array_key_exists('COLUMN_NAME', $primaryKey[0])) {
+        if (count($primaryKeys) > 1) {
             return false;
         }
 
-        if (empty($primaryKey[0]['COLUMN_NAME'])) {
-            return false;
+        $primaryKey = $primaryKeys[0];
+
+        // make sure only numeric primary key is return
+        if (
+            strpos($primaryKey->Type, 'int') === 0 ||
+            strpos($primaryKey->Type, 'bigint') === 0 ||
+            strpos($primaryKey->Type, 'smallint') === 0 ||
+            strpos($primaryKey->Type, 'mediumint') === 0
+        ) {
+            $this->numericPrimaryKey = $primaryKey->Field;
+            return $this->numericPrimaryKey;
         }
 
-        return $primaryKey[0]['COLUMN_NAME'];
+        return false;
     }
 
     /**
@@ -82,6 +100,7 @@ trait DbRowsGeneratorTrait
      *
      * @param string $table The prefixed name of the table to pull rows from.
      * @param int $offset The number of row to start the work from.
+     *                        In case of numeric primary table it is the last primary key value fetched.
      * @param int $limit The maximum number of rows to try and process; the actual number of
      *                       processed will depend on the server available memory and max request execution time.
      * @param \wpdb|null A reference to the database instance to fetch rows from.
@@ -113,7 +132,7 @@ trait DbRowsGeneratorTrait
 
         $this->stagingSiteDb = $db;
 
-        $numericPrimaryKey = ($key = $this->getPrimaryKey()) ? $key : false;
+        $numericPrimaryKey = $this->getNumericPrimaryKey();
 
         $suppressErrorsOriginal = $db->suppress_errors;
         $db->suppress_errors(false);
@@ -125,8 +144,13 @@ trait DbRowsGeneratorTrait
         $processed = 0;
         // More rows equals more memory; to process more let's reduce the memory footprint by using smaller fetch sizes.
         $batchSize = $limit / 5;
-        $lastFetch = false;
         $batchSize = ceil($batchSize);
+        $lastFetch = false;
+
+        $this->lastFetchedPrimaryKeyValue = false;
+        if (!empty($numericPrimaryKey)) {
+            $this->lastFetchedPrimaryKeyValue = $offset;
+        }
 
         do {
             if (count($rows) === 0) {
@@ -134,12 +158,12 @@ trait DbRowsGeneratorTrait
                     break;
                 }
 
-                // Optimal! We have Primary Keys so it doesn't get slower on large offsets.
+                // Optimal! We have a Primary Key so it doesn't get slower on large offsets.
                 if (!empty($numericPrimaryKey)) {
                     $query = <<<SQL
 SELECT  *
 FROM `{$table}`
-WHERE `{$numericPrimaryKey}` > {$offset}
+WHERE `{$numericPrimaryKey}` > {$this->lastFetchedPrimaryKeyValue}
 ORDER BY `{$numericPrimaryKey}` ASC
 LIMIT 0, {$batchSize}
 SQL;
@@ -176,6 +200,11 @@ SQL;
             // We're done, no more rows to process.
             if (null === $row) {
                 break;
+            }
+
+            // save the last fetched primary key value
+            if (!empty($numericPrimaryKey)) {
+                $this->lastFetchedPrimaryKeyValue = $row[$this->numericPrimaryKey];
             }
 
             yield $row;

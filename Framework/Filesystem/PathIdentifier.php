@@ -39,6 +39,15 @@ class PathIdentifier
     }
 
     /**
+     * Convert an absolute file path of a file into an abbreviated path.
+     *
+     * E.g.:
+     *
+     * /var/www/single/wp-content/plugins/index.php => wpstg_p_index.php
+     * /var/www/single/wp-content/mu-plugins/index.php => wpstg_m_index.php
+     * /var/www/single/wp-content/uploads/2019/image.png => wpstg_c_uploads/2019/image.png
+     * /var/www/single/wp-content/themes/twentytwentyone/index.php => wpstg_t_twentytwentyone/index.php
+     *
      * @param string $path /var/www/single/wp-content/plugins/index.php
      *
      * @return string wpstg_p_index.php

@@ -10,6 +10,7 @@ use LimitIterator;
 use RuntimeException;
 use SplFileObject;
 use WPStaging\Core\WPStaging;
+use WPStaging\functions;
 use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
 
 class FileObject extends SplFileObject
@@ -74,7 +75,9 @@ class FileObject extends SplFileObject
     /**
      * @param int $lines
      * @return array
+     *
      * @throws Exception
+     * @todo DRY /Framework/Utils/Cache/BufferedCache.php
      */
     public function readBottomLines($lines)
     {
@@ -94,7 +97,12 @@ class FileObject extends SplFileObject
      */
     public function readBackupMetadata()
     {
-        $negativeOffset = 16 * KB_IN_BYTES;
+        // Default max size 128KB for backup metadata
+        $maxBackupMetadataSize = apply_filters('wpstg_max_backup_metadata_size', 128 * KB_IN_BYTES);
+        // Make sure the max size is never above 1MB
+        $negativeOffset = min($maxBackupMetadataSize, 1 * MB_IN_BYTES);
+        // Make sure the max size is never below 32KB
+        $negativeOffset = max($negativeOffset, 32 * KB_IN_BYTES);
 
         // Set the pointer to the end of the file, minus the negative offset for which to start looking for the backup metadata.
         $this->fseek(max($this->getSize() - $negativeOffset, 0), SEEK_SET);
@@ -103,17 +111,44 @@ class FileObject extends SplFileObject
 
         do {
             $this->existingMetadataPosition = $this->ftell();
-            $line = trim($this->fgets());
-            if (substr($line, 0, 1) === '{') {
+            $line = trim($this->readAndMoveNext());
+            if ($this->isValidMetadata($line)) {
                 $backupMetadata = json_decode($line, true);
             }
         } while ($this->valid() && !is_array($backupMetadata));
 
         if (!is_array($backupMetadata)) {
+            \WPStaging\functions\debug_log('Could not find metadata in the backup.');
             throw new RuntimeException('Could not find metadata in the backup.');
         }
 
         return $backupMetadata;
+    }
+
+    /**
+     * @param string $line
+     * @return bool
+     *
+     * @todo Move all metadata related function out of FileObject
+     */
+    public function isValidMetadata($line)
+    {
+        if (substr($line, 0, 1) !== '{') {
+            return false;
+        }
+
+        $maybeMetadata = json_decode($line, true);
+
+        if (!is_array($maybeMetadata) || !array_key_exists('networks', $maybeMetadata) || !is_array($maybeMetadata['networks'])) {
+            return false;
+        }
+
+        $network = $maybeMetadata['networks']['1'];
+        if (!is_array($network) || !array_key_exists('blogs', $network) || !is_array($network['blogs'])) {
+            return false;
+        }
+
+        return true;
     }
 
     public function getExistingMetadataPosition()
@@ -227,10 +262,16 @@ class FileObject extends SplFileObject
      * Use this method instead if you want to achieve consistent behavior of SplFileObject::fgets after SplFileObject::fseek across all PHP versions up to PHP 8.0.1.
      * READ_AHEAD flag will not have any affect on this method. It's disabled.
      *
+     * @var bool $useFgets default false. Setting this to true will use fgets on PHP < 8.0.1
+     *
      * @return string
      */
-    public function readAndMoveNext()
+    public function readAndMoveNext($useFgets = false)
     {
+        if ($useFgets && version_compare(PHP_VERSION, '8.0.1', '<')) {
+            return $this->fgets();
+        }
+
         $originalFlags = $this->getFlags();
         $newFlags = $originalFlags & ~self::READ_AHEAD;
         $this->setFlags($newFlags);

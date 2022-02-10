@@ -367,6 +367,10 @@ class SearchReplace extends CloningProcess
             $whereSql = [];
             $doUpdate = false;
 
+            if ($this->lastFetchedPrimaryKeyValue !== false) {
+                $this->lastFetchedPrimaryKeyValue = $row[$this->numericPrimaryKey];
+            }
+
             // Skip rows
             if (isset($row['option_name']) && in_array($row['option_name'], $filter)) {
                 continue;
@@ -564,15 +568,22 @@ class SearchReplace extends CloningProcess
      *
      * If nothing was processed, then the job start  will be ticked by 1.
      *
-     * @param int   $processed The  number of actually processed rows in this run.
-     * @param wpdb $db        The wpdb instance being used to process.
-     * @param string $table    The table being processed.
+     * @param int $processed The  number of actually processed rows in this run.
+     * @param wpdb $db The wpdb instance being used to process.
+     * @param string $table The table being processed.
      *
      * @return void The method does not return any value.
      */
     protected function updateJobStart($processed, wpdb $db, $table)
     {
         $this->processed = absint($processed);
+
+        // If it is a numeric primary key table execution,
+        // Use last fetched primary key value for the next request
+        if ($this->executeNumericPrimaryKeyQuery && $this->lastFetchedPrimaryKeyValue !== false) {
+            $this->options->job->start = $this->lastFetchedPrimaryKeyValue;
+            return;
+        }
 
         // We make sure to increment the offset at least in 1 to avoid infinite loops.
         $minimumProcessed = 1;

@@ -40,7 +40,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
     public function __destruct()
     {
-        if ($this->needsUnlock && $this->handle instanceof FileObject) {
+        if ($this->needsUnlock && $this->handle instanceof FileObject && is_resource($this->handle)) {
             try {
                 $this->handle->flock(LOCK_UN);
             } catch (\Exception $e) {
