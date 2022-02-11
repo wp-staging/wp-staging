@@ -1,4 +1,8 @@
+/.wordpress-org
 /.git
-/.gitignore
-/.distignore
 /.github
+/node_modules
+
+.distignore
+.gitignore
+
