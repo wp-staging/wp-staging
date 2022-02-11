@@ -8,9 +8,10 @@
         <div style="text-align: left; padding-left: 8px; padding-right: 8px;">
             <h4 class="wpstg--swal2-title"><strong><?php esc_html_e('Read First', 'wp-staging') ?></strong></h4>
             <?php echo wp_kses_post(__(<<<HTML
-<p>Restoring a Backup is a beta feature. Back up your current website first before proceeding.</p>
-<p class="wpstg-backup-restore-contains-database">This site's database is going to be entirely replaced with the database from the backup, and you will be required to log in again with the user/password that exists in the backup.</p>
-<p class="wpstg-backup-restore-contains-files">The restore process will add the files from the backup to the site, replacing the ones that exist both in the backup and in the site.</p> 
+<p>Back up your current website before you proceed!</p>
+<p class="wpstg-backup-restore-contains-database">This backup restore will replace entirely your website's database. You will be required to log in again with the user/password combination that exists in the backup.</p>
+<p class="wpstg-backup-restore-contains-database-multisite">If you restore a multisite backup, all existing network sites will be completely replaced by the network sites from the backup.</p>
+<p class="wpstg-backup-restore-contains-files">This restore process extracts files from the backup file to the website and replaces all the files that exist in both the backup and the current website.</p> 
 HTML
                     , 'wp-staging')) ?>
         </div>

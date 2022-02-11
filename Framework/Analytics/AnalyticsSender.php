@@ -25,6 +25,11 @@ class AnalyticsSender
         // Also, the value we need to store in it is small.
         $settings = get_option("wpstg_settings", []);
 
+        // convert settings from type object to array
+        if (is_object($settings)) {
+            $settings = json_decode(json_encode($settings), true);
+        }
+
         // Interval to wait before sending events.
         $interval = 15 * MINUTE_IN_SECONDS;
 

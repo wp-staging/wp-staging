@@ -272,12 +272,12 @@ body.wp-staging-pro_page_wpstg-license {
 
 .wpstg-clone-header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
 }
 
 .wpstg-clone-title {
     display: inline-block;
+    margin-right: 8px;
     font-size: 15px;
     max-width: 300px;
     text-decoration: none;
@@ -289,7 +289,23 @@ body.wp-staging-pro_page_wpstg-license {
     color: #111111;
 }
 
+.wpstg-clone-labels {
+    display: inline-block;
+}
+
+
+.wpstg-clone-labels .wpstg-clone-label {
+    display: inline-block;
+    padding: 1px 4px;
+    margin-right: 4px;
+    font-size: 11px;
+    border-radius: 3px;
+    background: #8bc34a;
+    color: #fff;
+}
+
 .wpstg-clone-actions {
+    margin-left: auto;
     display: flex;
     margin-top: 5px;
 }

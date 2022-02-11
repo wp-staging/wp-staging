@@ -115,7 +115,7 @@ function shutdown_function()
             $error['message'],
             $error['file'],
             $error['line'],
-            $isFatalError ? 'is Fatal Error' : '',
+            $isFatalError ? 'Is Fatal Error!' : 'Is No Fatal Error!',
             $comesFromWpStaging ? 'Yes' : 'No'
         );
 

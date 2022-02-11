@@ -364,6 +364,7 @@
       /**
        * Convert the given url to make it slug compatible
        * @param {string} url
+       * @return {string}
        */
       slugify: function slugify(url) {
         return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
@@ -413,7 +414,7 @@
        * @param {bool} showErrors
        * @param {int} tryCount
        * @param {float} incrementRatio
-       * @param errorCallback
+       * @param {function} errorCallback
        */
       ajax: function ajax(data, callback, dataType, showErrors, tryCount, incrementRatio, errorCallback) {
         if (incrementRatio === void 0) {
