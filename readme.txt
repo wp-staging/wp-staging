@@ -6,7 +6,7 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wp-staging.com/#pricing
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, database backup, staging backup, duplicator backup, clone backup
+Tags: backup, cloud backup, database backup, restore, wordpress backup
 Requires at least: 3.6+
 Tested up to: 5.8
 Stable tag: 2.9.5
