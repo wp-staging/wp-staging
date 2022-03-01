@@ -6,10 +6,10 @@ Contributors: ReneHermi, WP-Staging
 Donate link: https://wp-staging.com/#pricing
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, database backup, backup staging, backup duplicator, clone backup
+Tags: backup, cloud backup, database backup, restore, wordpress backup
 Requires at least: 3.6+
-Tested up to: 5.8
-Stable tag: 2.9.5
+Tested up to: 5.9
+Stable tag: 2.9.6
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -192,6 +192,15 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.6 =
+* New: Support up to WordPress 5.9.1
+* New: Add filter wpstg.frontend.showLoginForm to allow third party plugin disabling login form for the staging site #1577
+* New: Add labels to distinguish between network and single site clones on multisite
+* Fix: Handle issue when showing staging sites in System Info #1560
+* Fix: Fix Rows Generator for zero or negative values for Primary Key Index #1584
+* Fix: Set option "Keep permalinks" on the staging site when updating a staging site if "keep permalinks" is active on the production site initially #1562
+* Fix: Updating an existing multisite clone converted the clone to a single site #1565 #1589
 
 = 2.9.5 =
 * New: Create backups and restore of multisites (PRO) #1458

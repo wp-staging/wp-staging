@@ -36,7 +36,7 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
             <?php echo esc_html($name); ?>
         </span>
         <div class="wpstg-clone-labels">
-            <span class="wpstg-clone-label"><?php echo $backup->type === 'single' ? 'Single Site' : 'Multisite' ?></span>
+            <span class="wpstg-clone-label"><?php echo $backup->type === 'single' ? __('Single Site', 'wp-staging') : __('Multisite', 'wp-staging') ?></span>
         </div>
         <div class="wpstg-clone-actions">
             <div class="wpstg-dropdown wpstg-action-dropdown">

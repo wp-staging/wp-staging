@@ -135,6 +135,8 @@ class Updating extends Job
             $this->options->uploadsSymlinked = isset($this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked']) ? $this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked'] : false;
             $this->options->prefix = $this->options->existingClones[$this->options->clone]['prefix'];
             $this->options->emailsAllowed = $this->options->existingClones[$this->options->clone]['emailsAllowed'];
+            $this->options->networkClone = isset($this->options->existingClones[strtolower($this->options->clone)]['networkClone']) ? $this->options->existingClones[$this->options->clone]['networkClone'] : false;
+            $this->options->networkClone = filter_var($this->options->networkClone, FILTER_VALIDATE_BOOLEAN);
             //$this->options->prefix = $this->getStagingPrefix();
             $helper = new Helper();
             $this->options->homeHostname = $helper->getHomeUrlWithoutScheme();

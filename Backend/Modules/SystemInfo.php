@@ -183,17 +183,20 @@ class SystemInfo
         // old name wpstg_existing_clones_beta
         // New name since version 4.0.3 wpstg_staging_sites
         $stagingSites = get_option(Sites::STAGING_SITES_OPTION, []);
-        foreach ($stagingSites as $key => $clone) {
-            $path = !empty($clone['path']) ? $clone['path'] : 'undefined';
+        // make sure $stagingSites is an array
+        if (is_array($stagingSites)) {
+            foreach ($stagingSites as $key => $clone) {
+                $path = !empty($clone['path']) ? $clone['path'] : 'undefined';
 
-            $output .= $this->info("Number:", isset($clone['number']) ? $clone['number'] : 'undefined');
-            $output .= $this->info("directoryName:", isset($clone['directoryName']) ? $clone['directoryName'] : 'undefined');
-            $output .= $this->info("Path:", $path);
-            $output .= $this->info("URL:", isset($clone['url']) ? $clone['url'] : 'undefined');
-            $output .= $this->info("DB Prefix:", isset($clone['prefix']) ? $clone['prefix'] : 'undefined');
-            $output .= $this->info("DB Prefix wp-config.php:", $this->getStagingPrefix($clone));
-            $output .= $this->info("WP Staging Version:", isset($clone['version']) ? $clone['version'] : 'undefined');
-            $output .= $this->info("WP Version:", $this->getStagingWpVersion($path)) . PHP_EOL . PHP_EOL;
+                $output .= $this->info("Number:", isset($clone['number']) ? $clone['number'] : 'undefined');
+                $output .= $this->info("directoryName:", isset($clone['directoryName']) ? $clone['directoryName'] : 'undefined');
+                $output .= $this->info("Path:", $path);
+                $output .= $this->info("URL:", isset($clone['url']) ? $clone['url'] : 'undefined');
+                $output .= $this->info("DB Prefix:", isset($clone['prefix']) ? $clone['prefix'] : 'undefined');
+                $output .= $this->info("DB Prefix wp-config.php:", $this->getStagingPrefix($clone));
+                $output .= $this->info("WP Staging Version:", isset($clone['version']) ? $clone['version'] : 'undefined');
+                $output .= $this->info("WP Version:", $this->getStagingWpVersion($path)) . PHP_EOL . PHP_EOL;
+            }
         }
 
         $output .= $this->info(Sites::STAGING_SITES_OPTION . ": ", serialize(get_option(Sites::STAGING_SITES_OPTION, [])));
