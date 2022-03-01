@@ -1,0 +1,18 @@
+name: Deploy to WordPress.org
+# Create a new tag/release in github and this github action workflow will be executed to deploy a new release of WP STAGING on wordpress.org
+on:
+  push:
+    branches:
+      - trunk
+jobs:
+  trunk:
+    name: Push to trunk
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+      - name: WordPress.org plugin asset/readme update
+        uses: WP-Staging/action-wordpress-plugin-asset-update@develop
+        env:
+          SVN_PASSWORD: ${{ secrets.SVN_PASSWORD }}
+          SVN_USERNAME: ${{ secrets.SVN_USERNAME }}
+          SLUG: wp-staging
