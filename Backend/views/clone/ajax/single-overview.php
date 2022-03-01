@@ -26,6 +26,11 @@
                     <a href="<?php echo $urlLogin ?>" class="wpstg-clone-title" target="_blank">
                         <?php echo isset($data["cloneName"]) ? $data["cloneName"] : $data["directoryName"]; ?>
                     </a>
+                    <?php if (is_multisite()) { ?>
+                    <div class="wpstg-clone-labels">
+                        <span class="wpstg-clone-label"><?php echo $data['networkClone'] ? __('Network', 'wp-staging') : __('Site', 'wp-staging') ?></span>
+                    </div>
+                    <?php } ?>
                     <div class="wpstg-clone-actions">
                         <div class="wpstg-dropdown wpstg-action-dropdown">
                             <a href="#" class="wpstg-dropdown-toggler transparent">

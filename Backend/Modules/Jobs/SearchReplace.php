@@ -333,6 +333,7 @@ class SearchReplace extends CloningProcess
         if (defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') && WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR) {
             $data = $this->stagingDb->get_results("SELECT * FROM $table LIMIT $offset, $limit", ARRAY_A);
         } else {
+            $this->lastFetchedPrimaryKeyValue = property_exists($this->options->job, 'lastProcessedId') ? $this->options->job->lastProcessedId : false;
             $data = $this->rowsGenerator($table, $offset, $limit, $this->stagingDb);
         }
 
@@ -550,7 +551,7 @@ class SearchReplace extends CloningProcess
     protected function finishStep()
     {
         // This job is not finished yet
-        if ($this->options->job->total > $this->options->job->start) {
+        if (!$this->noResultRows && ($this->options->job->total > $this->options->job->start)) {
             return false;
         }
 
@@ -579,9 +580,10 @@ class SearchReplace extends CloningProcess
         $this->processed = absint($processed);
 
         // If it is a numeric primary key table execution,
-        // Use last fetched primary key value for the next request
+        // Save the last processed primary key value for the next request
         if ($this->executeNumericPrimaryKeyQuery && $this->lastFetchedPrimaryKeyValue !== false) {
-            $this->options->job->start = $this->lastFetchedPrimaryKeyValue;
+            $this->options->job->lastProcessedId = $this->lastFetchedPrimaryKeyValue;
+            $this->options->job->start += $this->processed;
             return;
         }
 

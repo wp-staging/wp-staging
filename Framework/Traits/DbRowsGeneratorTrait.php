@@ -31,6 +31,9 @@ trait DbRowsGeneratorTrait
     /** @var string */
     public $numericPrimaryKey = null;
 
+    /** @var bool */
+    public $noResultRows = false;
+
     /**
      * Used by unit tests
      * @var bool
@@ -147,11 +150,6 @@ trait DbRowsGeneratorTrait
         $batchSize = ceil($batchSize);
         $lastFetch = false;
 
-        $this->lastFetchedPrimaryKeyValue = false;
-        if (!empty($numericPrimaryKey)) {
-            $this->lastFetchedPrimaryKeyValue = $offset;
-        }
-
         do {
             if (count($rows) === 0) {
                 if ($lastFetch) {
@@ -160,10 +158,15 @@ trait DbRowsGeneratorTrait
 
                 // Optimal! We have a Primary Key so it doesn't get slower on large offsets.
                 if (!empty($numericPrimaryKey)) {
+                    $whereCondition = '';
+                    if ($this->lastFetchedPrimaryKeyValue !== false) {
+                        $whereCondition = "WHERE `{$numericPrimaryKey}` > {$this->lastFetchedPrimaryKeyValue}";
+                    }
+
                     $query = <<<SQL
 SELECT  *
 FROM `{$table}`
-WHERE `{$numericPrimaryKey}` > {$this->lastFetchedPrimaryKeyValue}
+{$whereCondition}
 ORDER BY `{$numericPrimaryKey}` ASC
 LIMIT 0, {$batchSize}
 SQL;
@@ -171,6 +174,7 @@ SQL;
                     $query = "SELECT * FROM `{$table}` LIMIT {$offset}, {$batchSize}";
                 }
 
+                $this->noResultRows = false;
                 $rows = $db->get_results($query, ARRAY_A);
 
                 // Call to mysql_free_result
@@ -181,7 +185,8 @@ SQL;
                 }
 
                 // We're done here.
-                if (empty($rows)) {
+                if (empty($rows) || count($rows) === 0) {
+                    $this->noResultRows = true;
                     break;
                 }
 
@@ -202,9 +207,9 @@ SQL;
                 break;
             }
 
-            // save the last fetched primary key value
+            // save the last fetched primary key for next requests
             if (!empty($numericPrimaryKey)) {
-                $this->lastFetchedPrimaryKeyValue = $row[$this->numericPrimaryKey];
+                $this->lastFetchedPrimaryKeyValue = $row[$numericPrimaryKey];
             }
 
             yield $row;
