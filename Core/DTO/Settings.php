@@ -156,6 +156,22 @@ class Settings
     /**
      * @return int
      */
+    public function getQuerySRLimit()
+    {
+        return $this->querySRLimit;
+    }
+
+    /**
+     * @param int $querySRLimit
+     */
+    public function setQuerySRLimit($querySRLimit)
+    {
+        $this->querySRLimit = $querySRLimit;
+    }
+
+    /**
+     * @return int
+     */
     public function getFileLimit()
     {
         return $this->fileLimit;

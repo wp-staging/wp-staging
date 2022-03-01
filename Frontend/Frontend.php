@@ -90,7 +90,12 @@ class Frontend
     {
         $this->accessDenied = false;
 
-        // Dont show login form for rest requests
+        // Don't show login form if showLoginForm filter is set to false. Used by Real Cookie Banner plugin
+        if (apply_filters('wpstg.frontend.showLoginForm', false)) {
+            return false;
+        }
+
+        // Don't show login form for rest requests
         if ((new Rest())->isRestUrl()) {
             return false;
         }

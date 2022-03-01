@@ -94,7 +94,7 @@ abstract class CloningService
     }
 
     /**
-     * Undocumented function
+     * Is the current clone network?
      *
      * @return boolean
      */

@@ -35,13 +35,13 @@ class UpdateWpConfigConstants extends FileCloningService
             $replaceOrAdd['DB_NAME']     = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getExternalDatabaseName()));
         }
 
+        $replaceOrSkip = [];
         if ($this->isNetworkClone()) {
             $replaceOrAdd['DOMAIN_CURRENT_SITE'] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteDomain()));
             $replaceOrAdd['PATH_CURRENT_SITE'] = sprintf("'%s'", trailingslashit($this->escapeSingleQuotes($this->dto->getStagingSitePath())));
-        }
-
-        $replaceOrSkip = [];
-        if (!$this->isNetworkClone()) {
+            $replaceOrSkip["WP_ALLOW_MULTISITE"] = 'true';
+            $replaceOrSkip["MULTISITE"] = 'true';
+        } else {
             //It's OK to attempt replacing multi-site constants even in single-site jobs as they will not be present in a single-site wp-config.php
             $replaceOrSkip["WP_ALLOW_MULTISITE"] = 'false';
             $replaceOrSkip["MULTISITE"] = 'false';

@@ -78,6 +78,14 @@ class UpdateStagingOptionsTable extends DBCloningService
         if (!$this->keepPermalinks()) {
             $updateOrInsert['rewrite_rules'] = null;
             $updateOrInsert['permalink_structure'] = ' ';
+        } else {
+            /**
+             * if staging site is created with keep permalinks setting off,
+             * The below code make sure permalinks settings are kept during update,
+             * when later production site has keep permalinks setting on,
+             * without the need to also keep permalinks setting on staging site too.
+             */
+            $updateOrInsert['wpstg_rmpermalinks_executed'] = 'true';
         }
 
         $freemiusHelper = new FreemiusScript();
