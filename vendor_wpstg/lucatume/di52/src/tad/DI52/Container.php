@@ -140,6 +140,7 @@ class tad_DI52_Container implements \ArrayAccess
      * @return void
      * @since 5.0.0
      */
+    #[\ReturnTypeWillChange]
     public function offsetSet($offset, $value)
     {
         if ($value instanceof \WPStaging\Vendor\tad_DI52_ProtectedValue) {
@@ -189,6 +190,7 @@ class tad_DI52_Container implements \ArrayAccess
      *
      * @return mixed
      */
+    #[\ReturnTypeWillChange]
     public function offsetGet($offset)
     {
         if (\is_object($offset)) {
@@ -491,6 +493,7 @@ class tad_DI52_Container implements \ArrayAccess
      * The return value will be casted to boolean if non-boolean was returned.
      * @since 5.0.0
      */
+    #[\ReturnTypeWillChange]
     public function offsetExists($offset)
     {
         return isset($this->bindings[$offset]);
@@ -544,6 +547,7 @@ class tad_DI52_Container implements \ArrayAccess
      * @return void
      * @since 5.0.0
      */
+    #[\ReturnTypeWillChange]
     public function offsetUnset($offset)
     {
         unset($this->strings[$offset], $this->singletons[$offset], $this->objects[$offset], $this->bindings[$offset], $this->afterbuild[$offset], $this->callables[$offset], $this->contexts[$offset], $this->tags[$offset], $this->chains[$offset]);

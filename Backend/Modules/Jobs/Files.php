@@ -529,7 +529,8 @@ class Files extends JobExecutable
         $excludedFiles = (array)$this->options->excludedFiles;
 
         // Remove .htaccess and web.config from 'excludedFiles' if staging site is copied to a subdomain
-        if ($this->isIdenticalHostname() === false) {
+        // But skip during update
+        if ($this->isIdenticalHostname() === false && $this->options->mainJob !== 'updating') {
             $excludedFiles = \array_diff(
                 $excludedFiles,
                 ["web.config", ".htaccess"]
@@ -586,7 +587,7 @@ class Files extends JobExecutable
     {
         // If path + file exists
         foreach ($this->options->excludedFilesFullPath as $excludedFile) {
-            if (strpos($file, $excludedFile) !== false) {
+            if ($file === trailingslashit(ABSPATH) . $excludedFile) {
                 return true;
             }
         }

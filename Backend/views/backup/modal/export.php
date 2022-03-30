@@ -11,6 +11,9 @@ $timeFormatOption = get_option('time_format');
 
 $time = WPStaging\Core\WPStaging::make(\WPStaging\Framework\Utils\Times::class);
 
+/** @var \WPStaging\Pro\Backup\Storage\Providers */
+$storages = WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Storage\Providers::class);
+
 $recurrenceTimes = $time->range('midnight', 'tomorrow - 60 minutes', defined('WPSTG_DEV') && WPSTG_DEV ? 'PT1M' : 'PT15M');
 ?>
 <div id="wpstg--modal--backup--new" data-confirmButtonText="<?php esc_attr_e('Start Backup', 'wp-staging') ?>" style="display: none">
@@ -61,7 +64,7 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 60 minutes', defined('WP
 
             <div class="wpstg-backup-options-section">
                 <h4 class="swal2-title wpstg-w-100" >
-                    <?php esc_html_e('Backup plan', 'wp-staging') ?>
+                    <?php esc_html_e('Backup Times', 'wp-staging') ?>
                 </h4>
 
                 <div class="wpstg-backup-scheduling-options wpstg-container">
@@ -69,7 +72,7 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 60 minutes', defined('WP
                     <label>
                         <input type="checkbox" name="repeatBackupOnSchedule" id="repeatBackupOnSchedule" value="1" checked
                                onchange="WPStaging.handleDisplayDependencies(this)">
-                        <?php esc_html_e('One Time Only', 'wp-staging'); ?>
+                        <?php esc_html_e('One-Time Backup', 'wp-staging'); ?>
                     </label>
 
                     <div class="hidden" data-show-if-unchecked="repeatBackupOnSchedule">
@@ -102,13 +105,14 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 60 minutes', defined('WP
                             </div>
                         </label>
                         <select name="backupScheduleTime" id="backupScheduleTime">
+                            <?php $currentTime = (new DateTime('now', $time->getSiteTimezoneObject()))->format($timeFormatOption); ?>
                             <?php foreach ($recurrenceTimes as $recurTime) : ?>
-                                <option value="<?php echo esc_attr($recurTime->format('H:i')) ?>">
+                                <option value="<?php echo esc_attr($recurTime->format('H:i')) ?>" <?php echo esc_html($recurTime->format($timeFormatOption)) === esc_html($currentTime) ? 'selected' : '' ?>>
                                     <?php echo esc_html($recurTime->format($timeFormatOption)) ?>
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <span id="backup-schedule-current-time"><?php _e(sprintf('Current Time: %s', (new DateTime('now', $time->getSiteTimezoneObject()))->format($timeFormatOption)), 'wp-staging'); ?></span>
+                        <span id="backup-schedule-current-time"><?php _e(sprintf('Current Time: %s', $currentTime), 'wp-staging'); ?></span>
                         <label for="backupScheduleRotation">
                             <?php esc_html_e('How many backups to keep?', 'wp-staging'); ?>
                             <div class="wpstg--tooltip" style="position: absolute;">
@@ -125,11 +129,40 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 60 minutes', defined('WP
                                 </option>
                             <?php endfor; ?>
                         </select>
+
+                        <label for="backupScheduleLaunch">
+                            <?php esc_html_e('Run backup now?', 'wp-staging'); ?>
+                        </label>
+                        <input type="checkbox" name="backupScheduleLaunch" id="backupScheduleLaunch" />
                     </div>
 
                 </div>
             </div>
 
+            <div class="wpstg-backup-options-section">
+                <h4 class="swal2-title wpstg-w-100" >
+                    <?php esc_html_e('Storages', 'wp-staging') ?>
+                </h4>
+
+                <div class="wpstg-backup-scheduling-options wpstg-container">
+
+                    <label class="wpstg-storage-option">
+                        <input type="checkbox" name="storages" id="storage-localStorage" value="localStorage" checked disabled>
+                        <span><?php esc_html_e('Local Storage', 'wp-staging'); ?></span>
+                    </label>
+
+                    <?php foreach ($storages->getStorages(true) as $storage) : ?>
+                        <label class="wpstg-storage-option">
+                            <?php
+                                $isActivated = $storage['activated'];
+                            ?>
+                            <input type="checkbox" name="storages" id="storage-<?php echo $storage['id']?>" value="<?php echo $storage['id']?>" <?php echo $isActivated === false ? 'disabled' : '' ?> />
+                            <span><?php echo $storage['name']; ?></span>
+                            <span class="wpstg-storage-settings"><a class="<?php echo $isActivated === false ? 'wpstg-storage-settings-disabled' : ''; ?>" href="<?php echo $storage['settingsPath']; ?>" target="_blank"><?php echo $isActivated ? esc_html('Settings', 'wp-staging') : esc_html('Activate', 'wp-staging'); ?></a></span>
+                        </label>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </div>
 
         <!-- ADVANCED OPTIONS DROPDOWN -->

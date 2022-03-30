@@ -19,3 +19,11 @@ spl_autoload_register(
     true,
     true
 );
+
+$filesToInclude = include_once __DIR__ . '/vendor_wpstg/autoload/files.php';
+
+foreach ($filesToInclude as $file) {
+    if (file_exists($file)) {
+        require $file;
+    }
+}

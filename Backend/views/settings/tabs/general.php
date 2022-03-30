@@ -5,7 +5,7 @@
         settings_fields("wpstg_settings");
 
         foreach ($tabs as $id => $name) :
-            if ($id === 'mail-settings') {
+            if ($id === 'mail-settings' || $id === 'remote-storages') {
                 continue;
             }
 
@@ -405,13 +405,15 @@
                         <tr class="row">
                             <td class="row th">
                                 <div class="col-title">
-                                    <strong><?php echo __('Usage Information', 'wp-staging') ?></strong>
+                                    <strong><?php echo __('Send Usage Information', 'wp-staging') ?></strong>
                                     <span class="description">
                                         <?php
                                         _e(
-                                            'Allow WP STAGING to send usage information to wp-staging.com.</strong>',
+                                            'Allow WP STAGING to send usage information to wp-staging.com. </strong>',
                                             'wp-staging'
-                                        ); ?>
+                                        );
+                                        echo wp_kses_post(__(sprintf('<i>See the data we collect <a href="%s" target="_blank">here</a></i>', 'https://wp-staging.com/what-data-do-we-collect/')), 'wp-staging');
+                                        ?>
                                     </span>
                                 </div>
                             </td>
@@ -436,6 +438,28 @@
             </div>
             <?php
         endforeach;
+        if (WPStaging\Core\WPStaging::isPro()) :
+            ?>
+        <div class="wpstg-settings-row">
+            <b class="wpstg-settings-title"><?php _e('Send Email Error Report', 'wp-staging') ?></b>
+            <div class="wpstg-settings-form-group">
+                <p class="wpstg-settings-message">
+                    <?php _e('If a scheduled backup fails, send an email error report.', 'wp-staging') ?>
+                </p>
+                <input type="checkbox" id="wpstg-send-schedules-error-report" name="wpstg_settings[schedulesErrorReport]" class="wpstg-checkbox wpstg-settings-field" value="true" <?php echo get_option(WPStaging\Pro\Backup\BackupScheduler::BACKUP_SCHEDULE_ERROR_REPORT_OPTION) === 'true' ? 'checked' : '' ?> />
+            </div>
+        </div>
+        <div class="wpstg-settings-row">
+            <b class="wpstg-settings-title"><?php _e('Report Email Address', 'wp-staging') ?></b>
+            <div class="wpstg-settings-form-group">
+                <p class="wpstg-settings-message">
+                    <?php _e('The email address to which the backup error report will be sent.', 'wp-staging') ?>
+                </p>
+                <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-checkbox wpstg-settings-field" value="<?php echo get_option(WPStaging\Pro\Backup\BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION) ?>" />
+            </div>
+        </div>
+            <?php
+        endif;
         // show this option only on the staging site
         if ($this->siteInfo->isStagingSite()) :
             ?>

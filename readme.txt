@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, cloud backup, database backup, restore, wordpress backup
 Requires at least: 3.6+
 Tested up to: 5.9
-Stable tag: 2.9.6
+Stable tag: 2.9.7
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -192,6 +192,33 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.7 =
+* New: Support up to WordPress 5.9.2
+* New: Feature to upload backups to Google Drive (PRO) #1453
+* New: Add filter wpstg.frontend.showLoginForm to force disable login form for the staging / backup site access #1577
+* New: Option to schedule a backup without creating one (PRO) #1588
+* Enh: Improve backup schedules error reporting by showing cron related notice on backups page and sending schedules error report mails (PRO) #1588
+* Enh: Improve subdirectory WordPress install detection by adding support for idn(internationalized domain names) #1564
+* Enh: Change backup lock process mechanism from using database to file based lock #1561
+* Enh: Make files & folders exclude filters work on WordPress root directory #1606
+* Enh: Remove old database only backup before PUSH process (PRO) #1608
+* Enh: Exclude .htaccess from root directory only during cloning process #1616
+* Enh: Don't backup table wp_wpstg_queue table (PRO Version) #1624
+* Update: Bump minimist from 1.2.5 to 1.2.6 in /tests/js #1627
+* Update: Bump postcss from 8.2.10 to 8.2.13 in /src/assets #1547
+* Update: Bump mustache/mustache from 2.13.0 to 2.14.1 #1543
+* Update: Bump nanoid from 3.1.22 to 3.3.1 in /src/assets #1626
+* Fix: Correctly set multisite subsites urls with www prefix when cloning and restoring a backup (PRO) #1567
+* Fix: Backup error "OutOfRangeException" was never caught when insert query exceeds max allowed packet size (PRO)  #1570
+* Fix: Add backup logic to check extended query string size against max allowed packet size which otherwise leads to a fatal error (PRO) #1570
+* Fix: Handle critical error if WP STAGINGS settings get corrupted. Give option to restore default settings #1602
+* Fix: Recreate cron jobs of existing backup plans when adding a new backup schedules (PRO) #1588
+* Fix: Enqueue a failed task/item again and set the queue's offset to the end of file #1609
+* Fix: Stop cloning if destination directory/clone name already exists #1607
+* Fix: Continue cloning process even if copying a table failed #1578
+* Fix: Don't remove freemius options if entire multisite is cloned. Prevents a fatal error. (PRO) #1629
+#1638
 
 = 2.9.6 =
 * New: Support up to WordPress 5.9.1
@@ -438,6 +465,33 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
+
+* New: Support up to WordPress 5.9.2
+* New: Feature to upload backups to Google Drive (PRO) #1453
+* New: Add filter wpstg.frontend.showLoginForm to force disable login form for the staging / backup site access #1577
+* New: Option to schedule a backup without creating one (PRO) #1588
+* Enh: Improve backup schedules error reporting by showing cron related notice on backups page and sending schedules error report mails (PRO) #1588
+* Enh: Improve subdirectory WordPress install detection by adding support for idn(internationalized domain names) #1564
+* Enh: Change backup lock process mechanism from using database to file based lock #1561
+* Enh: Make files & folders exclude filters work on WordPress root directory #1606
+* Enh: Remove old database only backup before PUSH process (PRO) #1608
+* Enh: Exclude .htaccess from root directory only during cloning process #1616
+* Enh: Don't backup table wp_wpstg_queue table (PRO Version) #1624
+* Update: Bump minimist from 1.2.5 to 1.2.6 in /tests/js #1627
+* Update: Bump postcss from 8.2.10 to 8.2.13 in /src/assets #1547
+* Update: Bump mustache/mustache from 2.13.0 to 2.14.1 #1543
+* Update: Bump nanoid from 3.1.22 to 3.3.1 in /src/assets #1626
+* Fix: Correctly set multisite subsites urls with www prefix when cloning and restoring a backup (PRO) #1567
+* Fix: Backup error "OutOfRangeException" was never caught when insert query exceeds max allowed packet size (PRO)  #1570
+* Fix: Add backup logic to check extended query string size against max allowed packet size which otherwise leads to a fatal error (PRO) #1570
+* Fix: Handle critical error if WP STAGINGS settings get corrupted. Give option to restore default settings #1602
+* Fix: Recreate cron jobs of existing backup plans when adding a new backup schedules (PRO) #1588
+* Fix: Enqueue a failed task/item again and set the queue's offset to the end of file #1609
+* Fix: Stop cloning if destination directory/clone name already exists #1607
+* Fix: Continue cloning process even if copying a table failed #1578
+* Fix: Don't remove freemius options if entire multisite is cloned. Prevents a fatal error. (PRO) #1629
+#1638
+
 * New: Add support for WordPress 5.8.3
 * New: Add filter for excluding files during cloning / backup #1494
 * New: Add filter for overwriting max execution for database backup restore #1512

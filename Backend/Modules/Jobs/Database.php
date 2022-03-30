@@ -4,6 +4,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use stdClass;
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\CloningProcess\Database\DatabaseCloningService;
@@ -340,8 +341,10 @@ class Database extends CloningProcess
             $this->options->job->total = 0;
             $this->options->job->total = $this->databaseCloningService->createTable($old, $new);
         } catch (FatalException $e) {
-            $this->returnException($e->getMessage());
-            return true;
+            $this->log($e->getMessage(), Logger::TYPE_WARNING);
+            $this->log(__('Skipping cloning table: ' . $old, 'wp-staging'), Logger::TYPE_WARNING);
+            $this->finishStep();
+            return false;
         }
 
         if ($this->options->job->total === 0) {

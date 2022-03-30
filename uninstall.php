@@ -62,6 +62,7 @@ class uninstall
             delete_option("wpstg_old_staging_sites_backup"); // @deprecated
             delete_option("wpstg_staging_sites_backup");
             delete_option("wpstg_missing_cloneName_routine_executed");
+            delete_option('wpstg_googledrive');
             delete_option(BackupScheduler::OPTION_BACKUP_SCHEDULES);
 
 
