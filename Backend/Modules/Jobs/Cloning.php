@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use Exception;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
@@ -30,14 +31,29 @@ class Cloning extends Job
     private $dirUtils;
 
     /**
+     * @var Sites
+     */
+    private $sitesHelper;
+
+    /**
+     * @var string
+     */
+    private $errorMessage;
+
+    /**
      * Initialize is called in \Job
      */
     public function initialize()
     {
         $this->db = WPStaging::getInstance()->get("wpdb");
         $this->dirUtils = new WpDefaultDirectories();
+        $this->sitesHelper = new Sites();
     }
 
+    public function getErrorMessage()
+    {
+        return $this->errorMessage;
+    }
 
     /**
      * Save Chosen Cloning Settings
@@ -47,6 +63,7 @@ class Cloning extends Job
     public function save()
     {
         if (!isset($_POST) || !isset($_POST["cloneID"])) {
+            $this->errorMessage = __("clone ID missing");
             return false;
         }
 
@@ -59,15 +76,19 @@ class Cloning extends Job
         // Clone Name -> Site name that user input, if user left it empty it will be Clone ID
         $this->options->cloneName = wpstg_urldecode($_POST["cloneName"]);
         // The slugified version of Clone Name (to use in directory creation)
-        $this->options->cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($this->options->cloneName));
-        $this->options->cloneDirectoryName = substr($this->options->cloneDirectoryName, 0, 16);
+        $this->options->cloneDirectoryName = $this->sitesHelper->sanitizeDirectoryName($this->options->cloneName);
+        $result = $this->sitesHelper->isCloneExists($this->options->cloneDirectoryName);
+        if ($result !== false) {
+            $this->errorMessage = $result;
+            return false;
+        }
+
         $this->options->cloneNumber = 1;
         $this->options->prefix = $this->setStagingPrefix();
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
         $this->options->extraDirectories = [];
-        $this->options->excludedFiles = apply_filters('wpstg_clone_excluded_files' ,[
-            '.htaccess',
+        $this->options->excludedFiles = apply_filters('wpstg_clone_excluded_files', [
             '.DS_Store',
             '*.git',
             '*.svn',
@@ -81,10 +102,12 @@ class Cloning extends Job
         ]);
 
         $this->options->excludedFilesFullPath = [
+            '.htaccess',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'db.php',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'object-cache.php',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'advanced-cache.php'
         ];
+
         $this->options->currentStep = 0;
 
         // Job
@@ -216,6 +239,7 @@ class Cloning extends Job
 
         WPStaging::make(AnalyticsStagingCreate::class)->enqueueStartEvent($this->options->jobIdentifier, $this->options);
 
+        $this->errorMessage = "";
         return $this->saveOptions();
     }
 
@@ -262,7 +286,7 @@ class Cloning extends Job
             "networkClone"          => $this->isNetworkClone(),
         ];
 
-        if (update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones) === false) {
+        if ($this->sitesHelper->updateStagingSites($this->options->existingClones) === false) {
             $this->log("Cloning: Failed to save {$this->options->clone}'s clone job data to database'");
             return;
         }

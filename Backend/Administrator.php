@@ -38,6 +38,7 @@ use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
+use WPStaging\Pro\Backup\BackupScheduler;
 
 /**
  * Class Administrator
@@ -111,7 +112,7 @@ class Administrator
      */
     public function loadMeta()
     {
-        $run = new Pluginmeta();
+        new Pluginmeta();
     }
 
     /**
@@ -120,7 +121,7 @@ class Administrator
     private function defineHooks()
     {
         if (!defined('WPSTGPRO_VERSION')) {
-            $Welcome = new Activation\Welcome();
+            new Activation\Welcome();
         }
 
         add_action("admin_menu", [$this, "addMenu"], 10);
@@ -167,6 +168,7 @@ class Administrator
         add_action("wp_ajax_wpstg_fetch_dir_childrens", [$this, "ajaxFetchDirChildrens"]);
         add_action("wp_ajax_wpstg_modal_error", [$this, "ajaxModalError"]);
         add_action("wp_ajax_wpstg_dismiss_notice", [$this, "ajaxDismissNotice"]);
+        add_action("wp_ajax_wpstg_restore_settings", [$this, "ajaxRestoreSettings"]);
 
 
         // Ajax hooks pro Version
@@ -191,7 +193,7 @@ class Administrator
     public function loadFeedbackForm()
     {
         $form = new Feedback\Feedback();
-        $load = $form->loadForm();
+        $form->loadForm();
     }
 
     /**
@@ -200,7 +202,7 @@ class Administrator
     public function sendFeedback()
     {
         $form = new Feedback\Feedback();
-        $send = $form->sendMail();
+        $form->sendMail();
     }
 
     /**
@@ -233,18 +235,26 @@ class Administrator
      */
     public function sanitizeOptions($data = [])
     {
-        $error = false;
         // is_array() is required otherwise new clone will fail.
+        $showErrorToggleStagingSiteCloning = false;
         if ($this->siteInfo->isStagingSite() && is_array($data)) {
             $isStagingCloneable = isset($data['isStagingSiteCloneable']) ? $data['isStagingSiteCloneable'] : 'false';
             unset($data['isStagingSiteCloneable']);
-            $error = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
+            $showErrorToggleStagingSiteCloning = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
+        }
+
+        if (WPStaging::isPro() && is_array($data)) {
+            $sendBackupSchedulesErrorReport = isset($data['schedulesErrorReport']) ? $data['schedulesErrorReport'] : false;
+            $reportEmail = isset($data['schedulesReportEmail']) ? $data['schedulesReportEmail'] : '';
+            unset($data['schedulesErrorReport']);
+            unset($data['wpstg-send-schedules-report-email']);
+            $this->setBackupScheduleOptions($sendBackupSchedulesErrorReport, $reportEmail);
         }
 
         $sanitized = $this->sanitizeData($data);
 
-        if ($error) {
-            add_settings_error("wpstg-notices", '', __("Settings updated. But unable to toggle cloning feature!", "wp-staging"), "warning");
+        if ($showErrorToggleStagingSiteCloning) {
+            add_settings_error("wpstg-notices", '', __("Settings updated. But unable to activate/deactivate the site cloneable status!", "wp-staging"), "warning");
         } else {
             add_settings_error("wpstg-notices", '', __("Settings updated.", "wp-staging"), "updated");
         }
@@ -263,8 +273,8 @@ class Administrator
         foreach ($data as $key => $value) {
             if (is_array($value)) {
                 $sanitized[$key] = $this->sanitizeData($value);
-            } //Removing comma separators and decimal points
-            elseif (in_array($key, self::$integerOptions, true)) {
+            } elseif (in_array($key, self::$integerOptions, true)) {
+                //Removing comma separators and decimal points
                 $sanitized[$key] = preg_replace('/\D/', '', htmlspecialchars($value));
             } else {
                 $sanitized[$key] = htmlspecialchars($value);
@@ -676,40 +686,23 @@ class Administrator
             return;
         }
 
-        $cloneDirectoryName = sanitize_key($_POST["directoryName"]);
-        $cloneDirectoryName = substr($cloneDirectoryName, 0, 16);
+        $sitesHelper = new Sites();
+        $cloneDirectoryName = $sitesHelper->sanitizeDirectoryName($_POST["directoryName"]);
 
-        $cloneDirectoryNameLength = strlen($cloneDirectoryName);
-        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
-
-        $cloneDestDir = trailingslashit(get_home_path()) . $cloneDirectoryName;
-
-        if ($cloneDirectoryNameLength < 1) {
+        if (strlen($cloneDirectoryName) < 1) {
             return;
         }
 
-        // Check if destination clone dir exists and that it is not empty
-        if (!wpstg_is_empty_dir($cloneDestDir)) {
-            echo wp_send_json([
-                "status" => "failed",
-                "message" => "Warning: Use another site name! Clone destination directory " . $cloneDestDir . " already exists and is not empty. As default, WP STAGING uses the site name as subdirectory for the clone."
-            ]);
-
+        $result = $sitesHelper->isCloneExists($cloneDirectoryName);
+        if ($result === false) {
+            echo wp_send_json(["status" => "success"]);
             return;
         }
 
-        foreach ($existingClones as $clone) {
-            if ($clone['directoryName'] === $cloneDirectoryName) {
-                echo wp_send_json([
-                    "status" => "failed",
-                    "message" => "Site name is already in use, please choose another name for the staging site."
-                ]);
-
-                return;
-            }
-        }
-
-        echo wp_send_json(["status" => "success"]);
+        echo wp_send_json([
+            "status" => "failed",
+            "message" => $result
+        ]);
     }
 
     /**
@@ -773,7 +766,13 @@ class Administrator
         $cloning = WPStaging::make(Cloning::class);
 
         if (!$cloning->save()) {
-            wp_die('can not save clone data');
+            $message = $cloning->getErrorMessage();
+            wp_send_json([
+                'success' => false,
+                'message' => $message !== '' ? $message : 'Can not save clone data'
+            ]);
+
+            wp_die();
         }
 
         require_once "{$this->path}views/clone/ajax/start.php";
@@ -1146,6 +1145,8 @@ class Administrator
 
         // Start the process
         wp_send_json(WPStaging::make(Processing::class)->start());
+
+        return false;
     }
 
     /**
@@ -1383,6 +1384,10 @@ class Administrator
      */
     public function ajaxEnableStagingCloning()
     {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
         if ($this->siteInfo->enableStagingSiteCloning()) {
             echo json_encode(['success' => 'true']);
             exit();
@@ -1390,6 +1395,20 @@ class Administrator
 
         echo json_encode(['success' => 'false', 'message' => __('Unable to enable cloning in the staging site', 'wp-staging')]);
         exit();
+    }
+
+    /**
+     * Enable cloning on staging site if it is not enabled already
+     */
+    public function ajaxRestoreSettings()
+    {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
+        // Delete old settings
+        delete_option('wpstg_settings');
+        (new Settings())->setDefault();
     }
 
     /**
@@ -1419,6 +1438,31 @@ class Administrator
         }
 
         return false;
+    }
+
+    /**
+     * Set backup schedule error reporting options
+     *
+     * @param bool $sendBackupSchedulesErrorReport
+     * @param string $reportEmail
+     * @return bool
+     */
+    protected function setBackupScheduleOptions($sendBackupSchedulesErrorReport, $reportEmail)
+    {
+        if (!WPStaging::isPro()) {
+            return false;
+        }
+
+        if (!class_exists('WPStaging\Pro\Backup\BackupScheduler')) {
+            return false;
+        }
+
+        $error = !update_option(BackupScheduler::BACKUP_SCHEDULE_ERROR_REPORT_OPTION, $sendBackupSchedulesErrorReport);
+        if ($error) {
+            return false;
+        }
+
+        return update_option(BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION, $reportEmail);
     }
 
     /**

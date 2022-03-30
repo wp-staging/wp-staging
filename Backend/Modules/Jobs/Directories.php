@@ -104,7 +104,7 @@ class Directories extends JobExecutable
 
         try {
             // Iterate over wp root directory
-            $this->options->totalFiles = $this->scanToCacheFile($files, ABSPATH);
+            $this->options->totalFiles = $this->scanToCacheFile($files, ABSPATH, false, $this->getFilteredExcludedPaths(), $this->getFilteredExcludedFileSizes());
         } catch (Exception $e) {
             $this->returnException('Error: ' . $e->getMessage());
         }

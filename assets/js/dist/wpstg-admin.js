@@ -256,6 +256,97 @@
         return;
     }
   }
+  /**
+   * Toggle target element set in data-wpstg-target of the given element
+   *
+   * @param {Element} element A reference to the Element the change was triggered from.
+   *
+   * @return {void} The function does not return any value and will have the side-effect of
+   *                hiding or showing dependant elements.
+   */
+
+  function handleToggleElement(element) {
+    if (!element instanceof Element || !element.getAttribute('data-wpstg-target')) {
+      return;
+    }
+
+    var containerSelector = '.wpstg_admin'; // Use the default WordPress CSS class to hide and show the objects.
+
+    var hiddenClass = 'hidden'; // Go as high as the container that contains this element.
+
+    var container = closest(element, containerSelector);
+
+    if (container === null) {
+      return;
+    }
+
+    var elements = container.querySelectorAll(element.getAttribute('data-wpstg-target'));
+
+    if (elements.length) {
+      for (var _iterator4 = _createForOfIteratorHelperLoose(elements), _step4; !(_step4 = _iterator4()).done;) {
+        var el = _step4.value;
+        el.classList.toggle(hiddenClass);
+      }
+    }
+  }
+  /**
+   * Copy text in data-wpstg-copy to element(s) in data-wpstg-target
+   *
+   * @param {Element} element
+   *
+   * @return {void}
+   */
+
+  function handleCopyPaste(element) {
+    if (!element instanceof Element || !element.getAttribute('data-wpstg-target') || !element.getAttribute('data-wpstg-copy')) {
+      return;
+    }
+
+    var containerSelector = '.wpstg_admin'; // Go as high as the container that contains this element.
+
+    var container = closest(element, containerSelector);
+
+    if (container === null) {
+      return;
+    }
+
+    navigator.clipboard.writeText(element.getAttribute('data-wpstg-copy'));
+    var elements = container.querySelectorAll(element.getAttribute('data-wpstg-target'));
+
+    if (elements.length) {
+      for (var _iterator5 = _createForOfIteratorHelperLoose(elements), _step5; !(_step5 = _iterator5()).done;) {
+        var el = _step5.value;
+        el.value = element.getAttribute('data-wpstg-copy', '');
+      }
+    }
+  }
+  /**
+   * Copy text in data-wpstg-source to clipboard
+   *
+   * @param {Element} element
+   *
+   * @return {void}
+   */
+
+  function handleCopyToClipboard(element) {
+    if (!element instanceof Element || !element.getAttribute('data-wpstg-source')) {
+      return;
+    }
+
+    var containerSelector = '.wpstg_admin'; // Go as high as the container that contains this element.
+
+    var container = closest(element, containerSelector);
+
+    if (container === null) {
+      return;
+    }
+
+    var el = container.querySelector(element.getAttribute('data-wpstg-source'));
+
+    if (el) {
+      navigator.clipboard.writeText(el.value);
+    }
+  }
 
   /**
    * Enable/Disable cloning for staging site
@@ -1800,7 +1891,10 @@
       directoryNavigator: null,
       notyf: null,
       areAllTablesChecked: true,
-      handleDisplayDependencies: handleDisplayDependencies
+      handleDisplayDependencies: handleDisplayDependencies,
+      handleToggleElement: handleToggleElement,
+      handleCopyPaste: handleCopyPaste,
+      handleCopyToClipboard: handleCopyToClipboard
     };
     var cache = {
       elements: []
@@ -2592,7 +2686,7 @@
       errorModal.show(Object.assign({
         title: 'Error',
         icon: 'error',
-        html: wpstg.i18n['somethingWentWrong'],
+        html: wpstg.i18n['somethingWentWrong'] + (response.message !== undefined ? '<br/>' + response.message : ''),
         width: '500px',
         confirmButtonText: 'Ok',
         showCancelButton: false,

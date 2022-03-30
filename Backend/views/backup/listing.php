@@ -3,7 +3,9 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Pro\Backup\Ajax\ScheduleList;
 use WPStaging\Pro\Backup\BackupProcessLock;
+use WPStaging\Pro\Backup\BackupScheduler;
 use WPStaging\Pro\Backup\Exceptions\ProcessLockedException;
 
 /**
@@ -30,12 +32,17 @@ try {
 }
 ?>
 
-<?php if (defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) : ?>
-    <div class="notice notice-warning" style="margin-bottom: 10px;">
+<?php
+/** @var BackupScheduler */
+$backupScheduler = WPStaging::make(BackupScheduler::class);
+$cronStatus  = $backupScheduler->checkCronStatus();
+$cronMessage = $backupScheduler->getCronMessage();
+if ($cronMessage !== '') { ?>
+    <div class="notice <?php echo $cronStatus === true ? 'notice-warning' : 'notice-error'; ?>" style="margin-bottom: 10px;">
         <p><strong><?php esc_html_e('WP STAGING:', 'wp-staging') ?></strong></p>
-        <p><?php echo sprintf(__('The backup background creation depends on WP CRON but %s is set to %s. So backup background processing will not work. You can remove the constant %s or set its value to %s to make background processing work.', 'wp-staging'), '<code>DISABLE_WP_CRON</code>', '<code>true</code>', '<code>DISABLE_WP_CRON</code>', '<code>false</code>') ?></p>
+        <p><?php echo $cronMessage; ?></p>
     </div>
-<?php endif; ?>
+<?php } ?>
 
 <?php if ($isLocked) : ?>
     <div id="wpstg-backup-locked">
@@ -63,7 +70,7 @@ try {
 </div>
 
 <div id="wpstg-backup-runs-info">
-    <?php \WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Ajax\ScheduleList::class)->renderNextBackupSnippet(); ?>
+    <?php WPStaging::make(ScheduleList::class)->renderNextBackupSnippet(); ?>
 </div>
 
 <div id="wpstg-existing-backups">

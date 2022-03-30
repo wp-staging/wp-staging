@@ -3,6 +3,7 @@
 namespace WPStaging\Framework;
 
 use WPStaging\Framework\Staging\CloneOptions;
+use WPStaging\Framework\Utils\ThirdParty\Punycode;
 
 /**
  * Class SiteInfo
@@ -43,10 +44,16 @@ class SiteInfo
      */
     private $cloneOptions;
 
+    /**
+     * @var Punycode
+     */
+    private $punycode;
+
     public function __construct()
     {
         // TODO: inject using DI
         $this->cloneOptions = new CloneOptions();
+        $this->punycode = new Punycode();
     }
 
     /**
@@ -95,6 +102,11 @@ class SiteInfo
         // This happens much more often than you expect
         $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
         $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
+
+        // convert unicode(idn) to punycode(ascii) domain
+        // turn exämple.com to xn--exmple-cua.com
+        $home = $this->punycode->encode($home);
+        $siteurl = $this->punycode->encode($siteurl);
 
         if ($home === $siteurl) {
             return false;

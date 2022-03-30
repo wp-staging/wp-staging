@@ -169,9 +169,9 @@ class Notices
             require "{$viewsNoticesPath}disabled-items-notice.php";
         }
 
-        $db = WPStaging::getInstance()->get('wpdb');
-        $optionTable = $db->prefix . 'options';
-        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && $this->isOptionTablePrimaryKeyMissing($db, $optionTable))) {
+        global $wpdb;
+        $optionTable = $wpdb->prefix . 'options';
+        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && $this->isOptionTablePrimaryKeyMissing($wpdb, $optionTable))) {
             require "{$viewsNoticesPath}wp-options-missing-pk.php";
         }
 
@@ -184,6 +184,11 @@ class Notices
         $warningsNotice = WPStaging::make(WarningsNotice::class);
         if ($warningsNotice->isEnabled()) {
             require "{$viewsNoticesPath}warnings-notice.php";
+        }
+
+        $settings = get_option('wpstg_settings', []);
+        if (self::SHOW_ALL_NOTICES || (!is_array($settings) && !is_object($settings))) {
+            require "{$viewsNoticesPath}settings_option_corrupt.php";
         }
 
         /**
