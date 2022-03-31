@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, cloud backup, database backup, restore, wordpress backup
 Requires at least: 3.6+
 Tested up to: 5.9
-Stable tag: 2.9.7
+Stable tag: 2.9.8
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -192,6 +192,9 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.8 =
+* Fix: Fatal error if another plugin uses the same google library as WP STAGING uses for the backup storage provider #1641
 
 = 2.9.7 =
 * New: Support up to WordPress 5.9.2
@@ -466,6 +469,8 @@ WP STAGING Backup & Cloning | Full changelog:
 
 == Upgrade Notice ==
 
+* Fix: Fatal error if another plugin uses the same google library as WP STAGING uses for the backup storage provider #1641
+
 * New: Support up to WordPress 5.9.2
 * New: Feature to upload backups to Google Drive (PRO) #1453
 * New: Add filter wpstg.frontend.showLoginForm to force disable login form for the staging / backup site access #1577
@@ -559,26 +564,13 @@ WP STAGING Backup & Cloning | Full changelog:
 * Fix: Fix showing of error when unable to count tables rows and wrap table name when fetching rows during backup #1285
 * Fix: Remove custom error handler that could cause errors due to notices being thrown #1292
 * Fix: Fix an error that would occur when PHP lacked permission to get the size of a directory when pushing a staging backup site to production #1295
-* Dev: Set the version of Selenium containers to 3.141.59-20210713 to avoid issues with broken latest version of selenium #1234
 
-* Enh: Refactor our wp_login action hook to work with custom calls to this action with different parameter count than the one in WordPress Core #1223
-* Enh: Sort new staging sites in descending order by creation time #1226
 * Enh: Warn if creating a backup in PHP 32 bits #1231
 * Enh: Update the backups upload success message #1221
-* Enh: Show a notice for outdated wp staging on free version of plugin #1250
-* Enh: Refactor wpstg_existing_clones_beta in db option to wpstg_staging_sites #1211
-* Enh: Update the message shown when the entire delete of the staging site fails #1257
 * Fix: Fix a rare issue that could happen when creating a new staging site or restoring a backup when there is a row with primary key with value zero #1271
 * Fix: Try to repair MyISAM table if it's corrupt when creating a Backup #1222
 * Fix: FIx an issue on backup creation that would cause a database export to loop when encountering a table with negative integers or zeros as a primary key value #1251
 * Fix: Lock specific tables while exporting a backup, to prevent a rare duplicated row issue #1245
 * Fix: If the memory exhausts during a database export using the Backup feature, we now lower the memory usage/speed of the export and try again automatically #1230
 * Fix: Prevent failure of adding database to backup from causing a loop #1231
-* Fix: Fix issue when old clones from version 1.1.6 or lower replaces the existing clones from later version when upgrading from FREE to PRO version #1233
-* Fix: Fix inconsistent Unselect All Tables button's action #1243
 * Fix: Replace undefined date with proper formatted date during backups log for some warning and critical messages #1244
-* Fix: Split scanning of wp-content into scanning of plugins, themes, uploads and other directories to reduce timeout issues #1247
-* Fix: Rename .user.ini to .user.ini.bak after cloning into staging site reduce fatal errors on your staging site. Also show a notice about this #1255
-* Fix: Skip scanning the root directory if all other directories are are unselected #1256
-* Dev: fix the version of Selenium containers to 3.141.59-20210713 to avoid issues with broken latest version #1234
-#1300
