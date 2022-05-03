@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, cloud backup, database backup, restore, wordpress backup
 Requires at least: 3.6+
 Tested up to: 5.9
-Stable tag: 2.9.8
+Stable tag: 2.9.9
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -52,7 +52,9 @@ WP STAGING can help you prevent your website from being broken or unavailable be
 * <strong>[Premium]: </strong>Migration and cloning of WordPress multisites
 * <strong>[Premium]: </strong>Scheduled Backups running in the background
 * <strong>[Premium]: </strong>Backup of WordPress multisites
-* <strong>[Premium]: </strong>Backup to Google Drive (Will be released soon)
+* <strong>[Premium]: </strong>Backup to Google Drive (Released soon)
+* <strong>[Premium]: </strong>Backup to Amazon S3 (Released soon)
+* <strong>[Premium]: </strong>Backup to (s)FTP (Released soon)
 
 > Note: Some features are Premium. You need WP STAGING | PRO to use those features. [Read More about WP STAGING | PRO](https://wp-staging.com)!
 
@@ -192,6 +194,22 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.9 =
+* New: Support up to WordPress 5.9.3
+* New: Added upgrade routine for backup created with version 4.1.9 and 4.2.0 to fix backup metadata info #1647
+* New: Add multiple filters to keep existing media files, plugins, themes and mu-plugins after backup restore #1617
+* New: Clean existing files during backup restore which are not in backup #1617
+* Fix: Backup creation is blocked by mod_security if access tokens contain 0x string #1651
+* Fix: Unable to upload backup created with version 4.1.9 and 4.2.0 using WP Staging Backup Uploader #1647
+* Fix: Unable to import multisite backup when restoring backup into domain other than it was created on #1644
+* Fix: If there is an mysql error on copying a single row, it can lead to a interrupt of the whole clone job due to a browser memory exhaust error because whole sql query is written into html log element . #1654
+* Fix: Cloning does not work if php mb module is not installed #1669
+* Fix: Catch fatal error happening on backup upgrade routine #1663
+* Fix: Only process one queue action at a time. This make sure another action doesn't conflict with the action in process. Also fix the wpstg_queue backup table growing problem #1652
+* Enh: Save log file name instead of complete task response in wp_wpstg_queue table. This reduces the size of backup queue table #1623
+* Enh: Stop the backup job on critical errors during scheduled backup #1623
+* Dev: Test for cleaning up files before backup restore fails on second run #1681
 
 = 2.9.8 =
 * Fix: Fatal error if another plugin uses the same google library as WP STAGING uses for the backup storage provider #1641
@@ -436,38 +454,17 @@ https://wp-staging.com
 * Dev: Add trait to allow for easier use of the `uopz` extension in tests #1053
 * Dev: Replace const related tests logic with UOPZ for better readability and control #1079
 
-= 2.8.4 =
-* Feat: Compatible up to WordPress 5.7.2
-* Enh: Preserve directories/tables selection and excludes rules for RESET and UPDATE process #809
-* Enh: If any wpstg process is running allow to stop that process within RESET modal #942
-* Fix: Fix multisite subsite capabilities on the staging site #852
-* Fix: Properly resets the properties between Cloning tasks #896
-* Fix: Avoid PHP warning when building version of missing asset file #929
-* Fix: Make RESET modal show error message within modal on failed response instead of browser logs #942
-* Fix: Replace wpstgGetCloneSettings() in mail-settings.php with CloneOption::get() #956
-* Fix: Little typo changed effect to affect #963
-* Fix: Made node_modules dir to be only excluded from WP Staging's Plugins #963
-* Fix: Fix UPDATE and RESET for old wpstg clones which are without appended underscore db prefix #958
-
-= 2.8.3 =
-* Enh: Add Shutdownable interface to replace usages of __destruct in the code #729
-* Enh: Refactor on how the plugin keeps track of a request running time #766
-* Fix: Replace deprecated jQuery click method #730
-* Fix: Fix overlapping of sweetalert confirmation on push with sidebar #742
-* Fix: Exclude wp staging content folder during staging #741
-* Fix: Add sanitizing for path to fix comparing for Windows paths #751
-* Fix: _cerber_files tables are excluded and could not be copied Fix #770
-* Fix: Replaced jQuery assignment with an IIFE wrapper #761
-* Dev: Update php-scoper and other development dependencies #744
-* Dev: Build javascript when building the distributable version of the plugin #750
-* Dev: Internal helper CLI command to order the changelog notes according to type #749
-* Dev: Refactor Job(s) implementation to use the Resources Trait #765
-* Dev: Add internal documentation to versioning and hotfixes #780
-
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
+
+* New: Support up to WordPress 5.9.3
+* New: Added upgrade routine for backup created with version 4.1.9 and 4.2.0 to fix backup metadata info #1647
+* Fix: Backup creation is blocked by mod_security if access tokens contain 0x string #1651
+* Fix: Unable to upload backup created with version 4.1.9 and 4.2.0 using WP Staging Backup Uploader #1647
+* Fix: Unable to import multisite backup when restoring backup into domain other than it was created on #1644
+* Fix: If there is an mysql error on copying a single row, it can lead to a interrupt of the whole clone job due to a browser memory exhaust error because whole sql query is written into html log element . #1654
 
 * Fix: Fatal error if another plugin uses the same google library as WP STAGING uses for the backup storage provider #1641
 

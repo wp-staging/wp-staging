@@ -50,9 +50,14 @@ class AccessToken
             return false;
         }
 
-        update_option(static::OPTION_NAME, $newToken);
+        /* literals that start with 0x are hexadecimal integers (base 16) and can lead to blocked requests by mod_security
+         * Issue: https://github.com/wp-staging/wp-staging-pro/issues/1650
+         */
+        $sanitizedToken = str_ireplace('0x', 'ax', $newToken);
 
-        return $newToken;
+        update_option(static::OPTION_NAME, $sanitizedToken);
+
+        return $sanitizedToken;
     }
 
     /**

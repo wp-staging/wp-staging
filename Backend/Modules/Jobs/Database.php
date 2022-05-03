@@ -32,6 +32,7 @@ class Database extends CloningProcess
 
     /**
      * Initialize
+     * @throws \Exception
      */
     public function initialize()
     {
@@ -48,7 +49,7 @@ class Database extends CloningProcess
         $this->generateDto();
         $this->addMissingTables();
         $this->total = count($this->options->tables);
-        // if mainJob is resetting add one extra pre step for deleting all tables
+        // if mainJob is 'Reset', add one extra pre step for deleting all tables
         if ($this->options->mainJob === 'resetting') {
             $this->total++;
         }
@@ -78,6 +79,7 @@ class Database extends CloningProcess
      * Execute the Current Step
      * Returns false when over threshold limits are hit or when the job is done, true otherwise
      * @return bool
+     * @throws \Exception
      */
     protected function execute()
     {
@@ -103,7 +105,7 @@ class Database extends CloningProcess
             return true;
         }
 
-        // decrement the tableIndex if mainJob was resetting
+        // decrement the tableIndex if mainJob is 'resetting'
         $tableIndex = $this->options->currentStep;
         if ($this->options->mainJob === 'resetting') {
             $tableIndex--;
@@ -125,9 +127,10 @@ class Database extends CloningProcess
     }
 
     /**
-     * Delete all tables in staging site if the mainJob is resetting
+     * Delete all tables in staging site if the mainJob is 'resetting'
      *
      * @return bool
+     * @throws \Exception
      */
     private function deleteAllTables()
     {
@@ -216,7 +219,7 @@ class Database extends CloningProcess
 
     /**
      * Check if external database is used and if its not pro version
-     * @return boolean
+     * @return bool
      */
     private function abortIfExternalButNotPro()
     {
@@ -246,6 +249,7 @@ class Database extends CloningProcess
     /**
      * @param mixed string|object $tableName
      * @return bool
+     * @throws \Exception
      */
     private function copyTable($srcTableName)
     {
@@ -295,7 +299,7 @@ class Database extends CloningProcess
     /**
      * Is table excluded from database copying processing?
      * @param string $table
-     * @return boolean
+     * @return bool
      */
     private function isExcludedTable($table)
     {
@@ -319,13 +323,14 @@ class Database extends CloningProcess
 
     /**
      * Start Job and create tables
-     * @param string $new
-     * @param string $old
+     * @param string $destinationTable
+     * @param string $sourceTable
      * @return bool
+     * @throws \Exception
      */
-    private function startJob($new, $old)
+    private function startJob($destinationTable, $sourceTable)
     {
-        if ($this->isExcludedTable($new)) {
+        if ($this->isExcludedTable($destinationTable)) {
             return false;
         }
 
@@ -333,16 +338,16 @@ class Database extends CloningProcess
             return true;
         }
 
-        if ($this->databaseCloningService->isMissingTable($old)) {
+        if ($this->databaseCloningService->isMissingTable($sourceTable)) {
             return true;
         }
 
         try {
             $this->options->job->total = 0;
-            $this->options->job->total = $this->databaseCloningService->createTable($old, $new);
+            $this->options->job->total = $this->databaseCloningService->createTable($sourceTable, $destinationTable);
         } catch (FatalException $e) {
             $this->log($e->getMessage(), Logger::TYPE_WARNING);
-            $this->log(__('Skipping cloning table: ' . $old, 'wp-staging'), Logger::TYPE_WARNING);
+            $this->log(__('Skipping cloning table: ' . $sourceTable, 'wp-staging'), Logger::TYPE_WARNING);
             $this->finishStep();
             return false;
         }
@@ -362,6 +367,7 @@ class Database extends CloningProcess
      * because they are not available in MU installation but we need them on the staging site
      *
      * return void
+     * @throws \Exception
      */
     private function addMissingTables()
     {
@@ -417,7 +423,7 @@ class Database extends CloningProcess
     /**
      * Return fatal error and stops here if subfolder already exists
      * and mainJob is not updating and resetting the clone
-     * @return boolean
+     * @return bool
      */
     private function abortIfDirectoryNotEmpty()
     {
@@ -432,7 +438,7 @@ class Database extends CloningProcess
 
     /**
      * Return fatal error, if unable to create staging site directory
-     * @return boolean
+     * @return bool
      */
     private function abortIfDirectoryNotCreated()
     {
@@ -458,7 +464,7 @@ class Database extends CloningProcess
 
     /**
      * Stop cloning if database prefix contains hypen
-     * @return boolean
+     * @return bool
      */
     private function abortIfPrefixContainsInvalidCharacter()
     {
@@ -474,7 +480,7 @@ class Database extends CloningProcess
 
     /**
      * Check if the copy process started or not.
-     * @return boolean
+     * @return bool
      */
     private function isCopyProcessStarted()
     {

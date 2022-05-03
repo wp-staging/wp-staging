@@ -667,6 +667,7 @@ return array(
     'WPStaging\\Framework\\Utils\\Cache\\BufferedCache' => $baseDir . '/Framework/Utils/Cache/BufferedCache.php',
     'WPStaging\\Framework\\Utils\\Cache\\Cache' => $baseDir . '/Framework/Utils/Cache/Cache.php',
     'WPStaging\\Framework\\Utils\\Math' => $baseDir . '/Framework/Utils/Math.php',
+    'WPStaging\\Framework\\Utils\\Mbstring' => $baseDir . '/Framework/Utils/Mbstring.php',
     'WPStaging\\Framework\\Utils\\SlashMode' => $baseDir . '/Framework/Utils/SlashMode.php',
     'WPStaging\\Framework\\Utils\\Strings' => $baseDir . '/Framework/Utils/Strings.php',
     'WPStaging\\Framework\\Utils\\ThirdParty\\Glob' => $baseDir . '/Framework/Utils/ThirdParty/Glob.php',

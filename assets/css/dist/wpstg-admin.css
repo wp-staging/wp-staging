@@ -1548,6 +1548,7 @@ Tooltip top arrow
     background: none;
     border: none;
     cursor: pointer;
+    text-decoration: underline;
 }
 
 .wpstg--modal--backup--import--upload--title {
@@ -3516,6 +3517,10 @@ div#wpstg-backup-locked {
 
 #wpstg-btn-provider-revoke {
     border-radius: 2px;
+}
+
+#wpstg--js--translations {
+    text-decoration: underline;
 }
 
 /*# sourceMappingURL=wpstg-admin.css.map */
