@@ -131,9 +131,9 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 60 minutes', defined('WP
                         </select>
 
                         <label for="backupScheduleLaunch">
-                            <?php esc_html_e('Run backup now?', 'wp-staging'); ?>
+                            <input type="checkbox" name="backupScheduleLaunch" id="backupScheduleLaunch" />
+                            <?php esc_html_e('Run Backup Now?', 'wp-staging'); ?>
                         </label>
-                        <input type="checkbox" name="backupScheduleLaunch" id="backupScheduleLaunch" />
                     </div>
 
                 </div>

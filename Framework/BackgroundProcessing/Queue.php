@@ -512,11 +512,17 @@ class Queue
         $this->unlockQueueTable();
 
         $this->database->query("LOCK TABLE `$tableName` WRITE");
+
+        if ($this->count($processing) > 0) {
+            debug_log('Queue getNextAvailable: There is an action already in process. Stop!');
+            $this->database->query("UNLOCK TABLES");
+            return null;
+        }
+
         $claimIdQuery = "SELECT id FROM {$tableName}
-                WHERE status='{$ready}'
-                ORDER BY priority, action, jobId ASC
-                LIMIT 1";
-        $claimedId = $this->database->query($claimIdQuery, true);
+                        WHERE status = '{$ready}'
+                        ORDER BY priority, action, jobId ASC LIMIT 1";
+        $claimedId = $this->database->query($claimIdQuery);
 
         if (!$claimedId) {
             // This is NOT a failure: it just means the process could not lock the row.
@@ -525,10 +531,10 @@ class Queue
             return null;
         }
 
-        $claimedId = $claimedId->fetch_assoc();
+        $claimedId = $this->database->fetchAssoc($claimedId);
 
         if (!is_array($claimedId) || !array_key_exists('id', $claimedId)) {
-            debug_log('Queue getNextAvailable returns null because claimed Id did not had an Id empty. This query failed: ' . $claimIdQuery);
+            debug_log('Queue getNextAvailable returns null because claimedID query does not return an array or "id" does not exist. This query failed: ' . $claimIdQuery);
             $this->database->query("UNLOCK TABLES");
             return null;
         }
@@ -630,14 +636,14 @@ class Queue
      *
      * @param int|Action $action    Either an action id, or a reference to an Action object.
      * @param string     $newStatus The status to update the Action status to.
-     * @param bool       $unsafely  If the status update is to the Processing one, then we require
-     *                              the developer to do it with full understanding that it's NOT
-     *                              the correct way to do it.
+     * @param bool       $unsafely  If the status update is set to self::STATUS_PROCESSING, then we require
+     *                              the developer to do it with full understanding that this is NOT
+     *                              the correct way to do it. The status change should be handled by the queue automatically.
      *
      * @return false|int Either the updated action id, or `false` to indicate the status
      *                   update failed.
      *
-     * @throws QueueException If the status to update the Action to is the Processing one and
+     * @throws QueueException If the status to update the Action is self::STATUS_PROCESSING and
      *                        the client code is not owning the unsafety of it.
      */
     public function updateActionStatus($action, $newStatus, $unsafely = false)
@@ -650,7 +656,7 @@ class Queue
         $this->unlockQueueTable();
 
         if ($status !== self::STATUS_PROCESSING) {
-            // Any status update that is not to the processing status, will clean the `claimed_at` column.
+            // Any status update that is not the processing status, will clean the `claimed_at` column.
             $statusUpdateQuery = "UPDATE {$tableName} SET status='{$status}', claimed_at=NULL, updated_at='{$now}' WHERE id={$actionId}";
         } else {
             if (!$unsafely) {
@@ -1145,16 +1151,16 @@ class Queue
             self::STATUS_FAILED,
             self::STATUS_CANCELED
         ]);
-        $clenupQuery = "DELETE FROM {$tableName} 
+        $cleanupQuery = "DELETE FROM {$tableName} 
             WHERE updated_at < '{$cleanupBreakpoint}'
             AND status in ({$cleanableStati})";
-        $cleanupResult = $this->database->query($clenupQuery, true);
+        $cleanupResult = $this->database->query($cleanupQuery, true);
 
         if ($cleanupResult === false) {
             \WPStaging\functions\debug_log(json_encode([
                 'root' => 'Error while trying to cleanup Actions.',
                 'class' => get_class($this),
-                'query' => $clenupQuery,
+                'query' => $cleanupQuery,
                 'error' => $this->database->error(),
             ]));
 

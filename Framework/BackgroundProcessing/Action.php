@@ -58,7 +58,7 @@ class Action
      *
      * @var int
      */
-    private $priority;
+    public $priority;
 
     /**
      * An optional array of arguments that will be passed to either the WordPress
@@ -74,7 +74,7 @@ class Action
      *
      * @var string|null
      */
-    private $status;
+    public $status;
 
     /**
      * The string representing the date and time, in the site timezone, the Action was
@@ -90,7 +90,7 @@ class Action
      *
      * @var string|null
      */
-    private $updatedAt;
+    public $updatedAt;
 
     /**
      * Custom data attached to the Action.

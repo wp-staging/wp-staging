@@ -72,7 +72,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
     }
 
     /**
-     * Schedules the Queue mainteance by means of the Cron. The Cron is not
+     * Schedules the Queue maintenance by means of the Cron. The Cron is not
      * a really reliable method to execute timely tasks in WordPress, especially
      * if not powered by a real cron, but it's fine for addressing the maintenance
      * operations of the Queue that do not require to be timely and are fine happening

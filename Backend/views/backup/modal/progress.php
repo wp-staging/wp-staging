@@ -22,7 +22,7 @@
                 '<span class=\'wpstg--modal--logs--warning-count\'>0</span>'
             ) ?>"
     >
-        <?php _e('Show Logs', 'wp-staging') ?>
+        <span style="text-decoration: underline"><?php _e('Show Logs', 'wp-staging') ?></span>
     </button>
     <div class="wpstg--modal--process--logs"></div>
 </div>
