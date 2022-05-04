@@ -4,8 +4,6 @@ namespace WPStaging\Framework\Traits;
 
 use Exception;
 use RuntimeException;
-use stdClass;
-use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
 use WPStaging\Framework\Utils\Strings;
 
@@ -16,7 +14,7 @@ trait FileScanToCacheTrait
      *
      * @param resource $handle File handle to write to
      * @param string $content Content to write to the file
-     * @return integer
+     * @return int
      * @throws Exception
      */
     abstract public function write($handle, $content);
@@ -32,6 +30,7 @@ trait FileScanToCacheTrait
      * @param string $wpRootPath
      *
      * @return int count of files path written to cache file
+     * @throws Exception
      */
     public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $excludeSizeRules = [], $wpRootPath = ABSPATH)
     {
@@ -63,7 +62,7 @@ trait FileScanToCacheTrait
                 $path = $item->getPathname();
                 if ($item->isLink()) {
                     // Allow copying of link if the link's source is a directory
-                    if (is_dir($item->getRealPath())) {
+                    if (is_dir($item->getRealPath()) && $isRecursive) {
                         $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $path, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
                     }
 
