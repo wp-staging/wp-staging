@@ -296,7 +296,7 @@ abstract class Job implements ShutdownableInterface
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     public function isNetworkClone()
     {
@@ -309,7 +309,7 @@ abstract class Job implements ShutdownableInterface
 
     /**
      * Check if external database is used
-     * @return boolean
+     * @return bool
      */
     protected function isExternalDatabase()
     {

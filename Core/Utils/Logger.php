@@ -224,7 +224,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     /**
      * Get last element of logging data array
-     * @return string
+     * @return array
      */
     public function getLastLogMsg()
     {
@@ -236,7 +236,29 @@ class Logger implements LoggerInterface, ShutdownableInterface
             return $this->messages[] = array_pop($this->messages);
         }
     }
-    
+
+    /**
+     * Get last error message
+     * @param array $types - Types in which search the last logged message
+     *                     - Default [ERROR, CRITICAL]
+     *
+     * @return array|false
+     */
+    public function getLastErrorMsg($types = [self::TYPE_ERROR, self::TYPE_CRITICAL])
+    {
+        if (count($this->messages) === 0) {
+            return false;
+        }
+
+        foreach (array_reverse($this->messages) as $message) {
+            if (in_array(strtoupper($message['type']), $types)) {
+                return $message;
+            }
+        }
+
+        return false;
+    }
+
     /**
      * @inheritDoc
      */

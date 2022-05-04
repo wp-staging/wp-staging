@@ -8,6 +8,8 @@ class AnalyticsSender
 
     protected $consent;
 
+    private $corruptSettingsNotice;
+
     public function __construct(AnalyticsConsent $consent)
     {
         $this->consent = $consent;
@@ -28,6 +30,11 @@ class AnalyticsSender
         // convert settings from type object to array
         if (is_object($settings)) {
             $settings = json_decode(json_encode($settings), true);
+        }
+
+        // If still $settings is not array, bail
+        if (!is_array($settings)) {
+            return;
         }
 
         // Interval to wait before sending events.

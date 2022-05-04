@@ -8,6 +8,7 @@ use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
+use WPStaging\Pro\Staging\NetworkClone;
 
 class UpdateStagingOptionsTable extends DBCloningService
 {
@@ -24,7 +25,7 @@ class UpdateStagingOptionsTable extends DBCloningService
     }
 
     /**
-     * @return boolean
+     * @return bool
      */
     private function updateAllOptionsTables()
     {
@@ -44,9 +45,9 @@ class UpdateStagingOptionsTable extends DBCloningService
     }
 
     /**
-     * @param boolean $isMainSite
+     * @param bool $isMainSite
      *
-     * @return boolean
+     * @return bool
      */
     private function updateOptionsTable($isMainSite = false)
     {
@@ -65,8 +66,8 @@ class UpdateStagingOptionsTable extends DBCloningService
         // Add the base directory path and is network clone when cloning into network
         // Required to generate .htaccess file on the staging network.
         if ($this->dto->getJob()->isNetworkClone() && $isMainSite) {
-            $cloneOptions[\WPStaging\Pro\Staging\NetworkClone::NEW_NETWORK_CLONE_KEY] = 'true';
-            $cloneOptions[\WPStaging\Pro\Staging\NetworkClone::NETWORK_BASE_DIR_KEY]  = $this->dto->getStagingSitePath();
+            $cloneOptions[NetworkClone::NEW_NETWORK_CLONE_KEY] = 'true';
+            $cloneOptions[NetworkClone::NETWORK_BASE_DIR_KEY]  = $this->dto->getStagingSitePath();
         }
 
         // only insert or update clone option if job is not updating
@@ -91,7 +92,7 @@ class UpdateStagingOptionsTable extends DBCloningService
         $freemiusHelper = new FreemiusScript();
         // Only show freemius notice if freemius options exists on the productions site
         // These freemius options will be deleted from option table, see below.
-        if ($freemiusHelper->hasFreemiusOptions()) {
+        if (!$this->isNetworkClone() && $freemiusHelper->hasFreemiusOptions()) {
             $updateOrInsert[FreemiusScript::NOTICE_OPTION] = true;
         }
 
@@ -110,7 +111,7 @@ class UpdateStagingOptionsTable extends DBCloningService
         // Options to delete on the staging site
         $toDelete = [];
 
-        if ($freemiusHelper->hasFreemiusOptions()) {
+        if (!$this->isNetworkClone() && $freemiusHelper->hasFreemiusOptions()) {
             $toDelete = array_merge($toDelete, $freemiusHelper->getFreemiusOptions());
         }
 

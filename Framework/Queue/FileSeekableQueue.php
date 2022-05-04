@@ -161,12 +161,17 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
             return $this->handle->ftell();
         }
 
+        $currentOffset = $this->handle->ftell();
+
         $this->handle->fseek(0, SEEK_END);
         $this->handle->flock(LOCK_EX);
         $this->handle->fwrite(trim($data) . PHP_EOL);
         $this->handle->flock(LOCK_UN);
 
-        return $this->handle->ftell();
+        $offsetEndOfQueue = $this->handle->ftell();
+        $this->handle->fseek($currentOffset);
+
+        return $offsetEndOfQueue;
     }
 
     public function dequeue()

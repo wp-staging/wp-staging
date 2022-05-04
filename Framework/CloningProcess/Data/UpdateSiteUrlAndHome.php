@@ -27,6 +27,11 @@ class UpdateSiteUrlAndHome extends DBCloningService
      */
     private function updateAllOptionsTables()
     {
+        $wwwPrefix = '';
+        if (strpos($this->dto->getStagingSiteUrl(), '//www.') !== false) {
+            $wwwPrefix = 'www.';
+        }
+
         $baseDomain = DOMAIN_CURRENT_SITE;
         $basePath   = trailingslashit(PATH_CURRENT_SITE);
         $stagingSiteDomain = $this->dto->getStagingSiteDomain();
@@ -39,7 +44,7 @@ class UpdateSiteUrlAndHome extends DBCloningService
             $stagingPath = $str->str_replace_first($basePath, $stagingSitePath, $site->path);
             $this->updateBlogsTable($site->blog_id, $stagingDomain, $stagingPath);
 
-            $siteUrl = parse_url(site_url())["scheme"] . "://" . $stagingDomain . $stagingPath;
+            $siteUrl = parse_url(site_url())["scheme"] . "://" . $wwwPrefix . $stagingDomain . $stagingPath;
 
             $this->updateOptionsTable($tableName, $siteUrl);
         }

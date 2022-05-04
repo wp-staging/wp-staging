@@ -152,7 +152,7 @@ class Sites
      * Update staging sites option
      *
      * @param array $stagingSites
-     * @return boolean
+     * @return bool
      */
     public function updateStagingSites($stagingSites)
     {
@@ -189,5 +189,40 @@ class Sites
 
         $this->updateStagingSites($sites);
         update_option(self::MISSING_CLONE_NAME_ROUTINE_EXECUTED, true);
+    }
+
+    /**
+     * Sanitize the clone name to be used as directory
+     *
+     * @param string $cloneName
+     * @return string
+     */
+    public function sanitizeDirectoryName($cloneName)
+    {
+        $cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($cloneName));
+        return substr($cloneDirectoryName, 0, 16);
+    }
+
+    /**
+     * Return false if site not exists else return reason behind existing
+     *
+     * @param string $directoryName
+     * @return bool|string
+     */
+    public function isCloneExists($directoryName)
+    {
+        $cloneDirectoryPath = trailingslashit(get_home_path()) . $directoryName;
+        if (!wpstg_is_empty_dir($cloneDirectoryPath)) {
+            return sprintf(__("Warning: Use another site name! Clone destination directory %s already exists and is not empty. As default, WP STAGING uses the site name as subdirectory for the clone.", 'wp-staging'), $cloneDirectoryPath);
+        }
+
+        $stagingSites = $this->tryGettingStagingSites();
+        foreach ($stagingSites as $site) {
+            if ($site['directoryName'] === $directoryName) {
+                return __("Site name is already in use, please choose another name for the staging site.", "wp-staging");
+            }
+        }
+
+        return false;
     }
 }

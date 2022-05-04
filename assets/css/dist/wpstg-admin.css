@@ -7,6 +7,22 @@
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
 */
 
+/* Font Faces */
+
+/* roboto-regular - latin */
+@font-face {
+font-family: 'Roboto';
+font-style: normal;
+font-weight: 400;
+src: url('../../fonts/roboto-v29-latin-regular.eot'); /* IE9 Compat Modes */
+src: local(''),
+    url('../../fonts/roboto-v29-latin-regular.eot?#iefix') format('embedded-opentype'), /* IE6-IE8 */
+    url('../../fonts/roboto-v29-latin-regular.woff2') format('woff2'), /* Super Modern Browsers */
+    url('../../fonts/roboto-v29-latin-regular.woff') format('woff'), /* Modern Browsers */
+    url('../../fonts/roboto-v29-latin-regular.ttf') format('truetype'), /* Safari, Android, iOS */
+    url('../../fonts/roboto-v29-latin-regular.svg#Roboto') format('svg'); /* Legacy iOS */
+}
+
 /* Colors */
 
 .wpstg--violet {
@@ -1532,6 +1548,7 @@ Tooltip top arrow
     background: none;
     border: none;
     cursor: pointer;
+    text-decoration: underline;
 }
 
 .wpstg--modal--backup--import--upload--title {
@@ -1919,6 +1936,10 @@ Tooltip top arrow
 
 .wpstg-mt-10px {
     margin-top: 10px !important;
+}
+
+.wpstg-mr-10px {
+    margin-right: 10px !important;
 }
 
 .wpstg-my-10px {
@@ -3355,6 +3376,151 @@ div#wpstg-backup-locked {
 
 .wpstg-backup-scheduling-options label {
     margin-top:17px;
+}
+
+.wpstg-backup-scheduling-options .wpstg-storage-option {
+    display: block;
+    margin: .5em 0;
+    font-size: 15px;
+}
+
+.wpstg-storage-option>span:not(.wpstg-storage-settings) {
+    width: 150px;
+    display: inline-block;
+}
+
+.wpstg-storages-postbox {
+    display:none;
+    padding: 16px 8px;
+    margin-top: 8px;
+    margin-bottom: 8px;
+    background-color: white;
+    border:1px solid #cccccc;
+}
+
+.wpstg-storages-postbox a {
+    padding: 8px;
+    margin-right: 8px;
+    text-decoration: none;
+}
+
+.wpstg-storage-postbox {
+    padding: 4px 16px;
+    background-color: white;
+    border-bottom:1px solid #cccccc;
+    border-left:1px solid #cccccc;
+    border-right:1px solid #cccccc;
+}
+
+.wpstg-storages-postbox a.wpstg-storage-provider-active {
+    background: #25a1f0;
+    color: white;
+    font-weight: 700;
+    cursor: default;
+}
+
+.wpstg-storages-postbox a.wpstg-storage-provider-disabled {
+    color: #999;
+    cursor: not-allowed;
+}
+
+.wpstg-provider-revoke-form {
+    display: inline;
+    margin-top: 12px;
+    margin-bottom: 12px;
+}
+
+.wpstg-provider-settings-form {
+    margin-top: 10px;
+}
+
+.wpstg-provider-settings-form strong {
+    display: block;
+    margin: 8px 0;
+}
+
+.wpstg-provider-settings-form p {
+    margin: 0;
+    margin-bottom: 8px;
+}
+
+.wpstg-provider-settings-form fieldset {
+    margin: 0;
+    padding: 0;
+    margin-bottom: 16px;
+}
+
+.wpstg-provider-settings-form fieldset p {
+    margin: 0;
+    padding: 0;
+    font-size: 12px;
+}
+
+.wpstg-provider-settings-form fieldset label {
+    display: block;
+    margin-bottom: 2px;
+}
+
+.wpstg-provider-settings-form fieldset input {
+    font-size: 12px;
+}
+
+.wpstg-provider-settings-form .wpstg-link-btn.wpstg-blue-primary {
+    text-shadow: none;
+}
+
+.wpstg-btn-google {
+    font-family: Roboto;
+    display: inline-flex;
+    align-items: center;
+    border-width: 0;
+    outline: none;
+    border-radius: 2px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .6);
+    color: #555;
+    transition: background-color .3s;
+    padding: 8px;
+    padding-right: 16px;
+    height: 40px;
+    line-height: 40px;
+    font-size: 14px;
+    box-sizing: border-box;
+    text-decoration: none;
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+.wpstg-btn-google img {
+    width: 18px;
+    height: 18px;
+    margin-right: 12px;
+    margin-left:5px;
+}
+
+#wpstg-custom-google-credentials {
+    margin-top: 20px;
+}
+
+.wpstg-fieldset .wpstg-with-icon {
+    display: inline-flex;
+    align-items: center;    
+}
+
+.wpstg-fieldset .wpstg-with-icon .wpstg-fieldset-icon {
+    margin-left: 8px;
+}
+
+.wpstg-fieldset .wpstg-with-icon .wpstg-fieldset-icon img {
+    width: 16px;
+    height: 16px;
+}
+
+#wpstg-btn-provider-revoke {
+    border-radius: 2px;
+}
+
+#wpstg--js--translations {
+    text-decoration: underline;
 }
 
 /*# sourceMappingURL=wpstg-admin.css.map */

@@ -118,6 +118,10 @@ class Settings
     public function hydrate($settings = [])
     {
         $this->_raw = $settings;
+        if (!is_array($settings) && !is_object($settings)) {
+            $this->_raw = [];
+            return $this;
+        }
 
         foreach ($settings as $key => $value) {
             if (property_exists($this, $key)) {

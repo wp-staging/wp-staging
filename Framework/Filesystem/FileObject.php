@@ -118,8 +118,8 @@ class FileObject extends SplFileObject
         } while ($this->valid() && !is_array($backupMetadata));
 
         if (!is_array($backupMetadata)) {
-            \WPStaging\functions\debug_log('Could not find metadata in the backup.');
-            throw new RuntimeException('Could not find metadata in the backup.');
+            \WPStaging\functions\debug_log('Could not find metadata in the backup. This file could be corrupt.');
+            throw new RuntimeException('Could not find metadata in the backup. This file could be corrupt.');
         }
 
         return $backupMetadata;

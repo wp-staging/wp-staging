@@ -433,8 +433,9 @@ class SearchReplace extends CloningProcess
                 $result = $this->stagingDb->query($sql);
 
                 if ($result === false) {
+                    $partialQuery = substr($sql, 0, 100);
                     $this->log(
-                        "Error updating row {$currentRow} SQL: {$sql}",
+                        "Error updating row {$currentRow} SQL: {$partialQuery}",
                         Logger::TYPE_ERROR
                     );
                 }

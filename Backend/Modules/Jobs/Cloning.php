@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use Countable;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
@@ -30,14 +31,29 @@ class Cloning extends Job
     private $dirUtils;
 
     /**
+     * @var Sites
+     */
+    private $sitesHelper;
+
+    /**
+     * @var string
+     */
+    private $errorMessage;
+
+    /**
      * Initialize is called in \Job
      */
     public function initialize()
     {
         $this->db = WPStaging::getInstance()->get("wpdb");
         $this->dirUtils = new WpDefaultDirectories();
+        $this->sitesHelper = new Sites();
     }
 
+    public function getErrorMessage()
+    {
+        return $this->errorMessage;
+    }
 
     /**
      * Save Chosen Cloning Settings
@@ -47,10 +63,11 @@ class Cloning extends Job
     public function save()
     {
         if (!isset($_POST) || !isset($_POST["cloneID"])) {
+            $this->errorMessage = __("clone ID missing");
             return false;
         }
 
-        // Delete files to copy listing
+        // Delete files_to_copy.cache
         $this->cache->delete("files_to_copy");
 
         // Generate Options
@@ -59,15 +76,19 @@ class Cloning extends Job
         // Clone Name -> Site name that user input, if user left it empty it will be Clone ID
         $this->options->cloneName = wpstg_urldecode($_POST["cloneName"]);
         // The slugified version of Clone Name (to use in directory creation)
-        $this->options->cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($this->options->cloneName));
-        $this->options->cloneDirectoryName = substr($this->options->cloneDirectoryName, 0, 16);
+        $this->options->cloneDirectoryName = $this->sitesHelper->sanitizeDirectoryName($this->options->cloneName);
+        $result = $this->sitesHelper->isCloneExists($this->options->cloneDirectoryName);
+        if ($result !== false) {
+            $this->errorMessage = $result;
+            return false;
+        }
+
         $this->options->cloneNumber = 1;
         $this->options->prefix = $this->setStagingPrefix();
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
         $this->options->extraDirectories = [];
-        $this->options->excludedFiles = apply_filters('wpstg_clone_excluded_files' ,[
-            '.htaccess',
+        $this->options->excludedFiles = apply_filters('wpstg_clone_excluded_files', [
             '.DS_Store',
             '*.git',
             '*.svn',
@@ -81,10 +102,12 @@ class Cloning extends Job
         ]);
 
         $this->options->excludedFilesFullPath = [
+            '.htaccess',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'db.php',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'object-cache.php',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'advanced-cache.php'
         ];
+
         $this->options->currentStep = 0;
 
         // Job
@@ -94,9 +117,7 @@ class Cloning extends Job
         if (isset($this->options->existingClones[$this->options->clone])) {
             $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;
 
-            $this->options->prefix = isset($this->options->existingClones[$this->options->clone]->prefix) ?
-                $this->options->existingClones[$this->options->clone]->prefix :
-                $this->setStagingPrefix();
+            $this->options->prefix = isset($this->options->existingClones[$this->options->clone]->prefix) ? $this->options->existingClones[$this->options->clone]->prefix : $this->setStagingPrefix();
         }
         // Clone does not exist but there are other clones in db
         // Get data and increment it
@@ -113,13 +134,13 @@ class Cloning extends Job
 
         // Exclude File Size Rules
         $this->options->excludeSizeRules = [];
-        if (isset($_POST["excludeSizeRules"]) && !empty($_POST["excludeSizeRules"])) {
+        if (!empty($_POST["excludeSizeRules"])) {
             $this->options->excludeSizeRules = explode(',', wpstg_urldecode($_POST["excludeSizeRules"]));
         }
 
         // Exclude Glob Rules
         $this->options->excludeGlobRules = [];
-        if (isset($_POST["excludeGlobRules"]) && !empty($_POST["excludeGlobRules"])) {
+        if (!empty($_POST["excludeGlobRules"])) {
             $this->options->excludeGlobRules = explode(',', wpstg_urldecode($_POST["excludeGlobRules"]));
         }
 
@@ -149,39 +170,39 @@ class Cloning extends Job
         }
 
         $this->options->databaseServer = 'localhost';
-        if (isset($_POST["databaseServer"]) && !empty($_POST["databaseServer"])) {
+        if (!empty($_POST["databaseServer"])) {
             $this->options->databaseServer = $_POST["databaseServer"];
         }
 
         $this->options->databaseUser = '';
-        if (isset($_POST["databaseUser"]) && !empty($_POST["databaseUser"])) {
+        if (!empty($_POST["databaseUser"])) {
             $this->options->databaseUser = $_POST["databaseUser"];
         }
 
         $this->options->databasePassword = '';
-        if (isset($_POST["databasePassword"]) && !empty($_POST["databasePassword"])) {
+        if (!empty($_POST["databasePassword"])) {
             $this->options->databasePassword = stripslashes($_POST["databasePassword"]);
         }
 
         $this->options->databaseDatabase = '';
-        if (isset($_POST["databaseDatabase"]) && !empty($_POST["databaseDatabase"])) {
+        if (!empty($_POST["databaseDatabase"])) {
             $this->options->databaseDatabase = $_POST["databaseDatabase"];
         }
 
         // isExternalDatabase() depends upon databaseUser and databasePassword,
         // Make sure they are set before calling this.
         $this->options->databasePrefix = $this->isExternalDatabase() ? $this->db->prefix : '';
-        if (isset($_POST["databasePrefix"]) && !empty($_POST["databasePrefix"])) {
-            $this->options->databasePrefix = $this->appendUnderscore($_POST["databasePrefix"]);
+        if (!empty($_POST["databasePrefix"])) {
+            $this->options->databasePrefix = $this->maybeAppendUnderscorePrefix($_POST["databasePrefix"]);
         }
 
         $this->options->cloneDir = '';
-        if (isset($_POST["cloneDir"]) && !empty($_POST["cloneDir"])) {
+        if (!empty($_POST["cloneDir"])) {
             $this->options->cloneDir = trailingslashit(wpstg_urldecode($_POST["cloneDir"]));
         }
 
         $this->options->cloneHostname = '';
-        if (isset($_POST["cloneHostname"]) && !empty($_POST["cloneHostname"])) {
+        if (!empty($_POST["cloneHostname"])) {
             $this->options->cloneHostname = trim($_POST["cloneHostname"]);
         }
 
@@ -216,13 +237,14 @@ class Cloning extends Job
 
         WPStaging::make(AnalyticsStagingCreate::class)->enqueueStartEvent($this->options->jobIdentifier, $this->options);
 
+        $this->errorMessage = "";
         return $this->saveOptions();
     }
 
     /**
      * @return bool
      */
-    private function enteredDatabaseSameAsLiveDatabase()
+    private function isDestinationDatabaseSameAsLiveDatabase()
     {
         return $this->options->databaseServer === DB_HOST && $this->options->databaseDatabase === DB_NAME;
     }
@@ -262,14 +284,13 @@ class Cloning extends Job
             "networkClone"          => $this->isNetworkClone(),
         ];
 
-        if (update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones) === false) {
+        if ($this->sitesHelper->updateStagingSites($this->options->existingClones) === false) {
             $this->log("Cloning: Failed to save {$this->options->clone}'s clone job data to database'");
-            return;
         }
     }
 
     /**
-     * Get destination Hostname depending on wheather WP has been installed in sub dir or not
+     * Get destination Hostname depending on whether WP has been installed in sub dir or not
      * @return string
      */
     private function getDestinationUrl()
@@ -330,7 +351,7 @@ class Cloning extends Job
      * @param string $string
      * @return string
      */
-    private function appendUnderscore($string)
+    private function maybeAppendUnderscorePrefix($string)
     {
         $lastCharacter = substr($string, -1);
         if ($lastCharacter === '_') {
@@ -340,16 +361,16 @@ class Cloning extends Job
     }
 
     /**
-     * Create a new staging prefix that does not already exists in database
+     * Create a new staging prefix that does not exist in database
      */
     private function setStagingPrefix()
     {
-        // Get & find a new prefix that does not already exist in database.
+        // Find a new prefix that does not already exist in database.
         // Loop through up to 1000 different possible prefixes should be enough here;)
         for ($i = 0; $i <= 10000; $i++) {
-            $this->options->prefix = isset($this->options->existingClones) ?
-                'wpstg' . (count($this->options->existingClones) + $i) . '_' :
-                'wpstg' . $i . '_';
+            $this->options->prefix = !empty($this->options->existingClones) && $this->options->existingClones instanceof Countable
+                ? 'wpstg' . (count($this->options->existingClones) + $i) . '_'
+                : 'wpstg' . $i . '_';
 
             $sql = "SHOW TABLE STATUS LIKE '{$this->options->prefix}%'";
             $tables = $this->db->get_results($sql);
@@ -382,8 +403,8 @@ class Cloning extends Job
             throw new JobNotFoundException($methodName);
         }
 
-        if ($this->options->databasePrefix === $this->db->prefix && $this->enteredDatabaseSameAsLiveDatabase()) {
-            $this->returnException('Entered table prefix for staging and production database can not be identical! Please start over and change the table prefix.');
+        if ($this->options->databasePrefix === $this->db->prefix && $this->isDestinationDatabaseSameAsLiveDatabase()) {
+            $this->returnException('Table prefix for staging site can not be identical to live database if staging site will be cloned into production database! Please start over and change the table prefix or destination database.');
         }
 
         // Call the job

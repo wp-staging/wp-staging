@@ -208,8 +208,8 @@ msgid "Database Name:"
 msgstr "Nom de la base de données :"
 
 #: apps/Backend/views/clone/multi-site/index.php:2
-msgid "WordPress Multisite is not supported! Upgrade to <a href=\"%s\" target=\"_blank\">WP Staging Pro</a>"
-msgstr "WordPress Multisite n’est pas supporté ! Mettre à niveau vers <a href=\"%s\" target=\"_blank\">WP Staging PRO</a>"
+msgid "WordPress Multisite is not supported! Upgrade to <a href=\"%s\" target=\"_blank\">WP STAGING | PRO</a>"
+msgstr "WordPress Multisite n’est pas supporté ! Mettre à niveau vers <a href=\"%s\" target=\"_blank\">WP STAGING | PRO</a>"
 
 #: apps/Backend/views/welcome/welcome.php:14
 msgid "Comes with our 30-day money back guarantee * You need to give us chance to resolve your issue first."

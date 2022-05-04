@@ -78,6 +78,9 @@ class QueueProcessor
 
         $processed = 0;
 
+        /** @var Action|null */
+        $previousAction = null;
+
         while (!$this->isThreshold()) {
             $action = $this->queue->getNextAvailable();
 
@@ -89,11 +92,19 @@ class QueueProcessor
                 break;
             }
 
+            // Early bail to reset variable stored in memory
+            if ($previousAction !== null && $previousAction->jobId !== $action->jobId && $previousAction->action === $action->action) {
+                $this->queue->updateActionStatus($action, Queue::STATUS_READY);
+                break;
+            }
+
             $processed++;
 
             $this->dispatch($action);
 
             debug_log('[Background Processing] QueueProcessor::process After dispatch', 'debug');
+
+            $previousAction = $action;
         }
 
         /*
@@ -207,7 +218,12 @@ class QueueProcessor
         remove_action('shutdown', $markFailed);
 
         // Re-fetch the Action to check if it was updated during dispatch.
-        $updatedAt = $this->queue->getAction($action->id, true)->updatedAt;
+        $latestActionState = $this->queue->getAction($action->id, true);
+        if ($latestActionState->status === Queue::STATUS_READY) {
+            return true;
+        }
+
+        $updatedAt = $latestActionState->updatedAt;
         $updatedDuringDispatch = $originalUpdateTime === $updatedAt;
 
         if (!$updatedDuringDispatch) {

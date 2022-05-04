@@ -61,6 +61,8 @@ final class WPStaging
 
         $this->setupDebugLog();
 
+        $this->initCron();
+
         $this->container->register(CoreServiceProvider::class);
 
         $this->loadDependencies();
@@ -70,7 +72,7 @@ final class WPStaging
 
         $this->container->register(CommonServiceProvider::class);
         $this->container->register(AssetServiceProvider::class);
-        $this->initCron();
+
         $this->cloneSiteFirstRun();
 
         $this->container->register(AnalyticsServiceProvider::class);

@@ -36,6 +36,9 @@ class Filesystem extends FilterableDirectoryIterator
     /** @var PhpAdapter */
     private $phpAdapter;
 
+    /** @var int */
+    private $processed;
+
     /**
      * @todo Inject PhpAdapter and make changes to all instance of Filesystem accordingly :)
      */
@@ -306,6 +309,7 @@ class Filesystem extends FilterableDirectoryIterator
                 return false;
             }
 
+            $this->processed++;
             return true;
         }
 
@@ -321,6 +325,7 @@ class Filesystem extends FilterableDirectoryIterator
                 return false;
             }
 
+            $this->processed++;
             return true;
         }
 
@@ -360,6 +365,7 @@ class Filesystem extends FilterableDirectoryIterator
 
             try {
                 $result = $this->deleteItem($item);
+                $this->processed++;
             } catch (RuntimeException $e) {
                 if ($this->arePermissionExceptionsBypassed() !== true) {
                     $this->setRecursive($originalIsRecursive);
@@ -392,6 +398,7 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         $this->setRecursive($originalIsRecursive);
+        $this->processed++;
         return true;
     }
 
@@ -779,5 +786,55 @@ class Filesystem extends FilterableDirectoryIterator
     public function isReadableFile($filePath)
     {
         return file_exists($filePath) && is_file($filePath) && is_readable($filePath);
+    }
+
+    /**
+     * @param int $processed
+     */
+    public function setProcessedCount($processed = 0)
+    {
+        $this->processed = $processed;
+    }
+
+    /**
+     * @return int
+     */
+    public function getProcessedCount()
+    {
+        return $this->processed;
+    }
+
+    /**
+     * @param string $path Path to search files for
+     * @return array An array of files found in a directory,
+     *               where the index is the path relative to the directory, and the value is the absolute path to the file.
+     * @example [
+     *              'debug.log' => '/var/www/single/wp-content/uploads/wp-staging/tmp/import/655bb61a54f5/wpstg_c_/debug.log',
+     *              'custom-folder/custom-file.png' => '/var/www/single/wp-content/uploads/wp-staging/tmp/import/655bb61a54f5/wpstg_c_/custom-folder/custom-file.png',
+     *          ]
+     *
+     */
+    public function findFilesInDir($path)
+    {
+        $it = @new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS);
+        $it = new \RecursiveIteratorIterator($it);
+
+        $files = [];
+
+        /** @var \SplFileInfo $item */
+        foreach ($it as $item) {
+            // Early bail: We don't want dots, links or anything that is not a file.
+            if (!$item->isFile() || $item->isLink()) {
+                continue;
+            }
+
+            $pathName = $item->getPathname();
+
+            $relativePath = str_replace($path, '', $pathName);
+
+            $files[$relativePath] = $pathName;
+        }
+
+        return $files;
     }
 }
