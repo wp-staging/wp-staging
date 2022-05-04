@@ -6,7 +6,6 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\Sites;
-use WPStaging\Pro\Backup\BackupScheduler;
 
 /**
  * Copy wpstg_tmp_data back to wpstg_staging_sites after cloning with class::PreserveDataSecondStep
@@ -83,6 +82,10 @@ class PreserveDataSecondStep extends JobExecutable
             return true;
         }
 
+        // Make sure this is compatible with Free Version
+        // @see \WPStaging\Pro\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
+        $backupSchedulesOption = 'wpstg_backup_schedules';
+
         // Delete wpstg_tmp_data from the production site
         $deleteTmpData = $this->productionDb->query(
             $this->productionDb->prepare("DELETE FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s", "wpstg_tmp_data")
@@ -105,7 +108,7 @@ class PreserveDataSecondStep extends JobExecutable
 
         // Delete backup schedules tmp data from the staging site
         $deleteBackupSchedules = $this->stagingDb->query(
-            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", BackupScheduler::OPTION_BACKUP_SCHEDULES)
+            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", $backupSchedulesOption)
         );
 
         $tempData = maybe_unserialize($result);
@@ -144,7 +147,7 @@ class PreserveDataSecondStep extends JobExecutable
         $insertBackupSchedules = $this->stagingDb->query(
             $this->stagingDb->prepare(
                 "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
-                BackupScheduler::OPTION_BACKUP_SCHEDULES,
+                $backupSchedulesOption,
                 $tempData->backupSchedules,
                 "no"
             )
@@ -167,7 +170,7 @@ class PreserveDataSecondStep extends JobExecutable
         }
 
         if ($deleteBackupSchedules === false) {
-            $this->log("Preserve Data Second Step: Failed to delete " . BackupScheduler::OPTION_BACKUP_SCHEDULES . " from the staging site");
+            $this->log("Preserve Data Second Step: Failed to delete " . $backupSchedulesOption . " from the staging site");
         }
 
         if ($result === false) {
@@ -187,7 +190,7 @@ class PreserveDataSecondStep extends JobExecutable
         }
 
         if ($insertBackupSchedules === false) {
-            $this->log("Preserve Data Second Step: Failed to insert preserved clone options into " . BackupScheduler::OPTION_BACKUP_SCHEDULES . " of the staging site");
+            $this->log("Preserve Data Second Step: Failed to insert preserved clone options into " . $backupSchedulesOption . " of the staging site");
         }
 
         return true;

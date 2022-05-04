@@ -1,72 +1,102 @@
 === WP STAGING - Backup Duplicator & Migration  ===
 
-Author URL: https://wordpress.org/plugins/wp-staging
+Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
 Contributors: ReneHermi, WP-Staging
-Donate link: https://wp-staging.com/#pricing
+Donate link: https://wp-staging.com/backup-wordpress
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, cloud backup, database backup, restore, wordpress backup
+Tags: backup, backup plugin, database backup, wordpress backup plugin, migrate
 Requires at least: 3.6+
 Tested up to: 5.9
-Stable tag: 2.9.9
+Stable tag: 2.9.10
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
 
 == Description ==
 
-<h3>WP STAGING for WordPress Cloning & Migration</h3>
-This duplicator, staging, and backup plugin can create an exact copy of your entire website in seconds.* Great for staging, backup, or development purposes.
-(Cloning and Backup time depends on the size of your website)<br /><br />
-This clone plugin creates a clone of your website into a subfolder or subdomain (Pro) of your main WordPress installation. The clone includes an entire copy of your database.
- <br /> <br />
-<strong>Note: </strong> For pushing & migrating plugins and theme files to production site, check out the pro edition [https://wp-staging.com/](https://wp-staging.com/ "WP STAGING PRO")
+<h3>Staging, Backup, Cloning & Migration of WordPress Sites</h3>
+WP STAGING is a professional all in one duplicator, staging, and backup plugin. Create an exact copy and backup of your website in seconds.* Perfect for staging, backup, or development purposes.
+(Cloning and backup time depends on the size of your website)
 <br /><br />
-All the time-consumptive database and file cloning operations are done in the background. The plugin automatically does a complete search & replacement of all serialized links and paths.
+Visit [https://wp-staging.com/backup-wordpress](https://wp-staging.com/backup-wordpress "https://wp-staging.com/backup-wordpress") for more details.
+<br /><br />
+This backup and staging tool creates a clone of your website into a subfolder or subdomain (Pro) of your main WordPress installation. The cloned site includes an entire copy of your database.
+ <br /> <br />
+For pushing & migrating plugins and themes to the live site, and creating cloud backups, check out the pro edition [https://wp-staging.com/backup-wordpress](https://wp-staging.com/backup-wordpress "WP STAGING | PRO")
+<br /><br />
+WP STAGING runs all the time-consumptive database, file cloning and backup operations in the background. This tool does automatically a search & replacement of all links and paths.
  <br /><br />
 This staging and backup plugin can clone your website even if it runs on a weak shared hosting server.
- <br /><br />
  <br /><br />
 WP STAGING can help you prevent your website from being broken or unavailable because of installing untested plugin updates!
 
 [youtube https://www.youtube.com/watch?v=vkv52s36Yvg]
 
-= Main Features =
+= WP STAGING | FREE BACKUP AND CLONING WORDPRESS FEATURES =
 
-* WP STAGING clones the whole production site into a subfolder like example.com/staging-site.
+* Clones the entire production site into a subfolder like example.com/staging-site.
 * Easy to use! Create a clone / backup site by clicking one button
-* No Software as a Service - No account needed! All data belong to you only and stay on your server.
-* No server timeouts on huge websites or/and small hosting servers
+* No Software as a Service - No account needed! All your data stays on your server. Your data belongs to you only.
+* No server timeouts on huge websites or small and weak servers
 * Very fast - Migration and clone / backup process takes only a few seconds or minutes, depending on the website's size and server I/O power.
 * Use the clone as part of your backup strategy
 * Only administrators can access the clone / backup website.
 * SEO friendly: The clone website is unavailable to search engines due to a custom login prompt and the meta tag no-index.
 * The admin bar on the staging / backup website is orange colored and shows when you work on the staging site.
 * Extensive logging features
-* Supports all popular web servers: Apache, Nginx, and Microsoft IIS
-* <strong>[Premium]: </strong>Choose a separate database and select a custom directory for cloning
-* <strong>[Premium]: </strong>Make the clone website available from a subdomain like dev.example.com
-* <strong>[Premium]: </strong>Push & migrate entire clone site inc. all plugins, themes, and media files to the production website.
-* <strong>[Premium]: </strong>Define user roles that get access to the clone site only. For instance, clients or external developers.
-* <strong>[Premium]: </strong>Migration and cloning of WordPress multisites
-* <strong>[Premium]: </strong>Scheduled Backups running in the background
-* <strong>[Premium]: </strong>Backup of WordPress multisites
-* <strong>[Premium]: </strong>Backup to Google Drive (Released soon)
-* <strong>[Premium]: </strong>Backup to Amazon S3 (Released soon)
-* <strong>[Premium]: </strong>Backup to (s)FTP (Released soon)
+* Supports all popular web servers: Apache, Nginx, Microsoft IIS, LiteSpeed Server
+* Every release passes thousands of unit and acceptance tests to make the plugin extremely robust, reliable and fast on an enterprise code quality level
+* Fast and professional support team
 
-> Note: Some features are Premium. You need WP STAGING | PRO to use those features. [Read More about WP STAGING | PRO](https://wp-staging.com)!
+= WP STAGING | PRO BACKUP AND CLONING WORDPRESS FEATURES =
 
-= Additional Features WP STAGING | PRO Edition  =
+Note: These backup & cloning features are Premium. You need WP STAGING | PRO to use those features. [More about WP STAGING | PRO](https://wp-staging.com/backup-wordpress)!
 
-* Backup an entire website, even with millions of database rows faster and less resource-intensive than with other plugins
-* Migrate and transfer WordPress to another host or domain
-* Cloning and migration of WordPress multisite
-* Define a separate database and a custom directory for cloning
-* Clone your website into a subdomain
-* Specify user roles for accessing the staging site
-* Copy all modifications from the staging site to the production website
+* Migration - Migrate and transfer WordPress to another host or domain
+* High Performance - Backup and clone an entire website, even with millions of database rows faster and less resource-intensive than with other plugins
+* Push staging website including all plugins, themes, and media files to the production website wth one click
+* Clone the backup / clone site to a separate database
+* Choose custom directory for backup & cloned site
+* Select custom subdomain as destination for backup / clone site like dev.example.com
+* Authentication - Define user roles for accessing the clone / backup site only. This can be clients or external developers.
+* Multisite Support - Migrate, backup and clone WordPress multisites
+* Backup Plans - Schedule recurring multiple backups by hours, time and interval
+* Backup Transfer - Download and upload backups to another server for migration and website transfer
+* Backup Retention - Select number of backups you want to keep on your server or cloud remote storage provider
+* Backup Custom Names: Choose custom backup names to differentiate easily between different backup files
+* High Performance Background Processor - Runs backup in the background very efficiently without slowing down your website
+* Mail notifications - Be notified if a backup can not be created
+* Backup of WordPress multisites
+* Backup to Google Drive
+* Backup to Amazon S3 (Released soon)
+* Backup to (s)FTP (Released soon)
+* Backup to Dropbox (Released soon)
+* Specify custom backup folder destination for backup cloud storage providers
+* Priority Support for backup & cloning or if something does not work as expected for you.
+
+= DOCUMENTATION =
+
+== Backup, Restore & Migration ==
+
+<strong>How to Backup and Restore WordPress</strong>
+https://wp-staging.com/docs/how-to-backup-and-restore-your-wordpress-website/
+
+<strong>Backup & Transfer WordPress Site to Another Host/strong>
+https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/
+
+<strong>All Backup Guides</strong>
+https://wp-staging.com/docs/category/backup-restore/
+
+== Working with Staging Sites ==
+https://wp-staging.com/docs/category/working-with-wp-staging/
+
+<strong>FAQ for Backup & Cloning</strong>
+https://wp-staging.com/docs/category/frequently-asked-questions/
+
+<strong>Troubleshooting Backup & Cloning</strong>
+https://wp-staging.com/docs/category/troubleshooting/
 
 <strong>Change your workflow of updating themes and plugins:</strong>
 
@@ -75,6 +105,7 @@ WP STAGING can help you prevent your website from being broken or unavailable be
 3. Customize the theme, configuration, update or install new plugins
 4. Test everything on your staging site and keep a backup of the original site
 5. If the staging site works 100%, start the migration and copy all updates to your production site!
+6. If something does not work as expected, restore the previous backup
 
 <h3> Can´t I just use my local WordPress development system like xampp / lampp for testing and backup purposes? </h3>
 
@@ -141,7 +172,7 @@ To bypass this limitation and to be able to create a backup of your staging site
 If you want to migrate your local website to an already existing production site, you can use our pro version WP STAGING | PRO or a tool like WP Migrate DB that copies only the database.
 WP STAGING is intended to create a staging site with the latest data from your production site or create a backup of it.
 
-= What are the benefits compared to a plugin like Duplicator? =
+= What are the benefits compared to a migration and backup plugin like Duplicator? =
 We like the Duplicator plugin. Even though Duplicator is not as fast as WP STAGING for creating a backup,  it's still is a great tool for migrating from a development site to production one or from production site to development one. Overall it's a good tool to create a backup of your WordPress website.
 The downside is that before you can even create an export or backup file with Duplicator, a lot of adjustments, manual interventions, and requirements are needed before you can start the backup process.
 The backup plugin Duplicator also needs some skills to be able to create a backup and development/staging site. In contrast, WP STAGING does not need more than a click from you to create a backup or staging site.
@@ -161,7 +192,7 @@ Suppose you can still not log in to your staging / backup site. In that case, yo
 Permalinks are disabled on the staging / backup site after first time cloning / backup creation
 [Read here](https://wp-staging.com/docs/activate-permalinks-staging-site/ "activate permalinks on staging site") how to activate permalinks on the staging site.
 
-= How to Transfer WordPress to another Host or Domain by Using a WP STAGING Backup
+= How to use a Backup file to Migrate WordPress to another Host or Domain
 The pro version of WP STAGING can backup your whole WordPress website. (In the future, we are implementing a basic free version of our sophisticated backup feature into this free version as well)
 With this backup function, you can backup and copy your entire WordPress website to another domain, new host, or new server very easily, and often faster and more reliable than with any other existing backup plugins.
 Have a look at [https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/](this article), which introduces the backup feature.
@@ -174,8 +205,16 @@ If you are a developer, you will probably like to hear that we use Codeception a
 As there are infinite variations of possible server constellations, it still can happen that something does not work for you 100%. In that case,
 please open a [support request](https://wp-staging.com/support/ "support request") and describe your issue.
 
-== Official Site ==
-https://wp-staging.com
+WP STAGING BACKUP & CLONING TECHNICAL REQUIREMENTS & INFORMATION
+* WordPress 3.8
+* Works with all systems
+* No extra libraries required
+* Supports huge websites
+* Custom backup format is much faster and smaller than tar or zip compression
+* Backup & cloning works in low memory & shared hosting environments
+
+== SUPPORT ==
+[https://wp-staging.com/backup-wordpress](https://wp-staging.com/backup-wordpress "https://wp-staging.com/backup-wordpress")
 
 == Installation ==
 2. Upload and install the backup & clone plugin WP STAGING on the WordPress plugin page wp-admin > Plugins > Add New > uploads
@@ -194,6 +233,10 @@ https://wp-staging.com
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.10 =
+* Fix: Fatal error on missing Backup Scheduler class in Free version #1688
+* Fix: Fix recursive scanning if there is symlink in root directory linking to root directory itself #1688
 
 = 2.9.9 =
 * New: Support up to WordPress 5.9.3
