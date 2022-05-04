@@ -50,7 +50,7 @@ WP STAGING can help you prevent your website from being broken or unavailable be
 * Every release passes thousands of unit and acceptance tests to make the plugin extremely robust, reliable and fast on an enterprise code quality level
 * Fast and professional support team
 
-= WP STAGING | PRO BACKUP AND CLONING WORDPRESS FEATURES =
+== WP STAGING | PRO BACKUP AND CLONING WORDPRESS FEATURES ==
 
 Note: These backup & cloning features are Premium. You need WP STAGING | PRO to use those features. [More about WP STAGING | PRO](https://wp-staging.com/backup-wordpress)!
 
@@ -76,20 +76,20 @@ Note: These backup & cloning features are Premium. You need WP STAGING | PRO to 
 * Specify custom backup folder destination for backup cloud storage providers
 * Priority Support for backup & cloning or if something does not work as expected for you.
 
-= DOCUMENTATION =
+== DOCUMENTATION ==
 
 == Backup, Restore & Migration ==
 
 <strong>How to Backup and Restore WordPress</strong>
 https://wp-staging.com/docs/how-to-backup-and-restore-your-wordpress-website/
 
-<strong>Backup & Transfer WordPress Site to Another Host/strong>
+<strong>Backup & Transfer WordPress Site to Another Host</strong>
 https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/
 
 <strong>All Backup Guides</strong>
 https://wp-staging.com/docs/category/backup-restore/
 
-== Working with Staging Sites ==
+<strong> Working with Staging Sites </strong>
 https://wp-staging.com/docs/category/working-with-wp-staging/
 
 <strong>FAQ for Backup & Cloning</strong>
