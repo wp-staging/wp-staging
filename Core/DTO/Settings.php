@@ -216,10 +216,10 @@ class Settings
     /**
      * @return int
      */
-    public function getDelayRequests()
+/*    public function getDelayRequests()
     {
         return $this->delayRequests;
-    }
+    }*/
 
     /**
      * @param string $cpuLoad

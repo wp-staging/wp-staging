@@ -15,7 +15,7 @@ if (isset($_REQUEST['sub'])) {
             $providerId = $storage['id'];
         }
         ?>
-        <a class="wpstg-storage-provider <?php echo $isActive ? 'wpstg-storage-provider-active' : '' ?> href="<?php echo $isActive ? 'javascript:void(0);' : $storage['settingsPath']; ?>">
+        <a class="wpstg-storage-provider <?php echo $isActive ? 'wpstg-storage-provider-active' : '' ?>" href="<?php echo $isActive ? 'javascript:void(0);' : $storage['settingsPath']; ?>">
             <?php echo $storage['name']; ?>
         </a>
     <?php endforeach; ?>

@@ -3,24 +3,28 @@
 namespace WPStaging\Framework\Adapter;
 
 use WPStaging\Framework\Filesystem\Filesystem;
-use WPStaging\Pro\Backup\Job\Jobs\JobImport;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Pro\Backup\Job\Jobs\JobImport;
+use WPStaging\Pro\Backup\Service\Compressor;
 
 class Directory
 {
     /** @var string The directory that holds the uploads, usually wp-content/uploads */
     protected $uploadDir;
 
-    /** @var string The directory that holds the WPSTAGING cache directory, usually wp-content/uploads/wp-staging/cache */
+    /** @var string The directory that holds the WP STAGING cache directory, usually wp-content/uploads/wp-staging/cache */
     protected $cacheDirectory;
 
-    /** @var string The directory that holds the WPSTAGING tmp directory, usually wp-content/uploads/wp-staging/tmp */
+    /** @var string The directory that holds the WP STAGING tmp directory, usually wp-content/uploads/wp-staging/tmp */
     protected $tmpDirectory;
 
-    /** @var string The directory that holds the WPSTAGING logs directory, usually wp-content/uploads/wp-staging/logs */
+    /** @var string The directory that holds the WP STAGING logs directory, usually wp-content/uploads/wp-staging/logs */
     protected $logDirectory;
 
-    /** @var string The directory that holds the WPSTAGING data directory, usually wp-content/uploads/wp-staging */
+    /** @var string The directory that holds the WP STAGING backup directory, usually wp-content/uploads/wp-staging/backups */
+    protected $backupDirectory;
+
+    /** @var string The directory that holds the WP STAGING data directory, usually wp-content/uploads/wp-staging */
     protected $pluginUploadsDirectory;
 
     /** @var string The directory that holds the plugins, usually wp-content/plugins */
@@ -109,6 +113,20 @@ class Directory
     /**
      * @return string
      */
+    public function getBackupDirectory()
+    {
+        if (isset($this->backupDirectory)) {
+            return $this->backupDirectory;
+        }
+
+        $this->backupDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . Compressor::BACKUP_DIR_NAME));
+
+        return $this->backupDirectory;
+    }
+
+    /**
+     * @return string
+     */
     public function getPluginUploadsDirectory()
     {
         if (isset($this->pluginUploadsDirectory)) {
@@ -134,7 +152,7 @@ class Directory
 
         // Get absolute path to wordpress uploads directory e.g /var/www/wp-content/uploads/
         // Default is ABSPATH . 'wp-content/uploads', but it can be customized by the db option upload_path or the constant UPLOADS
-        $uploadDir = wp_upload_dir(null, false, null)['basedir'];
+        $uploadDir = wp_upload_dir(null, false, false)['basedir'];
 
         $this->uploadDir = trim(trailingslashit(wp_normalize_path($uploadDir)));
 

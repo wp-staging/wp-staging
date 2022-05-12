@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Vendor;
+
 
 /*
  * This file is part of the Symfony package.

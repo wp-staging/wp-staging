@@ -50,6 +50,9 @@ if ($cronMessage !== '') { ?>
         <div class="text"><?php esc_html_e('There is a backup work in progress...', 'wp-staging'); ?></div>
     </div>
 <?php endif; ?>
+<div id="wpstg-did-you-know" style="margin-bottom:12px">
+        <strong><?php echo sprintf(__('Did you know? You can upload backup files to another website to transfer it. <a href="%s" target="_blank">Read more</a>', 'wp-staging'), 'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'); ?></strong>
+</div>
 
 <div id="wpstg-step-1">
     <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo $disabledProperty; ?> <?php echo $disabledPropertyCreateBackup ?>>

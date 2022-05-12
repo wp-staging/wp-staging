@@ -123,18 +123,18 @@ msgstr "Lasse WP Staging die Ordnergrösse bei jedem Scan Prozess überprüfen<b
 
 #: Backend/views/settings/main-settings.php:275
 msgid ""
-"Check this box if you like WP Staging to completely remove all of its data when the plugin is deleted.\n"
+"Check this box if you like to remove all data when the plugin is deleted.\n"
 "                                                This will not remove staging sites files or database tables."
 msgstr "Lösche alle Einstellungen beim Löschen des Plugins"
 
 #: Backend/views/settings/main-settings.php:261
-msgid "The Optimizer is a mu plugin which disables all other plugins during WP Staging processing. Usually this makes the cloning process more reliable. If you experience issues, disable the Optimizer."
+msgid "The Optimizer is a mu plugin that disables all other plugins during WP STAGING processing. This lowers memory consumption and speed up the cloning process more reliable. If you experience issues, disable the Optimizer."
 msgstr "Der Optimizer ist ein mu Plugin welches alle anderen Plugins während des Klonvorgangs deaktiviert. Gewöhnlich macht das den Klonvorgang sehr viel zuverlässiger. Deaktiviere diese Option wenn etwas nicht funktioniert."
 
 #: Backend/views/settings/main-settings.php:246
 msgid ""
-"This will enable an extended debug mode which creates additional entries\n"
-"                                               in <strong>wp-content/uploads/wp-staging/logs/logfile.log</strong>.\n"
+"Enable an extended debug mode that creates additional log entries\n"
+"                                               in wp-content/uploads/wp-staging/logs/[filename].log.\n"
 "                                                Please enable this when we ask you to do so."
 msgstr "Dieser Modus schreibt zusätzliche Einträge in die Logdatei <strong>wp-content/uploads/wp-staging/logs/logfile.log</strong> Bitte aktiviere diesen Modus wenn Du ein Support Ticket eröffnest und wir Dich darum bitten."
 
@@ -163,12 +163,12 @@ msgid ""
 msgstr "Maximale Dateigrösse welche noch kopiert wird. Alle Dateien größer als dieser Wert werden übersprungen. Hinweis: Erhöhe diese Option nur wenn Du einen guten Grund dazu hast. Dateien größer als ein einige Megabyte sind in 99% aller Fälle Log und Backup Dateien welche für eine Staging Seite nicht notwendig sind."
 
 #: Backend/views/settings/main-settings.php:142
-msgid "<strong>Important:</strong> If CPU Load Priority is <strong>Low</strong> set a file copy limit value of 10 or higher! Otherwise file copying process takes a lot of time."
+msgid "<strong>Important:</strong> If CPU Load Priority is <strong>Low</strong>, set a file copy limit value of 10 or higher! Otherwise file copying process takes a lot of time."
 msgstr "<strong>Achtung</strong> Wenn die CPU Load Priority <strong>Low</strong> ist, setze das Datei Kopierlimit auf 10 oder höher! Andernfalls wird der Kopiervorgang sehr langsam sein."
 
 #: Backend/views/settings/main-settings.php:136
 msgid ""
-"Number of files to copy that will be copied within one ajax request.\n"
+"Number of files to copy that will be copied within one request.\n"
 "                                               The higher the value the faster the file copy process.\n"
 "                                               To find out the highest possible values try a high value like 500 or more. If you get timeout issues, lower it\n"
 "                                                until you get no more errors during copying process."
@@ -176,16 +176,16 @@ msgstr "Anzahl der Dateien, die mit einer Ajax Abfrage kopiert werden. Je höher
 
 #: Backend/views/settings/main-settings.php:116
 msgid ""
-"Number of DB rows, that are processed within one ajax query.\n"
+"Number of DB rows, that are processed within one request.\n"
 "                                               The higher the value the faster the database search & replace process.\n"
 "                                                This is a high memory consumptive process. If you get timeouts lower this value!"
 msgstr "Anzahl der Datenbankeinträge, welche gleichzeitig verarbeitet werden. Je größer der Wert, desto schneller ist der Suchen & Ersetzen Prozess. Zu große Werte können zu Timeouts durch hohen Speicherverbrauch führen!"
 
 #: Backend/views/settings/main-settings.php:96
 msgid ""
-"Number of DB rows, that are copied within one ajax query.\n"
+"Number of DB rows, that are queried within one request.\n"
 "                                               The higher the value the faster the database copy process.\n"
-"                                               To find out the highest possible values try a high value like 1.000 or more. If you get timeout issues, lower it\n"
+"                                               To find out the highest possible values try a high value like 10.000 or more. If you get timeout issues, lower it\n"
 "                                                until you get no more errors during copying process."
 msgstr "Anzahl der Datenbank Einträge, die zugleich kopiert werden. Je höher der Wert, desto schneller wird die Datenbank kopiert. Zu hohe Werte können allerdings zu Timeouts führen."
 

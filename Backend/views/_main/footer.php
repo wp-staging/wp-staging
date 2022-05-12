@@ -4,6 +4,7 @@
 <div id='wpstg-footer'>
     <strong class="wpstg-footer--title"><?php _e("Knowledgebase", "wp-staging") ?></strong>
     <ul>
+        <li><a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank" rel="external"><?php _e("Migrate Website to Another Server or Domain", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/staging-site-redirects-live-site/" target="_blank" rel="external"><?php _e("Can not login to staging site", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/staging-site-redirects-live-site/" target="_blank" rel="external"><?php _e("Staging site redirects to production site", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/fix-white-or-blank-page-after-pushing-fatal-error-500/" target="_blank" rel="external"><?php _e("Staging site returns blank white page", "wp-staging") ?></a></li>

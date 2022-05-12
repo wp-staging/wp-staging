@@ -3,7 +3,7 @@
     <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>
 
     <div class="wpstg-tabs-container" id="wpstg-settings">
-        <ul class="nav-tab-wrapper">
+        <ul class="wpstg-nav-tab-wrapper">
             <?php
             $tabs = \WPStaging\Core\WPStaging::getInstance()->get("tabs")->get();
             $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "general";
@@ -19,12 +19,12 @@
                     )
                 );
 
-                $activeClass = ($activeTab === $id) ? " nav-tab-active" : '';
+                $activeClass = ($activeTab === $id) ? " wpstg-nav-tab-active" : '';
                 ?>
                 <li>
                     <a href="<?php
                     echo $url ?>" title="<?php
-                    echo esc_attr($name) ?>" class="nav-tab<?php
+                    echo esc_attr($name) ?>" class="wpstg-nav-tab<?php
                     echo $activeClass ?>">
                         <?php
                         echo esc_html($name) ?>
