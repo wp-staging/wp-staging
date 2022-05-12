@@ -67,7 +67,8 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
                         </div>
                     </div>
                     <p class="wpstg-backup-direct-upload-notice">
-                        <?php esc_html_e('Did you know? You can also upload backups directly to this directory:', 'wp-staging') ?><br>
+                        <?php _e('<strong>Did you know?</strong>', 'wp-staging') ?><br>
+                        <?php esc_html_e('You can upload backups directly to the directory:', 'wp-staging') ?><br>
                         <strong><?php echo esc_html($uploadDirectory) ?></strong>
                     </p>
                 </div>

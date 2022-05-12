@@ -27,7 +27,9 @@
     <p>
         <strong class="wpstg-fs-14"> <?php _e('Google Drive', 'wp-staging'); ?></strong>
         <br/>
-        <p><?php echo sprintf(__('Upload backup files to your personal Google Drive account. None of your backup data is sent to us! <a href="%s" target="_blank">Our privacy policy</a>.', 'wp-staging'), 'https://wp-staging.com/privacy-policy/#Google_Drive'); ?></p>
+        <?php echo __('Upload backup files to your personal Google Drive account.', 'wp-staging'); ?>
+        <br>
+        <?php echo sprintf(__('None of your backup data is sent to any other party! <a href="%s" target="_blank">Our privacy policy</a>.', 'wp-staging'), 'https://wp-staging.com/privacy-policy/#Google_Drive'); ?>
     </p>
     <div class="wpstg-form-group">
         <?php
@@ -35,12 +37,13 @@
             ?>
             <strong class="wpstg-mr-10px">
                 <?php
-                _e('You are authenticated to Google.', 'wp-staging');
+                _e('You are authenticated to Google Drive.', 'wp-staging');
                 ?>
             </strong>
+            <br>
             <form class="wpstg-provider-revoke-form" id="wpstg-provider-revoke-form" method="post">
                 <input type="hidden" name="provider" value="<?php echo $providerId; ?>" />
-                <button type="button" id="wpstg-btn-provider-revoke" class="wpstg-link-btn wpstg-btn-danger"><?php _e("Logout", "wp-staging") ?></button>
+                <button type="button" id="wpstg-btn-provider-revoke" class="wpstg-link-btn wpstg-btn-danger"><?php _e("Logout from Google", "wp-staging") ?></button>
             </form>
             <br/>
             <?php
@@ -93,7 +96,7 @@
             <fieldset class="wpstg-fieldset">
                 <label><?php _e('Max Backups to Keep', 'wp-staging') ?></label>
                 <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo $maxBackupsToKeep; ?>" style="max-width: 60px" />
-                <p><?php _e("Add  \"0\" or leave empty for no limit", 'wp-staging') ?></p>
+                <p><?php _e("Leave empty or zero for no limit", 'wp-staging') ?></p>
             </fieldset>
 
             <fieldset class="wpstg-fieldset">

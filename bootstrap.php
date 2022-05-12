@@ -42,7 +42,7 @@ if (!defined('WPSTG_PLUGIN_SLUG')) {
     define('WPSTG_PLUGIN_SLUG', basename(dirname($pluginFilePath)));
 }
 
-// An identifier that is the same both for WPSTAGING Free and WPSTAGING Pro
+// An identifier that is the same both for WP STAGING Free and WP STAGING | PRO
 if (!defined('WPSTG_PLUGIN_DOMAIN')) {
     define('WPSTG_PLUGIN_DOMAIN', 'wp-staging');
 }

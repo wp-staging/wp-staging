@@ -349,7 +349,7 @@ class Administrator
         add_submenu_page(
             "wpstg_clone",
             __("WP Staging Tools", "wp-staging"),
-            __("Tools", "wp-staging"),
+            __("System Info", "wp-staging"),
             "manage_options",
             "wpstg-tools",
             [$this, "getToolsPage"]

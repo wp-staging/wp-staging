@@ -4,7 +4,6 @@ namespace WPStaging\Framework\Utils\ThirdParty;
 
 use WPStaging\Framework\Exceptions\DomainOutOfBoundsException;
 use WPStaging\Framework\Exceptions\LabelOutOfBoundsException;
-use WPStaging\Framework\Utils\Mbstring;
 
 /**
  * This is a port of TrueBV\Punycode.
@@ -66,10 +65,6 @@ class Punycode
     */
     protected $encoding;
 
-    /** @var object */
-    private $mbstring;
-
-
    /**
     * Constructor
     *
@@ -78,7 +73,6 @@ class Punycode
     public function __construct($encoding = 'UTF-8')
     {
         $this->encoding = $encoding;
-        $this->mbstring = new Mbstring();
     }
 
    /**
@@ -89,7 +83,7 @@ class Punycode
     */
     public function encode($input)
     {
-        $input = $this->mbstring->mb_strtolower($input, $this->encoding);
+        $input = mb_strtolower($input, $this->encoding);
         $parts = explode('.', $input);
         foreach ($parts as &$part) {
             $length = strlen($part);
@@ -137,7 +131,7 @@ class Punycode
         sort($codePoints['nonBasic']);
 
         $i = 0;
-        $length = $this->mbstring->mb_strlen($input, $this->encoding);
+        $length = mb_strlen($input, $this->encoding);
         while ($h < $length) {
             $m = $codePoints['nonBasic'][$i++];
             $delta = $delta + ($m - $n) * ($h + 1);
@@ -252,7 +246,7 @@ class Punycode
             $bias = $this->adapt($i - $oldi, ++$outputLength, ($oldi === 0));
             $n = $n + (int) ($i / $outputLength);
             $i = $i % ($outputLength);
-            $output = $this->mbstring->mb_substr($output, 0, $i, $this->encoding) . $this->codePointToChar($n) . $this->mbstring->mb_substr($output, $i, $outputLength - 1, $this->encoding);
+            $output = mb_substr($output, 0, $i, $this->encoding) . $this->codePointToChar($n) . mb_substr($output, $i, $outputLength - 1, $this->encoding);
 
             $i++;
         }
@@ -318,9 +312,9 @@ class Punycode
            'nonBasic' => [],
         ];
 
-        $length = $this->mbstring->mb_strlen($input, $this->encoding);
+        $length = mb_strlen($input, $this->encoding);
         for ($i = 0; $i < $length; $i++) {
-            $char = $this->mbstring->mb_substr($input, $i, 1, $this->encoding);
+            $char = mb_substr($input, $i, 1, $this->encoding);
             $code = $this->charToCodePoint($char);
             if ($code < 128) {
                 $codePoints['all'][] = $codePoints['basic'][] = $code;
