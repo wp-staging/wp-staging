@@ -521,3 +521,116 @@ WP STAGING Backup & Cloning | Full changelog:
 * Fix: Can not download backup files. Incorrect backup download link if wp-content folder is symlinked to another folder outside the wp root folder #1697
 * Fix: Error on downloading backup in IIS due to section in parent web.config that overwrites the WP STAGING generated web.config in backup folder #1699
 * Fix: Improve punycode related code. Keep cloning even if unable to use punycode related code doesn't work due to missing extensions #1702
+
+* New: Support up to WordPress 5.9.3
+* New: Added upgrade routine for backup created with version 4.1.9 and 4.2.0 to fix backup metadata info #1647
+* Fix: Backup creation is blocked by mod_security if access tokens contain 0x string #1651
+* Fix: Unable to upload backup created with version 4.1.9 and 4.2.0 using WP Staging Backup Uploader #1647
+* Fix: Unable to import multisite backup when restoring backup into domain other than it was created on #1644
+* Fix: If there is an mysql error on copying a single row, it can lead to a interrupt of the whole clone job due to a browser memory exhaust error because whole sql query is written into html log element . #1654
+
+* Fix: Fatal error if another plugin uses the same google library as WP STAGING uses for the backup storage provider #1641
+
+* New: Support up to WordPress 5.9.2
+* New: Feature to upload backups to Google Drive (PRO) #1453
+* New: Add filter wpstg.frontend.showLoginForm to force disable login form for the staging / backup site access #1577
+* New: Option to schedule a backup without creating one (PRO) #1588
+* Enh: Improve backup schedules error reporting by showing cron related notice on backups page and sending schedules error report mails (PRO) #1588
+* Enh: Improve subdirectory WordPress install detection by adding support for idn(internationalized domain names) #1564
+* Enh: Change backup lock process mechanism from using database to file based lock #1561
+* Enh: Make files & folders exclude filters work on WordPress root directory #1606
+* Enh: Remove old database only backup before PUSH process (PRO) #1608
+* Enh: Exclude .htaccess from root directory only during cloning process #1616
+* Enh: Don't backup table wp_wpstg_queue table (PRO Version) #1624
+* Update: Bump minimist from 1.2.5 to 1.2.6 in /tests/js #1627
+* Update: Bump postcss from 8.2.10 to 8.2.13 in /src/assets #1547
+* Update: Bump mustache/mustache from 2.13.0 to 2.14.1 #1543
+* Update: Bump nanoid from 3.1.22 to 3.3.1 in /src/assets #1626
+* Fix: Correctly set multisite subsites urls with www prefix when cloning and restoring a backup (PRO) #1567
+* Fix: Backup error "OutOfRangeException" was never caught when insert query exceeds max allowed packet size (PRO)  #1570
+* Fix: Add backup logic to check extended query string size against max allowed packet size which otherwise leads to a fatal error (PRO) #1570
+* Fix: Handle critical error if WP STAGINGS settings get corrupted. Give option to restore default settings #1602
+* Fix: Recreate cron jobs of existing backup plans when adding a new backup schedules (PRO) #1588
+* Fix: Enqueue a failed task/item again and set the queue's offset to the end of file #1609
+* Fix: Stop cloning if destination directory/clone name already exists #1607
+* Fix: Continue cloning process even if copying a table failed #1578
+* Fix: Don't remove freemius options if entire multisite is cloned. Prevents a fatal error. (PRO) #1629
+#1638
+
+* New: Add support for WordPress 5.8.3
+* New: Add filter for excluding files during cloning / backup #1494
+* New: Add filter for overwriting max execution for database backup restore #1512
+* New: Add filter to allow overwriting of the maximum allowed request time to make sure backup restore works for huge files. (19.000.000M database rows) #1510
+* Fix: If cloning a multisite subsite into external database, it does not clone / backup wp_users and wp_usermeta #1515
+* Fix: Skip tmp single file plugin during backup PUSH copy process #1491
+* Fix: Preserve table selection during PUSH and UPDATE even when all backup tables unselected #1488
+* Fix: Make sure maximum memory consumption during cloning or backup is never higher than 256MB #1502
+* Fix: Use custom implementation of wp_timezone() for backward compatibility to WordPress older than 5.3 #1505
+* Fix: Override FileObject::fgets to make them behave exactly from SplFileObject of PHP < 8.0.1 #1506
+* Tweak: Show custom uploads folder in tooltip description and explain better that changing a symlink image will also change the image on the production site. #1495
+
+* New: If cpu load setting is low make use of the file copy limit for pushing process to increase copy speed #1485
+* Enh: Add warning notice if WP_CRON_DISABLED is set to true as BG Processing depends upon it #1467
+* Fix: Add own implementation of get_current_network_id() for backward compatibility #1438
+* Fix: Updating or resetting staging / backup site skips all WordPress core folders #1435
+* Fix: Prevent 504 Gateway Timeout issue during Backup restore by force a low CPU LOAD (i.e. 10s) #1420
+* Fix: Wrong directory path is displayed when update/reset a staging / backup site #1447
+* Fix: Override SplFileObject::seek to make it consistent across all PHP version including PHP 8 #1444
+* Fix: Make FileObject::seek behave exactly as SplFileObject::seek from PHP < 8.0 #1480
+* Fix: Search Replace now works for Visual Composer / WP Bakery encoded pages #1442
+* Fix: Adjust CSS of the "Backup in Progress" element #1466
+* Fix: Clarify email sending tooltip description #1469
+* Fix: Adjust CSS of the loader icon #1487
+* Tweak: Retain WP STAGING ( backup ) options during push #1417
+* Tweak: Make PHP 5.6 minimum supported PHP version #1448
+* Tweak: Set WordPress 4.4 as minimum required WordPress version #1449
+* Dev: Fix Queue working in PHP 8 and Add PHP 8 unit tests in fast tests #1450
+* Dev: Cancel pending or running github actions fast tests if there is a new push on the same PR #1486
+
+* Fix: Update notice is shown even when using latest version #1398
+* Fix: Backup & cloning 100% compatible with PHP 8.0.12 #1281
+* Fix: Skip search replace on backup & cloning query if it's size exceed preg functions limit #1404
+* Fix: Skip inserting backup & cloning query if it exceeds mysql max_allowed_package. Show warning to user #1405
+* Fix: Make db option wpstg_staging_sites always return an array #1413
+* Fix: Fix dependency injection for backup notices class. Solve conflict with TranslatePress #1416
+* Tweak: Use php version number as tag for php docker container #1407
+* Tweak: Improve symlink tooltip text #1411
+* Tweak: Refactor WP STAGING Pro to WP STAGING | PRO in notices #1409
+* Tweak: Remove 16 characters limitation for the backup & CLONE NAME and keep it for CLONE DIRECTORY #1412
+
+* Enh: Refactor the wp_login action hook to work with different parameter count than the one in WordPress Core #1223
+* Enh: Sort new staging backup sites in descending order by creation time #1226
+* Enh: Warn if creating a backup in PHP 32 bit version #1231
+* Enh: Update the backup upload success message #1221
+* Enh: Show a notice if there is a new WP STAGING free version of the backup plugin #1250
+* Enh: Rename db option wpstg_existing_clones_beta to wpstg_staging_sites #1211
+* Enh: Update the warning message shown when the delete process of the staging backup site fails #1257
+* Enh: Allow use of REST API on staging backup sites without login #1287
+* Enh: Add new EDD software licensing updater for the pro version of the WP STAGING backup plugin #1294
+* Fix: New pro version does not recognize staging backup sites created with older free version #1293
+* Fix: Fix a rare issue that could happen when creating a new staging backup site or restoring a backup when there is a row with primary key with value zero #1271
+* Fix: Try to repair MyISAM table if it's corrupt when creating a Backup #1222
+* Fix: Fix an issue on backup creation that would cause a database export to loop when encountering a table with negative integers or zeros as a primary key value #1251
+* Fix: Lock specific tables while exporting a backup, to prevent a rare duplicated row issue #1245
+* Fix: If the memory exhausts during a database export using the Backup feature, lower the memory usage/speed of the export and try again automatically #1230
+* Fix: Prevent failure of adding database to backup from causing a loop #1231
+* Fix: Fix issue when old backup clones from version 1.1.6 or lower replaces the existing clones from later version when upgrading from FREE to PRO version #1233
+* Fix: Fix inconsistent Unselect All Tables button's action #1243
+* Fix: Replace undefined date with proper formatted date during backups for some warning and critical messages #1244
+* Fix: Split file scanning of wp-content into scanning of plugins, themes, uploads and other directories to reduce timeout issues #1247
+* Fix: Rename .user.ini to .user.ini.bak after cloning to reduce fatal errors on staging backup site. Also show a notice. #1255
+* Fix: Skip scanning the root directory if all other directories are unselected before starting a backup staging site #1256
+* Fix: Show correct insufficient space message instead of permission error if unable to copy or create a backup site due to insufficient space #1283
+* Fix: Fix showing of error when unable to count tables rows and wrap table name when fetching rows during backup #1285
+* Fix: Remove custom error handler that could cause errors due to notices being thrown #1292
+* Fix: Fix an error that would occur when PHP lacked permission to get the size of a directory when pushing a staging backup site to production #1295
+
+* Enh: Warn if creating a backup in PHP 32 bits #1231
+* Enh: Update the backups upload success message #1221
+* Fix: Fix a rare issue that could happen when creating a new staging site or restoring a backup when there is a row with primary key with value zero #1271
+* Fix: Try to repair MyISAM table if it's corrupt when creating a Backup #1222
+* Fix: FIx an issue on backup creation that would cause a database export to loop when encountering a table with negative integers or zeros as a primary key value #1251
+* Fix: Lock specific tables while exporting a backup, to prevent a rare duplicated row issue #1245
+* Fix: If the memory exhausts during a database export using the Backup feature, we now lower the memory usage/speed of the export and try again automatically #1230
+* Fix: Prevent failure of adding database to backup from causing a loop #1231
+* Fix: Replace undefined date with proper formatted date during backups log for some warning and critical messages #1244
