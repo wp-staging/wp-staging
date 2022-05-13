@@ -248,7 +248,8 @@ class Assets
         );
 
         wp_localize_script("wpstg-admin-script", "wpstg", [
-            "delayReq"               => $this->getDelay(),
+            //"delayReq"               => $this->getDelay(),
+            "delayReq"               => 0,
             // TODO: move directorySeparator to consts?
             "settings"               => (object)[
                 "directorySeparator"         => ScanConst::DIRECTORIES_SEPARATOR
@@ -372,7 +373,7 @@ class Assets
     /**
      * @return int
      */
-    public function getDelay()
+/*    public function getDelay()
     {
         switch ($this->settings->getDelayRequests()) {
             case "0":
@@ -400,7 +401,7 @@ class Assets
         }
 
         return $delay;
-    }
+    }*/
 
     /**
      * @return string

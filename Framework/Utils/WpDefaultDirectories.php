@@ -6,28 +6,14 @@ namespace WPStaging\Framework\Utils;
 
 use DirectoryIterator;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
-use WPStaging\Framework\Utils\SlashMode;
 
 // TODO PHP7.1; constant visibility
 class WpDefaultDirectories
 {
-    const WP_ADMIN = 'wp-admin';
-    const WP_INCLUDES = 'wp-includes';
-    const WP_CONTENT = 'wp-content';
-    const SITES = 'sites';
-    const MULTI_OLD_UPLOADS_DIR = 'blogs.dir';
-    const MULTI_UPLOADS_DIR = 'sites';
-
     /**
      * @var Strings
      */
     private $strUtils;
-
-    /**
-     * WordPress core directories: wp-admin, wp-includes, wp-content
-     * @var array
-     */
-    private $coreDirectories;
 
     /**
      * Sanitized ABSPATH for comparing against windows iterator
@@ -37,7 +23,7 @@ class WpDefaultDirectories
 
     /**
      * refresh cache of upload path
-     * @var boolean default false
+     * @var bool default false
      */
     private $refreshUploadPathCache = false;
 
@@ -49,7 +35,7 @@ class WpDefaultDirectories
     }
 
     /**
-     * @param boolean $shouldRefresh
+     * @param bool $shouldRefresh
      */
     public function shouldRefreshUploadPathCache($shouldRefresh = true)
     {
@@ -92,43 +78,13 @@ class WpDefaultDirectories
         // Could have been customized by populating the db option upload_path or the constant UPLOADS in wp-config
         // If both are defined WordPress will uses the value of the UPLOADS constant
         // First two parameters in wp_upload_dir are default parameter and last parameter is to refresh the cache
-        // Setting the 3rd and last parameter to true will refresh the cache return the latest value. Set to true for tests
+        // Setting the 3rd parameter to true will refresh the cache and return the latest value. Set to true for tests
         $uploads = wp_upload_dir(null, true, $this->refreshUploadPathCache);
 
         // Adding slashes at before and end of absolute path to WordPress uploads directory
         $uploadsAbsPath = trailingslashit($uploads['basedir']);
 
         return $this->strUtils->sanitizeDirectorySeparator($uploadsAbsPath);
-    }
-
-    /**
-     * Get site specific absolute WP uploads path e.g.
-     * Multisites: /var/www/htdocs/example.com/wp-content/uploads/sites/1 or /var/www/htdocs/example.com/wp-content/blogs.dir/1/files
-     * Single sites: /var/www/htdocs/example.com/wp-content/uploads
-     * This is compatible to old WordPress multisite version which contained blogs.dir
-     * @return string
-     */
-    public function getSiteUploadsPath()
-    {
-        $uploads = wp_upload_dir(null, false);
-        $baseDir = $this->strUtils->sanitizeDirectorySeparator($uploads['basedir']);
-
-        // If multisite (and if not the main site in a post-MU network)
-        if (is_multisite() && !( is_main_network() && is_main_site() && defined('MULTISITE') )) {
-            // blogs.dir is used on WP 3.5 and lower
-            if (strpos($baseDir, 'blogs.dir') !== false) {
-                // remove this piece from the basedir: /blogs.dir/2/files
-                $uploadDir = wpstg_replace_first_match('/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir);
-                $dir       = $this->strUtils->sanitizeDirectorySeparator($uploadDir . '/blogs.dir');
-            } else {
-                // remove this piece from the basedir: /sites/2
-                $uploadDir = wpstg_replace_first_match('/sites/' . get_current_blog_id(), null, $baseDir);
-                $dir       = $this->strUtils->sanitizeDirectorySeparator($uploadDir . '/sites');
-            }
-
-            return $dir;
-        }
-        return $baseDir;
     }
 
     /**
@@ -206,7 +162,7 @@ class WpDefaultDirectories
      */
     public function getWpCoreDirectories()
     {
-        $this->coreDirectories = [];
+        $coreDirectories = [];
 
         $directories = new DirectoryIterator(ABSPATH);
         foreach ($directories as $directory) {
@@ -231,10 +187,10 @@ class WpDefaultDirectories
             }
 
             $path = untrailingslashit($this->strUtils->sanitizeDirectorySeparator($path));
-            $this->coreDirectories[] = $path;
+            $coreDirectories[] = $path;
         }
 
-        return $this->coreDirectories;
+        return $coreDirectories;
     }
 
     /**
@@ -247,7 +203,7 @@ class WpDefaultDirectories
      */
     public function getExcludedDirectories($directoriesRequest)
     {
-        if ((empty($directoriesRequest) || $directoriesRequest === '')) {
+        if ((empty($directoriesRequest))) {
             return [];
         }
 

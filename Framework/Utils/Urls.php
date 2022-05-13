@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\Utils;
 
+use WPStaging\Pro\Backup\Service\Compressor;
+
 class Urls
 {
 
@@ -38,7 +40,6 @@ class Urls
 
     /**
      * Return WordPress home url without scheme e.h. host.com or www.host.com
-     * @param string $str
      * @return string
      */
     public function getHomeUrlWithoutScheme()
@@ -72,9 +73,7 @@ class Urls
             }
         }
 
-        $url = set_url_scheme($url, $scheme);
-
-        return $url;
+        return set_url_scheme($url, $scheme);
     }
 
     /**
@@ -89,7 +88,6 @@ class Urls
 
     /**
      * Return base URL (domain) without scheme e.g. blog.domain.com or domain.com
-     * @param string $str
      * @return string
      */
     public function getBaseUrlWithoutScheme()
@@ -115,5 +113,24 @@ class Urls
         $siteurl = get_site_url();
         $result = parse_url($siteurl);
         return $result['scheme'] . "://" . $result['host'];
+    }
+
+    /**
+     * Get url of the uploads directory, e.g. http://example.com/wp-content/uploads
+     * @return string
+     */
+    public function getUploadsUrl()
+    {
+        $upload_dir = wp_upload_dir(null, false, false);
+        return trailingslashit($upload_dir['baseurl']);
+    }
+
+    /**
+     * Get url of the wp staging backup directory, e.g. http://example.com/wp-content/uploads/backup
+     * @return string
+     */
+    public function getBackupUrl()
+    {
+        return $this->getUploadsUrl() . WPSTG_PLUGIN_DOMAIN . '/' . Compressor::BACKUP_DIR_NAME . '/';
     }
 }

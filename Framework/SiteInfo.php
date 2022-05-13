@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework;
 
+use Exception;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Utils\ThirdParty\Punycode;
 
@@ -48,6 +49,11 @@ class SiteInfo
      * @var Punycode
      */
     private $punycode;
+
+    /**
+     * @var array
+     */
+    private $errors = [];
 
     public function __construct()
     {
@@ -103,10 +109,21 @@ class SiteInfo
         $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
         $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
 
-        // convert unicode(idn) to punycode(ascii) domain
+        // convert unicode(idn) to punycode(ascii) domain if possible
         // turn exämple.com to xn--exmple-cua.com
-        $home = $this->punycode->encode($home);
-        $siteurl = $this->punycode->encode($siteurl);
+        $result = $this->punycodeEncode($home);
+        if ($result !== false) {
+            $home = $result;
+        } else {
+            $this->errors[] = __('Unable to detect punycode characters in home URL', 'wp-staging');
+        }
+
+        $result = $this->punycodeEncode($siteurl);
+        if ($result !== false) {
+            $siteurl = $result;
+        } else {
+            $this->errors[] = __('Unable to detect punycode characters in site URL', 'wp-staging');
+        }
 
         if ($home === $siteurl) {
             return false;
@@ -181,5 +198,46 @@ class SiteInfo
     public function isWpBakeryActive()
     {
         return defined('WPB_VC_VERSION');
+    }
+
+    /**
+     * @param string $url
+     * @return string|false
+     */
+    public function punycodeEncode($url)
+    {
+        // Get punycode encode if idn extension loaded
+        if (extension_loaded('idn') && is_callable('idn_to_ascii')) {
+            return idn_to_ascii($url, 0, INTL_IDNA_VARIANT_UTS46);
+        }
+
+        // Get punycode with idn polyfill If mb_string extension and Normalizer class available
+        try {
+            if (extension_loaded('mbstring') && class_exists('Normalizer') && is_callable('mb_chr')) {
+                return idn_to_ascii($url, 0, INTL_IDNA_VARIANT_UTS46);
+            }
+        } catch (Exception $ex) {
+        }
+
+        // Get punycode with mbstring extension if mbstring extension loaded
+        // Otherwise get with mbstring polyfill if iconv extension loaded
+        if (extension_loaded('mbstring') || extension_loaded('iconv')) {
+            return $this->punycode->encode($url);
+        }
+
+        return false;
+    }
+
+    public function clearErrors()
+    {
+        $this->errors = [];
+    }
+
+    /**
+     * @return array
+     */
+    public function getErrors()
+    {
+        return $this->errors;
     }
 }

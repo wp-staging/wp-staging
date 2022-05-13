@@ -1,10 +1,10 @@
 <!-- Export -->
-<div class="postbox">
-    <h3>
-                <span>
+<div>
+    <p>
+                <strong class="wpstg-fs-14">
                     <?php _e("Export Settings", "wp-staging")?>
-                </span>
-    </h3>
+                </strong>
+    </p>
 
     <div class="inside">
         <p>
@@ -27,11 +27,11 @@
 <!-- /Export -->
 
 <!-- Import -->
-<div class="postbox">
+<div class="">
     <h3>
-            <span>
+            <strong class="wpstg-fs-14">
                 <?php _e("Import Settings", "wp-staging")?>
-            </span>
+            </strong>
     </h3>
 
     <div class="inside">

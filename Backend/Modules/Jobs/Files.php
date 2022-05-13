@@ -11,7 +11,6 @@ use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
-use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
  * Class Files
@@ -406,39 +405,6 @@ class Files extends JobExecutable
         $this->setDirPermissions($destination);
 
         return true;
-    }
-
-    /**
-     * Get wp-content and wp-content/uploads destination dir
-     * Necessary if these folders were customized and changed from the default ones.
-     *
-     * @return string
-     */
-    protected function getWpContentPath($file)
-    {
-        // Get upload directory information
-        $uploads = wp_upload_dir();
-
-        // Get absolute path to wordpress uploads directory e.g srv/www/htdocs/sitename/wp-content/uploads
-        $uploadsAbsPath = trailingslashit($uploads['basedir']);
-
-        // Get relative path to the uploads folder, e.g assets or wp-content/uploads
-        $uploadsRelPath = (new WpDefaultDirectories())->getRelativeUploadPath();
-
-        // Get absolute path to wp-content directory e.g srv/www/htdocs/sitename/wp-content
-        $wpContentDir = trailingslashit(WP_CONTENT_DIR);
-
-        // Check if there is a custom uploads directory, then do a search $ replace. Do this only if custom upload path is not identical to WP_CONTENT_DIR
-        if ($uploadsAbsPath != $wpContentDir) {
-            $file = str_replace($uploadsAbsPath, ABSPATH . $uploadsRelPath, $file, $count);
-        }
-        // If there is no custom upload directory do a search & replace of the custom wp-content directory
-        if (empty($count) || $count === 0) {
-            $file = str_replace($wpContentDir, ABSPATH . 'wp-content/', $file);
-        }
-
-
-        return $file;
     }
 
     /**
