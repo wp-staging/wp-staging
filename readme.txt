@@ -2,7 +2,7 @@
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
-Contributors: wpstagingbackup, ReneHermi, WP-Staging
+Contributors: WP-Staging, wpstagingbackup, ReneHermi, lucatume, alaasalama, fayyazfayzi
 Donate link: https://wp-staging.com/backup-wordpress
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
