@@ -6,7 +6,7 @@
  * Description: Create a staging clone site for testing & developing
  * Author: WP-STAGING
  * Author URI: https://wp-staging.com
- * Contributors: wpstagingbackup, ReneHermi, WP-Staging
+ * Contributors: ReneHermi
  * Version: 2.9.11
  * Text Domain: wp-staging
  * Domain Path: /languages/
