@@ -1,4 +1,4 @@
-=== WP STAGING - Backup Duplicator & Migration  ===
+=== Backup Duplicator & Migration - WP STAGING ===
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
