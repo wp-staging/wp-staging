@@ -195,6 +195,31 @@ The pro version of WP STAGING can backup your whole WordPress website. (In the f
 With this backup function, you can backup and copy your entire WordPress website to another domain, new host, or new server very easily, and often faster and more reliable than with any other existing backup plugins.
 Have a look at [https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/](this article), that introduces the backup feature.
 
+= Is There a Translation of WP STAGING in my Language? =
+
+We have translated WP STAGING into five languages nearly completely:
+
+English: [WP STAGING Backup & Duplicator WordPress Plugin. Backup & Migrate WordPress websites.](https://es.wordpress.org/plugins/wp-staging/)
+French: [Plugin WordPress de sauvegarde et de duplication WP STAGING. Sauvegarder et migrer les sites Web WordPress.](https://es.wordpress.org/plugins/wp-staging/)
+German: [WP STAGING Backup & Duplicator WordPress Plugin. Migrate WordPress Webseiten.](https://es.wordpress.org/plugins/wp-staging/)
+Spanish: [WP STAGING Complemento de copia de seguridad y duplicador de WordPress. Copia de seguridad y migración de sitios web de WordPress.](https://es.wordpress.org/plugins/wp-staging/)
+
+The following languages have been partially translated. You can help us with the translation:
+
+Croatian: [WP STAGING Backup & Duplicator WordPress dodatak. Izradite sigurnosnu kopiju i migrirajte WordPress web stranice.](https://hr.wordpress.org/plugins/wp-staging/)
+Dutch: [WP STAGING Back-up & Duplicator WordPress-plug-in. Back-up en migratie van WordPress-websites.](https://nl.wordpress.org/plugins/wp-staging/)
+Finnish: [WP STAGING Backup & Duplicator WordPress-laajennus. Varmuuskopioi ja siirrä WordPress-verkkosivustoja.](https://fi.wordpress.org/plugins/wp-staging/)
+Greek: [WP STAGING Πρόσθετο WordPress Backup & Duplicator. Δημιουργία αντιγράφων ασφαλείας και μετεγκατάσταση ιστοσελίδων WordPress.](https://el.wordpress.org/plugins/wp-staging/)
+Hungarian: [WP STAGING Backup & Duplicator WordPress beépülő modul. WordPress-webhelyek biztonsági mentése és migrálása.](https://hu.wordpress.org/plugins/wp-staging/)
+Indonesian: [WP Staging Backup & Duplikator Plugin WordPress. Cadangkan & Migrasi situs web WordPress.](https://id.wordpress.org/plugins/wp-staging/)
+Italian: [WP STAGING Plugin WordPress per backup e duplicatori. Backup e migrazione di siti Web WordPress.](https://it.wordpress.org/plugins/wp-staging/)
+Persian: [WP STAGING پشتیبان گیری و افزونه وردپرس Duplicator. پشتیبان گیری و مهاجرت از وب سایت های وردپرسی.](https://fa.wordpress.org/plugins/wp-staging/)
+Polish: [WP STAGING Wtyczka WordPress do tworzenia kopii zapasowych i powielania. Twórz kopie zapasowe i migruj witryny WordPress.](https://pl.wordpress.org/plugins/wp-staging/)
+Portuguese (Brazil): [WP STAGING Backup & Duplicador Plugin WordPress. Backup e migração de sites WordPress.](https://br.wordpress.org/plugins/wp-staging/)
+Russian: [Плагин WP STAGING Backup & Duplicator для WordPress. Резервное копирование и перенос сайтов WordPress.](https://ru.wordpress.org/plugins/wp-staging/)
+Turkish: [WP STAGING Yedekleme ve Çoğaltıcı WordPress Eklentisi. WordPress web sitelerini yedekleyin ve taşıyın.](https://tr.wordpress.org/plugins/wp-staging/)
+Vietnamese: [WP STAGING Backup & Duplicator WordPress Plugin. Sao lưu và di chuyển các trang web WordPress.](https://vi.wordpress.org/plugins/wp-staging/)
+
 = Can I give you some feedback for WP STAGING Backup & Cloning? =
 This plugin has been created in thousands of hours and works even with the smallest shared web hosting package.
 We also use an enterprise-level approved testing coding environment to ensure that the cloning and backup process runs rock-solid on your system.
