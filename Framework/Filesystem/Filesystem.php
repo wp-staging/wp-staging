@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Filesystem;
 
+use Exception;
 use SplFileInfo;
 use WPStaging\Backend\Notices\Notices;
 use WPStaging\Core\WPStaging;
@@ -9,6 +10,8 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
 use WPStaging\Backend\Pro\Modules\Jobs\Copiers\Copier;
 use WPStaging\Framework\Adapter\PhpAdapter;
+
+use function WPStaging\functions\debug_log;
 
 class Filesystem extends FilterableDirectoryIterator
 {
@@ -173,6 +176,17 @@ class Filesystem extends FilterableDirectoryIterator
     {
         $path = $this->findPath($path);
 
+        /**
+         * For UNC Paths
+         * If the path starts with two forwardslashes, we need to convert them to backwardslashes to allow directory creation
+         * examples
+         * //server/path/to/dir -> \\server/path/to/dir
+         * //server\path\to\dir -> \\server\path\to\dir
+         */
+        if (strpos($path, '//') === 0) {
+            $path = '\\\\' . substr($path, 2);
+        }
+
         set_error_handler([$this, 'handleMkdirError']);
         $result = wp_mkdir_p($path);
         restore_error_handler();
@@ -304,7 +318,7 @@ class Filesystem extends FilterableDirectoryIterator
 
         // if $path is link or file, delete it and stop execution
         if (is_link($path) || is_file($path)) {
-            if (!unlink($path)) {
+            if (!@unlink($path)) {
                 $this->log('Permission Error: Can not delete file ' . $path);
                 return false;
             }
@@ -392,7 +406,7 @@ class Filesystem extends FilterableDirectoryIterator
 
         // Delete the empty directory itself and finish execution
         if (is_dir($path)) {
-            if (!rmdir($path)) {
+            if (!@rmdir($path)) {
                 $this->log('Permission Error: Can not delete directory ' . $path);
             }
         }
@@ -744,12 +758,29 @@ class Filesystem extends FilterableDirectoryIterator
      * This normalizes the given path in a specific way,
      * aiming to compare paths with precision.
      *
-     * @param $path
+     * @param string $path
+     * @param bool   $onlyNormalize. Default false
      *
      * @return string
      */
-    public function normalizePath($path)
+    public function normalizePath($path, $onlyNormalize = false)
     {
+        /**
+         * For UNC Paths
+         * If the path starts with two backslashes, we need to escape them, to make a valid UNC path
+         * No need to escape if already escaped.
+         * \\server\path\to\file is treated as \server\path\to\file
+         * The below code make sure \\server\path\to\file is changed to \\\\server\path\to\file so that it is treated as \\server\path\to\file
+         * No escaping is done if path already starts with four backslashes \\\\
+         */
+        if (strpos($path, '\\') === 0 && strpos($path, '\\\\') !== 0) {
+            $path = '\\' . $path;
+        }
+
+        if ($onlyNormalize) {
+            return wp_normalize_path($path);
+        }
+
         $path = trim($path);
         $path = wp_normalize_path($path);
         $path = trailingslashit($path);
@@ -780,12 +811,39 @@ class Filesystem extends FilterableDirectoryIterator
 
     /**
      * @param string $filePath The filename to check.
+     * Also compatible with Windows Network files
+     * @see https://bugs.php.net/bug.php?id=73543
+     * @see https://bugs.php.net/bug.php?id=69834
      *
      * @return bool Whether the file exists and is readable.
      */
     public function isReadableFile($filePath)
     {
-        return file_exists($filePath) && is_file($filePath) && is_readable($filePath);
+        if (is_readable($filePath)) {
+            return true;
+        }
+
+        if (!file_exists($filePath) || !is_file($filePath)) {
+            return false;
+        }
+
+        // On window or samba network file is_readable sometimes return false
+        // Even though files can be accessible with file_get_contents or fopen
+        // see links in the method docblock for more detail.
+        try {
+            $fileHandle = fopen($filePath, 'rb');
+            if (!is_resource($fileHandle)) {
+                return false;
+            }
+
+            if (fclose($fileHandle)) {
+                return true;
+            }
+        } catch (Exception $ex) {
+            debug_log($ex->getMessage());
+        }
+
+        return false;
     }
 
     /**

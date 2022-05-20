@@ -206,8 +206,8 @@ class SiteInfo
      */
     public function punycodeEncode($url)
     {
-        // Get punycode encode if idn extension loaded
-        if (extension_loaded('idn') && is_callable('idn_to_ascii')) {
+        // Get punycode encode if idn or intl extension loaded
+        if ((extension_loaded('idn') || extension_loaded('intl')) && is_callable('idn_to_ascii')) {
             return idn_to_ascii($url, 0, INTL_IDNA_VARIANT_UTS46);
         }
 

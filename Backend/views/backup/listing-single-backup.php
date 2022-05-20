@@ -15,6 +15,7 @@ $size            = $backup->size;
 $id              = $backup->id;
 $automatedBackup = $backup->automatedBackup;
 $legacy          = $backup->legacy;
+$corrupt         = $backup->corrupt;
 
 $isUnsupported = version_compare($backup->generatedOnWPStagingVersion, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT, '<');
 
@@ -35,9 +36,11 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
         <span class="wpstg-clone-title">
             <?php echo esc_html($name); ?>
         </span>
+        <?php if (!$corrupt) : ?>
         <div class="wpstg-clone-labels">
             <span class="wpstg-clone-label"><?php echo $backup->type === 'single' ? __('Single Site', 'wp-staging') : __('Multisite', 'wp-staging') ?></span>
         </div>
+        <?php endif ?>
         <div class="wpstg-clone-actions">
             <div class="wpstg-dropdown wpstg-action-dropdown">
                 <a href="#" class="wpstg-dropdown-toggler transparent">
@@ -45,7 +48,7 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
                     <span class="wpstg-caret"></span>
                 </a>
                 <div class="wpstg-dropdown-menu">
-                    <?php if (!$legacy) : ?>
+                    <?php if (!$legacy && !$corrupt) : ?>
                     <a href="#" class="wpstg-clone-action wpstg--backup--restore"
                        data-filePath="<?php echo esc_attr($backup->relativePath) ?>"
                        data-title="<?php esc_attr_e('Restore and overwrite current website according to the contents of this backup.', 'wp-staging') ?>"
@@ -58,7 +61,7 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
                        title="<?php esc_attr_e('Download backup file on local system', 'wp-staging') ?>">
                         <?php esc_html_e('Download', 'wp-staging') ?>
                     </a>
-                    <?php if (!$legacy) : ?>
+                    <?php if (!$legacy && !$corrupt) : ?>
                     <a href="#" class="wpstg--backup--edit wpstg-clone-action"
                        data-md5="<?php echo esc_attr($backup->md5BaseName); ?>"
                        data-name="<?php echo esc_attr($name); ?>"
@@ -82,14 +85,19 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
 
     <div class="wpstg-staging-info">
         <ul>
-            <?php if ($isUnsupported) : ?>
+        <?php if ($corrupt) : ?>
+                <li class="wpstg-corrupted-backup wpstg--red">
+                    <div class="wpstg-exclamation">!</div><strong><?php esc_html_e('This backup file is corrupt!', 'wp-staging') ?></strong><br/>
+                </li>
+        <?php endif ?>
+            <?php if ($isUnsupported && !$corrupt) : ?>
                 <li class="wpstg-unsupported-backup wpstg--red">
                     <div class="wpstg-exclamation">!</div><strong><?php esc_html_e('This backup was generated on the Beta version of WP STAGING and cannot be restored with the current version.', 'wp-staging') ?></strong><br/>
                 </li>
             <?php endif ?>
             <?php if ($createdAt) : ?>
             <li>
-                <strong><?php esc_html_e('Created on:', 'wp-staging') ?></strong>
+                <strong><?php $corrupt ? esc_html_e('Last modified:', 'wp-staging') : esc_html_e('Created on:', 'wp-staging') ?></strong>
                 <?php
                     $date = new DateTime();
                     $date->setTimestamp($createdAt);
@@ -109,6 +117,7 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
                 <strong><?php esc_html_e('Size: ', 'wp-staging') ?></strong>
                 <?php echo esc_html($size); ?>
             </li>
+            <?php if (!$corrupt) : ?>
             <li class="single-backup-includes">
                 <strong><?php esc_html_e('Contains: ', 'wp-staging') ?></strong>
                 <?php
@@ -121,15 +130,16 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
                 include(__DIR__ . '/modal/partials/backup-contains.php');
                 ?>
             </li>
-            <?php if ($automatedBackup) : ?>
+                <?php if ($automatedBackup) : ?>
                 <li style="font-style: italic">
                 <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/update.svg" /> <?php esc_html_e('Backup created automatically.', 'wp-staging') ?>
                 </li>
-            <?php endif ?>
-            <?php if ($legacy) : ?>
+                <?php endif ?>
+                <?php if ($legacy) : ?>
                 <li style="font-style: italic">
                 <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/cloud-saved.svg" /> <?php esc_html_e('This database backup was generated from an existing legacy WP STAGING Database export in the .SQL format.', 'wp-staging') ?>
                 </li>
+                <?php endif ?>
             <?php endif ?>
         </ul>
     </div>

@@ -6,6 +6,7 @@ use Exception;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Traits\FileScanToCacheTrait;
 use WPStaging\Framework\Utils\SlashMode;
@@ -15,6 +16,7 @@ use WPStaging\Framework\Utils\WpDefaultDirectories;
 /**
  * Class Files
  * @package WPStaging\Backend\Modules\Directories
+ * @todo DRY this class and WPStaging\Backend\Pro\Modules\Directories class
  */
 class Directories extends JobExecutable
 {
@@ -48,6 +50,16 @@ class Directories extends JobExecutable
     private $strUtils;
 
     /**
+     * @var Filesystem
+     */
+    private $filesystem;
+
+    /**
+     * @var string
+     */
+    private $rootPath;
+
+    /**
      * Initialize
      */
     public function initialize()
@@ -55,6 +67,8 @@ class Directories extends JobExecutable
         $this->filename = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
         $this->wpDirectories = new WpDefaultDirectories();
         $this->strUtils = new Strings();
+        $this->filesystem = WPStaging::make(Filesystem::class);
+        $this->rootPath = $this->filesystem->normalizePath(ABSPATH, true);
     }
 
     /**
@@ -126,20 +140,22 @@ class Directories extends JobExecutable
             return true;
         }
 
+        $directory = $this->filesystem->normalizePath($directory);
+        $relPath = str_replace($this->rootPath, '', $directory);
+
         // Skip it
         if (!is_dir($directory)) {
-            $this->log("Skipping: {$directory} does not exist.");
+            $this->log("Skipping: {$relPath} does not exist.");
             return true;
         }
 
         // Skip it
         if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skipping: {$directory}");
+            $this->log("Skipping: {$relPath}");
             return true;
         }
 
-        $relativeDirectory = str_replace($this->strUtils->sanitizeDirectorySeparator(ABSPATH), '', $directory);
-        $this->log("Scanning " . $relativeDirectory . " and its sub-directories and files");
+        $this->log("Scanning {$relPath} and its sub-directories and files");
 
         // open file handle
         $files = $this->open($this->filename, 'a');
@@ -175,16 +191,20 @@ class Directories extends JobExecutable
     private function getWpContentFiles()
     {
         $directory = WP_CONTENT_DIR;
+
+        $directory = $this->filesystem->normalizePath($directory);
+        $relPath = str_replace($this->rootPath, '', $directory);
+
         // Skip it
         if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skip " . $directory);
+            $this->log("Skipping {$relPath} for other files.");
             return true;
         }
+
         // open file handle
         $files = $this->open($this->filename, 'a');
 
-        $relativeDirectory = str_replace(ABSPATH, '', $directory);
-        $this->log("Scanning " . $relativeDirectory . " for other directories");
+        $this->log("Scanning {$relPath} for other directories and files");
 
         $excludePaths = [
             $this->wpDirectories->getRelativeWpContentPath(SlashMode::BOTH_SLASHES) . 'cache',
@@ -217,16 +237,20 @@ class Directories extends JobExecutable
     private function getWpIncludesFiles()
     {
         $directory = ABSPATH . 'wp-includes';
+
+        $directory = $this->filesystem->normalizePath($directory);
+        $relPath = str_replace($this->rootPath, '', $directory);
+
         // Skip it
         if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skip " . $directory);
+            $this->log("Skipping " . $relPath);
             return true;
         }
+
         // open file handle
         $files = $this->open($this->filename, 'a');
 
-        $relativeDirectory = str_replace(ABSPATH, '', $directory);
-        $this->log("Scanning " . $relativeDirectory . " for its sub-directories and files");
+        $this->log("Scanning " . $relPath . " for its sub-directories and files");
 
         try {
             $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true);
@@ -247,16 +271,20 @@ class Directories extends JobExecutable
     private function getWpAdminFiles()
     {
         $directory = ABSPATH . 'wp-admin';
+
+        $directory = $this->filesystem->normalizePath($directory);
+        $relPath = str_replace($this->rootPath, '', $directory);
+
         // Skip it
         if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skip " . $directory);
+            $this->log("Skipping " . $relPath);
             return true;
         }
+
         // open file handle
         $files = $this->open($this->filename, 'a');
 
-        $relativeDirectory = str_replace(ABSPATH, '', $directory);
-        $this->log("Scanning " . $relativeDirectory . " for its sub-directories and files");
+        $this->log("Scanning " . $relPath . " for its sub-directories and files");
 
         try {
             $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true);

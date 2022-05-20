@@ -2,6 +2,10 @@
 
 use WPStaging\Pro\Backup\Entity\BackupMetadata;
 
+if (!defined("WPINC")) {
+    die();
+}
+
 /**
  * @var BackupMetadata $info
  */
@@ -45,15 +49,6 @@ $isDatabaseOnlyBackup = $info->getIsExportingDatabase()
                 <span class=""><?php echo $info->getTotalFiles() ?></span>
             </div>
         <?php endif; ?>
-        <?php if (!empty($_POST['search'])) : ?>
-            <div class="wpstg-db-table" style="margin-top:20px;">
-                <?php foreach ($_POST['search'] as $index => $search) : ?>
-                    <span class=""><?php echo sprintf(__('Search: %s', 'wp-staging'), $search) ?></span> <br/>
-                    <span class=""><?php echo sprintf(__('Replace: %s', 'wp-staging'), $_POST['replace'][$index]) ?></span>
-                    <hr>
-                <?php endforeach ?>
-            </div>
-        <?php endif ?>
         <div class="wpstg-db-table" style="margin-top:5px;display:none;">
             <?php
             $backupGeneratedInVersion = $info->getVersion();

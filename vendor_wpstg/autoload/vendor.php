@@ -7,6 +7,7 @@ $baseDir = dirname($vendorDir);
 
 return array(
     'Composer\\InstalledVersions' => $vendorDir . '/composer/InstalledVersions.php',
+    'Normalizer' => $vendorDir . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
     'WPStaging\\Vendor\\AWS\\CRT\\Auth\\AwsCredentials' => $vendorDir . '/aws/aws-crt-php/src/AWS/CRT/Auth/AwsCredentials.php',
     'WPStaging\\Vendor\\AWS\\CRT\\Auth\\CredentialsProvider' => $vendorDir . '/aws/aws-crt-php/src/AWS/CRT/Auth/CredentialsProvider.php',
     'WPStaging\\Vendor\\AWS\\CRT\\Auth\\Signable' => $vendorDir . '/aws/aws-crt-php/src/AWS/CRT/Auth/Signable.php',
@@ -664,7 +665,6 @@ return array(
     'WPStaging\\Vendor\\Monolog\\ResettableInterface' => $vendorDir . '/monolog/monolog/src/Monolog/ResettableInterface.php',
     'WPStaging\\Vendor\\Monolog\\SignalHandler' => $vendorDir . '/monolog/monolog/src/Monolog/SignalHandler.php',
     'WPStaging\\Vendor\\Monolog\\Utils' => $vendorDir . '/monolog/monolog/src/Monolog/Utils.php',
-    'WPStaging\\Vendor\\Normalizer' => $vendorDir . '/symfony/polyfill-intl-normalizer/Resources/stubs/Normalizer.php',
     'WPStaging\\Vendor\\ParseError' => $vendorDir . '/symfony/polyfill-php70/Resources/stubs/ParseError.php',
     'WPStaging\\Vendor\\Psr\\Cache\\CacheException' => $vendorDir . '/psr/cache/src/CacheException.php',
     'WPStaging\\Vendor\\Psr\\Cache\\CacheItemInterface' => $vendorDir . '/psr/cache/src/CacheItemInterface.php',

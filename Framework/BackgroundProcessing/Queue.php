@@ -500,7 +500,7 @@ class Queue
     {
         if ($this->checkTable() !== self::TABLE_EXISTS) {
             // No actions if the table either does nto exist or has just been created.
-            debug_log('Queue getNextAvailable: Table does not exist for getting the next available.');
+            debug_log('Queue getNextAvailable: Table does not exist for getting the next available.', 'debug');
             return null;
         }
 
@@ -514,7 +514,7 @@ class Queue
         $this->database->query("LOCK TABLE `$tableName` WRITE");
 
         if ($this->count($processing) > 0) {
-            debug_log('Queue getNextAvailable: There is an action already in process. Stop!');
+            debug_log('Queue getNextAvailable: There is an action already in process. Stop!', 'debug');
             $this->database->query("UNLOCK TABLES");
             return null;
         }
@@ -526,7 +526,7 @@ class Queue
 
         if (!$claimedId) {
             // This is NOT a failure: it just means the process could not lock the row.
-            debug_log('Queue getNextAvailable returns null because claimed Id was empty. This query failed: ' . $claimIdQuery);
+            debug_log('Queue getNextAvailable returns null because claimed Id was empty. This query failed: ' . $claimIdQuery, 'debug');
             $this->database->query("UNLOCK TABLES");
             return null;
         }
@@ -534,7 +534,7 @@ class Queue
         $claimedId = $this->database->fetchAssoc($claimedId);
 
         if (!is_array($claimedId) || !array_key_exists('id', $claimedId)) {
-            debug_log('Queue getNextAvailable returns null because claimedID query does not return an array or "id" does not exist. This query failed: ' . $claimIdQuery);
+            debug_log('Queue getNextAvailable returns null because claimedID query does not return an array or "id" does not exist. This query failed: ' . $claimIdQuery, 'debug');
             $this->database->query("UNLOCK TABLES");
             return null;
         }
@@ -554,7 +554,7 @@ class Queue
 
         if (!$claimed) {
             // This is NOT a failure: it just means the process could not lock the row.
-            debug_log('Queue getNextAvailable returns null the process could not lock the row. This query failed: ' . $claimQuery);
+            debug_log('Queue getNextAvailable returns null the process could not lock the row. This query failed: ' . $claimQuery, 'debug');
             return null;
         }
 
@@ -857,7 +857,7 @@ class Queue
     public function markDanglingAs($newStatus)
     {
         if ($this->checkTable() === static::TABLE_NOT_EXIST) {
-            debug_log('Queue markDanglingAs: The table does not exist so there is nothing to update.');
+            debug_log('Queue markDanglingAs: The table does not exist so there is nothing to update.', 'debug');
             return 0;
         }
 
@@ -889,7 +889,7 @@ class Queue
             $marked = 0;
         }
 
-        debug_log("Marked $marked actions as dangling.");
+        debug_log("Marked $marked actions as dangling.", 'debug');
 
         return (int)$marked;
     }

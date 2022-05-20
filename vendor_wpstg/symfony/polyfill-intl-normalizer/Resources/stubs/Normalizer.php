@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Vendor;
+
 
 class Normalizer extends \WPStaging\Vendor\Symfony\Polyfill\Intl\Normalizer\Normalizer
 {
