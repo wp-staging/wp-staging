@@ -1,32 +1,18 @@
 <?php
 
 /**
- * Plugin Name: WP STAGING
+ * Plugin Name: Backup Duplicator & Migration - WP STAGING
  * Plugin URI: https://wordpress.org/plugins/wp-staging
- * Description: Create a staging clone site for testing & developing
- * Author: WP-STAGING
- * Author URI: https://wp-staging.com
- * Contributors: ReneHermi
- * Version: 2.9.11
+ * Description: Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
+ * Version: 2.9.12
+ * Requires at least: 3.6+
+ * Requires PHP: 5.6
+ * Author: WP-STAGING, wpstagingbackup
+ * Author URI: https://wp-staging.com/backup-wordpress
+ * License: GPLv2 or later
+ * License URI: http://www.gnu.org/licenses/gpl-2.0.html
  * Text Domain: wp-staging
  * Domain Path: /languages/
- *
- * WP STAGING is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 2 of the License, or
- * any later version.
- *
- * WP STAGING is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with Staging. If not, see <http://www.gnu.org/licenses/>.
- *
- * @package  WPSTG
- * @category Development, Migrating, Staging
- * @author   WP STAGING
  */
 
 if (!defined("WPINC")) {
@@ -34,7 +20,7 @@ if (!defined("WPINC")) {
 }
 
 /**
- * Welcome to WPSTAGING.
+ * Welcome to WP STAGING.
  *
  * If you're reading this, you are a curious person that likes
  * to understand how things works, and that's awesome!

@@ -45,14 +45,27 @@ class Files extends JobExecutable
     private $permissions;
 
     /**
+     * @var Filesystem
+     */
+    private $filesystem;
+
+    /**
+     * @var string
+     */
+    private $rootPath;
+
+    /**
      * Initialization
      */
     public function initialize()
     {
-
         $this->permissions = new Permissions();
+        /** @var Filesystem */
+        $this->filesystem = WPStaging::make(Filesystem::class);
 
-        $this->destination = $this->options->destinationDir;
+        $this->rootPath = $this->filesystem->normalizePath(WPStaging::getWPpath(), true);
+
+        $this->destination = $this->filesystem->normalizePath($this->options->destinationDir, true);
 
         $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
@@ -182,7 +195,7 @@ class Files extends JobExecutable
             ->shouldPermissionExceptionsBypass(true)
             ->setRecursive(true);
         try {
-            if (!$fs->delete($this->destination)) {
+            if (!$fs->delete($this->destination, false)) {
                 foreach ($fs->getLogs() as $log) {
                     $this->log($log, Logger::TYPE_WARNING);
                 }
@@ -339,7 +352,7 @@ class Files extends JobExecutable
     {
         $file = trim(WPStaging::getWPpath() . $file);
 
-        $file = wpstg_replace_windows_directory_separator($file);
+        $file = $this->filesystem->normalizePath($file, true);
 
         $directory = dirname($file);
 
@@ -365,12 +378,12 @@ class Files extends JobExecutable
             $this->log("File doesn't exist {$file}", Logger::TYPE_WARNING);
             return true;
         }
-        // Invalid file, skipping it as if succeeded
-        if (!is_readable($file)) {
+
+        // If file is unreadable, skip it as if succeeded
+        if (!$this->filesystem->isReadableFile($file)) {
             $this->log("Can't read file {$file}", Logger::TYPE_WARNING);
             return true;
         }
-
 
         // Get file size
         $fileSize = filesize($file);
@@ -429,20 +442,18 @@ class Files extends JobExecutable
      */
     private function getDestination($file)
     {
-        $file = wpstg_replace_windows_directory_separator($file);
-        $rootPath = wpstg_replace_windows_directory_separator(WPStaging::getWPpath());
-        $relativePath = str_replace($rootPath, '', $file);
+        $file = $this->filesystem->normalizePath($file, true);
+        $relativePath = str_replace($this->rootPath, '', $file);
         $destinationPath = $this->destination . $relativePath;
         $destinationDirectory = dirname($destinationPath);
 
-        $fs = new Filesystem();
-        $isDirectoryNotCreated = !is_dir($destinationDirectory) && !$fs->mkdir($destinationDirectory) && !is_dir($destinationDirectory);
+        $isDirectoryNotCreated = !is_dir($destinationDirectory) && !$this->filesystem->mkdir($destinationDirectory) && !is_dir($destinationDirectory);
         if ($isDirectoryNotCreated) {
-            $this->log("Files: Can not create directory {$destinationDirectory}." . $fs->getLogs()[0], Logger::TYPE_ERROR);
+            $this->log("Files: Can not create directory {$destinationDirectory}." . $this->filesystem->getLogs()[0], Logger::TYPE_ERROR);
             return false;
         }
 
-        return $this->sanitizeDirectorySeparator($destinationPath);
+        return $this->filesystem->normalizePath($destinationPath, true);
     }
 
     /**
@@ -503,7 +514,7 @@ class Files extends JobExecutable
             );
         }
 
-        if ((new Filesystem())->isFilenameExcluded($file, $excludedFiles)) {
+        if ($this->filesystem->isFilenameExcluded($file, $excludedFiles)) {
             return true;
         }
 

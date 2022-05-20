@@ -87,6 +87,11 @@ class DiskWriteCheck
         }
     }
 
+    /**
+     * @return bool
+     * @throws DiskNotWritableException
+     * @throws FilesystemExceptions
+     */
     public function testDiskIsWriteable()
     {
         $destination = $this->directory->getPluginUploadsDirectory() . '.wpstgDiskWriteCheck';
@@ -121,7 +126,7 @@ class DiskWriteCheck
             $result = $this->setLowLevelDiskFullFlag();
 
             if (!$result) {
-                \WPStaging\functions\debug_log('WPSTGAGING DiskWriteCheck failed and could not update the option in the database.');
+                \WPStaging\functions\debug_log('WP STAGING DiskWriteCheck failed and could not update the option in the database.');
             }
         }
 
