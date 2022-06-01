@@ -43,7 +43,15 @@ trait ResourceTrait
             }
         }
 
-        return $isMemoryLimit || $isTimeLimit;
+        if ($isMemoryLimit) {
+            return true;
+        }
+
+        if ($isTimeLimit) {
+            return true;
+        }
+
+        return false;
     }
 
     /**

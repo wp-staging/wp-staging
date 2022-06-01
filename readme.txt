@@ -2,14 +2,14 @@
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
-Contributors: WP-Staging, wpstagingbackup, ReneHermi, lucatume, alaasalama, fayyazfayzi
+Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, alaasalama, fayyazfayzi
 Donate link: https://wp-staging.com/backup-wordpress
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup plugin, migrate, backup wordpress, backups
 Requires at least: 3.6+
-Tested up to: 5.9
-Stable tag: 2.9.12
+Tested up to: 6.0
+Stable tag: 2.9.13
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -111,9 +111,9 @@ You can always test your website locally, but if your local hardware and softwar
 
 There are noticeable differences like the PHP version or the server your website is running under. Still, even such non-obvious settings like the amount of RAM or the CPU performance can lead to unexpected results on your production website.
 
-There are dozens of other reasons why a local test website will never mimic the production site server. That's why a successful local test is no guarantee that the site will run in the production environment as expected.
+There are dozens of other reasons why a local test website will never mimic the production site server. That's why a successful local test or backup site is no guarantee that the site will run in the production environment as expected.
 
-That is where WP STAGING comes into play... Site cloning, backup, and staging site creation simplified. WordPress cloning on an enterprise-ish level!
+That is where WP STAGING shows its strengths... Site cloning, backup, and staging site creation simplified. WordPress cloning on an enterprise-ish level!
 
 
 == Frequently Asked Questions ==
@@ -258,6 +258,12 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.13 =
+* New: Support up to WordPress 6.0
+* Fix: Don't load mbstring polyfill file at all if iconv extension isn't loaded #1734
+* Enh: Increasing Backup Filescanner Performance. Lower backup directory and file scanner request time #1714
+* Enh: Rename cancel button of backup schedules modal make it more responsive #1714
 
 = 2.9.12 =
 * Fix: If there is a damaged backup in backup folder, automated backup does not work any longer #1707
@@ -547,6 +553,11 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
+
+= 2.9.13 =
+* Fix: Don't load mbstring polyfill file at all if iconv extension isn't loaded #1734
+* Enh: Increasing Backup Filescanner Performance. Lower backup directory and file scanner request time #1714
+* Enh: Rename cancel button of backup schedules modal make it more responsive #1714
 
 = 2.9.11 =
 * New: Add Amazon S3 as backup cloud storage option for backup upload #1665
