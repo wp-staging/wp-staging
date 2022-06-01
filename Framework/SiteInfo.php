@@ -221,7 +221,7 @@ class SiteInfo
 
         // Get punycode with mbstring extension if mbstring extension loaded
         // Otherwise get with mbstring polyfill if iconv extension loaded
-        if (extension_loaded('mbstring') || extension_loaded('iconv')) {
+        if (extension_loaded('mbstring') || (extension_loaded('iconv') && is_callable('iconv') )) {
             return $this->punycode->encode($url);
         }
 

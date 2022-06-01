@@ -25,22 +25,22 @@
                 <?php if (!defined('WPSTGPRO_VERSION')) { ?>
                     <br><br>
                     <?php echo sprintf(__('P.S. Do you like to migrate this staging site to production site? 
-                Try out <a href="%1$s" target="_blank" style="color:white;font-weight:bold;">WP STAGING PRO</a>
+                Try out <a href="%1$s" target="_blank" style="color:white;font-weight:bold;">WP STAGING | PRO</a>
                         ', 'wp-staging'), 'https://wp-staging.com/?utm_source=wpstg_admin&utm_medium=rating_screen&utm_campaign=admin_notice'); ?>
                     <br>
                 <?php } ?>
             </p>
             <ul>
                 <li>
-                    <a href="https://wordpress.org/support/plugin/wp-staging/reviews/?filter=5#new-post" target="_blank" style="background-color:#35e6be;border-color:transparent;margin-bottom:10px;color:white;font-weight:bold;-webkit-box-shadow: 1px 1px 8px -7px rgba(0,0,0,0.75);-moz-box-shadow: 1px 1px 8px -7px rgba(0,0,0,0.75);box-shadow: 1px 1px 8px -7px rgba(0,0,0,0.75);" id="wpstg_clicked_deserved_it" class="thankyou button"
+                    <a href="https://wordpress.org/support/plugin/wp-staging/reviews/?filter=5#new-post" target="_blank" style="background-color:#d10f83;border-color:transparent;margin-bottom:10px;color:white;font-weight:bold;-webkit-box-shadow: 1px 1px 8px -7px rgba(0,0,0,0.75);-moz-box-shadow: 1px 1px 8px -7px rgba(0,0,0,0.75);box-shadow: 1px 1px 8px -7px rgba(0,0,0,0.75);" id="wpstg_clicked_deserved_it" class="thankyou button"
                     title="Sure, I like your plugin" style="font-weight:bold;">
-                        <?php _e('- Yes, I like WP STAGING - Rate & Close', 'wp-staging') ?>
+                        <?php _e('- Yes, I like WP STAGING! Rate & Close this Message', 'wp-staging') ?>
                     </a>
                 </li>
                 <li>
-                    <a href="javascript:void(0);" class="wpstg_hide_rating" title="I already did"
+                    <a href="javascript:void(0);" class="wpstg_hide_rating" title="I already rated"
                     style="font-weight:normal;color:white;text-decoration: none;">
-                        <?php _e('- I already did - Close ', 'wp-staging') ?>
+                        <?php _e('- I already rated - Close ', 'wp-staging') ?>
                     </a>
                 </li>
                 <li>

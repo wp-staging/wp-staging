@@ -1,4 +1,8 @@
 <?php
+if (!\extension_loaded('iconv') || !\function_exists('iconv')) {
+    return;
+}
+
 
 
 

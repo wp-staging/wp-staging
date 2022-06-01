@@ -3329,6 +3329,10 @@ div#wpstg-restore-wait div {
     padding-top: 10px;
 }
 
+#wpstg--modal--backup--manage--schedules--content td:last-child {
+    padding-right: 0px;
+}
+
 #wpstg--modal--backup--manage--schedules--content ul {
     margin-top: 0;
     margin-bottom: 0;
