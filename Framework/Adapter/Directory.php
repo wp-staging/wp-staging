@@ -184,7 +184,7 @@ class Directory
     public function getPluginsDirectory()
     {
         if (!isset($this->pluginsDir)) {
-            $this->pluginsDir = $this->filesystem->normalizePath(WP_PLUGIN_DIR);
+            $this->pluginsDir = $this->filesystem->normalizePath(WP_PLUGIN_DIR, true);
         }
 
         return $this->pluginsDir;
@@ -196,7 +196,7 @@ class Directory
     public function getMuPluginsDirectory()
     {
         if (!isset($this->muPluginsDir)) {
-            $this->muPluginsDir = $this->filesystem->normalizePath(WPMU_PLUGIN_DIR);
+            $this->muPluginsDir = $this->filesystem->normalizePath(WPMU_PLUGIN_DIR, true);
         }
 
         return $this->muPluginsDir;
@@ -211,7 +211,7 @@ class Directory
     {
         if (!isset($this->themesDirs)) {
             $this->themesDirs = array_map(function ($directory) {
-                return $this->filesystem->normalizePath($directory['theme_root']);
+                return $this->filesystem->normalizePath($directory['theme_root'], true);
             }, search_theme_directories(true));
 
             if (!is_array($this->themesDirs)) {
@@ -245,7 +245,7 @@ class Directory
     public function getActiveThemeParentDirectory()
     {
         if (!isset($this->activeThemeParentDir)) {
-            $this->activeThemeParentDir = $this->filesystem->normalizePath(get_theme_root(get_template()));
+            $this->activeThemeParentDir = $this->filesystem->normalizePath(get_theme_root(get_template()), true);
         }
 
         return $this->activeThemeParentDir;
@@ -257,7 +257,7 @@ class Directory
     public function getLangsDirectory()
     {
         if (!isset($this->langDir)) {
-            $this->langDir = $this->filesystem->normalizePath(WP_LANG_DIR);
+            $this->langDir = $this->filesystem->normalizePath(WP_LANG_DIR, true);
         }
 
         return $this->langDir;
@@ -269,7 +269,7 @@ class Directory
     public function getAbsPath()
     {
         if (!isset($this->absPath)) {
-            $this->absPath = $this->filesystem->normalizePath(ABSPATH);
+            $this->absPath = $this->filesystem->normalizePath(ABSPATH, true);
         }
 
         return $this->absPath;
@@ -281,7 +281,7 @@ class Directory
     public function getWpContentDirectory()
     {
         if (!isset($this->wpContentDirectory)) {
-            $this->wpContentDirectory = $this->filesystem->normalizePath(WP_CONTENT_DIR);
+            $this->wpContentDirectory = $this->filesystem->normalizePath(WP_CONTENT_DIR, true);
         }
 
         return $this->wpContentDirectory;

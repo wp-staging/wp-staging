@@ -870,6 +870,7 @@ return array(
     'WPStaging\\Framework\\Database\\ExcludedTables' => $baseDir . '/Framework/Database/ExcludedTables.php',
     'WPStaging\\Framework\\Database\\QueryBuilder\\SelectQuery' => $baseDir . '/Framework/Database/QueryBuilder/SelectQuery.php',
     'WPStaging\\Framework\\Database\\SearchReplace' => $baseDir . '/Framework/Database/SearchReplace.php',
+    'WPStaging\\Framework\\Database\\SelectedTables' => $baseDir . '/Framework/Database/SelectedTables.php',
     'WPStaging\\Framework\\Database\\TableDto' => $baseDir . '/Framework/Database/TableDto.php',
     'WPStaging\\Framework\\Database\\TableService' => $baseDir . '/Framework/Database/TableService.php',
     'WPStaging\\Framework\\Database\\WpDbInfo' => $baseDir . '/Framework/Database/WpDbInfo.php',

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup plugin, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.0
-Stable tag: 2.9.13
+Stable tag: 2.9.14
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -258,6 +258,16 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.14 =
+* Fix: Certain default plugins like wps-hide are not excluded anymore during cloning #1742
+* Fix: Scheduled backup not always executed #1754
+* Fix: Backup folder is deleted during backup restore on Windows OS #1737
+* Fix: On backup restore retry deleting an item again in next request instead of re adding it at the end of queue, if item isn't completely deleted in current request #1758
+* Enh: Refactor normalizePath() #1751
+* Enh: Optimize table selection to reduce POST characters. Send either selected tables or excluded tables whichever is smaller along to reduce the POST size for cloning and pushing #1727
+* Enh: Allow automatic update of WP STAGING | PRO on the staging site. It can still be disabled using the filter wpstg.notices.disable.plugin-update-notice #1749
+* Enh: Add filter wpstg.backup.restore.extended-search-replace. The extended search replace allow properly replacing to destination URL for some plugins like rev-sliders in backup restore #1741
 
 = 2.9.13 =
 * New: Support up to WordPress 6.0
@@ -553,6 +563,16 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
+
+= 2.9.14 =
+* Fix: Certain default plugins like wps-hide are not excluded anymore during cloning #1742
+* Fix: Scheduled backup not always executed #1754
+* Fix: Backup folder is deleted during backup restore on Windows OS #1737
+* Fix: On backup restore retry deleting an item again in next request instead of re adding it at the end of queue, if item isn't completely deleted in current request #1758
+* Enh: Refactor normalizePath() #1751
+* Enh: Optimize table selection to reduce POST characters. Send either selected tables or excluded tables whichever is smaller along to reduce the POST size for cloning and pushing #1727
+* Enh: Allow automatic update of WP STAGING | PRO on the staging site. It can still be disabled using the filter wpstg.notices.disable.plugin-update-notice #1749
+* Enh: Add filter wpstg.backup.restore.extended-search-replace. The extended search replace allow properly replacing to destination URL for some plugins like rev-sliders in backup restore #1741
 
 = 2.9.13 =
 * Fix: Don't load mbstring polyfill file at all if iconv extension isn't loaded #1734

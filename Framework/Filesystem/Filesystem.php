@@ -759,11 +759,11 @@ class Filesystem extends FilterableDirectoryIterator
      * aiming to compare paths with precision.
      *
      * @param string $path
-     * @param bool   $onlyNormalize. Default false
+     * @param bool   $addTrailingslash. Default false
      *
      * @return string
      */
-    public function normalizePath($path, $onlyNormalize = false)
+    public function normalizePath($path, $addTrailingslash = false)
     {
         /**
          * For UNC Paths
@@ -777,15 +777,15 @@ class Filesystem extends FilterableDirectoryIterator
             $path = '\\' . $path;
         }
 
-        if ($onlyNormalize) {
-            return wp_normalize_path($path);
+        if ($addTrailingslash) {
+            $path = trim($path);
+            $path = wp_normalize_path($path);
+            $path = trailingslashit($path);
+
+            return $path;
         }
 
-        $path = trim($path);
-        $path = wp_normalize_path($path);
-        $path = trailingslashit($path);
-
-        return $path;
+        return wp_normalize_path($path);
     }
 
     public function handleMkdirError($errno, $errstr)
@@ -874,6 +874,8 @@ class Filesystem extends FilterableDirectoryIterator
      */
     public function findFilesInDir($path)
     {
+        $path = $this->normalizePath($path);
+
         $it = @new \RecursiveDirectoryIterator($path, \RecursiveDirectoryIterator::SKIP_DOTS);
         $it = new \RecursiveIteratorIterator($it);
 
@@ -886,7 +888,7 @@ class Filesystem extends FilterableDirectoryIterator
                 continue;
             }
 
-            $pathName = $item->getPathname();
+            $pathName = $this->normalizePath($item->getPathname());
 
             $relativePath = str_replace($path, '', $pathName);
 
