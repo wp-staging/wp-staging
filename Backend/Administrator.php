@@ -38,6 +38,7 @@ use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
+use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Pro\Backup\BackupScheduler;
 
 /**
@@ -1114,16 +1115,21 @@ class Administrator
         $scan = new Pro\Modules\Jobs\Scan();
 
         $scan->start();
-        
+        $options = $scan->getOptions();
+
+        $selectedTables = new SelectedTables($_POST['includedTables'], $_POST['excludedTables'], $_POST['selectedTablesWithoutPrefix']);
+        $selectedTables->setDatabaseInfo($options->databaseServer, $options->databaseUser, $options->databasePassword, $options->databaseDatabase, empty($options->databasePrefix) ? $options->prefix : $options->databasePrefix);
+        $tables = $selectedTables->getSelectedTables($options->networkClone);
+
         $templateEngine = new TemplateEngine();
 
         echo json_encode([
             'success' => true,
             "content" => $templateEngine->render("/Backend/Pro/views/selections/tables.php", [
                 'isNetworkClone' => $scan->isNetworkClone(),
-                'options'  => $scan->getOptions(),
+                'options'  => $options,
                 'showAll'  => true,
-                'selected' => isset($_POST['tables']) ? explode(',', $_POST['tables']) : false
+                'selected' => $tables
             ])
         ]);
 

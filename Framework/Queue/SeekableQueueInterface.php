@@ -61,4 +61,9 @@ interface SeekableQueueInterface
      * Returns the Queue offset
      */
     public function getOffset();
+
+    /**
+     * Close all connection to the queue
+     */
+    public function shutdown();
 }

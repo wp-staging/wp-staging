@@ -5,6 +5,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
+use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Utils\SlashMode;
@@ -227,12 +228,9 @@ class Updating extends Job
 
     private function setTablesForUpdateJob()
     {
-        // Included Tables
-        if (isset($_POST["includedTables"]) && is_array($_POST["includedTables"])) {
-            $this->options->tables = $_POST["includedTables"];
-        } else {
-            $this->options->tables = [];
-        }
+        // Included Tables / Prefixed Table - Excluded Tables
+        $selectedTables = new SelectedTables($_POST['includedTables'], $_POST['excludedTables'], $_POST['selectedTablesWithoutPrefix']);
+        $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
     }
 
     /**

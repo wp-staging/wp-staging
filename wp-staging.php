@@ -4,7 +4,7 @@
  * Plugin Name: Backup Duplicator & Migration - WP STAGING
  * Plugin URI: https://wordpress.org/plugins/wp-staging
  * Description: Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
- * Version: 2.9.13
+ * Version: 2.9.14
  * Requires at least: 3.6+
  * Requires PHP: 5.6
  * Author: WP-STAGING, WPStagingBackup

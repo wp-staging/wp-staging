@@ -68,7 +68,7 @@ class Directories extends JobExecutable
         $this->wpDirectories = new WpDefaultDirectories();
         $this->strUtils = new Strings();
         $this->filesystem = WPStaging::make(Filesystem::class);
-        $this->rootPath = $this->filesystem->normalizePath(ABSPATH, true);
+        $this->rootPath = $this->filesystem->normalizePath(ABSPATH);
     }
 
     /**
@@ -140,7 +140,7 @@ class Directories extends JobExecutable
             return true;
         }
 
-        $directory = $this->filesystem->normalizePath($directory);
+        $directory = $this->filesystem->normalizePath($directory, true);
         $relPath = str_replace($this->rootPath, '', $directory);
 
         // Skip it
@@ -165,7 +165,7 @@ class Directories extends JobExecutable
         ];
 
         // Exclude predefined plugins if given directory is plugins dir
-        if (WP_PLUGIN_DIR === $directory) {
+        if ($this->filesystem->normalizePath(WP_PLUGIN_DIR) === $directory) {
             $excludePaths[] = '**/wp-staging*/**/node_modules'; // only exclude node modules in WP Staging's plugins
             // add excluded plugins defined by WP Staging
             $excludePaths = array_merge((new ExcludedPlugins())->getPluginsToExcludeWithRelativePath(), $excludePaths);
@@ -192,7 +192,7 @@ class Directories extends JobExecutable
     {
         $directory = WP_CONTENT_DIR;
 
-        $directory = $this->filesystem->normalizePath($directory);
+        $directory = $this->filesystem->normalizePath($directory, true);
         $relPath = str_replace($this->rootPath, '', $directory);
 
         // Skip it
@@ -238,7 +238,7 @@ class Directories extends JobExecutable
     {
         $directory = ABSPATH . 'wp-includes';
 
-        $directory = $this->filesystem->normalizePath($directory);
+        $directory = $this->filesystem->normalizePath($directory, true);
         $relPath = str_replace($this->rootPath, '', $directory);
 
         // Skip it
@@ -272,7 +272,7 @@ class Directories extends JobExecutable
     {
         $directory = ABSPATH . 'wp-admin';
 
-        $directory = $this->filesystem->normalizePath($directory);
+        $directory = $this->filesystem->normalizePath($directory, true);
         $relPath = str_replace($this->rootPath, '', $directory);
 
         // Skip it

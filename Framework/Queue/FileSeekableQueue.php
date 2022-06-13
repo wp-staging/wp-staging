@@ -2,9 +2,12 @@
 
 namespace WPStaging\Framework\Queue;
 
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
+
+use function WPStaging\functions\debug_log;
 
 class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 {
@@ -40,13 +43,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
     public function __destruct()
     {
-        if ($this->needsUnlock && $this->handle instanceof FileObject && is_resource($this->handle)) {
-            try {
-                $this->handle->flock(LOCK_UN);
-            } catch (\Exception $e) {
-                // no-op
-            }
-        }
+        $this->shutdown();
     }
 
     /**
@@ -91,7 +88,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
                     usleep(250000); // 0.25s
                     $waitedTimes++;
                     if ($waitedTimes > 5) {
-                        throw new \RuntimeException('Could not acquire exclusive lock for writing to Queue file.');
+                        throw new \RuntimeException('Could not acquire exclusive lock for writing to Queue file: ' . $this->taskName . '.task');
                     }
                 }
             } while (!$locked);
@@ -208,5 +205,16 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     public function getOffset()
     {
         return $this->handle->ftell();
+    }
+
+    public function shutdown()
+    {
+        if ($this->needsUnlock && $this->handle instanceof FileObject) {
+            try {
+                $this->handle->flock(LOCK_UN);
+            } catch (\Exception $e) {
+                debug_log("Unable to unlock handle " . $this->taskName . '.task : ' . $e->getMessage(), Logger::TYPE_DEBUG);
+            }
+        }
     }
 }

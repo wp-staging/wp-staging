@@ -448,9 +448,13 @@
    */
 
   var WpstgDirectoryNavigation = /*#__PURE__*/function () {
-    function WpstgDirectoryNavigation(directoryListingSelector, wpstgObject, notyf) {
+    function WpstgDirectoryNavigation(directoryListingSelector, workflowSelector, wpstgObject, notyf) {
       if (directoryListingSelector === void 0) {
         directoryListingSelector = '#wpstg-directories-listing';
+      }
+
+      if (workflowSelector === void 0) {
+        workflowSelector = '#wpstg-workflow';
       }
 
       if (wpstgObject === void 0) {
@@ -462,6 +466,7 @@
       }
 
       this.directoryListingContainer = qs(directoryListingSelector);
+      this.workflow = qs(workflowSelector);
       this.wpstgObject = wpstgObject;
       this.dirCheckboxSelector = '.wpstg-check-dir';
       this.dirExpandSelector = '.wpstg-expand-dirs';
@@ -504,6 +509,14 @@
       });
       addEvent(this.directoryListingContainer, 'click', this.selectDefaultDirsSelector, function () {
         _this.selectDefault();
+      });
+      addEvent(this.directoryListingContainer, 'click', '.wpstg-expand-dirs', function (target, event) {
+        event.preventDefault();
+
+        _this.toggleDirectoryNavigation(target);
+      });
+      addEvent(this.directoryListingContainer, 'change', 'input.wpstg-check-dir', function (target) {
+        _this.updateDirectorySelection(target);
       });
     };
 
@@ -696,7 +709,217 @@
       return scanned;
     };
 
+    _proto.toggleDirectoryNavigation = function toggleDirectoryNavigation(element) {
+      var cbElement = element.previousSibling;
+
+      if (cbElement.getAttribute('data-navigateable', 'false') === 'false') {
+        return;
+      }
+
+      if (cbElement.getAttribute('data-scanned', 'false') === 'false') {
+        return;
+      }
+
+      var subDirectories = getNextSibling(element, '.wpstg-subdir');
+
+      if (subDirectories.style.display === 'none') {
+        slideDown(subDirectories);
+      } else {
+        slideUp(subDirectories);
+      }
+    };
+
+    _proto.updateDirectorySelection = function updateDirectorySelection(element) {
+      var parent = element.parentElement;
+
+      if (element.checked) {
+        getParents(parent, '.wpstg-dir').forEach(function (parElem) {
+          for (var i = 0; i < parElem.children.length; i++) {
+            if (parElem.children[i].matches('.wpstg-check-dir')) {
+              parElem.children[i].checked = true;
+            }
+          }
+        });
+        parent.querySelectorAll('.wpstg-expand-dirs').forEach(function (x) {
+          x.classList.remove('disabled');
+        });
+        parent.querySelectorAll('.wpstg-subdir .wpstg-check-dir').forEach(function (x) {
+          x.checked = true;
+        });
+      } else {
+        parent.querySelectorAll('.wpstg-expand-dirs, .wpstg-check-subdirs').forEach(function (x) {
+          x.classList.add('disabled');
+        });
+        parent.querySelectorAll('.wpstg-dir .wpstg-check-dir').forEach(function (x) {
+          x.checked = false;
+        });
+      }
+    };
+
     return WpstgDirectoryNavigation;
+  }();
+
+  /**
+   * Database tables selection
+   */
+
+  var WpstgTableSelection = /*#__PURE__*/function () {
+    function WpstgTableSelection(databaseTableSectionSelector, workflowSelector, networkCloneSelector, wpstgObject) {
+      if (databaseTableSectionSelector === void 0) {
+        databaseTableSectionSelector = '#wpstg-scanning-db';
+      }
+
+      if (workflowSelector === void 0) {
+        workflowSelector = '#wpstg-workflow';
+      }
+
+      if (networkCloneSelector === void 0) {
+        networkCloneSelector = '#wpstg_network_clone';
+      }
+
+      if (wpstgObject === void 0) {
+        wpstgObject = wpstg;
+      }
+
+      this.databaseTableSection = qs(databaseTableSectionSelector);
+      this.workflow = qs(workflowSelector);
+      this.networkCloneSelector = networkCloneSelector;
+      this.networkCloneCheckbox = qs(networkCloneSelector);
+      this.wpstgObject = wpstgObject;
+      this.isAllTablesChecked = true;
+      this.isMultisite = this.wpstgObject.isMultisite === '1';
+      this.isNetworkClone = false;
+      this.init();
+    }
+
+    var _proto = WpstgTableSelection.prototype;
+
+    _proto.setNetworkClone = function setNetworkClone(isNetworkClone) {
+      this.isNetworkClone = isNetworkClone;
+    };
+
+    _proto.addEvents = function addEvents() {
+      var _this = this;
+
+      if (this.workflow === null) {
+        console.log('Error: database table section is null. Cannot register events');
+        return;
+      }
+
+      addEvent(this.workflow, 'change', this.networkCloneSelector, function () {
+        _this.selectDefaultTables();
+      });
+      addEvent(this.workflow, 'click', '.wpstg-button-select', function (target, event) {
+        event.preventDefault();
+
+        _this.selectDefaultTables();
+      });
+      addEvent(this.workflow, 'click', '.wpstg-button-unselect', function (target, event) {
+        event.preventDefault();
+
+        _this.toggleTableSelection();
+      });
+    };
+
+    _proto.init = function init() {
+      this.addEvents();
+    };
+
+    _proto.getRegexPattern = function getRegexPattern() {
+      var pattern = '^' + this.wpstgObject.tblprefix;
+      var isNetwork = false;
+
+      if (this.networkCloneCheckbox !== undefined && this.networkCloneCheckbox !== null) {
+        isNetwork = this.networkCloneCheckbox.checked;
+      } // Force network clone true if set explicitly
+
+
+      if (this.isNetworkClone) {
+        isNetwork = true;
+      }
+
+      if (this.isMultisite && !isNetwork) {
+        pattern += '([^0-9])_*';
+      }
+
+      return pattern;
+    };
+
+    _proto.selectDefaultTables = function selectDefaultTables() {
+      var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table');
+      var regexPattern = this.getRegexPattern();
+      options.forEach(function (option) {
+        var name = option.getAttribute('name', '');
+
+        if (name.match(regexPattern)) {
+          option.selected = true;
+        } else {
+          option.selected = false;
+        }
+      });
+    };
+
+    _proto.toggleTableSelection = function toggleTableSelection() {
+      if (false === this.isAllTablesChecked) {
+        this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table').forEach(function (option) {
+          option.selected = true;
+        });
+        this.databaseTableSection.querySelector('.wpstg-button-unselect').innerHTML = 'Unselect All'; // cache.get('.wpstg-db-table-checkboxes').prop('checked', true);
+
+        this.isAllTablesChecked = true;
+      } else {
+        this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table').forEach(function (option) {
+          option.selected = false;
+        });
+        this.databaseTableSection.querySelector('.wpstg-button-unselect').innerHTML = 'Select All'; // cache.get('.wpstg-db-table-checkboxes').prop('checked', false);
+
+        this.isAllTablesChecked = false;
+      }
+    };
+
+    _proto.getSelectedTablesWithoutPrefix = function getSelectedTablesWithoutPrefix() {
+      var selectedTablesWithoutPrefix = [];
+      var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning option:checked');
+      var regexPattern = this.getRegexPattern();
+      options.forEach(function (option) {
+        var name = option.getAttribute('name', '');
+
+        if (!name.match(regexPattern)) {
+          selectedTablesWithoutPrefix.push(option.value);
+        }
+      });
+      return selectedTablesWithoutPrefix.join(this.wpstgObject.settings.directorySeparator);
+    };
+
+    _proto.getIncludedTables = function getIncludedTables() {
+      var includedTables = [];
+      var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning option:checked');
+      var regexPattern = this.getRegexPattern();
+      options.forEach(function (option) {
+        var name = option.getAttribute('name', '');
+
+        if (name.match(regexPattern)) {
+          includedTables.push(option.value);
+        }
+      });
+      return includedTables.join(this.wpstgObject.settings.directorySeparator);
+    };
+
+    _proto.getExcludedTables = function getExcludedTables() {
+      var excludedTables = [];
+      var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning option:not(:checked)');
+      var regexPattern = this.getRegexPattern();
+      options.forEach(function (option) {
+        var name = option.getAttribute('name', '');
+
+        if (name.match(regexPattern)) {
+          excludedTables.push(option.value);
+        }
+      });
+      return excludedTables.join(this.wpstgObject.settings.directorySeparator);
+    };
+
+    return WpstgTableSelection;
   }();
 
   /**
@@ -1513,7 +1736,8 @@
       this.resetTabSelector = '.wpstg-reset-exclude-tab';
       this.directoryNavigator = null;
       this.excludeFilters = null;
-      this.isAllTablesChecked = true;
+      this.tableSelector = null;
+      this.isNetworkClone = false;
     }
 
     var _proto = WpstgResetModal.prototype;
@@ -1531,24 +1755,14 @@
       addEvent(resetModalContainer, 'click', this.resetTabSelector, function (target) {
         _this.toggleContent(target);
       });
-      addEvent(resetModalContainer, 'click', '.wpstg-button-select', function () {
-        _this.selectDefaultTables();
-      });
-      addEvent(resetModalContainer, 'click', '.wpstg-button-unselect', function () {
-        _this.toggleTableSelection();
-      });
-      addEvent(resetModalContainer, 'click', '.wpstg-expand-dirs', function (target, event) {
-        event.preventDefault();
-
-        _this.toggleDirectoryNavigation(target);
-      });
-      addEvent(resetModalContainer, 'change', 'input.wpstg-check-dir', function (target) {
-        _this.updateDirectorySelection(target);
-      });
     };
 
     _proto.init = function init() {
       this.addEvents();
+    };
+
+    _proto.setNetworkClone = function setNetworkClone(isNetworkClone) {
+      this.isNetworkClone = isNetworkClone;
     };
 
     _proto.toggleContent = function toggleContent(target) {
@@ -1662,6 +1876,9 @@
         modal.querySelector('.wpstg--swal2-content').innerHTML = data.html;
         _this2.directoryNavigator = new WpstgDirectoryNavigation();
         _this2.excludeFilters = new WpstgExcludeFilters();
+        _this2.tableSelector = new WpstgTableSelection('#wpstg-reset-excluded-tables', '.' + _this2.resetModalContainerClass);
+
+        _this2.tableSelector.setNetworkClone(_this2.isNetworkClone);
       })["catch"](function (error) {
         _this2.renderError({
           'html': _this2.wpstgObject.i18n['somethingWentWrong'] + ' ' + error
@@ -1677,95 +1894,12 @@
       return this.excludeFilters;
     };
 
+    _proto.getTableSelector = function getTableSelector() {
+      return this.tableSelector;
+    };
+
     _proto.getAjaxLoader = function getAjaxLoader() {
       return '<div class="wpstg-swal2-ajax-loader"><img src="' + this.wpstgObject.wpstgIcon + '" /></div>';
-    };
-
-    _proto.toggleDirectoryNavigation = function toggleDirectoryNavigation(element) {
-      var cbElement = element.previousSibling;
-
-      if (cbElement.getAttribute('data-navigateable', 'false') === 'false') {
-        return;
-      }
-
-      if (cbElement.getAttribute('data-scanned', 'false') === 'false') {
-        return;
-      }
-
-      var subDirectories = getNextSibling(element, '.wpstg-subdir');
-
-      if (subDirectories.style.display === 'none') {
-        slideDown(subDirectories);
-      } else {
-        slideUp(subDirectories);
-      }
-    };
-
-    _proto.updateDirectorySelection = function updateDirectorySelection(element) {
-      var parent = element.parentElement;
-
-      if (element.checked) {
-        getParents(parent, '.wpstg-dir').forEach(function (parElem) {
-          for (var i = 0; i < parElem.children.length; i++) {
-            if (parElem.children[i].matches('.wpstg-check-dir')) {
-              parElem.children[i].checked = true;
-            }
-          }
-        });
-        parent.querySelectorAll('.wpstg-expand-dirs').forEach(function (x) {
-          x.classList.remove('disabled');
-        });
-        parent.querySelectorAll('.wpstg-subdir .wpstg-check-dir').forEach(function (x) {
-          x.checked = true;
-        });
-      } else {
-        parent.querySelectorAll('.wpstg-expand-dirs, .wpstg-check-subdirs').forEach(function (x) {
-          x.classList.add('disabled');
-        });
-        parent.querySelectorAll('.wpstg-dir .wpstg-check-dir').forEach(function (x) {
-          x.checked = false;
-        });
-      }
-    };
-
-    _proto.selectDefaultTables = function selectDefaultTables() {
-      var _this3 = this;
-
-      var resetModalContainer = qs('.' + this.resetModalContainerClass);
-      var options = resetModalContainer.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table');
-      var multisitePattern = '^' + this.wpstgObject.tblprefix + '([^0-9])_*';
-      var singleSitePattern = '^' + this.wpstgObject.tblprefix;
-      options.forEach(function (option) {
-        var name = option.getAttribute('name', '');
-
-        if (_this3.wpstgObject.isMultisite === '1' && name.match(multisitePattern)) {
-          option.setAttribute('selected', 'selected');
-        } else if (_this3.wpstgObject.isMultisite === '' && name.match(singleSitePattern)) {
-          option.setAttribute('selected', 'selected');
-        } else {
-          option.removeAttribute('selected');
-        }
-      });
-    };
-
-    _proto.toggleTableSelection = function toggleTableSelection() {
-      var resetModalContainer = qs('.' + this.resetModalContainerClass);
-
-      if (false === this.isAllTablesChecked) {
-        resetModalContainer.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table').forEach(function (option) {
-          option.setAttribute('selected', 'selected');
-        });
-        resetModalContainer.querySelector('.wpstg-button-unselect').innerHTML = 'Unselect All'; // cache.get('.wpstg-db-table-checkboxes').prop('checked', true);
-
-        this.isAllTablesChecked = true;
-      } else {
-        resetModalContainer.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table').forEach(function (option) {
-          option.removeAttribute('selected');
-        });
-        resetModalContainer.querySelector('.wpstg-button-unselect').innerHTML = 'Select All'; // cache.get('.wpstg-db-table-checkboxes').prop('checked', false);
-
-        this.isAllTablesChecked = false;
-      }
     };
 
     return WpstgResetModal;
@@ -1889,6 +2023,7 @@
       progressBar: 0,
       cloneExcludeFilters: null,
       directoryNavigator: null,
+      tableSelector: null,
       notyf: null,
       areAllTablesChecked: true,
       handleDisplayDependencies: handleDisplayDependencies,
@@ -2014,77 +2149,82 @@
       urlSpinner += '.gif';
       ajaxSpinner = '<img src=\'\'' + urlSpinner + '\' alt=\'\' class=\'ajax-spinner general-spinner\' />';
 
-      $workFlow.on('change', '#wpstg_network_clone', function (e) {
-        e.preventDefault();
-        $('.wpstg-button-select').trigger('click');
-      }) // Check / Un-check All Database Tables New
-      .on('click', '.wpstg-button-unselect', function (e) {
-        e.preventDefault();
-
-        if (false === that.areAllTablesChecked) {
-          cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', 'selected');
-          cache.get('.wpstg-button-unselect').text('Unselect All');
-          cache.get('.wpstg-db-table-checkboxes').prop('checked', true);
-          that.areAllTablesChecked = true;
-        } else {
-          cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', false);
-          cache.get('.wpstg-button-unselect').text('Select All');
-          cache.get('.wpstg-db-table-checkboxes').prop('checked', false);
-          that.areAllTablesChecked = false;
-        }
-      })
+      $workFlow
       /**
+          .on('change', '#wpstg_network_clone', function(e) {
+            e.preventDefault();
+            $('.wpstg-button-select').trigger('click');
+          })
+      // Check / Un-check All Database Tables New
+          .on('click', '.wpstg-button-unselect', function(e) {
+            e.preventDefault();
+             if (false === that.areAllTablesChecked) {
+              cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', 'selected');
+              cache.get('.wpstg-button-unselect').text('Unselect All');
+              cache.get('.wpstg-db-table-checkboxes').prop('checked', true);
+              that.areAllTablesChecked = true;
+            } else {
+              cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', false);
+              cache.get('.wpstg-button-unselect').text('Select All');
+              cache.get('.wpstg-db-table-checkboxes').prop('checked', false);
+              that.areAllTablesChecked = false;
+            }
+          })
+       /**
                * Select tables with certain tbl prefix | NEW
                * @param obj e
                * @returns {undefined}
                */
-      .on('click', '.wpstg-button-select', function (e) {
-        e.preventDefault();
-        $('#wpstg_select_tables_cloning .wpstg-db-table').each(function () {
-          var regex = '^' + wpstg.tblprefix;
 
-          if (wpstg.isMultisite === '1' && !$('#wpstg_network_clone').is(':checked')) {
-            regex += '([^0-9])_*';
-          }
-
-          if ($(this).attr('name').match(regex)) {
-            $(this).prop('selected', 'selected');
-          } else {
-            $(this).prop('selected', false);
-          }
-        });
-      }) // Expand Directories
-      .on('click', '.wpstg-expand-dirs', function (e) {
-        e.preventDefault();
-        var $this = $(this);
-        $this.siblings('.wpstg-subdir').slideToggle();
-      }) // When a directory checkbox is Selected
-      .on('change', 'input.wpstg-check-dir', function () {
-        var $directory = $(this).parent('.wpstg-dir');
-
-        if (this.checked) {
-          $directory.parents('.wpstg-dir').children('.wpstg-check-dir').prop('checked', true);
-          $directory.find('.wpstg-expand-dirs').removeClass('disabled');
-          $directory.find('.wpstg-subdir .wpstg-check-dir').prop('checked', true);
-        } else {
-          $directory.find('.wpstg-dir .wpstg-check-dir').prop('checked', false);
-          $directory.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
-          $directory.find('.wpstg-check-subdirs').data('action', 'check').text('check');
-        }
-      }) // When a directory name is Selected
-      .on('change', 'href.wpstg-check-dir', function () {
-        var $directory = $(this).parent('.wpstg-dir');
-
-        if (this.checked) {
-          $directory.parents('.wpstg-dir').children('.wpstg-check-dir').prop('checked', true);
-          $directory.find('.wpstg-expand-dirs').removeClass('disabled');
-          $directory.find('.wpstg-subdir .wpstg-check-dir').prop('checked', true);
-        } else {
-          $directory.find('.wpstg-dir .wpstg-check-dir').prop('checked', false);
-          $directory.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
-          $directory.find('.wpstg-check-subdirs').data('action', 'check').text('check');
-        }
-      }) // Check the max length of the clone name and if the clone name already exists
+      /**
+          .on('click', '.wpstg-button-select', function(e) {
+            e.preventDefault();
+            $('#wpstg_select_tables_cloning .wpstg-db-table').each(function() {
+              let regex = '^' + wpstg.tblprefix;
+              if (wpstg.isMultisite === '1' && !$('#wpstg_network_clone').is(':checked')) {
+                regex += '([^0-9])_*';
+              }
+               if ($(this).attr('name').match(regex)) {
+                $(this).prop('selected', 'selected');
+              } else {
+                $(this).prop('selected', false);
+              }
+            });
+          })
+       // Expand Directories
+          .on('click', '.wpstg-expand-dirs', function(e) {
+            e.preventDefault();
+             const $this = $(this);
+             $this.siblings('.wpstg-subdir').slideToggle();
+          })
+      // When a directory checkbox is Selected
+          .on('change', 'input.wpstg-check-dir', function() {
+            const $directory = $(this).parent('.wpstg-dir');
+             if (this.checked) {
+              $directory.parents('.wpstg-dir').children('.wpstg-check-dir').prop('checked', true);
+              $directory.find('.wpstg-expand-dirs').removeClass('disabled');
+              $directory.find('.wpstg-subdir .wpstg-check-dir').prop('checked', true);
+            } else {
+              $directory.find('.wpstg-dir .wpstg-check-dir').prop('checked', false);
+              $directory.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
+              $directory.find('.wpstg-check-subdirs').data('action', 'check').text('check');
+            }
+          })
+      // When a directory name is Selected
+          .on('change', 'href.wpstg-check-dir', function() {
+            const $directory = $(this).parent('.wpstg-dir');
+             if (this.checked) {
+              $directory.parents('.wpstg-dir').children('.wpstg-check-dir').prop('checked', true);
+              $directory.find('.wpstg-expand-dirs').removeClass('disabled');
+              $directory.find('.wpstg-subdir .wpstg-check-dir').prop('checked', true);
+            } else {
+              $directory.find('.wpstg-dir .wpstg-check-dir').prop('checked', false);
+              $directory.find('.wpstg-expand-dirs, .wpstg-check-subdirs').addClass('disabled');
+              $directory.find('.wpstg-check-subdirs').data('action', 'check').text('check');
+            }
+          })
+          */
+      // Check the max length of the clone name and if the clone name already exists
       .on('keyup', '#wpstg-new-clone-id', function () {
         // Hide previous errors
         document.getElementById('wpstg-error-details').style.display = 'none'; // This request was already sent, clear it up!
@@ -2297,7 +2437,8 @@
           $workFlow.removeClass('loading').html(response); // register check disk space function for clone update process.
 
           checkDiskSpace();
-          that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', wpstg, that.notyf);
+          that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', '#wpstg-workflow', wpstg, that.notyf);
+          that.tableSelector = new WpstgTableSelection('#wpstg-scanning-db', '#wpstg-workflow', '#wpstg_network_clone', wpstg, that.notyf);
           that.cloneExcludeFilters = new WpstgExcludeFilters();
           that.switchStep(2);
         }, 'HTML');
@@ -2306,14 +2447,34 @@
         e.preventDefault();
         var clone = $(this).data('clone');
         var resetModal = new WpstgResetModal(clone);
+        resetModal.setNetworkClone($(this).data('network') === 'yes');
         var promise = resetModal.showModal();
         that.areAllTablesChecked = true;
         promise.then(function (result) {
           if (result.value) {
             var dirNavigator = resetModal.getDirectoryNavigator();
+            var tableSelector = resetModal.getTableSelector();
             var exclFilters = resetModal.getExcludeFilters().getExcludeFilters();
+            var includedTables = '';
+            var excludedTables = '';
+            var selectedTablesWithoutPrefix = '';
+
+            if (tableSelector !== null) {
+              includedTables = tableSelector.getIncludedTables();
+              excludedTables = tableSelector.getExcludedTables();
+              selectedTablesWithoutPrefix = tableSelector.getSelectedTablesWithoutPrefix();
+            }
+
+            if (includedTables.length > excludedTables.length) {
+              includedTables = '';
+            } else if (excludedTables.length > includedTables.length) {
+              excludedTables = '';
+            }
+
             resetClone(clone, {
-              includedTables: getIncludedTables(),
+              includedTables: includedTables,
+              excludedTables: excludedTables,
+              selectedTablesWithoutPrefix: selectedTablesWithoutPrefix,
               excludeSizeRules: encodeURIComponent(exclFilters.sizes),
               excludeGlobRules: encodeURIComponent(exclFilters.globs),
               excludedDirectories: dirNavigator.getExcludedDirectories(),
@@ -2476,19 +2637,6 @@
       });
     };
     /**
-     * Get Included (Checked) Database Tables
-     * @return {Array}
-     */
-
-
-    var getIncludedTables = function getIncludedTables() {
-      var includedTables = [];
-      $('#wpstg_select_tables_cloning option:selected').each(function () {
-        includedTables.push(this.value);
-      });
-      return includedTables;
-    };
-    /**
      * Get Excluded (Unchecked) Database Tables
      * Not used anymore!
      * @return {Array}
@@ -2596,8 +2744,7 @@
         that.data.cloneID = $('#wpstg-new-clone-id').data('clone');
       }
 
-      that.data.cloneName = $('#wpstg-new-clone-id').val() || that.data.cloneID; // Remove this to keep &_POST[] small otherwise mod_security will throw error 404
-      // that.data.excludedTables = getExcludedTables();
+      that.data.cloneName = $('#wpstg-new-clone-id').val() || that.data.cloneID;
 
       if (that.directoryNavigator !== null) {
         that.data.excludedDirectories = encodeURIComponent(that.directoryNavigator.getExcludedDirectories());
@@ -2613,7 +2760,21 @@
         that.data.excludeSizeRules = encodeURIComponent(rules.sizes);
       }
 
-      that.data.includedTables = getIncludedTables();
+      that.data.includedTables = '';
+      that.data.excludedTables = '';
+
+      if (that.tableSelector !== null) {
+        that.data.includedTables = that.tableSelector.getIncludedTables();
+        that.data.excludedTables = that.tableSelector.getExcludedTables();
+        that.data.selectedTablesWithoutPrefix = that.tableSelector.getSelectedTablesWithoutPrefix();
+      }
+
+      if (that.data.includedTables.length > that.data.excludedTables.length) {
+        that.data.includedTables = '';
+      } else if (that.data.excludedTables.length > that.data.includedTables.length) {
+        that.data.excludedTables = '';
+      }
+
       that.data.databaseServer = $('#wpstg_db_server').val();
       that.data.databaseUser = $('#wpstg_db_username').val();
       that.data.databasePassword = $('#wpstg_db_password').val();
@@ -2669,7 +2830,8 @@
 
         if (that.data.action === 'wpstg_scanning') {
           that.areAllTablesChecked = true;
-          that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', wpstg, that.notyf);
+          that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', '#wpstg-workflow', wpstg, that.notyf);
+          that.tableSelector = new WpstgTableSelection('#wpstg-scanning-db', '#wpstg-workflow', '#wpstg_network_clone', wpstg, that.notyf);
           that.switchStep(2);
           that.cloneExcludeFilters = new WpstgExcludeFilters();
         } else if (that.data.action === 'wpstg_cloning' || that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {

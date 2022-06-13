@@ -47,7 +47,7 @@
                                 <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Update and overwrite this clone. Select folders and database tables in the next step.", "wp-staging") ?>">
                                     <?php _e("Update", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Reset this clone with existing production site. Confirm to proceed.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" data-network="<?php echo is_multisite() && $data['networkClone'] ? 'yes' : 'no' ?>" title="<?php echo __("Reset this clone with existing production site. Confirm to proceed.", "wp-staging") ?>">
                                     <?php _e("Reset", "wp-staging"); ?>
                                 </a>
                                 <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Delete this clone. Select specific folders and database tables in the next step.", "wp-staging") ?>">

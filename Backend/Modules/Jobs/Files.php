@@ -63,9 +63,9 @@ class Files extends JobExecutable
         /** @var Filesystem */
         $this->filesystem = WPStaging::make(Filesystem::class);
 
-        $this->rootPath = $this->filesystem->normalizePath(WPStaging::getWPpath(), true);
+        $this->rootPath = $this->filesystem->normalizePath(WPStaging::getWPpath());
 
-        $this->destination = $this->filesystem->normalizePath($this->options->destinationDir, true);
+        $this->destination = $this->filesystem->normalizePath($this->options->destinationDir);
 
         $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
@@ -352,7 +352,7 @@ class Files extends JobExecutable
     {
         $file = trim(WPStaging::getWPpath() . $file);
 
-        $file = $this->filesystem->normalizePath($file, true);
+        $file = $this->filesystem->normalizePath($file);
 
         $directory = dirname($file);
 
@@ -442,7 +442,7 @@ class Files extends JobExecutable
      */
     private function getDestination($file)
     {
-        $file = $this->filesystem->normalizePath($file, true);
+        $file = $this->filesystem->normalizePath($file);
         $relativePath = str_replace($this->rootPath, '', $file);
         $destinationPath = $this->destination . $relativePath;
         $destinationDirectory = dirname($destinationPath);
@@ -453,7 +453,7 @@ class Files extends JobExecutable
             return false;
         }
 
-        return $this->filesystem->normalizePath($destinationPath, true);
+        return $this->filesystem->normalizePath($destinationPath);
     }
 
     /**

@@ -7,6 +7,7 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
+use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Staging\Sites;
@@ -125,12 +126,14 @@ class Cloning extends Job
             $this->options->cloneNumber = count($this->options->existingClones) + 1;
         }
 
-        // Included Tables
-        if (isset($_POST["includedTables"]) && is_array($_POST["includedTables"])) {
-            $this->options->tables = $_POST["includedTables"];
-        } else {
-            $this->options->tables = [];
+        $this->options->networkClone = false;
+        if ($this->isMultisiteAndPro() && is_main_site()) {
+            $this->options->networkClone = isset($_POST['networkClone']) && $_POST['networkClone'] !== "false";
         }
+
+        // Included Tables / Prefixed Table - Excluded Tables
+        $selectedTables = new SelectedTables($_POST['includedTables'], $_POST['excludedTables'], $_POST['selectedTablesWithoutPrefix']);
+        $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
 
         // Exclude File Size Rules
         $this->options->excludeSizeRules = [];
@@ -213,11 +216,6 @@ class Cloning extends Job
                 'wpstg_cloning_email_allowed',
                 isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false"
             );
-        }
-
-        $this->options->networkClone = false;
-        if ($this->isMultisiteAndPro() && is_main_site()) {
-            $this->options->networkClone = isset($_POST['networkClone']) && $_POST['networkClone'] !== "false";
         }
 
         $this->options->destinationHostname = $this->getDestinationHostname();
