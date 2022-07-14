@@ -16,6 +16,11 @@ class CopyWpConfig extends FileCloningService
     {
         $this->log("Copy wp-config.php file");
 
+        if ($this->isExcludedWpConfig()) {
+            $this->log("Excluded: wp-config.php is excluded by filter");
+            return true;
+        }
+
         $dir = trailingslashit(dirname(ABSPATH));
 
         $source = $dir . 'wp-config.php';

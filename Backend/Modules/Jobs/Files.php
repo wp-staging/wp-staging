@@ -350,9 +350,9 @@ class Files extends JobExecutable
      */
     private function copyFile($file)
     {
-        $file = trim(WPStaging::getWPpath() . $file);
+        $filePath = trim(WPStaging::getWPpath() . $file);
 
-        $file = $this->filesystem->normalizePath($file);
+        $file = $this->filesystem->maybeNormalizePath($filePath);
 
         $directory = dirname($file);
 
@@ -519,7 +519,7 @@ class Files extends JobExecutable
         }
 
         // Do not copy wp-config.php if the clone gets updated. This is for security purposes,
-        // because if the updating process fails, the staging site would not be accessable any longer
+        // because if the updating process fails, the staging site would not be accessible any longer
         if (
             isset($this->options->mainJob) && $this->options->mainJob === "updating"
             && stripos(strrev($file), strrev("wp-config.php")) === 0

@@ -18,8 +18,6 @@ use Generator;
  */
 trait DbRowsGeneratorTrait
 {
-    use ResourceTrait;
-
     protected $tableName = '';
 
     /** @var object */

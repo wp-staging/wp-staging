@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup plugin, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.0
-Stable tag: 2.9.14
+Stable tag: 2.9.15
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -258,6 +258,18 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.15 =
+* New: Add sFTP support to upload backup files automatically via (s)FTP to a remote server or NAS system #1677
+* Enh: Cloning/Push stops if folder name contains backslash character (\) on Linux OS #1744
+* Enh: Don't copy or update wp-config.php if staging site is updated by using the UPDATE button #1747
+* Enh: Restoring a backup from a staging site that uses the meta tag noindex, causes the imported site to also not be indexed. In the worst case, this can result in a production site not being indexable after restoring a backup. This update ensures that the index meta value of the imported site is preserved when a backup is restored. #1777
+* Enh: If Jetpack plugin is active, use the special Jetpack Staging Mode by adding the constant JETPACK_STAGING_MODE to wp-config.php of the staging site #1780
+* Fix: On some servers, autoloader tries to load Composer\InstalledVersions although this doesn't exist. We fix this by only loading classes that exist #1801
+* Fix: Fatal error if php curl() module is missing and backup is uploaded to Google Drive or Amazon S3 #1769
+* Fix: Fatal error on cloning due to strict standard issue in DbRowsGeneratorTrait when user has E_STRICT or E_DEPRECATED constants active in PHP #1772
+* Fix: Fatal error on plugin activation if there is no write permission on the backup files. Happens only on updating from a very old version to latest one and the backup metadata update routine is fired #1776
+* Dev: Add automated test for scheduled backup plans #1764
 
 = 2.9.14 =
 * Fix: Certain default plugins like wps-hide are not excluded anymore during cloning #1742
@@ -563,6 +575,18 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
+
+= 2.9.15 =
+* New: Add sFTP support to upload backup files automatically via (s)FTP to a remote server or NAS system #1677
+* Enh: Cloning/Push stops if folder name contains backslash character (\) on Linux OS #1744
+* Enh: Don't copy or update wp-config.php if staging site is updated by using the UPDATE button #1747
+* Enh: Restoring a backup from a staging site that uses the meta tag noindex, causes the imported site to also not be indexed. In the worst case, this can result in a production site not being indexable after restoring a backup. This update ensures that the index meta value of the imported site is preserved when a backup is restored. #1777
+* Enh: If Jetpack plugin is active, use the special Jetpack Staging Mode by adding the constant JETPACK_STAGING_MODE to wp-config.php of the staging site #1780
+* Fix: On some servers, autoloader tries to load Composer\InstalledVersions although this doesn't exist. We fix this by only loading classes that exist #1801
+* Fix: Fatal error if php curl() module is missing and backup is uploaded to Google Drive or Amazon S3 #1769
+* Fix: Fatal error on cloning due to strict standard issue in DbRowsGeneratorTrait when user has E_STRICT or E_DEPRECATED constants active in PHP #1772
+* Fix: Fatal error on plugin activation if there is no write permission on the backup files. Happens only on updating from a very old version to latest one and the backup metadata update routine is fired #1776
+* Dev: Add automated test for scheduled backup plans #1764
 
 = 2.9.14 =
 * Fix: Certain default plugins like wps-hide are not excluded anymore during cloning #1742

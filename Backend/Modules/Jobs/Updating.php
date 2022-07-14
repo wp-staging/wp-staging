@@ -119,6 +119,11 @@ class Updating extends Job
         // Define mainJob to differentiate between cloning, updating and pushing
         $this->options->mainJob = $this->mainJob;
 
+        // Only exclude wp-config.php during UPDATE not RESET
+        if ($this->excludeWpConfigDuringUpdate()) {
+            $this->options->excludedFilesFullPath[] = 'wp-config.php';
+        }
+
         // Job
         $this->options->job = new \stdClass();
 
@@ -202,8 +207,13 @@ class Updating extends Job
     {
         // Exclude Glob Rules
         $this->options->excludeGlobRules = [];
-        if (isset($_POST["excludeGlobRules"]) && !empty($_POST["excludeGlobRules"])) {
-            $this->options->excludeGlobRules = wpstg_urldecode(explode(',', $_POST["excludeGlobRules"]));
+        if (!empty($_POST["excludeGlobRules"])) {
+            $this->options->excludeGlobRules = explode(',', wpstg_urldecode($_POST["excludeGlobRules"]));
+        }
+
+        $this->options->excludeSizeRules = [];
+        if (!empty($_POST["excludeSizeRules"])) {
+            $this->options->excludeSizeRules = explode(',', wpstg_urldecode($_POST["excludeSizeRules"]));
         }
 
         // Excluded Directories

@@ -19,6 +19,7 @@ use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
+use WPStaging\Framework\Support\ThirdParty\Jetpack;
 use WPStaging\Framework\Support\ThirdParty\WordFence;
 
 /**
@@ -164,6 +165,8 @@ class Notices
             $excludedPlugins = (array)(new ExcludedPlugins())->getExcludedPlugins();
             // Show freemius notice if freemius options were deleted during cloning.
             $freemiusOptionsCleared = (new FreemiusScript())->isNoticeEnabled();
+            // Show jetpack staging mode notice if the constant is set on staging site
+            $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
             // use require here instead of require_once otherwise unit tests will always fail,
             // as this notice is tested multiple times.
             require "{$viewsNoticesPath}disabled-items-notice.php";

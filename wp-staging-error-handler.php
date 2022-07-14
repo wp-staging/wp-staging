@@ -109,13 +109,13 @@ function shutdown_function()
         $fileHandler = fopen(WPSTG_DEBUG_LOG_FILE, 'a');
 
         $message = sprintf(
-            "[WP STAGING Shutdown Function][%s][%s] %s - File: %s Line: %s Fatal? %s Comes from WP STAGING? %s\n",
+            "[WP STAGING Shutdown Function][%s][%s] %s - File: %s Line: %s | Is it Fatal Error? %s | Is it Thrown by WP STAGING? %s\n",
             $allErrorTypes[$error['type']],
             current_time('mysql'),
             $error['message'],
             $error['file'],
             $error['line'],
-            $isFatalError ? 'Is Fatal Error!' : 'Is No Fatal Error!',
+            $isFatalError ? 'Yes' : 'No',
             $comesFromWpStaging ? 'Yes' : 'No'
         );
 

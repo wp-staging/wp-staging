@@ -755,8 +755,35 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * This normalizes the given path in a specific way,
-     * aiming to compare paths with precision.
+     * Normalize Path if
+     * 1. On Windows OS
+     * 2. OR it doesn't contains backslash
+     *
+     * Normalize work under normal condition but on Linux OS if a folder contains backslash \,
+     * it will be converted into forward slash thus make the folder path inaccessible.
+     * So on linux if the path contains backslash we don't normalize it.
+     * On Windows OS we always return the normalize path for readability.
+     *
+     * @param string $path
+     * @param bool $addTrailingslash
+     *
+     * @return string
+     */
+    public function maybeNormalizePath($path, $addTrailingslash = false)
+    {
+        if ($this->isWindowsOs() || !strpos($path, '\\')) {
+            return $this->normalizePath($path, $addTrailingslash);
+        }
+
+        return $addTrailingslash ? $this->trailingSlashit($path) : $path;
+    }
+
+    /**
+     * Normalize a filesystem path.
+     *
+     * On windows systems, replaces backslashes with forward slashes
+     * and forces upper-case drive letters.
+     * Allows two leading slashes for Windows network shares
      *
      * @param string $path
      * @param bool   $addTrailingslash. Default false
@@ -896,5 +923,35 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         return $files;
+    }
+
+    /**
+     * This extends and improves WP's trailingslashit().
+     * If directory path ends with backlash as it is supported by linux, it adds a trailing slash to escape it properly e.g '/var/www/folder\\' => '/var/www/folder\/'
+     * WP's trailingslashit() would return the wrong directory path '/var/www/folder/'
+     * @param string $path
+     * @return string
+     */
+    public function trailingSlashit($path)
+    {
+        if ($this->isWindowsOs()) {
+            return trailingslashit($path);
+        }
+
+        if ($path[strlen($path) - 1] === '\\') {
+            return $path . '/';
+        }
+
+        return trailingslashit($path);
+    }
+
+    /**
+     * Wrapper around WPStaging::isWindowsOs to make it easily mockable
+     *
+     * @return bool
+     */
+    protected function isWindowsOs()
+    {
+        return WPStaging::isWindowsOs();
     }
 }

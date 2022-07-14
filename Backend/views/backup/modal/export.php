@@ -14,7 +14,11 @@ $time = WPStaging\Core\WPStaging::make(\WPStaging\Framework\Utils\Times::class);
 /** @var \WPStaging\Pro\Backup\Storage\Providers */
 $storages = WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Storage\Providers::class);
 
-$recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', defined('WPSTG_DEV') && WPSTG_DEV ? 'PT1M' : 'PT15M');
+$recurInterval = (defined('WPSTG_DEV') && WPSTG_DEV) ? 'PT1M' : 'PT15M';
+
+$recurInterval = apply_filters('wpstg.schedulesBackup.interval', $recurInterval);
+
+$recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterval);
 ?>
 <div id="wpstg--modal--backup--new" data-confirmButtonText="<?php esc_attr_e('Start Backup', 'wp-staging') ?>" style="display: none">
     <h3 class="wpstg--swal2-title wpstg-w-100" for="wpstg-backup-name-input"><?php esc_html_e('Create Site Backup', 'wp-staging') ?></h3>

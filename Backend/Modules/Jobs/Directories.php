@@ -117,8 +117,10 @@ class Directories extends JobExecutable
         $this->log("Scanning / for its files");
 
         try {
+            $this->setIsExcludedWpConfig(true);
             // Iterate over wp root directory
             $this->options->totalFiles = $this->scanToCacheFile($files, ABSPATH, false, $this->getFilteredExcludedPaths(), $this->getFilteredExcludedFileSizes());
+            $this->options->isExcludedWpConfig = $this->getIsExcludedWpConfig();
         } catch (Exception $e) {
             $this->returnException('Error: ' . $e->getMessage());
         }

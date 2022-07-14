@@ -4,11 +4,14 @@ namespace WPStaging\Framework\Traits;
 
 use Exception;
 use RuntimeException;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
-use WPStaging\Framework\Utils\Strings;
 
 trait FileScanToCacheTrait
 {
+    protected $isExcludedWpConfig = false;
+
     /**
      * Write contents to a file
      *
@@ -34,9 +37,10 @@ trait FileScanToCacheTrait
      */
     public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $excludeSizeRules = [], $wpRootPath = ABSPATH)
     {
-        $strUtil = new Strings();
+        $filesystem = new Filesystem();
+        $normalizedWpRoot = $filesystem->normalizePath($wpRootPath);
         if (is_file($path)) {
-            $file = str_replace($strUtil->sanitizeDirectorySeparator($wpRootPath), '', $strUtil->sanitizeDirectorySeparator($path)) . PHP_EOL;
+            $file = str_replace($normalizedWpRoot, '', $filesystem->normalizePath($path, true)) . PHP_EOL;
             if ($this->write($filesHandle, $file)) {
                 return 1;
             }
@@ -46,9 +50,13 @@ trait FileScanToCacheTrait
 
         $filesWrittenToCache = 0;
 
+        if (!file_exists($path)) {
+            return 0;
+        }
+
         try {
             $iterator = (new FilterableDirectoryIterator())
-                            ->setDirectory(trailingslashit($path))
+                            ->setDirectory($filesystem->trailingSlashit($path))
                             ->setRecursive(false)
                             ->setDotSkip()
                             ->setExcludePaths($excludePaths)
@@ -56,26 +64,34 @@ trait FileScanToCacheTrait
                             ->setWpRootPath($wpRootPath)
                             ->get();
 
-            $strUtil = new Strings();
             foreach ($iterator as $item) {
                 // Always check link first otherwise it may be treated as directory
-                $path = $item->getPathname();
+                $itemPath = $item->getPathname();
                 if ($item->isLink()) {
                     // Allow copying of link if the link's source is a directory
                     if (is_dir($item->getRealPath()) && $isRecursive) {
-                        $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $path, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
+                        $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
                     }
 
                     continue;
                 }
 
                 if ($isRecursive && $item->isDir()) {
-                    $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $path, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
+                    $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
                     continue;
                 }
 
                 if ($item->isFile()) {
-                    $file = str_replace($strUtil->sanitizeDirectorySeparator($wpRootPath), '', $strUtil->sanitizeDirectorySeparator($path)) . PHP_EOL;
+                    $file = $filesystem->maybeNormalizePath($itemPath);
+                    $file = str_replace($normalizedWpRoot, '', $file);
+                    // One more time with not normalized $wpRootPath in case the file path was not normalized
+                    $file = str_replace($wpRootPath, '', $file) . PHP_EOL;
+
+                    // At the moment will only handle case where wp-config.php is present at root folder of WP
+                    if ($file === '/wp-config.php') {
+                        $this->setIsExcludedWpConfig(false);
+                    }
+
                     if ($this->write($filesHandle, $file)) {
                         $filesWrittenToCache++;
                     }
@@ -86,5 +102,21 @@ trait FileScanToCacheTrait
         }
 
         return $filesWrittenToCache;
+    }
+
+    /**
+     * @param bool $skipped
+     */
+    public function setIsExcludedWpConfig($skipped = true)
+    {
+        $this->isExcludedWpConfig = $skipped;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsExcludedWpConfig()
+    {
+        return $this->isExcludedWpConfig;
     }
 }

@@ -24,7 +24,7 @@ class PathExcludeFilter extends FilterIterator
         $this->excludeFilter = new PathFilterHelper();
         $this->excludeFilter->setWpRootPath($wpRootPath);
         $this->excludeFilter->categorizeRules($exclude);
-        $this->includeFilter = new PathFilterHelper(true);
+        $this->includeFilter = new PathFilterHelper($isInclude = true);
         $this->includeFilter->setWpRootPath($wpRootPath);
         $this->includeFilter->categorizeRules($exclude);
     }

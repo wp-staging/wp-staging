@@ -212,8 +212,8 @@ msgid "WordPress Multisite is not supported! Upgrade to <a href=\"%s\" target=\"
 msgstr "WordPress Multisite n’est pas supporté ! Mettre à niveau vers <a href=\"%s\" target=\"_blank\">WP STAGING | PRO</a>"
 
 #: apps/Backend/views/welcome/welcome.php:14
-msgid "Comes with our 30-day money back guarantee * You need to give us chance to resolve your issue first."
-msgstr "Livré avec notre garantie de remboursement de 30 jours*. Vous devez nous donner la chance de résoudre votre problème en premier."
+msgid "Comes with our money back guarantee * You need to give us chance to resolve your issue first."
+msgstr "Livré avec notre garantie de remboursement de 14 jours*. Vous devez nous donner la chance de résoudre votre problème en premier."
 
 #: apps/Backend/views/welcome/welcome.php:11
 msgid "WP Staging Pro allows to clone and push Multisites, (main site & sub sites)"

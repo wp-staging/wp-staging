@@ -44,10 +44,10 @@
                                 <a href="<?php echo $urlLogin ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank" title="<?php echo __("Open the staging site in a new tab", "wp-staging") ?>">
                                     <?php _e("Open", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Update and overwrite this clone. Select folders and database tables in the next step.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Update and overwrite this clone with files and database tables selected on the next page. This will not replace nor modify the wp-config.php on the staging site!", "wp-staging") ?>">
                                     <?php _e("Update", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" data-network="<?php echo is_multisite() && $data['networkClone'] ? 'yes' : 'no' ?>" title="<?php echo __("Reset this clone with existing production site. Confirm to proceed.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" data-network="<?php echo is_multisite() && $data['networkClone'] ? 'yes' : 'no' ?>" title="<?php echo __("Replace this clone with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging") ?>">
                                     <?php _e("Reset", "wp-staging"); ?>
                                 </a>
                                 <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Delete this clone. Select specific folders and database tables in the next step.", "wp-staging") ?>">

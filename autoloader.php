@@ -8,7 +8,7 @@ $class_map = array_merge(
 
 spl_autoload_register(
     function ($class) use ($class_map) {
-        if (isset($class_map[$class])) {
+        if (isset($class_map[$class]) && file_exists($class_map[$class])) {
             include_once $class_map[$class];
 
             return true;

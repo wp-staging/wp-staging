@@ -3,6 +3,7 @@
 namespace WPStaging\Backend\Notices;
 
 use WPStaging\Core\WPStaging;
+use Countable;
 
 /**
  * Class OutdatedWpStagingNotice
@@ -94,6 +95,11 @@ class OutdatedWpStagingNotice
         }
 
         $plugins = $plugins->response;
+
+        if (empty($plugins) || ($plugins instanceof Countable === false)) {
+            return null;
+        }
+
         foreach ($plugins as $plugin) {
             if ($plugin->slug === $slug) {
                 return $plugin->new_version;
@@ -103,6 +109,9 @@ class OutdatedWpStagingNotice
         return null;
     }
 
+    /**
+     * @return bool
+     */
     private function isOutdatedWpStagingVersion()
     {
         // If latest version is not available there is no need to update

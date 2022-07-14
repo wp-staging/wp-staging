@@ -57,6 +57,11 @@ class ExcludeFilter
 
         $globRule = $this->convertToNameGlob($nameRule);
         if ($this->strUtils->startsWith($rule, 'file:')) {
+            // if rule has . that means it was provided with extension
+            if (strpos($globRule, '.') !== false) {
+                return $globRule;
+            }
+
             return $globRule . '.*';
         }
 
@@ -118,7 +123,7 @@ class ExcludeFilter
     /**
      * Convert wpstg name rule to glob rule
      *
-     * @return $string
+     * @return string
      */
     private function convertToNameGlob($rule)
     {

@@ -49,10 +49,18 @@ abstract class FileCloningService extends CloningService
 
     /**
      * Check if WP is installed in subdir
-     * @return boolean
+     * @return bool
      */
     protected function isSubDir()
     {
         return (new SiteInfo())->isInstalledInSubDir();
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isExcludedWpConfig()
+    {
+        return $this->dto->getJob()->excludeWpConfigDuringUpdate();
     }
 }

@@ -249,7 +249,7 @@ class TableService
                 return false;
             }
 
-            $this->database->getWpdba()->exec("DROP TABLE {$table};");
+            $this->database->getWpdba()->exec("DROP TABLE `{$table}`;");
         }
 
         return true;
