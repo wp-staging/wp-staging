@@ -15,6 +15,12 @@ class UpdateWpConfigTablePrefix extends FileCloningService
         $path = $this->dto->getDestinationDir() . "wp-config.php";
         $prefix = $this->dto->getPrefix();
         $this->log("Updating table_prefix in {$path} to " . $prefix);
+
+        if ($this->isExcludedWpConfig()) {
+            $this->log("Excluded: wp-config.php is excluded by filter");
+            return true;
+        }
+
         $content = $this->readWpConfig();
 
         $oldUrl = (!$this->dto->isMultisite()) ? $this->dto->getHomeUrl() : $this->dto->getBaseUrl();
@@ -22,7 +28,7 @@ class UpdateWpConfigTablePrefix extends FileCloningService
         // Don't update the table prefix if the line starts with //, /* or * (ignoring space before them),
         // Otherwise replace table prefix
         $pattern = '/^\s*((?!\/\/|\/\*|\*))\$table_prefix\s*=\s*(.*)/m';
-        $replacement = '$table_prefix = \'' . $prefix . '\'; // Changed by WP Staging';
+        $replacement = '$table_prefix = \'' . $prefix . '\'; // Changed by WP STAGING';
         $content = preg_replace($pattern, $replacement, $content);
 
         if ($content === null) {

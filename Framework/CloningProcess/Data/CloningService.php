@@ -96,7 +96,7 @@ abstract class CloningService
     /**
      * Is the current clone network?
      *
-     * @return boolean
+     * @return bool
      */
     protected function isNetworkClone()
     {

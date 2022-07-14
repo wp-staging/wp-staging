@@ -16,6 +16,6 @@
         <li><strong>Secure</strong> - <?php _e('WP STAGING is no cloud service. Your data belongs to you only.', 'wp-staging'); ?></li>
         <a href="http://wp-staging.com/?utm_source=wpstg&utm_medium=addon_page&utm_term=click-wpstaging-pro&utm_campaign=wpstaging" target="_blank" class="wpstg-button--big wpstg-button--blue">Buy WP STAGING Pro</a>
         <a href="<?php echo admin_url(); ?>admin.php?page=wpstg_clone" target="_self" class="wpstg-ml-30px">Skip & Start Cloning</a>
-        <div class="wpstg-footer"> <?php _e('Comes with our 30-day money back guarantee * You need to give us chance to resolve your issue first.', 'wp-staging'); ?></div>
+        <div class="wpstg-footer"> <?php _e('Comes with our money back guarantee * You need to give us chance to resolve your issue first.', 'wp-staging'); ?></div>
     </div>
 </div>

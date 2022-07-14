@@ -381,11 +381,11 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
             9 => 'NET_SFTP_TYPE_FIFO',
         );
         $this->_define_array($this->packet_types, $this->status_codes, $this->attributes, $this->open_flags, $this->open_flags5, $this->file_types);
-        if (!\defined('WPStaging\\Vendor\\NET_SFTP_QUEUE_SIZE')) {
-            \define('WPStaging\\Vendor\\NET_SFTP_QUEUE_SIZE', 32);
+        if (!\defined('NET_SFTP_QUEUE_SIZE')) {
+            \define('NET_SFTP_QUEUE_SIZE', 32);
         }
-        if (!\defined('WPStaging\\Vendor\\NET_SFTP_UPLOAD_QUEUE_SIZE')) {
-            \define('WPStaging\\Vendor\\NET_SFTP_UPLOAD_QUEUE_SIZE', 1024);
+        if (!\defined('NET_SFTP_UPLOAD_QUEUE_SIZE')) {
+            \define('NET_SFTP_UPLOAD_QUEUE_SIZE', 1024);
         }
     }
     /**
@@ -3079,7 +3079,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
         // http://php.net/microtime#61838
         $result = $this->_send_channel_packet(self::CHANNEL, $packet);
         $stop = \strtok(\microtime(), ' ') + \strtok('');
-        if (\defined('WPStaging\\Vendor\\NET_SFTP_LOGGING')) {
+        if (\defined('NET_SFTP_LOGGING')) {
             $packet_type = '-> ' . $this->packet_types[$type] . ' (' . \round($stop - $start, 4) . 's)';
             if (NET_SFTP_LOGGING == self::LOG_REALTIME) {
                 switch (\PHP_SAPI) {
@@ -3192,7 +3192,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
             // account for the packet type
         }
         $packet = $this->_string_shift($this->packet_buffer, $length);
-        if (\defined('WPStaging\\Vendor\\NET_SFTP_LOGGING')) {
+        if (\defined('NET_SFTP_LOGGING')) {
             $packet_type = '<- ' . $this->packet_types[$this->packet_type] . ' (' . \round($stop - $start, 4) . 's)';
             if (NET_SFTP_LOGGING == self::LOG_REALTIME) {
                 switch (\PHP_SAPI) {
@@ -3229,7 +3229,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
      */
     function getSFTPLog()
     {
-        if (!\defined('WPStaging\\Vendor\\NET_SFTP_LOGGING')) {
+        if (!\defined('NET_SFTP_LOGGING')) {
             return \false;
         }
         switch (NET_SFTP_LOGGING) {

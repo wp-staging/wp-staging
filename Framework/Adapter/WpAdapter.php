@@ -32,6 +32,8 @@ class WpAdapter
      */
     public function isPluginActive($plugin)
     {
+        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+        remove_all_filters('option_active_plugins');
         return in_array($plugin, (array) get_option('active_plugins', [])) || $this->isPluginNetworkActive($plugin);
     }
 
@@ -49,6 +51,8 @@ class WpAdapter
             return false;
         }
 
+        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+        remove_all_filters('site_option_active_sitewide_plugins');
         $plugins = get_site_option('active_sitewide_plugins');
         if (isset($plugins[$plugin])) {
             return true;

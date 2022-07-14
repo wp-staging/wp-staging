@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\CloningProcess\Data;
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Support\ThirdParty\Jetpack;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
@@ -16,6 +18,12 @@ class UpdateWpConfigConstants extends FileCloningService
     protected function internalExecute()
     {
         $this->log("Updating constants in wp-config.php");
+
+        if ($this->isExcludedWpConfig()) {
+            $this->log("Excluded: wp-config.php is excluded by filter");
+            return true;
+        }
+
         $content = $this->readWpConfig();
 
         $replaceOrAdd = [
@@ -45,6 +53,12 @@ class UpdateWpConfigConstants extends FileCloningService
             //It's OK to attempt replacing multi-site constants even in single-site jobs as they will not be present in a single-site wp-config.php
             $replaceOrSkip["WP_ALLOW_MULTISITE"] = 'false';
             $replaceOrSkip["MULTISITE"] = 'false';
+        }
+
+        /** @var Jetpack */
+        $jetpackHelper = WPStaging::make(Jetpack::class);
+        if ($jetpackHelper->isJetpackActive()) {
+            $replaceOrAdd[Jetpack::STAGING_MODE_CONST] = 'true';
         }
 
         //In the old job structure, these were deleted for the single-site non-external job only. Now they are deleted everywhere

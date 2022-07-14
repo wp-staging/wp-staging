@@ -67,8 +67,8 @@ msgid "Once Weekly"
 msgstr "Einmal wöchentlich"
 
 #: Backend/views/welcome/welcome.php:13
-msgid "Comes with our 30-day no questions asked money back guarantee"
-msgstr "Kommt mit unserer 30-Tage Geld zurück Garantie"
+msgid "Comes with our 14-day no questions asked money back guarantee"
+msgstr "Kommt mit unserer 14-Tage Geld zurück Garantie"
 
 #: Backend/views/welcome/welcome.php:10
 msgid "WP Staging is coded well for protection of your data"

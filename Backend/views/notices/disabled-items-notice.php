@@ -6,6 +6,7 @@
  * @see \WPStaging\Backend\Notices\Notices::messages
  * @var bool  $outgoingMailsDisabled
  * @var bool  $freemiusOptionsCleared
+ * @var bool  $isJetpackStagingModeActive
  * @var array $excludedPlugins
  */
 
@@ -24,6 +25,12 @@ use WPStaging\Backend\Notices\Notices;
         <li>
             <?php _e('You may need to consider to reactivate your Freemius license to make sure that Freemius integration does not act slightly differently in your staging site.', 'wp-staging') ?>
           <a href="https://wp-staging.com/docs/freemius-integration-how-its-handled-by-wp-staging/"><?php _e('Read more here', 'wp-staging') ?>
+        </li>
+        <?php endif; ?>
+        <?php if ($isJetpackStagingModeActive) : ?>
+        <li>
+            <?php _e('You have Jetpack plugin active on this staging site, so we have enabled Jetpack staging mode.', 'wp-staging') ?>
+            <a href="https://wp-staging.com/docs/make-jetpack-working-on-staging-site/"><?php _e('Read more here', 'wp-staging') ?>
         </li>
         <?php endif; ?>
         <?php if (count($excludedPlugins) > 0) : ?>

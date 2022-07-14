@@ -308,6 +308,16 @@ abstract class Job implements ShutdownableInterface
     }
 
     /**
+     * Should exclude wp-config file during clone update
+     *
+     * @return bool
+     */
+    public function excludeWpConfigDuringUpdate()
+    {
+        return $this->options->mainJob === Updating::NORMAL_UPDATE;
+    }
+
+    /**
      * Check if external database is used
      * @return bool
      */

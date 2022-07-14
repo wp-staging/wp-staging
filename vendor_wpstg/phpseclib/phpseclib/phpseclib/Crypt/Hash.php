@@ -145,16 +145,16 @@ class Hash
      */
     function __construct($hash = 'sha1')
     {
-        if (!\defined('WPStaging\\Vendor\\CRYPT_HASH_MODE')) {
+        if (!\defined('CRYPT_HASH_MODE')) {
             switch (\true) {
                 case \extension_loaded('hash'):
-                    \define('WPStaging\\Vendor\\CRYPT_HASH_MODE', self::MODE_HASH);
+                    \define('CRYPT_HASH_MODE', self::MODE_HASH);
                     break;
                 case \extension_loaded('mhash'):
-                    \define('WPStaging\\Vendor\\CRYPT_HASH_MODE', self::MODE_MHASH);
+                    \define('CRYPT_HASH_MODE', self::MODE_MHASH);
                     break;
                 default:
-                    \define('WPStaging\\Vendor\\CRYPT_HASH_MODE', self::MODE_INTERNAL);
+                    \define('CRYPT_HASH_MODE', self::MODE_INTERNAL);
             }
         }
         $this->setHash($hash);

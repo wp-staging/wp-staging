@@ -235,19 +235,19 @@ class BigInteger
      */
     function __construct($x = 0, $base = 10)
     {
-        if (!\defined('WPStaging\\Vendor\\MATH_BIGINTEGER_MODE')) {
+        if (!\defined('MATH_BIGINTEGER_MODE')) {
             switch (\true) {
                 case \extension_loaded('gmp'):
-                    \define('WPStaging\\Vendor\\MATH_BIGINTEGER_MODE', self::MODE_GMP);
+                    \define('MATH_BIGINTEGER_MODE', self::MODE_GMP);
                     break;
                 case \extension_loaded('bcmath'):
-                    \define('WPStaging\\Vendor\\MATH_BIGINTEGER_MODE', self::MODE_BCMATH);
+                    \define('MATH_BIGINTEGER_MODE', self::MODE_BCMATH);
                     break;
                 default:
-                    \define('WPStaging\\Vendor\\MATH_BIGINTEGER_MODE', self::MODE_INTERNAL);
+                    \define('MATH_BIGINTEGER_MODE', self::MODE_INTERNAL);
             }
         }
-        if (\function_exists('phpinfo') && \extension_loaded('openssl') && !\defined('WPStaging\\Vendor\\MATH_BIGINTEGER_OPENSSL_DISABLE') && !\defined('WPStaging\\Vendor\\MATH_BIGINTEGER_OPENSSL_ENABLED')) {
+        if (\function_exists('phpinfo') && \extension_loaded('openssl') && !\defined('MATH_BIGINTEGER_OPENSSL_DISABLE') && !\defined('MATH_BIGINTEGER_OPENSSL_ENABLED')) {
             // some versions of XAMPP have mismatched versions of OpenSSL which causes it not to work
             $versions = array();
             // avoid generating errors (even with suppression) when phpinfo() is disabled (common in production systems)
@@ -275,10 +275,10 @@ class BigInteger
                 case !isset($versions['Library']):
                 case $versions['Header'] == $versions['Library']:
                 case \version_compare($versions['Header'], '1.0.0') >= 0 && \version_compare($versions['Library'], '1.0.0') >= 0:
-                    \define('WPStaging\\Vendor\\MATH_BIGINTEGER_OPENSSL_ENABLED', \true);
+                    \define('MATH_BIGINTEGER_OPENSSL_ENABLED', \true);
                     break;
                 default:
-                    \define('WPStaging\\Vendor\\MATH_BIGINTEGER_OPENSSL_DISABLE', \true);
+                    \define('MATH_BIGINTEGER_OPENSSL_DISABLE', \true);
             }
         }
         if (!\defined('PHP_INT_SIZE')) {
@@ -759,7 +759,7 @@ class BigInteger
                 $engine = 'internal';
                 $opts[] = \PHP_INT_SIZE == 8 ? '64-bit' : '32-bit';
         }
-        if (MATH_BIGINTEGER_MODE != self::MODE_GMP && \defined('WPStaging\\Vendor\\MATH_BIGINTEGER_OPENSSL_ENABLED')) {
+        if (MATH_BIGINTEGER_MODE != self::MODE_GMP && \defined('MATH_BIGINTEGER_OPENSSL_ENABLED')) {
             $opts[] = 'OpenSSL';
         }
         if (!empty($opts)) {
@@ -1430,7 +1430,7 @@ class BigInteger
             list(, $temp) = $this->divide($n);
             return $temp->modPow($e, $n);
         }
-        if (\defined('WPStaging\\Vendor\\MATH_BIGINTEGER_OPENSSL_ENABLED')) {
+        if (\defined('MATH_BIGINTEGER_OPENSSL_ENABLED')) {
             $components = array('modulus' => $n->toBytes(\true), 'publicExponent' => $e->toBytes(\true));
             $components = array('modulus' => \pack('Ca*a*', 2, $this->_encodeASN1Length(\strlen($components['modulus'])), $components['modulus']), 'publicExponent' => \pack('Ca*a*', 2, $this->_encodeASN1Length(\strlen($components['publicExponent'])), $components['publicExponent']));
             $RSAPublicKey = \pack('Ca*a*a*', 48, $this->_encodeASN1Length(\strlen($components['modulus']) + \strlen($components['publicExponent'])), $components['modulus'], $components['publicExponent']);
@@ -2619,7 +2619,7 @@ class BigInteger
      */
     function _random_number_helper($size)
     {
-        if (\class_exists('WPStaging\\Vendor\\phpseclib\\Crypt\\Random')) {
+        if (\class_exists('phpseclib\\Crypt\\Random')) {
             $random = \WPStaging\Vendor\phpseclib\Crypt\Random::string($size);
         } else {
             $random = '';

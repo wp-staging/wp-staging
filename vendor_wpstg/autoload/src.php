@@ -933,6 +933,7 @@ return array(
     'WPStaging\\Framework\\Staging\\FirstRun' => $baseDir . '/Framework/Staging/FirstRun.php',
     'WPStaging\\Framework\\Staging\\Sites' => $baseDir . '/Framework/Staging/Sites.php',
     'WPStaging\\Framework\\Support\\ThirdParty\\FreemiusScript' => $baseDir . '/Framework/Support/ThirdParty/FreemiusScript.php',
+    'WPStaging\\Framework\\Support\\ThirdParty\\Jetpack' => $baseDir . '/Framework/Support/ThirdParty/Jetpack.php',
     'WPStaging\\Framework\\Support\\ThirdParty\\WordFence' => $baseDir . '/Framework/Support/ThirdParty/WordFence.php',
     'WPStaging\\Framework\\TemplateEngine\\TemplateEngine' => $baseDir . '/Framework/TemplateEngine/TemplateEngine.php',
     'WPStaging\\Framework\\TemplateEngine\\TemplateEngineException' => $baseDir . '/Framework/TemplateEngine/TemplateEngineException.php',
