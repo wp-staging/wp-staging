@@ -419,7 +419,7 @@ class Assets
     /**
      * Check whether app is in debug mode or in dev mode
      *
-     * @return boolean
+     * @return bool
      */
     private function isDebugOrDevMode()
     {

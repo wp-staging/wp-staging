@@ -1113,7 +1113,7 @@ class Administrator
 
         // Scan
         $scan = new Pro\Modules\Jobs\Scan();
-
+        $scan->loadStagingDBTables($onlyLoadStagingPrefixTables = false);
         $scan->start();
         $options = $scan->getOptions();
 

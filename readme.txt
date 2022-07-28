@@ -2,14 +2,14 @@
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
-Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, alaasalama, fayyazfayzi
+Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, lucasbustamante, alaasalama, fayyazfayzi
 Donate link: https://wp-staging.com/backup-wordpress
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, backup plugin, database backup, wordpress backup plugin, migrate, backup wordpress, backups
+Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.0
-Stable tag: 2.9.15
+Stable tag: 2.9.16
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -190,7 +190,7 @@ Suppose you can still not log in to your staging / backup site. In that case, yo
 Permalinks are disabled on the staging / backup site after first time cloning / backup creation
 [Read here](https://wp-staging.com/docs/activate-permalinks-staging-site/ "activate permalinks on staging site") how to activate permalinks on the staging site.
 
-= How to use a Backup file to Migrate WordPress to another Host or Domain
+= How to use a Backup file to Migrate WordPress Backup to another Host or Domain
 The pro version of WP STAGING can backup your whole WordPress website. (In the future, we are implementing a basic free version of our sophisticated backup feature into this free version as well)
 With this backup function, you can backup and copy your entire WordPress website to another domain, new host, or new server very easily, and often faster and more reliable than with any other existing backup plugins.
 Have a look at [https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/](this article), that introduces the backup feature.
@@ -258,6 +258,14 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.16 =
+* Fix: On some servers, autoloader tries to load Composer\InstalledVersions although this doesn't exist. We fix this by only loading classes that exist #1801
+* Enh: Some shared hosting servers like DreamHost doesn't allow sending large data through URL which resulted in interval server error 500 when fetching the backup list. We changed the way of sending data now through request body which allow listing backups on such shared hosting servers #1788
+* Enh: Improve workflow to support tables with long name exceeding the 64 characters MySQL limit when a tmp prefix during restore is added. Those tables are now temporarily renamed to temporary short names during the restore process and after successful restore renamed back to their original names #1784
+* Fix: Restoring a backup, site language is not properly imported, resulting in switching the imported site back to site default language. Reason: Language files are imported before importing other files during backup restore. This led to cleaning the restored language files while cleaning other files. Now language directory is skipped during the cleaning of existing "other" files #1794
+* Fix: Check/Uncheck of the plugins and themes checkbox in the PUSH UI didn't affect the children checkboxes. This issue is fixed and children checkboxes are properly toggled #1797
+* Fix: If all tables were excluded during PUSH, it was treated as if all tables were selected. Now tables selection is properly handled during the PUSH #1797
 
 = 2.9.15 =
 * New: Add sFTP support to upload backup files automatically via (s)FTP to a remote server or NAS system #1677
@@ -576,38 +584,10 @@ WP STAGING Backup & Cloning | Full changelog:
 
 == Upgrade Notice ==
 
-= 2.9.15 =
-* New: Add sFTP support to upload backup files automatically via (s)FTP to a remote server or NAS system #1677
-* Enh: Cloning/Push stops if folder name contains backslash character (\) on Linux OS #1744
-* Enh: Don't copy or update wp-config.php if staging site is updated by using the UPDATE button #1747
-* Enh: Restoring a backup from a staging site that uses the meta tag noindex, causes the imported site to also not be indexed. In the worst case, this can result in a production site not being indexable after restoring a backup. This update ensures that the index meta value of the imported site is preserved when a backup is restored. #1777
-* Enh: If Jetpack plugin is active, use the special Jetpack Staging Mode by adding the constant JETPACK_STAGING_MODE to wp-config.php of the staging site #1780
+= 2.9.16 =
 * Fix: On some servers, autoloader tries to load Composer\InstalledVersions although this doesn't exist. We fix this by only loading classes that exist #1801
-* Fix: Fatal error if php curl() module is missing and backup is uploaded to Google Drive or Amazon S3 #1769
-* Fix: Fatal error on cloning due to strict standard issue in DbRowsGeneratorTrait when user has E_STRICT or E_DEPRECATED constants active in PHP #1772
-* Fix: Fatal error on plugin activation if there is no write permission on the backup files. Happens only on updating from a very old version to latest one and the backup metadata update routine is fired #1776
-* Dev: Add automated test for scheduled backup plans #1764
-
-= 2.9.14 =
-* Fix: Certain default plugins like wps-hide are not excluded anymore during cloning #1742
-* Fix: Scheduled backup not always executed #1754
-* Fix: Backup folder is deleted during backup restore on Windows OS #1737
-* Fix: On backup restore retry deleting an item again in next request instead of re adding it at the end of queue, if item isn't completely deleted in current request #1758
-* Enh: Refactor normalizePath() #1751
-* Enh: Optimize table selection to reduce POST characters. Send either selected tables or excluded tables whichever is smaller along to reduce the POST size for cloning and pushing #1727
-* Enh: Allow automatic update of WP STAGING | PRO on the staging site. It can still be disabled using the filter wpstg.notices.disable.plugin-update-notice #1749
-* Enh: Add filter wpstg.backup.restore.extended-search-replace. The extended search replace allow properly replacing to destination URL for some plugins like rev-sliders in backup restore #1741
-
-= 2.9.13 =
-* Fix: Don't load mbstring polyfill file at all if iconv extension isn't loaded #1734
-* Enh: Increasing Backup Filescanner Performance. Lower backup directory and file scanner request time #1714
-* Enh: Rename cancel button of backup schedules modal make it more responsive #1714
-
-= 2.9.11 =
-* New: Add Amazon S3 as backup cloud storage option for backup upload #1665
-* Enh: Remove duplicate mbstring related code #1702
-* Fix: Fatal error due to missing BackupScheduler class in Free version #1688
-* Fix: Can not recursive scan file system if there is a symlink in root directory linking to the root directory itself. #1688
-* Fix: Can not download backup files. Incorrect backup download link if wp-content folder is symlinked to another folder outside the wp root folder #1697
-* Fix: Error on downloading backup in IIS due to section in parent web.config that overwrites the WP STAGING generated web.config in backup folder #1699
-* Fix: Improve punycode related code. Keep cloning even if unable to use punycode related code doesn't work due to missing extensions #1702
+* Enh: Some shared hosting servers like DreamHost doesn't allow sending large data through URL which resulted in interval server error 500 when fetching the backup list. We changed the way of sending data now through request body which allow listing backups on such shared hosting servers #1788
+* Enh: Improve workflow to support tables with long name exceeding the 64 characters MySQL limit when a tmp prefix during restore is added. Those tables are now temporarily renamed to temporary short names during the restore process and after successful restore renamed back to their original names #1784
+* Fix: Restoring a backup, site language is not properly imported, resulting in switching the imported site back to site default language. Reason: Language files are imported before importing other files during backup restore. This led to cleaning the restored language files while cleaning other files. Now language directory is skipped during the cleaning of existing "other" files #1794
+* Fix: Check/Uncheck of the plugins and themes checkbox in the PUSH UI didn't affect the children checkboxes. This issue is fixed and children checkboxes are properly toggled #1797
+* Fix: If all tables were excluded during PUSH, it was treated as if all tables were selected. Now tables selection is properly handled during the PUSH #1797
