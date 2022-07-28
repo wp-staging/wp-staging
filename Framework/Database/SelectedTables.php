@@ -17,6 +17,12 @@ class SelectedTables
     /** @var array */
     private $selectedTablesWithoutPrefix = '';
 
+    /** @var bool */
+    private $allTablesExcluded = false;
+
+    /** @var bool */
+    private $includeAllTables = false;
+
     /** @var wpdb|null */
     private $wpdb;
 
@@ -30,6 +36,18 @@ class SelectedTables
         $this->selectedTablesWithoutPrefix = $selectedTablesWithoutPrefix === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $selectedTablesWithoutPrefix);
         $this->wpdb = null;
         $this->prefix = null;
+    }
+
+    /** @param bool $areAllTablesExcluded  */
+    public function setAllTablesExcluded($areAllTablesExcluded)
+    {
+        $this->allTablesExcluded = $areAllTablesExcluded;
+    }
+
+    /** @param bool $includeAllTables  */
+    public function shouldIncludeAllTables($includeAllTables)
+    {
+        $this->includeAllTables = $includeAllTables;
     }
 
     /**
@@ -65,7 +83,7 @@ class SelectedTables
         $this->prefix = $prefix;
     }
 
-    /**
+    /**W
      * @param wpdb $wpdb
      * @param string $prefix
      */
@@ -83,6 +101,10 @@ class SelectedTables
      */
     public function getPrefixedTables($isNetworkClone, $includeSize = false)
     {
+        if ($this->allTablesExcluded) {
+            return [];
+        }
+
         if ($this->wpdb === null) {
             $this->wpdb = WPStaging::getInstance()->get("wpdb");
         }
@@ -97,7 +119,7 @@ class SelectedTables
         $selectedTables = [];
 
         foreach ($tables as $table) {
-            if (!$this->isPrefixedTable($table->Name, $this->prefix, is_multisite(), is_main_site(), $isNetworkClone)) {
+            if (!$this->includeAllTables && !$this->isPrefixedTable($table->Name, $this->prefix, is_multisite(), is_main_site(), $isNetworkClone)) {
                 continue;
             }
 
