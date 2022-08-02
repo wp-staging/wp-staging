@@ -134,8 +134,10 @@ class Directories extends JobExecutable
      * Scan plugins, mu-plugins, themes or uploads dir depending upon the input
      *
      * @param string $directory
+     * @param string $pluginDir - default const WP_PLUGIN_DIR - testing purpose only
+     * @param string $wpRoot    - default const ABSPATH       - testing purpose only
      */
-    private function getWpContentSubDirectory($directory)
+    protected function getWpContentSubDirectory($directory, $pluginDir = WP_PLUGIN_DIR, $wpRoot = ABSPATH)
     {
         // Skip if scanning uploads directory and symlink option selected
         if ($this->wpDirectories->getUploadsPath() === $directory && $this->options->uploadsSymlinked) {
@@ -167,7 +169,7 @@ class Directories extends JobExecutable
         ];
 
         // Exclude predefined plugins if given directory is plugins dir
-        if ($this->filesystem->normalizePath(WP_PLUGIN_DIR) === $directory) {
+        if ($this->filesystem->normalizePath($pluginDir, true) === $directory) {
             $excludePaths[] = '**/wp-staging*/**/node_modules'; // only exclude node modules in WP Staging's plugins
             // add excluded plugins defined by WP Staging
             $excludePaths = array_merge((new ExcludedPlugins())->getPluginsToExcludeWithRelativePath(), $excludePaths);
@@ -176,7 +178,7 @@ class Directories extends JobExecutable
         $excludePaths = array_merge($this->getFilteredExcludedPaths(), $excludePaths);
 
         try {
-            $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true, $excludePaths, $this->getFilteredExcludedFileSizes());
+            $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true, $excludePaths, $this->getFilteredExcludedFileSizes(), $wpRoot);
         } catch (Exception $e) {
             $this->returnException('Error: ' . $e->getMessage());
         }
@@ -517,7 +519,7 @@ class Directories extends JobExecutable
      * Return List of all user defined file size excludes from hooks and through UI
      * @return array
      */
-    private function getFilteredExcludedFileSizes()
+    protected function getFilteredExcludedFileSizes()
     {
         return apply_filters('wpstg_clone_file_size_exclude', $this->options->excludeSizeRules);
     }
@@ -528,7 +530,7 @@ class Directories extends JobExecutable
      * Defined by WP Staging i.e. cache or some plugins.
      * @return array
      */
-    private function getFilteredExcludedPaths()
+    protected function getFilteredExcludedPaths()
     {
         $excludePaths = [];
         $abspath = $this->strUtils->sanitizeDirectorySeparator(ABSPATH);
