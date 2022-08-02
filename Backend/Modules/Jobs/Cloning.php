@@ -133,6 +133,7 @@ class Cloning extends Job
 
         // Included Tables / Prefixed Table - Excluded Tables
         $selectedTables = new SelectedTables($_POST['includedTables'], $_POST['excludedTables'], $_POST['selectedTablesWithoutPrefix']);
+        $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $_POST['allTablesExcluded'] === 'true');
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
 
         // Exclude File Size Rules

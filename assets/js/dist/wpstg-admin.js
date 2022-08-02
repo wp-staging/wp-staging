@@ -2477,6 +2477,7 @@
             var includedTables = '';
             var excludedTables = '';
             var selectedTablesWithoutPrefix = '';
+            var allTablesExcluded = false;
 
             if (tableSelector !== null) {
               includedTables = tableSelector.getIncludedTables();
@@ -2488,11 +2489,13 @@
               includedTables = '';
             } else if (excludedTables.length > includedTables.length) {
               excludedTables = '';
+              allTablesExcluded = includedTables === '';
             }
 
             resetClone(clone, {
               includedTables: includedTables,
               excludedTables: excludedTables,
+              allTablesExcluded: allTablesExcluded,
               selectedTablesWithoutPrefix: selectedTablesWithoutPrefix,
               excludeSizeRules: encodeURIComponent(exclFilters.sizes),
               excludeGlobRules: encodeURIComponent(exclFilters.globs),
@@ -2781,6 +2784,7 @@
 
       that.data.includedTables = '';
       that.data.excludedTables = '';
+      that.data.allTablesExcluded = false;
 
       if (that.tableSelector !== null) {
         that.data.includedTables = that.tableSelector.getIncludedTables();
@@ -2792,6 +2796,7 @@
         that.data.includedTables = '';
       } else if (that.data.excludedTables.length > that.data.includedTables.length) {
         that.data.excludedTables = '';
+        that.data.allTablesExcluded = that.data.includedTables === '';
       }
 
       that.data.databaseServer = $('#wpstg_db_server').val();

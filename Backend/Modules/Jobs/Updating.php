@@ -4,10 +4,8 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Helper;
-use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
-use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
@@ -240,6 +238,7 @@ class Updating extends Job
     {
         // Included Tables / Prefixed Table - Excluded Tables
         $selectedTables = new SelectedTables($_POST['includedTables'], $_POST['excludedTables'], $_POST['selectedTablesWithoutPrefix']);
+        $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $_POST['allTablesExcluded'] === 'true');
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
     }
 
