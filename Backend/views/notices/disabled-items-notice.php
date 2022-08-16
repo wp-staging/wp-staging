@@ -38,7 +38,7 @@ use WPStaging\Backend\Notices\Notices;
             <?php _e('Excluded the following plugins:', 'wp-staging') ?>
             <ul style="margin-left: 0px; margin-top: 4px;">
                 <?php foreach ($excludedPlugins as $excludedPlugin) : ?>
-                    <li> <span style="font-size: 13px;">➜</span> <?php echo $excludedPlugin; ?></li>
+                    <li> <span style="font-size: 13px;">➜</span> <?php echo esc_html($excludedPlugin); ?></li>
                 <?php endforeach; ?>
             </ul>
         </li>

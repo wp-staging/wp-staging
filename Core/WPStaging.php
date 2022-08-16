@@ -14,6 +14,7 @@ use WPStaging\Framework\DI\Container;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
+use WPStaging\Framework\SettingsServiceProvider;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Frontend\Frontend;
 use WPStaging\Frontend\FrontendServiceProvider;
@@ -72,6 +73,7 @@ final class WPStaging
 
         $this->container->register(CommonServiceProvider::class);
         $this->container->register(AssetServiceProvider::class);
+        $this->container->register(SettingsServiceProvider::class);
 
         $this->cloneSiteFirstRun();
 

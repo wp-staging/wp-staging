@@ -39,7 +39,7 @@ use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Framework\Database\SelectedTables;
-use WPStaging\Pro\Backup\BackupScheduler;
+use WPStaging\Framework\Facades\Sanitize;
 
 /**
  * Class Administrator
@@ -80,15 +80,6 @@ class Administrator
      */
     private $siteInfo;
 
-    /**
-     * @var array
-     * All options here will only be stored in the database as integers. Decimal points and separators will be removed
-     */
-    private static $integerOptions = [
-        'queryLimit',
-        'querySRLimit'
-    ];
-
     public function __construct()
     {
         // TODO: Inject using DI
@@ -126,7 +117,6 @@ class Administrator
         }
 
         add_action("admin_menu", [$this, "addMenu"], 10);
-        add_action("admin_init", [$this, "setOptionFormElements"]);
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]);
         add_action("admin_post_wpstg_export", [$this, "export"]);
@@ -207,14 +197,6 @@ class Administrator
     }
 
     /**
-     * Register options form elements
-     */
-    public function setOptionFormElements()
-    {
-        register_setting("wpstg_settings", "wpstg_settings", [$this, "sanitizeOptions"]);
-    }
-
-    /**
      * Upgrade routine
      * @action admin_init 10 0
      * @see \WPStaging\Backend\Administrator::defineHooks
@@ -227,62 +209,6 @@ class Administrator
             $upgrade = new Upgrade\Upgrade();
         }
         $upgrade->doUpgrade();
-    }
-
-    /**
-     * Sanitize options data and delete the cache
-     * @param array $data
-     * @return array
-     */
-    public function sanitizeOptions($data = [])
-    {
-        // is_array() is required otherwise new clone will fail.
-        $showErrorToggleStagingSiteCloning = false;
-        if ($this->siteInfo->isStagingSite() && is_array($data)) {
-            $isStagingCloneable = isset($data['isStagingSiteCloneable']) ? $data['isStagingSiteCloneable'] : 'false';
-            unset($data['isStagingSiteCloneable']);
-            $showErrorToggleStagingSiteCloning = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
-        }
-
-        if (WPStaging::isPro() && is_array($data)) {
-            $sendBackupSchedulesErrorReport = isset($data['schedulesErrorReport']) ? $data['schedulesErrorReport'] : false;
-            $reportEmail = isset($data['schedulesReportEmail']) ? $data['schedulesReportEmail'] : '';
-            unset($data['schedulesErrorReport']);
-            unset($data['wpstg-send-schedules-report-email']);
-            $this->setBackupScheduleOptions($sendBackupSchedulesErrorReport, $reportEmail);
-        }
-
-        $sanitized = $this->sanitizeData($data);
-
-        if ($showErrorToggleStagingSiteCloning) {
-            add_settings_error("wpstg-notices", '', __("Settings updated. But unable to activate/deactivate the site cloneable status!", "wp-staging"), "warning");
-        } else {
-            add_settings_error("wpstg-notices", '', __("Settings updated.", "wp-staging"), "updated");
-        }
-
-        return apply_filters("wpstg-settings", $sanitized, $data);
-    }
-
-    /**
-     * @param array $data
-     * @return array
-     */
-    private function sanitizeData($data = [])
-    {
-        $sanitized = [];
-
-        foreach ($data as $key => $value) {
-            if (is_array($value)) {
-                $sanitized[$key] = $this->sanitizeData($value);
-            } elseif (in_array($key, self::$integerOptions, true)) {
-                //Removing comma separators and decimal points
-                $sanitized[$key] = preg_replace('/\D/', '', htmlspecialchars($value));
-            } else {
-                $sanitized[$key] = htmlspecialchars($value);
-            }
-        }
-
-        return $sanitized;
     }
 
     /**
@@ -1041,20 +967,20 @@ class Administrator
             }
 
             $cloneId      = $_POST["clone"];
-            $cloneName    = wpstg_urldecode($_POST["cloneName"]);
+            $cloneName    = Sanitize::sanitizeString(wpstg_urldecode($_POST["cloneName"]));
             $cloneDirectoryName = wpstg_urldecode($_POST["directoryName"]);
             $cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($cloneDirectoryName));
 
-            $existingClones[$cloneId]["cloneName"] = stripslashes($cloneName);
-            $existingClones[$cloneId]["directoryName"] = stripslashes($cloneDirectoryName);
-            $existingClones[$cloneId]["path"] = stripslashes($_POST["path"]);
-            $existingClones[$cloneId]["url"] = stripslashes($_POST["url"]);
-            $existingClones[$cloneId]["prefix"] = stripslashes($_POST["prefix"]);
-            $existingClones[$cloneId]["databaseUser"] = stripslashes($_POST["externalDBUser"]);
-            $existingClones[$cloneId]["databasePassword"] = stripslashes($_POST["externalDBPassword"]);
-            $existingClones[$cloneId]["databaseDatabase"] = stripslashes($_POST["externalDBDatabase"]);
-            $existingClones[$cloneId]["databaseServer"] = stripslashes($_POST["externalDBHost"]);
-            $existingClones[$cloneId]["databasePrefix"] = stripslashes($_POST["externalDBPrefix"]);
+            $existingClones[$cloneId]["cloneName"] = Sanitize::sanitizeString($cloneName);
+            $existingClones[$cloneId]["directoryName"] = Sanitize::sanitizeString($cloneDirectoryName);
+            $existingClones[$cloneId]["path"] = Sanitize::sanitizeString($_POST["path"]);
+            $existingClones[$cloneId]["url"] = Sanitize::sanitizeString($_POST["url"]);
+            $existingClones[$cloneId]["prefix"] = Sanitize::sanitizeString($_POST["prefix"]);
+            $existingClones[$cloneId]["databaseUser"] = Sanitize::sanitizeString($_POST["externalDBUser"]);
+            $existingClones[$cloneId]["databasePassword"] = Sanitize::sanitizeString($_POST["externalDBPassword"]);
+            $existingClones[$cloneId]["databaseDatabase"] = Sanitize::sanitizeString($_POST["externalDBDatabase"]);
+            $existingClones[$cloneId]["databaseServer"] = Sanitize::sanitizeString($_POST["externalDBHost"]);
+            $existingClones[$cloneId]["databasePrefix"] = Sanitize::sanitizeString($_POST["externalDBPrefix"]);
 
             update_option(Sites::STAGING_SITES_OPTION, $existingClones);
 
@@ -1424,51 +1350,6 @@ class Administrator
     {
         $backup = new BackupUploadsDir(null);
         $backup->removeUploadsBackup();
-    }
-
-    /**
-     * Toggle staging site cloning
-     *
-     * @param bool $isCloneable
-     *
-     * @return bool
-     */
-    protected function toggleStagingSiteCloning($isCloneable)
-    {
-        if ($isCloneable && $this->siteInfo->enableStagingSiteCloning()) {
-            return true;
-        }
-
-        if (!$isCloneable && $this->siteInfo->disableStagingSiteCloning()) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
-     * Set backup schedule error reporting options
-     *
-     * @param bool $sendBackupSchedulesErrorReport
-     * @param string $reportEmail
-     * @return bool
-     */
-    protected function setBackupScheduleOptions($sendBackupSchedulesErrorReport, $reportEmail)
-    {
-        if (!WPStaging::isPro()) {
-            return false;
-        }
-
-        if (!class_exists('WPStaging\Pro\Backup\BackupScheduler')) {
-            return false;
-        }
-
-        $error = !update_option(BackupScheduler::BACKUP_SCHEDULE_ERROR_REPORT_OPTION, $sendBackupSchedulesErrorReport);
-        if ($error) {
-            return false;
-        }
-
-        return update_option(BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION, $reportEmail);
     }
 
     /**

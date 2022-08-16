@@ -27,7 +27,7 @@
     <?php echo __("Resume", "wp-staging")?>
 </button>
 
-<button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo $cloning->getOptions()->clone?>" style="margin-top: 5px;display:none;">
+<button type="button" id="wpstg-show-log-button" class="button" data-clone="<?php echo esc_attr($cloning->getOptions()->clone) ?>" style="margin-top: 5px;display:none;">
     <?php _e('Display working log', 'wp-staging')?>
 </button>
 
@@ -41,7 +41,7 @@
     $subDirectory = str_replace(get_home_path(), '', ABSPATH);
     $helper = new \WPStaging\Core\Utils\Helper();
     $url = $helper->getHomeUrl() . str_replace('/', '', $subDirectory);
-    echo sprintf(__('WP STAGING successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging'), $url);
+    echo sprintf(__('WP STAGING successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging'), esc_attr($url));
     ?>
     <br>
     <br>
@@ -79,11 +79,11 @@
                 <p>
                     <?php _e('To make it more clear when you work on the staging site WP Staging changed the color of the admin bar:', 'wp-staging') ?>
                     <br><br>
-                    <img src="<?php echo $this->assets->getAssetsUrl("img/admin_dashboard.png") ?>">
+                    <img src="<?php echo esc_url($this->assets->getAssetsUrl("img/admin_dashboard.png")) ?>">
                     <br>
                     <?php _e('On the front page the site name also changed to', 'wp-staging') ?> <br>
                     <strong class="wpstg-font-italic">
-                        "STAGING - <span class="wpstg-clone-name"><?php echo get_bloginfo("name")?></span>"
+                        "STAGING - <span class="wpstg-clone-name"><?php echo esc_html(get_bloginfo("name")) ?></span>"
                     </strong>.
                 </p>
             </li>

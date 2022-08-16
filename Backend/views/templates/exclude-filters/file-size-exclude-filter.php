@@ -1,5 +1,6 @@
 <?php
 
+use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 
 /**
@@ -18,7 +19,7 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
             <option value="<?php echo ExcludeFilter::SIZE_GREATER_THAN ?>" <?php echo isset($comparison) && $comparison === ExcludeFilter::SIZE_GREATER_THAN ? "selected" : '' ?>><?php _e('GREATER THAN', 'wp-staging') ?></option>
             <option value="<?php echo ExcludeFilter::SIZE_EQUAL_TO ?>" <?php echo isset($comparison) && $comparison === ExcludeFilter::SIZE_EQUAL_TO ? "selected" : '' ?>><?php _e('EXACT', 'wp-staging') ?></option>
         </select>
-        <input type="number" class="wpstg-exclude-rule-input wpstg-file-size-exclude-input" name="wpstgFileSizeExcludeRuleSize[]" <?php echo isset($bytes) ? "value='$bytes'" : '' ?> />
+        <input type="number" class="wpstg-exclude-rule-input wpstg-file-size-exclude-input" name="wpstgFileSizeExcludeRuleSize[]" value="<?php echo isset($bytes) ? Sanitize::sanitizeInt($bytes) : '0' ?>" />
         <select class="wpstg-exclude-rule-input wpstg-file-size-exclude-select-small" name="wpstgFileSizeExcludeRuleByte[]">
             <option value="<?php echo ExcludeFilter::SIZE_KB ?>" <?php echo isset($size) && strpos($size, ExcludeFilter::SIZE_KB) !== false ? "selected" : '' ?>>KB</option>
             <option value="<?php echo ExcludeFilter::SIZE_MB ?>" <?php echo isset($size) && strpos($size, ExcludeFilter::SIZE_MB) !== false ? "selected" : '' ?>>MB</option>

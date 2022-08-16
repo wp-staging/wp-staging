@@ -27,7 +27,7 @@
         ?>
 
         <div id="wpstg-update-notify" style="display:<?php echo $display; ?>">
-            <strong><?php echo sprintf(__("New: WP STAGING PRO v. %s is available.", 'wp-staging'), $latestReleasedVersion); ?></strong><br/>
+            <strong><?php echo sprintf(__("New: WP STAGING PRO v. %s is available.", 'wp-staging'), esc_html($latestReleasedVersion)); ?></strong><br/>
             <?php echo sprintf(__('Important: Please update the plugin before pushing the staging site to production site. <a href="%s" target="_blank">What\'s New?</a>', 'wp-staging'), 'https://wp-staging.com/wp-staging-pro-changelog'); ?>
         </div>
 

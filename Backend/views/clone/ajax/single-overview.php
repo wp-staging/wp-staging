@@ -1,4 +1,5 @@
 <?php
+
 /**
  * @see \WPStaging\Backend\Administrator::ajaxOverview
  *
@@ -6,6 +7,9 @@
  * @var string $iconPath
  * @var        $license
  */
+
+use WPStaging\Framework\Facades\Sanitize;
+
 ?>
 <div id="wpstg-step-1">
     <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning">
@@ -20,15 +24,15 @@
             <?php _e("Your Staging Sites:", "wp-staging") ?>
         </h3>
         <?php foreach ($availableClones as $cloneID => $data) : ?>
-            <div id="<?php echo $data['directoryName']; ?>" data-clone-id="<?php echo $cloneID; ?>" class="wpstg-clone">
-                <?php $urlLogin = $data["url"]; ?>
+            <div id="<?php echo Sanitize::sanitizeString($data['directoryName']); ?>" data-clone-id="<?php echo esc_attr($cloneID); ?>" class="wpstg-clone">
+                <?php $urlLogin = esc_url($data["url"]); ?>
                 <div class="wpstg-clone-header">
                     <a href="<?php echo $urlLogin ?>" class="wpstg-clone-title" target="_blank">
-                        <?php echo isset($data["cloneName"]) ? $data["cloneName"] : $data["directoryName"]; ?>
+                        <?php echo isset($data["cloneName"]) ? Sanitize::sanitizeString($data["cloneName"]) : Sanitize::sanitizeString($data["directoryName"]); ?>
                     </a>
                     <?php if (is_multisite()) { ?>
                     <div class="wpstg-clone-labels">
-                        <span class="wpstg-clone-label"><?php echo $data['networkClone'] ? __('Network', 'wp-staging') : __('Site', 'wp-staging') ?></span>
+                        <span class="wpstg-clone-label"><?php echo Sanitize::sanitizeString($data['networkClone']) ? __('Network', 'wp-staging') : __('Site', 'wp-staging') ?></span>
                     </div>
                     <?php } ?>
                     <div class="wpstg-clone-actions">
@@ -44,13 +48,13 @@
                                 <a href="<?php echo $urlLogin ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank" title="<?php echo __("Open the staging site in a new tab", "wp-staging") ?>">
                                     <?php _e("Open", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Update and overwrite this clone with files and database tables selected on the next page. This will not replace nor modify the wp-config.php on the staging site!", "wp-staging") ?>">
+                                <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" title="<?php echo __("Update and overwrite this clone with files and database tables selected on the next page. This will not replace nor modify the wp-config.php on the staging site!", "wp-staging") ?>">
                                     <?php _e("Update", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" data-network="<?php echo is_multisite() && $data['networkClone'] ? 'yes' : 'no' ?>" title="<?php echo __("Replace this clone with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" data-network="<?php echo is_multisite() && $data['networkClone'] ? 'yes' : 'no' ?>" title="<?php echo __("Replace this clone with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging") ?>">
                                     <?php _e("Reset", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo $cloneID ?>" title="<?php echo __("Delete this clone. Select specific folders and database tables in the next step.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" title="<?php echo __("Delete this clone. Select specific folders and database tables in the next step.", "wp-staging") ?>">
                                     <?php _e("Delete", "wp-staging"); ?>
                                 </a>
                                 <?php
@@ -66,7 +70,7 @@
                     $dbname   = ! empty($data['databaseDatabase']) ? $data['databaseDatabase'] : DB_NAME;
                     $prefix   = ! empty($data['prefix']) ? $data['prefix'] : '';
                     $cloneDir = ! empty($data['path']) ? $data['path'] : '';
-                    $url      = ! empty($data['url']) ? sprintf('<a href="%1$s" target="_blank">%1$s</a>', $data['url']) : '';
+                    $url      = ! empty($data['url']) ? sprintf('<a href="%1$s" target="_blank">%1$s</a>', esc_url($data['url'])) : '';
                     $datetime = ! empty($data['datetime']) ? get_date_from_gmt(date("Y-m-d H:i:s", $data['datetime']), "D, d M Y H:i:s T") : '&nbsp;&nbsp;&nbsp;';
                     $owner    = ! empty($data['ownerId']) ? get_userdata($data['ownerId']) : null;
                     $ownerName = ! empty($owner->user_login) ? $owner->user_login : 'N/A';
@@ -88,19 +92,19 @@
                     }
 
 
-                    echo sprintf(__('Database: <span class="wpstg-bold">%s</span>', 'wp-staging'), $dbname);
+                    echo sprintf(__('Database: <span class="wpstg-bold">%s</span>', 'wp-staging'), esc_html($dbname));
                     echo '</br>';
-                    echo sprintf(__('Database Prefix: <span class="wpstg-bold">%s</span>', 'wp-staging'), $prefix);
+                    echo sprintf(__('Database Prefix: <span class="wpstg-bold">%s</span>', 'wp-staging'), esc_html($prefix));
                     echo '</br>';
-                    echo sprintf(__('Directory: <span class="wpstg-bold">%s</span>', 'wp-staging'), $cloneDir);
+                    echo sprintf(__('Directory: <span class="wpstg-bold">%s</span>', 'wp-staging'), esc_html($cloneDir));
                     echo '</br>';
                     echo sprintf(__('URL: <span class="wpstg-bold">%s</span>', 'wp-staging'), $url);
                     echo '</br>';
-                    echo sprintf(__('Created By: <span class="wpstg-bold">%s</span>', 'wp-staging'), $ownerName);
+                    echo sprintf(__('Created By: <span class="wpstg-bold">%s</span>', 'wp-staging'), esc_html($ownerName));
                     echo '</br>';
                     echo $status;
                     echo '</br>';
-                    echo sprintf(__('Updated: <span>%s</span>', 'wp-staging'), $datetime);
+                    echo sprintf(__('Updated: <span>%s</span>', 'wp-staging'), esc_html($datetime));
 
                     // Todo: Remove in future versions
                     if (function_exists('do_action_deprecated')) {
@@ -119,7 +123,7 @@
 <?php endif ?>
 
 <div id="wpstg-no-staging-site-results" class="wpstg-clone" <?php echo $availableClones !== [] ? 'style="display: none;"' : '' ?> >
-    <img class="wpstg--dashicons" src="<?php echo $iconPath; ?>" alt="cloud">
+    <img class="wpstg--dashicons" src="<?php echo esc_url($iconPath); ?>" alt="cloud">
     <div class="no-staging-site-found-text">
         <?php _e('No Staging Site found. Create your first Staging Site above!', 'wp-staging'); ?>
     </div>

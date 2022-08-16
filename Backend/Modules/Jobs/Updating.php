@@ -6,6 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
+use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
@@ -47,6 +48,11 @@ class Updating extends Job
     private $dirUtils;
 
     /**
+     * @var Sanitize
+     */
+    private $sanitize;
+
+    /**
      * Initialize is called in \Job
      */
     public function initialize()
@@ -54,6 +60,7 @@ class Updating extends Job
         $this->db = WPStaging::getInstance()->get("wpdb");
         $this->mainJob = self::NORMAL_UPDATE;
         $this->dirUtils = new WpDefaultDirectories();
+        $this->sanitize = WPStaging::make(Sanitize::class);
     }
 
     /**
@@ -206,12 +213,12 @@ class Updating extends Job
         // Exclude Glob Rules
         $this->options->excludeGlobRules = [];
         if (!empty($_POST["excludeGlobRules"])) {
-            $this->options->excludeGlobRules = explode(',', wpstg_urldecode($_POST["excludeGlobRules"]));
+            $this->options->excludeGlobRules = array_map([$this->sanitize, 'sanitizeString'], explode(',', wpstg_urldecode($_POST["excludeGlobRules"])));
         }
 
         $this->options->excludeSizeRules = [];
         if (!empty($_POST["excludeSizeRules"])) {
-            $this->options->excludeSizeRules = explode(',', wpstg_urldecode($_POST["excludeSizeRules"]));
+            $this->options->excludeSizeRules = array_map([$this->sanitize, 'sanitizeString'], explode(',', wpstg_urldecode($_POST["excludeSizeRules"])));
         }
 
         // Excluded Directories

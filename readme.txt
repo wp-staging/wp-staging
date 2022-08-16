@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.0
-Stable tag: 2.9.17
+Stable tag: 2.9.18
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -259,9 +259,12 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
+= 2.9.18 =
+* Fix: Does not sanitise and escape some of its backup settings, which could allow high privilege users such as admin to perform Stored Cross-Site Scripting attacks (XSS) even when the unfiltered_html capability is disallowed (for example in multisite setup) #1825
+
 = 2.9.17 =
 * New: Support up to WordPress 6.0.1
-* Fix: Important update! Deselecting all tables does not lead to exclusion of tables as expected, but leads to selection of all tables. Thus all tables are copied and possibly overwritten instead of deselected. Applies to new cloning, UPDATE and RESET of a staging page. That can lead to data loss in the staging site. An update is strongly recommended!. #1814
+* Fix: Important update! Deselecting all tables does not lead to exclusion of tables as expected, but leads to selection of all tables. Thus all tables are copied and possibly overwritten instead of deselected. Applies to new cloning, UPDATE and RESET of a staging page. That can lead to data loss in the staging site. An update is strongly recommended! The problem appeared for the first time in version 4.2.8. #1814
 * Fix: Can not upload backup file to google drive if the google api returns incorrect value for available storage size (negative value). This sometimes happens for Google workspace accounts and does not affect all users. #1799
 * Fix: Plugin wps-hide-login could not be excluded during cloning process, preventing users from log in to the staging site #1812
 
@@ -538,8 +541,5 @@ WP STAGING Backup & Cloning | Full changelog:
 
 == Upgrade Notice ==
 
-= 2.9.17 =
-* New: Support up to WordPress 6.0.1
-* Fix: Important update! Deselecting all tables does not lead to exclusion of tables as expected, but leads to selection of all tables. Thus all tables are copied and possibly overwritten instead of deselected. Applies to new cloning, UPDATE and RESET of a staging page. That can lead to data loss in the staging site. An update is strongly recommended!. #1814
-* Fix: Can not upload backup file to google drive if the google api returns incorrect value for available storage size (negative value). This sometimes happens for Google workspace accounts and does not affect all users. #1799
-* Fix: Plugin wps-hide-login could not be excluded during cloning process, preventing users from log in to the staging site #1812
+= 2.9.18 =
+* Fix: Does not sanitise and escape some of its backup settings, which could allow high privilege users such as admin to perform Stored Cross-Site Scripting attacks (XSS) even when the unfiltered_html capability is disallowed (for example in multisite setup) #1825

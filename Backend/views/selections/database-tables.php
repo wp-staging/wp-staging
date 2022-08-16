@@ -19,7 +19,7 @@
 </p>
 <div class="wpstg-my-10px">
     <a href="#" class="wpstg-button-unselect button"><?php _e('Unselect All', 'wp-staging'); ?></a>
-    <a href="#" class="wpstg-button-select button"> <?php echo $dbPrefix ?> </a>
+    <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix) ?> </a>
 </div>
 <select multiple="multiple" id="wpstg_select_tables_cloning">
     <?php
@@ -31,14 +31,14 @@
 
         $attributes .= in_array($table->name, $options->clonedTables) ? "disabled" : '';
         ?>
-        <option class="wpstg-db-table" value="<?php echo $table->name ?>" name="<?php echo $table->name ?>" <?php echo $attributes ?>>
-            <?php echo $table->name ?> - <?php echo size_format($table->size, 2) ?>
+        <option class="wpstg-db-table" value="<?php echo esc_attr($table->name) ?>" name="<?php echo esc_attr($table->name) ?>" <?php echo $attributes ?>>
+            <?php echo esc_html($table->name) ?> - <?php echo esc_html(size_format($table->size, 2)) ?>
         </option>
     <?php endforeach ?>
 </select>
 <div class="wpstg-mt-10px">
     <a href="#" class="wpstg-button-unselect button"> <?php _e('Unselect All', 'wp-staging'); ?> </a>
-    <a href="#" class="wpstg-button-select button"> <?php echo $dbPrefix; ?> </a>
+    <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix); ?> </a>
 </div>
 <p>
     <?php _e("You can select multiple tables. Press left mouse button & move or press STRG+Left mouse button. (Apple: ⌘+Left Mouse Button)", "wp-staging"); ?>

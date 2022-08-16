@@ -1,9 +1,14 @@
+<?php
+/**
+ * @var string $varsDirectory
+ * @see \WPStaging\Backend\Notices\Notices::messages
+ */
+?>
 <div class="notice notice-error">
-    <p>
-        <strong>WP STAGING - Folder Permission error. </strong>
+    <p><strong><?php _e('WP STAGING - Folder Permission error.', 'wp-staging'); ?></strong>
         <br>
-        The folder <code><?php echo "{$varsDirectory}"?></code> is not write and/or readable.
+        <?php echo sprintf(esc_html__('The folder %s is not write and/or readable.', 'wp-staging'), '<code>' . esc_html($varsDirectory) . '</code>'); ?>
         <br>
-        Check if this folder exists! Folder permissions should be chmod 755 or 777.
+        <?php _e('Check if this folder exists! Folder permissions should be chmod 755 or 777.', 'wp-staging'); ?>
     </p>
 </div>
