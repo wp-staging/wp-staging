@@ -29,7 +29,7 @@ if ($isDatabaseConnected) { ?>
         <?php _e('Database Location:', 'wp-staging'); ?>
         <code>
         <?php
-        $database = empty($clone->databaseDatabase) ? $dbname . "</code> (Production Database)" : $clone->databaseDatabase . "</code> (Separate Database)";
+        $database = empty($clone->databaseDatabase) ? esc_html($dbname) . "</code> (Production Database)" : esc_html($clone->databaseDatabase) . "</code> (Separate Database)";
         echo $database;
         ?>
 
@@ -40,7 +40,7 @@ if ($isDatabaseConnected) { ?>
 <?php if (!$isDatabaseConnected) { ?>
 <div class="wpstg-notice-alert wpstg-failed">
     <h4 class="wpstg-mb-0"><?php _e('Error: Can not connect to external database: ', 'wp-staging');
-    echo $clone->databaseDatabase; ?></h4>
+    echo esc_html($clone->databaseDatabase); ?></h4>
     <ul class="wpstg-mb-0">
         <li><?php _e('This can happen if the password of the external database has been changed or if the database was deleted', 'wp-staging') ?></li>
         <li><?php _e('You can still delete this staging site but deleting this site will not delete any table or database. You will have to delete them manually if they exist.', 'wp-staging') ?></li>
@@ -71,11 +71,11 @@ if ($isDatabaseConnected) { ?>
             <div class="wpstg-db-table">
                 <label>
                     <?php $checkedProperty = (strpos($table->name, $clone->prefix) === 0) ? 'checked' : ''; ?>
-                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo $table->name?>" <?php echo $checkedProperty ?>>
+                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo esc_attr($table->name); ?>" <?php echo $checkedProperty ?>>
                     <?php echo $table->name?>
                 </label>
                 <span class="wpstg-size-info">
-                <?php echo isset($table->size) ? $table->size : '';?>
+                <?php echo isset($table->size) ? esc_html($table->size) : '';?>
             </span>
             </div>
         <?php endforeach ?>
@@ -102,8 +102,8 @@ if ($isDatabaseConnected) { ?>
         <div class="wpstg-dir">
             <label>
                 <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1" checked data-deletepath="<?php echo urlencode($clone->path);?>">
-                <?php echo $clone->path;?>
-                <span class="wpstg-size-info"><?php echo isset($clone->size) ? $clone->size : ''; ?></span>
+                <?php echo esc_html($clone->path);?>
+                <span class="wpstg-size-info"><?php echo isset($clone->size) ? esc_html($clone->size) : ''; ?></span>
             </label>
         </div>
     </div>
@@ -114,6 +114,6 @@ if ($isDatabaseConnected) { ?>
     <?php _e("Cancel", "wp-staging")?>
 </a>
 
-<a href="#" class="wpstg-button--primary wpstg-button--red" style="margin-left:5px;" id="wpstg-remove-clone" data-clone="<?php echo $clone->name?>">
+<a href="#" class="wpstg-button--primary wpstg-button--red" style="margin-left:5px;" id="wpstg-remove-clone" data-clone="<?php echo esc_attr($clone->name); ?>">
     <?php echo __("Delete", "wp-staging")?>
 </a>

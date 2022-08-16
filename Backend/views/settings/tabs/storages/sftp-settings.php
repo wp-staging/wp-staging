@@ -1,24 +1,28 @@
 <?php
+
 /**
  * @var string $providerId
  */
+
+use WPStaging\Framework\Facades\Sanitize;
+
 ?>
 <fieldset>
     <?php
     /** @var \WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth */
     $storage = \WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth::class);
     $options = $storage->getOptions();
-    $ftpType = !empty($options['ftpType']) ? $options['ftpType'] : 'ftp';
-    $host = !empty($options['host']) ? $options['host'] : '';
-    $port = !empty($options['port']) ? $options['port'] : '';
-    $username = !empty($options['username']) ? $options['username'] : '';
-    $password = !empty($options['password']) ? $options['password'] : '';
-    $ssl = isset($options['ssl']) ? $options['ssl'] : false;
-    $passive = isset($options['passive']) ? $options['passive'] : false;
-    $privateKey = !empty($options['key']) ? $options['key'] : '';
-    $passphrase = !empty($options['passphrase']) ? $options['passphrase'] : '';
-    $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
-    $location = isset($options['location']) ? $options['location'] : '';
+    $ftpType = !empty($options['ftpType']) ? Sanitize::sanitizeString($options['ftpType']) : 'ftp';
+    $host = !empty($options['host']) ? Sanitize::sanitizeString($options['host']) : '';
+    $port = !empty($options['port']) ? Sanitize::sanitizeString($options['port']) : '';
+    $username = !empty($options['username']) ? Sanitize::sanitizeString($options['username']) : '';
+    $password = !empty($options['password']) ? Sanitize::sanitizeString($options['password']) : '';
+    $ssl = isset($options['ssl']) ? Sanitize::sanitizeBool($options['ssl']) : false;
+    $passive = isset($options['passive']) ? Sanitize::sanitizeBool($options['passive']) : false;
+    $privateKey = !empty($options['key']) ? Sanitize::sanitizeString($options['key']) : '';
+    $passphrase = !empty($options['passphrase']) ? Sanitize::sanitizeString($options['passphrase']) : '';
+    $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? Sanitize::sanitizeInt($options['maxBackupsToKeep']) : 2;
+    $location = isset($options['location']) ? Sanitize::sanitizeString($options['location']) : '';
     ?>
     <p>
         <strong class="wpstg-fs-14"> <?php _e('FTP/SFTP', 'wp-staging'); ?></strong>

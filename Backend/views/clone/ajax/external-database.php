@@ -12,6 +12,8 @@
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
 
+use WPStaging\Framework\Facades\Sanitize;
+
 $database   = '';
 $username   = '';
 $password   = '';
@@ -24,10 +26,10 @@ if (!$isPro) {
 }
 
 if ($isPro && !empty($options->current) && $options->current !== null) {
-    $database   = isset($options->existingClones[$options->current]['databaseDatabase']) ? $options->existingClones[$options->current]['databaseDatabase'] : '';
-    $username   = isset($options->existingClones[$options->current]['databaseUser']) ? $options->existingClones[$options->current]['databaseUser'] : '';
-    $prefix     = isset($options->existingClones[$options->current]['databasePrefix']) ? $options->existingClones[$options->current]['databasePrefix'] : '';
-    $server     = isset($options->existingClones[$options->current]['databaseServer']) ? $options->existingClones[$options->current]['databaseServer'] : '';
+    $database   = isset($options->existingClones[$options->current]['databaseDatabase']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['databaseDatabase']) : '';
+    $username   = isset($options->existingClones[$options->current]['databaseUser']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['databaseUser']) : '';
+    $prefix     = isset($options->existingClones[$options->current]['databasePrefix']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['databasePrefix']) : '';
+    $server     = isset($options->existingClones[$options->current]['databaseServer']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['databaseServer']) : '';
     $isDisabled = true;
     $password   = '*********';
 }
@@ -43,7 +45,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     <label for="wpstg-ext-db"><?php _e('Change Database'); ?></label>
     <input type="checkbox" id="wpstg-ext-db" name="wpstg-ext-db" value="true" class="wpstg-toggle-advance-settings-section" data-id="wpstg-external-db-section" <?php echo $isPro === true ? '' : 'disabled' ?> >
     <span class="wpstg--tooltip">
-        <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
+        <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
             <?php _e('You can clone the staging site into a separate database. The Database must be created manually in advance before starting the cloning proccess.<br/><br/><strong>Note:</strong> If there are already tables with the same database prefix and name in this database, the cloning process will be aborted without any further asking!', 'wp-staging'); ?>
         </span>

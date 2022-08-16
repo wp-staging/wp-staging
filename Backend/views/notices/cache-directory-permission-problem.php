@@ -5,10 +5,10 @@
  */
 ?>
 <div class="notice notice-error">
-    <p><strong>WP STAGING - Folder Permission error. </strong>
+    <p><strong><?php _e('WP STAGING - Folder Permission error.', 'wp-staging'); ?></strong>
         <br>
-        The folder <code><?php echo $cacheDir; ?></code> is not write and/or readable.
+        <?php echo sprintf(esc_html__('The folder %s is not write and/or readable.', 'wp-staging'), '<code>' . esc_html($cacheDir) . '</code>'); ?>
         <br>
-        Check if this folder exists! Folder permissions should be chmod 755 or higher.
+        <?php _e('Check if this folder exists! Folder permissions should be chmod 755 or higher.', 'wp-staging'); ?>
     </p>
 </div>

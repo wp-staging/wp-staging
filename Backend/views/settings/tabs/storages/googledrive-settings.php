@@ -1,7 +1,11 @@
 <?php
+
 /**
  * @var string $providerId
  */
+
+use WPStaging\Framework\Facades\Sanitize;
+
 ?>
 <fieldset>
     <?php
@@ -10,11 +14,11 @@
     $isGoogleDriveAuthenticated = $googleDriveStorage->isAuthenticated();
     $options = $googleDriveStorage->getOptions();
 
-    $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
-    $folderName = isset($options['folderName']) ? $options['folderName'] : \WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::FOLDER_NAME;
+    $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? Sanitize::sanitizeInt($options['maxBackupsToKeep']) : 2;
+    $folderName = isset($options['folderName']) ? Sanitize::sanitizeString($options['folderName']) : \WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::FOLDER_NAME;
 
-    $googleClientId = isset($options['googleClientId']) ? $options['googleClientId'] : '';
-    $googleClientSecret = isset($options['googleClientSecret']) ? $options['googleClientSecret'] : '';
+    $googleClientId = isset($options['googleClientId']) ? Sanitize::sanitizeString($options['googleClientId']) : '';
+    $googleClientSecret = isset($options['googleClientSecret']) ? Sanitize::sanitizeString($options['googleClientSecret']) : '';
     $defaultApiAuthorizeURL = add_query_arg(
         [
             'action' => 'wpstg-googledrive-api-auth',
@@ -22,7 +26,7 @@
         network_admin_url('admin-post.php')
     );
 
-    $googleRedirectURI = isset($options['googleRedirectURI']) ? $options['googleRedirectURI'] : $defaultApiAuthorizeURL;
+    $googleRedirectURI = isset($options['googleRedirectURI']) ? Sanitize::sanitizeString($options['googleRedirectURI']) : $defaultApiAuthorizeURL;
     ?>
     <p>
         <strong class="wpstg-fs-14"> <?php _e('Google Drive', 'wp-staging'); ?></strong>

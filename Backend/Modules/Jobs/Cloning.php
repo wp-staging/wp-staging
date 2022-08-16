@@ -11,6 +11,7 @@ use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
@@ -42,6 +43,12 @@ class Cloning extends Job
     private $errorMessage;
 
     /**
+     * @var Sanitize
+     */
+    private $sanitize;
+
+
+    /**
      * Initialize is called in \Job
      */
     public function initialize()
@@ -49,6 +56,7 @@ class Cloning extends Job
         $this->db = WPStaging::getInstance()->get("wpdb");
         $this->dirUtils = new WpDefaultDirectories();
         $this->sitesHelper = new Sites();
+        $this->sanitize = WPStaging::make(Sanitize::class);
     }
 
     public function getErrorMessage()
@@ -75,7 +83,7 @@ class Cloning extends Job
         // Clone ID -> timestamp (time at which this clone creation initiated)
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($_POST["cloneID"]));
         // Clone Name -> Site name that user input, if user left it empty it will be Clone ID
-        $this->options->cloneName = wpstg_urldecode($_POST["cloneName"]);
+        $this->options->cloneName = $this->sanitize->sanitizeString((wpstg_urldecode($_POST["cloneName"])));
         // The slugified version of Clone Name (to use in directory creation)
         $this->options->cloneDirectoryName = $this->sitesHelper->sanitizeDirectoryName($this->options->cloneName);
         $result = $this->sitesHelper->isCloneExists($this->options->cloneDirectoryName);
@@ -139,13 +147,13 @@ class Cloning extends Job
         // Exclude File Size Rules
         $this->options->excludeSizeRules = [];
         if (!empty($_POST["excludeSizeRules"])) {
-            $this->options->excludeSizeRules = explode(',', wpstg_urldecode($_POST["excludeSizeRules"]));
+            $this->options->excludeSizeRules = array_map([$this->sanitize, 'sanitizeString'], explode(',', wpstg_urldecode($_POST["excludeSizeRules"])));
         }
 
         // Exclude Glob Rules
         $this->options->excludeGlobRules = [];
         if (!empty($_POST["excludeGlobRules"])) {
-            $this->options->excludeGlobRules = explode(',', wpstg_urldecode($_POST["excludeGlobRules"]));
+            $this->options->excludeGlobRules = array_map([$this->sanitize, 'sanitizeString'], explode(',', wpstg_urldecode($_POST["excludeGlobRules"])));
         }
 
         $this->options->uploadsSymlinked = isset($_POST['uploadsSymlinked']) && $_POST['uploadsSymlinked'] === 'true';

@@ -40,7 +40,7 @@ if ($isPro && !empty($options->current)) {
     <label for="wpstg_allow_emails"><?php _e('Allow Emails Sending'); ?></label>
     <input type="checkbox" id="wpstg_allow_emails" name="wpstg_allow_emails" value="true" <?php echo $emailsAllowed === true ? 'checked' : '' ?> <?php echo $settingsEnabled === false ? 'disabled' : '' ?> />
     <span class="wpstg--tooltip">
-        <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
+        <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
             <?php _e('Allow emails sending for this staging site.', 'wp-staging'); ?>
             <br /> <br />

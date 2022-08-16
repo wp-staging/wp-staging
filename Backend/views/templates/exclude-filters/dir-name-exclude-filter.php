@@ -1,5 +1,6 @@
 <?php
 
+use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 
 /**
@@ -18,7 +19,7 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
             <option value="<?php echo ExcludeFilter::NAME_EXACT_MATCHES ?>" <?php echo isset($rule) && $rule === ExcludeFilter::NAME_EXACT_MATCHES ? 'selected' : '' ?>><?php _e('EXACT MATCHES', 'wp-staging') ?></option>
             <option value="<?php echo ExcludeFilter::NAME_CONTAINS ?>" <?php echo isset($rule) && $rule === ExcludeFilter::NAME_CONTAINS ? 'selected' : '' ?>><?php _e('CONTAINS', 'wp-staging') ?></option>
         </select>
-        <input type="text" class="wpstg-exclude-rule-input" name="wpstgDirNameExcludeRulePath[]" value="<?php echo isset($name) ? $name : '' ?>" />
+        <input type="text" class="wpstg-exclude-rule-input" name="wpstgDirNameExcludeRulePath[]" value="<?php echo isset($name) ? Sanitize::sanitizeString($name) : '' ?>" />
         <div class="wpstg--tooltip wpstg--exclude-rules--tooltip">
             <button class="wpstg-exclusion-rule-info" type="button">i</button>
             <p class="wpstg--tooltiptext has-top-arrow"><?php echo sprintf(__('Exclude folders by name. For example to exclude all folder with name node_modules, select %s and type %s in the input box.', 'wp-staging'), '<code class="wpstg-code">' . __('EXACT MATCHES', 'wp-staging') . '</code>', '<code class="wpstg-code">node_modules</code>') ?>

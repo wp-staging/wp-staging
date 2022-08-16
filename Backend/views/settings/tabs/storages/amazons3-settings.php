@@ -1,7 +1,11 @@
 <?php
+
 /**
  * @var string $providerId
  */
+
+use WPStaging\Framework\Facades\Sanitize;
+
 ?>
 <fieldset>
     <?php
@@ -9,11 +13,11 @@
     $amazonS3Storage = \WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Storage\Storages\Amazon\S3::class);
     $isStorageAuthenticated = $amazonS3Storage->isAuthenticated();
     $options = $amazonS3Storage->getOptions();
-    $accessKey = empty($options['accessKey']) ? '' : $options['accessKey'];
-    $secretKey = empty($options['secretKey']) ? '' : $options['secretKey'];
-    $region = empty($options['region']) ? '' : $options['region'];
-    $maxBackupsToKeep = empty($options['maxBackupsToKeep']) ? 2 : $options['maxBackupsToKeep'];
-    $location = empty($options['location']) ? '' : $options['location'];
+    $accessKey = empty($options['accessKey']) ? '' : Sanitize::sanitizeString($options['accessKey']);
+    $secretKey = empty($options['secretKey']) ? '' : Sanitize::sanitizeString($options['secretKey']);
+    $region = empty($options['region']) ? '' : Sanitize::sanitizeString($options['region']);
+    $maxBackupsToKeep = empty($options['maxBackupsToKeep']) ? 2 : Sanitize::sanitizeInt($options['maxBackupsToKeep']);
+    $location = empty($options['location']) ? '' : Sanitize::sanitizeString($options['location']);
     ?>
     <p>
         <strong class="wpstg-fs-14"><?php _e('Amazon S3', 'wp-staging'); ?></strong>

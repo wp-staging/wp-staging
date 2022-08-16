@@ -3,6 +3,7 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Jobs\Scan;
+use WPStaging\Framework\Facades\Sanitize;
 
 /**
  * This file is currently being called for the both FREE and PRO version:
@@ -48,10 +49,10 @@ if ($isPro) {
 }
 
 if ($isPro && !empty($options->current) && $options->current !== null) {
-    $cloneDir         = isset($options->existingClones[$options->current]['cloneDir']) ? $options->existingClones[$options->current]['cloneDir'] : '';
-    $hostname         = isset($options->existingClones[$options->current]['url']) ? $options->existingClones[$options->current]['url'] : '';
+    $cloneDir         = isset($options->existingClones[$options->current]['cloneDir']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['cloneDir']) : '';
+    $hostname         = isset($options->existingClones[$options->current]['url']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['url']) : '';
     $customHostname   = $hostname;
-    $directory        = isset($options->existingClones[$options->current]['path']) ? $options->existingClones[$options->current]['path'] : '';
+    $directory        = isset($options->existingClones[$options->current]['path']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['path']) : '';
     $customDir        = $directory;
     $uploadsSymlinked = isset($options->existingClones[$options->current]['uploadsSymlinked']) && $options->existingClones[$options->current]['uploadsSymlinked'];
     $proSettingsDisabled = true;
@@ -62,11 +63,11 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
   <label for="wpstg-change-dest"><?php _e('Change Destination'); ?></label>
   <input type="checkbox" id="wpstg-change-dest" name="wpstg-change-dest" value="true" class="wpstg-toggle-advance-settings-section" data-id="wpstg-clone-directory" <?php echo $isPro === true ? '' : 'disabled' ?> >
   <span class="wpstg--tooltip">
-    <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
+    <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
     <span class="wpstg--tooltiptext">
       <strong> <?php _e('You can copy the staging site to a custom directory and can use a different hostname.', 'wp-staging'); ?></strong>
       <br /> <br />
-      <?php echo sprintf(__('<strong>Target Directory:</strong> An absolute path like <code>/www/public_html/dev</code>. File permissions should be 755 and it must be writeable by php user <code>%s</code>', 'wp-staging'), (new SystemInfo())->getPHPUser()); ?>
+      <?php echo sprintf(__('<strong>Target Directory:</strong> An absolute path like <code>/www/public_html/dev</code>. File permissions should be 755 and it must be writeable by php user <code>%s</code>', 'wp-staging'), esc_html((new SystemInfo())->getPHPUser())); ?>
       <br /> <br />
       <?php _e('<strong>Taget Hostname:</strong> The hostname of the target site, for instance <code>https://subdomain.example.com</code> or <code>https://example.com/staging</code>', 'wp-staging'); ?>
       <br /> <br />
@@ -77,25 +78,25 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
 <div id="wpstg-clone-directory" <?php echo $isPro === true ? 'style="display: none;"' : '' ?> >
   <div class="wpstg-form-group wpstg-text-field">
     <label><?php _e('Target Directory: ', 'wp-staging') ?> </label>
-    <input type="text" class="wpstg-textbox" name="wpstg_clone_dir" id="wpstg_clone_dir" value="<?php echo $customDir; ?>" title="wpstg_clone_dir" placeholder="<?php echo $directory; ?>" autocapitalize="off" <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?> />
+    <input type="text" class="wpstg-textbox" name="wpstg_clone_dir" id="wpstg_clone_dir" value="<?php echo esc_attr($customDir); ?>" title="wpstg_clone_dir" placeholder="<?php echo esc_attr($directory); ?>" autocapitalize="off" <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?> />
     <?php if (!$proSettingsDisabled) : ?>
     <span class="wpstg-code-segment">
       <code>
-        <a id="wpstg-use-target-dir" data-base-path="<?php echo $directory ?>" data-path="<?php echo $directory ?>" class="wpstg-pointer">
+        <a id="wpstg-use-target-dir" data-base-path="<?php echo esc_attr($directory) ?>" data-path="<?php echo esc_attr($directory) ?>" class="wpstg-pointer">
           <?php _e('Set Default: ', 'wp-staging') ?>
         </a>
-        <span class="wpstg-use-target-dir--value"><?php echo $directory; ?></span>
+        <span class="wpstg-use-target-dir--value"><?php echo esc_attr($directory); ?></span>
       </code>
     </span>
     <?php endif; ?>
   </div>
   <div class="wpstg-form-group wpstg-text-field">
     <label><?php _e('Target Hostname: ') ?> </label>
-    <input type="text" class="wpstg-textbox" name="wpstg_clone_hostname" id="wpstg_clone_hostname" value="<?php echo $customHostname; ?>" title="wpstg_clone_hostname" placeholder="<?php echo $hostname; ?>" autocapitalize="off" <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?> />
+    <input type="text" class="wpstg-textbox" name="wpstg_clone_hostname" id="wpstg_clone_hostname" value="<?php echo esc_attr($customHostname); ?>" title="wpstg_clone_hostname" placeholder="<?php echo esc_attr($hostname); ?>" autocapitalize="off" <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?> />
     <?php if (!$proSettingsDisabled) : ?>
     <span class="wpstg-code-segment">
       <code>
-        <a id="wpstg-use-target-hostname" data-base-uri="<?php echo $hostname ?>" data-uri="<?php echo $hostname ?>" class="wpstg-pointer">
+        <a id="wpstg-use-target-hostname" data-base-uri="<?php echo esc_attr($hostname) ?>" data-uri="<?php echo esc_attr($hostname) ?>" class="wpstg-pointer">
           <?php _e('Set Default: ', 'wp-staging') ?>
         </a>
         <span class="wpstg-use-target-hostname--value"><?php echo get_site_url(); ?></span>
@@ -112,7 +113,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
       <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?>
       <?php echo $uploadsSymlinked === true ? 'checked' : '' ?> />
     <span class="wpstg--tooltip">
-        <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
+        <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
           <?php echo sprintf(__('Activate to symlink the folder %s%s%s to the production site. %s All files including images on the production site\'s uploads folder will be linked to the staging site uploads folder. This will speed up the cloning and pushing process tremendously as no files from the uploads folder are copied between both sites. %s Note: this can lead to mixed and shared content issues if both site loads (custom) stylesheet files from the same uploads folder. %s Using this option means changing images on the staging site will change images on the production site as well. Use this with care! %s', 'wp-staging'), '<code>', $wpDefaultDirectories->getRelativeUploadPath(), '</code>', '<br><br>', '<br><br>', '<br><br><strong>', '</strong>');?>
           <br/>

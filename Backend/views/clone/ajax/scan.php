@@ -1,5 +1,5 @@
-
 <?php
+
 /**
  * @see \WPStaging\Backend\Administrator::ajaxCloneScan Context where this is included.
  *
@@ -10,6 +10,8 @@
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
 
+use WPStaging\Framework\Facades\Sanitize;
+
 $isPro = defined('WPSTGPRO_VERSION');
 ?>
 <label id="wpstg-clone-label" for="wpstg-new-clone">
@@ -17,7 +19,7 @@ $isPro = defined('WPSTGPRO_VERSION');
         placeholder="<?php _e('Enter Site Name (Optional)', 'wp-staging') ?>"
         data-clone="<?php echo $options->current; ?>"
         <?php if ($options->current !== null) {
-            $siteName = isset($options->currentClone['cloneName']) ? $options->currentClone['cloneName'] : $options->currentClone['directoryName'];
+            $siteName = isset($options->currentClone['cloneName']) ? Sanitize::sanitizeString(wpstg_urldecode($options->currentClone['cloneName'])) : $options->currentClone['directoryName'];
             echo ' value="' . $siteName . '"';
             echo " disabled='disabled'";
         } ?> />
@@ -90,7 +92,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
         <label for="wpstg-clean-plugins-themes"><?php _e('Clean Plugins/Themes'); ?></label>
         <input type="checkbox" id="wpstg-clean-plugins-themes" name="wpstg-clean-plugins-themes" value="true">
         <span class="wpstg--tooltip">
-            <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
+            <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
             <span class="wpstg--tooltiptext">
                 <?php _e('Delete all plugins & themes on staging site before starting copy process.', 'wp-staging'); ?>
             </span>
@@ -100,7 +102,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
         <label for="wpstg-clean-uploads"><?php _e('Clean Uploads'); ?></label>
         <input type="checkbox" id="wpstg-clean-uploads" name="wpstg-clean-uploads" value="true">
         <span class="wpstg--tooltip">
-            <img class="wpstg--dashicons" src="<?php echo $scan->getInfoIcon(); ?>" alt="info" />
+            <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
             <span class="wpstg--tooltiptext">
                 <?php _e('Delete entire folder wp-content/uploads on staging site including all images before starting copy process.', 'wp-staging'); ?>
                 <?php echo ($uploadsSymlinked ? "<br/><br/><b>" . __("Note: This option is disabled as uploads directory is symlinked", "wp-staging") . "</b>" : '') ?>
@@ -128,6 +130,6 @@ if ($options->current !== null && $options->mainJob === 'updating') {
 }
 ?>
 
-<button type="button" id="<?php echo $btnId; ?>" class="wpstg-next-step-link wpstg-button--primary wpstg-button--blue" data-action="<?php echo $action; ?>"><?php echo $label; ?></button>
+<button type="button" id="<?php echo esc_attr($btnId); ?>" class="wpstg-next-step-link wpstg-button--primary wpstg-button--blue" data-action="<?php echo esc_attr($action); ?>"><?php echo esc_html($label); ?></button>
 
 <a href="#" id="wpstg-check-space"><?php _e('Check required disk space', 'wp-staging'); ?></a>
