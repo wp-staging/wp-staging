@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.0
-Stable tag: 2.9.18
+Stable tag: 2.9.19
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -258,6 +258,13 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.9.19 =
+* New: Compatible up to WordPres 6.0.2
+* Security: Further improve sanitization and escaping of variables to prevent potential XSS attacks with high privileges #1836
+* Enh: Show better response from remote when license can not be activated #1818
+* Fix: Fatal error Uncaught TypeError on google drive backup upload settings page under rare circumstances when site is translated #1849
+* Fix: Fatal error on Windows OS when pushing a staging site and activating the backup option. It deletes the WP Staging content directory including its cache files file during files copying process, resulting in a failed push #1851
 
 = 2.9.18 =
 * Fix: Does not sanitise and escape some of its backup settings, which could allow high privilege users such as admin to perform Stored Cross-Site Scripting attacks (XSS) even when the unfiltered_html capability is disallowed (for example in multisite setup) #1825
@@ -541,5 +548,9 @@ WP STAGING Backup & Cloning | Full changelog:
 
 == Upgrade Notice ==
 
-= 2.9.18 =
-* Fix: Does not sanitise and escape some of its backup settings, which could allow high privilege users such as admin to perform Stored Cross-Site Scripting attacks (XSS) even when the unfiltered_html capability is disallowed (for example in multisite setup) #1825
+= 2.9.19 =
+* New: Compatible up to WordPres 6.0.2
+* Security: Further improve sanitization and escaping of variables to prevent potential XSS attacks with high privileges #1836
+* Enh: Show better response from remote when license can not be activated #1818
+* Fix: Fatal error Uncaught TypeError on google drive backup upload settings page under rare circumstances when site is translated #1849
+* Fix: Fatal error on Windows OS when pushing a staging site and activating the backup option. It deletes the WP Staging content directory including its cache files file during files copying process, resulting in a failed push #1851

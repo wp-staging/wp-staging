@@ -39,7 +39,8 @@ use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Framework\Database\SelectedTables;
-use WPStaging\Framework\Facades\Sanitize;
+use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Utils\Sanitize;
 
 /**
  * Class Administrator
@@ -80,6 +81,9 @@ class Administrator
      */
     private $siteInfo;
 
+    /** @var Sanitize */
+    private $sanitize;
+
     public function __construct()
     {
         // TODO: Inject using DI
@@ -90,10 +94,14 @@ class Administrator
         // Todo: Inject using DI
         $this->siteInfo = new SiteInfo();
 
+        add_filter('wpstg.escape.allowedHtmls', [$this, 'htmlAllowedDuringEscape']);
+
         $this->defineHooks();
 
         // Path to backend
         $this->path = plugin_dir_path(__FILE__);
+
+        $this->sanitize = WPStaging::make(Sanitize::class);
 
         // Load plugins meta data
         $this->loadMeta();
@@ -391,7 +399,7 @@ class Administrator
         nocache_headers();
         header("Content-Type: text/plain");
         header('Content-Disposition: attachment; filename="wpstg-system-info.txt"');
-        echo wp_strip_all_tags(new SystemInfo());
+        echo esc_html(wp_strip_all_tags(new SystemInfo()));
     }
 
     /**
@@ -411,17 +419,22 @@ class Administrator
             return;
         }
 
-        $fileExtension = explode('.', $_FILES["import_file"]["name"]);
+        $importFile = isset($_FILES["import_file"]) ? $this->sanitize->sanitizeFileUpload($_FILES["import_file"]) : null;
+        if ($importFile === null) {
+            wp_die("Please upload a valid .json file", "wp-staging");
+        }
+
+        $fileExtension = explode('.', $importFile["name"]);
         $fileExtension = end($fileExtension);
         if ($fileExtension !== "json") {
             wp_die("Please upload a valid .json file", "wp-staging");
         }
 
 
-        $importFile = $_FILES["import_file"]["tmp_name"];
+        $importFile = $importFile["tmp_name"];
 
         if (empty($importFile)) {
-            wp_die(__("Please upload a file to import", "wp-staging"));
+            wp_die(esc_html__("Please upload a file to import", "wp-staging"));
         }
 
         update_option("wpstg_settings", json_decode(file_get_contents($importFile, true)));
@@ -560,7 +573,7 @@ class Administrator
         $response = (new ProcessLock())->ajaxIsRunning();
         if ($response !== false)
         {
-            echo $response;
+            echo json_encode($response);
 
             exit();
         }
@@ -592,9 +605,9 @@ class Administrator
             return;
         }
 
-        $isChecked = isset($_POST['isChecked']) ? $_POST['isChecked'] === 'true' : false;
-        $forceDefault = isset($_POST['forceDefault']) ? $_POST['forceDefault'] === 'true' : false;
-        $path = isset($_POST['dirPath']) ? $_POST['dirPath'] : "";
+        $isChecked = isset($_POST['isChecked']) ? $this->sanitize->sanitizeBool($_POST['isChecked']) : false;
+        $forceDefault = isset($_POST['forceDefault']) ? $this->sanitize->sanitizeBool($_POST['forceDefault']) : false;
+        $path = isset($_POST['dirPath']) ? $this->sanitize->sanitizePath($_POST['dirPath']) : "";
         $path = ABSPATH . $path;
         $scan = new Scan($path);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
@@ -613,8 +626,9 @@ class Administrator
             return;
         }
 
+        /** @var Sites $sitesHelper */
         $sitesHelper = new Sites();
-        $cloneDirectoryName = $sitesHelper->sanitizeDirectoryName($_POST["directoryName"]);
+        $cloneDirectoryName = isset($_POST["directoryName"]) ? $sitesHelper->sanitizeDirectoryName($_POST["directoryName"]) : '';
 
         if (strlen($cloneDirectoryName) < 1) {
             return;
@@ -622,11 +636,11 @@ class Administrator
 
         $result = $sitesHelper->isCloneExists($cloneDirectoryName);
         if ($result === false) {
-            echo wp_send_json(["status" => "success"]);
+            wp_send_json(["status" => "success"]);
             return;
         }
 
-        echo wp_send_json([
+        wp_send_json([
             "status" => "failed",
             "message" => $result
         ]);
@@ -899,7 +913,7 @@ class Administrator
 
         /** @var DismissNotice */
         $dismissNotice = WPStaging::make(DismissNotice::class);
-        $dismissNotice->dismiss($_POST['wpstg_notice']);
+        $dismissNotice->dismiss($this->sanitize->sanitizeString($_POST['wpstg_notice']));
     }
 
     /**
@@ -923,8 +937,8 @@ class Administrator
             return false;
         }
 
-        $excludedDirectories = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
-        $extraDirectories = isset($_POST["extraDirectories"]) ? $_POST["extraDirectories"] : '';
+        $excludedDirectories = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
+        $extraDirectories = isset($_POST["extraDirectories"]) ? $this->sanitize->sanitizeString($_POST["extraDirectories"]) : '';
 
         $scan = new Scan();
         return $scan->hasFreeDiskSpace($excludedDirectories, $extraDirectories);
@@ -941,10 +955,10 @@ class Administrator
 
         $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
-            $clone = $existingClones[$_POST["clone"]];
+            $clone = $existingClones[$this->sanitize->sanitizeString($_POST["clone"])];
             require_once "{$this->path}Pro/views/edit-clone-data.php";
         } else {
-            echo __("Unknown error. Please reload the page and try again", "wp-staging");
+            echo esc_html__("Unknown error. Please reload the page and try again", "wp-staging");
         }
 
         wp_die();
@@ -962,31 +976,31 @@ class Administrator
         $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
             if (empty($_POST['directoryName'])) {
-                echo __("Site name is required!");
+                echo esc_html__("Site name is required!", "wp-staging");
                 wp_die();
             }
 
-            $cloneId      = $_POST["clone"];
-            $cloneName    = Sanitize::sanitizeString(wpstg_urldecode($_POST["cloneName"]));
-            $cloneDirectoryName = wpstg_urldecode($_POST["directoryName"]);
+            $cloneId      = $this->sanitize->sanitizeString($_POST["clone"]);
+            $cloneName    = isset($_POST["cloneName"]) ? $this->sanitize->sanitizeString($_POST["cloneName"]) : '';
+            $cloneDirectoryName = $this->sanitize->sanitizeString($_POST["directoryName"]);
             $cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($cloneDirectoryName));
 
-            $existingClones[$cloneId]["cloneName"] = Sanitize::sanitizeString($cloneName);
-            $existingClones[$cloneId]["directoryName"] = Sanitize::sanitizeString($cloneDirectoryName);
-            $existingClones[$cloneId]["path"] = Sanitize::sanitizeString($_POST["path"]);
-            $existingClones[$cloneId]["url"] = Sanitize::sanitizeString($_POST["url"]);
-            $existingClones[$cloneId]["prefix"] = Sanitize::sanitizeString($_POST["prefix"]);
-            $existingClones[$cloneId]["databaseUser"] = Sanitize::sanitizeString($_POST["externalDBUser"]);
-            $existingClones[$cloneId]["databasePassword"] = Sanitize::sanitizeString($_POST["externalDBPassword"]);
-            $existingClones[$cloneId]["databaseDatabase"] = Sanitize::sanitizeString($_POST["externalDBDatabase"]);
-            $existingClones[$cloneId]["databaseServer"] = Sanitize::sanitizeString($_POST["externalDBHost"]);
-            $existingClones[$cloneId]["databasePrefix"] = Sanitize::sanitizeString($_POST["externalDBPrefix"]);
+            $existingClones[$cloneId]["cloneName"] = $this->sanitize->sanitizeString($cloneName);
+            $existingClones[$cloneId]["directoryName"] = $this->sanitize->sanitizeString($cloneDirectoryName);
+            $existingClones[$cloneId]["path"] = isset($_POST["path"]) ? $this->sanitize->sanitizeString($_POST["path"]) : '';
+            $existingClones[$cloneId]["url"] = isset($_POST["url"]) ? $this->sanitize->sanitizeString($_POST["url"]) : '';
+            $existingClones[$cloneId]["prefix"] = isset($_POST["prefix"]) ? $this->sanitize->sanitizeString($_POST["prefix"]) : '';
+            $existingClones[$cloneId]["databaseUser"] = isset($_POST["externalDBUser"]) ? $this->sanitize->sanitizeString($_POST["externalDBUser"]) : '';
+            $existingClones[$cloneId]["databasePassword"] = isset($_POST["externalDBPassword"]) ? $this->sanitize->sanitizeString($_POST["externalDBPassword"]) : '';
+            $existingClones[$cloneId]["databaseDatabase"] = isset($_POST["externalDBDatabase"]) ? $this->sanitize->sanitizeString($_POST["externalDBDatabase"]) : '';
+            $existingClones[$cloneId]["databaseServer"] = isset($_POST["externalDBHost"]) ? $this->sanitize->sanitizeString($_POST["externalDBHost"]) : 'localhost';
+            $existingClones[$cloneId]["databasePrefix"] = isset($_POST["externalDBPrefix"]) ? $this->sanitize->sanitizeString($_POST["externalDBPrefix"]) : 'wp_';
 
             update_option(Sites::STAGING_SITES_OPTION, $existingClones);
 
-            echo __("Success");
+            echo esc_html__("Success", "wp-staging");
         } else {
-            echo __("Unknown error. Please reload the page and try again", "wp-staging");
+            echo esc_html__("Unknown error. Please reload the page and try again", "wp-staging");
         }
 
         wp_die();
@@ -1043,7 +1057,10 @@ class Administrator
         $scan->start();
         $options = $scan->getOptions();
 
-        $selectedTables = new SelectedTables($_POST['includedTables'], $_POST['excludedTables'], $_POST['selectedTablesWithoutPrefix']);
+        $includedTables = isset($_POST['includedTables']) ? $this->sanitize->sanitizeString($_POST['includedTables']) : '';
+        $excludedTables = isset($_POST['excludedTables']) ? $this->sanitize->sanitizeString($_POST['excludedTables']) : '';
+        $selectedTablesWithoutPrefix = isset($_POST['selectedTablesWithoutPrefix']) ? $this->sanitize->sanitizeString($_POST['selectedTablesWithoutPrefix']) : '';
+        $selectedTables = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
         $selectedTables->setDatabaseInfo($options->databaseServer, $options->databaseUser, $options->databasePassword, $options->databaseDatabase, empty($options->databasePrefix) ? $options->prefix : $options->databasePrefix);
         $tables = $selectedTables->getSelectedTables($options->networkClone);
 
@@ -1109,35 +1126,35 @@ class Administrator
         // Set e-mail
         $email = null;
         if (isset($args['wpstg_email'])) {
-            $email = trim($args['wpstg_email']);
+            $email = trim($this->sanitize->sanitizeString($args['wpstg_email']));
         }
 
         // Set hosting provider
         $provider = null;
         if (isset($args['wpstg_provider'])) {
-            $provider = trim($args['wpstg_provider']);
+            $provider = trim($this->sanitize->sanitizeString($args['wpstg_provider']));
         }
 
         // Set message
         $message = null;
         if (isset($args['wpstg_message'])) {
-            $message = trim($args['wpstg_message']);
+            $message = trim($this->sanitize->sanitizeString($args['wpstg_message']));
         }
 
         // Set syslog
         $syslog = false;
         if (isset($args['wpstg_syslog'])) {
-            $syslog = (bool)$args['wpstg_syslog'];
+            $syslog = $this->sanitize->sanitizeBool($args['wpstg_syslog']);
         }
 
         // Set terms
         $terms = false;
         if (isset($args['wpstg_terms'])) {
-            $terms = (bool)$args['wpstg_terms'];
+            $terms = $this->sanitize->sanitizeBool($args['wpstg_terms']);
         }
 
         // Set forceSend
-        $forceSend = isset($_POST['wpstg_force_send']) && $_POST['wpstg_force_send'] !== "false";
+        $forceSend = isset($_POST['wpstg_force_send']) && $this->sanitize->sanitizeBool($_POST['wpstg_force_send']);
 
         $report = new Report();
         $errors = $report->send($email, $message, $terms, $syslog, $provider, $forceSend);
@@ -1158,11 +1175,11 @@ class Administrator
         global $wpdb;
 
         $args = $_POST;
-        $user = !empty($args['databaseUser']) ? $args['databaseUser'] : '';
-        $password = !empty($args['databasePassword']) ? $args['databasePassword'] : '';
-        $database = !empty($args['databaseDatabase']) ? $args['databaseDatabase'] : '';
-        $server = !empty($args['databaseServer']) ? $args['databaseServer'] : 'localhost';
-        $prefix = !empty($args['databasePrefix']) ? $args['databasePrefix'] : $wpdb->prefix;
+        $user = !empty($args['databaseUser']) ? $this->sanitize->sanitizeString($args['databaseUser']) : '';
+        $password = !empty($args['databasePassword']) ? $this->sanitize->sanitizeString($args['databasePassword']) : '';
+        $database = !empty($args['databaseDatabase']) ? $this->sanitize->sanitizeString($args['databaseDatabase']) : '';
+        $server = !empty($args['databaseServer']) ? $this->sanitize->sanitizeString($args['databaseServer']) : 'localhost';
+        $prefix = !empty($args['databasePrefix']) ? $this->sanitize->sanitizeString($args['databasePrefix']) : $wpdb->prefix;
         // make sure prefix doesn't contains any invalid character
         // same condition as in WordPress wpdb::set_prefix() method
         if (preg_match('|[^a-z0-9_]|i', $prefix)) {
@@ -1171,7 +1188,7 @@ class Administrator
         }
 
         // ensure tables with the given prefix exist, default false
-        $ensurePrefixTableExist = !empty($args['databaseEnsurePrefixTableExist']) ? filter_var($args['databaseEnsurePrefixTableExist'], FILTER_VALIDATE_BOOLEAN) : false;
+        $ensurePrefixTableExist = !empty($args['databaseEnsurePrefixTableExist']) ? $this->sanitize->sanitizeBool($args['databaseEnsurePrefixTableExist']) : false;
 
         $dbInfo = new DbInfo($server, $user, stripslashes($password), $database);
         $wpdb = $dbInfo->connect();
@@ -1241,7 +1258,7 @@ class Administrator
             return;
         }
 
-        $type = isset($_POST['type']) ? $_POST['type'] : null;
+        $type = isset($_POST['type']) ? $this->sanitize->sanitizeString($_POST['type']) : null;
         if ($type === 'processLock') {
             $process = new ProcessLock();
             $process->restart();
@@ -1262,7 +1279,7 @@ class Administrator
         $response = (new ProcessLock())->ajaxIsRunning();
         if ($response !== false)
         {
-            echo $response;
+            echo json_encode($response);
 
             exit();
         }
@@ -1299,10 +1316,10 @@ class Administrator
             return;
         }
 
-        $user = !empty($_POST['databaseUser']) ? $_POST['databaseUser'] : '';
-        $password = !empty($_POST['databasePassword']) ? $_POST['databasePassword'] : '';
-        $database = !empty($_POST['databaseDatabase']) ? $_POST['databaseDatabase'] : '';
-        $server = !empty($_POST['databaseServer']) ? $_POST['databaseServer'] : 'localhost';
+        $user = !empty($_POST['databaseUser']) ? $this->sanitize->sanitizeString($_POST['databaseUser']) : '';
+        $password = !empty($_POST['databasePassword']) ? $this->sanitize->sanitizeString($_POST['databasePassword']) : '';
+        $database = !empty($_POST['databaseDatabase']) ? $this->sanitize->sanitizeString($_POST['databaseDatabase']) : '';
+        $server = !empty($_POST['databaseServer']) ? $this->sanitize->sanitizeString($_POST['databaseServer']) : 'localhost';
 
         $comparison = new CompareExternalDatabase($server, $user, stripslashes($password), $database);
         $results = $comparison->maybeGetComparison();
@@ -1350,6 +1367,15 @@ class Administrator
     {
         $backup = new BackupUploadsDir(null);
         $backup->removeUploadsBackup();
+    }
+
+    /**
+     * @param array $array
+     * @return array 
+     */
+    public function htmlAllowedDuringEscape($array)
+    {
+        return Escape::htmlAllowedDuringEscape($array);
     }
 
     /**

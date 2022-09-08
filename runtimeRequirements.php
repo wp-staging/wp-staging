@@ -18,7 +18,7 @@ if (isset($_REQUEST['action'])) {
         case 'activate':
         case 'error_scrape':
             if (isset($_REQUEST['plugin'])) {
-                $plugin = (string)wp_unslash($_REQUEST['plugin']);
+                $plugin = (string)wp_unslash(sanitize_text_field($_REQUEST['plugin']));
 
                 $isActivatingWpStaging        = strpos($plugin, 'wp-staging.php') || strpos($plugin, 'wp-staging-pro.php');
                 $isActivatingAnotherWpStaging = plugin_basename($plugin) !== plugin_basename($pluginFilePath);
@@ -31,7 +31,7 @@ if (isset($_REQUEST['action'])) {
         case 'activate-selected':
         case 'activate-multi':
             if (isset($_REQUEST['checked'])) {
-                $plugins = (array)wp_unslash($_REQUEST['checked']);
+                $plugins = array_map('sanitize_text_field', (array)wp_unslash($_REQUEST['checked']));
 
                 foreach ($plugins as $i => $plugin) {
                     $isActivatingWpStaging        = strpos($plugin, 'wp-staging.php') || strpos($plugin, 'wp-staging-pro.php');

@@ -5,6 +5,7 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Escape;
 use WPStaging\Pro\Backup\Service\BackupsFinder;
 
 $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(BackupsFinder::class)->getBackupsDirectory());
@@ -18,15 +19,21 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
     <h2 class="wpstg--modal--backup--import--upload--title">
         <?php esc_html_e('Uploading Backup', 'wp-staging') ?>
         <div class="wpstg--tooltip">
-            <img class="wpstg--dashicons wpstg-dashicons-19" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg"></img>
+            <img class="wpstg--dashicons wpstg-dashicons-19" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg"></img>
             <p class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                <?php _e("Upload a WP STAGING backup file (*.wpstg) and restore your site to it at any time. This backup can have been created from this site, or even created on another website. So you can migrate the other site to this one.", "wp-staging")?>
+                <?php esc_html_e("Upload a WP STAGING backup file (*.wpstg) and restore your site to it at any time. This backup can have been created from this site, or even created on another website. So you can migrate the other site to this one.", "wp-staging")?>
                 <br><br>
-                <?php _e("Videos:", "wp-staging")?>
+                <?php esc_html_e("Videos:", "wp-staging")?>
                 <br>
-                <?php echo sprintf(__('&#8226; <a href="%s" target="_blank">How to backup WordPress</a>', 'wp-staging'), 'https://www.youtube.com/watch?v=q352aYduOUY'); ?>
+                <?php echo sprintf(
+                    Escape::escapeHtml(__('&#8226; <a href="%s" target="_blank">How to backup WordPress</a>', 'wp-staging')),
+                    'https://www.youtube.com/watch?v=q352aYduOUY'
+                ); ?>
                 <br>
-                <?php echo sprintf(__('&#8226; <a href="%s" target="_blank">How to migrate WordPress</a>', 'wp-staging'), 'https://www.youtube.com/watch?v=DBaZQg1Efq4'); ?>
+                <?php echo sprintf(
+                    Escape::escapeHtml(__('&#8226; <a href="%s" target="_blank">How to migrate WordPress</a>', 'wp-staging')),
+                    'https://www.youtube.com/watch?v=DBaZQg1Efq4'
+                ); ?>
             </p>
         </div>
     </h2>
@@ -53,21 +60,15 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
                         <img src="<?php echo esc_url($urlAssets . 'img/upload.svg'); ?>" alt="Upload Image"/>
                         <div class="wpstg-upload-text">
                             <?php
-                                echo wp_kses(
-                                    __(sprintf('Drop the backup file here to upload or <br><a>select from your computer</a>'), 'wp-staging'),
-                                    [
-                                    // Allowed HTML
-                                    'a' => [],
-                                    'br' => []
-                                    ]
-                                ) ?>
+                                echo Escape::escapeHtml(__('Drop the backup file here to upload or <br><a>select from your computer</a>', 'wp-staging'));
+                            ?>
                         </div>
                         <div class="wpstg-dragover-text">
                             <strong><?php echo esc_html('Drop here to start the upload!') ?></strong>
                         </div>
                     </div>
                     <p class="wpstg-backup-direct-upload-notice">
-                        <?php _e('<strong>Did you know?</strong>', 'wp-staging') ?><br>
+                        <strong><?php esc_html_e('Did you know?', 'wp-staging') ?></strong><br>
                         <?php esc_html_e('You can upload backups directly to the directory:', 'wp-staging') ?><br>
                         <strong><?php echo esc_html($uploadDirectory) ?></strong>
                     </p>

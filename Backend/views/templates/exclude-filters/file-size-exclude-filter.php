@@ -12,12 +12,12 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
  */
 ?>
 <tr>
-    <td class="wpstg-exclude-filter-name-column"><?php _e('File Size', 'wp-staging') ?></td>
+    <td class="wpstg-exclude-filter-name-column"><?php esc_html_e('File Size', 'wp-staging') ?></td>
     <td class="wpstg-exclude-filter-exclusion-column">
         <select class="wpstg-exclude-rule-input wpstg-file-size-exclude-select" name="wpstgFileSizeExcludeRuleCompare[]">
-            <option value="<?php echo ExcludeFilter::SIZE_LESS_THAN ?>" <?php echo isset($comparison) && $comparison === ExcludeFilter::SIZE_LESS_THAN ? "selected" : '' ?>><?php _e('LESS THAN', 'wp-staging') ?></option>
-            <option value="<?php echo ExcludeFilter::SIZE_GREATER_THAN ?>" <?php echo isset($comparison) && $comparison === ExcludeFilter::SIZE_GREATER_THAN ? "selected" : '' ?>><?php _e('GREATER THAN', 'wp-staging') ?></option>
-            <option value="<?php echo ExcludeFilter::SIZE_EQUAL_TO ?>" <?php echo isset($comparison) && $comparison === ExcludeFilter::SIZE_EQUAL_TO ? "selected" : '' ?>><?php _e('EXACT', 'wp-staging') ?></option>
+            <option value="<?php echo ExcludeFilter::SIZE_LESS_THAN ?>" <?php echo isset($comparison) && $comparison === ExcludeFilter::SIZE_LESS_THAN ? "selected" : '' ?>><?php esc_html_e('LESS THAN', 'wp-staging') ?></option>
+            <option value="<?php echo ExcludeFilter::SIZE_GREATER_THAN ?>" <?php echo isset($comparison) && $comparison === ExcludeFilter::SIZE_GREATER_THAN ? "selected" : '' ?>><?php esc_html_e('GREATER THAN', 'wp-staging') ?></option>
+            <option value="<?php echo ExcludeFilter::SIZE_EQUAL_TO ?>" <?php echo isset($comparison) && $comparison === ExcludeFilter::SIZE_EQUAL_TO ? "selected" : '' ?>><?php esc_html_e('EXACT', 'wp-staging') ?></option>
         </select>
         <input type="number" class="wpstg-exclude-rule-input wpstg-file-size-exclude-input" name="wpstgFileSizeExcludeRuleSize[]" value="<?php echo isset($bytes) ? Sanitize::sanitizeInt($bytes) : '0' ?>" />
         <select class="wpstg-exclude-rule-input wpstg-file-size-exclude-select-small" name="wpstgFileSizeExcludeRuleByte[]">
@@ -27,7 +27,7 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
         </select>
         <div class="wpstg--tooltip wpstg--exclude-rules--tooltip">
             <button class="wpstg-exclusion-rule-info" type="button">i</button>
-            <p class="wpstg--tooltiptext has-top-arrow"><?php echo sprintf(__('Exclude files by size. For example to exclude files greater than 10 MB, select %s and type %s in next input box and select %s.', 'wp-staging'), '<code class="wpstg-code">' . __('GREATER THAN', 'wp-staging') . '</code>', '<code class="wpstg-code">10</code>', '<code class="wpstg-code">MB</code>') ?>
+            <p class="wpstg--tooltiptext has-top-arrow"><?php echo sprintf(esc_html__('Exclude files by size. For example to exclude files greater than 10 MB, select %s and type %s in next input box and select %s.', 'wp-staging'), '<code class="wpstg-code">' . esc_html__('GREATER THAN', 'wp-staging') . '</code>', '<code class="wpstg-code">10</code>', '<code class="wpstg-code">MB</code>') ?>
             </p>
         </div>
     </td>

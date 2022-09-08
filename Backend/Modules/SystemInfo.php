@@ -6,6 +6,7 @@ use WPStaging\Core\Utils\Browser;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils;
 use WPStaging\Core\Utils\Multisite;
+use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 
@@ -436,7 +437,7 @@ class SystemInfo
 
         $output .= $this->info("PHP Version:", PHP_VERSION);
         $output .= $this->info("MySQL Version:", WPStaging::getInstance()->get("wpdb")->db_version());
-        $output .= $this->info("Webserver Info:", $_SERVER["SERVER_SOFTWARE"]);
+        $output .= $this->info("Webserver Info:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
 
         return apply_filters("wpstg_sysinfo_after_webserver_config", $output);
     }

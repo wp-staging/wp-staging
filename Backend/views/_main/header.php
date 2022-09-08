@@ -2,17 +2,17 @@
 
 <div>
 <span class="wpstg-logo">
-    <img src="<?php echo $this->assets->getAssetsUrl("img/logo.svg") ?>" width="212">
+    <img src="<?php echo esc_url($this->assets->getAssetsUrl("img/logo.svg")) ?>" width="212">
 </span>
 
 <span class="wpstg-version">
     <?php if (defined('WPSTGPRO_VERSION')) {
         echo "PRO";
-    } ?> v. <?php echo WPStaging\Core\WPStaging::getVersion() ?>
+    } ?> v. <?php echo esc_html(WPStaging\Core\WPStaging::getVersion()) ?>
 </span>
 </div>
 <div class="wpstg-header">
-    <?php if ($_GET['page'] === 'wpstg_clone') { ?>
+    <?php if (isset($_GET['page']) && $_GET['page'] === 'wpstg_clone') { ?>
         <?php
         $latestReleasedVersion = get_option('wpstg_version_latest');
         $display = 'none;';
@@ -26,7 +26,7 @@
         }
         ?>
 
-        <div id="wpstg-update-notify" style="display:<?php echo $display; ?>">
+        <div id="wpstg-update-notify" style="display:<?php echo esc_attr($display); ?>">
             <strong><?php echo sprintf(__("New: WP STAGING PRO v. %s is available.", 'wp-staging'), esc_html($latestReleasedVersion)); ?></strong><br/>
             <?php echo sprintf(__('Important: Please update the plugin before pushing the staging site to production site. <a href="%s" target="_blank">What\'s New?</a>', 'wp-staging'), 'https://wp-staging.com/wp-staging-pro-changelog'); ?>
         </div>

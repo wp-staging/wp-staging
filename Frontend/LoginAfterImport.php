@@ -3,6 +3,7 @@
 namespace WPStaging\Frontend;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Security\AccessToken;
 
 class LoginAfterImport
@@ -13,7 +14,7 @@ class LoginAfterImport
     public function showMessage()
     {
         // Early bail: Not after Import
-        if (!isset($_GET['wpstgAfterImport']) || $_GET['wpstgAfterImport'] !== 'yes') {
+        if (!isset($_GET['wpstgAfterImport']) || !Sanitize::sanitizeBool($_GET['wpstgAfterImport'])) {
             return;
         }
 
@@ -23,7 +24,8 @@ class LoginAfterImport
         }
 
         // Late instantiation, since this runs on the FE on every request
-        $auth = WPStaging::getInstance()->getContainer()->make(AccessToken::class);
+        /** @var AccessToken $auth */
+        $auth = WPStaging::make(AccessToken::class);
 
         // Early bail: Invalid access token
         if (!$auth->isValidToken($_GET['accessToken'])) {

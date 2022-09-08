@@ -178,7 +178,7 @@ abstract class Elements implements InterfaceElement
      */
     public function setDefault($value)
     {
-        $this->default = esc_attr__($value);
+        $this->default = $value;
 
         return $this;
     }

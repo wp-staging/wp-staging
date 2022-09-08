@@ -3,7 +3,7 @@ $storages = WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Storage\Provide
 $provider = 'googledrive';
 $providerId = '';
 if (isset($_REQUEST['sub'])) {
-    $provider = strtolower($_REQUEST['sub']);
+    $provider = strtolower(sanitize_text_field($_REQUEST['sub']));
 }
 
 ?>
@@ -15,8 +15,8 @@ if (isset($_REQUEST['sub'])) {
             $providerId = $storage['id'];
         }
         ?>
-        <a class="wpstg-storage-provider <?php echo $isActive ? 'wpstg-storage-provider-active' : '' ?>" href="<?php echo $isActive ? 'javascript:void(0);' : $storage['settingsPath']; ?>">
-            <?php echo $storage['name']; ?>
+        <a class="wpstg-storage-provider <?php echo $isActive ? 'wpstg-storage-provider-active' : '' ?>" href="<?php echo $isActive ? 'javascript:void(0);' : esc_url($storage['settingsPath']); ?>">
+            <?php echo esc_html($storage['name']); ?>
         </a>
     <?php endforeach; ?>
 </div>
