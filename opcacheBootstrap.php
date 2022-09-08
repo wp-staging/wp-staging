@@ -20,9 +20,11 @@ if (version_compare($wp_version, '5.5', '>=')) {
     return;
 }
 
+$filename = isset($_SERVER['SCRIPT_FILENAME']) ? sanitize_text_field($_SERVER['SCRIPT_FILENAME']) : '';
+
 // Ported from WordPress 5.5 wp_opcache_invalidate
 $canInvalidate = function_exists('opcache_invalidate')
-                 && (!ini_get('opcache.restrict_api') || stripos(realpath($_SERVER['SCRIPT_FILENAME']), ini_get('opcache.restrict_api')) === 0);
+                 && (!ini_get('opcache.restrict_api') || stripos(realpath($filename), ini_get('opcache.restrict_api')) === 0);
 
 // Early bail: OPCache not enabled, or we can't clear it.
 if (!$canInvalidate) {
@@ -45,7 +47,7 @@ if (!$canInvalidate) {
  *
  * We use the "Version" from the headers of the main file of the plugin to compare.
  */
-$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '2.9.18';
+$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '2.9.19';
 $lastCheckHappenedAfterInterval          = current_time('timestamp') > (int)get_site_transient('wpstg.bootstrap.opcache.lastCleared') + 5 * MINUTE_IN_SECONDS;
 
 $shouldClearOpCache = apply_filters('wpstg.bootstrap.opcache.shouldClear', $runtimeVersionDifferentFromBuildVersion && $lastCheckHappenedAfterInterval);

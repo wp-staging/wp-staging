@@ -14,7 +14,7 @@ use WPStaging\Backend\Notices\Notices;
 
 ?>
 <div class="notice notice-warning wpstg-disabled-items-notice">
-    <p><strong><?php _e('WP STAGING - Notes:', 'wp-staging'); ?></strong></p>
+    <p><strong><?php esc_html_e('WP STAGING - Notes:', 'wp-staging'); ?></strong></p>
     <ol style="margin-left: 12px;">
         <li> <?php echo sprintf(__('WP STAGING Disabled the cache by setting the constant <code>WP_CACHE</code> to <code>FALSE</code>in the file <code>wp-config.php</code>. <a href="%s" target="_blank"> You can revert this easily</a>', 'wp-staging'), 'https://wp-staging.com/docs/how-to-activate-caching-on-staging-site/') ?></li>
         <li> <?php echo sprintf(__('Permalinks are disabled. <a href="%s" target="_blank">How to activate permalinks</a>', 'wp-staging'), 'https://wp-staging.com/docs/activate-permalinks-staging-site/') ?></li>
@@ -23,19 +23,19 @@ use WPStaging\Backend\Notices\Notices;
         <?php endif; ?>
         <?php if ($freemiusOptionsCleared) : ?>
         <li>
-            <?php _e('You may need to consider to reactivate your Freemius license to make sure that Freemius integration does not act slightly differently in your staging site.', 'wp-staging') ?>
-          <a href="https://wp-staging.com/docs/freemius-integration-how-its-handled-by-wp-staging/"><?php _e('Read more here', 'wp-staging') ?>
+            <?php esc_html_e('You may need to consider to reactivate your Freemius license to make sure that Freemius integration does not act slightly differently in your staging site.', 'wp-staging') ?>
+          <a href="https://wp-staging.com/docs/freemius-integration-how-its-handled-by-wp-staging/"><?php esc_html_e('Read more here', 'wp-staging') ?>
         </li>
         <?php endif; ?>
         <?php if ($isJetpackStagingModeActive) : ?>
         <li>
-            <?php _e('You have Jetpack plugin active on this staging site, so we have enabled Jetpack staging mode.', 'wp-staging') ?>
-            <a href="https://wp-staging.com/docs/make-jetpack-working-on-staging-site/"><?php _e('Read more here', 'wp-staging') ?>
+            <?php esc_html_e('You have Jetpack plugin active on this staging site, so we have enabled Jetpack staging mode.', 'wp-staging') ?>
+            <a href="https://wp-staging.com/docs/make-jetpack-working-on-staging-site/"><?php esc_html_e('Read more here', 'wp-staging') ?>
         </li>
         <?php endif; ?>
         <?php if (count($excludedPlugins) > 0) : ?>
         <li>
-            <?php _e('Excluded the following plugins:', 'wp-staging') ?>
+            <?php esc_html_e('Excluded the following plugins:', 'wp-staging') ?>
             <ul style="margin-left: 0px; margin-top: 4px;">
                 <?php foreach ($excludedPlugins as $excludedPlugin) : ?>
                     <li> <span style="font-size: 13px;">➜</span> <?php echo esc_html($excludedPlugin); ?></li>

@@ -71,6 +71,8 @@ class Files extends JobExecutable
 
         if (is_file($filePath)) {
             $this->file = new FileObject($filePath, 'r');
+        } else {
+            $this->returnException(sprintf('Fatal Error: Files - File: %s is missing! Either the file was deleted after directory scanning or there is a permission issue with the file system.', $filePath));
         }
 
         $logStep = 0;

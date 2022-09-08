@@ -1,5 +1,6 @@
 <?php
 
+use WPStaging\Framework\Facades\Escape;
 use WPStaging\Pro\Backup\Task\Tasks\JobImport\RestoreRequirementsCheckTask;
 
 /**
@@ -38,13 +39,13 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
         </span>
         <?php if (!$corrupt) : ?>
         <div class="wpstg-clone-labels">
-            <span class="wpstg-clone-label"><?php echo $backup->type === 'single' ? __('Single Site', 'wp-staging') : __('Multisite', 'wp-staging') ?></span>
+            <span class="wpstg-clone-label"><?php echo $backup->type === 'single' ? esc_html__('Single Site', 'wp-staging') : esc_html__('Multisite', 'wp-staging') ?></span>
         </div>
         <?php endif ?>
         <div class="wpstg-clone-actions">
             <div class="wpstg-dropdown wpstg-action-dropdown">
                 <a href="#" class="wpstg-dropdown-toggler transparent">
-                    <?php _e("Actions", "wp-staging"); ?>
+                    <?php esc_html_e("Actions", "wp-staging"); ?>
                     <span class="wpstg-caret"></span>
                 </a>
                 <div class="wpstg-dropdown-menu">
@@ -109,7 +110,7 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
                 <li>
                     <strong><?php esc_html_e('Notes:', 'wp-staging') ?></strong><br/>
                     <div class="backup-notes">
-                        <?php echo nl2br(esc_html($notes)); ?>
+                        <?php echo Escape::escapeHtml(__(nl2br($notes, 'wp-staging'))); ?>
                     </div>
                 </li>
             <?php endif ?>
@@ -132,12 +133,12 @@ if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PH
             </li>
                 <?php if ($automatedBackup) : ?>
                 <li style="font-style: italic">
-                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/update.svg" /> <?php esc_html_e('Backup created automatically.', 'wp-staging') ?>
+                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/update.svg" /> <?php esc_html_e('Backup created automatically.', 'wp-staging') ?>
                 </li>
                 <?php endif ?>
                 <?php if ($legacy) : ?>
                 <li style="font-style: italic">
-                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/cloud-saved.svg" /> <?php esc_html_e('This database backup was generated from an existing legacy WP STAGING Database export in the .SQL format.', 'wp-staging') ?>
+                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/cloud-saved.svg" /> <?php esc_html_e('This database backup was generated from an existing legacy WP STAGING Database export in the .SQL format.', 'wp-staging') ?>
                 </li>
                 <?php endif ?>
             <?php endif ?>

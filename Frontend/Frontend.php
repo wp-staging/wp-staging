@@ -2,6 +2,7 @@
 
 namespace WPStaging\Frontend;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Rest\Rest;
 use WPStaging\Framework\SiteInfo;
 
@@ -96,7 +97,10 @@ class Frontend
         }
 
         // Don't show login form for rest requests
-        if ((new Rest())->isRestUrl()) {
+
+        /** @var Rest */
+        $rest = WPStaging::make(Rest::class);
+        if ($rest->isRestUrl()) {
             return false;
         }
 

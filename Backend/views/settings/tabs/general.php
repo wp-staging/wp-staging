@@ -1,3 +1,9 @@
+<?php
+
+use WPStaging\Framework\Facades\Escape;
+
+?>
+
 <!-- General Settings -->
 <div id="wpstg-tab-container" class="tab_container">
     <form class="wpstg-settings-panel" method="post" action="options.php">
@@ -9,20 +15,21 @@
                 continue;
             }
 
+            /** @var WPStaging\Core\Forms\Form */
             $form = \WPStaging\Core\WPStaging::getInstance()->get("forms")->get($id);
 
             if ($form === null) {
                 continue;
             }
             ?>
-            <div id="<?php echo $id ?>__wpstg_header">
+            <div id="<?php echo esc_attr($id) ?>__wpstg_header">
                 <table class="wpstg-form-table">
                     <thead>
                     <tr class="wpstg-settings-row">
                         <th class="wpstg-settings-row th" colspan="2">
                             <div class="col-title">
                                 <strong><?php
-                                    echo $name ?></strong>
+                                    echo esc_html($name) ?></strong>
                                 <span class="description"></span>
                             </div>
                         </th>
@@ -34,11 +41,11 @@
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[queryLimit]")
+                                $form->renderLabel("wpstg_settings[queryLimit]")
                                 ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        esc_html_e(
                                             "Number of DB rows, that are queried within one request.
                                         The higher the value the faster the database copy process.
                                         To find out the highest possible values try a high value like 10.000 or more. If you get timeout issues, lower it
@@ -52,18 +59,18 @@
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[queryLimit]") ?>
+                            $form->renderInput("wpstg_settings[queryLimit]") ?>
                         </td>
                     </tr>
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[querySRLimit]")
+                                $form->renderLabel("wpstg_settings[querySRLimit]")
                                 ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        esc_html_e(
                                             "Number of DB rows, that are processed within one request.
                                         The higher the value the faster the database search & replace process.
                                         This is a high memory consumptive process. If you get timeouts lower this value!",
@@ -76,7 +83,7 @@
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[querySRLimit]") ?>
+                            $form->renderInput("wpstg_settings[querySRLimit]") ?>
                         </td>
                     </tr>
 
@@ -84,11 +91,11 @@
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[fileLimit]")
+                                $form->renderLabel("wpstg_settings[fileLimit]")
                                 ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        esc_html_e(
                                             "Number of files to copy that will be copied within one request.
                                         The higher the value the faster the file copy process.
                                         To find out the highest possible values try a high value like 500 or more. If you get timeout issues, lower it
@@ -97,9 +104,10 @@
                                         ); ?>
                                         <br>
                                         <br>
+                                        <strong><?php esc_html_e("Important:", "wp-staging") ?></strong>
                                         <?php
-                                        _e(
-                                            "<strong>Important:</strong> If CPU Load Priority is <strong>Low</strong>, set a file copy limit value of 50 or higher! Otherwise file copying process takes a lot of time.",
+                                        esc_html_e(
+                                            "If CPU Load Priority is <strong>Low</strong>, set a file copy limit value of 50 or higher! Otherwise file copying process takes a lot of time.",
                                             "wp-staging"
                                         ); ?>
                                         <br>
@@ -110,7 +118,7 @@
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[fileLimit]") ?>
+                            $form->renderInput("wpstg_settings[fileLimit]") ?>
                         </td>
                     </tr>
 
@@ -118,10 +126,10 @@
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[maxFileSize]") ?>
+                                $form->renderLabel("wpstg_settings[maxFileSize]") ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        esc_html_e(
                                             "Maximum size of the files which are allowed to copy. All files larger than this value will be skipped.                                              
                                         Note: Increase this option only if you have a good reason. Files larger than a few megabytes are in 99% of all cases log and backup files which are not needed on a staging site.",
                                             "wp-staging"
@@ -133,17 +141,17 @@
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[maxFileSize]") ?>
+                            $form->renderInput("wpstg_settings[maxFileSize]") ?>
                         </td>
                     </tr>
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[batchSize]") ?>
+                                $form->renderLabel("wpstg_settings[batchSize]") ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        esc_html_e(
                                             "Buffer size for the file copy process in megabyte.
                                         The higher the value the faster large files are copied.
                                         To find out the highest possible values try a high one and lower it until
@@ -159,7 +167,7 @@
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[batchSize]") ?>
+                            $form->renderInput("wpstg_settings[batchSize]") ?>
                         </td>
                     </tr>
 
@@ -167,16 +175,16 @@
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[cpuLoad]") ?>
+                                $form->renderLabel("wpstg_settings[cpuLoad]") ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        echo sprintf(esc_html__(
                                             "Using high will result in fast as possible processing but the cpu load
                                         increases and it's also possible that staging process gets interrupted because of too many ajax requests
-                                        (e.g. <strong>authorization error</strong>).
+                                        (e.g. %s).
                                         Using a lower value results in lower cpu load on your server but also slower staging site creation.",
                                             "wp-staging"
-                                        ); ?>
+                                        ), "<strong>authorization error</strong>"); ?>
                                         <br>
                                         <strong>Default: </strong> Low
                                     </span>
@@ -184,7 +192,7 @@
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[cpuLoad]") ?>
+                            $form->renderInput("wpstg_settings[cpuLoad]") ?>
                         </td>
                     </tr>
                     <?php
@@ -194,7 +202,7 @@
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
                                     <?php
-                                    echo $form->label("wpstg_settings[disableAdminLogin]") ?>
+                                    $form->renderLabel("wpstg_settings[disableAdminLogin]") ?>
                                     <span class="description">
                                         If you want to remove the requirement to login to the staging site you can deactivate it here.
                                         <strong>Note:</strong> The staging site discourages search engines from indexing the site by setting the 'noindex' tag into header of the staging site.
@@ -203,7 +211,7 @@
                             </td>
                             <td>
                                 <?php
-                                echo $form->render("wpstg_settings[disableAdminLogin]") ?>
+                                $form->renderInput("wpstg_settings[disableAdminLogin]") ?>
                             </td>
                         </tr>
                         <?php
@@ -216,22 +224,22 @@
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
                                     <?php
-                                    echo $form->label("wpstg_settings[keepPermalinks]") ?>
+                                    $form->renderLabel("wpstg_settings[keepPermalinks]") ?>
                                     <span class="description">
                                         <?php
-                                        echo sprintf(
+                                        echo wp_kses_post(sprintf(
                                             __(
                                                 'Use on the staging site the same permalink structure and do not set permalinks to plain structure. <br/>Read more: <a href="%1$s" target="_blank">Permalink Settings</a> ',
                                                 'wp-staging'
                                             ),
                                             'https://wp-staging.com/docs/activate-permalinks-staging-site/'
-                                        ); ?>
+                                        )); ?>
                                     </span>
                                 </div>
                             </td>
                             <td>
                                 <?php
-                                echo $form->render("wpstg_settings[keepPermalinks]") ?>
+                                $form->renderInput("wpstg_settings[keepPermalinks]") ?>
                             </td>
                         </tr>
                         <?php
@@ -241,30 +249,33 @@
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[debugMode]") ?>
+                                $form->renderLabel("wpstg_settings[debugMode]") ?>
                                 <span class="description">
                                         <?php
-                                        _e(
-                                            "Enable an extended debug mode that creates additional log entries in wp-content/uploads/wp-staging/logs/logfile.log.
-                                        <strong>Do NOT activate this until we ask you to do so!</strong>",
+                                        esc_html_e(
+                                            "Enable an extended debug mode that creates additional log entries in wp-content/uploads/wp-staging/logs/logfile.log.",
                                             "wp-staging"
-                                        ); ?>
+                                        );
+                                        ?>
+                                        <strong>
+                                            <?php esc_attr_e('Do NOT activate this until we ask you to do so!', 'wp-staging') ?>
+                                        </strong>
                                     </span>
                             </div>
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[debugMode]") ?>
+                            $form->renderInput("wpstg_settings[debugMode]") ?>
                         </td>
                     </tr>
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[optimizer]") ?>
+                                $form->renderLabel("wpstg_settings[optimizer]") ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        esc_html_e(
                                             "The Optimizer is a mu plugin that disables all other plugins during WP STAGING processing. This lowers memory consumption and speeds up processing. This should always be enabled!",
                                             "wp-staging"
                                         ); ?>
@@ -273,17 +284,17 @@
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[optimizer]") ?>
+                            $form->renderInput("wpstg_settings[optimizer]") ?>
                         </td>
                     </tr>
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[unInstallOnDelete]") ?>
+                                $form->renderLabel("wpstg_settings[unInstallOnDelete]") ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        esc_html_e(
                                             "Check this box if you like to remove all data when the plugin is deleted.
                                         This will not remove staging sites files or database tables.",
                                             "wp-staging"
@@ -293,7 +304,7 @@
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[unInstallOnDelete]") ?>
+                            $form->renderInput("wpstg_settings[unInstallOnDelete]") ?>
                         </td>
                     </tr>
 
@@ -301,21 +312,21 @@
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
                                 <?php
-                                echo $form->label("wpstg_settings[checkDirectorySize]") ?>
+                                $form->renderLabel("wpstg_settings[checkDirectorySize]") ?>
                                 <span class="description">
                                         <?php
-                                        _e(
+                                        echo sprintf(esc_html__(
                                             "Check this box if you like WP Staging to check sizes of each directory on scanning process.
-                                        <br>
+                                        %s
                                         Warning this may cause timeout problems in big directory / file structures.",
                                             "wp-staging"
-                                        ); ?>
+                                        ), "<br>"); ?>
                                     </span>
                             </div>
                         </td>
                         <td>
                             <?php
-                            echo $form->render("wpstg_settings[checkDirectorySize]") ?>
+                            $form->renderInput("wpstg_settings[checkDirectorySize]") ?>
                         </td>
                     </tr>
                     <?php
@@ -325,66 +336,66 @@
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
                                     <?php
-                                    echo $form->label("wpstg_settings[userRoles][]") ?>
+                                    $form->renderLabel("wpstg_settings[userRoles][]") ?>
                                     <span class="description">
                                         <?php
-                                        _e(
+                                        echo Escape::escapeHtml(__(
                                             'Select the user role you want to give access to the staging site. You can select multiple roles by holding CTRL or ⌘ Cmd key while clicking. <strong>Change this option on the staging site if you want to change the authentication behavior there.</strong>',
                                             'wp-staging'
-                                        ); ?>
+                                        )); ?>
                                     </span>
                                 </div>
                             </td>
                             <td>
                                 <?php
-                                echo $form->render("wpstg_settings[userRoles][]") ?>
+                                $form->renderInput("wpstg_settings[userRoles][]") ?>
                             </td>
                         </tr>
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
                                     <?php
-                                    echo $form->label("wpstg_settings[usersWithStagingAccess]") ?>
+                                    $form->renderLabel("wpstg_settings[usersWithStagingAccess]") ?>
                                     <span class="description">
                                         <?php
-                                        _e(
+                                        echo Escape::escapeHtml(__(
                                             'Specify users who will have access to the staging site regardless of their role. You can enter multiple user names separated by a comma. <strong>Change this option on the staging site if you want to change the authentication behavior there.</strong>',
                                             'wp-staging'
-                                        ); ?>
+                                        )); ?>
                                     </span>
                                 </div>
                             </td>
                             <td>
                                 <?php
-                                echo $form->render("wpstg_settings[usersWithStagingAccess]") ?>
+                                $form->renderInput("wpstg_settings[usersWithStagingAccess]") ?>
                             </td>
                         </tr>
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
                                     <?php
-                                    echo $form->label("wpstg_settings[adminBarColor]") ?>
+                                    $form->renderLabel("wpstg_settings[adminBarColor]") ?>
                                     <span class="description">
                                     </span>
                                 </div>
                             </td>
                             <td>
                                 <?php
-                                echo $form->render("wpstg_settings[adminBarColor]") ?>
+                                $form->renderInput("wpstg_settings[adminBarColor]") ?>
                             </td>
                         </tr>
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
-                                    <strong><?php echo __('Send Usage Information', 'wp-staging') ?></strong>
+                                    <strong><?php esc_html_e('Send Usage Information', 'wp-staging') ?></strong>
                                     <span class="description">
                                         <?php
-                                        _e(
+                                        esc_html_e(
                                             'Send usage information to wp-staging.com.',
                                             'wp-staging'
                                         );
                                         echo '<br>';
-                                        echo wp_kses_post(__(sprintf('<i>See the data we collect <a href="%s" target="_blank">here</a></i>', 'https://wp-staging.com/what-data-do-we-collect/')), 'wp-staging');
+                                        echo wp_kses_post(sprintf(__('<i>See the data we collect <a href="%s" target="_blank">here</a></i>', 'wp-staging'), 'https://wp-staging.com/what-data-do-we-collect/'));
                                         ?>
                                     </span>
                                 </div>
@@ -407,9 +418,9 @@
                             ?>
                             <tr class="wpstg-settings-row">
                                 <td class="wpstg-settings-row th">
-                                    <b class="wpstg-settings-title"><?php _e('Send Email Error Report', 'wp-staging') ?></b>
+                                    <b class="wpstg-settings-title"><?php esc_html_e('Send Email Error Report', 'wp-staging') ?></b>
                                     <p class="wpstg-settings-message">
-                                        <?php _e('If a scheduled backup fails, send an email.', 'wp-staging') ?>
+                                        <?php esc_html_e('If a scheduled backup fails, send an email.', 'wp-staging') ?>
                                     </p>
                                 </td>
                                 <td>
@@ -418,13 +429,13 @@
                             </tr>
                             <tr class="wpstg-settings-row">
                                 <td>
-                                    <b class="wpstg-settings-title"><?php _e('Email Address', 'wp-staging') ?></b>
+                                    <b class="wpstg-settings-title"><?php esc_html_e('Email Address', 'wp-staging') ?></b>
                                     <p class="wpstg-settings-message">
-                                        <?php _e('Send emails to this address', 'wp-staging') ?>
+                                        <?php esc_html_e('Send emails to this address', 'wp-staging') ?>
                                     </p>
                                 </td>
                                 <td>
-                                    <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-checkbox wpstg-settings-field" value="<?php echo get_option(WPStaging\Pro\Backup\BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION) ?>"/>
+                                    <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-checkbox wpstg-settings-field" value="<?php echo esc_attr(get_option(WPStaging\Pro\Backup\BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION)) ?>"/>
                                 </td>
                             </tr>
                             <?php
@@ -434,9 +445,9 @@
                             ?>
                             <tr>
                                 <td>
-                                    <b class="wpstg-settings-title"><?php _e('Allow Cloning (Staging Site Only)', 'wp-staging') ?></b>
+                                    <b class="wpstg-settings-title"><?php esc_html_e('Allow Cloning (Staging Site Only)', 'wp-staging') ?></b>
                                     <p class="wpstg-settings-message">
-                                        <?php _e('Check this box to make this staging site cloneable.', 'wp-staging') ?>
+                                        <?php esc_html_e('Check this box to make this staging site cloneable.', 'wp-staging') ?>
                                         <?php echo sprintf(__("If you would like to know more about cloning staging sites check out <a href='%s' target='_new'>this article</a>.", 'wp-staging'), 'https://wp-staging.com/docs/cloning-a-staging-site-testing-push-method/'); ?>
                                     </p>
                                 </td>

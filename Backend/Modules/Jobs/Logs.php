@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Framework\Facades\Sanitize;
+
 /**
  * Class Logs
  * @package WPStaging\Backend\Modules\Jobs
@@ -16,7 +18,7 @@ class Logs extends Job
     public function initialize()
     {
         if (isset($_POST["clone"])) {
-            $this->clone = $_POST["clone"];
+            $this->clone = Sanitize::sanitizeString($_POST["clone"]);
         }
     }
 

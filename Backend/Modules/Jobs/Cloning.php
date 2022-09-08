@@ -81,9 +81,9 @@ class Cloning extends Job
 
         // Generate Options
         // Clone ID -> timestamp (time at which this clone creation initiated)
-        $this->options->clone = preg_replace("#\W+#", '-', strtolower($_POST["cloneID"]));
+        $this->options->clone = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
         // Clone Name -> Site name that user input, if user left it empty it will be Clone ID
-        $this->options->cloneName = $this->sanitize->sanitizeString((wpstg_urldecode($_POST["cloneName"])));
+        $this->options->cloneName = isset($_POST["cloneName"]) ? $this->sanitize->sanitizeString($_POST["cloneName"]) : '';
         // The slugified version of Clone Name (to use in directory creation)
         $this->options->cloneDirectoryName = $this->sitesHelper->sanitizeDirectoryName($this->options->cloneName);
         $result = $this->sitesHelper->isCloneExists($this->options->cloneDirectoryName);
@@ -136,27 +136,30 @@ class Cloning extends Job
 
         $this->options->networkClone = false;
         if ($this->isMultisiteAndPro() && is_main_site()) {
-            $this->options->networkClone = isset($_POST['networkClone']) && $_POST['networkClone'] !== "false";
+            $this->options->networkClone = isset($_POST['networkClone']) && $this->sanitize->sanitizeBool($_POST['networkClone']);
         }
 
         // Included Tables / Prefixed Table - Excluded Tables
-        $selectedTables = new SelectedTables($_POST['includedTables'], $_POST['excludedTables'], $_POST['selectedTablesWithoutPrefix']);
-        $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $_POST['allTablesExcluded'] === 'true');
+        $includedTables = isset($_POST['includedTables']) ? $this->sanitize->sanitizeString($_POST['includedTables']) : '';
+        $excludedTables = isset($_POST['excludedTables']) ? $this->sanitize->sanitizeString($_POST['excludedTables']) : '';
+        $selectedTablesWithoutPrefix = isset($_POST['selectedTablesWithoutPrefix']) ? $this->sanitize->sanitizeString($_POST['selectedTablesWithoutPrefix']) : '';
+        $selectedTables = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
+        $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $this->sanitize->sanitizeBool($_POST['allTablesExcluded']));
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
 
         // Exclude File Size Rules
-        $this->options->excludeSizeRules = [];
-        if (!empty($_POST["excludeSizeRules"])) {
-            $this->options->excludeSizeRules = array_map([$this->sanitize, 'sanitizeString'], explode(',', wpstg_urldecode($_POST["excludeSizeRules"])));
+        $this->options->excludeGlobRules = [];
+        if (!empty($_POST["excludeGlobRules"])) {
+            $this->options->excludeGlobRules = $this->sanitize->sanitizeExcludeRules($_POST["excludeGlobRules"]);
         }
 
         // Exclude Glob Rules
-        $this->options->excludeGlobRules = [];
-        if (!empty($_POST["excludeGlobRules"])) {
-            $this->options->excludeGlobRules = array_map([$this->sanitize, 'sanitizeString'], explode(',', wpstg_urldecode($_POST["excludeGlobRules"])));
+        $this->options->excludeSizeRules = [];
+        if (!empty($_POST["excludeSizeRules"])) {
+            $this->options->excludeSizeRules = $this->sanitize->sanitizeExcludeRules($_POST["excludeSizeRules"]);
         }
 
-        $this->options->uploadsSymlinked = isset($_POST['uploadsSymlinked']) && $_POST['uploadsSymlinked'] === 'true';
+        $this->options->uploadsSymlinked = isset($_POST['uploadsSymlinked']) && $this->sanitize->sanitizeBool($_POST['uploadsSymlinked']);
 
         /**
          * @see /WPStaging/Framework/CloningProcess/ExcludedPlugins.php to exclude plugins
@@ -171,51 +174,51 @@ class Cloning extends Job
             $excludedDirectories[] = $this->dirUtils->getRelativeUploadPath(SlashMode::LEADING_SLASH);
         }
 
-        $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
+        $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
         $excludedDirectoriesRequest = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
 
         $this->options->excludedDirectories = array_merge($excludedDirectories, $excludedDirectoriesRequest);
 
         // Extra Directories
         if (isset($_POST["extraDirectories"])) {
-            $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode($_POST["extraDirectories"]));
+            $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, $this->sanitize->sanitizeString($_POST["extraDirectories"]));
         }
 
         $this->options->databaseServer = 'localhost';
         if (!empty($_POST["databaseServer"])) {
-            $this->options->databaseServer = $_POST["databaseServer"];
+            $this->options->databaseServer = $this->sanitize->sanitizeString($_POST["databaseServer"]);
         }
 
         $this->options->databaseUser = '';
         if (!empty($_POST["databaseUser"])) {
-            $this->options->databaseUser = $_POST["databaseUser"];
+            $this->options->databaseUser = $this->sanitize->sanitizeString($_POST["databaseUser"]);
         }
 
         $this->options->databasePassword = '';
         if (!empty($_POST["databasePassword"])) {
-            $this->options->databasePassword = stripslashes($_POST["databasePassword"]);
+            $this->options->databasePassword = stripslashes($this->sanitize->sanitizeString($_POST["databasePassword"]));
         }
 
         $this->options->databaseDatabase = '';
         if (!empty($_POST["databaseDatabase"])) {
-            $this->options->databaseDatabase = $_POST["databaseDatabase"];
+            $this->options->databaseDatabase = $this->sanitize->sanitizeString($_POST["databaseDatabase"]);
         }
 
         // isExternalDatabase() depends upon databaseUser and databasePassword,
         // Make sure they are set before calling this.
         $this->options->databasePrefix = $this->isExternalDatabase() ? $this->db->prefix : '';
         if (!empty($_POST["databasePrefix"])) {
-            $this->options->databasePrefix = $this->maybeAppendUnderscorePrefix($_POST["databasePrefix"]);
+            $this->options->databasePrefix = $this->maybeAppendUnderscorePrefix($this->sanitize->sanitizeString($_POST["databasePrefix"]));
         }
 
         $this->options->cloneDir = '';
         if (!empty($_POST["cloneDir"])) {
-            $this->options->cloneDir = trailingslashit(wpstg_urldecode($_POST["cloneDir"]));
+            $this->options->cloneDir = trailingslashit(wpstg_urldecode($this->sanitize->sanitizeString($_POST["cloneDir"])));
         }
 
         $this->options->cloneHostname = '';
         if (!empty($_POST["cloneHostname"])) {
-            $this->options->cloneHostname = trim($_POST["cloneHostname"]);
+            $this->options->cloneHostname = trim($this->sanitize->sanitizeString($_POST["cloneHostname"]));
         }
 
         // Make sure it is always enabled for free version
@@ -223,7 +226,7 @@ class Cloning extends Job
         if (defined('WPSTGPRO_VERSION')) {
             $this->options->emailsAllowed = apply_filters(
                 'wpstg_cloning_email_allowed',
-                isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false"
+                isset($_POST['emailsAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsAllowed'])
             );
         }
 
@@ -387,8 +390,10 @@ class Cloning extends Job
                 return $this->options->prefix;
             }
         }
-        $this->returnException("Fatal Error: Can not create staging prefix. '{$this->options->prefix}' already exists! Stopping for security reasons. Contact support@wp-staging.com");
-        wp_die("Fatal Error: Can not create staging prefix. Prefix '{$this->options->prefix}' already exists! Stopping for security reasons. Contact support@wp-staging.com");
+
+        $message = sprintf("Fatal Error: Can not create staging prefix. '%s' already exists! Stopping for security reasons. Contact support@wp-staging.com", $this->options->prefix);
+        $this->returnException($message);
+        wp_die(esc_html($message));
     }
 
 

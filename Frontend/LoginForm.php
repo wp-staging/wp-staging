@@ -2,6 +2,9 @@
 
 namespace WPStaging\Frontend;
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Utils\Sanitize;
+
 class LoginForm
 {
 
@@ -11,8 +14,12 @@ class LoginForm
     /** @var string */
     private $error;
 
+    /** @var Sanitize */
+    private $sanitize;
+
     function __construct()
     {
+        $this->sanitize = WPStaging::make(Sanitize::class);
         $this->login();
     }
 
@@ -36,12 +43,13 @@ class LoginForm
             return false;
         }
 
+        $username = $this->sanitize->sanitizeString($_POST['wpstg-username']);
         // Try to find user by username
-        $user_data = get_user_by('login', $_POST['wpstg-username']);
+        $user_data = get_user_by('login', $username);
 
         // Try to find user by email address
         if (!$user_data) {
-            $user_data = get_user_by('email', $_POST['wpstg-username']);
+            $user_data = get_user_by('email', $username);
         }
 
         if (!$user_data) {
@@ -50,15 +58,16 @@ class LoginForm
         }
 
         // Validate provided password and login
-        if (wp_check_password($_POST['wpstg-pass'], $user_data->user_pass, $user_data->ID)) {
+        $password = isset($_POST['wpstg-pass']) ? $this->sanitize->sanitizeString($_POST['wpstg-pass']) : '';
+        if (wp_check_password($password, $user_data->user_pass, $user_data->ID)) {
             $rememberme = isset($_POST['rememberme']) ? true : false;
 
             wp_set_auth_cookie($user_data->ID, $rememberme);
-            wp_set_current_user($user_data->ID, $_POST['wpstg-username']);
-            do_action('wp_login', $_POST['wpstg-username'], get_userdata($user_data->ID));
+            wp_set_current_user($user_data->ID, $username);
+            do_action('wp_login', $username, get_userdata($user_data->ID));
 
             if (!empty($_POST['redirect_to'])) {
-                $redirectTo = $_POST['redirect_to'];
+                $redirectTo = $this->sanitize->sanitizeURL($_POST['redirect_to']);
             }
 
             header('Location:' . $redirectTo);
@@ -161,7 +170,9 @@ class LoginForm
     public function getDefaultArguments(array $overrides = [])
     {
         // Default 'redirect' value takes the user back to the request URI.
-        $redirect = (is_ssl() ? 'https://' : 'http://') . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
+        $httpHost   = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';
+        $requestURI = !empty($_SERVER['REQUEST_URI']) ? $this->sanitize->sanitizeString($_SERVER['REQUEST_URI']) : '';
+        $redirect   = $this->sanitize->sanitizeURL((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
         $lostPasswordUrl = wp_lostpassword_url($redirect);
         $arguments = wp_parse_args(
             $overrides,

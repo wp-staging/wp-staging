@@ -96,8 +96,8 @@ function wpstg_is_valid_date($date, $format = 'Y-m-d')
 /**
  * Convert all values of a string or an array into url decoded values
  * Main use for preventing Wordfence firewall rule 'local file inclusion'
- * @param mixed string | array $data
- * @return mixed string | array
+ * @param mixed string|array
+ * @return mixed string|array
  */
 function wpstg_urldecode($data)
 {
@@ -112,7 +112,7 @@ function wpstg_urldecode($data)
     if (is_array($data)) {
         $array = [];
         foreach ($data as $string) {
-            $array[] = urldecode($string);
+                $array[] = is_string($string) ? urldecode($string) : $string;
         }
         return $array;
     }

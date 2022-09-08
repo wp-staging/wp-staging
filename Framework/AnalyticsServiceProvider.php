@@ -8,9 +8,13 @@ use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 use WPStaging\Framework\Analytics\AnalyticsSender;
 use WPStaging\Framework\DI\FeatureServiceProvider;
+use WPStaging\Framework\Utils\Sanitize;
 
 class AnalyticsServiceProvider extends FeatureServiceProvider
 {
+    /** @var Sanitize */
+    private $sanitize;
+
     public static function getFeatureTrigger()
     {
         return 'WPSTG_FEATURE_ANALYTICS';
@@ -27,6 +31,8 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
         add_action('admin_notices', $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentNotice'));
         add_action('admin_notices', $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentFailureNotice'));
         add_action('admin_init', $this->container->callback(AnalyticsConsent::class, 'listenForConsent'));
+
+        $this->sanitize = WPStaging::make(Sanitize::class);
 
         /*
          * Analytics error detection for Backup actions
@@ -47,11 +53,9 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
                 }
             }
 
-            $errorMessage = html_entity_decode($_POST['error_message']);
-            $errorMessage = sanitize_text_field($errorMessage);
+            $errorMessage = isset($_POST['error_message']) ? $this->sanitize->htmlDecodeAndSanitize($_POST['error_message']) : '';
 
-            $jobId = html_entity_decode($_POST['job_id']);
-            $jobId = sanitize_text_field($jobId);
+            $jobId = isset($_POST['job_id']) ? $this->sanitize->htmlDecodeAndSanitize($_POST['job_id']) : '';
 
             AnalyticsEventDto::enqueueErrorEvent($jobId, $errorMessage);
         });
@@ -68,9 +72,8 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
                 }
             }
 
-            $errorMessage = html_entity_decode($_POST['error_message']);
             // prevent emptying HTML string, as Staging errors might be returned in HTML (?)
-            $errorMessage = wp_kses_post($errorMessage);
+            $errorMessage = isset($_POST['error_message']) ? $this->sanitize->htmlDecodeAndSanitize($_POST['error_message']) : '';
 
             /**
              * Get the "options" object from cache

@@ -21,6 +21,7 @@ use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
 use WPStaging\Framework\Support\ThirdParty\Jetpack;
 use WPStaging\Framework\Support\ThirdParty\WordFence;
+use WPStaging\Framework\Utils\Sanitize;
 
 /**
  * Class Notices
@@ -40,6 +41,9 @@ class Notices
      */
     private $assets;
 
+    /** @var Sanitize */
+    private $sanitize;
+
     //** For testing all notices  */
     const SHOW_ALL_NOTICES = false;
 
@@ -48,9 +52,10 @@ class Notices
      */
     public static $directoryListingErrors = 'directoryListingErrors';
 
-    public function __construct(Assets $assets)
+    public function __construct(Assets $assets, Sanitize $sanitize)
     {
         $this->assets = $assets;
+        $this->sanitize = $sanitize;
     }
 
     /**
@@ -59,7 +64,7 @@ class Notices
      */
     public function isAdminPage()
     {
-        $currentPage = (isset($_GET["page"])) ? $_GET["page"] : null;
+        $currentPage = (isset($_GET["page"])) ? $this->sanitize->sanitizeString($_GET["page"]) : null;
 
         $availablePages = [
             "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone", "wpstg_backup"
@@ -383,6 +388,8 @@ class Notices
      * @param string $wpstgNotice
      * @param string $cssClassSelectorDismiss
      * @param string $cssClassSelectorNotice
+     *
+     * @todo Convert to Facade for testability?
      */
     public static function renderNoticeDismissAction($viewsNoticesPath, $wpstgNotice, $cssClassSelectorDismiss, $cssClassSelectorNotice)
     {

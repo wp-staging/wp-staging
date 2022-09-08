@@ -37,20 +37,20 @@ if ($isPro && !empty($options->current)) {
     $emailsAllowed = isset($options->existingClones[$options->current]['emailsAllowed']) ? (bool) $options->existingClones[$options->current]['emailsAllowed'] : $defaultEmailsSending;
 } ?>
 <p class="wpstg--advance-settings--checkbox">
-    <label for="wpstg_allow_emails"><?php _e('Allow Emails Sending'); ?></label>
+    <label for="wpstg_allow_emails"><?php esc_html_e('Allow Emails Sending'); ?></label>
     <input type="checkbox" id="wpstg_allow_emails" name="wpstg_allow_emails" value="true" <?php echo $emailsAllowed === true ? 'checked' : '' ?> <?php echo $settingsEnabled === false ? 'disabled' : '' ?> />
     <span class="wpstg--tooltip">
-        <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
+        <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
-            <?php _e('Allow emails sending for this staging site.', 'wp-staging'); ?>
+            <?php esc_html_e('Allow emails sending for this staging site.', 'wp-staging'); ?>
             <br /> <br />
-            <b><?php _e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(__('Even if email sendings is disabled, some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'); ?>
+            <b><?php esc_html_e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(esc_html__('Even if email sendings is disabled, some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'); ?>
         </span>
     </span>
 </p>
 
 <?php if (!$isPro) { // Show this on only FREE version ?>
-<p class="wpstg-dark-alert"><?php _e('These are Pro Features ', 'wp-staging'); ?>
-    <a href="https://wp-staging.com/?utm_source=wp-admin&utm_medium=wp-admin&utm_campaign=db-external&utm_term=db-external" target="_blank" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet"><?php _e("Get Started", "wp-staging"); ?></a>
+<p class="wpstg-dark-alert"><?php esc_html_e('These are Pro Features ', 'wp-staging'); ?>
+    <a href="https://wp-staging.com/?utm_source=wp-admin&utm_medium=wp-admin&utm_campaign=db-external&utm_term=db-external" target="_blank" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet"><?php esc_html_e("Get Started", "wp-staging"); ?></a>
 </p>
 <?php } ?>

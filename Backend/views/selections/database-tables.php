@@ -10,15 +10,15 @@
     $dbPrefix = WPStaging\Core\WPStaging::getTablePrefix();
 ?>
 <p>
-    <strong><?php _e("Select Tables to Copy", "wp-staging"); ?></strong>
+    <strong><?php esc_html_e("Select Tables to Copy", "wp-staging"); ?></strong>
     <br>
-    <?php printf(__("Tables with the production prefix <code>%s</code> have been selected.", "wp-staging"), $dbPrefix); ?>
+    <?php echo sprintf(esc_html__("Tables with the production prefix %s have been selected.", "wp-staging"), "<code>" . esc_html($dbPrefix) . "</code>"); ?>
 </p>
 <p style="display: none;">
-    <?php _e("Selected tables will be copied/replaced with the tables from the production site.", "wp-staging"); ?>
+    <?php esc_html_e("Selected tables will be copied/replaced with the tables from the production site.", "wp-staging"); ?>
 </p>
 <div class="wpstg-my-10px">
-    <a href="#" class="wpstg-button-unselect button"><?php _e('Unselect All', 'wp-staging'); ?></a>
+    <a href="#" class="wpstg-button-unselect button"><?php esc_html_e('Unselect All', 'wp-staging'); ?></a>
     <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix) ?> </a>
 </div>
 <select multiple="multiple" id="wpstg_select_tables_cloning">
@@ -31,15 +31,15 @@
 
         $attributes .= in_array($table->name, $options->clonedTables) ? "disabled" : '';
         ?>
-        <option class="wpstg-db-table" value="<?php echo esc_attr($table->name) ?>" name="<?php echo esc_attr($table->name) ?>" <?php echo $attributes ?>>
+        <option class="wpstg-db-table" value="<?php echo esc_attr($table->name) ?>" name="<?php echo esc_attr($table->name) ?>" <?php echo esc_html($attributes) ?>>
             <?php echo esc_html($table->name) ?> - <?php echo esc_html(size_format($table->size, 2)) ?>
         </option>
     <?php endforeach ?>
 </select>
 <div class="wpstg-mt-10px">
-    <a href="#" class="wpstg-button-unselect button"> <?php _e('Unselect All', 'wp-staging'); ?> </a>
+    <a href="#" class="wpstg-button-unselect button"> <?php esc_html_e('Unselect All', 'wp-staging'); ?> </a>
     <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix); ?> </a>
 </div>
 <p>
-    <?php _e("You can select multiple tables. Press left mouse button & move or press STRG+Left mouse button. (Apple: ⌘+Left Mouse Button)", "wp-staging"); ?>
+    <?php esc_html_e("You can select multiple tables. Press left mouse button & move or press STRG+Left mouse button. (Apple: ⌘+Left Mouse Button)", "wp-staging"); ?>
 </p>
