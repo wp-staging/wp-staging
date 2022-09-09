@@ -44,4 +44,16 @@ class Form
 
         return $this->elements[$name]->prepareLabel();
     }
+
+    /** @param string $name */
+    public function renderLabel($name)
+    {
+        echo wp_kses($this->label($name), ['label' => []]);
+    }
+
+    /** @param string $name */
+    public function renderInput($name)
+    {
+        echo $this->render($name);
+    }
 }

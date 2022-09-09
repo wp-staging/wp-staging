@@ -20,7 +20,7 @@ if (!isset($urlAssets)) {
     <?php if ($isExportingDatabase) : ?>
         <li>
             <span class="wpstg--tooltip wpstg-backups-contains">
-                <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/database.svg"/>
+                <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/database.svg"/>
                 <div class='wpstg--tooltiptext'>Database</div>
             </span>
         </li>
@@ -28,7 +28,7 @@ if (!isset($urlAssets)) {
     <?php if ($isExportingPlugins) : ?>
         <li>
             <span class="wpstg--tooltip wpstg-backups-contains">
-                <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/admin-plugins.svg"/>
+                <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/admin-plugins.svg"/>
                 <div class='wpstg--tooltiptext'>Plugins</div>
             </span>
         </li>
@@ -36,7 +36,7 @@ if (!isset($urlAssets)) {
     <?php if ($isExportingMuPlugins) : ?>
         <li>
             <span class="wpstg--tooltip wpstg-backups-contains">
-                <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/plugins-checked.svg"/>
+                <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/plugins-checked.svg"/>
                 <div class='wpstg--tooltiptext'>Must-Use Plugins</div>
             </span>
         </li>
@@ -44,7 +44,7 @@ if (!isset($urlAssets)) {
     <?php if ($isExportingThemes) : ?>
         <li>
             <span class="wpstg--tooltip wpstg-backups-contains">
-                <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/layout.svg"/>
+                <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/layout.svg"/>
                 <div class='wpstg--tooltiptext'>Themes</div>
             </span>
         </li>
@@ -52,7 +52,7 @@ if (!isset($urlAssets)) {
     <?php if ($isExportingUploads) : ?>
         <li>
             <span class="wpstg--tooltip wpstg-backups-contains">
-                <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/images-alt.svg"/>
+                <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/images-alt.svg"/>
                 <div class='wpstg--tooltiptext'>Uploads</div>
             </span>
         </li>
@@ -60,7 +60,7 @@ if (!isset($urlAssets)) {
     <?php if ($isExportingOtherWpContentFiles) : ?>
         <li>
             <span class="wpstg--tooltip wpstg-backups-contains">
-                <img class="wpstg--dashicons" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/admin-generic.svg"/>
+                <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/admin-generic.svg"/>
                 <div class='wpstg--tooltiptext'>Other files in wp-content</div>
             </span>
         </li>

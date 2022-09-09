@@ -94,7 +94,7 @@ class Updating extends Job
         $this->cache->delete("files_to_copy");
 
         // Generate Options
-        $this->options->clone = preg_replace("#\W+#", '-', strtolower($_POST["cloneID"]));
+        $this->options->clone = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
         $this->options->cloneNumber = 1;
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
@@ -157,7 +157,7 @@ class Updating extends Job
                 $job = 'reset';
             }
 
-            wp_die("Fatal Error: Can not {$job} clone because there is no clone data.");
+            wp_die(sprintf("Fatal Error: Can not %s clone because there is no clone data.", esc_html($job)));
         }
 
         $this->isExternalDb = !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
@@ -183,7 +183,7 @@ class Updating extends Job
         // Make sure it is always enabled for free version
         $this->options->emailsAllowed = true;
         if (defined('WPSTGPRO_VERSION')) {
-            $this->options->emailsAllowed = isset($_POST['emailsAllowed']) && $_POST['emailsAllowed'] !== "false";
+            $this->options->emailsAllowed = isset($_POST['emailsAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsAllowed']);
         }
 
         $this->options->cloneDir = $this->options->existingClones[$this->options->clone]['path'];
@@ -213,29 +213,29 @@ class Updating extends Job
         // Exclude Glob Rules
         $this->options->excludeGlobRules = [];
         if (!empty($_POST["excludeGlobRules"])) {
-            $this->options->excludeGlobRules = array_map([$this->sanitize, 'sanitizeString'], explode(',', wpstg_urldecode($_POST["excludeGlobRules"])));
+            $this->options->excludeGlobRules = $this->sanitize->sanitizeExcludeRules($_POST["excludeGlobRules"]);
         }
 
         $this->options->excludeSizeRules = [];
         if (!empty($_POST["excludeSizeRules"])) {
-            $this->options->excludeSizeRules = array_map([$this->sanitize, 'sanitizeString'], explode(',', wpstg_urldecode($_POST["excludeSizeRules"])));
+            $this->options->excludeSizeRules = $this->sanitize->sanitizeExcludeRules($_POST["excludeSizeRules"]);
         }
 
         // Excluded Directories
-        $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $_POST["excludedDirectories"] : '';
+        $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
         $excludedDirectoriesRequest = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
         $this->options->excludedDirectories = array_merge($this->options->excludedDirectories, $excludedDirectoriesRequest);
         // Extra Directories
         if (isset($_POST["extraDirectories"])) {
-            $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode($_POST["extraDirectories"]));
+            $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, $this->sanitize->sanitizeString($_POST["extraDirectories"]));
         }
 
         // delete uploads folder before copying if uploads is not symlinked
-        $this->options->deleteUploadsFolder = !$this->options->uploadsSymlinked && isset($_POST['cleanUploadsDir']) && $_POST['cleanUploadsDir'] === 'true';
+        $this->options->deleteUploadsFolder = !$this->options->uploadsSymlinked && isset($_POST['cleanUploadsDir']) && $this->sanitize->sanitizeBool($_POST['cleanUploadsDir']);
         // should not backup uploads during update process
         $this->options->backupUploadsFolder = false;
         // clean plugins and themes dir before updating
-        $this->options->deletePluginsAndThemes = isset($_POST['cleanPluginsThemes']) && $_POST['cleanPluginsThemes'] === 'true';
+        $this->options->deletePluginsAndThemes = isset($_POST['cleanPluginsThemes']) && $this->sanitize->sanitizeBool($_POST['cleanPluginsThemes']);
         // set default statuses for backup of uploads dir and cleaning of uploads, themes and plugins dirs
         $this->options->statusBackupUploadsDir = 'skipped';
         $this->options->statusContentCleaner = 'pending';
@@ -244,8 +244,11 @@ class Updating extends Job
     private function setTablesForUpdateJob()
     {
         // Included Tables / Prefixed Table - Excluded Tables
-        $selectedTables = new SelectedTables($_POST['includedTables'], $_POST['excludedTables'], $_POST['selectedTablesWithoutPrefix']);
-        $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $_POST['allTablesExcluded'] === 'true');
+        $includedTables = isset($_POST['includedTables']) ? $this->sanitize->sanitizeString($_POST['includedTables']) : '';
+        $excludedTables = isset($_POST['excludedTables']) ? $this->sanitize->sanitizeString($_POST['excludedTables']) : '';
+        $selectedTablesWithoutPrefix = isset($_POST['selectedTablesWithoutPrefix']) ? $this->sanitize->sanitizeString($_POST['selectedTablesWithoutPrefix']) : '';
+        $selectedTables = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
+        $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $this->sanitize->sanitizeBool($_POST['allTablesExcluded']));
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
     }
 

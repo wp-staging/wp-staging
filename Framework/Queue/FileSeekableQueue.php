@@ -210,13 +210,19 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     public function shutdown()
     {
         if ($this->needsUnlock && $this->handle instanceof FileObject) {
-            try {
-                $this->handle->flock(LOCK_UN);
-            } catch (\Exception $e) {
-                $message = $e->getMessage();
-                if ($message !== 'Object not initialized') {
-                    debug_log("Unable to unlock handle " . $this->taskName . '.task : ' . $message, Logger::TYPE_DEBUG);
-                }
+            $this->unlockObject();
+            return;
+        }
+    }
+
+    protected function unlockObject()
+    {
+        try {
+            $this->handle->flock(LOCK_UN);
+        } catch (\Exception $e) {
+            $message = $e->getMessage();
+            if ($message !== 'Object not initialized') {
+                debug_log("Unable to unlock handle " . $this->taskName . '.task : ' . $message, Logger::TYPE_DEBUG);
             }
         }
     }

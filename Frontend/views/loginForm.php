@@ -2,7 +2,7 @@
             <div class="wpstg-text-center">
               <img width="220" src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/img/logo.svg'); ?>" alt="WP Staging Login" />
             </div>
-            <form class="wp-staging-form" name="<?php echo $args['form_id']; ?>" id="<?php echo $args['form_id']; ?>" action="" method="post">
+            <form class="wp-staging-form" name="<?php echo esc_attr($args['form_id']); ?>" id="<?php echo esc_attr($args['form_id']); ?>" action="" method="post">
                 <?php if ($showNotice) { ?>
                     <div class="wpstg-alert wpstg-alert-info wpstg-text-justify">
                         <p><?php echo esc_html($notice); ?></p>
@@ -22,15 +22,15 @@
                 <?php } ?>
 
                 <div class="login-submit">
-                    <button type="submit" name="wpstg-submit" id="<?php echo esc_attr($args['id_submit']); ?>" class="btn" value="<?php echo esc_attr($args['label_log_in']); ?>">Login</button>
+                    <button type="submit" name="wpstg-submit" id="<?php echo esc_attr($args['id_submit']); ?>" class="btn" value="<?php echo esc_attr($args['label_log_in']); ?>"><?php esc_html_e('Login', 'wp-staging') ?></button>
                     <input type="hidden" name="redirect_to" value="<?php echo esc_url($args['redirect']); ?>" />
                 </div>
                 <div class="password-lost">
-                    <a href="<?php echo esc_url($args['lost_password_url']); ?>">Lost your password?</a>
+                    <a href="<?php echo esc_url($args['lost_password_url']); ?>"><?php esc_html_e('Lost your password?', 'wp-staging') ?></a>
                 </div>
 
                 <p class="error-msg">
-                    <?php echo $this->error; ?>
+                    <?php echo esc_html($this->error); ?>
                 </p>
             </form>
         </main>

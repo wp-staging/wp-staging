@@ -43,7 +43,7 @@ class ProcessLock extends JobExecutable
     public function ajaxIsRunning()
     {
         if (parent::isRunning()) {
-            return json_encode([
+            return [
                 'success'       => false,
                 'type'          => 'processLock',
                 // TODO: Create a Swal Response Class and Js library to handle that response or, Implement own Swal alternative
@@ -53,7 +53,7 @@ class ProcessLock extends JobExecutable
                     'confirmButtonText' => __('Stop other process', 'wp-staging'),
                     'showCancelButton'  => true,
                 ],
-            ]);
+            ];
         }
 
         return false;

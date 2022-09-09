@@ -12,22 +12,22 @@
     <div class="wpstg-field wpstg-report-privacy-policy">
         <label for="wpstg-report-syslog">
             <input type="checkbox" class="wpstg-report-syslog" id="wpstg-report-syslog">
-            <?php echo sprintf(
+            <?php echo wp_kses_post(sprintf(
                 __('Optional: Submit the <a href="%s" target="_blank">System Log</a> and your WordPress debug log. This helps us to resolve your technical issues.', 'wp-staging'),
-                admin_url() . 'admin.php?page=wpstg-tools&tab=system_info'
-            ); ?>
+                esc_url(admin_url()) . 'admin.php?page=wpstg-tools&tab=system_info'
+            )); ?>
         </label>
     </div>
     <div class="wpstg-field wpstg-report-privacy-policy">
         <label for="wpstg-report-terms">
             <input type="checkbox" class="wpstg-report-terms" id="wpstg-report-terms">
-            <?php _e('By submitting, I accept the <a href="https://wp-staging.com/privacy-policy/" target="_blank">Privacy Policy</a> and consent that my email will be stored and processed for the purposes of proving support.', 'wp-staging'); ?>
+            <?php echo sprintf(esc_html__('By submitting, I accept the %s and consent that my email will be stored and processed for the purposes of proving support.', 'wp-staging'), '<a href="https://wp-staging.com/privacy-policy/" target="_blank">' . esc_html__('Privacy Policy', 'wp-staging') . '</a>'); ?>
         </label>
     </div>
     <div class="wpstg-field">
         <div class="wpstg-buttons">
             <button type="submit" id="wpstg-report-submit" class="wpstg-form-submit button-primary wpstg-button">
-                <?php _e('Submit', 'wp-staging'); ?>
+                <?php esc_html_e('Submit', 'wp-staging'); ?>
             </button>
             <span class="spinner"></span>
              <a href="#" id="wpstg-report-cancel" class="wpstg-report-cancel wpstg--red">CLOSE [X]</a>

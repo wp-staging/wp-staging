@@ -28,7 +28,7 @@ class AccessToken
      */
     public function requestHasValidToken()
     {
-        return isset($_REQUEST[self::REQUEST_KEY]) && $this->isValidToken($_REQUEST[self::REQUEST_KEY]);
+        return isset($_REQUEST[self::REQUEST_KEY]) && $this->isValidToken(sanitize_text_field($_REQUEST[self::REQUEST_KEY]));
     }
 
     /**

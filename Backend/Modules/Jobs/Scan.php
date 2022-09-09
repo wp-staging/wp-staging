@@ -14,6 +14,7 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
@@ -73,6 +74,12 @@ class Scan extends Job
     private $diskWriteCheck;
 
     /**
+     * @var Sanitize
+     */
+    private $sanitize;
+
+
+    /**
      * @var string Path to the info icon
      */
     private $infoIconPath;
@@ -90,6 +97,7 @@ class Scan extends Job
         $this->strUtils       = new Strings();
         $this->dirAdapter     = WPStaging::make(Directory::class);
         $this->diskWriteCheck = WPStaging::make(DiskWriteCheck::class);
+        $this->sanitize       = WPStaging::make(Sanitize::class);
         parent::__construct();
     }
 
@@ -151,8 +159,10 @@ class Scan extends Job
         $this->options->existingClones = is_array($this->options->existingClones) ? $this->options->existingClones : [];
         $this->options->current        = null;
 
-        if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $this->options->existingClones)) {
-            $this->options->current = $_POST["clone"];
+        $cloneID = isset($_POST["clone"]) ? $this->sanitize->sanitizeString($_POST['clone']) : '';
+
+        if (array_key_exists($cloneID, $this->options->existingClones)) {
+            $this->options->current = $cloneID;
             $this->options->currentClone = $this->options->existingClones[$this->options->current];
             // Make sure no warning is shown when updating/resetting an old clone having no exclude rules options
             $this->options->currentClone['excludeSizeRules'] = isset($this->options->currentClone['excludeSizeRules']) ? $this->options->currentClone['excludeSizeRules'] : [];
@@ -186,7 +196,7 @@ class Scan extends Job
         $this->options->mainJob = 'cloning';
         $job = '';
         if (isset($_POST["job"])) {
-            $job = $_POST['job'];
+            $job = $this->sanitize->sanitizeString($_POST['job']);
         }
 
         if ($this->options->current !== null && $job === 'resetting') {

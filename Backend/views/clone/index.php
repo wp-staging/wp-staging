@@ -27,13 +27,13 @@
         <div class="wpstg--tab--header">
             <ul>
                 <li>
-                    <a class="wpstg--tab--content <?php echo $classStagingPageActive; ?> wpstg-button" data-target="#wpstg--tab--staging">
-                        <?php _e('Staging', 'wp-staging') ?>
+                    <a class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?> wpstg-button" data-target="#wpstg--tab--staging">
+                        <?php esc_html_e('Staging', 'wp-staging') ?>
                     </a>
                 </li>
                 <li>
-                    <a class="wpstg-button <?php echo $classBackupPageActive; ?>" data-target="#wpstg--tab--backup" id="wpstg--tab--toggle--backup">
-                        <?php _e('Backup & Migration', 'wp-staging') ?>
+                    <a class="wpstg-button <?php echo esc_attr($classBackupPageActive); ?>" data-target="#wpstg--tab--backup" id="wpstg--tab--toggle--backup">
+                        <?php esc_html_e('Backup & Migration', 'wp-staging') ?>
                     </a>
                 </li>
                 <li class="wpstg-tab-item--vert-center">
@@ -42,7 +42,7 @@
             </ul>
         </div>
         <div class="wpstg--tab--contents">
-            <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo $classStagingPageActive; ?>">
+            <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">
                 <?php
                 if (!$this->siteInfo->isCloneable()) {
                     // Staging site but not cloneable
@@ -55,10 +55,10 @@
                 }
                 ?>
             </div>
-            <div id="wpstg--tab--backup" class="wpstg--tab--content <?php echo $classBackupPageActive; ?>">
+            <div id="wpstg--tab--backup" class="wpstg--tab--content <?php echo esc_attr($classBackupPageActive); ?>">
                 <?php
                 if (defined('WPSTGPRO_VERSION')) {
-                    _e('Loading...', 'wp-staging');
+                    esc_html_e('Loading...', 'wp-staging');
                 } else {
                     require_once($this->path . "views/backup/free-version.php");
                 }

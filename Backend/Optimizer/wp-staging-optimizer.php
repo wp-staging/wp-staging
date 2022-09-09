@@ -188,8 +188,8 @@ function wpstgIsOptimizerRequest()
         defined('DOING_AJAX') &&
         DOING_AJAX &&
         isset($_REQUEST['action']) &&
-        strpos($_REQUEST['action'], 'wpstg_send_report') === false &&
-        strpos($_REQUEST['action'], 'wpstg') === 0
+        strpos(sanitize_text_field($_REQUEST['action']), 'wpstg_send_report') === false &&
+        strpos(sanitize_text_field($_REQUEST['action']), 'wpstg') === 0
     ) {
         return true;
     }
@@ -211,7 +211,7 @@ function wpstgTgmpaCompatibility()
         $remove_function = true;
     }
     // run on wpstg ajax requests
-    if (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && strpos($_POST['action'], 'wpstg') !== false) {
+    if (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && strpos(sanitize_text_field($_POST['action']), 'wpstg') !== false) {
         $remove_function = true;
     }
 

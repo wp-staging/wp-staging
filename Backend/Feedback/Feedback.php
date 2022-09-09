@@ -45,7 +45,7 @@ class Feedback
     {
 
         if (isset($_POST['data'])) {
-            parse_str($_POST['data'], $form);
+            parse_str(sanitize_text_field($_POST['data']), $form);
         }
 
         $text = '';

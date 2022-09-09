@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\Rest;
 
+use WPStaging\Framework\Utils\Sanitize;
+
 /**
  * Class Rest
  *
@@ -9,6 +11,14 @@ namespace WPStaging\Framework\Rest;
  */
 class Rest
 {
+    /** @var Sanitize */
+    private $sanitize;
+
+    public function __construct(Sanitize $sanitize)
+    {
+        $this->sanitize = $sanitize;
+    }
+
     // Is Rest URL
     public function isRestUrl()
     {
@@ -17,7 +27,7 @@ class Rest
             return false;
         }
 
-        $requestPath = trim($_SERVER['REQUEST_URI'], '/');
+        $requestPath = trim($this->sanitize->sanitizeURL($_SERVER['REQUEST_URI']), '/');
 
         $url = trailingslashit(get_home_url(get_current_blog_id(), ''));
         // nginx only allows HTTP/1.0 methods when redirecting from / to /index.php.

@@ -17,7 +17,7 @@ use WPStaging\Core\WPStaging;
  */
 abstract class Facade
 {
-    protected static $facadeInstance = null;
+    protected static $facadeInstances = [];
 
     /**
      * Caution: Use in testing Only
@@ -28,7 +28,7 @@ abstract class Facade
      */
     public static function swapInstance($instance)
     {
-        $oldInstance = static::$facadeInstance;
+        $oldInstance = static::$facadeInstances[static::getFacadeAccessor()];
         static::setInstance($instance);
         return $oldInstance;
     }
@@ -42,7 +42,7 @@ abstract class Facade
     {
         $class = static::getFacadeAccessor();
         if ($instance instanceof $class) {
-            static::$facadeInstance = $instance;
+            static::$facadeInstances[static::getFacadeAccessor()] = $instance;
             return;
         }
 
@@ -77,20 +77,20 @@ abstract class Facade
     protected static function createInstance()
     {
         try {
-            static::$facadeInstance = WPStaging::make(static::getFacadeAccessor());
+            static::$facadeInstances[static::getFacadeAccessor()] = WPStaging::make(static::getFacadeAccessor());
         } catch (Exception $ex) {
-            static::$facadeInstance = null;
+            static::$facadeInstances[static::getFacadeAccessor()] = null;
         }
     }
 
     /** @return self */
     protected static function getInstance()
     {
-        if (static::$facadeInstance === null) {
+        if (!isset(static::$facadeInstances[static::getFacadeAccessor()]) || static::$facadeInstances[static::getFacadeAccessor()] === null) {
             static::createInstance();
         }
 
-        return static::$facadeInstance;
+        return static::$facadeInstances[static::getFacadeAccessor()];
     }
 
     /**

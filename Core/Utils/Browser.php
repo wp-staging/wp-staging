@@ -1,6 +1,8 @@
 <?php
 namespace WPStaging\Core\Utils;
 
+use WPStaging\Framework\Facades\Sanitize;
+
 	/**
 	 * Modified to remove var
 	 * Chris Christoff on 12/26/2012
@@ -233,7 +235,7 @@ namespace WPStaging\Core\Utils;
 		* Reset all properties
 		*/
 		function reset() {
-			$this->_agent = isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : "";
+			$this->_agent = isset($_SERVER['HTTP_USER_AGENT']) ? Sanitize::sanitizeString($_SERVER['HTTP_USER_AGENT']) : "";
 			$this->_browser_name = $this->BROWSER_UNKNOWN;
 			$this->_version = $this->VERSION_UNKNOWN;
 			$this->_platform = $this->PLATFORM_UNKNOWN;

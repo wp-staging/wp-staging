@@ -1,4 +1,8 @@
-<?php settings_errors(); ?>
+<?php
+
+use WPStaging\Framework\Facades\Sanitize;
+
+ settings_errors(); ?>
 <div class="wpstg_admin">
     <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/header.php'); ?>
 
@@ -6,7 +10,7 @@
         <ul class="wpstg-nav-tab-wrapper">
             <?php
             $tabs = \WPStaging\Core\WPStaging::getInstance()->get("tabs")->get();
-            $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? $_GET["tab"] : "general";
+            $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? Sanitize::sanitizeString($_GET["tab"]) : "general";
 
             # Loop through tabs
             foreach ($tabs as $id => $name) :
@@ -23,9 +27,9 @@
                 ?>
                 <li>
                     <a href="<?php
-                    echo $url ?>" title="<?php
+                    echo esc_url($url) ?>" title="<?php
                     echo esc_attr($name) ?>" class="wpstg-nav-tab<?php
-                    echo $activeClass ?>">
+                    echo esc_attr($activeClass) ?>">
                         <?php
                         echo esc_html($name) ?>
                     </a>

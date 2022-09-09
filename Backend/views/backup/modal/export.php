@@ -6,6 +6,7 @@
  */
 
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Framework\Facades\Escape;
 
 $timeFormatOption = get_option('time_format');
 
@@ -48,7 +49,7 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
                 <input type="checkbox" name="includeOtherFilesInWpContent" id="includeOtherFilesInWpContent" value="true" checked/>
                 <?php esc_html_e('Backup Other Files In wp-content', 'wp-staging') ?>
                 <div class="wpstg--tooltip" style="position: absolute;">
-                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
+                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
                     <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
                             <?php esc_html_e('All files in folder wp-content that are not plugins, themes, mu-plugins and uploads. Recommended for full-site backups.', 'wp-staging') ?>
                     </span>
@@ -97,14 +98,17 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
                         <label for="backupScheduleTime">
                             <?php esc_html_e('At what time should it start?', 'wp-staging'); ?>
                             <div class="wpstg--tooltip" style="position: absolute;">
-                                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
+                                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
                                 <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                                    <?php _e(sprintf('Relative to current server time, which you can change in <a href="%s">WordPress Settings</a>.', admin_url('options-general.php#timezone_string'))); ?>
+                                    <?php echo sprintf(
+                                        Escape::escapeHtml(__('Relative to current server time, which you can change in <a href="%s">WordPress Settings</a>.', 'wp-staging')),
+                                        esc_url(admin_url('options-general.php#timezone_string'))
+                                    ); ?>
                                     <br>
                                     <br>
-                                        <?php _e(sprintf('Current Server Time: %s', (new DateTime('now', $time->getSiteTimezoneObject()))->format($timeFormatOption)), 'wp-staging'); ?>
+                                        <?php echo sprintf(esc_html__('Current Server Time: %s', 'wp-staging'), esc_html((new DateTime('now', $time->getSiteTimezoneObject()))->format($timeFormatOption))); ?>
                                         <br>
-                                        <?php _e(sprintf('Site Timezone: %s', $time->getSiteTimezoneString()), 'wp-staging'); ?>
+                                        <?php echo sprintf(esc_html__('Site Timezone: %s', 'wp-staging'), esc_html($time->getSiteTimezoneString())); ?>
                                  </span>
                             </div>
                         </label>
@@ -116,11 +120,11 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
                                 </option>
                             <?php endforeach; ?>
                         </select>
-                        <span id="backup-schedule-current-time"><?php _e(sprintf('Current Time: %s', $currentTime), 'wp-staging'); ?></span>
+                        <span id="backup-schedule-current-time"><?php echo sprintf(esc_html__('Current Time: %s', 'wp-staging'), esc_html($currentTime)); ?></span>
                         <label for="backupScheduleRotation">
                             <?php esc_html_e('How many backups to keep?', 'wp-staging'); ?>
                             <div class="wpstg--tooltip" style="position: absolute;">
-                                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo $urlAssets; ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
+                                <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
                                 <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
                                     <?php esc_html_e('Choose how many backups you want to keep before old ones are deleted to free up disk space.', 'wp-staging') ?>
                                  </span>
@@ -128,7 +132,7 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
                         </label>
                         <select name="backupScheduleRotation" id="backupScheduleRotation">
                             <?php for ($i = 1; $i <= 10; $i++) : ?>
-                                <option value="<?php echo $i ?>">
+                                <option value="<?php echo esc_attr($i) ?>">
                                     <?php esc_html_e(sprintf('Keep last %d backup%s', $i, ($i > 1 ? 's' : ''))); ?>
                                 </option>
                             <?php endfor; ?>
@@ -160,9 +164,9 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
                             <?php
                                 $isActivated = $storage['activated'];
                             ?>
-                            <input type="checkbox" name="storages" id="storage-<?php echo $storage['id']?>" value="<?php echo $storage['id']?>" <?php echo $isActivated === false ? 'disabled' : '' ?> />
-                            <span><?php echo $storage['name']; ?></span>
-                            <span class="wpstg-storage-settings"><a class="<?php echo $isActivated === false ? 'wpstg-storage-settings-disabled' : ''; ?>" href="<?php echo $storage['settingsPath']; ?>" target="_blank"><?php echo $isActivated ? esc_html('Settings', 'wp-staging') : esc_html('Activate', 'wp-staging'); ?></a></span>
+                            <input type="checkbox" name="storages" id="storage-<?php echo esc_attr($storage['id'])?>" value="<?php echo esc_attr($storage['id'])?>" <?php echo $isActivated === false ? 'disabled' : '' ?> />
+                            <span><?php echo esc_html($storage['name']); ?></span>
+                            <span class="wpstg-storage-settings"><a class="<?php echo $isActivated === false ? 'wpstg-storage-settings-disabled' : ''; ?>" href="<?php echo esc_url($storage['settingsPath']); ?>" target="_blank"><?php echo $isActivated ? esc_html('Settings', 'wp-staging') : esc_html('Activate', 'wp-staging'); ?></a></span>
                         </label>
                     <?php endforeach; ?>
                 </div>

@@ -13,6 +13,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 
 /**
@@ -63,12 +64,17 @@ class Delete extends Job
     /** @var Strings  */
     private $strings;
 
+    /** @var Sanitize */
+    private $sanitize;
+
     public function __construct($isExternal = false)
     {
         parent::__construct();
 
+        /** @var Sanitize */
+        $this->sanitize = WPStaging::make(Sanitize::class);
         $this->isExternalDb = $isExternal;
-        $this->deleteDir = !empty($_POST['deleteDir']) ? urldecode($_POST['deleteDir']) : '';
+        $this->deleteDir = !empty($_POST['deleteDir']) ? $this->sanitize->sanitizePath($_POST['deleteDir']) : '';
         $this->strings = new Strings();
     }
 
@@ -147,7 +153,7 @@ class Delete extends Job
         }
 
         if ($name === null) {
-            $name = (string)$_POST["clone"];
+            $name = $this->sanitize->sanitizeString($_POST["clone"]);
         }
 
         $clones = get_option(Sites::STAGING_SITES_OPTION, []);
@@ -324,7 +330,7 @@ class Delete extends Job
             return $tables;
         }
 
-        return array_diff($tables, $_POST["excludedTables"]);
+        return array_diff($tables, $this->sanitize->sanitizeString($_POST["excludedTables"]));
     }
 
     /**

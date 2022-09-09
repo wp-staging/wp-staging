@@ -3,6 +3,7 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Facades\Escape;
 use WPStaging\Pro\Backup\Ajax\ScheduleList;
 use WPStaging\Pro\Backup\BackupProcessLock;
 use WPStaging\Pro\Backup\BackupScheduler;
@@ -40,33 +41,36 @@ $cronMessage = $backupScheduler->getCronMessage();
 if ($cronMessage !== '') { ?>
     <div class="notice <?php echo $cronStatus === true ? 'notice-warning' : 'notice-error'; ?>" style="margin-bottom: 10px;">
         <p><strong><?php esc_html_e('WP STAGING:', 'wp-staging') ?></strong></p>
-        <p><?php echo $cronMessage; ?></p>
+        <p><?php echo Escape::escapeHtml(__($cronMessage, 'wp-staging')); ?></p>
     </div>
 <?php } ?>
 
 <?php if ($isLocked) : ?>
     <div id="wpstg-backup-locked">
-        <div class="icon"><img width="20" src="<?php echo WPSTG_PLUGIN_URL . "assets/img/wpstaging-icon.png"; ?>"></div>
+        <div class="icon"><img width="20" src="<?php echo esc_url(WPSTG_PLUGIN_URL . "assets/img/wpstaging-icon.png"); ?>"></div>
         <div class="text"><?php esc_html_e('There is a backup work in progress...', 'wp-staging'); ?></div>
     </div>
 <?php endif; ?>
 <div id="wpstg-did-you-know" style="margin-bottom:12px">
-        <strong><?php echo sprintf(__('Did you know? You can upload backup files to another website to transfer it. <a href="%s" target="_blank">Read more</a>', 'wp-staging'), 'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'); ?></strong>
+        <strong><?php echo sprintf(
+            Escape::escapeHtml(__('Did you know? You can upload backup files to another website to transfer it. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
+            'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'
+        ); ?></strong>
 </div>
 
 <div id="wpstg-step-1">
-    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo $disabledProperty; ?> <?php echo $disabledPropertyCreateBackup ?>>
+    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo esc_attr($disabledProperty); ?> <?php echo esc_attr($disabledPropertyCreateBackup) ?>>
         <?php esc_html_e('Create New Backup', 'wp-staging') ?>
     </button>
-    <button id="wpstg-upload-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4" <?php echo $disabledProperty ?>>
+    <button id="wpstg-upload-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4" <?php echo esc_attr($disabledProperty) ?>>
         <?php esc_html_e('Upload Backup', 'wp-staging') ?>
     </button>
-    <button id="wpstg-manage-backup-schedules" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4" <?php echo $disabledProperty ?>>
+    <button id="wpstg-manage-backup-schedules" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4" <?php echo esc_attr($disabledProperty) ?>>
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
     <div id="wpstg-report-issue-wrapper">
         <button type="button" id="wpstg-report-issue-button" class="wpstg-button">
-            <i class="wpstg-icon-issue"></i><?php echo __("Report Issue", "wp-staging"); ?>
+            <i class="wpstg-icon-issue"></i><?php echo esc_html__("Report Issue", "wp-staging"); ?>
         </button>
         <?php require_once($this->views . '_main/report-issue.php'); ?>
     </div>
@@ -80,7 +84,7 @@ if ($cronMessage !== '') { ?>
         <div id="backup-messages"></div>
         <div class="wpstg-backup-list">
             <ul>
-                <li><?php _e('Searching for existing backups...', 'wp-staging') ?></li>
+                <li><?php esc_html_e('Searching for existing backups...', 'wp-staging') ?></li>
             </ul>
         </div>
 </div>
