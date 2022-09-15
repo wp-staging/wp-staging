@@ -196,7 +196,7 @@ class Cloning extends Job
 
         $this->options->databasePassword = '';
         if (!empty($_POST["databasePassword"])) {
-            $this->options->databasePassword = stripslashes($this->sanitize->sanitizeString($_POST["databasePassword"]));
+            $this->options->databasePassword = $this->sanitize->sanitizePassword($_POST["databasePassword"]);
         }
 
         $this->options->databaseDatabase = '';

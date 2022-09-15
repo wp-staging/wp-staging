@@ -58,7 +58,7 @@ class LoginForm
         }
 
         // Validate provided password and login
-        $password = isset($_POST['wpstg-pass']) ? $this->sanitize->sanitizeString($_POST['wpstg-pass']) : '';
+        $password = isset($_POST['wpstg-pass']) ? $this->sanitize->sanitizePassword($_POST['wpstg-pass']) : '';
         if (wp_check_password($password, $user_data->user_pass, $user_data->ID)) {
             $rememberme = isset($_POST['rememberme']) ? true : false;
 
