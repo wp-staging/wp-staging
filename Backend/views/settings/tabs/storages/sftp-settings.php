@@ -16,11 +16,11 @@ use WPStaging\Framework\Facades\Sanitize;
     $host = !empty($options['host']) ? Sanitize::sanitizeString($options['host']) : '';
     $port = !empty($options['port']) ? Sanitize::sanitizeString($options['port']) : '';
     $username = !empty($options['username']) ? Sanitize::sanitizeString($options['username']) : '';
-    $password = !empty($options['password']) ? Sanitize::sanitizeString($options['password']) : '';
+    $password = !empty($options['password']) ? Sanitize::sanitizePassword($options['password']) : '';
     $ssl = isset($options['ssl']) ? Sanitize::sanitizeBool($options['ssl']) : false;
     $passive = isset($options['passive']) ? Sanitize::sanitizeBool($options['passive']) : false;
     $privateKey = !empty($options['key']) ? Sanitize::sanitizeString($options['key']) : '';
-    $passphrase = !empty($options['passphrase']) ? Sanitize::sanitizeString($options['passphrase']) : '';
+    $passphrase = !empty($options['passphrase']) ? Sanitize::sanitizePassword($options['passphrase']) : '';
     $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? Sanitize::sanitizeInt($options['maxBackupsToKeep']) : 2;
     $location = isset($options['location']) ? Sanitize::sanitizeString($options['location']) : '';
     ?>
@@ -81,7 +81,7 @@ use WPStaging\Framework\Facades\Sanitize;
 
                 <fieldset class="wpstg-fieldset only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Passphrase', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="text" name="passphrase" value="<?php echo esc_attr($passphrase); ?>" />
+                    <input class="wpstg-form-control" type="password" name="passphrase" value="<?php echo esc_attr($passphrase); ?>" />
                     <p><?php esc_html_e("Passphrase for the key.", 'wp-staging') ?></p>
                 </fieldset>
             </div>

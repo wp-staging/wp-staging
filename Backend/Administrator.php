@@ -991,7 +991,7 @@ class Administrator
             $existingClones[$cloneId]["url"] = isset($_POST["url"]) ? $this->sanitize->sanitizeString($_POST["url"]) : '';
             $existingClones[$cloneId]["prefix"] = isset($_POST["prefix"]) ? $this->sanitize->sanitizeString($_POST["prefix"]) : '';
             $existingClones[$cloneId]["databaseUser"] = isset($_POST["externalDBUser"]) ? $this->sanitize->sanitizeString($_POST["externalDBUser"]) : '';
-            $existingClones[$cloneId]["databasePassword"] = isset($_POST["externalDBPassword"]) ? $this->sanitize->sanitizeString($_POST["externalDBPassword"]) : '';
+            $existingClones[$cloneId]["databasePassword"] = isset($_POST["externalDBPassword"]) ? $this->sanitize->sanitizePassword($_POST["externalDBPassword"]) : '';
             $existingClones[$cloneId]["databaseDatabase"] = isset($_POST["externalDBDatabase"]) ? $this->sanitize->sanitizeString($_POST["externalDBDatabase"]) : '';
             $existingClones[$cloneId]["databaseServer"] = isset($_POST["externalDBHost"]) ? $this->sanitize->sanitizeString($_POST["externalDBHost"]) : 'localhost';
             $existingClones[$cloneId]["databasePrefix"] = isset($_POST["externalDBPrefix"]) ? $this->sanitize->sanitizeString($_POST["externalDBPrefix"]) : 'wp_';
@@ -1176,7 +1176,7 @@ class Administrator
 
         $args = $_POST;
         $user = !empty($args['databaseUser']) ? $this->sanitize->sanitizeString($args['databaseUser']) : '';
-        $password = !empty($args['databasePassword']) ? $this->sanitize->sanitizeString($args['databasePassword']) : '';
+        $password = !empty($args['databasePassword']) ? $this->sanitize->sanitizePassword($args['databasePassword']) : '';
         $database = !empty($args['databaseDatabase']) ? $this->sanitize->sanitizeString($args['databaseDatabase']) : '';
         $server = !empty($args['databaseServer']) ? $this->sanitize->sanitizeString($args['databaseServer']) : 'localhost';
         $prefix = !empty($args['databasePrefix']) ? $this->sanitize->sanitizeString($args['databasePrefix']) : $wpdb->prefix;
@@ -1317,7 +1317,7 @@ class Administrator
         }
 
         $user = !empty($_POST['databaseUser']) ? $this->sanitize->sanitizeString($_POST['databaseUser']) : '';
-        $password = !empty($_POST['databasePassword']) ? $this->sanitize->sanitizeString($_POST['databasePassword']) : '';
+        $password = !empty($_POST['databasePassword']) ? $this->sanitize->sanitizePassword($_POST['databasePassword']) : '';
         $database = !empty($_POST['databaseDatabase']) ? $this->sanitize->sanitizeString($_POST['databaseDatabase']) : '';
         $server = !empty($_POST['databaseServer']) ? $this->sanitize->sanitizeString($_POST['databaseServer']) : 'localhost';
 

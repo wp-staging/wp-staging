@@ -34,6 +34,19 @@ class Sanitize
     }
 
     /**
+     * @param string $password
+     * @return string
+     */
+    public function sanitizePassword($password)
+    {
+        if (!is_string($password)) {
+            return "";
+        }
+
+        return trim(stripslashes($password));
+    }
+
+    /**
      * Sanitize integer. Optionally use abs flag
      * @param int|string $value
      * @param bool $useAbsValue
