@@ -169,7 +169,7 @@ class BufferedCache extends AbstractCache
         $existingFile->flock(LOCK_EX);
         $tempFile->fwrite($data);
 
-        while (!empty($nextLine = $existingFile->fgets())) {
+        while (!empty($nextLine = $existingFile->readAndMoveNext())) {
             $tempFile->fwrite($nextLine);
         }
 

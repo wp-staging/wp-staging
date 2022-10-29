@@ -9,6 +9,7 @@
 
 namespace WPStaging\Core\Utils;
 
+use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
@@ -62,6 +63,9 @@ class Logger implements LoggerInterface, ShutdownableInterface
      */
     private $fileName       = null;
 
+    /** @var Settings */
+    private $settingsDto;
+
     /**
      * Logger constructor.
      *
@@ -70,7 +74,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
      *
      * @throws \Exception
      */
-    public function __construct($logDir = null, $logExtension = null)
+    public function __construct($logDir = null, $logExtension = null, $settingsDto = null)
     {
         // Set log directory
         if (!empty($logDir) && is_dir($logDir)) {
@@ -91,6 +95,11 @@ class Logger implements LoggerInterface, ShutdownableInterface
          * @see \WPStaging\Backend\Notices\Notices::messages Notice that shows if log directory couldn't be created.
          */
         (new Filesystem())->mkdir($this->logDir);
+
+        $this->settingsDto = $settingsDto;
+        if ($this->settingsDto === null) {
+            $this->settingsDto = WPStaging::make(Settings::class);
+        }
     }
 
     public function onWpShutdown()
@@ -316,10 +325,24 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
     /**
-     * @inheritDoc
+     * @param string $message
+     * @param array $context
+     * @return void
      */
     public function debug($message, array $context = [])
     {
-        $this->add($message, LogLevel::DEBUG);
+        if ($this->isDebugMode()) {
+            $this->add($message, LogLevel::DEBUG);
+        }
+    }
+
+    /** @return bool */
+    protected function isDebugMode()
+    {
+        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG === true) {
+            return true;
+        }
+
+        return $this->settingsDto->isDebugMode();
     }
 }

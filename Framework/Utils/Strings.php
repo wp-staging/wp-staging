@@ -66,7 +66,7 @@ class Strings
     }
 
     /**
-     * Check if a strings start with a specific string
+     * Check if a string start with a specific string
      * @param string $haystack
      * @param string $needle
      * @return bool
@@ -76,6 +76,20 @@ class Strings
         $length = strlen($needle);
         return ($needle === substr($haystack, 0, $length));
     }
+
+    /**
+     * Check if a string ends with a specific string
+     * @param string $haystack
+     * @param string $needle
+     * @return bool
+     */
+    public function endsWith($haystack, $needle)
+    {
+        $haystack = strrev($haystack);
+        $needle = strrev($needle);
+        return strpos($haystack, $needle) === 0;
+    }
+
 
     /**
      * Search & Replace last occurrence of string in haystack

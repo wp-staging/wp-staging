@@ -67,7 +67,7 @@ class LoginForm
             do_action('wp_login', $username, get_userdata($user_data->ID));
 
             if (!empty($_POST['redirect_to'])) {
-                $redirectTo = $this->sanitize->sanitizeURL($_POST['redirect_to']);
+                $redirectTo = sanitize_url($_POST['redirect_to']);
             }
 
             header('Location:' . $redirectTo);
@@ -172,7 +172,7 @@ class LoginForm
         // Default 'redirect' value takes the user back to the request URI.
         $httpHost   = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';
         $requestURI = !empty($_SERVER['REQUEST_URI']) ? $this->sanitize->sanitizeString($_SERVER['REQUEST_URI']) : '';
-        $redirect   = $this->sanitize->sanitizeURL((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
+        $redirect   = sanitize_url((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
         $lostPasswordUrl = wp_lostpassword_url($redirect);
         $arguments = wp_parse_args(
             $overrides,

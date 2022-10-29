@@ -228,15 +228,17 @@ class Scan extends Job
      * @param bool $forceDefault        Default false. Set it to true,
      *                                  when default button on ui is clicked,
      *                                  to ignore previous selected option for UPDATE and RESET process.
+     * @param null|array                $directories to list
      *
      * @return string
      *
      * @todo create a template for ui
      */
-    public function directoryListing($parentChecked = null, $forceDefault = false)
+    public function directoryListing($parentChecked = null, $forceDefault = false, $directories = null)
     {
-
-        $directories = $this->directories;
+        if ($directories === null) {
+            $directories = $this->directories;
+        }
 
         uksort($directories, 'strcasecmp');
 
@@ -284,8 +286,24 @@ class Scan extends Job
                 $isNavigateable = 'false';
             }
 
+            $contentType = 'other';
+            if ($this->strUtils->startsWith($path, $wpRoot . "wp-content/plugins/") !== false) {
+                $contentType = 'plugin';
+            } elseif ($this->strUtils->startsWith($path, $wpRoot . "wp-content/themes/") !== false) {
+                $contentType = 'theme';
+            }
+
+            $isScanned = 'false';
+            if (
+                $path === $wpRoot . 'wp-content'
+                || $path === $wpRoot . 'wp-content/plugins'
+                || $path === $wpRoot . 'wp-content/themes'
+            ) {
+                $isScanned = 'true';
+            }
+
             $output .= "<div class='wpstg-dir'>";
-            $output .= "<input type='checkbox' class='wpstg-check-dir " . $class . "'";
+            $output .= "<input type='checkbox' data-content-type='" . $contentType . "' class='wpstg-check-dir " . $class . "'";
 
             // Decide if item checkbox is active or not
             $shouldBeChecked = $parentChecked !== null ? $parentChecked : !$isNotWPCoreDir;
@@ -303,7 +321,7 @@ class Scan extends Job
                 $output .= " checked";
             }
 
-            $output .= " name='selectedDirectories[]' value='{$relPath}' data-scanned='false' data-navigateable='{$isNavigateable}'>";
+            $output .= " name='selectedDirectories[]' value='{$relPath}' data-scanned='{$isScanned}' data-navigateable='{$isNavigateable}'>";
 
             $output .= "<a href='#' class='wpstg-expand-dirs ";
 
@@ -317,6 +335,14 @@ class Scan extends Job
             $output .= ($this->gifLoaderPath !== '' && $isNavigateable === 'true') ? "<img src='{$this->gifLoaderPath}' class='wpstg-is-dir-loading' alt='loading' />" : "";
             $output .= "<span class='wpstg-size-info'>{$this->utilsMath->formatSize( $dataSize )}</span>";
             $output .= isset($this->settings->debugMode) ? "<span class='wpstg-size-info'> {$dataPath}</span>" : "";
+
+            if ($isScanned === 'true') {
+                $childDirectories = $this->getDirectories($path, $return = true);
+                $output .= '<div class="wpstg-dir wpstg-subdir" style="display: none;">';
+                $output .= $this->directoryListing($parentChecked, $forceDefault, $childDirectories);
+                $output .= '</div>';
+            }
+
             $output .= "</div>";
         }
 
@@ -414,9 +440,12 @@ class Scan extends Job
 
     /**
      * Get directories and main meta data about given directory path
-     * @param string $dirPath - Optional - Default ABSPATH
+     * @param string $dirPath      - Optional - Default ABSPATH
+     * @param bool   $shouldReturn - Optional - Default false
+     *
+     * @return void|array            Depend upon value of $shouldReturn
      */
-    protected function getDirectories($dirPath = ABSPATH)
+    protected function getDirectories($dirPath = ABSPATH, $shouldReturn = false)
     {
         if (!is_dir($dirPath)) {
             return;
@@ -441,6 +470,8 @@ class Scan extends Job
             exit();
         }
 
+        $result = [];
+
         foreach ($directories as $directory) {
             // Not a valid directory
             if (($path = $this->getPath($directory)) === false) {
@@ -454,11 +485,17 @@ class Scan extends Job
             $fullPath = WPStaging::getWPpath() . $path;
             $size     = $this->getDirectorySize($fullPath);
 
-            $this->directories[$directory->getFilename()]['metaData'] = [
+            $result[$directory->getFilename()]['metaData'] = [
                 "size" => $size,
                 "path" => $fullPath,
             ];
         }
+
+        if ($shouldReturn) {
+            return $result;
+        }
+
+        $this->directories = $result;
     }
 
     /**

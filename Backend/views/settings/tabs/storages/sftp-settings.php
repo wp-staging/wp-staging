@@ -1,5 +1,7 @@
 <?php
 
+namespace WPStaging\Storages\SftpSettings;
+
 /**
  * @var string $providerId
  */
@@ -22,7 +24,9 @@ use WPStaging\Framework\Facades\Sanitize;
     $privateKey = !empty($options['key']) ? Sanitize::sanitizeString($options['key']) : '';
     $passphrase = !empty($options['passphrase']) ? Sanitize::sanitizePassword($options['passphrase']) : '';
     $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? Sanitize::sanitizeInt($options['maxBackupsToKeep']) : 2;
+    $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
     $location = isset($options['location']) ? Sanitize::sanitizeString($options['location']) : '';
+
     ?>
     <p>
         <strong class="wpstg-fs-14"> <?php esc_html_e('FTP/SFTP', 'wp-staging'); ?></strong>
@@ -91,8 +95,7 @@ use WPStaging\Framework\Facades\Sanitize;
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
             <fieldset class="wpstg-fieldset">
                 <label><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
-                <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" style="max-width: 60px" />
-                <p><?php esc_html_e("Leave empty or zero for no limit", 'wp-staging') ?></p>
+                <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
             </fieldset>
 
             <fieldset class="wpstg-fieldset">
@@ -100,6 +103,10 @@ use WPStaging\Framework\Facades\Sanitize;
                 <input class="wpstg-form-control" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
                 <p><?php esc_html_e("Where to change directory to after logging in - often this is relative to your home directory. Needs to already exist", 'wp-staging') ?></p>
             </fieldset>
+
+            <?php
+            require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php";
+            ?>
 
             <hr/>
 

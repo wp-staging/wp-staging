@@ -19,6 +19,7 @@
         <a href="#" class="wpstg-tab-header wpstg-reset-exclude-tab" data-id="#wpstg-reset-excluded-tables" data-collapsed="true">
             <span class="wpstg-tab-triangle"></span>
             <?php esc_html_e("Selected Tables", "wp-staging") ?>
+            <span id="wpstg-tables-count" class="wpstg-selection-preview"></span>
         </a>
 
         <fieldset class="wpstg-tab-section" id="wpstg-reset-excluded-tables">
@@ -28,6 +29,7 @@
         <a href="#" class="wpstg-tab-header wpstg-reset-exclude-tab" data-id="#wpstg-reset-excluded-files" data-collapsed="true">
             <span class="wpstg-tab-triangle"></span>
             <?php esc_html_e("Selected Files", "wp-staging") ?>
+            <span id="wpstg-files-count" class="wpstg-selection-preview"></span>
         </a>
 
         <fieldset class="wpstg-tab-section" id="wpstg-reset-excluded-files">

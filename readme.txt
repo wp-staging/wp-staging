@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.0
-Stable tag: 2.9.20
+Stable tag: 2.10.0
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -258,6 +258,46 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.10.0 =
+* New: Compatible up to WordPress 6.0.3
+* New: Show loader icon while saving settings or testing backup remote storages connections #1925
+* New: Show settings last saved time for backup remote storages SFTP, Amazon S3 and Google Drive #1925
+* New: Show last update and install date for WP STAGING|PRO plugin in System Info #1928
+* New: Show selected themes and plugins for UPDATE and RESET clone jobs #1926
+* New: Fix issues when restoring multisites backup if network subsites have different domains. It now support restore or conversion of domain based subsite to subdirectory based subsite #1872
+* New: Option to disable local storage space and upload backup(s) only to remote storage spaces #1935
+* Enh: Huge improve of backup restoring performance by factor 2-3. #1951
+* Enh: Huge improve of backup creating performance on slow database servers. #1951
+* Enh: Add extra search & replace rule for elementor generated data #1902
+* Enh: Add dropdown to select bucket region for S3 backups instead of typing it in manually. Improve Amazon S3 settings page #1943
+* Enh: Skip search & replace if restoring a backup on the same site #1949
+* Enh: Add extra search & replace rule for elementor generated data #1949
+* Enh: Add search replace filter for database backup restore #1872
+* Enh: Allow access of staging site by using user email addresses beside usernames #1928
+* Enh: Add option to not ask for license key activation on local development sites #1913
+* Enh: Add better log messages for non working cron jobs #1907
+* Fix: Prevent a rare situation where the database is copied slowly with only one row per request #1951
+* Fix: Table selection ignored when creating a new staging site #1946
+* Fix: Could not properly restore network sites when a multisite backup was restored on a new WordPress that had a different table prefix than the source website #1948
+* Fix: Adjusted multiple SplFileObject methods (due to unconsistent behaviour of these methods across multiple PHP versions) to support PHP 8.0 > 8.0.19, PHP 8.1 > 8.1.6 and upcoming PHP 8.2 #1903
+* Fix: Deleting the oldest remote backup from SFTP, Amazon S3 and Google Drive fails sometimes #1890
+* Fix: No update notification visible in wp staging user interface when there is a new pro version available #1894
+* Fix: Clean up code #1871
+* Fix: Unable to create backup if there are files in WP STAGING cache folder that can not be deleted like .nfs* files. #1859
+* Fix: Analytics reporting does not contain the list of installed plugins #1896
+* Fix: If an Amazon S3 api key contained + character, it turned into space character when saving in database #1912
+* Fix: Always store the names of installed plugins, mu-plugins and themes in backup metadata #1906
+* Fix: When restoring database with large amount of tables on PHP > 8.0.1 some tables doesn't get created due unconsistent behaviour of FileObject library across PHP versions. #1872
+* Fix: Undefined var message in the log files if SSL connection could not be established due to outdated TLS on client server #1913
+* Fix: While creating a single staging site out of a network site, the folders (uploads/sites/ID) from other network sites weren't excluded and contained in the staging site #1922
+* Fix: Selecting parent folder does not automatically select its subfolders for UPDATE and RESET clone jobs. #1926
+* Fix: Amazon S3 only supports a maximum of 10,000 chunks for uploading a single backup file. With previous 5MB chunk size, backup uploads to S3 failed if they are bigger than 50 GB. Now backup chunk size is adjusted according to the size of the backup file by making sure total chunks are less than 10,000 #1924
+* Fix: Error when pushing a staging site and all folders are selected #1883
+* Dev: Add testing suite to run unit tests against multiple PHP versions #1903
+* Dev: Add sass/scss support for compiling css #1925
+* Dev: Add Xdebug support for PHP 8.1, use custom php.ini in PHP 8.0 and PHP 8.1 #1928
+* Dev: Update DI52 version to 3.0 for performance gain #1934
 
 = 2.9.20 =
 * Fix: Prevent internal error when clicking on Test Connection link on SFTP remote storage backup settings page. #1869

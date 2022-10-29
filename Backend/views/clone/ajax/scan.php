@@ -51,6 +51,7 @@ $isPro = defined('WPSTGPRO_VERSION');
     <a href="#" class="wpstg-tab-header active" data-id="#wpstg-scanning-db">
         <span class="wpstg-tab-triangle"></span>
         <?php echo esc_html__("Database Tables", "wp-staging") ?>
+        <span id="wpstg-tables-count" class="wpstg-selection-preview"></span>
     </a>
 
     <fieldset class="wpstg-tab-section" id="wpstg-scanning-db">
@@ -60,6 +61,7 @@ $isPro = defined('WPSTGPRO_VERSION');
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-scanning-files">
         <span class="wpstg-tab-triangle"></span>
         <?php echo esc_html__("Files", "wp-staging") ?>
+        <span id="wpstg-files-count" class="wpstg-selection-preview"></span>
     </a>
 
     <fieldset class="wpstg-tab-section" id="wpstg-scanning-files">

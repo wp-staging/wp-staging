@@ -35,7 +35,15 @@ class uninstall
             delete_option("wpstg_version");
             delete_option("wpstgpro_version_upgraded_from");
             delete_option("wpstgpro_version");
-            delete_option("wpstg_installDate");
+            // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_UPGRADE_DATE
+            delete_option("wpstgpro_upgrade_date");
+            // @see \WPStaging\Backend\Upgrade\Upgrade::OPTION_UPGRADE_DATE
+            delete_option("wpstg_free_upgrade_date");
+            delete_option("wpstg_installDate"); // @deprecated
+            // @see \WPStaging\Backend\Upgrade\Upgrade::OPTION_INSTALL_DATE
+            delete_option("wpstg_free_install_date");
+            // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_INSTALL_DATE
+            delete_option("wpstgpro_install_date");
             delete_option("wpstg_firsttime"); // @deprecated
             delete_option("wpstg_is_staging_site");
             delete_option("wpstg_settings");

@@ -6,7 +6,7 @@
 ?>
 <div class="notice notice-error">
     <p>
-        <strong><?php echo sprintf(esc_html__('WP STAGING - The table %s has no primary key index.', 'wp-staging'), esc_html($optionTable))?></strong>
+        <strong><?php echo sprintf(esc_html__('WP STAGING - The table %s has no primary key index or missing autoincrement flag.', 'wp-staging'), esc_html($optionTable))?></strong>
         <br>
         <?php esc_html_e('This is a serious issue and needs to be fixed as soon as possible. The longer you wait, the harder it gets to repair it and can make your site inaccessible at worst. We recommend fixing it right now! This error has either been caused by a person with access to the database or by another plugin. You should not do any changes to your site until this is fixed.', 'wp-staging') ?>
     </p>

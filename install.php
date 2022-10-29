@@ -42,9 +42,16 @@ if (extension_loaded('litespeed')) {
 $settings = (new Settings())->setDefault();
 
 /**
- * Add a entry for plugin install in wp options table.
- * If that option already exists not overwrite it.
+ * Add plugin install for free or pro version in wp options table.
+ * If that option already exists do not overwrite it to always keep it
  */
+if (defined('WPSTGPRO_VERSION')) {
+    add_option('wpstgpro_install_date', date('Y-m-d h:i:s'));
+} else {
+    add_option('wpstg_free_install_date', date('Y-m-d h:i:s'));
+}
+
+// @deprecated since 13.10.2022 Remove in 2023
 add_option('wpstg_installDate', date('Y-m-d h:i:s'));
 
 /**

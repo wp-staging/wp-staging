@@ -27,7 +27,7 @@ class Rest
             return false;
         }
 
-        $requestPath = trim($this->sanitize->sanitizeURL($_SERVER['REQUEST_URI']), '/');
+        $requestPath = trim(sanitize_url($_SERVER['REQUEST_URI']), '/');
 
         $url = trailingslashit(get_home_url(get_current_blog_id(), ''));
         // nginx only allows HTTP/1.0 methods when redirecting from / to /index.php.

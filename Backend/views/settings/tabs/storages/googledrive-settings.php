@@ -16,7 +16,9 @@ use WPStaging\Framework\Facades\Sanitize;
     $options = $googleDriveStorage->getOptions();
 
     $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? Sanitize::sanitizeInt($options['maxBackupsToKeep']) : 2;
+    $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
     $folderName = isset($options['folderName']) ? Sanitize::sanitizeString($options['folderName']) : \WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::FOLDER_NAME;
+    $lastUpdated = empty($options['lastUpdated']) ? 0 : Sanitize::sanitizeInt($options['lastUpdated']);
 
     $googleClientId = isset($options['googleClientId']) ? Sanitize::sanitizeString($options['googleClientId']) : '';
     $googleClientSecret = isset($options['googleClientSecret']) ? Sanitize::sanitizeString($options['googleClientSecret']) : '';
@@ -106,14 +108,17 @@ use WPStaging\Framework\Facades\Sanitize;
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
             <fieldset class="wpstg-fieldset">
                 <label><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
-                <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" style="max-width: 60px" />
-                <p><?php esc_html_e("Leave empty or zero for no limit", 'wp-staging') ?></p>
+                <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
             </fieldset>
 
             <fieldset class="wpstg-fieldset">
                 <label><?php esc_html_e('Backup Folder Name', 'wp-staging') ?></label>
                 <input class="wpstg-form-control" type="text" name="folder_name" value="<?php echo esc_attr($folderName); ?>" />
             </fieldset>
+
+            <?php
+            require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php";
+            ?>
 
             <hr/>
 

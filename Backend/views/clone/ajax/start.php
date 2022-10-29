@@ -60,34 +60,31 @@ use WPStaging\Framework\Facades\Escape;
     </a>
     <div id="wpstg-success-notice">
         <h3>
-            <?php esc_html_e("Please read this first:", "wp-staging")?>
+            <?php esc_html_e("Please Read This First:", "wp-staging")?>
         </h3>
         <ul>
             <li>
-                <strong><?php echo sprintf(esc_html__('1. Post name permalinks on your %s have been disabled for technical reasons. ', 'wp-staging'), '<span class="wpstg-font-italic">' . esc_html__('staging site', 'wp-staging') . '</span>') ?></strong>
+                <strong><?php echo sprintf(esc_html__('1. Post name permalinks on the %s have been disabled for technical reasons. ', 'wp-staging'), '<span class="wpstg-font-italic">' . esc_html__('staging site', 'wp-staging') . '</span>') ?></strong>
                 <br>
-                <?php esc_html_e('Usually this will not affect your staging website. In 99% of all cases you do not need to activate permalinks.', 'wp-staging') ?>
+                <?php esc_html_e('Usually this will not affect the staging website and you do not need to activate permalinks.', 'wp-staging') ?>
                 <br>
                 <p>
-                    <?php esc_html_e('If Apache is the webserver there is a good chance that permalinks can be activated without further modifications. Try to activate them from', 'wp-staging') ?> <br/>
+                    <?php esc_html_e('If you still want to activate them and the webserver is Apache there is a good chance that permalinks can be activated without further modifications. Try to activate them on', 'wp-staging') ?> <br/>
                     <br>
                     <strong>Staging Site > wp-admin > Settings > Permalinks</strong></a>
                     <br/><br/>
-                    <?php esc_html_e('If this does not work or Nginx webserver is used there might be some modifications needed in the files .htaccess (Apache) or *.conf (Nginx).', 'wp-staging') ?>
-                </p>
-                <p>
+                    <?php esc_html_e('If this does not work or another web server like Nginx is used, a few simple changes in the .htaccess (Apache) or *.conf (Nginx) configuration files may be required.', 'wp-staging') ?>
                     <strong><?php echo sprintf(
-                        Escape::escapeHtml(__('<a href="%s" target="_blank">Read this tutorial</a> to learn how to enable permalinks on the staging site.', 'wp-staging')),
+                        Escape::escapeHtml(__('<a href="%s" target="_blank">Open this tutorial</a> to read more about this.', 'wp-staging')),
                         'https://wp-staging.com/docs/activate-permalinks-staging-site/?utm_source=wpstg_admin&utm_medium=finish_screen&utm_campaign=tutorial'
                     ) ?></strong>
                 </p>
             </li>
             <li>
-                <strong><?php esc_html_e('2. Verify that you are REALLY working on your staging site and NOT on your production site if you are not 100% sure!', 'wp-staging') ?> </strong>
+                <strong><?php esc_html_e('2. Always make sure that you are REALLY working on your staging site and NOT on your production site!', 'wp-staging') ?> </strong>
                 <br>
-                <?php esc_html_e('Your main and your staging site are both reachable under the same domain so <br> this can be confusing.', 'wp-staging') ?>
                 <p>
-                    <?php esc_html_e('To make it more clear when you work on the staging site WP Staging changed the color of the admin bar:', 'wp-staging') ?>
+                    <?php esc_html_e('For better distinction WP STAGING has changed the background color of the admin bar on the staging site:', 'wp-staging') ?>
                     <br><br>
                     <img src="<?php echo esc_url($this->assets->getAssetsUrl("img/admin_dashboard.png")) ?>">
                     <br>
