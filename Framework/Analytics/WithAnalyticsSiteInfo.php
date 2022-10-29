@@ -93,9 +93,9 @@ trait WithAnalyticsSiteInfo
             'sql_server_version_number' => $mySqlVersionNumber,
             'sql_server_version_engine' => $engine,
             'sql_server_version_engine_raw' => $mysqlInfo,
-            'site_active_plugins' => $plugins['siteActive'],
-            'mu_plugins' => $plugins['muPlugins'],
-            'network_active_plugins' => $plugins['networkActive'],
+            'site_active_plugins' => isset($plugins['siteActive']) ? $plugins['siteActive'] : '',
+            'mu_plugins' => isset($plugins['muPlugins']) ? $plugins['muPlugins'] : '',
+            'network_active_plugins' => isset($plugins['networkActive']) ? $plugins['networkActive'] : '',
             'php_extensions' => $this->getPhpExtensions(),
         ];
 
@@ -123,8 +123,10 @@ trait WithAnalyticsSiteInfo
 
         // plugins
         add_filter('pre_site_option_active_sitewide_plugins', $callback);
-        foreach (wp_get_active_and_valid_plugins() ?: [] as $activePlugin) {
-            $pluginData = get_plugin_data($activePlugin);
+
+        $plugins = $this->getPlugins();
+        foreach ($plugins as $activePlugin) {
+            $pluginData = get_plugin_data(WP_PLUGIN_DIR . "/" . $activePlugin);
             $version = array_key_exists('Version', $pluginData) ? $pluginData['Version'] : 'UNDEFINED';
             $name = str_replace($wpPluginDir, '', wp_normalize_path($activePlugin));
             $name = trim($name, '/\\');
@@ -172,5 +174,20 @@ trait WithAnalyticsSiteInfo
         }
 
         return $phpExtensions;
+    }
+
+    /**
+     * Use this special method to get the list of active plugins, instead of using a core method like wp_get_active_and_valid_plugins() because
+     * wp_get_active_and_valid_plugins() does not deliver a result because our mu-plugin wp-staging-optimizer.php filters the active plugins.
+     * @return array
+     */
+    protected function getPlugins()
+    {
+        global $wpdb;
+
+        $sql = "SELECT option_value FROM " . esc_sql($wpdb->prefix) . "options WHERE option_name = 'active_plugins'";
+        $result = $wpdb->get_results($sql, ARRAY_A);
+        $result = isset($result[0]['option_value']) ? unserialize($result[0]['option_value']) : [];
+        return (array)$result;
     }
 }

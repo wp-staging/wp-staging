@@ -2,7 +2,7 @@
 
 namespace WPStaging\Framework\DI;
 
-abstract class ServiceProvider extends \WPStaging\Vendor\tad_DI52_ServiceProvider
+abstract class ServiceProvider extends \WPStaging\Vendor\lucatume\DI52\ServiceProvider
 {
     public function register()
     {

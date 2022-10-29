@@ -175,6 +175,11 @@ class Directories extends JobExecutable
             $excludePaths = array_merge((new ExcludedPlugins())->getPluginsToExcludeWithRelativePath(), $excludePaths);
         }
 
+        // Exclude subsite uploads if is multisite, is_main_site and is not network clone
+        if (is_multisite() && is_main_site() && !$this->isNetworkClone()) {
+            $excludePaths[] = $this->wpDirectories->getRelativeUploadPath(SlashMode::LEADING_SLASH) . '/sites';
+        }
+
         $excludePaths = array_merge($this->getFilteredExcludedPaths(), $excludePaths);
 
         try {
@@ -219,6 +224,11 @@ class Directories extends JobExecutable
             $this->wpDirectories->getRelativeMuPluginPath(SlashMode::LEADING_SLASH),
             $this->wpDirectories->getRelativeThemePath(SlashMode::LEADING_SLASH),
         ];
+
+        // Exclude main uploads directory if multisite and not main site
+        if (is_multisite() && !is_main_site()) {
+            $excludePaths[] = $this->wpDirectories->getRelativeWpContentPath(SlashMode::BOTH_SLASHES) . 'uploads';
+        }
 
         $excludePaths = array_merge($this->getFilteredExcludedPaths(), $excludePaths);
 

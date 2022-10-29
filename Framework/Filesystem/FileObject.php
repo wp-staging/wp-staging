@@ -29,6 +29,12 @@ class FileObject extends SplFileObject
     /** @var int */
     private $totalLines = null;
 
+    /** @var bool */
+    private $fgetsUsedOnKey0 = false;
+
+    /** @var bool */
+    private $fseekUsed = false;
+
     /**
      * Lock File Handle for Windows
      * @var resource
@@ -200,6 +206,8 @@ class FileObject extends SplFileObject
             throw new Exception("Can't seek file: " . $this->getPathname() . " to negative offset: $offset");
         }
 
+        $this->fseekUsed = false;
+        $this->fgetsUsedOnKey0 = false;
         if ($offset === 0 || version_compare(PHP_VERSION, '8.0.1', '<')) {
             parent::seek($offset);
             return;
@@ -236,12 +244,15 @@ class FileObject extends SplFileObject
      * This implementation makes it consistent after SplFileObject::seek across all PHP versions up to 8.0.1.
      * Use readAndMoveNext() instead if you want to achieve consistent behavior of SplFileObject::fgets after SplFileObject::fseek.
      *
+     * @deprecated 4.2.13 Use readAndMoveNext instead as it is hard to make fgets against multiple php version after seek(0)
+     *
      * @return string
      */
     #[\ReturnTypeWillChange]
     public function fgets()
     {
         if ($this->key() === 0 || version_compare(PHP_VERSION, '8.0.1', '<')) {
+            $this->fgetsUsedOnKey0 = true;
             return parent::fgets();
         }
 
@@ -249,13 +260,76 @@ class FileObject extends SplFileObject
         $newFlags = $originalFlags & ~self::READ_AHEAD;
         $this->setFlags($newFlags);
 
-        $this->current();
-        $this->next();
         $line = $this->current();
+        $this->next();
+
+        if (version_compare(PHP_VERSION, '8.0.19', '<')) {
+            $line = $this->current();
+        }
+
+        if (version_compare(PHP_VERSION, '8.1', '>') && version_compare(PHP_VERSION, '8.1.6', '<')) {
+            $line = $this->current();
+        }
+
+        if (!$this->fseekUsed) {
+            $line = $this->current();
+        }
 
         $this->setFlags($originalFlags);
         return $line;
     }
+
+    /**
+     * Gets the current line number
+     *
+     * @return int
+     */
+    #[\ReturnTypeWillChange]
+    public function key()
+    {
+        if (!$this->fgetsUsedOnKey0 || version_compare(PHP_VERSION, '8.0.19', '<')) {
+            return parent::key();
+        }
+
+        if (version_compare(PHP_VERSION, '8.1', '>') && version_compare(PHP_VERSION, '8.1.6', '<')) {
+            return parent::key();
+        }
+
+        return parent::key() - 1;
+    }
+
+    /**
+     * Seek to a position
+     *
+     * @param int $offset The value to start from added to the $whence
+     * @param int $whence values are:
+     * SEEK_SET - Set position equal to offset bytes.
+     * SEEK_CUR - Set position to current location plus offset.
+     * SEEK_END - Set position to end-of-file plus offset.
+     * @return int
+     */
+    #[\ReturnTypeWillChange]
+    public function fseek($offset, $whence = SEEK_SET)
+    {
+        if (version_compare(PHP_VERSION, '8.0.19', '<')) {
+            return parent::fseek($offset, $whence);
+        }
+
+        if (version_compare(PHP_VERSION, '8.1', '>') && version_compare(PHP_VERSION, '8.1.6', '<')) {
+            return parent::fseek($offset, $whence);
+        }
+
+        // After calling parent::fseek() and $this->>fgets() two or three times it starts to act different on PHP >= 8.0.19, PHP >= 8.1.6 and PHP >= 8.2.
+        // Calling it three times helps to write a consistent fseek() for the above mentioned PHP versions.
+        for ($i = 0; $i < 3; $i++) {
+            parent::fseek(0);
+            $this->fgets();
+        }
+
+        $this->fseekUsed = true;
+        return parent::fseek($offset, $whence);
+    }
+
 
     /**
      * SplFileObject::fgets() is not consistent after SplFileObject::fseek() between php 5.x/7.x and php 8.0.1.
@@ -269,7 +343,7 @@ class FileObject extends SplFileObject
     public function readAndMoveNext($useFgets = false)
     {
         if ($useFgets && version_compare(PHP_VERSION, '8.0.1', '<')) {
-            return $this->fgets();
+            return parent::fgets();
         }
 
         $originalFlags = $this->getFlags();

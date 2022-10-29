@@ -50,7 +50,9 @@ class Escape
             'br'     => [],
             'code'   => [],
             'em'     => [],
-            'strong' => [],
+            'strong' => [
+                'class'  => [],
+            ],
         ];
     }
 }

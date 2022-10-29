@@ -96,7 +96,7 @@ class OutdatedWpStagingNotice
 
         $plugins = $plugins->response;
 
-        if (empty($plugins) || ($plugins instanceof Countable === false)) {
+        if (empty($plugins) || (!is_array($plugins) || (!is_array($plugins) && $plugins instanceof Countable === false))) {
             return null;
         }
 

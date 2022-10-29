@@ -71,7 +71,7 @@ class Files extends JobExecutable
 
         if (is_file($filePath)) {
             $this->file = new FileObject($filePath, 'r');
-        } else {
+        } elseif ($this->options->totalFiles !== 0) {
             $this->returnException(sprintf('Fatal Error: Files - File: %s is missing! Either the file was deleted after directory scanning or there is a permission issue with the file system.', $filePath));
         }
 
@@ -277,7 +277,7 @@ class Files extends JobExecutable
             $this->file->seek($this->options->copiedFiles - 1);
         }
 
-        $this->file->setFlags(FileObject::READ_AHEAD | FileObject::DROP_NEW_LINE);
+        $this->file->setFlags(FileObject::DROP_NEW_LINE);
 
         for ($i = 0; $i < $this->maxFilesPerRun; $i++) {
             // Increment copied files
@@ -289,7 +289,7 @@ class Files extends JobExecutable
                 break;
             }
 
-            $file = trim($this->file->fgets());
+            $file = trim($this->file->readAndMoveNext());
 
             if (empty($file)) {
                 continue;

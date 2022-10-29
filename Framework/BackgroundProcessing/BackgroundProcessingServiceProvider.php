@@ -9,6 +9,8 @@
 namespace WPStaging\Framework\BackgroundProcessing;
 
 use WPStaging\Core\Cron\Cron;
+use WPStaging\Framework\Adapter\Database;
+use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\DI\FeatureServiceProvider;
 
 use function WPStaging\functions\debug_log;
@@ -40,6 +42,13 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
         if (!static::isEnabledInProduction()) {
             return false;
         }
+
+        $database = $this->container->make(Database::class)->getClient();
+
+        // See if there is better way than this to handle this code?
+        $this->container->when(Queue::class)
+            ->needs(InterfaceDatabaseClient::class)
+            ->give($database);
 
         // For caching purposes, have one single instance of the Queue around.
         $this->container->singleton(Queue::class, Queue::class);

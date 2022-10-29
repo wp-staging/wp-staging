@@ -1,12 +1,16 @@
 <?php
 
-namespace WPStaging\Vendor;
+/**
+ * The base service provider class.
+ */
+namespace WPStaging\Vendor\lucatume\DI52;
 
 /**
- * Class tad_DI52_ServiceProvider
- * @codeCoverageIgnore
+ * Class ServiceProvider
+ *
+ * @package lucatume\DI52
  */
-abstract class tad_DI52_ServiceProvider implements \WPStaging\Vendor\tad_DI52_ServiceProviderInterface
+abstract class ServiceProvider
 {
     /**
      * Whether the service provider will be a deferred one or not.
@@ -15,14 +19,15 @@ abstract class tad_DI52_ServiceProvider implements \WPStaging\Vendor\tad_DI52_Se
      */
     protected $deferred = \false;
     /**
-     * @var tad_DI52_Container
+     * @var Container
      */
     protected $container;
     /**
-     * tad_DI52_ServiceProvider constructor.
-     * @param tad_DI52_Container $container
+     * ServiceProvider constructor.
+     *
+     * @param Container $container
      */
-    public function __construct(\WPStaging\Vendor\tad_DI52_Container $container)
+    public function __construct(\WPStaging\Vendor\lucatume\DI52\Container $container)
     {
         $this->container = $container;
     }
@@ -38,17 +43,25 @@ abstract class tad_DI52_ServiceProvider implements \WPStaging\Vendor\tad_DI52_Se
     /**
      * Returns an array of the class or interfaces bound and provided by the service provider.
      *
-     * @return array
+     * @return array<string> A list of fully-qualified implementations provided by the service provider.
      */
     public function provides()
     {
-        return array();
+        return [];
     }
     /**
      * Binds and sets up implementations at boot time.
+     *
+     * @return void The method will not return any value.
      */
     public function boot()
     {
         // no-op
     }
+    /**
+     * Registers the service provider bindings.
+     *
+     * @return void The method does not return any value.
+     */
+    public abstract function register();
 }

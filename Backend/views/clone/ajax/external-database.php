@@ -37,7 +37,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
 <p class="wpstg--advance-settings--checkbox">
 
     <?php if (!$isPro) { // Show this on only FREE version ?>
-    <p class="wpstg-dark-alert"><?php esc_html_e('These are Pro Features ', 'wp-staging'); ?>
+    <p class="wpstg-dark-alert"><?php esc_html_e('These are premium features ', 'wp-staging'); ?>
         <a href="https://wp-staging.com/?utm_source=wp-admin&utm_medium=wp-admin&utm_campaign=db-external&utm_term=db-external" target="_blank" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet"><?php esc_html_e("Get Started", "wp-staging"); ?></a>
     </p>
     <?php } ?>

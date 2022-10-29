@@ -314,10 +314,12 @@ function wpstg_chmod($file, $mode = false)
  */
 function wpstg_is_local()
 {
-    $localHostname = ['.local', '.test', 'localhost'];
+    $localHostname = ['.local', '.test', 'localhost', '.dev', '10.0.0.', '172.16.0.', '192.168.0.'];
+
+    $siteUrl = get_site_url();
 
     foreach ($localHostname as $hostname) {
-        if (strpos(get_site_url(), $hostname) !== false) {
+        if (strpos($siteUrl, $hostname) !== false) {
             return true;
         }
     }

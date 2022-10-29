@@ -19,6 +19,9 @@ if( !defined( "WPINC" ) ) {
 
 class Upgrade
 {
+    const OPTION_UPGRADE_DATE = 'wpstg_free_upgrade_date';
+
+    const OPTION_INSTALL_DATE = 'wpstg_free_install_date';
 
     /**
      * Previous Version number
@@ -202,7 +205,7 @@ class Upgrade
     {
         // Previous version lower than 2.0.2
         if (version_compare($this->previousVersion, '2.0.2', '<')) {
-            $this->upgradeOptions();
+            $this->initialInstall();
             $this->upgradeNotices();
         }
     }
@@ -231,10 +234,11 @@ class Upgrade
     /**
      * Upgrade routine for new install
      */
-    private function upgradeOptions()
+    private function initialInstall()
     {
         // Write some default vars
-        add_option('wpstg_installDate', date('Y-m-d h:i:s'));
+        add_option('wpstg_installDate', date('Y-m-d h:i:s')); // Common install date for free or pro version - deprecated. Remove 2023
+        add_option(self::OPTION_INSTALL_DATE, date('Y-m-d h:i:s'));
         $this->settings->optimizer = 1;
         update_option('wpstg_settings', $this->settings);
     }
@@ -251,6 +255,8 @@ class Upgrade
             update_option('wpstg_version', preg_replace('/[^0-9.].*/', '', WPStaging::getVersion()));
             // Update "upgraded from" version number
             update_option('wpstg_version_upgraded_from', preg_replace('/[^0-9.].*/', '', $this->previousVersion));
+            // Update the time version upgraded at
+            update_option(self::OPTION_UPGRADE_DATE, date('Y-m-d H:i'));
 
             return true;
         }

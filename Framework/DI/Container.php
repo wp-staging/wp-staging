@@ -3,13 +3,25 @@
 namespace WPStaging\Framework\DI;
 
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
+use WPStaging\Framework\DI\Resolver;
+use WPStaging\Vendor\lucatume\DI52\Builders\Factory;
 
-class Container extends \WPStaging\Vendor\tad_DI52_Container
+class Container extends \WPStaging\Vendor\lucatume\DI52\Container
 {
     /**
      * @var string The PSR-4 namespace prefix we use to isolate third-party dependencies.
      */
     protected $prefix = 'WPStaging\\Vendor\\';
+
+    /**
+     * @inheritDoc
+     */
+    public function __construct($resolveUnboundAsSingletons = false)
+    {
+        parent::__construct($resolveUnboundAsSingletons);
+        $this->resolver = new Resolver($resolveUnboundAsSingletons);
+        $this->builders = new Factory($this, $this->resolver);
+    }
 
     /**
      * @deprecated Currently, all usages of _get in the codebase
@@ -32,45 +44,13 @@ class Container extends \WPStaging\Vendor\tad_DI52_Container
     }
 
     /**
-     * Add helpful debug notice for developers.
-     */
-    public function _getParameter(\ReflectionParameter $parameter)
-    {
-        try {
-            return parent::_getParameter($parameter);
-        } catch (\ReflectionException $e) {
-            $message = $e->getMessage();
-            $message .= ' (Are you running a development version of WP STAGING without the WPSTG_DEV constant?)';
-
-            throw new \ReflectionException($message);
-        }
-    }
-
-    /**
-     * Allows to enqueue the ShutdownableInterface hook
-     * on classes resolved by the DI container, such as
-     * dependencies injected in the __construct.
-     */
-    protected function resolve($classOrInterface)
-    {
-        $instance = parent::resolve($classOrInterface);
-        if (is_object($instance) && $instance instanceof ShutdownableInterface) {
-            if (!has_action('shutdown', [$instance, 'onWpShutdown'])) {
-                add_action('shutdown', [$instance, 'onWpShutdown']);
-            }
-        }
-
-        return $instance;
-    }
-
-    /**
      * Allows to enqueue the ShutdownableInterface hook
      * on classes requested directly by the application
      * to the container.
      */
-    public function make($classOrInterface)
+    public function get($classOrInterface)
     {
-        $instance = parent::make($classOrInterface);
+        $instance = parent::get($classOrInterface);
         if (is_object($instance) && $instance instanceof ShutdownableInterface) {
             if (!has_action('shutdown', [$instance, 'onWpShutdown'])) {
                 add_action('shutdown', [$instance, 'onWpShutdown']);
@@ -78,6 +58,15 @@ class Container extends \WPStaging\Vendor\tad_DI52_Container
         }
 
         return $instance;
+    }
+
+    /**
+     * @deprecated 4.1.15
+     * Use get instead
+     */
+    public function make($classOrInterface)
+    {
+        return $this->get($classOrInterface);
     }
 
     /**

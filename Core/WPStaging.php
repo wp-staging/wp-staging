@@ -320,7 +320,7 @@ final class WPStaging
             $container = self::getInstance()->getContainer();
         }
 
-        return $container->make($id);
+        return $container->get($id);
     }
 
     /**

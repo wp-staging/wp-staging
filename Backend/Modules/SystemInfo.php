@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules;
 
+use WPStaging\Backend\Upgrade\Upgrade;
 use WPStaging\Core\Utils\Browser;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils;
@@ -163,7 +164,7 @@ class SystemInfo
         // Get wpstg settings
         $settings = (object)get_option('wpstg_settings', []);
 
-        $output = "-- WP Staging Settings" . PHP_EOL . PHP_EOL;
+        $output = "-- WP STAGING Settings" . PHP_EOL . PHP_EOL;
         $output .= $this->info("Query Limit:", isset($settings->queryLimit) ? $settings->queryLimit : 'undefined');
         $output .= $this->info("DB Search & Replace Limit:", isset($settings->querySRLimit) ? $settings->querySRLimit : 'undefined');
         $output .= $this->info("File Copy Limit:", isset($settings->fileLimit) ? $settings->fileLimit : 'undefined');
@@ -195,7 +196,7 @@ class SystemInfo
                 $output .= $this->info("URL:", isset($clone['url']) ? $clone['url'] : 'undefined');
                 $output .= $this->info("DB Prefix:", isset($clone['prefix']) ? $clone['prefix'] : 'undefined');
                 $output .= $this->info("DB Prefix wp-config.php:", $this->getStagingPrefix($clone));
-                $output .= $this->info("WP Staging Version:", isset($clone['version']) ? $clone['version'] : 'undefined');
+                $output .= $this->info("WP STAGING Version:", isset($clone['version']) ? $clone['version'] : 'undefined');
                 $output .= $this->info("WP Version:", $this->getStagingWpVersion($path)) . PHP_EOL . PHP_EOL;
             }
         }
@@ -210,12 +211,18 @@ class SystemInfo
         $output .= '' . PHP_EOL;
 
 
-        $output .= $this->info("Plugin Pro Version:", get_option('wpstgpro_version', 'undefined'));
-        $output .= $this->info("Plugin Pro License Key:", get_option('wpstg_license_key'));
-        $output .= $this->info("Plugin Free Version:", get_option('wpstg_version', 'undefined'));
-        $output .= $this->info("Install Date:", get_option('wpstg_installDate', 'undefined'));
-        $output .= $this->info("Upgraded from Pro:", get_option('wpstgpro_version_upgraded_from', 'undefined'));
-        $output .= $this->info("Upgraded from Free:", get_option('wpstg_version_upgraded_from', 'undefined'));
+        $output .= $this->info("Pro Version:", get_option('wpstgpro_version', 'undefined'));
+        $output .= $this->info("Pro License Key:", get_option('wpstg_license_key'));
+        // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_INSTALL_DATE
+        $output .= $this->info("Pro Install Date:", get_option('wpstgpro_install_date', 'undefined'));
+        // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_UPGRADE_DATE
+        $output .= $this->info("Pro Update Date:", get_option('wpstgpro_upgrade_date', 'undefined'));
+        $output .= $this->info("Free or Pro Install Date (deprecated):", get_option('wpstg_installDate', 'undefined'));
+        $output .= $this->info("Free Version:", get_option('wpstg_version', 'undefined'));
+        $output .= $this->info("Free Install Date:", get_option(Upgrade::OPTION_INSTALL_DATE, 'undefined'));
+        $output .= $this->info("Free Update Date:", get_option(Upgrade::OPTION_UPGRADE_DATE, 'undefined'));
+        $output .= $this->info("Updated from Pro Version:", get_option('wpstgpro_version_upgraded_from', 'undefined'));
+        $output .= $this->info("Updated from Free Version:", get_option('wpstg_version_upgraded_from', 'undefined'));
         $output .= $this->info("Is Staging Site:", (new SiteInfo())->isStagingSite() ? 'true' : 'false') . PHP_EOL . PHP_EOL;
 
 
@@ -330,7 +337,7 @@ class SystemInfo
 
         // WP Debug
         $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? WP_DEBUG ? "Enabled" : "Disabled" : "Not set");
-        $output .= $this->info("Memory Limit:", WP_MEMORY_LIMIT);
+        $output .= $this->info("WP_MEMORY_LIMIT:", WP_MEMORY_LIMIT);
         $output .= $this->info("Registered Post Stati:", implode(", ", \get_post_stati()));
 
         return apply_filters("wpstg_sysinfo_after_wpstg_config", $output);
@@ -449,7 +456,8 @@ class SystemInfo
     public function php()
     {
         $output = $this->header("PHP Configuration");
-        $output .= $this->info("PHP Max Memory Limit:", ini_get("memory_limit"));
+        $output .= $this->info("PHP Max Memory Limit value (memory_limit):", ini_get("memory_limit"));
+        $output .= $this->info("PHP Max Memory Limit in Bytes:", wp_convert_hr_to_bytes(ini_get("memory_limit")));
         $output .= $this->info("Max Execution Time:", ini_get("max_execution_time"));
         $output .= $this->info("Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
         $output .= $this->info("Upload Max File Size:", ini_get("upload_max_filesize"));

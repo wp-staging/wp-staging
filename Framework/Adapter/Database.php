@@ -83,6 +83,14 @@ class Database
     /**
      * @return string
      */
+    public function getBasePrefix()
+    {
+        return $this->wpdb->base_prefix;
+    }
+
+    /**
+     * @return string
+     */
     public function getProductionPrefix()
     {
         return $this->productionPrefix;

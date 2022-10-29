@@ -10,12 +10,12 @@ class AnalyticsConsent
     use WithAnalyticsAPI;
 
     /**
-     * Shows the admin notice asking the user whether he consents to sending usage information to WP STAGNIG.
+     * Shows the admin notice asking the user whether he consents to sending usage information to WP STAGING.
      * @action admin_notices
      */
     public function maybeShowConsentNotice()
     {
-        // Early bail: Not a WPSTAGING page
+        // Early bail: Not a WP STAGING page
         if (!WPStaging::make(Notices::class)->isAdminPage()) {
             return;
         }
@@ -46,7 +46,7 @@ class AnalyticsConsent
      */
     public function maybeShowConsentFailureNotice()
     {
-        // Early bail: Not a WPSTAGING page
+        // Early bail: Not a WP STAGING page
         if (!WPStaging::make(Notices::class)->isAdminPage()) {
             return;
         }

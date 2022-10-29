@@ -155,7 +155,7 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
                 <div class="wpstg-backup-scheduling-options wpstg-container">
 
                     <label class="wpstg-storage-option">
-                        <input type="checkbox" name="storages" id="storage-localStorage" value="localStorage" checked disabled>
+                        <input type="checkbox" name="storages" id="storage-localStorage" value="localStorage" checked />
                         <span><?php esc_html_e('Local Storage', 'wp-staging'); ?></span>
                     </label>
 

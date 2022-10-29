@@ -4,11 +4,11 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use stdClass;
 use wpdb;
+use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\Utils\Multisite;
-use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\DbRowsGeneratorTrait;
 use WPStaging\Framework\Utils\Strings;
 

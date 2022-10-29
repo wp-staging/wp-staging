@@ -12,7 +12,11 @@ use WPStaging\Framework\Facades\Escape;
 <p>
 <strong><?php esc_html_e("Select Folders to Copy", "wp-staging") ?></strong>
     <br>
-<?php esc_html_e("Click on a folder name to expand it.", "wp-staging") ?>
+<?php esc_html_e("Click on a folder name to expand it.", "wp-staging") ?>  <br/> <br/>
+<b class="wpstg--red"><?php esc_html_e("Note: ", "wp-staging") ?></b>
+<?php esc_html_e("Your folder selection is automatically saved", "wp-staging") ?>
+<br/>
+<?php esc_html_e("and used as the default selection for the next update.", "wp-staging") ?>
 </p>
 <div id="wpstg-directories-listing" data-existing-excludes="<?php echo (($options->mainJob === 'updating' || $options->mainJob === 'resetting') && isset($options->currentClone['excludedDirectories'])) ? esc_html(implode(',', $options->currentClone['excludedDirectories'])) : '' ?>">
     <div class="wpstg-mb-8px">

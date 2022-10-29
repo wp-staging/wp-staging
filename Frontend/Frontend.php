@@ -6,6 +6,8 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Rest\Rest;
 use WPStaging\Framework\SiteInfo;
 
+use function WPStaging\functions\debug_log;
+
 /**
  * Class Frontend
  * @package WPStaging\Frontend
@@ -127,13 +129,6 @@ class Frontend
             return false;
         }
 
-        if (defined('WPSTGPRO_VERSION') && !empty($this->settings->usersWithStagingAccess)) {
-            $usersWithStagingAccess = explode(',', $this->settings->usersWithStagingAccess);
-            if (in_array(wp_get_current_user()->user_login, $usersWithStagingAccess, true)) {
-                return false;
-            }
-        }
-
         if (!is_user_logged_in()) {
             return true;
         }
@@ -144,8 +139,23 @@ class Frontend
             return true;
         }
 
-        // Require login form if user is not in specific user role
         $currentUser = wp_get_current_user();
+
+        if (defined('WPSTGPRO_VERSION') && !empty($this->settings->usersWithStagingAccess)) {
+            $usersWithStagingAccess = explode(',', $this->settings->usersWithStagingAccess);
+
+            // check against usernames
+            if (in_array($currentUser->user_login, $usersWithStagingAccess, true)) {
+                return false;
+            }
+
+            // check against emails
+            if (in_array($currentUser->user_email, $usersWithStagingAccess, true)) {
+                return false;
+            }
+        }
+
+        // Require login form if user is not in specific user role
         $activeUserRoles = $currentUser->roles;
 
         $result = isset($this->settings->userRoles) && is_array($this->settings->userRoles) ?
