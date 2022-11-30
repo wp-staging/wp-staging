@@ -1,5 +1,7 @@
-![PHPUnit](https://github.com/WP-Staging/wp-staging/workflows/PHPUnit/badge.svg)
-![Deploy to WordPress.org](https://github.com/WP-Staging/wp-staging/workflows/Deploy%20to%20WordPress.org/badge.svg?branch=master)
+[![Fast tests: Lint JS, PHPCS/XSS, PHPStan, PHPUnit](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml/badge.svg?event=push)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml)
+[![Full Webdriver for Release](https://github.com/wp-staging/wp-staging-pro/actions/workflows/full_release.yml/badge.svg?event=push)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/full_release.yml)
+[![High Pro Webdriver](https://github.com/wp-staging/wp-staging-pro/actions/workflows/high_pro.yml/badge.svg?event=push)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/high_pro.yml)
+
 ### Welcome to the WP Staging repository
 
 ## Note ##
