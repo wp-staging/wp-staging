@@ -21,7 +21,7 @@ use WPStaging\Framework\Facades\Escape;
     </div>
 </div>
 <div id="wpstg-did-you-know" style="margin-bottom:12px">
-    <strong><?php echo sprintf(Escape::escapeHtml(__('Did you know? You can upload a WP STAGING backup to another server to move a website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')), 'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'); ?></strong>
+    <strong><?php echo sprintf(Escape::escapeHtml(__('Did you know? You can upload a WP STAGING backup to another server to transfer a website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')), 'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'); ?></strong>
 </div>
 
 <div id="wpstg-step-1">

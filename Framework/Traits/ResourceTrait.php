@@ -226,7 +226,7 @@ trait ResourceTrait
         $memoryLimit = wp_convert_hr_to_bytes(ini_get('memory_limit'));
 
         // No memory limit
-        if ($memoryLimit == -1) {
+        if ($memoryLimit == -1 || $memoryLimit < 0) {
             $memoryLimit = 256 * MB_IN_BYTES;
         }
 

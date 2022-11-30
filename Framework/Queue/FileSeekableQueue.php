@@ -105,31 +105,37 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         }
     }
 
+    #[\ReturnTypeWillChange]
     public function current()
     {
         return $this->fileGenerator->current();
     }
 
+    #[\ReturnTypeWillChange]
     public function next()
     {
         $this->fileGenerator->next();
     }
 
+    #[\ReturnTypeWillChange]
     public function key()
     {
         return $this->fileGenerator->key();
     }
 
+    #[\ReturnTypeWillChange]
     public function valid()
     {
         return $this->fileGenerator->valid();
     }
 
+    #[\ReturnTypeWillChange]
     public function rewind()
     {
         $this->handle->fseek(0);
     }
 
+    #[\ReturnTypeWillChange]
     public function seek($offset)
     {
         $this->handle->fseek($offset);

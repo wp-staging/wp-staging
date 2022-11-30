@@ -119,11 +119,11 @@ class Cache
         try {
             // Save it to file
             if (!wpstg_put_contents($cacheFile, @serialize($value))) {
-                $this->returnException(" Can't save data to: " . $cacheFile . " Disk quota exceeded or not enough free disk space left");
+                $this->returnException(" Can't save data to: " . $cacheFile . " Disk quota exceeded or not enough free disk space left. Ask your host to increase the storage disk space.");
                 return false;
             }
         } catch (Exception $e) {
-            $this->returnException(" Can't save data to: " . $cacheFile . " Error: " . $e);
+            $this->returnException(" Can't write to: " . $cacheFile . " Error: " . $e);
             return false;
         }
         return true;

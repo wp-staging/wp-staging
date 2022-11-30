@@ -40,7 +40,7 @@ $cronStatus  = $backupScheduler->checkCronStatus();
 $cronMessage = $backupScheduler->getCronMessage();
 if ($cronMessage !== '') { ?>
     <div class="notice <?php echo $cronStatus === true ? 'notice-warning' : 'notice-error'; ?>" style="margin-bottom: 10px;">
-        <p><strong><?php esc_html_e('WP STAGING:', 'wp-staging') ?></strong></p>
+        <p><strong><?php esc_html_e('WP STAGING Notice:', 'wp-staging') ?></strong></p>
         <p><?php echo Escape::escapeHtml(__($cronMessage, 'wp-staging')); ?></p>
     </div>
 <?php } ?>
@@ -53,7 +53,7 @@ if ($cronMessage !== '') { ?>
 <?php endif; ?>
 <div id="wpstg-did-you-know" style="margin-bottom:12px">
         <strong><?php echo sprintf(
-            Escape::escapeHtml(__('Did you know? You can upload backup files to another website to transfer it. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
+            Escape::escapeHtml(__('Did you know? You can upload backup files to another site to transfer a website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
             'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'
         ); ?></strong>
 </div>

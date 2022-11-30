@@ -454,14 +454,19 @@ class Scan extends Job
         try {
             $directories = new DirectoryIterator($dirPath);
         } catch (UnexpectedValueException $ex) {
+            $errorMessage = $ex->getMessage();
+            if ($ex->getCode() === 5) {
+                $errorMessage = esc_html__('Access Denied: No read permission to scan the root directory for cloning. Alternatively you can try the WP STAGING backup feature!', 'wp-staging');
+            }
+
             echo json_encode([
                 'success'       => false,
                 'type'          => '',
                 // TODO: Create a Swal Response Class and Js library to handle that response or, Implement own Swal alternative
                 'swalOptions'   => [
-                    'title'             => __('Error!', 'wp-staging'),
-                    'html'              => $ex->getMessage(),
-                    'cancelButtonText'  => __('Ok', 'wp-staging'),
+                    'title'             => esc_html__('Error!', 'wp-staging'),
+                    'html'              => $errorMessage,
+                    'cancelButtonText'  => esc_html__('Ok', 'wp-staging'),
                     'showCancelButton'  => true,
                     'showConfirmButton' => false,
                 ],

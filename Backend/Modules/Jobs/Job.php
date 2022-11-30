@@ -217,7 +217,7 @@ abstract class Job implements ShutdownableInterface
     public function log($msg, $type = Logger::TYPE_INFO)
     {
         if (!isset($this->options->clone)) {
-            $this->options->clone = date(DATE_ATOM, mktime(0, 0, 0, 7, 1, 2000));
+            $this->options->clone = time();
         }
 
         if ($this->hasLoggedFileNameSet === false && strlen($this->options->clone) > 0) {

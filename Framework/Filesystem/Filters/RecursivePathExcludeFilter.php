@@ -58,6 +58,7 @@ class RecursivePathExcludeFilter extends RecursiveFilterIterator
         return $this->wpRootPath;
     }
 
+    #[\ReturnTypeWillChange]
     public function accept()
     {
         // Get the current SplFileInfo object
@@ -75,6 +76,7 @@ class RecursivePathExcludeFilter extends RecursiveFilterIterator
         return !$this->excludeFilter->isMatched($fileInfo);
     }
 
+    #[\ReturnTypeWillChange]
     public function getChildren()
     {
         return new self($this->getInnerIterator()->getChildren(), $this->excludePaths, $this->getWpRootPath());

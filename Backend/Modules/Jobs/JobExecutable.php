@@ -2,7 +2,9 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\Utils\ServerVars;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -43,11 +45,20 @@ abstract class JobExecutable extends Job
         // Calculate total steps
         $this->calculateTotalSteps();
 
-        // Set server settings (Do not set this globally. HS Ticket #9061)
-        wpstg_setup_environment();
+        // Set server settings for jobs (Do not set this globally as this will affect other plugins and even wp core then as well. Helpscout Ticket #9061)
+        // Set whether a client disconnect should abort script execution
+        @ignore_user_abort(true);
 
-        // TODO: inject using DI
-        $this->strUtil = new Strings();
+        // Set maximum execution time
+        WPStaging::make(ServerVars::class)->setTimeLimit(0);
+
+        // Set maximum time in seconds a script is allowed to parse input data
+        @ini_set('max_input_time', '-1');
+
+        // Set maximum backtracking steps
+        @ini_set('pcre.backtrack_limit', PHP_INT_MAX);
+
+        $this->strUtil = WPStaging::make(Strings::class);
     }
 
     /**

@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
-Tested up to: 6.0
-Stable tag: 2.10.0
+Tested up to: 6.1
+Stable tag: 2.11.0
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -259,7 +259,21 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
-= 2.10.0 =
+= 2.11.0 =
+* New: Compatible up to WordPress 6.1.1
+* New: Add support for uploading backups to DigitalOcean Spaces, Wasabi and other S3 compatible storages #1966
+* Enh: Allow backup upload to Amazon S3 when bucket has Lock Object and retention enabled #1973
+* Enh: Show warning if test connection to backup storage provider fails during save settings #1965
+* Enh: Show warning if there are more than 4 overdue backup cron jobs #1986
+* Enh: Show message if unable to pre-scan directories before cloning #1993
+* Fix: Could not delete oldest backup from (S)FTP cloud storage provider if FTP location was set in FTP settings #1953
+* Fix: Under rare circumstances a fatal error is thrown during backup if scheduled time is NULL
+* Fix: `SSL` and `Passive` checkboxes were not considered during FTP backup storage test connection #1965
+* Fix: Fatal error when set_time_limit() has been disabled by the hosting provider #1977
+* Fix: Preserve backup cloud storage provider settings when pushing and improve Google Drive backup authentication #1999
+* Dev: Deprecated heredoc syntax for variables. Fix unit tests for php 8.2RC #1975
+
+2.10.0
 * New: Compatible up to WordPress 6.0.3
 * New: Show loader icon while saving settings or testing backup remote storages connections #1925
 * New: Show settings last saved time for backup remote storages SFTP, Amazon S3 and Google Drive #1925
