@@ -954,7 +954,7 @@ class Queue
         $now = current_time('mysql');
         $cancelQuery = "UPDATE {$tableName} 
             SET status='{$newStatus}', claimed_at=NULL, updated_at='{$now}'
-            WHERE jobId in (${jobIdsInterval})";
+            WHERE jobId in ({$jobIdsInterval})";
         $cancelResult = $this->database->query($cancelQuery, true);
 
         if ($cancelResult === false) {

@@ -127,8 +127,6 @@ class Administrator
         add_action("admin_menu", [$this, "addMenu"], 10);
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]);
-        add_action("admin_post_wpstg_export", [$this, "export"]);
-        add_action("admin_post_wpstg_import_settings", [$this, "import"]);
         add_action("admin_notices", [$this, "messages"]);
 
         if (!defined('WPSTGPRO_VERSION')) {
@@ -376,7 +374,6 @@ class Administrator
     {
         // Tabs
         $tabs = new Tabs([
-            "import_export" => __("Import/Export", "wp-staging"),
             "system_info" => __("System Info", "wp-staging")
         ]);
 
@@ -400,84 +397,6 @@ class Administrator
         header("Content-Type: text/plain");
         header('Content-Disposition: attachment; filename="wpstg-system-info.txt"');
         echo esc_html(wp_strip_all_tags(new SystemInfo()));
-    }
-
-    /**
-     * Import JSON settings file
-     */
-    public function import()
-    {
-        if (empty($_POST["wpstg_import_nonce"])) {
-            return;
-        }
-
-        if (!wp_verify_nonce($_POST["wpstg_import_nonce"], "wpstg_import_nonce")) {
-            return;
-        }
-
-        if (!current_user_can("update_plugins")) {
-            return;
-        }
-
-        $importFile = isset($_FILES["import_file"]) ? $this->sanitize->sanitizeFileUpload($_FILES["import_file"]) : null;
-        if ($importFile === null) {
-            wp_die("Please upload a valid .json file", "wp-staging");
-        }
-
-        $fileExtension = explode('.', $importFile["name"]);
-        $fileExtension = end($fileExtension);
-        if ($fileExtension !== "json") {
-            wp_die("Please upload a valid .json file", "wp-staging");
-        }
-
-
-        $importFile = $importFile["tmp_name"];
-
-        if (empty($importFile)) {
-            wp_die(esc_html__("Please upload a file to import", "wp-staging"));
-        }
-
-        update_option("wpstg_settings", json_decode(file_get_contents($importFile, true)));
-
-        wp_safe_redirect(admin_url("admin.php?page=wpstg-tools&amp;wpstg-message=settings-imported"));
-
-        return;
-    }
-
-    /**
-     * Export settings to JSON file
-     */
-    public function export()
-    {
-        if (empty($_POST["wpstg_export_nonce"])) {
-            return;
-        }
-
-        if (!wp_verify_nonce($_POST["wpstg_export_nonce"], "wpstg_export_nonce")) {
-            return;
-        }
-
-        if (!current_user_can("manage_options")) {
-            return;
-        }
-
-        $settings = get_option("wpstg_settings", []);
-
-        ignore_user_abort(true);
-
-        // phpcs:ignore PHPCompatibility.IniDirectives.RemovedIniDirectives.safe_modeDeprecatedRemoved
-        if (!in_array("set_time_limit", explode(',', ini_get("disable_functions")))) {
-            set_time_limit(0);
-        }
-
-        $fileName = apply_filters("wpstg_settings_export_filename", "wpstg-settings-export-" . date("m-d-Y")) . ".json";
-
-        nocache_headers();
-        header("Content-Type: application/json; charset=utf-8");
-        header("Content-Disposition: attachment; filename={$fileName}");
-        header("Expires: 0");
-
-        echo json_encode($settings);
     }
 
     /**

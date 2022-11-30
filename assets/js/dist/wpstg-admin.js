@@ -2591,6 +2591,7 @@
         retryTimeout *= incrementRatio;
       }
 
+      var errorMsgFooter = 'Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP STAGING Small Server Settings</a> or submit an error report and contact us. <br/><br/><strong>Tip:</strong> If you get this error while pushing, you can also use the <strong>BACKUP & MIGRATION</strong> feature to move your staging site to live. <a href=\'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/\' target=\'_blank\'>Read more.</a>';
       $.ajax({
         url: ajaxurl + '?action=wpstg_processing&_=' + Date.now() / 1000,
         type: 'POST',
@@ -2610,7 +2611,7 @@
           } else {
             console.log('RETRYING LIMIT');
             var errorCode = 'undefined' === typeof xhr.status ? 'Unknown' : xhr.status;
-            showError('Fatal Error:  ' + errorCode + ' Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+            showError('Fatal Error:  ' + errorCode + ' ' + errorMsgFooter);
           }
         },
         success: function success(data) {
@@ -2621,32 +2622,32 @@
         statusCode: {
           404: function _() {
             if (tryCount >= retryLimit) {
-              showError('Error 404 - Can\'t find ajax request URL! Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+              showError('Error 404 - Can\'t find ajax request URL! ' + errorMsgFooter);
             }
           },
           500: function _() {
             if (tryCount >= retryLimit) {
-              showError('Fatal Error 500 - Internal server error while processing the request! Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+              showError('Fatal Error 500 - Internal server error while processing the request! ' + errorMsgFooter);
             }
           },
           504: function _() {
             if (tryCount > retryLimit) {
-              showError('Error 504 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              showError('Error 504 - It seems your server is rate limiting ajax requests. Please try to resume after a minute. ' + errorMsgFooter);
             }
           },
           502: function _() {
             if (tryCount >= retryLimit) {
-              showError('Error 502 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              showError('Error 502 - It seems your server is rate limiting ajax requests. Please try to resume after a minute. ' + errorMsgFooter);
             }
           },
           503: function _() {
             if (tryCount >= retryLimit) {
-              showError('Error 503 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              showError('Error 503 - It seem your server is rate limiting ajax requests. Please try to resume after a minute. ' + errorMsgFooter);
             }
           },
           429: function _() {
             if (tryCount >= retryLimit) {
-              showError('Error 429 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              showError('Error 429 - It seems your server is rate limiting ajax requests. Please try to resume after a minute. ' + errorMsgFooter);
             }
           },
           403: function _() {

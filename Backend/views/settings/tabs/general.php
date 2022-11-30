@@ -96,10 +96,7 @@ use WPStaging\Framework\Facades\Escape;
                                 <span class="description">
                                         <?php
                                         esc_html_e(
-                                            "Number of files to copy that will be copied within one request.
-                                        The higher the value the faster the file copy process.
-                                        To find out the highest possible values try a high value like 500 or more. If you get timeout issues, lower it
-                                        until you get no more errors during copying process.",
+                                            "Number of files to be copied within one request. The higher the value, the faster files are copied. To find out the highest possible values, try a high value like 500 or more. If you get timeout problems, decrease the value until no more errors occur during the copy process.",
                                             "wp-staging"
                                         ); ?>
                                         <br>
@@ -107,7 +104,7 @@ use WPStaging\Framework\Facades\Escape;
                                         <strong><?php esc_html_e("Important:", "wp-staging") ?></strong>
                                         <?php
                                         esc_html_e(
-                                            "If CPU Load Priority is <strong>Low</strong>, set a file copy limit value of 50 or higher! Otherwise file copying process takes a lot of time.",
+                                            "If CPU Load Priority is LOW, set the file copy limit to 50 to copy files as fast as possible.",
                                             "wp-staging"
                                         ); ?>
                                         <br>
@@ -130,8 +127,7 @@ use WPStaging\Framework\Facades\Escape;
                                 <span class="description">
                                         <?php
                                         esc_html_e(
-                                            "Maximum size of the files which are allowed to copy. All files larger than this value will be skipped.                                              
-                                        Note: Increase this option only if you have a good reason. Files larger than a few megabytes are in 99% of all cases log and backup files which are not needed on a staging site.",
+                                            "Maximum size of the files that may be copied. All files larger than this will be skipped. Note: Increase this option only if you have a good reason to do so. Files larger than a few megabytes are 99% of the time log and backup files that are not needed on a staging site.",
                                             "wp-staging"
                                         ); ?>
                                         <br>
@@ -155,8 +151,8 @@ use WPStaging\Framework\Facades\Escape;
                                             "Buffer size for the file copy process in megabyte.
                                         The higher the value the faster large files are copied.
                                         To find out the highest possible values try a high one and lower it until
-                                        you get no errors during file copy process. Usually this value correlates directly
-                                        with the memory consumption of php so make sure that
+                                        you get no more errors during file copy process. Usually this value correlates directly
+                                        with the memory consumption of PHP so make sure that
                                         it does not exceed any php.ini max_memory limits.",
                                             "wp-staging"
                                         ); ?>
@@ -179,12 +175,10 @@ use WPStaging\Framework\Facades\Escape;
                                 <span class="description">
                                         <?php
                                         echo sprintf(esc_html__(
-                                            "Using high will result in fast as possible processing but the cpu load
-                                        increases and it's also possible that staging process gets interrupted because of too many ajax requests
-                                        (e.g. %s).
-                                        Using a lower value results in lower cpu load on your server but also slower staging site creation.",
+                                            "Using HIGH will result in fast as possible processing but the cpu load
+                                        increases. Using a lower value results in lower cpu load on your server but also slower staging site creation.",
                                             "wp-staging"
-                                        ), "<strong>authorization error</strong>"); ?>
+                                        ), "<strong>Authorization error 403</strong>"); ?>
                                         <br>
                                         <strong>Default: </strong> Low
                                     </span>
@@ -204,8 +198,8 @@ use WPStaging\Framework\Facades\Escape;
                                     <?php
                                     $form->renderLabel("wpstg_settings[disableAdminLogin]") ?>
                                     <span class="description">
-                                        If you want to remove the requirement to login to the staging site you can deactivate it here.
-                                        <strong>Note:</strong> The staging site discourages search engines from indexing the site by setting the 'noindex' tag into header of the staging site.
+                                        Remove the requirement to login to the staging site.
+                                        <strong>Note:</strong> The staging site always discourages search engines from indexing the site by setting the 'noindex' tag into header of the staging site.
                                     </span>
                                 </div>
                             </td>
@@ -253,12 +247,12 @@ use WPStaging\Framework\Facades\Escape;
                                 <span class="description">
                                         <?php
                                         esc_html_e(
-                                            "Enable an extended debug mode that creates additional log entries in wp-content/uploads/wp-staging/logs/logfile.log.",
+                                            "Enable a debug mode that creates log entries in wp-content/uploads/wp-staging/logs/logfile.log.",
                                             "wp-staging"
                                         );
                                         ?>
                                         <strong>
-                                            <?php esc_attr_e('Do NOT activate this until we ask you to do so!', 'wp-staging') ?>
+                                            <?php esc_attr_e('It\'s not recommended to activate this until we ask you to do so!', 'wp-staging') ?>
                                         </strong>
                                     </span>
                             </div>
@@ -276,7 +270,7 @@ use WPStaging\Framework\Facades\Escape;
                                 <span class="description">
                                         <?php
                                         esc_html_e(
-                                            "The Optimizer is a mu plugin that disables all other plugins during WP STAGING processing. This lowers memory consumption and speeds up processing. This should always be enabled!",
+                                            "The Optimizer is a mu-plugin that disables all other plugins during WP STAGING processing. This lowers memory consumption and speeds up processing. It should always be enabled!",
                                             "wp-staging"
                                         ); ?>
                                     </span>
@@ -295,7 +289,7 @@ use WPStaging\Framework\Facades\Escape;
                                 <span class="description">
                                         <?php
                                         esc_html_e(
-                                            "Check this box if you like to remove all data when the plugin is deleted.
+                                            "Activate this if you like to remove all data when the plugin is deleted.
                                         This will not remove staging sites files or database tables.",
                                             "wp-staging"
                                         ); ?>
@@ -316,7 +310,7 @@ use WPStaging\Framework\Facades\Escape;
                                 <span class="description">
                                         <?php
                                         echo sprintf(esc_html__(
-                                            "Check this box if you like WP Staging to check sizes of each directory on scanning process.
+                                            "Activate this to check sizes of each directory on scanning process.
                                         %s
                                         Warning this may cause timeout problems in big directory / file structures.",
                                             "wp-staging"

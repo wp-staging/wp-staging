@@ -6,12 +6,13 @@
 
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Sanitize;
+use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
 
 ?>
 <fieldset>
     <?php
     /** @var \WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth */
-    $googleDriveStorage = \WPStaging\Core\WPStaging::getInstance()->get(\WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::class);
+    $googleDriveStorage = \WPStaging\Core\WPStaging::make(Auth::class);
     $isGoogleDriveAuthenticated = $googleDriveStorage->isAuthenticated();
     $options = $googleDriveStorage->getOptions();
 

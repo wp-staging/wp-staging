@@ -71,6 +71,10 @@ class uninstall
             delete_option("wpstg_staging_sites_backup");
             delete_option("wpstg_missing_cloneName_routine_executed");
             delete_option('wpstg_googledrive');
+            delete_option('wpstg_amazons3');
+            delete_option('wpstg_sftp');
+            delete_option('wpstg_digitalocean');
+            delete_option('wpstg_wasabi');
 
             // @see \WPStaging\Pro\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
             delete_option('wpstg_backup_schedules');

@@ -13,26 +13,6 @@
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
- * PHP setup environment
- *
- * @return void
- */
-function wpstg_setup_environment()
-{
-    // Set whether a client disconnect should abort script execution
-    @ignore_user_abort(true);
-
-    // Set maximum execution time
-    @set_time_limit(0);
-
-    // Set maximum time in seconds a script is allowed to parse input data
-    @ini_set('max_input_time', '-1');
-
-    // Set maximum backtracking steps
-    @ini_set('pcre.backtrack_limit', PHP_INT_MAX);
-}
-
-/**
  * Windows Compatibility Fix
  * Replace Windows directory separator (Backward slash)
  * Replace backward slash with forward slash directory separator

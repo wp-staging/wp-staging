@@ -15,7 +15,7 @@ use WPStaging\Framework\Utils\Sanitize as UtilsSanitize;
  * @method static array sanitizeFileUpload(array $value)
  * @method static array sanitizeExcludeRules(string $value)
  * @method static array sanitizeArrayInt(array $value)
- * @method static array sanitizeArray(array $value)
+ * @method static array sanitizeArray(array $value, array $config)
  * @method static string decodeBase64AndSanitize(string $value)
  */
 class Sanitize extends Facade

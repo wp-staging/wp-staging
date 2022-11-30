@@ -63,6 +63,7 @@ abstract class AnalyticsEventDto implements \JsonSerializable
         $this->site_info = $this->getAnalyticsSiteInfo();
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return get_object_vars($this);

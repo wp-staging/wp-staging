@@ -965,6 +965,7 @@ return array(
     'WPStaging\\Framework\\Utils\\Escape' => $baseDir . '/Framework/Utils/Escape.php',
     'WPStaging\\Framework\\Utils\\Math' => $baseDir . '/Framework/Utils/Math.php',
     'WPStaging\\Framework\\Utils\\Sanitize' => $baseDir . '/Framework/Utils/Sanitize.php',
+    'WPStaging\\Framework\\Utils\\ServerVars' => $baseDir . '/Framework/Utils/ServerVars.php',
     'WPStaging\\Framework\\Utils\\SlashMode' => $baseDir . '/Framework/Utils/SlashMode.php',
     'WPStaging\\Framework\\Utils\\Strings' => $baseDir . '/Framework/Utils/Strings.php',
     'WPStaging\\Framework\\Utils\\ThirdParty\\Glob' => $baseDir . '/Framework/Utils/ThirdParty/Glob.php',

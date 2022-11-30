@@ -60,7 +60,7 @@
   color: #83c11f; }
 
 .wpstg--grey {
-  color: #3e3e3e; }
+  color: #393939; }
 
 .wpstg--darkgrey {
   color: #1b1b1b; }
@@ -2149,11 +2149,11 @@ li#wpstg-backup-no-results .no-backups-found-text, #wpstg-no-staging-site-result
   max-width: 1200px !important; }
 
 .wpstg-swal-popup.wpstg-push-finished .wpstg--swal2-title {
-  color: #a8a8a8; }
+  color: #393939; }
 
 .wpstg-swal-popup.wpstg-push-finished .wpstg--swal2-content {
   margin-top: 8px;
-  color: #a8a8a8; }
+  color: #393939; }
 
 .wpstg-swal-popup .wpstg--swal2-progress-steps .wpstg--swal2-progress-step.wpstg--swal2-active-progress-step,
 .wpstg-swal-popup .wpstg--swal2-progress-steps .wpstg--swal2-progress-step,
@@ -2302,9 +2302,6 @@ body.toplevel_page_wpstg_clone .wpstg--swal2-container.wpstg--swal2-backdrop-sho
 .wpstg-restore-finished-container .wpstg--swal2-title {
   color: #565656 !important; }
 
-/*#wpstg-restore-success {
-    color: #565656;
-}*/
 .wpstg-restore-finished-container .wpstg--swal2-content {
   margin-top: 20px;
   color: #a8a8a8; }

@@ -126,7 +126,7 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
                             <div class="wpstg--tooltip" style="position: absolute;">
                                 <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info" />
                                 <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                                    <?php esc_html_e('Choose how many backups you want to keep before old ones are deleted to free up disk space.', 'wp-staging') ?>
+                                    <?php esc_html_e('How many local backups to keep before deleting old ones to free up storage space.', 'wp-staging') ?>
                                  </span>
                             </div>
                         </label>

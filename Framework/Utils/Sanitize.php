@@ -189,7 +189,7 @@ class Sanitize
 
     /**
      * @param array $items
-     * @param array $config
+     * @param array $config An array that defines the expected type of a key,e.g. ['thisIsAbooleanValue' => true, 'thisShouldBeAnInteger' => int]
      * @return array
      */
     public function sanitizeArray($items, $config = [])
