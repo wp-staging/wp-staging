@@ -73,7 +73,7 @@ class ConfigurationProvider extends \WPStaging\Vendor\Aws\AbstractConfigurationP
             $configProviders[] = self::ini();
         }
         $configProviders[] = self::fallback();
-        $memo = self::memoize(\call_user_func_array('self::chain', $configProviders));
+        $memo = self::memoize(\call_user_func_array(self::class . '::chain', $configProviders));
         if (isset($config['defaultsMode']) && $config['defaultsMode'] instanceof \WPStaging\Vendor\Aws\CacheInterface) {
             return self::cache($memo, $config['defaultsMode'], self::$cacheKey);
         }

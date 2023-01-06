@@ -200,7 +200,7 @@ body.wp-staging-pro_page_wpstg-license {
     margin-bottom: 20px; } }
 
 #wpstg-steps {
-  margin-top: 0px;
+  margin-top: 0;
   margin-left: 20px; }
 
 #wpstg-steps li {
@@ -266,7 +266,7 @@ body.wp-staging-pro_page_wpstg-license {
 
 .wpstg-clone-labels .wpstg-clone-label {
   display: inline-block;
-  padding: 1px 4px;
+  padding: 1px 4px 0;
   margin-right: 4px;
   font-size: 11px;
   border-radius: 3px;
@@ -551,7 +551,7 @@ body.wp-staging-pro_page_wpstg-license {
 /* Tabs */
 .wpstg-tabs-wrapper {
   max-width: 640px;
-  margin: 10px 0; }
+  margin: 0 0 10px; }
 
 #wpstg-path-wrapper {
   border-bottom: 2px dashed #ccc;
@@ -564,7 +564,7 @@ body.wp-staging-pro_page_wpstg-license {
   border-left: none;
   display: none;
   width: calc(100% - 72px);
-  padding: 0px 36px; }
+  padding: 0 36px; }
 
 .wpstg-tab-section::after {
   display: block;
@@ -576,7 +576,7 @@ body.wp-staging-pro_page_wpstg-license {
   border-right: none;
   border-left: none;
   color: #444;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: bold;
   display: block;
   padding: 10px;
@@ -584,7 +584,7 @@ body.wp-staging-pro_page_wpstg-license {
 
 .wpstg-tab-triangle {
   display: inline-block;
-  margin-right: 12px;
+  margin-right: 6px;
   animation: transform 0.5s;
   width: 0;
   height: 0;
@@ -601,9 +601,9 @@ body.wp-staging-pro_page_wpstg-license {
   width: auto;
   height: auto;
   vertical-align: auto;
-  border-top: 0px solid;
-  border-bottom: 0px solid;
-  border-left: 0px solid; }
+  border-top: 0 solid;
+  border-bottom: 0 solid;
+  border-left: 0 solid; }
 
 .wpstg-tab-triangle.wpstg-rotate-90 {
   transform: rotate(90deg); }
@@ -835,7 +835,7 @@ body.wp-staging-pro_page_wpstg-license {
 
 #wpstg-footer ul {
   margin-left: 15px;
-  margin-top: 0px; }
+  margin-top: 0; }
 
 .wpstg-footer--title {
   margin-left: 15px; }
@@ -1009,7 +1009,6 @@ a.wpstg-blue-primary {
   color: #ffffff;
   margin: 10px 10px 10px 0 !important;
   border-color: transparent !important;
-  border-left-color: transparent !important;
   box-shadow: none !important; }
 
 .wpstg-error a {
@@ -1075,12 +1074,11 @@ a.wpstg-blue-primary {
   cursor: pointer; }
 
 .wpstg--tab--header {
-  background-color: white;
   position: relative;
   transition: border-color .2s ease-in-out;
   background-color: #ffffff;
   color: #3e3e3e;
-  border-radius: 0px;
+  border-radius: 0;
   box-shadow: 0 0 1px rgba(0, 0, 0, 0.125), 0 1px 3px rgba(0, 0, 0, 0.02); }
 
 .wpstg--tab--header ul {
@@ -1088,7 +1086,7 @@ a.wpstg-blue-primary {
 
 .wpstg--tab--header ul li {
   margin-right: 1em;
-  margin-bottom: 0px; }
+  margin-bottom: 0; }
 
 .wpstg--tab--header ul li:last-child {
   margin-right: 0; }
@@ -1098,8 +1096,7 @@ a.wpstg-blue-primary {
   text-align: center;
   cursor: pointer;
   display: inline-block;
-  padding: 1em 1.25em;
-  padding-bottom: 9px;
+  padding: 1em 1.25em 9px;
   color: #c4c4c4;
   font-size: 18px; }
 
@@ -1127,7 +1124,7 @@ a.wpstg-blue-primary {
   font-weight: bold !important; }
 
 .wpstg--text--danger {
-  color: #a94442; }
+  color: #E01E5A; }
 
 .wpstg--tooltip {
   position: relative;
@@ -1148,9 +1145,9 @@ a.wpstg-blue-primary {
   border-radius: 3px;
   position: absolute;
   z-index: 1;
-  -webkit-box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
-  -moz-box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
-  box-shadow: rgba(0, 0, 0, 0.16) 0px 1px 4px;
+  -webkit-box-shadow: rgba(0, 0, 0, 0.16) 0 1px 4px;
+  -moz-box-shadow: rgba(0, 0, 0, 0.16) 0 1px 4px;
+  box-shadow: rgba(0, 0, 0, 0.16) 0 1px 4px;
   font-weight: normal; }
 
 .wpstg--tooltiptext-backups {
@@ -1161,10 +1158,10 @@ a.wpstg-blue-primary {
   margin-top: 4px; }
 
 .wpstg--tooltip.wpstg--exclude-rules--tooltip {
-  border-bottom: 0px solid transparent; }
+  border-bottom: 0 solid transparent; }
 
 .wpstg--tooltip.wpstg--exclude-rules--tooltip > .wpstg--tooltiptext {
-  margin-top: 0px;
+  margin-top: 0;
   margin-left: -150px; }
 
 /**
@@ -1275,8 +1272,7 @@ Tooltip top arrow
 
 .wpstg--modal--process--logs p,
 .wpstg--modal--error--logs p {
-  margin: 0px;
-  margin-bottom: 2px; }
+  margin: 0 0 2px; }
 
 .wpstg--modal--process--msg--error {
   color: #E01E5A; }
@@ -1316,6 +1312,11 @@ Tooltip top arrow
   border: none;
   cursor: pointer;
   text-decoration: underline; }
+
+.wpstg--modal-fetching-data {
+  display: flex;
+  flex-direction: column;
+  margin-top: 2.25em; }
 
 .wpstg--modal--backup--import--upload--title {
   color: #3e3e3e; }
@@ -1520,7 +1521,7 @@ Tooltip top arrow
   font-weight: bold;
   background-color: #0e86d9;
   padding: 30px;
-  margin-top: 0px;
+  margin-top: 0;
   color: white; }
 
 .wpstg-dark-alert ul {
@@ -1699,8 +1700,7 @@ Tooltip top arrow
   text-align: left; }
 
 #wpstg-confirm-backup-restore-wrapper {
-  margin: 30px;
-  margin-top: 0; }
+  margin: 0 30px 30px; }
 
 #wpstg-confirm-backup-restore-wrapper h3 {
   color: #E01E5A; }
@@ -1763,7 +1763,7 @@ div#exportUploadsWithoutDatabaseWarning {
 
 .wpstg-import-backup-contains li {
   display: inline-block;
-  margin-bottom: 0px; }
+  margin-bottom: 0; }
 
 .wpstg-import-backup-contains li .wpstg-backups-contains {
   border-radius: 3px;
@@ -1778,7 +1778,7 @@ div#exportUploadsWithoutDatabaseWarning {
   background-color: white; }
 
 .wpstg-import-backup-contains.wpstg-listing-single-backup li .wpstg-backups-contains > .wpstg--dashicons {
-  filter: invert(35%); }
+  filter: invert(25%); }
 
 .wpstg-import-backup-contains .wpstg--tooltiptext {
   width: 80px;
@@ -2064,6 +2064,30 @@ li#wpstg-backup-no-results .no-backups-found-text, #wpstg-no-staging-site-result
 #wpstg--modal--backup--download-inner h2 {
   color: #565656; }
 
+#wpstg--modal--backup--download-inner-modal .wpstg--modal--download--parts {
+  display: flex;
+  flex-wrap: wrap; }
+
+#wpstg--modal--backup--download-inner-modal .wpstg--backups--part {
+  padding: 8px;
+  text-align: left;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  margin: 4px;
+  width: 128px; }
+
+#wpstg--modal--backup--download-inner-modal .wpstg--backups--part h2 {
+  margin: 0;
+  font-size: 16px; }
+
+#wpstg--modal--backup--download-inner-modal .wpstg--backups--part p {
+  font-weight: bold;
+  margin: 0; }
+
+#wpstg--modal--backup--download-inner-modal .wpstg--backups--part a {
+  margin-bottom: 0;
+  font-size: 13px; }
+
 .wpstg-backup-restore-contains-database,
 .wpstg-backup-restore-contains-files {
   display: none; }
@@ -2172,7 +2196,9 @@ li#wpstg-backup-no-results .no-backups-found-text, #wpstg-no-staging-site-result
 
 .wpstg--dashicons.wpstg-dashicons-19 {
   width: 19px;
-  height: 19px; }
+  height: 19px;
+  margin-top: -2px;
+  filter: invert(19%) sepia(56%) saturate(5393%) hue-rotate(331deg) brightness(92%) contrast(90%); }
 
 .wpstg--dashicons.wpstg-dashicons-21 {
   width: 21px;
@@ -2228,8 +2254,7 @@ li#wpstg-backup-no-results .no-backups-found-text, #wpstg-no-staging-site-result
 
 #wpstg-confirm-backup-restore-data {
   font-size: 18px;
-  margin: 0;
-  margin-top: 30px; }
+  margin: 30px 0 0; }
 
 /* Sweetalert WP STAGING Theme */
 body.toplevel_page_wpstg_backup .wpstg--swal2-container.wpstg--swal2-backdrop-show,
@@ -2386,7 +2411,7 @@ body.toplevel_page_wpstg_clone .wpstg--swal2-container.wpstg--swal2-backdrop-sho
 
 .wpstg--notice {
   box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
-  margin: 20px 20px 20px 0px;
+  margin: 20px 20px 20px 0;
   padding: 1px 12px; }
 
 .wpstg--error a:hover {
@@ -2561,7 +2586,7 @@ input.wpstg-textbox::placeholder {
   margin-left: 5px;
   position: relative;
   display: inline-block;
-  border-bottom: 0px solid transparent; }
+  border-bottom: 0 solid transparent; }
 
 .wpstg--advance-settings--checkbox > .wpstg--tooltip > .wpstg--tooltiptext {
   top: 18px;
@@ -2733,7 +2758,7 @@ div#wpstg-restore-wait div {
 .wpstg--modal--backup--manage--schedules--title {
   text-align: left;
   margin-bottom: 10px;
-  margin-top: 0px; }
+  margin-top: 0; }
 
 .wpstg--modal--backup--import--upload--title {
   text-align: center; }
@@ -2755,7 +2780,7 @@ div#wpstg-restore-wait div {
   padding-top: 10px; }
 
 #wpstg--modal--backup--manage--schedules--content td:last-child {
-  padding-right: 0px; }
+  padding-right: 0; }
 
 #wpstg--modal--backup--manage--schedules--content ul {
   margin-top: 0;
@@ -2772,13 +2797,12 @@ div#wpstg-restore-wait div {
   cursor: not-allowed; }
 
 #wpstg-backup-runs-info {
-  margin: 0px;
-  margin-top: 20px;
-  padding: 0px;
+  margin: 20px 0 0;
+  padding: 0;
   font-size: 12px; }
 
 #wpstg-backup-runs-info li {
-  margin: 0px; }
+  margin: 0; }
 
 div#wpstg-backup-locked {
   width: 100%;
@@ -2862,13 +2886,11 @@ div#wpstg-backup-locked {
   margin: 8px 0; }
 
 .wpstg-provider-settings-form p {
-  margin: 0;
-  margin-bottom: 8px; }
+  margin: 0 0 8px; }
 
 .wpstg-provider-settings-form fieldset {
-  margin: 0;
   padding: 0;
-  margin-bottom: 16px; }
+  margin: 0 0 16px; }
 
 .wpstg-provider-settings-form fieldset p {
   margin: 0;
@@ -2886,7 +2908,7 @@ div#wpstg-backup-locked {
   text-shadow: none; }
 
 .wpstg-btn-google {
-  font-family: Roboto;
+  font-family: Roboto, sans-serif;
   display: inline-flex;
   align-items: center;
   border-width: 0;
@@ -2895,8 +2917,7 @@ div#wpstg-backup-locked {
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
   color: #555;
   transition: background-color .3s;
-  padding: 8px;
-  padding-right: 16px;
+  padding: 8px 16px 8px 8px;
   height: 40px;
   line-height: 40px;
   font-size: 14px;
@@ -2941,8 +2962,7 @@ div#wpstg-backup-locked {
 
 @media only screen and (max-width: 680px) {
   .wpstg-metabox-holder {
-    padding: 0px;
-    padding-top: 5px;
+    padding: 5px 0 0;
     margin-left: 0;
     margin-right: 5px; }
   #wpstg-tab-container .wpstg-settings-panel {
@@ -2985,9 +3005,23 @@ div#wpstg-backup-locked {
   line-height: inherit; }
 
 .wpstg-nav-tab-wrapper li {
-  margin-bottom: 0px; }
+  margin-bottom: 0; }
 
 #wpstg--js--translations {
   text-decoration: underline; }
+
+.invalid-backup-tabs .wpstg-tab-header,
+.invalid-backup-tabs .wpstg-tab-content {
+  color: #E01E5A; }
+
+.invalid-backup-tabs h5 {
+  margin-top: 8px;
+  margin-bottom: 4px;
+  font-size: 13px; }
+
+.invalid-backup-tabs ol {
+  font-size: 13px;
+  margin-top: 0;
+  margin-left: 16px; }
 
 /*# sourceMappingURL=wpstg-admin.css.map */

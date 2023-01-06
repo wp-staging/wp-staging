@@ -16,10 +16,10 @@ use WPStaging\Framework\Staging\Sites;
 
 class PreserveDataFirstStep extends JobExecutable
 {
-    /** @var object */
+    /** @var \wpdb */
     private $stagingDb;
 
-    /** @var object */
+    /** @var \wpdb */
     private $productionDb;
 
     /** @var string */
@@ -93,48 +93,35 @@ class PreserveDataFirstStep extends JobExecutable
         }
 
         // Get wpstg_staging_sites from staging database
-        $stagingSites = $this->stagingDb->get_var(
-            $this->stagingDb->prepare(
-                "SELECT `option_value` FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s",
-                Sites::STAGING_SITES_OPTION
-            )
-        );
+        $stagingSites = $this->getStagingSiteOption(Sites::STAGING_SITES_OPTION);
 
         // Get wpstg_settings from staging database
-        $settings = $this->stagingDb->get_var(
-            $this->stagingDb->prepare(
-                "SELECT `option_value` FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s",
-                "wpstg_settings"
-            )
-        );
+        $settings = $this->getStagingSiteOption("wpstg_settings");
 
         // Get wpstg_clone_options from staging database
-        $cloneOptions = $this->stagingDb->get_var(
-            $this->stagingDb->prepare(
-                "SELECT `option_value` FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s",
-                CloneOptions::WPSTG_CLONE_SETTINGS_KEY
-            )
-        );
+        $cloneOptions = $this->getStagingSiteOption(CloneOptions::WPSTG_CLONE_SETTINGS_KEY);
 
         // Automated backup schedules
-        $backupSchedules = $this->stagingDb->get_var(
-            $this->stagingDb->prepare(
-                "SELECT `option_value` FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s",
-                $this->backupSchedulesOption
-            )
-        );
+        $backupSchedules = $this->getStagingSiteOption($this->backupSchedulesOption);
+
+        // All remote storages for backup
+        $remoteStorages = $this->preserveRemoteStorages();
 
         // Nothing to do
-        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules) {
+        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules && empty($remoteStorages)) {
             return true;
         }
 
-        $tmpData = serialize((object) [
+        $options = [
             'stagingSites' => $stagingSites,
             'settings' => $settings,
             'cloneOptions' => $cloneOptions,
             'backupSchedules' => $backupSchedules,
-        ]);
+        ];
+
+        $options = array_merge($options, $remoteStorages);
+
+        $tmpData = serialize((object) $options);
 
         // Insert staging site preserved data into wpstg_tmp_data in production database
         $insert = $this->productionDb->query(
@@ -174,9 +161,106 @@ class PreserveDataFirstStep extends JobExecutable
     }
 
     /**
+     * @return array
+     */
+    protected function preserveRemoteStorages()
+    {
+        $storages = [];
+
+        /**
+         * Google Drive Options
+         * @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
+         */
+        $googleDrive = $this->getStagingSiteOption('wpstg_googledrive');
+
+        /**
+         * Amazon S3 Options
+         * @see WPStaging\Pro\Backup\Storage\Storages\Amazon\S3::getOptionName for option name
+         */
+        $amazonS3 = $this->getStagingSiteOption('wpstg_amazons3');
+
+        /**
+         * sFTP/FTP Options
+         * @see WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth::getOptionName for option name
+         */
+        $sftp = $this->getStagingSiteOption('wpstg_sftp');
+
+        /**
+         * Digital Ocean Spaces Options
+         * @see WPStaging\Pro\Backup\Storage\Storages\DigitalOceanSpaces\Auth::getOptionName for option name
+         */
+        $digitalOceanSpaces = $this->getStagingSiteOption('wpstg_digitalocean-spaces');
+
+        /**
+         * Wasabi S3 Options
+         * @see WPStaging\Pro\Backup\Storage\Storages\Wasabi\Auth::getOptionName for option name
+         */
+        $wasabiS3 = $this->getStagingSiteOption('wpstg_wasabi');
+
+        /**
+         * Generic S3 / Other S3 Compat Options
+         * @see WPStaging\Pro\Backup\Storage\Storages\GenericS3\Auth::getOptionName for option name
+         */
+        $genericS3 = $this->getStagingSiteOption('wpstg_generic-s3');
+
+        if ($googleDrive === false) {
+            $this->log("Preserve Data: Failed to get Google Drive Settings");
+        } else {
+            $storages['googleDrive'] = $googleDrive;
+        }
+
+        if ($amazonS3 === false) {
+            $this->log("Preserve Data: Failed to get Amazon S3 Settings");
+        } else {
+            $storages['amazonS3'] = $amazonS3;
+        }
+
+        if ($sftp === false) {
+            $this->log("Preserve Data: Failed to get sFTP/FTP Settings");
+        } else {
+            $storages['sftp'] = $sftp;
+        }
+
+        if ($digitalOceanSpaces === false) {
+            $this->log("Preserve Data: Failed to get Digital Ocean Spaces Settings");
+        } else {
+            $storages['digitalOceanSpaces'] = $digitalOceanSpaces;
+        }
+
+        if ($wasabiS3 === false) {
+            $this->log("Preserve Data: Failed to get Wasabi S3 Settings");
+        } else {
+            $storages['wasabiS3'] = $wasabiS3;
+        }
+
+        if ($genericS3 === false) {
+            $this->log("Preserve Data: Failed to get Generic S3 Settings");
+        } else {
+            $storages['genericS3'] = $genericS3;
+        }
+
+        return $storages;
+    }
+
+    /**
+     * @param string $optionName
+     *
+     * @return string|null
+     */
+    protected function getStagingSiteOption($optionName)
+    {
+        return $this->stagingDb->get_var(
+            $this->stagingDb->prepare(
+                "SELECT `option_value` FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s",
+                $optionName
+            )
+        );
+    }
+
+    /**
      * Check if table exists
      * @param string $table
-     * @return boolean
+     * @return bool
      */
     private function tableExists($table)
     {

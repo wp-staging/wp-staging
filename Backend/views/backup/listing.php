@@ -92,6 +92,7 @@ if ($cronMessage !== '') { ?>
 <?php include(__DIR__ . '/modal/export.php'); ?>
 <?php include(__DIR__ . '/modal/progress.php'); ?>
 <?php include(__DIR__ . '/modal/download.php'); ?>
+<?php include(__DIR__ . '/modal/download-modal.php'); ?>
 <?php include(__DIR__ . '/modal/upload.php'); ?>
 <?php include(__DIR__ . '/modal/manage-schedules.php'); ?>
 <?php include(__DIR__ . '/modal/import.php'); ?>

@@ -134,7 +134,7 @@ abstract class AbstractCache
     /**
      * @return bool
      */
-    protected function isValid()
+    public function isValid($delete = true)
     {
         if (!$this->filePath || !is_file($this->filePath)) {
             return false;
@@ -144,7 +144,10 @@ abstract class AbstractCache
             return true;
         }
 
-        $this->delete();
+        if ($delete) {
+            $this->delete();
+        }
+
         return false;
     }
 

@@ -32,6 +32,9 @@ class Database
     /** @var string */
     private $productionPrefix;
 
+    /** @var string */
+    private $mysqlVersion;
+
     /**
      * @param wpdb $wpDatabase
      */
@@ -43,6 +46,7 @@ class Database
             $this->wpdb = $wpDatabase;
         }
 
+        $this->mysqlVersion = null;
         $this->productionPrefix = $wpdb->prefix;
         $this->wpdba = new WpDbAdapter($this->wpdb);
         $this->client = $this->findClient();
@@ -148,6 +152,45 @@ class Database
     public function find($sql, array $conditions = [])
     {
         return $this->wpdba->find($sql, $conditions);
+    }
+
+    /**
+     * @param bool $compact if true return just the version with other info
+     * @param bool $refresh if true fetch info again from server
+     * @return string
+     */
+    public function getSqlVersion($compact = false, $refresh = false)
+    {
+        if ($refresh || empty($this->mysqlVersion)) {
+            $this->mysqlVersion = $this->wpdb->get_var('SELECT VERSION()');
+        }
+
+        if (empty($this->mysqlVersion)) {
+            $this->mysqlVersion = $this->wpdb->db_version();
+        }
+
+        if (!$compact) {
+            return $this->mysqlVersion;
+        }
+
+        return explode('-', explode(' ', explode('_', $this->mysqlVersion)[0])[0])[0];
+    }
+
+    /**
+     * @return string
+     */
+    public function getServerType()
+    {
+        $dbInfo = $this->getSqlVersion();
+        if (strpos($dbInfo, 'maria')) {
+            return 'MariaDB';
+        }
+
+        if (strpos($dbInfo, 'percona')) {
+            return 'Percona';
+        }
+
+        return 'MySQL';
     }
 
     /**

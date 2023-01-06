@@ -9,6 +9,9 @@ use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Utils\Cache\AbstractCache;
 use WPStaging\Framework\Utils\Cache\Cache;
 
+/**
+ * @todo this class in not used anymore. 14.12.2022 We will delete this class in version 4.4.2
+ */
 class CacheStorage implements StorageInterface, ShutdownableInterface
 {
     /** @var string */

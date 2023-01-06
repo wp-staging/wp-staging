@@ -173,6 +173,12 @@ class Directory
                 ],
                 $this->getAllThemesDirectories()
             );
+
+            // For edge cases when actual uploads is within wp-content/uploads/some-uploads-dir i.e. subsites clones
+            $baseUploadsFolder = trailingslashit($this->getWpContentDirectory() . 'uploads');
+            if (!in_array($baseUploadsFolder, $this->defaultWordPressFolders)) {
+                $this->defaultWordPressFolders[] = $baseUploadsFolder;
+            }
         }
 
         return $this->defaultWordPressFolders;

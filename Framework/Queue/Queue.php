@@ -9,6 +9,10 @@ use WPStaging\Framework\Queue\Storage\CacheStorage;
 use WPStaging\Framework\Queue\Storage\StorageInterface;
 use WPStaging\Pro\Backup\Task\AbstractTask;
 
+/**
+ * @todo this class in not used anymore. 14.12.2022 We will delete this class in version 4.4.2
+ */
+
 class Queue implements QueueInterface
 {
     /** @var string */

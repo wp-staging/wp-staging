@@ -70,7 +70,7 @@ class ConfigurationProvider extends \WPStaging\Vendor\Aws\AbstractConfigurationP
             $configProviders[] = self::ini();
         }
         $configProviders[] = self::fallback($config['region']);
-        $memo = self::memoize(\call_user_func_array('self::chain', $configProviders));
+        $memo = self::memoize(\call_user_func_array(self::class . '::chain', $configProviders));
         if (isset($config['use_fips_endpoint']) && $config['use_fips_endpoint'] instanceof \WPStaging\Vendor\Aws\CacheInterface) {
             return self::cache($memo, $config['use_fips_endpoint'], self::$cacheKey);
         }

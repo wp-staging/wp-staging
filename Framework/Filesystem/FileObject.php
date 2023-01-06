@@ -13,6 +13,9 @@ use WPStaging\Core\WPStaging;
 use WPStaging\functions;
 use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
 
+use function tad\WPBrowser\debug;
+use function WPStaging\functions\debug_log;
+
 class FileObject extends SplFileObject
 {
     const MODE_READ = 'rb'; // read only, binary
@@ -120,7 +123,7 @@ class FileObject extends SplFileObject
             $this->existingMetadataPosition = $this->ftell();
             $line = trim($this->readAndMoveNext());
             if ($this->isValidMetadata($line)) {
-                $backupMetadata = json_decode($line, true);
+                $backupMetadata = $this->extractMetadata($line);
             }
         } while ($this->valid() && !is_array($backupMetadata));
 
@@ -131,6 +134,15 @@ class FileObject extends SplFileObject
         return $backupMetadata;
     }
 
+    public function extractMetadata($line)
+    {
+        if (!$this->isSqlFile()) {
+            return json_decode($line, true);
+        }
+
+        return json_decode(substr($line, 3), true);
+    }
+
     /**
      * @param string $line
      * @return bool
@@ -139,11 +151,13 @@ class FileObject extends SplFileObject
      */
     public function isValidMetadata($line)
     {
-        if (substr($line, 0, 1) !== '{') {
+        if ($this->isSqlFile() && substr($line, 3, 1) !== '{') {
+            return false;
+        } elseif (!$this->isSqlFile() && substr($line, 0, 1) !== '{') {
             return false;
         }
 
-        $maybeMetadata = json_decode($line, true);
+        $maybeMetadata = $this->extractMetadata($line);
 
         if (!is_array($maybeMetadata) || !array_key_exists('networks', $maybeMetadata) || !is_array($maybeMetadata['networks'])) {
             return false;
@@ -400,5 +414,10 @@ class FileObject extends SplFileObject
     public function __destruct()
     {
         $this->releaseLock();
+    }
+
+    public function isSqlFile()
+    {
+        return $this->getExtension() === 'sql';
     }
 }

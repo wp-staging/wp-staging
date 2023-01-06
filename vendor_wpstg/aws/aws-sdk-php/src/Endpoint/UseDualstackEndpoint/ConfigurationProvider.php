@@ -71,7 +71,7 @@ class ConfigurationProvider extends \WPStaging\Vendor\Aws\AbstractConfigurationP
             $configProviders[] = self::ini($region);
         }
         $configProviders[] = self::fallback($region);
-        $memo = self::memoize(\call_user_func_array('self::chain', $configProviders));
+        $memo = self::memoize(\call_user_func_array(self::class . '::chain', $configProviders));
         if (isset($config['use_dual_stack_endpoint']) && $config['use_dual_stack_endpoint'] instanceof \WPStaging\Vendor\Aws\CacheInterface) {
             return self::cache($memo, $config['use_dual_stack_endpoint'], self::$cacheKey);
         }

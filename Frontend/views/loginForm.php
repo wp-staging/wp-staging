@@ -30,7 +30,7 @@
                 </div>
 
                 <p class="error-msg">
-                    <?php echo esc_html($this->error); ?>
+                    <?php echo wp_kses_post($this->error); ?>
                 </p>
             </form>
         </main>

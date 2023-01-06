@@ -7,6 +7,27 @@ use WPStaging\Pro\Backup\Dto\Job\JobExportDataDto;
 
 class AnalyticsBackupCreate extends AnalyticsEventDto
 {
+    /** @var bool */
+    public $is_backup_database;
+
+    /** @var bool */
+    public $is_backup_plugins;
+
+    /** @var bool */
+    public $is_backup_themes;
+
+    /** @var bool */
+    public $is_backup_uploads;
+
+    /** @var bool */
+    public $is_backup_muplugins;
+
+    /** @var bool */
+    public $is_backup_wp_content;
+
+    /** @var int */
+    public $automated_backup;
+
     public function getEventAction()
     {
         return 'event_backup_create';
