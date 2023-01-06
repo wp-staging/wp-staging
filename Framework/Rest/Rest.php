@@ -60,8 +60,15 @@ class Rest
 
     private function getApiRequestURI($url)
     {
-        $path  = trim(parse_url($url, PHP_URL_PATH), '/');
-        $query = trim(parse_url($url, PHP_URL_QUERY), '/');
+        if (empty($url)) {
+            return '';
+        }
+
+        $path  = parse_url($url, PHP_URL_PATH);
+        $path  = empty($path) ? '' : trim($path, '/');
+
+        $query = parse_url($url, PHP_URL_QUERY);
+        $query = empty($query) ? '' : trim($query, '/');
 
         return $query === '' ? $path : $path . '?' . $query;
     }

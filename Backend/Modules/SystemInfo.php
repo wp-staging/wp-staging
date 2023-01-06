@@ -7,6 +7,7 @@ use WPStaging\Core\Utils\Browser;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils;
 use WPStaging\Core\Utils\Multisite;
+use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
@@ -412,6 +413,10 @@ class SystemInfo
         $output .= $this->info("WP_MEMORY_LIMIT:", WP_MEMORY_LIMIT);
         $output .= $this->info("Registered Post Stati:", implode(", ", \get_post_stati()));
 
+        // WP upload path
+        $output .= $this->info("UPLOAD_PATH in wp-config.php:", (defined("UPLOAD_PATH")) ? UPLOAD_PATH : '[not set]');
+        $output .= $this->info("upload_path in " . $wpDB->prefix . 'options:', get_option('upload_path', '[not set]'));
+
         return apply_filters("wpstg_sysinfo_after_wpstg_config", $output);
     }
 
@@ -514,8 +519,13 @@ class SystemInfo
         // Server Configuration
         $output = $this->header("Webserver Configuration");
 
+        /** @var Database */
+        $database = WPStaging::make(Database::class);
+
         $output .= $this->info("PHP Version:", PHP_VERSION);
-        $output .= $this->info("MySQL Version:", WPStaging::getInstance()->get("wpdb")->db_version());
+        $output .= $this->info("MySQL Server Type:", $database->getServerType());
+        $output .= $this->info("MySQL Version:", $database->getSqlVersion($compact = true));
+        $output .= $this->info("MySQL Version Full Info:", $database->getSqlVersion());
         $output .= $this->info("Webserver Info:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
 
         return apply_filters("wpstg_sysinfo_after_webserver_config", $output);

@@ -29,7 +29,7 @@ use WPStaging\Backend\Notices\Notices;
         <?php endif; ?>
         <?php if ($isJetpackStagingModeActive) : ?>
         <li>
-            <?php esc_html_e('You have Jetpack plugin active on this staging site, so we have enabled Jetpack staging mode.', 'wp-staging') ?>
+            <?php esc_html_e('Jetpack constant JETPACK_STAGING_MODE is enabled on this staging site.', 'wp-staging') ?>
             <a href="https://wp-staging.com/docs/make-jetpack-working-on-staging-site/"><?php esc_html_e('Read more here', 'wp-staging') ?>
         </li>
         <?php endif; ?>

@@ -9,6 +9,7 @@ use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Pro\Backup\Task\Tasks\JobExport\DatabaseExportTask;
 
 class Assets
 {
@@ -247,7 +248,7 @@ class Assets
             $this->getAssetsVersion($asset)
         );
 
-        wp_localize_script("wpstg-admin-script", "wpstg", [
+        $wpstgConfig = [
             //"delayReq"               => $this->getDelay(),
             "delayReq"               => 0,
             // TODO: move directorySeparator to consts?
@@ -280,7 +281,14 @@ class Assets
                 'noFileSelected'  => esc_html__('No file selected', 'wp-staging'),
                 'filesSelected'   => esc_html__('{t} theme(s), {p} plugin(s) selected', 'wp-staging'),
             ],
-        ]);
+        ];
+
+        // Safety check for free version
+        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Pro\Backup\Task\Tasks\JobExport\DatabaseExportTask')) {
+            $wpstgConfig['backupDBExtension'] = DatabaseExportTask::PART_IDENTIFIER . '.' . DatabaseExportTask::FILE_FORMAT;
+        }
+
+        wp_localize_script("wpstg-admin-script", "wpstg", $wpstgConfig);
     }
 
     /**

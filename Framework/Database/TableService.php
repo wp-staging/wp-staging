@@ -180,6 +180,10 @@ class TableService
     public function getCreateTableQuery($table_name)
     {
         $result = $this->client->query("SHOW CREATE TABLE `{$table_name}`");
+        if ($result === false) {
+            return '';
+        }
+
         $row = $this->client->fetchAssoc($result);
 
         $this->client->freeResult($result);

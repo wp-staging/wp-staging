@@ -101,7 +101,7 @@ use WPStaging\Framework\Facades\Sanitize;
             <fieldset class="wpstg-fieldset">
                 <label><?php esc_html_e('Location', 'wp-staging') ?></label>
                 <input class="wpstg-form-control" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
-                <p><?php esc_html_e("Where to change directory to after logging in - often this is relative to your home directory. Needs to already exist", 'wp-staging') ?></p>
+                <p><?php esc_html_e("Add the directory where you want to upload the backup files. This directory must already exist and a relative one to the home dir of the FTP user.", 'wp-staging') ?></p>
             </fieldset>
 
             <?php

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.1
-Stable tag: 2.11.0
+Stable tag: 2.12.0
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -259,7 +259,35 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
-= 2.11.0 =
+= 2.12.0 =
+* New: Optional feature to split backup files by type (plugins, media, themes) and maximum file size. Use filter `wpstg.backup.isMultipartBackup` to activate this option. Use `wpstg.backup.maxMultipartBackupSize` filter to adjust maximum file size for split backup, default is 2GB #1804
+* New: Add filter `wpstg.remoteStorages.chunkSize` (in bytes) to change chunk size of backups upload to remote storages #2047
+* New: Add filter `wpstg.remoteStorages.delayBetweenRequests` (in milliseconds) to add delay between requests to upload chunks to remote storages #1997
+* New: Add filter `wpstg.backup.tables.non-prefixed` to allow backup and restore of non WordPress prefixed tables #2018
+* New: Add option to download backup log files via ACTIONS > Log File #2025
+* New: Send mail report if unable to upload backup to remote storage(s) during automated backup #2025
+* Enh: Dont show recommendation message on using the same MySQL/MariaDB version while restoring if already the same MySQL/MariaDB version #1997
+* Enh: Preserve remote storages options during clone update. #2004
+* Fix: Store taskQueue in jobDataDto instead of a separate file #1997
+* Fix: Added upload_path in system info #2024
+* Fix: BINARY and NULL were not correctly search replaced if restoring the backup on the same site #2043
+* Fix: Correct database server type and MySQL/MariaDB version in System Info Tab #2043
+* Fix: Exclude filters in the UI for the staging site now allow adding dot `.` for extension, file and folder exclusion rules #2053
+* Fix: Issue during cleaning of other files in wp-content directory when actual uploads directory is not direct child of wp-content directory #2041
+* Fix: UPLOAD path was not correctly search replaced if source and destination site had a different relative upload path #2041
+* Fix: Importing a multisite backup with domains as network sites created wrong URLs for network sites if backup is restored into a multisite where network sites are subdirectories #2038
+* Fix: Allow database creation during push if multisite and mainsite #2032
+* Fix: Preserve scheduled backup plans during push #2032
+* Fix: Stop uploading backup to remote storage(s) after failure on certain amount of retries #2025
+* Fix: Dont copy google drive option during new or reset clone. This will make sure both sites will have different Refresh token. So revoking refresh token on one site doesn't break uploading process for the other #2004
+* Fix: Fix php warning when null is passed as argument to trim function #2059
+* Fix: Improve admin notice when JETPACK_STAGING_MODE is active on staging site #2014
+* Dev: Bump minimatch from 3.0.4 to 3.0.8 in /src/assets #2007
+* Dev: Make extra_hosts section in docker DRY #2070
+* Dev: Split webdriver tests to speed up running and allow parallel execution of them #2057
+* Dev: Improve login page authentication message #2058
+
+2.11.0
 * New: Compatible up to WordPress 6.1.1
 * New: Add support for uploading backups to DigitalOcean Spaces, Wasabi and other S3 compatible storages #1966
 * Enh: Allow backup upload to Amazon S3 when bucket has Lock Object and retention enabled #1973
@@ -277,7 +305,7 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 * New: Compatible up to WordPress 6.0.3
 * New: Show loader icon while saving settings or testing backup remote storages connections #1925
 * New: Show settings last saved time for backup remote storages SFTP, Amazon S3 and Google Drive #1925
-* New: Show last update and install date for WP STAGING|PRO plugin in System Info #1928
+* New: Show last update and install date for WP STAGING | PRO plugin in System Info #1928
 * New: Show selected themes and plugins for UPDATE and RESET clone jobs #1926
 * New: Fix issues when restoring multisites backup if network subsites have different domains. It now support restore or conversion of domain based subsite to subdirectory based subsite #1872
 * New: Option to disable local storage space and upload backup(s) only to remote storage spaces #1935
@@ -611,5 +639,4 @@ WP STAGING Backup & Cloning | Full changelog:
 
 == Upgrade Notice ==
 
-= 2.9.19 =
-Recommended update! Users with certain password combinations could not log in to the staging site. This update also enhances the security.
+Recommended update! Several performance updates and bug fixes to improve reliability for PHP 8.1 and 8.2.

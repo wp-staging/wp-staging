@@ -1107,13 +1107,7 @@
         var _Object$entries2$_i = _Object$entries2[_i2],
             _key = _Object$entries2$_i[0],
             fileInput = _Object$entries2$_i[1];
-        var fileName = '';
-
-        if ('name_exact_matches' === fileNamesPos[_key].value) {
-          fileName = this.cleanStringForGlobExactMatches(fileInput.value);
-        } else {
-          fileName = this.cleanStringForGlob(fileInput.value);
-        }
+        var fileName = this.cleanStringForGlob(fileInput.value);
 
         if (fileName !== '') {
           globExcludes.push('file:' + fileNamesPos[_key].value + ' ' + fileName.trim());
@@ -1153,18 +1147,7 @@
 
     _proto.cleanStringForGlob = function cleanStringForGlob(value) {
       // will replace character like * ^ / \ ! ? [ from the string
-      return value.replace(/[*^//!\.[?]/g, '');
-    }
-    /**
-     * Remove most of the comment glob characters from the string except . to allow input of extensions
-     * @param {String} value
-     * @return {String}
-     */
-    ;
-
-    _proto.cleanStringForGlobExactMatches = function cleanStringForGlobExactMatches(value) {
-      // will replace character like * ^ / \ ! ? [ from the string
-      return value.replace(/[*^//!\\[?]/g, '');
+      return value.replace(/[*^//!\[?]/g, '');
     };
 
     return WpstgExcludeFilters;

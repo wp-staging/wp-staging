@@ -45,11 +45,11 @@ use WPStaging\Framework\Facades\Escape;
     </table>
     <p <?php echo !$hasRules ? 'style="display: none;"' : '' ?> class="wpstg-has-exclude-rules"><b><?php esc_html_e('Note', 'wp-staging'); ?>:</b> <?php esc_html_e('These rules will not affect wp-admin and wp-includes directories!', 'wp-staging')?></p>
     <div class="wpstg-exclude-filters-foot">
-        <div class="wpstg-dropdown wpstg-exclude-filter-dropdown">
+        <div class="wpstg-dropdown wpstg-exclude-filter-dropdown" id="wpstg-exclude-filter-dropdown">
             <button class="wpstg-dropdown-toggler wpstg-button--secondary wpstg-button--blue">
                 <?php esc_html_e("Add Exclude Rule + ", "wp-staging"); ?>
             </button>
-            <div class="wpstg-dropdown-menu wpstg-menu-dropup">
+            <div class="wpstg-dropdown-menu wpstg-menu-dropup" id="wpstg-exclude-filter-dropdown-menu">
                 <button class="wpstg-dropdown-action wpstg-file-size-rule"><?php esc_html_e('File Size', 'wp-staging'); ?></button>
                 <button class="wpstg-dropdown-action wpstg-file-ext-rule"><?php esc_html_e('File Extension', 'wp-staging'); ?></button>
                 <button class="wpstg-dropdown-action wpstg-file-name-rule"><?php esc_html_e('File Name', 'wp-staging'); ?></button>

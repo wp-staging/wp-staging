@@ -19,6 +19,8 @@ use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
 
+use function WPStaging\functions\debug_log;
+
 /**
  * Class Scan
  * @package WPStaging\Backend\Modules\Jobs
@@ -78,7 +80,6 @@ class Scan extends Job
      */
     private $sanitize;
 
-
     /**
      * @var string Path to the info icon
      */
@@ -134,6 +135,9 @@ class Scan extends Job
     {
         $this->objDirectories = new DirectoriesUtil();
 
+        $this->options->existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
+        $this->options->existingClones = is_array($this->options->existingClones) ? $this->options->existingClones : [];
+
         if ($this->directoryToScanOnly !== null) {
             $this->getDirectories($this->directoryToScanOnly);
             return;
@@ -155,15 +159,10 @@ class Scan extends Job
     {
         // Basic Options
         $this->options->root           = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, WPStaging::getWPpath());
-        $this->options->existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
-        $this->options->existingClones = is_array($this->options->existingClones) ? $this->options->existingClones : [];
         $this->options->current        = null;
+        $this->options->currentClone   = $this->getCurrentClone();
 
-        $cloneID = isset($_POST["clone"]) ? $this->sanitize->sanitizeString($_POST['clone']) : '';
-
-        if (array_key_exists($cloneID, $this->options->existingClones)) {
-            $this->options->current = $cloneID;
-            $this->options->currentClone = $this->options->existingClones[$this->options->current];
+        if ($this->options->currentClone !== null) {
             // Make sure no warning is shown when updating/resetting an old clone having no exclude rules options
             $this->options->currentClone['excludeSizeRules'] = isset($this->options->currentClone['excludeSizeRules']) ? $this->options->currentClone['excludeSizeRules'] : [];
             $this->options->currentClone['excludeGlobRules'] = isset($this->options->currentClone['excludeGlobRules']) ? $this->options->currentClone['excludeGlobRules'] : [];
@@ -414,6 +413,9 @@ class Scan extends Job
 
         $currentTables = [];
 
+        $currentClone = $this->getCurrentClone();
+        $networkClone = is_multisite() && is_main_site() && is_array($currentClone) && (array_key_exists('networkClone', $currentClone) ? $this->sanitize->sanitizeBool($currentClone['networkClone']) : false);
+
         // Reset excluded Tables than loop through all tables
         $this->options->excludedTables = [];
         foreach ($tables as $table) {
@@ -422,7 +424,7 @@ class Scan extends Job
             // (On network sites, the correct tables are selected anyway)
             if (
                 ( ! empty($dbPrefix) && strpos($table->Name, $dbPrefix) !== 0)
-                || (is_multisite() && is_main_site() && preg_match('/^' . $dbPrefix . '\d+_/', $table->Name))
+                || (is_multisite() && is_main_site() && !$networkClone && preg_match('/^' . $dbPrefix . '\d+_/', $table->Name))
             ) {
                 $this->options->excludedTables[] = $table->Name;
             }
@@ -640,5 +642,17 @@ class Scan extends Job
     protected function isUpdateOrResetJob()
     {
         return isset($this->options->mainJob) && ($this->options->mainJob === 'updating' || $this->options->mainJob === 'resetting');
+    }
+
+    protected function getCurrentClone()
+    {
+        $cloneID = isset($_POST["clone"]) ? $this->sanitize->sanitizeString($_POST['clone']) : '';
+
+        if (array_key_exists($cloneID, $this->options->existingClones)) {
+            $this->options->current = $cloneID;
+            return $this->options->existingClones[$this->options->current];
+        }
+
+        return null;
     }
 }

@@ -14,14 +14,17 @@ use WPStaging\Framework\Staging\Sites;
 
 class PreserveDataSecondStep extends JobExecutable
 {
-    /** @var object */
+    /** @var \wpdb */
     private $stagingDb;
 
-    /** @var object */
+    /** @var \wpdb */
     private $productionDb;
 
     /** @var string */
     private $stagingPrefix;
+
+    /** @var object */
+    private $preservedData;
 
     protected function calculateTotalSteps()
     {
@@ -91,108 +94,128 @@ class PreserveDataSecondStep extends JobExecutable
             $this->productionDb->prepare("DELETE FROM " . $this->productionDb->prefix . "options WHERE `option_name` = %s", "wpstg_tmp_data")
         );
 
-        // Delete wpstg_staging_sites from the staging site
-        $deleteStagingSites = $this->stagingDb->query(
-            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", Sites::STAGING_SITES_OPTION)
-        );
-
-        // Delete wpstg_settings from the staging site
-        $deleteSettings = $this->stagingDb->query(
-            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", "wpstg_settings")
-        );
-
-        // Delete wpstg_clone_options from the staging site
-        $deleteCloneOptions = $this->stagingDb->query(
-            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", CloneOptions::WPSTG_CLONE_SETTINGS_KEY)
-        );
-
-        // Delete backup schedules tmp data from the staging site
-        $deleteBackupSchedules = $this->stagingDb->query(
-            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", $backupSchedulesOption)
-        );
-
-        $tempData = maybe_unserialize($result);
-
-        // Insert wpstg_staging_sites in staging database
-        $insertStagingSites = $this->stagingDb->query(
-            $this->stagingDb->prepare(
-                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
-                Sites::STAGING_SITES_OPTION,
-                $tempData->stagingSites,
-                "no"
-            )
-        );
-
-        // Insert wpstg_settings in staging database
-        $insertSettings = $this->stagingDb->query(
-            $this->stagingDb->prepare(
-                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
-                "wpstg_settings",
-                $tempData->settings,
-                "no"
-            )
-        );
-
-        // Insert wpstg_clone_options in staging database
-        $insertCloneOptions = $this->stagingDb->query(
-            $this->stagingDb->prepare(
-                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
-                CloneOptions::WPSTG_CLONE_SETTINGS_KEY,
-                $tempData->cloneOptions,
-                "no"
-            )
-        );
-
-        // Insert backup schedules
-        $insertBackupSchedules = $this->stagingDb->query(
-            $this->stagingDb->prepare(
-                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
-                $backupSchedulesOption,
-                $tempData->backupSchedules,
-                "no"
-            )
-        );
-
         if ($deleteTmpData === false) {
             $this->log("Preserve Data Second Step: Failed to delete wpstg_tmp_data from the production site");
         }
 
-        if ($deleteStagingSites === false) {
-            $this->log("Preserve Data Second Step: Failed to delete wpstg_staging_sites from the staging site");
+        $this->preservedData = maybe_unserialize($result);
+
+        // Preserve wpstg_staging_sites in staging database
+        $this->preserveStagingOption(Sites::STAGING_SITES_OPTION, $this->preservedData->stagingSites, 'existing clones');
+
+        // Preserve wpstg_settings in staging database
+        $this->preserveStagingOption("wpstg_settings", $this->preservedData->settings, 'settings');
+
+        // Preserve wpstg_clone_options in staging database
+        $this->preserveStagingOption(CloneOptions::WPSTG_CLONE_SETTINGS_KEY, $this->preservedData->cloneOptions, 'clone options');
+
+        // Preserve backup schedules
+        $this->preserveStagingOption($backupSchedulesOption, $this->preservedData->backupSchedules, 'backup schedules');
+
+        if ($this->propertyExists('googleDrive')) {
+            $this->preserveStagingOption('wpstg_googledrive', $this->preservedData->googleDrive, 'Google Drive settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_googledrive');
         }
 
-        if ($deleteSettings === false) {
-            $this->log("Preserve Data Second Step: Failed to delete wpstg_settings from the staging site");
+        if ($this->propertyExists('amazonS3')) {
+            $this->preserveStagingOption('wpstg_amazons3', $this->preservedData->amazonS3, 'Amazon S3 settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_amazons3');
         }
 
-        if ($deleteCloneOptions === false) {
-            $this->log("Preserve Data Second Step: Failed to delete wpstg_clone_options from the staging site");
+        if ($this->propertyExists('sftp')) {
+            $this->preserveStagingOption('wpstg_sftp', $this->preservedData->sftp, 'sFTP/FTP settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_sftp');
         }
 
-        if ($deleteBackupSchedules === false) {
-            $this->log("Preserve Data Second Step: Failed to delete " . $backupSchedulesOption . " from the staging site");
+        if ($this->propertyExists('digitalOceanSpaces')) {
+            $this->preserveStagingOption('wpstg_digitalocean-spaces', $this->preservedData->digitalOceanSpaces, 'Digital Ocean Spaces settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_digitalocean-spaces');
         }
 
-        if ($result === false) {
-            $this->log("Preserve Data Second Step: Failed to get wpstg_tmp_data from the production site");
+        if ($this->propertyExists('wasabiS3')) {
+            $this->preserveStagingOption('wpstg_wasabi', $this->preservedData->wasabiS3, 'Wasabi S3 settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_wasabi');
         }
 
-        if ($insertStagingSites === false) {
-            $this->log("Preserve Data Second Step: Failed to insert preserved existing clones into wpstg_staging_sites of the staging site");
-        }
-
-        if ($insertSettings === false) {
-            $this->log("Preserve Data Second Step: Failed to insert preserved settings into wpstg_settings of the staging site");
-        }
-
-        if ($insertCloneOptions === false) {
-            $this->log("Preserve Data Second Step: Failed to insert preserved clone options into wpstg_settings of the staging site");
-        }
-
-        if ($insertBackupSchedules === false) {
-            $this->log("Preserve Data Second Step: Failed to insert preserved clone options into " . $backupSchedulesOption . " of the staging site");
+        if ($this->propertyExists('genericS3')) {
+            $this->preserveStagingOption('wpstg_generic-s3', $this->preservedData->genericS3, 'S3 Compat settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_generic-s3');
         }
 
         return true;
+    }
+
+    /**
+     * @param string $optionName
+     * @param string $optionValue
+     * @param bool   $autoload
+     */
+    protected function preserveStagingOption($optionName, $optionValue, $logEntity, $autoload = false)
+    {
+        $isDeleted = $this->deleteStagingSiteOption($optionName);
+
+        if ($isDeleted === false) {
+            $this->log("Preserve Data Second Step: Failed to delete " . $optionName . " from the staging site");
+        }
+
+        $isInserted =  $this->insertOptionIntoStagingSite($optionName, $optionValue, $autoload);
+
+        if ($isInserted === false) {
+            $this->log("Preserve Data Second Step: Failed to insert preserved " . $logEntity . " into " . $optionName . " of the staging site");
+        }
+    }
+
+    /**
+     * @param string $optionName
+     *
+     * @return bool
+     */
+    protected function deleteStagingSiteOption($optionName)
+    {
+        return $this->stagingDb->query(
+            $this->stagingDb->prepare("DELETE FROM " . $this->stagingPrefix . "options WHERE `option_name` = %s", $optionName)
+        );
+    }
+
+    /**
+     * @param string $optionName
+     * @param string $optionValue
+     * @param bool   $autoload
+     *
+     * @return bool
+     */
+    protected function insertOptionIntoStagingSite($optionName, $optionValue, $autoload = false)
+    {
+        $autoload = $autoload ? 'yes' : 'no';
+
+        return $this->stagingDb->query(
+            $this->stagingDb->prepare(
+                "INSERT INTO `" . $this->stagingPrefix . "options` ( `option_id`, `option_name`, `option_value`, `autoload` ) VALUES ( NULL , %s, %s, %s )",
+                $optionName,
+                $optionValue,
+                $autoload
+            )
+        );
+    }
+
+    /**
+     * Return true if property exists in preserved data and not null
+     * @param string $property
+     *
+     * @return bool
+     */
+    protected function propertyExists($property)
+    {
+        if (!property_exists($this->preservedData, $property)) {
+            return false;
+        }
+
+        return !empty($this->preservedData->{$property});
     }
 }

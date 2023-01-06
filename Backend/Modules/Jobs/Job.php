@@ -287,12 +287,17 @@ abstract class Job implements ShutdownableInterface
         return false;
     }
 
+    protected function isPro()
+    {
+        return defined('WPSTGPRO_VERSION');
+    }
+
     /**
      * @return bool
      */
     protected function isMultisiteAndPro()
     {
-        return defined('WPSTGPRO_VERSION') && is_multisite();
+        return $this->isPro() && is_multisite();
     }
 
     /**

@@ -115,6 +115,12 @@ class UpdateStagingOptionsTable extends DBCloningService
             $toDelete = array_merge($toDelete, $freemiusHelper->getFreemiusOptions());
         }
 
+        // Delete options for new clone or reset job
+        if ($this->dto->getMainJob() !== 'updating') {
+            // @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
+            $toDelete[] = 'wpstg_googledrive';
+        }
+
         $this->deleteOptions($toDelete);
 
         return true;

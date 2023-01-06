@@ -38,6 +38,12 @@ class PathIdentifier
         $this->directory = $directory;
     }
 
+    /** @var string */
+    public function getBackupDirectory()
+    {
+        return $this->directory->getBackupDirectory();
+    }
+
     /**
      * Convert an absolute file path of a file into an abbreviated path.
      *

@@ -52,8 +52,14 @@ class LoginForm
             $user_data = get_user_by('email', $username);
         }
 
+        $guideLink = esc_url( 'https://wp-staging.com/docs/can-not-login-to-staging-website/#Disable_WP_STAGING_Login_Form_or_Allow_Specific_Users_to_Pass_it' );
         if (!$user_data) {
-            $this->error = 'Login not possible.';
+            $msg = sprintf( __( 'Incorrect credentials! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging' ), wp_login_url(), $guideLink);
+
+            if (defined('WPSTGPRO_VERSION')) {
+                $msg = sprintf( __( 'Incorrect credentials! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging' ), wp_login_url(), $guideLink);
+            }
+            $this->error = $msg;
             return false;
         }
 
@@ -72,7 +78,12 @@ class LoginForm
 
             header('Location:' . $redirectTo);
         } else {
-            $this->error = 'Username or password wrong!';
+            $msg = sprintf( __( 'Login not possible! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging' ), wp_login_url(), $guideLink);
+
+            if (defined('WPSTGPRO_VERSION')) {
+                $msg = sprintf( __( 'Login not possible! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging' ), wp_login_url(), $guideLink);
+            }
+            $this->error = $msg;
         }
 
         return false;

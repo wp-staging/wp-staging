@@ -71,7 +71,7 @@ class ConfigurationProvider extends \WPStaging\Vendor\Aws\AbstractConfigurationP
             $configProviders[] = self::ini();
         }
         $configProviders[] = self::fallback();
-        $memo = self::memoize(\call_user_func_array('self::chain', $configProviders));
+        $memo = self::memoize(\call_user_func_array(self::class . '::chain', $configProviders));
         if (isset($config['use_arn_region']) && $config['use_arn_region'] instanceof \WPStaging\Vendor\Aws\CacheInterface) {
             return self::cache($memo, $config['use_arn_region'], self::$cacheKey);
         }
