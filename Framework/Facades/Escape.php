@@ -5,7 +5,7 @@ namespace WPStaging\Framework\Facades;
 use WPStaging\Framework\Utils\Escape as UtilsEscape;
 
 /**
- * @method static string escapeHtml(string $content, string $domain)
+ * @method static string escapeHtml(string $content)
  */
 class Escape extends Facade
 {

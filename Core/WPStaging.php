@@ -46,12 +46,16 @@ final class WPStaging
      */
     public static $startTime;
 
+    /**  @var Filesystem */
+    private $filesystem;
+
     /**
      * WPStaging constructor.
      */
     private function __construct(Container $container)
     {
         $this->container = $container;
+        $this->filesystem = new Filesystem();
     }
 
     public function bootstrap()
@@ -101,8 +105,7 @@ final class WPStaging
         $logsDirectory = trailingslashit(wp_upload_dir()['basedir']) . WPSTG_PLUGIN_DOMAIN . '/logs/';
 
         if (!file_exists($logsDirectory)) {
-            (new Filesystem())->mkdir($logsDirectory, true);
-
+            $this->filesystem->mkdir($logsDirectory, true);
             $logsDirectoryExists = file_exists($logsDirectory) && is_writable($logsDirectory);
         } else {
             $logsDirectoryExists = is_writable($logsDirectory);

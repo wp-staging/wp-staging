@@ -3,9 +3,11 @@
 namespace WPStaging\Framework\Settings;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Pro\Backup\BackupScheduler;
+use WPStaging\Framework\Security\Auth;
 
 class Settings
 {
@@ -41,10 +43,18 @@ class Settings
      */
     private $sanitize;
 
-    public function __construct(SiteInfo $siteInfo, Sanitize $sanitize)
+    /** @var Queue */
+    private $queue;
+
+    /** @var Auth */
+    private $auth;
+
+    public function __construct(SiteInfo $siteInfo, Sanitize $sanitize, Queue $queue, Auth $auth)
     {
         $this->siteInfo = $siteInfo;
         $this->sanitize = $sanitize;
+        $this->queue    = $queue;
+        $this->auth     = $auth;
     }
 
     public function registerSettings()
@@ -69,7 +79,7 @@ class Settings
 
         if (WPStaging::isPro() && is_array($data)) {
             $sendBackupSchedulesErrorReport = isset($data['schedulesErrorReport']) ? $data['schedulesErrorReport'] : false;
-            $reportEmail = isset($data['schedulesReportEmail']) ? $data['schedulesReportEmail'] : '';
+            $reportEmail                    = isset($data['schedulesReportEmail']) ? $data['schedulesReportEmail'] : '';
             unset($data['schedulesErrorReport']);
             unset($data['wpstg-send-schedules-report-email']);
             $this->setBackupScheduleOptions($sendBackupSchedulesErrorReport, $reportEmail);
@@ -84,6 +94,40 @@ class Settings
         }
 
         return apply_filters("wpstg-settings", $sanitized, $data);
+    }
+
+    /**
+     * @return null
+     */
+    public function ajaxPurgeQueueTable()
+    {
+        if ($this->auth->isAuthenticatedRequest() === false) {
+            wp_send_json([
+                'success' => false,
+                'message' => esc_html__('Error 403: Unauthorized Request', 'wp-staging')
+            ]);
+        }
+
+        $result = $this->queue->purgeQueueTable();
+
+        if ($result === false) {
+            wp_send_json([
+                'success' => false,
+                'message' => esc_html__('Unable to purge queue table', 'wp-staging')
+            ]);
+        }
+
+        if ($result === 0) {
+            wp_send_json([
+                'success' => true,
+                'message' => esc_html__(sprintf('Table %s is already empty.', $this->queue->getTableName()))
+            ]);
+        }
+
+        wp_send_json([
+            'success' => true,
+            'message' => sprintf(esc_html__('Purged queue table! Removed %s action(s)', 'wp-staging'), $result)
+        ]);
     }
 
     /**
@@ -103,7 +147,7 @@ class Settings
             $val = htmlspecialchars($value);
             if (array_key_exists($key, $this->optionsToSanitize)) {
                 $sanitizeMethod = $this->optionsToSanitize[$key];
-                $val = $this->sanitize->$sanitizeMethod($val);
+                $val            = $this->sanitize->$sanitizeMethod($val);
             }
 
             $sanitized[$key] = wp_filter_nohtml_kses($val);

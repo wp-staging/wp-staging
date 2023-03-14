@@ -47,6 +47,10 @@ abstract class AbstractCache
      */
     abstract public function save($value);
 
+    /**
+     * @return void
+     * @throws IOException
+     */
     public function delete()
     {
         if (!is_file($this->filePath)) {
@@ -132,7 +136,10 @@ abstract class AbstractCache
     }
 
     /**
+     * If cache is not valid, it will be deleted
+     * @param $delete
      * @return bool
+     * @throws IOException
      */
     public function isValid($delete = true)
     {

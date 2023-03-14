@@ -17,11 +17,11 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
     style="display: none"
 >
     <h2 class="wpstg--modal--backup--import--upload--title">
-        <?php esc_html_e('Uploading Backup', 'wp-staging') ?>
+        <?php esc_html_e('Upload Backup', 'wp-staging') ?>
         <div class="wpstg--tooltip">
             <img class="wpstg--dashicons wpstg-dashicons-19" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg"></img>
             <p class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                <?php esc_html_e("Upload a WP STAGING backup file (*.wpstg) and restore your site to it at any time. This backup can have been created from this site, or even created on another website. So you can migrate the other site to this one.", "wp-staging")?>
+                <?php esc_html_e("Upload a WP STAGING backup file (*.wpstg) and use it to restore your website at any time. This backup may have been created from this website or from another website. You can move a website in this way.", "wp-staging")?>
                 <br><br>
                 <?php esc_html_e("Videos:", "wp-staging")?>
                 <br>
@@ -69,7 +69,7 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
                     </div>
                     <p class="wpstg-backup-direct-upload-notice">
                         <strong><?php esc_html_e('Did you know?', 'wp-staging') ?></strong><br>
-                        <?php esc_html_e('You can upload backups directly to the directory:', 'wp-staging') ?><br>
+                        <?php esc_html_e('You can optionally upload a backup via FTP to the directory:', 'wp-staging') ?><br>
                         <strong><?php echo esc_html($uploadDirectory) ?></strong>
                     </p>
                 </div>
@@ -81,7 +81,7 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
                             <span><small><?php esc_html_e('Discovering optimal upload speed... This might a little while...', 'wp-staging'); ?></small></span>
                         </h4>
                     </div>
-                    <p class="wpstg-backup-upload-dont-close-notice"><?php esc_html_e('If you close this window your backup will be aborted.', 'wp-staging') ?></p>
+                    <p class="wpstg-backup-upload-dont-close-notice"><?php esc_html_e('If you close this window the upload will be aborted.', 'wp-staging') ?></p>
                 </div>
 
 

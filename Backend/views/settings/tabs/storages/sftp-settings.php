@@ -6,26 +6,24 @@ namespace WPStaging\Storages\SftpSettings;
  * @var string $providerId
  */
 
-use WPStaging\Framework\Facades\Sanitize;
-
 ?>
 <fieldset>
     <?php
     /** @var \WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth */
     $storage = \WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth::class);
     $options = $storage->getOptions();
-    $ftpType = !empty($options['ftpType']) ? Sanitize::sanitizeString($options['ftpType']) : 'ftp';
-    $host = !empty($options['host']) ? Sanitize::sanitizeString($options['host']) : '';
-    $port = !empty($options['port']) ? Sanitize::sanitizeString($options['port']) : '';
-    $username = !empty($options['username']) ? Sanitize::sanitizeString($options['username']) : '';
-    $password = !empty($options['password']) ? Sanitize::sanitizePassword($options['password']) : '';
-    $ssl = isset($options['ssl']) ? Sanitize::sanitizeBool($options['ssl']) : false;
-    $passive = isset($options['passive']) ? Sanitize::sanitizeBool($options['passive']) : false;
-    $privateKey = !empty($options['key']) ? Sanitize::sanitizeString($options['key']) : '';
-    $passphrase = !empty($options['passphrase']) ? Sanitize::sanitizePassword($options['passphrase']) : '';
-    $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? Sanitize::sanitizeInt($options['maxBackupsToKeep']) : 2;
+    $ftpType = !empty($options['ftpType']) ? $options['ftpType'] : 'ftp';
+    $host = !empty($options['host']) ? $options['host'] : '';
+    $port = !empty($options['port']) ? $options['port'] : '';
+    $username = !empty($options['username']) ? $options['username'] : '';
+    $password = !empty($options['password']) ? $options['password'] : '';
+    $ssl = isset($options['ssl']) ? $options['ssl'] : false;
+    $passive = isset($options['passive']) ? $options['passive'] : false;
+    $privateKey = !empty($options['key']) ? $options['key'] : '';
+    $passphrase = !empty($options['passphrase']) ? $options['passphrase'] : '';
+    $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
     $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
-    $location = isset($options['location']) ? Sanitize::sanitizeString($options['location']) : '';
+    $location = isset($options['location']) ? $options['location'] : '';
 
     ?>
     <p>
@@ -69,12 +67,12 @@ use WPStaging\Framework\Facades\Sanitize;
 
                 <fieldset class="wpstg-fieldset only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('SSL', 'wp-staging') ?></label>
-                    <input type="checkbox" name="ssl" value="true" <?php echo $ssl === true ? 'checked ' : '' ?>/>
+                    <input type="checkbox" class="wpstg-checkbox" name="ssl" value="true" <?php echo $ssl === true ? 'checked ' : '' ?>/>
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Passive', 'wp-staging') ?></label>
-                    <input type="checkbox" name="passive" value="true" <?php echo $passive === true ? 'checked ' : '' ?>/>
+                    <input type="checkbox" class="wpstg-checkbox" name="passive" value="true" <?php echo $passive === true ? 'checked ' : '' ?>/>
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
@@ -99,18 +97,14 @@ use WPStaging\Framework\Facades\Sanitize;
             </fieldset>
 
             <fieldset class="wpstg-fieldset">
-                <label><?php esc_html_e('Location', 'wp-staging') ?></label>
-                <input class="wpstg-form-control" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
-                <p><?php esc_html_e("Add the directory where you want to upload the backup files. This directory must already exist and a relative one to the home dir of the FTP user.", 'wp-staging') ?></p>
+                <label><?php esc_html_e('Directory Path', 'wp-staging') ?></label>
+                <input class="wpstg-form-control" style="min-width:300px;" type="text" placeholder="/backups/example.com/" name="location" value="<?php echo esc_attr($location); ?>" />
+                <br><br><?php esc_html_e("Add the directory to which you want to upload the backup files.", 'wp-staging') ?>
+                <br>
+                <?php esc_html_e("This directory must already exist and be relative to the FTP user's home directory.", 'wp-staging') ?>
             </fieldset>
 
-            <?php
-            require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php";
-            ?>
-
-            <hr/>
-
-            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button>
+            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
         </form>
     </div>
 </fieldset>

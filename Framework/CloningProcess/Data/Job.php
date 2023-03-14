@@ -171,11 +171,11 @@ abstract class Job extends CloningProcess
         $home = get_option('home');
         $siteurl = get_option('siteurl');
 
-        if (empty($home) || empty($siteurl)) {
+        if (empty($home) || empty($siteurl) || !$this->isSubDir() || str_replace([$home], '', $siteurl) === $siteurl) {
             return '';
         }
 
-        return str_replace([$home, '/'], '', $siteurl);
+        return trim(wp_parse_url($siteurl, PHP_URL_PATH), '/');
     }
 
     /**
@@ -193,7 +193,7 @@ abstract class Job extends CloningProcess
         }
 
         if ($this->isMultisiteAndPro()) {
-            if ($this->isSubDir()) {
+            if ($this->getInstallSubDir()) {
                 return trailingslashit($this->baseUrl) . trailingslashit($this->getInstallSubDir()) . $this->options->cloneDirectoryName;
             }
 
@@ -202,7 +202,7 @@ abstract class Job extends CloningProcess
             return rtrim($this->baseUrl, '/\\') . $multisitePath . $this->options->cloneDirectoryName;
         }
 
-        if ($this->isSubDir()) {
+        if ($this->getInstallSubDir()) {
             return trailingslashit($this->homeUrl) . trailingslashit($this->getInstallSubDir()) . $this->options->cloneDirectoryName;
         }
 

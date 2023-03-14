@@ -4,7 +4,6 @@
  * This class is not PSR-3 compliant. Currently just added the basic functionality to make the "change" easier
  * in the future. For now, there are just few things to make transition easy.
  *
- * Todo: Replace all instances of Strings with actual "string"
  */
 
 namespace WPStaging\Core\Utils;
@@ -25,13 +24,11 @@ class Logger implements LoggerInterface, ShutdownableInterface
     const TYPE_ERROR    = "ERROR";
 
     const TYPE_CRITICAL = "CRITICAL";
-
     const TYPE_FATAL    = "FATAL";
 
     const TYPE_WARNING  = "WARNING";
 
     const TYPE_INFO     = "INFO";
-
     const TYPE_DEBUG    = "DEBUG";
 
     /**
@@ -41,13 +38,13 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     /**
      * Log directory (full path)
-     * @var Strings
+     * @var String
      */
     private $logDir;
 
     /**
      * Log file extension
-     * @var Strings
+     * @var String
      */
     private $logExtension   = "log";
 
@@ -59,7 +56,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     /**
      * Forced filename for the log
-     * @var null|Strings
+     * @var null|string
      */
     private $fileName       = null;
 
@@ -69,8 +66,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
     /**
      * Logger constructor.
      *
-     * @param null|Strings $logDir
-     * @param null|Strings $logExtension
+     * @param null|string $logDir
+     * @param null|string $logExtension
      *
      * @throws \Exception
      */
@@ -133,7 +130,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
     /**
-     * @return null|Strings
+     * @return null|string
      */
     public function getFileName()
     {
@@ -172,9 +169,9 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
     /**
-     * @param null|Strings $file
+     * @param null|string $file
      *
-     * @return Strings
+     * @return string
      */
     public function read($file = null)
     {
@@ -182,9 +179,9 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
     /**
-     * @param null|Strings $fileName
+     * @param null|string $fileName
      *
-     * @return Strings
+     * @return string
      */
     public function getLogFile($fileName = null)
     {
@@ -199,7 +196,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
     /**
      * Delete a log file
      *
-     * @param Strings $logFileName
+     * @param string $logFileName
      *
      * @return bool
      * @throws \Exception
@@ -216,7 +213,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
     /**
-     * @return Strings
+     * @return string
      */
     public function getLogDir()
     {
@@ -224,7 +221,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
     }
 
     /**
-     * @return Strings
+     * @return string
      */
     public function getLogExtension()
     {
@@ -260,6 +257,11 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
 
         foreach (array_reverse($this->messages) as $message) {
+            // Skip if type is not set
+            if (empty($message['type'])) {
+                continue;
+            }
+
             if (in_array(strtoupper($message['type']), $types)) {
                 return $message;
             }

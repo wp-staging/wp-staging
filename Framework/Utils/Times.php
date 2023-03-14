@@ -271,4 +271,14 @@ class Times
          */
         return apply_filters('human_time_diff', $since, $diff, $from, $to);
     }
+
+    /**
+     * @return string
+     * @throws \Exception
+     */
+    public function getCurrentTime()
+    {
+        $timeFormatOption = get_option('time_format');
+        return (new DateTime('now', $this->getSiteTimezoneObject()))->format($timeFormatOption);
+    }
 }

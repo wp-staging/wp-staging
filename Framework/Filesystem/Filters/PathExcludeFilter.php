@@ -48,6 +48,7 @@ class PathExcludeFilter extends FilterIterator
         return $this->excludeFilter->getWpRootPath();
     }
 
+    #[\ReturnTypeWillChange]
     public function accept()
     {
         // Get the current SplFileInfo object

@@ -6,6 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Support\ThirdParty\Jetpack;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
+use RuntimeException;
 
 class UpdateWpConfigConstants extends FileCloningService
 {
@@ -13,7 +14,6 @@ class UpdateWpConfigConstants extends FileCloningService
 
     /**
      * @return bool
-     * @throws \Exception
      */
     protected function internalExecute()
     {
@@ -55,7 +55,7 @@ class UpdateWpConfigConstants extends FileCloningService
             $replaceOrSkip["MULTISITE"] = 'false';
         }
 
-        /** @var Jetpack */
+        /** @var  $jetpackHelper */
         $jetpackHelper = WPStaging::make(Jetpack::class);
         if ($jetpackHelper->isJetpackActive()) {
             $replaceOrAdd[Jetpack::STAGING_MODE_CONST] = 'true';
@@ -86,7 +86,6 @@ class UpdateWpConfigConstants extends FileCloningService
             $content = $this->deleteDefinition($constant, $content);
         }
         $this->writeWpConfig($content);
-        //$this->log("Done");
         return true;
     }
 
@@ -108,7 +107,7 @@ class UpdateWpConfigConstants extends FileCloningService
      * @param string $content
      * @param string $newDefinition
      * @return bool|string|string[]|null
-     * @throws \Exception
+     * @throws RuntimeException
      */
     protected function replaceExistingDefinition($constant, $content, $newDefinition)
     {
@@ -127,7 +126,7 @@ class UpdateWpConfigConstants extends FileCloningService
         $content = preg_replace([$pattern], $replacementEscapedCharacter, $content);
 
         if ($content === null) {
-            throw new \RuntimeException("Failed to change " . $constant);
+            throw new RuntimeException("Failed to change " . $constant);
         }
 
         $this->log("Updated: " . $constant);
@@ -138,35 +137,76 @@ class UpdateWpConfigConstants extends FileCloningService
      * @param string $constant
      * @param string $content
      * @param string $newDefinition
-     * @return string|string[]|null
-     * @throws \Exception
+     * @return string
+     * @throws RuntimeException
      */
     protected function addDefinition($constant, $content, $newDefinition)
     {
-        preg_match($this->abspathRegex, $content, $matches);
-        if (!empty($matches[0])) {
-            $replace = "define('" . $constant . "', " . $newDefinition . "); \n" .
-                "if ( ! defined( 'ABSPATH' ) )";
-
-             // escaping dollar sign in the value
-            $replaceEscaped = addcslashes($replace, '\\$');
-
-            if (($content = preg_replace([$this->abspathRegex], $replaceEscaped, $content)) === null) {
-                throw new \RuntimeException("Failed to change " . $constant);
-            }
-        } else {
-            throw new \RuntimeException("Can not add " . $constant . " constant to wp-config.php. Can not find free position to add it.");
+        if (!$this->abspathConstantExists($content)) {
+            throw new RuntimeException("Can not add " . $constant . " constant to wp-config.php. Can not find ABSPATH constant.");
         }
 
-        $this->log("Added:" . $constant);
+        if ($this->maybeAddDefinedCondition($constant)) {
+            $replacement = <<<EOT
+if ( ! defined( '$constant' ) ) {
+    define('$constant', $newDefinition);
+}
+if ( ! defined( 'ABSPATH' ) )
+EOT;
+        } else {
+            $replacement = <<<EOT
+define('$constant', $newDefinition);
+if ( ! defined( 'ABSPATH' ) )
+EOT;
+        }
+
+        // escaping dollar sign
+        $replacementEscaped = addcslashes($replacement, '\\$');
+
+        if (($content = preg_replace([$this->abspathRegex], $replacementEscaped, $content)) === null) {
+            throw new RuntimeException("Failed to update constant " . $constant);
+        }
+
+        $this->log("Added constant:" . $constant);
         return $content;
+    }
+
+    /**
+     * @param $content string
+     * @return bool
+     */
+    private function abspathConstantExists($content)
+    {
+        preg_match($this->abspathRegex, $content, $matches);
+        if (empty($matches[0])) {
+            return false;
+        }
+        return true;
+    }
+
+    /**
+     * Treat certain constants differently because other plugins or themes could declare this constant outside wp-config.php.
+     * E.g. Local by Flywheel does.
+     * We don't add the defined condition to all constants because it would make it
+     * difficult to debug and find out why a staging site breaks if client site overwrites a default constant outside wp-config.php.
+     * So we treat some constants like WP_ENVIRONMENT_TYPE differently.
+     *
+     * @param $constant string Name of the constant
+     * @return bool
+     */
+    private function maybeAddDefinedCondition($constant)
+    {
+        if ($constant === 'WP_ENVIRONMENT_TYPE') {
+            return true;
+        }
+        return false;
     }
 
     /**
      * @param string $constant
      * @param string $content
-     * @return bool|string|string[]|null
-     * @throws \Exception
+     * @return string|array|null
+     * @throws RuntimeException
      */
     protected function deleteDefinition($constant, $content)
     {
@@ -174,12 +214,11 @@ class UpdateWpConfigConstants extends FileCloningService
         preg_match($pattern, $content, $matches);
 
         if (empty($matches[0])) {
-            //$this->log($constant . " not found in wp-config.php. Skipping");
             return $content;
         }
         $replace = "";
         if (($content = preg_replace([$pattern], $replace, $content)) === null) {
-            throw new \RuntimeException("Failed to change " . $constant);
+            throw new RuntimeException("Failed to change " . $constant);
         }
         $this->log("Deleted: " . $constant);
         return $content;
@@ -189,14 +228,13 @@ class UpdateWpConfigConstants extends FileCloningService
      * @param $constant
      * @param $content
      * @param $newDefinition
-     * @return bool|string|string[]|null
-     * @throws \Exception
+     * @return string
      */
     protected function replaceOrAddDefinition($constant, $content, $newDefinition)
     {
         $newContent = $this->replaceExistingDefinition($constant, $content, $newDefinition);
         if (!$newContent) {
-            $this->debugLog($constant . " not defined in wp-config.php. Creating new entry.");
+            $this->debugLog("Constant" . $constant . " not defined in wp-config.php. Creating new entry.");
             $newContent = $this->addDefinition($constant, $content, $newDefinition);
         }
         return $newContent;
@@ -207,7 +245,6 @@ class UpdateWpConfigConstants extends FileCloningService
      * @param $content
      * @param $newDefinition
      * @return bool|string|string[]|null
-     * @throws \Exception
      */
     protected function replaceOrSkipDefinition($constant, $content, $newDefinition)
     {

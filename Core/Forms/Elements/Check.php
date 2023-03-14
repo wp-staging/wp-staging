@@ -23,7 +23,7 @@ class Check extends ElementsWithOptions
 
             $attributeId = $this->getId() . '_' . $this->getId($id);
 
-            $output .= "<input type='checkbox' name='{$this->getId()}' id='{$attributeId}' value='{$id}' {$checked}/>";
+            $output .= "<input type='checkbox' class='wpstg-checkbox' name='{$this->getId()}' id='{$attributeId}' value='{$id}' {$checked}/>";
 
             if ($value) {
                 $output .= "<label for='{$attributeId}'>{$value}</label>";

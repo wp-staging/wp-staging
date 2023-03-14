@@ -132,7 +132,7 @@
                 margin-top:30px;
             }
             .wpstg-alert {
-                padding: 8px;
+                padding: 16px;
                 border: 1px solid transparent;
                 margin-bottom: 8px;
             }
@@ -144,8 +144,8 @@
             }
             .wpstg-alert.wpstg-alert-info {
                 color: #fff;
-                background: #25a1f0;
-                border-color: #2188c9;
+                background: #185abc;
+                border-color: #185abc;
             }
 
             @-webkit-keyframes slideIn {

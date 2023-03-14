@@ -256,6 +256,16 @@ class Notices
             require_once "{$viewsNoticesPath}outdated-wp-staging-hooks.php";
         }
 
+        // Show notice mu-plugin directory is not executable
+        $varsDirectory = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
+        $wpstgSettings = (object) $settings;
+        if (
+            self::SHOW_ALL_NOTICES || (!is_writable($varsDirectory) || !is_readable($varsDirectory))
+            && isset($wpstgSettings->optimizer) && $wpstgSettings->optimizer
+        ) {
+            require "{$viewsNoticesPath}/mu-plugin-directory-permission-problem.php";
+        }
+
         // Show notice Failed to prevent directory listing
         $this->showDirectoryListingWarningNotice($viewsNoticesPath);
     }

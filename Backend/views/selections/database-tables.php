@@ -12,7 +12,7 @@
 <p>
     <strong><?php esc_html_e("Select Tables to Copy", "wp-staging"); ?></strong>
     <br>
-    <?php echo sprintf(esc_html__("Tables with the production prefix %s have been selected.", "wp-staging"), "<code>" . esc_html($dbPrefix) . "</code>"); ?>
+    <?php echo sprintf(esc_html__("Tables with the live site prefix %s have been selected.", "wp-staging"), "<code>" . esc_html($dbPrefix) . "</code>"); ?>
 </p>
 <p style="display: none;">
     <?php esc_html_e("Selected tables will be copied/replaced with the tables from the production site.", "wp-staging"); ?>

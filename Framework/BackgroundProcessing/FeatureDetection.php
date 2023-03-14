@@ -40,7 +40,7 @@ class FeatureDetection
      */
     public function isAjaxAvailable($showAdminNotice = true)
     {
-        debug_log('isAjaxAvailable start');
+        //debug_log('isAjaxAvailable start');
         if ($this->isAjaxAvailableCache === null) {
             // Run this check only on Admin UI and on PHP initial state.
             // TODO: inject WpAdapter using DI
@@ -50,12 +50,12 @@ class FeatureDetection
             if ($notRightContext) {
                 // Default to say that it's supported if we cannot exclude it.
                 debug_log(sprintf(
-                    "isAjaxAvailable not right context: Installing? %s \n Rest? %s \n Ajax? %s \n Cron? %s \n Not admin? %s \n",
-                    wp_installing(),
-                    (defined('REST_REQUEST') && REST_REQUEST),
-                    (new WpAdapter())->doingAjax(),
-                    wp_doing_cron(),
-                    !is_admin()
+                    "isAjaxAvailable not right context: Is WP Installing? %s - Is Rest? %s - Is Ajax? %s - Is Cron? %s - Is admin? %s",
+                    wp_installing() ? 'true' : 'false',
+                    (defined('REST_REQUEST') && REST_REQUEST) ? 'true' : 'false',
+                    (new WpAdapter())->doingAjax() ? 'true' : 'false',
+                    wp_doing_cron() ? 'true' : 'false',
+                    is_admin() ? 'true' : 'false'
                 ));
                 return true;
             }
@@ -75,7 +75,7 @@ class FeatureDetection
             add_action('admin_notices', [$this, 'ajaxSupportMissingAdminNotice']);
         }
 
-        debug_log('isAjaxAvailable end. Result: ' . $this->isAjaxAvailableCache);
+        //debug_log('isAjaxAvailable end. Result: ' . $this->isAjaxAvailableCache);
 
         return $this->isAjaxAvailableCache;
     }

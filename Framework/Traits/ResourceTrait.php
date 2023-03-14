@@ -116,7 +116,7 @@ trait ResourceTrait
      */
     public function isDatabaseRestoreTimeLimit()
     {
-        $timeLimit = apply_filters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', self::$backupRestoreMaxExecutionTimeInSeconds);
+        $timeLimit = apply_filters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', static::$backupRestoreMaxExecutionTimeInSeconds);
         return $this->getRunningTime() > $timeLimit;
     }
 

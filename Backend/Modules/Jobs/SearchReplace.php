@@ -11,6 +11,7 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\DbRowsGeneratorTrait;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\Utils\Escape;
 
 /**
  * Class SearchReplace
@@ -401,7 +402,7 @@ class SearchReplace extends CloningProcess
 
                 // Skip primary key column
                 if (in_array($column, $primaryKeys)) {
-                    $whereSql[] = $column . ' = "' . wpstg_mysql_escape_mimic($dataRow) . '"';
+                    $whereSql[] = $column . ' = "' . WPStaging::make(Escape::class)->mysqlRealEscapeString($dataRow) . '"';
                     continue;
                 }
 
@@ -419,7 +420,7 @@ class SearchReplace extends CloningProcess
 
                 // Something was changed
                 if ($row[$column] !== $dataRow) {
-                    $updateSql[] = $column . ' = "' . wpstg_mysql_escape_mimic($dataRow) . '"';
+                    $updateSql[] = $column . ' = "' . WPStaging::make(Escape::class)->mysqlRealEscapeString($dataRow) . '"';
                     $doUpdate = true;
                 }
             }

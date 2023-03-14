@@ -345,4 +345,12 @@ class Directory
         $path = $this->getAbsPath() . str_replace($this->getAbsPath(), '', $path);
         return file_exists($path);
     }
+
+    /**
+     * @return Filesystem
+     */
+    public function getFileSystem()
+    {
+        return $this->filesystem;
+    }
 }

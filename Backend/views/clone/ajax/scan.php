@@ -69,7 +69,7 @@ $isPro = defined('WPSTGPRO_VERSION');
     </fieldset>
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
-        <span class="wpstg-tab-triangle wpstg-no-icon"><input type="checkbox" name="wpstg-advanced" value="true"></span>
+        <span class="wpstg-tab-triangle wpstg-no-icon"><input type="checkbox" class="wpstg-checkbox" name="wpstg-advanced" value="true"></span>
         <?php
             $advanceSettingsTitle = $isPro ? esc_html__("Advanced Settings  ", "wp-staging") : esc_html__('Advanced Settings  (Requires Pro Version)', "wp-staging");
             echo esc_html($advanceSettingsTitle); ?>
@@ -93,7 +93,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
 <fieldset class="wpstg-fieldset" style="margin-left: 16px;">
     <p class="wpstg--advance-settings--checkbox">
         <label for="wpstg-clean-plugins-themes"><?php esc_html_e('Clean Plugins/Themes'); ?></label>
-        <input type="checkbox" id="wpstg-clean-plugins-themes" name="wpstg-clean-plugins-themes" value="true">
+        <input type="checkbox" class="wpstg-checkbox" id="wpstg-clean-plugins-themes" name="wpstg-clean-plugins-themes" value="true">
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
             <span class="wpstg--tooltiptext">
@@ -103,7 +103,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
     </p>
     <p class="wpstg--advance-settings--checkbox">
         <label for="wpstg-clean-uploads"><?php esc_html_e('Clean Uploads'); ?></label>
-        <input type="checkbox" id="wpstg-clean-uploads" name="wpstg-clean-uploads" value="true">
+        <input type="checkbox" class="wpstg-checkbox" id="wpstg-clean-uploads" name="wpstg-clean-uploads" value="true">
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
             <span class="wpstg--tooltiptext">

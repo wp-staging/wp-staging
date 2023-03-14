@@ -26,5 +26,7 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
             </p>
         </div>
     </td>
-    <td class="wpstg-exclude-filter-action-column"><button class="wpstg-remove-exclude-rule">×</button></td>
+    <td class="wpstg-exclude-filter-action-column">
+        <img class="wpstg-remove-exclude-rule" src="<?php echo esc_url(trailingslashit(WPSTG_PLUGIN_URL)) . 'assets/'; ?>img/trash.svg" alt="">
+    </td>
 </tr>

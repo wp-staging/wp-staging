@@ -38,19 +38,13 @@ if ($isPro && !empty($options->current)) {
 } ?>
 <p class="wpstg--advance-settings--checkbox">
     <label for="wpstg_allow_emails"><?php esc_html_e('Allow Emails Sending'); ?></label>
-    <input type="checkbox" id="wpstg_allow_emails" name="wpstg_allow_emails" value="true" <?php echo $emailsAllowed === true ? 'checked' : '' ?> <?php echo $settingsEnabled === false ? 'disabled' : '' ?> />
+    <input type="checkbox" class="wpstg-checkbox" id="wpstg_allow_emails" name="wpstg_allow_emails" value="true" <?php echo $emailsAllowed === true ? 'checked' : '' ?> <?php echo $settingsEnabled === false ? 'disabled' : '' ?> />
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
             <?php esc_html_e('Allow emails sending for this staging site.', 'wp-staging'); ?>
             <br /> <br />
-            <b><?php esc_html_e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(esc_html__('Even if email sendings is disabled, some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'); ?>
+            <b><?php esc_html_e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(esc_html__('Even if email sending is disabled, some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'); ?>
         </span>
     </span>
 </p>
-
-<?php if (!$isPro) { // Show this only in FREE version ?>
-<p class="wpstg-dark-alert"><?php esc_html_e('These are premium features ', 'wp-staging'); ?>
-    <a href="https://wp-staging.com/?utm_source=wp-admin&utm_medium=wp-admin&utm_campaign=db-external&utm_term=db-external" target="_blank" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet"><?php esc_html_e("Get Started", "wp-staging"); ?></a>
-</p>
-<?php } ?>

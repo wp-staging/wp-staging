@@ -43,11 +43,11 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     <?php } ?>
 
     <label for="wpstg-ext-db"><?php esc_html_e('Change Database'); ?></label>
-    <input type="checkbox" id="wpstg-ext-db" name="wpstg-ext-db" value="true" class="wpstg-toggle-advance-settings-section" data-id="wpstg-external-db-section" <?php echo $isPro === true ? '' : 'disabled' ?> >
+    <input type="checkbox" id="wpstg-ext-db" name="wpstg-ext-db" value="true" class="wpstg-toggle-advance-settings-section wpstg-checkbox" data-id="wpstg-external-db-section" <?php echo $isPro === true ? '' : 'disabled' ?> >
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
-            <?php wp_kses_post(__('You can clone the staging site into a separate database. The Database must be created manually in advance before starting the cloning proccess.<br/><br/><strong>Note:</strong> If there are already tables with the same database prefix and name in this database, the cloning process will be aborted without any further asking!', 'wp-staging')); ?>
+            <?php echo wp_kses_post(__('You can clone the staging site into a separate database. The Database must be created manually in advance before starting the cloning proccess.<br/><br/><strong>Note:</strong> If there are already tables with the same database prefix and name in this database, the cloning process will be aborted without any further asking!', 'wp-staging')); ?>
         </span>
     </span>
 </p>

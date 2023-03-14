@@ -1440,6 +1440,37 @@
   var WPStagingCommon = (function ($) {
     var WPStagingCommon = {
       continueErrorHandle: true,
+      retry: {
+        currentDelay: 0,
+        count: 0,
+        max: 10,
+        retryOnErrors: [401, 403, 404, 429, 502, 503, 504],
+        performingRequest: false,
+        incrementRetry: function incrementRetry(incrementRatio) {
+          if (incrementRatio === void 0) {
+            incrementRatio = 1.25;
+          }
+
+          WPStagingCommon.retry.performingRequest = true;
+
+          if (WPStagingCommon.retry.currentDelay === 0) {
+            // start with a delay of 1sec
+            WPStagingCommon.retry.currentDelay = 1000;
+            WPStagingCommon.retry.count = 1;
+          }
+
+          WPStagingCommon.retry.currentDelay += 500 * WPStagingCommon.retry.count * incrementRatio;
+          WPStagingCommon.retry.count++;
+        },
+        canRetry: function canRetry() {
+          return WPStagingCommon.retry.count < WPStagingCommon.retry.max;
+        },
+        reset: function reset() {
+          WPStagingCommon.retry.currentDelay = 0;
+          WPStagingCommon.retry.count = 0;
+          WPStagingCommon.retry.performingRequest = false;
+        }
+      },
       cache: {
         elements: [],
         get: function get(selector) {
@@ -1618,6 +1649,11 @@
         return response;
       },
       showError: function showError(message) {
+        // If retry request no need to show Error;
+        if (WPStagingCommon.retry.performingRequest) {
+          return;
+        }
+
         WPStagingCommon.cache.get('#wpstg-try-again').css('display', 'inline-block');
         WPStagingCommon.cache.get('#wpstg-cancel-cloning').text('Reset');
         WPStagingCommon.cache.get('#wpstg-resume-cloning').show();
@@ -1916,7 +1952,7 @@
 
         var modal = qs('.wpstg-reset-confirmation');
         modal.classList.remove('wpstg-swal2-loading');
-        modal.querySelector('.wpstg--swal2-popup').style.width = '500px';
+        modal.querySelector('.wpstg--swal2-popup').style.width = '540px';
         modal.querySelector('.wpstg--swal2-content').innerHTML = data.html;
         _this2.directoryNavigator = new WpstgDirectoryNavigation();
 
@@ -2121,7 +2157,7 @@
       cache.get('#wpstg-resume-cloning').show();
       cache.get('#wpstg-error-wrapper').show();
       cache.get('#wpstg-error-details').show().html(message);
-      cache.get('#wpstg-removing-clone').removeClass('loading');
+      cache.get('#wpstg-removing-clone').removeClass('wpstg-loading');
       cache.get('.wpstg-loader').hide();
       $('.wpstg--modal--process--generic-problem').show().html(message); // Error event information for Staging
 
@@ -2453,7 +2489,7 @@
       .on('click', '#wpstg-remove-clone', function (e) {
         resetErrors();
         e.preventDefault();
-        cache.get('#wpstg-removing-clone').addClass('loading');
+        cache.get('#wpstg-removing-clone').addClass('wpstg-loading');
         cache.get('.wpstg-loader').show();
         deleteClone($(this).data('clone'));
       }) // Cancel deleting clone
@@ -2465,7 +2501,7 @@
       .on('click', '.wpstg-execute-clone', function (e) {
         e.preventDefault();
         var clone = $(this).data('clone');
-        $workFlow.addClass('loading');
+        $workFlow.addClass('wpstg-loading');
         that.cloneExcludeFilters = null;
         ajax({
           action: 'wpstg_scanning',
@@ -2480,12 +2516,12 @@
           var jsonResponse = tryParseJson(response);
 
           if (jsonResponse !== false && jsonResponse.success === false) {
-            $workFlow.removeClass('loading');
+            $workFlow.removeClass('wpstg-loading');
             showErrorModal(jsonResponse);
             return;
           }
 
-          $workFlow.removeClass('loading').html(response); // register check disk space function for clone update process.
+          $workFlow.removeClass('wpstg-loading').html(response); // register check disk space function for clone update process.
 
           checkDiskSpace();
           that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', '#wpstg-workflow', wpstg, that.notyf);
@@ -2851,7 +2887,7 @@
 
     var proceedCloning = function proceedCloning($this, workflow) {
       // Add loading overlay
-      workflow.addClass('loading'); // Prepare data
+      workflow.addClass('wpstg-loading'); // Prepare data
 
       that.data = {
         action: $this.data('action'),
@@ -2878,13 +2914,13 @@
         var jsonResponse = tryParseJson(response);
 
         if (jsonResponse !== false && jsonResponse.success === false) {
-          workflow.removeClass('loading');
+          workflow.removeClass('wpstg-loading');
           showErrorModal(jsonResponse);
           return;
         } // Styling of elements
 
 
-        workflow.removeClass('loading').html(response);
+        workflow.removeClass('wpstg-loading').html(response);
         that.cloneExcludeFilters = null;
 
         if (that.data.action === 'wpstg_scanning') {
@@ -2960,7 +2996,7 @@
 
     var loadOverview = function loadOverview() {
       var $workFlow = cache.get('#wpstg-workflow');
-      $workFlow.addClass('loading');
+      $workFlow.addClass('wpstg-loading');
       ajax({
         action: 'wpstg_overview',
         accessToken: wpstg.accessToken,
@@ -2972,7 +3008,7 @@
 
         cache.get('.wpstg-current-step'); // Styling of elements
 
-        $workFlow.removeClass('loading').html(response);
+        $workFlow.removeClass('wpstg-loading').html(response);
       }, 'HTML');
       that.switchStep(1);
       cache.get('.wpstg-step3-cloning').show();
@@ -3021,7 +3057,7 @@
           showAjaxFatalError(response); // Finished
 
           if ('undefined' !== typeof response["delete"] && (response["delete"] === 'finished' || response["delete"] === 'unfinished')) {
-            cache.get('#wpstg-removing-clone').removeClass('loading').html('');
+            cache.get('#wpstg-removing-clone').removeClass('wpstg-loading').html('');
 
             if (response["delete"] === 'finished' && response.error === undefined) {
               $('.wpstg-clone[data-clone-id="' + clone + '"]').remove();
@@ -3211,7 +3247,7 @@
           } // Show required disk space
 
 
-          cache.get('#wpstg-clone-id-error').html('Estimated necessary disk space: ' + response.requiredSpace + (response.errorMessage !== null ? '<br>' + response.errorMessage : '') + '<br> <span style="color:#444;">Before you proceed ensure your account has enough free disk space to hold the entire instance of the production site. You can check the available space from your hosting account (cPanel or similar).</span>').show();
+          cache.get('#wpstg-clone-id-error').html('<strong>Estimated necessary disk space: ' + response.requiredSpace + '</strong>' + (response.errorMessage !== null ? '<br>' + response.errorMessage : '') + '<br> <span style="color:#444;">Before you proceed ensure your account has enough free disk space to hold the entire instance of the production site. You can check the available space from your hosting account (e.g. cPanel).</span>').show();
           cache.get('.wpstg-loader').hide();
         }, 'json', false);
       });
@@ -3469,6 +3505,39 @@
       cache.get('.wpstg-current-step').removeClass('wpstg-current-step');
       cache.get('.wpstg-step' + step).addClass('wpstg-current-step');
     };
+
+    that.checkUserDbPermissions = function checkUserDbPermissions(operationType) {
+      return new Promise(function (resolve) {
+        WPStaging$1.ajax({
+          action: 'wpstg_check_user_permissions',
+          accessToken: wpstg.accessToken,
+          nonce: wpstg.nonce,
+          type: operationType
+        }, function (response) {
+          if (response.success) {
+            resolve(true);
+          } else {
+            var _WPStagingCommon$getS;
+
+            WPStagingCommon.getSwalModal(true, {
+              container: 'wpstg-swal-push-container'
+            }).fire((_WPStagingCommon$getS = {
+              title: '',
+              icon: 'warning',
+              html: response.data.message,
+              width: '750px',
+              showCancelButton: true,
+              focusConfirm: false,
+              confirmButtonText: 'Proceed'
+            }, _WPStagingCommon$getS["showCancelButton"] = true, _WPStagingCommon$getS)).then(function (result) {
+              if (result.isConfirmed) {
+                resolve(true);
+              }
+            });
+          }
+        }, 'json', false);
+      });
+    };
     /**
      * Initiation
      * @type {Function}
@@ -3522,26 +3591,26 @@
 
   jQuery(document).ready(function ($) {
     $('body').on('click', '#wpstg-report-issue-button', function (e) {
-      console.log('REPORT');
-      $('.wpstg--tab--active .wpstg-report-issue-form').toggleClass('wpstg-report-show');
+      console.log('REPORT ISSUE.');
+      $('.wpstg-report-issue-form').toggleClass('wpstg-report-show');
       e.preventDefault();
     });
     $('body').on('click', '#wpstg-backups-report-issue-button', function (e) {
-      $('.wpstg--tab--active .wpstg-report-issue-form').toggleClass('wpstg-report-show');
+      $('.wpstg-report-issue-form').toggleClass('wpstg-report-show');
       e.preventDefault();
     });
     $('body').on('click', '#wpstg-report-cancel', function (e) {
-      $('.wpstg--tab--active .wpstg-report-issue-form').removeClass('wpstg-report-show');
+      $('.wpstg-report-issue-form').removeClass('wpstg-report-show');
       e.preventDefault();
     });
-    $('body').on('click', '.wpstg--tab--active #wpstg-report-submit', function (e) {
+    $('body').on('click', '#wpstg-report-submit', function (e) {
       var self = $(this);
       sendIssueReport(self, 'false');
       e.preventDefault();
     });
     /*
-       * Close Success Modal
-       */
+     * Close Success Modal
+     */
 
     $('body').on('click', '#wpstg-success-button', function (e) {
       e.preventDefault();
@@ -3559,6 +3628,7 @@
       var message = $('.wpstg--tab--active .wpstg-report-description').val();
       var syslog = $('.wpstg--tab--active .wpstg-report-syslog').is(':checked');
       var terms = $('.wpstg--tab--active .wpstg-report-terms').is(':checked');
+      console.log(hosting_provider);
       button.attr('disabled', true);
       spinner.css('visibility', 'visible');
       $.ajax({
@@ -3582,7 +3652,7 @@
         spinner.css('visibility', 'hidden');
 
         if (data.errors.length > 0) {
-          $('.wpstg--tab--active .wpstg-report-issue-form .wpstg-message').remove();
+          $('.wpstg-report-issue-form .wpstg-message').remove();
           var errorMessage = $('<div />').addClass('wpstg-message wpstg-error-message');
           $.each(data.errors, function (key, value) {
             if (value.status === 'already_submitted') {
@@ -3607,7 +3677,7 @@
               errorMessage.append('<p>' + value + '</p>');
             }
           });
-          $('.wpstg--tab--active .wpstg-report-issue-form').prepend(errorMessage);
+          $('.wpstg-report-issue-form').prepend(errorMessage);
         } else {
           var successMessage = $('<div />').addClass('wpstg-message wpstg-success-message');
           successMessage.append('<p>Thanks for submitting your request! You should receive an auto reply mail with your ticket ID immediately for confirmation!<br><br>If you do not get that mail please contact us directly at <strong>support@wp-staging.com</strong></p>');

@@ -62,7 +62,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
 
 <p class="wpstg--advance-settings--checkbox">
   <label for="wpstg-change-dest"><?php esc_html_e('Change Destination'); ?></label>
-  <input type="checkbox" id="wpstg-change-dest" name="wpstg-change-dest" value="true" class="wpstg-toggle-advance-settings-section" data-id="wpstg-clone-directory" <?php echo $isPro === true ? '' : 'disabled' ?> >
+  <input type="checkbox" id="wpstg-change-dest" name="wpstg-change-dest" value="true" class="wpstg-toggle-advance-settings-section wpstg-checkbox" data-id="wpstg-clone-directory" <?php echo $isPro === true ? '' : 'disabled' ?> >
   <span class="wpstg--tooltip">
     <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
     <span class="wpstg--tooltiptext">
@@ -113,7 +113,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
 
 <p class="wpstg--advance-settings--checkbox">
     <label for="wpstg_symlink_upload"><?php esc_html_e('Symlink Uploads Folder'); ?></label>
-    <input type="checkbox" id="wpstg_symlink_upload" name="wpstg_symlink_upload" value="true"
+    <input type="checkbox" class="wpstg-checkbox" id="wpstg_symlink_upload" name="wpstg_symlink_upload" value="true"
       <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?>
       <?php echo $uploadsSymlinked === true ? 'checked' : '' ?> />
     <span class="wpstg--tooltip">

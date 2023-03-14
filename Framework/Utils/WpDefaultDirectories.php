@@ -63,7 +63,7 @@ class WpDefaultDirectories
      */
     public function getRelativeUploadPath($mode = SlashMode::NO_SLASH)
     {
-        $relPath = str_replace($this->wpRoot, null, $this->getUploadsPath());
+        $relPath = str_replace($this->wpRoot, '', $this->getUploadsPath());
 
         return $this->slashit($relPath, $mode);
     }
@@ -99,7 +99,7 @@ class WpDefaultDirectories
     public function getRelativeWpContentPath($mode = SlashMode::NO_SLASH)
     {
         $wpContentDir = $this->strUtils->sanitizeDirectorySeparator(WP_CONTENT_DIR);
-        $relPath = str_replace($this->wpRoot, null, $wpContentDir);
+        $relPath = str_replace($this->wpRoot, '', $wpContentDir);
 
         return $this->slashit($relPath, $mode);
     }
@@ -116,7 +116,7 @@ class WpDefaultDirectories
     public function getRelativePluginPath($mode = SlashMode::NO_SLASH)
     {
         $wpPluginDir = $this->strUtils->sanitizeDirectorySeparator(WP_PLUGIN_DIR);
-        $relPath = str_replace($this->wpRoot, null, $wpPluginDir);
+        $relPath = str_replace($this->wpRoot, '', $wpPluginDir);
 
         return $this->slashit($relPath, $mode);
     }

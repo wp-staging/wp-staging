@@ -19,9 +19,10 @@ $isLegacy               = $backup->isLegacy;
 $isCorrupt              = $backup->isCorrupt;
 $isValidMultipartBackup = $backup->isValidMultipartBackup;
 $isMultipartBackup      = $backup->isMultipartBackup;
-$missingParts           = $backup->validationIssues['missingParts'];
-$sizeIssues             = $backup->validationIssues['sizeIssues'];
+$missingParts           = isset($backup->validationIssues['missingParts']) ? $backup->validationIssues['missingParts'] : [];
+$sizeIssues             = isset($backup->validationIssues['sizeIssues']) ? $backup->validationIssues['sizeIssues'] : [];
 $existingBackupParts    = $backup->existingBackupParts;
+$isValidFileIndex       = $backup->isValidFileIndex;
 
 $isUnsupported = version_compare($backup->generatedOnWPStagingVersion, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT, '<');
 
@@ -98,6 +99,7 @@ $logUrl = add_query_arg([
                         </a>
                     <?php endif ?>
                     <a href="#" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-backup"
+                       data-name="<?php echo esc_attr($backupName); ?>"
                        data-md5="<?php echo esc_attr($backup->md5BaseName) ?>"
                        title="<?php esc_attr_e('Delete this backup. This action can not be undone!', 'wp-staging') ?>">
                         <?php esc_html_e('Delete', 'wp-staging') ?>
@@ -174,6 +176,12 @@ $logUrl = add_query_arg([
                 <div class="wpstg-tabs-wrapper invalid-backup-tabs" style="margin-left: -8px; text-align: left;">
                     <?php include(__DIR__ . '/partials/invalid-backup.php'); ?>
                 </div>
+            <?php endif ?>
+            <?php if (!$isMultipartBackup && !$isValidFileIndex) : ?>
+                <li class="wpstg-corrupted-backup wpstg--red">
+                    <div class="wpstg-exclamation">!</div>
+                    <strong><?php esc_html_e('This backup has an invalid files index. Please create a new backup!', 'wp-staging') ?></strong><br/>
+                </li>
             <?php endif ?>
         </ul>
     </div>

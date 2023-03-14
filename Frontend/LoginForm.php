@@ -11,7 +11,10 @@ class LoginForm
     /** @var array $args */
     private $args = [];
 
-    /** @var string */
+    /**
+     * @var string
+     * Read in src/Frontend/views/loginForm.php
+     */
     private $error;
 
     /** @var Sanitize */
@@ -52,12 +55,12 @@ class LoginForm
             $user_data = get_user_by('email', $username);
         }
 
-        $guideLink = esc_url( 'https://wp-staging.com/docs/can-not-login-to-staging-website/#Disable_WP_STAGING_Login_Form_or_Allow_Specific_Users_to_Pass_it' );
+        $guideLink = esc_url('https://wp-staging.com/docs/can-not-login-to-staging-website/#Disable_WP_STAGING_Login_Form_or_Allow_Specific_Users_to_Pass_it');
         if (!$user_data) {
-            $msg = sprintf( __( 'Incorrect credentials! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging' ), wp_login_url(), $guideLink);
+            $msg = sprintf(__('Incorrect credentials! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
 
             if (defined('WPSTGPRO_VERSION')) {
-                $msg = sprintf( __( 'Incorrect credentials! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging' ), wp_login_url(), $guideLink);
+                $msg = sprintf(__('Incorrect credentials! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
             }
             $this->error = $msg;
             return false;
@@ -78,10 +81,10 @@ class LoginForm
 
             header('Location:' . $redirectTo);
         } else {
-            $msg = sprintf( __( 'Login not possible! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging' ), wp_login_url(), $guideLink);
+            $msg = sprintf(__('Login not possible! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
 
             if (defined('WPSTGPRO_VERSION')) {
-                $msg = sprintf( __( 'Login not possible! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging' ), wp_login_url(), $guideLink);
+                $msg = sprintf(__('Login not possible! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
             }
             $this->error = $msg;
         }
@@ -147,14 +150,19 @@ class LoginForm
         $args = empty($this->args) ? $this->getDefaultArguments() : $this->args;
 
         // Don't delete! This is used in the views below
-        $notice = __('Enter your administrator credentials to access the cloned site. (This message will be displayed only once!)', 'wp-staging');
+        $notice     = __('Enter your administrator credentials to access this site. (This message will be displayed only once!)', 'wp-staging');
         $showNotice = (new LoginNotice())->isLoginNoticeActive();
 
+        $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/pro/loginForm.php';
+        if (!file_exists($loginFileView)) {
+            $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/loginForm.php';
+        }
+
         if ($args['echo']) {
-            require(__DIR__ . DIRECTORY_SEPARATOR . 'views/loginForm.php');
+            require($loginFileView);
         } else {
             ob_start();
-            require(__DIR__ . DIRECTORY_SEPARATOR . 'views/loginForm.php');
+            require($loginFileView);
             return ob_get_clean();
         }
     }
@@ -162,7 +170,6 @@ class LoginForm
     /**
      * set error to show
      * @param string $error Error message to set
-     * @return null
      */
     public function setError($error)
     {
@@ -172,20 +179,20 @@ class LoginForm
     /**
      * Returns the default set of arguments used to render the Login Form.
      *
-     * @since TBD
-     *
      * @param array<string,mixed> $overrides A set of values to override the default ones.
      *
      * @return array<string,mixed> The default set of arguments used to render the login form.
+     * @since TBD
+     *
      */
     public function getDefaultArguments(array $overrides = [])
     {
         // Default 'redirect' value takes the user back to the request URI.
-        $httpHost   = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';
-        $requestURI = !empty($_SERVER['REQUEST_URI']) ? $this->sanitize->sanitizeString($_SERVER['REQUEST_URI']) : '';
-        $redirect   = sanitize_url((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
+        $httpHost        = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';
+        $requestURI      = !empty($_SERVER['REQUEST_URI']) ? $this->sanitize->sanitizeString($_SERVER['REQUEST_URI']) : '';
+        $redirect        = sanitize_url((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
         $lostPasswordUrl = wp_lostpassword_url($redirect);
-        $arguments = wp_parse_args(
+        $arguments       = wp_parse_args(
             $overrides,
             [
                 'echo' => true,

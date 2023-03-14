@@ -6,7 +6,6 @@
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
-use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Auth;
 use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
@@ -18,21 +17,21 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
     $providers = Providers::PROVIDERS;
     $isStorageAuthenticated = $auth->isAuthenticated();
     $options = $auth->getOptions();
-    $s3provider = empty($options['provider']) ? '' : Sanitize::sanitizeString($options['provider']);
-    $accessKey = empty($options['accessKey']) ? '' : Sanitize::sanitizePassword($options['accessKey']);
-    $secretKey = empty($options['secretKey']) ? '' : Sanitize::sanitizePassword($options['secretKey']);
-    $region = empty($options['region']) ? '' : Sanitize::sanitizeString($options['region']);
-    $maxBackupsToKeep = empty($options['maxBackupsToKeep']) ? 2 : Sanitize::sanitizeInt($options['maxBackupsToKeep']);
+    $s3provider = empty($options['provider']) ? '' : $options['provider'];
+    $accessKey = empty($options['accessKey']) ? '' : $options['accessKey'];
+    $secretKey = empty($options['secretKey']) ? '' : $options['secretKey'];
+    $region = empty($options['region']) ? '' : $options['region'];
+    $maxBackupsToKeep = empty($options['maxBackupsToKeep']) ? 2 : $options['maxBackupsToKeep'];
     $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
-    $location = empty($options['location']) ? '' : Sanitize::sanitizeString($options['location']);
-    $lastUpdated = empty($options['lastUpdated']) ? 0 : Sanitize::sanitizeInt($options['lastUpdated']);
+    $location = empty($options['location']) ? '' : $options['location'];
+    $lastUpdated = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
 
     if ($s3provider === '') {
-        $customProviderName = empty($options['providerName']) ? '' : Sanitize::sanitizeString($options['providerName']);
-        $endpoint = empty($options['endpoint']) ? '' : Sanitize::sanitizeString($options['endpoint']);
-        $version = empty($options['version']) ? '' : Sanitize::sanitizeString($options['version']);
-        $ssl = isset($options['ssl']) ? Sanitize::sanitizeBool($options['ssl']) : false;
-        $usePathStyleEndpoint = isset($options['usePathStyleEndpoint']) ? Sanitize::sanitizeBool($options['usePathStyleEndpoint']) : false;
+        $customProviderName = empty($options['providerName']) ? '' : $options['providerName'];
+        $endpoint = empty($options['endpoint']) ? '' : $options['endpoint'];
+        $version = empty($options['version']) ? '' : $options['version'];
+        $ssl = isset($options['ssl']) ? $options['ssl'] : false;
+        $usePathStyleEndpoint = isset($options['usePathStyleEndpoint']) ? $options['usePathStyleEndpoint'] : false;
     }
 
     $locationName = empty($locationName) ? 'Bucket' : $locationName;
@@ -73,7 +72,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
                     <fieldset class="wpstg-fieldset">
                         <label><?php esc_html_e('Name', 'wp-staging') ?></label>
-                        <input class="wpstg-form-control" type="text" name="provider_name" value="<?php echo esc_attr($customProviderName); ?>" />
+                        <input class="wpstg-form-control" type="text" style="min-width:300px;" name="provider_name" value="<?php echo esc_attr($customProviderName); ?>" />
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
@@ -84,22 +83,24 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                     <fieldset class="wpstg-fieldset">
                         <label><?php esc_html_e('Version', 'wp-staging') ?></label>
                         <input class="wpstg-form-control" type="text" name="version" value="<?php echo esc_attr($version); ?>" style="min-width:300px;" />
+                        <br><br>
+                            <?php echo Escape::escapeHtml(__("If your S3 provider does not specify a version in their guide, enter <code>latest</code> or <code>2006-03-01</code>.", 'wp-staging')); ?>
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
                         <label><?php esc_html_e('SSL', 'wp-staging') ?></label>
-                        <input type="checkbox" name="ssl" value="true" <?php echo $ssl === true ? 'checked ' : '' ?>/>
+                        <input type="checkbox" class="wpstg-checkbox" name="ssl" value="true" <?php echo $ssl === true ? 'checked ' : '' ?>/>
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
                         <label><?php esc_html_e('Use path style endpoint', 'wp-staging') ?></label>
-                        <input type="checkbox" name="use_path_style_endpoint" value="true" <?php echo $usePathStyleEndpoint === true ? 'checked ' : '' ?>/>
+                        <input type="checkbox" class="wpstg-checkbox" name="use_path_style_endpoint" value="true" <?php echo $usePathStyleEndpoint === true ? 'checked ' : '' ?>/>
                     </fieldset>
                 </div>
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Access Key', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="text" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
+                    <input class="wpstg-form-control" type="text" style="min-width:300px;" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
@@ -109,22 +110,21 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Region', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="text" name="region" value="<?php echo esc_attr($region); ?>" />
+                    <input class="wpstg-form-control" type="text" style="min-width:300px;" name="region" value="<?php echo esc_attr($region); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Bucket Name', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
-                    <p>
-                        <?php echo sprintf(
-                            Escape::escapeHtml(__("Create the %s beforhand in your S3 account and add it here! %s To add a subdirectory you can write <code>s3:[bucket-name]/[directory-name]</code>. <br>The directory will be created by WP STAGING automatically during backup upload. ", 'wp-staging')),
-                            esc_html($locationName),
-                            '<br>'
-                        ); ?>
-                    </p>
+                    <input class="wpstg-form-control" type="text" style="min-width:300px;" name="location" value="<?php echo esc_attr($location); ?>" />
+                    <br><br>
+                    <?php echo sprintf(
+                        Escape::escapeHtml(__('To add a directory you can write <code>s3:[%s]/[directory-name]</code>.<br>The directory will be created automatically during backup upload. ', 'wp-staging')),
+                        esc_html($locationName),
+                        '<br>'
+                    ); ?>
                 </fieldset>
             </div>
-            <button type="button" id="wpstg-btn-provider-test-connection" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Test Connection", "wp-staging") ?></button>
+            <button type="button" id="wpstg-btn-provider-test-connection" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Connection Test", "wp-staging") ?></button>
 
             <hr/>
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
@@ -133,13 +133,10 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                 <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
             </fieldset>
 
-            <?php
-            require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php";
-            ?>
-
             <hr/>
 
-            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button>
+            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
+
         </form>
     </div>
 </fieldset>

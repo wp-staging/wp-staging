@@ -60,17 +60,17 @@ if ($cronMessage !== '') { ?>
 
 <div id="wpstg-step-1">
     <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo esc_attr($disabledProperty); ?> <?php echo esc_attr($disabledPropertyCreateBackup) ?>>
-        <?php esc_html_e('Create New Backup', 'wp-staging') ?>
+        <?php esc_html_e('Create Backup', 'wp-staging') ?>
     </button>
-    <button id="wpstg-upload-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4" <?php echo esc_attr($disabledProperty) ?>>
+    <button type="button" id="wpstg-upload-backup" class="wpstg-button wpstg-border-thin-button" <?php echo esc_attr($disabledProperty) ?>>
         <?php esc_html_e('Upload Backup', 'wp-staging') ?>
     </button>
-    <button id="wpstg-manage-backup-schedules" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-ml-4" <?php echo esc_attr($disabledProperty) ?>>
+    <button id="wpstg-manage-backup-schedules" class="wpstg-button wpstg-border-thin-button" <?php echo esc_attr($disabledProperty) ?>>
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
     <div id="wpstg-report-issue-wrapper">
         <button type="button" id="wpstg-report-issue-button" class="wpstg-button">
-            <i class="wpstg-icon-issue"></i><?php echo esc_html__("Report Issue", "wp-staging"); ?>
+            <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
         </button>
         <?php require_once($this->views . '_main/report-issue.php'); ?>
     </div>
@@ -95,6 +95,7 @@ if ($cronMessage !== '') { ?>
 <?php include(__DIR__ . '/modal/download-modal.php'); ?>
 <?php include(__DIR__ . '/modal/upload.php'); ?>
 <?php include(__DIR__ . '/modal/manage-schedules.php'); ?>
+<?php include(__DIR__ . '/modal/edit-schedule-modal.php'); ?>
 <?php include(__DIR__ . '/modal/import.php'); ?>
 
 <?php include(__DIR__ . '/restore-wait.php'); ?>

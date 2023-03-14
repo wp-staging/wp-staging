@@ -14,9 +14,9 @@ use WPStaging\Framework\Facades\Escape;
     <br>
 <?php esc_html_e("Click on a folder name to expand it.", "wp-staging") ?>  <br/> <br/>
 <b class="wpstg--red"><?php esc_html_e("Note: ", "wp-staging") ?></b>
-<?php esc_html_e("Your folder selection is automatically saved", "wp-staging") ?>
+<?php esc_html_e("This folder selection will be automatically saved", "wp-staging") ?>
 <br/>
-<?php esc_html_e("and used as the default selection for the next update.", "wp-staging") ?>
+<?php esc_html_e("and preselected the next time you update this staging site.", "wp-staging") ?>
 </p>
 <div id="wpstg-directories-listing" data-existing-excludes="<?php echo (($options->mainJob === 'updating' || $options->mainJob === 'resetting') && isset($options->currentClone['excludedDirectories'])) ? esc_html(implode(',', $options->currentClone['excludedDirectories'])) : '' ?>">
     <div class="wpstg-mb-8px">

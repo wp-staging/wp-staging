@@ -13,8 +13,14 @@ use WPStaging\Framework\Facades\Escape;
 ?>
 <div id="wpstg-step-1">
     <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning">
-        <?php echo esc_html__("Create new staging site", "wp-staging") ?>
+        <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
     </button>
+    <div id="wpstg-report-issue-wrapper">
+        <button type="button" id="wpstg-report-issue-button" class="wpstg-button">
+            <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
+        </button>
+        <?php require_once($this->path . 'views/_main/report-issue.php'); ?>
+    </div>
 </div>
 
 <?php if (isset($availableClones) && !empty($availableClones)) : ?>
@@ -48,13 +54,13 @@ use WPStaging\Framework\Facades\Escape;
                                 <a href="<?php echo esc_url($urlLogin) ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank" title="<?php echo esc_html__("Open the staging site in a new tab", "wp-staging") ?>">
                                     <?php esc_html_e("Open", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" title="<?php echo esc_html__("Update and overwrite this clone with files and database tables selected on the next page. This will not replace nor modify the wp-config.php on the staging site!", "wp-staging") ?>">
+                                <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" title="<?php echo esc_html__("Update and overwrite the selected staging site with the production site. You can select files and database tables on the next page. This action will not replace nor modify the wp-config.php on the staging site!", "wp-staging") ?>">
                                     <?php esc_html_e("Update", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" data-network="<?php echo is_multisite() && $data['networkClone'] ? 'yes' : 'no' ?>" title="<?php echo esc_attr__("Replace this clone with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" data-network="<?php echo is_multisite() && !empty($data['networkClone'])  ? 'yes' : 'no' ?>" title="<?php echo esc_attr__("Replace the selected staging site with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging") ?>">
                                     <?php esc_html_e("Reset", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" title="<?php echo esc_html__("Delete this clone. Select specific folders and database tables in the next step.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" title="<?php echo esc_html__("Delete the selected staging site. Select specific folders and database tables in the next step.", "wp-staging") ?>">
                                     <?php esc_html_e("Delete", "wp-staging"); ?>
                                 </a>
                                 <?php
@@ -133,7 +139,7 @@ use WPStaging\Framework\Facades\Escape;
                 </div>
             </div>
         <?php endforeach ?>
-        <div class="wpstg-fs-14">
+        <div class="wpstg-fs-14" id="info-block-how-to-push">
             <?php esc_html_e("How to:", "wp-staging") ?> <a href="https://wp-staging.com/docs/copy-staging-site-to-live-site/" target="_blank"><?php esc_html_e("Push staging site to production", "wp-staging") ?></a>
         </div>
     </div>

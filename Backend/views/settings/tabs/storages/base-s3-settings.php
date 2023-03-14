@@ -12,7 +12,6 @@
  */
 
 use WPStaging\Framework\Facades\Escape;
-use WPStaging\Framework\Facades\Sanitize;
 
 ?>
 <fieldset>
@@ -20,13 +19,13 @@ use WPStaging\Framework\Facades\Sanitize;
     $regions = $auth->getRegions();
     $isStorageAuthenticated = $auth->isAuthenticated();
     $options = $auth->getOptions();
-    $accessKey = empty($options['accessKey']) ? '' : Sanitize::sanitizePassword($options['accessKey']);
-    $secretKey = empty($options['secretKey']) ? '' : Sanitize::sanitizePassword($options['secretKey']);
-    $region = empty($options['region']) ? '' : Sanitize::sanitizeString($options['region']);
-    $maxBackupsToKeep = empty($options['maxBackupsToKeep']) ? 2 : Sanitize::sanitizeInt($options['maxBackupsToKeep']);
+    $accessKey = empty($options['accessKey']) ? '' : $options['accessKey'];
+    $secretKey = empty($options['secretKey']) ? '' : $options['secretKey'];
+    $region = empty($options['region']) ? '' : $options['region'];
+    $maxBackupsToKeep = empty($options['maxBackupsToKeep']) ? 2 : $options['maxBackupsToKeep'];
     $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
-    $location = empty($options['location']) ? '' : Sanitize::sanitizeString($options['location']);
-    $lastUpdated = empty($options['lastUpdated']) ? 0 : Sanitize::sanitizeInt($options['lastUpdated']);
+    $location = empty($options['location']) ? '' : $options['location'];
+    $lastUpdated = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
     $locationName = empty($locationName) ? 'Bucket' : $locationName;
     ?>
     <p>
@@ -56,7 +55,7 @@ use WPStaging\Framework\Facades\Sanitize;
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Access Key', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="text" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
+                    <input class="wpstg-form-control" style="min-width:300px;" type="text" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
@@ -79,22 +78,19 @@ use WPStaging\Framework\Facades\Sanitize;
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e($locationName, 'wp-staging') ?></label>
-                    <span>s3:</span><input class="wpstg-form-control" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
+                    <span>s3:</span><input class="wpstg-form-control" style="min-width:284px;" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
                     <?php if (!empty($settingLink1) && !empty($settingText1)) : ?>
                             <a href="<?php echo esc_attr($settingLink1); ?>" target="_blank"><?php echo esc_html($settingText1); ?></a>
                     <?php endif; ?>
-                    <p>
+                        <br><br>
                         <?php echo sprintf(
-                            Escape::escapeHtml(__('Create the %1$s beforhand in your %2$s account and add it here! %3$s To add a subdirectory you can write <code>s3:[%1$s]/[directory-name]</code>. <br>The directory will be created by WP STAGING automatically during backup upload. ', 'wp-staging')),
+                            Escape::escapeHtml(__('To add a directory you can write <code>s3:[%s]/[directory-name]</code>.<br>The directory will be created automatically during backup upload. ', 'wp-staging')),
                             esc_html($locationName),
-                            esc_html($providerName),
                             '<br>'
                         ); ?>
-                    </p>
                 </fieldset>
             </div>
-            <button type="button" id="wpstg-btn-provider-test-connection" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Test Connection", "wp-staging") ?></button>
-
+            <button type="button" id="wpstg-btn-provider-test-connection" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Connection Test", "wp-staging") ?></button>
             <hr/>
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
             <fieldset class="wpstg-fieldset">
@@ -102,13 +98,11 @@ use WPStaging\Framework\Facades\Sanitize;
                 <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
             </fieldset>
 
-            <?php
-            require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php";
-            ?>
 
             <hr/>
 
-            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button>
+            <div><button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?></div>
+
         </form>
     </div>
 </fieldset>

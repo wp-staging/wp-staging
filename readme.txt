@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.1
-Stable tag: 2.12.0
+Stable tag: 2.13.0
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -259,7 +259,60 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
-= 2.12.0 =
+= 2.13.0 =
+* New: Major change of the User Interface #2197 #2208
+* New: Add an option to send an email error report. You can enable this option in the settings and use a separate email to receive error reports #2205
+* New: Button to edit backup schedules #2042 #2135
+* New: Show Google Drive backup account information on the plugin's Google Drive backup settings page #2091
+* New: Add a cancel button to stop the pushing process #2101
+* Enh: Show a notice if site contains backup(s) with invalid files-index #2205
+* Enh: Add a retry mechanism to backup restore if a backup restore fails due to 404, 429 or 503 errors #2094
+* Enh: Clean up log files and don't show necessary information #2124
+* Enh: Show notice how to enable permalinks depending on whether the server is Apache or another. #2143
+* Enh: Explain what to enter in the 'version' field of Generic S3 provider #2172
+* Enh: Show notice how to fix cron issue when using Litespeed server #2170 #2226
+* Enh: Better notification message when there are no files to backup #2175
+* Enh: Take sub folder into account when testing location for Google Drive Storage #2197
+* Enh: Include the current date and time in the database filename when the backup is a "Multipart Backup" #2126
+* Enh: Database restore enhancement to increase the execution time for executing an ajax triggered SQL query when query execution fails for a certain number of retries on weak servers #2117
+* Enh: Hide license key for privacy reasons, for instance when plugin is used by agencies on client websites #2118
+* Enh: Add filter `wpstg_login_form_logo` to allow custom change of the logo image on login page to staging site #2076
+* Enh: Clarification that the maximum retention period for backup in the "Create backup" modal only applies to locally hosted backup files #2085
+* Enh: If issue is reported via using the REPORT ISSUE button, send the license key with the submitted message #2087
+* Enh: Change some words in UI to be more consistent #2099
+* Enh: Show link to docs article in warning if license key can not be activated #2100
+* Enh: Cleanup and remove backend/views/notices/poll.php and all related code #2107
+* Enh: Clean up backend/views/notices/poll.php and all related unused code #2107
+* Fix: Staging site database tables can not be pushed if staging site settings contain different table prefixes #2151
+* Fix: Support adding "+" sign in the name of the backup folder by FTP, the name of backup and in the name of clone #2160
+* Fix: Check if WP_ENVIRONMENT_TYPE is already defined before adding it to wp-config.php. (Solve conflict with local flywheel). #2165
+* Fix: Oldest multipart backups were not deleted during remote upload #2129
+* Fix: Prevent fatal error on push when there is no theme installed on production site #2185
+* Fix: Continue database backup restore by using shorter name for identifiers name exceeding maximum allowed characters #2114
+* Fix: Add a check to prevent warning undefined variable: jobId #2196
+* Fix: Better error handling if folder or file is not writeable #2190
+* Fix: Handle errors for PHP 8.x during Database backup restore Task when  max_packet_size is bigger than the actual sql result #2125
+* Fix: Convert utf8mb4 to utf8 when restoring database in MySQL < 5.7 to prevent MySQL Error 1071 because MySQL < 5.7 has max key length of 767 bytes. By converting utfmb4 to utf8 it reduces the size by 1/4 and allows restoring a backup. #2203
+* Fix: Restore of backup blocked due to incorrect permission check #2228
+* Fix: WP Staging log backup files could not be deleted #2222
+* Fix: Prevents a rare edge case where scheduled backup are continuous started over by implementing a better clean up routing #2231
+* Fix: Prevent fatal error on setting page due to using double semicolon(‘::’) to call static method from variable. Affects old php versions only. #2166
+* Fix: Old automated local backup were not deleted and thus no new automated backup were created #2141
+* Fix: Improve detection if WordPress is installed in subdirectory. If home URL and site URL are different the cloned staging site URLs are sometimes incorrect. #2068
+* Fix: Ensure that functions in wp-staging-optimizer.php are declared only one time #2079
+* Fix: Remove some php's deprecation warnings for php 8.x #2078
+* Fix: Remove error in search & replace of serialized data due to strict types during staging PUSH on PHP 8.1 and higher version. #2065
+* Fix: Remove warning "Undefined index: networkClone in single-overview.php line: 54" #2097
+* Fix: Attach log files to report mail #2156
+* Fix: Unable to upload backup files to more than one remote storage in single backup job #2245
+* Fix: Fetch google drive backup files in ascending order by time to fix a backup retention issue for google drive #2245
+* Dev: Revert all usage of isWritable and isExecutable #2232
+* Dev: Broken test _04PushCest after implementing #2199 #2216
+* Dev: Write the version of the plugin into the header of wpstg.js when creating the dist package with make dev_dist #2095
+* Dev: Downgrade phpcs library to fix xss tests #2105
+* Dev: Show upload_path in system info #2024 #2147
+
+2.12.0
 * New: Optional feature to split backup files by type (plugins, media, themes) and maximum file size. Use filter `wpstg.backup.isMultipartBackup` to activate this option. Use `wpstg.backup.maxMultipartBackupSize` filter to adjust maximum file size for split backup, default is 2GB #1804
 * New: Add filter `wpstg.remoteStorages.chunkSize` (in bytes) to change chunk size of backups upload to remote storages #2047
 * New: Add filter `wpstg.remoteStorages.delayBetweenRequests` (in milliseconds) to add delay between requests to upload chunks to remote storages #1997
