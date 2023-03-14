@@ -18,5 +18,7 @@ use WPStaging\Framework\Facades\Sanitize;
             <p class="wpstg--tooltiptext has-top-arrow"><?php echo sprintf(esc_html__('Exclude files by extension. For example to exclude zip files, type %s to exclude all zip files.', 'wp-staging'), '<code class="wpstg-code">zip</code>') ?> </p>
         </div>
     </td>
-    <td class="wpstg-exclude-filter-action-column"><button class="wpstg-remove-exclude-rule">×</button></td>
+    <td class="wpstg-exclude-filter-action-column">
+        <img class="wpstg-remove-exclude-rule" src="<?php echo esc_url(trailingslashit(WPSTG_PLUGIN_URL)) . 'assets/'; ?>img/trash.svg" alt="">
+    </td>
 </tr>

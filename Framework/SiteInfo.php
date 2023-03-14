@@ -4,7 +4,6 @@ namespace WPStaging\Framework;
 
 use Exception;
 use WPStaging\Framework\Staging\CloneOptions;
-use WPStaging\Framework\Utils\ThirdParty\Punycode;
 
 /**
  * Class SiteInfo
@@ -46,11 +45,6 @@ class SiteInfo
     private $cloneOptions;
 
     /**
-     * @var Punycode
-     */
-    private $punycode;
-
-    /**
      * @var array
      */
     private $errors = [];
@@ -59,11 +53,10 @@ class SiteInfo
     {
         // TODO: inject using DI
         $this->cloneOptions = new CloneOptions();
-        $this->punycode = new Punycode();
     }
 
     /**
-     * @return bool True if is staging site. False otherwise.
+     * @return bool True if it is staging site. False otherwise.
      */
     public function isStagingSite()
     {
@@ -75,7 +68,7 @@ class SiteInfo
     }
 
     /**
-     * @return bool True if is staging site. False otherwise.
+     * @return bool True if it is staging site. False otherwise.
      *
      * @todo update with WPStaging/Framework/Staging/CloneOption once PR #717 is merged
      */
@@ -96,41 +89,30 @@ class SiteInfo
     }
 
     /**
-     * Check if WP is installed in sub directory
+     * Check if WP is installed in subdirectory
      * If siteurl and home are not identical we assume the site is located in a subdirectory
      * related to that instruction https://wordpress.org/support/article/giving-wordpress-its-own-directory/
      *
-     * @return boolean
+     * @return bool
      */
     public function isInstalledInSubDir()
     {
-        // Compare names without scheme (http/https) to bypass case where siteurl and home are stored with different schemes in database
-        // This happens much more often than you expect
-        $siteurl = preg_replace('#^https?://#', '', rtrim(get_option('siteurl'), '/'));
-        $home = preg_replace('#^https?://#', '', rtrim(get_option('home'), '/'));
+        $siteUrl = get_option('siteurl');
+        $homeUrl = get_option('home');
 
-        // convert unicode(idn) to punycode(ascii) domain if possible
-        // turn exämple.com to xn--exmple-cua.com
-        $result = $this->punycodeEncode($home);
-        if ($result !== false) {
-            $home = $result;
-        } else {
-            $this->errors[] = __('Unable to detect punycode characters in home URL', 'wp-staging');
-        }
+        //Get URL path e.g.https://example.com/path will return /path
+        $siteUrlPath = wp_parse_url($siteUrl, PHP_URL_PATH);
+        $homeUrlPath = wp_parse_url($homeUrl, PHP_URL_PATH);
 
-        $result = $this->punycodeEncode($siteurl);
-        if ($result !== false) {
-            $siteurl = $result;
-        } else {
-            $this->errors[] = __('Unable to detect punycode characters in site URL', 'wp-staging');
-        }
-
-        if ($home === $siteurl) {
+        if ($siteUrlPath === null && $homeUrlPath === null || $siteUrlPath === $homeUrlPath) {
             return false;
         }
 
-        // Extended check when siteurl -> www.example.com and home url -> example.com or vice versa
-        return !(($home === 'www.' . $siteurl) || ($siteurl === 'www.' . $home));
+        if ($siteUrlPath === null && $homeUrlPath !== null) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -198,39 +180,6 @@ class SiteInfo
     public function isWpBakeryActive()
     {
         return defined('WPB_VC_VERSION');
-    }
-
-    /**
-     * @param string $url
-     * @return string|false
-     */
-    public function punycodeEncode($url)
-    {
-        // Get punycode encode if idn or intl extension loaded
-        if ((extension_loaded('idn') || extension_loaded('intl')) && is_callable('idn_to_ascii')) {
-            return idn_to_ascii($url, 0, INTL_IDNA_VARIANT_UTS46);
-        }
-
-        // Get punycode with idn polyfill If mb_string extension and Normalizer class available
-        try {
-            if (extension_loaded('mbstring') && class_exists('Normalizer') && is_callable('mb_chr')) {
-                return idn_to_ascii($url, 0, INTL_IDNA_VARIANT_UTS46);
-            }
-        } catch (Exception $ex) {
-        }
-
-        // Get punycode with mbstring extension if mbstring extension loaded
-        // Otherwise get with mbstring polyfill if iconv extension loaded
-        if (extension_loaded('mbstring') || (extension_loaded('iconv') && is_callable('iconv') )) {
-            return $this->punycode->encode($url);
-        }
-
-        return false;
-    }
-
-    public function clearErrors()
-    {
-        $this->errors = [];
     }
 
     /**

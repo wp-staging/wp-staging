@@ -8,6 +8,7 @@ use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Framework\CloningProcess\CloningDto;
 use WPStaging\Framework\Database\QueryBuilder\SelectQuery;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\Utils\Escape;
 
 class DatabaseCloningService
 {
@@ -69,8 +70,8 @@ class DatabaseCloningService
             $stagingDb->query('START TRANSACTION;');
             // Copy into staging site
             foreach ($rows as $row) {
-                $escaped_values = $this->mysqlEscapeMimic(array_values($row));
-                $values = implode("', '", $escaped_values);
+                $escapedValues = WPStaging::make(Escape::class)->mysqlRealEscapeString(array_values($row));
+                $values = is_array($escapedValues) ? implode("', '", $escapedValues) : $escapedValues;
                 $query = "INSERT INTO `$destTableName` VALUES ('$values')";
                 if ($stagingDb->query($query) === false) {
                     $this->log("Can not insert data into table $destTableName");
@@ -270,7 +271,6 @@ class DatabaseCloningService
         $this->dto->getJob()->log($prependString . $message, $type);
     }
 
-
     /**
      * @param string $message
      * @param string $type
@@ -279,25 +279,6 @@ class DatabaseCloningService
     {
         $prependString = $this->dto->isExternal() ? "DB External Copy: " : "DB Copy: ";
         $this->dto->getJob()->debugLog($prependString . $message, $type);
-    }
-
-    /**
-     * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
-     * @link   http://php.net/manual/en/function.mysql-real-escape-string.php#101248
-     * @access public
-     * @param mixed string|array $input The string to escape.
-     * @return string|array
-     */
-    private function mysqlEscapeMimic($input)
-    {
-        if (is_array($input)) {
-            return array_map(__METHOD__, $input);
-        }
-        if (!empty($input) && is_string($input)) {
-            return str_replace(['\\', "\0", "\n", "\r", "'", '"', "\x1a"], ['\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'], $input);
-        }
-
-        return $input;
     }
 
     /**

@@ -25,7 +25,7 @@ class DebugLogReader
                 }
 
                 // Redirect to prevent refresh from deleting the log again
-                wp_redirect(admin_url() . 'admin.php?page=wpstg-tools&tab=system_info');
+                wp_redirect(admin_url() . 'admin.php?page=wpstg-tools&tab=system-info');
                 exit;
             }
         }
@@ -66,7 +66,7 @@ class DebugLogReader
             if (defined('WPSTG_DEBUG_LOG_FILE')) {
                 if ($this->filesystem->isReadableFile(WPSTG_DEBUG_LOG_FILE)) {
                     $errors .= sprintf(
-                        "--- WPSTAGING Debug Logs\nFile: %s\nTotal file size: %s\nShowing last: %s\n=== START ===\n",
+                        "--- WPSTAGING Debug Logs\nFile: %s\nTotal file size: %s\nShowing last: %s\n\n=== START ===\n\n",
                         WPSTG_DEBUG_LOG_FILE,
                         size_format(filesize(WPSTG_DEBUG_LOG_FILE)),
                         size_format($maxSizeEach)
@@ -74,7 +74,7 @@ class DebugLogReader
                     $errors .= $this->getDebugLogLines(WPSTG_DEBUG_LOG_FILE, $maxSizeEach);
                     $errors .= "=== END ===\n\n";
                 } else {
-                    $errors .= "\n=== WPSTG_DEBUG_LOG_FILE IS NOT A FILE OR IS NOT READABLE ===\n";
+                    $errors .= "\n=== File WPSTG_DEBUG_LOG_FILE is not readable or does not exist ===\n";
                 }
             } else {
                 $errors .= "\n=== WPSTG_DEBUG_LOG_FILE NOT DEFINED ===\n";
@@ -87,7 +87,7 @@ class DebugLogReader
 
             if ($this->filesystem->isReadableFile($phpDebugLogFile)) {
                 $errors .= sprintf(
-                    "--- PHP Debug Logs\nFile: %s\nTotal file size: %s\nShowing last: %s\n=== START ===\n",
+                    "--- PHP debug.log \nFile: %s\nTotal file size: %s\nShowing last: %s\n\n=== START ===\n\n",
                     $phpDebugLogFile,
                     size_format(filesize($phpDebugLogFile)),
                     size_format($maxSizeEach)

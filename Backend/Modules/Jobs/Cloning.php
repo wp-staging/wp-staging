@@ -83,7 +83,7 @@ class Cloning extends Job
         // Clone ID -> timestamp (time at which this clone creation initiated)
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
         // Clone Name -> Site name that user input, if user left it empty it will be Clone ID
-        $this->options->cloneName = isset($_POST["cloneName"]) ? $this->sanitize->sanitizeString($_POST["cloneName"]) : '';
+        $this->options->cloneName = isset($_POST["cloneName"]) ? sanitize_text_field($_POST["cloneName"]) : '';
         // The slugified version of Clone Name (to use in directory creation)
         $this->options->cloneDirectoryName = $this->sitesHelper->sanitizeDirectoryName($this->options->cloneName);
         $result = $this->sitesHelper->isCloneExists($this->options->cloneDirectoryName);

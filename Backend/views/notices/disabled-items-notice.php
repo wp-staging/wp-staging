@@ -11,13 +11,25 @@
  */
 
 use WPStaging\Backend\Notices\Notices;
+use WPStaging\Framework\Utils\ServerVars;
+use WPStaging\Core\WPStaging;
+
+if (empty(get_option('permalink_structure'))) {
+    $permalinksMessage = sprintf(__('Post name permalinks are disabled. <a href="%s" target="_blank">How to activate permalinks</a>', 'wp-staging'), 'https://wp-staging.com/docs/activate-permalinks-staging-site/');
+} elseif (WPStaging::make(ServerVars::class)->isApache() &&  !file_exists(get_home_path() . '.htaccess')) {
+    $permalinksMessage = __('.haccess is missing but required for permalinks! Go to Settings > Permalinks and click on Save Settings to create the .htaccess to make permalinks work!', 'wp-staging');
+} elseif (!WPStaging::make(ServerVars::class)->isApache()) {
+    $permalinksMessage = sprintf(__('Permalinks are active but may not work. Please <a href="%s" target="_blank">read this article</a> to find out how to make them work.', 'wp-staging'), 'https://wp-staging.com/docs/activate-permalinks-staging-site/');
+}
 
 ?>
 <div class="notice notice-warning wpstg-disabled-items-notice">
     <p><strong><?php esc_html_e('WP STAGING - Notes:', 'wp-staging'); ?></strong></p>
     <ol style="margin-left: 12px;">
         <li> <?php echo sprintf(__('WP STAGING Disabled the cache by setting the constant <code>WP_CACHE</code> to <code>FALSE</code>in the file <code>wp-config.php</code>. <a href="%s" target="_blank"> You can revert this easily</a>', 'wp-staging'), 'https://wp-staging.com/docs/how-to-activate-caching-on-staging-site/') ?></li>
-        <li> <?php echo sprintf(__('Permalinks are disabled. <a href="%s" target="_blank">How to activate permalinks</a>', 'wp-staging'), 'https://wp-staging.com/docs/activate-permalinks-staging-site/') ?></li>
+        <?php if (isset($permalinksMessage)) : ?>
+        <li> <?php echo wp_kses_post($permalinksMessage); ?></li>
+        <?php endif; ?>
         <?php if ($outgoingMailsDisabled) : ?>
         <li> <?php echo sprintf(__('Disabled outgoing emails. <a href="%s" target="_blank">How to activate email sending</a>', 'wp-staging'), 'https://wp-staging.com/docs/how-to-activate-email-sending-on-the-staging-site/')?></li>
         <?php endif; ?>

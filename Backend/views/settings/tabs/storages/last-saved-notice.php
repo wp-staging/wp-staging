@@ -21,13 +21,8 @@ $dateTimeAdapter = Core\WPStaging::make(DateTimeAdapter::class);
 
 ?>
 
-<fieldset class="wpstg-fieldset">
-    <label>
-        <?php esc_html_e('Last Saved Settings: ', 'wp-staging') ?>
         <?php if ($lastUpdated !== 0) { ?>
-            <span class="wpstg-badge wpstg-badge-info"> <?php echo esc_html($dateTimeAdapter->transformToWpFormat($date)); ?> </span>
+            <span class="wpstg-badge wpstg-badge-info">Last Saved: <?php echo esc_html($dateTimeAdapter->transformToWpFormat($date)); ?> </span>
         <?php } else { ?>
             <span class="wpstg-badge wpstg-badge-warning"> <?php esc_html_e('Not saved yet!', 'wp-staging') ?> </span>
         <?php } ?>
-    </label>
-</fieldset>

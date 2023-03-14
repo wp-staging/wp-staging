@@ -41,6 +41,9 @@ use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Utils\Sanitize;
+use WPStaging\Backend\Pro\Modules\Jobs\CancelPush;
+use WPStaging\Framework\Utils\DBPermissions;
+use WPStaging\Pro\License\License;
 
 /**
  * Class Administrator
@@ -152,7 +155,6 @@ class Administrator
         add_action("wp_ajax_wpstg_delete_clone", [$this, "ajaxDeleteClone"]);
         add_action("wp_ajax_wpstg_cancel_clone", [$this, "ajaxCancelClone"]);
         add_action("wp_ajax_wpstg_cancel_update", [$this, "ajaxCancelUpdate"]);
-        add_action("wp_ajax_wpstg_hide_poll", [$this, "ajaxHidePoll"]);
         add_action("wp_ajax_wpstg_hide_rating", [$this, "ajaxHideRating"]);
         add_action("wp_ajax_wpstg_hide_later", [$this, "ajaxHideLaterRating"]);
         add_action("wp_ajax_wpstg_hide_beta", [$this, "ajaxHideBeta"]);
@@ -176,6 +178,8 @@ class Administrator
         add_action("wp_ajax_wpstg_push_tables", [$this, "ajaxPushTables"]);
         add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
         add_action("wp_ajax_nopriv_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
+        add_action("wp_ajax_wpstg_cancel_push_processing", [$this, "ajaxCancelPush"]);
+        add_action("wp_ajax_wpstg_check_user_permissions", [$this, "ajaxCheckUserPermissions"]);     
 
         // TODO: replace uploads backup during push once we have backups PR ready,
         // Then there will be no need to have any cron to delete those backups
@@ -318,6 +322,9 @@ class Administrator
      */
     public function getSettingsPage()
     {
+
+        $license = get_option('wpstg_license_status');
+
         // Tabs
         $tabs = new Tabs(apply_filters('wpstg_main_settings_tabs', [
             "general" => __("General", "wp-staging")
@@ -337,7 +344,9 @@ class Administrator
      */
     public function getClonePage()
     {
-        // Existing clones
+
+        $license = get_option('wpstg_license_status');
+
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
         require_once "{$this->path}views/clone/index.php";
@@ -348,10 +357,12 @@ class Administrator
      */
     public function getBackupPage()
     {
+        $license = get_option('wpstg_license_status');
+
         // Existing clones
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
-        $openBackupPage = true;
+        $isBackupPage = true;
 
         require_once "{$this->path}views/clone/index.php";
     }
@@ -374,12 +385,15 @@ class Administrator
     {
         // Tabs
         $tabs = new Tabs([
-            "system_info" => __("System Info", "wp-staging")
+            "system-info" => __("System Info", "wp-staging")
         ]);
 
         WPStaging::getInstance()->set("tabs", $tabs);
 
         WPStaging::getInstance()->set("systemInfo", new SystemInfo());
+
+        // Get license data
+        $license = get_option('wpstg_license_status');
 
         require_once "{$this->path}views/tools/index.php";
     }
@@ -735,7 +749,7 @@ class Administrator
     }
 
     /**
-     * Delete clone
+     * Cancel clone
      */
     public function ajaxCancelClone()
     {
@@ -770,19 +784,6 @@ class Administrator
 
         // Return this instance when we request it from the container
         WPStaging::getInstance()->getContainer()->singleton(Notices::class, $notices);
-    }
-
-    /**
-     * Ajax Hide Poll
-     * @todo check if this is being used, remove otherwise.
-     */
-    public function ajaxHidePoll()
-    {
-        if (update_option("wpstg_poll", "no") !== false) {
-            wp_send_json(true);
-        }
-
-        wp_send_json(null);
     }
 
     /**
@@ -1018,6 +1019,50 @@ class Administrator
     }
 
     /**
+     * Cancel push
+     */
+    public function ajaxCancelPush()
+    {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+        wp_send_json_success(WPStaging::make(CancelPush::class)->start());
+    }
+
+    /**
+     * Ajax check user permissions on DB before push process start
+     */
+    public function ajaxCheckUserPermissions()
+    {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
+        // Temporarily disabled, will be re-enabled in the next version
+        wp_send_json_success();
+        return;
+
+        $type = filter_input(INPUT_POST, 'type');
+        $grantsToCheck = ['CREATE', 'UPDATE', 'INSERT', 'DROP'];
+        if ($type === 'push') {
+            $grantsToCheck[] = 'ALTER';
+        }
+
+        if (WPStaging::make(DBPermissions::class)->isAllowed(['ALL PRIVILEGES']) || WPStaging::make(DBPermissions::class)->isAllowed($grantsToCheck)) {
+            wp_send_json_success();
+        }
+
+        $message = esc_html__("The database user might not have sufficient permissions to use the restore action. Continue the process anyway by clicking the 'Proceed' button or change the user's DB permissions and resume the process. Required permissions are: CREATE, UPDATE, INSERT, DROP.", 'wp-staging');
+        if ($type === 'push') {
+            $message = esc_html__("The database user might not have sufficient permissions to use the push action. Continue the process anyway by clicking the 'Proceed' button or alter the user's DB permissions and resume the process. Required permissions are: CREATE, UPDATE, ALTER, INSERT, DROP.", 'wp-staging');
+        }
+
+        wp_send_json_error([
+            'message'=>$message,
+        ]);
+    }
+
+    /**
      * License Page
      */
     public function getLicensePage()
@@ -1043,40 +1088,40 @@ class Administrator
             $args = stripslashes_deep($_POST);
         }
         // Set e-mail
-        $email = null;
+        $emailRecipient = null;
         if (isset($args['wpstg_email'])) {
-            $email = trim($this->sanitize->sanitizeString($args['wpstg_email']));
+            $emailRecipient = trim($this->sanitize->sanitizeString($args['wpstg_email']));
         }
 
         // Set hosting provider
-        $provider = null;
+        $providerName = null;
         if (isset($args['wpstg_provider'])) {
-            $provider = trim($this->sanitize->sanitizeString($args['wpstg_provider']));
+            $providerName = trim($this->sanitize->sanitizeString($args['wpstg_provider']));
         }
 
         // Set message
-        $message = null;
+        $messageBody = null;
         if (isset($args['wpstg_message'])) {
-            $message = trim($this->sanitize->sanitizeString($args['wpstg_message']));
+            $messageBody = trim($this->sanitize->sanitizeString($args['wpstg_message']));
         }
 
         // Set syslog
-        $syslog = false;
+        $sendLogFiles = false;
         if (isset($args['wpstg_syslog'])) {
-            $syslog = $this->sanitize->sanitizeBool($args['wpstg_syslog']);
+            $sendLogFiles = $this->sanitize->sanitizeBool($args['wpstg_syslog']);
         }
 
         // Set terms
-        $terms = false;
+        $termsAccepted = false;
         if (isset($args['wpstg_terms'])) {
-            $terms = $this->sanitize->sanitizeBool($args['wpstg_terms']);
+            $termsAccepted = $this->sanitize->sanitizeBool($args['wpstg_terms']);
         }
 
         // Set forceSend
         $forceSend = isset($_POST['wpstg_force_send']) && $this->sanitize->sanitizeBool($_POST['wpstg_force_send']);
 
-        $report = new Report();
-        $errors = $report->send($email, $message, $terms, $syslog, $provider, $forceSend);
+        $report = WPStaging::make(Report::class);
+        $errors = $report->send($emailRecipient, $messageBody, $termsAccepted, $sendLogFiles, $providerName, $forceSend);
 
         echo json_encode(['errors' => $errors]);
         exit;
@@ -1120,7 +1165,7 @@ class Administrator
         }
 
         // Check if any table with provided prefix already exist
-        $existingTables = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $prefix . '%'));
+        $existingTables = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($prefix) . '%'));
         // used in new clone
         if ($existingTables !== null && !$ensurePrefixTableExist) {
             echo json_encode(['success' => 'false', 'errors' => __('Tables with prefix ' . $prefix . ' already exist in database. Select another prefix.', 'wp-staging')]);

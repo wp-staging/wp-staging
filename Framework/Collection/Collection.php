@@ -52,6 +52,7 @@ class Collection extends SplObjectStorage implements JsonSerializable
         }
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->toArray();

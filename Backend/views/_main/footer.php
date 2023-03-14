@@ -1,7 +1,7 @@
 <div id="wpstg-error-wrapper">
     <div id="wpstg-error-details"></div>
 </div>
-<div id='wpstg-footer'>
+<div id='wpstg-footer' class="" style="">
     <strong class="wpstg-footer--title"><?php esc_html_e("Knowledgebase", "wp-staging") ?></strong>
     <ul>
         <li><a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank" rel="external"><?php esc_html_e("Migrate Website to Another Server or Domain", "wp-staging") ?></a></li>
@@ -15,23 +15,32 @@
         <li><a href="https://wp-staging.com/docs/pagebuilders-do-not-work/" target="_blank" rel="external"><?php esc_html_e("Pagebuilders like DIVI or Elementor do not work", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/troubleshooting-try-this-first/" target="_blank" rel="external"><?php esc_html_e("All articles", "wp-staging") ?></a></li>
     </ul>
-    <br>
-    <?php esc_html_e('Still questions?', 'wp-staging'); ?><br>
-    <?php echo wp_kses_post(sprintf(__('Open a <a href="%s" target="_blank" rel="external nofollow">support ticket</a> and get in contact with us.', 'wp-staging'), 'https://wp-staging.com/support')); ?>
-</div>
-<div class='wpstg-share-button-container'>
-    <div class='wpstg-share-button wpstg-share-button-twitter' data-share-url="https://wordpress.org/plugins/wp-staging">
-        <div class='box'>
-            <a href="https://twitter.com/intent/tweet?button_hashtag=wpstaging&text=Check%20out%20this%20plugin%20for%20creating%20a%20one-click%20WordPress%20testing%20site&via=wpstg" target='_blank'>
-                <span class='wpstg-share'><?php esc_html_e('Tweet #wpstaging', 'wp-staging'); ?></span>
-            </a>
+    <div id="footer-link-support-ticket ">
+        <?php esc_html_e('Still questions?', 'wp-staging'); ?>
+        <?php echo wp_kses_post(sprintf(__('Please <a href="%s" target="_blank" rel="external nofollow" class="wpstg--blue">contact us.</a>', 'wp-staging'), 'https://wp-staging.com/support')); ?>
+    </div>
+
+    <div class="wpstg-social-footer">
+        <div class="wpstg-social-row">
+            <div class="wpstg-social-col">
+                Find us on:
+            </div>
+            <div class="wpstg-social-col">
+                <div class="wpstg-share-button">
+                    <a href="https://twitter.com/intent/follow?ref_src=twsrc%5Etfw&region=follow_link&screen_name=wpstg&tw_p=followbutton" target="_blank">
+                        <img src="<?php echo esc_url($this->assets->getAssetsUrl("img/twitter-logo.svg")) ?>" id="twitter-logo-svg" style="width:23px;" alt="WP STAGING on Twitter" title="Follow us on Twitter">
+                    </a>
+                </div>
+            </div>
+            <div class="wpstg-social-col">
+                <a href="https://github.com/wp-staging/wp-staging" target="_blank" class="wpstg-share-button">
+                    <img src="<?php echo esc_url($this->assets->getAssetsUrl("img/github-logo.svg")) ?>" id="github-logo-svg" style="width:23px;" alt="WP STAGING on GitHub" title="Follow us on GitHub">
+                </a>
+            </div>
         </div>
     </div>
-    <div class="wpstg-share-button wpstg-share-button-twitter">
-        <div class="box">
-            <a href="https://twitter.com/intent/follow?original_referer=http%3A%2F%2Fsrc.wordpress-develop.dev%2Fwp-admin%2Fadmin.php%3Fpage%3Dwpstg-settings&ref_src=twsrc%5Etfw&region=follow_link&screen_name=wpstg&tw_p=followbutton" target="_blank">
-                <span class='wpstg-share'><?php esc_html_e('Follow @wpstg', 'wp-staging'); ?></span>
-            </a>
-        </div>
-    </div>
 </div>
+<div class="wpstg-footer-logo" style="">
+    <a href="https://wp-staging.com/tell-me-more/"><img src="<?php echo esc_url($this->assets->getAssetsUrl("img/logo.svg")) ?>" width="140"></a>
+</div>
+

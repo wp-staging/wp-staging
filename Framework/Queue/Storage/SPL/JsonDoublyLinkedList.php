@@ -28,6 +28,7 @@ class JsonDoublyLinkedList extends \SplDoublyLinkedList implements \JsonSerializ
         return $data;
     }
 
+    #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
         return $this->toArray();

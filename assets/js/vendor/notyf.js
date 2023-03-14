@@ -88,7 +88,7 @@ var DEFAULT_OPTIONS = {
         {
             type: 'error',
             className: 'notyf__toast--error',
-            backgroundColor: '#ed3d3d',
+            backgroundColor: '#e01e5a',
             icon: {
                 className: 'notyf__icon--error',
                 tagName: 'i',

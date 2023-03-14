@@ -215,6 +215,37 @@
   var wpstg = (function ($) {
     var WPStagingCommon = {
       continueErrorHandle: true,
+      retry: {
+        currentDelay: 0,
+        count: 0,
+        max: 10,
+        retryOnErrors: [401, 403, 404, 429, 502, 503, 504],
+        performingRequest: false,
+        incrementRetry: function incrementRetry(incrementRatio) {
+          if (incrementRatio === void 0) {
+            incrementRatio = 1.25;
+          }
+
+          WPStagingCommon.retry.performingRequest = true;
+
+          if (WPStagingCommon.retry.currentDelay === 0) {
+            // start with a delay of 1sec
+            WPStagingCommon.retry.currentDelay = 1000;
+            WPStagingCommon.retry.count = 1;
+          }
+
+          WPStagingCommon.retry.currentDelay += 500 * WPStagingCommon.retry.count * incrementRatio;
+          WPStagingCommon.retry.count++;
+        },
+        canRetry: function canRetry() {
+          return WPStagingCommon.retry.count < WPStagingCommon.retry.max;
+        },
+        reset: function reset() {
+          WPStagingCommon.retry.currentDelay = 0;
+          WPStagingCommon.retry.count = 0;
+          WPStagingCommon.retry.performingRequest = false;
+        }
+      },
       cache: {
         elements: [],
         get: function get(selector) {
@@ -393,6 +424,11 @@
         return response;
       },
       showError: function showError(message) {
+        // If retry request no need to show Error;
+        if (WPStagingCommon.retry.performingRequest) {
+          return;
+        }
+
         WPStagingCommon.cache.get('#wpstg-try-again').css('display', 'inline-block');
         WPStagingCommon.cache.get('#wpstg-cancel-cloning').text('Reset');
         WPStagingCommon.cache.get('#wpstg-resume-cloning').show();

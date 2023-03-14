@@ -8,6 +8,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils;
 use WPStaging\Core\Utils\Multisite;
 use WPStaging\Framework\Adapter\Database;
+use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
@@ -232,14 +233,7 @@ class SystemInfo
             }
         }
 
-        $output .= PHP_EOL . PHP_EOL . "-- Backup Schedules" . PHP_EOL . PHP_EOL;
-
-        $backupSchedules = get_option('wpstg_backup_schedules', []);
-        if (!empty($backupSchedules)) {
-            foreach ($backupSchedules as $key => $value) {
-                $output .= $this->info('Schedule ' . !empty($key) ? $key : '', empty($value) ? '[not set]' : print_r($value, true));
-            }
-        }
+        $output .= $this->getScheduleInfo();
 
         $output .= PHP_EOL . PHP_EOL . "-- Available Sites. Version < 1.1.6.x" . PHP_EOL . PHP_EOL;
 
@@ -416,6 +410,7 @@ class SystemInfo
         // WP upload path
         $output .= $this->info("UPLOAD_PATH in wp-config.php:", (defined("UPLOAD_PATH")) ? UPLOAD_PATH : '[not set]');
         $output .= $this->info("upload_path in " . $wpDB->prefix . 'options:', get_option('upload_path', '[not set]'));
+        $output .= $this->info("Wordpress cron:", wp_json_encode(get_option('cron', [])));
 
         return apply_filters("wpstg_sysinfo_after_wpstg_config", $output);
     }
@@ -655,7 +650,7 @@ class SystemInfo
 
     /**
      * Check if WP is installed in subdir
-     * @return boolean
+     * @return bool
      */
     private function isSubDir()
     {
@@ -683,6 +678,11 @@ class SystemInfo
     {
         // Throw error
         $path = ABSPATH . $clone['directoryName'] . DIRECTORY_SEPARATOR . "wp-config.php";
+
+        if (!file_exists($path)) {
+            return 'File does not exist in: ' . $path;
+        }
+
         if (($content = @file_get_contents($path)) === false) {
             return 'Can\'t find staging wp-config.php';
         } else {
@@ -737,5 +737,28 @@ class SystemInfo
             return '[REMOVED]';
         }
         return empty($value) ? '[not set]' : $value;
+    }
+
+    private function getScheduleInfo()
+    {
+        $output = PHP_EOL . PHP_EOL . "-- Backup Schedules" . PHP_EOL . PHP_EOL;
+
+        $backupSchedules = get_option('wpstg_backup_schedules', []);
+        if (!empty($backupSchedules)) {
+            foreach ($backupSchedules as $key => $value) {
+                $output .= $this->info('Schedule ' . !empty($key) ? $key : '', empty($value) ? '[not set]' : print_r($value, true));
+            }
+        }
+
+        /** @var Queue */
+        $queue = WPStaging::make(Queue::class);
+
+        $output .= $this->info("All Actions:", $queue->count());
+        $output .= $this->info("Pending Actions:", $queue->count(Queue::STATUS_READY));
+        $output .= $this->info("Processing Actions:", $queue->count(Queue::STATUS_PROCESSING));
+        $output .= $this->info("Completed Actions:", $queue->count(Queue::STATUS_COMPLETED));
+        $output .= $this->info("Failed Actions:", $queue->count(Queue::STATUS_FAILED));
+
+        return $output;
     }
 }

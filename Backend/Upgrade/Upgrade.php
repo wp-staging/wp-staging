@@ -274,10 +274,6 @@ class Upgrade
         $beta   = get_option("wpstg_hide_beta", false);
         $rating = get_option("wpstg_RatingDiv", false);
 
-        if ($poll && $poll === "no") {
-            update_option('wpstg_poll', 'no');
-        }
-
         if ($beta && $beta === "yes") {
             update_option('wpstg_beta', 'no');
         }

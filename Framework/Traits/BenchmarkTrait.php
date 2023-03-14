@@ -18,11 +18,11 @@ trait BenchmarkTrait
     {
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             /** @var Logger $logger */
-            $this->benchmarkLogger = clone WPStaging::getInstance()->get(Logger::class);
+            $this->benchmarkLogger = WPStaging::make(Logger::class);
 
             // Eg: JobSiteExport_Benchmark
             $filename = sanitize_file_name(sprintf(
-                '%s_Benchmark',
+                '%s_benchmark',
                 (new \ReflectionClass($this))->getShortName()
             ));
 
@@ -31,9 +31,13 @@ trait BenchmarkTrait
         }
     }
 
+    /**
+     * @param $context string Write a meaningful context of the benchmark, like a function name that is measured.
+     * @return void
+     */
     protected function finishBenchmark($context)
     {
-        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG && $this->benchmarkLogger instanceof LoggerInterface) {
+        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG && $this->benchmarkLogger instanceof Logger) {
             $message = sprintf(
                 'Finished %s in %s seconds',
                 $context,

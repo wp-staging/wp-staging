@@ -85,6 +85,9 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
             if (is_object($options) && property_exists($options, 'jobIdentifier')) {
                 $jobId = $options->jobIdentifier;
             }
+            if (empty($jobId)) {
+                return;
+            }
 
             AnalyticsEventDto::enqueueErrorEvent($jobId, $errorMessage);
         });

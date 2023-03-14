@@ -54,7 +54,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
             <br>
             <form class="wpstg-provider-revoke-form" id="wpstg-provider-revoke-form" method="post">
                 <input type="hidden" name="provider" value="<?php echo esc_attr($providerId); ?>" />
-                <button type="button" id="wpstg-btn-provider-revoke" class="wpstg-link-btn wpstg-btn-danger"><?php esc_html_e("Logout from Google", "wp-staging") ?></button>
+                <button type="button" id="wpstg-btn-provider-revoke" class="wpstg-button--primary wpstg-button--blue"><?php esc_html_e("Logout from Google", "wp-staging") ?></button>
             </form>
             <br/>
             <?php
@@ -72,6 +72,8 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
             }
         }
         ?>
+    </div>
+    <div class="wpstg-form-group">
         <form class="wpstg-provider-settings-form" id="wpstg-provider-settings-form" method="post">
             <input type="hidden" name="provider" value="<?php echo esc_attr($providerId); ?>" />
 
@@ -113,17 +115,13 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
             </fieldset>
 
             <fieldset class="wpstg-fieldset">
-                <label><?php esc_html_e('Backup Folder Name', 'wp-staging') ?></label>
-                <input class="wpstg-form-control" type="text" name="folder_name" value="<?php echo esc_attr($folderName); ?>" />
+                <label><?php esc_html_e('Backup Location', 'wp-staging') ?></label>
+                <span>//Google Drive/</span><input class="wpstg-form-control" type="text" style="min-width:300px;" placeholder="backups/example.com/" name="folder_name" value="<?php echo esc_attr($folderName); ?>" />
             </fieldset>
-
-            <?php
-            require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php";
-            ?>
 
             <hr/>
 
-            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button>
+            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
         </form>
     </div>
 </fieldset>

@@ -17,15 +17,18 @@ class Strings
      */
     public function str_replace_first($search, $replace, $subject)
     {
-
         if (empty($search)) {
             return $subject;
         }
 
         $pos = strpos($subject, $search);
         if ($pos !== false) {
+            if ($replace === null) {
+                $replace = '';
+            }
             return substr_replace($subject, $replace, $pos, strlen($search));
         }
+
         return $subject;
     }
 
@@ -90,7 +93,6 @@ class Strings
         return strpos($haystack, $needle) === 0;
     }
 
-
     /**
      * Search & Replace last occurrence of string in haystack
      * @param string $needle
@@ -105,6 +107,7 @@ class Strings
         if ($pos !== false) {
             $result = substr_replace($haystack, $replace, $pos, strlen($needle));
         }
+
         return $result;
     }
 }

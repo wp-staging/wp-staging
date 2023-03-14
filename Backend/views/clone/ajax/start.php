@@ -46,7 +46,7 @@ use WPStaging\Framework\Facades\Escape;
     $helper = new \WPStaging\Core\Utils\Helper();
     $url = $helper->getHomeUrl() . str_replace('/', '', $subDirectory);
     echo sprintf(
-        Escape::escapeHtml(__('WP STAGING successfully created a staging site in a sub-directory of your main site accessable from:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging')),
+        Escape::escapeHtml(__('Successfully created a staging site in a subdirectory of your main site! You can access it from there:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging')),
         esc_url($url)
     );
     ?>
@@ -55,7 +55,7 @@ use WPStaging\Framework\Facades\Escape;
     <a href="" class="wpstg-button--primary" id="wpstg-home-link">
         <?php echo esc_html__("BACK", "wp-staging")?>
     </a>
-    <a href="<?php echo esc_url($url); ?>" id="wpstg-clone-url" target="_blank" class="wpstg-link-btn wpstg-blue-primary">
+    <a href="<?php echo esc_url($url); ?>" id="wpstg-clone-url" target="_blank" class="wpstg-blue-primary wpstg-button">
         <?php esc_html_e('Open Staging Site', 'wp-staging') ?>
     </a>
     <div id="wpstg-success-notice">

@@ -14,6 +14,7 @@ class RecursiveFileSizeFilter extends RecursiveFilterIterator
         $this->sizeFilters = $sizeFilters;
     }
 
+    #[\ReturnTypeWillChange]
     public function accept()
     {
         $current = $this->current();
@@ -68,6 +69,7 @@ class RecursiveFileSizeFilter extends RecursiveFilterIterator
         return false;
     }
 
+    #[\ReturnTypeWillChange]
     public function getChildren()
     {
         return new self($this->getInnerIterator()->getChildren(), $this->sizeFilters);

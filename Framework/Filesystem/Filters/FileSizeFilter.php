@@ -14,6 +14,7 @@ class FileSizeFilter extends FilterIterator
         $this->sizeFilters = $sizeFilters;
     }
 
+    #[\ReturnTypeWillChange]
     public function accept()
     {
         $current = $this->current();

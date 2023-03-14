@@ -18,8 +18,13 @@ use WPStaging\Framework\Adapter\Directory;
  */
 class DirectoryListing
 {
+    /**  @var Directory */
     private $directory;
+
+    /**  @var Htaccess */
     private $htaccess;
+
+    /**  @var IISWebConfig */
     private $webConfig;
 
     public function __construct(Directory $directory, Htaccess $htaccess, IISWebConfig $webConfig)

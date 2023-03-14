@@ -18,6 +18,7 @@ use WPStaging\Framework\Adapter\Database as DatabaseAdapter;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient as Database;
 use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
+use WPStaging\Framework\Traits\BenchmarkTrait;
 
 use function WPStaging\functions\debug_log;
 
@@ -29,6 +30,8 @@ use function WPStaging\functions\debug_log;
 class Queue
 {
     use WithQueueAwareness;
+
+    use BenchmarkTrait;
 
     /**
      * A set of constants that are used internally to detect the
@@ -124,12 +127,6 @@ class Queue
         $this->logger = $services->make('logger');
         $this->featureDetection = $services->make(FeatureDetection::class);
         $this->phpAdapter = $services->make(PhpAdapter::class);
-/*        if (defined('WPSTG_DEV')) {
-            $this->unlocker = static function () {
-                global $wpdb;
-                $wpdb->query('COMMIT;');
-            };
-        }*/
     }
 
     /**
@@ -586,7 +583,7 @@ class Queue
     public function count($status = null, $jobId = null)
     {
         if (!$this->tableExists()) {
-            debug_log('Queue count: The table does not exist for count.');
+            debug_log(sprintf('Queue count: The table %s does not exist for count.', self::getTableName()));
             return 0;
         }
 
@@ -904,12 +901,12 @@ class Queue
      */
     public function maybeFireAjaxAction()
     {
-        debug_log('maybeFireAjaxAction start');
+        //debug_log('maybeFireAjaxAction start');
         if (!$this->count(self::STATUS_READY)) {
             return false;
         }
 
-        debug_log('maybeFireAjaxAction dispatch');
+        //debug_log('maybeFireAjaxAction dispatch');
         return $this->fireAjaxAction();
     }
 
@@ -1178,6 +1175,125 @@ class Queue
     }
 
     /**
+     * Count the number of actions in the queue by schedule Id.
+     * Used by tests/webdriverNew/Backup/_99AutomatedBackupExportCest.php
+     *
+     * @param string $scheduleId
+     * @param array $statuses if not given all statuses will be counted otherwise only the given statuses
+     * @return int|false The number of actions or false on failure.
+     */
+    public function countActionsByScheduleId($scheduleId, $statuses = [])
+    {
+        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+            debug_log('Count actions by ScheduleId: The table does not exist so there is nothing to do.');
+            return 0;
+        }
+
+        $tableName = self::getTableName();
+
+        $countQuery = "SELECT COUNT(*) as actions_count FROM {$tableName} 
+            WHERE {$this->getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses)};";
+
+        $countResult = $this->database->query($countQuery, true);
+
+        if ($countResult === false) {
+            debug_log(json_encode([
+                'root' => 'Error while trying to count Actions for the scheduleId: "' . $scheduleId . '".',
+                'class' => get_class($this),
+                'query' => $countQuery,
+                'error' => $this->database->error(),
+            ]));
+
+            return false;
+        }
+
+        if ($this->database->numRows($countResult) === 0) {
+            return 0;
+        }
+
+        $count = $this->database->fetchAssoc($countResult);
+
+        return (int)$count['actions_count'];
+    }
+
+    /**
+     * @param string $scheduleId
+     * @param array $statuses if not given all statuses will be cleaned otherwise only the given statuses
+     * @return int|false Number of rows affected or false on error
+     */
+    public function cleanupActionsByScheduleId($scheduleId, $statuses = [])
+    {
+        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+            debug_log('Actions Cleanup by ScheduleId: The table does not exist so there is nothing to update.');
+            return 0;
+        }
+
+        $tableName = self::getTableName();
+
+        $this->startBenchmark();
+        $cleanupQuery = "DELETE FROM {$tableName} WHERE {$this->getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses)};";
+        $cleanupResult = $this->database->query($cleanupQuery, true);
+        $this->finishBenchmark('cleanupActionsByScheduleId clean up query . ' . $cleanupQuery);
+
+        if ($cleanupResult === false) {
+            debug_log(json_encode([
+                'root' => 'Error while trying to cleanup Actions for the scheduleId: "' . $scheduleId . '".',
+                'class' => get_class($this),
+                'query' => $cleanupQuery,
+                'error' => $this->database->error(),
+            ]));
+
+            return false;
+        }
+        if (isset($this->database->link->affected_rows)) {
+            $removed = $this->database->link->affected_rows;
+        } else {
+            $removed = 0;
+        }
+
+        debug_log("Removed $removed actions for the scheduleId: '$scheduleId'.");
+
+        return $removed;
+    }
+
+    /**
+     * Remove all actions from queue table
+     * @return int|false Number of rows affected/selected or false on error
+     */
+    public function purgeQueueTable()
+    {
+        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+            debug_log('Queue Cleanup: The table does not exist so there is nothing to update.');
+            return false;
+        }
+
+        $tableName = self::getTableName();
+
+        $cleanupQuery = "TRUNCATE {$tableName}";
+        $cleanupResult = $this->database->query($cleanupQuery, true);
+
+        if ($cleanupResult === false) {
+            \WPStaging\functions\debug_log(json_encode([
+                'root' => 'Error while trying to cleanup Actions.',
+                'class' => get_class($this),
+                'query' => $cleanupQuery,
+                'error' => $this->database->error(),
+            ]));
+
+            return false;
+        }
+        if (isset($this->database->link->affected_rows)) {
+            $removed = $this->database->link->affected_rows;
+        } else {
+            $removed = 0;
+        }
+
+        debug_log("Removed $removed actions from the queue during cleanup.");
+
+        return $removed;
+    }
+
+    /**
      * @param $jobId
      *
      * @return Action|null
@@ -1247,5 +1363,28 @@ class Queue
         }
 
         call_user_func($this->unlocker);
+    }
+
+    /**
+     * @param string $scheduleId
+     * @param array $statuses
+     *
+     * @return string
+     */
+    private function getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses = [])
+    {
+        $scheduleIdSerializedRow = 's:10:"scheduleId";s:' . strlen($scheduleId) . ':"' . $scheduleId . '";';
+        $whereCondition = "args LIKE '%$scheduleIdSerializedRow%'";
+        if (empty($statuses)) {
+            return $whereCondition;
+        }
+
+        $statuses = array_map(function ($status) {
+            return "'" . $this->database->escape($status) . "'";
+        }, $statuses);
+
+        $whereCondition .= " AND status IN (" . implode(',', $statuses) . ")";
+
+        return $whereCondition;
     }
 }

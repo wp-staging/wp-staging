@@ -47,7 +47,7 @@ class Optimizer
 
     private function copy()
     {
-        if (!copy($this->source, $this->dest)) {
+        if (!@copy($this->source, $this->dest)) {
             return false;
         }
     }

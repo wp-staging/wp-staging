@@ -73,7 +73,7 @@ trait WithQueueAwareness
             'body' => $this->normalizeAjaxRequestBody($bodyData),
         ]);
 
-        debug_log('fireAjaxAction: ' . wp_json_encode($response, JSON_PRETTY_PRINT));
+        //debug_log('fireAjaxAction: ' . wp_json_encode($response, JSON_PRETTY_PRINT));
 
         /*
          * A non-blocking request will either return a WP_Error instance, or

@@ -22,7 +22,7 @@ if (!defined('WPSTG_PLUGIN_FILE')) {
     define('WPSTG_PLUGIN_FILE', $pluginFilePath);
 }
 
-// Absolute path to plugin dir /var/www/.../plugins/wp-staging(-pro)
+// Absolute path to plugin dir /var/www/.../plugins/wp-staging(-pro)/
 if (!defined('WPSTG_PLUGIN_DIR')) {
     define('WPSTG_PLUGIN_DIR', plugin_dir_path($pluginFilePath));
 }
@@ -87,6 +87,11 @@ if (!defined('MONTH_IN_SECONDS')) {
 
 if (!defined('YEAR_IN_SECONDS')) {
     define('YEAR_IN_SECONDS', 365 * DAY_IN_SECONDS);
+}
+
+// PHP 5.6 compatibility
+if (file_exists(__DIR__ . '/php56-compatibilty.php')) {
+    include_once __DIR__ . '/php56-compatibilty.php';
 }
 
 /**

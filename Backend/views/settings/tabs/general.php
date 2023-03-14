@@ -429,7 +429,7 @@ use WPStaging\Framework\Facades\Escape;
                                     </p>
                                 </td>
                                 <td>
-                                    <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-checkbox wpstg-settings-field" value="<?php echo esc_attr(get_option(WPStaging\Pro\Backup\BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION)) ?>"/>
+                                    <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(WPStaging\Pro\Backup\BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION)) ?>"/>
                                 </td>
                             </tr>
                             <?php
@@ -459,8 +459,9 @@ use WPStaging\Framework\Facades\Escape;
             </div>
             <?php
         endforeach;
-
-        submit_button();
+        ?>
+            <input type="submit" name="submit" id="submit" class="wpstg-button wpstg-blue-primary" value="<?php esc_html_e('Save Changes', 'wp-staging'); ?>">
+        <?php
         unset($tabs);
         ?>
     </form>

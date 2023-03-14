@@ -302,7 +302,7 @@ class Scan extends Job
             }
 
             $output .= "<div class='wpstg-dir'>";
-            $output .= "<input type='checkbox' data-content-type='" . $contentType . "' class='wpstg-check-dir " . $class . "'";
+            $output .= "<input type='checkbox' data-content-type='" . $contentType . "' class='wpstg-checkbox wpstg-checkbox--small wpstg-check-dir " . $class . "'";
 
             // Decide if item checkbox is active or not
             $shouldBeChecked = $parentChecked !== null ? $parentChecked : !$isNotWPCoreDir;
@@ -521,7 +521,7 @@ class Scan extends Job
             return false;
         }
 
-        $path = str_replace(WPStaging::getWPpath(), null, $directory->getRealPath());
+        $path = str_replace(WPStaging::getWPpath(), '', $directory->getRealPath());
         // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
         if (!$directory->isDir() || strlen($path) < 1) {
             return false;

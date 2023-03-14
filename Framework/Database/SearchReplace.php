@@ -190,6 +190,8 @@ class SearchReplace
             $unserialized = @unserialize($data);
         } catch (\Exception $e) {
             debug_log('replaceString. Can not unserialize data. Error: ' . $e->getMessage() . ' Data: ' . $data);
+        } catch (\TypeError $err) {
+            debug_log('replaceString. Can not unserialize data. Error: ' . $err->getMessage() . ' Data: ' . $data);
         }
 
         if ($unserialized !== false) {
