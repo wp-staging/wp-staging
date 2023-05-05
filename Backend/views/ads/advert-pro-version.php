@@ -3,6 +3,8 @@
 <div class="wpstg-dark-alert">
     <span id="wpstg-premium-header"><?php esc_html_e('Backup and Migration - Go Premium!', 'wp-staging'); ?></span>
     <ul>
+        <li><?php esc_html_e('New: Create magic login links to staging sites', 'wp-staging'); ?></php></li>
+        <li><?php esc_html_e('New: Synchronization of admin accounts with staging sites', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('Create scheduled backup plans', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('Restore backups on other websites', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('Migrate websites to another hosting provider', 'wp-staging'); ?></php></li>
