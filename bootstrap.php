@@ -110,6 +110,7 @@ if (file_exists(__DIR__ . '/wp-staging-error-handler.php')) {
 }
 
 $wpStaging = WPStaging::getInstance();
+$wpStaging->registerErrorHandler();
 
 /*
  * Set the WPSTG_COMPATIBLE constant in the container,

@@ -46,15 +46,16 @@ class Cancel extends Job
             return $clone;
         }
 
-        $clone["name"] = $this->options->clone;
-        $clone["number"] = $this->options->cloneNumber;
-        $clone["path"] = ABSPATH . $this->options->cloneDirectoryName;
-        $clone["prefix"] = $this->options->prefix;
-        $clone["databaseServer"] = $this->options->databaseServer;
-        $clone["databaseUser"] = $this->options->databaseUser;
+        $clone["name"]             = $this->options->clone;
+        $clone["number"]           = $this->options->cloneNumber;
+        $clone["path"]             = ABSPATH . $this->options->cloneDirectoryName;
+        $clone["prefix"]           = $this->options->prefix;
+        $clone["databaseServer"]   = $this->options->databaseServer;
+        $clone["databaseUser"]     = $this->options->databaseUser;
         $clone["databasePassword"] = $this->options->databasePassword;
-        $clone["databasePrefix"] = $this->options->databasePrefix;
+        $clone["databasePrefix"]   = $this->options->databasePrefix;
         $clone["databaseDatabase"] = $this->options->databaseDatabase;
+        $clone["databaseSsl"]      = $this->options->databaseSsl;
 
         return $clone;
     }
@@ -82,11 +83,11 @@ class Cancel extends Job
     {
 
         wp_die(json_encode([
-          'job' => 'delete',
-          'status' => true,
+          'job'     => 'delete',
+          'status'  => true,
           'message' => $message,
-          'error' => false,
-          'delete' => 'finished'
+          'error'   => false,
+          'delete'  => 'finished'
         ]));
     }
 }

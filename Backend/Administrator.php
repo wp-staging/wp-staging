@@ -10,11 +10,9 @@ use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Database\DbInfo;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Security\Auth;
-use WPStaging\Framework\Security\AccessToken;
-use WPStaging\Framework\Security\Capabilities;
-use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
+use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\CloningProcess\Database\CompareExternalDatabase;
 use WPStaging\Framework\Utils\Math;
@@ -31,19 +29,16 @@ use WPStaging\Backend\Modules\Jobs\Logs;
 use WPStaging\Backend\Modules\Jobs\ProcessLock;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Backend\Modules\Views\Tabs\Tabs;
-use WPStaging\Backend\Notices\Notices;
 use WPStaging\Backend\Modules\Views\Forms\Settings as FormSettings;
 use WPStaging\Backend\Activation;
-use WPStaging\Backend\Feedback;
 use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Utils\Sanitize;
-use WPStaging\Backend\Pro\Modules\Jobs\CancelPush;
-use WPStaging\Framework\Utils\DBPermissions;
-use WPStaging\Pro\License\License;
+use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
+use WPStaging\Backend\Feedback\Feedback;
 
 /**
  * Class Administrator
@@ -89,13 +84,9 @@ class Administrator
 
     public function __construct()
     {
-        // TODO: Inject using DI
-        $this->auth = new Auth(new Capabilities(), new AccessToken(), new Nonce());
-        // TODO: Inject using DI
-        $this->assets = new Assets(new AccessToken(), new Settings());
-
-        // Todo: Inject using DI
-        $this->siteInfo = new SiteInfo();
+        $this->auth     = WPStaging::make(Auth::class);
+        $this->assets   = WPStaging::make(Assets::class);
+        $this->siteInfo = WPStaging::make(SiteInfo::class);
 
         add_filter('wpstg.escape.allowedHtmls', [$this, 'htmlAllowedDuringEscape']);
 
@@ -111,7 +102,7 @@ class Administrator
     }
 
     /**
-     * Load plugn meta data
+     * Load plugin meta data
      */
     public function loadMeta()
     {
@@ -130,7 +121,6 @@ class Administrator
         add_action("admin_menu", [$this, "addMenu"], 10);
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]);
-        add_action("admin_notices", [$this, "messages"]);
 
         if (!defined('WPSTGPRO_VERSION')) {
             add_filter('admin_footer', [$this, 'loadFeedbackForm']);
@@ -164,11 +154,10 @@ class Administrator
         add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]);
         add_action("wp_ajax_wpstg_enable_staging_cloning", [$this, "ajaxEnableStagingCloning"]);
         add_action("wp_ajax_wpstg_clone_excludes_settings", [$this, "ajaxCloneExcludesSettings"]);
-        add_action("wp_ajax_wpstg_fetch_dir_childrens", [$this, "ajaxFetchDirChildrens"]);
+        add_action("wp_ajax_wpstg_fetch_dir_children", [$this, "ajaxFetchDirChildren"]);
         add_action("wp_ajax_wpstg_modal_error", [$this, "ajaxModalError"]);
         add_action("wp_ajax_wpstg_dismiss_notice", [$this, "ajaxDismissNotice"]);
         add_action("wp_ajax_wpstg_restore_settings", [$this, "ajaxRestoreSettings"]);
-
 
         // Ajax hooks pro Version
         // TODO: move all below actions to pro service provider?
@@ -178,8 +167,6 @@ class Administrator
         add_action("wp_ajax_wpstg_push_tables", [$this, "ajaxPushTables"]);
         add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
         add_action("wp_ajax_nopriv_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
-        add_action("wp_ajax_wpstg_cancel_push_processing", [$this, "ajaxCancelPush"]);
-        add_action("wp_ajax_wpstg_check_user_permissions", [$this, "ajaxCheckUserPermissions"]);     
 
         // TODO: replace uploads backup during push once we have backups PR ready,
         // Then there will be no need to have any cron to delete those backups
@@ -193,7 +180,7 @@ class Administrator
      */
     public function loadFeedbackForm()
     {
-        $form = new Feedback\Feedback();
+        $form = WPStaging::make(Feedback::class);
         $form->loadForm();
     }
 
@@ -202,7 +189,7 @@ class Administrator
      */
     public function sendFeedback()
     {
-        $form = new Feedback\Feedback();
+        $form = WPStaging::make(Feedback::class);
         $form->sendMail();
     }
 
@@ -214,9 +201,9 @@ class Administrator
     public function upgrade()
     {
         if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backend\Pro\Upgrade\Upgrade')) {
-            $upgrade = new Pro\Upgrade\Upgrade();
+            $upgrade = WPStaging::make('WPStaging\Backend\Pro\Upgrade\Upgrade');
         } else {
-            $upgrade = new Upgrade\Upgrade();
+            $upgrade = WPStaging::make('WPStaging\Backend\Upgrade\Upgrade');
         }
         $upgrade->doUpgrade();
     }
@@ -410,7 +397,10 @@ class Administrator
         nocache_headers();
         header("Content-Type: text/plain");
         header('Content-Disposition: attachment; filename="wpstg-system-info.txt"');
-        echo esc_html(wp_strip_all_tags(new SystemInfo()));
+        echo esc_html(wp_strip_all_tags(WPStaging::make(SystemInfo::class)->get("systemInfo")));
+        echo esc_html("\n\n" . str_repeat("-", 25) . "\n\n");
+        $wpstgLogs = WPStaging::make(DebugLogReader::class)->getLastLogEntries(8 * KB_IN_BYTES, true, false);
+        echo esc_html(wp_strip_all_tags($wpstgLogs));
     }
 
     /**
@@ -421,8 +411,8 @@ class Administrator
      */
     public function render($file, $vars = [])
     {
-        $fullPath = $this->path . "views" . DIRECTORY_SEPARATOR;
-        $fullPath = str_replace(['/', "\\"], DIRECTORY_SEPARATOR, $fullPath . $file . ".php");
+        $fullPath = $this->path . "views/" . $file . ".php";
+        $fullPath = wp_normalize_path($fullPath);
 
         if (!file_exists($fullPath) || !is_readable($fullPath)) {
             return "Can't render : {$fullPath} either file doesn't exist or can't read it";
@@ -462,7 +452,7 @@ class Administrator
             return;
         }
 
-        $process = new ProcessLock();
+        $process = WPStaging::make(ProcessLock::class);
         $process->restart();
     }
 
@@ -476,13 +466,14 @@ class Administrator
         }
 
         // Existing clones
-        $availableClones = (new Sites())->getSortedStagingSites();
+        $sites = WPStaging::make(Sites::class);
+        $availableClones = $sites->getSortedStagingSites();
 
         // Get license data
         $license = get_option('wpstg_license_status');
 
         // Get db
-        $db = WPStaging::getInstance()->get('wpdb');
+        $db = WPStaging::make('wpdb');
 
         $iconPath = $this->assets->getAssetsUrl('svg/vendor/dashicons/cloud.svg');
 
@@ -503,26 +494,26 @@ class Administrator
         }
 
         // Check first if there is already a process running
-        $response = (new ProcessLock())->ajaxIsRunning();
-        if ($response !== false)
-        {
+        $processLock = WPStaging::make(ProcessLock::class);
+        $response = $processLock->ajaxIsRunning();
+        if ($response !== false) {
             echo json_encode($response);
 
             exit();
         }
 
-        $db = WPStaging::getInstance()->get('wpdb');
+        $db = WPStaging::make('wpdb');
 
         // Scan
-        $scan = new Scan();
+        $scan = WPStaging::make(Scan::class);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
         $scan->setInfoIcon($this->assets->getAssetsUrl('svg/vendor/dashicons/info-outline.svg'));
         $scan->start();
 
         // Get Options
-        $options = $scan->getOptions();
-        $excludeUtils = new ExcludeFilter();
-        $wpDefaultDirectories = new WpDefaultDirectories();
+        $options              = $scan->getOptions();
+        $excludeUtils         = WPStaging::make(ExcludeFilter::class);
+        $wpDefaultDirectories = WPStaging::make(WpDefaultDirectories::class);
         require_once "{$this->path}views/clone/ajax/scan.php";
 
         wp_die();
@@ -531,21 +522,21 @@ class Administrator
     /**
      * Fetch children of the given directory
      */
-    public function ajaxFetchDirChildrens()
+    public function ajaxFetchDirChildren()
     {
         if (!$this->isAuthenticated()) {
             wp_send_json(['success' => false]);
             return;
         }
 
-        $isChecked = isset($_POST['isChecked']) ? $this->sanitize->sanitizeBool($_POST['isChecked']) : false;
+        $isChecked    = isset($_POST['isChecked']) ? $this->sanitize->sanitizeBool($_POST['isChecked']) : false;
         $forceDefault = isset($_POST['forceDefault']) ? $this->sanitize->sanitizeBool($_POST['forceDefault']) : false;
-        $path = isset($_POST['dirPath']) ? $this->sanitize->sanitizePath($_POST['dirPath']) : "";
-        $path = ABSPATH . $path;
-        $scan = new Scan($path);
+        $path         = isset($_POST['dirPath']) ? $this->sanitize->sanitizePath($_POST['dirPath']) : "";
+        $path         = ABSPATH . $path;
+        $scan         = new Scan($path);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
         wp_send_json([
-            "success" => true,
+            "success"          => true,
             "directoryListing" => json_encode($scan->directoryListing($isChecked, $forceDefault)),
         ]);
     }
@@ -560,7 +551,7 @@ class Administrator
         }
 
         /** @var Sites $sitesHelper */
-        $sitesHelper = new Sites();
+        $sitesHelper        = WPStaging::make(Sites::class);
         $cloneDirectoryName = isset($_POST["directoryName"]) ? $sitesHelper->sanitizeDirectoryName($_POST["directoryName"]) : '';
 
         if (strlen($cloneDirectoryName) < 1) {
@@ -574,7 +565,7 @@ class Administrator
         }
 
         wp_send_json([
-            "status" => "failed",
+            "status"  => "failed",
             "message" => $result
         ]);
     }
@@ -634,7 +625,7 @@ class Administrator
         }
 
         // Check first if there is already a process running
-        $processLock = new ProcessLock();
+        $processLock = WPStaging::make(ProcessLock::class);
         $processLock->isRunning();
 
         $cloning = WPStaging::make(Cloning::class);
@@ -723,7 +714,7 @@ class Administrator
             return;
         }
 
-        $delete = new Delete();
+        $delete = WPStaging::make(Delete::class);
 
         $isDatabaseConnected = $delete->setData();
 
@@ -744,8 +735,9 @@ class Administrator
         if (!$this->isAuthenticated()) {
             return;
         }
+        $delete = WPStaging::make(Delete::class);
 
-        wp_send_json((new Delete())->start());
+        wp_send_json($delete->start());
     }
 
     /**
@@ -757,7 +749,8 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Cancel())->start());
+        $cancel = WPStaging::make(Cancel::class);
+        wp_send_json($cancel->start());
     }
 
     /**
@@ -769,21 +762,8 @@ class Administrator
             return;
         }
 
-        wp_send_json((new CancelUpdate())->start());
-    }
-
-    /**
-     * Admin Messages
-     */
-    public function messages()
-    {
-        /** @var Notices */
-        $notices = WPStaging::make(Notices::class);
-        $notices->setPluginPath($this->path);
-        $notices->messages();
-
-        // Return this instance when we request it from the container
-        WPStaging::getInstance()->getContainer()->singleton(Notices::class, $notices);
+        $cancelUpdate = WPStaging::make(CancelUpdate::class);
+        wp_send_json($cancelUpdate->start());
     }
 
     /**
@@ -845,7 +825,8 @@ class Administrator
             return;
         }
 
-        wp_send_json((new Logs())->start());
+        $logs = WPStaging::make(Logs::class);
+        wp_send_json($logs->start());
     }
 
     /**
@@ -858,9 +839,9 @@ class Administrator
         }
 
         $excludedDirectories = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
-        $extraDirectories = isset($_POST["extraDirectories"]) ? $this->sanitize->sanitizeString($_POST["extraDirectories"]) : '';
+        $extraDirectories    = isset($_POST["extraDirectories"]) ? $this->sanitize->sanitizeString($_POST["extraDirectories"]) : '';
 
-        $scan = new Scan();
+        $scan = WPStaging::make(Scan::class);
         return $scan->hasFreeDiskSpace($excludedDirectories, $extraDirectories);
     }
 
@@ -900,23 +881,34 @@ class Administrator
                 wp_die();
             }
 
-            $cloneId      = $this->sanitize->sanitizeString($_POST["clone"]);
-            $cloneName    = isset($_POST["cloneName"]) ? $this->sanitize->sanitizeString($_POST["cloneName"]) : '';
+            $cloneId            = $this->sanitize->sanitizeString($_POST["clone"]);
+            $cloneName          = isset($_POST["cloneName"]) ? $this->sanitize->sanitizeString($_POST["cloneName"]) : '';
             $cloneDirectoryName = $this->sanitize->sanitizeString($_POST["directoryName"]);
             $cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($cloneDirectoryName));
 
-            $existingClones[$cloneId]["cloneName"] = $this->sanitize->sanitizeString($cloneName);
-            $existingClones[$cloneId]["directoryName"] = $this->sanitize->sanitizeString($cloneDirectoryName);
-            $existingClones[$cloneId]["path"] = isset($_POST["path"]) ? $this->sanitize->sanitizeString($_POST["path"]) : '';
-            $existingClones[$cloneId]["url"] = isset($_POST["url"]) ? $this->sanitize->sanitizeString($_POST["url"]) : '';
-            $existingClones[$cloneId]["prefix"] = isset($_POST["prefix"]) ? $this->sanitize->sanitizeString($_POST["prefix"]) : '';
-            $existingClones[$cloneId]["databaseUser"] = isset($_POST["externalDBUser"]) ? $this->sanitize->sanitizeString($_POST["externalDBUser"]) : '';
-            $existingClones[$cloneId]["databasePassword"] = isset($_POST["externalDBPassword"]) ? $this->sanitize->sanitizePassword($_POST["externalDBPassword"]) : '';
-            $existingClones[$cloneId]["databaseDatabase"] = isset($_POST["externalDBDatabase"]) ? $this->sanitize->sanitizeString($_POST["externalDBDatabase"]) : '';
-            $existingClones[$cloneId]["databaseServer"] = isset($_POST["externalDBHost"]) ? $this->sanitize->sanitizeString($_POST["externalDBHost"]) : 'localhost';
-            $existingClones[$cloneId]["databasePrefix"] = isset($_POST["externalDBPrefix"]) ? $this->sanitize->sanitizeString($_POST["externalDBPrefix"]) : 'wp_';
+            $updateClones = [
+                "cloneName"        => $this->sanitize->sanitizeString($cloneName),
+                "directoryName"    => $this->sanitize->sanitizeString($cloneDirectoryName),
+                "path"             => isset($_POST["path"]) ? $this->sanitize->sanitizeString($_POST["path"]) : '',
+                "url"              => isset($_POST["url"]) ? $this->sanitize->sanitizeString($_POST["url"]) : '',
+                "prefix"           => isset($_POST["prefix"]) ? $this->sanitize->sanitizeString($_POST["prefix"]) : '',
+                "databaseUser"     => isset($_POST["externalDBUser"]) ? $this->sanitize->sanitizeString($_POST["externalDBUser"]) : '',
+                "databasePassword" => isset($_POST["externalDBPassword"]) ? $this->sanitize->sanitizePassword($_POST["externalDBPassword"]) : '',
+                "databaseDatabase" => isset($_POST["externalDBDatabase"]) ? $this->sanitize->sanitizeString($_POST["externalDBDatabase"]) : '',
+                "databaseServer"   => isset($_POST["externalDBHost"]) ? $this->sanitize->sanitizeString($_POST["externalDBHost"]) : 'localhost',
+                "databasePrefix"   => isset($_POST["externalDBPrefix"]) ? $this->sanitize->sanitizeString($_POST["externalDBPrefix"]) : 'wp_',
+                "databaseSsl"      => isset($_POST["externalDBSsl"]) && 'true' === $this->sanitize->sanitizeString($_POST["externalDBSsl"]) ? true : false,
+                "datetime"         => ! empty($existingClones["datetime"]) ? $existingClones["datetime"] : time(),
+                "ownerId"          => ! empty($existingClones['ownerId']) ? $existingClones['ownerId'] : get_current_user_id()
+            ];
 
-            update_option(Sites::STAGING_SITES_OPTION, $existingClones);
+            $existingClones[$cloneId] = array_merge($existingClones[$cloneId], $updateClones);
+
+            if (update_option(Sites::STAGING_SITES_OPTION, $existingClones)) {
+                // Update datetime if data was updated
+                $existingClones[$cloneId]["datetime"] = time();
+                update_option(Sites::STAGING_SITES_OPTION, $existingClones);
+            }
 
             echo esc_html__("Success", "wp-staging");
         } else {
@@ -943,7 +935,7 @@ class Administrator
         }
 
         // Scan
-        $scan = new Pro\Modules\Jobs\Scan();
+        $scan = WPStaging::make(ScanProModule::class);
 
         $scan->start();
 
@@ -951,7 +943,7 @@ class Administrator
         $options = $scan->getOptions();
 
         // Get Framework\Utils\Math
-        $utilsMath = new Math();
+        $utilsMath = WPStaging::make(Math::class);
 
         require_once "{$this->path}Pro/views/scan.php";
 
@@ -972,27 +964,27 @@ class Administrator
         }
 
         // Scan
-        $scan = new Pro\Modules\Jobs\Scan();
+        $scan = WPStaging::make(ScanProModule::class);
         $scan->loadStagingDBTables($onlyLoadStagingPrefixTables = false);
         $scan->start();
         $options = $scan->getOptions();
 
-        $includedTables = isset($_POST['includedTables']) ? $this->sanitize->sanitizeString($_POST['includedTables']) : '';
-        $excludedTables = isset($_POST['excludedTables']) ? $this->sanitize->sanitizeString($_POST['excludedTables']) : '';
+        $includedTables              = isset($_POST['includedTables']) ? $this->sanitize->sanitizeString($_POST['includedTables']) : '';
+        $excludedTables              = isset($_POST['excludedTables']) ? $this->sanitize->sanitizeString($_POST['excludedTables']) : '';
         $selectedTablesWithoutPrefix = isset($_POST['selectedTablesWithoutPrefix']) ? $this->sanitize->sanitizeString($_POST['selectedTablesWithoutPrefix']) : '';
-        $selectedTables = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
-        $selectedTables->setDatabaseInfo($options->databaseServer, $options->databaseUser, $options->databasePassword, $options->databaseDatabase, empty($options->databasePrefix) ? $options->prefix : $options->databasePrefix);
+        $selectedTables              = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
+        $selectedTables->setDatabaseInfo($options->databaseServer, $options->databaseUser, $options->databasePassword, $options->databaseDatabase, empty($options->databasePrefix) ? $options->prefix : $options->databasePrefix, $options->databaseSsl);
         $tables = $selectedTables->getSelectedTables($options->networkClone);
 
-        $templateEngine = new TemplateEngine();
+        $templateEngine = WPStaging::make(TemplateEngine::class);
 
         echo json_encode([
             'success' => true,
             "content" => $templateEngine->render("/Backend/Pro/views/selections/tables.php", [
                 'isNetworkClone' => $scan->isNetworkClone(),
-                'options'  => $options,
-                'showAll'  => true,
-                'selected' => $tables
+                'options'        => $options,
+                'showAll'        => true,
+                'selected'       => $tables
             ])
         ]);
 
@@ -1016,50 +1008,6 @@ class Administrator
         wp_send_json(WPStaging::make(Processing::class)->start());
 
         return false;
-    }
-
-    /**
-     * Cancel push
-     */
-    public function ajaxCancelPush()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-        wp_send_json_success(WPStaging::make(CancelPush::class)->start());
-    }
-
-    /**
-     * Ajax check user permissions on DB before push process start
-     */
-    public function ajaxCheckUserPermissions()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-
-        // Temporarily disabled, will be re-enabled in the next version
-        wp_send_json_success();
-        return;
-
-        $type = filter_input(INPUT_POST, 'type');
-        $grantsToCheck = ['CREATE', 'UPDATE', 'INSERT', 'DROP'];
-        if ($type === 'push') {
-            $grantsToCheck[] = 'ALTER';
-        }
-
-        if (WPStaging::make(DBPermissions::class)->isAllowed(['ALL PRIVILEGES']) || WPStaging::make(DBPermissions::class)->isAllowed($grantsToCheck)) {
-            wp_send_json_success();
-        }
-
-        $message = esc_html__("The database user might not have sufficient permissions to use the restore action. Continue the process anyway by clicking the 'Proceed' button or change the user's DB permissions and resume the process. Required permissions are: CREATE, UPDATE, INSERT, DROP.", 'wp-staging');
-        if ($type === 'push') {
-            $message = esc_html__("The database user might not have sufficient permissions to use the push action. Continue the process anyway by clicking the 'Proceed' button or alter the user's DB permissions and resume the process. Required permissions are: CREATE, UPDATE, ALTER, INSERT, DROP.", 'wp-staging');
-        }
-
-        wp_send_json_error([
-            'message'=>$message,
-        ]);
     }
 
     /**
@@ -1138,12 +1086,14 @@ class Administrator
 
         global $wpdb;
 
-        $args = $_POST;
-        $user = !empty($args['databaseUser']) ? $this->sanitize->sanitizeString($args['databaseUser']) : '';
+        $args     = $_POST;
+        $user     = !empty($args['databaseUser']) ? $this->sanitize->sanitizeString($args['databaseUser']) : '';
         $password = !empty($args['databasePassword']) ? $this->sanitize->sanitizePassword($args['databasePassword']) : '';
         $database = !empty($args['databaseDatabase']) ? $this->sanitize->sanitizeString($args['databaseDatabase']) : '';
-        $server = !empty($args['databaseServer']) ? $this->sanitize->sanitizeString($args['databaseServer']) : 'localhost';
-        $prefix = !empty($args['databasePrefix']) ? $this->sanitize->sanitizeString($args['databasePrefix']) : $wpdb->prefix;
+        $server   = !empty($args['databaseServer']) ? $this->sanitize->sanitizeString($args['databaseServer']) : 'localhost';
+        $prefix   = !empty($args['databasePrefix']) ? $this->sanitize->sanitizeString($args['databasePrefix']) : $wpdb->prefix;
+        $useSsl   = !empty($args['databaseSsl']) && 'true' === $this->sanitize->sanitizeString($args['databaseSsl']) ? true : false;
+
         // make sure prefix doesn't contains any invalid character
         // same condition as in WordPress wpdb::set_prefix() method
         if (preg_match('|[^a-z0-9_]|i', $prefix)) {
@@ -1154,8 +1104,8 @@ class Administrator
         // ensure tables with the given prefix exist, default false
         $ensurePrefixTableExist = !empty($args['databaseEnsurePrefixTableExist']) ? $this->sanitize->sanitizeBool($args['databaseEnsurePrefixTableExist']) : false;
 
-        $dbInfo = new DbInfo($server, $user, stripslashes($password), $database);
-        $wpdb = $dbInfo->connect();
+        $dbInfo = new DbInfo($server, $user, stripslashes($password), $database, $useSsl);
+        $wpdb   = $dbInfo->connect();
 
         // Can not connect to mysql database
         $error = $dbInfo->getError();
@@ -1185,12 +1135,12 @@ class Administrator
         }
 
         // get production db
-        $productionDb = WPStaging::getInstance()->get('wpdb');
+        $productionDb = WPStaging::make('wpdb');
 
         $queryToFindHost = "SHOW VARIABLES WHERE Variable_name = 'hostname';";
         $queryToFindPort = "SHOW VARIABLES WHERE Variable_name = 'port';";
 
-        $stagingSiteAddress = gethostbyname($wpdb->get_var($wpdb->prepare($queryToFindHost), 1));
+        $stagingSiteAddress    = gethostbyname($wpdb->get_var($wpdb->prepare($queryToFindHost), 1));
         $productionSiteAddress = gethostbyname($productionDb->get_var($productionDb->prepare($queryToFindHost), 1));
         if ($stagingSiteAddress === null || $productionSiteAddress === null) {
             echo json_encode(['success' => 'false', 'errors' => __('Unable to find database server hostname of the staging or the production site.', 'wp-staging')]);
@@ -1198,7 +1148,7 @@ class Administrator
         }
 
         $isSameAddress = $productionSiteAddress === $stagingSiteAddress;
-        $isSamePort = $wpdb->get_var($wpdb->prepare($queryToFindPort), 1) === $productionDb->get_var($productionDb->prepare($queryToFindPort), 1);
+        $isSamePort    = $wpdb->get_var($wpdb->prepare($queryToFindPort), 1) === $productionDb->get_var($productionDb->prepare($queryToFindPort), 1);
 
         $isSameServer = ($isSameAddress && $isSamePort) || $server === DB_HOST;
 
@@ -1224,7 +1174,7 @@ class Administrator
 
         $type = isset($_POST['type']) ? $this->sanitize->sanitizeString($_POST['type']) : null;
         if ($type === 'processLock') {
-            $process = new ProcessLock();
+            $process = WPStaging::make(ProcessLock::class);
             $process->restart();
 
             exit();
@@ -1240,27 +1190,27 @@ class Administrator
             return;
         }
 
-        $response = (new ProcessLock())->ajaxIsRunning();
-        if ($response !== false)
-        {
+        $processLock = WPStaging::make(ProcessLock::class);
+        $response = $processLock->ajaxIsRunning();
+        if ($response !== false) {
             echo json_encode($response);
 
             exit();
         }
 
-        $templateEngine = new TemplateEngine();
+        $templateEngine = WPStaging::make(TemplateEngine::class);
 
         // Scan
-        $scan = new Scan();
+        $scan = WPStaging::make(Scan::class);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
         $scan->start();
 
         echo json_encode([
             'success' => true,
-            "html" => $templateEngine->render("/Backend/views/clone/ajax/exclude-settings.php", [
-                'scan' => $scan,
-                'options' => $scan->getOptions(),
-                'excludeUtils' => new ExcludeFilter(),
+            "html"    => $templateEngine->render("/Backend/views/clone/ajax/exclude-settings.php", [
+                'scan'         => $scan,
+                'options'      => $scan->getOptions(),
+                'excludeUtils' => WPStaging::make(ExcludeFilter::class),
             ])
         ]);
 
@@ -1280,13 +1230,14 @@ class Administrator
             return;
         }
 
-        $user = !empty($_POST['databaseUser']) ? $this->sanitize->sanitizeString($_POST['databaseUser']) : '';
+        $user     = !empty($_POST['databaseUser']) ? $this->sanitize->sanitizeString($_POST['databaseUser']) : '';
         $password = !empty($_POST['databasePassword']) ? $this->sanitize->sanitizePassword($_POST['databasePassword']) : '';
         $database = !empty($_POST['databaseDatabase']) ? $this->sanitize->sanitizeString($_POST['databaseDatabase']) : '';
-        $server = !empty($_POST['databaseServer']) ? $this->sanitize->sanitizeString($_POST['databaseServer']) : 'localhost';
+        $server   = !empty($_POST['databaseServer']) ? $this->sanitize->sanitizeString($_POST['databaseServer']) : 'localhost';
+        $useSsl   = !empty($_POST['databaseSsl']) && 'true' === $this->sanitize->sanitizeString($_POST['databaseSsl']) ? true : false;
 
-        $comparison = new CompareExternalDatabase($server, $user, stripslashes($password), $database);
-        $results = $comparison->maybeGetComparison();
+        $comparison = new CompareExternalDatabase($server, $user, stripslashes($password), $database, $useSsl);
+        $results    = $comparison->maybeGetComparison();
 
         echo json_encode($results);
         exit();
@@ -1321,7 +1272,8 @@ class Administrator
 
         // Delete old settings
         delete_option('wpstg_settings');
-        (new Settings())->setDefault();
+        $settings = WPStaging::make(Settings::class);
+        $settings->setDefault();
     }
 
     /**
@@ -1335,7 +1287,7 @@ class Administrator
 
     /**
      * @param array $array
-     * @return array 
+     * @return array
      */
     public function htmlAllowedDuringEscape($array)
     {

@@ -1,8 +1,8 @@
 <?php
 
 /**
- * @var $this \WPStaging\Backend\Notices\OutdatedWpStagingNotice
- * @see \WPStaging\Backend\Notices\OutdatedWpStagingNotice::showNotice
+ * @var $this \WPStaging\Framework\Notices\OutdatedWpStagingNotice
+ * @see \WPStaging\Framework\Notices\OutdatedWpStagingNotice::showNotice
  */
 
 use WPStaging\Framework\Facades\Escape;

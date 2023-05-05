@@ -28,10 +28,11 @@ class CompareExternalDatabase
     * @param string $user
     * @param string $password
     * @param string $database
+    * @param string $useSsl
     */
-    public function __construct($hostServer, $user, $password, $database)
+    public function __construct($hostServer, $user, $password, $database, $useSsl = false)
     {
-        $this->stagingDbInfo = new DbInfo($hostServer, $user, $password, $database);
+        $this->stagingDbInfo    = new DbInfo($hostServer, $user, $password, $database, $useSsl);
         $this->productionDbInfo = new WpDbInfo(WPStaging::getInstance()->get("wpdb"));
     }
 
@@ -43,9 +44,9 @@ class CompareExternalDatabase
         $stagingDbError = $this->stagingDbInfo->getError();
         if ($stagingDbError !== null) {
             return [
-                "success" => false,
+                "success"    => false,
                 'error_type' => 'connection',
-                "message" => $stagingDbError
+                "message"    => $stagingDbError
             ];
         }
 
@@ -58,23 +59,23 @@ class CompareExternalDatabase
 
         // DB Properties are different. Get comparison table
         return [
-            "success" => false,
+            "success"    => false,
             'error_type' => 'comparison',
-            "checks" => [
+            "checks"     => [
                 [
-                    "name" => __('DB Collation'),
+                    "name"       => __('DB Collation'),
                     "production" => $this->productionDbInfo->getDbCollation(),
-                    "staging" => $this->stagingDbInfo->getDbCollation(),
+                    "staging"    => $this->stagingDbInfo->getDbCollation(),
                 ],
                 [
-                    "name" => __('DB Storage Engine'),
+                    "name"       => __('DB Storage Engine'),
                     "production" => $this->productionDbInfo->getDbEngine(),
-                    "staging" => $this->stagingDbInfo->getDbEngine(),
+                    "staging"    => $this->stagingDbInfo->getDbEngine(),
                 ],
                 [
-                    "name" => __('MySQL Server Version'),
+                    "name"       => __('MySQL Server Version'),
                     "production" => $this->productionDbInfo->getMySqlServerVersion(),
-                    "staging" => $this->stagingDbInfo->getMySqlServerVersion(),
+                    "staging"    => $this->stagingDbInfo->getMySqlServerVersion(),
                 ]
             ]
         ];

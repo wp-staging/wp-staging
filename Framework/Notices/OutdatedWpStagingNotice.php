@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Backend\Notices;
+namespace WPStaging\Framework\Notices;
 
 use WPStaging\Core\WPStaging;
 use Countable;
@@ -9,7 +9,7 @@ use Countable;
  * Class OutdatedWpStagingNotice
  *
  * Show a notification if installed WP STAGING free or pro version is outdated and if there is a new plugin update available
- * @see \WPStaging\Backend\Notices\Notices
+ * @see \WPStaging\Framework\Notices\Notices
  */
 class OutdatedWpStagingNotice
 {

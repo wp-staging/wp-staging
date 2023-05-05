@@ -1,15 +1,10 @@
 <?php
 
-namespace WPStaging\Backend\Notices;
-
-/*
- *  Admin Notices | Warnings | Messages
- */
+namespace WPStaging\Framework\Notices;
 
 use Exception;
 use DateTime;
 use wpdb;
-use WPStaging\Backend\Pro\Notices\Notices as ProNotices;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
@@ -21,28 +16,57 @@ use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
 use WPStaging\Framework\Support\ThirdParty\Jetpack;
 use WPStaging\Framework\Support\ThirdParty\WordFence;
-use WPStaging\Framework\Utils\Sanitize;
+use WPStaging\Framework\Traits\NoticesTrait;
 
 /**
- * Class Notices
- * @package WPStaging\Backend\Notices
+ * Show Admin Notices | Warnings | Messages
  *
- * @todo Have NoticeServiceProvider?
+ * Class Notices
+ * @package WPStaging\Framework\Notices
+ * @todo maybe split this class into multiple classes like staging notices, permission notices etc
+ * to avoid dependency hell without using service locator?
  */
 class Notices
 {
-    /**
-     * @var string
-     */
-    private $path;
+    use NoticesTrait;
 
-    /**
-     * @var Assets
-     */
+    const PRO_NOTICES_ACTION = 'wpstg.notices.show_pro_notices';
+
+    /** @var Assets */
     private $assets;
 
-    /** @var Sanitize */
-    private $sanitize;
+    /** @var Directory */
+    private $dirUtil;
+
+    /** @var Cache */
+    private $cache;
+
+    /** @var Logger */
+    private $logger;
+
+    /** @var CloneOptions */
+    private $cloneOptions;
+
+    /** @var ExcludedPlugins */
+    private $excludedPlugins;
+
+    /** @var FreemiusScript */
+    private $freemiusScript;
+
+    /** @var WordFence */
+    private $wordfence;
+
+    /** @var DisabledItemsNotice */
+    private $disabledItemsNotice;
+
+    /** @var WarningsNotice */
+    private $warningsNotice;
+
+    /** @var OutdatedWpStagingNotice */
+    private $outdatedWpStagingNotice;
+
+    /** @var wpdb */
+    private $db;
 
     //** For testing all notices  */
     const SHOW_ALL_NOTICES = false;
@@ -52,37 +76,34 @@ class Notices
      */
     public static $directoryListingErrors = 'directoryListingErrors';
 
-    public function __construct(Assets $assets, Sanitize $sanitize)
+    public function __construct(Assets $assets)
     {
         $this->assets = $assets;
-        $this->sanitize = $sanitize;
+
+        // To avoid dependency hell and smooth transition we will be using service locator for below dependencies
+        $this->dirUtil = WPStaging::make(Directory::class);
+        $this->wordfence = WPStaging::make(WordFence::class);
+        $this->cloneOptions = WPStaging::make(CloneOptions::class);
+        $this->freemiusScript = WPStaging::make(FreemiusScript::class);
+        $this->excludedPlugins = WPStaging::make(ExcludedPlugins::class);
+        $this->logger = WPStaging::getInstance()->get("logger");
+        $this->cache = WPStaging::getInstance()->get("cache");
+        $this->db = WPStaging::getInstance()->get('wpdb');
+
+        // Notices
+        $this->disabledItemsNotice = WPStaging::make(DisabledItemsNotice::class);
+        $this->warningsNotice = WPStaging::make(WarningsNotice::class);
+        $this->outdatedWpStagingNotice = WPStaging::make(OutdatedWpStagingNotice::class);
     }
 
     /**
-     * Check whether the page is admin page or not
-     * @return bool
-     */
-    public function isAdminPage()
-    {
-        $currentPage = (isset($_GET["page"])) ? $this->sanitize->sanitizeString($_GET["page"]) : null;
-
-        $availablePages = [
-            "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone", "wpstg_backup"
-        ];
-
-        return !(!is_admin() || !in_array($currentPage, $availablePages, true));
-    }
-
-    /**
-     * check whether the plugin is pro version
+     * Check whether the plugin is pro version
      *
-     * @return  boolean
-     * @todo    Implement this in a separate class related to plugin. Then replace it with dependency injection. Add filters
-     *
+     * @return  bool
      */
     protected function isPro()
     {
-        return defined('WPSTGPRO_VERSION');
+        return WPStaging::isPro();
     }
 
     /**
@@ -115,7 +136,6 @@ class Notices
             }
         }
 
-
         // Show X days after installation
         $installDate = new DateTime(get_option("wpstg_installDate"));
 
@@ -126,10 +146,13 @@ class Notices
     }
 
     /**
-     * Get current page
+     * Get current page.
+     * Note: This can not be moved to wpAdapter class as it is only available very late
+     * at add admin_init and not available most of the time.
+     *
      * @return string post, page
      */
-    private function getCurrentScreen()
+    private function getCurrentPage()
     {
         if (function_exists('get_current_screen')) {
             return \get_current_screen()->post_type;
@@ -138,17 +161,16 @@ class Notices
         throw new Exception('Function get_current_screen does not exist. WP < 3.0.1.');
     }
 
-
     /**
      * Load admin notices
      * @throws Exception
      */
-    public function messages()
+    public function renderNotices()
     {
-        $viewsNoticesPath = "{$this->path}views/notices/";
+        $viewsNoticesPath = "{$this->getPluginPath()}/Backend/views/notices/";
 
         // Show notice "rate the plugin". Free version only
-        if (self::SHOW_ALL_NOTICES || (!$this->isPro() && ($this->canShow("wpstg_rating", 7) && $this->getCurrentScreen() !== 'page' && $this->getCurrentScreen() !== 'post'))) {
+        if (self::SHOW_ALL_NOTICES || (!$this->isPro() && ($this->canShow("wpstg_rating", 7) && $this->getCurrentPage() !== 'page' && $this->getCurrentPage() !== 'post'))) {
             require_once "{$viewsNoticesPath}rating.php";
         }
 
@@ -157,19 +179,17 @@ class Notices
 
         // Show all notices of the pro version
         if ($this->isPro()) {
-            $proNotices = new ProNotices($this);
             // Check mails disabled against both the old and new way of emails disabled option
-            $outgoingMailsDisabled = (bool)(new CloneOptions())->get(FirstRun::MAILS_DISABLED_KEY) || ((bool)get_option(FirstRun::MAILS_DISABLED_KEY, false));
-            $proNotices->getNotices();
+            $outgoingMailsDisabled = (bool)$this->cloneOptions->get(FirstRun::MAILS_DISABLED_KEY) || ((bool)get_option(FirstRun::MAILS_DISABLED_KEY, false));
+            // This hook is for internal use only. Used in PRO version to display PRO version related notices.
+            do_action(self::PRO_NOTICES_ACTION);
         }
 
-        /** @var DisabledItemsNotice */
-        $disabledItemNotice = WPStaging::make(DisabledItemsNotice::class);
         // Show notice about what disabled in the staging site. (Show only on staging site)
-        if (self::SHOW_ALL_NOTICES || $disabledItemNotice->isEnabled()) {
-            $excludedPlugins = (array)(new ExcludedPlugins())->getExcludedPlugins();
+        if (self::SHOW_ALL_NOTICES || $this->disabledItemsNotice->isEnabled()) {
+            $excludedPlugins = (array)$this->excludedPlugins->getExcludedPlugins();
             // Show freemius notice if freemius options were deleted during cloning.
-            $freemiusOptionsCleared = (new FreemiusScript())->isNoticeEnabled();
+            $freemiusOptionsCleared = $this->freemiusScript->isNoticeEnabled();
             // Show jetpack staging mode notice if the constant is set on staging site
             $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
             // use require here instead of require_once otherwise unit tests will always fail,
@@ -177,22 +197,13 @@ class Notices
             require "{$viewsNoticesPath}disabled-items-notice.php";
         }
 
-        global $wpdb;
-        $optionTable = $wpdb->prefix . 'options';
-        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && $this->isOptionTablePrimaryKeyMissing($wpdb, $optionTable))) {
+        $optionTable = $this->db->prefix . 'options';
+        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && $this->isOptionTablePrimaryKeyMissing($this->db, $optionTable))) {
             require "{$viewsNoticesPath}wp-options-missing-pk.php";
         }
 
         // Show notice if WordFence Firewall is disabled
-        /** @var WordFence */
-        WPStaging::make(WordFence::class)->showNotice($viewsNoticesPath);
-
-        // Single dismissable notice to show all warning on staging sites
-        /** @var WarningsNotice */
-        $warningsNotice = WPStaging::make(WarningsNotice::class);
-        if ($warningsNotice->isEnabled()) {
-            require "{$viewsNoticesPath}warnings-notice.php";
-        }
+        $this->wordfence->showNotice($viewsNoticesPath);
 
         $settings = get_option('wpstg_settings', []);
         if (self::SHOW_ALL_NOTICES || (!is_array($settings) && !is_object($settings))) {
@@ -202,36 +213,28 @@ class Notices
         /**
          * Display all notices below this line in WP STAGING admin pages only and only to administrators!
          */
-        if (!current_user_can("update_plugins") || !$this->isAdminPage()) {
+        if (!current_user_can("update_plugins") || !$this->isWPStagingAdminPage()) {
             return;
         }
 
         // Show notice if uploads dir is outside ABSPATH
-        /** @var Directory */
-        $dirUtils = WPStaging::make(Directory::class);
-        if (self::SHOW_ALL_NOTICES || !$dirUtils->isPathInWpRoot($dirUtils->getUploadsDirectory())) {
+        if (self::SHOW_ALL_NOTICES || !$this->dirUtil->isPathInWpRoot($this->dirUtil->getUploadsDirectory())) {
             require "{$viewsNoticesPath}uploads-outside-wp-root.php";
         }
 
         /**
          * Display outdated WP Staging version notice (Free Only)
          */
-        /** @var OutdatedWpStagingNotice */
-        WPStaging::make(OutdatedWpStagingNotice::class)
-            ->showNotice($viewsNoticesPath);
+        $this->outdatedWpStagingNotice->showNotice($viewsNoticesPath);
 
         // Show notice Cache directory is not writable
-        /** @var Cache $cache */
-        $cache = WPStaging::getInstance()->get("cache");
-        $cacheDir = $cache->getCacheDir();
+        $cacheDir = $this->cache->getCacheDir();
         if (self::SHOW_ALL_NOTICES || (!is_dir($cacheDir) || !is_writable($cacheDir))) {
             require_once "{$viewsNoticesPath}/cache-directory-permission-problem.php";
         }
 
         // Show notice Logger directory is not writable
-        /** @var Logger $logger */
-        $logger = WPStaging::getInstance()->get("logger");
-        $logsDir = $logger->getLogDir();
+        $logsDir = $this->logger->getLogDir();
         if (self::SHOW_ALL_NOTICES || (!is_dir($logsDir) || !is_writable($logsDir))) {
             require_once "{$viewsNoticesPath}/logs-directory-permission-problem.php";
         }
@@ -264,6 +267,10 @@ class Notices
             && isset($wpstgSettings->optimizer) && $wpstgSettings->optimizer
         ) {
             require "{$viewsNoticesPath}/mu-plugin-directory-permission-problem.php";
+        }
+
+        if (self::SHOW_ALL_NOTICES || empty($wpstgSettings->optimizer)) {
+            require_once "{$viewsNoticesPath}disabled-optimizer-notice.php";
         }
 
         // Show notice Failed to prevent directory listing
@@ -305,15 +312,14 @@ class Notices
      */
     private function showDirectoryListingWarningNotice($viewsNoticesPath)
     {
+        $directoryListingErrors = WPStaging::getInstance()->getContainer()->getFromArray(static::$directoryListingErrors);
 
-            $directoryListingErrors = WPStaging::getInstance()->getContainer()->getFromArray(static::$directoryListingErrors);
-
-            // Early bail: No errors to show
+        // Early bail: No errors to show
         if (!self::SHOW_ALL_NOTICES && empty($directoryListingErrors)) {
             return;
         }
 
-            // Early bail: These warnings were disabled by the user.
+        // Early bail: These warnings were disabled by the user.
         if ((bool)apply_filters('wpstg.notices.hideDirectoryListingWarnings', false)) {
             return;
         }
@@ -363,32 +369,6 @@ class Notices
         }
 
         return false;
-    }
-
-    /**
-     * @param string $path
-     */
-    public function setPluginPath($path)
-    {
-        $this->path = $path;
-    }
-
-    /**
-     * Get the path of plugin
-     * @return string
-     */
-    public function getPluginPath()
-    {
-        return $this->path;
-    }
-
-    /**
-     * Get the assets helper
-     * @return Assets
-     */
-    public function getAssets()
-    {
-        return $this->assets;
     }
 
     /**

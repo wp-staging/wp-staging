@@ -270,7 +270,8 @@ use WPStaging\Framework\Facades\Escape;
                                 <span class="description">
                                         <?php
                                         esc_html_e(
-                                            "The Optimizer is a mu-plugin that disables all other plugins during WP STAGING processing. This lowers memory consumption and speeds up processing. It should always be enabled!",
+                                            "The Optimizer is a mu-plugin that disables all other plugins during staging and backup operations.
+                                            This lowers memory consumption and speeds up processing. It should always be enabled!",
                                             "wp-staging"
                                         ); ?>
                                     </span>
@@ -418,7 +419,7 @@ use WPStaging\Framework\Facades\Escape;
                                     </p>
                                 </td>
                                 <td>
-                                    <input type="checkbox" id="wpstg-send-schedules-error-report" name="wpstg_settings[schedulesErrorReport]" class="wpstg-checkbox wpstg-settings-field" value="true" <?php echo get_option(WPStaging\Pro\Backup\BackupScheduler::BACKUP_SCHEDULE_ERROR_REPORT_OPTION) === 'true' ? 'checked' : '' ?> />
+                                    <input type="checkbox" id="wpstg-send-schedules-error-report" name="wpstg_settings[schedulesErrorReport]" class="wpstg-checkbox wpstg-settings-field" value="true" <?php echo get_option(WPStaging\Backup\BackupScheduler::BACKUP_SCHEDULE_ERROR_REPORT_OPTION) === 'true' ? 'checked' : '' ?> />
                                 </td>
                             </tr>
                             <tr class="wpstg-settings-row">
@@ -429,7 +430,7 @@ use WPStaging\Framework\Facades\Escape;
                                     </p>
                                 </td>
                                 <td>
-                                    <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(WPStaging\Pro\Backup\BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION)) ?>"/>
+                                    <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(WPStaging\Backup\BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION)) ?>"/>
                                 </td>
                             </tr>
                             <?php

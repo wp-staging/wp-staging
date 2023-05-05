@@ -19,6 +19,7 @@ $username   = '';
 $password   = '';
 $prefix     = '';
 $server     = '';
+$useSsl     = false;
 $isDisabled = false;
 
 if (!$isPro) {
@@ -30,6 +31,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     $username   = isset($options->existingClones[$options->current]['databaseUser']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['databaseUser']) : '';
     $prefix     = isset($options->existingClones[$options->current]['databasePrefix']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['databasePrefix']) : '';
     $server     = isset($options->existingClones[$options->current]['databaseServer']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['databaseServer']) : '';
+    $useSsl     = !empty($options->existingClones[$options->current]['databaseSsl']);
     $isDisabled = true;
     $password   = '*********';
 }
@@ -43,7 +45,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     <?php } ?>
 
     <label for="wpstg-ext-db"><?php esc_html_e('Change Database'); ?></label>
-    <input type="checkbox" id="wpstg-ext-db" name="wpstg-ext-db" value="true" class="wpstg-toggle-advance-settings-section wpstg-checkbox" data-id="wpstg-external-db-section" <?php echo $isPro === true ? '' : 'disabled' ?> >
+    <input type="checkbox" id="wpstg-ext-db" name="wpstg-ext-db" value="true" class="wpstg-toggle-advance-settings-section wpstg-checkbox" data-id="wpstg-external-db-section" <?php echo $isPro === true ? '' : 'disabled' ?>>
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
@@ -51,7 +53,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
         </span>
     </span>
 </p>
-<div id="wpstg-external-db-section" <?php echo $isPro === true ? 'style="display: none;"' : '' ?> >
+<div id="wpstg-external-db-section" <?php echo $isPro === true ? 'style="display: none;"' : '' ?>>
     <div class="wpstg-form-group wpstg-text-field">
         <label><?php esc_html_e('Server: ', 'wp-staging'); ?> </label>
         <input type="text" class="wpstg-textbox" name="wpstg_db_server" id="wpstg_db_server" value="<?php echo esc_attr($server); ?>" title="wpstg_db_server" placeholder="localhost" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly>
@@ -72,7 +74,13 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
         <label for="wpstg_db_prefix"><?php esc_html_e('Database Prefix: ', 'wp-staging'); ?></label>
         <input type="text" class="wpstg-textbox" name="wpstg_db_prefix" id="wpstg_db_prefix" value="<?php echo esc_attr($prefix); ?>" placeholder="<?php echo $db->prefix; ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
     </div>
-    <div class="wpstg-form-group wpstg-text-field">
+    <div class="wpstg-form-group">
+        <div class="wpstg-checkbox">
+            <label for="wpstg_db_ssl"><?php esc_html_e('Enable SSL: ', 'wp-staging'); ?></label>
+            <input type="checkbox" id="wpstg_db_ssl" name="wpstg_db_ssl" value="true" class="wpstg-checkbox" <?php echo $useSsl ? "checked" : '';?> readonly />
+        </div>
+    </div>
+    <div class="wpstg-form-group wpstg-text-field wpstg-mt-10px">
         <a href="#" id="wpstg-db-connect"><?php esc_html_e("Test Database Connection", "wp-staging"); ?></a>
     </div>
     <hr />

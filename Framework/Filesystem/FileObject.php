@@ -11,7 +11,7 @@ use RuntimeException;
 use SplFileObject;
 use WPStaging\Core\WPStaging;
 use WPStaging\functions;
-use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Backup\Exceptions\DiskNotWritableException;
 
 use function tad\WPBrowser\debug;
 use function WPStaging\functions\debug_log;
@@ -46,13 +46,14 @@ class FileObject extends SplFileObject
 
     /**
      * @throws DiskNotWritableException
+     * @throws FilesystemExceptions
      */
     public function __construct($fullPath, $openMode = self::MODE_READ)
     {
         $fullPath = untrailingslashit($fullPath);
 
         if (!file_exists($fullPath)) {
-            (new Filesystem())->mkdir(dirname($fullPath));
+            WPStaging::make(Filesystem::class)->mkdir(dirname($fullPath), true);
         }
 
         try {
@@ -66,10 +67,16 @@ class FileObject extends SplFileObject
         }
     }
 
-    // Not sure if we need this, if not, delete it as we already open file with binary mode.
+    /**
+     * @param $str
+     * @param $length
+     * @return false|int False on error, number of bytes written on success
+     */
     public function fwriteSafe($str, $length = null)
     {
+        // Not sure if we need mbstring_binary_safe_encoding. If not, delete it as we already open file with binary mode.
         mbstring_binary_safe_encoding();
+
         $strLen = strlen($str);
         $writtenBytes = $length !== null ? $this->fwrite($str, $length) : $this->fwrite($str);
         reset_mbstring_encoding();
@@ -128,7 +135,8 @@ class FileObject extends SplFileObject
         } while ($this->valid() && !is_array($backupMetadata));
 
         if (!is_array($backupMetadata)) {
-            throw new RuntimeException('Could not find metadata in the backup. This file could be corrupt.');
+            $error = sprintf('Could not find metadata in the backup file %s - This file could be corrupt.', $this->getFilename());
+            throw new RuntimeException($error);
         }
 
         return $backupMetadata;
@@ -378,6 +386,10 @@ class FileObject extends SplFileObject
     public function flock($operation, &$wouldBlock = null)
     {
         if (!WPStaging::isWindowsOs()) {
+            if (!is_callable('parent::flock')) {
+                return false;
+            }
+
             return parent::flock($operation, $wouldBlock);
         }
 

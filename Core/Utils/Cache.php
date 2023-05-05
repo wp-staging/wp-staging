@@ -77,7 +77,7 @@ class Cache
          * There's no need to handle failure to create here,
          * as a warning is already displayed on:
          *
-         * @see \WPStaging\Backend\Notices\Notices::messages
+         * @see \WPStaging\Framework\Notices\Notices::renderNotices
          */
         (new Filesystem())->mkdir($this->cacheDir);
     }

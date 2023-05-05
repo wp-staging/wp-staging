@@ -39,7 +39,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
     public function __construct(Directory $directory, Filesystem $filesystem)
     {
-        $this->directory = $directory;
+        $this->directory  = $directory;
         $this->filesystem = $filesystem;
     }
 
@@ -60,15 +60,15 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
         $this->filesystem->mkdir(dirname($path), true);
 
-        if (!file_exists($path)) {
-            touch($path);
+        if (!file_exists($path) && !touch($path)) {
+            debug_log("Check if there is enough free space and the file permissions are 644 or 755. Could not create file: $path");
+            throw new \RuntimeException(sprintf(esc_html__("Check if there is enough free space and the file permissions are 644 or 755. Could not create file: %s", 'wp-staging'), $path));
         }
 
         // Developer exception
         if ($queueMode !== SeekableQueueInterface::MODE_WRITE && $queueMode !== SeekableQueueInterface::MODE_READ_WRITE) {
             throw new \BadMethodCallException();
         }
-
         $this->handle = new FileObject($path, $queueMode);
         $this->handle->setFlags(FileObject::DROP_NEW_LINE);
         $this->fileGenerator = $this->initializeGenerator();
@@ -90,7 +90,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
                     usleep(250000); // 0.25s
                     $waitedTimes++;
                     if ($waitedTimes > 5) {
-                        throw new \RuntimeException('Could not acquire exclusive lock for writing to Queue file: ' . $this->taskName . '.task');
+                        throw new \RuntimeException(esc_html__('Could not acquire exclusive lock for writing to Queue file: ' . $this->taskName . '.task'));
                     }
                 }
             } while (!$locked);
@@ -148,6 +148,10 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         return $this->handle->eof();
     }
 
+    /**
+     * @param $dequeue
+     * @return mixed|void
+     */
     public function retry($dequeue = true)
     {
         $this->seek($this->offsetBefore);
@@ -157,6 +161,10 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         }
     }
 
+    /**
+     * @param $data
+     * @return false|int
+     */
     public function enqueue($data)
     {
         // Early bail: Write-only optimization
@@ -179,6 +187,9 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         return $offsetEndOfQueue;
     }
 
+    /**
+     * @return mixed
+     */
     public function dequeue()
     {
         if ($this->isWriteOnly) {
@@ -194,6 +205,10 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         return $this->current();
     }
 
+    /**
+     * @param array $data
+     * @return false|int
+     */
     public function enqueueMany(array $data = [])
     {
         foreach ($data as $item) {
@@ -210,11 +225,21 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         $this->handle->ftruncate(0);
     }
 
+    /**
+     * @return false|int
+     */
     public function getOffset()
     {
+        if (!isset($this->handle) || !$this->handle instanceof FileObject) {
+            return false;
+        }
+
         return $this->handle->ftell();
     }
 
+    /**
+     * @return void
+     */
     public function shutdown()
     {
         if ($this->needsUnlock && $this->handle instanceof FileObject) {

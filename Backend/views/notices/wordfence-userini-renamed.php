@@ -5,7 +5,7 @@
  * @see \WPStaging\Framework\Support\ThirdParty\WordFence::showNotice
  */
 
-use WPStaging\Backend\Notices\Notices;
+use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Support\ThirdParty\WordFence;
 
 ?>

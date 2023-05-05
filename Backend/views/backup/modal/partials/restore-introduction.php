@@ -7,8 +7,8 @@
 use WPStaging\Framework\Facades\Escape;
 
 ?>
-<div class="wpstg--modal--backup--import--introduction">
-    <div class="wpstg--modal--backup--import--wrapper">
+<div class="wpstg--modal--backup--restore--introduction">
+    <div class="wpstg--modal--backup--restore--wrapper">
         <div style="text-align: left; padding-left: 8px; padding-right: 8px;">
             <h4 class="wpstg--swal2-title"><strong><?php esc_html_e('Read First', 'wp-staging') ?></strong></h4>
             <?php echo Escape::escapeHtml(__(<<<HTML

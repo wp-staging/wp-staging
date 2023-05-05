@@ -247,11 +247,11 @@ class BigInteger
                     \define('MATH_BIGINTEGER_MODE', self::MODE_INTERNAL);
             }
         }
-        if (\function_exists('phpinfo') && \extension_loaded('openssl') && !\defined('MATH_BIGINTEGER_OPENSSL_DISABLE') && !\defined('MATH_BIGINTEGER_OPENSSL_ENABLED')) {
+        if (\extension_loaded('openssl') && !\defined('MATH_BIGINTEGER_OPENSSL_DISABLE') && !\defined('MATH_BIGINTEGER_OPENSSL_ENABLED')) {
             // some versions of XAMPP have mismatched versions of OpenSSL which causes it not to work
             $versions = array();
             // avoid generating errors (even with suppression) when phpinfo() is disabled (common in production systems)
-            if (\strpos(\ini_get('disable_functions'), 'phpinfo') === \false) {
+            if (\function_exists('phpinfo')) {
                 \ob_start();
                 @\phpinfo();
                 $content = \ob_get_contents();
@@ -345,7 +345,7 @@ class BigInteger
                         break;
                     case self::MODE_BCMATH:
                         // round $len to the nearest 4 (thanks, DavidMJ!)
-                        $len = \strlen($x) + 3 & 0xfffffffc;
+                        $len = \strlen($x) + 3 & ~3;
                         $x = \str_pad($x, $len, \chr(0), \STR_PAD_LEFT);
                         for ($i = 0; $i < $len; $i += 4) {
                             $this->value = \bcmul($this->value, '4294967296', 0);

@@ -6,7 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Sanitize;
-use WPStaging\Pro\Backup\BackupScheduler;
+use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Security\Auth;
 
 class Settings
@@ -120,13 +120,13 @@ class Settings
         if ($result === 0) {
             wp_send_json([
                 'success' => true,
-                'message' => esc_html__(sprintf('Table %s is already empty.', $this->queue->getTableName()))
+                'message' => sprintf(esc_html__('Table %s is already empty.', 'wp-staging'), esc_html($this->queue->getTableName()))
             ]);
         }
 
         wp_send_json([
             'success' => true,
-            'message' => sprintf(esc_html__('Purged queue table! Removed %s action(s)', 'wp-staging'), $result)
+            'message' => sprintf(esc_html__('Purged queue table! Removed %s action(s)', 'wp-staging'), esc_html($result))
         ]);
     }
 
@@ -189,7 +189,7 @@ class Settings
             return false;
         }
 
-        if (!class_exists('WPStaging\Pro\Backup\BackupScheduler')) {
+        if (!class_exists('WPStaging\Backup\BackupScheduler')) {
             return false;
         }
 

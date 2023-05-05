@@ -102,7 +102,8 @@ abstract class Job extends CloningProcess
             $this->settings,
             $this->homeUrl,
             $this->baseUrl,
-            $this->options->mainJob
+            $this->options->mainJob,
+            $this->isExternalDatabase() ? $this->options->databaseSsl : false
         );
     }
 
@@ -168,10 +169,10 @@ abstract class Job extends CloningProcess
      */
     protected function getInstallSubDir()
     {
-        $home = get_option('home');
+        $home    = get_option('home');
         $siteurl = get_option('siteurl');
 
-        if (empty($home) || empty($siteurl) || !$this->isSubDir() || str_replace([$home], '', $siteurl) === $siteurl) {
+        if (empty($home) || empty($siteurl) || !$this->isSubDir() || $siteurl === str_replace([$home], '', $siteurl)) {
             return '';
         }
 

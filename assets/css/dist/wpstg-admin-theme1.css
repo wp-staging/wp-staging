@@ -1472,12 +1472,12 @@ Tooltip top arrow
   flex-direction: column;
   margin-top: 2.25em; }
 
-.wpstg--modal--backup--import--upload--title {
+.wpstg--modal--backup--upload--title {
   color: #3e3e3e; }
 
 .wpstg--modal--backup--import--configure,
-.wpstg--modal--backup--import--upload--status,
-.wpstg--modal--backup--import--upload--container input[type="file"] {
+.wpstg--modal--backup--upload--status,
+.wpstg--modal--backup--upload--container input[type="file"] {
   display: none; }
 
 #wpstg--backups--import--file-list {
@@ -1493,14 +1493,14 @@ Tooltip top arrow
 .wpstg--modal--backup--import--filesystem button {
   margin-bottom: 20px; }
 
-.wpstg--modal--backup--import--upload {
+.wpstg--modal--backup--upload {
   position: relative;
   min-height: 30px; }
 
-.wpstg--modal--backup--import--upload {
+.wpstg--modal--backup--upload {
   color: #505050; }
 
-.wpstg--modal--backup--import--upload--container {
+.wpstg--modal--backup--upload--container {
   position: relative;
   border-radius: 10px;
   margin: .5em;
@@ -1510,19 +1510,19 @@ Tooltip top arrow
   background-color: #f4fbff;
   min-height: 130px; }
 
-.wpstg--modal--backup--import--upload--container.wpstg--has-dragover span.wpstg--drop {
+.wpstg--modal--backup--upload--container.wpstg--has-dragover span.wpstg--drop {
   display: inline-flex; }
 
-.wpstg--modal--backup--import--upload--container input[type='file'] {
+.wpstg--modal--backup--upload--container input[type='file'] {
   display: none; }
 
-.wpstg--modal--backup--import--upload--container img {
+.wpstg--modal--backup--upload--container img {
   margin-top: 10px;
   width: 4em;
   align-self: center;
   border: none; }
 
-.wpstg--modal--backup--import--upload--container span {
+.wpstg--modal--backup--upload--container span {
   margin-top: 1em; }
 
 .wpstg--backup--import--options > button {
@@ -1632,7 +1632,7 @@ Tooltip top arrow
   padding: 8px;
   margin-bottom: 12px; }
 
-.wpstg--modal--import--upload--process {
+.wpstg--modal--upload--process {
   display: none;
   position: relative;
   height: 30px;
@@ -1648,7 +1648,7 @@ Tooltip top arrow
   justify-content: center;
   align-items: center; }
 
-.wpstg--modal--import--upload--progress {
+.wpstg--modal--upload--progress {
   position: absolute;
   background: #98d452;
   color: white;
@@ -1657,7 +1657,7 @@ Tooltip top arrow
   left: 0;
   top: 0; }
 
-.wpstg--modal--import--upload--progress--title {
+.wpstg--modal--upload--progress--title {
   z-index: 9; }
 
 .wpstg-fieldset:disabled {
@@ -1901,7 +1901,7 @@ body.toplevel_page_wpstg_clone .wpstg--swal2-container .wpstg--swal2-content {
 .toplevel_page_wpstg_clone #swal2-content {
   line-height: 1.5em; }
 
-div#exportUploadsWithoutDatabaseWarning {
+div#backupUploadsWithoutDatabaseWarning {
   font-style: italic;
   font-size: 0.9rem;
   margin: 10px;
@@ -2544,11 +2544,11 @@ body.toplevel_page_wpstg_clone .wpstg--swal2-container.wpstg--swal2-backdrop-sho
     opacity: 0; } }
 
 /* END - Windows Style Linear Loader */
-.wpstg--modal--backup--import--upload--content {
+.wpstg--modal--backup--upload--content {
   padding: .75em;
   margin: 1em auto; }
 
-.wpstg--modal--backup--import--upload--content .wpstg-linear-loader {
+.wpstg--modal--backup--upload--content .wpstg-linear-loader {
   display: none; }
 
 #wpstg-multisite-disabled .wpstg-clone {
@@ -2557,7 +2557,7 @@ body.toplevel_page_wpstg_clone .wpstg--swal2-container.wpstg--swal2-backdrop-sho
 .wpstg-staging-info li .backup-notes {
   word-break: break-word; }
 
-.wpstg--modal--import--upload--progress--title small {
+.wpstg--modal--upload--progress--title small {
   font-weight: normal; }
 
 #wpstg-report-issue-wrapper {
@@ -2798,22 +2798,22 @@ div#wpstg-restore-wait div {
 .wpstg-upload-text {
   font-weight: 600; }
 
-.wpstg--modal--backup--import--upload--container.dragover {
+.wpstg--modal--backup--upload--container.dragover {
   transition: background-color 0.7s;
   background-color: #94dc96;
   color: #FFF; }
 
-.wpstg--modal--backup--import--upload--container.dragover * {
+.wpstg--modal--backup--upload--container.dragover * {
   pointer-events: none;
   /* Avoids flickering when dragging to drop a file */ }
 
-.wpstg--modal--backup--import--upload--container.dragover .wpstg-upload-text {
+.wpstg--modal--backup--upload--container.dragover .wpstg-upload-text {
   display: none; }
 
-.wpstg--modal--backup--import--upload--container.dragover .wpstg-dragover-text {
+.wpstg--modal--backup--upload--container.dragover .wpstg-dragover-text {
   display: block; }
 
-.wpstg--modal--backup--import--upload--container .wpstg-dragover-text {
+.wpstg--modal--backup--upload--container .wpstg-dragover-text {
   display: none; }
 
 #wpstg-invalid-license-message, #wpstg-invalid-license-message a {
@@ -2940,7 +2940,7 @@ div#wpstg-restore-wait div {
   margin-bottom: 10px;
   margin-top: 0; }
 
-.wpstg--modal--backup--import--upload--title {
+.wpstg--modal--backup--upload--title {
   text-align: center; }
 
 #wpstg--modal--backup--manage--schedules--content {

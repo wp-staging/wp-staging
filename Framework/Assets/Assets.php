@@ -9,7 +9,7 @@ use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\SiteInfo;
-use WPStaging\Pro\Backup\Task\Tasks\JobExport\DatabaseExportTask;
+use WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask;
 
 class Assets
 {
@@ -52,7 +52,7 @@ class Assets
     public function getAssetsUrlWithVersion($assetsFile, $assetsVersion = '')
     {
         $url = $this->getAssetsUrl($assetsFile);
-        $ver = $this->getAssetsVersion($assetsFile, $assetsVersion);
+        $ver = empty($assetsVersion) ? $this->getAssetsVersion($assetsFile, $assetsVersion) : $assetsVersion;
         return $url . '?v=' . $ver;
     }
 
@@ -199,27 +199,8 @@ class Assets
 
         // Load admin js pro files
         if (defined('WPSTGPRO_VERSION')) {
-            $asset = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? 'js/vendor/resumable.js' : 'js/vendor/resumable.min.js';
-            wp_enqueue_script(
-                "wpstg-resumable",
-                $this->getAssetsUrl($asset),
-                ["wpstg-common"],
-                $this->getAssetsVersion($asset),
-                false
-            );
-
-            $asset = 'js/dist/pro/wpstg-backup.min.js';
-            if ($this->isDebugOrDevMode()) {
-                $asset = 'js/dist/pro/wpstg-backup.js';
-            }
-
-            wp_enqueue_script(
-                "wpstg-backup",
-                $this->getAssetsUrl($asset),
-                ["wpstg-resumable"],
-                $this->getAssetsVersion($asset),
-                false
-            );
+            // Internal hook to enqueue backup scripts, used by the backup addon
+            do_action('wpstg_enqueue_backup_scripts', $this->isDebugOrDevMode());
 
             $asset = 'js/dist/pro/wpstg-admin-pro.min.js';
             if ($this->isDebugOrDevMode()) {
@@ -268,8 +249,8 @@ class Assets
                 'dbConnectionSuccess' => esc_html__('Database Connection - Success', 'wp-staging'),
                 'dbConnectionFailed'  => esc_html__('Database Connection - Failed', 'wp-staging'),
                 'somethingWentWrong'  => esc_html__('Something went wrong.', 'wp-staging'),
-                'noImportFileFound'   => esc_html__('No import file found.', 'wp-staging'),
-                'selectFileToImport'  => esc_html__('Select file to import.', 'wp-staging'),
+                'noRestoreFileFound'  => esc_html__('No backup file found.', 'wp-staging'),
+                'selectFileToRestore' => esc_html__('Select backup file to restore.', 'wp-staging'),
                 'cloneResetComplete'  => esc_html__('Reset Complete!', 'wp-staging'),
                 'cloneUpdateComplete' => esc_html__('Update Complete!', 'wp-staging'),
                 'success'    => esc_html__('Success', 'wp-staging'),
@@ -284,8 +265,8 @@ class Assets
         ];
 
         // Safety check for free version
-        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Pro\Backup\Task\Tasks\JobExport\DatabaseExportTask')) {
-            $wpstgConfig['backupDBExtension'] = DatabaseExportTask::PART_IDENTIFIER . '.' . DatabaseExportTask::FILE_FORMAT;
+        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask')) {
+            $wpstgConfig['backupDBExtension'] = DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT;
         }
 
         wp_localize_script("wpstg-admin-script", "wpstg", $wpstgConfig);

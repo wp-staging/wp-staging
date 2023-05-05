@@ -1,7 +1,7 @@
 <?php
 /**
- * @var $this \WPStaging\Backend\Notices\Notices
- * @see \WPStaging\Backend\Notices\Notices::messages
+ * @var $this \WPStaging\Framework\Notices\Notices
+ * @see \WPStaging\Framework\Notices\Notices::renderNotices
  */
 ?>
 <div class="wpstg-hooks-outdated-notice notice notice-error">

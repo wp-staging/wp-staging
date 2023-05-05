@@ -24,7 +24,7 @@ $proSettingsDisabled = false;
 $uploadsSymlinked = false;
 
 /**
- * Used for overwriting the default target directory and target hostname via hook
+ * Used for overwriting the default destination directory and destination hostname via hook
  */
 $directory = WPStaging::getWPpath();
 $customDir = $directory;
@@ -38,10 +38,10 @@ $customHostname = $hostname;
 
 // Apply Filters in only PRO version
 if ($isPro) {
-    $hostname = apply_filters('wpstg_cloning_target_hostname', $hostname);
+    $hostname       = apply_filters('wpstg_cloning_target_hostname', $hostname);
     $customHostname = apply_filters('wpstg_cloning_target_hostname', '');
-    $directory = apply_filters('wpstg_cloning_target_dir', $directory);
-    $customDir = apply_filters('wpstg_cloning_target_dir', '');
+    $directory      = apply_filters('wpstg_cloning_target_dir', $directory);
+    $customDir      = apply_filters('wpstg_cloning_target_dir', '');
 } else {
     // Disable pro settings when not PRO version
     $customDir           = '';
@@ -50,12 +50,12 @@ if ($isPro) {
 }
 
 if ($isPro && !empty($options->current) && $options->current !== null) {
-    $cloneDir         = isset($options->existingClones[$options->current]['cloneDir']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['cloneDir']) : '';
-    $hostname         = isset($options->existingClones[$options->current]['url']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['url']) : '';
-    $customHostname   = $hostname;
-    $directory        = isset($options->existingClones[$options->current]['path']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['path']) : '';
-    $customDir        = $directory;
-    $uploadsSymlinked = isset($options->existingClones[$options->current]['uploadsSymlinked']) && $options->existingClones[$options->current]['uploadsSymlinked'];
+    $cloneDir            = isset($options->existingClones[$options->current]['cloneDir']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['cloneDir']) : '';
+    $hostname            = isset($options->existingClones[$options->current]['url']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['url']) : '';
+    $customHostname      = $hostname;
+    $directory           = isset($options->existingClones[$options->current]['path']) ? Sanitize::sanitizeString($options->existingClones[$options->current]['path']) : '';
+    $customDir           = $directory;
+    $uploadsSymlinked    = isset($options->existingClones[$options->current]['uploadsSymlinked']) && $options->existingClones[$options->current]['uploadsSymlinked'];
     $proSettingsDisabled = true;
 }
 ?>
@@ -69,19 +69,19 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
       <strong> <?php esc_html_e('You can copy the staging site to a custom directory and can use a different hostname.', 'wp-staging'); ?></strong>
       <br /> <br />
       <?php echo sprintf(
-          Escape::escapeHtml(__('<strong>Target Directory:</strong> An absolute path like <code>/www/public_html/dev</code>. File permissions should be 755 and it must be writeable by php user <code>%s</code>', 'wp-staging')),
+          Escape::escapeHtml(__('<strong>Destination Directory:</strong> An absolute path like <code>/www/public_html/dev</code>. File permissions should be 755 and it must be writeable by php user <code>%s</code>', 'wp-staging')),
           esc_html((new SystemInfo())->getPHPUser())
       ); ?>
       <br /> <br />
-      <?php echo Escape::escapeHtml(__('<strong>Taget Hostname:</strong> The hostname of the target site, for instance <code>https://subdomain.example.com</code> or <code>https://example.com/staging</code>', 'wp-staging')) ?>
+      <?php echo Escape::escapeHtml(__('<strong>Target Hostname:</strong> The hostname of the destination site, for instance <code>https://subdomain.example.com</code> or <code>https://example.com/staging</code>', 'wp-staging')) ?>
       <br /> <br />
-      <?php esc_html_e('Make sure the hostname points to the target directory from above.', 'wp-staging'); ?>
+      <?php esc_html_e('Make sure the hostname points to the destination directory from above.', 'wp-staging'); ?>
     </span>
   </span>
 </p>
 <div id="wpstg-clone-directory" <?php echo $isPro === true ? 'style="display: none;"' : '' ?> >
   <div class="wpstg-form-group wpstg-text-field">
-    <label><?php esc_html_e('Target Directory: ', 'wp-staging') ?> </label>
+    <label><?php esc_html_e('Destination Directory: ', 'wp-staging') ?> </label>
     <input type="text" class="wpstg-textbox" name="wpstg_clone_dir" id="wpstg_clone_dir" value="<?php echo esc_attr($customDir); ?>" title="wpstg_clone_dir" placeholder="<?php echo esc_attr($directory); ?>" autocapitalize="off" <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?> />
     <?php if (!$proSettingsDisabled) : ?>
     <span class="wpstg-code-segment">

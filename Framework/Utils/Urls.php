@@ -2,7 +2,10 @@
 
 namespace WPStaging\Framework\Utils;
 
-use WPStaging\Pro\Backup\Service\Compressor;
+use WPStaging\Core\WPStaging;
+use WPStaging\Backup\Service\Compressor;
+use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Framework\Adapter\Directory;
 
 class Urls
 {
@@ -126,11 +129,23 @@ class Urls
     }
 
     /**
-     * Get url of the wp staging backup directory, e.g. http://example.com/wp-content/uploads/backup
+     * Get url of the backup directory, e.g. http://example.com/*
      * @return string
      */
     public function getBackupUrl()
     {
-        return $this->getUploadsUrl() . WPSTG_PLUGIN_DOMAIN . '/' . Compressor::BACKUP_DIR_NAME . '/';
+        $origBackupDirAbsPath = WPStaging::make(Directory::class)->getPluginUploadsDirectory() . Compressor::BACKUP_DIR_NAME;
+        $origBackupDirAbsPath = wp_normalize_path($origBackupDirAbsPath);
+        $backupDirAbsPath     = WPStaging::make(BackupsFinder::class)->getBackupsDirectory();
+
+        // Early bail if backup directory has not been filtered by the user in getBackupsDirectory(),
+        // Return path as it is, see https://github.com/wp-staging/wp-staging-pro/pull/2359
+        if ($backupDirAbsPath === $origBackupDirAbsPath) {
+            return $this->getUploadsUrl() . WPSTG_PLUGIN_DOMAIN . '/' . Compressor::BACKUP_DIR_NAME . '/';
+        }
+
+        // Return user customized and filtered path
+        $relativePathToBackupDir = str_replace(wp_normalize_path(ABSPATH), "", $backupDirAbsPath);
+        return trailingslashit(get_option('siteurl')) . $relativePathToBackupDir;
     }
 }

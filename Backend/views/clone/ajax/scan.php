@@ -97,7 +97,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
             <span class="wpstg--tooltiptext">
-                <?php esc_html_e('Delete all plugins & themes on staging site before starting copy process.', 'wp-staging'); ?>
+                <?php esc_html_e('Delete all plugins & themes on staging site before starting update process.', 'wp-staging'); ?>
             </span>
         </span>
     </p>
@@ -107,7 +107,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
             <span class="wpstg--tooltiptext">
-                <?php esc_html_e('Delete entire folder wp-content/uploads on staging site including all images before starting copy process.', 'wp-staging'); ?>
+                <?php esc_html_e('Delete entire folder wp-content/uploads on staging site including all images before starting update process.', 'wp-staging'); ?>
                 <?php echo $uploadsSymlinked ? "<br/><br/><b>" . esc_html__("Note: This option is disabled as uploads directory is symlinked", "wp-staging") . "</b>" : '' ?>
             </span>
         </span>

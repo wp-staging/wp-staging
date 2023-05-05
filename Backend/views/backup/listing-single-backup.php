@@ -1,11 +1,11 @@
 <?php
 
 use WPStaging\Framework\Facades\Escape;
-use WPStaging\Pro\Backup\Task\Tasks\JobImport\RestoreRequirementsCheckTask;
+use WPStaging\Backup\Task\Tasks\JobRestore\RestoreRequirementsCheckTask;
 
 /**
  * @var \WPStaging\Framework\TemplateEngine\TemplateEngine $this
- * @var \WPStaging\Pro\Backup\Entity\ListableBackup $backup
+ * @var \WPStaging\Backup\Entity\ListableBackup $backup
  * @var string $urlAssets
  */
 $backupName             = $backup->backupName;
@@ -23,6 +23,12 @@ $missingParts           = isset($backup->validationIssues['missingParts']) ? $ba
 $sizeIssues             = isset($backup->validationIssues['sizeIssues']) ? $backup->validationIssues['sizeIssues'] : [];
 $existingBackupParts    = $backup->existingBackupParts;
 $isValidFileIndex       = $backup->isValidFileIndex;
+$indexFileError         = $backup->errorMessage;
+
+// Default error message
+if (empty($indexFileError)) {
+    $indexFileError = __("This backup has an invalid files index. Please create a new backup!", 'wp-staging');
+}
 
 $isUnsupported = version_compare($backup->generatedOnWPStagingVersion, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT, '<');
 
@@ -58,7 +64,7 @@ $logUrl = add_query_arg([
         <?php endif ?>
         <div class="wpstg-clone-actions">
             <div class="wpstg-dropdown wpstg-action-dropdown">
-                <a href="#" class="wpstg-dropdown-toggler transparent">
+                <a href="#" class="wpstg-dropdown-toggler">
                     <?php esc_html_e("Actions", "wp-staging"); ?>
                     <span class="wpstg-caret"></span>
                 </a>
@@ -168,7 +174,7 @@ $logUrl = add_query_arg([
                 <?php endif ?>
                 <?php if ($isLegacy) : ?>
                     <li style="font-style: italic">
-                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/cloud-saved.svg"/> <?php esc_html_e('This database backup was generated from an existing legacy WP STAGING Database export in the .SQL format.', 'wp-staging') ?>
+                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/cloud-saved.svg"/> <?php esc_html_e('This database backup was generated from an existing legacy WP STAGING Database backup in the .SQL format.', 'wp-staging') ?>
                     </li>
                 <?php endif ?>
             <?php endif ?>
@@ -180,7 +186,7 @@ $logUrl = add_query_arg([
             <?php if (!$isMultipartBackup && !$isValidFileIndex) : ?>
                 <li class="wpstg-corrupted-backup wpstg--red">
                     <div class="wpstg-exclamation">!</div>
-                    <strong><?php esc_html_e('This backup has an invalid files index. Please create a new backup!', 'wp-staging') ?></strong><br/>
+                    <strong><?php echo esc_html($indexFileError); ?></strong><br/>
                 </li>
             <?php endif ?>
         </ul>

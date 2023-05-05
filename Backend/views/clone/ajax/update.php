@@ -24,6 +24,10 @@
     <?php esc_html_e("Back", "wp-staging") ?>
 </button>
 
+<button type="button" id="wpstg-update-cloning-site-button" class="wpstg-blue-primary wpstg-button wpstg-ml-12" style="display: none;">
+    <?php esc_html_e("Open Staging Site", "wp-staging") ?>
+</button>
+
 <button type="button" id="wpstg-cancel-cloning-update" data-job="<?php echo esc_attr($cloning->getOptions()->mainJob); ?>" class="wpstg-link-btn wpstg-button--primary wpstg-button--red">
     <?php
     if ($cloning->getOptions()->mainJob === 'resetting') {

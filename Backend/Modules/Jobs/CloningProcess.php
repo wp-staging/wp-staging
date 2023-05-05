@@ -39,6 +39,11 @@ abstract class CloningProcess extends JobExecutable
      */
     protected function setExternalDatabase()
     {
+        if ($this->options->databaseSsl && !defined('MYSQL_CLIENT_FLAGS')) {
+            // phpcs:disable PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
+            define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT);
+        }
+
         $this->stagingDb = new \wpdb($this->options->databaseUser, str_replace("\\\\", "\\", $this->options->databasePassword), $this->options->databaseDatabase, $this->options->databaseServer);
 
         // Check if there were any error when connecting

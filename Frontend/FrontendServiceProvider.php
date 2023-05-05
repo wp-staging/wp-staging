@@ -9,10 +9,10 @@ class FrontendServiceProvider extends ServiceProvider
 
     public function register()
     {
-        $this->registerLoginAfterImport();
+        $this->registerLoginAfterRestore();
     }
 
-    private function registerLoginAfterImport()
+    private function registerLoginAfterRestore()
     {
         // Available in WordPress 4.6+
         $action = 'login_header';
@@ -27,7 +27,6 @@ class FrontendServiceProvider extends ServiceProvider
             }
         }
 
-       #add_action($action, [$this->container->callback(LoginAfterImport::class, 'showMessage')], 10, 0);
-        add_action($action, [$this->container->make(LoginAfterImport::class), 'showMessage'], 10, 0);
+        add_action($action, [$this->container->make(LoginAfterRestore::class), 'showMessage'], 10, 0);
     }
 }

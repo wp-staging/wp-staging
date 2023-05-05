@@ -6,6 +6,8 @@
  * @var bool $isBackupPage
  */
 
+use WPStaging\Framework\Notices\Notices;
+
 ?>
 
 <div id="wpstg-clonepage-wrapper">
@@ -28,7 +30,7 @@
         <div class="wpstg--tab--header">
             <ul>
                 <li>
-                    <a class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?> wpstg-button" data-target="#wpstg--tab--staging">
+                    <a class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?> wpstg-button" data-target="#wpstg--tab--staging" id="wpstg--tab--toggle--staging">
                         <?php esc_html_e('Staging', 'wp-staging') ?>
                     </a>
                 </li>
@@ -71,6 +73,32 @@
                     <span class="wpstg-loader"></span>
                 </li>
             </ul>
+        </div>
+        <div class="wpstg-header">
+            <?php if (isset($_GET['page']) && $_GET['page'] === 'wpstg_clone' || $_GET['page'] === 'wpstg_backup') { ?>
+                <?php
+                $latestReleasedVersion = get_option('wpstg_version_latest');
+                $display               = 'none;';
+
+                if (defined('WPSTGPRO_VERSION')) {
+                    $outdatedVersionCheck  = new WPStaging\Framework\Notices\OutdatedWpStagingNotice();
+                    $latestReleasedVersion = $outdatedVersionCheck->getLatestWpstgProVersion();
+                    if ($outdatedVersionCheck->isOutdatedWpStagingProVersion()) {
+                        $display = 'block;';
+                    }
+                }
+
+                if (Notices::SHOW_ALL_NOTICES){
+                    $display = 'block;';
+                }
+                ?>
+
+                <div id="wpstg-update-notify" style="display:<?php echo esc_attr($display); ?>">
+                    <strong><?php echo sprintf(__("New: WP Staging Pro v. %s is available.", 'wp-staging'), esc_html($latestReleasedVersion)); ?></strong><br/>
+                    <?php echo sprintf(__('Important: It\'s recommended to update the plugin before pushing a staging site to the live site. <a href="%s" target="_blank">What\'s New?</a>', 'wp-staging'), 'https://wp-staging.com/wp-staging-pro-changelog'); ?>
+                </div>
+
+            <?php } ?>
         </div>
         <div class="wpstg--tab--contents">
             <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">

@@ -7,6 +7,7 @@ use WPStaging\Framework\DI\ServiceProvider;
 use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\LogCleanup;
+use WPStaging\Framework\Utils\DBPermissions;
 
 /**
  * Class CommonServiceProvider
@@ -24,6 +25,7 @@ class CommonServiceProvider extends ServiceProvider
 
         add_action('wpstg_daily_event', [$this, 'cleanupLogs'], 25, 0);
         add_action('wpstg_daily_event', [$this, 'cleanupAnalytics'], 25, 0);
+        add_action("wp_ajax_wpstg_check_user_permissions", $this->container->callback(DBPermissions::class, 'ajaxCheckDBPermissions'));
     }
 
     public function cleanupLogs()

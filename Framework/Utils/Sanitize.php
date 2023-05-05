@@ -9,18 +9,22 @@ class Sanitize
     protected $config = [];
 
     /**
-     * Sanitize string and array. Automatically urldecode
+     * Sanitize string and array. Automatically urldecode.
      *
      * @param array|string $value
+     * @param bool $shouldUrlDecode
      * @return array|string
      */
-    public function sanitizeString($value)
+    public function sanitizeString($value, $shouldUrlDecode = true)
     {
         if (is_object($value)) {
             return $value;
         }
 
-        $value = wpstg_urldecode($value);
+        if ($shouldUrlDecode) {
+            $value = wpstg_urldecode($value);
+        }
+
         if (!is_array($value)) {
             return htmlspecialchars($value);
         }
@@ -40,14 +44,15 @@ class Sanitize
     public function sanitizePassword($password)
     {
         if (!is_string($password)) {
-            return "";
+            return '';
         }
 
         return trim(stripslashes($password));
     }
 
     /**
-     * Sanitize integer. Optionally use abs flag
+     * Sanitize integer. Optionally use abs flag.
+     *
      * @param int|string $value
      * @param bool $useAbsValue
      * @return int
@@ -83,7 +88,8 @@ class Sanitize
     }
 
     /**
-     * Sanitize the path, remove spaces and trailing slashes
+     * Sanitize the path, remove spaces and trailing slashes.
+     *
      * @param string $value
      * @return string
      */
@@ -95,15 +101,15 @@ class Sanitize
 
         $value = $this->sanitizeString($value);
 
-        // Remove trailing slashes
+        // Remove trailing slashes.
         $path = rtrim($value, '/\\');
 
-        // To support network path on windows
+        // To support network path on windows.
         if (WPStaging::isWindowsOs()) {
             return $path;
         }
 
-        // Remove whitespace and spaces
+        // Remove whitespace and spaces.
         $path = preg_replace('/\s+/', '', $path);
 
         // Convert all invalid slashes to one single forward slash
@@ -115,7 +121,7 @@ class Sanitize
     }
 
     /**
-     * Html decode and then sanitize
+     * Html decode and then sanitize.
      *
      * @param string $text
      * @return string
@@ -132,11 +138,11 @@ class Sanitize
     public function sanitizeFileUpload($file)
     {
         if (!is_array($file)) {
-            return null;
+            return;
         }
 
         if (!isset($file['tmp_name'])) {
-            return null;
+            return;
         }
 
         return $file;
@@ -235,5 +241,17 @@ class Sanitize
         }
 
         return $this->{$methodName}($value);
+    }
+
+    /**
+     * Wrapper for sanitize_url and esc_url_raw.
+     *
+     * @param string $url
+     * @param string[] $protocols Optional. An array of acceptable protocols.
+     * @return string
+     */
+    public function sanitizeUrl($url, $protocols = null)
+    {
+        return esc_url($url, $protocols, 'db');
     }
 }

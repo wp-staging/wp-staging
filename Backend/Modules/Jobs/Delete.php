@@ -72,10 +72,10 @@ class Delete extends Job
         parent::__construct();
 
         /** @var Sanitize */
-        $this->sanitize = WPStaging::make(Sanitize::class);
+        $this->sanitize     = WPStaging::make(Sanitize::class);
         $this->isExternalDb = $isExternal;
-        $this->deleteDir = !empty($_POST['deleteDir']) ? $this->sanitize->sanitizePath($_POST['deleteDir']) : '';
-        $this->strings = new Strings();
+        $this->deleteDir    = !empty($_POST['deleteDir']) ? $this->sanitize->sanitizePath($_POST['deleteDir']) : '';
+        $this->strings      = new Strings();
     }
 
     /**
@@ -112,6 +112,11 @@ class Delete extends Job
      */
     private function getStagingDb()
     {
+        if ($this->clone->databaseSsl && !defined('MYSQL_CLIENT_FLAGS')) {
+            // phpcs:disable PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
+            define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT);
+        }
+
         return new wpdb($this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase, $this->clone->databaseServer);
     }
 
@@ -163,7 +168,7 @@ class Delete extends Job
             $this->returnException("Couldn't find clone name $name or no existing clone");
         }
 
-        $this->clone = $clones[$name];
+        $this->clone         = $clones[$name];
         $this->clone["name"] = $name;
 
         $this->clone = (object)$this->clone;
@@ -301,9 +306,9 @@ class Delete extends Job
 
         // Generate JOB
         $this->job = (object)[
-            "current" => "tables",
+            "current"               => "tables",
             "nextDirectoryToDelete" => $this->clone->path,
-            "name" => $this->clone->name
+            "name"                  => $this->clone->name
         ];
 
         $this->cache->save($this->getJobCacheFileName(), $this->job);
@@ -409,7 +414,7 @@ class Delete extends Job
             return;
         }
 
-        $clone = (string)$this->clone->path;
+        $clone        = (string)$this->clone->path;
         $errorMessage = __(sprintf("We could not delete the staging site completely. There are still files in the folder %s that could not be deleted. This could be a write permission issue. Try to delete the folder manually by using FTP or a file manager plugin.<br/> If this happens again please contact us at support@wp-staging.com", $clone), "wp-staging");
         $deleteStatus = "finished";
         if ($this->isNotEmpty($this->deleteDir)) {
@@ -430,11 +435,11 @@ class Delete extends Job
         // Throw fatal error if the folder has still not been deleted and there are files in it
         if ($this->isNotEmpty($this->deleteDir)) {
             $response = [
-                'job' => 'delete',
-                'status' => true,
-                'delete' => $deleteStatus,
+                'job'     => 'delete',
+                'status'  => true,
+                'delete'  => $deleteStatus,
                 'message' => $errorMessage,
-                'error' => true,
+                'error'   => true,
             ];
             wp_die(json_encode($response));
         }
@@ -453,7 +458,7 @@ class Delete extends Job
         // Throw fatal error if the folder has still not been deleted and there are files in it
         $isDirNotEmpty = false;
         if (is_dir($dir)) {
-            $iterator = new FilesystemIterator($dir);
+            $iterator      = new FilesystemIterator($dir);
             $isDirNotEmpty = $iterator->valid();
         }
 
@@ -512,7 +517,18 @@ class Delete extends Job
      */
     private function isExternalDatabaseError()
     {
-        $db = new mysqli($this->clone->databaseServer, $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase);
+        if ($this->clone->databaseSsl) {
+            // wpdb requires this constant for SSL use
+            if (!defined('MYSQL_CLIENT_FLAGS')) {
+                // phpcs:disable PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
+                define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT);
+            }
+
+            $db = mysqli_init();
+            $db->real_connect($this->clone->databaseServer, $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase, null, null, MYSQL_CLIENT_FLAGS);
+        } else {
+            $db = new mysqli($this->clone->databaseServer, $this->clone->databaseUser, $this->clone->databasePassword, $this->clone->databaseDatabase);
+        }
         if ($db->connect_error) {
             return true;
         }

@@ -2,7 +2,7 @@
 
 namespace WPStaging\Framework\Analytics;
 
-use WPStaging\Backend\Notices\Notices;
+use WPStaging\Framework\Notices\Notices;
 use WPStaging\Core\WPStaging;
 
 class AnalyticsConsent
@@ -16,7 +16,7 @@ class AnalyticsConsent
     public function maybeShowConsentNotice()
     {
         // Early bail: Not a WP STAGING page
-        if (!WPStaging::make(Notices::class)->isAdminPage()) {
+        if (!WPStaging::make(Notices::class)->isWPStagingAdminPage()) {
             return;
         }
 
@@ -47,7 +47,7 @@ class AnalyticsConsent
     public function maybeShowConsentFailureNotice()
     {
         // Early bail: Not a WP STAGING page
-        if (!WPStaging::make(Notices::class)->isAdminPage()) {
+        if (!WPStaging::make(Notices::class)->isWPStagingAdminPage()) {
             return;
         }
 

@@ -2,7 +2,6 @@
 
 namespace WPStaging\Framework;
 
-use Exception;
 use WPStaging\Framework\Staging\CloneOptions;
 
 /**

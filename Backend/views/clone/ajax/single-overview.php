@@ -36,14 +36,14 @@ use WPStaging\Framework\Facades\Escape;
                     <a href="<?php echo esc_url($urlLogin) ?>" class="wpstg-clone-title" target="_blank">
                         <?php echo isset($data["cloneName"]) ? esc_html($data["cloneName"]) : esc_html($data["directoryName"]); ?>
                     </a>
-                    <?php if (is_multisite()) { ?>
+                    <?php if (is_multisite()) : ?>
                     <div class="wpstg-clone-labels">
                         <span class="wpstg-clone-label"><?php echo !empty($data['networkClone']) ? esc_html__('Network Site', 'wp-staging') : esc_html__('Single Site', 'wp-staging') ?></span>
                     </div>
-                    <?php } ?>
+                    <?php endif; ?>
                     <div class="wpstg-clone-actions">
                         <div class="wpstg-dropdown wpstg-action-dropdown">
-                            <a href="#" class="wpstg-dropdown-toggler transparent">
+                            <a href="#" class="wpstg-dropdown-toggler">
                                 <?php esc_html_e("Actions", "wp-staging"); ?>
                                 <span class="wpstg-caret"></span>
                             </a>
@@ -80,12 +80,12 @@ use WPStaging\Framework\Facades\Escape;
                     $datetime = ! empty($data['datetime']) ? get_date_from_gmt(date("Y-m-d H:i:s", $data['datetime']), "D, d M Y H:i:s T") : '&nbsp;&nbsp;&nbsp;';
                     $owner    = ! empty($data['ownerId']) ? get_userdata($data['ownerId']) : null;
                     $ownerName = ! empty($owner->user_login) ? $owner->user_login : 'N/A';
-                    $statusTooltip = "This clone is incomplete and does not work. Clone or update it again! \n\n" .
+                    $statusTooltip = __("This clone is incomplete and does not work. Clone or update it again! \n\n" .
                                       "Important: Keep the browser open until the cloning is finished. \n" .
                                       "It will not proceed if your browser is not open.\n\n" .
                                       "If you have an unstable internet connection and cloning breaks due to that, clone again only the folders wp-admin, wp-includes, and all database tables.\n\n" .
                                       "That will not take much time. Then, you can proceed with the wp-content folder that usually needs the most disk space. " .
-                                      "If it interrupts again, at least it will not break the existing staging site again, and you can repeat and resume the last operation.";
+                                      "If it interrupts again, at least it will not break the existing staging site again, and you can repeat and resume the last operation.", 'wp-staging');
 
                     if (!empty($data['status']) && $data['status'] !== 'finished') {
                         $status = sprintf(
@@ -115,7 +115,7 @@ use WPStaging\Framework\Facades\Escape;
                     echo '</br>';
                     echo sprintf(
                         Escape::escapeHtml(__('URL: <span class="wpstg-bold">%s</span>', 'wp-staging')),
-                        Escape::escapeHtml(__($url, 'wp-staging'))
+                        Escape::escapeHtml($url)
                     );
                     echo '</br>';
                     echo sprintf(
@@ -123,7 +123,7 @@ use WPStaging\Framework\Facades\Escape;
                         esc_html($ownerName)
                     );
                     echo '</br>';
-                    echo Escape::escapeHtml(__($status, 'wp-staging'));
+                    echo Escape::escapeHtml($status);
                     echo '</br>';
                     echo sprintf(
                         Escape::escapeHtml(__('Updated: <span>%s</span>', 'wp-staging')),

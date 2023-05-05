@@ -74,7 +74,7 @@ abstract class Job implements ShutdownableInterface
         $this->excludedTableService = new ExcludedTables();
 
         // Services
-        $this->cache = new Cache(-1, WPStaging::getContentDir());
+        $this->cache  = new Cache(-1, WPStaging::getContentDir());
         $this->logger = WPStaging::getInstance()->get("logger");
 
         // Settings and Options
@@ -100,7 +100,7 @@ abstract class Job implements ShutdownableInterface
         // Commit logs
         if ($this->logger instanceof Logger) {
             if (isset($this->options->mainJob)) {
-                if (array_key_exists('datetime', $this->options->existingClones[$this->options->clone])) {
+                if (!empty($this->options->existingClones[$this->options->clone]) && array_key_exists('datetime', $this->options->existingClones[$this->options->clone])) {
                     $timestamp = date('Y-m-d_H-i-s', $this->options->existingClones[$this->options->clone]['datetime']);
                 } else {
                     // This is a fallback for older staging sites that did not have the datetime property.
@@ -128,7 +128,7 @@ abstract class Job implements ShutdownableInterface
             $options = $this->options;
         }
 
-        $now = new DateTime();
+        $now                = new DateTime();
         $options->expiresAt = $now->add(new DateInterval('P1D'))->format('Y-m-d H:i:s');
 
         if (!property_exists($options, 'jobIdentifier')) {
@@ -137,6 +137,7 @@ abstract class Job implements ShutdownableInterface
 
         // Ensure that it is an object
         $options = json_decode(json_encode($options));
+
         return $this->cache->save('clone_options', $options);
     }
 
@@ -166,8 +167,8 @@ abstract class Job implements ShutdownableInterface
     public function isOverThreshold()
     {
         // Check if the memory is over threshold
-        $usedMemory = $this->getMemoryPeakUsage(true);
-        $maxMemoryLimit = $this->getMaxMemoryLimit();
+        $usedMemory        = $this->getMemoryPeakUsage(true);
+        $maxMemoryLimit    = $this->getMaxMemoryLimit();
         $scriptMemoryLimit = $this->getScriptMemoryLimit();
 
         $this->debugLog(
@@ -258,10 +259,10 @@ abstract class Job implements ShutdownableInterface
         wp_die(
             json_encode(
                 [
-                    'job' => isset($this->options->currentJob) ? $this->options->currentJob : '',
-                    'status' => false,
+                    'job'     => isset($this->options->currentJob) ? $this->options->currentJob : '',
+                    'status'  => false,
                     'message' => $message,
-                    'error' => true
+                    'error'   => true
                 ]
             )
         );
@@ -278,7 +279,7 @@ abstract class Job implements ShutdownableInterface
         }
 
         try {
-            $now = new DateTime();
+            $now       = new DateTime();
             $expiresAt = new DateTime($this->options->expiresAt);
             return $this->options->isRunning === true && $now < $expiresAt;
         } catch (Exception $e) {

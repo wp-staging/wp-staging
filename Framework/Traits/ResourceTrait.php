@@ -57,7 +57,7 @@ trait ResourceTrait
     /**
      * @return bool
      */
-    public function isDatabaseImportThreshold()
+    public function isDatabaseRestoreThreshold()
     {
         if ($this->isMemoryLimit() || $this->isDatabaseRestoreTimeLimit()) {
             return true;

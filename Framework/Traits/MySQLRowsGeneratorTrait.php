@@ -12,7 +12,7 @@ namespace WPStaging\Framework\Traits;
 use Generator;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Adapter\Database\MysqliAdapter;
-use WPStaging\Pro\Backup\Dto\JobDataDto;
+use WPStaging\Backup\Dto\JobDataDto;
 
 /**
  * Trait MySQLRowsGeneratorTrait

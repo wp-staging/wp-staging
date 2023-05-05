@@ -1,13 +1,13 @@
 <?php
 
-namespace WPStaging\Backend\Notices;
+namespace WPStaging\Framework\Notices;
 
 /**
  * Class BooleanNotice
  *
  * This class is used to reduce the boilerplate code for dismissible boolean notices
  *
- * @package WPStaging\Backend\Notices;
+ * @package WPStaging\Framework\Notices;
  */
 abstract class BooleanNotice
 {
@@ -16,7 +16,7 @@ abstract class BooleanNotice
      *
      * @return string
      */
-    abstract function getOptionName();
+    abstract public function getOptionName();
 
     /**
      * Enable the option in database to show this notice

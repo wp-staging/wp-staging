@@ -1,4 +1,7 @@
-(function () {
+/** 
+* version: 4.7.2.1683285892
+**/ 
+ (function () {
   'use strict';
 
   /**
@@ -246,6 +249,7 @@
           WPStagingCommon.retry.performingRequest = false;
         }
       },
+      memoryExhaustArticleLink: 'https://wp-staging.com/docs/php-fatal-error-allowed-memory-size-of-134217728-bytes-exhausted/',
       cache: {
         elements: [],
         get: function get(selector) {
@@ -274,15 +278,6 @@
         }, function (target, event) {
           target.querySelector('.wpstg--tooltiptext').style.visibility = 'hidden';
         });
-      },
-      isEmpty: function isEmpty(obj) {
-        for (var prop in obj) {
-          if (obj.hasOwnProperty(prop)) {
-            return false;
-          }
-        }
-
-        return true;
       },
       // Get the custom themed Swal Modal for WP Staging
       // Easy to maintain now in one place now

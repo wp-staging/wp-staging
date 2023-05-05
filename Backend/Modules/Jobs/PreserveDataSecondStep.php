@@ -86,7 +86,7 @@ class PreserveDataSecondStep extends JobExecutable
         }
 
         // Make sure this is compatible with Free Version
-        // @see \WPStaging\Pro\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
+        // @see \WPStaging\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
         $backupSchedulesOption = 'wpstg_backup_schedules';
 
         // Delete wpstg_tmp_data from the production site

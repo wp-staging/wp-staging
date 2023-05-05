@@ -10,6 +10,8 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Exceptions\IOException;
 use WPStaging\Framework\Adapter\Directory;
 
+use function WPStaging\functions\debug_log;
+
 abstract class AbstractCache
 {
     const DEFAULT_LIFETIME = 2592000; // 30 days
@@ -61,15 +63,8 @@ abstract class AbstractCache
             return;
         }
 
+        debug_log(sprintf('Attempting to delete invalid cache file (%s) failed', $this->filePath));
         throw new IOException(sprintf('Attempting to delete invalid cache file (%s) failed', $this->filePath));
-    }
-
-    /**
-     * @return int
-     */
-    public function getLifetime()
-    {
-        return $this->lifetime;
     }
 
     /**
@@ -77,7 +72,7 @@ abstract class AbstractCache
      */
     public function setLifetime($lifetime)
     {
-        $this->lifetime = (int) $lifetime;
+        $this->lifetime = (int)$lifetime;
     }
 
     /**
@@ -123,16 +118,6 @@ abstract class AbstractCache
     public function getFilePath()
     {
         return $this->filePath;
-    }
-
-    /**
-     * @param $fileName
-     *
-     * @return bool
-     */
-    public function cacheExists($fileName)
-    {
-        return is_file(trailingslashit($this->getPath()) . $fileName . '.' . static::EXTENSION);
     }
 
     /**

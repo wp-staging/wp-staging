@@ -4,13 +4,17 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use RuntimeException;
 use WPStaging\Backend\Modules\Jobs\Cleaners\WpContentCleaner;
+use WPStaging\Backup\Exceptions\DiskNotWritableException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
+
+use function WPStaging\functions\debug_log;
 
 /**
  * Class Files
@@ -56,11 +60,12 @@ class Files extends JobExecutable
 
     /**
      * Initialization
+     * @throws DiskNotWritableException|FilesystemExceptions
      */
     public function initialize()
     {
         $this->permissions = new Permissions();
-        /** @var Filesystem */
+
         $this->filesystem = WPStaging::make(Filesystem::class);
 
         $this->rootPath = $this->filesystem->normalizePath(WPStaging::getWPpath());
@@ -86,7 +91,7 @@ class Files extends JobExecutable
         }
 
         $this->settings->batchSize = $this->settings->batchSize * 1000000;
-        $this->maxFilesPerRun = $this->settings->fileLimit;
+        $this->maxFilesPerRun      = $this->settings->fileLimit;
     }
 
     /**
@@ -113,6 +118,7 @@ class Files extends JobExecutable
      * Execute the Current Step
      * Returns false when over threshold limits are hit or when the job is done, true otherwise
      * @return bool
+     * @throws \Exception
      */
     protected function execute()
     {
@@ -153,6 +159,7 @@ class Files extends JobExecutable
      * Clean staging site directory if the mainJob is resetting
      *
      * @return bool
+     * @throws \Exception
      */
     private function cleanStagingDirectory()
     {
@@ -171,7 +178,7 @@ class Files extends JobExecutable
 
         // Finished or path does not exist
         if (empty($this->destination) || !is_dir($this->destination)) {
-            \WPStaging\functions\debug_log('Destination is not a directory: ' . $this->destination);
+            debug_log('Destination is not a directory: ' . $this->destination);
 
             $this->log(sprintf(__('Fail! Destination is not a directory! %s', 'wp-staging'), $this->destination));
             return true;
@@ -257,6 +264,7 @@ class Files extends JobExecutable
     /**
      * Get files and copy
      * @return bool
+     * @throws \Exception
      */
     private function getFilesAndCopy()
     {
@@ -272,7 +280,7 @@ class Files extends JobExecutable
             return false;
         }
 
-        // Go to last copied line and than to next one
+        // Go to last copied line and then to next one
         if (isset($this->options->copiedFiles) && $this->options->copiedFiles != 0) {
             $this->file->seek($this->options->copiedFiles - 1);
         }
@@ -425,7 +433,7 @@ class Files extends JobExecutable
     /**
      * Set directory permissions
      * @param string $file
-     * @return boolean
+     * @return bool
      */
     private function setDirPermissions($file)
     {
@@ -444,9 +452,9 @@ class Files extends JobExecutable
      */
     private function getDestination($file)
     {
-        $file = $this->filesystem->normalizePath($file);
-        $relativePath = str_replace($this->rootPath, '', $file);
-        $destinationPath = $this->destination . $relativePath;
+        $file                 = $this->filesystem->normalizePath($file);
+        $relativePath         = str_replace($this->rootPath, '', $file);
+        $destinationPath      = $this->destination . $relativePath;
         $destinationDirectory = dirname($destinationPath);
 
         $isDirectoryNotCreated = !is_dir($destinationDirectory) && !$this->filesystem->mkdir($destinationDirectory) && !is_dir($destinationDirectory);
@@ -463,11 +471,11 @@ class Files extends JobExecutable
      * @param string $src
      * @param string $dst
      * @param int $buffersize
-     * @return boolean
+     * @return bool
      */
     private function copyBig($src, $dst, $buffersize)
     {
-        $src = fopen($src, 'rb');
+        $src  = fopen($src, 'rb');
         $dest = fopen($dst, 'wb');
 
         if (!$src || !$dest) {
@@ -501,7 +509,7 @@ class Files extends JobExecutable
      * Check if certain file is excluded from copying process
      *
      * @param string $file full path + filename
-     * @return boolean
+     * @return bool
      */
     private function isFileExcluded($file)
     {
@@ -535,17 +543,17 @@ class Files extends JobExecutable
     /**
      * Check if production and staging hostname are identical
      * If they are not identical we assume website is cloned to a subdomain and not into a subfolder
-     * @return boolean
+     * @return bool
      */
     private function isIdenticalHostname()
     {
         // hostname of production site without scheme
-        $siteurl = get_site_url();
-        $url = parse_url($siteurl);
+        $siteurl            = get_site_url();
+        $url                = parse_url($siteurl);
         $productionHostname = $url['host'];
 
         // hostname of staging site without scheme
-        $cloneUrl = empty($this->options->cloneHostname) ? $url : parse_url($this->options->cloneHostname);
+        $cloneUrl       = empty($this->options->cloneHostname) ? $url : parse_url($this->options->cloneHostname);
         $targetHostname = $cloneUrl['host'];
 
         // Check if target hostname beginns with the production hostname
@@ -560,7 +568,7 @@ class Files extends JobExecutable
      * Check if certain file is excluded from copying process
      *
      * @param string $file filename including ending + (part) path e.g wp-content/db.php
-     * @return boolean
+     * @return bool
      */
     private function isFileExcludedFullPath($file)
     {
@@ -620,7 +628,7 @@ class Files extends JobExecutable
     /**
      * Check if directory is an extra directory and should be copied
      * @param string $directory
-     * @return boolean
+     * @return bool
      */
     private function isExtraDirectory($directory)
     {

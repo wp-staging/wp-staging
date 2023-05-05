@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
-Tested up to: 6.1
-Stable tag: 2.13.0
+Tested up to: 6.2
+Stable tag: 2.14.0
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -199,9 +199,9 @@ Have a look at [https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-t
 
 We have translated WP STAGING into five languages nearly completely:
 
-English: [WP STAGING Backup & Duplicator WordPress Plugin. Backup & Migrate WordPress websites.](https://es.wordpress.org/plugins/wp-staging/)
-French: [Plugin WordPress de sauvegarde et de duplication WP STAGING. Sauvegarder et migrer les sites Web WordPress.](https://es.wordpress.org/plugins/wp-staging/)
-German: [WP STAGING Backup & Duplicator WordPress Plugin. Migrate WordPress Webseiten.](https://es.wordpress.org/plugins/wp-staging/)
+English: [WP STAGING Backup & Duplicator WordPress Plugin. Backup & Migrate WordPress websites.](https://wordpress.org/plugins/wp-staging/)
+French: [Plugin WordPress de sauvegarde et de duplication WP STAGING. Sauvegarder et migrer les sites Web WordPress.](https://fr.wordpress.org/plugins/wp-staging/)
+German: [WP STAGING Backup & Duplicator WordPress Plugin. Migrate WordPress Webseiten.](https://de.wordpress.org/plugins/wp-staging/)
 Spanish: [WP STAGING Complemento de copia de seguridad y duplicador de WordPress. Copia de seguridad y migración de sitios web de WordPress.](https://es.wordpress.org/plugins/wp-staging/)
 
 The following languages have been partially translated. You can help us with the translation:
@@ -259,7 +259,47 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
-= 2.13.0 =
+= 2.14.0 =
+* New: Compatible up to WordPress 6.2
+* New: Pro feature to allow generation of magic login links to staging site. Go to "Actions > Share Login Link". This requires updating WP Staging Pro plugin on staging site #2204
+* New: Pro feature to sync active admin account. Go to "Actions > Sync User Account" to synchronize active admin user account with staging site #2183
+* New: Support SSL connection to external databases #2264
+* New: Allow WP-CLI to work on the staging site #2280
+* Enh: Refresh UI and add new animated loader icon to show backup progress #2292 #2349
+* Enh: Refresh UI and format system information page #2333
+* Enh: Refresh UI an add button to open staging site after updating staging site #2358
+* Enh: Refresh UI. Show more clear cron message and take into account that WP_CRON could be disabled if external backup cron is used #2378
+* Enh: Improve backup email error report and show more clear messages when a backup fail #2383
+* Enh: Display a message when the backup or restore process stops due to lack of server memory #2210
+* Enh: Combine wp staging logs and system info logs #2224
+* Enh: Show admin notice when optimizer mu-plugin is disabled to improve reliability of backup creation #2301
+* Enh: Run backup validation checks again after deleting a backup #2286
+* Enh: Toggle triangle icon on multi part backup click #2308
+* Enh: Make more clear where to enter the license key #2404
+* Enh: Allow uploads directory outside ABSPATH by using the filter `wpstg.backup.directory` #2359
+* Enh: Improves the look of the update notice #2294
+* Fix: Selecting a child folder automatically selects the parent folder. #2317
+* Fix: Toggle correctly the side bar navigation depending if staging or backup tab is active #2261
+* Fix: Excluding sub-directories on backup did not work with using the filter 'wpstg.backup.exclude.directories' #2291
+* Fix: Database permission warning did not disappear due to escaped database name #2234
+* Fix: Remove sanitize_url() deprecated notice #2306
+* Fix: Could not download system info #2323
+* Fix: Catch runtime exception when checking for valid backups during invalid file index notice #2312
+* Fix: Use correct html element id to fix js console error #2344
+* Fix: Last backup duration was always 0 min, 0 sec. It is now fixed #2383
+* Fix: Retry adding the backup file index up to 3 times if adding the backup file index fails #2383
+* Fix: Login redirect loop on wp-admin #2385
+* Fix: Remove double `www` prefix if network is cloned to a `www` prefixed hostname but subsite already has `www` prefix #2284
+* Dev: DRY webdriver tests #2276
+* Dev: Decouple PRO feature from WPStaging\Backup namespace and move them into WPStaging\Pro\Backup namespace #2296 #2336 #2356
+* Dev: Fix issues running basic webdriver tests on Github CI #2319
+* Dev: Add timeout to Github actions #2324
+* Dev: Add more unit tests to increase reliability of the backup plugin #2273
+* Dev: Refactor backup terms `Export` to `Backup` and `Import` to `Restore` for consistency #2265
+* Dev: Move src/Pro/Backup to src/Backup as a first step to allow basic Backup feature to be added in Free version of WP Staging #2287 #2297
+* Dev: Write wp staging debug logs into global debug.log #2346
+
+2.13.0
 * New: Major change of the User Interface #2197 #2208
 * New: Add an option to send an email error report. You can enable this option in the settings and use a separate email to receive error reports #2205
 * New: Button to edit backup schedules #2042 #2135

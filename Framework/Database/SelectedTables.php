@@ -31,11 +31,11 @@ class SelectedTables
 
     public function __construct($includedTables = '', $excludedTables = '', $selectedTablesWithoutPrefix = '')
     {
-        $this->includedTables = $includedTables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $includedTables);
-        $this->excludedTables = $excludedTables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $excludedTables);
+        $this->includedTables              = $includedTables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $includedTables);
+        $this->excludedTables              = $excludedTables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $excludedTables);
         $this->selectedTablesWithoutPrefix = $selectedTablesWithoutPrefix === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $selectedTablesWithoutPrefix);
-        $this->wpdb = null;
-        $this->prefix = null;
+        $this->wpdb                        = null;
+        $this->prefix                      = null;
     }
 
     /** @param bool $areAllTablesExcluded  */
@@ -70,17 +70,22 @@ class SelectedTables
      * @param string $password
      * @param string $database
      * @param string $prefix
+     * @param string $useSsl
      */
-    public function setDatabaseInfo($server, $username, $password, $database, $prefix)
+    public function setDatabaseInfo($server, $username, $password, $database, $prefix, $useSsl = false)
     {
         if (empty($username) || empty($database)) {
             $this->wpdb = WPStaging::getInstance()->get("wpdb");
         } else {
+            if ($useSsl && !defined('MYSQL_CLIENT_FLAGS')) {
+                // phpcs:disable PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
+                define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT);
+            }
             $this->wpdb = new wpdb($username, str_replace("\\\\", "\\", $password), $database, $server);
         }
 
         $this->wpdb->prefix = $prefix;
-        $this->prefix = $prefix;
+        $this->prefix       = $prefix;
     }
 
     /**W
@@ -89,9 +94,9 @@ class SelectedTables
      */
     public function setWpdb($wpdb, $prefix)
     {
-        $this->wpdb = $wpdb;
+        $this->wpdb         = $wpdb;
         $this->wpdb->prefix = $prefix;
-        $this->prefix = $prefix;
+        $this->prefix       = $prefix;
     }
 
     /**
@@ -113,7 +118,7 @@ class SelectedTables
             $this->prefix = WPStaging::getTablePrefix();
         }
 
-        $sql = "SHOW TABLE STATUS";
+        $sql    = "SHOW TABLE STATUS";
         $tables = $this->wpdb->get_results($sql);
 
         $selectedTables = [];

@@ -1,6 +1,6 @@
 <?php
 
-use WPStaging\Pro\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Entity\BackupMetadata;
 
 if (!defined("WPINC")) {
     die();
@@ -53,7 +53,7 @@ $isDatabaseOnlyBackup = $info->getIsExportingDatabase()
             <?php
             $backupGeneratedInVersion = $info->getVersion();
             $thisVersion = \WPStaging\Core\WPStaging::getVersion();
-            // Use this in the future if we need to warn the user about compatibility issues between export version and current version.
+            // Use this in the future if we need to warn the user about compatibility issues between backup version and current version.
             ?>
             <small><?php echo sprintf(wp_kses_post('This backup was generated on WP STAGING %s. </br> You are running WP STAGING %s.', 'wp-staging'), esc_html($backupGeneratedInVersion), esc_html($thisVersion)) ?></small>
         </div>

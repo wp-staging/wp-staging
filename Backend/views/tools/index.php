@@ -13,31 +13,6 @@ use WPStaging\Framework\Facades\Sanitize;
     ?>
 
     <div class="wpstg-tabs-container" id="wpstg-tools">
-<!--        <ul class="wpstg-nav-tab-wrapper">
-            <?php
-/*            $tabs       = \WPStaging\Core\WPStaging::getInstance()->get("tabs")->get();
-            $activeTab  = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? Sanitize::sanitizeString($_GET["tab"]) : "system-info";
-
-            # Loop through tabs
-            foreach ($tabs as $id => $name) :
-                $url = esc_url(add_query_arg([
-                    "settings-updated"  => false,
-                    "tab"               => $id
-                ]));
-
-                $activeClass = ($activeTab === $id) ? " wpstg-nav-tab-active" : '';
-                */?>
-                <li>
-                    <a href="<?php /*echo esc_url($url) */?>" title="<?php /*echo esc_attr($name)*/?>" class="nav-tab<?php /*echo esc_attr($activeClass) */?>">
-                        <?php /*echo esc_html($name)*/?>
-                    </a>
-                </li>
-                <?php
-/*                unset($url, $activeClass);
-            endforeach;
-            */?>
-        </ul>-->
-
         <div class="wpstg-metabox-holder">
             <?php require_once $this->path . "views/tools/tabs/system-info.php"?>
         </div>

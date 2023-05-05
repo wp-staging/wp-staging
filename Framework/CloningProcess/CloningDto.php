@@ -52,6 +52,11 @@ class CloningDto
     protected $externalDatabaseName;
 
     /**
+     * @var bool
+     */
+    protected $externalDatabaseSsl;
+
+    /**
      * CloningDto constructor.
      * @param Job $job
      * @param \wpdb $stagingDb
@@ -62,18 +67,20 @@ class CloningDto
      * @param string $externalDatabaseUser
      * @param string $externalDatabasePassword
      * @param string $externalDatabaseName
+     * @param bool $externalDatabaseSsl
      */
-    public function __construct(Job $job, \wpdb $stagingDb, \wpdb $productionDb, $isExternal, $isMultisite, $externalDatabaseHost, $externalDatabaseUser, $externalDatabasePassword, $externalDatabaseName)
+    public function __construct(Job $job, \wpdb $stagingDb, \wpdb $productionDb, $isExternal, $isMultisite, $externalDatabaseHost, $externalDatabaseUser, $externalDatabasePassword, $externalDatabaseName, $externalDatabaseSsl = false)
     {
-        $this->job = $job;
-        $this->stagingDb = $stagingDb;
-        $this->productionDb = $productionDb;
-        $this->isExternal = $isExternal;
-        $this->isMultisite = $isMultisite;
-        $this->externalDatabaseHost = $externalDatabaseHost;
-        $this->externalDatabaseUser = $externalDatabaseUser;
+        $this->job                      = $job;
+        $this->stagingDb                = $stagingDb;
+        $this->productionDb             = $productionDb;
+        $this->isExternal               = $isExternal;
+        $this->isMultisite              = $isMultisite;
+        $this->externalDatabaseHost     = $externalDatabaseHost;
+        $this->externalDatabaseUser     = $externalDatabaseUser;
         $this->externalDatabasePassword = $externalDatabasePassword;
-        $this->externalDatabaseName = $externalDatabaseName;
+        $this->externalDatabaseName     = $externalDatabaseName;
+        $this->externalDatabaseSsl      = $externalDatabaseSsl;
     }
 
     /**
@@ -146,5 +153,13 @@ class CloningDto
     public function getExternalDatabaseName()
     {
         return $this->externalDatabaseName;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getExternalDatabaseSsl()
+    {
+        return $this->externalDatabaseSsl;
     }
 }

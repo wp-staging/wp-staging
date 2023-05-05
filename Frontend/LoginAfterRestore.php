@@ -6,15 +6,15 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Security\AccessToken;
 
-class LoginAfterImport
+class LoginAfterRestore
 {
     /**
-     * @see \WPStaging\Frontend\FrontendServiceProvider::registerLoginAfterImport
+     * @see \WPStaging\Frontend\FrontendServiceProvider::registerLoginAfterRestore
      */
     public function showMessage()
     {
-        // Early bail: Not after Import
-        if (!isset($_GET['wpstgAfterImport']) || !Sanitize::sanitizeBool($_GET['wpstgAfterImport'])) {
+        // Early bail: Not after Restore
+        if (!isset($_GET['wpstgAfterRestore']) || !Sanitize::sanitizeBool($_GET['wpstgAfterRestore'])) {
             return;
         }
 
@@ -32,9 +32,9 @@ class LoginAfterImport
             return;
         }
 
-        // Used by loginAfterImport
+        // Used by loginAfterRestore
         $adminEmails = $this->getListOfAdminEmails();
-        include __DIR__ . '/views/loginAfterImport.php';
+        include __DIR__ . '/views/loginAfterRestore.php';
     }
 
     private function getListOfAdminEmails()

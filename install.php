@@ -57,4 +57,4 @@ add_option('wpstg_installDate', date('Y-m-d h:i:s'));
 /**
  * Register the Cron Events for Scheduled Backups
  */
-WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\BackupScheduler::class)->reCreateCron();
+WPStaging\Core\WPStaging::make(\WPStaging\Backup\BackupScheduler::class)->reCreateCron();

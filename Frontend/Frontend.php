@@ -6,8 +6,6 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Rest\Rest;
 use WPStaging\Framework\SiteInfo;
 
-use function WPStaging\functions\debug_log;
-
 /**
  * Class Frontend
  * @package WPStaging\Frontend
@@ -55,9 +53,9 @@ class Frontend
             // Main Title
             $wp_admin_bar->add_menu(
                 [
-                    'id' => 'site-name',
+                    'id'    => 'site-name',
                     'title' => is_admin() ? ($siteTitle . ' - ' . get_bloginfo('name')) : ($siteTitle . ' - ' . get_bloginfo('name') . ' Dashboard'),
-                    'href' => is_admin() ? home_url('/') : admin_url(),
+                    'href'  => is_admin() ? home_url('/') : admin_url(),
                 ]
             );
         }
@@ -92,6 +90,11 @@ class Frontend
     private function showLoginForm()
     {
         $this->accessDenied = false;
+
+        // Don't show login form if from wp-cli
+        if ('cli' === PHP_SAPI && defined('WP_CLI')) {
+            return false;
+        }
 
         // Don't show login form if showLoginForm filter is set to false. Used by Real Cookie Banner plugin
         if (apply_filters('wpstg.frontend.showLoginForm', false)) {

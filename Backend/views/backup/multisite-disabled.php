@@ -2,7 +2,7 @@
 
 /**
  * @var $mainsiteWpstgURL
- * @see \WPStaging\Pro\Backup\Ajax\Listing::render
+ * @see \WPStaging\Backup\Ajax\Listing::render
  */
 
 ?>

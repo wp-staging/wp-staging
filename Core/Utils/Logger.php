@@ -38,13 +38,13 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     /**
      * Log directory (full path)
-     * @var String
+     * @var string
      */
     private $logDir;
 
     /**
      * Log file extension
-     * @var String
+     * @var string
      */
     private $logExtension   = "log";
 
@@ -89,7 +89,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
         /**
          * If log directory doesn't exists, create it.
-         * @see \WPStaging\Backend\Notices\Notices::messages Notice that shows if log directory couldn't be created.
+         * @see \WPStaging\Framework\Notices\Notices::renderNotices Notice that shows if log directory couldn't be created.
          */
         (new Filesystem())->mkdir($this->logDir);
 

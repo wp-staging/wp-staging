@@ -3,8 +3,9 @@
 /**
  * @var WPStaging\Framework\TemplateEngine\TemplateEngine $this
  * @var string                                            $urlAssets
- * @var string                                            $isValidLicenseKey
- * @see \WPStaging\Pro\Backup\Ajax\FileList::render()
+ * @var bool                                              $isProVersion
+ * @var bool                                              $isValidLicenseKey
+ * @see \WPStaging\Backup\Ajax\FileList::render()
  */
 
 use WPStaging\Framework\Facades\Escape;
@@ -13,7 +14,7 @@ use WPStaging\Framework\Facades\Escape;
 <li id="wpstg-backup-no-results" class="wpstg-clone">
     <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/cloud.svg" alt="cloud">
     <div class="no-backups-found-text">
-        <?php if ($isValidLicenseKey) : ?>
+        <?php if ($isValidLicenseKey || !$isProVersion) : ?>
             <?php esc_html_e('No Backups found. Create your first Backup above!', 'wp-staging'); ?>
         <?php else :?>
             <strong id="wpstg-invalid-license-message" class="wpstg--red">

@@ -16,7 +16,7 @@ if (!isset($urlAssets)) {
 }
 ?>
 
-<ul class="wpstg-import-backup-contains wpstg-listing-single-backup">
+<ul class="wpstg-restore-backup-contains wpstg-listing-single-backup">
     <?php if ($isExportingDatabase) : ?>
         <li>
             <span class="wpstg--tooltip wpstg-backups-contains">

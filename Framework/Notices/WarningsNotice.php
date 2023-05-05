@@ -1,22 +1,20 @@
 <?php
 
-namespace WPStaging\Backend\Notices;
+namespace WPStaging\Framework\Notices;
 
 use WPStaging\Framework\SiteInfo;
 
 /**
- * Class DisabledItemsNotice
+ * Class WarningsNotice
  *
- * This class is used to show notice about what WP Staging has disabled on the staging site
+ * Single Dismissable Notice for showing all warnings on staging sites
  *
- * @see \WPStaging\Backend\Notices\Notices;
+ * This notice is disabled for the moment as it was annoying to so many wp staging notices.
+ * @see \WPStaging\Framework\Notices\Notices
  */
-class DisabledItemsNotice extends BooleanNotice
+class WarningsNotice extends BooleanNotice
 {
-    /**
-     * The option name to store the visibility of disabled cache notice
-     */
-    const OPTION_NAME = 'wpstg_disabled_notice';
+    const OPTION_NAME = 'wpstg_warnings_notice';
 
     private $siteInfo;
 
@@ -31,7 +29,7 @@ class DisabledItemsNotice extends BooleanNotice
     }
 
     /**
-     * Show this notice only on staging site
+     * This warning notice should be shown only on the staging site
      *
      * @return bool
      */
