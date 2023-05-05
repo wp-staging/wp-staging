@@ -141,7 +141,7 @@ class Random
             \ini_set('session.use_cookies', 0);
             \session_cache_limiter('');
             \session_start();
-            $v = $seed = $_SESSION['seed'] = \pack('H*', \sha1((isset($_SERVER) ? phpseclib_safe_serialize($_SERVER) : '') . (isset($_POST) ? phpseclib_safe_serialize($_POST) : '') . (isset($_GET) ? phpseclib_safe_serialize($_GET) : '') . (isset($_COOKIE) ? phpseclib_safe_serialize($_COOKIE) : '') . phpseclib_safe_serialize($GLOBALS) . phpseclib_safe_serialize($_SESSION) . phpseclib_safe_serialize($_OLD_SESSION)));
+            $v = $seed = $_SESSION['seed'] = \pack('H*', \sha1((isset($_SERVER) ? phpseclib_safe_serialize($_SERVER) : '') . (isset($_POST) ? phpseclib_safe_serialize($_POST) : '') . (isset($_GET) ? phpseclib_safe_serialize($_GET) : '') . (isset($_COOKIE) ? phpseclib_safe_serialize($_COOKIE) : '') . (\version_compare(\PHP_VERSION, '8.1.0', '>=') ? \serialize($GLOBALS) : phpseclib_safe_serialize($GLOBALS)) . phpseclib_safe_serialize($_SESSION) . phpseclib_safe_serialize($_OLD_SESSION)));
             if (!isset($_SESSION['count'])) {
                 $_SESSION['count'] = 0;
             }

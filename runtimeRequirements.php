@@ -73,7 +73,7 @@ if (!version_compare($currentWordPressVersion = get_bloginfo('version'), $minimu
     add_action(is_network_admin() ? 'network_admin_notices' : 'admin_notices', function () use ($currentWordPressVersion, $minimumWordPressVersion) {
         echo '<div class="notice-warning notice is-dismissible">';
         echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING') . '</p>';
-        echo '<p>' . esc_html__(sprintf('WP STAGING requires at least WordPress %s to run. You have WordPress %s.', $minimumWordPressVersion, $currentWordPressVersion), 'wp-staging') . '</p>';
+        echo '<p>' . sprintf(esc_html__('WP STAGING requires at least WordPress %s to run. You have WordPress %s.', 'wp-staging'), esc_html($minimumWordPressVersion), esc_html($currentWordPressVersion)) . '</p>';
         echo '</div>';
     });
 

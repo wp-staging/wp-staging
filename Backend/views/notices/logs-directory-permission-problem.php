@@ -1,7 +1,7 @@
 <?php
 /**
  * @var string $logsDir
- * @see \WPStaging\Backend\Notices\Notices::messages
+ * @see \WPStaging\Framework\Notices\Notices::renderNotices
  */
 ?>
 <div class="notice notice-error">

@@ -10,8 +10,10 @@ use LimitIterator;
 use WPStaging\Framework\Exceptions\IOException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Filesystem\FileObject;
-use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
-use WPStaging\Pro\Backup\Exceptions\ThresholdException;
+use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Backup\Exceptions\ThresholdException;
+
+use function WPStaging\functions\debug_log;
 
 // TODO DRY; re-use \WPStaging\Framework\Filesystem\FileObject
 // Buffered cache reads the file partially
@@ -24,6 +26,11 @@ class BufferedCache extends AbstractCache
 
     const AVERAGE_LINE_LENGTH = 4096;
 
+    protected $chunkReadingSizeForAppendingFile = 500 * 1024; // 500KB
+
+    /**
+     * @throws IOException
+     */
     public function first()
     {
         if (!$this->isValid()) {
@@ -40,13 +47,13 @@ class BufferedCache extends AbstractCache
             return null;
         }
 
-        $first = null;
+        $first = '';
         $offset = 0;
         clearstatcache();
         $len = filesize($this->filePath);
         while (($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
             if (!$first) {
-                $first = $buffer;
+                $first  = $buffer;
                 $offset = strlen($first);
                 continue;
             }
@@ -65,6 +72,11 @@ class BufferedCache extends AbstractCache
         return trim(rtrim($first, PHP_EOL));
     }
 
+    /**
+     * @param $value
+     * @return int
+     * @throws DiskNotWritableException
+     */
     public function append($value)
     {
         if (is_array($value)) {
@@ -72,13 +84,27 @@ class BufferedCache extends AbstractCache
         }
 
         /** @noinspection UnnecessaryCastingInspection */
-        return (new FileObject($this->filePath, FileObject::MODE_APPEND))->fwriteSafe((string)$value . PHP_EOL);
+        $file = new FileObject($this->filePath, FileObject::MODE_APPEND);
+
+        $writtenData = $file->fwriteSafe($value . PHP_EOL);
+
+        if ($writtenData === false) {
+            debug_log("Could not write to file {$this->filePath} Data: {$value}");
+            throw DiskNotWritableException::fileNotWritable($this->filePath);
+        }
+
+        if (!file_exists($this->filePath)) {
+            debug_log("Could not write to file {$this->filePath} Data: {$value}. File not created!");
+            throw DiskNotWritableException::fileNotWritable($this->filePath);
+        }
+
+        return $writtenData;
     }
 
     /**
      * Like array_reverse(), but for files.
      *
-     * @throws ThresholdException When threshold limit hits.
+     * @throws ThresholdException|DiskNotWritableException When threshold limit hits.
      */
     public function reverse()
     {
@@ -92,7 +118,7 @@ class BufferedCache extends AbstractCache
         $tempFile = new FileObject($this->filePath . 'tmp', 'rb+');
         $existingFile->flock(LOCK_EX);
 
-        $lastLine = null;
+        $lastLine    = null;
         $currentLine = null;
 
         try {
@@ -103,7 +129,7 @@ class BufferedCache extends AbstractCache
                 if ($i >= 25) {
                     $i = 0;
                     if ($this->isThreshold()) {
-                        throw ThresholdException::thresholdHit('');
+                        throw ThresholdException::thresholdHit();
                     }
                 }
 
@@ -120,7 +146,7 @@ class BufferedCache extends AbstractCache
                 }
 
                 if (is_null($lastLine)) {
-                    $lastLine = $existingFile->key();
+                    $lastLine    = $existingFile->key();
                     $currentLine = $lastLine;
                     $existingFile->seek($lastLine);
                 }
@@ -133,13 +159,19 @@ class BufferedCache extends AbstractCache
             // End of file
         } catch (ThresholdException $e) {
             // This exception must be handled by the caller.
+            debug_log("Threshold hit while reversing file {$this->filePath}");
             throw $e;
+        } catch (\Exception $e) {
+            debug_log("Could not reverse file {$this->filePath}. {$e->getMessage()}");
         }
 
         unlink($this->filePath);
         rename($this->filePath . 'tmp', $this->filePath);
     }
 
+    /**
+     * @throws DiskNotWritableException
+     */
     public function prepend($data)
     {
         if (is_array($data)) {
@@ -191,6 +223,9 @@ class BufferedCache extends AbstractCache
         return $this->stoppableAppendFile($source, $target, $offset);
     }
 
+    /**
+     * @throws IOException|DiskNotWritableException
+     */
     public function readLines($lines = 1, $default = null, $position = self::POSITION_TOP)
     {
         if (!$this->isValid()) {
@@ -205,8 +240,9 @@ class BufferedCache extends AbstractCache
 
     /**
      * @param int $lines
-     * @return array|bool
+     * @return bool
      * @noinspection PhpUnused
+     * @throws IOException
      */
     public function deleteLines($lines = 1)
     {
@@ -226,7 +262,7 @@ class BufferedCache extends AbstractCache
 
         $offset = 0;
         clearstatcache();
-        $size = filesize($this->filePath);
+        $size       = filesize($this->filePath);
         $totalLines = 0;
         while (($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
             $bufferSize = strlen($buffer);
@@ -251,16 +287,19 @@ class BufferedCache extends AbstractCache
 
     /**
      * @param int $bytes
+     * @throws IOException
      */
     public function deleteBottomBytes($bytes)
     {
         $handle = fopen($this->filePath, 'rb+');
         if (!$handle) {
+            debug_log('Failed to open file: ' . $this->filePath, 'file');
             throw new IOException('Failed to open file: ' . $this->filePath);
         }
 
         if (!flock($handle, LOCK_EX)) {
             fclose($handle);
+            debug_log('Failed to lock file: ' . $this->filePath, 'file');
             throw new IOException('Failed to lock file: ' . $this->filePath);
         }
 
@@ -271,7 +310,9 @@ class BufferedCache extends AbstractCache
     }
 
     /**
-     * @inheritDoc
+     * @param $default
+     * @return array|false|mixed|object|string|null
+     * @throws IOException
      */
     public function get($default = null)
     {
@@ -283,11 +324,22 @@ class BufferedCache extends AbstractCache
     }
 
     /**
-     * @inheritDoc
+     * @param $value
+     * @return int
+     * @throws DiskNotWritableException
      */
     public function save($value)
     {
-        return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe($value);
+        $file = new FileObject($this->filePath, FileObject::MODE_WRITE);
+
+        $writtenData = $file->fwriteSafe($value);
+
+        if ($writtenData === false) {
+            debug_log("Could not save() and write to file {$this->filePath} Data: {$value}");
+            throw DiskNotWritableException::fileNotWritable($this->filePath);
+        }
+
+        return $writtenData;
     }
 
     /**
@@ -298,7 +350,7 @@ class BufferedCache extends AbstractCache
     public function countLines()
     {
         $handle = fopen($this->filePath, 'rb+');
-        $total = 0;
+        $total  = 0;
 
         while (!feof($handle)) {
             $total += substr_count(fread($handle, self::AVERAGE_LINE_LENGTH), PHP_EOL);
@@ -308,24 +360,30 @@ class BufferedCache extends AbstractCache
     }
 
     // TODO DRY \WPStaging\Framework\Filesystem\FileObject::readBottomLines
+
     /**
      * @param int $lines
      * @return array
+     * @throws DiskNotWritableException
+     * @throws \Exception
      */
     private function readBottomLine($lines)
     {
         $file = new FileObject($this->filePath, 'rb');
         $file->seek(PHP_INT_MAX);
         $lastLine = $file->key();
-        $offset = max($lastLine - $lines, 0);
+        $offset   = max($lastLine - $lines, 0);
 
         $allLines = new LimitIterator($file, $offset, $lastLine);
         return array_reverse(array_values(iterator_to_array($allLines)));
     }
 
+    /**
+     * @throws DiskNotWritableException
+     */
     public function readLastLine()
     {
-        $file = new FileObject($this->filePath, 'rb');
+        $file           = new FileObject($this->filePath, 'rb');
         $negativeOffset = 16 * KB_IN_BYTES;
 
         // Set the pointer to the end of the file, minus the negative offset for which to start looking for the last line.
@@ -341,6 +399,7 @@ class BufferedCache extends AbstractCache
     /**
      * @param int $lines
      * @return array|null
+     * @throws IOException
      */
     private function readTopLine($lines)
     {
@@ -350,7 +409,7 @@ class BufferedCache extends AbstractCache
         }
 
         $data = [];
-        $i = 0;
+        $i    = 0;
         while (($buffer = fgets($handle, self::AVERAGE_LINE_LENGTH)) !== false) {
             $data[] = trim($buffer);
             $i++;
@@ -371,17 +430,18 @@ class BufferedCache extends AbstractCache
      * @param int $offset
      * @return int
      * @throws DiskNotWritableException
-     * @throws \RuntimeException If can't read chunk from file
+     * @throws \RuntimeException If you can't read chunk from file
      */
     private function stoppableAppendFile($source, $target, $offset)
     {
-        $stats = fstat($source);
+        $stats             = fstat($source);
         $bytesWrittenTotal = $offset;
         fseek($source, $offset);
         while (!$this->isThreshold() && !feof($source)) {
-            $chunk = fread($source, 512 * KB_IN_BYTES);
+            $chunk = fread($source, $this->chunkReadingSizeForAppendingFile);
 
             if ($chunk === false) {
+                debug_log('stoppableAppendFile(): Could not read chunk from file');
                 throw new \RuntimeException('Could not read chunk from file');
             }
 
@@ -389,6 +449,7 @@ class BufferedCache extends AbstractCache
 
             // Failed to write
             if ($bytesWrittenInThisRequest === false || ($bytesWrittenInThisRequest <= 0 && strlen($chunk) > 0)) {
+                debug_log('stoppableAppendFile(): Could not write chunk to file');
                 throw DiskNotWritableException::fileNotWritable($this->filePath);
             }
 

@@ -3,7 +3,7 @@
 namespace WPStaging\Framework\Analytics\Actions;
 
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
-use WPStaging\Pro\Backup\Dto\Job\JobExportDataDto;
+use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 
 class AnalyticsBackupCreate extends AnalyticsEventDto
 {
@@ -35,7 +35,7 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
 
     public function enqueueStartEvent($jobId, $eventData)
     {
-        if (!$eventData instanceof JobExportDataDto) {
+        if (!$eventData instanceof JobBackupDataDto) {
             return;
         }
 

@@ -293,6 +293,34 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
      */
     var $partial_init = \false;
     /**
+     * http://tools.ietf.org/html/draft-ietf-secsh-filexfer-13#section-7.1
+     * the order, in this case, matters quite a lot - see \phpseclib3\Net\SFTP::_parseAttributes() to understand why
+     *
+     * @var array
+     * @access private
+     */
+    var $attributes = array();
+    /**
+     * @var array
+     * @access private
+     */
+    var $open_flags = array();
+    /**
+     * SFTPv5+ changed the flags up:
+     * https://datatracker.ietf.org/doc/html/draft-ietf-secsh-filexfer-13#section-8.1.1.3
+     *
+     * @var array
+     * @access private
+     */
+    var $open_flags5 = array();
+    /**
+     * http://tools.ietf.org/html/draft-ietf-secsh-filexfer-04#section-5.2
+     * see \phpseclib\Net\SFTP::_parseLongname() for an explanation
+     *
+     * @var array
+     */
+    var $file_types = array();
+    /**
      * Default Constructor.
      *
      * Connects to an SFTP server
@@ -337,7 +365,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
             // yields inconsistent behavior depending on how php is compiled.  so we left shift -1 (which, in
             // two's compliment, consists of all 1 bits) by 31.  on 64-bit systems this'll yield 0xFFFFFFFF80000000.
             // that's not a problem, however, and 'anded' and a 32-bit number, as all the leading 1 bits are ignored.
-            -1 << 31 & 0xffffffff => 'NET_SFTP_ATTR_EXTENDED',
+            \PHP_INT_SIZE == 4 ? -1 : 0xffffffff => 'NET_SFTP_ATTR_EXTENDED',
         );
         $this->open_flags = array(0x1 => 'NET_SFTP_OPEN_READ', 0x2 => 'NET_SFTP_OPEN_WRITE', 0x4 => 'NET_SFTP_OPEN_APPEND', 0x8 => 'NET_SFTP_OPEN_CREATE', 0x10 => 'NET_SFTP_OPEN_TRUNCATE', 0x20 => 'NET_SFTP_OPEN_EXCL', 0x40 => 'NET_SFTP_OPEN_TEXT');
         // SFTPv5+ changed the flags up:
@@ -563,7 +591,16 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
         if ($this->version < 2 || $this->version > 6) {
             return \false;
         }
+        $this->pwd = \true;
         $this->pwd = $this->_realpath('.');
+        if ($this->pwd === \false) {
+            if (!$this->canonicalize_paths) {
+                \user_error('Unable to canonicalize current working directory');
+                return \false;
+            }
+            $this->canonicalize_paths = \false;
+            $this->_reset_connection(NET_SSH2_DISCONNECT_CONNECTION_LOST);
+        }
         $this->_update_stat_cache($this->pwd, array());
         return \true;
     }
@@ -604,7 +641,9 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
         $this->canonicalize_paths = \true;
     }
     /**
-     * Enable path canonicalization
+     * Disable path canonicalization
+     *
+     * If this is enabled then $sftp->pwd() will not return the canonicalized absolute path
      *
      * @access public
      */
@@ -700,9 +739,34 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
     function _realpath($path)
     {
         if (!$this->canonicalize_paths) {
-            return $path;
+            if ($this->pwd === \true) {
+                return '.';
+            }
+            if (!\strlen($path) || $path[0] != '/') {
+                $path = $this->pwd . '/' . $path;
+            }
+            $parts = \explode('/', $path);
+            $afterPWD = $beforePWD = [];
+            foreach ($parts as $part) {
+                switch ($part) {
+                    //case '': // some SFTP servers /require/ double /'s. see https://github.com/phpseclib/phpseclib/pull/1137
+                    case '.':
+                        break;
+                    case '..':
+                        if (!empty($afterPWD)) {
+                            \array_pop($afterPWD);
+                        } else {
+                            $beforePWD[] = '..';
+                        }
+                        break;
+                    default:
+                        $afterPWD[] = $part;
+                }
+            }
+            $beforePWD = \count($beforePWD) ? \implode('/', $beforePWD) : '.';
+            return $beforePWD . '/' . \implode('/', $afterPWD);
         }
-        if ($this->pwd === \false) {
+        if ($this->pwd === \true) {
             // http://tools.ietf.org/html/draft-ietf-secsh-filexfer-13#section-8.9
             if (!$this->_send_sftp_packet(NET_SFTP_REALPATH, \pack('Na*', \strlen($path), $path))) {
                 return \false;
@@ -724,7 +788,6 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
                     $this->_logError($response);
                     return \false;
                 default:
-                    \user_error('Expected SSH_FXP_NAME or SSH_FXP_STATUS');
                     return \false;
             }
         }
@@ -824,6 +887,11 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
     function _nlist_helper($dir, $recursive, $relativeDir)
     {
         $files = $this->_list($dir, \false);
+        // If we get an int back, then that is an "unexpected" status.
+        // We do not have a file list, so return false.
+        if (\is_int($files)) {
+            return \false;
+        }
         if (!$recursive || $files === \false) {
             return $files;
         }
@@ -856,6 +924,11 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
     function rawlist($dir = '.', $recursive = \false)
     {
         $files = $this->_list($dir, \true);
+        // If we get an int back, then that is an "unexpected" status.
+        // We do not have a file list, so return false.
+        if (\is_int($files)) {
+            return \false;
+        }
         if (!$recursive || $files === \false) {
             return $files;
         }
@@ -915,8 +988,12 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
                 break;
             case NET_SFTP_STATUS:
                 // presumably SSH_FX_NO_SUCH_FILE or SSH_FX_PERMISSION_DENIED
-                $this->_logError($response);
-                return \false;
+                if (\strlen($response) < 4) {
+                    return \false;
+                }
+                \extract(\unpack('Nstatus', $this->_string_shift($response, 4)));
+                $this->_logError($response, $status);
+                return $status;
             default:
                 \user_error('Expected SSH_FXP_HANDLE or SSH_FXP_STATUS');
                 return \false;
@@ -981,7 +1058,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
                     \extract(\unpack('Nstatus', $this->_string_shift($response, 4)));
                     if ($status != NET_SFTP_STATUS_EOF) {
                         $this->_logError($response, $status);
-                        return \false;
+                        return $status;
                     }
                     break 2;
                 default:
@@ -1571,7 +1648,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
         }
         $i = 0;
         $entries = $this->_list($path, \true);
-        if ($entries === \false) {
+        if ($entries === \false || \is_int($entries)) {
             return $this->_setstat($path, $attr, \false);
         }
         // normally $entries would have at least . and .. but it might not if the directories
@@ -1930,7 +2007,7 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
             case \is_resource($data):
                 $mode = $mode & ~self::SOURCE_LOCAL_FILE;
                 $info = \stream_get_meta_data($data);
-                if ($info['wrapper_type'] == 'PHP' && $info['stream_type'] == 'Input') {
+                if (isset($info['wrapper_type']) && $info['wrapper_type'] == 'PHP' && $info['stream_type'] == 'Input') {
                     $fp = \fopen('php://memory', 'w+');
                     \stream_copy_to_stream($data, $fp);
                     \rewind($fp);
@@ -2304,10 +2381,14 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
         }
         $i = 0;
         $entries = $this->_list($path, \true);
-        // normally $entries would have at least . and .. but it might not if the directories
-        // permissions didn't allow reading
-        if (empty($entries)) {
+        // The folder does not exist at all, so we cannot delete it.
+        if ($entries === NET_SFTP_STATUS_NO_SUCH_FILE) {
             return \false;
+        }
+        // Normally $entries would have at least . and .. but it might not if the directories
+        // permissions didn't allow reading. If this happens then default to an empty list of files.
+        if ($entries === \false || \is_int($entries)) {
+            $entries = array();
         }
         unset($entries['.'], $entries['..']);
         foreach ($entries as $filename => $props) {
@@ -3173,6 +3254,9 @@ class SFTP extends \WPStaging\Vendor\phpseclib\Net\SSH2
         while ($tempLength > 0) {
             $temp = $this->_get_channel_packet(self::CHANNEL, \true);
             if (\is_bool($temp)) {
+                if ($temp && $this->channel_status[self::CHANNEL] === NET_SSH2_MSG_CHANNEL_CLOSE) {
+                    $this->channel_close = \true;
+                }
                 $this->packet_type = \false;
                 $this->packet_buffer = '';
                 return \false;

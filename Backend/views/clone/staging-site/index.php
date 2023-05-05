@@ -9,7 +9,7 @@ use WPStaging\Framework\Facades\Escape;
 
 ?>
 
-<span class="wpstg-notice--white wpstg-mt-20px">
+<span class="wpstg-notice--white">
     <?php echo esc_html__("If you want to transfer this staging site to the production site,", "wp-staging") ?>
     <br/>
     <?php echo sprintf(

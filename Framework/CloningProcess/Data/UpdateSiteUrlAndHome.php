@@ -23,28 +23,70 @@ class UpdateSiteUrlAndHome extends DBCloningService
     }
 
     /**
-     * @return boolean
+     * Wrapper for DOMAIN_CURRENT_SITE for mocking
+     * @return string
      */
-    private function updateAllOptionsTables()
+    protected function getCurrentSiteDomain()
     {
-        $wwwPrefix = '';
-        if (strpos($this->dto->getStagingSiteUrl(), '//www.') !== false) {
-            $wwwPrefix = 'www.';
+        return DOMAIN_CURRENT_SITE;
+    }
+
+    /**
+     * Wrapper for PATH_CURRENT_SITE for mocking
+     * @return string
+     */
+    protected function getCurrentSitePath()
+    {
+        return PATH_CURRENT_SITE;
+    }
+
+    /**
+     * Wrapper for get_sites for mocking
+     *
+     * @return array
+     */
+    protected function getSites()
+    {
+        return get_sites();
+    }
+
+    /**
+     * @return bool
+     */
+    protected function updateAllOptionsTables()
+    {
+        $stagingURLhasWWWPrefix = false;
+        $stagingSiteURL = $this->dto->getStagingSiteUrl();
+        if (strpos($stagingSiteURL, '//www.') !== false) {
+            $stagingURLhasWWWPrefix = true;
         }
 
-        $baseDomain = DOMAIN_CURRENT_SITE;
-        $basePath   = trailingslashit(PATH_CURRENT_SITE);
+        $baseDomain = $this->getCurrentSiteDomain();
+        $basePath   = trailingslashit($this->getCurrentSitePath());
         $stagingSiteDomain = $this->dto->getStagingSiteDomain();
         $stagingSitePath   = trailingslashit($this->dto->getStagingSitePath());
         $str   = new Strings();
-        foreach (get_sites() as $site) {
+        foreach ($this->getSites() as $site) {
             $tableName = $this->getOptionTableWithoutBasePrefix($site->blog_id);
 
             $stagingDomain = $str->str_replace_first($baseDomain, $stagingSiteDomain, $site->domain);
+
+            $subsiteHasWWWPrefix = false;
+            // remove www prefix from domain
+            if (strpos($stagingDomain, 'www.') !== false) {
+                $stagingDomain = $str->str_replace_first('www.', '', $stagingDomain);
+                $subsiteHasWWWPrefix = true;
+            }
+
             $stagingPath = $str->str_replace_first($basePath, $stagingSitePath, $site->path);
             $this->updateBlogsTable($site->blog_id, $stagingDomain, $stagingPath);
 
-            $siteUrl = parse_url(site_url())["scheme"] . "://" . $wwwPrefix . $stagingDomain . $stagingPath;
+            $wwwPrefix = '';
+            if ($stagingURLhasWWWPrefix || $subsiteHasWWWPrefix) {
+                $wwwPrefix = 'www.';
+            }
+
+            $siteUrl = parse_url($stagingSiteURL)["scheme"] . "://" . $wwwPrefix . $stagingDomain . $stagingPath;
 
             $this->updateOptionsTable($tableName, $siteUrl);
         }
@@ -55,11 +97,11 @@ class UpdateSiteUrlAndHome extends DBCloningService
     /**
      * @param string $tableName
      * @param string $siteUrl
-     * @return boolean
+     * @return bool
      *
      * @throws FatalException
      */
-    private function updateOptionsTable($tableName, $siteUrl)
+    protected function updateOptionsTable($tableName, $siteUrl)
     {
         if ($this->skipTable($tableName)) {
             $this->log("{$this->dto->getPrefix()}{$tableName} Skipped");
@@ -84,11 +126,11 @@ class UpdateSiteUrlAndHome extends DBCloningService
 
     /**
      * Update Multisite Site Table
-     * @return boolean
+     * @return bool
      *
      * @throws FatalException
      */
-    private function updateSiteTable()
+    protected function updateSiteTable()
     {
         $tableName = 'site';
         $domain = $this->dto->getStagingSiteDomain();
@@ -119,11 +161,11 @@ class UpdateSiteUrlAndHome extends DBCloningService
      * @param int $blogID
      * @param string $domain
      * @param string $path
-     * @return boolean
+     * @return bool
      *
      * @throws FatalException
      */
-    private function updateBlogsTable($blogID, $domain, $path)
+    protected function updateBlogsTable($blogID, $domain, $path)
     {
         $tableName = 'blogs';
         if ($this->skipTable($tableName)) {

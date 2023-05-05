@@ -94,6 +94,7 @@ class DataCloningDto extends CloningDto
      * @param string $homeUrl
      * @param string $baseUrl
      * @param string $mainJob
+     * @param bool $externalDatabaseSsl
      */
     public function __construct(
         CloningJob $job,
@@ -114,21 +115,22 @@ class DataCloningDto extends CloningDto
         $settings,
         $homeUrl,
         $baseUrl,
-        $mainJob
+        $mainJob,
+        $externalDatabaseSsl = false
     ) {
-        parent::__construct($job, $stagingDb, $productionDb, $isExternal, $isMultisite, $externalDatabaseHost, $externalDatabaseUser, $externalDatabasePassword, $externalDatabaseName);
-        $this->stepNumber = $stepNumber;
-        $this->prefix = $prefix;
-        $this->tables = $tables;
-        $this->destinationDir = $destinationDir;
-        $this->stagingSiteUrl = $stagingSiteUrl;
-        $this->uploadFolder = $uploadFolder;
-        $this->settings = $settings;
-        $this->homeUrl = $homeUrl;
-        $this->baseUrl = $baseUrl;
-        $this->mainJob = $mainJob;
+        parent::__construct($job, $stagingDb, $productionDb, $isExternal, $isMultisite, $externalDatabaseHost, $externalDatabaseUser, $externalDatabasePassword, $externalDatabaseName, $externalDatabaseSsl);
+        $this->stepNumber        = $stepNumber;
+        $this->prefix            = $prefix;
+        $this->tables            = $tables;
+        $this->destinationDir    = $destinationDir;
+        $this->stagingSiteUrl    = $stagingSiteUrl;
+        $this->uploadFolder      = $uploadFolder;
+        $this->settings          = $settings;
+        $this->homeUrl           = $homeUrl;
+        $this->baseUrl           = $baseUrl;
+        $this->mainJob           = $mainJob;
         $this->stagingSiteDomain = '';
-        $this->stagingSitePath = '';
+        $this->stagingSitePath   = '';
     }
 
     /**

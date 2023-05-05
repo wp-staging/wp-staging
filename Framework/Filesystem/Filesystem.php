@@ -4,7 +4,7 @@ namespace WPStaging\Framework\Filesystem;
 
 use Exception;
 use SplFileInfo;
-use WPStaging\Backend\Notices\Notices;
+use WPStaging\Framework\Notices\Notices;
 use WPStaging\Core\WPStaging;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -205,7 +205,7 @@ class Filesystem extends FilterableDirectoryIterator
                 /**
                  * Enqueue this error. All enqueued errors will be shown as a single notice.
                  *
-                 * @see \WPStaging\Backend\Notices\Notices::showDirectoryListingWarningNotice
+                 * @see \WPStaging\Framework\Notices\Notices::showDirectoryListingWarningNotice
                  */
                 WPStaging::getInstance()->getContainer()->pushToArray(Notices::$directoryListingErrors, $e->getMessage());
             }
@@ -894,8 +894,8 @@ class Filesystem extends FilterableDirectoryIterator
      * @return array An array of files found in a directory,
      *               where the index is the path relative to the directory, and the value is the absolute path to the file.
      * @example [
-     *              'debug.log' => '/var/www/single/wp-content/uploads/wp-staging/tmp/import/655bb61a54f5/wpstg_c_/debug.log',
-     *              'custom-folder/custom-file.png' => '/var/www/single/wp-content/uploads/wp-staging/tmp/import/655bb61a54f5/wpstg_c_/custom-folder/custom-file.png',
+     *              'debug.log' => '/var/www/single/wp-content/uploads/wp-staging/tmp/restore/655bb61a54f5/wpstg_c_/debug.log',
+     *              'custom-folder/custom-file.png' => '/var/www/single/wp-content/uploads/wp-staging/tmp/restore/655bb61a54f5/wpstg_c_/custom-folder/custom-file.png',
      *          ]
      *
      */

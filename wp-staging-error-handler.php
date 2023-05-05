@@ -17,17 +17,21 @@ function debug_log($message, $logType = 'info')
     // Keep the file handler open for the duration of the request for performance.
     static $fileHandler;
 
-    if (!defined('WPSTG_DEBUG_LOG_FILE')) {
+    if ($logType === 'debug' && !defined('WPSTG_DEBUG') || defined('WPSTG_DEBUG') && !WPSTG_DEBUG) {
         return;
     }
 
-    if ($logType === 'debug' && !defined('WPSTG_DEBUG') || defined('WPSTG_DEBUG') && !WPSTG_DEBUG) {
+    if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+        error_log('[' . $logType . '] WP Staging - ' . $message, 0);
+    }
+
+    if (!defined('WPSTG_DEBUG_LOG_FILE')) {
         return;
     }
 
     if (is_null($fileHandler)) {
         // Open the file handler once per request, and keep it open, as we might need to write to it multiple times.
-        $fileHandler = fopen(WPSTG_DEBUG_LOG_FILE, 'a');
+        $fileHandler = @fopen(WPSTG_DEBUG_LOG_FILE, 'a');
 
         // On Windows OS we need to remove the lock handle first before locking it again.
         if (stripos(PHP_OS, "WIN") === 0) {
@@ -35,7 +39,9 @@ function debug_log($message, $logType = 'info')
         }
 
         // Make sure the lock is shared, as we might need to open the handler again if a fatal error occurs.
-        flock($fileHandler, LOCK_SH | LOCK_NB);
+        if (is_resource($fileHandler)) {
+            flock($fileHandler, LOCK_SH | LOCK_NB);
+        }
     }
 
     $message = sprintf(
@@ -67,34 +73,34 @@ function shutdown_function()
 
     // Errors that bring PHP to a halt.
     $fatalErrorTypes = [
-        E_ERROR => 'E_ERROR',
-        E_PARSE => 'E_PARSE',
-        E_USER_ERROR => 'E_USER_ERROR',
-        E_COMPILE_ERROR => 'E_COMPILE_ERROR',
+        E_ERROR             => 'E_ERROR',
+        E_PARSE             => 'E_PARSE',
+        E_USER_ERROR        => 'E_USER_ERROR',
+        E_COMPILE_ERROR     => 'E_COMPILE_ERROR',
         E_RECOVERABLE_ERROR => 'E_RECOVERABLE_ERROR',
     ];
 
     // Provide friendly-names for the error codes
     $allErrorTypes = [
-        E_ERROR => "E_ERROR",
-        E_WARNING => "E_WARNING",
-        E_PARSE => "E_PARSE",
-        E_NOTICE => "E_NOTICE",
-        E_CORE_ERROR => "E_CORE_ERROR",
-        E_CORE_WARNING => "E_CORE_WARNING",
-        E_COMPILE_ERROR => "E_COMPILE_ERROR",
-        E_COMPILE_WARNING => "E_COMPILE_WARNING",
-        E_USER_ERROR => "E_USER_ERROR",
-        E_USER_WARNING => "E_USER_WARNING",
-        E_USER_NOTICE => "E_USER_NOTICE",
-        E_STRICT => "E_STRICT",
+        E_ERROR             => "E_ERROR",
+        E_WARNING           => "E_WARNING",
+        E_PARSE             => "E_PARSE",
+        E_NOTICE            => "E_NOTICE",
+        E_CORE_ERROR        => "E_CORE_ERROR",
+        E_CORE_WARNING      => "E_CORE_WARNING",
+        E_COMPILE_ERROR     => "E_COMPILE_ERROR",
+        E_COMPILE_WARNING   => "E_COMPILE_WARNING",
+        E_USER_ERROR        => "E_USER_ERROR",
+        E_USER_WARNING      => "E_USER_WARNING",
+        E_USER_NOTICE       => "E_USER_NOTICE",
+        E_STRICT            => "E_STRICT",
         E_RECOVERABLE_ERROR => "E_RECOVERABLE_ERROR",
-        E_DEPRECATED => "E_DEPRECATED",
-        E_USER_DEPRECATED => "E_USER_DEPRECATED",
-        E_ALL => "E_ALL",
+        E_DEPRECATED        => "E_DEPRECATED",
+        E_USER_DEPRECATED   => "E_USER_DEPRECATED",
+        E_ALL               => "E_ALL",
     ];
 
-    $isFatalError = isset($fatalErrorTypes[$error['type']]);
+    $isFatalError       = isset($fatalErrorTypes[$error['type']]);
     $comesFromWpStaging = strpos($error['file'], WPSTG_PLUGIN_SLUG) !== false;
 
     /*
@@ -106,7 +112,7 @@ function shutdown_function()
      */
     if ($isFatalError || $comesFromWpStaging) {
         // Opening a file handler gives us more control than error_log('foo', 3, 'custom-file.log');
-        $fileHandler = fopen(WPSTG_DEBUG_LOG_FILE, 'a');
+        $fileHandler = @fopen(WPSTG_DEBUG_LOG_FILE, 'a');
 
         $message = sprintf(
             "[WP STAGING Shutdown Function][%s][%s] %s - File: %s Line: %s | Is it Fatal Error? %s | Is it Thrown by WP STAGING? %s\n",

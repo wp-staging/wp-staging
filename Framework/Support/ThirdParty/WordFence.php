@@ -2,8 +2,8 @@
 
 namespace WPStaging\Framework\Support\ThirdParty;
 
-use WPStaging\Backend\Notices\BooleanNotice;
-use WPStaging\Backend\Notices\Notices;
+use WPStaging\Framework\Notices\BooleanNotice;
+use WPStaging\Framework\Notices\Notices;
 
 /**
  * Class WordFence

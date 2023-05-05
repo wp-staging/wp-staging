@@ -8,6 +8,8 @@ use WPStaging\Framework\Utils\Sanitize;
  * Class Rest
  *
  * @package WPStaging\Framework\Rest
+ *
+ * @todo merge into WPAdapter class?
  */
 class Rest
 {
@@ -27,7 +29,7 @@ class Rest
             return false;
         }
 
-        $requestPath = trim(sanitize_url($_SERVER['REQUEST_URI']), '/');
+        $requestPath = trim($this->sanitize->sanitizeUrl($_SERVER['REQUEST_URI']), '/');
 
         $url = trailingslashit(get_home_url(get_current_blog_id(), ''));
         // nginx only allows HTTP/1.0 methods when redirecting from / to /index.php.
@@ -36,7 +38,7 @@ class Rest
             $url .= 'index.php';
         }
 
-        $url = add_query_arg('rest_route', '/', $url);
+        $url      = add_query_arg('rest_route', '/', $url);
         $restPath = $this->getApiRequestURI($url);
         if (!empty($restPath) && strpos($requestPath, $restPath) === 0) {
             return true;
@@ -48,7 +50,7 @@ class Rest
         }
 
         $baseRestURL = get_rest_url(get_current_blog_id(), '/');
-        $restPath = $this->getApiRequestURI($baseRestURL);
+        $restPath    = $this->getApiRequestURI($baseRestURL);
 
         // Early bail if rest path is empty
         if (empty($restPath)) {
@@ -64,8 +66,8 @@ class Rest
             return '';
         }
 
-        $path  = parse_url($url, PHP_URL_PATH);
-        $path  = empty($path) ? '' : trim($path, '/');
+        $path = parse_url($url, PHP_URL_PATH);
+        $path = empty($path) ? '' : trim($path, '/');
 
         $query = parse_url($url, PHP_URL_QUERY);
         $query = empty($query) ? '' : trim($query, '/');

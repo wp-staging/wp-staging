@@ -365,11 +365,10 @@ use WPStaging\Framework\Facades\Sanitize;
 		}
 		// Now we split the remaining string of UA ($text2) into lines that are prefixed by spaces for formatting
 		$wordwrapped = chunk_split($towrapUA, 32, "\n $space");
-			return "Platform:                 {$this->getPlatform()} \n".
-				   "Browser Name:             {$this->getBrowser()}  \n" .
-			       "Browser Version:          {$this->getVersion()} \n" .
-			       "User Agent String:        $UAline1 \n\t\t\t  " .
-				   "$wordwrapped";
+			return str_pad("Platform:", 56, ' ', STR_PAD_RIGHT) . print_r($this->getPlatform(), true) . PHP_EOL.
+			       str_pad("Browser Name:", 56, ' ', STR_PAD_RIGHT) . print_r($this->getBrowser(), true) . PHP_EOL.
+			       str_pad("Browser Version:", 56, ' ', STR_PAD_RIGHT) . print_r($this->getVersion(), true) . PHP_EOL.
+			       str_pad("User Agent String:", 56, ' ', STR_PAD_RIGHT) . print_r($UAline1.' '.$towrapUA, true) . PHP_EOL;
 		}
 		/**
 		 * Protected routine to calculate and determine what the browser is in use (including platform)

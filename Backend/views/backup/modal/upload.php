@@ -6,9 +6,22 @@
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
-use WPStaging\Pro\Backup\Service\BackupsFinder;
+use WPStaging\Backup\Service\BackupsFinder;
 
-$uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(BackupsFinder::class)->getBackupsDirectory());
+try {
+    $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(BackupsFinder::class)->getBackupsDirectory());
+} catch (\Exception $e) { // TODO: remove the double catch and switch with Throwable when the support of php 5.6 is dropped!
+    ob_end_clean();
+    if (wp_doing_ajax()) {
+        wp_send_json_error($e->getMessage());
+    }
+} catch (\Error $e) {
+    ob_end_clean();
+    if (wp_doing_ajax()) {
+        wp_send_json_error($e->getMessage());
+    }
+}
+
 ?>
 <div
     id="wpstg--modal--backup--upload"
@@ -16,7 +29,7 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
     data-uploadSuccessMessage="<?php esc_attr_e('The backup file has been successfully uploaded. You can restore your website with this backup.', 'wp-staging'); ?>"
     style="display: none"
 >
-    <h2 class="wpstg--modal--backup--import--upload--title">
+    <h2 class="wpstg--modal--backup--upload--title">
         <?php esc_html_e('Upload Backup', 'wp-staging') ?>
         <div class="wpstg--tooltip">
             <img class="wpstg--dashicons wpstg-dashicons-19" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg"></img>
@@ -37,7 +50,7 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
             </p>
         </div>
     </h2>
-    <div class="wpstg--modal--backup--import--upload--content">
+    <div class="wpstg--modal--backup--upload--content">
         <?php
         /**
          * @var string $urlAssets
@@ -53,10 +66,10 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
             <span class="wpstg-linear-loader-item"></span>
         </div>
 
-        <div class="wpstg--modal--backup--import--upload">
+        <div class="wpstg--modal--backup--upload">
 
                 <div id="wpstg-upload-select">
-                    <div class="wpstg--modal--backup--import--upload--container resumable-drop resumable-browse">
+                    <div class="wpstg--modal--backup--upload--container resumable-drop resumable-browse">
                         <img src="<?php echo esc_url($urlAssets . 'img/upload.svg'); ?>" alt="Upload Image"/>
                         <div class="wpstg-upload-text">
                             <?php
@@ -75,10 +88,10 @@ $uploadDirectory = str_replace(wp_normalize_path(ABSPATH), '', WPStaging::make(B
                 </div>
 
                 <div id="wpstg-upload-progress">
-                    <div class="wpstg--modal--import--upload--process">
-                        <div class="wpstg--modal--import--upload--progress"></div>
-                        <h4 class="wpstg--modal--import--upload--progress--title">
-                            <span><small><?php esc_html_e('Discovering optimal upload speed... This might a little while...', 'wp-staging'); ?></small></span>
+                    <div class="wpstg--modal--upload--process">
+                        <div class="wpstg--modal--upload--progress"></div>
+                        <h4 class="wpstg--modal--upload--progress--title">
+                            <span><small><?php esc_html_e('Discovering optimal upload speed... This may take a while...', 'wp-staging'); ?></small></span>
                         </h4>
                     </div>
                     <p class="wpstg-backup-upload-dont-close-notice"><?php esc_html_e('If you close this window the upload will be aborted.', 'wp-staging') ?></p>

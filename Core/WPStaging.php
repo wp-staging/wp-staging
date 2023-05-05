@@ -3,6 +3,8 @@
 namespace WPStaging\Core;
 
 use WPStaging\Backend\Administrator;
+use WPStaging\Backend\Pro\Licensing\Licensing;
+use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
@@ -11,13 +13,18 @@ use WPStaging\Framework\AnalyticsServiceProvider;
 use WPStaging\Framework\AssetServiceProvider;
 use WPStaging\Framework\CommonServiceProvider;
 use WPStaging\Framework\DI\Container;
+use WPStaging\Framework\ErrorHandler;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\NoticeServiceProvider;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
 use WPStaging\Framework\SettingsServiceProvider;
+use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Staging\FirstRun;
+use WPStaging\Framework\Url;
 use WPStaging\Frontend\Frontend;
 use WPStaging\Frontend\FrontendServiceProvider;
+use WPStaging\Pro\ProServiceProvider;
 
 /**
  * Class WPStaging
@@ -46,16 +53,20 @@ final class WPStaging
      */
     public static $startTime;
 
-    /**  @var Filesystem */
+    /** @var Filesystem */
     private $filesystem;
+
+    /** @var ErrorHandler */
+    private $errorHandler;
 
     /**
      * WPStaging constructor.
      */
     private function __construct(Container $container)
     {
-        $this->container = $container;
-        $this->filesystem = new Filesystem();
+        $this->container    = $container;
+        $this->errorHandler = new ErrorHandler();
+        $this->filesystem   = new Filesystem();
     }
 
     public function bootstrap()
@@ -66,8 +77,6 @@ final class WPStaging
 
         $this->setupDebugLog();
 
-        $this->initCron();
-
         $this->container->register(CoreServiceProvider::class);
 
         $this->loadDependencies();
@@ -77,32 +86,59 @@ final class WPStaging
 
         $this->container->register(CommonServiceProvider::class);
         $this->container->register(AssetServiceProvider::class);
+
+        /** @var WpAdapter */
+        $wpAdapter = $this->container->get(WpAdapter::class);
+
+        $currentUrlPath = $this->container->get(Url::class)->getCurrentRoute();
+
+        // Register notices only on UI requests and admin pages except plugins.php
+        // to keep the plugins page alive and allow deactivation of the plugin in case of failure in one of the notices.
+        if (!$wpAdapter->doingAjax() && !$wpAdapter->isWpCliRequest() && is_admin() && strpos($currentUrlPath, 'plugins.php') === false) {
+            $this->container->register(NoticeServiceProvider::class);
+        }
+
+        $this->initCron();
+
         $this->container->register(SettingsServiceProvider::class);
 
         $this->cloneSiteFirstRun();
 
         $this->container->register(AnalyticsServiceProvider::class);
 
-        if (class_exists('\WPStaging\Pro\ProServiceProvider')) {
-            $this->container->register(\WPStaging\Pro\ProServiceProvider::class);
+        // @todo remove this pro condition in the last step PR of backup feature to enable backup on free version.
+        if (self::isPro() && class_exists('\WPStaging\Backup\BackupServiceProvider')) {
+            $this->container->register(BackupServiceProvider::class);
         }
 
-        if (!is_admin()) {
-            $this->container->register(FrontendServiceProvider::class);
+        if (class_exists('\WPStaging\Pro\ProServiceProvider')) {
+            $this->container->register(ProServiceProvider::class);
         }
+
+        $this->container->register(FrontendServiceProvider::class);
 
 
         $this->handleCacheIssues();
         $this->preventDirectoryListing();
     }
 
+    public function registerErrorHandler()
+    {
+        $this->errorHandler->registerShutdownHandler();
+    }
+
     protected function setupDebugLog()
     {
+        if (!defined('WPSTG_UPLOADS_DIR')) {
+            $wpStagingUploadsDir = trailingslashit(wp_upload_dir()['basedir']) . WPSTG_PLUGIN_DOMAIN . '/';
+            define('WPSTG_UPLOADS_DIR', $wpStagingUploadsDir);
+        }
+
         if (defined('WPSTG_DEBUG_LOG_FILE')) {
             return;
         }
 
-        $logsDirectory = trailingslashit(wp_upload_dir()['basedir']) . WPSTG_PLUGIN_DOMAIN . '/logs/';
+        $logsDirectory = WPSTG_UPLOADS_DIR . 'logs/';
 
         if (!file_exists($logsDirectory)) {
             $this->filesystem->mkdir($logsDirectory, true);
@@ -209,18 +245,28 @@ final class WPStaging
     {
         if (php_sapi_name() == "cli") {
             $this->isBootstrapped = false;
-            $this->container = new Container();
+            $this->container      = new Container();
         }
     }
 
     /**
      * Is the current PHP OS Windows?
      *
-     * @return boolean
+     * @return bool
      */
     public static function isWindowsOs()
     {
         return strncasecmp(PHP_OS, 'WIN', 3) === 0;
+    }
+
+    /**
+     * Check License is Valid or not
+     *
+     * @return bool
+     */
+    public static function isValidLicense()
+    {
+        return self::isPro() && ((new SiteInfo())->isStagingSite() || (new Licensing())->isValidOrExpiredLicenseKey());
     }
 
     /**
@@ -277,11 +323,11 @@ final class WPStaging
      * Set a variable to DI with given name
      *
      * @param string $name
-     * @param mixed  $variable
-     *
-     * @deprecated Refactor implementations of this method to use the Container instead.
+     * @param mixed $variable
      *
      * @return $this
+     * @deprecated Refactor implementations of this method to use the Container instead.
+     *
      */
     public function set($name, $variable)
     {
@@ -295,9 +341,9 @@ final class WPStaging
      *
      * @param string $name
      *
+     * @return mixed|null
      * @deprecated Refactor implementations of this method to use the Container instead.
      *
-     * @return mixed|null
      */
     public function get($name)
     {
@@ -331,9 +377,9 @@ final class WPStaging
      *
      * @param string $name
      *
+     * @return mixed|null
      * @deprecated Refactor implementations of this method to use Dependency Injection instead.
      *
-     * @return mixed|null
      */
     public function _make($name)
     {
@@ -404,7 +450,7 @@ final class WPStaging
         // TODO: inject WpAdapter using DI
         if (is_admin() && !(new WpAdapter())->doingAjax()) {
             /** @var DirectoryListing $directoryListing */
-            $directoryListing = $this->getContainer()->make(DirectoryListing::class);
+            $directoryListing = $this->getContainer()->get(DirectoryListing::class);
             $directoryListing->protectPluginUploadDirectory();
         }
     }

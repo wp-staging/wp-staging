@@ -1,5 +1,5 @@
 <?php
-$storages = WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Storage\Providers::class);
+$storages = WPStaging\Core\WPStaging::make(\WPStaging\Backup\Storage\Providers::class);
 $provider = 'googledrive';
 $providerId = '';
 if (isset($_REQUEST['sub'])) {

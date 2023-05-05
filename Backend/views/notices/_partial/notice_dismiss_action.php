@@ -3,7 +3,7 @@
  * @var $cssClassSelectorNotice
  * @var $cssClassSelectorDismiss
  * @var $wpstgNotice
- * @see \WPStaging\WPStaging\Backend\Notices\Notices::renderNoticeDismissAction
+ * @see \WPStaging\WPStaging\Framework\Notices\Notices::renderNoticeDismissAction
  */
 ?>
 <a href="javascript:void(0);"

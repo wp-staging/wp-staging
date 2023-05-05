@@ -4,23 +4,24 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Escape;
-use WPStaging\Pro\Backup\Ajax\ScheduleList;
-use WPStaging\Pro\Backup\BackupProcessLock;
-use WPStaging\Pro\Backup\BackupScheduler;
-use WPStaging\Pro\Backup\Exceptions\ProcessLockedException;
+use WPStaging\Backup\Ajax\ScheduleList;
+use WPStaging\Backup\BackupProcessLock;
+use WPStaging\Backup\BackupScheduler;
+use WPStaging\Backup\Exceptions\ProcessLockedException;
 
 /**
- * @see \WPStaging\Pro\Backup\Ajax\Listing::render
+ * @see \WPStaging\Backup\Ajax\Listing::render
  *
  * @var TemplateEngine              $this
  * @var array                       $directories
  * @var string                      $urlAssets
  * @var Directory                   $directory
- * @var string                      $isValidLicense
+ * @var bool                        $isValidLicense
+ * @var bool                        $isProVersion
+ * @var bool                        $hasSchedule
  */
 
 $disabledProperty = $isValidLicense ? '' : 'disabled';
-
 
 $backupProcessLock = WPStaging::make(BackupProcessLock::class);
 try {
@@ -41,7 +42,7 @@ $cronMessage = $backupScheduler->getCronMessage();
 if ($cronMessage !== '') { ?>
     <div class="notice <?php echo $cronStatus === true ? 'notice-warning' : 'notice-error'; ?>" style="margin-bottom: 10px;">
         <p><strong><?php esc_html_e('WP STAGING Notice:', 'wp-staging') ?></strong></p>
-        <p><?php echo Escape::escapeHtml(__($cronMessage, 'wp-staging')); ?></p>
+        <p><?php echo Escape::escapeHtml($cronMessage); ?></p>
     </div>
 <?php } ?>
 
@@ -89,14 +90,14 @@ if ($cronMessage !== '') { ?>
         </div>
 </div>
 
-<?php include(__DIR__ . '/modal/export.php'); ?>
+<?php include(__DIR__ . '/modal/backup.php'); ?>
 <?php include(__DIR__ . '/modal/progress.php'); ?>
 <?php include(__DIR__ . '/modal/download.php'); ?>
 <?php include(__DIR__ . '/modal/download-modal.php'); ?>
 <?php include(__DIR__ . '/modal/upload.php'); ?>
 <?php include(__DIR__ . '/modal/manage-schedules.php'); ?>
 <?php include(__DIR__ . '/modal/edit-schedule-modal.php'); ?>
-<?php include(__DIR__ . '/modal/import.php'); ?>
+<?php include(__DIR__ . '/modal/restore.php'); ?>
 
 <?php include(__DIR__ . '/restore-wait.php'); ?>
 

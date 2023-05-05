@@ -2,10 +2,10 @@
 
 /**
  * @var string $varsDirectory
- * @see \WPStaging\Backend\Notices\Notices::messages
+ * @see \WPStaging\Framework\Notices\Notices::renderNotices
  */
 
-use WPStaging\Backend\Notices\Notices;
+use WPStaging\Framework\Notices\Notices;
 
 ?>
 <div class="notice notice-error wpstg-mu-dir-permission-notice">

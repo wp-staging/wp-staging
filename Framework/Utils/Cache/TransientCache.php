@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\Utils\Cache;
 
+use function WPStaging\functions\debug_log;
+
 class TransientCache
 {
     /** @var string used to prevent checking the backup file index with every page reload */
@@ -22,8 +24,14 @@ class TransientCache
         }
 
         if (is_callable($callback)) {
-            $value = call_user_func($callback);
-            set_transient($key, (string)$value, $expirationTimeSeconds);
+            try {
+                $value = call_user_func($callback);
+                set_transient($key, (string)$value, $expirationTimeSeconds);
+            } catch (\Exception $e) {
+                $error = 'TransientCache->get() Error: Can not execute callback: "' . (!empty($callback[1]) ? $callback[1] : "unknown callback") . '" Error: ' . $e->getMessage();
+                debug_log($error, 'ERROR');
+                $value = false;
+            }
         }
 
         return $value;

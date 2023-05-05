@@ -15,11 +15,19 @@ class WpAdapter
      * Alternative to wp_doing_ajax() as it is not available for WP < 4.7
      * This implementation is without hooks
      *
-     * @return boolean
+     * @return bool
      */
     public function doingAjax()
     {
         return defined('DOING_AJAX') && DOING_AJAX;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWpCliRequest()
+    {
+        return defined('WP_CLI') && WP_CLI;
     }
 
     /**

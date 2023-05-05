@@ -4,8 +4,8 @@ namespace WPStaging\Framework\Adapter;
 
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Utils\Strings;
-use WPStaging\Pro\Backup\Job\Jobs\JobImport;
-use WPStaging\Pro\Backup\Service\Compressor;
+use WPStaging\Backup\Job\Jobs\JobRestore;
+use WPStaging\Backup\Service\Compressor;
 
 class Directory
 {
@@ -15,7 +15,7 @@ class Directory
     /** @var string The directory that holds the WP STAGING cache directory, usually wp-content/uploads/wp-staging/cache */
     protected $cacheDirectory;
 
-    /** @var string The directory that holds the WP STAGING tmp directory, usually wp-content/uploads/wp-staging/tmp */
+    /** @var string The directory that holds the WP STAGING backup tmp directory, usually wp-content/uploads/wp-staging/tmp/import */
     protected $tmpDirectory;
 
     /** @var string The directory that holds the WP STAGING logs directory, usually wp-content/uploads/wp-staging/logs */
@@ -89,7 +89,7 @@ class Directory
             return $this->tmpDirectory;
         }
 
-        $this->tmpDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . JobImport::TMP_DIRECTORY));
+        $this->tmpDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . JobRestore::TMP_DIRECTORY));
 
         wp_mkdir_p($this->tmpDirectory);
 

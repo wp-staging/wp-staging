@@ -3,7 +3,7 @@
 namespace WPStaging\Framework\Filesystem;
 
 use RuntimeException;
-use WPStaging\Backend\Notices\Notices;
+use WPStaging\Framework\Notices\Notices;
 use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\WPStaging;
@@ -73,7 +73,7 @@ class DirectoryListing
                     /**
                      * Enqueue this error. All enqueued errors will be shown as a single notice.
                      *
-                     * @see \WPStaging\Backend\Notices\Notices::showDirectoryListingWarningNotice
+                     * @see \WPStaging\Framework\Notices\Notices::showDirectoryListingWarningNotice
                      */
                     WPStaging::getInstance()->getContainer()->pushToArray(Notices::$directoryListingErrors, $e->getMessage());
                 }

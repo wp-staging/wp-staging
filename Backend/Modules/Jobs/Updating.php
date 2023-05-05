@@ -57,8 +57,8 @@ class Updating extends Job
      */
     public function initialize()
     {
-        $this->db = WPStaging::getInstance()->get("wpdb");
-        $this->mainJob = self::NORMAL_UPDATE;
+        $this->db       = WPStaging::getInstance()->get("wpdb");
+        $this->mainJob  = self::NORMAL_UPDATE;
         $this->dirUtils = new WpDefaultDirectories();
         $this->sanitize = WPStaging::make(Sanitize::class);
     }
@@ -94,14 +94,14 @@ class Updating extends Job
         $this->cache->delete("files_to_copy");
 
         // Generate Options
-        $this->options->clone = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
-        $this->options->cloneNumber = 1;
+        $this->options->clone               = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
+        $this->options->cloneNumber         = 1;
         $this->options->includedDirectories = [];
         $this->options->excludedDirectories = [];
-        $this->options->extraDirectories = [];
-        $this->options->excludeGlobRules = [];
-        $this->options->excludeSizeRules = [];
-        $this->options->excludedFiles = [
+        $this->options->extraDirectories    = [];
+        $this->options->excludeGlobRules    = [];
+        $this->options->excludeSizeRules    = [];
+        $this->options->excludedFiles       = [
             '.htaccess',
             '.DS_Store',
             '*.git',
@@ -134,22 +134,23 @@ class Updating extends Job
 
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
-            $this->options->cloneName = $this->options->existingClones[$this->options->clone]['cloneName'];
-            $this->options->cloneDirectoryName = $this->options->existingClones[$this->options->clone]['directoryName'];
-            $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]['number'];
-            $this->options->databaseUser = $this->options->existingClones[$this->options->clone]['databaseUser'];
-            $this->options->databasePassword = $this->options->existingClones[$this->options->clone]['databasePassword'];
-            $this->options->databaseDatabase = $this->options->existingClones[$this->options->clone]['databaseDatabase'];
-            $this->options->databaseServer = $this->options->existingClones[$this->options->clone]['databaseServer'];
-            $this->options->databasePrefix = $this->options->existingClones[$this->options->clone]['databasePrefix'];
+            $this->options->cloneName           = $this->options->existingClones[$this->options->clone]['cloneName'];
+            $this->options->cloneDirectoryName  = $this->options->existingClones[$this->options->clone]['directoryName'];
+            $this->options->cloneNumber         = $this->options->existingClones[$this->options->clone]['number'];
+            $this->options->databaseUser        = $this->options->existingClones[$this->options->clone]['databaseUser'];
+            $this->options->databasePassword    = $this->options->existingClones[$this->options->clone]['databasePassword'];
+            $this->options->databaseDatabase    = $this->options->existingClones[$this->options->clone]['databaseDatabase'];
+            $this->options->databaseServer      = $this->options->existingClones[$this->options->clone]['databaseServer'];
+            $this->options->databasePrefix      = $this->options->existingClones[$this->options->clone]['databasePrefix'];
+            $this->options->databaseSsl         = $this->options->existingClones[$this->options->clone]['databaseSsl'];
             $this->options->destinationHostname = $this->options->existingClones[$this->options->clone]['url'];
-            $this->options->uploadsSymlinked = isset($this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked']) ? $this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked'] : false;
-            $this->options->prefix = $this->options->existingClones[$this->options->clone]['prefix'];
-            $this->options->emailsAllowed = $this->options->existingClones[$this->options->clone]['emailsAllowed'];
-            $this->options->networkClone = isset($this->options->existingClones[strtolower($this->options->clone)]['networkClone']) ? $this->options->existingClones[$this->options->clone]['networkClone'] : false;
-            $this->options->networkClone = filter_var($this->options->networkClone, FILTER_VALIDATE_BOOLEAN);
+            $this->options->uploadsSymlinked    = isset($this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked']) ? $this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked'] : false;
+            $this->options->prefix              = $this->options->existingClones[$this->options->clone]['prefix'];
+            $this->options->emailsAllowed       = $this->options->existingClones[$this->options->clone]['emailsAllowed'];
+            $this->options->networkClone        = isset($this->options->existingClones[strtolower($this->options->clone)]['networkClone']) ? $this->options->existingClones[$this->options->clone]['networkClone'] : false;
+            $this->options->networkClone        = filter_var($this->options->networkClone, FILTER_VALIDATE_BOOLEAN);
             //$this->options->prefix = $this->getStagingPrefix();
-            $helper = new Helper();
+            $helper                      = new Helper();
             $this->options->homeHostname = $helper->getHomeUrlWithoutScheme();
         } else {
             $job = 'update';
@@ -186,9 +187,9 @@ class Updating extends Job
             $this->options->emailsAllowed = isset($_POST['emailsAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsAllowed']);
         }
 
-        $this->options->cloneDir = $this->options->existingClones[$this->options->clone]['path'];
+        $this->options->cloneDir       = $this->options->existingClones[$this->options->clone]['path'];
         $this->options->destinationDir = $this->getDestinationDir();
-        $this->options->cloneHostname = $this->options->destinationHostname;
+        $this->options->cloneHostname  = $this->options->destinationHostname;
 
         // Process lock state
         $this->options->isRunning = true;
@@ -222,8 +223,8 @@ class Updating extends Job
         }
 
         // Excluded Directories
-        $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
-        $excludedDirectoriesRequest = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
+        $excludedDirectoriesRequest         = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
+        $excludedDirectoriesRequest         = $this->dirUtils->getExcludedDirectories($excludedDirectoriesRequest);
         $this->options->excludedDirectories = array_merge($this->options->excludedDirectories, $excludedDirectoriesRequest);
         // Extra Directories
         if (isset($_POST["extraDirectories"])) {
@@ -238,16 +239,16 @@ class Updating extends Job
         $this->options->deletePluginsAndThemes = isset($_POST['cleanPluginsThemes']) && $this->sanitize->sanitizeBool($_POST['cleanPluginsThemes']);
         // set default statuses for backup of uploads dir and cleaning of uploads, themes and plugins dirs
         $this->options->statusBackupUploadsDir = 'skipped';
-        $this->options->statusContentCleaner = 'pending';
+        $this->options->statusContentCleaner   = 'pending';
     }
 
     private function setTablesForUpdateJob()
     {
         // Included Tables / Prefixed Table - Excluded Tables
-        $includedTables = isset($_POST['includedTables']) ? $this->sanitize->sanitizeString($_POST['includedTables']) : '';
-        $excludedTables = isset($_POST['excludedTables']) ? $this->sanitize->sanitizeString($_POST['excludedTables']) : '';
+        $includedTables              = isset($_POST['includedTables']) ? $this->sanitize->sanitizeString($_POST['includedTables']) : '';
+        $excludedTables              = isset($_POST['excludedTables']) ? $this->sanitize->sanitizeString($_POST['excludedTables']) : '';
         $selectedTablesWithoutPrefix = isset($_POST['selectedTablesWithoutPrefix']) ? $this->sanitize->sanitizeString($_POST['selectedTablesWithoutPrefix']) : '';
-        $selectedTables = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
+        $selectedTables              = new SelectedTables($includedTables, $excludedTables, $selectedTablesWithoutPrefix);
         $selectedTables->setAllTablesExcluded(empty($_POST['allTablesExcluded']) ? false : $this->sanitize->sanitizeBool($_POST['allTablesExcluded']));
         $this->options->tables = $selectedTables->getSelectedTables($this->options->networkClone);
     }

@@ -7,7 +7,6 @@ use WPStaging\Framework\Utils\Sanitize;
 
 class LoginForm
 {
-
     /** @var array $args */
     private $args = [];
 
@@ -20,7 +19,7 @@ class LoginForm
     /** @var Sanitize */
     private $sanitize;
 
-    function __construct()
+    public function __construct()
     {
         $this->sanitize = WPStaging::make(Sanitize::class);
         $this->login();
@@ -31,7 +30,6 @@ class LoginForm
      */
     private function login()
     {
-
         if (is_user_logged_in()) {
             return false;
         }
@@ -76,7 +74,7 @@ class LoginForm
             do_action('wp_login', $username, get_userdata($user_data->ID));
 
             if (!empty($_POST['redirect_to'])) {
-                $redirectTo = sanitize_url($_POST['redirect_to']);
+                $redirectTo = $this->sanitize->sanitizeUrl($_POST['redirect_to']);
             }
 
             header('Location:' . $redirectTo);
@@ -102,7 +100,7 @@ class LoginForm
 
     private function getHeader()
     {
-        require_once(__DIR__ . DIRECTORY_SEPARATOR . 'views/header.php');
+        require_once __DIR__ . '/views/header.php';
     }
 
     /**
@@ -111,7 +109,7 @@ class LoginForm
      */
     private function getFooter()
     {
-        require_once(__DIR__ . DIRECTORY_SEPARATOR . 'views/footer.php');
+        require_once __DIR__ . '/views/footer.php';
     }
 
     /**
@@ -190,27 +188,27 @@ class LoginForm
         // Default 'redirect' value takes the user back to the request URI.
         $httpHost        = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';
         $requestURI      = !empty($_SERVER['REQUEST_URI']) ? $this->sanitize->sanitizeString($_SERVER['REQUEST_URI']) : '';
-        $redirect        = sanitize_url((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
+        $redirect        = $this->sanitize->sanitizeUrl((is_ssl() ? 'https://' : 'http://') . $httpHost . $requestURI);
         $lostPasswordUrl = wp_lostpassword_url($redirect);
         $arguments       = wp_parse_args(
             $overrides,
             [
-                'echo' => true,
-                'redirect' => $redirect,
+                'echo'              => true,
+                'redirect'          => $redirect,
                 'lost_password_url' => $lostPasswordUrl,
-                'form_id' => 'loginform',
-                'label_username' => __('Username'),
-                'label_password' => __('Password'),
-                'label_remember' => __('Remember Me'),
-                'label_log_in' => __('Log In'),
-                'id_username' => 'user_login',
-                'id_password' => 'user_pass',
-                'id_remember' => 'rememberme',
-                'id_submit' => 'wp-submit',
-                'remember' => true,
-                'value_username' => '',
+                'form_id'           => 'loginform',
+                'label_username'    => __('Username'),
+                'label_password'    => __('Password'),
+                'label_remember'    => __('Remember Me'),
+                'label_log_in'      => __('Log In'),
+                'id_username'       => 'user_login',
+                'id_password'       => 'user_pass',
+                'id_remember'       => 'rememberme',
+                'id_submit'         => 'wp-submit',
+                'remember'          => true,
+                'value_username'    => '',
                 // Set 'value_remember' to true to default the "Remember me" checkbox to checked.
-                'value_remember' => false,
+                'value_remember'    => false,
             ]
         );
 

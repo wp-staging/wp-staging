@@ -3,8 +3,8 @@
 namespace WPStaging\Framework\Staging;
 
 use WPStaging\Frontend\LoginNotice;
-use WPStaging\Backend\Notices\DisabledItemsNotice;
-use WPStaging\Backend\Notices\WarningsNotice;
+use WPStaging\Framework\Notices\DisabledItemsNotice;
+use WPStaging\Framework\Notices\WarningsNotice;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Support\ThirdParty\WordFence;

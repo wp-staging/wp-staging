@@ -1176,7 +1176,7 @@ class Queue
 
     /**
      * Count the number of actions in the queue by schedule Id.
-     * Used by tests/webdriverNew/Backup/_99AutomatedBackupExportCest.php
+     * Used by tests/webdriverNew/Backup/_99AutomatedBackupCest.php
      *
      * @param string $scheduleId
      * @param array $statuses if not given all statuses will be counted otherwise only the given statuses

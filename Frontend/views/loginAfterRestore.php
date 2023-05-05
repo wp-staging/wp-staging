@@ -13,15 +13,15 @@
         -ms-user-select: none;
         user-select: none;
     }
-    #loginAfterImport {
+    #loginAfterRestore {
         width: 320px;
         padding-top: 20px;
         margin: auto;
     }
-    #loginAfterImport h1 {
+    #loginAfterRestore h1 {
         margin-bottom: 20px;
     }
-    #loginAfterImport p {
+    #loginAfterRestore p {
         margin-bottom: 10px;
     }
     #showAdminEmails {
@@ -37,10 +37,10 @@
         padding-top:40px;
     }
 </style>
-<div id="loginAfterImport">
+<div id="loginAfterRestore">
     <h1 class="unselectable"><?php esc_html_e('Congratulations!', 'wp-staging'); ?></h1>
     <p class="unselectable"><?php esc_html_e('You have just restored a WP STAGING backup.', 'wp-staging'); ?></p>
-    <p class="unselectable"><?php echo wp_kses_post(__(sprintf('Now you need to log-in using email and password that were in the Backup that you just restored. If you don\'t remember the credentials, click <span id="showAdminEmails">here</span> to see a list of admin e-mails you can use to restore your access by clicking "Forgot your password". This message will appear only once.'), 'wp-staging')); ?></p>
+    <p class="unselectable"><?php echo wp_kses_post(__('Now you need to log-in using email and password that were in the Backup that you just restored. If you don\'t remember the credentials, click <span id="showAdminEmails">here</span> to see a list of admin e-mails you can use to restore your access by clicking "Forgot your password". This message will appear only once.', 'wp-staging')); ?></p>
     <div id="adminEmails">
         <p>
             <?php if (is_array($adminEmails) && !empty($adminEmails)) : ?>

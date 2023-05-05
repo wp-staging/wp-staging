@@ -2,8 +2,8 @@
 
 namespace WPStaging\Framework\Notices;
 
-use WPStaging\Backend\Notices\DisabledItemsNotice;
-use WPStaging\Backend\Notices\WarningsNotice;
+use WPStaging\Framework\Notices\DisabledItemsNotice;
+use WPStaging\Framework\Notices\WarningsNotice;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Support\ThirdParty\WordFence;
 use WPStaging\Pro\Notices\DismissNotice as DismissProNotice;

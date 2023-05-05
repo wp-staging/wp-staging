@@ -70,7 +70,8 @@ class Database extends CloningProcess
                 $this->isExternalDatabase() ? $this->options->databaseServer : null,
                 $this->isExternalDatabase() ? $this->options->databaseUser : null,
                 $this->isExternalDatabase() ? $this->options->databasePassword : null,
-                $this->isExternalDatabase() ? $this->options->databaseDatabase : null
+                $this->isExternalDatabase() ? $this->options->databaseDatabase : null,
+                $this->isExternalDatabase() ? $this->options->databaseSsl : false
             )
         );
     }
@@ -218,7 +219,7 @@ class Database extends CloningProcess
     }
 
     /**
-     * Check if external database is used and if its not pro version
+     * Check if external database is used and if It's not pro version
      * @return bool
      */
     private function abortIfExternalButNotPro()
@@ -243,11 +244,11 @@ class Database extends CloningProcess
         }
 
         $this->options->job->current = $table;
-        $this->options->job->start = 0;
+        $this->options->job->start   = 0;
     }
 
     /**
-     * @param mixed string|object $tableName
+     * @param $srcTableName string|object
      * @return bool
      * @throws \Exception
      */
@@ -364,7 +365,7 @@ class Database extends CloningProcess
 
     /**
      * Add wp_users and wp_usermeta to the tables if they do not exist
-     * because they are not available in MU installation but we need them on the staging site
+     * because they are not available in MU installation, but we need them on the staging site
      *
      * return void
      * @throws \Exception
@@ -389,7 +390,7 @@ class Database extends CloningProcess
     }
 
     /**
-     * @return false
+     * @return bool
      */
     private function abortIfStagingPrefixEqualsProdPrefix()
     {
@@ -421,7 +422,7 @@ class Database extends CloningProcess
     }
 
     /**
-     * Return fatal error and stops here if subfolder already exists
+     * Return fatal error and stops here if sub folder already exists
      * and mainJob is not updating and resetting the clone
      * @return bool
      */
@@ -458,17 +459,17 @@ class Database extends CloningProcess
             return false;
         }
 
-        $this->returnException(" Unable to create the staging site directory. " . $fs->getLogs()[0]);
+        $this->returnException(" Unable to create the staging site directory $path " . $fs->getLogs()[0]);
         return true;
     }
 
     /**
-     * Stop cloning if database prefix contains hypen
+     * Stop cloning if database prefix contains hyphen
      * @return bool
      */
     private function abortIfPrefixContainsInvalidCharacter()
     {
-        // make sure prefix doesn't contains any invalid character
+        // make sure prefix doesn't contain any invalid character
         // same condition as in WordPress wpdb::set_prefix() method
         if (preg_match('|[^a-z0-9_]|i', $this->options->databasePrefix)) {
             $this->returnException(__("Table prefix contains invalid character(s). Use different prefix with valid characters.", 'wp-staging'));
@@ -484,6 +485,6 @@ class Database extends CloningProcess
      */
     private function isCopyProcessStarted()
     {
-        return isset($this->options->job) && isset($this->options->job->copyProcessStarted) && $this->options->job->copyProcessStarted === true;
+        return isset($this->options->job->copyProcessStarted) && $this->options->job->copyProcessStarted === true;
     }
 }

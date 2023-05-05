@@ -32,7 +32,7 @@ class FilterableDirectoryIterator
      * list of files, directories or symlinks paths to be excluded
      * @var array
      */
-    private $paths = [];
+    private $excludePaths = [];
 
     /**
      * list of files sizes exclude rules
@@ -146,7 +146,7 @@ class FilterableDirectoryIterator
      */
     public function getExcludePaths()
     {
-        return $this->paths;
+        return $this->excludePaths;
     }
 
     /**
@@ -155,7 +155,7 @@ class FilterableDirectoryIterator
      */
     public function setExcludePaths($paths)
     {
-        $this->paths = $paths;
+        $this->excludePaths = $paths;
         return $this;
     }
 
@@ -165,7 +165,7 @@ class FilterableDirectoryIterator
      */
     public function addExcludePath($path)
     {
-        $this->paths[] = $path;
+        $this->excludePaths[] = $path;
         return $this;
     }
 
@@ -252,8 +252,8 @@ class FilterableDirectoryIterator
             $iterator = new RecursiveFileSizeFilter($iterator, $this->sizes);
         }
 
-        if (count($this->paths) !== 0) {
-            $iterator = new RecursivePathExcludeFilter($iterator, $this->paths, $this->wpRootPath);
+        if (count($this->excludePaths) !== 0) {
+            $iterator = new RecursivePathExcludeFilter($iterator, $this->excludePaths, $this->wpRootPath);
         }
 
         $iterator = new RecursiveIteratorIterator($iterator, $this->iteratorMode);
@@ -277,8 +277,8 @@ class FilterableDirectoryIterator
             $iterator = new FileSizeFilter($iterator, $this->sizes);
         }
 
-        if (count($this->paths) !== 0) {
-            $iterator = new PathExcludeFilter($iterator, $this->paths, $this->wpRootPath);
+        if (count($this->excludePaths) !== 0) {
+            $iterator = new PathExcludeFilter($iterator, $this->excludePaths, $this->wpRootPath);
         }
 
         $iterator = new IteratorIterator($iterator);

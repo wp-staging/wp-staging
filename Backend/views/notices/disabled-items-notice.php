@@ -1,16 +1,16 @@
 <?php
 
 /**
- * @var $this \WPStaging\Backend\Notices\Notices
+ * @var $this \WPStaging\Framework\Notices\Notices
  * @var $viewsNoticesPath
- * @see \WPStaging\Backend\Notices\Notices::messages
+ * @see \WPStaging\Framework\Notices\Notices::renderNotices
  * @var bool  $outgoingMailsDisabled
  * @var bool  $freemiusOptionsCleared
  * @var bool  $isJetpackStagingModeActive
  * @var array $excludedPlugins
  */
 
-use WPStaging\Backend\Notices\Notices;
+use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Utils\ServerVars;
 use WPStaging\Core\WPStaging;
 

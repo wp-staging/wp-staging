@@ -20,7 +20,7 @@ trait BenchmarkTrait
             /** @var Logger $logger */
             $this->benchmarkLogger = WPStaging::make(Logger::class);
 
-            // Eg: JobSiteExport_Benchmark
+            // Eg: JobSiteBackup_Benchmark
             $filename = sanitize_file_name(sprintf(
                 '%s_benchmark',
                 (new \ReflectionClass($this))->getShortName()

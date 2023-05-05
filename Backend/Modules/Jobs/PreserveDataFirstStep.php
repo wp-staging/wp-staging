@@ -32,11 +32,11 @@ class PreserveDataFirstStep extends JobExecutable
     {
         $this->options->totalSteps = 1;
 
-        if (class_exists('\WPStaging\Pro\Backup\BackupScheduler')) {
-            $this->backupSchedulesOption = \WPStaging\Pro\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES;
+        if (class_exists('\WPStaging\Backup\BackupScheduler')) {
+            $this->backupSchedulesOption = \WPStaging\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES;
         } else {
             // Fallback if pro namespace is not available
-            // @see \WPStaging\Pro\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
+            // @see \WPStaging\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
             $this->backupSchedulesOption = 'wpstg_backup_schedules';
         }
     }

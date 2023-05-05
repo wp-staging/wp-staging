@@ -4,7 +4,7 @@
  * @var \WPStaging\Framework\Adapter\Directory $directory
  * @var string $urlAssets
  */
-$schedules = WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\BackupScheduler::class)->getSchedules();
+$schedules = WPStaging\Core\WPStaging::make(\WPStaging\Backup\BackupScheduler::class)->getSchedules();
 ?>
 <div
     id="wpstg--modal--edit--backup--schedules"

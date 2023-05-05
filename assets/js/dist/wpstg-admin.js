@@ -92,6 +92,556 @@
   var closest = polyfillClosest();
 
   /**
+   * This is a namespaced port of https://github.com/tristen/hoverintent,
+   * with slight modification to accept selector with dynamically added element in dom,
+   * instead of just already present element.
+   *
+   * @param {HTMLElement} parent
+   * @param {string} selector
+   * @param {CallableFunction} onOver
+   * @param {CallableFunction} onOut
+   *
+   * @return {object}
+   */
+
+  function wpstgHoverIntent (parent, selector, onOver, onOut) {
+    var x;
+    var y;
+    var pX;
+    var pY;
+    var mouseOver = false;
+    var focused = false;
+    var h = {};
+    var state = 0;
+    var timer = 0;
+    var options = {
+      sensitivity: 7,
+      interval: 100,
+      timeout: 0,
+      handleFocus: false
+    };
+
+    function delay(el, e) {
+      if (timer) {
+        timer = clearTimeout(timer);
+      }
+
+      state = 0;
+      return focused ? undefined : onOut(el, e);
+    }
+
+    function tracker(e) {
+      x = e.clientX;
+      y = e.clientY;
+    }
+
+    function compare(el, e) {
+      if (timer) timer = clearTimeout(timer);
+
+      if (Math.abs(pX - x) + Math.abs(pY - y) < options.sensitivity) {
+        state = 1;
+        return focused ? undefined : onOver(el, e);
+      } else {
+        pX = x;
+        pY = y;
+        timer = setTimeout(function () {
+          compare(el, e);
+        }, options.interval);
+      }
+    } // Public methods
+
+
+    h.options = function (opt) {
+      var focusOptionChanged = opt.handleFocus !== options.handleFocus;
+      options = Object.assign({}, options, opt);
+
+      if (focusOptionChanged) {
+        options.handleFocus ? addFocus() : removeFocus();
+      }
+
+      return h;
+    };
+
+    function dispatchOver(el, e) {
+      mouseOver = true;
+
+      if (timer) {
+        timer = clearTimeout(timer);
+      }
+
+      el.removeEventListener('mousemove', tracker, false);
+
+      if (state !== 1) {
+        pX = e.clientX;
+        pY = e.clientY;
+        el.addEventListener('mousemove', tracker, false);
+        timer = setTimeout(function () {
+          compare(el, e);
+        }, options.interval);
+      }
+
+      return this;
+    }
+    /**
+     * Newly added method,
+     * A wrapper around dispatchOver to support dynamically added elements to dom
+     */
+
+
+    function onMouseOver(event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        dispatchOver(event.target.closest(selector), event);
+      }
+    }
+
+    function dispatchOut(el, e) {
+      mouseOver = false;
+
+      if (timer) {
+        timer = clearTimeout(timer);
+      }
+
+      el.removeEventListener('mousemove', tracker, false);
+
+      if (state === 1) {
+        timer = setTimeout(function () {
+          delay(el, e);
+        }, options.timeout);
+      }
+
+      return this;
+    }
+    /**
+     * Newly added method,
+     * A wrapper around dispatchOut to support dynamically added elements to dom
+     */
+
+
+    function onMouseOut(event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        dispatchOut(event.target.closest(selector), event);
+      }
+    }
+
+    function dispatchFocus(el, e) {
+      if (!mouseOver) {
+        focused = true;
+        onOver(el, e);
+      }
+    }
+    /**
+     * Newly added method,
+     * A wrapper around dispatchFocus to support dynamically added elements to dom
+     */
+
+
+    function onFocus(event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        dispatchFocus(event.target.closest(selector), event);
+      }
+    }
+
+    function dispatchBlur(el, e) {
+      if (!mouseOver && focused) {
+        focused = false;
+        onOut(el, e);
+      }
+    }
+    /**
+     * Newly added method,
+     * A wrapper around dispatchBlur to support dynamically added elements to dom
+     */
+
+
+    function onBlur(event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        dispatchBlur(event.target.closest(selector), event);
+      }
+    }
+    /**
+     * Modified to support dynamically added element
+     */
+
+    function addFocus() {
+      parent.addEventListener('focus', onFocus, false);
+      parent.addEventListener('blur', onBlur, false);
+    }
+    /**
+     * Modified to support dynamically added element
+     */
+
+
+    function removeFocus() {
+      parent.removeEventListener('focus', onFocus, false);
+      parent.removeEventListener('blur', onBlur, false);
+    }
+    /**
+     * Modified to support dynamically added element
+     */
+
+
+    h.remove = function () {
+      if (!parent) {
+        return;
+      }
+
+      parent.removeEventListener('mouseover', onMouseOver, false);
+      parent.removeEventListener('mouseout', onMouseOut, false);
+      removeFocus();
+    };
+    /**
+     * Modified to support dynamically added element
+     */
+
+
+    if (parent) {
+      parent.addEventListener('mouseover', onMouseOver, false);
+      parent.addEventListener('mouseout', onMouseOut, false);
+    }
+
+    return h;
+  }
+
+  var WPStagingCommon = (function ($) {
+    var WPStagingCommon = {
+      continueErrorHandle: true,
+      retry: {
+        currentDelay: 0,
+        count: 0,
+        max: 10,
+        retryOnErrors: [401, 403, 404, 429, 502, 503, 504],
+        performingRequest: false,
+        incrementRetry: function incrementRetry(incrementRatio) {
+          if (incrementRatio === void 0) {
+            incrementRatio = 1.25;
+          }
+
+          WPStagingCommon.retry.performingRequest = true;
+
+          if (WPStagingCommon.retry.currentDelay === 0) {
+            // start with a delay of 1sec
+            WPStagingCommon.retry.currentDelay = 1000;
+            WPStagingCommon.retry.count = 1;
+          }
+
+          WPStagingCommon.retry.currentDelay += 500 * WPStagingCommon.retry.count * incrementRatio;
+          WPStagingCommon.retry.count++;
+        },
+        canRetry: function canRetry() {
+          return WPStagingCommon.retry.count < WPStagingCommon.retry.max;
+        },
+        reset: function reset() {
+          WPStagingCommon.retry.currentDelay = 0;
+          WPStagingCommon.retry.count = 0;
+          WPStagingCommon.retry.performingRequest = false;
+        }
+      },
+      memoryExhaustArticleLink: 'https://wp-staging.com/docs/php-fatal-error-allowed-memory-size-of-134217728-bytes-exhausted/',
+      cache: {
+        elements: [],
+        get: function get(selector) {
+          // It is already cached!
+          if ($.inArray(selector, this.elements) !== -1) {
+            return this.elements[selector];
+          } // Create cache and return
+
+
+          this.elements[selector] = $(selector);
+          return this.elements[selector];
+        },
+        refresh: function refresh(selector) {
+          selector.elements[selector] = $(selector);
+        }
+      },
+      setJobId: function setJobId(jobId) {
+        localStorage.setItem('jobIdBeingProcessed', jobId);
+      },
+      getJobId: function getJobId() {
+        return localStorage.getItem('jobIdBeingProcessed');
+      },
+      listenTooltip: function listenTooltip() {
+        wpstgHoverIntent(document, '.wpstg--tooltip', function (target, event) {
+          target.querySelector('.wpstg--tooltiptext').style.visibility = 'visible';
+        }, function (target, event) {
+          target.querySelector('.wpstg--tooltiptext').style.visibility = 'hidden';
+        });
+      },
+      // Get the custom themed Swal Modal for WP Staging
+      // Easy to maintain now in one place now
+      getSwalModal: function getSwalModal(isContentCentered, customClasses) {
+        if (isContentCentered === void 0) {
+          isContentCentered = false;
+        }
+
+        if (customClasses === void 0) {
+          customClasses = {};
+        }
+
+        // common style for all swal modal used in WP Staging
+        var defaultCustomClasses = {
+          confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-100-width',
+          cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn wpstg-100-width',
+          actions: 'wpstg--modal--actions',
+          popup: isContentCentered ? 'wpstg-swal-popup centered-modal' : 'wpstg-swal-popup'
+        }; // If a attribute exists in both default and additional attributes,
+        // The class(es) of the additional attribute will overrite the default one.
+
+        var options = {
+          customClass: Object.assign(defaultCustomClasses, customClasses),
+          buttonsStyling: false,
+          reverseButtons: true,
+          showClass: {
+            popup: 'wpstg--swal2-show wpstg-swal-show'
+          }
+        };
+        return wpstgSwal.mixin(options);
+      },
+      showSuccessModal: function showSuccessModal(htmlContent) {
+        this.getSwalModal().fire({
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'OK',
+          icon: 'success',
+          title: 'Success!',
+          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
+        });
+      },
+      showWarningModal: function showWarningModal(htmlContent) {
+        this.getSwalModal().fire({
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'OK',
+          icon: 'warning',
+          title: '',
+          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
+        });
+      },
+      showErrorModal: function showErrorModal(htmlContent) {
+        this.getSwalModal().fire({
+          showConfirmButton: false,
+          showCancelButton: true,
+          cancelButtonText: 'OK',
+          icon: 'error',
+          title: 'Error!',
+          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
+        });
+      },
+      getSwalContainer: function getSwalContainer() {
+        return wpstgSwal.getContainer();
+      },
+      closeSwalModal: function closeSwalModal() {
+        wpstgSwal.close();
+      },
+
+      /**
+       * Treats a default response object generated by WordPress's
+       * wp_send_json_success() or wp_send_json_error() functions in
+       * PHP, parses it in JavaScript, and either throws if it's an error,
+       * or returns the data if the response is successful.
+       *
+       * @param {object} response
+       * @return {*}
+       */
+      getDataFromWordPressResponse: function getDataFromWordPressResponse(response) {
+        if (typeof response !== 'object') {
+          throw new Error('Unexpected response (ERR 1341)');
+        }
+
+        if (!response.hasOwnProperty('success')) {
+          throw new Error('Unexpected response (ERR 1342)');
+        }
+
+        if (!response.hasOwnProperty('data')) {
+          throw new Error('Unexpected response (ERR 1343)');
+        }
+
+        if (response.success === false) {
+          if (response.data instanceof Array && response.data.length > 0) {
+            throw new Error(response.data.shift());
+          } else {
+            throw new Error('Response was not successful');
+          }
+        } else {
+          // Successful response. Return the data.
+          return response.data;
+        }
+      },
+      isLoading: function isLoading(_isLoading) {
+        if (!_isLoading || _isLoading === false) {
+          WPStagingCommon.cache.get('.wpstg-loader').hide();
+        } else {
+          WPStagingCommon.cache.get('.wpstg-loader').show();
+        }
+      },
+
+      /**
+       * Convert the given url to make it slug compatible
+       * @param {string} url
+       * @return {string}
+       */
+      slugify: function slugify(url) {
+        return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
+      },
+      showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
+        prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
+        appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
+
+        if (response === false) {
+          WPStagingCommon.showError(prependMessage + ' Error: No response.' + appendMessage);
+          window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+          return;
+        }
+
+        if (typeof response.error !== 'undefined' && response.error) {
+          WPStagingCommon.showError(prependMessage + ' Error: ' + response.message + appendMessage);
+          window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
+          return;
+        }
+      },
+      handleFetchErrors: function handleFetchErrors(response) {
+        if (!response.ok) {
+          WPStagingCommon.showError('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
+        }
+
+        return response;
+      },
+      showError: function showError(message) {
+        // If retry request no need to show Error;
+        if (WPStagingCommon.retry.performingRequest) {
+          return;
+        }
+
+        WPStagingCommon.cache.get('#wpstg-try-again').css('display', 'inline-block');
+        WPStagingCommon.cache.get('#wpstg-cancel-cloning').text('Reset');
+        WPStagingCommon.cache.get('#wpstg-resume-cloning').show();
+        WPStagingCommon.cache.get('#wpstg-error-wrapper').show();
+        WPStagingCommon.cache.get('#wpstg-error-details').show().html(message);
+        WPStagingCommon.cache.get('#wpstg-removing-clone').removeClass('loading');
+        WPStagingCommon.cache.get('.wpstg-loader').hide();
+        $('.wpstg--modal--process--generic-problem').show().html(message);
+      },
+      resetErrors: function resetErrors() {
+        WPStagingCommon.cache.get('#wpstg-error-details').hide().html('');
+      },
+
+      /**
+       * Ajax Requests
+       * @param {Object} data
+       * @param {Function} callback
+       * @param {string} dataType
+       * @param {bool} showErrors
+       * @param {int} tryCount
+       * @param {float} incrementRatio
+       * @param {function} errorCallback
+       */
+      ajax: function ajax(data, callback, dataType, showErrors, tryCount, incrementRatio, errorCallback) {
+        if (incrementRatio === void 0) {
+          incrementRatio = null;
+        }
+
+        if (errorCallback === void 0) {
+          errorCallback = null;
+        }
+
+        if ('undefined' === typeof dataType) {
+          dataType = 'json';
+        }
+
+        if (false !== showErrors) {
+          showErrors = true;
+        }
+
+        tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
+        var retryLimit = 10;
+        var retryTimeout = 10000 * tryCount;
+        incrementRatio = parseInt(incrementRatio);
+
+        if (!isNaN(incrementRatio)) {
+          retryTimeout *= incrementRatio;
+        }
+
+        $.ajax({
+          url: ajaxurl + '?action=wpstg_processing&_=' + Date.now() / 1000,
+          type: 'POST',
+          dataType: dataType,
+          cache: false,
+          data: data,
+          error: function error(xhr, textStatus, errorThrown) {
+            console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
+
+            if (typeof errorCallback === 'function') {
+              // Custom error handler
+              errorCallback(xhr, textStatus, errorThrown);
+
+              if (!WPStagingCommon.continueErrorHandle) {
+                // Reset state
+                WPStagingCommon.continueErrorHandle = true;
+                return;
+              }
+            } // Default error handler
+
+
+            tryCount++;
+
+            if (tryCount <= retryLimit) {
+              setTimeout(function () {
+                WPStagingCommon.ajax(data, callback, dataType, showErrors, tryCount, incrementRatio);
+                return;
+              }, retryTimeout);
+            } else {
+              var errorCode = 'undefined' === typeof xhr.status ? 'Unknown' : xhr.status;
+              WPStagingCommon.showError('Fatal Error:  ' + errorCode + ' Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+            }
+          },
+          success: function success(data) {
+            if ('function' === typeof callback) {
+              callback(data);
+            }
+          },
+          statusCode: {
+            404: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Error 404 - Can\'t find ajax request URL! Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+              }
+            },
+            500: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Fatal Error 500 - Internal server error while processing the request! Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
+              }
+            },
+            504: function _() {
+              if (tryCount > retryLimit) {
+                WPStagingCommon.showError('Error 504 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              }
+            },
+            502: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Error 502 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              }
+            },
+            503: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Error 503 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              }
+            },
+            429: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Error 429 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
+              }
+            },
+            403: function _() {
+              if (tryCount >= retryLimit) {
+                WPStagingCommon.showError('Refresh page or login again! The process should be finished successfully. \n\ ');
+              }
+            }
+          }
+        });
+      }
+    };
+    return WPStagingCommon;
+  })(jQuery);
+
+  /**
    * WP STAGING basic jQuery replacement
    */
 
@@ -443,6 +993,26 @@
     return WpstgCloneStaging;
   }();
 
+  window.onload = function () {
+    document.getElementById('wpstg--tab--toggle--staging').addEventListener('click', function () {
+      window.history.pushState(null, null, window.location.pathname + '?page=wpstg_clone');
+      var adminMenu = document.getElementById('toplevel_page_wpstg_clone');
+      var adminMenuElements = adminMenu.querySelector('ul').querySelectorAll('li');
+
+      if (adminMenuElements.length > 0) {
+        for (var i = 0; i < adminMenuElements.length; i++) {
+          adminMenuElements[i].classList.remove('current');
+
+          if (adminMenuElements[i].querySelector('a') !== null) {
+            if (adminMenuElements[i].querySelector('a').getAttribute('href') === 'admin.php?page=wpstg_clone') {
+              adminMenuElements[i].classList.add('current');
+            }
+          }
+        }
+      }
+    });
+  };
+
   /**
    * Fetch directory direct child directories
    */
@@ -472,7 +1042,7 @@
       this.dirExpandSelector = '.wpstg-expand-dirs';
       this.unselectAllDirsSelector = '.wpstg-unselect-dirs';
       this.selectDefaultDirsSelector = '.wpstg-select-dirs-default';
-      this.fetchChildrenAction = 'wpstg_fetch_dir_childrens';
+      this.fetchChildrenAction = 'wpstg_fetch_dir_children';
       this.currentCheckboxElement = null;
       this.currentParentDiv = null;
       this.currentLoader = null;
@@ -613,6 +1183,11 @@
           _this3.excludedDirectories.push(element.value);
         }
       });
+
+      if (!this.existingExcludes) {
+        this.existingExcludes = [];
+      }
+
       this.existingExcludes.forEach(function (exclude) {
         if (!_this3.isParentExcluded(exclude) && !_this3.isScanned(exclude)) {
           _this3.excludedDirectories.push(exclude);
@@ -681,7 +1256,7 @@
     _proto.parseExcludes = function parseExcludes() {
       this.existingExcludes = this.directoryListingContainer.getAttribute('data-existing-excludes', []);
 
-      if (this.existingExcludes === '') {
+      if (typeof this.existingExcludes === 'undefined' || !this.existingExcludes) {
         this.existingExcludes = [];
         return;
       }
@@ -744,6 +1319,10 @@
           }
         });
         parent.querySelectorAll('.wpstg-expand-dirs').forEach(function (x) {
+          if (x.textContent === 'wp-admin' || x.textContent === 'wp-includes') {
+            return;
+          }
+
           x.classList.remove('disabled');
         });
         parent.querySelectorAll('.wpstg-subdir .wpstg-check-dir').forEach(function (x) {
@@ -1225,564 +1804,6 @@
 
     return WpstgModal;
   }();
-
-  /**
-   * This is a namespaced port of https://github.com/tristen/hoverintent,
-   * with slight modification to accept selector with dynamically added element in dom,
-   * instead of just already present element.
-   *
-   * @param {HTMLElement} parent
-   * @param {string} selector
-   * @param {CallableFunction} onOver
-   * @param {CallableFunction} onOut
-   *
-   * @return {object}
-   */
-
-  function wpstgHoverIntent (parent, selector, onOver, onOut) {
-    var x;
-    var y;
-    var pX;
-    var pY;
-    var mouseOver = false;
-    var focused = false;
-    var h = {};
-    var state = 0;
-    var timer = 0;
-    var options = {
-      sensitivity: 7,
-      interval: 100,
-      timeout: 0,
-      handleFocus: false
-    };
-
-    function delay(el, e) {
-      if (timer) {
-        timer = clearTimeout(timer);
-      }
-
-      state = 0;
-      return focused ? undefined : onOut(el, e);
-    }
-
-    function tracker(e) {
-      x = e.clientX;
-      y = e.clientY;
-    }
-
-    function compare(el, e) {
-      if (timer) timer = clearTimeout(timer);
-
-      if (Math.abs(pX - x) + Math.abs(pY - y) < options.sensitivity) {
-        state = 1;
-        return focused ? undefined : onOver(el, e);
-      } else {
-        pX = x;
-        pY = y;
-        timer = setTimeout(function () {
-          compare(el, e);
-        }, options.interval);
-      }
-    } // Public methods
-
-
-    h.options = function (opt) {
-      var focusOptionChanged = opt.handleFocus !== options.handleFocus;
-      options = Object.assign({}, options, opt);
-
-      if (focusOptionChanged) {
-        options.handleFocus ? addFocus() : removeFocus();
-      }
-
-      return h;
-    };
-
-    function dispatchOver(el, e) {
-      mouseOver = true;
-
-      if (timer) {
-        timer = clearTimeout(timer);
-      }
-
-      el.removeEventListener('mousemove', tracker, false);
-
-      if (state !== 1) {
-        pX = e.clientX;
-        pY = e.clientY;
-        el.addEventListener('mousemove', tracker, false);
-        timer = setTimeout(function () {
-          compare(el, e);
-        }, options.interval);
-      }
-
-      return this;
-    }
-    /**
-     * Newly added method,
-     * A wrapper around dispatchOver to support dynamically added elements to dom
-     */
-
-
-    function onMouseOver(event) {
-      if (event.target.matches(selector + ', ' + selector + ' *')) {
-        dispatchOver(event.target.closest(selector), event);
-      }
-    }
-
-    function dispatchOut(el, e) {
-      mouseOver = false;
-
-      if (timer) {
-        timer = clearTimeout(timer);
-      }
-
-      el.removeEventListener('mousemove', tracker, false);
-
-      if (state === 1) {
-        timer = setTimeout(function () {
-          delay(el, e);
-        }, options.timeout);
-      }
-
-      return this;
-    }
-    /**
-     * Newly added method,
-     * A wrapper around dispatchOut to support dynamically added elements to dom
-     */
-
-
-    function onMouseOut(event) {
-      if (event.target.matches(selector + ', ' + selector + ' *')) {
-        dispatchOut(event.target.closest(selector), event);
-      }
-    }
-
-    function dispatchFocus(el, e) {
-      if (!mouseOver) {
-        focused = true;
-        onOver(el, e);
-      }
-    }
-    /**
-     * Newly added method,
-     * A wrapper around dispatchFocus to support dynamically added elements to dom
-     */
-
-
-    function onFocus(event) {
-      if (event.target.matches(selector + ', ' + selector + ' *')) {
-        dispatchFocus(event.target.closest(selector), event);
-      }
-    }
-
-    function dispatchBlur(el, e) {
-      if (!mouseOver && focused) {
-        focused = false;
-        onOut(el, e);
-      }
-    }
-    /**
-     * Newly added method,
-     * A wrapper around dispatchBlur to support dynamically added elements to dom
-     */
-
-
-    function onBlur(event) {
-      if (event.target.matches(selector + ', ' + selector + ' *')) {
-        dispatchBlur(event.target.closest(selector), event);
-      }
-    }
-    /**
-     * Modified to support dynamically added element
-     */
-
-    function addFocus() {
-      parent.addEventListener('focus', onFocus, false);
-      parent.addEventListener('blur', onBlur, false);
-    }
-    /**
-     * Modified to support dynamically added element
-     */
-
-
-    function removeFocus() {
-      parent.removeEventListener('focus', onFocus, false);
-      parent.removeEventListener('blur', onBlur, false);
-    }
-    /**
-     * Modified to support dynamically added element
-     */
-
-
-    h.remove = function () {
-      if (!parent) {
-        return;
-      }
-
-      parent.removeEventListener('mouseover', onMouseOver, false);
-      parent.removeEventListener('mouseout', onMouseOut, false);
-      removeFocus();
-    };
-    /**
-     * Modified to support dynamically added element
-     */
-
-
-    if (parent) {
-      parent.addEventListener('mouseover', onMouseOver, false);
-      parent.addEventListener('mouseout', onMouseOut, false);
-    }
-
-    return h;
-  }
-
-  var WPStagingCommon = (function ($) {
-    var WPStagingCommon = {
-      continueErrorHandle: true,
-      retry: {
-        currentDelay: 0,
-        count: 0,
-        max: 10,
-        retryOnErrors: [401, 403, 404, 429, 502, 503, 504],
-        performingRequest: false,
-        incrementRetry: function incrementRetry(incrementRatio) {
-          if (incrementRatio === void 0) {
-            incrementRatio = 1.25;
-          }
-
-          WPStagingCommon.retry.performingRequest = true;
-
-          if (WPStagingCommon.retry.currentDelay === 0) {
-            // start with a delay of 1sec
-            WPStagingCommon.retry.currentDelay = 1000;
-            WPStagingCommon.retry.count = 1;
-          }
-
-          WPStagingCommon.retry.currentDelay += 500 * WPStagingCommon.retry.count * incrementRatio;
-          WPStagingCommon.retry.count++;
-        },
-        canRetry: function canRetry() {
-          return WPStagingCommon.retry.count < WPStagingCommon.retry.max;
-        },
-        reset: function reset() {
-          WPStagingCommon.retry.currentDelay = 0;
-          WPStagingCommon.retry.count = 0;
-          WPStagingCommon.retry.performingRequest = false;
-        }
-      },
-      cache: {
-        elements: [],
-        get: function get(selector) {
-          // It is already cached!
-          if ($.inArray(selector, this.elements) !== -1) {
-            return this.elements[selector];
-          } // Create cache and return
-
-
-          this.elements[selector] = $(selector);
-          return this.elements[selector];
-        },
-        refresh: function refresh(selector) {
-          selector.elements[selector] = $(selector);
-        }
-      },
-      setJobId: function setJobId(jobId) {
-        localStorage.setItem('jobIdBeingProcessed', jobId);
-      },
-      getJobId: function getJobId() {
-        return localStorage.getItem('jobIdBeingProcessed');
-      },
-      listenTooltip: function listenTooltip() {
-        wpstgHoverIntent(document, '.wpstg--tooltip', function (target, event) {
-          target.querySelector('.wpstg--tooltiptext').style.visibility = 'visible';
-        }, function (target, event) {
-          target.querySelector('.wpstg--tooltiptext').style.visibility = 'hidden';
-        });
-      },
-      isEmpty: function isEmpty(obj) {
-        for (var prop in obj) {
-          if (obj.hasOwnProperty(prop)) {
-            return false;
-          }
-        }
-
-        return true;
-      },
-      // Get the custom themed Swal Modal for WP Staging
-      // Easy to maintain now in one place now
-      getSwalModal: function getSwalModal(isContentCentered, customClasses) {
-        if (isContentCentered === void 0) {
-          isContentCentered = false;
-        }
-
-        if (customClasses === void 0) {
-          customClasses = {};
-        }
-
-        // common style for all swal modal used in WP Staging
-        var defaultCustomClasses = {
-          confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-100-width',
-          cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn wpstg-100-width',
-          actions: 'wpstg--modal--actions',
-          popup: isContentCentered ? 'wpstg-swal-popup centered-modal' : 'wpstg-swal-popup'
-        }; // If a attribute exists in both default and additional attributes,
-        // The class(es) of the additional attribute will overrite the default one.
-
-        var options = {
-          customClass: Object.assign(defaultCustomClasses, customClasses),
-          buttonsStyling: false,
-          reverseButtons: true,
-          showClass: {
-            popup: 'wpstg--swal2-show wpstg-swal-show'
-          }
-        };
-        return wpstgSwal.mixin(options);
-      },
-      showSuccessModal: function showSuccessModal(htmlContent) {
-        this.getSwalModal().fire({
-          showConfirmButton: false,
-          showCancelButton: true,
-          cancelButtonText: 'OK',
-          icon: 'success',
-          title: 'Success!',
-          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
-        });
-      },
-      showWarningModal: function showWarningModal(htmlContent) {
-        this.getSwalModal().fire({
-          showConfirmButton: false,
-          showCancelButton: true,
-          cancelButtonText: 'OK',
-          icon: 'warning',
-          title: '',
-          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
-        });
-      },
-      showErrorModal: function showErrorModal(htmlContent) {
-        this.getSwalModal().fire({
-          showConfirmButton: false,
-          showCancelButton: true,
-          cancelButtonText: 'OK',
-          icon: 'error',
-          title: 'Error!',
-          html: '<div class="wpstg--grey" style="text-align: left; margin-top: 8px;">' + htmlContent + '</div>'
-        });
-      },
-      getSwalContainer: function getSwalContainer() {
-        return wpstgSwal.getContainer();
-      },
-      closeSwalModal: function closeSwalModal() {
-        wpstgSwal.close();
-      },
-
-      /**
-       * Treats a default response object generated by WordPress's
-       * wp_send_json_success() or wp_send_json_error() functions in
-       * PHP, parses it in JavaScript, and either throws if it's an error,
-       * or returns the data if the response is successful.
-       *
-       * @param {object} response
-       * @return {*}
-       */
-      getDataFromWordPressResponse: function getDataFromWordPressResponse(response) {
-        if (typeof response !== 'object') {
-          throw new Error('Unexpected response (ERR 1341)');
-        }
-
-        if (!response.hasOwnProperty('success')) {
-          throw new Error('Unexpected response (ERR 1342)');
-        }
-
-        if (!response.hasOwnProperty('data')) {
-          throw new Error('Unexpected response (ERR 1343)');
-        }
-
-        if (response.success === false) {
-          if (response.data instanceof Array && response.data.length > 0) {
-            throw new Error(response.data.shift());
-          } else {
-            throw new Error('Response was not successful');
-          }
-        } else {
-          // Successful response. Return the data.
-          return response.data;
-        }
-      },
-      isLoading: function isLoading(_isLoading) {
-        if (!_isLoading || _isLoading === false) {
-          WPStagingCommon.cache.get('.wpstg-loader').hide();
-        } else {
-          WPStagingCommon.cache.get('.wpstg-loader').show();
-        }
-      },
-
-      /**
-       * Convert the given url to make it slug compatible
-       * @param {string} url
-       * @return {string}
-       */
-      slugify: function slugify(url) {
-        return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
-      },
-      showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
-        prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
-        appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
-
-        if (response === false) {
-          WPStagingCommon.showError(prependMessage + ' Error: No response.' + appendMessage);
-          window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
-          return;
-        }
-
-        if (typeof response.error !== 'undefined' && response.error) {
-          WPStagingCommon.showError(prependMessage + ' Error: ' + response.message + appendMessage);
-          window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
-          return;
-        }
-      },
-      handleFetchErrors: function handleFetchErrors(response) {
-        if (!response.ok) {
-          WPStagingCommon.showError('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
-        }
-
-        return response;
-      },
-      showError: function showError(message) {
-        // If retry request no need to show Error;
-        if (WPStagingCommon.retry.performingRequest) {
-          return;
-        }
-
-        WPStagingCommon.cache.get('#wpstg-try-again').css('display', 'inline-block');
-        WPStagingCommon.cache.get('#wpstg-cancel-cloning').text('Reset');
-        WPStagingCommon.cache.get('#wpstg-resume-cloning').show();
-        WPStagingCommon.cache.get('#wpstg-error-wrapper').show();
-        WPStagingCommon.cache.get('#wpstg-error-details').show().html(message);
-        WPStagingCommon.cache.get('#wpstg-removing-clone').removeClass('loading');
-        WPStagingCommon.cache.get('.wpstg-loader').hide();
-        $('.wpstg--modal--process--generic-problem').show().html(message);
-      },
-      resetErrors: function resetErrors() {
-        WPStagingCommon.cache.get('#wpstg-error-details').hide().html('');
-      },
-
-      /**
-       * Ajax Requests
-       * @param {Object} data
-       * @param {Function} callback
-       * @param {string} dataType
-       * @param {bool} showErrors
-       * @param {int} tryCount
-       * @param {float} incrementRatio
-       * @param {function} errorCallback
-       */
-      ajax: function ajax(data, callback, dataType, showErrors, tryCount, incrementRatio, errorCallback) {
-        if (incrementRatio === void 0) {
-          incrementRatio = null;
-        }
-
-        if (errorCallback === void 0) {
-          errorCallback = null;
-        }
-
-        if ('undefined' === typeof dataType) {
-          dataType = 'json';
-        }
-
-        if (false !== showErrors) {
-          showErrors = true;
-        }
-
-        tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
-        var retryLimit = 10;
-        var retryTimeout = 10000 * tryCount;
-        incrementRatio = parseInt(incrementRatio);
-
-        if (!isNaN(incrementRatio)) {
-          retryTimeout *= incrementRatio;
-        }
-
-        $.ajax({
-          url: ajaxurl + '?action=wpstg_processing&_=' + Date.now() / 1000,
-          type: 'POST',
-          dataType: dataType,
-          cache: false,
-          data: data,
-          error: function error(xhr, textStatus, errorThrown) {
-            console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
-
-            if (typeof errorCallback === 'function') {
-              // Custom error handler
-              errorCallback(xhr, textStatus, errorThrown);
-
-              if (!WPStagingCommon.continueErrorHandle) {
-                // Reset state
-                WPStagingCommon.continueErrorHandle = true;
-                return;
-              }
-            } // Default error handler
-
-
-            tryCount++;
-
-            if (tryCount <= retryLimit) {
-              setTimeout(function () {
-                WPStagingCommon.ajax(data, callback, dataType, showErrors, tryCount, incrementRatio);
-                return;
-              }, retryTimeout);
-            } else {
-              var errorCode = 'undefined' === typeof xhr.status ? 'Unknown' : xhr.status;
-              WPStagingCommon.showError('Fatal Error:  ' + errorCode + ' Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
-            }
-          },
-          success: function success(data) {
-            if ('function' === typeof callback) {
-              callback(data);
-            }
-          },
-          statusCode: {
-            404: function _() {
-              if (tryCount >= retryLimit) {
-                WPStagingCommon.showError('Error 404 - Can\'t find ajax request URL! Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
-              }
-            },
-            500: function _() {
-              if (tryCount >= retryLimit) {
-                WPStagingCommon.showError('Fatal Error 500 - Internal server error while processing the request! Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
-              }
-            },
-            504: function _() {
-              if (tryCount > retryLimit) {
-                WPStagingCommon.showError('Error 504 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
-              }
-            },
-            502: function _() {
-              if (tryCount >= retryLimit) {
-                WPStagingCommon.showError('Error 502 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
-              }
-            },
-            503: function _() {
-              if (tryCount >= retryLimit) {
-                WPStagingCommon.showError('Error 503 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
-              }
-            },
-            429: function _() {
-              if (tryCount >= retryLimit) {
-                WPStagingCommon.showError('Error 429 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.\n\ ');
-              }
-            },
-            403: function _() {
-              if (tryCount >= retryLimit) {
-                WPStagingCommon.showError('Refresh page or login again! The process should be finished successfully. \n\ ');
-              }
-            }
-          }
-        });
-      }
-    };
-    return WPStagingCommon;
-  })(jQuery);
 
   /**
    * Manage RESET MODAL
@@ -2531,6 +2552,8 @@
           that.cloneExcludeFilters = new WpstgExcludeFilters();
           that.switchStep(2);
         }, 'HTML');
+      }).on('click', '#wpstg-update-cloning-site-button', function (e) {
+        window.open(that.data.cloneHostname, '_blank');
       }) // Reset Clone
       .on('click', '.wpstg-reset-clone', function (e) {
         e.preventDefault();
@@ -2757,7 +2780,8 @@
         databaseUser: cache.get('#wpstg_db_username').val(),
         databasePassword: cache.get('#wpstg_db_password').val(),
         databaseServer: cache.get('#wpstg_db_server').val(),
-        databaseDatabase: cache.get('#wpstg_db_database').val()
+        databaseDatabase: cache.get('#wpstg_db_database').val(),
+        databaseSsl: cache.get('#wpstg_db_ssl').is(':checked')
       }, function (response) {
         // Undefined Error
         if (false === response) {
@@ -2875,6 +2899,7 @@
       that.data.databasePassword = $('#wpstg_db_password').val();
       that.data.databaseDatabase = $('#wpstg_db_database').val();
       that.data.databasePrefix = $('#wpstg_db_prefix').val();
+      that.data.databaseSsl = $('#wpstg_db_ssl').is(':checked');
       var cloneDir = $('#wpstg_clone_dir').val();
       that.data.cloneDir = encodeURIComponent($.trim(cloneDir));
       that.data.cloneHostname = $('#wpstg_clone_hostname').val();
@@ -3223,7 +3248,7 @@
       logscroll();
     };
     /**
-     * Check diskspace
+     * Check disk space
      * @return string json
      */
 
@@ -3431,6 +3456,7 @@
 
         if (that.data.action === 'wpstg_update') {
           msg = wpstg.i18n.cloneUpdateComplete;
+          cache.get('#wpstg-update-cloning-site-button').show();
         }
 
         if (that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
@@ -3517,22 +3543,23 @@
           if (response.success) {
             resolve(true);
           } else {
-            var _WPStagingCommon$getS;
-
             WPStagingCommon.getSwalModal(true, {
               container: 'wpstg-swal-push-container'
-            }).fire((_WPStagingCommon$getS = {
+            }).fire({
               title: '',
               icon: 'warning',
               html: response.data.message,
               width: '750px',
-              showCancelButton: true,
               focusConfirm: false,
-              confirmButtonText: 'Proceed'
-            }, _WPStagingCommon$getS["showCancelButton"] = true, _WPStagingCommon$getS)).then(function (result) {
+              confirmButtonText: 'Proceed',
+              showCancelButton: true
+            }).then(function (result) {
               if (result.isConfirmed) {
                 resolve(true);
               }
+            });
+            $('#wpstg-db-permission-show-full-message').click(function () {
+              $('#wpstg-permission-info-output').html($('#wpstg-permission-info-data').html());
             });
           }
         }, 'json', false);

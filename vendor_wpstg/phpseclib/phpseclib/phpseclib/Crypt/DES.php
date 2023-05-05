@@ -234,6 +234,12 @@ class DES extends \WPStaging\Vendor\phpseclib\Crypt\Base
     {
         if ($this->key_length_max == 8) {
             if ($engine == self::ENGINE_OPENSSL) {
+                // quoting https://www.openssl.org/news/openssl-3.0-notes.html, OpenSSL 3.0.1
+                // "Moved all variations of the EVP ciphers CAST5, BF, IDEA, SEED, RC2, RC4, RC5, and DES to the legacy provider"
+                // in theory openssl_get_cipher_methods() should catch this but, on GitHub Actions, at least, it does not
+                if (\version_compare(\preg_replace('#OpenSSL (\\d+\\.\\d+\\.\\d+) .*#', '$1', \OPENSSL_VERSION_TEXT), '3.0.1', '>=')) {
+                    return \false;
+                }
                 $this->cipher_name_openssl_ecb = 'des-ecb';
                 $this->cipher_name_openssl = 'des-' . $this->_openssl_translate_mode();
             }
@@ -419,8 +425,8 @@ class DES extends \WPStaging\Vendor\phpseclib\Crypt\Base
                 $cp = $pc2mapc1[$c >> 24] | $pc2mapc2[$c >> 16 & 0xff] | $pc2mapc3[$c >> 8 & 0xff] | $pc2mapc4[$c & 0xff];
                 $dp = $pc2mapd1[$d >> 24] | $pc2mapd2[$d >> 16 & 0xff] | $pc2mapd3[$d >> 8 & 0xff] | $pc2mapd4[$d & 0xff];
                 // Reorder: odd bytes/even bytes. Push the result in key schedule.
-                $val1 = $cp & 0xff000000 | $cp << 8 & 0xff0000 | $dp >> 16 & 0xff00 | $dp >> 8 & 0xff;
-                $val2 = $cp << 8 & 0xff000000 | $cp << 16 & 0xff0000 | $dp >> 8 & 0xff00 | $dp & 0xff;
+                $val1 = $cp & \intval(0xff000000) | $cp << 8 & 0xff0000 | $dp >> 16 & 0xff00 | $dp >> 8 & 0xff;
+                $val2 = $cp << 8 & \intval(0xff000000) | $cp << 16 & 0xff0000 | $dp >> 8 & 0xff00 | $dp & 0xff;
                 $keys[$des_round][self::ENCRYPT][] = $val1;
                 $keys[$des_round][self::DECRYPT][$ki - 1] = $val1;
                 $keys[$des_round][self::ENCRYPT][] = $val2;

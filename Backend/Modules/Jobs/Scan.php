@@ -17,7 +17,7 @@ use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
-use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Backup\Exceptions\DiskNotWritableException;
 
 use function WPStaging\functions\debug_log;
 
@@ -158,16 +158,16 @@ class Scan extends Job
     public function start()
     {
         // Basic Options
-        $this->options->root           = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, WPStaging::getWPpath());
-        $this->options->current        = null;
-        $this->options->currentClone   = $this->getCurrentClone();
+        $this->options->root         = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, WPStaging::getWPpath());
+        $this->options->current      = null;
+        $this->options->currentClone = $this->getCurrentClone();
 
         if ($this->options->currentClone !== null) {
             // Make sure no warning is shown when updating/resetting an old clone having no exclude rules options
             $this->options->currentClone['excludeSizeRules'] = isset($this->options->currentClone['excludeSizeRules']) ? $this->options->currentClone['excludeSizeRules'] : [];
             $this->options->currentClone['excludeGlobRules'] = isset($this->options->currentClone['excludeGlobRules']) ? $this->options->currentClone['excludeGlobRules'] : [];
             // Make sure no warning is shown when updating/resetting an old clone having emails allowed option
-            $this->options->currentClone['emailsAllowed']    = isset($this->options->currentClone['emailsAllowed']) ? $this->options->currentClone['emailsAllowed'] : true;
+            $this->options->currentClone['emailsAllowed'] = isset($this->options->currentClone['emailsAllowed']) ? $this->options->currentClone['emailsAllowed'] : true;
         }
 
         // Tables
@@ -193,7 +193,7 @@ class Scan extends Job
 
         // Define mainJob to differentiate between cloning, updating and pushing
         $this->options->mainJob = 'cloning';
-        $job = '';
+        $job                    = '';
         if (isset($_POST["job"])) {
             $job = $this->sanitize->sanitizeString($_POST['job']);
         }
@@ -324,8 +324,10 @@ class Scan extends Job
 
             $output .= "<a href='#' class='wpstg-expand-dirs ";
 
+            $isDisabledDir = $dirName === 'wp-admin' || $dirName === 'wp-includes';
+
             // Set menu item to 'disable'
-            if ($isNotWPCoreDir) {
+            if ($isNotWPCoreDir || $isDisabledDir) {
                 $output .= " disabled";
             }
 
@@ -358,7 +360,7 @@ class Scan extends Job
      */
     public function hasFreeDiskSpace($excludedDirectories, $extraDirectories)
     {
-        $dirUtils = new WpDefaultDirectories();
+        $dirUtils            = new WpDefaultDirectories();
         $selectedDirectories = $dirUtils->getWpCoreDirectories();
         $excludedDirectories = $dirUtils->getExcludedDirectories($excludedDirectories);
 
@@ -391,8 +393,8 @@ class Scan extends Job
         }
 
         $data = [
-            'requiredSpace'  => $this->utilsMath->formatSize($size),
-            'errorMessage'   => $errorMessage
+            'requiredSpace' => $this->utilsMath->formatSize($size),
+            'errorMessage'  => $errorMessage
         ];
 
         echo json_encode($data);
@@ -404,7 +406,7 @@ class Scan extends Job
      */
     protected function getTables()
     {
-        $db = WPStaging::getInstance()->get("wpdb");
+        $db       = WPStaging::getInstance()->get("wpdb");
         $dbPrefix = WPStaging::getTablePrefix();
 
         $sql = "SHOW TABLE STATUS";
@@ -462,10 +464,10 @@ class Scan extends Job
             }
 
             echo json_encode([
-                'success'       => false,
-                'type'          => '',
+                'success'     => false,
+                'type'        => '',
                 // TODO: Create a Swal Response Class and Js library to handle that response or, Implement own Swal alternative
-                'swalOptions'   => [
+                'swalOptions' => [
                     'title'             => esc_html__('Error!', 'wp-staging'),
                     'html'              => $errorMessage,
                     'cancelButtonText'  => esc_html__('Ok', 'wp-staging'),
@@ -576,7 +578,7 @@ class Scan extends Job
     protected function getDirectorySize($path)
     {
         if (!isset($this->settings->checkDirectorySize) || $this->settings->checkDirectorySize !== '1') {
-            return null;
+            return;
         }
 
         return $this->objDirectories->size($path);
@@ -653,6 +655,6 @@ class Scan extends Job
             return $this->options->existingClones[$this->options->current];
         }
 
-        return null;
+        return;
     }
 }

@@ -3,7 +3,7 @@
 namespace WPStaging\Framework\Filesystem;
 
 use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Pro\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Backup\Exceptions\DiskNotWritableException;
 
 class DiskWriteCheck
 {

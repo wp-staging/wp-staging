@@ -28,6 +28,7 @@ class Deactivate
         }
 
         $this->deleteBackupSchedulesFromCron();
+        $this->deleteOtherCron();
     }
 
     /**
@@ -67,9 +68,29 @@ class Deactivate
 
     protected function deleteBackupSchedulesFromCron()
     {
-        if (file_exists(__DIR__ . '/Pro/Backup/BackupScheduler.php')) {
-            require_once __DIR__ . '/Pro/Backup/BackupScheduler.php';
-            \WPStaging\Pro\Backup\BackupScheduler::removeBackupSchedulesFromCron();
+        if (file_exists(__DIR__ . '/Backup/BackupScheduler.php')) {
+            require_once __DIR__ . '/Backup/BackupScheduler.php';
+            \WPStaging\Backup\BackupScheduler::removeBackupSchedulesFromCron();
+        }
+    }
+
+    /**
+     * delete Other Cron
+     */
+    private function deleteOtherCron()
+    {
+        $hooks = [
+            'wpstg_q_ajax_support_feature_detection',
+            'wpstg_queue_maintain',
+            'wpstg_queue_process',
+            'wpstg_weekly_event',
+            'wpstg_daily_event'
+        ];
+
+        foreach ($hooks as $hook) {
+            if (wp_get_schedule($hook)) {
+                wp_clear_scheduled_hook($hook);
+            }
         }
     }
 }
