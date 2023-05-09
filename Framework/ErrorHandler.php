@@ -12,39 +12,6 @@ class ErrorHandler
     /** @var string */
     const ERROR_FILE_EXTENSION = '.wpstgerror';
 
-    public function __construct()
-    {
-        set_exception_handler(['WPStaging\Framework\ErrorHandler', 'customExceptionHandler']);
-    }
-
-    /**
-     * @param $exception
-     * @return void
-     */
-    public static function customExceptionHandler($exception)
-    {
-        $message = "Something went wrong. Error: " . $exception;
-        error_log($message);
-
-        $stackTrace = "<pre style='font-size:10px;'>" . htmlspecialchars($exception->getTraceAsString()) . "</pre>";
-
-        $mailSubject = urlencode("Fatal Error on Our Website");
-        $mailBody    = rawurlencode(htmlspecialchars($exception->getTraceAsString()));
-
-        $html = "<div style='background-color:#cfe1ff;padding:20px;margin-right:20px;'><strong>Something went wrong!</strong> Please <a href='https://wp-staging.com/support/#pro-support' target='_blank'>contact WP Staging</a> or write to <a href='mailto:support@wp-staging.com?subject=" . $mailSubject . "&body=" . $mailBody . "' target='_blank'>support@wp-staging.com</a> and send these errors!";
-        $html .= "<p>If this error causes your entire site to be unavailable, go to <code>wp-admin > Plugins</code> and temporarily disable the WP Staging plugin until we fix the issue.</p>";
-        $html .= "If you can't access the plugins page, rename the folder <code>wp-content/plugins/wp-staging(-pro)</code> with FTP to disable the WP Staging plugin.";
-        $html .= '</div>';
-        $html .= "<div style='background-color:#deedff;padding:20px;margin-right:20px;'>";
-        $html .= "<h1 style='font-size: 14px;line-height: 20px;color:#d63638;margin-top:0px;'>Exception: " . htmlspecialchars($exception->getMessage()) . "</h1>";
-        $html .= "" . htmlspecialchars($exception->getFile()) . " on line " . htmlspecialchars($exception->getLine()) . "";
-        $html .= "Call stack:";
-        $html .= $stackTrace;
-        $html .= '</div>';
-
-        echo wp_kses_post(strip_tags($html, '<div><pre><code><p><a><strong><h1>'));
-    }
-
     public function registerShutdownHandler()
     {
         register_shutdown_function([$this, 'shutdownHandler']);
