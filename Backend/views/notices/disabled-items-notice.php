@@ -8,6 +8,7 @@
  * @var bool  $freemiusOptionsCleared
  * @var bool  $isJetpackStagingModeActive
  * @var array $excludedPlugins
+ * @var array $excludedFiles
  */
 
 use WPStaging\Framework\Notices\Notices;
@@ -55,6 +56,18 @@ if (empty(get_option('permalink_structure'))) {
             </ul>
         </li>
         <?php endif; ?>
+        <?php if (isset($excludedFiles) && is_array($excludedFiles) && count($excludedFiles) > 0) : ?>
+        <li>
+            <?php echo wp_kses_post(__('<a href="#" id="wpstg-excluded-files-link">These files</a> were excluded and not copied to the staging site:', 'wp-staging')); ?>
+            <br>
+            <ul id="wpstg-excluded-files-list" style="margin-left: 0px; margin-top: 4px;">
+                <?php foreach ($excludedFiles as $excludedFile) : ?>
+                    <li><span style="font-size: 13px;">➜</span> <?php echo esc_html($excludedFile); ?></li>
+                <?php endforeach; ?>
+            </ul>
+            <?php echo wp_kses_post(sprintf(__('You can use <a href="%s" target="_blank" rel="external nofollow">this filter</a> to change this.', 'wp-staging'), 'https://wp-staging.com/docs/actions-and-filters/#Exclude_Files')); ?>
+        </li>
+        <?php endif; ?>
     </ol>    
     <p>
       <?php Notices::renderNoticeDismissAction(
@@ -64,4 +77,19 @@ if (empty(get_option('permalink_structure'))) {
           '.wpstg-disabled-items-notice'
       ) ?>
     </p>
+    <script>
+        jQuery(document).ready(function ($) {
+            //display or hide excluded files list
+            const el = $('#wpstg-excluded-files-list');
+            el.hide();
+            $('#wpstg-excluded-files-link').click(function(e) {
+            e.preventDefault();
+            if (el.is(':visible')) {
+                el.hide('slow');
+                return;
+            }
+            el.show('slow');
+            });
+        });
+    </script>
 </div>

@@ -63,17 +63,17 @@ class CompareExternalDatabase
             'error_type' => 'comparison',
             "checks"     => [
                 [
-                    "name"       => __('DB Collation'),
+                    "name"       => __('DB Collation', 'wp-staging'),
                     "production" => $this->productionDbInfo->getDbCollation(),
                     "staging"    => $this->stagingDbInfo->getDbCollation(),
                 ],
                 [
-                    "name"       => __('DB Storage Engine'),
+                    "name"       => __('DB Storage Engine', 'wp-staging'),
                     "production" => $this->productionDbInfo->getDbEngine(),
                     "staging"    => $this->stagingDbInfo->getDbEngine(),
                 ],
                 [
-                    "name"       => __('MySQL Server Version'),
+                    "name"       => __('MySQL Server Version', 'wp-staging'),
                     "production" => $this->productionDbInfo->getMySqlServerVersion(),
                     "staging"    => $this->stagingDbInfo->getMySqlServerVersion(),
                 ]

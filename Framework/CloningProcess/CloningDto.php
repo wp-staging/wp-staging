@@ -108,6 +108,15 @@ class CloningDto
     }
 
     /**
+     * @param  Job $job
+     * @return void
+     */
+    public function setJob($job)
+    {
+        $this->job = $job;
+    }
+
+    /**
      * @return bool
      */
     public function isExternal()

@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Utils;
 
 use wpdb;
+use ArrayIterator;
 use WPStaging\Framework\Security\Auth;
 
 /**
@@ -69,7 +70,7 @@ class DBPermissions
         }
 
         $hasGranted = array_filter($grants, function ($grant) use ($grantsToCheck) {
-            $grant = current($grant);
+            $grant = (new ArrayIterator($grant))->current();
             if (stripos($grant, '`' . DB_NAME . '`') !== false || stripos($grant, '`' . $this->wpdb->esc_like(DB_NAME) . '`') !== false || stripos($grant, '*.*') !== false) {
                 foreach ($grantsToCheck as $value) {
                     if (!preg_match("/" . $value . "[,]/", $grant) && !preg_match("/" . $value . " ON/", $grant)) {
@@ -79,9 +80,11 @@ class DBPermissions
                 return true;
             }
         });
+
         if (!empty($hasGranted)) {
             return true;
         }
+
         return false;
     }
 
@@ -102,7 +105,7 @@ class DBPermissions
         }
         $grantsHtml = '';
         foreach ($grants as $grant) {
-            $grantsHtml .= PHP_EOL . current($grant) . ';';
+            $grantsHtml .= PHP_EOL . (new ArrayIterator($grant))->current() . ';';
         }
 
         $data .= PHP_EOL . __('User Grants: ', 'wp-staging') . $grantsHtml;

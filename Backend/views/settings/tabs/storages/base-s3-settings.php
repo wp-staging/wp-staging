@@ -16,17 +16,22 @@ use WPStaging\Framework\Facades\Escape;
 ?>
 <fieldset>
     <?php
-    $regions = $auth->getRegions();
+
+    if ($auth->isEncrypted()) {
+        require_once "{$this->path}views/settings/tabs/storages/encrypted-notice.php";
+    }
+
+    $regions                = $auth->getRegions();
     $isStorageAuthenticated = $auth->isAuthenticated();
-    $options = $auth->getOptions();
-    $accessKey = empty($options['accessKey']) ? '' : $options['accessKey'];
-    $secretKey = empty($options['secretKey']) ? '' : $options['secretKey'];
-    $region = empty($options['region']) ? '' : $options['region'];
-    $maxBackupsToKeep = empty($options['maxBackupsToKeep']) ? 2 : $options['maxBackupsToKeep'];
-    $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
-    $location = empty($options['location']) ? '' : $options['location'];
-    $lastUpdated = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
-    $locationName = empty($locationName) ? 'Bucket' : $locationName;
+    $options                = $auth->getOptions();
+    $accessKey              = empty($options['accessKey']) ? '' : $options['accessKey'];
+    $secretKey              = empty($options['secretKey']) ? '' : $options['secretKey'];
+    $region                 = empty($options['region']) ? '' : $options['region'];
+    $maxBackupsToKeep       = empty($options['maxBackupsToKeep']) ? 2 : $options['maxBackupsToKeep'];
+    $maxBackupsToKeep       = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
+    $location               = empty($options['location']) ? '' : $options['location'];
+    $lastUpdated            = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
+    $locationName           = empty($locationName) ? 'Bucket' : $locationName;
     ?>
     <p>
         <strong class="wpstg-fs-14"><?php echo esc_html($providerName); ?></strong>

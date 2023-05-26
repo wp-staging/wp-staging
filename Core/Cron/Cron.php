@@ -37,52 +37,52 @@ class Cron
         // add weekly and monthly intervals
         $schedules['weekly'] = [
             'interval' => 604800,
-            'display' => __('Once Weekly')
+            'display' => __('Once Weekly', 'wp-staging')
         ];
 
         $schedules['monthly'] = [
             'interval' => 2635200,
-            'display' => __('Once a month')
+            'display' => __('Once a month', 'wp-staging')
         ];
 
         $schedules[static::HOURLY] = [
             'interval' => HOUR_IN_SECONDS,
-            'display' => __('WP Staging events that happens hourly'),
+            'display' => __('WP Staging events that happens hourly', 'wp-staging'),
         ];
 
         $schedules[static::SIX_HOURS] = [
             'interval' => HOUR_IN_SECONDS * 6,
-            'display' => __('WP Staging events that happens every six hours'),
+            'display' => __('WP Staging events that happens every six hours', 'wp-staging'),
         ];
 
         $schedules[static::TWELVE_HOURS] = [
             'interval' => HOUR_IN_SECONDS * 12,
-            'display' => __('WP Staging events that happens every twelve hours'),
+            'display' => __('WP Staging events that happens every twelve hours', 'wp-staging'),
         ];
 
         $schedules[static::DAILY] = [
             'interval' => DAY_IN_SECONDS,
-            'display' => __('WP Staging events that happens daily'),
+            'display' => __('WP Staging events that happens daily', 'wp-staging'),
         ];
 
         $schedules[static::EVERY_TWO_DAYS] = [
             'interval' => DAY_IN_SECONDS * 2,
-            'display' => __('WP Staging events that happens every 2 days'),
+            'display' => __('WP Staging events that happens every 2 days', 'wp-staging'),
         ];
 
         $schedules[static::WEEKLY] = [
             'interval' => WEEK_IN_SECONDS,
-            'display' => __('WP Staging events that happens weekly'),
+            'display' => __('WP Staging events that happens weekly', 'wp-staging'),
         ];
 
         $schedules[static::EVERY_TWO_WEEKS] = [
             'interval' => WEEK_IN_SECONDS * 2,
-            'display' => __('WP Staging events that happens every two weeks'),
+            'display' => __('WP Staging events that happens every two weeks', 'wp-staging'),
         ];
 
         $schedules[static::MONTHLY] = [
             'interval' => MONTH_IN_SECONDS,
-            'display' => __('WP Staging events that happens every month'),
+            'display' => __('WP Staging events that happens every month', 'wp-staging'),
         ];
 
         return $schedules;

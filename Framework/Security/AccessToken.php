@@ -107,16 +107,17 @@ class AccessToken
      */
     public function isValidToken($tokenToValidate)
     {
+        $tokenToValidate = (string)$tokenToValidate;
+
         // Early bail: A token is always a 64-character random string.
-        if (strlen($tokenToValidate) !== 64) {
+        if (empty($tokenToValidate) || strlen($tokenToValidate) !== 64) {
             return false;
         }
 
-        $savedToken      = (string)get_option(static::OPTION_NAME, null);
-        $tokenToValidate = (string)$tokenToValidate;
+        $savedToken = (string)get_option(static::OPTION_NAME, null);
 
         // Early bail: We can't validate a token because at least one of the parts are empty.
-        if (empty($savedToken) || empty($tokenToValidate)) {
+        if (empty($savedToken)) {
             return false;
         }
 

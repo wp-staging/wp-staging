@@ -5,7 +5,6 @@ namespace WPStaging\Framework\Mails\Report;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DebugLogReader;
-use WPStaging\Framework\Mails\Report\ReportSubmitTransient;
 
 class Report
 {
@@ -28,6 +27,8 @@ class Report
 
     /** @var ReportSubmitTransient */
     private $transient;
+
+    const TEMP_DIRECTORY = 'tmp';
 
     public function __construct(SystemInfo $systemInfo, Directory $directory, DebugLogReader $debugLogReader, ReportSubmitTransient $reportSubmitTransient)
     {
@@ -112,19 +113,19 @@ class Report
      */
     protected function getAttachments(array $attachments)
     {
-        $systemInformationFile = trailingslashit($this->directory->getTmpDirectory()) . 'system_information.txt';
+        $systemInformationFile = trailingslashit($this->getTempDirectoryForLogsAttachments()) . 'system_information.txt';
         $this->copyDataToFile($systemInformationFile, $this->systemInfo->get());
         $attachments[] = $systemInformationFile;
 
         if (file_exists(WPSTG_DEBUG_LOG_FILE)) {
-            $destinationWpstgDebugFilePath = trailingslashit($this->directory->getTmpDirectory()) . 'wpstg_debug.log';
+            $destinationWpstgDebugFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . 'wpstg_debug.log';
             $this->copyDataToFile($destinationWpstgDebugFilePath, $this->debugLogReader->getLastLogEntries(512 * KB_IN_BYTES, true, false));
             $attachments[] = $destinationWpstgDebugFilePath;
         }
 
         $debugLogFile = WP_CONTENT_DIR . '/debug.log';
         if (file_exists($debugLogFile)) {
-            $destinationDebugLogFilePath = trailingslashit($this->directory->getTmpDirectory()) . 'debug.log';
+            $destinationDebugLogFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . 'debug.log';
             $this->copyDataToFile($destinationDebugLogFilePath, $this->debugLogReader->getLastLogEntries(512 * KB_IN_BYTES, false));
             $attachments[] = $destinationDebugLogFilePath;
         }
@@ -167,5 +168,17 @@ class Report
         }
 
         return false;
+    }
+
+    /**
+     * create temp location for storing logs
+     * @return string temporary path to hold logs attachments
+     */
+
+    private function getTempDirectoryForLogsAttachments()
+    {
+        $tempDirectory = trailingslashit(wp_normalize_path($this->directory->getPluginUploadsDirectory() . self::TEMP_DIRECTORY));
+        wp_mkdir_p($tempDirectory);
+        return $tempDirectory;
     }
 }

@@ -20,6 +20,7 @@
 <div class="wpstg-my-10px">
     <a href="#" class="wpstg-button-unselect button"><?php esc_html_e('Unselect All', 'wp-staging'); ?></a>
     <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix) ?> </a>
+    <a href="#" class="wpstg-button-unselect-wpstg button"> <?php esc_html_e('Unselect wpstg', 'wp-staging'); ?> </a>
 </div>
 <select multiple="multiple" id="wpstg_select_tables_cloning">
     <?php
@@ -39,6 +40,7 @@
 <div class="wpstg-mt-10px">
     <a href="#" class="wpstg-button-unselect button"> <?php esc_html_e('Unselect All', 'wp-staging'); ?> </a>
     <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix); ?> </a>
+    <a href="#" class="wpstg-button-unselect-wpstg button"> <?php esc_html_e('Unselect wpstg', 'wp-staging'); ?> </a>
 </div>
 <p>
     <?php esc_html_e("You can select multiple tables. Press left mouse button & move or press STRG+Left mouse button. (Apple: ⌘+Left Mouse Button)", "wp-staging"); ?>

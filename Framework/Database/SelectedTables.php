@@ -70,7 +70,7 @@ class SelectedTables
      * @param string $password
      * @param string $database
      * @param string $prefix
-     * @param string $useSsl
+     * @param bool $useSsl
      */
     public function setDatabaseInfo($server, $username, $password, $database, $prefix, $useSsl = false)
     {

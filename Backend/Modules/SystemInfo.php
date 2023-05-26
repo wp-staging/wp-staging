@@ -30,6 +30,9 @@ class SystemInfo
      */
     private $isMultiSite;
 
+    /** @var mixed|Database  */
+    private $database;
+
     /**
      *
      * @var object
@@ -40,6 +43,8 @@ class SystemInfo
     {
         $this->isMultiSite = is_multisite();
         $this->helper      = new Utils\Helper();
+        /** @var Database */
+        $this->database = WPStaging::make(Database::class);
     }
 
     /**
@@ -125,11 +130,11 @@ class SystemInfo
         }
 
         $uploads = wp_upload_dir();
-        $output  .= $this->info("uploads['path']:", $uploads['path']);
-        $output  .= $this->info("uploads['subdir']:", $uploads['subdir']);
-        $output  .= $this->info("uploads['basedir']:", $uploads['basedir']);
-        $output  .= $this->info("uploads['baseurl']:", $uploads['baseurl']);
-        $output  .= $this->info("uploads['url']:", $uploads['url']);
+        $output .= $this->info("uploads['path']:", $uploads['path']);
+        $output .= $this->info("uploads['subdir']:", $uploads['subdir']);
+        $output .= $this->info("uploads['basedir']:", $uploads['basedir']);
+        $output .= $this->info("uploads['baseurl']:", $uploads['baseurl']);
+        $output .= $this->info("uploads['url']:", $uploads['url']);
 
         $output .= $this->info("UPLOAD_PATH in wp-config.php:", (defined("UPLOAD_PATH")) ? UPLOAD_PATH : '[not set]');
         $output .= $this->info("upload_path in " . $wpdb->prefix . 'options:', get_option("upload_path") ?: "[not set]");
@@ -213,29 +218,29 @@ class SystemInfo
 
         $output .= $this->getScheduleInfo();
 
-        $output              .= $this->info("DB Query Limit:", isset($settings->queryLimit) ? $settings->queryLimit : '[not set]');
-        $output              .= $this->info("DB Search & Replace Limit:", isset($settings->querySRLimit) ? $settings->querySRLimit : '[not set]');
-        $output              .= $this->info("File Copy Limit:", isset($settings->fileLimit) ? $settings->fileLimit : '[not set]');
-        $output              .= $this->info("Maximum File Size:", isset($settings->maxFileSize) ? $settings->maxFileSize : '[not set]');
-        $output              .= $this->info("File Copy Batch Size:", isset($settings->batchSize) ? $settings->batchSize : '[not set]');
-        $output              .= $this->info("CPU Load Priority:", isset($settings->cpuLoad) ? $settings->cpuLoad : '[not set]');
-        $output              .= $this->info("Keep Permalinks:", isset($settings->keepPermalinks) ? $settings->keepPermalinks : '[not set]');
-        $output              .= $this->info("Debug Mode:", isset($settings->debugMode) ? $settings->debugMode : '[NOT SET]');
-        $output              .= $this->info("Optimize Active:", isset($settings->optimizer) ? $settings->optimizer : '[not set]');
-        $output              .= $this->info("Delete on Uninstall:", isset($settings->unInstallOnDelete) ? $settings->unInstallOnDelete : '[not set]');
-        $output              .= $this->info("Check Directory Size:", isset($settings->checkDirectorySize) ? $settings->checkDirectorySize : '[not set]');
-        $output              .= $this->info("Access Permissions:", isset($settings->userRoles) ? $settings->userRoles : '[not set]');
-        $output              .= $this->info("Users With Staging Access:", isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : '[not set]');
-        $output              .= $this->info("Admin Bar Color:", isset($settings->adminBarColor) ? $settings->adminBarColor : '[not set]');
+        $output .= $this->info("DB Query Limit:", isset($settings->queryLimit) ? $settings->queryLimit : '[not set]');
+        $output .= $this->info("DB Search & Replace Limit:", isset($settings->querySRLimit) ? $settings->querySRLimit : '[not set]');
+        $output .= $this->info("File Copy Limit:", isset($settings->fileLimit) ? $settings->fileLimit : '[not set]');
+        $output .= $this->info("Maximum File Size:", isset($settings->maxFileSize) ? $settings->maxFileSize : '[not set]');
+        $output .= $this->info("File Copy Batch Size:", isset($settings->batchSize) ? $settings->batchSize : '[not set]');
+        $output .= $this->info("CPU Load Priority:", isset($settings->cpuLoad) ? $settings->cpuLoad : '[not set]');
+        $output .= $this->info("Keep Permalinks:", isset($settings->keepPermalinks) ? $settings->keepPermalinks : '[not set]');
+        $output .= $this->info("Debug Mode:", isset($settings->debugMode) ? $settings->debugMode : '[NOT SET]');
+        $output .= $this->info("Optimize Active:", isset($settings->optimizer) ? $settings->optimizer : '[not set]');
+        $output .= $this->info("Delete on Uninstall:", isset($settings->unInstallOnDelete) ? $settings->unInstallOnDelete : '[not set]');
+        $output .= $this->info("Check Directory Size:", isset($settings->checkDirectorySize) ? $settings->checkDirectorySize : '[not set]');
+        $output .= $this->info("Access Permissions:", isset($settings->userRoles) ? $settings->userRoles : '[not set]');
+        $output .= $this->info("Users With Staging Access:", isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : '[not set]');
+        $output .= $this->info("Admin Bar Color:", isset($settings->adminBarColor) ? $settings->adminBarColor : '[not set]');
         $analyticsHasConsent = get_option('wpstg_analytics_has_consent');
-        $output              .= $this->info("Send Usage Information:", !empty($analyticsHasConsent) ? 'true' : 'false');
-        $output              .= $this->info("Send Backup Errors via E-Mail:", isset($settings->schedulesErrorReport) ? $settings->schedulesErrorReport : '[not set]');
-        $output              .= $this->info("E-Mail Address:", isset($settings->schedulesReportEmail) ? $settings->schedulesReportEmail : '[not set]');
+        $output .= $this->info("Send Usage Information:", !empty($analyticsHasConsent) ? 'true' : 'false');
+        $output .= $this->info("Send Backup Errors via E-Mail:", isset($settings->schedulesErrorReport) ? $settings->schedulesErrorReport : '[not set]');
+        $output .= $this->info("E-Mail Address:", isset($settings->schedulesReportEmail) ? $settings->schedulesReportEmail : '[not set]');
 
         $output .= PHP_EOL . "-- Google Drive Settings" . PHP_EOL;
 
         $googleDriveSettings = (object)get_option('wpstg_googledrive', []);
-        if (!empty($googleDriveSettings)) {
+        if (!empty((array)$googleDriveSettings)) {
             foreach ($googleDriveSettings as $key => $value) {
                 $output .= $this->info($key, empty($value) ? '[not set]' : $this->removeCredentials($key, $value));
             }
@@ -244,7 +249,7 @@ class SystemInfo
         $output .= PHP_EOL . "-- Amazon S3 Settings" . PHP_EOL;
 
         $amazonS3Settings = (object)get_option('wpstg_amazons3', []);
-        if (!empty($amazonS3Settings)) {
+        if (!empty((array)$amazonS3Settings)) {
             foreach ($amazonS3Settings as $key => $value) {
                 $output .= $this->info($key, empty($value) ? '[not set]' : $this->removeCredentials($key, $value));
             }
@@ -309,6 +314,22 @@ class SystemInfo
         $output .= $this->info(Sites::OLD_STAGING_SITES_OPTION . ": ", serialize(get_option(Sites::OLD_STAGING_SITES_OPTION, [])));
 
         return $output;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWpStagingVersion()
+    {
+        if (defined('WPSTG_VERSION')) {
+            return WPSTG_VERSION;
+        }
+
+        if (defined('WPSTGPRO_VERSION')) {
+            return 'Pro ' . WPSTGPRO_VERSION;
+        }
+
+        return 'unknown';
     }
 
     /**
@@ -462,22 +483,62 @@ class SystemInfo
     }
 
     /**
+     * @return string
+     */
+    public function getMySqlServerType()
+    {
+        return $this->database->getServerType();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMySqlFullVersion()
+    {
+        return $this->database->getSqlVersion();
+    }
+
+    /**
+     * @return string
+     */
+    public function getMySqlVersionCompact()
+    {
+        return $this->database->getSqlVersion($compact = true);
+    }
+
+    /**
+     * @return string
+     */
+    public function getPhpVersion()
+    {
+        return PHP_VERSION;
+    }
+
+    /**
+     * @return array|string
+     */
+    public function getWebServerInfo()
+    {
+        return isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '';
+    }
+
+    /**
      * PHP Configuration
      * @return string
      */
     public function php()
     {
-        $output        = $this->info("PHP memory_limit:", ini_get("memory_limit"));
-        $output        .= $this->info("PHP memory_limit in Bytes:", wp_convert_hr_to_bytes(ini_get("memory_limit")));
-        $output        .= $this->info("PHP max_execution_time:", ini_get("max_execution_time"));
-        $output        .= $this->info("PHP Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
-        $output        .= $this->info("PHP Upload Max File Size:", ini_get("upload_max_filesize"));
-        $output        .= $this->info("PHP Post Max Size:", ini_get("post_max_size"));
-        $output        .= $this->info("PHP Upload Max Filesize:", ini_get("upload_max_filesize"));
-        $output        .= $this->info("PHP Max Input Vars:", ini_get("max_input_vars"));
+        $output = $this->info("PHP memory_limit:", ini_get("memory_limit"));
+        $output .= $this->info("PHP memory_limit in Bytes:", wp_convert_hr_to_bytes(ini_get("memory_limit")));
+        $output .= $this->info("PHP max_execution_time:", ini_get("max_execution_time"));
+        $output .= $this->info("PHP Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
+        $output .= $this->info("PHP Upload Max File Size:", ini_get("upload_max_filesize"));
+        $output .= $this->info("PHP Post Max Size:", ini_get("post_max_size"));
+        $output .= $this->info("PHP Upload Max Filesize:", ini_get("upload_max_filesize"));
+        $output .= $this->info("PHP Max Input Vars:", ini_get("max_input_vars"));
         $displayErrors = ini_get("display_errors");
-        $output        .= $this->info("PHP display_errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A");
-        $output        .= $this->info("PHP User:", $this->getPHPUser());
+        $output .= $this->info("PHP display_errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A");
+        $output .= $this->info("PHP User:", $this->getPHPUser());
 
         return $output;
     }

@@ -35,7 +35,7 @@ use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Framework\Database\SelectedTables;
-use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Utils\Escape;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
 use WPStaging\Backend\Feedback\Feedback;
@@ -87,8 +87,6 @@ class Administrator
         $this->auth     = WPStaging::make(Auth::class);
         $this->assets   = WPStaging::make(Assets::class);
         $this->siteInfo = WPStaging::make(SiteInfo::class);
-
-        add_filter('wpstg.escape.allowedHtmls', [$this, 'htmlAllowedDuringEscape']);
 
         $this->defineHooks();
 
@@ -399,8 +397,11 @@ class Administrator
         header('Content-Disposition: attachment; filename="wpstg-system-info.txt"');
         echo esc_html(wp_strip_all_tags(WPStaging::make(SystemInfo::class)->get("systemInfo")));
         echo esc_html("\n\n" . str_repeat("-", 25) . "\n\n");
-        $wpstgLogs = WPStaging::make(DebugLogReader::class)->getLastLogEntries(8 * KB_IN_BYTES, true, false);
+        $wpstgLogs = WPStaging::make(DebugLogReader::class)->getLastLogEntries(100 * KB_IN_BYTES, true, false);
         echo esc_html(wp_strip_all_tags($wpstgLogs));
+        echo esc_html(PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL);
+        $wpCoreDebugLog =  WPStaging::make(DebugLogReader::class)->getLastLogEntries((256 * KB_IN_BYTES ), false, true);
+        echo esc_html(wp_strip_all_tags($wpCoreDebugLog ));
     }
 
     /**
@@ -466,7 +467,7 @@ class Administrator
         }
 
         // Existing clones
-        $sites = WPStaging::make(Sites::class);
+        $sites           = WPStaging::make(Sites::class);
         $availableClones = $sites->getSortedStagingSites();
 
         // Get license data
@@ -495,7 +496,7 @@ class Administrator
 
         // Check first if there is already a process running
         $processLock = WPStaging::make(ProcessLock::class);
-        $response = $processLock->ajaxIsRunning();
+        $response    = $processLock->ajaxIsRunning();
         if ($response !== false) {
             echo json_encode($response);
 
@@ -1191,7 +1192,7 @@ class Administrator
         }
 
         $processLock = WPStaging::make(ProcessLock::class);
-        $response = $processLock->ajaxIsRunning();
+        $response    = $processLock->ajaxIsRunning();
         if ($response !== false) {
             echo json_encode($response);
 
@@ -1283,15 +1284,6 @@ class Administrator
     {
         $backup = new BackupUploadsDir(null);
         $backup->removeUploadsBackup();
-    }
-
-    /**
-     * @param array $array
-     * @return array
-     */
-    public function htmlAllowedDuringEscape($array)
-    {
-        return Escape::htmlAllowedDuringEscape($array);
     }
 
     /**

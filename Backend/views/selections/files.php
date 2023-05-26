@@ -94,10 +94,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
     <span>
         <?php
         echo sprintf(
-            Escape::escapeHtml(__(
-                "Enter one folder path per line.<br>" .
-                "Folders must be relative to the path: %s"
-            ), 'wp-staging'),
+            Escape::escapeHtml(__("Enter one folder path per line.<br>Folders must be relative to the path: %s", 'wp-staging')),
             esc_html($options->root)
         );
         ?>

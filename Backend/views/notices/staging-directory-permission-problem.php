@@ -19,7 +19,7 @@ use WPStaging\Framework\Facades\Escape;
                 WP Staging\'s default behavior is to create a staging site in a subfolder of the live site.
                 If you get this warning this will not be possible, but you can still create a staging site.
                 <a href="%3$s" target="_blank">Create a staging site without write permission to root.</a>
-                '), 'wp-staging'),
+                ', 'wp-staging')),
                 esc_html(ABSPATH),
                 esc_html(getenv('USERNAME')) ?: esc_html(getenv('USER')),
                 esc_url('https://wp-staging.com/docs/create-staging-site-without-write-permission/')

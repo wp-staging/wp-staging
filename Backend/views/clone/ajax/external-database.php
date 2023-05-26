@@ -44,7 +44,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     </p>
     <?php } ?>
 
-    <label for="wpstg-ext-db"><?php esc_html_e('Change Database'); ?></label>
+    <label for="wpstg-ext-db"><?php esc_html_e('Change Database', 'wp-staging'); ?></label>
     <input type="checkbox" id="wpstg-ext-db" name="wpstg-ext-db" value="true" class="wpstg-toggle-advance-settings-section wpstg-checkbox" data-id="wpstg-external-db-section" <?php echo $isPro === true ? '' : 'disabled' ?>>
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />

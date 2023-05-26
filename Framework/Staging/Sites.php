@@ -42,6 +42,11 @@ class Sites
     const MISSING_CLONE_NAME_ROUTINE_EXECUTED = 'wpstg_missing_cloneName_routine_executed';
 
     /**
+     * The option that stores the excluded files from cloning process
+     */
+    const STAGING_EXCLUDED_FILES_OPTION = 'wpstg_clone_excluded_files_list';
+
+    /**
      * Return list of staging sites in descending order of their creation time.
      *
      * @return array
@@ -138,7 +143,7 @@ class Sites
     }
 
     /**
-     * Will try gettings staging sites from new option
+     * Will try getting staging sites from new option
      * If that is empty, will get staging sites from old option
      *
      * @return array

@@ -6,6 +6,11 @@ use WPStaging\Framework\Analytics\AnalyticsEventDto;
 
 class AnalyticsStagingCreate extends AnalyticsEventDto
 {
+    public $is_allowing_email;
+    public $is_symlinking_uploads_folder;
+    public $is_external_database;
+    public $number_of_tables;
+
     public function getEventAction()
     {
         return 'event_staging_create';

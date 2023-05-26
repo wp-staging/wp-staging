@@ -107,7 +107,7 @@ class Files extends JobExecutable
             $this->options->totalSteps++;
         }
 
-        // Run this job atleast once if no files selected
+        // Run this job at least once if no files selected
         // Strict comparison doesn't work for 0 neither '0'
         if ($this->options->totalSteps == 0) {
             $this->options->totalSteps = 1;
@@ -225,7 +225,6 @@ class Files extends JobExecutable
         return true;
     }
 
-
     /**
      * Clean WP Content According to option selected
      *
@@ -306,7 +305,6 @@ class Files extends JobExecutable
             $this->copyFile($file);
         }
 
-
         $totalFiles = $this->options->copiedFiles;
         // Log this only every 50 entries to keep the log small and to not block the rendering browser
         if ($this->options->copiedFiles % 50 == 0) {
@@ -379,6 +377,7 @@ class Files extends JobExecutable
         }
         // Path + File is excluded
         if ($this->isFileExcludedFullPath($file)) {
+            $this->options->tmpExcludedFilesFullPath[] = $file;
             $this->debugLog("Skipping file by rule: {$file}", Logger::TYPE_INFO);
             return false;
         }
@@ -473,7 +472,7 @@ class Files extends JobExecutable
      * @param int $buffersize
      * @return bool
      */
-    private function copyBig($src, $dst, $buffersize)
+    private function copyBig($src, $dst, $bufferSize)
     {
         $src  = fopen($src, 'rb');
         $dest = fopen($dst, 'wb');
@@ -484,7 +483,7 @@ class Files extends JobExecutable
 
         // Try first method:
         while (!feof($src)) {
-            if (fwrite($dest, fread($src, $buffersize)) === false) {
+            if (fwrite($dest, fread($src, $bufferSize)) === false) {
                 $error = true;
             }
         }
@@ -523,8 +522,9 @@ class Files extends JobExecutable
                 ["web.config", ".htaccess"]
             );
         }
-
-        if ($this->filesystem->isFilenameExcluded($file, $excludedFiles)) {
+        $isExcluded = $this->filesystem->isFilenameExcluded($file, $excludedFiles, true);
+        if ($isExcluded !== false) {
+            $this->options->tmpExcludedFilesFullPath[] = $isExcluded;
             return true;
         }
 
@@ -556,7 +556,7 @@ class Files extends JobExecutable
         $cloneUrl       = empty($this->options->cloneHostname) ? $url : parse_url($this->options->cloneHostname);
         $targetHostname = $cloneUrl['host'];
 
-        // Check if target hostname beginns with the production hostname
+        // Check if target hostname begins with the production hostname
         // Only compare the hostname without path
         if (wpstg_starts_with($productionHostname, $targetHostname)) {
             return true;

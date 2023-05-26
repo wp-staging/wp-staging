@@ -295,7 +295,7 @@ class Delete extends Job
      * Get job data
      * @throws Exception
      */
-    private function getJob()
+    public function getJob()
     {
         $this->job = $this->cache->get($this->getJobCacheFileName());
 
@@ -414,8 +414,9 @@ class Delete extends Job
             return;
         }
 
-        $clone        = (string)$this->clone->path;
-        $errorMessage = __(sprintf("We could not delete the staging site completely. There are still files in the folder %s that could not be deleted. This could be a write permission issue. Try to delete the folder manually by using FTP or a file manager plugin.<br/> If this happens again please contact us at support@wp-staging.com", $clone), "wp-staging");
+        $clone = (string)$this->clone->path;
+        $errorMessage = sprintf(__('We could not delete the staging site completely. There are still files in the folder %s that could not be deleted. This could be a write permission issue. Try to delete the folder manually by using FTP or a file manager plugin.<br/> If this happens again please contact us at support@wp-staging.com', 'wp-staging'), $clone);
+
         $deleteStatus = "finished";
         if ($this->isNotEmpty($this->deleteDir)) {
             $fs = (new Filesystem())

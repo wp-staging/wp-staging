@@ -419,20 +419,28 @@ class Filesystem extends FilterableDirectoryIterator
     /**
      * @param string $file full path + filename
      * @param array $excludedFiles List of filenames. Can be wildcard pattern like data.php, data*.php, *.php, .php
-     * @return boolean
+     * @param bool $returnPattern If true, returns the pattern that matched the filename.
+     *
+     * @return bool|string false if not excluded, true if excluded and $returnPattern is false, string if $returnPattern is true
      */
-    public function isFilenameExcluded($file, $excludedFiles)
+    public function isFilenameExcluded($file, $excludedFiles, $returnPattern = false)
     {
         $filename = basename($file);
 
         // Regular filenames
         if (in_array($filename, $excludedFiles, true)) {
+            if ($returnPattern) {
+                return $filename;
+            }
             return true;
         }
 
         // Wildcards
         foreach ($excludedFiles as $pattern) {
             if ($this->fnmatch($pattern, $filename)) {
+                if ($returnPattern) {
+                    return $pattern;
+                }
                 return true;
             }
         }

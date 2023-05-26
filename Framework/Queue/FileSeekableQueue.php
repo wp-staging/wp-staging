@@ -90,7 +90,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
                     usleep(250000); // 0.25s
                     $waitedTimes++;
                     if ($waitedTimes > 5) {
-                        throw new \RuntimeException(esc_html__('Could not acquire exclusive lock for writing to Queue file: ' . $this->taskName . '.task'));
+                        throw new \RuntimeException(sprintf(esc_html__('Could not acquire exclusive lock for writing to Queue file: %s.task', 'wp-staging'), $this->taskName));
                     }
                 }
             } while (!$locked);

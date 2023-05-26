@@ -50,7 +50,7 @@ class Feedback
 
         $text = '';
         if (isset($form['wpstg_disable_text'])) {
-            $text = implode("\n\r", $form['wpstg_disable_text']);
+            $text = implode("\n\r", (array)$form['wpstg_disable_text']);
         }
 
         $headers = [];

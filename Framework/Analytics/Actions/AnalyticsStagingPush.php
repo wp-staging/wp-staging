@@ -6,6 +6,11 @@ use WPStaging\Framework\Analytics\AnalyticsEventDto;
 
 class AnalyticsStagingPush extends AnalyticsEventDto
 {
+    public $create_backup_before_pushing;
+    public $delete_plugins_and_themes;
+    public $delete_uploads_folder;
+    public $backup_uploads_folder;
+
     public function getEventAction()
     {
         return 'event_staging_push';

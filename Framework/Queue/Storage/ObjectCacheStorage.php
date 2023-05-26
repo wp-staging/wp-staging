@@ -268,6 +268,7 @@ class ObjectCacheStorage implements StorageInterface, ShutdownableInterface
     public function getCache()
     {
         // no-op
+        return null;
     }
 
     public function reverse()

@@ -14,6 +14,7 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Vendor\Psr\Log\LogLevel;
+use WPStaging\Backend\Modules\SystemInfo;
 
 /**
  * Class Logger
@@ -24,11 +25,13 @@ class Logger implements LoggerInterface, ShutdownableInterface
     const TYPE_ERROR    = "ERROR";
 
     const TYPE_CRITICAL = "CRITICAL";
+
     const TYPE_FATAL    = "FATAL";
 
     const TYPE_WARNING  = "WARNING";
 
     const TYPE_INFO     = "INFO";
+
     const TYPE_DEBUG    = "DEBUG";
 
     /**
@@ -88,7 +91,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
 
         /**
-         * If log directory doesn't exists, create it.
+         * If log directory doesn't exist, create it.
          * @see \WPStaging\Framework\Notices\Notices::renderNotices Notice that shows if log directory couldn't be created.
          */
         (new Filesystem())->mkdir($this->logDir);
@@ -102,6 +105,23 @@ class Logger implements LoggerInterface, ShutdownableInterface
     public function onWpShutdown()
     {
         $this->commit();
+    }
+
+    /**
+     * @return void
+     */
+    public function writeLogHeader()
+    {
+        $systemInfo = WPStaging::make(SystemInfo::class);
+
+        $this->info(esc_html('WP Staging Version: ' . $systemInfo->getWpStagingVersion()));
+        $this->info(esc_html('PHP Version: ' . $systemInfo->getPhpVersion()));
+        $this->info(esc_html('Server: ' . $systemInfo->getWebServerInfo()));
+        $this->info(esc_html('MySQL: ' . $systemInfo->getMySqlVersionCompact()));
+        $this->info(esc_html('WP Version: ' . get_bloginfo("version")));
+        $this->info(esc_html('PHP Memory Limit: ' . wp_convert_hr_to_bytes(ini_get("memory_limit"))));
+        $this->info(esc_html('WP Memory Limit: ' . (defined('WP_MEMORY_LIMIT') ? wp_convert_hr_to_bytes(WP_MEMORY_LIMIT) : '')));
+        $this->info(esc_html('PHP Max Execution Time: ' . ini_get("max_execution_time")));
     }
 
     /**

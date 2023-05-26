@@ -128,6 +128,8 @@ class Settings
             'success' => true,
             'message' => sprintf(esc_html__('Purged queue table! Removed %s action(s)', 'wp-staging'), esc_html($result))
         ]);
+
+        return null;
     }
 
     /**

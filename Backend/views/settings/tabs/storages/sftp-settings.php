@@ -2,32 +2,41 @@
 
 namespace WPStaging\Storages\SftpSettings;
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
+
 /**
  * @var string $providerId
  */
-
 ?>
 <fieldset>
     <?php
-    /** @var \WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth */
-    $storage = \WPStaging\Core\WPStaging::make(\WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth::class);
-    $options = $storage->getOptions();
-    $ftpType = !empty($options['ftpType']) ? $options['ftpType'] : 'ftp';
-    $host = !empty($options['host']) ? $options['host'] : '';
-    $port = !empty($options['port']) ? $options['port'] : '';
-    $username = !empty($options['username']) ? $options['username'] : '';
-    $password = !empty($options['password']) ? $options['password'] : '';
-    $ssl = isset($options['ssl']) ? $options['ssl'] : false;
-    $passive = isset($options['passive']) ? $options['passive'] : false;
-    $privateKey = !empty($options['key']) ? $options['key'] : '';
-    $passphrase = !empty($options['passphrase']) ? $options['passphrase'] : '';
+    /** @var Auth */
+    $storage = WPStaging::make(Auth::class);
+
+    $providerName = esc_html__('FTP/SFTP', 'wp-staging');
+    if ($storage->isEncrypted()) {
+        require_once "{$this->path}views/settings/tabs/storages/encrypted-notice.php";
+    }
+
+    $options          = $storage->getOptions();
+    $ftpType          = !empty($options['ftpType']) ? $options['ftpType'] : 'ftp';
+    $host             = !empty($options['host']) ? $options['host'] : '';
+    $port             = !empty($options['port']) ? $options['port'] : '';
+    $username         = !empty($options['username']) ? $options['username'] : '';
+    $password         = !empty($options['password']) ? $options['password'] : '';
+    $ssl              = isset($options['ssl']) ? $options['ssl'] : false;
+    $passive          = isset($options['passive']) ? $options['passive'] : false;
+    $privateKey       = !empty($options['key']) ? $options['key'] : '';
+    $passphrase       = !empty($options['passphrase']) ? $options['passphrase'] : '';
     $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
     $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
-    $location = isset($options['location']) ? $options['location'] : '';
+    $location         = isset($options['location']) ? $options['location'] : '';
+
 
     ?>
     <p>
-        <strong class="wpstg-fs-14"> <?php esc_html_e('FTP/SFTP', 'wp-staging'); ?></strong>
+        <strong class="wpstg-fs-14"> <?php echo esc_html($providerName); ?></strong>
     </p>
     <div class="wpstg-form-group">
         <form class="wpstg-provider-settings-form" id="wpstg-provider-settings-form" method="post">

@@ -57,7 +57,7 @@ if (
 ) {
     add_action(is_network_admin() ? 'network_admin_notices' : 'admin_notices', function () {
         echo '<div class="notice-warning notice is-dismissible another-wpstaging-active">';
-        echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING Already Active') . '</p>';
+        echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING Already Active', 'wp-staging') . '</p>';
         echo '<p>' . esc_html__('Another WP STAGING is already activated, please leave only one instance of the WP STAGING plugin active at the same time.', 'wp-staging') . '</p>';
         echo '</div>';
     });
@@ -72,7 +72,7 @@ if (
 if (!version_compare($currentWordPressVersion = get_bloginfo('version'), $minimumWordPressVersion = '4.4', '>=')) {
     add_action(is_network_admin() ? 'network_admin_notices' : 'admin_notices', function () use ($currentWordPressVersion, $minimumWordPressVersion) {
         echo '<div class="notice-warning notice is-dismissible">';
-        echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING') . '</p>';
+        echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING', 'wp-staging') . '</p>';
         echo '<p>' . sprintf(esc_html__('WP STAGING requires at least WordPress %s to run. You have WordPress %s.', 'wp-staging'), esc_html($minimumWordPressVersion), esc_html($currentWordPressVersion)) . '</p>';
         echo '</div>';
     });

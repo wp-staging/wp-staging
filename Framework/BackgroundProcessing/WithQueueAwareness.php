@@ -58,19 +58,19 @@ trait WithQueueAwareness
         }
 
         $ajaxUrl = add_query_arg([
-            'action' => QueueProcessor::QUEUE_PROCESS_ACTION,
+            'action'      => QueueProcessor::QUEUE_PROCESS_ACTION,
             '_ajax_nonce' => wp_create_nonce(QueueProcessor::QUEUE_PROCESS_ACTION)
         ], admin_url('admin-ajax.php'));
 
         $response = wp_remote_post(esc_url_raw($ajaxUrl), [
-            'headers' => [
+            'headers'   => [
                 'X-WPSTG-Request' => QueueProcessor::QUEUE_PROCESS_ACTION,
             ],
-            'blocking' => false,
-            'timeout' => 0.01,
-            'cookies' => isset($_COOKIE) ? $_COOKIE : [],
+            'blocking'  => false,
+            'timeout'   => 0.01,
+            'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],
             'sslverify' => apply_filters('https_local_ssl_verify', false),
-            'body' => $this->normalizeAjaxRequestBody($bodyData),
+            'body'      => $this->normalizeAjaxRequestBody($bodyData),
         ]);
 
         //debug_log('fireAjaxAction: ' . wp_json_encode($response, JSON_PRETTY_PRINT));
@@ -82,11 +82,11 @@ trait WithQueueAwareness
          */
         if ($response instanceof WP_Error) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Queue processing admin-ajax request failed.',
-                'class' => get_class($this),
-                'code' => $response->get_error_code(),
+                'root'    => 'Queue processing admin-ajax request failed.',
+                'class'   => get_class($this),
+                'code'    => $response->get_error_code(),
                 'message' => $response->get_error_message(),
-                'data' => $response->get_error_data()
+                'data'    => $response->get_error_data()
             ], JSON_PRETTY_PRINT));
 
             return false;

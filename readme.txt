@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.2
-Stable tag: 2.14.1
+Stable tag: 2.15.0
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -259,15 +259,22 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
-= 2.14.1 =
-* Fix: Remove custom global exception handler to avoid conflicts with other plugins #2424
-
-= 2.14.0 =
-* New: Compatible up to WordPress 6.2
+= 2.15.0 =
+* New: Compatible up to WordPress 6.2.2
 * New: Pro feature to allow generation of magic login links to staging site. Go to "Actions > Share Login Link". This requires updating WP Staging Pro plugin on staging site #2204
 * New: Pro feature to sync active admin account. Go to "Actions > Sync User Account" to synchronize active admin user account with staging site #2183
+* New: Feature to disable WP Cron on the staging site #2314
+* New: Add two-way encryption for backup storage credentials stored in the database. Read https://wp-staging.com/docs/wp-staging-encryption-setup/ #2310
+* New: Show selected plugins and themes count before cloning #2339
 * New: Support SSL connection to external databases #2264
 * New: Allow WP-CLI to work on the staging site #2280
+* New: Button to unselect all staging site tables before cloning #2355
+* Enh: Beautify backup and staging log file format #2393
+* Enh: Append debug log to download system information #2441
+* Enh: Improved code to be compatible with PHPstan level 1 rules #2348
+* Enh: Improved code to be compatible with PHPstan level 2 rules #2419 #2459
+* Enh: Check if the option_name field contains the primary key before cloning #2386
+* Enh: Display the staging site name on generate login link screen #2432
 * Enh: Refresh UI and add new animated loader icon to show backup progress #2292 #2349
 * Enh: Refresh UI and format system information page #2333
 * Enh: Refresh UI an add button to open staging site after updating staging site #2358
@@ -281,6 +288,16 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 * Enh: Make more clear where to enter the license key #2404
 * Enh: Allow uploads directory outside ABSPATH by using the filter `wpstg.backup.directory` #2359
 * Enh: Improves the look of the update notice #2294
+* Fix: Inaccurate performance values "queries per second" for backup restore #2327
+* Fix: Backup download URLs now support mixed http/https scheme #2376
+* Fix: Deprecation notice on PHP 8.2 / 8.1 #2389
+* Fix: Write the correct version number in wpstg.js when creating a free dist package #2431
+* Fix: Correct use of printf and gettext #2313
+* Fix: On backup creation MySQL Error 1118 row size too large error can appear #2422
+* Fix: Fix line-break issue during files-index validation when validating a backup on Windows OS that was created on Linux OS and vice versa #2402
+* Fix: Add Query Compatibility fix when restoring a database backup created on MariaDB with PAGE_COMPRESSED=`ON` on MySQL database #2401
+* Fix: PHP 8.1 warnings on backup creation due to using null value on wp_normalize_path #2453
+* Fix: Added method to handle sending email in free version with attachments #2417
 * Fix: Selecting a child folder automatically selects the parent folder. #2317
 * Fix: Toggle correctly the side bar navigation depending if staging or backup tab is active #2261
 * Fix: Excluding sub-directories on backup did not work with using the filter 'wpstg.backup.exclude.directories' #2291
@@ -293,6 +310,7 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 * Fix: Retry adding the backup file index up to 3 times if adding the backup file index fails #2383
 * Fix: Login redirect loop on wp-admin #2385
 * Fix: Remove double `www` prefix if network is cloned to a `www` prefixed hostname but subsite already has `www` prefix #2284
+* Dev: Check if the Issue or PR Number exist in the changelog #2394
 * Dev: DRY webdriver tests #2276
 * Dev: Decouple PRO feature from WPStaging\Backup namespace and move them into WPStaging\Pro\Backup namespace #2296 #2336 #2356
 * Dev: Fix issues running basic webdriver tests on Github CI #2319
@@ -301,6 +319,9 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 * Dev: Refactor backup terms `Export` to `Backup` and `Import` to `Restore` for consistency #2265
 * Dev: Move src/Pro/Backup to src/Backup as a first step to allow basic Backup feature to be added in Free version of WP Staging #2287 #2297
 * Dev: Write wp staging debug logs into global debug.log #2346
+
+2.14.1
+* Fix: Remove custom global exception handler to avoid conflicts with other plugins #2424
 
 2.13.0
 * New: Major change of the User Interface #2197 #2208

@@ -14,6 +14,7 @@
  */
 
 add_action('plugins_loaded', function () use ($pluginFilePath) {
+    // Unused $pluginFilePath: Other code will fail if removed it
     try {
         require __DIR__ . '/runtimeRequirements.php';
         require_once __DIR__ . '/bootstrap.php';
@@ -25,6 +26,7 @@ add_action('plugins_loaded', function () use ($pluginFilePath) {
 }, 11, 0); // The priority of this hook must be larger than 10 for the runtime requirement check to detect older versions of WPSTAGING.
 
 register_activation_hook($pluginFilePath, function () use ($pluginFilePath) {
+    // Unused $pluginFilePath: Other code will fail if removed it
     // Prevent WPSTAGING Free activation when Pro is active
     if (is_multisite()) {
         foreach (wp_get_active_network_plugins() as $networkActivePlugin) {

@@ -47,7 +47,6 @@ class Cloning extends Job
      */
     private $sanitize;
 
-
     /**
      * Initialize is called in \Job
      */
@@ -72,7 +71,7 @@ class Cloning extends Job
     public function save()
     {
         if (!isset($_POST) || !isset($_POST["cloneID"])) {
-            $this->errorMessage = __("clone ID missing");
+            $this->errorMessage = __("clone ID missing", 'wp-staging');
             return false;
         }
 
@@ -107,15 +106,15 @@ class Cloning extends Job
             '*.log',
             'web.config', // Important: Windows IIS configuration file. Must not be in the staging site!
             '.wp-staging', // Determines if a site is a staging site
-            '.wp-staging-cloneable', // File which make staging site to be cloneable
+            '.wp-staging-cloneable', // File that makes the staging site cloneable.
         ]);
 
-        $this->options->excludedFilesFullPath = [
+        $this->options->excludedFilesFullPath = apply_filters('wpstg.clone.excluded_files_full_path', [
             '.htaccess',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'db.php',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'object-cache.php',
             $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'advanced-cache.php'
-        ];
+        ]);
 
         $this->options->currentStep = 0;
 
@@ -228,11 +227,14 @@ class Cloning extends Job
 
         // Make sure it is always enabled for free version
         $this->options->emailsAllowed = true;
+        $this->options->cronDisabled = false;
+
         if (defined('WPSTGPRO_VERSION')) {
             $this->options->emailsAllowed = apply_filters(
                 'wpstg_cloning_email_allowed',
                 isset($_POST['emailsAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsAllowed'])
             );
+            $this->options->cronDisabled = !empty($_POST['cronDisabled']) ? $this->sanitize->sanitizeBool($_POST['cronDisabled']) : false;
         }
 
         $this->options->destinationHostname = $this->getDestinationHostname();
@@ -271,7 +273,7 @@ class Cloning extends Job
     private function saveClone()
     {
         // Save new clone data
-        $this->log("Cloning: {$this->options->clone}'s clone job's data is not in database, generating data");
+        $this->debugLog("Cloning: {$this->options->clone}'s clone job's data is not in database, generating data");
 
         $this->options->existingClones[$this->options->clone] = [
             "cloneName"           => $this->options->cloneName,
@@ -289,6 +291,7 @@ class Cloning extends Job
             "databaseServer"      => $this->options->databaseServer,
             "databasePrefix"      => $this->options->databasePrefix,
             "databaseSsl"         => (bool)$this->options->databaseSsl,
+            "cronDisabled"        => (bool)$this->options->cronDisabled,
             "emailsAllowed"       => (bool)$this->options->emailsAllowed,
             "uploadsSymlinked"    => (bool)$this->options->uploadsSymlinked,
             "ownerId"             => $this->options->ownerId,
@@ -460,6 +463,8 @@ class Cloning extends Job
      */
     public function jobPreserveDataFirstStep()
     {
+        $this->writeJobSpecificLogStartHeader();
+
         $preserve = new PreserveDataFirstStep();
         return $this->handleJobResponse($preserve->start(), 'database');
     }
@@ -545,5 +550,37 @@ class Cloning extends Job
 
         $finish = new Finish();
         return $this->handleJobResponse($finish->start(), '');
+    }
+
+    /**
+     * @return void
+     */
+    private function writeJobSpecificLogStartHeader()
+    {
+
+        $jobName = empty($this->options->mainJob) ? 'Unknown' : $this->options->mainJob;
+
+        switch($jobName) {
+            case 'updating':
+                $jobName = 'Update';
+                break;
+            case 'resetting':
+                $jobName = 'Reset';
+                break;
+            case 'cloning':
+                $jobName = 'Cloning';
+                break;
+            default:
+                $jobName = 'Unknown';
+                break;
+        }
+
+        $this->log('#################### Start ' . $jobName . ' Job ####################', 'INFO');
+        if ($jobName !== 'Cloning' && !empty($this->options->clone)) {
+            $this->logger->info(esc_html('Staging Site ID: ' . $this->options->clone));
+            $this->logger->info(esc_html('Staging Site: ' . $this->options->cloneName));
+        }
+
+        $this->logger->writeLogHeader();
     }
 }

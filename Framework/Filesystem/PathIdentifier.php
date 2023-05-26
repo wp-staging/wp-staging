@@ -77,6 +77,14 @@ class PathIdentifier
             return $this->lastIdentifier . substr($path, strlen($this->directory->getUploadsDirectory()));
         }
 
+        if ($this->directory->getPluginUploadsDirectory() !== $this->directory->getUploadsDirectory()) {
+            if (strpos($path, $this->directory->getPluginUploadsDirectory()) === 0) {
+                $this->lastIdentifier = self::IDENTIFIER_UPLOADS;
+
+                return $this->lastIdentifier . substr($path, strlen($this->directory->getPluginUploadsDirectory()));
+            }
+        }
+
         if (strpos($path, $this->directory->getPluginsDirectory()) === 0) {
             $this->lastIdentifier = self::IDENTIFIER_PLUGINS;
 
@@ -120,7 +128,7 @@ class PathIdentifier
      */
     public function transformIdentifiableToPath($path)
     {
-        $identifier = $this->getIdentifierFromPath($path);
+        $identifier            = $this->getIdentifierFromPath($path);
         $pathWithoutIdentifier = $this->getPathWithoutIdentifier($path);
 
         return $this->getIdentifierPath($identifier) . $pathWithoutIdentifier;
