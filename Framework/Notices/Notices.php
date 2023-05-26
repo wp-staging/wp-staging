@@ -17,6 +17,7 @@ use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
 use WPStaging\Framework\Support\ThirdParty\Jetpack;
 use WPStaging\Framework\Support\ThirdParty\WordFence;
 use WPStaging\Framework\Traits\NoticesTrait;
+use WPStaging\Framework\Staging\Sites;
 
 /**
  * Show Admin Notices | Warnings | Messages
@@ -81,18 +82,18 @@ class Notices
         $this->assets = $assets;
 
         // To avoid dependency hell and smooth transition we will be using service locator for below dependencies
-        $this->dirUtil = WPStaging::make(Directory::class);
-        $this->wordfence = WPStaging::make(WordFence::class);
-        $this->cloneOptions = WPStaging::make(CloneOptions::class);
-        $this->freemiusScript = WPStaging::make(FreemiusScript::class);
+        $this->dirUtil         = WPStaging::make(Directory::class);
+        $this->wordfence       = WPStaging::make(WordFence::class);
+        $this->cloneOptions    = WPStaging::make(CloneOptions::class);
+        $this->freemiusScript  = WPStaging::make(FreemiusScript::class);
         $this->excludedPlugins = WPStaging::make(ExcludedPlugins::class);
-        $this->logger = WPStaging::getInstance()->get("logger");
-        $this->cache = WPStaging::getInstance()->get("cache");
-        $this->db = WPStaging::getInstance()->get('wpdb');
+        $this->logger          = WPStaging::getInstance()->get("logger");
+        $this->cache           = WPStaging::getInstance()->get("cache");
+        $this->db              = WPStaging::getInstance()->get('wpdb');
 
         // Notices
-        $this->disabledItemsNotice = WPStaging::make(DisabledItemsNotice::class);
-        $this->warningsNotice = WPStaging::make(WarningsNotice::class);
+        $this->disabledItemsNotice     = WPStaging::make(DisabledItemsNotice::class);
+        $this->warningsNotice          = WPStaging::make(WarningsNotice::class);
         $this->outdatedWpStagingNotice = WPStaging::make(OutdatedWpStagingNotice::class);
     }
 
@@ -154,7 +155,7 @@ class Notices
      */
     private function getCurrentPage()
     {
-        if (function_exists('get_current_screen')) {
+        if (function_exists('\get_current_screen')) {
             return \get_current_screen()->post_type;
         }
 
@@ -192,13 +193,17 @@ class Notices
             $freemiusOptionsCleared = $this->freemiusScript->isNoticeEnabled();
             // Show jetpack staging mode notice if the constant is set on staging site
             $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
+            $excludedFiles = get_option(Sites::STAGING_EXCLUDED_FILES_OPTION, []);
             // use require here instead of require_once otherwise unit tests will always fail,
             // as this notice is tested multiple times.
             require "{$viewsNoticesPath}disabled-items-notice.php";
         }
 
-        $optionTable = $this->db->prefix . 'options';
-        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && $this->isOptionTablePrimaryKeyMissing($this->db, $optionTable))) {
+        $optionTable              = $this->db->prefix . 'options';
+        $isPrimaryKeyMissing      = $this->isOptionTablePrimaryKeyMissing($this->db, $optionTable);
+        $isPrimaryKeyIsOptionName = $this->isOptionTablePrimaryKeyIsOptionName($this->db, $optionTable);
+
+        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && ( $isPrimaryKeyMissing || $isPrimaryKeyIsOptionName ) )) {
             require "{$viewsNoticesPath}wp-options-missing-pk.php";
         }
 
@@ -282,20 +287,39 @@ class Notices
      * @param wpdb $db
      * @param string $optionTable
      *
-     * @return boolean
+     * @return bool
      */
     private function isOptionTablePrimaryKeyMissing($db, $optionTable)
     {
         $result = $db->dbh->query("SELECT option_id FROM {$optionTable} LIMIT 1");
-        $fInfo = $result->fetch_field();
+        $fInfo  = $result->fetch_field();
         $result->free_result();
 
         // Check whether the flag have primary key and auto increment flag
-        if (($fInfo->flags & MYSQLI_PRI_KEY_FLAG) && ($fInfo->flags & MYSQLI_AUTO_INCREMENT_FLAG)) {
+        if (isset($fInfo->flags) && ($fInfo->flags & MYSQLI_PRI_KEY_FLAG) && $fInfo->flags & MYSQLI_AUTO_INCREMENT_FLAG) {
+            return false;
+        }
+
+        if ($this->isOptionTablePrimaryKeyIsOptionName($db, $optionTable)) {
             return false;
         }
 
         return true;
+    }
+
+    /** @return bool */
+    private function isOptionTablePrimaryKeyIsOptionName($db, $optionTable)
+    {
+        $result = $db->dbh->query("SELECT option_name FROM {$optionTable} LIMIT 1");
+        $fInfo  = $result->fetch_field();
+        $result->free_result();
+
+        // Check whether the flag have primary key
+        if ($fInfo->flags & MYSQLI_PRI_KEY_FLAG) {
+            return true;
+        }
+
+        return false;
     }
 
     /**
@@ -334,7 +358,7 @@ class Notices
     private function isDifferentScheme()
     {
         $siteurlScheme = parse_url(get_option('siteurl'), PHP_URL_SCHEME);
-        $homeScheme = parse_url(get_option('home'), PHP_URL_SCHEME);
+        $homeScheme    = parse_url(get_option('home'), PHP_URL_SCHEME);
 
         return !($siteurlScheme === $homeScheme);
     }

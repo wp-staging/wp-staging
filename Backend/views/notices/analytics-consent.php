@@ -11,8 +11,8 @@
         <?php echo esc_html__('We don’t collect any personal user information like your mail address or name and will not send you any marketing mails!', 'wp-staging') ?>
     <p>
         <a href="<?php echo esc_url($this->getConsentLink(true)) ?>" class="button-primary"><?php echo esc_html__('Yes, help us by sending usage information', 'wp-staging') ?></a>
-        <a href="<?php echo esc_url($this->getConsentLink(false)) ?>" class="button-cancel"><?php echo esc_html__('No, don\'t send any information', 'wp-staging') ?></a>
+        <a href="<?php echo esc_url($this->getConsentLink(false)) ?>" class="button-cancel wpstg-consent-cancel"><?php echo esc_html__('No, don\'t send any information', 'wp-staging') ?></a>
         <a href="<?php echo esc_url($this->getRemindMeLaterConsentLink()) ?>" class="button-cancel"><?php echo esc_html__('Ask me later', 'wp-staging') ?></a>
     </p>
-    <p><?php echo wp_kses_post(__(sprintf('<i>See the data we collect <a href="%s" target="_blank">here</a></i>', 'https://wp-staging.com/what-data-do-we-collect/')), 'wp-staging') ?></p>
+    <p><i><?php echo wp_kses_post(sprintf(__('See the data we collect <a href="%s" target="_blank">here</a>', 'wp-staging'), 'https://wp-staging.com/what-data-do-we-collect/')) ?></i></p>
 </div>

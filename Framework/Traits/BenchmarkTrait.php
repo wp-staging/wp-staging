@@ -17,7 +17,7 @@ trait BenchmarkTrait
     protected function startBenchmark()
     {
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            /** @var Logger $logger */
+            /** @var Logger */
             $this->benchmarkLogger = WPStaging::make(Logger::class);
 
             // Eg: JobSiteBackup_Benchmark

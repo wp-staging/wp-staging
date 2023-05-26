@@ -13,7 +13,7 @@ use WPStaging\Framework\Facades\Sanitize;
  * @var Scan $scan
  * @var stdClass                             $options
  * @var boolean                              $isPro
- * @var stdClass $wpDefaultDirectories
+ * @var object $wpDefaultDirectories
  *
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
@@ -61,7 +61,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
 ?>
 
 <p class="wpstg--advance-settings--checkbox">
-  <label for="wpstg-change-dest"><?php esc_html_e('Change Destination'); ?></label>
+  <label for="wpstg-change-dest"><?php esc_html_e('Change Destination', 'wp-staging'); ?></label>
   <input type="checkbox" id="wpstg-change-dest" name="wpstg-change-dest" value="true" class="wpstg-toggle-advance-settings-section wpstg-checkbox" data-id="wpstg-clone-directory" <?php echo $isPro === true ? '' : 'disabled' ?> >
   <span class="wpstg--tooltip">
     <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
@@ -95,7 +95,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     <?php endif; ?>
   </div>
   <div class="wpstg-form-group wpstg-text-field">
-    <label><?php esc_html_e('Target Hostname: ') ?> </label>
+    <label><?php esc_html_e('Target Hostname: ', 'wp-staging') ?> </label>
     <input type="text" class="wpstg-textbox" name="wpstg_clone_hostname" id="wpstg_clone_hostname" value="<?php echo esc_attr($customHostname); ?>" title="wpstg_clone_hostname" placeholder="<?php echo esc_attr($hostname); ?>" autocapitalize="off" <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?> />
     <?php if (!$proSettingsDisabled) : ?>
     <span class="wpstg-code-segment">
@@ -112,7 +112,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
 </div>
 
 <p class="wpstg--advance-settings--checkbox">
-    <label for="wpstg_symlink_upload"><?php esc_html_e('Symlink Uploads Folder'); ?></label>
+    <label for="wpstg_symlink_upload"><?php esc_html_e('Symlink Uploads Folder', 'wp-staging'); ?></label>
     <input type="checkbox" class="wpstg-checkbox" id="wpstg_symlink_upload" name="wpstg_symlink_upload" value="true"
       <?php echo $proSettingsDisabled === true ? 'disabled' : '' ?>
       <?php echo $uploadsSymlinked === true ? 'checked' : '' ?> />

@@ -4,24 +4,31 @@
  * @var string $providerId
  */
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
 
 ?>
 <fieldset>
     <?php
-    /** @var \WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth */
-    $googleDriveStorage = \WPStaging\Core\WPStaging::make(Auth::class);
+    /** @var Auth */
+    $googleDriveStorage = WPStaging::make(Auth::class);
+
+    $providerName = esc_html__('Google Drive', 'wp-staging');
+    if ($googleDriveStorage->isEncrypted()) {
+        require_once "{$this->path}views/settings/tabs/storages/encrypted-notice.php";
+    }
+
     $isGoogleDriveAuthenticated = $googleDriveStorage->isAuthenticated();
-    $options = $googleDriveStorage->getOptions();
+    $options                    = $googleDriveStorage->getOptions();
 
     $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
     $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
-    $folderName = isset($options['folderName']) ? $options['folderName'] : \WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::FOLDER_NAME;
-    $lastUpdated = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
+    $folderName       = isset($options['folderName']) ? $options['folderName'] : Auth::FOLDER_NAME;
+    $lastUpdated      = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
 
-    $googleClientId = isset($options['googleClientId']) ? $options['googleClientId'] : '';
-    $googleClientSecret = isset($options['googleClientSecret']) ? $options['googleClientSecret'] : '';
+    $googleClientId         = isset($options['googleClientId']) ? $options['googleClientId'] : '';
+    $googleClientSecret     = isset($options['googleClientSecret']) ? $options['googleClientSecret'] : '';
     $defaultApiAuthorizeURL = add_query_arg(
         [
             'action' => 'wpstg-googledrive-api-auth',
@@ -32,7 +39,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
     $googleRedirectURI = isset($options['googleRedirectURI']) ? $options['googleRedirectURI'] : $defaultApiAuthorizeURL;
     ?>
     <p>
-        <strong class="wpstg-fs-14"> <?php esc_html_e('Google Drive', 'wp-staging'); ?></strong>
+        <strong class="wpstg-fs-14"> <?php echo esc_html($providerName); ?></strong>
         <br/>
         <?php echo esc_html__('Upload backup files to your personal Google Drive account.', 'wp-staging'); ?>
         <br>
@@ -81,7 +88,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
 
                 <p>
                     <?php echo sprintf(
-                        Escape::escapeHtml(__('You can use your own Google API keys. This is optional. <a href="%s" target="_blank">How to create your own Google API keys</a>.', 'wp-staging', 'wp-staging')),
+                        Escape::escapeHtml(__('You can use your own Google API keys. This is optional. <a href="%s" target="_blank">How to create your own Google API keys</a>.', 'wp-staging')),
                         'https://wp-staging.com/docs/create-google-api-credentials-to-authenticate-to-google-drive/'
                     ); ?>
                 </p>

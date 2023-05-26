@@ -6,6 +6,11 @@ use WPStaging\Framework\Analytics\AnalyticsEventDto;
 
 class AnalyticsStagingUpdate extends AnalyticsEventDto
 {
+    public $emails_allowed;
+    public $delete_plugins_and_themes;
+    public $delete_uploads_folder;
+    public $backup_uploads_folder;
+
     public function getEventAction()
     {
         return 'event_staging_update';

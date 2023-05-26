@@ -10,12 +10,13 @@ trait WithAnalyticsSiteInfo
 {
     public function getAnalyticsSiteInfo()
     {
+        global $wpdb, $wp_version, $wp_db_version;
+
         /**
          * @var string $wp_version
          * @var int    $wp_db_version
          */
         include ABSPATH . WPINC . '/version.php';
-        global $wpdb;
 
         // eg: 10.4.19-MariaDB-1:10.4.19+maria~focal
         $mysqlInfo = $wpdb->get_var('SELECT VERSION();');

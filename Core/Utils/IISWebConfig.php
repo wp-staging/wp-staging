@@ -19,7 +19,7 @@ class IISWebConfig
 
     /**
      *
-     * @var obj
+     * @var object
      */
     private $filesystem;
 

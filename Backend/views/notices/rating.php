@@ -30,12 +30,6 @@
                     </a>
                 </li>
                 <li>
-                    <a href="javascript:void(0);" class="wpstg_hide_rating" title="No, not good enough"
-                    style="font-weight:normal;color:white;">
-                        <?php esc_html_e('', 'wp-staging') ?>
-                    </a>
-                </li>
-                <li>
                     <a href="javascript:void(0);" class="wpstg_rate_later" title="Ask me again in a week"
                     style="font-weight:normal;color:white;text-decoration: none;">
                         <?php esc_html_e('- Ask me again in a week - Close', 'wp-staging') ?>
@@ -50,8 +44,8 @@
 <script>
     var wpstgYouTubeConfig = {
         'accepted': false,
-        'message': "<?php esc_html_e("This video is hosted on YouTube. Please click on the OK button to play this video. We don't load any external data without your explicit consent.") ?>",
-        'regards': "<?php esc_html_e("Your WP STAGING Team") ?>"
+        'message': "<?php esc_html_e("This video is hosted on YouTube. Please click on the OK button to play this video. We don't load any external data without your explicit consent.", 'wp-staging') ?>",
+        'regards': "<?php esc_html_e("Your WP STAGING Team", 'wp-staging') ?>"
     };
 </script>
 <script src="<?php echo esc_url($this->assets->getAssetsUrlWithVersion("js/dist/wpstg-admin-rating.js", '2.7.6')) ?>"></script>

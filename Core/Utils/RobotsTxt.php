@@ -18,7 +18,7 @@ class RobotsTxt
 
     /**
      *
-     * @var obj
+     * @var object
      */
     public $filesystem;
 

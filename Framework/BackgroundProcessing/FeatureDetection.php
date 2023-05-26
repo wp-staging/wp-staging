@@ -20,8 +20,8 @@ use function WPStaging\functions\debug_log;
  */
 class FeatureDetection
 {
-    const AJAX_TEST_ACTION = 'wpstg_ajax_test_action';
-    const AJAX_OPTION_NAME = 'wpstg_q_feature_detection_ajax_available';
+    const AJAX_TEST_ACTION       = 'wpstg_ajax_test_action';
+    const AJAX_OPTION_NAME       = 'wpstg_q_feature_detection_ajax_available';
     const AJAX_REQUEST_QUERY_VAR = 'wpstg_q_ajax_check';
 
     /**
@@ -63,7 +63,7 @@ class FeatureDetection
             $availableOptionValue = get_option(self::AJAX_OPTION_NAME, null);
 
             if (!in_array($availableOptionValue, ['y', 'n'], true)) {
-                $available = $this->runAjaxFeatureTest();
+                $available            = $this->runAjaxFeatureTest();
                 $availableOptionValue = $available ? 'y' : 'n';
                 update_option(self::AJAX_OPTION_NAME, $availableOptionValue, false);
             }
@@ -105,7 +105,7 @@ class FeatureDetection
         delete_option(self::AJAX_OPTION_NAME);
 
         $ajaxUrl = add_query_arg([
-            'action' => self::AJAX_TEST_ACTION,
+            'action'      => self::AJAX_TEST_ACTION,
             '_ajax_nonce' => wp_create_nonce(self::AJAX_TEST_ACTION)
         ], admin_url('admin-ajax.php'));
 
@@ -114,14 +114,14 @@ class FeatureDetection
         debug_log('Sending request to: ' . $ajaxUrl);
 
         $response = wp_remote_post(esc_url_raw($ajaxUrl), [
-            'headers' => [
+            'headers'   => [
                 'X-WPSTG-Request' => self::AJAX_TEST_ACTION
             ],
-            'blocking' => false,
-            'timeout' => 0.01,
-            'cookies' => isset($_COOKIE) ? $_COOKIE : [],
+            'blocking'  => false,
+            'timeout'   => 0.01,
+            'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],
             'sslverify' => apply_filters('https_local_ssl_verify', false),
-            'body' => [self::AJAX_OPTION_NAME => $hash],
+            'body'      => [self::AJAX_OPTION_NAME => $hash],
         ]);
 
         debug_log(wp_json_encode($response));
@@ -130,7 +130,7 @@ class FeatureDetection
             return false;
         }
 
-        $test = static function () use ($hash) {
+        $test = static function () {
             // Run a direct query to force the re-fetch and not hit the cache.
             global $wpdb;
             $fetched = $wpdb->get_var(
@@ -146,9 +146,9 @@ class FeatureDetection
             return $fetched === 'y';
         };
 
-        $waited = 0;
+        $waited   = 0;
         $waitStep = .5 * 1e6; // 0.5 second
-        $timeout = 10 * 1e6; // 10 seconds
+        $timeout  = 10 * 1e6; // 10 seconds
 
         do {
             debug_log('runAjaxFeatureTest waited ' . number_format($waited / 1e6, 1) . ' seconds...');

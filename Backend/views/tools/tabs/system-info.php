@@ -8,7 +8,7 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
 <form action="<?php echo esc_url(admin_url("admin-post.php?action=wpstg_download_sysinfo")) ?>" method="post" dir="ltr">
     <!-- Keep the class wpstg--tab--active or the report issue form js can not grab the form values because the same form is embedded multiple times into the UI. See sendIssueReport() in wpstg-admin.js -->
     <div id="wpstg--systeminfo-header" style="">
-        <input type="submit" name="wpstg-download-sysinfo" id="wpstg-download-sysinfo" class="wpstg-button wpstg-blue-primary" value="Download System Info">
+        <input type="submit" name="wpstg-download-sysinfo" id="wpstg-download-sysinfo" class="wpstg-button wpstg-blue-primary" value="Download All Log Files">
         <button type="button" id="wpstg-report-issue-button" class="wpstg-button">
             <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
         </button>

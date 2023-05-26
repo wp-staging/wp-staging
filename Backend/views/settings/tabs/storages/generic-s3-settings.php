@@ -14,23 +14,29 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
     <?php
     /** @var Auth */
     $auth = WPStaging::make(Auth::class);
-    $providers = Providers::PROVIDERS;
+
+    $providerName = esc_html__('Generic S3', 'wp-staging');
+    if ($auth->isEncrypted()) {
+        require_once "{$this->path}views/settings/tabs/storages/encrypted-notice.php";
+    }
+
+    $providers              = Providers::PROVIDERS;
     $isStorageAuthenticated = $auth->isAuthenticated();
-    $options = $auth->getOptions();
-    $s3provider = empty($options['provider']) ? '' : $options['provider'];
-    $accessKey = empty($options['accessKey']) ? '' : $options['accessKey'];
-    $secretKey = empty($options['secretKey']) ? '' : $options['secretKey'];
-    $region = empty($options['region']) ? '' : $options['region'];
-    $maxBackupsToKeep = empty($options['maxBackupsToKeep']) ? 2 : $options['maxBackupsToKeep'];
-    $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
-    $location = empty($options['location']) ? '' : $options['location'];
-    $lastUpdated = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
+    $options                = $auth->getOptions();
+    $s3provider             = empty($options['provider']) ? '' : $options['provider'];
+    $accessKey              = empty($options['accessKey']) ? '' : $options['accessKey'];
+    $secretKey              = empty($options['secretKey']) ? '' : $options['secretKey'];
+    $region                 = empty($options['region']) ? '' : $options['region'];
+    $maxBackupsToKeep       = empty($options['maxBackupsToKeep']) ? 2 : $options['maxBackupsToKeep'];
+    $maxBackupsToKeep       = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
+    $location               = empty($options['location']) ? '' : $options['location'];
+    $lastUpdated            = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
 
     if ($s3provider === '') {
-        $customProviderName = empty($options['providerName']) ? '' : $options['providerName'];
-        $endpoint = empty($options['endpoint']) ? '' : $options['endpoint'];
-        $version = empty($options['version']) ? '' : $options['version'];
-        $ssl = isset($options['ssl']) ? $options['ssl'] : false;
+        $customProviderName   = empty($options['providerName']) ? '' : $options['providerName'];
+        $endpoint             = empty($options['endpoint']) ? '' : $options['endpoint'];
+        $version              = empty($options['version']) ? '' : $options['version'];
+        $ssl                  = isset($options['ssl']) ? $options['ssl'] : false;
         $usePathStyleEndpoint = isset($options['usePathStyleEndpoint']) ? $options['usePathStyleEndpoint'] : false;
     }
 
@@ -38,7 +44,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
     ?>
     <p>
-        <strong class="wpstg-fs-14"><?php esc_html_e('Generic S3', 'wp-staging'); ?></strong>
+        <strong class="wpstg-fs-14"><?php echo esc_html($providerName); ?></strong>
         <br/>
         <br/>
         <?php echo esc_html__('Upload backup files to your personal Generic S3 account.', 'wp-staging'); ?>
@@ -59,14 +65,14 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('S3 Compatible Provider', 'wp-staging') ?></label>
                     <select class="wpstg-form-select" name="s3_provider" style="min-width:300px;">
-                    <option value="" <?php echo ('' === $s3provider) ? 'selected' : '' ; ?>><?php esc_html_e('Custom Provider', 'wp-staging'); ?></option>
+                    <option value="" <?php echo ($s3provider === '') ? 'selected' : '' ; ?>><?php esc_html_e('Custom Provider', 'wp-staging'); ?></option>
                         <?php foreach ($providers as $providerArr) : ?>
                             <option value="<?php echo esc_attr($providerArr['key']); ?>" <?php echo ($providerArr['key'] === $s3provider) ? 'selected' : '' ; ?>><?php echo esc_html($providerArr['name']); ?></option>
                         <?php endforeach; ?>
                     </select>
                 </fieldset>
 
-                <div id="wpstg-s3-custom-provider-fields" class="hidden" <?php echo ('' === $s3provider) ? 'style="display: block;"' : '' ; ?>>
+                <div id="wpstg-s3-custom-provider-fields" class="hidden" <?php echo ($s3provider === '') ? 'style="display: block;"' : '' ; ?>>
                     
                     <strong><?php esc_html_e('Custom Provider', 'wp-staging') ?></strong>
 

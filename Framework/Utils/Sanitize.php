@@ -213,7 +213,7 @@ class Sanitize
         }
 
         foreach ($items as $key => $value) {
-            $sanitized[$key] = isset($config[$key]) ? $this->sanitize($value, $config[$key]) : $this->sanitizeString($value);
+            $sanitized[$key] = isset($config[$key]) ? $this->sanitizeCall($value, $config[$key]) : $this->sanitizeString($value);
         }
 
         return $sanitized;
@@ -233,7 +233,7 @@ class Sanitize
      * @param string $method
      * @return int|bool|string|array
      */
-    protected function sanitize($value, $method)
+    protected function sanitizeCall($value, $method)
     {
         $methodName = 'sanitize' . ucfirst($method);
         if (!method_exists($this, $methodName)) {

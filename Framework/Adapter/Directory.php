@@ -60,7 +60,7 @@ class Directory
     public function __construct(Filesystem $filesystem, Strings $strings)
     {
         $this->filesystem = $filesystem;
-        $this->strUtils = $strings;
+        $this->strUtils   = $strings;
     }
 
     /**
@@ -352,5 +352,17 @@ class Directory
     public function getFileSystem()
     {
         return $this->filesystem;
+    }
+
+    /**
+    * Return true if the default backup paths has been changed by a filter and is outside abspath
+    * @return bool
+    */
+    public function isBackupPathOutsideAbspath()
+    {
+        $defaultBackupDirAbsPath = $this->getPluginUploadsDirectory() . Compressor::BACKUP_DIR_NAME;
+        $absPath                 = $this->getAbsPath();
+
+        return $absPath !== substr($defaultBackupDirAbsPath, 0, strlen($absPath));
     }
 }

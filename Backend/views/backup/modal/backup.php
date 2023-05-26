@@ -145,7 +145,7 @@ $disabledProElement = $isProVersion ? '' : ' disabled';
                         <select name="backupScheduleRotation" id="backupScheduleRotation">
                             <?php for ($i = 1; $i <= 10; $i++) : ?>
                                 <option value="<?php echo esc_attr($i) ?>" <?php echo $isProVersion ? "" : ($i === 2 ? 'selected' : 'disabled') ?>>
-                                    <?php esc_html_e(sprintf('Keep last %d backup%s', $i, ($i > 1 ? 's' : ''))); ?>
+                                    <?php echo sprintf(esc_html__('Keep last %d backup%s', 'wp-staging'), (int) $i, (int)$i > 1 ? 's' : ''); ?>
                                 </option>
                             <?php endfor; ?>
                         </select>

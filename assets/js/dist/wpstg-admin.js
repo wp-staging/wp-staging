@@ -1426,6 +1426,11 @@
 
         _this.toggleTableSelection();
       });
+      addEvent(this.workflow, 'click', '.wpstg-button-unselect-wpstg', function (target, event) {
+        event.preventDefault();
+
+        _this.unselectWPSTGTables();
+      });
     };
 
     _proto.init = function init() {
@@ -1484,6 +1489,21 @@
         this.isAllTablesChecked = false;
       }
 
+      this.countSelectedTables();
+    };
+
+    _proto.unselectWPSTGTables = function unselectWPSTGTables() {
+      var _this2 = this;
+
+      var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table');
+      var regexPattern = 'wpstg';
+      options.forEach(function (option) {
+        var name = option.getAttribute('name', '');
+
+        if (name.match(regexPattern) && !name.match(_this2.wpstgObject.tblprefix + 'wpstg_queue')) {
+          option.selected = false;
+        }
+      });
       this.countSelectedTables();
     };
 
@@ -2903,6 +2923,7 @@
       var cloneDir = $('#wpstg_clone_dir').val();
       that.data.cloneDir = encodeURIComponent($.trim(cloneDir));
       that.data.cloneHostname = $('#wpstg_clone_hostname').val();
+      that.data.cronDisabled = $('#wpstg_disable_cron').is(':checked');
       that.data.emailsAllowed = $('#wpstg_allow_emails').is(':checked');
       that.data.networkClone = $('#wpstg_network_clone').is(':checked');
       that.data.uploadsSymlinked = $('#wpstg_symlink_upload').is(':checked');
@@ -2954,6 +2975,8 @@
           that.tableSelector = new WpstgTableSelection('#wpstg-scanning-db', '#wpstg-workflow', '#wpstg_network_clone', '#wpstg_select_tables_cloning', wpstg);
           that.switchStep(2);
           that.cloneExcludeFilters = new WpstgExcludeFilters();
+          that.directoryNavigator.countSelectedFiles();
+          that.tableSelector.countSelectedTables();
         } else if (that.data.action === 'wpstg_cloning' || that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
           that.switchStep(3);
         } // Start cloning

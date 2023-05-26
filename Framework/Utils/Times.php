@@ -167,19 +167,19 @@ class Times
         // Add the hour part to the string.
         if (is_numeric($hour)) {
             /* translators: %s: Time duration in hour or hours. */
-            $human_readable_duration[] = sprintf(_n('%s hour', '%s hours', $hour), (int)$hour);
+            $human_readable_duration[] = sprintf(_n('%s hour', '%s hours', $hour, 'wp-staging'), (int)$hour);
         }
 
         // Add the minute part to the string.
         if (is_numeric($minute)) {
             /* translators: %s: Time duration in minute or minutes. */
-            $human_readable_duration[] = sprintf(_n('%s minute', '%s minutes', $minute), (int)$minute);
+            $human_readable_duration[] = sprintf(_n('%s minute', '%s minutes', $minute, 'wp-staging'), (int)$minute);
         }
 
         // Add the second part to the string.
         if (is_numeric($second)) {
             /* translators: %s: Time duration in second or seconds. */
-            $human_readable_duration[] = sprintf(_n('%s second', '%s seconds', $second), (int)$second);
+            $human_readable_duration[] = sprintf(_n('%s second', '%s seconds', $second, 'wp-staging'), (int)$second);
         }
 
         return implode(', ', $human_readable_duration);
@@ -214,49 +214,49 @@ class Times
                 $secs = 1;
             }
             /* translators: Time difference between two dates, in seconds. %s: Number of seconds. */
-            $since = sprintf(_n('%s second', '%s seconds', $secs), $secs);
+            $since = sprintf(_n('%s second', '%s seconds', $secs, 'wp-staging'), $secs);
         } elseif ($diff < HOUR_IN_SECONDS) {
             $mins = round($diff / MINUTE_IN_SECONDS);
             if ($mins <= 1) {
                 $mins = 1;
             }
             /* translators: Time difference between two dates, in minutes (min=minute). %s: Number of minutes. */
-            $since = sprintf(_n('%s min', '%s mins', $mins), $mins);
+            $since = sprintf(_n('%s min', '%s mins', $mins, 'wp-staging'), $mins);
         } elseif ($diff < DAY_IN_SECONDS) {
             $hours = round($diff / HOUR_IN_SECONDS);
             if ($hours <= 1) {
                 $hours = 1;
             }
             /* translators: Time difference between two dates, in hours. %s: Number of hours. */
-            $since = sprintf(_n('%s hour', '%s hours', $hours), $hours);
+            $since = sprintf(_n('%s hour', '%s hours', $hours, 'wp-staging'), $hours);
         } elseif ($diff < WEEK_IN_SECONDS) {
             $days = round($diff / DAY_IN_SECONDS);
             if ($days <= 1) {
                 $days = 1;
             }
             /* translators: Time difference between two dates, in days. %s: Number of days. */
-            $since = sprintf(_n('%s day', '%s days', $days), $days);
+            $since = sprintf(_n('%s day', '%s days', $days, 'wp-staging'), $days);
         } elseif ($diff < MONTH_IN_SECONDS) {
             $weeks = round($diff / WEEK_IN_SECONDS);
             if ($weeks <= 1) {
                 $weeks = 1;
             }
             /* translators: Time difference between two dates, in weeks. %s: Number of weeks. */
-            $since = sprintf(_n('%s week', '%s weeks', $weeks), $weeks);
+            $since = sprintf(_n('%s week', '%s weeks', $weeks, 'wp-staging'), $weeks);
         } elseif ($diff < YEAR_IN_SECONDS) {
             $months = round($diff / MONTH_IN_SECONDS);
             if ($months <= 1) {
                 $months = 1;
             }
             /* translators: Time difference between two dates, in months. %s: Number of months. */
-            $since = sprintf(_n('%s month', '%s months', $months), $months);
+            $since = sprintf(_n('%s month', '%s months', $months, 'wp-staging'), $months);
         } elseif ($diff >= YEAR_IN_SECONDS) {
             $years = round($diff / YEAR_IN_SECONDS);
             if ($years <= 1) {
                 $years = 1;
             }
             /* translators: Time difference between two dates, in years. %s: Number of years. */
-            $since = sprintf(_n('%s year', '%s years', $years), $years);
+            $since = sprintf(_n('%s year', '%s years', $years, 'wp-staging'), $years);
         }
 
         /**

@@ -72,10 +72,10 @@ class Frontend
             $login = new LoginForm();
             if ($this->accessDenied) {
                 wp_logout();
-                $login->setError(__('Access Denied'));
+                $login->setError(__('Access Denied', 'wp-staging'));
             }
             $overrides = [
-                'label_username' => __('Username or Email Address'),
+                'label_username' => __('Username or Email Address', 'wp-staging'),
             ];
             $login->renderForm($login->getDefaultArguments($overrides));
             die();

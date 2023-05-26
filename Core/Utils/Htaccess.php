@@ -19,7 +19,7 @@ class Htaccess
 
     /**
      *
-     * @var obj
+     * @var object
      */
     public $filesystem;
 

@@ -162,7 +162,7 @@ class Upgrade
                             $sites[$key]['prefix'] = $this->getStagingPrefix($sites[$key]['directoryName']);
         }
 
-        if (!empty($sites)) {
+        if (count($sites) > 0) {
             $this->stagingSitesHelper->updateStagingSites($sites);
         }
     }

@@ -39,19 +39,19 @@ class Queue
      * manage its information.
      */
     const TABLE_NOT_EXIST = -1;
-    const TABLE_EXISTS = 0;
-    const TABLE_CREATED = 1;
+    const TABLE_EXISTS    = 0;
+    const TABLE_CREATED   = 1;
 
     /**
      * A set of constants that are used to normalize the possible status
      * of an action in the context of the queue.
      */
-    const STATUS_READY = 'ready';
+    const STATUS_READY      = 'ready';
     const STATUS_PROCESSING = 'processing';
-    const STATUS_COMPLETED = 'completed';
-    const STATUS_FAILED = 'failed';
-    const STATUS_ANY = 'any';
-    const STATUS_CANCELED = 'canceled';
+    const STATUS_COMPLETED  = 'completed';
+    const STATUS_FAILED     = 'failed';
+    const STATUS_ANY        = 'any';
+    const STATUS_CANCELED   = 'canceled';
 
     /**
      * Option name where we store queue table version
@@ -122,11 +122,11 @@ class Queue
      */
     public function __construct(Database $database = null)
     {
-        $services = WPStaging::getInstance()->getContainer();
-        $this->database = $database ?: $services->make(DatabaseAdapter::class)->getClient();
-        $this->logger = $services->make('logger');
+        $services               = WPStaging::getInstance()->getContainer();
+        $this->database         = $database ?: $services->make(DatabaseAdapter::class)->getClient();
+        $this->logger           = $services->make('logger');
         $this->featureDetection = $services->make(FeatureDetection::class);
-        $this->phpAdapter = $services->make(PhpAdapter::class);
+        $this->phpAdapter       = $services->make(PhpAdapter::class);
     }
 
     /**
@@ -161,29 +161,29 @@ class Queue
             $this->checkTable(true);
         }
 
-        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+        if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             // The table does not exist and cannot be created, bail.
             return false;
         }
 
         $assignments = [
-            'action' => $actionObject->action,
-            'jobId' => (string)$actionObject->jobId,
-            'status' => self::STATUS_READY,
+            'action'   => $actionObject->action,
+            'jobId'    => (string)$actionObject->jobId,
+            'status'   => self::STATUS_READY,
             'priority' => (int)$actionObject->priority,
-            'args' => $actionObject->args,
+            'args'     => $actionObject->args,
         ];
 
         $assignmentsList = $this->buildAssignmentsList($assignments);
 
         $tableName = self::getTableName();
-        $query = "INSERT INTO {$tableName} SET {$assignmentsList}";
+        $query     = "INSERT INTO {$tableName} SET {$assignmentsList}";
 
         $result = $this->database->query($query, true);
 
-        if (empty($result)) {
+        if ($result === false) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Error while trying insert Action information.',
+                'root'  => 'Error while trying insert Action information.',
                 'class' => get_class($this),
                 'query' => $query,
                 'error' => $this->database->error(),
@@ -196,7 +196,7 @@ class Queue
 
         if (empty($id)) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Error while trying to fetch last inserted Action ID.',
+                'root'  => 'Error while trying to fetch last inserted Action ID.',
                 'class' => get_class($this),
                 'query' => $query,
                 'error' => $this->database->error(),
@@ -205,7 +205,7 @@ class Queue
             return false;
         }
 
-        $actionObject = $actionObject->alter(['id' => $id, 'status' => self::STATUS_READY]);
+        $actionObject            = $actionObject->alter(['id' => $id, 'status' => self::STATUS_READY]);
         $this->actionCaches[$id] = $actionObject->toArray();
 
         if (!has_action('shutdown', [$this, 'maybeFireAjaxAction'])) {
@@ -354,7 +354,7 @@ class Queue
     public function tableExists()
     {
         $tableName = self::getTableName();
-        $result = $this->database->query("SHOW TABLES LIKE '{$tableName}'");
+        $result    = $this->database->query("SHOW TABLES LIKE '{$tableName}'");
 
         if ($result === false) {
             return false;
@@ -420,16 +420,16 @@ class Queue
          * all the actions of a specific type.
          */
 
-        $offset = 0;
-        $limit = 100;
+        $offset              = 0;
+        $limit               = 100;
         $inputActionIdsCount = count($actionIds);
-        $totalResultsCount = 0;
+        $totalResultsCount   = 0;
 
         do {
             $offsetAndLimit = sprintf('%d, %d', $offset, $limit);
 
             if ($inputActionIdsCount > 0) {
-                $ids = implode(',', array_filter(array_map('absint', $actionIds)));
+                $ids   = implode(',', array_filter(array_map('absint', $actionIds)));
                 $query = "SELECT * FROM {$queueTable} q JOIN {$queueTable} q1 ON q.status = q1.status WHERE q1.id IN ({$ids}) LIMIT {$offsetAndLimit}";
             } else {
                 $stati = implode(',', array_map(function ($status) {
@@ -440,9 +440,9 @@ class Queue
 
             $result = $this->database->query($query);
 
-            if (false === $result) {
+            if ($result === false) {
                 \WPStaging\functions\debug_log(json_encode([
-                    'root' => 'Error while trying to fetch Actions information.',
+                    'root'  => 'Error while trying to fetch Actions information.',
                     'class' => get_class($this),
                     'query' => $query,
                     'error' => $this->database->error(),
@@ -458,7 +458,7 @@ class Queue
                 $preparedActions[$actionRow['id']] = $this->convertDbRowToData($actionRow);
             }
 
-            $found = count(array_diff_key($preparedActions, array_flip($actionIds))) === $inputActionIdsCount;
+            $found = $inputActionIdsCount === count(array_diff_key($preparedActions, array_flip($actionIds)));
 
             if (!isset($foundRows)) {
                 $foundRows = max(0, (int)$this->database->foundRows());
@@ -498,13 +498,13 @@ class Queue
         if ($this->checkTable() !== self::TABLE_EXISTS) {
             // No actions if the table either does nto exist or has just been created.
             debug_log('Queue getNextAvailable: Table does not exist for getting the next available.', 'debug');
-            return null;
+            return;
         }
 
         $processing = self::STATUS_PROCESSING;
-        $ready = self::STATUS_READY;
-        $tableName = self::getTableName();
-        $now = current_time('mysql');
+        $ready      = self::STATUS_READY;
+        $tableName  = self::getTableName();
+        $now        = current_time('mysql');
 
         $this->unlockQueueTable();
 
@@ -513,7 +513,7 @@ class Queue
         if ($this->count($processing) > 0) {
             debug_log('Queue getNextAvailable: There is an action already in process. Stop!', 'debug');
             $this->database->query("UNLOCK TABLES");
-            return null;
+            return;
         }
 
         $claimIdQuery = "SELECT id FROM {$tableName}
@@ -525,7 +525,7 @@ class Queue
             // This is NOT a failure: it just means the process could not lock the row.
             debug_log('Queue getNextAvailable returns null because claimed Id was empty. This query failed: ' . $claimIdQuery, 'debug');
             $this->database->query("UNLOCK TABLES");
-            return null;
+            return;
         }
 
         $claimedId = $this->database->fetchAssoc($claimedId);
@@ -533,7 +533,7 @@ class Queue
         if (!is_array($claimedId) || !array_key_exists('id', $claimedId)) {
             debug_log('Queue getNextAvailable returns null because claimedID query does not return an array or "id" does not exist. This query failed: ' . $claimIdQuery, 'debug');
             $this->database->query("UNLOCK TABLES");
-            return null;
+            return;
         }
 
         $claimedActionId = $claimedId['id'];
@@ -552,7 +552,7 @@ class Queue
         if (!$claimed) {
             // This is NOT a failure: it just means the process could not lock the row.
             debug_log('Queue getNextAvailable returns null the process could not lock the row. This query failed: ' . $claimQuery, 'debug');
-            return null;
+            return;
         }
 
         // Invalidate this Action cache and re-fetch the information.
@@ -592,13 +592,13 @@ class Queue
         $jobClause = '';
         if (isset($jobId)) {
             $jobIdsInterval = $this->escapeInterval((array)$jobId);
-            $jobClause = "AND jobId IN ({$jobIdsInterval})";
+            $jobClause      = "AND jobId IN ({$jobIdsInterval})";
         }
 
         if (empty($status) || $status === Queue::STATUS_ANY) {
             $countQuery = "SELECT COUNT(id) FROM {$tableName} WHERE 1=1 {$jobClause}";
         } else {
-            $statuses = $this->escapeInterval((array)$status);
+            $statuses   = $this->escapeInterval((array)$status);
             $countQuery = "SELECT COUNT(id) FROM {$tableName} WHERE status IN ({$statuses}) {$jobClause}";
         }
 
@@ -609,7 +609,7 @@ class Queue
 
             if (!empty($error)) {
                 \WPStaging\functions\debug_log(json_encode([
-                    'root' => 'Error while trying to count Actions.',
+                    'root'  => 'Error while trying to count Actions.',
                     'class' => get_class($this),
                     'query' => $countQuery,
                     'error' => $error,
@@ -645,10 +645,10 @@ class Queue
      */
     public function updateActionStatus($action, $newStatus, $unsafely = false)
     {
-        $actionId = absint($action instanceof Action ? $action->id : (int)$action);
+        $actionId  = absint($action instanceof Action ? $action->id : (int)$action);
         $tableName = self::getTableName();
-        $status = $this->database->escape($newStatus);
-        $now = current_time('mysql');
+        $status    = $this->database->escape($newStatus);
+        $now       = current_time('mysql');
 
         $this->unlockQueueTable();
 
@@ -669,7 +669,7 @@ class Queue
 
         if (!$updated) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Error while trying to update Action status.',
+                'root'  => 'Error while trying to update Action status.',
                 'class' => get_class($this),
                 'query' => $statusUpdateQuery,
                 'error' => $this->database->error(),
@@ -692,9 +692,9 @@ class Queue
     private function getCreateTableSql()
     {
         global $wpdb;
-        $collate = $wpdb->collate;
+        $collate    = $wpdb->collate;
         $queueTable = self::getTableName();
-        $tableSql = "CREATE TABLE {$queueTable} (
+        $tableSql   = "CREATE TABLE {$queueTable} (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             action VARCHAR(1000) NOT NULL,
             jobId VARCHAR(1000) DEFAULT NULL,
@@ -720,7 +720,7 @@ class Queue
     public function dropTable()
     {
         $tableName = self::getTableName();
-        $query = "DROP TABLE IF EXISTS {$tableName}";
+        $query     = "DROP TABLE IF EXISTS {$tableName}";
         $this->database->query($query, true);
         $this->tableState = self::TABLE_NOT_EXIST;
 
@@ -758,13 +758,13 @@ class Queue
             return null;
         }
 
-        $tableName = self::getTableName();
-        $fetchQuery = "SELECT * FROM {$tableName} WHERE id={$actionId}";
+        $tableName   = self::getTableName();
+        $fetchQuery  = "SELECT * FROM {$tableName} WHERE id={$actionId}";
         $fetchResult = $this->database->query($fetchQuery);
 
         if ($fetchResult === false) {
             // This is NOT an error, the query might be for a no-more existing Action.
-            return null;
+            return;
         }
 
         $row = $this->database->fetchAssoc($fetchResult);
@@ -853,17 +853,17 @@ class Queue
      */
     public function markDanglingAs($newStatus)
     {
-        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+        if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             debug_log('Queue markDanglingAs: The table does not exist so there is nothing to update.', 'debug');
             return 0;
         }
 
         $this->unlockQueueTable();
 
-        $tableName = self::getTableName();
-        $newStatus = $this->database->escape($newStatus);
+        $tableName          = self::getTableName();
+        $newStatus          = $this->database->escape($newStatus);
         $danglingBreakpoint = $this->getDanglingBreakpointDate()->format('Y-m-d H:i:s');
-        $markQuery = "UPDATE {$tableName} 
+        $markQuery          = "UPDATE {$tableName} 
             SET status='{$newStatus}', claimed_at=NULL
             WHERE claimed_at IS NOT NULL
             AND claimed_at < '{$danglingBreakpoint}'";
@@ -871,7 +871,7 @@ class Queue
 
         if ($markResult === false) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Error while trying to mark dangling Actions.',
+                'root'  => 'Error while trying to mark dangling Actions.',
                 'class' => get_class($this),
                 'query' => $markQuery,
                 'error' => $this->database->error(),
@@ -937,26 +937,26 @@ class Queue
      */
     public function cancelJob($jobId)
     {
-        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+        if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             debug_log('Queue cancelJob: The table does not exist so there is nothing to cancel.');
             return 0;
         }
 
         $this->unlockQueueTable();
 
-        $tableName = self::getTableName();
-        $newStatus = self::STATUS_CANCELED;
-        $jobIds = (array)$jobId;
+        $tableName      = self::getTableName();
+        $newStatus      = self::STATUS_CANCELED;
+        $jobIds         = (array)$jobId;
         $jobIdsInterval = $this->escapeInterval($jobIds);
-        $now = current_time('mysql');
-        $cancelQuery = "UPDATE {$tableName} 
+        $now            = current_time('mysql');
+        $cancelQuery    = "UPDATE {$tableName} 
             SET status='{$newStatus}', claimed_at=NULL, updated_at='{$now}'
             WHERE jobId in ({$jobIdsInterval})";
         $cancelResult = $this->database->query($cancelQuery, true);
 
         if ($cancelResult === false) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Error while trying to cancel Actions.',
+                'root'  => 'Error while trying to cancel Actions.',
                 'class' => get_class($this),
                 'query' => $cancelQuery,
                 'error' => $this->database->error(),
@@ -1028,19 +1028,19 @@ class Queue
             );
         }
 
-        $actionId = absint($action instanceof Action ? $action->id : (int)$action);
+        $actionId  = absint($action instanceof Action ? $action->id : (int)$action);
         $tableName = self::getTableName();
 
-        $assignmentsList = $this->buildAssignmentsList($updates);
+        $assignmentsList   = $this->buildAssignmentsList($updates);
         $statusUpdateQuery = "UPDATE {$tableName} SET {$assignmentsList} WHERE id={$actionId}";
 
         $this->unlockQueueTable();
 
         $updated = $this->database->query($statusUpdateQuery, true);
 
-        if (!$updated) {
+        if ($updated === false) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Error while trying to update Action field.',
+                'root'  => 'Error while trying to update Action field.',
                 'class' => get_class($this),
                 'query' => $statusUpdateQuery,
                 'error' => $this->database->error(),
@@ -1077,13 +1077,13 @@ class Queue
 
             if ($key === 'priority') {
                 // Keep the numeric value.
-                $escapedValue = (int)$value;
+                $escapedValue     = (int)$value;
                 $assignmentList[] = "{$escapedKey}={$escapedValue}";
             } elseif ($key === 'args' || $key === 'custom') {
                 global $wpdb;
                 $assignmentList[] = $wpdb->prepare("{$escapedKey}=%s", maybe_serialize($value));
             } else {
-                $escapedValue = $this->database->escape($value);
+                $escapedValue     = $this->database->escape($value);
                 $assignmentList[] = "{$escapedKey}='{$escapedValue}'";
             }
         });
@@ -1135,14 +1135,14 @@ class Queue
      */
     public function cleanup()
     {
-        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+        if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             debug_log('Queue Cleanup: The table does not exist so there is nothing to update.');
             return 0;
         }
 
-        $tableName = self::getTableName();
+        $tableName         = self::getTableName();
         $cleanupBreakpoint = $this->getCleanupBreakpointDate()->format('Y-m-d H:i:s');
-        $cleanableStati = $this->escapeInterval([
+        $cleanableStati    = $this->escapeInterval([
             self::STATUS_READY,
             self::STATUS_COMPLETED,
             self::STATUS_FAILED,
@@ -1155,7 +1155,7 @@ class Queue
 
         if ($cleanupResult === false) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Error while trying to cleanup Actions.',
+                'root'  => 'Error while trying to cleanup Actions.',
                 'class' => get_class($this),
                 'query' => $cleanupQuery,
                 'error' => $this->database->error(),
@@ -1184,7 +1184,7 @@ class Queue
      */
     public function countActionsByScheduleId($scheduleId, $statuses = [])
     {
-        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+        if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             debug_log('Count actions by ScheduleId: The table does not exist so there is nothing to do.');
             return 0;
         }
@@ -1198,7 +1198,7 @@ class Queue
 
         if ($countResult === false) {
             debug_log(json_encode([
-                'root' => 'Error while trying to count Actions for the scheduleId: "' . $scheduleId . '".',
+                'root'  => 'Error while trying to count Actions for the scheduleId: "' . $scheduleId . '".',
                 'class' => get_class($this),
                 'query' => $countQuery,
                 'error' => $this->database->error(),
@@ -1223,7 +1223,7 @@ class Queue
      */
     public function cleanupActionsByScheduleId($scheduleId, $statuses = [])
     {
-        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+        if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             debug_log('Actions Cleanup by ScheduleId: The table does not exist so there is nothing to update.');
             return 0;
         }
@@ -1231,13 +1231,13 @@ class Queue
         $tableName = self::getTableName();
 
         $this->startBenchmark();
-        $cleanupQuery = "DELETE FROM {$tableName} WHERE {$this->getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses)};";
+        $cleanupQuery  = "DELETE FROM {$tableName} WHERE {$this->getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses)};";
         $cleanupResult = $this->database->query($cleanupQuery, true);
         $this->finishBenchmark('cleanupActionsByScheduleId clean up query . ' . $cleanupQuery);
 
         if ($cleanupResult === false) {
             debug_log(json_encode([
-                'root' => 'Error while trying to cleanup Actions for the scheduleId: "' . $scheduleId . '".',
+                'root'  => 'Error while trying to cleanup Actions for the scheduleId: "' . $scheduleId . '".',
                 'class' => get_class($this),
                 'query' => $cleanupQuery,
                 'error' => $this->database->error(),
@@ -1262,19 +1262,19 @@ class Queue
      */
     public function purgeQueueTable()
     {
-        if ($this->checkTable() === static::TABLE_NOT_EXIST) {
+        if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             debug_log('Queue Cleanup: The table does not exist so there is nothing to update.');
             return false;
         }
 
         $tableName = self::getTableName();
 
-        $cleanupQuery = "TRUNCATE {$tableName}";
+        $cleanupQuery  = "TRUNCATE {$tableName}";
         $cleanupResult = $this->database->query($cleanupQuery, true);
 
         if ($cleanupResult === false) {
             \WPStaging\functions\debug_log(json_encode([
-                'root' => 'Error while trying to cleanup Actions.',
+                'root'  => 'Error while trying to cleanup Actions.',
                 'class' => get_class($this),
                 'query' => $cleanupQuery,
                 'error' => $this->database->error(),
@@ -1302,18 +1302,18 @@ class Queue
     public function getLatestUpdatedAction($jobId)
     {
         if (!is_string($jobId) || $this->tableState === self::TABLE_NOT_EXIST) {
-            return null;
+            return;
         }
 
-        $tableName = self::getTableName();
+        $tableName    = self::getTableName();
         $escapedJobId = $this->database->escape(trim($jobId));
-        $query = "SELECT id FROM $tableName WHERE jobId = '$escapedJobId' ORDER BY updated_at DESC, id DESC LIMIT 1";
+        $query        = "SELECT id FROM $tableName WHERE jobId = '$escapedJobId' ORDER BY updated_at DESC, id DESC LIMIT 1";
 
         $result = $this->database->query($query);
 
-        if (false === $result) {
+        if ($result === false) {
             error_log(json_encode([
-                'root' => 'Error while trying to fetch latest updated Action.',
+                'root'  => 'Error while trying to fetch latest updated Action.',
                 'class' => get_class($this),
                 'query' => $query,
                 'error' => $this->database->error(),
@@ -1321,14 +1321,14 @@ class Queue
             ]));
 
             // There has been an error fetching the results, bail.
-            return null;
+            return;
         }
 
         $row = $this->database->fetchAssoc($result);
 
         if (!isset($row['id'])) {
             // Not an error, it could just mean there are not matching Actions.
-            return null;
+            return;
         }
 
         return $this->getAction($row['id']);
@@ -1373,8 +1373,8 @@ class Queue
      */
     private function getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses = [])
     {
-        $scheduleIdSerializedRow = 's:10:"scheduleId";s:' . strlen($scheduleId) . ':"' . $scheduleId . '";';
-        $whereCondition = "args LIKE '%$scheduleIdSerializedRow%'";
+        $scheduleIdSerializedRow = 's:10:"scheduleId";s:' . strlen((string)$scheduleId) . ':"' . $scheduleId . '";';
+        $whereCondition          = "args LIKE '%$scheduleIdSerializedRow%'";
         if (empty($statuses)) {
             return $whereCondition;
         }

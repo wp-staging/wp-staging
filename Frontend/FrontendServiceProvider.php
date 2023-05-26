@@ -21,7 +21,7 @@ class FrontendServiceProvider extends ServiceProvider
         if (file_exists(ABSPATH . WPINC . '/version.php')) {
             require ABSPATH . WPINC . '/version.php';
 
-            if (isset($wp_version) && version_compare($wp_version, '4.6', '<')) {
+            if (isset($GLOBALS['wp_version']) && version_compare($GLOBALS['wp_version'], '4.6', '<')) {
                 // Available in WordPress >3.1
                 $action = 'login_footer';
             }

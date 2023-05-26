@@ -13,7 +13,6 @@ use WPStaging\Framework\Staging\Sites;
  * Mainly used while an existing staging site is updated, not initially cloned
  * @package WPStaging\Backend\Modules\Jobs
  */
-
 class PreserveDataFirstStep extends JobExecutable
 {
     /** @var \wpdb */
@@ -41,17 +40,13 @@ class PreserveDataFirstStep extends JobExecutable
         }
     }
 
-    /**
-     * @return object
-     */
+    /** @return object */
     public function start()
     {
         $db = new SourceDatabase($this->options);
 
-        $this->stagingDb = $db->getDatabase();
-
-        $this->productionDb = WPStaging::getInstance()->get("wpdb");
-
+        $this->stagingDb     = $db->getDatabase();
+        $this->productionDb  = WPStaging::getInstance()->get("wpdb");
         $this->stagingPrefix = $this->options->prefix;
 
         if ($db->isExternalDatabase()) {
@@ -59,28 +54,21 @@ class PreserveDataFirstStep extends JobExecutable
         }
 
         $this->run();
-
         $this->saveOptions();
 
         return (object)$this->response;
     }
 
-    /**
-     * @return bool
-     */
+    /** @return false */
     protected function execute()
     {
-
         $this->copyToTmp();
-
         $this->prepareResponse(true, true);
+
         return false;
     }
 
-    /**
-     * @return bool
-     */
-
+    /** @return true */
     public function copyToTmp()
     {
         // Delete wpstg_tmp_data and reset it
@@ -113,14 +101,13 @@ class PreserveDataFirstStep extends JobExecutable
         }
 
         $options = [
-            'stagingSites' => $stagingSites,
-            'settings' => $settings,
-            'cloneOptions' => $cloneOptions,
+            'stagingSites'    => $stagingSites,
+            'settings'        => $settings,
+            'cloneOptions'    => $cloneOptions,
             'backupSchedules' => $backupSchedules,
         ];
 
         $options = array_merge($options, $remoteStorages);
-
         $tmpData = serialize((object) $options);
 
         // Insert staging site preserved data into wpstg_tmp_data in production database
@@ -160,9 +147,7 @@ class PreserveDataFirstStep extends JobExecutable
         return true;
     }
 
-    /**
-     * @return array
-     */
+    /** @return array */
     protected function preserveRemoteStorages()
     {
         $storages = [];
@@ -198,7 +183,7 @@ class PreserveDataFirstStep extends JobExecutable
         $wasabiS3 = $this->getStagingSiteOption('wpstg_wasabi');
 
         /**
-         * Generic S3 / Other S3 Compat Options
+         * Generic S3 / Other S3 Compat Options.
          * @see WPStaging\Pro\Backup\Storage\Storages\GenericS3\Auth::getOptionName for option name
          */
         $genericS3 = $this->getStagingSiteOption('wpstg_generic-s3');

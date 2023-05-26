@@ -8,7 +8,7 @@ use WPStaging\Framework\Facades\Escape;
         <strong><?php esc_html_e('WP STAGING - HTTP/HTTPS Scheme Error.', 'wp-staging'); ?></strong>
         <br>
         <?php echo sprintf(
-            Escape::escapeHtml(__('Go to <a href="%s" target="_blank">Settings > General</a> and make sure that WordPress Address (URL) and Site Address (URL) both start wth either http or https scheme.'), 'wp-staging'),
+            Escape::escapeHtml(__('Go to <a href="%s" target="_blank">Settings > General</a> and make sure that WordPress Address (URL) and Site Address (URL) both start wth either http or https scheme.', 'wp-staging')),
             esc_url(admin_url()) . 'options-general.php'
         ); ?>
         <br>

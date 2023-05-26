@@ -8,6 +8,7 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\Adapter\SourceDatabase;
 
 /**
  * Class Finish
@@ -23,12 +24,20 @@ class Finish extends Job
     private $clone = '';
 
     /**
+     * @var SourceDatabase
+     */
+    private $sourceDatabase;
+
+    /**
      * Start Module
      * @return object
      * @throws \Exception
      */
     public function start()
     {
+        $this->sourceDatabase = WPStaging::make(SourceDatabase::class);
+        $this->sourceDatabase->setOptions($this->options);
+
         // sanitize the clone name before saving
         $this->clone = preg_replace("#\W+#", '-', strtolower($this->options->clone));
 
@@ -36,6 +45,8 @@ class Finish extends Job
 
         // Prepare clone records & save scanned directories for delete job later
         $this->prepareCloneDataRecords();
+
+        $this->addExcludedFilesInCloneDB();
 
         $this->options->isRunning = false;
 
@@ -66,6 +77,8 @@ class Finish extends Job
 
         do_action('wpstg_cloning_complete', $this->options);
 
+        $this->logger->info("################## FINISH ##################");
+
         return (object) $return;
     }
 
@@ -81,6 +94,21 @@ class Finish extends Job
         $this->cache->delete("files_to_copy");
 
         $this->log("Finish: Clone job's cache files have been deleted!");
+    }
+
+    /**
+     * Add excluded files data in clone database as option
+     *
+     * @return void
+     */
+    protected function addExcludedFilesInCloneDB()
+    {
+        $this->log("Finish: Adding Excluded files option...");
+        if ($this->options->tmpExcludedFilesFullPath && $this->sourceDatabase->addOrUpdateClonedSiteOption(Sites::STAGING_EXCLUDED_FILES_OPTION, array_unique($this->options->tmpExcludedFilesFullPath)) === false) {
+            $this->log("Finish: Failed to add excluded files option in clone database!");
+        }
+        unset($this->options->tmpExcludedFilesFullPath);
+        $this->log("Finish: Successfully added excluded files option in clone database!");
     }
 
     /**
@@ -104,8 +132,8 @@ class Finish extends Job
             $this->options->existingClones[$this->options->clone]['datetime']            = time();
             $this->options->existingClones[$this->options->clone]['status']              = 'finished';
             $this->options->existingClones[$this->options->clone]['prefix']              = $this->options->prefix;
+            $this->options->existingClones[$this->options->clone]['cronDisabled']        = isset($this->options->cronDisabled) ? (bool) $this->options->cronDisabled : false;
             $this->options->existingClones[$this->options->clone]['emailsAllowed']       = (bool) $this->options->emailsAllowed;
-            $this->options->existingClones[$this->options->clone]['uploadsSymlinked']    = (bool) $this->options->uploadsSymlinked;
             $this->options->existingClones[$this->options->clone]['uploadsSymlinked']    = (bool) $this->options->uploadsSymlinked;
             $this->options->existingClones[$this->options->clone]['includedTables']      = $this->options->tables;
             $this->options->existingClones[$this->options->clone]['excludeSizeRules']    = $this->options->excludeSizeRules;

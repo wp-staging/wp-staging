@@ -79,6 +79,9 @@ $isPro = defined('WPSTGPRO_VERSION');
         <?php
         require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
         require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
+        if ($options->mainJob === 'cloning') {
+            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'cron-setting.php');
+        }
         require_once(__DIR__ . DIRECTORY_SEPARATOR . 'mail-setting.php');
         ?>
     </div>
@@ -92,7 +95,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
     ?>
 <fieldset class="wpstg-fieldset" style="margin-left: 16px;">
     <p class="wpstg--advance-settings--checkbox">
-        <label for="wpstg-clean-plugins-themes"><?php esc_html_e('Clean Plugins/Themes'); ?></label>
+        <label for="wpstg-clean-plugins-themes"><?php esc_html_e('Clean Plugins/Themes', 'wp-staging'); ?></label>
         <input type="checkbox" class="wpstg-checkbox" id="wpstg-clean-plugins-themes" name="wpstg-clean-plugins-themes" value="true">
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
@@ -102,7 +105,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
         </span>
     </p>
     <p class="wpstg--advance-settings--checkbox">
-        <label for="wpstg-clean-uploads"><?php esc_html_e('Clean Uploads'); ?></label>
+        <label for="wpstg-clean-uploads"><?php esc_html_e('Clean Uploads', 'wp-staging'); ?></label>
         <input type="checkbox" class="wpstg-checkbox" id="wpstg-clean-uploads" name="wpstg-clean-uploads" value="true">
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />

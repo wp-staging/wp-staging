@@ -2,6 +2,9 @@
 
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreRequirementsCheckTask;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Utils\Urls;
 
 /**
  * @var \WPStaging\Framework\TemplateEngine\TemplateEngine $this
@@ -30,23 +33,25 @@ if (empty($indexFileError)) {
     $indexFileError = __("This backup has an invalid files index. Please create a new backup!", 'wp-staging');
 }
 
-$isUnsupported = version_compare($backup->generatedOnWPStagingVersion, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT, '<');
+$isUnsupported = version_compare((string)$backup->generatedOnWPStagingVersion, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT, '<');
 
-if (defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PHP) {
-    // Download through PHP. Useful when the server mistakenly reads the .wpstg file as plain text instead of downloading it.
+// Download URL of backup file
+$downloadUrl = $backup->downloadUrl;
+
+if (WPStaging::make(Directory::class)->isBackupPathOutsideAbspath() || ( defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PHP )) {
     $downloadUrl = add_query_arg([
         'wpstgBackupDownloadNonce' => wp_create_nonce('wpstg_download_nonce'),
-        'wpstgBackupDownloadMd5' => $backup->md5BaseName,
+        'wpstgBackupDownloadMd5'   => $backup->md5BaseName,
     ], admin_url());
-} else {
-    // Direct download of .wpstg file.
-    $downloadUrl = $backup->downloadUrl;
 }
+
+// Fix mixed http/https
+$downloadUrl = (new Urls())->maybeUseProtocolRelative($downloadUrl);
 
 $logUrl = add_query_arg([
     'action' => 'wpstg--backups--logs',
-    'nonce' => wp_create_nonce('wpstg_log_nonce'),
-    'md5' => $backup->md5BaseName,
+    'nonce'  => wp_create_nonce('wpstg_log_nonce'),
+    'md5'    => $backup->md5BaseName,
 ], admin_url('admin-post.php'));
 
 ?>
@@ -146,7 +151,7 @@ $logUrl = add_query_arg([
                 <li>
                     <strong><?php esc_html_e('Notes:', 'wp-staging') ?></strong><br/>
                     <div class="backup-notes">
-                        <?php echo Escape::escapeHtml(__(nl2br($notes, 'wp-staging'))); ?>
+                        <?php echo Escape::escapeHtml(nl2br($notes)); ?>
                     </div>
                 </li>
             <?php endif ?>

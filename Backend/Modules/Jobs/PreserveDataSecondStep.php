@@ -11,7 +11,6 @@ use WPStaging\Framework\Staging\Sites;
  * Copy wpstg_tmp_data back to wpstg_staging_sites after cloning with class::PreserveDataSecondStep
  * @package WPStaging\Backend\Modules\Jobs
  */
-
 class PreserveDataSecondStep extends JobExecutable
 {
     /** @var \wpdb */
@@ -31,29 +30,22 @@ class PreserveDataSecondStep extends JobExecutable
         $this->options->totalSteps = 1;
     }
 
-    /**
-     * @return object
-     */
+    /** @return object */
     public function start()
     {
         $this->run();
-
         $this->saveOptions();
 
         return (object)$this->response;
     }
 
-    /**
-     * @return bool
-     */
+    /** @return false */
     protected function execute()
     {
         $db = new SourceDatabase($this->options);
 
-        $this->stagingDb = $db->getDatabase();
-
-        $this->productionDb = WPStaging::getInstance()->get("wpdb");
-
+        $this->stagingDb     = $db->getDatabase();
+        $this->productionDb  = WPStaging::getInstance()->get("wpdb");
         $this->stagingPrefix = $this->options->prefix;
 
         if ($db->isExternalDatabase()) {
@@ -61,15 +53,12 @@ class PreserveDataSecondStep extends JobExecutable
         }
 
         $this->copyToStaging();
-
         $this->prepareResponse(true, true);
+
         return false;
     }
 
-    /**
-     * @return bool
-     */
-
+    /** @return true */
     public function copyToStaging()
     {
         // Get wpstg_tmp_data from production database
@@ -164,7 +153,7 @@ class PreserveDataSecondStep extends JobExecutable
             $this->log("Preserve Data Second Step: Failed to delete " . $optionName . " from the staging site");
         }
 
-        $isInserted =  $this->insertOptionIntoStagingSite($optionName, $optionValue, $autoload);
+        $isInserted = $this->insertOptionIntoStagingSite($optionName, $optionValue, $autoload);
 
         if ($isInserted === false) {
             $this->log("Preserve Data Second Step: Failed to insert preserved " . $logEntity . " into " . $optionName . " of the staging site");
@@ -174,7 +163,7 @@ class PreserveDataSecondStep extends JobExecutable
     /**
      * @param string $optionName
      *
-     * @return bool
+     * @return bool|int Number of rows affected. Boolean false on error
      */
     protected function deleteStagingSiteOption($optionName)
     {
@@ -188,7 +177,7 @@ class PreserveDataSecondStep extends JobExecutable
      * @param string $optionValue
      * @param bool   $autoload
      *
-     * @return bool
+     * @return bool|int Number of rows affected. Boolean false on error
      */
     protected function insertOptionIntoStagingSite($optionName, $optionValue, $autoload = false)
     {
@@ -205,7 +194,6 @@ class PreserveDataSecondStep extends JobExecutable
     }
 
     /**
-     * Return true if property exists in preserved data and not null
      * @param string $property
      *
      * @return bool

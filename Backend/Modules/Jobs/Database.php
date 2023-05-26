@@ -153,7 +153,8 @@ class Database extends CloningProcess
         }
 
         if ($this->options->databaseResettingStatus === 'pending') {
-            $this->log(__('DB: Removing all clone database tables.', 'wp-staging'));
+            $this->log('#################### Start Reset Job ####################');
+            $this->log('DB: Removing all staging database tables.');
             $this->options->databaseResettingStatus = 'processing';
             $this->saveOptions();
         }

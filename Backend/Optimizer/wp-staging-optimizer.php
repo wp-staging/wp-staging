@@ -11,6 +11,7 @@
  * Author: René Hermenau
  * Version: 1.5.1
  * Author URI: https://wp-staging.com
+ * Text Domain: wp-staging
  */
 
 // Version number of this mu-plugin. Important for automatic updates

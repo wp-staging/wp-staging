@@ -44,9 +44,9 @@ trait HydrateTrait
     {
         if (!method_exists($this, $method)) {
             if (!is_string($value)) {
-                $value = wp_json_encode($value);
+                $value = wp_json_encode($value, JSON_UNESCAPED_SLASHES);
             }
-            throw new Exception(sprintf('Trying to hydrate DTO with value that does not exist. \n %s \n %s \n %s', get_class($this), $method, $value));
+            throw new Exception(sprintf("Trying to hydrate DTO with value that does not exist. %s::%s(%s)", get_class($this), $method, $value));
         }
 
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */

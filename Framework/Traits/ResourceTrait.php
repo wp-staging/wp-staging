@@ -14,8 +14,9 @@ trait ResourceTrait
     protected $memoryLimit;
     protected $scriptMemoryLimit;
 
-    public static $defaultMaxExecutionTimeInSeconds  = 30;
-    public static $executionTimeGapInSeconds         = 5;
+    public static $defaultMaxExecutionTimeInSeconds = 30;
+    public static $executionTimeGapInSeconds        = 5;
+
     // Set lower maximum execution time for backup restore to avoid 504 errors in large database
     public static $backupRestoreMaxExecutionTimeInSeconds = 10;
 
@@ -35,11 +36,11 @@ trait ResourceTrait
         }
 
         $isMemoryLimit = $this->isMemoryLimit();
-        $isTimeLimit = $this->isTimeLimit();
+        $isTimeLimit   = $this->isTimeLimit();
 
         if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             if ($isTimeLimit || $isMemoryLimit) {
-                \WPStaging\functions\debug_log(wp_json_encode(['class', __CLASS__, 'isTimeLimit' => $isTimeLimit, 'isMemoryLimit' => $isMemoryLimit]));
+                \WPStaging\functions\debug_log('isThreshold: ' . wp_json_encode(['class' => __CLASS__, 'isTimeLimit' => $isTimeLimit, 'isMemoryLimit' => $isMemoryLimit], JSON_UNESCAPED_SLASHES));
             }
         }
 
@@ -116,7 +117,7 @@ trait ResourceTrait
      */
     public function isDatabaseRestoreTimeLimit()
     {
-        $timeLimit = apply_filters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', static::$backupRestoreMaxExecutionTimeInSeconds);
+        $timeLimit = (int)apply_filters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', static::$backupRestoreMaxExecutionTimeInSeconds);
         return $this->getRunningTime() > $timeLimit;
     }
 
@@ -135,7 +136,7 @@ trait ResourceTrait
             return $this->executionTimeLimit;
         }
 
-        $phpMaxExecutionTime = $this->getPhpMaxExecutionTime();
+        $phpMaxExecutionTime      = $this->getPhpMaxExecutionTime();
         $cpuBoundMaxExecutionTime = $this->getCpuBoundMaxExecutionTime();
 
         // TODO don't overwrite when CLI / SAPI and / or add setting to not overwrite for devs

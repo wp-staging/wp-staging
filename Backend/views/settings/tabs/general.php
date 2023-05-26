@@ -390,7 +390,7 @@ use WPStaging\Framework\Facades\Escape;
                                             'wp-staging'
                                         );
                                         echo '<br>';
-                                        echo wp_kses_post(sprintf(__('<i>See the data we collect <a href="%s" target="_blank">here</a></i>', 'wp-staging'), 'https://wp-staging.com/what-data-do-we-collect/'));
+                                        echo '<i>' . wp_kses_post(sprintf(__('See the data we collect <a href="%s" target="_blank">here</a>', 'wp-staging'), 'https://wp-staging.com/what-data-do-we-collect/')) . '</i>';
                                         ?>
                                     </span>
                                 </div>

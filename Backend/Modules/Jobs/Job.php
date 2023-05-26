@@ -14,6 +14,10 @@ use WPStaging\Framework\Database\ExcludedTables;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Math;
+use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Framework\Security\UniqueIdentifier;
+
+use function WPStaging\functions\debug_log;
 
 /**
  * Class Job
@@ -34,11 +38,6 @@ abstract class Job implements ShutdownableInterface
     protected $logger;
 
     /**
-     * @var bool
-     */
-    protected $hasLoggedFileNameSet = false;
-
-    /**
      * @var object
      */
     protected $options;
@@ -54,13 +53,16 @@ abstract class Job implements ShutdownableInterface
      */
     protected $baseUrl;
 
-    /**
-     * @var ExcludedTables
-     */
+    /** @var ExcludedTables */
     protected $excludedTableService;
 
-    /** @var \stdClass */
+    /** @var UniqueIdentifier */
+    protected $identifier;
+
+    /** @var Math */
     protected $utilsMath;
+
+    protected $systemInfo;
 
     /**
      * Job constructor.
@@ -68,18 +70,19 @@ abstract class Job implements ShutdownableInterface
      */
     public function __construct()
     {
-
         $this->utilsMath = new Math();
 
         $this->excludedTableService = new ExcludedTables();
 
         // Services
-        $this->cache  = new Cache(-1, WPStaging::getContentDir());
-        $this->logger = WPStaging::getInstance()->get("logger");
+        $this->cache      = new Cache(-1, WPStaging::getContentDir());
+        //$this->logger     = WPStaging::make(Logger::class);
+        $this->logger     = WPStaging::getInstance()->get("logger");
+        $this->systemInfo = WPStaging::make(SystemInfo::class);
+        $this->identifier = WPStaging::make(UniqueIdentifier::class);
 
         // Settings and Options
-        $this->options = $this->cache->get("clone_options");
-
+        $this->options  = $this->cache->get("clone_options");
         $this->settings = (object)((new Settings())->setDefault());
 
         if (!$this->options) {
@@ -98,22 +101,14 @@ abstract class Job implements ShutdownableInterface
     public function onWpShutdown()
     {
         // Commit logs
-        if ($this->logger instanceof Logger) {
+        /*if ($this->logger instanceof Logger) {
             if (isset($this->options->mainJob)) {
-                if (!empty($this->options->existingClones[$this->options->clone]) && array_key_exists('datetime', $this->options->existingClones[$this->options->clone])) {
-                    $timestamp = date('Y-m-d_H-i-s', $this->options->existingClones[$this->options->clone]['datetime']);
-                } else {
-                    // This is a fallback for older staging sites that did not have the datetime property.
-                    $timestamp = sanitize_file_name($this->options->clone) . '_' . date('Y-m-d', time());
-                }
-
-                $this->logger->setFileName($this->options->mainJob . '_' . $timestamp);
+                $this->logger->setFileName($this->getLogFilename());
             }
-
             $this->logger->commit();
         } else {
-            \WPStaging\functions\debug_log('Tried to commit log, but $this->logger was not a logger.');
-        }
+            debug_log('Tried to commit log, but logger is no instance of Logger.');
+        }*/
     }
 
     /**
@@ -157,7 +152,7 @@ abstract class Job implements ShutdownableInterface
     {
         $time = microtime();
         $time = explode(' ', $time);
-        $time = $time[1] + $time[0];
+        $time = (float)$time[1] + (float)$time[0];
         return $time;
     }
 
@@ -167,7 +162,7 @@ abstract class Job implements ShutdownableInterface
     public function isOverThreshold()
     {
         // Check if the memory is over threshold
-        $usedMemory        = $this->getMemoryPeakUsage(true);
+        $usedMemory        = $this->getMemoryPeakUsage();
         $maxMemoryLimit    = $this->getMaxMemoryLimit();
         $scriptMemoryLimit = $this->getScriptMemoryLimit();
 
@@ -217,16 +212,40 @@ abstract class Job implements ShutdownableInterface
      */
     public function log($msg, $type = Logger::TYPE_INFO)
     {
-        if (!isset($this->options->clone)) {
-            $this->options->clone = time();
+        if ($this->logger === null) {
+            return;
         }
 
-        if ($this->hasLoggedFileNameSet === false && strlen($this->options->clone) > 0) {
-            $this->logger->setFileName($this->options->clone);
-            $this->hasLoggedFileNameSet = true;
-        }
+        $this->logger->setFileName($this->getLogFilename());
 
         $this->logger->add($msg, $type);
+    }
+
+    /**
+     * @return string
+     */
+    private function getLogFilename()
+    {
+        $uniqueId = $this->identifier->getIdentifier();
+        // If job is not cloning i.e. updating, resetting, pushing
+        if (!empty($this->options->mainJob) && $this->options->mainJob !== 'cloning') {
+            return $this->options->mainJob . '_' . $uniqueId . '_' . date('Y-m-d', time());
+        }
+
+        // If job is cloning
+        if (!empty($this->options->clone) && !empty($this->options->mainJob)) {
+            return $this->options->mainJob . '_' . $uniqueId . '_' . $this->options->clone . '_' . date('Y-m-d', time());
+        }
+
+        if (empty($this->options->clone) && !empty($this->options->mainJob)) {
+            return $this->options->mainJob . '_' . $uniqueId . '_unknown_clone_' . date('Y-m-d', time());
+        }
+
+        if (!empty($this->options->clone) && empty($this->options->mainJob)) {
+            return 'unknown_job_' . $uniqueId . '_' .  $this->options->clone . '_' . date('Y-m-d', time());
+        }
+
+        return 'unknown_job_' . $uniqueId . '_' . date('Y-m-d', time());
     }
 
     /**
@@ -235,15 +254,7 @@ abstract class Job implements ShutdownableInterface
      */
     public function debugLog($msg, $type = Logger::TYPE_INFO)
     {
-        if (!isset($this->options->clone)) {
-            $this->options->clone = date(DATE_ATOM, mktime(0, 0, 0, 7, 1, 2000));
-        }
-
-        if ($this->hasLoggedFileNameSet === false && $this->options->clone != '') {
-            $this->logger->setFileName($this->options->clone);
-            $this->hasLoggedFileNameSet = true;
-        }
-
+        $this->logger->setFileName($this->getLogFilename());
 
         if (isset($this->settings->debugMode)) {
             $this->logger->add($msg, $type);

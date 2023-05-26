@@ -24,8 +24,6 @@ class UpdateWpConfigConstants extends FileCloningService
             return true;
         }
 
-        $content = $this->readWpConfig();
-
         $replaceOrAdd = [
             "UPLOADS"             => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getUploadFolder())),
             "WP_PLUGIN_DIR"       => '__DIR__ . "' . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH) . '"',
@@ -34,6 +32,7 @@ class UpdateWpConfigConstants extends FileCloningService
             "WP_HOME"             => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_SITEURL"          => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_CACHE"            => 'false',
+            "DISABLE_WP_CRON"     => (isset($this->dto->getJob()->getOptions()->cronDisabled) && $this->dto->getJob()->getOptions()->cronDisabled) ? 'true' : 'false',
             "WP_ENVIRONMENT_TYPE" => sprintf("'%s'", 'staging'),
         ];
 
@@ -81,6 +80,7 @@ class UpdateWpConfigConstants extends FileCloningService
          */
         $replaceOrAdd = (array)apply_filters('wpstg_constants_replace_or_add', $replaceOrAdd);
 
+        $content = $this->readWpConfig();
         foreach ($replaceOrAdd as $constant => $newDefinition) {
             $content = $this->replaceOrAddDefinition($constant, $content, $newDefinition);
         }

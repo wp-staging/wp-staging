@@ -12,8 +12,9 @@
  * parameter set to true.
  *
  * @var string $pluginFilePath
+ * @var string $wp_version
  */
-global $wp_version;
+global $wp_version, $pluginFilePath;
 
 // Early bail: WordPress 5.5+ already handles OPCache invalidation on plugin updates.
 if (version_compare($wp_version, '5.5', '>=')) {
@@ -47,7 +48,7 @@ if (!$canInvalidate) {
  *
  * We use the "Version" from the headers of the main file of the plugin to compare.
  */
-$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '2.14.1';
+$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '2.15.0';
 $lastCheckHappenedAfterInterval          = current_time('timestamp') > (int)get_site_transient('wpstg.bootstrap.opcache.lastCleared') + 5 * MINUTE_IN_SECONDS;
 
 $shouldClearOpCache = apply_filters('wpstg.bootstrap.opcache.shouldClear', $runtimeVersionDifferentFromBuildVersion && $lastCheckHappenedAfterInterval);
@@ -92,8 +93,14 @@ if ($shouldClearOpCache) {
 
     add_action('admin_notices', function () use ($pluginFilePath, $start) {
         echo '<div class="notice-warning notice is-dismissible">';
-        echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING OPCache') . '</p>';
-        echo '<p>' . wp_kses_post(__(sprintf('WP STAGING detected that the OPCache was outdated and automatically cleared the OPCache for the <strong>%s</strong> folder to prevent issues. This operation took %s seconds.', plugin_basename($pluginFilePath), number_format(microtime(true) - $start, 4)))) . '</p>';
+        echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING OPCache', 'wp-staging') . '</p>';
+        echo '<p>' . wp_kses_post(
+            sprintf(
+                __('WP STAGING detected that the OPCache was outdated and automatically cleared the OPCache for the <strong>%s</strong> folder to prevent issues. This operation took %s seconds.', 'wp-staging'),
+                plugin_basename($pluginFilePath),
+                number_format(microtime(true) - $start, 4)
+            )
+        ) . '</p>';
         echo '</div>';
     });
 
