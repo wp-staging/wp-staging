@@ -6,6 +6,8 @@
 
 namespace WPStaging\Core\Cron;
 
+use WPStaging\Core\WPStaging;
+
 // No Direct Access
 if (!defined("WPINC")) {
     die;
@@ -13,14 +15,32 @@ if (!defined("WPINC")) {
 
 class Cron
 {
+    /** @var string */
     const HOURLY          = 'wpstg_hourly';
+
+    /** @var string */
     const SIX_HOURS       = 'wpstg_six_hours';
+
+    /** @var string */
     const TWELVE_HOURS    = 'wpstg_twelve_hours';
+
+    /** @var string */
     const DAILY           = 'wpstg_daily';
+
+    /** @var string */
     const EVERY_TWO_DAYS  = 'wpstg_every_two_days';
+
+    /** @var string */
     const WEEKLY          = 'wpstg_weekly';
+
+    /** @var string */
     const EVERY_TWO_WEEKS = 'wpstg_every_two_weeks';
+
+    /** @var string */
     const MONTHLY         = 'wpstg_montly';
+
+    /** @var string */
+    const BASIC_DAILY     = 'wpstg_basic_daily';
 
     public function __construct()
     {
@@ -34,6 +54,10 @@ class Cron
      */
     public function addIntervals($schedules)
     {
+        if (!WPStaging::isPro()) {
+            return $this->addBasicIntervals($schedules);
+        }
+
         // add weekly and monthly intervals
         $schedules['weekly'] = [
             'interval' => 604800,
@@ -88,6 +112,16 @@ class Cron
         return $schedules;
     }
 
+    public function addBasicIntervals($schedules)
+    {
+        $schedules[static::BASIC_DAILY] = [
+            'interval' => DAY_IN_SECONDS,
+            'display' => __('WP Staging events that happens daily', 'wp-staging'),
+        ];
+
+        return $schedules;
+    }
+
     public static function getCronDisplayName($cronInterval)
     {
         switch ($cronInterval) {
@@ -107,9 +141,28 @@ class Cron
                 return __('Every 2 weeks', 'wp-staging');
             case static::MONTHLY:
                 return __('Monthly', 'wp-staging');
+            case static::BASIC_DAILY:
+                return __('Daily', 'wp-staging');
         }
 
         return $cronInterval;
+    }
+
+    /**
+     * @return array
+     */
+    public function getProEvents()
+    {
+        return [
+            self::HOURLY,
+            self::SIX_HOURS,
+            self::TWELVE_HOURS,
+            self::DAILY,
+            self::EVERY_TWO_DAYS,
+            self::WEEKLY,
+            self::EVERY_TWO_WEEKS,
+            self::MONTHLY
+        ];
     }
 
     /**
@@ -120,6 +173,7 @@ class Cron
         if (!wp_next_scheduled('wpstg_weekly_event')) {
             wp_schedule_event(time(), 'weekly', 'wpstg_weekly_event');
         }
+
         if (!wp_next_scheduled('wpstg_daily_event')) {
             wp_schedule_event(time(), 'daily', 'wpstg_daily_event');
         }

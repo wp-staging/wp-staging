@@ -104,10 +104,12 @@ class Finish extends Job
     protected function addExcludedFilesInCloneDB()
     {
         $this->log("Finish: Adding Excluded files option...");
-        if ($this->options->tmpExcludedFilesFullPath && $this->sourceDatabase->addOrUpdateClonedSiteOption(Sites::STAGING_EXCLUDED_FILES_OPTION, array_unique($this->options->tmpExcludedFilesFullPath)) === false) {
-            $this->log("Finish: Failed to add excluded files option in clone database!");
+        if (isset($this->options->tmpExcludedFilesFullPath)) {
+            if ($this->sourceDatabase->addOrUpdateClonedSiteOption(Sites::STAGING_EXCLUDED_FILES_OPTION, array_unique($this->options->tmpExcludedFilesFullPath)) === false) {
+                $this->log("Finish: Failed to add excluded files option in clone database!");
+            }
+            unset($this->options->tmpExcludedFilesFullPath);
         }
-        unset($this->options->tmpExcludedFilesFullPath);
         $this->log("Finish: Successfully added excluded files option in clone database!");
     }
 

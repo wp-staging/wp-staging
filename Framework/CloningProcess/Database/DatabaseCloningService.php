@@ -63,21 +63,26 @@ class DatabaseCloningService
             }
 
             // Get data from production site
-            $rows = $this->dto->getProductionDb()->get_results($preparedQuery, ARRAY_A);
+            $result = $this->dto->getProductionDb()->get_results($preparedQuery, ARRAY_A);
             // Start transaction
             $stagingDb->query('SET autocommit=0;');
             $stagingDb->query('SET FOREIGN_KEY_CHECKS=0;');
             $stagingDb->query('START TRANSACTION;');
+
+            /** @var Escape $escapeUtil */
+            $escapeUtil   = WPStaging::make(Escape::class);
+            $tableColumns = $this->getColumnTypes($srcTableName);
             // Copy into staging site
-            foreach ($rows as $row) {
-                $escapedValues = WPStaging::make(Escape::class)->mysqlRealEscapeString(array_values($row));
-                $values = is_array($escapedValues) ? implode("', '", $escapedValues) : $escapedValues;
-                $query = "INSERT INTO `$destTableName` VALUES ('$values')";
+            foreach ($result as $row) {
+                // Prepare values for insert statement (encase in quotes if not null and binary)
+                $values = $this->prepareValuesStatement($row, $tableColumns, $escapeUtil);
+                $query  = "INSERT INTO `$destTableName` VALUES ($values)";
                 if ($stagingDb->query($query) === false) {
                     $this->log("Can not insert data into table $destTableName");
                     $this->debugLog("Failed Query: " . $query . " Error: " . $stagingDb->last_error);
                 }
             }
+
             // Commit transaction
             $this->dto->getStagingDb()->query('COMMIT;');
             $this->dto->getStagingDb()->query('SET autocommit=1;');
@@ -162,6 +167,7 @@ class DatabaseCloningService
         if (strpos($srcTable, $productionDb->prefix) === 0) {
             return true;
         }
+
         return false;
     }
 
@@ -175,9 +181,11 @@ class DatabaseCloningService
         if ($this->dto->isExternal() && $this->isMultisiteWpCoreTable($srcTable)) {
             return true;
         }
+
         if ($this->dto->isExternal() && !$this->beginsWithWordPressPrefix($srcTable)) {
             return false;
         }
+
         return true;
     }
 
@@ -197,6 +205,7 @@ class DatabaseCloningService
         if (in_array($tableName, $coreTables)) {
             return true;
         }
+
         return false;
     }
 
@@ -238,6 +247,7 @@ class DatabaseCloningService
                 throw new FatalException("DB Internal Copy - Fatal Error: {$stagingDb->last_error} Query: {$query}");
             }
         }
+
         $rowsInTable = (int)$productionDb->get_var("SELECT COUNT(1) FROM `$productionDb->dbname`.`$srcTableName`");
         $this->log("Table $srcTableName contains $rowsInTable rows ");
         return $rowsInTable;
@@ -320,6 +330,58 @@ class DatabaseCloningService
         if (isset($statement['Create Table'])) {
             return $statement['Create Table'];
         }
+
         return [];
+    }
+
+    /**
+     * Foreach value in values, perform adjustment for binary and null values otherwise encase in quotes
+     * @param array  $row
+     * @param array  $tableColumns
+     * @param Escape $escapeUtil
+     * @return string
+     */
+    protected function prepareValuesStatement($row, $tableColumns, $escapeUtil)
+    {
+        $preparedValues = [];
+        foreach ($row as $column => $value) {
+            $value = $escapeUtil->mysqlRealEscapeString($value);
+
+            if (is_null($value)) {
+                $preparedValues[] = 'NULL';
+                continue;
+            }
+
+            if (
+                strpos($tableColumns[strtolower($column)], 'binary') !== false ||
+                strpos($tableColumns[strtolower($column)], 'blob') !== false
+            ) {
+                $preparedValues[] = "UNHEX('" . bin2hex($value) . "')";
+                continue;
+            }
+
+            $preparedValues[] = "'$value'";
+        }
+
+        return implode(', ', $preparedValues);
+    }
+
+    /**
+     * @param string $tableName Table name
+     *
+     * @return array
+     */
+    private function getColumnTypes($tableName)
+    {
+        $column_types = [];
+
+        $result = $this->dto->getProductionDb()->get_results("SHOW COLUMNS FROM `{$tableName}`", ARRAY_A);
+        foreach ($result as $row) {
+            if (isset($row['Field'])) {
+                $column_types[strtolower($row['Field'])] = strtolower($row['Type']);
+            }
+        }
+
+        return $column_types;
     }
 }

@@ -197,11 +197,11 @@ class Assets
             $this->getAssetsVersion($asset)
         );
 
+        // Internal hook to enqueue backup scripts, used by the backup addon
+        do_action('wpstg_enqueue_backup_scripts', $this->isDebugOrDevMode());
+
         // Load admin js pro files
         if (defined('WPSTGPRO_VERSION')) {
-            // Internal hook to enqueue backup scripts, used by the backup addon
-            do_action('wpstg_enqueue_backup_scripts', $this->isDebugOrDevMode());
-
             $asset = 'js/dist/pro/wpstg-admin-pro.min.js';
             if ($this->isDebugOrDevMode()) {
                 $asset = 'js/dist/pro/wpstg-admin-pro.js';
@@ -243,7 +243,8 @@ class Assets
             'assetsUrl'              => $this->getAssetsUrl(),
             'ajaxUrl'                => admin_url('admin-ajax.php'),
             'wpstgIcon'              => $this->getAssetsUrl('img/wpstaging-icon.png'),
-            'maxUploadChunkSize'          => $this->getMaxUploadChunkSize(),
+            'maxUploadChunkSize'     => $this->getMaxUploadChunkSize(),
+            'backupDBExtension'      => DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
             // TODO: handle i18n translations through Class/Service Provider?
             'i18n'                   => [
                 'dbConnectionSuccess' => esc_html__('Database Connection - Success', 'wp-staging'),
@@ -263,11 +264,6 @@ class Assets
                 'filesSelected'   => esc_html__('{t} theme(s), {p} plugin(s) selected', 'wp-staging'),
             ],
         ];
-
-        // Safety check for free version
-        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask')) {
-            $wpstgConfig['backupDBExtension'] = DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT;
-        }
 
         wp_localize_script("wpstg-admin-script", "wpstg", $wpstgConfig);
     }

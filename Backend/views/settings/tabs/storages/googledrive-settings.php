@@ -22,21 +22,12 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
     $isGoogleDriveAuthenticated = $googleDriveStorage->isAuthenticated();
     $options                    = $googleDriveStorage->getOptions();
 
-    $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
-    $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
-    $folderName       = isset($options['folderName']) ? $options['folderName'] : Auth::FOLDER_NAME;
-    $lastUpdated      = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
-
-    $googleClientId         = isset($options['googleClientId']) ? $options['googleClientId'] : '';
-    $googleClientSecret     = isset($options['googleClientSecret']) ? $options['googleClientSecret'] : '';
-    $defaultApiAuthorizeURL = add_query_arg(
-        [
-            'action' => 'wpstg-googledrive-api-auth',
-        ],
-        network_admin_url('admin-post.php')
-    );
-
-    $googleRedirectURI = isset($options['googleRedirectURI']) ? $options['googleRedirectURI'] : $defaultApiAuthorizeURL;
+    $maxBackupsToKeep   = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
+    $maxBackupsToKeep   = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
+    $folderName         = isset($options['folderName']) ? $options['folderName'] : Auth::FOLDER_NAME;
+    $lastUpdated        = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
+    $googleClientId     = isset($options['googleClientId']) ? $options['googleClientId'] : '';
+    $googleClientSecret = isset($options['googleClientSecret']) ? $options['googleClientSecret'] : '';
     ?>
     <p>
         <strong class="wpstg-fs-14"> <?php echo esc_html($providerName); ?></strong>
@@ -62,20 +53,20 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
                 <input type="hidden" name="provider" value="<?php echo esc_attr($providerId); ?>" />
                 <button type="button" id="wpstg-btn-provider-revoke" class="wpstg-button--primary wpstg-button--blue"><?php esc_html_e("Logout from Google", "wp-staging") ?></button>
             </form>
-            <br/>
             <?php
         } else {
             $authURL = $googleDriveStorage->getAuthenticationURL();
             if ($authURL === false) {
                 ?>
-                <b class="wpstg-error"><?php esc_html_e('Unable to generate Google Authentication URL. Google API keys are not correct!', 'wp-staging'); ?></b>
-                <?php
-            } else {
-                ?>
-            <a href="<?php echo esc_url($authURL); ?>" id="wpstg_google_drive_connect" class="wpstg-btn-google"> <img src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/img/google-g.png'); ?>" /> <?php esc_html_e("Sign in with Google", "wp-staging") ?></a>
-            <span><?php esc_html_e("OR", "wp-staging") ?></span> &nbsp; <a onclick="WPStaging.handleToggleElement(this)" data-wpstg-target="#wpstg-custom-google-credentials" href="javascript:void(0);"><?php esc_html_e("Connect with API Credentials", "wp-staging") ?></a>
+                <div class="wpstg-form-group">
+                    <b class="wpstg-error"><?php esc_html_e('Unable to generate Google Authentication URL. Google API keys are not correct!', 'wp-staging'); ?></b>
+                </div>
                 <?php
             }
+            ?>
+            <a href="<?php echo esc_url($authURL); ?>" id="wpstg_google_drive_connect" class="wpstg-btn-google"> <img src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/img/google-g.png'); ?>" /> <?php esc_html_e("Sign in with Google", "wp-staging") ?></a>
+            <span><?php esc_html_e("OR", "wp-staging") ?></span> &nbsp; <a onclick="WPStaging.handleToggleElement(this)" data-wpstg-target="#wpstg-custom-google-credentials" href="javascript:void(0);"><?php esc_html_e("Connect with API Credentials", "wp-staging") ?></a>
+            <?php
         }
         ?>
     </div>
@@ -95,18 +86,18 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Google Client Id', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="text" name="google_client_id" value="<?php echo esc_attr($googleClientId); ?>" />
+                    <input class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_client_id" value="<?php echo esc_attr($googleClientId); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Google Client Secret', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="text" name="google_client_secret" value="<?php echo esc_attr($googleClientSecret); ?>" />
+                    <input class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_client_secret" value="<?php echo esc_attr($googleClientSecret); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Google Redirect URI', 'wp-staging') ?></label>
                     <div class="wpstg-with-icon">
-                        <input class="wpstg-form-control" type="text" name="google_redirect_uri" id="google-redirect-uri" value="<?php echo esc_url($googleRedirectURI); ?>" />
+                        <input class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_redirect_uri" id="google-redirect-uri" value="<?php echo esc_url($googleDriveStorage->getRedirectURI()); ?>" disabled/>
                         <a href="javascript:void(0);" class="wpstg-fieldset-icon" onclick="WPStaging.handleCopyToClipboard(this)" data-wpstg-source="#google-redirect-uri">
                             <img src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/svg/copy.svg'); ?>" alt="<?php esc_html_e("Copy to Clipboard", 'wp-staging') ?>" title="<?php esc_html_e("Copy to Clipboard", 'wp-staging') ?>" />
                         </a>

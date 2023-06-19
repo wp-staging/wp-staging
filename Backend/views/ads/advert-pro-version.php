@@ -5,11 +5,11 @@
     <ul>
         <li><?php esc_html_e('New: Create magic login links to staging sites', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('New: Synchronization of admin accounts with staging sites', 'wp-staging'); ?></php></li>
-        <li><?php esc_html_e('Create scheduled backup plans', 'wp-staging'); ?></php></li>
+        <li><?php esc_html_e('Create unlimited number of scheduled backup plans', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('Restore backups on other websites', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('Migrate websites to another hosting provider', 'wp-staging'); ?></php></li>
-        <li><?php esc_html_e('Migrate websites to another domain.', 'wp-staging'); ?></php></li>
-        <li><?php esc_html_e('Support WordPress multisites.', 'wp-staging'); ?></php></li>
+        <li><?php esc_html_e('Migrate websites to another domain', 'wp-staging'); ?></php></li>
+        <li><?php esc_html_e('Support WordPress multisites', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('Automatic backup upload to cloud providers Google Drive, Amazon S3, DigitalOcean, SFTP and more', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('Rewritten for raw backup and cloning performance', 'wp-staging'); ?></php></li>
         <li><?php esc_html_e('No advertisements', 'wp-staging'); ?></php></li>

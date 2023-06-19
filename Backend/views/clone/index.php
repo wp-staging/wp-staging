@@ -6,7 +6,9 @@
  * @var bool $isBackupPage
  */
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\Notices;
+use WPStaging\Framework\Notices\OutdatedWpStagingNotice;
 
 ?>
 
@@ -81,7 +83,7 @@ use WPStaging\Framework\Notices\Notices;
                 $display               = 'none;';
 
                 if (defined('WPSTGPRO_VERSION')) {
-                    $outdatedVersionCheck  = new WPStaging\Framework\Notices\OutdatedWpStagingNotice();
+                    $outdatedVersionCheck  = new OutdatedWpStagingNotice();
                     $latestReleasedVersion = $outdatedVersionCheck->getLatestWpstgProVersion();
                     if ($outdatedVersionCheck->isOutdatedWpStagingProVersion()) {
                         $display = 'block;';
@@ -115,7 +117,9 @@ use WPStaging\Framework\Notices\Notices;
             </div>
             <div id="wpstg--tab--backup" class="wpstg--tab--content <?php echo esc_attr($classBackupPageActive); ?>">
                 <?php
-                if (defined('WPSTGPRO_VERSION')) {
+                if (!WPStaging::isPro()) {
+                    esc_html_e('Loading...', 'wp-staging');
+                } elseif (is_multisite() && is_main_site()) {
                     esc_html_e('Loading...', 'wp-staging');
                 } else {
                     require_once($this->path . "views/backup/free-version.php");

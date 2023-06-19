@@ -31,7 +31,11 @@ class Notices
 {
     use NoticesTrait;
 
+    /** @var string */
     const PRO_NOTICES_ACTION = 'wpstg.notices.show_pro_notices';
+
+    /** @var string */
+    const BASIC_NOTICES_ACTION = 'wpstg.notices.show_basic_notices';
 
     /** @var Assets */
     private $assets;
@@ -108,61 +112,6 @@ class Notices
     }
 
     /**
-     * Check if notice should be shown after certain days of installation
-     * @param int $days default 10
-     * @return bool
-     */
-    private function canShow($option, $days = 10)
-    {
-        // Do not show notice
-        if (empty($option)) {
-            return false;
-        }
-
-        $dbOption = get_option($option);
-
-        // Do not show notice
-        if ($dbOption === "no") {
-            return false;
-        }
-
-        $now = new DateTime("now");
-
-        // Check if user clicked on "rate later" button and if there is a valid 'later' date
-        if (wpstg_is_valid_date($dbOption)) {
-            // Do not show before this date
-            $show = new DateTime($dbOption);
-            if ($now < $show) {
-                return false;
-            }
-        }
-
-        // Show X days after installation
-        $installDate = new DateTime(get_option("wpstg_installDate"));
-
-        // get number of days between installation date and today
-        $difference = $now->diff($installDate)->days;
-
-        return $days <= $difference;
-    }
-
-    /**
-     * Get current page.
-     * Note: This can not be moved to wpAdapter class as it is only available very late
-     * at add admin_init and not available most of the time.
-     *
-     * @return string post, page
-     */
-    private function getCurrentPage()
-    {
-        if (function_exists('\get_current_screen')) {
-            return \get_current_screen()->post_type;
-        }
-
-        throw new Exception('Function get_current_screen does not exist. WP < 3.0.1.');
-    }
-
-    /**
      * Load admin notices
      * @throws Exception
      */
@@ -170,9 +119,8 @@ class Notices
     {
         $viewsNoticesPath = "{$this->getPluginPath()}/Backend/views/notices/";
 
-        // Show notice "rate the plugin". Free version only
-        if (self::SHOW_ALL_NOTICES || (!$this->isPro() && ($this->canShow("wpstg_rating", 7) && $this->getCurrentPage() !== 'page' && $this->getCurrentPage() !== 'post'))) {
-            require_once "{$viewsNoticesPath}rating.php";
+        if (!$this->isPro()) {
+            do_action(self::BASIC_NOTICES_ACTION);
         }
 
         // Never show disable mail message if it's free version
@@ -247,11 +195,6 @@ class Notices
         // Show notice Staging directory is not writable
         if (self::SHOW_ALL_NOTICES || (!is_writable(ABSPATH))) {
             require_once "{$viewsNoticesPath}/staging-directory-permission-problem.php";
-        }
-
-        // Show notice WP STAGING is not tested with current WordPress version
-        if (self::SHOW_ALL_NOTICES || (!$this->isPro() && version_compare(WPStaging::getInstance()->get('WPSTG_COMPATIBLE'), get_bloginfo("version"), "<"))) {
-            require_once "{$viewsNoticesPath}wp-version-compatible-message.php";
         }
 
         // Show notice Different scheme in home and siteurl

@@ -20,7 +20,8 @@
     <div class="wpstg-clear-both"></div>
 </div>
 
-<button type="button" class="wpstg-prev-step-link wpstg-button--primary wpstg-mt-10px" style="display: none;">
+<button type="button" class="wpstg-prev-step-link wpstg-button--primary wpstg-mt-10px wpstg-button-back-arrow" style="display: none;">
+    <i class="wpstg-back-arrow"></i>
     <?php esc_html_e("Back", "wp-staging") ?>
 </button>
 

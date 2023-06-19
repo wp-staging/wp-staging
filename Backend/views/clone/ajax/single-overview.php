@@ -16,7 +16,7 @@ use WPStaging\Framework\Facades\Escape;
         <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
     </button>
     <div id="wpstg-report-issue-wrapper">
-        <button type="button" id="wpstg-report-issue-button" class="wpstg-button">
+        <button type="button" id="" class="wpstg-report-issue-button">
             <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
         </button>
         <?php require_once($this->path . 'views/_main/report-issue.php'); ?>

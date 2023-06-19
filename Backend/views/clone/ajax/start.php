@@ -52,7 +52,8 @@ use WPStaging\Framework\Facades\Escape;
     ?>
     <br>
     <br>
-    <a href="" class="wpstg-button--primary" id="wpstg-home-link">
+    <a href="" class="wpstg-button--primary wpstg-button-back-arrow" id="wpstg-home-link">
+        <i class="wpstg-back-arrow"></i>
         <?php echo esc_html__("BACK", "wp-staging")?>
     </a>
     <a href="<?php echo esc_url($url); ?>" id="wpstg-clone-url" target="_blank" class="wpstg-blue-primary wpstg-button">

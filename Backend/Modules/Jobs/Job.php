@@ -62,6 +62,7 @@ abstract class Job implements ShutdownableInterface
     /** @var Math */
     protected $utilsMath;
 
+    /** @var SystemInfo */
     protected $systemInfo;
 
     /**
