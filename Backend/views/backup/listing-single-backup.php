@@ -27,13 +27,12 @@ $sizeIssues             = isset($backup->validationIssues['sizeIssues']) ? $back
 $existingBackupParts    = $backup->existingBackupParts;
 $isValidFileIndex       = $backup->isValidFileIndex;
 $indexFileError         = $backup->errorMessage;
+$isUnsupported          = $backup->isUnsupported;
 
 // Default error message
 if (empty($indexFileError)) {
     $indexFileError = __("This backup has an invalid files index. Please create a new backup!", 'wp-staging');
 }
-
-$isUnsupported = version_compare((string)$backup->generatedOnWPStagingVersion, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT, '<');
 
 // Download URL of backup file
 $downloadUrl = $backup->downloadUrl;

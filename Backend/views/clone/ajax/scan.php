@@ -121,7 +121,8 @@ if ($options->current !== null && $options->mainJob === 'updating') {
 }
 ?>
 
-<button type="button" class="wpstg-prev-step-link wpstg-button--primary">
+<button type="button" class="wpstg-prev-step-link wpstg-button--primary wpstg-button-back-arrow">
+    <i class="wpstg-back-arrow"></i>
     <?php esc_html_e("Back", "wp-staging") ?>
 </button>
 

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.2
-Stable tag: 2.15.0
+Stable tag: 2.16.0
 Requires PHP: 5.6
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -258,6 +258,19 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 2.16.0 =
+* New: Bring the premium high-performance pro backup feature into the basic version to allow creating a periodic backup of the WordPress website including backup restoring. #1979 #2487
+* Enh: Display Google Drive account info permanently on the settings page. Remove the option to customize the Google drive redirect uri. #2399
+* Enh: New styled back button #2444
+* Fix: Database tables renaming is now done in multiple requests instead of a single request for both PUSH and RESTORE. This allow easily rename hugh number of tables on slow server without worrying about increasing PHP Script timeout limit #2392
+* Fix: On backup restore keep or remove the staging site mode depending upon the current site state. E.g. Restoring a backup of a staging site on a live site will remove the staging site mode #2392
+* Fix: Small JS errors related to the backup sidebar menu when clicking tabs on the main navigation #1979
+* Fix: Backup restore can fail if backup has different access token than current site #2481
+* Fix: Several php 8.x warnings on staging site push operation in wpstg debug log #2472
+* Fix: When cloning into external database NULLs were converted to empty strings in the staging site #2448
+* Fix: Backup created with free version can show a warning if it is restored with pro version #2497
+* Dev: Update google webdriver driver test credentials #2450
 
 = 2.15.0 =
 * New: Compatible up to WordPress 6.2.2

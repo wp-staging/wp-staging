@@ -21,7 +21,7 @@ use WPStaging\Backup\Exceptions\ProcessLockedException;
  * @var bool                        $hasSchedule
  */
 
-$disabledProperty = $isValidLicense ? '' : 'disabled';
+$disabledProperty = !$isProVersion || $isValidLicense ? '' : 'disabled';
 
 $backupProcessLock = WPStaging::make(BackupProcessLock::class);
 try {
@@ -70,7 +70,7 @@ if ($cronMessage !== '') { ?>
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
     <div id="wpstg-report-issue-wrapper">
-        <button type="button" id="wpstg-report-issue-button" class="wpstg-button">
+        <button type="button" id="" class="wpstg-report-issue-button">
             <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
         </button>
         <?php require_once($this->views . '_main/report-issue.php'); ?>

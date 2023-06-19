@@ -174,11 +174,11 @@ class Report
      * create temp location for storing logs
      * @return string temporary path to hold logs attachments
      */
-
     private function getTempDirectoryForLogsAttachments()
     {
         $tempDirectory = trailingslashit(wp_normalize_path($this->directory->getPluginUploadsDirectory() . self::TEMP_DIRECTORY));
         wp_mkdir_p($tempDirectory);
+
         return $tempDirectory;
     }
 }

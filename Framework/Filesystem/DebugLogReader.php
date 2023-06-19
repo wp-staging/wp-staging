@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\Filesystem;
 
+use WPStaging\Framework\Security\Capabilities;
+
 class DebugLogReader
 {
     protected $filesystem;
@@ -16,21 +18,30 @@ class DebugLogReader
      */
     public function listenDeleteLogRequest()
     {
-        if (isset($_GET['deleteLog']) && isset($_GET['deleteLogNonce'])) {
-            if (current_user_can((new \WPStaging\Framework\Security\Capabilities())->manageWPSTG()) && wp_verify_nonce($_GET['deleteLogNonce'], 'wpstgDeleteLogNonce')) {
-                if ($_GET['deleteLog'] === 'wpstaging') {
-                    $this->deleteWpStagingDebugLogFile();
-                } elseif ($_GET['deleteLog'] === 'php') {
-                    $this->deletePhpDebugLogFile();
-                }
-
-                // Redirect to prevent refresh from deleting the log again
-                wp_redirect(admin_url() . 'admin.php?page=wpstg-tools&tab=system-info');
-                exit;
-            }
+        if (!isset($_GET['deleteLog']) || !isset($_GET['deleteLogNonce'])) {
+            return;
         }
+
+        if (!current_user_can((new Capabilities())->manageWPSTG()) || !wp_verify_nonce($_GET['deleteLogNonce'], 'wpstgDeleteLogNonce')) {
+            return;
+        }
+
+        if ($_GET['deleteLog'] === 'wpstaging') {
+            $this->deleteWpStagingDebugLogFile();
+        }
+
+        if ($_GET['deleteLog'] === 'php') {
+            $this->deletePhpDebugLogFile();
+        }
+
+        // Redirect to prevent refresh from deleting the log again
+        wp_redirect(admin_url() . 'admin.php?page=wpstg-tools&tab=system-info');
+        exit;
     }
 
+    /**
+     * @return bool|null Whether the log file was deleted or not.
+     */
     public function deletePhpDebugLogFile()
     {
         $phpDebugLogFile = ini_get('error_log');
@@ -42,6 +53,9 @@ class DebugLogReader
         return null;
     }
 
+    /**
+     * @return bool|null
+     */
     public function deleteWpStagingDebugLogFile()
     {
         if (file_exists(WPSTG_DEBUG_LOG_FILE) && is_writable(WPSTG_DEBUG_LOG_FILE)) {
@@ -52,7 +66,7 @@ class DebugLogReader
     }
 
     /**
-     * @param int  $maxSizeEach Max size in bytes to fetch from each log.
+     * @param int $maxSizeEach Max size in bytes to fetch from each log.
      * @param bool $withWpstgDebugLog Whether to include WP STAGING custom log entries.
      * @param bool $withPhpDebugLog Whether to include PHP error_log entries.
      *
@@ -119,9 +133,9 @@ class DebugLogReader
             $debugLines = [];
 
             do {
-                $line = trim($debugFile->readAndMoveNext());
-                $line = html_entity_decode($line);
-                $line = sanitize_text_field($line);
+                $line         = trim($debugFile->readAndMoveNext());
+                $line         = html_entity_decode($line);
+                $line         = sanitize_text_field($line);
                 $debugLines[] = $line;
             } while ($debugFile->valid());
 

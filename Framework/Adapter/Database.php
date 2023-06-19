@@ -140,7 +140,7 @@ class Database
      */
     public function exec($statement)
     {
-        return (bool)$this->wpdba->exec($statement);
+        return $this->wpdba->exec($statement);
     }
 
     /**

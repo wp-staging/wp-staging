@@ -899,6 +899,66 @@
   }
 
   /**
+   * Enable side bar menu and set url on tab click
+   */
+  var WpstgSidebarMenu = /*#__PURE__*/function () {
+    function WpstgSidebarMenu() {
+      this.init();
+    }
+
+    var _proto = WpstgSidebarMenu.prototype;
+
+    _proto.init = function init() {
+      this.wpstdStagingTab = document.querySelector('#wpstg--tab--toggle--staging');
+      this.wpstdBackupTab = document.querySelector('#wpstg--tab--toggle--backup');
+      this.wpstdSidebarMenu = document.querySelector('#toplevel_page_wpstg_clone');
+      this.addEvents();
+    };
+
+    _proto.addEvents = function addEvents() {
+      var _this = this;
+
+      if (this.wpstdStagingTab !== null) {
+        this.wpstdStagingTab.addEventListener('click', function () {
+          _this.setPageUrl('wpstg_clone');
+
+          _this.setSidebarMenu('wpstg_clone');
+        });
+      }
+
+      if (this.wpstdBackupTab !== null) {
+        this.wpstdBackupTab.addEventListener('click', function () {
+          _this.setPageUrl('wpstg_backup');
+
+          _this.setSidebarMenu('wpstg_backup');
+        });
+      }
+    };
+
+    _proto.setPageUrl = function setPageUrl(page) {
+      window.history.pushState(null, null, window.location.pathname + '?page=' + page);
+    };
+
+    _proto.setSidebarMenu = function setSidebarMenu(page) {
+      var wpstgSidebarMenuElements = this.wpstdSidebarMenu.querySelector('ul').querySelectorAll('li');
+
+      if (wpstgSidebarMenuElements.length > 0) {
+        for (var i = 0; i < wpstgSidebarMenuElements.length; i++) {
+          wpstgSidebarMenuElements[i].classList.remove('current');
+
+          if (wpstgSidebarMenuElements[i].querySelector('a') !== null) {
+            if (wpstgSidebarMenuElements[i].querySelector('a').getAttribute('href') === 'admin.php?page=' + page) {
+              wpstgSidebarMenuElements[i].classList.add('current');
+            }
+          }
+        }
+      }
+    };
+
+    return WpstgSidebarMenu;
+  }();
+
+  /**
    * Enable/Disable cloning for staging site
    */
 
@@ -944,6 +1004,7 @@
       addEvent(this.pageWrapper, 'click', this.enableButtonId, function () {
         _this.sendRequest(_this.enableAction);
       });
+      new WpstgSidebarMenu();
     };
 
     _proto.init = function init() {
@@ -992,26 +1053,6 @@
 
     return WpstgCloneStaging;
   }();
-
-  window.onload = function () {
-    document.getElementById('wpstg--tab--toggle--staging').addEventListener('click', function () {
-      window.history.pushState(null, null, window.location.pathname + '?page=wpstg_clone');
-      var adminMenu = document.getElementById('toplevel_page_wpstg_clone');
-      var adminMenuElements = adminMenu.querySelector('ul').querySelectorAll('li');
-
-      if (adminMenuElements.length > 0) {
-        for (var i = 0; i < adminMenuElements.length; i++) {
-          adminMenuElements[i].classList.remove('current');
-
-          if (adminMenuElements[i].querySelector('a') !== null) {
-            if (adminMenuElements[i].querySelector('a').getAttribute('href') === 'admin.php?page=wpstg_clone') {
-              adminMenuElements[i].classList.add('current');
-            }
-          }
-        }
-      }
-    });
-  };
 
   /**
    * Fetch directory direct child directories
@@ -2111,6 +2152,11 @@
       addEvent(qs('.wpstg--tab--header'), 'click', '.wpstg-button', function (element) {
         var $this = element;
         var target = $this.getAttribute('data-target');
+
+        if (target === '') {
+          return;
+        }
+
         var targetElements = all(target);
         var menuItems = all('.wpstg--tab--header a[data-target]');
         var contents = all('.wpstg--tab--contents > .wpstg--tab--content');
@@ -3640,12 +3686,12 @@
    */
 
   jQuery(document).ready(function ($) {
-    $('body').on('click', '#wpstg-report-issue-button', function (e) {
+    $('body').on('click', '.wpstg-report-issue-button', function (e) {
       console.log('REPORT ISSUE.');
       $('.wpstg-report-issue-form').toggleClass('wpstg-report-show');
       e.preventDefault();
     });
-    $('body').on('click', '#wpstg-backups-report-issue-button', function (e) {
+    $('body').on('click', '.wpstg-backups-report-issue-button', function (e) {
       $('.wpstg-report-issue-form').toggleClass('wpstg-report-show');
       e.preventDefault();
     });

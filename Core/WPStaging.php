@@ -2,9 +2,11 @@
 
 namespace WPStaging\Core;
 
+use RuntimeException;
 use WPStaging\Backend\Administrator;
 use WPStaging\Backend\Pro\Licensing\Licensing;
 use WPStaging\Backup\BackupServiceProvider;
+use WPStaging\Basic\BasicServiceProvider;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
@@ -106,17 +108,18 @@ final class WPStaging
 
         $this->container->register(AnalyticsServiceProvider::class);
 
-        // @todo remove this pro condition in the last step PR of backup feature to enable backup on free version.
-        if (self::isPro() && class_exists('\WPStaging\Backup\BackupServiceProvider')) {
-            $this->container->register(BackupServiceProvider::class);
-        }
+        $this->container->register(BackupServiceProvider::class);
 
-        if (class_exists('\WPStaging\Pro\ProServiceProvider')) {
+        // Register Pro or Basic Provider, Always prefer registering Pro if both classes found. If both not present throw error
+        if (class_exists('\WPStaging\Pro\ProServiceProvider') && !$this->isWPStagingDevBasic()) {
             $this->container->register(ProServiceProvider::class);
+        } elseif (class_exists('\WPStaging\Basic\BasicServiceProvider')) {
+            $this->container->register(BasicServiceProvider::class);
+        } else {
+            throw new RuntimeException('Basic and Pro Providers both not found! At least one of them should be present.');
         }
 
         $this->container->register(FrontendServiceProvider::class);
-
 
         $this->handleCacheIssues();
         $this->preventDirectoryListing();
@@ -407,6 +410,10 @@ final class WPStaging
      */
     public static function getVersion()
     {
+        if (WPStaging::getInstance()->isWPStagingDevBasic()) {
+            return WPSTG_DEV_BASIC;
+        }
+
         if (self::isPro()) {
             return WPSTGPRO_VERSION;
         }
@@ -416,12 +423,10 @@ final class WPStaging
 
     /**
      * @return bool
-     *
-     * @todo find a better place to make it mockable or add filter for mocking
      */
     public static function isPro()
     {
-        return defined('WPSTGPRO_VERSION');
+        return self::make('WPSTG_PRO');
     }
 
     /**
@@ -453,5 +458,15 @@ final class WPStaging
             $directoryListing = $this->getContainer()->get(DirectoryListing::class);
             $directoryListing->protectPluginUploadDirectory();
         }
+    }
+
+    /**
+     * Const is used during development for building and testing basic features
+     *
+     * @return bool
+     */
+    private function isWPStagingDevBasic()
+    {
+        return defined('WPSTG_DEV_BASIC') && WPSTG_DEV_BASIC;
     }
 }

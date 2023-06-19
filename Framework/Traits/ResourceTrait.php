@@ -60,10 +60,15 @@ trait ResourceTrait
      */
     public function isDatabaseRestoreThreshold()
     {
-        if ($this->isMemoryLimit() || $this->isDatabaseRestoreTimeLimit()) {
-            return true;
-        }
-        return false;
+        return $this->isMemoryLimit() || $this->isDatabaseRestoreTimeLimit();
+    }
+
+    /**
+     * @return bool
+     */
+    public function isMaxExecutionThreshold()
+    {
+        return $this->isMemoryLimit() || $this->isMaxExecutionTimeoutLimit();
     }
 
     /**
@@ -121,15 +126,24 @@ trait ResourceTrait
         return $this->getRunningTime() > $timeLimit;
     }
 
+    /**
+     * @return bool
+     */
+    public function isMaxExecutionTimeoutLimit()
+    {
+        return $this->getRunningTime() > $this->findExecutionTimeLimit(true);
+    }
 
     /**
      * Returns the maximum allowed execution time limit.
      * The minimum needs to be 10seconds!
      * @see https://github.com/wp-staging/wp-staging-pro/pull/1492
      *
+     * @param bool $useMaxTimeout
+     *
      * @return float|int
      */
-    public function findExecutionTimeLimit()
+    public function findExecutionTimeLimit($useMaxTimeout = false)
     {
         // Early bail: Cache
         if (isset($this->executionTimeLimit)) {
@@ -138,6 +152,16 @@ trait ResourceTrait
 
         $phpMaxExecutionTime      = $this->getPhpMaxExecutionTime();
         $cpuBoundMaxExecutionTime = $this->getCpuBoundMaxExecutionTime();
+
+        // Use the max execution time limit for CPU bound tasks like tables renaming
+        if ($useMaxTimeout) {
+            $this->executionTimeLimit = max(min($phpMaxExecutionTime - static::$executionTimeGapInSeconds, $phpMaxExecutionTime * 0.8), 10);
+
+            // Internal Use only. Allow overwriting of the max execution time limit for testing database rename task.
+            $this->executionTimeLimit = (int)apply_filters('wpstg.tests.databaseRenameTask', $this->executionTimeLimit);
+
+            return $this->executionTimeLimit;
+        }
 
         // TODO don't overwrite when CLI / SAPI and / or add setting to not overwrite for devs
         if (!$cpuBoundMaxExecutionTime || $cpuBoundMaxExecutionTime > static::$defaultMaxExecutionTimeInSeconds) {

@@ -60,7 +60,7 @@ class Escape
      * Mimics the mysql_real_escape_string function. Adapted from a post by 'feedr' on php.net.
      * @link   http://php.net/manual/en/function.mysql-real-escape-string.php#101248
      * @access public
-     * @param string | array $input The string to escape.
+     * @param string|array $input The string to escape.
      * @return string|array
      */
     public function mysqlRealEscapeString($input)
@@ -68,6 +68,7 @@ class Escape
         if (is_array($input)) {
             return array_map(__METHOD__, $input);
         }
+
         if (!empty($input) && is_string($input)) {
             return str_replace(['\\', "\0", "\n", "\r", "'", '"', "\x1a"], ['\\\\', '\\0', '\\n', '\\r', "\\'", '\\"', '\\Z'], $input);
         }

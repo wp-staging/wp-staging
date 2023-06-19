@@ -583,7 +583,6 @@ class Queue
     public function count($status = null, $jobId = null)
     {
         if (!$this->tableExists()) {
-            debug_log(sprintf('Queue count: The table %s does not exist for count.', self::getTableName()));
             return 0;
         }
 
