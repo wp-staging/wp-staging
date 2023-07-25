@@ -8,6 +8,7 @@ use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 use WPStaging\Framework\Analytics\AnalyticsSender;
 use WPStaging\Framework\DI\FeatureServiceProvider;
+use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\Sanitize;
 
 class AnalyticsServiceProvider extends FeatureServiceProvider
@@ -42,8 +43,12 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
          *
          * "analytics" should never be mentioned in JavaScript, only on server-side.
          */
-        add_action("wp_ajax_wpstg_job_error", function () {
+        add_action("wp_ajax_wpstg_job_error", function () { // phpcs:ignore WPStaging.Security.AuthorizationChecked
             if (empty($_POST)) {
+                return;
+            }
+
+            if (!$this->container->make(Auth::class)->isAuthenticatedRequest()) {
                 return;
             }
 
@@ -61,8 +66,12 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
         });
 
         // Analytics error detection for Staging actions
-        add_action("wp_ajax_wpstg_staging_job_error", function () {
+        add_action("wp_ajax_wpstg_staging_job_error", function () { // phpcs:ignore WPStaging.Security.AuthorizationChecked
             if (empty($_POST)) {
+                return;
+            }
+
+            if (!$this->container->make(Auth::class)->isAuthenticatedRequest()) {
                 return;
             }
 

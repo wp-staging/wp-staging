@@ -158,8 +158,8 @@ abstract class AbstractJob implements ShutdownableInterface
             $this->diskFullCheck->hasDiskWriteTestFailed();
         } catch (DiskNotWritableException $e) {
             $response = new TaskResponseDto();
-            $response->setStatus(false);
-            $response->setStatus('JOB_FAIL');
+            $response->setIsRunning(false);
+            $response->setJobStatus('JOB_FAIL');
             $response->addMessage([
                 'type' => 'critical',
                 'date' => $this->getFormattedDate(),
@@ -176,11 +176,11 @@ abstract class AbstractJob implements ShutdownableInterface
                 $this->prepare();
             } catch (TaskHealthException $e) {
                 $response = new TaskResponseDto();
-                $response->setStatus(false);
+                $response->setIsRunning(false);
 
                 if ($e->getCode() === TaskHealthException::CODE_TASK_FAILED_TOO_MANY_TIMES) {
                     // Signal to JavaScript that this Job failed if no further requests should be made.
-                    $response->setStatus('JOB_FAIL');
+                    $response->setJobStatus('JOB_FAIL');
                     $response->addMessage([
                         'type' => 'critical',
                         'date' => $this->getFormattedDate(),
@@ -189,7 +189,7 @@ abstract class AbstractJob implements ShutdownableInterface
 
                     $this->jobDataCache->delete();
                 } else {
-                    $response->setStatus('JOB_RETRY');
+                    $response->setJobStatus('JOB_RETRY');
                     $response->addMessage([
                         'type' => 'warning',
                         'date' => $this->getFormattedDate(),
@@ -200,9 +200,10 @@ abstract class AbstractJob implements ShutdownableInterface
                 return $response;
             } catch (RuntimeException $ex) {
                 $response = new TaskResponseDto();
-                $response->setStatus(false);
 
-                $response->setStatus('JOB_FAIL');
+                $response->setIsRunning(false);
+                $response->setJobStatus('JOB_FAIL');
+
                 $response->addMessage([
                     'type' => 'critical',
                     'date' => $this->getFormattedDate(),
@@ -244,8 +245,8 @@ abstract class AbstractJob implements ShutdownableInterface
              * @see DiskWriteCheck::hasDiskWriteTestFailed()
              */
             $response = new TaskResponseDto();
-            $response->setStatus(false);
-            $response->setStatus('JOB_RETRY');
+            $response->setIsRunning(false);
+            $response->setJobStatus('JOB_RETRY');
             $response->addMessage([
                 'type' => 'warning',
                 'date' => $this->getFormattedDate(),
@@ -408,12 +409,12 @@ abstract class AbstractJob implements ShutdownableInterface
         $response->setJob(substr($this->findCurrentJob(), 3));
 
         // Task is not done yet, add it to beginning of the queue again
-        if (!$response->isStatus()) {
+        if (!$response->isRunning()) {
             $className = get_class($this->currentTask);
         }
 
         try {
-            if ($response->isStatus()) {
+            if ($response->isRunning()) {
                 $this->jobDataDto->moveToNextTask();
             }
         } catch (FinishedQueueException $e) {
@@ -422,7 +423,7 @@ abstract class AbstractJob implements ShutdownableInterface
             return $response;
         }
 
-        $response->setStatus(false);
+        $response->setIsRunning(false);
 
         return $response;
     }

@@ -1,5 +1,14 @@
 <?php
-$storages = WPStaging\Core\WPStaging::make(\WPStaging\Backup\Storage\Providers::class);
+
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Security\Capabilities;
+
+// This is already covered, but just to make sure, since this data is sensitive.
+if (!current_user_can(WPStaging::make(Capabilities::class)->manageWPSTG())) {
+    return;
+}
+
+$storages = WPStaging::make(\WPStaging\Backup\Storage\Providers::class);
 $provider = 'googledrive';
 $providerId = '';
 if (isset($_REQUEST['sub'])) {

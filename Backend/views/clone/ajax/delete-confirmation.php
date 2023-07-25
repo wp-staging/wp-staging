@@ -56,7 +56,7 @@ if ($isDatabaseConnected) { ?>
     </a>
 
     <!-- Database -->
-    <div class="wpstg-tab-section" id="wpstg-scanning-db">
+    <div class="wpstg-tab-section wpstg-database-delete-confirmation" id="wpstg-scanning-db">
         <h4 class="wpstg-m-0">
             <?php esc_html_e("Select all database tables you want to delete:", "wp-staging")?>
         </h4>
@@ -70,12 +70,12 @@ if ($isDatabaseConnected) { ?>
             <div class="wpstg-db-table">
                 <label>
                     <?php $checkedProperty = (strpos($table->name, $clone->prefix) === 0) ? 'checked' : ''; ?>
-                    <input class="wpstg-db-table-checkboxes" type="checkbox" name="<?php echo esc_attr($table->name); ?>" <?php echo esc_attr($checkedProperty) ?>>
+                    <input class="wpstg-db-table-checkboxes wpstg-checkbox" type="checkbox" name="<?php echo esc_attr($table->name); ?>" <?php echo esc_attr($checkedProperty) ?>>
                     <?php echo esc_html($table->name) ?>
                 </label>
                 <span class="wpstg-size-info">
                 <?php echo isset($table->size) ? esc_html($table->size) : '';?>
-            </span>
+                </span>
             </div>
         <?php endforeach ?>
         <div class="wpstg-my-6px">
@@ -100,7 +100,7 @@ if ($isDatabaseConnected) { ?>
 
         <div class="wpstg-dir">
             <label>
-                <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir" name="deleteDirectory" value="1" checked data-deletepath="<?php echo urlencode($clone->path);?>">
+                <input id="deleteDirectory" type="checkbox" class="wpstg-check-dir wpstg-checkbox" name="deleteDirectory" value="1" checked data-deletepath="<?php echo urlencode($clone->path);?>">
                 <?php echo esc_html($clone->path);?>
                 <span class="wpstg-size-info"><?php echo isset($clone->size) ? esc_html($clone->size) : ''; ?></span>
             </label>

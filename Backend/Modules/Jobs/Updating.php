@@ -2,12 +2,14 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use Exception;
+use stdClass;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Helper;
 use WPStaging\Framework\Database\SelectedTables;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Utils\Sanitize;
-use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
@@ -82,7 +84,7 @@ class Updating extends Job
     /**
      * Save Chosen Cloning Settings
      * @return bool
-     * @throws \Exception
+     * @throws Exception
      */
     public function save()
     {
@@ -116,9 +118,9 @@ class Updating extends Job
         ];
 
         $this->options->excludedFilesFullPath = [
-            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'db.php',
-            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'object-cache.php',
-            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'advanced-cache.php'
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'db.php',
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'object-cache.php',
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'advanced-cache.php'
         ];
 
         // Define mainJob to differentiate between cloning, updating and pushing
@@ -130,7 +132,7 @@ class Updating extends Job
         }
 
         // Job
-        $this->options->job = new \stdClass();
+        $this->options->job = new stdClass();
 
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
@@ -168,12 +170,12 @@ class Updating extends Job
          * Only add other directories here
          */
         $excludedDirectories = [
-            $this->dirUtils->getRelativeWpContentPath(SlashMode::BOTH_SLASHES) . 'cache',
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'cache',
         ];
 
         // Add upload folder to list of excluded directories for push if symlink option is enabled
         if ($this->options->uploadsSymlinked) {
-            $excludedDirectories[] = $this->dirUtils->getRelativeUploadPath(SlashMode::LEADING_SLASH);
+            $excludedDirectories[] = PathIdentifier::IDENTIFIER_UPLOADS;
         }
 
         $this->options->excludedDirectories = $excludedDirectories;

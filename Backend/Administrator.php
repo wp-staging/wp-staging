@@ -13,6 +13,7 @@ use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\DebugLogReader;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\CloningProcess\Database\CompareExternalDatabase;
 use WPStaging\Framework\Utils\Math;
@@ -118,58 +119,58 @@ class Administrator
 
         add_action("admin_menu", [$this, "addMenu"], 10);
         add_action("admin_init", [$this, "upgrade"]);
-        add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]);
+        add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         if (!defined('WPSTGPRO_VERSION')) {
             add_filter('admin_footer', [$this, 'loadFeedbackForm']);
         }
 
         // Ajax Requests
-        add_action("wp_ajax_wpstg_overview", [$this, "ajaxOverview"]);
-        add_action("wp_ajax_wpstg_scanning", [$this, "ajaxCloneScan"]);
-        add_action("wp_ajax_wpstg_check_clone", [$this, "ajaxCheckCloneDirectoryName"]);
-        add_action("wp_ajax_wpstg_restart", [$this, "ajaxRestart"]);
-        add_action("wp_ajax_wpstg_update", [$this, "ajaxUpdateProcess"]);
-        add_action("wp_ajax_wpstg_reset", [$this, "ajaxResetProcess"]);
-        add_action("wp_ajax_wpstg_cloning", [$this, "ajaxStartClone"]);
-        add_action("wp_ajax_wpstg_processing", [$this, "ajaxCloneDatabase"]);
-        add_action("wp_ajax_wpstg_database_connect", [$this, "ajaxDatabaseConnect"]);
-        add_action("wp_ajax_wpstg_database_verification", [$this, "ajaxDatabaseVerification"]);
-        add_action("wp_ajax_wpstg_clone_prepare_directories", [$this, "ajaxPrepareDirectories"]);
-        add_action("wp_ajax_wpstg_clone_files", [$this, "ajaxCopyFiles"]);
-        add_action("wp_ajax_wpstg_clone_replace_data", [$this, "ajaxReplaceData"]);
-        add_action("wp_ajax_wpstg_clone_finish", [$this, "ajaxFinish"]);
-        add_action("wp_ajax_wpstg_confirm_delete_clone", [$this, "ajaxDeleteConfirmation"]);
-        add_action("wp_ajax_wpstg_delete_clone", [$this, "ajaxDeleteClone"]);
-        add_action("wp_ajax_wpstg_cancel_clone", [$this, "ajaxCancelClone"]);
-        add_action("wp_ajax_wpstg_cancel_update", [$this, "ajaxCancelUpdate"]);
-        add_action("wp_ajax_wpstg_hide_rating", [$this, "ajaxHideRating"]);
-        add_action("wp_ajax_wpstg_hide_later", [$this, "ajaxHideLaterRating"]);
-        add_action("wp_ajax_wpstg_hide_beta", [$this, "ajaxHideBeta"]);
-        add_action("wp_ajax_wpstg_logs", [$this, "ajaxLogs"]);
-        add_action("wp_ajax_wpstg_check_disk_space", [$this, "ajaxCheckFreeSpace"]);
-        add_action("wp_ajax_wpstg_send_report", [$this, "ajaxSendReport"]);
-        add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]);
-        add_action("wp_ajax_wpstg_enable_staging_cloning", [$this, "ajaxEnableStagingCloning"]);
-        add_action("wp_ajax_wpstg_clone_excludes_settings", [$this, "ajaxCloneExcludesSettings"]);
-        add_action("wp_ajax_wpstg_fetch_dir_children", [$this, "ajaxFetchDirChildren"]);
-        add_action("wp_ajax_wpstg_modal_error", [$this, "ajaxModalError"]);
-        add_action("wp_ajax_wpstg_dismiss_notice", [$this, "ajaxDismissNotice"]);
-        add_action("wp_ajax_wpstg_restore_settings", [$this, "ajaxRestoreSettings"]);
+        add_action("wp_ajax_wpstg_overview", [$this, "ajaxOverview"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_scanning", [$this, "ajaxCloneScan"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_check_clone", [$this, "ajaxCheckCloneDirectoryName"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_restart", [$this, "ajaxRestart"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_update", [$this, "ajaxUpdateProcess"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_reset", [$this, "ajaxResetProcess"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_cloning", [$this, "ajaxStartClone"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_processing", [$this, "ajaxCloneDatabase"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_database_connect", [$this, "ajaxDatabaseConnect"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_database_verification", [$this, "ajaxDatabaseVerification"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_clone_prepare_directories", [$this, "ajaxPrepareDirectories"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_clone_files", [$this, "ajaxCopyFiles"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_clone_replace_data", [$this, "ajaxReplaceData"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_clone_finish", [$this, "ajaxFinish"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_confirm_delete_clone", [$this, "ajaxDeleteConfirmation"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_delete_clone", [$this, "ajaxDeleteClone"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_cancel_clone", [$this, "ajaxCancelClone"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_cancel_update", [$this, "ajaxCancelUpdate"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_hide_rating", [$this, "ajaxHideRating"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_hide_later", [$this, "ajaxHideLaterRating"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_hide_beta", [$this, "ajaxHideBeta"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_logs", [$this, "ajaxLogs"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_check_disk_space", [$this, "ajaxCheckFreeSpace"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_send_report", [$this, "ajaxSendReport"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_send_feedback", [$this, "sendFeedback"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_enable_staging_cloning", [$this, "ajaxEnableStagingCloning"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_clone_excludes_settings", [$this, "ajaxCloneExcludesSettings"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_fetch_dir_children", [$this, "ajaxFetchDirChildren"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_modal_error", [$this, "ajaxModalError"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_dismiss_notice", [$this, "ajaxDismissNotice"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_restore_settings", [$this, "ajaxRestoreSettings"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         // Ajax hooks pro Version
         // TODO: move all below actions to pro service provider?
-        add_action("wp_ajax_wpstg_edit_clone_data", [$this, "ajaxEditCloneData"]);
-        add_action("wp_ajax_wpstg_save_clone_data", [$this, "ajaxSaveCloneData"]);
-        add_action("wp_ajax_wpstg_scan", [$this, "ajaxPushScan"]);
-        add_action("wp_ajax_wpstg_push_tables", [$this, "ajaxPushTables"]);
-        add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
-        add_action("wp_ajax_nopriv_wpstg_push_processing", [$this, "ajaxPushProcessing"]);
+        add_action("wp_ajax_wpstg_edit_clone_data", [$this, "ajaxEditCloneData"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_save_clone_data", [$this, "ajaxSaveCloneData"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_scan", [$this, "ajaxPushScan"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_push_tables", [$this, "ajaxPushTables"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_nopriv_wpstg_push_processing", [$this, "ajaxPushProcessing"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         // TODO: replace uploads backup during push once we have backups PR ready,
         // Then there will be no need to have any cron to delete those backups
         if (class_exists('WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir')) {
-            add_action(BackupUploadsDir::BACKUP_DELETE_CRON_HOOK_NAME, [$this, "removeOldUploadsBackup"]);
+            add_action(BackupUploadsDir::BACKUP_DELETE_CRON_HOOK_NAME, [$this, "removeOldUploadsBackup"]); // phpcs:ignore WPStaging.Security.FirstArgNotAString -- Cron callback
         }
     }
 
@@ -187,6 +188,10 @@ class Administrator
      */
     public function sendFeedback()
     {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
         $form = WPStaging::make(Feedback::class);
         $form->sendMail();
     }
@@ -533,9 +538,18 @@ class Administrator
         $isChecked    = isset($_POST['isChecked']) ? $this->sanitize->sanitizeBool($_POST['isChecked']) : false;
         $forceDefault = isset($_POST['forceDefault']) ? $this->sanitize->sanitizeBool($_POST['forceDefault']) : false;
         $path         = isset($_POST['dirPath']) ? $this->sanitize->sanitizePath($_POST['dirPath']) : "";
-        $path         = ABSPATH . $path;
+        $prefix       = isset($_POST['prefix']) ? $this->sanitize->sanitizePath($_POST['prefix']) : "";
+        $basePath     = ABSPATH;
+        if ($prefix === PathIdentifier::IDENTIFIER_WP_CONTENT) {
+            $basePath = WP_CONTENT_DIR;
+        }
+
+        $path         = trailingslashit($basePath) . $path;
         $scan         = new Scan($path);
+        $scan->setBasePath($basePath);
+        $scan->setPathIdentifier($prefix);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
+        $scan->getDirectories($path);
         wp_send_json([
             "success"          => true,
             "directoryListing" => json_encode($scan->directoryListing($isChecked, $forceDefault)),
@@ -774,6 +788,10 @@ class Administrator
      */
     public function ajaxHideRating()
     {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
         if (update_option("wpstg_rating", "no") !== false) {
             wp_send_json(true);
         }
@@ -788,6 +806,10 @@ class Administrator
      */
     public function ajaxHideLaterRating()
     {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
         $date = date('Y-m-d', strtotime(date('Y-m-d') . ' + 7 days'));
         if (update_option('wpstg_rating', $date) !== false) {
             wp_send_json(true);
@@ -801,11 +823,19 @@ class Administrator
      */
     public function ajaxHideBeta()
     {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
         wp_send_json(update_option("wpstg_beta", "no"));
     }
 
     public function ajaxDismissNotice()
     {
+        if (!$this->isAuthenticated()) {
+            return;
+        }
+
         // Early bail if no notice option available
         if (!isset($_POST['wpstg_notice'])) {
             wp_send_json(null);

@@ -68,10 +68,15 @@ class Deactivate
 
     protected function deleteBackupSchedulesFromCron()
     {
-        if (file_exists(__DIR__ . '/Backup/BackupScheduler.php')) {
-            require_once __DIR__ . '/Backup/BackupScheduler.php';
-            \WPStaging\Backup\BackupScheduler::removeBackupSchedulesFromCron();
+        if (!file_exists(__DIR__ . '/Backup/BackupScheduler.php')) {
+            return;
         }
+
+        if (!class_exists('\WPStaging\Backup\BackupScheduler')) {
+            require_once __DIR__ . '/Backup/BackupScheduler.php';
+        }
+
+        \WPStaging\Backup\BackupScheduler::removeBackupSchedulesFromCron();
     }
 
     /**

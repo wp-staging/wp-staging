@@ -54,11 +54,13 @@ class CleanExistingMediaTask extends RestoreTask
 
         $this->prepareCleaningMedia();
 
-        $wpStagingUploadsDir = '/' . str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->directory->getPluginUploadsDirectory()) . '**';
+        $excludedPaths = [
+            rtrim($this->directory->getPluginUploadsDirectory(), '/')
+        ];
 
         $this->filesystem->setShouldStop([$this, 'isThreshold'])
-            ->addExcludePath($wpStagingUploadsDir)
-            ->setWpRootPath(ABSPATH)
+            ->setExcludePaths($excludedPaths)
+            ->setWpRootPath(WP_CONTENT_DIR)
             ->setRecursive();
 
         $result = false;

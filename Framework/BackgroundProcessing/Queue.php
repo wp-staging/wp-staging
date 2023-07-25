@@ -70,7 +70,7 @@ class Queue
      * The current table state, or `null` if the current table state has never been
      * assessed before.
      *
-     * @var string|null
+     * @var string|null|int
      */
     private $tableState;
 
@@ -284,11 +284,13 @@ class Queue
 
         $dbdeltaQueries = [];
 
+        $this->addUpgradeQueries($dbdeltaQueries);
+
         // A Closure that will collect, and empty, the SQL queries `dbdelta` would run to, then, run using
         $collectDbdeltaQueries = static function ($queries) use (&$dbdeltaQueries, &$collectDbdeltaQueries) {
             // Self remove.
             remove_filter('dbdelta_queries', $collectDbdeltaQueries);
-            $dbdeltaQueries = $queries;
+            $dbdeltaQueries = array_merge($queries, $dbdeltaQueries);
 
             // Return an empty array to avoid dbDelta from actually running the queries.
             return [];
@@ -304,6 +306,7 @@ class Queue
 
         foreach ($dbdeltaQueries as $query) {
             if ($this->database->query($query) === false) {
+                debug_log('Queue Table Upgrade Error: ' . $this->database->error());
                 $this->database->query('ROLLBACK');
                 return self::TABLE_NOT_EXIST;
             }
@@ -498,7 +501,7 @@ class Queue
         if ($this->checkTable() !== self::TABLE_EXISTS) {
             // No actions if the table either does nto exist or has just been created.
             debug_log('Queue getNextAvailable: Table does not exist for getting the next available.', 'debug');
-            return;
+            return null;
         }
 
         $processing = self::STATUS_PROCESSING;
@@ -513,7 +516,7 @@ class Queue
         if ($this->count($processing) > 0) {
             debug_log('Queue getNextAvailable: There is an action already in process. Stop!', 'debug');
             $this->database->query("UNLOCK TABLES");
-            return;
+            return null;
         }
 
         $claimIdQuery = "SELECT id FROM {$tableName}
@@ -525,7 +528,7 @@ class Queue
             // This is NOT a failure: it just means the process could not lock the row.
             debug_log('Queue getNextAvailable returns null because claimed Id was empty. This query failed: ' . $claimIdQuery, 'debug');
             $this->database->query("UNLOCK TABLES");
-            return;
+            return null;
         }
 
         $claimedId = $this->database->fetchAssoc($claimedId);
@@ -533,7 +536,7 @@ class Queue
         if (!is_array($claimedId) || !array_key_exists('id', $claimedId)) {
             debug_log('Queue getNextAvailable returns null because claimedID query does not return an array or "id" does not exist. This query failed: ' . $claimIdQuery, 'debug');
             $this->database->query("UNLOCK TABLES");
-            return;
+            return null;
         }
 
         $claimedActionId = $claimedId['id'];
@@ -552,7 +555,7 @@ class Queue
         if (!$claimed) {
             // This is NOT a failure: it just means the process could not lock the row.
             debug_log('Queue getNextAvailable returns null the process could not lock the row. This query failed: ' . $claimQuery, 'debug');
-            return;
+            return null;
         }
 
         // Invalidate this Action cache and re-fetch the information.
@@ -693,7 +696,7 @@ class Queue
         global $wpdb;
         $collate    = $wpdb->collate;
         $queueTable = self::getTableName();
-        $tableSql   = "CREATE TABLE {$queueTable} (
+        $tableSql   = "CREATE TABLE IF NOT EXISTS {$queueTable} (
             id BIGINT(20) UNSIGNED NOT NULL AUTO_INCREMENT,
             action VARCHAR(1000) NOT NULL,
             jobId VARCHAR(1000) DEFAULT NULL,
@@ -763,7 +766,7 @@ class Queue
 
         if ($fetchResult === false) {
             // This is NOT an error, the query might be for a no-more existing Action.
-            return;
+            return null;
         }
 
         $row = $this->database->fetchAssoc($fetchResult);
@@ -1301,7 +1304,7 @@ class Queue
     public function getLatestUpdatedAction($jobId)
     {
         if (!is_string($jobId) || $this->tableState === self::TABLE_NOT_EXIST) {
-            return;
+            return null;
         }
 
         $tableName    = self::getTableName();
@@ -1320,14 +1323,14 @@ class Queue
             ]));
 
             // There has been an error fetching the results, bail.
-            return;
+            return null;
         }
 
         $row = $this->database->fetchAssoc($result);
 
         if (!isset($row['id'])) {
             // Not an error, it could just mean there are not matching Actions.
-            return;
+            return null;
         }
 
         return $this->getAction($row['id']);
@@ -1347,6 +1350,19 @@ class Queue
         $this->unlocker = $unlocker;
 
         return $this;
+    }
+
+    /**
+     * @param array $dbdeltaQueries
+     */
+    protected function addUpgradeQueries(&$dbdeltaQueries)
+    {
+        $tablename           = self::getTableName();
+        $currentTableVersion = get_option(self::QUEUE_TABLE_VERSION_KEY, '0.0.0');
+
+        if (version_compare($currentTableVersion, '4.9.1', '<')) {
+            $dbdeltaQueries[] = "ALTER TABLE `{$tablename}` ADD COLUMN `response` LONGTEXT DEFAULT NULL AFTER `args`";
+        }
     }
 
     /**

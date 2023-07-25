@@ -106,7 +106,7 @@ class BackupMetadata implements JsonSerializable
     /** @var string The MySQL/MariaDB version from which this backup was generated. */
     private $sqlServerVersion;
 
-    /** @var int The backup file size in bytes. */
+    /** @var int|string The backup file size in bytes. Default is empty string. */
     private $backupSize = '';
 
     /** @var int The blog ID for this metadata. */
@@ -148,6 +148,9 @@ class BackupMetadata implements JsonSerializable
     /** @var MultipartMetadata|array|null */
     private $multipartMetadata = null;
 
+    /** @var array */
+    private $indexPartSize = [];
+
     /**
      * BackupMetadata constructor.
      *
@@ -156,7 +159,7 @@ class BackupMetadata implements JsonSerializable
     public function __construct()
     {
         $siteInfo = new SiteInfo();
-        $time = new Times();
+        $time     = new Times();
 
         $this->setVersion(WPStaging::getVersion());
         $this->setSiteUrl(get_option('siteurl'));
@@ -858,7 +861,7 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @return array|null.
+     * @return array|null
      */
     public function getNonWpTables()
     {
@@ -876,5 +879,16 @@ class BackupMetadata implements JsonSerializable
     public function setLogFile($fileName)
     {
         $this->logFile = $fileName;
+    }
+
+    public function setIndexPartSize($indexPartSize)
+    {
+        $this->indexPartSize = $indexPartSize;
+    }
+
+    /** @return array */
+    public function getIndexPartSize()
+    {
+        return $this->indexPartSize;
     }
 }

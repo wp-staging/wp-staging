@@ -15,7 +15,7 @@ use function WPStaging\functions\debug_log;
 abstract class AbstractCache
 {
     const DEFAULT_LIFETIME = 2592000; // 30 days
-    const EXTENSION = 'cache';
+    const EXTENSION        = 'cache';
 
     /** @var int */
     protected $lifetime;
@@ -45,7 +45,7 @@ abstract class AbstractCache
     /**
      * @param mixed $value
      *
-     * @return bool
+     * @return int
      */
     abstract public function save($value);
 

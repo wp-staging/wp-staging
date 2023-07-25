@@ -2,6 +2,7 @@
 
 namespace WPStaging\Core;
 
+use Exception;
 use RuntimeException;
 use WPStaging\Backend\Administrator;
 use WPStaging\Backend\Pro\Licensing\Licensing;
@@ -51,7 +52,7 @@ final class WPStaging
     private $isBootstrapped = false;
 
     /**
-     * @var int The microtime where the Container was bootstraped. Used to identify the time where the application started running.
+     * @var int|float The microtime where the Container was bootstraped. Used to identify the time where the application started running.
      */
     public static $startTime;
 
@@ -427,6 +428,26 @@ final class WPStaging
     public static function isPro()
     {
         return self::make('WPSTG_PRO');
+    }
+
+    /**
+     * @param bool $silence
+     */
+    public static function silenceLogs($silence = true)
+    {
+        WPStaging::getInstance()->set('SILENCE_LOGS', $silence);
+    }
+
+    /**
+     * @return bool
+     */
+    public static function areLogsSilenced()
+    {
+        try {
+            return self::make('SILENCE_LOGS');
+        } catch (Exception $ex) {
+            return false;
+        }
     }
 
     /**

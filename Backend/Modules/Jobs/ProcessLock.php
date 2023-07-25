@@ -38,16 +38,16 @@ class ProcessLock extends JobExecutable
      * Check if any process is already running, if running return a json encoded response for Swal Modal,
      * Otherwise return false
      *
-     * @return boolean|string
+     * @return false|array
      */
     public function ajaxIsRunning()
     {
         if (parent::isRunning()) {
             return [
-                'success'       => false,
-                'type'          => 'processLock',
+                'success'     => false,
+                'type'        => 'processLock',
                 // TODO: Create a Swal Response Class and Js library to handle that response or, Implement own Swal alternative
-                'swalOptions'   => [
+                'swalOptions' => [
                     'title'             => __('Error!', 'wp-staging'),
                     'html'              => __('Hold on, another WP STAGING process is already running...', 'wp-staging'),
                     'confirmButtonText' => __('Stop other process', 'wp-staging'),

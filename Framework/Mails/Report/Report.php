@@ -38,8 +38,6 @@ class Report
         $this->transient = $reportSubmitTransient;
     }
 
-
-
     /**
      * Send customer issue report
      *
@@ -81,7 +79,7 @@ class Report
                 "message" => __("You've already submitted a ticket.<br/>" .
                     "Do you want to send another one?", 'wp-staging')
             ];
-            return  $errors;
+            return $errors;
         }
 
         $attachments = [];

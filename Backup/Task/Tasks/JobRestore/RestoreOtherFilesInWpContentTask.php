@@ -61,9 +61,15 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             if ($files->isFile()) {
                 $absoluteFilePath = $files->getRealPath();
                 $fileName = str_replace($wpContentDir, '', $absoluteFilePath);
-                if ($fileName !== 'debug.log' && $fileName !== 'index.php') {
-                    $this->enqueueDelete($absoluteFilePath);
+                if ($fileName === 'debug.log' || $fileName === 'index.php') {
+                    continue;
                 }
+
+                if ($fileName === 'object-cache.php') {
+                    $this->jobDataDto->addFileChecksum('object-cache.php', sha1_file($absoluteFilePath));
+                }
+
+                $this->enqueueDelete($absoluteFilePath);
             }
 
             if ($files->isDir()) {
@@ -95,6 +101,12 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             $absDestPath = $destinationWpContentDir . $relativePath;
 
             if ($this->isExcludedOtherFile($absDestPath)) {
+                continue;
+            }
+
+            if ($relativePath === 'object-cache.php' && sha1_file($absSourcePath) !== $this->jobDataDto->getFileChecksum('object-cache.php')) {
+                $this->logger->warning('object-cache.php checksum does not match. Skipped restoring object-cache to avoid issues.');
+                $this->jobDataDto->setObjectCacheSkipped(true);
                 continue;
             }
 

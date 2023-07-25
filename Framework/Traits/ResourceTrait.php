@@ -277,8 +277,7 @@ trait ResourceTrait
     /**
      * Returns the actual script memory limit.
      *
-     * @return int The script memory limit, by definition less then
-     *             the maximum memory limit.
+     * @return int|float The script memory limit, by definition less then the maximum memory limit.
      */
     protected function getScriptMemoryLimit()
     {

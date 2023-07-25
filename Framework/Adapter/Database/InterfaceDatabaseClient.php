@@ -11,7 +11,7 @@ interface InterfaceDatabaseClient
     /**
      * Runs given MySQL query
      * @param string $query
-     * @return resource
+     * @return resource|bool|mysqli_result
      */
     public function query($query);
 
@@ -19,7 +19,7 @@ interface InterfaceDatabaseClient
      * Runs given MySQL query
      * @param string $query
      * @param bool $isExecOnly
-     * @return resource
+     * @return resource|bool|false|mysqli_result
      */
     public function realQuery($query, $isExecOnly = false);
 
@@ -65,7 +65,7 @@ interface InterfaceDatabaseClient
     /**
      * Returns the result from MySQL query resource as an object
      * @param resource|mysqli_result $result
-     * @return array
+     * @return array|object|false|null
      */
     public function fetchObject($result);
 
@@ -79,7 +79,7 @@ interface InterfaceDatabaseClient
     /**
      * Free MySQL result memory
      * @param resource|mysqli_result $result
-     * @return void
+     * @return null
      */
     public function freeResult($result);
 

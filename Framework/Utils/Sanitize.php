@@ -91,7 +91,7 @@ class Sanitize
      * Sanitize the path, remove spaces and trailing slashes.
      *
      * @param string $value
-     * @return string
+     * @return string|false returns false if $value is an array or object
      */
     public function sanitizePath($value)
     {

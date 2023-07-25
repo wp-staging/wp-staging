@@ -21,7 +21,7 @@ class MySQLi
      * Run MySQL query
      *
      * @param  string   $input SQL query
-     * @return resource
+     * @return resource|bool|\mysqli_result
      */
     public function query($input)
     {

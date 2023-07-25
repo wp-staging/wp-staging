@@ -29,5 +29,5 @@
     });
   });
 
-}());
+})();
 //# sourceMappingURL=wpstg-admin-corrupt-settings.js.map

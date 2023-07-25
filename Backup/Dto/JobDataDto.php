@@ -47,13 +47,13 @@ class JobDataDto extends AbstractDto
     /** @var bool Whether the task is currently retrying a request that failed */
     protected $taskHealthIsRetrying = false;
 
-    /** @var bool Where to set the Task queue offset */
+    /** @var int Where to set the Task queue offset */
     protected $queueOffset = 0;
 
     /** @var int Calculating the queue count is expensive, so we store it here as a metadata */
     protected $queueCount = 0;
 
-    /** @var false Whether this backup contains only a database */
+    /** @var bool Whether this backup contains only a database */
     protected $databaseOnlyBackup = false;
 
     /** @var string The reason why a requirement fail, if it failed. */
@@ -299,7 +299,7 @@ class JobDataDto extends AbstractDto
     }
 
     /**
-     * @return bool
+     * @return int
      */
     public function getQueueOffset()
     {

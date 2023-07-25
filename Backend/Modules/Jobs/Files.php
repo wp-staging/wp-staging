@@ -11,10 +11,10 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
+use WPStaging\Framework\Filesystem\PathChecker;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
-
-use function WPStaging\functions\debug_log;
 
 /**
  * Class Files
@@ -27,7 +27,6 @@ use function WPStaging\functions\debug_log;
  */
 class Files extends JobExecutable
 {
-
     /**
      * @var FileObject
      */
@@ -53,10 +52,24 @@ class Files extends JobExecutable
      */
     private $filesystem;
 
+    /** @var PathIdentifier */
+    private $pathAdapter;
+
+    /** @var PathChecker */
+    private $pathChecker;
+
+    /** @var Directory */
+    private $directory;
+
     /**
      * @var string
      */
     private $rootPath;
+
+    /**
+     * @var string
+     */
+    private $contentPath;
 
     /**
      * Initialization
@@ -66,10 +79,14 @@ class Files extends JobExecutable
     {
         $this->permissions = new Permissions();
 
-        $this->filesystem = WPStaging::make(Filesystem::class);
-
-        $this->rootPath = $this->filesystem->normalizePath(WPStaging::getWPpath());
-
+        /** @var Filesystem */
+        $this->filesystem  = WPStaging::make(Filesystem::class);
+        /** @var Directory */
+        $this->directory   = WPStaging::make(Directory::class);
+        $this->pathAdapter = WPStaging::make(PathIdentifier::class);
+        $this->pathChecker = WPStaging::make(PathChecker::class);
+        $this->rootPath    = rtrim($this->directory->getAbsPath(), '/');
+        $this->contentPath = rtrim($this->directory->getWpContentDirectory(), '/');
         $this->destination = $this->filesystem->normalizePath($this->options->destinationDir);
 
         $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
@@ -178,8 +195,6 @@ class Files extends JobExecutable
 
         // Finished or path does not exist
         if (empty($this->destination) || !is_dir($this->destination)) {
-            debug_log('Destination is not a directory: ' . $this->destination);
-
             $this->log(sprintf(__('Fail! Destination is not a directory! %s', 'wp-staging'), $this->destination));
             return true;
         }
@@ -358,10 +373,15 @@ class Files extends JobExecutable
      */
     private function copyFile($file)
     {
-        $filePath = trim(WPStaging::getWPpath() . $file);
+        $basePath  = $this->rootPath;
+        $isContent = false;
+        if ($this->pathAdapter->getIdentifierFromPath($file) === PathIdentifier::IDENTIFIER_WP_CONTENT) {
+            $basePath  = $this->contentPath;
+            $isContent = true;
+        }
 
-        $file = $this->filesystem->maybeNormalizePath($filePath);
-
+        $filePath  = $this->pathAdapter->transformIdentifiableToPath($file);
+        $file      = $this->filesystem->maybeNormalizePath($filePath);
         $directory = dirname($file);
 
         // Directory is excluded
@@ -404,7 +424,7 @@ class Files extends JobExecutable
         }
 
         // Failed to get destination
-        if (($destination = $this->getDestination($file)) === false) {
+        if (($destination = $this->getDestination($file, $basePath, $isContent)) === false) {
             $this->log("Can't get the destination of {$file}", Logger::TYPE_WARNING);
             return false;
         }
@@ -447,13 +467,19 @@ class Files extends JobExecutable
      * Gets destination file and checks if the directory exists, if it does not attempts to create it.
      * If creating destination directory fails, it returns false, gives destination full path otherwise
      * @param string $file
+     * @param string $basePath
+     * @param bool   $isContent
      * @return bool|string
      */
-    private function getDestination($file)
+    private function getDestination($file, $basePath, $isContent = false)
     {
         $file                 = $this->filesystem->normalizePath($file);
-        $relativePath         = str_replace($this->rootPath, '', $file);
+        $relativePath         = str_replace($basePath, '', $file);
         $destinationPath      = $this->destination . $relativePath;
+        if ($isContent) {
+            $destinationPath  = $this->destination . 'wp-content/' . $relativePath;
+        }
+
         $destinationDirectory = dirname($destinationPath);
 
         $isDirectoryNotCreated = !is_dir($destinationDirectory) && !$this->filesystem->mkdir($destinationDirectory) && !is_dir($destinationDirectory);
@@ -621,8 +647,7 @@ class Files extends JobExecutable
             return false;
         }
 
-        // TODO: Inject Directory using DI.
-        return WPStaging::make(Directory::class)->isPathInPathsList($directory, $this->options->excludedDirectories, true);
+        return $this->pathChecker->isPathInPathsList($directory, $this->options->excludedDirectories, false);
     }
 
     /**

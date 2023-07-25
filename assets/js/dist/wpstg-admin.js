@@ -2,23 +2,19 @@
   'use strict';
 
   function _extends() {
-    _extends = Object.assign || function (target) {
+    _extends = Object.assign ? Object.assign.bind() : function (target) {
       for (var i = 1; i < arguments.length; i++) {
         var source = arguments[i];
-
         for (var key in source) {
           if (Object.prototype.hasOwnProperty.call(source, key)) {
             target[key] = source[key];
           }
         }
       }
-
       return target;
     };
-
     return _extends.apply(this, arguments);
   }
-
   function _unsupportedIterableToArray(o, minLen) {
     if (!o) return;
     if (typeof o === "string") return _arrayLikeToArray(o, minLen);
@@ -27,38 +23,28 @@
     if (n === "Map" || n === "Set") return Array.from(o);
     if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
   }
-
   function _arrayLikeToArray(arr, len) {
     if (len == null || len > arr.length) len = arr.length;
-
     for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-
     return arr2;
   }
-
   function _createForOfIteratorHelperLoose(o, allowArrayLike) {
-    var it;
-
-    if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
-      if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-        if (it) o = it;
-        var i = 0;
-        return function () {
-          if (i >= o.length) return {
-            done: true
-          };
-          return {
-            done: false,
-            value: o[i++]
-          };
+    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
+    if (it) return (it = it.call(o)).next.bind(it);
+    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+      if (it) o = it;
+      var i = 0;
+      return function () {
+        if (i >= o.length) return {
+          done: true
         };
-      }
-
-      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+        return {
+          done: false,
+          value: o[i++]
+        };
+      };
     }
-
-    it = o[Symbol.iterator]();
-    return it.next.bind(it);
+    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
   }
 
   /**
@@ -71,24 +57,19 @@
       if (!Element.prototype.matches) {
         Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
       }
-
       Element.prototype.closest = function (s) {
         var el = this;
-
         do {
           if (Element.prototype.matches.call(el, s)) return el;
           el = el.parentElement || el.parentNode;
         } while (el !== null && el.nodeType === 1);
-
         return null;
       };
     }
-
     return function (element, selector) {
       return element instanceof Element ? element.closest(selector) : null;
     };
   }
-
   var closest = polyfillClosest();
 
   /**
@@ -103,7 +84,6 @@
    *
    * @return {object}
    */
-
   function wpstgHoverIntent (parent, selector, onOver, onOut) {
     var x;
     var y;
@@ -120,24 +100,19 @@
       timeout: 0,
       handleFocus: false
     };
-
     function delay(el, e) {
       if (timer) {
         timer = clearTimeout(timer);
       }
-
       state = 0;
       return focused ? undefined : onOut(el, e);
     }
-
     function tracker(e) {
       x = e.clientX;
       y = e.clientY;
     }
-
     function compare(el, e) {
       if (timer) timer = clearTimeout(timer);
-
       if (Math.abs(pX - x) + Math.abs(pY - y) < options.sensitivity) {
         state = 1;
         return focused ? undefined : onOver(el, e);
@@ -148,29 +123,23 @@
           compare(el, e);
         }, options.interval);
       }
-    } // Public methods
+    }
 
-
+    // Public methods
     h.options = function (opt) {
       var focusOptionChanged = opt.handleFocus !== options.handleFocus;
       options = Object.assign({}, options, opt);
-
       if (focusOptionChanged) {
         options.handleFocus ? addFocus() : removeFocus();
       }
-
       return h;
     };
-
     function dispatchOver(el, e) {
       mouseOver = true;
-
       if (timer) {
         timer = clearTimeout(timer);
       }
-
       el.removeEventListener('mousemove', tracker, false);
-
       if (state !== 1) {
         pX = e.clientX;
         pY = e.clientY;
@@ -179,126 +148,109 @@
           compare(el, e);
         }, options.interval);
       }
-
       return this;
     }
+
     /**
      * Newly added method,
      * A wrapper around dispatchOver to support dynamically added elements to dom
      */
-
-
     function onMouseOver(event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         dispatchOver(event.target.closest(selector), event);
       }
     }
-
     function dispatchOut(el, e) {
       mouseOver = false;
-
       if (timer) {
         timer = clearTimeout(timer);
       }
-
       el.removeEventListener('mousemove', tracker, false);
-
       if (state === 1) {
         timer = setTimeout(function () {
           delay(el, e);
         }, options.timeout);
       }
-
       return this;
     }
+
     /**
      * Newly added method,
      * A wrapper around dispatchOut to support dynamically added elements to dom
      */
-
-
     function onMouseOut(event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         dispatchOut(event.target.closest(selector), event);
       }
     }
-
     function dispatchFocus(el, e) {
       if (!mouseOver) {
         focused = true;
         onOver(el, e);
       }
     }
+
     /**
      * Newly added method,
      * A wrapper around dispatchFocus to support dynamically added elements to dom
      */
-
-
     function onFocus(event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         dispatchFocus(event.target.closest(selector), event);
       }
     }
-
     function dispatchBlur(el, e) {
       if (!mouseOver && focused) {
         focused = false;
         onOut(el, e);
       }
     }
+
     /**
      * Newly added method,
      * A wrapper around dispatchBlur to support dynamically added elements to dom
      */
-
-
     function onBlur(event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         dispatchBlur(event.target.closest(selector), event);
       }
     }
+
     /**
      * Modified to support dynamically added element
      */
-
     function addFocus() {
       parent.addEventListener('focus', onFocus, false);
       parent.addEventListener('blur', onBlur, false);
     }
+
     /**
      * Modified to support dynamically added element
      */
-
-
     function removeFocus() {
       parent.removeEventListener('focus', onFocus, false);
       parent.removeEventListener('blur', onBlur, false);
     }
+
     /**
      * Modified to support dynamically added element
      */
-
-
     h.remove = function () {
       if (!parent) {
         return;
       }
-
       parent.removeEventListener('mouseover', onMouseOver, false);
       parent.removeEventListener('mouseout', onMouseOut, false);
       removeFocus();
     };
+
     /**
      * Modified to support dynamically added element
      */
-
-
     if (parent) {
       parent.addEventListener('mouseover', onMouseOver, false);
       parent.addEventListener('mouseout', onMouseOut, false);
     }
-
     return h;
   }
 
@@ -315,15 +267,12 @@
           if (incrementRatio === void 0) {
             incrementRatio = 1.25;
           }
-
           WPStagingCommon.retry.performingRequest = true;
-
           if (WPStagingCommon.retry.currentDelay === 0) {
             // start with a delay of 1sec
             WPStagingCommon.retry.currentDelay = 1000;
             WPStagingCommon.retry.count = 1;
           }
-
           WPStagingCommon.retry.currentDelay += 500 * WPStagingCommon.retry.count * incrementRatio;
           WPStagingCommon.retry.count++;
         },
@@ -343,9 +292,9 @@
           // It is already cached!
           if ($.inArray(selector, this.elements) !== -1) {
             return this.elements[selector];
-          } // Create cache and return
+          }
 
-
+          // Create cache and return
           this.elements[selector] = $(selector);
           return this.elements[selector];
         },
@@ -372,20 +321,19 @@
         if (isContentCentered === void 0) {
           isContentCentered = false;
         }
-
         if (customClasses === void 0) {
           customClasses = {};
         }
-
         // common style for all swal modal used in WP Staging
         var defaultCustomClasses = {
           confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-100-width',
           cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn wpstg-100-width',
           actions: 'wpstg--modal--actions',
           popup: isContentCentered ? 'wpstg-swal-popup centered-modal' : 'wpstg-swal-popup'
-        }; // If a attribute exists in both default and additional attributes,
-        // The class(es) of the additional attribute will overrite the default one.
+        };
 
+        // If a attribute exists in both default and additional attributes,
+        // The class(es) of the additional attribute will overrite the default one.
         var options = {
           customClass: Object.assign(defaultCustomClasses, customClasses),
           buttonsStyling: false,
@@ -432,7 +380,6 @@
       closeSwalModal: function closeSwalModal() {
         wpstgSwal.close();
       },
-
       /**
        * Treats a default response object generated by WordPress's
        * wp_send_json_success() or wp_send_json_error() functions in
@@ -446,15 +393,12 @@
         if (typeof response !== 'object') {
           throw new Error('Unexpected response (ERR 1341)');
         }
-
         if (!response.hasOwnProperty('success')) {
           throw new Error('Unexpected response (ERR 1342)');
         }
-
         if (!response.hasOwnProperty('data')) {
           throw new Error('Unexpected response (ERR 1343)');
         }
-
         if (response.success === false) {
           if (response.data instanceof Array && response.data.length > 0) {
             throw new Error(response.data.shift());
@@ -473,7 +417,6 @@
           WPStagingCommon.cache.get('.wpstg-loader').show();
         }
       },
-
       /**
        * Convert the given url to make it slug compatible
        * @param {string} url
@@ -485,13 +428,11 @@
       showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
         prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
         appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
-
         if (response === false) {
           WPStagingCommon.showError(prependMessage + ' Error: No response.' + appendMessage);
           window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
           return;
         }
-
         if (typeof response.error !== 'undefined' && response.error) {
           WPStagingCommon.showError(prependMessage + ' Error: ' + response.message + appendMessage);
           window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
@@ -502,7 +443,6 @@
         if (!response.ok) {
           WPStagingCommon.showError('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
         }
-
         return response;
       },
       showError: function showError(message) {
@@ -510,7 +450,6 @@
         if (WPStagingCommon.retry.performingRequest) {
           return;
         }
-
         WPStagingCommon.cache.get('#wpstg-try-again').css('display', 'inline-block');
         WPStagingCommon.cache.get('#wpstg-cancel-cloning').text('Reset');
         WPStagingCommon.cache.get('#wpstg-resume-cloning').show();
@@ -523,7 +462,6 @@
       resetErrors: function resetErrors() {
         WPStagingCommon.cache.get('#wpstg-error-details').hide().html('');
       },
-
       /**
        * Ajax Requests
        * @param {Object} data
@@ -538,28 +476,22 @@
         if (incrementRatio === void 0) {
           incrementRatio = null;
         }
-
         if (errorCallback === void 0) {
           errorCallback = null;
         }
-
         if ('undefined' === typeof dataType) {
           dataType = 'json';
         }
-
         if (false !== showErrors) {
           showErrors = true;
         }
-
         tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
         var retryLimit = 10;
         var retryTimeout = 10000 * tryCount;
         incrementRatio = parseInt(incrementRatio);
-
         if (!isNaN(incrementRatio)) {
           retryTimeout *= incrementRatio;
         }
-
         $.ajax({
           url: ajaxurl + '?action=wpstg_processing&_=' + Date.now() / 1000,
           type: 'POST',
@@ -568,21 +500,18 @@
           data: data,
           error: function error(xhr, textStatus, errorThrown) {
             console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
-
             if (typeof errorCallback === 'function') {
               // Custom error handler
               errorCallback(xhr, textStatus, errorThrown);
-
               if (!WPStagingCommon.continueErrorHandle) {
                 // Reset state
                 WPStagingCommon.continueErrorHandle = true;
                 return;
               }
-            } // Default error handler
+            }
 
-
+            // Default error handler
             tryCount++;
-
             if (tryCount <= retryLimit) {
               setTimeout(function () {
                 WPStagingCommon.ajax(data, callback, dataType, showErrors, tryCount, incrementRatio);
@@ -649,27 +578,25 @@
    * Shortcut for document.querySelector() or jQuery's $()
    * Return single element only
    */
-
   function qs(selector) {
     return document.querySelector(selector);
   }
+
   /**
    * Shortcut for document.querySelector() or jQuery's $()
    * Return collection of elements
    */
-
   function all(selector) {
     return document.querySelectorAll(selector);
   }
+
   /**
    * alternative of jQuery - $(parent).on(event, selector, handler)
    */
-
   function addEvent(parent, evt, selector, handler) {
     if (!parent instanceof Element) {
       return;
     }
-
     parent.addEventListener(evt, function (event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         handler(event.target.closest(selector), event);
@@ -680,7 +607,6 @@
     if (duration === void 0) {
       duration = 400;
     }
-
     element.style.display = 'block';
     element.style.overflow = 'hidden';
     var height = element.offsetHeight;
@@ -701,7 +627,6 @@
     if (duration === void 0) {
       duration = 400;
     }
-
     element.style.display = 'block';
     element.style.overflow = 'hidden';
     var height = element.offsetHeight;
@@ -721,26 +646,32 @@
   }
   function getNextSibling(element, selector) {
     var sibling = element.nextElementSibling;
-
     while (sibling) {
       if (sibling.matches(selector)) {
         return sibling;
       }
-
       sibling = sibling.nextElementSibling;
+    }
+  }
+  function getPreviousSibling(element, selector) {
+    var sibling = element.previousElementSibling;
+    while (sibling) {
+      if (sibling.matches(selector)) {
+        return sibling;
+      }
+      sibling = sibling.previousElementSibling;
     }
   }
   function getParents(element, selector) {
     var result = [];
-
     for (var parent = element && element.parentElement; parent; parent = parent.parentElement) {
       if (parent.matches(selector)) {
         result.push(parent);
       }
     }
-
     return result;
   }
+
   /**
    * Dispatches a change on an element that will trigger, depending on the element type,
    * cascading changes on elements dependant on the one that triggered the change and that
@@ -751,34 +682,27 @@
    * @return {void} The function does not return any value and will have the side-effect of
    *                hiding or showing dependant elements.
    */
-
   function handleDisplayDependencies(element) {
     if (!element instanceof Element || !element.id) {
       return;
     }
-
-    var containerSelector = '.wpstg-container'; // Use the default WordPress CSS class to hide and show the objects.
-
+    var containerSelector = '.wpstg-container';
+    // Use the default WordPress CSS class to hide and show the objects.
     var hiddenClass = 'hidden';
     var elementType = element.getAttribute('type');
-
     switch (elementType) {
       case 'checkbox':
         // Go as high as the container that contains this element.
         var container = closest(element, containerSelector);
-
         if (container === null) {
           return;
         }
-
         var showIfChecked = container.querySelectorAll("[data-show-if-checked=\"" + element.id + "\"]");
         var showIfUnchecked = container.querySelectorAll("[data-show-if-unchecked=\"" + element.id + "\"]");
         var checked = element.checked;
-
         if (showIfChecked.length) {
           for (var _iterator = _createForOfIteratorHelperLoose(showIfChecked), _step; !(_step = _iterator()).done;) {
             var el = _step.value;
-
             if (checked) {
               el.classList.remove(hiddenClass);
             } else {
@@ -786,11 +710,9 @@
             }
           }
         }
-
         if (showIfUnchecked.length) {
           for (var _iterator2 = _createForOfIteratorHelperLoose(showIfUnchecked), _step2; !(_step2 = _iterator2()).done;) {
             var _el = _step2.value;
-
             if (checked) {
               _el.classList.add(hiddenClass);
             } else {
@@ -798,14 +720,13 @@
             }
           }
         }
-
         return;
-
       default:
         // Not a type we handle.
         return;
     }
   }
+
   /**
    * Toggle target element set in data-wpstg-target of the given element
    *
@@ -814,24 +735,20 @@
    * @return {void} The function does not return any value and will have the side-effect of
    *                hiding or showing dependant elements.
    */
-
   function handleToggleElement(element) {
     if (!element instanceof Element || !element.getAttribute('data-wpstg-target')) {
       return;
     }
+    var containerSelector = '.wpstg_admin';
+    // Use the default WordPress CSS class to hide and show the objects.
+    var hiddenClass = 'hidden';
 
-    var containerSelector = '.wpstg_admin'; // Use the default WordPress CSS class to hide and show the objects.
-
-    var hiddenClass = 'hidden'; // Go as high as the container that contains this element.
-
+    // Go as high as the container that contains this element.
     var container = closest(element, containerSelector);
-
     if (container === null) {
       return;
     }
-
     var elements = container.querySelectorAll(element.getAttribute('data-wpstg-target'));
-
     if (elements.length) {
       for (var _iterator4 = _createForOfIteratorHelperLoose(elements), _step4; !(_step4 = _iterator4()).done;) {
         var el = _step4.value;
@@ -839,6 +756,7 @@
       }
     }
   }
+
   /**
    * Copy text in data-wpstg-copy to element(s) in data-wpstg-target
    *
@@ -846,23 +764,19 @@
    *
    * @return {void}
    */
-
   function handleCopyPaste(element) {
     if (!element instanceof Element || !element.getAttribute('data-wpstg-target') || !element.getAttribute('data-wpstg-copy')) {
       return;
     }
+    var containerSelector = '.wpstg_admin';
 
-    var containerSelector = '.wpstg_admin'; // Go as high as the container that contains this element.
-
+    // Go as high as the container that contains this element.
     var container = closest(element, containerSelector);
-
     if (container === null) {
       return;
     }
-
     navigator.clipboard.writeText(element.getAttribute('data-wpstg-copy'));
     var elements = container.querySelectorAll(element.getAttribute('data-wpstg-target'));
-
     if (elements.length) {
       for (var _iterator5 = _createForOfIteratorHelperLoose(elements), _step5; !(_step5 = _iterator5()).done;) {
         var el = _step5.value;
@@ -870,6 +784,7 @@
       }
     }
   }
+
   /**
    * Copy text in data-wpstg-source to clipboard
    *
@@ -877,22 +792,18 @@
    *
    * @return {void}
    */
-
   function handleCopyToClipboard(element) {
     if (!element instanceof Element || !element.getAttribute('data-wpstg-source')) {
       return;
     }
+    var containerSelector = '.wpstg_admin';
 
-    var containerSelector = '.wpstg_admin'; // Go as high as the container that contains this element.
-
+    // Go as high as the container that contains this element.
     var container = closest(element, containerSelector);
-
     if (container === null) {
       return;
     }
-
     var el = container.querySelector(element.getAttribute('data-wpstg-source'));
-
     if (el) {
       navigator.clipboard.writeText(el.value);
     }
@@ -905,47 +816,36 @@
     function WpstgSidebarMenu() {
       this.init();
     }
-
     var _proto = WpstgSidebarMenu.prototype;
-
     _proto.init = function init() {
       this.wpstdStagingTab = document.querySelector('#wpstg--tab--toggle--staging');
       this.wpstdBackupTab = document.querySelector('#wpstg--tab--toggle--backup');
       this.wpstdSidebarMenu = document.querySelector('#toplevel_page_wpstg_clone');
       this.addEvents();
     };
-
     _proto.addEvents = function addEvents() {
       var _this = this;
-
       if (this.wpstdStagingTab !== null) {
         this.wpstdStagingTab.addEventListener('click', function () {
           _this.setPageUrl('wpstg_clone');
-
           _this.setSidebarMenu('wpstg_clone');
         });
       }
-
       if (this.wpstdBackupTab !== null) {
         this.wpstdBackupTab.addEventListener('click', function () {
           _this.setPageUrl('wpstg_backup');
-
           _this.setSidebarMenu('wpstg_backup');
         });
       }
     };
-
     _proto.setPageUrl = function setPageUrl(page) {
       window.history.pushState(null, null, window.location.pathname + '?page=' + page);
     };
-
     _proto.setSidebarMenu = function setSidebarMenu(page) {
       var wpstgSidebarMenuElements = this.wpstdSidebarMenu.querySelector('ul').querySelectorAll('li');
-
       if (wpstgSidebarMenuElements.length > 0) {
         for (var i = 0; i < wpstgSidebarMenuElements.length; i++) {
           wpstgSidebarMenuElements[i].classList.remove('current');
-
           if (wpstgSidebarMenuElements[i].querySelector('a') !== null) {
             if (wpstgSidebarMenuElements[i].querySelector('a').getAttribute('href') === 'admin.php?page=' + page) {
               wpstgSidebarMenuElements[i].classList.add('current');
@@ -954,24 +854,20 @@
         }
       }
     };
-
     return WpstgSidebarMenu;
   }();
 
   /**
    * Enable/Disable cloning for staging site
    */
-
   var WpstgCloneStaging = /*#__PURE__*/function () {
     function WpstgCloneStaging(pageWrapperId, wpstgObject) {
       if (pageWrapperId === void 0) {
         pageWrapperId = '#wpstg-clonepage-wrapper';
       }
-
       if (wpstgObject === void 0) {
         wpstgObject = wpstg;
       }
-
       this.pageWrapper = qs(pageWrapperId);
       this.wpstgObject = wpstgObject;
       this.enableButtonId = '#wpstg-enable-staging-cloning';
@@ -991,29 +887,22 @@
       });
       this.init();
     }
-
     var _proto = WpstgCloneStaging.prototype;
-
     _proto.addEvents = function addEvents() {
       var _this = this;
-
       if (this.pageWrapper === null) {
         return;
       }
-
       addEvent(this.pageWrapper, 'click', this.enableButtonId, function () {
         _this.sendRequest(_this.enableAction);
       });
       new WpstgSidebarMenu();
     };
-
     _proto.init = function init() {
       this.addEvents();
     };
-
     _proto.sendRequest = function sendRequest(action) {
       var _this2 = this;
-
       fetch(this.wpstgObject.ajaxUrl, {
         method: 'POST',
         credentials: 'same-origin',
@@ -1029,55 +918,42 @@
         if (response.ok) {
           return response.json();
         }
-
         return Promise.reject(response);
       }).then(function (data) {
         // Reload current page if successful.
         if ('undefined' !== typeof data.success && data.success) {
           location.reload();
           return;
-        } // There will be message probably in case of error
-
-
-        if ('undefined' !== typeof data.message) {
-          _this2.notyf.error(data.message);
-
-          return;
         }
 
+        // There will be message probably in case of error
+        if ('undefined' !== typeof data.message) {
+          _this2.notyf.error(data.message);
+          return;
+        }
         _this2.notyf.error(_this2.wpstgObject.i18n['somethingWentWrong']);
       })["catch"](function (error) {
         console.warn(_this2.wpstgObject.i18n['somethingWentWrong'], error);
       });
     };
-
     return WpstgCloneStaging;
   }();
 
   /**
    * Fetch directory direct child directories
    */
-
   var WpstgDirectoryNavigation = /*#__PURE__*/function () {
-    function WpstgDirectoryNavigation(directoryListingSelector, workflowSelector, wpstgObject, notyf) {
+    function WpstgDirectoryNavigation(directoryListingSelector, wpstgObject, notyf) {
       if (directoryListingSelector === void 0) {
         directoryListingSelector = '#wpstg-directories-listing';
       }
-
-      if (workflowSelector === void 0) {
-        workflowSelector = '#wpstg-workflow';
-      }
-
       if (wpstgObject === void 0) {
-        wpstgObject = wpstg;
+        wpstgObject = WPStagingCommon;
       }
-
       if (notyf === void 0) {
         notyf = null;
       }
-
       this.directoryListingContainer = qs(directoryListingSelector);
-      this.workflow = qs(workflowSelector);
       this.wpstgObject = wpstgObject;
       this.dirCheckboxSelector = '.wpstg-check-dir';
       this.dirExpandSelector = '.wpstg-expand-dirs';
@@ -1093,23 +969,18 @@
       this.notyf = notyf;
       this.init();
     }
-
     var _proto = WpstgDirectoryNavigation.prototype;
-
     _proto.addEvents = function addEvents() {
       var _this = this;
-
       if (this.directoryListingContainer === null) {
-        console.log('Error: directory navigation add events');
+        console.log('Error: Unable to add directory navigation events.');
         return;
       }
-
       addEvent(this.directoryListingContainer, 'change', this.dirCheckboxSelector, function (element, event) {
         event.preventDefault();
       });
       addEvent(this.directoryListingContainer, 'click', this.dirExpandSelector, function (element, event) {
         event.preventDefault();
-
         if (_this.toggleDirExpand(element)) {
           _this.sendRequest(_this.fetchChildrenAction, element);
         }
@@ -1122,50 +993,43 @@
       });
       addEvent(this.directoryListingContainer, 'click', '.wpstg-expand-dirs', function (target, event) {
         event.preventDefault();
-
         _this.toggleDirectoryNavigation(target);
       });
       addEvent(this.directoryListingContainer, 'change', 'input.wpstg-check-dir', function (target) {
         _this.updateDirectorySelection(target);
       });
     };
-
     _proto.init = function init() {
       this.addEvents();
       this.parseExcludes();
     }
+
     /**
      * Toggle Dir Expand,
      * Return true if children aren't fetched
      * @param {HTMLElement} element
      * @return {boolean}
-     */
-    ;
-
+     */;
     _proto.toggleDirExpand = function toggleDirExpand(element) {
       this.currentParentDiv = element.parentElement;
-      this.currentCheckboxElement = element.previousSibling;
+      this.currentCheckboxElement = getPreviousSibling(element, 'input');
       this.currentLoader = this.currentParentDiv.querySelector('.wpstg-is-dir-loading');
-
-      if (this.currentCheckboxElement.getAttribute('data-navigateable', 'false') === 'false') {
+      if (this.currentCheckboxElement.getAttribute('wpstg-data-navigateable', 'false') === 'false') {
         return false;
       }
-
-      if (this.currentCheckboxElement.getAttribute('data-scanned', 'false') === 'false') {
+      if (this.currentCheckboxElement.getAttribute('wpstg-data-scanned', 'false') === 'false') {
         return true;
       }
-
       return false;
     };
-
     _proto.sendRequest = function sendRequest(action) {
       var _this2 = this;
-
       if (this.currentLoader !== null) {
         this.currentLoader.style.display = 'inline-block';
       }
-
-      var changed = this.currentCheckboxElement.getAttribute('data-changed');
+      var changed = this.currentCheckboxElement.getAttribute('wpstg-data-changed');
+      var path = this.currentCheckboxElement.getAttribute('wpstg-data-path');
+      var prefix = this.currentCheckboxElement.getAttribute('wpstg-data-prefix');
       fetch(this.wpstgObject.ajaxUrl, {
         method: 'POST',
         credentials: 'same-origin',
@@ -1173,7 +1037,8 @@
           action: action,
           accessToken: this.wpstgObject.accessToken,
           nonce: this.wpstgObject.nonce,
-          dirPath: this.currentCheckboxElement.value,
+          dirPath: path,
+          prefix: prefix,
           isChecked: this.currentCheckboxElement.checked,
           forceDefault: changed === 'true'
         }),
@@ -1184,27 +1049,21 @@
         if (response.ok) {
           return response.json();
         }
-
         return Promise.reject(response);
       }).then(function (data) {
         if ('undefined' !== typeof data.success && data.success) {
-          _this2.currentCheckboxElement.setAttribute('data-scanned', true);
-
+          _this2.currentCheckboxElement.setAttribute('wpstg-data-scanned', true);
           var dirContainer = document.createElement('div');
           dirContainer.classList.add('wpstg-dir');
           dirContainer.classList.add('wpstg-subdir');
           dirContainer.innerHTML = JSON.parse(data.directoryListing);
-
           _this2.currentParentDiv.appendChild(dirContainer);
-
           if (_this2.currentLoader !== null) {
             _this2.currentLoader.style.display = 'none';
           }
-
           slideDown(dirContainer);
           return;
         }
-
         if (_this2.notyf !== null) {
           _this2.notyf.error(_this2.wpstgObject.i18n['somethingWentWrong']);
         } else {
@@ -1214,34 +1073,30 @@
         console.warn(_this2.wpstgObject.i18n['somethingWentWrong'], error);
       });
     };
-
     _proto.getExcludedDirectories = function getExcludedDirectories() {
-      var _this3 = this;
-
+      var _this3 = this,
+        _this$wpstgObject$set;
       this.excludedDirectories = [];
       this.directoryListingContainer.querySelectorAll('.wpstg-dir input:not(:checked)').forEach(function (element) {
         if (!_this3.isParentExcluded(element.value)) {
           _this3.excludedDirectories.push(element.value);
         }
       });
-
       if (!this.existingExcludes) {
         this.existingExcludes = [];
       }
-
       this.existingExcludes.forEach(function (exclude) {
         if (!_this3.isParentExcluded(exclude) && !_this3.isScanned(exclude)) {
           _this3.excludedDirectories.push(exclude);
         }
       });
-      return this.excludedDirectories.join(this.wpstgObject.settings.directorySeparator);
+      return this.excludedDirectories.join((_this$wpstgObject$set = this.wpstgObject.settings) == null ? void 0 : _this$wpstgObject$set.directorySeparator);
     }
+
     /**
      * @param {string} path
      * @return {bool}
-     */
-    ;
-
+     */;
     _proto.isParentExcluded = function isParentExcluded(path) {
       var isParentAlreadyExcluded = false;
       this.excludedDirectories.forEach(function (dir) {
@@ -1251,40 +1106,39 @@
       });
       return isParentAlreadyExcluded;
     };
-
     _proto.getExtraDirectoriesRootOnly = function getExtraDirectoriesRootOnly() {
       this.getExcludedDirectories();
       var extraDirectories = [];
       this.directoryListingContainer.querySelectorAll(':not(.wpstg-subdir)>.wpstg-dir>input.wpstg-wp-non-core-dir:checked').forEach(function (element) {
         extraDirectories.push(element.value);
-      }); // Check if extra directories text area exists
+      });
+
+      // Check if extra directories text area exists
       // TODO: remove extraCustomDirectories code if no one require extraCustomDirectories...
-
       var extraDirectoriesTextArea = qs('#wpstg_extraDirectories');
-
       if (extraDirectoriesTextArea === null || extraDirectoriesTextArea.value === '') {
-        return extraDirectories.join(this.wpstgObject.settings.directorySeparator);
+        var _this$wpstgObject$set2;
+        return extraDirectories.join((_this$wpstgObject$set2 = this.wpstgObject.settings) == null ? void 0 : _this$wpstgObject$set2.directorySeparator);
       }
-
       var extraCustomDirectories = extraDirectoriesTextArea.value.split(/\r?\n/);
       return extraDirectories.concat(extraCustomDirectories).join(this.wpstgObject.settings.directorySeparator);
     };
-
     _proto.unselectAll = function unselectAll() {
       this.directoryListingContainer.querySelectorAll('.wpstg-dir input').forEach(function (element) {
         element.checked = false;
       });
       this.countSelectedFiles();
     };
-
     _proto.selectDefault = function selectDefault() {
       // unselect all checkboxes
-      this.unselectAll(); // only select those checkboxes whose class is wpstg-wp-core-dir
+      this.unselectAll();
 
+      // only select those checkboxes whose class is wpstg-wp-core-dir
       this.directoryListingContainer.querySelectorAll('.wpstg-dir input.wpstg-wp-core-dir').forEach(function (element) {
         element.checked = true;
-      }); // then unselect those checkboxes whose parent has wpstg extra checkbox
+      });
 
+      // then unselect those checkboxes whose parent has wpstg extra checkbox
       this.directoryListingContainer.querySelectorAll('.wpstg-dir > .wpstg-wp-non-core-dir').forEach(function (element) {
         element.parentElement.querySelectorAll('input.wpstg-wp-core-dir').forEach(function (element) {
           element.checked = false;
@@ -1293,64 +1147,51 @@
       this.isDefaultSelected = true;
       this.countSelectedFiles();
     };
-
     _proto.parseExcludes = function parseExcludes() {
-      this.existingExcludes = this.directoryListingContainer.getAttribute('data-existing-excludes', []);
-
+      this.existingExcludes = this.directoryListingContainer.getAttribute('wpstg-data-existing-excludes', []);
       if (typeof this.existingExcludes === 'undefined' || !this.existingExcludes) {
         this.existingExcludes = [];
         return;
       }
-
       if (this.existingExcludes.length === 0) {
         this.existingExcludes = [];
         return;
       }
-
       var existingExcludes = this.existingExcludes.split(',');
       this.existingExcludes = existingExcludes.map(function (exclude) {
         if (exclude.substr(0, 1) === '/') {
           return exclude.slice(1);
         }
-
         return exclude;
       });
     };
-
     _proto.isScanned = function isScanned(exclude) {
       var scanned = false;
       this.directoryListingContainer.querySelectorAll('.wpstg-dir>input').forEach(function (element) {
-        if (element.value == exclude) {
+        if (element.value === exclude) {
           scanned = true;
         }
       });
       return scanned;
     };
-
     _proto.toggleDirectoryNavigation = function toggleDirectoryNavigation(element) {
-      var cbElement = element.previousSibling;
-
-      if (cbElement.getAttribute('data-navigateable', 'false') === 'false') {
+      var cbElement = getPreviousSibling(element, 'input');
+      if (cbElement.getAttribute('wpstg-data-navigateable', 'false') === 'false') {
         return;
       }
-
-      if (cbElement.getAttribute('data-scanned', 'false') === 'false') {
+      if (cbElement.getAttribute('wpstg-data-scanned', 'false') === 'false') {
         return;
       }
-
       var subDirectories = getNextSibling(element, '.wpstg-subdir');
-
       if (subDirectories.style.display === 'none') {
         slideDown(subDirectories);
       } else {
         slideUp(subDirectories);
       }
     };
-
     _proto.updateDirectorySelection = function updateDirectorySelection(element) {
       var parent = element.parentElement;
-      element.setAttribute('data-changed', 'true');
-
+      element.setAttribute('wpstg-data-changed', 'true');
       if (element.checked) {
         getParents(parent, '.wpstg-dir').forEach(function (parElem) {
           for (var i = 0; i < parElem.children.length; i++) {
@@ -1363,7 +1204,6 @@
           if (x.textContent === 'wp-admin' || x.textContent === 'wp-includes') {
             return;
           }
-
           x.classList.remove('disabled');
         });
         parent.querySelectorAll('.wpstg-subdir .wpstg-check-dir').forEach(function (x) {
@@ -1377,15 +1217,12 @@
           x.checked = false;
         });
       }
-
       this.countSelectedFiles();
     };
-
     _proto.countSelectedFiles = function countSelectedFiles() {
-      var themesCount = this.directoryListingContainer.querySelectorAll('[data-content-type="theme"]:checked').length;
-      var pluginsCount = this.directoryListingContainer.querySelectorAll('[data-content-type="plugin"]:checked').length;
+      var themesCount = this.directoryListingContainer.querySelectorAll('[wpstg-data-dir-type="theme"]:checked').length;
+      var pluginsCount = this.directoryListingContainer.querySelectorAll('[wpstg-data-dir-type="plugin"]:checked').length;
       var filesCountElement = qs('#wpstg-files-count');
-
       if (themesCount === 0 && pluginsCount === 0) {
         filesCountElement.classList.add('danger');
         filesCountElement.innerHTML = this.wpstgObject.i18n['noFileSelected'];
@@ -1394,36 +1231,29 @@
         filesCountElement.innerHTML = this.wpstgObject.i18n['filesSelected'].replace('{t}', themesCount).replace('{p}', pluginsCount);
       }
     };
-
     return WpstgDirectoryNavigation;
   }();
 
   /**
    * Database tables selection
    */
-
   var WpstgTableSelection = /*#__PURE__*/function () {
     function WpstgTableSelection(databaseTableSectionSelector, workflowSelector, networkCloneSelector, inputSelector, wpstgObject) {
       if (databaseTableSectionSelector === void 0) {
         databaseTableSectionSelector = '#wpstg-scanning-db';
       }
-
       if (workflowSelector === void 0) {
         workflowSelector = '#wpstg-workflow';
       }
-
       if (networkCloneSelector === void 0) {
         networkCloneSelector = '#wpstg_network_clone';
       }
-
       if (inputSelector === void 0) {
         inputSelector = '#wpstg_select_tables_cloning';
       }
-
       if (wpstgObject === void 0) {
         wpstgObject = wpstg;
       }
-
       this.databaseTableSection = qs(databaseTableSectionSelector);
       this.workflow = qs(workflowSelector);
       this.networkCloneSelector = networkCloneSelector;
@@ -1436,21 +1266,16 @@
       this.input = qs(this.inputSelector);
       this.init();
     }
-
     var _proto = WpstgTableSelection.prototype;
-
     _proto.setNetworkClone = function setNetworkClone(isNetworkClone) {
       this.isNetworkClone = isNetworkClone;
     };
-
     _proto.addEvents = function addEvents() {
       var _this = this;
-
       if (this.workflow === null) {
         console.log('Error: database table section is null. Cannot register events');
         return;
       }
-
       addEvent(this.workflow, 'change', this.networkCloneSelector, function () {
         _this.selectDefaultTables();
       });
@@ -1459,51 +1284,41 @@
       });
       addEvent(this.workflow, 'click', '.wpstg-button-select', function (target, event) {
         event.preventDefault();
-
         _this.selectDefaultTables();
       });
       addEvent(this.workflow, 'click', '.wpstg-button-unselect', function (target, event) {
         event.preventDefault();
-
         _this.toggleTableSelection();
       });
       addEvent(this.workflow, 'click', '.wpstg-button-unselect-wpstg', function (target, event) {
         event.preventDefault();
-
         _this.unselectWPSTGTables();
       });
     };
-
     _proto.init = function init() {
       this.addEvents();
     };
-
     _proto.getRegexPattern = function getRegexPattern() {
       var pattern = '^' + this.wpstgObject.tblprefix;
       var isNetwork = false;
-
       if (this.networkCloneCheckbox !== undefined && this.networkCloneCheckbox !== null) {
         isNetwork = this.networkCloneCheckbox.checked;
-      } // Force network clone true if set explicitly
+      }
 
-
+      // Force network clone true if set explicitly
       if (this.isNetworkClone) {
         isNetwork = true;
       }
-
       if (this.isMultisite && !isNetwork) {
         pattern += '([^0-9])_*';
       }
-
       return pattern;
     };
-
     _proto.selectDefaultTables = function selectDefaultTables() {
       var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table');
       var regexPattern = this.getRegexPattern();
       options.forEach(function (option) {
         var name = option.getAttribute('name', '');
-
         if (name.match(regexPattern)) {
           option.selected = true;
         } else {
@@ -1512,88 +1327,75 @@
       });
       this.countSelectedTables();
     };
-
     _proto.toggleTableSelection = function toggleTableSelection() {
       if (false === this.isAllTablesChecked) {
         this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table').forEach(function (option) {
           option.selected = true;
         });
-        this.databaseTableSection.querySelector('.wpstg-button-unselect').innerHTML = 'Unselect All'; // cache.get('.wpstg-db-table-checkboxes').prop('checked', true);
-
+        this.databaseTableSection.querySelector('.wpstg-button-unselect').innerHTML = 'Unselect All';
+        // cache.get('.wpstg-db-table-checkboxes').prop('checked', true);
         this.isAllTablesChecked = true;
       } else {
         this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table').forEach(function (option) {
           option.selected = false;
         });
-        this.databaseTableSection.querySelector('.wpstg-button-unselect').innerHTML = 'Select All'; // cache.get('.wpstg-db-table-checkboxes').prop('checked', false);
-
+        this.databaseTableSection.querySelector('.wpstg-button-unselect').innerHTML = 'Select All';
+        // cache.get('.wpstg-db-table-checkboxes').prop('checked', false);
         this.isAllTablesChecked = false;
       }
-
       this.countSelectedTables();
     };
-
     _proto.unselectWPSTGTables = function unselectWPSTGTables() {
       var _this2 = this;
-
       var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning .wpstg-db-table');
       var regexPattern = 'wpstg';
       options.forEach(function (option) {
         var name = option.getAttribute('name', '');
-
         if (name.match(regexPattern) && !name.match(_this2.wpstgObject.tblprefix + 'wpstg_queue')) {
           option.selected = false;
         }
       });
       this.countSelectedTables();
     };
-
     _proto.getSelectedTablesWithoutPrefix = function getSelectedTablesWithoutPrefix() {
       var selectedTablesWithoutPrefix = [];
       var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning option:checked');
       var regexPattern = this.getRegexPattern();
       options.forEach(function (option) {
         var name = option.getAttribute('name', '');
-
         if (!name.match(regexPattern)) {
           selectedTablesWithoutPrefix.push(option.value);
         }
       });
       return selectedTablesWithoutPrefix.join(this.wpstgObject.settings.directorySeparator);
     };
-
     _proto.getIncludedTables = function getIncludedTables() {
       var includedTables = [];
       var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning option:checked');
       var regexPattern = this.getRegexPattern();
       options.forEach(function (option) {
         var name = option.getAttribute('name', '');
-
         if (name.match(regexPattern)) {
           includedTables.push(option.value);
         }
       });
       return includedTables.join(this.wpstgObject.settings.directorySeparator);
     };
-
     _proto.getExcludedTables = function getExcludedTables() {
       var excludedTables = [];
       var options = this.databaseTableSection.querySelectorAll('#wpstg_select_tables_cloning option:not(:checked)');
       var regexPattern = this.getRegexPattern();
       options.forEach(function (option) {
         var name = option.getAttribute('name', '');
-
         if (name.match(regexPattern)) {
           excludedTables.push(option.value);
         }
       });
       return excludedTables.join(this.wpstgObject.settings.directorySeparator);
     };
-
     _proto.countSelectedTables = function countSelectedTables() {
       var tablesCount = this.input.querySelectorAll('option:checked').length;
       var tablesCountElement = qs('#wpstg-tables-count');
-
       if (tablesCount === 0) {
         tablesCountElement.classList.add('danger');
         tablesCountElement.innerHTML = this.wpstgObject.i18n['noTableSelected'];
@@ -1602,35 +1404,28 @@
         tablesCountElement.innerHTML = this.wpstgObject.i18n['tablesSelected'].replace('{d}', tablesCount);
       }
     };
-
     return WpstgTableSelection;
   }();
 
   /**
    * Rich Exclude Filter Module
    */
-
   var WpstgExcludeFilters = /*#__PURE__*/function () {
     function WpstgExcludeFilters(excludeFilterContainerSelector, wpstgObject) {
       if (excludeFilterContainerSelector === void 0) {
         excludeFilterContainerSelector = '#wpstg-exclude-filters-container';
       }
-
       if (wpstgObject === void 0) {
         wpstgObject = wpstg;
       }
-
       this.excludeContainer = qs(excludeFilterContainerSelector);
       this.excludeTableBody = qs(excludeFilterContainerSelector + " tbody");
       this.wpstgObject = wpstgObject;
       this.init();
     }
-
     var _proto = WpstgExcludeFilters.prototype;
-
     _proto.addEvents = function addEvents() {
       var _this = this;
-
       addEvent(this.excludeContainer, 'click', '.wpstg-file-size-rule', function () {
         _this.addFileSizeExclude();
       });
@@ -1650,35 +1445,27 @@
         _this.removeExclude(target);
       });
     };
-
     _proto.init = function init() {
       if (this.excludeContainer === null) {
         console.log('Error: Given table selector not found!');
         return;
       }
-
       this.addEvents();
     };
-
     _proto.addFileSizeExclude = function addFileSizeExclude() {
       this.addExcludeRuleRow('#wpstg-file-size-exclude-filter-template');
     };
-
     _proto.addFileExtExclude = function addFileExtExclude() {
       this.addExcludeRuleRow('#wpstg-file-ext-exclude-filter-template');
     };
-
     _proto.addFileNameExclude = function addFileNameExclude() {
       this.addExcludeRuleRow('#wpstg-file-name-exclude-filter-template');
     };
-
     _proto.addDirNameExclude = function addDirNameExclude() {
       this.addExcludeRuleRow('#wpstg-dir-name-exclude-filter-template');
     };
-
     _proto.addExcludeRuleRow = function addExcludeRuleRow(templateName) {
       var excludeRowTemplate = qs(templateName);
-
       if (excludeRowTemplate !== null) {
         var clone = excludeRowTemplate.content.cloneNode(true);
         var excludeRow = clone.querySelector('tr');
@@ -1688,108 +1475,90 @@
         });
       }
     };
-
     _proto.clearExcludes = function clearExcludes() {
       this.excludeTableBody.innerHTML = '';
       all('.wpstg-has-exclude-rules').forEach(function (e) {
         e.style.display = 'none';
       });
     };
-
     _proto.removeExclude = function removeExclude(target) {
       if (target.parentElement !== null && target.parentElement.parentElement !== null) {
         this.excludeTableBody.removeChild(target.parentElement.parentElement);
       }
-
       if (this.excludeTableBody.innerHTML.trim() === '') {
         all('.wpstg-has-exclude-rules').forEach(function (e) {
           e.style.display = 'none';
         });
       }
     }
+
     /**
      * Converts all the exclude filters arrays into one single string to keep size of post request small
      * @return {string}
-     */
-    ;
-
+     */;
     _proto.getExcludeFilters = function getExcludeFilters() {
       var _this2 = this;
-
       var globExcludes = [];
       var sizeExcludes = [];
       var sizeCompares = this.excludeTableBody.querySelectorAll('select[name="wpstgFileSizeExcludeRuleCompare[]"]');
       var sizeSizes = this.excludeTableBody.querySelectorAll('input[name="wpstgFileSizeExcludeRuleSize[]"]');
       var sizeByte = this.excludeTableBody.querySelectorAll('select[name="wpstgFileSizeExcludeRuleByte[]"]');
-
       for (var _i = 0, _Object$entries = Object.entries(sizeSizes); _i < _Object$entries.length; _i++) {
         var _Object$entries$_i = _Object$entries[_i],
-            key = _Object$entries$_i[0],
-            sizeInput = _Object$entries$_i[1];
-
+          key = _Object$entries$_i[0],
+          sizeInput = _Object$entries$_i[1];
         if (sizeInput.value !== '') {
           sizeExcludes.push(sizeCompares[key].value + ' ' + sizeInput.value + sizeByte[key].value);
         }
       }
-
       var extensionInputs = this.excludeTableBody.querySelectorAll('input[name="wpstgFileExtExcludeRule[]"]');
       extensionInputs.forEach(function (x) {
         var ext = _this2.cleanStringForGlob(x.value);
-
         if (ext !== '') {
           globExcludes.push('ext:' + ext.trim());
         }
       });
       var fileNamesPos = this.excludeTableBody.querySelectorAll('select[name="wpstgFileNameExcludeRulePos[]"]');
       var fileNames = this.excludeTableBody.querySelectorAll('input[name="wpstgFileNameExcludeRulePath[]"]');
-
       for (var _i2 = 0, _Object$entries2 = Object.entries(fileNames); _i2 < _Object$entries2.length; _i2++) {
         var _Object$entries2$_i = _Object$entries2[_i2],
-            _key = _Object$entries2$_i[0],
-            fileInput = _Object$entries2$_i[1];
+          _key = _Object$entries2$_i[0],
+          fileInput = _Object$entries2$_i[1];
         var fileName = this.cleanStringForGlob(fileInput.value);
-
         if (fileName !== '') {
           globExcludes.push('file:' + fileNamesPos[_key].value + ' ' + fileName.trim());
         }
       }
-
       var dirNamesPos = this.excludeTableBody.querySelectorAll('select[name="wpstgDirNameExcludeRulePos[]"]');
       var dirNames = this.excludeTableBody.querySelectorAll('input[name="wpstgDirNameExcludeRulePath[]"]');
-
       for (var _i3 = 0, _Object$entries3 = Object.entries(dirNames); _i3 < _Object$entries3.length; _i3++) {
         var _Object$entries3$_i = _Object$entries3[_i3],
-            _key2 = _Object$entries3$_i[0],
-            dirInput = _Object$entries3$_i[1];
+          _key2 = _Object$entries3$_i[0],
+          dirInput = _Object$entries3$_i[1];
         var dirName = this.cleanStringForGlob(dirInput.value);
-
         if (dirName !== '') {
           globExcludes.push('dir:' + dirNamesPos[_key2].value + ' ' + dirName.trim());
         }
       }
-
       return {
         'sizes': sizeExcludes.filter(this.onlyUnique).join(','),
         // return set of unique rules
         'globs': globExcludes.filter(this.onlyUnique).join(',')
       };
     };
-
     _proto.onlyUnique = function onlyUnique(value, index, self) {
       return self.indexOf(value) === index;
     }
+
     /**
      * Remove most of the comment glob characters from the string
      * @param {String} value
      * @return {String}
-     */
-    ;
-
+     */;
     _proto.cleanStringForGlob = function cleanStringForGlob(value) {
       // will replace character like * ^ / \ ! ? [ from the string
       return value.replace(/[*^//!\[?]/g, '');
     };
-
     return WpstgExcludeFilters;
   }();
 
@@ -1801,42 +1570,32 @@
       if (wpstgObject === void 0) {
         wpstgObject = wpstg;
       }
-
       this.confirmAction = confirmAction;
       this.wpstgObject = wpstgObject;
     }
-
     var _proto = WpstgModal.prototype;
-
     _proto.show = function show(swalOptions, additionalParams, callback) {
       var _this = this;
-
       if (additionalParams === void 0) {
         additionalParams = {};
       }
-
       if (callback === void 0) {
         callback = null;
       }
-
       wpstgSwal.fire(swalOptions).then(function (result) {
         if (result.value && _this.error !== null) {
           _this.triggerConfirmAction(additionalParams, callback);
         }
       });
     };
-
     _proto.triggerConfirmAction = function triggerConfirmAction(additionalParams, callback) {
       var _this2 = this;
-
       if (additionalParams === void 0) {
         additionalParams = {};
       }
-
       if (callback === void 0) {
         callback = null;
       }
-
       fetch(this.wpstgObject.ajaxUrl, {
         method: 'POST',
         credentials: 'same-origin',
@@ -1852,7 +1611,6 @@
         if (response.ok) {
           return response.json();
         }
-
         return Promise.reject(response);
       }).then(function (response) {
         if (callback !== null) {
@@ -1862,32 +1620,26 @@
         console.log(_this2.wpstgObject.i18n['somethingWentWrong'], error);
       });
     };
-
     return WpstgModal;
   }();
 
   /**
    * Manage RESET MODAL
    */
-
   var WpstgResetModal = /*#__PURE__*/function () {
     function WpstgResetModal(cloneID, workflowSelector, fetchExcludeSettingsAction, modalErrorAction, wpstgObject) {
       if (workflowSelector === void 0) {
         workflowSelector = '#wpstg-workflow';
       }
-
       if (fetchExcludeSettingsAction === void 0) {
         fetchExcludeSettingsAction = 'wpstg_clone_excludes_settings';
       }
-
       if (modalErrorAction === void 0) {
         modalErrorAction = 'wpstg_modal_error';
       }
-
       if (wpstgObject === void 0) {
         wpstgObject = wpstg;
       }
-
       this.cloneID = cloneID;
       this.workflow = qs(workflowSelector);
       this.wpstgObject = wpstgObject;
@@ -1901,46 +1653,36 @@
       this.tableSelector = null;
       this.isNetworkClone = false;
     }
-
     var _proto = WpstgResetModal.prototype;
-
     _proto.addEvents = function addEvents() {
       var _this = this;
-
       var resetModalContainer = qs('.' + this.resetModalContainerClass);
-
       if (resetModalContainer === null) {
         console.log('Exit');
         return;
       }
-
       addEvent(resetModalContainer, 'click', this.resetTabSelector, function (target) {
         _this.toggleContent(target);
       });
     };
-
     _proto.init = function init() {
       this.addEvents();
     };
-
     _proto.setNetworkClone = function setNetworkClone(isNetworkClone) {
       this.isNetworkClone = isNetworkClone;
     };
-
     _proto.toggleContent = function toggleContent(target) {
       var resetModalContainer = qs('.' + this.resetModalContainerClass);
       var contentId = target.getAttribute('data-id');
       var tabTriangle = target.querySelector('.wpstg-tab-triangle');
       var isCollapsed = target.getAttribute('data-collapsed', 'true');
       var content = qs(contentId);
-
       if (isCollapsed === 'true') {
         if (resetModalContainer.classList.contains('has-collapsible-open')) {
           resetModalContainer.classList.add('has-collapsible-open-2');
         } else {
           resetModalContainer.classList.add('has-collapsible-open');
         }
-
         slideDown(content);
         tabTriangle.style.transform = 'rotate(90deg)';
         target.setAttribute('data-collapsed', 'false');
@@ -1950,25 +1692,22 @@
         } else {
           resetModalContainer.classList.remove('has-collapsible-open');
         }
-
         slideUp(content);
         tabTriangle.style.removeProperty('transform');
         target.setAttribute('data-collapsed', 'true');
       }
     }
+
     /**
      * Show Swal alert with loader and send ajax request to fetch content of alert.
      * @return Promise
-     */
-    ;
-
+     */;
     _proto.showModal = function showModal() {
       var swalPromise = this.loadModal();
       this.init();
       this.fetchCloneExcludes();
       return swalPromise;
     };
-
     _proto.loadModal = function loadModal() {
       return WPStagingCommon.getSwalModal(false, {
         confirmButton: this.resetButtonClass + ' wpstg-confirm-reset-clone wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
@@ -1983,12 +1722,10 @@
         showCancelButton: true
       });
     };
-
     _proto.fetchCloneExcludes = function fetchCloneExcludes() {
       var _this2 = this;
-
-      this.error = null; // send ajax request and fetch preserved exclude settings
-
+      this.error = null;
+      // send ajax request and fetch preserved exclude settings
       fetch(this.wpstgObject.ajaxUrl, {
         method: 'POST',
         credentials: 'same-origin',
@@ -2006,7 +1743,6 @@
         if (response.ok) {
           return response.json();
         }
-
         return Promise.reject(response);
       }).then(function (data) {
         if (!data.success) {
@@ -2031,20 +1767,15 @@
           });
           return;
         }
-
         var modal = qs('.wpstg-reset-confirmation');
         modal.classList.remove('wpstg-swal2-loading');
         modal.querySelector('.wpstg--swal2-popup').style.width = '540px';
         modal.querySelector('.wpstg--swal2-content').innerHTML = data.html;
-        _this2.directoryNavigator = new WpstgDirectoryNavigation();
-
+        _this2.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', wpstg, null);
         _this2.directoryNavigator.countSelectedFiles();
-
         _this2.excludeFilters = new WpstgExcludeFilters();
         _this2.tableSelector = new WpstgTableSelection('#wpstg-reset-excluded-tables', '.' + _this2.resetModalContainerClass);
-
         _this2.tableSelector.setNetworkClone(_this2.isNetworkClone);
-
         _this2.tableSelector.countSelectedTables();
       })["catch"](function (error) {
         _this2.renderError({
@@ -2052,83 +1783,68 @@
         });
       });
     };
-
     _proto.getDirectoryNavigator = function getDirectoryNavigator() {
       return this.directoryNavigator;
     };
-
     _proto.getExcludeFilters = function getExcludeFilters() {
       return this.excludeFilters;
     };
-
     _proto.getTableSelector = function getTableSelector() {
       return this.tableSelector;
     };
-
     _proto.getAjaxLoader = function getAjaxLoader() {
       return '<div class="wpstg-swal2-ajax-loader"><img src="' + this.wpstgObject.wpstgIcon + '" /></div>';
     };
-
     return WpstgResetModal;
   }();
 
   /**
    * Handle toggle of advance settings checkboxes
    */
-
   var WpstgCloningAdvanceSettings = /*#__PURE__*/function () {
     function WpstgCloningAdvanceSettings(baseContainerSelector) {
       if (baseContainerSelector === void 0) {
         baseContainerSelector = '#wpstg-clonepage-wrapper';
       }
-
       this.baseContainer = qs(baseContainerSelector);
       this.checkBoxSettingTogglerSelector = '.wpstg-toggle-advance-settings-section';
       this.init();
     }
+
     /**
      * Add events
      * @return {void}
      */
-
-
     var _proto = WpstgCloningAdvanceSettings.prototype;
-
     _proto.addEvents = function addEvents() {
       var _this = this;
-
       if (this.baseContainer === null) {
         return;
       }
-
       addEvent(this.baseContainer, 'change', this.checkBoxSettingTogglerSelector, function (element) {
         _this.toggleSettings(element);
       });
     }
+
     /**
      * @return {void}
-     */
-    ;
-
+     */;
     _proto.init = function init() {
       this.addEvents();
     }
+
     /**
      * Expand/Collapse checkbox content on change
      * @return {void}
-     */
-    ;
-
+     */;
     _proto.toggleSettings = function toggleSettings(element) {
       var target = qs('#' + element.getAttribute('data-id'));
-
       if (element.checked) {
         slideDown(target);
       } else {
         slideUp(target);
       }
     };
-
     return WpstgCloningAdvanceSettings;
   }();
 
@@ -2137,26 +1853,20 @@
       this.activeTabClass = 'wpstg--tab--active';
       this.mainMenu();
     }
-
     var _proto = WpstgMainMenu.prototype;
-
     _proto.mainMenu = function mainMenu() {
       var _this = this;
-
-      var tabHeader = qs('.wpstg--tab--header'); // Early bail if tab header is not available
-
+      var tabHeader = qs('.wpstg--tab--header');
+      // Early bail if tab header is not available
       if (tabHeader === null) {
         return;
       }
-
       addEvent(qs('.wpstg--tab--header'), 'click', '.wpstg-button', function (element) {
         var $this = element;
         var target = $this.getAttribute('data-target');
-
         if (target === '') {
           return;
         }
-
         var targetElements = all(target);
         var menuItems = all('.wpstg--tab--header a[data-target]');
         var contents = all('.wpstg--tab--contents > .wpstg--tab--content');
@@ -2175,13 +1885,11 @@
         targetElements.forEach(function (targetElement) {
           targetElement.classList.add(_this.activeTabClass);
         });
-
         if ('#wpstg--tab--backup' === target) {
           window.dispatchEvent(new Event('backups-tab'));
         }
       });
     };
-
     return WpstgMainMenu;
   }();
 
@@ -2207,37 +1915,35 @@
       elements: []
     };
     var ajaxSpinner;
+
     /**
        * Get / Set Cache for Selector
        * @param {String} selector
        * @return {*}
        */
-
     cache.get = function (selector) {
       // It is already cached!
       if ($.inArray(selector, cache.elements) !== -1) {
         return cache.elements[selector];
-      } // Create cache and return
+      }
 
-
+      // Create cache and return
       cache.elements[selector] = jQuery(selector);
       return cache.elements[selector];
     };
+
     /**
        * Refreshes given cache
        * @param {String} selector
        */
-
-
     cache.refresh = function (selector) {
       selector.elements[selector] = jQuery(selector);
     };
+
     /**
        * Show and Log Error Message
        * @param {String} message
        */
-
-
     var showError = function showError(message) {
       cache.get('#wpstg-try-again').css('display', 'inline-block');
       cache.get('#wpstg-cancel-cloning').text('Reset');
@@ -2246,8 +1952,9 @@
       cache.get('#wpstg-error-details').show().html(message);
       cache.get('#wpstg-removing-clone').removeClass('wpstg-loading');
       cache.get('.wpstg-loader').hide();
-      $('.wpstg--modal--process--generic-problem').show().html(message); // Error event information for Staging
+      $('.wpstg--modal--process--generic-problem').show().html(message);
 
+      // Error event information for Staging
       $.ajax({
         url: ajaxurl,
         type: 'POST',
@@ -2260,18 +1967,18 @@
         }
       });
     };
+
     /**
      * Show warning during cloning or push process when closing tab or browser, or changing page
      * @param {beforeunload} event
      * @return {null}
      */
-
-
     that.warnIfClosingDuringProcess = function (event) {
       // Only some browsers show the message below, most say something like "Changes you made may not be saved" (Chrome) or "You have unsaved changes. Exit?"
       event.returnValue = 'You MUST leave this window open while cloning/pushing. Please wait...';
       return null;
     };
+
     /**
        *
        * @param response the error object
@@ -2280,17 +1987,14 @@
        * @returns void
        */
 
-
     var showAjaxFatalError = function showAjaxFatalError(response, prependMessage, appendMessage) {
       prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
       appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
-
       if (response === false) {
         showError(prependMessage + ' Error: No response.' + appendMessage);
         window.removeEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
         return;
       }
-
       if (typeof response.error !== 'undefined' && response.error) {
         console.error(response.message);
         showError(prependMessage + ' Error: ' + response.message + appendMessage);
@@ -2298,29 +2002,24 @@
         return;
       }
     };
+
     /** Hide and reset previous thrown visible errors */
-
-
     var resetErrors = function resetErrors() {
       cache.get('#wpstg-error-details').hide().html('');
     };
+
     /**
        * Common Elements
        */
-
-
     var elements = function elements() {
       var $workFlow = cache.get('#wpstg-workflow');
       var urlSpinner = ajaxurl.replace('/admin-ajax.php', '') + '/images/spinner';
       var timer;
-
       if (2 < window.devicePixelRatio) {
         urlSpinner += '-2x';
       }
-
       urlSpinner += '.gif';
       ajaxSpinner = '<img src=\'\'' + urlSpinner + '\' alt=\'\' class=\'ajax-spinner general-spinner\' />';
-
       $workFlow
       /**
           .on('change', '#wpstg_network_clone', function(e) {
@@ -2331,7 +2030,6 @@
       // Check / Un-check All Database Tables New
       .on('click', '.wpstg-button-unselect', function (e) {
         e.preventDefault();
-
         if (false === that.areAllTablesChecked) {
           cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', 'selected');
           cache.get('.wpstg-button-unselect').text('Unselect All');
@@ -2344,12 +2042,12 @@
           that.areAllTablesChecked = false;
         }
       })
+
       /**
                * Select tables with certain tbl prefix | NEW
                * @param obj e
                * @returns {undefined}
                */
-
       /**
           .on('click', '.wpstg-button-select', function(e) {
             e.preventDefault();
@@ -2401,21 +2099,22 @@
       // Check the max length of the clone name and if the clone name already exists
       .on('keyup', '#wpstg-new-clone-id', function () {
         // Hide previous errors
-        document.getElementById('wpstg-error-details').style.display = 'none'; // This request was already sent, clear it up!
+        document.getElementById('wpstg-error-details').style.display = 'none';
 
+        // This request was already sent, clear it up!
         if ('number' === typeof timer) {
           clearInterval(timer);
-        } // Early bail if site name is empty
+        }
 
-
+        // Early bail if site name is empty
         if (this.value === undefined || this.value === '') {
           cache.get('#wpstg-new-clone-id').removeClass('wpstg-error-input');
           cache.get('#wpstg-start-cloning').removeAttr('disabled');
           cache.get('#wpstg-clone-id-error').text('').hide();
           return;
-        } // Convert the site name to directory name (slugify the site name to create directory name)
+        }
 
-
+        // Convert the site name to directory name (slugify the site name to create directory name)
         var cloneDirectoryName = WPStagingCommon.slugify(this.value);
         timer = setTimeout(function () {
           ajax({
@@ -2435,7 +2134,8 @@
             }
           });
         }, 500);
-      }) // Restart cloning process
+      })
+      // Restart cloning process
       .on('click', '#wpstg-start-cloning', function () {
         resetErrors();
         that.isCancelled = false;
@@ -2445,21 +2145,17 @@
         if ($('#wpstg-clone-directory').length < 1) {
           return;
         }
-
         var slug = WPStagingCommon.slugify(this.value).substring(0, 16);
         var $targetDir = $('#wpstg-use-target-dir');
         var $targetUri = $('#wpstg-use-target-hostname');
         var path = $targetDir.data('base-path');
         var uri = $targetUri.data('base-uri');
-
         if (path) {
           path = path.replace(/\/+$/g, '') + '/' + slug + '/';
         }
-
         if (uri) {
           uri = uri.replace(/\/+$/g, '') + '/' + slug;
         }
-
         $('.wpstg-use-target-dir--value').text(path);
         $('.wpstg-use-target-hostname--value').text(uri);
         $targetDir.attr('data-path', path);
@@ -2471,44 +2167,37 @@
           $('#wpstg_clone_hostname_error').remove();
           return;
         }
-
         if (!validateTargetHost() && !$('#wpstg_clone_hostname_error').length) {
           $('#wpstg-clone-directory tr:last-of-type').after('<tr><td>&nbsp;</td><td><p id="wpstg_clone_hostname_error" style="color: red;">&nbsp;Invalid host name. Please provide it in a format like http://example.com</p></td></tr>');
         }
       });
       cloneActions();
     };
+
     /* @returns {boolean} */
-
-
     var validateTargetHost = function validateTargetHost() {
       var the_domain = $('#wpstg_clone_hostname').val();
-
       if (the_domain === '') {
         return true;
       }
-
       var reg = /^http(s)?:\/\/.*$/;
-
       if (reg.test(the_domain) === false) {
         return false;
       }
-
       return true;
     };
+
     /**
        * Clone actions
        */
-
-
     var cloneActions = function cloneActions() {
       var $workFlow = cache.get('#wpstg-workflow');
-      $workFlow // Cancel cloning
+      $workFlow
+      // Cancel cloning
       .on('click', '#wpstg-cancel-cloning', function () {
         if (!confirm('Are you sure you want to cancel cloning process?')) {
           return false;
         }
-
         var $this = $(this);
         $('#wpstg-try-again, #wpstg-home-link').hide();
         $this.prop('disabled', true);
@@ -2518,7 +2207,8 @@
         $('.wpstg-loader, #wpstg-show-log-button').hide();
         $this.parent().append(ajaxSpinner);
         cancelCloning();
-      }) // Resume cloning
+      })
+      // Resume cloning
       .on('click', '#wpstg-resume-cloning', function () {
         resetErrors();
         var $this = $(this);
@@ -2529,7 +2219,8 @@
         $('.wpstg-loader').show();
         $this.parent().append(ajaxSpinner);
         that.startCloning();
-      }) // Cancel update cloning
+      })
+      // Cancel update cloning
       .on('click', '#wpstg-cancel-cloning-update', function () {
         resetErrors();
         var $this = $(this);
@@ -2540,7 +2231,8 @@
         $('.wpstg-loader, #wpstg-show-log-button').hide();
         $this.parent().append(ajaxSpinner);
         cancelCloningUpdate();
-      }) // Restart cloning
+      })
+      // Restart cloning
       .on('click', '#wpstg-restart-cloning', function () {
         resetErrors();
         var $this = $(this);
@@ -2551,7 +2243,8 @@
         $('.wpstg-loader, #wpstg-show-log-button').hide();
         $this.parent().append(ajaxSpinner);
         restart();
-      }) // Delete clone - confirmation
+      })
+      // Delete clone - confirmation
       .on('click', '.wpstg-remove-clone[data-clone]', function (e) {
         resetErrors();
         e.preventDefault();
@@ -2572,19 +2265,22 @@
             scrollTop: $('#wpstg-remove-clone').offset().top - $(window).height() + $('#wpstg-remove-clone').height() + 50
           }, 100);
         }, 'HTML');
-      }) // Delete clone - confirmed
+      })
+      // Delete clone - confirmed
       .on('click', '#wpstg-remove-clone', function (e) {
         resetErrors();
         e.preventDefault();
         cache.get('#wpstg-removing-clone').addClass('wpstg-loading');
         cache.get('.wpstg-loader').show();
         deleteClone($(this).data('clone'));
-      }) // Cancel deleting clone
+      })
+      // Cancel deleting clone
       .on('click', '#wpstg-cancel-removing', function (e) {
         e.preventDefault();
         $('.wpstg-clone').removeClass('active');
         cache.get('#wpstg-removing-clone').html('');
-      }) // Update
+      })
+      // Update
       .on('click', '.wpstg-execute-clone', function (e) {
         e.preventDefault();
         var clone = $(this).data('clone');
@@ -2599,19 +2295,16 @@
           if (response.length < 1) {
             showError('Something went wrong! Error: No response.  Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.');
           }
-
           var jsonResponse = tryParseJson(response);
-
           if (jsonResponse !== false && jsonResponse.success === false) {
             $workFlow.removeClass('wpstg-loading');
             showErrorModal(jsonResponse);
             return;
           }
-
-          $workFlow.removeClass('wpstg-loading').html(response); // register check disk space function for clone update process.
-
+          $workFlow.removeClass('wpstg-loading').html(response);
+          // register check disk space function for clone update process.
           checkDiskSpace();
-          that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', '#wpstg-workflow', wpstg, that.notyf);
+          that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', wpstg, that.notyf);
           that.directoryNavigator.countSelectedFiles();
           that.tableSelector = new WpstgTableSelection('#wpstg-scanning-db', '#wpstg-workflow', '#wpstg_network_clone', '#wpstg_select_tables_cloning', wpstg, that.notyf);
           that.tableSelector.countSelectedTables();
@@ -2620,7 +2313,8 @@
         }, 'HTML');
       }).on('click', '#wpstg-update-cloning-site-button', function (e) {
         window.open(that.data.cloneHostname, '_blank');
-      }) // Reset Clone
+      })
+      // Reset Clone
       .on('click', '.wpstg-reset-clone', function (e) {
         e.preventDefault();
         var clone = $(this).data('clone');
@@ -2637,20 +2331,17 @@
             var excludedTables = '';
             var selectedTablesWithoutPrefix = '';
             var allTablesExcluded = false;
-
             if (tableSelector !== null) {
               includedTables = tableSelector.getIncludedTables();
               excludedTables = tableSelector.getExcludedTables();
               selectedTablesWithoutPrefix = tableSelector.getSelectedTablesWithoutPrefix();
             }
-
             if (includedTables.length > excludedTables.length) {
               includedTables = '';
             } else if (excludedTables.length > includedTables.length) {
               excludedTables = '';
               allTablesExcluded = includedTables === '';
             }
-
             resetClone(clone, {
               includedTables: includedTables,
               excludedTables: excludedTables,
@@ -2666,6 +2357,7 @@
         return;
       });
     };
+
     /**
      * Ajax Requests
      * @param Object data
@@ -2675,30 +2367,23 @@
      * @param int tryCount
      * @param float incrementRatio
      */
-
-
     var ajax = function ajax(data, callback, dataType, showErrors, tryCount, incrementRatio) {
       if (incrementRatio === void 0) {
         incrementRatio = null;
       }
-
       if ('undefined' === typeof dataType) {
         dataType = 'json';
       }
-
       if (false !== showErrors) {
         showErrors = true;
       }
-
       tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
       var retryLimit = 5;
       var retryTimeout = 10000 * tryCount;
       incrementRatio = parseInt(incrementRatio);
-
       if (!isNaN(incrementRatio)) {
         retryTimeout *= incrementRatio;
       }
-
       var errorMsgFooter = 'Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP STAGING Small Server Settings</a> or submit an error report and contact us. <br/><br/><strong>Tip:</strong> If you get this error while pushing, you can also use the <strong>BACKUP & MIGRATION</strong> feature to move your staging site to live. <a href=\'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/\' target=\'_blank\'>Read more.</a>';
       $.ajax({
         url: ajaxurl + '?action=wpstg_processing&_=' + Date.now() / 1000,
@@ -2709,7 +2394,6 @@
         error: function error(xhr, textStatus, errorThrown) {
           // try again after 10 seconds
           tryCount++;
-
           if (tryCount <= retryLimit) {
             console.log('RETRYING ' + tryCount + '/' + retryLimit);
             setTimeout(function () {
@@ -2766,41 +2450,36 @@
         }
       });
     };
+
     /**
      * Next / Previous Step Clicks to Navigate Through Staging Job
      */
-
-
     var stepButtons = function stepButtons() {
       var $workFlow = cache.get('#wpstg-workflow');
-      $workFlow // Next Button
+      $workFlow
+      // Next Button
       .on('click', '.wpstg-next-step-link', function (e) {
         e.preventDefault();
         var $this = $(this);
-
         if ($('#wpstg_clone_hostname').length && !validateTargetHost()) {
           $('#wpstg_clone_hostname').focus();
           return false;
         }
-
         if ($this.data('action') === 'wpstg_update' || $this.data('action') === 'wpstg_reset') {
           // Update / Reset Clone - confirmed
           var onlyUpdateMessage = '';
-
           if ($this.data('action') === 'wpstg_update') {
             onlyUpdateMessage = ' \n\nExclude all tables and folders you do not want to overwrite, first! \n\nDo not cancel the updating process! This can break your staging site. \n\n\Create a backup of your staging website before you proceed.';
           }
-
           if (!confirm('STOP! This will overwrite your staging site with all selected data from the production site! This should be used only if you want to clone again your production site. Are you sure you want to do this?' + onlyUpdateMessage)) {
             return false;
           }
-        } // Button is disabled
+        }
 
-
+        // Button is disabled
         if ($this.attr('disabled')) {
           return false;
         }
-
         if ($this.data('action') === 'wpstg_cloning') {
           // Verify External Database If Checked and Not Skipped
           if ($('#wpstg-ext-db').is(':checked')) {
@@ -2808,9 +2487,9 @@
             return;
           }
         }
-
         proceedCloning($this, $workFlow);
-      }) // Previous Button
+      })
+      // Previous Button
       .on('click', '.wpstg-prev-step-link', function (e) {
         e.preventDefault();
         cache.get('.wpstg-loader').removeClass('wpstg-finished');
@@ -2818,13 +2497,12 @@
         loadOverview();
       });
     };
+
     /**
      * Get Excluded (Unchecked) Database Tables
      * Not used anymore!
      * @return {Array}
      */
-
-
     var getExcludedTables = function getExcludedTables() {
       var excludedTables = [];
       $('.wpstg-db-table input:not(:checked)').each(function () {
@@ -2832,11 +2510,10 @@
       });
       return excludedTables;
     };
+
     /**
      * Verify External Database for Cloning
      */
-
-
     var verifyExternalDatabase = function verifyExternalDatabase($this, workflow) {
       cache.get('.wpstg-loader').show();
       ajax({
@@ -2854,31 +2531,27 @@
           showError('Something went wrong! Error: No response.' + 'Please try again. If that does not help, ' + '<a href=\'https://wp-staging.com/support/\' target=\'_blank\'>open a support ticket</a> ');
           cache.get('.wpstg-loader').hide();
           return;
-        } // Throw Error
+        }
 
-
+        // Throw Error
         if ('undefined' === typeof response.success) {
           showError('Something went wrong! Error: Invalid response.' + 'Please try again. If that does not help, ' + '<a href=\'https://wp-staging.com/support/\' target=\'_blank\'>open a support ticket</a> ');
           cache.get('.wpstg-loader').hide();
           return;
         }
-
         if (response.success) {
           cache.get('.wpstg-loader').hide();
           proceedCloning($this, workflow);
           return;
         }
-
         if (response.error_type === 'comparison') {
           cache.get('.wpstg-loader').hide();
           var render = '<table class="wpstg-db-comparison-table"><thead><tr><th>Property</th><th>Production DB</th><th>Staging DB</th><th>Status</th></tr></thead><tbody>';
           response.checks.forEach(function (x) {
             var icon = '<span class="wpstg-css-tick"></span>';
-
             if (x.production !== x.staging) {
               icon = '<span class="wpstg-css-cross"></span>';
             }
-
             render += '<tr><td>' + x.name + '</td><td>' + x.production + '</td><td>' + x.staging + '</td><td>' + icon + '</td></tr>';
           });
           render += '</tbody></table><p>Note: Some MySQL/MariaDB properties do not match. You may proceed but the staging site may not work as expected.</p>';
@@ -2899,7 +2572,6 @@
           });
           return;
         }
-
         WPStagingCommon.getSwalModal(true).fire({
           title: 'Different Database Properties',
           icon: 'error',
@@ -2911,55 +2583,44 @@
         cache.get('.wpstg-loader').hide();
       }, 'json', false);
     };
+
     /**
      * Get Cloning Step Data
      */
-
-
     var getCloningData = function getCloningData() {
       if ('wpstg_cloning' !== that.data.action && 'wpstg_update' !== that.data.action && 'wpstg_reset' !== that.data.action) {
         return;
       }
-
       that.data.cloneID = new Date().getTime().toString();
-
       if ('wpstg_update' === that.data.action) {
         that.data.cloneID = $('#wpstg-new-clone-id').data('clone');
       }
-
       that.data.cloneName = $('#wpstg-new-clone-id').val() || that.data.cloneID;
-
       if (that.directoryNavigator !== null) {
         that.data.excludedDirectories = encodeURIComponent(that.directoryNavigator.getExcludedDirectories());
         that.data.extraDirectories = encodeURIComponent(that.directoryNavigator.getExtraDirectoriesRootOnly());
       }
-
       that.data.excludeGlobRules = '';
       that.data.excludeSizeRules = '';
-
       if (that.cloneExcludeFilters instanceof WpstgExcludeFilters) {
         var rules = that.cloneExcludeFilters.getExcludeFilters();
         that.data.excludeGlobRules = encodeURIComponent(rules.globs);
         that.data.excludeSizeRules = encodeURIComponent(rules.sizes);
       }
-
       that.data.includedTables = '';
       that.data.excludedTables = '';
       that.data.allTablesExcluded = false;
-
       if (that.tableSelector !== null) {
         that.data.includedTables = that.tableSelector.getIncludedTables();
         that.data.excludedTables = that.tableSelector.getExcludedTables();
         that.data.selectedTablesWithoutPrefix = that.tableSelector.getSelectedTablesWithoutPrefix();
       }
-
       if (that.data.includedTables.length > that.data.excludedTables.length) {
         that.data.includedTables = '';
       } else if (that.data.excludedTables.length > that.data.includedTables.length) {
         that.data.excludedTables = '';
         that.data.allTablesExcluded = that.data.includedTables === '';
       }
-
       that.data.databaseServer = $('#wpstg_db_server').val();
       that.data.databaseUser = $('#wpstg_db_username').val();
       that.data.databasePassword = $('#wpstg_db_password').val();
@@ -2976,21 +2637,21 @@
       that.data.cleanPluginsThemes = $('#wpstg-clean-plugins-themes').is(':checked');
       that.data.cleanUploadsDir = $('#wpstg-clean-uploads').is(':checked');
     };
-
     var proceedCloning = function proceedCloning($this, workflow) {
       // Add loading overlay
-      workflow.addClass('wpstg-loading'); // Prepare data
+      workflow.addClass('wpstg-loading');
 
+      // Prepare data
       that.data = {
         action: $this.data('action'),
         accessToken: wpstg.accessToken,
         nonce: wpstg.nonce
-      }; // Cloning data
+      };
 
+      // Cloning data
       getCloningData();
       sendCloningAjax(workflow);
     };
-
     var sendCloningAjax = function sendCloningAjax(workflow) {
       // Send ajax request
       ajax(that.data, function (response) {
@@ -2998,26 +2659,22 @@
         if (false === response) {
           showError('Something went wrong!<br/><br/> Go to WP Staging > Settings and lower \'File Copy Limit\' and \'DB Query Limit\'. Also set \'CPU Load Priority to low \'' + 'and try again. If that does not help, ' + '<a href=\'https://wp-staging.com/support/\' target=\'_blank\'>open a support ticket</a> ');
         }
-
         if (response.length < 1) {
           showError('Something went wrong! No response.  Go to WP Staging > Settings and lower \'File Copy Limit\' and \'DB Query Limit\'. Also set \'CPU Load Priority to low \'' + 'and try again. If that does not help, ' + '<a href=\'https://wp-staging.com/support/\' target=\'_blank\'>open a support ticket</a> ');
         }
-
         var jsonResponse = tryParseJson(response);
-
         if (jsonResponse !== false && jsonResponse.success === false) {
           workflow.removeClass('wpstg-loading');
           showErrorModal(jsonResponse);
           return;
-        } // Styling of elements
+        }
 
-
+        // Styling of elements
         workflow.removeClass('wpstg-loading').html(response);
         that.cloneExcludeFilters = null;
-
         if (that.data.action === 'wpstg_scanning') {
           that.areAllTablesChecked = true;
-          that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', '#wpstg-workflow', wpstg, that.notyf);
+          that.directoryNavigator = new WpstgDirectoryNavigation('#wpstg-directories-listing', wpstg, that.notyf);
           that.tableSelector = new WpstgTableSelection('#wpstg-scanning-db', '#wpstg-workflow', '#wpstg_network_clone', '#wpstg_select_tables_cloning', wpstg);
           that.switchStep(2);
           that.cloneExcludeFilters = new WpstgExcludeFilters();
@@ -3025,13 +2682,12 @@
           that.tableSelector.countSelectedTables();
         } else if (that.data.action === 'wpstg_cloning' || that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
           that.switchStep(3);
-        } // Start cloning
+        }
 
-
+        // Start cloning
         that.startCloning();
       }, 'HTML');
     };
-
     var showErrorModal = function showErrorModal(response) {
       var errorModal = new WpstgModal('wpstg_modal_error', wpstg);
       errorModal.show(Object.assign({
@@ -3053,25 +2709,21 @@
         type: response.type
       });
     };
-
     var tryParseJson = function tryParseJson(json) {
       // early bail if not string
       if (!json) {
         return false;
       }
-
       try {
         var object = JSON.parse(json);
-
         if (object && typeof object === 'object') {
           return object;
         }
-      } catch (e) {// do nothing on catch
+      } catch (e) {
+        // do nothing on catch
       }
-
       return false;
     };
-
     var resetClone = function resetClone(clone, excludeOptions) {
       that.data = {
         action: 'wpstg_reset',
@@ -3083,11 +2735,10 @@
       var $workFlow = cache.get('#wpstg-workflow');
       sendCloningAjax($workFlow);
     };
+
     /**
      * Loads Overview (first step) of Staging Job
      */
-
-
     var loadOverview = function loadOverview() {
       var $workFlow = cache.get('#wpstg-workflow');
       $workFlow.addClass('wpstg-loading');
@@ -3099,20 +2750,19 @@
         if (response.length < 1) {
           showError('Something went wrong! No response. Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report.');
         }
+        cache.get('.wpstg-current-step');
 
-        cache.get('.wpstg-current-step'); // Styling of elements
-
+        // Styling of elements
         $workFlow.removeClass('wpstg-loading').html(response);
       }, 'HTML');
       that.switchStep(1);
       cache.get('.wpstg-step3-cloning').show();
       cache.get('.wpstg-step3-pushing').hide();
     };
+
     /**
      * Load Tabs
      */
-
-
     var tabs = function tabs() {
       cache.get('#wpstg-workflow').on('click', '.wpstg-tab-header', function (e) {
         e.preventDefault();
@@ -3121,7 +2771,6 @@
         $this.toggleClass('expand');
         $section.slideToggle();
         var tabTriangle = $this.find('.wpstg-tab-triangle');
-
         if ($this.hasClass('expand')) {
           tabTriangle.removeClass('wpstg-no-icon');
           tabTriangle.text('');
@@ -3131,12 +2780,11 @@
         }
       });
     };
+
     /**
      * Delete Clone
      * @param {String} clone
      */
-
-
     var deleteClone = function deleteClone(clone) {
       var deleteDir = $('#deleteDirectory:checked').data('deletepath');
       ajax({
@@ -3148,46 +2796,41 @@
         deleteDir: deleteDir
       }, function (response) {
         if (response) {
-          showAjaxFatalError(response); // Finished
+          showAjaxFatalError(response);
 
+          // Finished
           if ('undefined' !== typeof response["delete"] && (response["delete"] === 'finished' || response["delete"] === 'unfinished')) {
             cache.get('#wpstg-removing-clone').removeClass('wpstg-loading').html('');
-
             if (response["delete"] === 'finished' && response.error === undefined) {
               $('.wpstg-clone[data-clone-id="' + clone + '"]').remove();
-            } // No staging site message is also of type/class .wpstg-class but hidden
+            }
+
+            // No staging site message is also of type/class .wpstg-class but hidden
             // We have just excluded that from search when counting no of clones
-
-
             if ($('#wpstg-existing-clones .wpstg-clone').length < 1) {
               cache.get('#wpstg-existing-clones').find('h3').text('');
               cache.get('#wpstg-no-staging-site-results').show();
             }
-
             cache.get('.wpstg-loader').hide();
             return;
           }
-        } // continue
-
-
+        }
+        // continue
         if (true !== response) {
           deleteClone(clone);
           return;
         }
       });
     };
+
     /**
      * Cancel Cloning Process
      */
-
-
     var cancelCloning = function cancelCloning() {
       that.timer('stop');
-
       if (true === that.isFinished) {
         return true;
       }
-
       ajax({
         action: 'wpstg_cancel_clone',
         clone: that.data.cloneID,
@@ -3195,32 +2838,29 @@
         nonce: wpstg.nonce
       }, function (response) {
         if (response && 'undefined' !== typeof response["delete"] && response["delete"] === 'finished') {
-          cache.get('.wpstg-loader').hide(); // Load overview
-
+          cache.get('.wpstg-loader').hide();
+          // Load overview
           loadOverview();
           return;
         }
-
         if (true !== response) {
           // continue
           cancelCloning();
           return;
-        } // Load overview
+        }
 
-
+        // Load overview
         loadOverview();
       });
     };
+
     /**
      * Cancel Cloning Process
      */
-
-
     var cancelCloningUpdate = function cancelCloningUpdate() {
       if (true === that.isFinished) {
         return true;
       }
-
       ajax({
         action: 'wpstg_cancel_update',
         clone: that.data.cloneID,
@@ -3232,27 +2872,24 @@
           loadOverview();
           return;
         }
-
         if (true !== response) {
           // continue
           cancelCloningUpdate();
           return;
-        } // Load overview
+        }
 
-
+        // Load overview
         loadOverview();
       });
     };
+
     /**
      * Cancel Cloning Process
      */
-
-
     var restart = function restart() {
       if (true === that.isFinished) {
         return true;
       }
-
       ajax({
         action: 'wpstg_restart',
         // clone: that.data.cloneID,
@@ -3264,37 +2901,33 @@
           loadOverview();
           return;
         }
-
         if (true !== response) {
           // continue
           cancelCloningUpdate();
           return;
-        } // Load overview
+        }
 
-
+        // Load overview
         loadOverview();
       });
     };
+
     /**
      * Scroll the window log to bottom
      * @return void
      */
-
-
     var logscroll = function logscroll() {
       var $div = cache.get('.wpstg-log-details');
-
       if ('undefined' !== typeof $div[0]) {
         $div.scrollTop($div[0].scrollHeight);
       }
     };
+
     /**
      * Append the log to the logging window
      * @param string log
      * @return void
      */
-
-
     var getLogs = function getLogs(log) {
       if (log != null && 'undefined' !== typeof log) {
         if (log.constructor === Array) {
@@ -3302,7 +2935,6 @@
             if (value === null) {
               return;
             }
-
             if (value.type === 'ERROR') {
               cache.get('.wpstg-log-details').append('<span class="wpstg--red">[' + value.type + ']</span>-' + '[' + value.date + '] ' + value.message + '</br>');
             } else {
@@ -3313,15 +2945,13 @@
           cache.get('.wpstg-log-details').append('[' + log.type + ']-' + '[' + log.date + '] ' + log.message + '</br>');
         }
       }
-
       logscroll();
     };
+
     /**
      * Check disk space
      * @return string json
      */
-
-
     var checkDiskSpace = function checkDiskSpace() {
       cache.get('#wpstg-check-space').on('click', function (e) {
         cache.get('.wpstg-loader').show();
@@ -3338,20 +2968,19 @@
             cache.get('#wpstg-clone-id-error').text('Can not detect required disk space').show();
             cache.get('.wpstg-loader').hide();
             return;
-          } // Show required disk space
+          }
 
-
+          // Show required disk space
           cache.get('#wpstg-clone-id-error').html('<strong>Estimated necessary disk space: ' + response.requiredSpace + '</strong>' + (response.errorMessage !== null ? '<br>' + response.errorMessage : '') + '<br> <span style="color:#444;">Before you proceed ensure your account has enough free disk space to hold the entire instance of the production site. You can check the available space from your hosting account (e.g. cPanel).</span>').show();
           cache.get('.wpstg-loader').hide();
         }, 'json', false);
       });
     };
+
     /**
      * Show or hide animated loading icon
      * @param isLoading bool
      */
-
-
     var isLoading = function isLoading(_isLoading) {
       if (!_isLoading || _isLoading === false) {
         cache.get('.wpstg-loader').hide();
@@ -3359,13 +2988,12 @@
         cache.get('.wpstg-loader').show();
       }
     };
+
     /**
      * Count up processing execution time
      * @param string status
      * @return html
      */
-
-
     that.timer = function (status) {
       if (status === 'stop') {
         var time = that.time;
@@ -3373,59 +3001,55 @@
         clearInterval(that.executionTime);
         return that.convertSeconds(time);
       }
-
       that.executionTime = setInterval(function () {
         if (null !== document.getElementById('wpstg-processing-timer')) {
           document.getElementById('wpstg-processing-timer').innerHTML = 'Elapsed Time: ' + that.convertSeconds(that.time);
         }
-
         that.time++;
-
         if (status === 'stop') {
           that.time = 1;
           clearInterval(that.executionTime);
         }
       }, 1000);
     };
+
     /**
      * Convert seconds to hourly format
      * @param int seconds
      * @return string
      */
-
-
     that.convertSeconds = function (seconds) {
       var date = new Date(null);
       date.setSeconds(seconds); // specify value for SECONDS here
-
       return date.toISOString().substr(11, 8);
     };
+
     /**
      * Start Cloning Process
      * @type {Function}
      */
-
-
     that.startCloning = function () {
-      resetErrors(); // Register function for checking disk space
+      resetErrors();
 
+      // Register function for checking disk space
       checkDiskSpace();
-
       if ('wpstg_cloning' !== that.data.action && 'wpstg_update' !== that.data.action && 'wpstg_reset' !== that.data.action) {
         return;
       }
+      that.isCancelled = false;
 
-      that.isCancelled = false; // Start the process
+      // Start the process
+      start();
 
-      start(); // Functions
+      // Functions
       // Start
-
       function start() {
         cache.get('.wpstg-loader').show();
         cache.get('#wpstg-cancel-cloning').text('Cancel');
         cache.get('#wpstg-resume-cloning').hide();
-        cache.get('#wpstg-error-details').hide(); // Clone Database
+        cache.get('#wpstg-error-details').hide();
 
+        // Clone Database
         setTimeout(function () {
           // cloneDatabase();
           window.addEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
@@ -3433,28 +3057,25 @@
         }, wpstg.delayReq);
         that.timer('start');
       }
+
       /**
        * Start ajax processing
        * @return string
        */
-
-
       var processing = function processing() {
         if (true === that.isCancelled) {
           window.removeEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
           return false;
         }
-
         isLoading(true);
         var excludedDirectories = '';
         var extraDirectories = '';
-
         if (that.directoryNavigator !== null) {
           excludedDirectories = that.directoryNavigator.getExcludedDirectories();
           extraDirectories = that.directoryNavigator.getExtraDirectoriesRootOnly();
-        } // Show logging window
+        }
 
-
+        // Show logging window
         cache.get('.wpstg-log-details').show();
         WPStaging$1.ajax({
           action: 'wpstg_processing',
@@ -3464,13 +3085,13 @@
           excludedDirectories: encodeURIComponent(excludedDirectories),
           extraDirectories: encodeURIComponent(extraDirectories)
         }, function (response) {
-          showAjaxFatalError(response); // Add Log messages
+          showAjaxFatalError(response);
 
+          // Add Log messages
           if ('undefined' !== typeof response.last_msg && response.last_msg) {
             getLogs(response.last_msg);
-          } // Continue processing
-
-
+          }
+          // Continue processing
           if (false === response.status) {
             progressBar(response);
             setTimeout(function () {
@@ -3487,20 +3108,19 @@
             finish(response);
           }
         }, 'json', false);
-      }; // Finish
+      };
 
-
+      // Finish
       function finish(response) {
         if (true === that.getLogs) {
           getLogs();
         }
+        progressBar(response);
 
-        progressBar(response); // Add Log
-
+        // Add Log
         if ('undefined' !== typeof response.last_msg) {
           getLogs(response.last_msg);
         }
-
         cache.get('.wpstg-loader').hide();
         cache.get('#wpstg-processing-header').html('Processing Complete');
         $('#wpstg-processing-status').text('Succesfully finished');
@@ -3514,20 +3134,20 @@
         $link1.attr('href', response.url);
         $link1.html(response.url);
         $link.attr('href', response.url);
-        cache.get('#wpstg-remove-clone').data('clone', that.data.cloneID); // Finished
+        cache.get('#wpstg-remove-clone').data('clone', that.data.cloneID);
 
+        // Finished
         that.isFinished = true;
         that.timer('stop');
         cache.get('.wpstg-loader').hide();
-        cache.get('#wpstg-processing-header').html('Processing Complete'); // show alert
+        cache.get('#wpstg-processing-header').html('Processing Complete');
 
+        // show alert
         var msg = wpstg.i18n.cloneResetComplete;
-
         if (that.data.action === 'wpstg_update') {
           msg = wpstg.i18n.cloneUpdateComplete;
           cache.get('#wpstg-update-cloning-site-button').show();
         }
-
         if (that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
           cache.get('#wpstg-cancel-cloning-update').hide();
           cache.get('.wpstg-prev-step-link').show();
@@ -3541,36 +3161,31 @@
             focusConfirm: true
           });
         }
-
         return false;
       }
+
       /**
        * Add percentage progress bar
        * @param object response
        * @return {Boolean}
        */
-
-
       var progressBar = function progressBar(response, restart) {
         if ('undefined' === typeof response.percentage) {
           return false;
         }
-
         if (response.job === 'database') {
           cache.get('#wpstg-progress-db').width(response.percentage * 0.2 + '%').html(response.percentage + '%');
           cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Step 1 of 4 Cloning Database Tables...');
         }
-
         if (response.job === 'SearchReplace') {
           cache.get('#wpstg-progress-db').css('background-color', '#3bc36b');
-          cache.get('#wpstg-progress-db').html('1. Database'); // Assumption: All previous steps are done.
+          cache.get('#wpstg-progress-db').html('1. Database');
+          // Assumption: All previous steps are done.
           // This avoids bugs where some steps are skipped and the progress bar is incomplete as a result
-
           cache.get('#wpstg-progress-db').width('20%');
           cache.get('#wpstg-progress-sr').width(response.percentage * 0.1 + '%').html(response.percentage + '%');
           cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Step 2 of 4 Preparing Database Data...');
         }
-
         if (response.job === 'directories') {
           cache.get('#wpstg-progress-sr').css('background-color', '#3bc36b');
           cache.get('#wpstg-progress-sr').html('2. Data');
@@ -3578,7 +3193,6 @@
           cache.get('#wpstg-progress-dirs').width(response.percentage * 0.1 + '%').html(response.percentage + '%');
           cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Step 3 of 4 Getting files...');
         }
-
         if (response.job === 'files') {
           cache.get('#wpstg-progress-dirs').css('background-color', '#3bc36b');
           cache.get('#wpstg-progress-dirs').html('3. Files');
@@ -3586,7 +3200,6 @@
           cache.get('#wpstg-progress-files').width(response.percentage * 0.6 + '%').html(response.percentage + '%');
           cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Step 4 of 4 Copy files...');
         }
-
         if (response.job === 'finish') {
           cache.get('#wpstg-progress-files').css('background-color', '#3bc36b');
           cache.get('#wpstg-progress-files').html('4. Copy Files');
@@ -3595,12 +3208,10 @@
         }
       };
     };
-
     that.switchStep = function (step) {
       cache.get('.wpstg-current-step').removeClass('wpstg-current-step');
       cache.get('.wpstg-step' + step).addClass('wpstg-current-step');
     };
-
     that.checkUserDbPermissions = function checkUserDbPermissions(operationType) {
       return new Promise(function (resolve) {
         WPStaging$1.ajax({
@@ -3634,12 +3245,11 @@
         }, 'json', false);
       });
     };
+
     /**
      * Initiation
      * @type {Function}
      */
-
-
     that.init = function () {
       loadOverview();
       elements();
@@ -3663,28 +3273,26 @@
         }]
       });
     };
+
     /**
      * Ajax call
      * @type {ajax}
      */
-
-
     that.ajax = ajax;
     that.showError = showError;
     that.getLogs = getLogs;
     that.loadOverview = loadOverview;
     return that;
   }(jQuery);
-
   jQuery(document).ready(function () {
-    WPStaging$1.init(); // This is necessary to make WPStaging var accessibile in WP Staging PRO js script
-
+    WPStaging$1.init();
+    // This is necessary to make WPStaging var accessible in WP Staging PRO js script
     window.WPStaging = WPStaging$1;
   });
+
   /**
    * Report Issue modal
    */
-
   jQuery(document).ready(function ($) {
     $('body').on('click', '.wpstg-report-issue-button', function (e) {
       console.log('REPORT ISSUE.');
@@ -3704,20 +3312,18 @@
       sendIssueReport(self, 'false');
       e.preventDefault();
     });
+
     /*
      * Close Success Modal
      */
-
     $('body').on('click', '#wpstg-success-button', function (e) {
       e.preventDefault();
       $('.wpstg-report-issue-form').removeClass('wpstg-report-show');
     });
-
     function sendIssueReport(button, forceSend) {
       if (forceSend === void 0) {
         forceSend = 'false';
       }
-
       var spinner = button.next();
       var email = $('.wpstg--tab--active .wpstg-report-email').val();
       var hosting_provider = $('.wpstg--tab--active .wpstg-report-hosting-provider').val();
@@ -3746,14 +3352,13 @@
       }).done(function (data) {
         button.attr('disabled', false);
         spinner.css('visibility', 'hidden');
-
         if (data.errors.length > 0) {
           $('.wpstg-report-issue-form .wpstg-message').remove();
           var errorMessage = $('<div />').addClass('wpstg-message wpstg-error-message');
           $.each(data.errors, function (key, value) {
             if (value.status === 'already_submitted') {
-              errorMessage = ''; // TODO: remove default custom classes
-
+              errorMessage = '';
+              // TODO: remove default custom classes
               WPStagingCommon.getSwalModal(true, {
                 container: 'wpstg-issue-resubmit-confirmation'
               }).fire({
@@ -3778,16 +3383,17 @@
           var successMessage = $('<div />').addClass('wpstg-message wpstg-success-message');
           successMessage.append('<p>Thanks for submitting your request! You should receive an auto reply mail with your ticket ID immediately for confirmation!<br><br>If you do not get that mail please contact us directly at <strong>support@wp-staging.com</strong></p>');
           $('.wpstg--tab--active .wpstg-report-issue-form').html(successMessage);
-          $('.wpstg--tab--active .wpstg-success-message').append('<div style="float:right;margin-top:10px;"><a id="wpstg-success-button" href="#" class="wpstg--red">[X] CLOSE</a></div>'); // Hide message
+          $('.wpstg--tab--active .wpstg-success-message').append('<div style="float:right;margin-top:10px;"><a id="wpstg-success-button" href="#" class="wpstg--red">[X] CLOSE</a></div>');
 
+          // Hide message
           setTimeout(function () {
             $('.wpstg--tab--active .wpstg-report-issue-form').removeClass('wpstg-report-active');
           }, 2000);
         }
       });
-    } // Open/close actions drop down menu
+    }
 
-
+    // Open/close actions drop down menu
     $(document).on('click', '.wpstg-dropdown>.wpstg-dropdown-toggler', function (e) {
       e.preventDefault();
       $(e.target).next('.wpstg-dropdown-menu').toggleClass('shown');
@@ -3796,26 +3402,24 @@
     $(document).on('click', '.wpstg-caret', function (e) {
       e.preventDefault();
       var toggler = $(e.target).closest('.wpstg-dropdown-toggler');
-
       if (toggler) {
         toggler.trigger('click');
       }
-    }); // Close action drop down menu if clicked anywhere outside
+    });
 
+    // Close action drop down menu if clicked anywhere outside
     document.addEventListener('click', function (event) {
       var isClickInside = event.target.closest('.wpstg-dropdown-toggler');
-
       if (!isClickInside) {
         var dropDown = document.getElementsByClassName('wpstg-dropdown-menu');
-
         for (var i = 0; i < dropDown.length; i++) {
           dropDown[i].classList.remove('shown');
         }
-
         $('.wpstg-caret').removeClass('wpstg-caret-up');
       }
-    }); // "Event info" for backup errors
+    });
 
+    // "Event info" for backup errors
     window.addEventListener('finishedProcessWithError', function (customEvent) {
       $.ajax({
         url: ajaxurl,
@@ -3832,5 +3436,5 @@
     });
   });
 
-}());
+})();
 //# sourceMappingURL=wpstg-admin.js.map

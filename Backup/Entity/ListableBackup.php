@@ -102,4 +102,7 @@ class ListableBackup
 
     /** @var string */
     public $error;
+
+    /** @var array */
+    public $indexPartSize = [];
 }

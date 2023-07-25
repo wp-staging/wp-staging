@@ -4,13 +4,16 @@ namespace WPStaging\Framework\Traits;
 
 use Exception;
 use RuntimeException;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
 
 trait FileScanToCacheTrait
 {
+    /** @var bool */
     protected $isExcludedWpConfig = false;
+
+    /** @var string */
+    protected $pathIdentifier = '';
 
     /**
      * Write contents to a file
@@ -92,7 +95,7 @@ trait FileScanToCacheTrait
                         $this->setIsExcludedWpConfig(false);
                     }
 
-                    if ($this->write($filesHandle, $file)) {
+                    if ($this->write($filesHandle, $this->pathIdentifier . ltrim($file, '/'))) {
                         $filesWrittenToCache++;
                     }
                 }
@@ -118,5 +121,13 @@ trait FileScanToCacheTrait
     public function getIsExcludedWpConfig()
     {
         return $this->isExcludedWpConfig;
+    }
+
+    /**
+     * @param string $pathIdentifier
+     */
+    protected function setPathIdentifier($pathIdentifier)
+    {
+        $this->pathIdentifier = $pathIdentifier;
     }
 }

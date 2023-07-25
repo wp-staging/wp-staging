@@ -14,7 +14,10 @@ class TaskResponseDto extends AbstractDto
     }
 
     /** @var boolean */
-    protected $status;
+    protected $isRunning;
+
+    /** @var string */
+    protected $jobStatus;
 
     /** @var int */
     protected $percentage;
@@ -52,8 +55,7 @@ class TaskResponseDto extends AbstractDto
         // TODO REF: Remove
         $data['last_msg'] = $lastMsg;
         $data['isForceSave'] = true;
-        $data['job_done'] = $data['status'];
-
+        $data['job_done'] = $data['isRunning'];
         return $data;
     }
 
@@ -68,17 +70,33 @@ class TaskResponseDto extends AbstractDto
     /**
      * @return bool
      */
-    public function isStatus()
+    public function isRunning()
     {
-        return $this->status;
+        return $this->isRunning;
     }
 
     /**
-     * @param bool $status
+     * @param bool $isRunning
      */
-    public function setStatus($status)
+    public function setIsRunning($isRunning)
     {
-        $this->status = $status;
+        $this->isRunning = $isRunning;
+    }
+
+    /**
+     * @param string $jobStatus
+     */
+    public function setJobStatus($jobStatus)
+    {
+        $this->jobStatus = $jobStatus;
+    }
+
+    /**
+     * @return string
+     */
+    public function getJobStatus()
+    {
+        return $this->jobStatus;
     }
 
     /**

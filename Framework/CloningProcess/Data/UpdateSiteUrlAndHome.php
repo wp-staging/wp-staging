@@ -23,11 +23,15 @@ class UpdateSiteUrlAndHome extends DBCloningService
     }
 
     /**
-     * Wrapper for DOMAIN_CURRENT_SITE for mocking
+     * Wrapper for DOMAIN_CURRENT_SITE for mocking, if DOMAIN_CURRENT_SITE is not defined this returns 'HTTP_HOST' data from $_SERVER.
      * @return string
      */
     protected function getCurrentSiteDomain()
     {
+        if (!defined('DOMAIN_CURRENT_SITE')) {
+            $domain = isset($_SERVER['HTTP_HOST']) ? sanitize_text_field($_SERVER['HTTP_HOST']) : '';
+            return $domain;
+        }
         return DOMAIN_CURRENT_SITE;
     }
 
@@ -61,11 +65,11 @@ class UpdateSiteUrlAndHome extends DBCloningService
             $stagingURLhasWWWPrefix = true;
         }
 
-        $baseDomain = $this->getCurrentSiteDomain();
-        $basePath   = trailingslashit($this->getCurrentSitePath());
+        $baseDomain        = $this->getCurrentSiteDomain();
+        $basePath          = trailingslashit($this->getCurrentSitePath());
         $stagingSiteDomain = $this->dto->getStagingSiteDomain();
         $stagingSitePath   = trailingslashit($this->dto->getStagingSitePath());
-        $str   = new Strings();
+        $str               = new Strings();
         foreach ($this->getSites() as $site) {
             $tableName = $this->getOptionTableWithoutBasePrefix($site->blog_id);
 

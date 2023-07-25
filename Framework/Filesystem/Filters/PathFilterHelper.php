@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Filesystem\Filters;
 
 use SplFileInfo;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\ThirdParty\Glob;
 
@@ -56,7 +57,7 @@ class PathFilterHelper
      */
     public function setWpRootPath($wpRootPath)
     {
-        $this->wpRootPath = $this->strUtils->sanitizeDirectorySeparator($wpRootPath);
+        $this->wpRootPath = wp_normalize_path($wpRootPath);
         $this->wpRootPath = rtrim($this->wpRootPath, '/');
     }
 
@@ -105,6 +106,20 @@ class PathFilterHelper
                 continue;
             }
 
+            // Support for windows absolute paths
+            if ((strpos($rule, '://') === 1 || strpos($rule, ':\\') === 1) && !$this->isGlobPattern($rule)) {
+                $this->absolutePathRules[] = $rule;
+                $this->rulesCount++;
+                continue;
+            }
+
+            // Support for vfs:// paths if vfs is allowed (used in tests)
+            if (WPStaging::make('WPSTG_ALLOW_VFS') === true && $this->strUtils->startsWith($rule, 'vfs://') && !$this->isGlobPattern($rule)) {
+                $this->absolutePathRules[] = $rule;
+                $this->rulesCount++;
+                continue;
+            }
+
             // *. is to check whether the exclude is extension exclude or not,
             // If it is extension exclude then convert to glob pattern
             if ($this->strUtils->startsWith($rule, '*.')) {
@@ -143,9 +158,13 @@ class PathFilterHelper
     public function isMatched($fileInfo)
     {
         $path = $fileInfo->getPathname();
-        $path = $this->strUtils->sanitizeDirectorySeparator($path);
-        $relpath = str_replace($this->wpRootPath, '', $path);
+        $path = wp_normalize_path($path);
 
+        if ($this->isAbsolutePathMatched($path)) {
+            return true;
+        }
+
+        $relpath = str_replace($this->wpRootPath, '', $path);
         // Check absolute path
         if ($this->isAbsolutePathMatched($relpath)) {
             return true;

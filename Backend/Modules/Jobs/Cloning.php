@@ -8,6 +8,7 @@ use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Database\SelectedTables;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Staging\Sites;
@@ -111,9 +112,9 @@ class Cloning extends Job
 
         $this->options->excludedFilesFullPath = apply_filters('wpstg.clone.excluded_files_full_path', [
             '.htaccess',
-            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'db.php',
-            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'object-cache.php',
-            $this->dirUtils->getRelativeWpContentPath(SlashMode::TRAILING_SLASH) . 'advanced-cache.php'
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'db.php',
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'object-cache.php',
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'advanced-cache.php'
         ]);
 
         $this->options->currentStep = 0;
@@ -165,12 +166,12 @@ class Cloning extends Job
          * Only add other directories here
          */
         $excludedDirectories = [
-            $this->dirUtils->getRelativeWpContentPath(SlashMode::BOTH_SLASHES) . 'cache',
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'cache',
         ];
 
         // Add upload folder to list of excluded directories for push if symlink option is enabled
         if ($this->options->uploadsSymlinked) {
-            $excludedDirectories[] = $this->dirUtils->getRelativeUploadPath(SlashMode::LEADING_SLASH);
+            $excludedDirectories[] = PathIdentifier::IDENTIFIER_UPLOADS;
         }
 
         $excludedDirectoriesRequest = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';

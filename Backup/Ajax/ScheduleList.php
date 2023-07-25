@@ -128,7 +128,9 @@ class ScheduleList
                 ); ?>
             </li>
             <?php
+            WPStaging::silenceLogs();
             $lastRun = get_option(FinishBackupTask::OPTION_LAST_BACKUP);
+            WPStaging::silenceLogs(false);
 
             if (is_array($lastRun)) :
                 $lastRunTime = $this->times->getHumanTimeDiff($lastRun['endTime'], time());

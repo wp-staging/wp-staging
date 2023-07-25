@@ -87,7 +87,7 @@ class ListableBackupsCollection
                     $listableBackup->relativePath          = $relativePath;
                     $listableBackup->backupName            = $relativePath;
                     $listableBackup->name                  = $file->getFilename();
-                    $listableBackup->size                  = size_format($file->getSize(), 2);
+                    $listableBackup->size                  = size_format($file->getSize(), 2); // @phpstan-ignore-line
                     $listableBackup->id                    = $md5Basename;
                     $listableBackup->md5BaseName           = $md5Basename;
                     $listableBackup->isCorrupt             = true;
@@ -121,7 +121,7 @@ class ListableBackupsCollection
                 $listableBackup->createdOnPro                     = $backupMetadata->getCreatedOnPro();
                 $listableBackup->name                             = $file->getFilename();
                 $listableBackup->notes                            = $backupMetadata->getNote();
-                $listableBackup->size                             = size_format($backupMetadata->getBackupSize(), 2);
+                $listableBackup->size                             = size_format($backupMetadata->getBackupSize(), 2); // @phpstan-ignore-line
                 $listableBackup->md5BaseName                      = $md5Basename;
                 $listableBackup->isValidFileIndex                 = $this->backupValidator->validateFileIndex($fileObject, $backupMetadata);
                 $listableBackup->isValidMultipartBackup           = $this->backupValidator->checkIfSplitBackupIsValid($backupMetadata);
@@ -130,6 +130,7 @@ class ListableBackupsCollection
                 $listableBackup->validationIssues['missingParts'] = $this->backupValidator->getMissingPartIssues();
                 $listableBackup->existingBackupParts              = $listableBackup->isMultipartBackup ? $backupMetadata->getMultipartMetadata()->getBackupParts() : [];
                 $listableBackup->errorMessage                     = $this->backupValidator->getErrorMessage();
+                $listableBackup->indexPartSize                    = $backupMetadata->getIndexPartSize();
             } elseif ($file->getExtension() === 'sql') {
                 $listableBackup                      = new ListableBackup();
                 $listableBackup->isLegacy            = true;
@@ -137,7 +138,7 @@ class ListableBackupsCollection
                 $listableBackup->backupName          = $file->getBasename();
                 $listableBackup->downloadUrl         = $downloadUrl;
                 $listableBackup->name                = $file->getFilename();
-                $listableBackup->size                = size_format($file->getSize(), 2);
+                $listableBackup->size                = size_format($file->getSize(), 2); // @phpstan-ignore-line
                 $listableBackup->md5BaseName         = $md5Basename;
             } else {
                 continue;

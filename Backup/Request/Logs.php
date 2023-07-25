@@ -7,9 +7,11 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backend\Modules\SystemInfo;
 
 class Logs
 {
@@ -30,6 +32,10 @@ class Logs
 
     public function download()
     {
+        if (!current_user_can(WPStaging::make(Capabilities::class)->manageWPSTG())) {
+            return;
+        }
+
         if (!$this->nonce->requestHasValidNonce('wpstg_log_nonce')) {
             return;
         }
@@ -78,7 +84,8 @@ class Logs
         $logPath = $this->logsDir . $logFile;
 
         $this->downloadHeader($metaData->getName() . '_' . $id);
-
+        echo esc_html(wp_strip_all_tags(WPStaging::make(SystemInfo::class)->get("systemInfo")));
+        echo esc_html("\n\n" . str_repeat("-", 25) . "\n\n");
         print('WP STAGING Backup Log: ' . esc_html($id) . PHP_EOL . PHP_EOL);
         if (!empty($logFile) && file_exists($logPath)) {
             readfile($logPath);

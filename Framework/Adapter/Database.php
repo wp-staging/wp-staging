@@ -20,7 +20,7 @@ use SplObjectStorage;
 
 class Database
 {
-    /** @var InterfaceDatabase  */
+    /** @var MysqliAdapter */
     private $client;
 
     /** @var WpDbAdapter */
@@ -32,7 +32,7 @@ class Database
     /** @var string */
     private $productionPrefix;
 
-    /** @var string */
+    /** @var string|null */
     private $mysqlVersion;
 
     /**
@@ -46,14 +46,14 @@ class Database
             $this->wpdb = $wpDatabase;
         }
 
-        $this->mysqlVersion = null;
+        $this->mysqlVersion     = null;
         $this->productionPrefix = $wpdb->prefix;
-        $this->wpdba = new WpDbAdapter($this->wpdb);
-        $this->client = $this->findClient();
+        $this->wpdba            = new WpDbAdapter($this->wpdb);
+        $this->client           = $this->findClient();
     }
 
     /**
-     * @return InterfaceDatabase|null
+     * @return MysqliAdapter|null
      */
     public function getClient()
     {
@@ -194,7 +194,7 @@ class Database
     }
 
     /**
-     * @return InterfaceDatabaseClient
+     * @return MysqliAdapter|MysqlAdapter
      */
     private function findClient()
     {

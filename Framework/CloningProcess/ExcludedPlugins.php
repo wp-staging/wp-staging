@@ -2,8 +2,10 @@
 
 namespace WPStaging\Framework\CloningProcess;
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Staging\CloneOptions;
-use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 /**
  * Add here the list of excluded plugins to make sure code remain DRY
@@ -13,20 +15,32 @@ class ExcludedPlugins
     /**
      * @var string
      */
-    const EXCLUDED_PLUGINS_KEY = 'excluded_plugins';
+    const EXCLUDED_PLUGINS_KEY  = 'excluded_plugins';
 
     /**
      * @var array
      */
     private $excludedPlugins;
 
+    /** @var string */
+    private $pluginsPath;
+
+    /** @var string */
+    private $absPath;
+
     /**
      * Place below the list of plugins to exclude
      * If any of these below plugins are installed in user site they will be skipped during cloning
      * And a message will be shown to them about their exclusion
      */
-    public function __construct()
+    public function __construct(Directory $dirAdapter = null)
     {
+        if ($dirAdapter === null) {
+            $dirAdapter        = WPStaging::make(Directory::class);
+        }
+
+        $this->pluginsPath     = $dirAdapter->getPluginsDirectory();
+        $this->absPath         = $dirAdapter->getAbsPath();
         $this->excludedPlugins = [
             'wps-hide-login',
             'wp-super-cache',
@@ -53,14 +67,41 @@ class ExcludedPlugins
     }
 
     /**
+     * Get list of excluded plugins prefixed with {wpstg_p} identifier
+     *
+     * @return array
+     */
+    public function getPluginsToExcludeWithIdentifier()
+    {
+        return array_map(function ($plugin) {
+            return PathIdentifier::IDENTIFIER_PLUGINS . $plugin;
+        }, $this->excludedPlugins);
+    }
+
+    /**
      * Get list of excluded plugins with relative path to wp root
      *
      * @return array
      */
     public function getPluginsToExcludeWithRelativePath()
     {
-        return array_map(function ($plugin) {
-            return '/' . trailingslashit((new WpDefaultDirectories())->getRelativePluginPath()) . $plugin;
+        $relativePath = str_replace($this->absPath, '/', $this->pluginsPath);
+        $relativePath = trailingslashit($relativePath);
+        return array_map(function ($plugin) use ($relativePath) {
+            return $relativePath . $plugin;
+        }, $this->excludedPlugins);
+    }
+
+    /**
+     * Get list of excluded plugins with full path
+     *
+     * @return array
+     */
+    public function getPluginsToExcludeFullPath()
+    {
+        $pluginsPath = $this->pluginsPath;
+        return array_map(function ($plugin) use ($pluginsPath) {
+            return $pluginsPath . $plugin;
         }, $this->excludedPlugins);
     }
 
@@ -85,11 +126,13 @@ class ExcludedPlugins
             $installedPlugins = array_keys($installedPlugins);
         }
 
+        $relativePath = str_replace($this->absPath, '/', $this->pluginsPath);
+        $relativePath = trailingslashit($relativePath);
         // Remove all paths other than plugins not in installed plugins
-        $filteredExcludedPlugins = array_filter($filteredExcludedPlugins, function ($path) use ($installedPlugins) {
+        $filteredExcludedPlugins = array_filter($filteredExcludedPlugins, function ($path) use ($installedPlugins, $relativePath) {
             foreach ($installedPlugins as $plugin) {
-                $plugin = '/' . trailingslashit((new WpDefaultDirectories())->getRelativePluginPath()) . explode('/', $plugin)[0];
-                if (strpos($path, $plugin) !== false) {
+                $plugin = $relativePath . explode('/', $plugin)[0];
+                if (strpos($path, $plugin) === 0) {
                     return true;
                 }
             }
@@ -106,8 +149,8 @@ class ExcludedPlugins
          * /wp-content/plugins/single-file-plugin.php will return single-file-plugin.php
          * /wp-content/plugins/plugin-dir will return plugin-dir
          */
-        return array_map(function ($path) {
-            $plugin = str_replace('/' . trailingslashit((new WpDefaultDirectories())->getRelativePluginPath()), '', $path);
+        return array_map(function ($path) use ($relativePath) {
+            $plugin = str_replace($relativePath, '', $path);
             return explode('/', $plugin)[0];
         }, $filteredExcludedPlugins);
     }

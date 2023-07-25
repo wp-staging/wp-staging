@@ -11,11 +11,10 @@
           $('.wpstg_beta_notice').slideUp('slow');
           return true;
         }
-
         alert('Unexpected message received. This might mean the data was not saved ' + 'and you might see this message again');
       });
     });
   });
 
-}());
+})();
 //# sourceMappingURL=wpstg-admin-beta.js.map

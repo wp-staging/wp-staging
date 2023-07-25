@@ -51,6 +51,9 @@ class Directory
     /** @var string The directory that points to the ABSPATH folder */
     protected $absPath;
 
+    /** @var string The directory that points to main site uploads folder, usually wp-content/uploads */
+    protected $mainSiteUploadsDir;
+
     /** @var Filesystem */
     protected $filesystem;
 
@@ -133,7 +136,9 @@ class Directory
             return $this->pluginUploadsDirectory;
         }
 
-        $pluginUploadsDir = apply_filters('wpstg.directory.pluginUploadsDirectory', wp_normalize_path($this->getUploadsDirectory() . WPSTG_PLUGIN_DOMAIN));
+        /** This is deprecated filter and its value should always be replaced by newer filter */
+        $pluginUploadsDir = apply_filters('wpstg_get_upload_dir', wp_normalize_path($this->getUploadsDirectory() . WPSTG_PLUGIN_DOMAIN));
+        $pluginUploadsDir = apply_filters('wpstg.directory.pluginUploadsDirectory', $pluginUploadsDir);
 
         $this->pluginUploadsDirectory = trailingslashit($pluginUploadsDir);
 
@@ -157,6 +162,32 @@ class Directory
         $this->uploadDir = trim(trailingslashit(wp_normalize_path($uploadDir)));
 
         return $this->uploadDir;
+    }
+
+    /**
+     * If multisite, return the main site uploads directory
+     * If single site, return the uploads directory
+     * @return string
+     */
+    public function getMainSiteUploadsDirectory()
+    {
+        if (isset($this->mainSiteUploadsDir)) {
+            return $this->mainSiteUploadsDir;
+        }
+
+        $uploadsDir = $this->getUploadsDirectory();
+        if (!is_multisite() || is_main_site()) {
+            $this->mainSiteUploadsDir = $uploadsDir;
+
+            return $this->mainSiteUploadsDir;
+        }
+
+        switch_to_blog(1);
+        $uploadDir = wp_upload_dir(null, false, true)['basedir'];
+        $this->mainSiteUploadsDir = trim(trailingslashit(wp_normalize_path($uploadDir)));
+        restore_current_blog();
+
+        return $this->mainSiteUploadsDir;
     }
 
     /**
@@ -294,54 +325,15 @@ class Directory
     }
 
     /**
-     * Check whether the path exists in the list.
-     * If the isRelative flag is checked it will ignore ABSPATH (root path of WP Installation),
-     * from both the paths during checking
-     *
-     * @param string   $path        The path to check
-     * @param array    $list        List of path to check against
-     * @param boolean  $isRelative  Should the ABSPATH be ignored when checking. Default false
-     *
-     * @return boolean
-     */
-    public function isPathInPathsList($path, $list, $isRelative = false)
-    {
-        $path = $this->strUtils->sanitizeDirectorySeparator($path);
-        // remove ABSPATH and add leading slash if not present
-        if ($isRelative) {
-            $path = '/' . ltrim(str_replace($this->getAbsPath(), '', $path), '/');
-        }
-
-        foreach ($list as $pathItem) {
-            $pathItem = $this->strUtils->sanitizeDirectorySeparator($pathItem);
-            // remove ABSPATH and add leading slash if not present
-            if ($isRelative) {
-                $pathItem = '/' . ltrim(str_replace($this->getAbsPath(), '', $pathItem), '/');
-            }
-
-            if ($path === $pathItem) {
-                return true;
-            }
-
-            // Check whether directory a child of any excluded directories
-            if ($this->strUtils->startsWith($path, $pathItem . '/')) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    /**
      * Check whether the given path exists in WordPress Root,
      * Method will return true if exists in WordPress Root or is relative to WordPress root.
      *
      * @param string $path
-     * @return boolean
+     * @return bool
      */
     public function isPathInWpRoot($path)
     {
-        $path = $this->strUtils->sanitizeDirectorySeparator($path);
+        $path = $this->filesystem->normalizePath($path);
         $path = $this->getAbsPath() . str_replace($this->getAbsPath(), '', $path);
         return file_exists($path);
     }

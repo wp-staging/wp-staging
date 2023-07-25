@@ -50,6 +50,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->tableService           = $tableService;
+        // @phpstan-ignore-next-line
         $this->jobDataDto             = $jobDataDto;
         $this->diskWriteCheck         = $diskWriteCheck;
         $this->analyticsBackupRestore = $analyticsBackupRestore;

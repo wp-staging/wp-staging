@@ -81,9 +81,10 @@ class DatabaseImporter
 
     public function __construct(Database $database, JobDataDto $jobRestoreDataDto, QueryInserter $queryInserter, QueryCompatibility $queryCompatibility)
     {
-        $this->client            = $database->getClient();
-        $this->wpdb              = $database->getWpdba();
-        $this->database          = $database;
+        $this->client   = $database->getClient();
+        $this->wpdb     = $database->getWpdba();
+        $this->database = $database;
+        // @phpstan-ignore-next-line
         $this->jobRestoreDataDto = $jobRestoreDataDto;
 
         $this->queryInserter      = $queryInserter;
@@ -228,7 +229,7 @@ class DatabaseImporter
     }
 
     /**
-     * @return void
+     * @return bool
      * @throws ThresholdException
      */
     private function execute()
@@ -384,7 +385,7 @@ class DatabaseImporter
             }
 
             if ($result) {
-                return;
+                return true;
             }
 
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
@@ -403,6 +404,7 @@ class DatabaseImporter
 
             throw new RuntimeException(sprintf('Could not restore query. MySQL has returned the error code %d, with message "%s".', $errorNo, $errorMsg) . $additionalInfo);
         }
+        return $result;
     }
 
     protected function maybeShorterTableNameForDropTableQuery(&$query)

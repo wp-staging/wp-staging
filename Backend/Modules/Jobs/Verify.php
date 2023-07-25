@@ -51,8 +51,8 @@ class Verify extends JobExecutable
             $this->log("Verifying files...");
         }
 
-        $this->settings->batchSize = $this->settings->batchSize * 1000000;
-        $this->maxFilesPerRun = 1;
+        $this->settings->batchSize    = $this->settings->batchSize * 1000000;
+        $this->maxFilesPerRun         = 1;
         $this->options->verifiedFiles = 0;
     }
 
@@ -121,12 +121,13 @@ class Verify extends JobExecutable
     {
         $file = $this->cache->getCacheDir() . "files_to_verify." . $this->cache->getCacheExtension();
 
-        if (($this->verifyFiles = @file_get_contents($file)) === false) {
+        $fileContent = file_get_contents($file);
+        if ($fileContent === false) {
             $this->verifyFiles = [];
             return;
         }
 
-        $this->verifyFiles = explode(PHP_EOL, $this->verifyFiles);
+        $this->verifyFiles = explode(PHP_EOL, $fileContent);
     }
 
     /**
@@ -137,12 +138,13 @@ class Verify extends JobExecutable
     {
         $file = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
 
-        if (($this->verifyFiles = @file_get_contents($file)) === false) {
+        $fileContent = file_get_contents($file);
+        if ($fileContent === false) {
             $this->verifyFiles = [];
             return;
         }
 
-        $this->verifyFiles = explode(PHP_EOL, $this->verifyFiles);
+        $this->verifyFiles = explode(PHP_EOL, $fileContent);
     }
 
     /**
@@ -156,7 +158,7 @@ class Verify extends JobExecutable
         $filesVerified = array_diff($this->files, $this->verifyFiles);
 
         $fileName = $this->cache->getCacheDir() . "files_verified" . $this->cache->getCacheExtension();
-        $files = implode(PHP_EOL, $filesVerified);
+        $files    = implode(PHP_EOL, $filesVerified);
 
         return (@wpstg_put_contents($fileName, $files) !== false);
     }

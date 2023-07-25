@@ -27,6 +27,6 @@ class FrontendServiceProvider extends ServiceProvider
             }
         }
 
-        add_action($action, [$this->container->make(LoginAfterRestore::class), 'showMessage'], 10, 0);
+        add_action($action, [$this->container->make(LoginAfterRestore::class), 'showMessage'], 10, 0); // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
     }
 }

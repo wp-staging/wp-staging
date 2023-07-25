@@ -40,7 +40,7 @@ class FileObject extends SplFileObject
 
     /**
      * Lock File Handle for Windows
-     * @var resource
+     * @var resource|null
      */
     private $lockHandle = null;
 
