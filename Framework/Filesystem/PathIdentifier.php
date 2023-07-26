@@ -16,11 +16,25 @@ use WPStaging\Framework\Adapter\Directory;
 
 class PathIdentifier
 {
+    /** @var string */
+    const IDENTIFIER_ABSPATH    = 'wpstg_a_';
+
+    /** @var string */
     const IDENTIFIER_WP_CONTENT = 'wpstg_c_';
+
+    /** @var string */
     const IDENTIFIER_PLUGINS    = 'wpstg_p_';
+
+    /** @var string */
     const IDENTIFIER_THEMES     = 'wpstg_t_';
+
+    /** @var string */
     const IDENTIFIER_MUPLUGINS  = 'wpstg_m_';
+
+    /** @var string */
     const IDENTIFIER_UPLOADS    = 'wpstg_u_';
+
+    /** @var string */
     const IDENTIFIER_LANG       = 'wpstg_l_';
 
     /**
@@ -117,6 +131,12 @@ class PathIdentifier
             return $this->lastIdentifier . substr($path, strlen($this->directory->getWpContentDirectory()));
         }
 
+        if (strpos($path, $this->directory->getAbspath()) === 0) {
+            $this->lastIdentifier = self::IDENTIFIER_ABSPATH;
+
+            return $this->lastIdentifier . substr($path, strlen($this->directory->getAbspath()));
+        }
+
         // This should never happen on Backups, as we only scan the folders above explicitly and don't follow links.
         throw new \RuntimeException("Unknown entity type for path: $path");
     }
@@ -163,6 +183,8 @@ class PathIdentifier
     {
         // It is crucial that generic paths are placed last in this list. Eg: wp-content directory must be last.
         switch ($identifier) :
+            case self::IDENTIFIER_ABSPATH:
+                return $this->directory->getAbspath();
             case self::IDENTIFIER_UPLOADS:
                 return $this->directory->getUploadsDirectory();
             case self::IDENTIFIER_PLUGINS:

@@ -18,7 +18,7 @@ class RowsExporter extends AbstractExporter
 
     /**
      * Current table
-     * @var string
+     * @var int
      */
     protected $tableIndex = 0;
 
@@ -101,6 +101,7 @@ class RowsExporter extends AbstractExporter
     {
         parent::__construct($database);
 
+        // @phpstan-ignore-next-line
         $this->jobDataDto = $jobDataDto;
 
         $this->specialFields = ['user_roles', 'capabilities', 'user_level', 'dashboard_quick_press_last_post_id', 'user-settings', 'user-settings-time'];
@@ -285,7 +286,7 @@ class RowsExporter extends AbstractExporter
     }
 
     /**
-     * @return string|null
+     * @return string|null|int
      * @throws Exception
      */
     public function backup($jobId, LoggerInterface $logger)

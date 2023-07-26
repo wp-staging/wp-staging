@@ -63,7 +63,7 @@ class CleanupTmpFilesTask extends AbstractTask
                 ->delete($tmpRestoreDir);
         } catch (\Exception $e) {
             $this->logger->warning(sprintf(
-                __('%s: Could not cleanup path "%s". May be a permission issue?', 'wp-staging'),
+                '%s: Could not cleanup path "%s". May be a permission issue?',
                 static::getTaskTitle(),
                 $relativePathForLogging
             ));
@@ -74,7 +74,7 @@ class CleanupTmpFilesTask extends AbstractTask
         if ($deleted) {
             // Successfully deleted
             $this->logger->info(sprintf(
-                __('%s: Path "%s" successfully cleaned up.', 'wp-staging'),
+                '%s: Path "%s" successfully cleaned up.',
                 static::getTaskTitle(),
                 $relativePathForLogging
             ));
@@ -88,12 +88,12 @@ class CleanupTmpFilesTask extends AbstractTask
              * deleting it in the next request...
              */
             $response = $this->generateResponse(false);
-            $response->setStatus(false);
+            $response->setIsRunning(false);
 
             $this->logger->info(sprintf(
-                __('%s: Re-enqueing path %s for deletion, as it couldn\'t be deleted in a single request without
+                '%s: Re-enqueing path %s for deletion, as it couldn\'t be deleted in a single request without
                     hitting execution limits. If you see this message in a loop, PHP might not be able to delete
-                    this directory, so you might want to try to delete it manually.', 'wp-staging'),
+                    this directory, so you might want to try to delete it manually.',
                 static::getTaskTitle(),
                 $relativePathForLogging
             ));

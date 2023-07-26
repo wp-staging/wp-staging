@@ -2,7 +2,6 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use Countable;
 use DirectoryIterator;
 use Exception;
 use RuntimeException;
@@ -18,18 +17,17 @@ use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Backup\Exceptions\DiskNotWritableException;
-
-use function WPStaging\functions\debug_log;
+use WPStaging\Framework\Filesystem\PathChecker;
+use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 
 /**
  * Class Scan
  * @package WPStaging\Backend\Modules\Jobs
- *
- * @todo replace WPStaging::getWPpath() with ABSPATH - separate PR
  */
 class Scan extends Job
 {
-
     /**
      * CSS class name to use for WordPress core directories like wp-content, wp-admin, wp-includes
      * This doesn't contains class selector prefix
@@ -52,7 +50,7 @@ class Scan extends Job
     /** @var DirectoriesUtil */
     private $objDirectories;
 
-    /** @var string */
+    /** @var string|null */
     private $directoryToScanOnly;
 
     /**
@@ -68,7 +66,7 @@ class Scan extends Job
     /**
      * @var Directory
      */
-    private $dirAdapter;
+    protected $dirAdapter;
 
     /**
      * @var DiskWriteCheck
@@ -85,6 +83,33 @@ class Scan extends Job
      */
     private $infoIconPath;
 
+    /**
+     * @var string
+     */
+    private $basePath;
+
+    /**
+     * @var string
+     */
+    private $pathIdentifier;
+
+    /**
+     * @var TemplateEngine
+     */
+    private $templateEngine;
+
+    /** @var PathIdentifier */
+    private $pathAdapter;
+
+    /** @var PathChecker */
+    private $pathChecker;
+
+    /** @var string */
+    protected $absPath = ABSPATH;
+
+    /** @var string */
+    protected $wpContentPath = WP_CONTENT_DIR;
+
     public function __construct($directoryToScanOnly = null)
     {
         // Accept both the absolute path or relative path with respect to wp root
@@ -96,9 +121,12 @@ class Scan extends Job
 
         // TODO: inject using DI when available
         $this->strUtils       = new Strings();
+        $this->pathAdapter    = WPStaging::make(PathIdentifier::class);
+        $this->pathChecker    = WPStaging::make(PathChecker::class);
         $this->dirAdapter     = WPStaging::make(Directory::class);
         $this->diskWriteCheck = WPStaging::make(DiskWriteCheck::class);
         $this->sanitize       = WPStaging::make(Sanitize::class);
+        $this->templateEngine = WPStaging::make(TemplateEngine::class);
         parent::__construct();
     }
 
@@ -129,6 +157,38 @@ class Scan extends Job
     }
 
     /**
+     * @param string $directoryToScanOnly
+     */
+    public function setDirectoryToScanOnly($directoryToScanOnly)
+    {
+        $this->directoryToScanOnly = $directoryToScanOnly;
+    }
+
+    /** @param string $basePath */
+    public function setBasePath($basePath)
+    {
+        $this->basePath = rtrim(wp_normalize_path($basePath), '/');
+    }
+
+    /** @return string */
+    public function getBasePath()
+    {
+        return $this->basePath;
+    }
+
+    /** @param string $pathIdentifier */
+    public function setPathIdentifier($pathIdentifier)
+    {
+        $this->pathIdentifier = $pathIdentifier;
+    }
+
+    /** @return string */
+    public function getPathIdentifier()
+    {
+        return $this->pathIdentifier;
+    }
+
+    /**
      * Upon class initialization
      */
     protected function initialize()
@@ -138,14 +198,23 @@ class Scan extends Job
         $this->options->existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         $this->options->existingClones = is_array($this->options->existingClones) ? $this->options->existingClones : [];
 
-        if ($this->directoryToScanOnly !== null) {
-            $this->getDirectories($this->directoryToScanOnly);
+        $this->directories = [];
+        if (!empty($this->directoryToScanOnly)) {
             return;
         }
 
         $this->getTables();
 
-        $this->getDirectories();
+        $this->setBasePath($this->absPath);
+        $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
+        $this->getDirectories($this->absPath);
+
+        // If wp-content is outside ABSPATH, then scan it too
+        if ($this->isWpContentOutsideAbspath()) {
+            $this->setBasePath($this->wpContentPath);
+            $this->setPathIdentifier(PathIdentifier::IDENTIFIER_WP_CONTENT);
+            $this->getDirectories(dirname($this->wpContentPath));
+        }
 
         $this->installOptimizer();
     }
@@ -158,7 +227,7 @@ class Scan extends Job
     public function start()
     {
         // Basic Options
-        $this->options->root         = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, WPStaging::getWPpath());
+        $this->options->root         = str_replace(["\\", '/'], DIRECTORY_SEPARATOR, ABSPATH);
         $this->options->current      = null;
         $this->options->currentClone = $this->getCurrentClone();
 
@@ -230,8 +299,6 @@ class Scan extends Job
      * @param null|array                $directories to list
      *
      * @return string
-     *
-     * @todo create a template for ui
      */
     public function directoryListing($parentChecked = null, $forceDefault = false, $directories = null)
     {
@@ -246,8 +313,15 @@ class Scan extends Job
 
         if ($this->isUpdateOrResetJob()) {
             $currentClone        = json_decode(json_encode($this->options->currentClone));
-            $excludedDirectories = isset($currentClone->excludedDirectories) ? $currentClone->excludedDirectories : [];
             $extraDirectories    = isset($currentClone->extraDirectories) ? $currentClone->extraDirectories : [];
+            $excludedDirectories = isset($currentClone->excludedDirectories) ? array_map(function ($directory) {
+                // Exception is thrown when directory doesn't have identifier, so we will return directory as it is
+                try {
+                    return $this->pathAdapter->transformIdentifiableToPath($directory);
+                } catch (UnexpectedValueException $ex) {
+                    return $directory;
+                }
+            }, $currentClone->excludedDirectories) : [];
         }
 
         $output = '';
@@ -261,90 +335,7 @@ class Scan extends Job
             $data = reset($directory);
             unset($directory[key($directory)]);
 
-            $dataPath = isset($data["path"]) ? $data["path"] : '';
-            $dataSize = isset($data["size"]) ? $data["size"] : '';
-            $path     = $this->strUtils->sanitizeDirectorySeparator($dataPath);
-            $wpRoot   = $this->strUtils->sanitizeDirectorySeparator(ABSPATH);
-            $relPath  = str_replace($wpRoot, '', $path);
-            $dirPath  = '/' . $relPath;
-
-            // Check if directory name or directory path is not WP core folder
-            $isNotWPCoreDir = ($dirName !== 'wp-admin' &&
-                    $dirName !== 'wp-includes' &&
-                    $dirName !== 'wp-content') &&
-                    strpos($path, $wpRoot . "wp-admin") === false &&
-                    strpos($path, $wpRoot . "wp-includes") === false &&
-                    strpos($path, $wpRoot . "wp-content") === false;
-
-            // html class to differentiate between wp core and non core folders
-            $class = $isNotWPCoreDir ? self::WP_NON_CORE_DIR : self::WP_CORE_DIR;
-
-            // Make wp-includes and wp-admin directory items not expandable
-            $isNavigateable = 'true';
-            if ($this->strUtils->startsWith($path, $wpRoot . "wp-admin") !== false || $this->strUtils->startsWith($path, $wpRoot . "wp-includes") !== false) {
-                $isNavigateable = 'false';
-            }
-
-            $contentType = 'other';
-            if ($this->strUtils->startsWith($path, $wpRoot . "wp-content/plugins/") !== false) {
-                $contentType = 'plugin';
-            } elseif ($this->strUtils->startsWith($path, $wpRoot . "wp-content/themes/") !== false) {
-                $contentType = 'theme';
-            }
-
-            $isScanned = 'false';
-            if (
-                $path === $wpRoot . 'wp-content'
-                || $path === $wpRoot . 'wp-content/plugins'
-                || $path === $wpRoot . 'wp-content/themes'
-            ) {
-                $isScanned = 'true';
-            }
-
-            $output .= "<div class='wpstg-dir'>";
-            $output .= "<input type='checkbox' data-content-type='" . $contentType . "' class='wpstg-checkbox wpstg-checkbox--small wpstg-check-dir " . $class . "'";
-
-            // Decide if item checkbox is active or not
-            $shouldBeChecked = $parentChecked !== null ? $parentChecked : !$isNotWPCoreDir;
-            if (!$forceDefault && $this->isUpdateOrResetJob() && (!$this->isPathInDirectories($dirPath, $excludedDirectories))) {
-                $shouldBeChecked = true;
-            } elseif (!$forceDefault && $this->isUpdateOrResetJob()) {
-                $shouldBeChecked = false;
-            }
-
-            if (!$forceDefault && $this->isUpdateOrResetJob() && $class === self::WP_NON_CORE_DIR && !$this->isPathInDirectories($relPath, $extraDirectories)) {
-                $shouldBeChecked = false;
-            }
-
-            if ($shouldBeChecked && ($parentChecked !== false)) {
-                $output .= " checked";
-            }
-
-            $output .= " name='selectedDirectories[]' value='{$relPath}' data-scanned='{$isScanned}' data-navigateable='{$isNavigateable}'>";
-
-            $output .= "<a href='#' class='wpstg-expand-dirs ";
-
-            $isDisabledDir = $dirName === 'wp-admin' || $dirName === 'wp-includes';
-
-            // Set menu item to 'disable'
-            if ($isNotWPCoreDir || $isDisabledDir) {
-                $output .= " disabled";
-            }
-
-            $output .= "'>{$dirName}";
-            $output .= "</a>";
-            $output .= ($this->gifLoaderPath !== '' && $isNavigateable === 'true') ? "<img src='{$this->gifLoaderPath}' class='wpstg-is-dir-loading' alt='loading' />" : "";
-            $output .= "<span class='wpstg-size-info'>{$this->utilsMath->formatSize( $dataSize )}</span>";
-            $output .= isset($this->settings->debugMode) ? "<span class='wpstg-size-info'> {$dataPath}</span>" : "";
-
-            if ($isScanned === 'true') {
-                $childDirectories = $this->getDirectories($path, $return = true);
-                $output .= '<div class="wpstg-dir wpstg-subdir" style="display: none;">';
-                $output .= $this->directoryListing($parentChecked, $forceDefault, $childDirectories);
-                $output .= '</div>';
-            }
-
-            $output .= "</div>";
+            $output .= $this->getDirectoryHtml($data['dirName'], $data, $excludedDirectories, $extraDirectories, $parentChecked, $forceDefault);
         }
 
         return $output;
@@ -366,7 +357,7 @@ class Scan extends Job
 
         $size = 0;
         // Scan WP Root path for size (only files)
-        $size += $this->getDirectorySizeExcludingSubdirs(ABSPATH);
+        $size += $this->getDirectorySizeExcludingSubdirs($this->absPath);
         // Scan selected directories for size (wp-core)
         foreach ($selectedDirectories as $directory) {
             if ($this->isPathInDirectories($directory, $excludedDirectories)) {
@@ -379,13 +370,13 @@ class Scan extends Job
         if (!empty($extraDirectories) && $extraDirectories !== '') {
             $extraDirectories = wpstg_urldecode(explode(ScanConst::DIRECTORIES_SEPARATOR, $extraDirectories));
             foreach ($extraDirectories as $directory) {
-                $size += $this->getDirectorySizeInclSubdirs(ABSPATH . $directory, $excludedDirectories);
+                $size += $this->getDirectorySizeInclSubdirs($this->absPath . $directory, $excludedDirectories);
             }
         }
 
         $errorMessage = null;
         try {
-            $this->diskWriteCheck->checkPathCanStoreEnoughBytes(ABSPATH, $size);
+            $this->diskWriteCheck->checkPathCanStoreEnoughBytes($this->absPath, $size);
         } catch (RuntimeException $ex) {
             $errorMessage = $ex->getMessage();
         } catch (DiskNotWritableException $ex) {
@@ -449,7 +440,7 @@ class Scan extends Job
      *
      * @return void|array            Depend upon value of $shouldReturn
      */
-    protected function getDirectories($dirPath = ABSPATH, $shouldReturn = false)
+    public function getDirectories($dirPath = ABSPATH, $shouldReturn = false)
     {
         if (!is_dir($dirPath)) {
             return;
@@ -482,21 +473,25 @@ class Scan extends Job
         $result = [];
 
         foreach ($directories as $directory) {
+            if ($directory->isDot() || $directory->isFile()) {
+                continue;
+            }
+
             // Not a valid directory
             if (($path = $this->getPath($directory)) === false) {
                 continue;
             }
 
-            if ($directory->isDot()) {
-                continue;
-            }
-
-            $fullPath = WPStaging::getWPpath() . $path;
+            $fullPath = trailingslashit($this->getBasePath()) . ltrim($path, '/');
             $size     = $this->getDirectorySize($fullPath);
 
+            // If filename is int, then it is treated as a numeric index in key and start with 0
             $result[$directory->getFilename()]['metaData'] = [
-                "size" => $size,
-                "path" => $fullPath,
+                'dirName'  => $directory->getFilename(),
+                "size"     => $size,
+                "path"     => $fullPath,
+                "basePath" => $this->getBasePath(),
+                "prefix"   => $this->getPathIdentifier()
             ];
         }
 
@@ -504,28 +499,32 @@ class Scan extends Job
             return $result;
         }
 
-        $this->directories = $result;
+        $this->directories = array_merge($this->directories, $result);
     }
 
     /**
      * Get Path from $directory
-     * @param string
+     * @param DirectoryIterator $directory
      * @return bool|string
      */
     protected function getPath($directory)
     {
+        $basePath = $this->getBasePath();
+        $realPath = WPStaging::make('WPSTG_ALLOW_VFS') === true && strpos($directory->getPathname(), 'vfs://') === 0 ? $directory->getPathname() : $directory->getRealPath();
+        $realPath = wp_normalize_path($realPath);
+
         /*
          * Do not follow root path like src/web/..
          * This must be done before \SplFileInfo->isDir() is used!
          * Prevents open base dir restriction fatal errors
          */
-        if (strpos($directory->getRealPath(), WPStaging::getWPpath()) !== 0) {
+        if (strpos($realPath, $basePath) !== 0) {
             return false;
         }
 
-        $path = str_replace(WPStaging::getWPpath(), '', $directory->getRealPath());
+        $path = str_replace($basePath, '', $realPath);
         // Using strpos() for symbolic links as they could create nasty stuff in nix stuff for directory structures
-        if (!$directory->isDir() || strlen($path) < 1) {
+        if (!$directory->isDir() || (strlen($path) < 1 && $this->pathIdentifier !== PathIdentifier::IDENTIFIER_WP_CONTENT)) {
             return false;
         }
 
@@ -533,41 +532,88 @@ class Scan extends Job
     }
 
     /**
-     * Organizes $this->directories
-     * @param string $path
+     * @param string $dirName
+     * @param array  $dirInfo contains information about the directory
+     * @param array  $excludedDirectories
+     * @param array  $extraDirectories
+     * @param bool   $parentChecked
+     * @param bool   $forceDefault
+     * @return string
      */
-    protected function handleDirectory($path)
+    protected function getDirectoryHtml($dirName, $dirInfo, $excludedDirectories, $extraDirectories, $parentChecked = false, $forceDefault = false)
     {
-        $directoryArray = explode(DIRECTORY_SEPARATOR, $path);
-        $total          = is_array($directoryArray) || $directoryArray instanceof Countable ? count($directoryArray) : 0;
+        $data     = $dirInfo;
+        $dataPath = isset($data["path"]) ? $data["path"] : '';
+        $dataSize = isset($data["size"]) ? $data["size"] : '';
+        $path     = wp_normalize_path($dataPath);
+        $basePath = isset($data["basePath"]) ? $data["basePath"] : wp_normalize_path($this->absPath);
+        $prefix   = isset($data["prefix"]) ? $data["prefix"] : PathIdentifier::IDENTIFIER_ABSPATH;
+        $relPath  = str_replace($basePath, '', $path);
+        $relPath  = ltrim($relPath, '/');
 
-        if ($total < 1) {
-            return;
+        // Check if directory name or directory path is not WP core folder
+        $isNotWPCoreDir = $this->isNonWpCoreDirectory($dirName, $path);
+
+        $class   = $isNotWPCoreDir ? self::WP_NON_CORE_DIR : self::WP_CORE_DIR;
+        $dirType = 'other';
+
+        if ($this->strUtils->startsWith($path, $this->dirAdapter->getPluginsDirectory()) !== false) {
+            $pluginPath = $this->strUtils->strReplaceFirst($this->dirAdapter->getPluginsDirectory(), '', $path);
+            $dirType    = strpos($pluginPath, '/') === false ? 'plugin' : 'other';
+        } elseif ($this->strUtils->startsWith($path, $this->dirAdapter->getActiveThemeParentDirectory()) !== false) {
+            $themePath = $this->strUtils->strReplaceFirst($this->dirAdapter->getActiveThemeParentDirectory(), '', $path);
+            $dirType   = strpos($themePath, '/') === false ? 'theme' : 'other';
         }
 
-        $total        = $total - 1;
-        $currentArray = &$this->directories;
-
-        for ($i = 0; $i <= $total; $i++) {
-            if (!isset($currentArray[$directoryArray[$i]])) {
-                $currentArray[$directoryArray[$i]] = [];
-            }
-
-            $currentArray = &$currentArray[$directoryArray[$i]];
-
-            // Attach meta data to the end
-            if ($i < $total) {
-                continue;
-            }
-
-            $fullPath = WPStaging::getWPpath() . $path;
-            $size     = $this->getDirectorySize($fullPath);
-
-            $currentArray["metaData"] = [
-                "size" => $size,
-                "path" => WPStaging::getWPpath() . $path,
-            ];
+        $isScanned = 'false';
+        if (
+            trailingslashit($path) === $this->dirAdapter->getWpContentDirectory()
+            || trailingslashit($path) === $this->dirAdapter->getPluginsDirectory()
+            || trailingslashit($path) === $this->dirAdapter->getActiveThemeParentDirectory()
+        ) {
+            $isScanned = 'true';
         }
+
+        // Make wp-includes and wp-admin directory items not expandable
+        $isNavigateable = 'true';
+        if ($this->strUtils->startsWith($path, $basePath . "/wp-admin") !== false || $this->strUtils->startsWith($path, $basePath . "/wp-includes") !== false) {
+            $isNavigateable = 'false';
+        }
+
+        // Decide if item checkbox is active or not
+        $shouldBeChecked = $parentChecked !== null ? $parentChecked : !$isNotWPCoreDir;
+        if (!$forceDefault && $this->isUpdateOrResetJob() && (!$this->isPathInDirectories($path, $excludedDirectories))) {
+            $shouldBeChecked = true;
+        } elseif (!$forceDefault && $this->isUpdateOrResetJob()) {
+            $shouldBeChecked = false;
+        }
+
+        if (!$forceDefault && $this->isUpdateOrResetJob() && $class === self::WP_NON_CORE_DIR && !$this->isPathInDirectories($path, $extraDirectories)) {
+            $shouldBeChecked = false;
+        }
+
+        $isDisabledDir = $dirName === 'wp-admin' || $dirName === 'wp-includes';
+
+        return $this->templateEngine->render('Backend/views/clone/ajax/directory-navigation.php', [
+            'scan'    => $this,
+            'prefix'  => $prefix,
+            'relPath' => $relPath,
+            'class'   => $class,
+            'dirType' => $dirType,
+            'isScanned'         => $isScanned,
+            'isNavigateable'    => $isNavigateable,
+            'shouldBeChecked'   => $shouldBeChecked,
+            'parentChecked'     => $parentChecked,
+            'directoryDisabled' => $isNotWPCoreDir || $isDisabledDir,
+            'dirName'       => $dirName,
+            'gifLoaderPath' => $this->gifLoaderPath,
+            'formattedSize' => $this->utilsMath->formatSize($dataSize),
+            'isDebugMode'   => $this->utilsMath->formatSize($dataSize),
+            'dataPath'      => $dataPath,
+            'basePath'      => $basePath,
+            'forceDefault'  => $forceDefault,
+            'dirPath'       => $path,
+        ]);
     }
 
     /**
@@ -578,7 +624,7 @@ class Scan extends Job
     protected function getDirectorySize($path)
     {
         if (!isset($this->settings->checkDirectorySize) || $this->settings->checkDirectorySize !== '1') {
-            return;
+            return null;
         }
 
         return $this->objDirectories->size($path);
@@ -629,23 +675,29 @@ class Scan extends Job
      * @param string $path
      * @param array $directories List of directories relative to ABSPATH with leading slash
      *
-     * @return boolean
+     * @return bool
      */
     protected function isPathInDirectories($path, $directories)
     {
-        return $this->dirAdapter->isPathInPathsList($path, $directories, true);
+        return $this->pathChecker->isPathInPathsList($path, $directories, true);
     }
 
     /**
      * Is the current main job UPDATE or RESET
      *
-     * @return boolean
+     * @return bool
      */
     protected function isUpdateOrResetJob()
     {
         return isset($this->options->mainJob) && ($this->options->mainJob === 'updating' || $this->options->mainJob === 'resetting');
     }
 
+    /**
+     * Get clone from $_POST['clone'] and set it as current clone
+     * If clone is not found, then set current clone to null
+     *
+     * @return array|null
+     */
     protected function getCurrentClone()
     {
         $cloneID = isset($_POST["clone"]) ? $this->sanitize->sanitizeString($_POST['clone']) : '';
@@ -655,6 +707,54 @@ class Scan extends Job
             return $this->options->existingClones[$this->options->current];
         }
 
-        return;
+        return null;
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isWpContentOutsideAbspath()
+    {
+        /** @var SiteInfo $siteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
+        return $siteInfo->isWpContentOutsideAbspath();
+    }
+
+    /**
+     * Check if directory name or directory path is not WP core folder
+     *
+     * @param string $dirname
+     * @param string $path
+     * @return bool
+     */
+    protected function isNonWpCoreDirectory($dirname, $path)
+    {
+        $coreDirectories = [
+            'wp-admin',
+            'wp-content',
+            'wp-includes'
+        ];
+
+        foreach ($coreDirectories as $coreDirectory) {
+            if ($dirname === $coreDirectory) {
+                return false;
+            }
+        }
+
+        $wpDirectories = [
+            $this->dirAdapter->getWpContentDirectory(),
+            $this->dirAdapter->getPluginsDirectory(),
+            $this->dirAdapter->getActiveThemeParentDirectory(),
+            $this->dirAdapter->getUploadsDirectory(),
+            $this->dirAdapter->getMuPluginsDirectory()
+        ];
+
+        foreach ($wpDirectories as $wpDirectory) {
+            if (strpos($path, $wpDirectory) !== false) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

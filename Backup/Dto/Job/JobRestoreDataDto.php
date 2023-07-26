@@ -10,7 +10,7 @@ class JobRestoreDataDto extends JobDataDto
     /** @var string */
     private $file;
 
-    /** @var BackupMetadata */
+    /** @var BackupMetadata|null */
     private $backupMetadata;
 
     /** @var string */
@@ -81,6 +81,16 @@ class JobRestoreDataDto extends JobDataDto
 
     /** @var int */
     private $totalTablesRenamed = 0;
+
+    /**
+     * Store checksum of some important files in the form of key value format i.e. file path => checksum
+     *
+     * @var array
+     */
+    private $filesChecksum = [];
+
+    /** @var bool */
+    private $objectCacheSkipped = false;
 
     /**
      * @return string The .wpstg backup file being restored.
@@ -509,5 +519,54 @@ class JobRestoreDataDto extends JobDataDto
     public function setTotalTablesRenamed($totalTablesRenamed)
     {
         $this->totalTablesRenamed = $totalTablesRenamed;
+    }
+
+    /**
+     * @return array
+     */
+    public function getFilesChecksum()
+    {
+        return $this->filesChecksum;
+    }
+
+    /**
+     * @param array $filesChecksum
+     */
+    public function setFilesChecksum($filesChecksum)
+    {
+        $this->filesChecksum = $filesChecksum;
+    }
+
+    /**
+     * @param string $filePath
+     * @param string $checksum
+     */
+    public function addFileChecksum($filePath, $checksum)
+    {
+        $this->filesChecksum[$filePath] = $checksum;
+    }
+
+    /**
+     * @param string $filePath
+     */
+    public function getFileChecksum($filePath)
+    {
+        return $this->filesChecksum[$filePath];
+    }
+
+    /**
+     * @return bool
+     */
+    public function getObjectCacheSkipped()
+    {
+        return $this->objectCacheSkipped;
+    }
+
+    /**
+     * @param bool $objectCacheSkipped
+     */
+    public function setObjectCacheSkipped($objectCacheSkipped)
+    {
+        $this->objectCacheSkipped = $objectCacheSkipped;
     }
 }

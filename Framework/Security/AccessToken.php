@@ -32,9 +32,9 @@ class AccessToken
     }
 
     /**
-     * @return string The new access token
-     * @return bool False if user has no cap to generate a new token,
-     *              or the generated token does not comply with the standards.
+     * @return string       The new access token
+     * @return string|bool  Returns False if user has no cap to generate a new token,
+     *                      or the generated token does not comply with the standards.
      */
     public function generateNewToken()
     {
@@ -85,8 +85,8 @@ class AccessToken
     /**
      * Gets the token. Requires user to be logged-in.
      *
-     * @return string The access token or an empty string if no token exists.
-     * @return bool False if user has no cap to read the token.
+     * @return string       The access token or an empty string if no token exists.
+     * @return string|bool  Returns False if user has no cap to read the token.
      */
     public function getToken()
     {

@@ -239,8 +239,8 @@ class SystemInfo
 
         $output .= PHP_EOL . "-- Google Drive Settings" . PHP_EOL;
 
-        $googleDriveSettings = (object)get_option('wpstg_googledrive', []);
-        if (!empty((array)$googleDriveSettings)) {
+        $googleDriveSettings = (array)get_option('wpstg_googledrive', []);
+        if (!empty($googleDriveSettings)) {
             foreach ($googleDriveSettings as $key => $value) {
                 $output .= $this->info($key, empty($value) ? '[not set]' : $this->removeCredentials($key, $value));
             }
@@ -248,8 +248,8 @@ class SystemInfo
 
         $output .= PHP_EOL . "-- Amazon S3 Settings" . PHP_EOL;
 
-        $amazonS3Settings = (object)get_option('wpstg_amazons3', []);
-        if (!empty((array)$amazonS3Settings)) {
+        $amazonS3Settings = (array)get_option('wpstg_amazons3', []);
+        if (!empty($amazonS3Settings)) {
             foreach ($amazonS3Settings as $key => $value) {
                 $output .= $this->info($key, empty($value) ? '[not set]' : $this->removeCredentials($key, $value));
             }
@@ -257,32 +257,37 @@ class SystemInfo
 
         $output .= PHP_EOL . "-- DigitalOcean Spaces Settings" . PHP_EOL;
 
-        $digitalOceanSpacesSettings = (object)get_option('wpstg_digitalocean-spaces', []);
-        foreach ($digitalOceanSpacesSettings as $key => $value) {
-            $output .= $this->info($key, empty($value) ? 'not set' : $this->removeCredentials($key, $value));
+        $digitalOceanSpacesSettings = (array)get_option('wpstg_digitalocean-spaces', []);
+        if (!empty($digitalOceanSpacesSettings)) {
+            foreach ($digitalOceanSpacesSettings as $key => $value) {
+                $output .= $this->info($key, empty($value) ? 'not set' : $this->removeCredentials($key, $value));
+            }
         }
 
         $output .= PHP_EOL . "-- Wasabi Settings" . PHP_EOL;
 
-        $wasabiSettings = (object)get_option('wpstg_wasabi-s3', []);
-        foreach ($wasabiSettings as $key => $value) {
-            $output .= $this->info($key, empty($value) ? 'not set' : $this->removeCredentials($key, $value));
+        $wasabiSettings = (array)get_option('wpstg_wasabi-s3', []);
+        if (!empty($wasabiSettings)) {
+            foreach ($wasabiSettings as $key => $value) {
+                $output .= $this->info($key, empty($value) ? 'not set' : $this->removeCredentials($key, $value));
+            }
         }
-
         $output .= PHP_EOL . "-- Generic S3 Settings" . PHP_EOL;
 
-        $genericS3Settings = (object)get_option('wpstg_generic-s3', []);
-        foreach ($genericS3Settings as $key => $value) {
-            $output .= $this->info($key, empty($value) ? 'not set' : $this->removeCredentials($key, $value));
+        $genericS3Settings = (array)get_option('wpstg_generic-s3', []);
+        if (!empty($genericS3Settings)) {
+            foreach ($genericS3Settings as $key => $value) {
+                $output .= $this->info($key, empty($value) ? 'not set' : $this->removeCredentials($key, $value));
+            }
         }
-
         $output .= PHP_EOL . "-- SFTP Settings" . PHP_EOL;
 
-        $sftpSettings = (object)get_option('wpstg_sftp', []);
-        foreach ($sftpSettings as $key => $value) {
-            $output .= $this->info($key, empty($value) ? '[not set]' : $this->removeCredentials($key, $value));
+        $sftpSettings = (array)get_option('wpstg_sftp', []);
+        if (!empty($sftpSettings)) {
+            foreach ($sftpSettings as $key => $value) {
+                $output .= $this->info($key, empty($value) ? '[not set]' : $this->removeCredentials($key, $value));
+            }
         }
-
         $output .= PHP_EOL . "-- Existing Staging Sites" . PHP_EOL . PHP_EOL;
 
         // Clones data version > 2.x

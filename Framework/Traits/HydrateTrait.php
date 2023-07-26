@@ -10,7 +10,10 @@ use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\DateTimeAdapter;
+
+use function WPStaging\functions\debug_log;
 
 trait HydrateTrait
 {
@@ -27,11 +30,20 @@ trait HydrateTrait
             try {
                 $this->hydrateByMethod('set' . ucfirst($key), $value);
             } catch (Exception $e) {
-                \WPStaging\functions\debug_log($e->getMessage());
+                $this->debugLog($e->getMessage());
             }
         }
 
         return $this;
+    }
+
+    protected function debugLog($message)
+    {
+        if (WPStaging::areLogsSilenced()) {
+            return;
+        }
+
+        debug_log($message);
     }
 
     /**

@@ -188,4 +188,27 @@ class SiteInfo
     {
         return $this->errors;
     }
+
+    /**
+     * @return bool
+     */
+    public function isWpContentOutsideAbspath()
+    {
+        $wpContentDir = wp_normalize_path(WP_CONTENT_DIR);
+        $abspath      = wp_normalize_path(ABSPATH);
+
+        return !(strpos($wpContentDir, $abspath) === 0);
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFlywheel()
+    {
+        if (!$this->isWpContentOutsideAbspath()) {
+            return false;
+        }
+
+        return file_exists(trailingslashit(wp_normalize_path(ABSPATH)) . '.fw-config.php');
+    }
 }

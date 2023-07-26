@@ -60,7 +60,7 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
 
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Port', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="number" name="port" value="<?php echo esc_attr($port); ?>" style="max-width: 60px" />
+                    <input class="wpstg-form-control wpstg-sftp-port-input" type="number" name="port" value="<?php echo esc_attr($port); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
@@ -86,7 +86,7 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
 
                 <fieldset class="wpstg-fieldset only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Key', 'wp-staging') ?></label>
-                    <textarea class="wpstg-form-control" name="key" style="width:350px;height:200px;"><?php echo esc_textarea($privateKey); ?></textarea>
+                    <textarea class="wpstg-form-control wpstg-sftp-key-input" name="key"><?php echo esc_textarea($privateKey); ?></textarea>
                     <p><?php esc_html_e("PKCS1 (PEM header: BEGIN RSA PRIVATE KEY), XML and PuTTY format keys are accepted.", 'wp-staging') ?></p>
                 </fieldset>
 
@@ -95,6 +95,13 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
                     <input class="wpstg-form-control" type="password" name="passphrase" value="<?php echo esc_attr($passphrase); ?>" />
                     <p><?php esc_html_e("Passphrase for the key.", 'wp-staging') ?></p>
                 </fieldset>
+
+                <fieldset class="wpstg-fieldset">
+                    <label><?php esc_html_e('Backups Directory Path', 'wp-staging') ?></label>
+                    <input class="wpstg-form-control wpstg-sftp-location-input" type="text" placeholder="/backups/example.com/" name="location" value="<?php echo esc_attr($location); ?>" />
+                    <br>
+                    <?php esc_html_e("This directory must already exist and be an absolute path.", 'wp-staging') ?>
+                </fieldset>
             </div>
             <button type="button" id="wpstg-btn-provider-test-connection" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Test Connection", "wp-staging") ?></button>
 
@@ -102,15 +109,7 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
             <fieldset class="wpstg-fieldset">
                 <label><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
-                <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
-            </fieldset>
-
-            <fieldset class="wpstg-fieldset">
-                <label><?php esc_html_e('Directory Path', 'wp-staging') ?></label>
-                <input class="wpstg-form-control" style="min-width:300px;" type="text" placeholder="/backups/example.com/" name="location" value="<?php echo esc_attr($location); ?>" />
-                <br><br><?php esc_html_e("Add the directory to which you want to upload the backup files.", 'wp-staging') ?>
-                <br>
-                <?php esc_html_e("This directory must already exist and be relative to the FTP user's home directory.", 'wp-staging') ?>
+                <input class="wpstg-form-control wpstg-sftp-port-input" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" />
             </fieldset>
 
             <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>

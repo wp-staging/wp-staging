@@ -23,7 +23,7 @@ class MultipartMetadata implements JsonSerializable
     /** @var int total files in this part */
     private $totalFiles;
 
-    /** @var int The backup file size in bytes. */
+    /** @var int|string The backup file size in bytes. Default is empty string. */
     private $partSize = '';
 
     /** @var array List of plugins backup parts with their info */
@@ -198,7 +198,7 @@ class MultipartMetadata implements JsonSerializable
      */
     public function pushBackupPart($part, $fileInfo)
     {
-        $partName = $part . 'Parts';
+        $partName            = $part . 'Parts';
         $this->{$partName}[] = $fileInfo;
     }
 

@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\CloningProcess;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\CloningProcess\Data\DataCloningDto;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Urls;
@@ -43,12 +44,16 @@ abstract class Job extends CloningProcess
      */
     protected $tables;
 
+    /** @var array */
+    protected $steps = [];
+
     /**
      * Initialize
      */
     public function initialize()
     {
         $this->initializeDbObjects();
+        $this->initializeSteps();
 
         $this->prefix = $this->options->prefix;
 
@@ -76,6 +81,8 @@ abstract class Job extends CloningProcess
 
         return (object)$this->response;
     }
+
+    abstract protected function initializeSteps();
 
     /**
      * @param int $stepNumber
@@ -128,9 +135,13 @@ abstract class Job extends CloningProcess
             return false;
         }
 
-        // Execute step
-        $stepMethodName = "step" . $this->options->currentStep;
-        if (!$this->{$stepMethodName}()) {
+        $step = $this->steps[$this->options->currentStep];
+
+        /** @var CloningService $stepService */
+        $stepService = WPStaging::make($step);
+        $stepService->setDataCloningDto($this->getCloningDto($this->options->currentStep));
+
+        if (!$stepService->execute()) {
             $this->prepareResponse(false, false);
             return false;
         }
@@ -151,7 +162,7 @@ abstract class Job extends CloningProcess
         return
             !$this->isRunning() ||
             $this->options->currentStep > $this->options->totalSteps ||
-            !method_exists($this, "step" . $this->options->currentStep);
+            $this->options->currentStep >= count($this->steps);
     }
 
     /**

@@ -69,7 +69,11 @@ class Compressor
     /** @var bool */
     private $isLocalBackup = false;
 
+    /** @var int */
     protected $bytesWrittenInThisRequest = 0;
+
+    /** @var string **/
+    private $tempFilePartsSize;
 
     // TODO telescoped
     public function __construct(BufferedCache $cacheIndex, BufferedCache $tempBackup, PathIdentifier $pathIdentifier, JobDataDto $jobDataDto, CompressorDto $compressorDto, PhpAdapter $phpAdapter, MultipartSplitInterface $multipartSplit)
@@ -129,8 +133,11 @@ class Compressor
         $this->tempBackup->setFilename('temp_wpstg_backup_' . $postFix);
         $this->tempBackup->setLifetime(DAY_IN_SECONDS);
 
-        $this->tempBackupIndex->setFilename('temp_backup_index_' . $postFix);
+        $tempBackupIndexFilePrefix = 'temp_backup_index_';
+        $this->tempBackupIndex->setFilename($tempBackupIndexFilePrefix . $postFix);
         $this->tempBackupIndex->setLifetime(DAY_IN_SECONDS);
+
+        $this->setTmpIndexPartSizeFile($tempBackupIndexFilePrefix);
     }
 
     /**
@@ -189,7 +196,7 @@ class Compressor
         $resource = @fopen($fullFilePath, 'rb');
         if (!$resource) {
             debug_log("appendFileToBackup(): Can't open file {$fullFilePath} for reading");
-            return;
+            return null;
         }
 
         $fileStats = fstat($resource);
@@ -235,7 +242,7 @@ class Compressor
      * @param int    $sizeBeforeAddingIndex
      * @param string $category
      * @param string $partName
-     * @param string $categoryIndex
+     * @param int    $categoryIndex
      */
     public function generateBackupMetadataForBackupPart($sizeBeforeAddingIndex, $category, $partName, $categoryIndex)
     {
@@ -269,6 +276,8 @@ class Compressor
             $this->multipartSplit->updateMultipartMetadata($this->jobDataDto, $backupMetadata, $this->category, $this->categoryIndex);
         }
 
+        $backupMetadata->setIndexPartSize($this->getIndexPartSize());
+
         $this->tempBackup->append(json_encode($backupMetadata));
 
         return $this->renameBackup($finalFileNameOnRename);
@@ -280,16 +289,16 @@ class Compressor
     public function getFinalizeBackupInfo()
     {
         return [
-            'category'    => $this->category,
-            'index'       => $this->categoryIndex,
-            'filePath'    => $this->tempBackup->getFilePath(),
-            'destination' => $this->getDestinationPath(),
-            'status'      => 'Pending',
+            'category'              => $this->category,
+            'index'                 => $this->categoryIndex,
+            'filePath'              => $this->tempBackup->getFilePath(),
+            'destination'           => $this->getDestinationPath(),
+            'status'                => 'Pending',
             'sizeBeforeAddingIndex' => 0
         ];
     }
 
-    /** @return int */
+    /** @return int|null */
     public function addFileIndex()
     {
         clearstatcache();
@@ -302,7 +311,7 @@ class Compressor
 
         //debug_log('[Add File Index] Resource index found! Index: ' . $this->tempBackupIndex->getFilePath());
 
-        $lastLine = $this->tempBackup->readLastLine();
+        $lastLine     = $this->tempBackup->readLastLine();
         $writtenBytes = $this->compressorDto->getWrittenBytesTotal();
         if ($lastLine !== PHP_EOL && $writtenBytes === 0) {
             // See if this is really needed, removing an extra empty line should not impact backup performance
@@ -414,7 +423,7 @@ class Compressor
      * Get delay in milliseconds for retry according to retry number
      *
      * @param int $retry
-     * @return int
+     * @return float
      */
     protected function getDelayForRetry($retry)
     {
@@ -469,6 +478,8 @@ class Compressor
         $info             = $identifiablePath . '|' . $start . ':' . $writtenBytesTotal;
         $bytesWritten     = $this->tempBackupIndex->append($info);
         $this->compressorDto->setIndexPositionCreated(true);
+
+        $this->addIndexPartSize($identifiablePath, $writtenBytesTotal);
 
         /**
          * We require JobDataDto in the constructor because it is wired in the DI container
@@ -527,6 +538,8 @@ class Compressor
         $bytesWritten     = $this->tempBackupIndex->append($info);
         $this->compressorDto->setIndexPositionCreated(true, $this->category, $this->categoryIndex);
 
+        $this->addIndexPartSize($identifiablePath, $writtenBytesTotal);
+
         return $bytesWritten;
     }
 
@@ -550,5 +563,75 @@ class Compressor
             // Re-throw for readability
             throw $e;
         }
+    }
+
+    /**
+     * @param string $identifiablePath
+     * @param int $writtenBytesTotal
+     * @return int|false
+     */
+    private function addIndexPartSize($identifiablePath, $writtenBytesTotal)
+    {
+        $collectPartsize = $this->getIndexPartSize();
+
+        $partName = 'unknownSize';
+        switch ($identifiablePath) {
+            case ($this->pathIdentifier::IDENTIFIER_WP_CONTENT === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_WP_CONTENT))):
+                $partName = 'wpcontentSize';
+                break;
+            case ($this->pathIdentifier::IDENTIFIER_PLUGINS === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_PLUGINS))):
+                $partName = 'pluginsSize';
+                break;
+            case ($this->pathIdentifier::IDENTIFIER_THEMES === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_THEMES))):
+                $partName = 'themesSize';
+                break;
+            case ($this->pathIdentifier::IDENTIFIER_MUPLUGINS === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_MUPLUGINS))):
+                $partName = 'mupluginsSize';
+                break;
+            case ($this->pathIdentifier::IDENTIFIER_UPLOADS === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_UPLOADS))):
+                $partName = 'uploadsSize';
+                if (substr($identifiablePath, -4) === '.sql') {
+                    $partName = 'sqlSize';
+                }
+                break;
+            case ($this->pathIdentifier::IDENTIFIER_LANG === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_LANG))):
+                $partName = 'langSize';
+                break;
+        }
+
+        // TODO: This should never happen. Log this when we have our own Logger, see https://github.com/wp-staging/wp-staging-pro/pull/2440#discussion_r1247951548
+        if (!isset($collectPartsize[$partName])) {
+            $collectPartsize[$partName] = 0;
+        }
+
+        $collectPartsize[$partName] += $writtenBytesTotal;
+        return file_put_contents($this->tempFilePartsSize, maybe_serialize($collectPartsize), LOCK_EX);
+    }
+
+    /** @return array */
+    private function getIndexPartSize()
+    {
+        $collectPartsize = [];
+        clearstatcache();
+        if (!file_exists($this->tempFilePartsSize)) {
+            return $collectPartsize;
+        }
+
+        $data = file_get_contents($this->tempFilePartsSize);
+        if (!empty($data)) {
+            $data = maybe_unserialize($data);
+            if (is_array($data)) {
+                $collectPartsize = $data;
+            }
+        }
+        unset($data);
+
+        return $collectPartsize;
+    }
+
+    /** @param string $tempBackupIndexFilePrefix */
+    private function setTmpIndexPartSizeFile($tempBackupIndexFilePrefix)
+    {
+        $this->tempFilePartsSize = str_replace($tempBackupIndexFilePrefix, $tempBackupIndexFilePrefix . 'partsize_', $this->tempBackupIndex->getFilePath());
     }
 }

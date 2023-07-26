@@ -25,7 +25,7 @@ class CommonServiceProvider extends ServiceProvider
 
         add_action('wpstg_daily_event', [$this, 'cleanupLogs'], 25, 0);
         add_action('wpstg_daily_event', [$this, 'cleanupAnalytics'], 25, 0);
-        add_action("wp_ajax_wpstg_check_user_permissions", $this->container->callback(DBPermissions::class, 'ajaxCheckDBPermissions'));
+        add_action("wp_ajax_wpstg_check_user_permissions", $this->container->callback(DBPermissions::class, 'ajaxCheckDBPermissions')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     public function cleanupLogs()

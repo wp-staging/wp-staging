@@ -5,6 +5,9 @@
 namespace WPStaging\Framework\Utils;
 
 use DirectoryIterator;
+use Hoa\Console\Readline\Autocompleter\Path;
+use UnexpectedValueException;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 
 // TODO PHP7.1; constant visibility
@@ -209,10 +212,50 @@ class WpDefaultDirectories
 
         $excludedDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode($directoriesRequest));
         $excludedDirectories = array_map(function ($directory) {
-            return $this->slashit($directory, SlashMode::LEADING_SLASH);
+            return $this->slashit($directory, SlashMode::NO_SLASH);
         }, $excludedDirectories);
 
         return $excludedDirectories;
+    }
+
+    /**
+     * return default directory for wordpress without absolute path for the given identifier
+     * @param string $identifier
+     * @return string
+     *
+     * @throws UnexpectedValueException
+     */
+    public function getDefaultDirectoryByIdentifier($identifier)
+    {
+        if ($identifier === PathIdentifier::IDENTIFIER_ABSPATH) {
+            return '/';
+        }
+
+        if ($identifier === PathIdentifier::IDENTIFIER_WP_CONTENT) {
+            return '/wp-content/';
+        }
+
+        if ($identifier === PathIdentifier::IDENTIFIER_MUPLUGINS) {
+            return '/wp-content/mu-plugins/';
+        }
+
+        if ($identifier === PathIdentifier::IDENTIFIER_PLUGINS) {
+            return '/wp-content/plugins/';
+        }
+
+        if ($identifier === PathIdentifier::IDENTIFIER_THEMES) {
+            return '/wp-content/themes/';
+        }
+
+        if ($identifier === PathIdentifier::IDENTIFIER_UPLOADS) {
+            return '/wp-content/uploads/';
+        }
+
+        if ($identifier === PathIdentifier::IDENTIFIER_LANG) {
+            return '/wp-content/languages/';
+        }
+
+        throw new UnexpectedValueException('Unknown identifier: ' . $identifier);
     }
 
     /**

@@ -547,11 +547,11 @@ class JobBackupDataDto extends JobDataDto
     }
 
     /**
-     * @param string $isCreateScheduleBackupNow
+     * @param bool $isCreateScheduleBackupNow
      */
     public function setIsCreateScheduleBackupNow($isCreateScheduleBackupNow)
     {
-        $this->isCreateScheduleBackupNow = $isCreateScheduleBackupNow;
+        $this->isCreateScheduleBackupNow = (bool)$isCreateScheduleBackupNow;
     }
 
     /**

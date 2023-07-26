@@ -129,7 +129,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
 
         foreach ($wpActions as $wpAction) {
             if (!has_action($wpAction, $queueProcessorProcess)) {
-                add_action($wpAction, $queueProcessorProcess);
+                add_action($wpAction, $queueProcessorProcess); // phpcs:ignore WPStaging.Security.FirstArgNotAString -- Queue action callbacks should not take input from request.
             }
         }
 
@@ -166,8 +166,8 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
         // Register the method that will handle the AJAX check.
         $updateOption = $this->container->callback(FeatureDetection::class, 'updateAjaxTestOption');
         // Hook on authenticated AJAX endpoint to handle the check.
-        add_action('wp_ajax_' . FeatureDetection::AJAX_TEST_ACTION, $updateOption);
-        add_action('wp_ajax_nopriv_' . FeatureDetection::AJAX_TEST_ACTION, $updateOption);
+        add_action('wp_ajax_' . FeatureDetection::AJAX_TEST_ACTION, $updateOption); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Public
+        add_action('wp_ajax_nopriv_' . FeatureDetection::AJAX_TEST_ACTION, $updateOption); // phpcs:ignore WPStaging.Security.AuthorizationChecked -- Public
 
         // Once a week re-run the check.
         if (!wp_next_scheduled('wpstg_q_ajax_support_feature_detection')) {

@@ -17,6 +17,8 @@
         type: 'POST',
         data: {
           action: 'wpstg_clean_pro_crons',
+          accessToken: wpstg.accessToken,
+          nonce: wpstg.nonce,
         },
         error: function error(xhr, textStatus, errorThrown) {
           console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);

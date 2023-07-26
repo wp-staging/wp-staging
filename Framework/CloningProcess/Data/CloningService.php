@@ -11,9 +11,9 @@ abstract class CloningService
     protected $dto;
 
     /**
-     * CloningService constructor.
+     * @param DataCloningDto $dto
      */
-    public function __construct(DataCloningDto $dto)
+    public function setDataCloningDto(DataCloningDto $dto)
     {
         $this->dto = $dto;
     }

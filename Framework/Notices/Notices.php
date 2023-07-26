@@ -11,6 +11,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
+use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
@@ -70,6 +71,9 @@ class Notices
     /** @var OutdatedWpStagingNotice */
     private $outdatedWpStagingNotice;
 
+    /** @var ObjectCacheNotice */
+    private $objectCacheNotice;
+
     /** @var wpdb */
     private $db;
 
@@ -99,6 +103,7 @@ class Notices
         $this->disabledItemsNotice     = WPStaging::make(DisabledItemsNotice::class);
         $this->warningsNotice          = WPStaging::make(WarningsNotice::class);
         $this->outdatedWpStagingNotice = WPStaging::make(OutdatedWpStagingNotice::class);
+        $this->objectCacheNotice       = WPStaging::make(ObjectCacheNotice::class);
     }
 
     /**
@@ -117,6 +122,10 @@ class Notices
      */
     public function renderNotices()
     {
+        if (!current_user_can(WPStaging::make(Capabilities::class)->manageWPSTG())) {
+            return;
+        }
+
         $viewsNoticesPath = "{$this->getPluginPath()}/Backend/views/notices/";
 
         if (!$this->isPro()) {
@@ -141,7 +150,7 @@ class Notices
             $freemiusOptionsCleared = $this->freemiusScript->isNoticeEnabled();
             // Show jetpack staging mode notice if the constant is set on staging site
             $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
-            $excludedFiles = get_option(Sites::STAGING_EXCLUDED_FILES_OPTION, []);
+            $excludedFiles              = get_option(Sites::STAGING_EXCLUDED_FILES_OPTION, []);
             // use require here instead of require_once otherwise unit tests will always fail,
             // as this notice is tested multiple times.
             require "{$viewsNoticesPath}disabled-items-notice.php";
@@ -150,8 +159,7 @@ class Notices
         $optionTable              = $this->db->prefix . 'options';
         $isPrimaryKeyMissing      = $this->isOptionTablePrimaryKeyMissing($this->db, $optionTable);
         $isPrimaryKeyIsOptionName = $this->isOptionTablePrimaryKeyIsOptionName($this->db, $optionTable);
-
-        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && ( $isPrimaryKeyMissing || $isPrimaryKeyIsOptionName ) )) {
+        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && ( $isPrimaryKeyMissing || $isPrimaryKeyIsOptionName ) && $this->isWPStagingAdminPage())) {
             require "{$viewsNoticesPath}wp-options-missing-pk.php";
         }
 
@@ -179,6 +187,11 @@ class Notices
          * Display outdated WP Staging version notice (Free Only)
          */
         $this->outdatedWpStagingNotice->showNotice($viewsNoticesPath);
+
+        // Show notice Outdated version of WP Staging Hooks
+        if (self::SHOW_ALL_NOTICES || ($this->objectCacheNotice->isEnabled())) {
+            require_once "{$viewsNoticesPath}object-cache-skipped.php";
+        }
 
         // Show notice Cache directory is not writable
         $cacheDir = $this->cache->getCacheDir();
@@ -257,12 +270,29 @@ class Notices
         $fInfo  = $result->fetch_field();
         $result->free_result();
 
-        // Check whether the flag have primary key
-        if ($fInfo->flags & MYSQLI_PRI_KEY_FLAG) {
+        // Abort if flag has no primary key
+        if (!($fInfo->flags & MYSQLI_PRI_KEY_FLAG)) {
+            return false;
+        }
+
+        // Check if the field has a composite key
+        $results = $db->get_results("SELECT `CONSTRAINT_NAME`,`COLUMN_NAME` FROM `information_schema`.`KEY_COLUMN_USAGE` WHERE `table_name`='{$optionTable}' AND `table_schema`=DATABASE()", ARRAY_A);
+        if (empty($results) || !is_array($results)) {
             return true;
         }
 
-        return false;
+        $found = 0;
+        while ($row = array_shift($results)) {
+            if ($row['CONSTRAINT_NAME'] === 'PRIMARY' && in_array($row['COLUMN_NAME'], ['option_name', 'option_id'])) {
+                $found++;
+            }
+
+            if ($found > 1) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**

@@ -8,13 +8,13 @@ use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 
 class SelectedTables
 {
-    /** @var array */
+    /** @var array|string */
     private $includedTables = '';
 
-    /** @var array */
+    /** @var array|string */
     private $excludedTables = '';
 
-    /** @var array */
+    /** @var array|string */
     private $selectedTablesWithoutPrefix = '';
 
     /** @var bool */

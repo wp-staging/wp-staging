@@ -428,12 +428,25 @@ class TablesRenamer
     /**
      * @param string $activeSitewidePlugins
      * @param string $activeWpstgPlugin
+     * @param int    $time timestamp when the plugin was activated
      * @return bool
      */
-    public function restorePreservedActiveSitewidePlugins($activeSitewidePlugins, $activeWpstgPlugin)
+    public function restorePreservedActiveSitewidePlugins($activeSitewidePlugins, $activeWpstgPlugin, $time = null)
     {
         $activeSitewidePlugins = maybe_unserialize($activeSitewidePlugins);
-        $activeSitewidePlugins[$activeWpstgPlugin] = time();
+        $activeSitewidePlugins = array_filter($activeSitewidePlugins, function ($pluginSlug) {
+
+            // Disable all wp staging plugins, we will reactive current active wp staging plugin later
+            if (strpos($pluginSlug, 'wp-staging') !== false) {
+                return false;
+            }
+
+            return true;
+        });
+
+        if (!empty($activeWpstgPlugin)) {
+            $activeSitewidePlugins[$activeWpstgPlugin] = empty($time) ? time() : $time;
+        }
 
         return $this->updateNetworkOptionValue($this->productionTablePrefix . 'sitemeta', 'active_sitewide_plugins', serialize($activeSitewidePlugins));
     }
@@ -562,13 +575,13 @@ class TablesRenamer
     {
         $database   = $this->tableService->getDatabase()->getWpdba()->getClient();
         $optionName = $database->esc_like($optionName);
-        $sql        = "SELECT meta_value FROM {$tableName} WHERE meta_name LIKE '{$optionName}'";
+        $sql        = "SELECT meta_value FROM {$tableName} WHERE meta_key LIKE '{$optionName}'";
         $result     = $database->get_results($sql, ARRAY_A);
         if (empty($result)) {
             return '';
         }
 
-        return $result[0]['option_value'];
+        return $result[0]['meta_value'];
     }
 
     /**
@@ -581,7 +594,7 @@ class TablesRenamer
     {
         $database   = $this->tableService->getDatabase()->getWpdba()->getClient();
         $optionName = $database->esc_like($optionName);
-        $sql        = "UPDATE {$tableName} SET meta_value = '{$optionValue}' WHERE meta_name LIKE '{$optionName}'";
+        $sql        = "UPDATE {$tableName} SET meta_value = '{$optionValue}' WHERE meta_key LIKE '{$optionName}'";
 
         return $database->query($sql);
     }

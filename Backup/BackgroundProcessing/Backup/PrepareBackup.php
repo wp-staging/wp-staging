@@ -170,6 +170,7 @@ class PrepareBackup
 
         do {
             try {
+                /** @see WPStaging\Backup\Job\AbstractJob::prepareAndExecute() */
                 $taskResponseDto = $this->jobBackup->prepareAndExecute();
                 $this->jobBackup->persist();
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
@@ -192,7 +193,7 @@ class PrepareBackup
                 return new WP_Error(400, $errorMessage);
             }
 
-            if ($taskResponseDto->isStatus()) {
+            if ($taskResponseDto->isRunning()) {
                 // Cleanup the pending/ready actions for this scheduleId.
                 $this->queue->cleanupActionsByScheduleId($args['scheduleId'], [Queue::STATUS_READY]);
 
@@ -289,7 +290,7 @@ class PrepareBackup
             }
 
             $logFile = $this->jobBackup->getCurrentTask()->getLogger()->getFileName();
-            $this->queue->updateActionFields($action->id, ['custom' => $logFile], true);
+            $this->queue->updateActionFields($action->id, ['custom' => $logFile, 'response' => serialize($dto)], true);
 
             $errorMessage = $this->getLastErrorMessage();
             if ($errorMessage !== false) {

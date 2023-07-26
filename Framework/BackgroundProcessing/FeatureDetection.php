@@ -85,7 +85,7 @@ class FeatureDetection
      *
      * This method will fire a non-blocking POST request
      * to the `admin-ajax` endpoint.
-     * In response, the `updateAjaxTestOption` will udpate
+     * In response, the `updateAjaxTestOption` will update
      * the flag option value and set it to `y` or not set it at all.
      * This method will wait for some time for its counter-part, the
      * `updateAjaxTestOption` running in the other request, to update

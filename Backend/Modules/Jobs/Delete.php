@@ -24,7 +24,7 @@ class Delete extends Job
 {
 
     /**
-     * @var stdClass
+     * @var stdClass|false
      */
     private $clone = false;
 
@@ -35,7 +35,7 @@ class Delete extends Job
     private $deleteDir;
 
     /**
-     * @var null|object
+     * @var null|object|array
      */
     private $tables = null;
 
@@ -414,7 +414,7 @@ class Delete extends Job
             return;
         }
 
-        $clone = (string)$this->clone->path;
+        $clone        = (string)$this->clone->path;
         $errorMessage = sprintf(__('We could not delete the staging site completely. There are still files in the folder %s that could not be deleted. This could be a write permission issue. Try to delete the folder manually by using FTP or a file manager plugin.<br/> If this happens again please contact us at support@wp-staging.com', 'wp-staging'), $clone);
 
         $deleteStatus = "finished";

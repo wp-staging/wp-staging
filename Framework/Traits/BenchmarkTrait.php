@@ -11,7 +11,7 @@ trait BenchmarkTrait
     /** @var LoggerInterface To store the benchmark results. */
     private $benchmarkLogger;
 
-    /** @var int Timestamp when the benchmark started. */
+    /** @var float Timestamp when the benchmark started. */
     private $benchmarkStart = 0;
 
     protected function startBenchmark()

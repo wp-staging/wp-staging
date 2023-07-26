@@ -72,6 +72,17 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
             <label style="display: block;margin: .5em 0;">
                 <input type="checkbox" class="wpstg-checkbox" name="backup_database" id="includeDatabaseInBackup" value="true" checked/>
                 <?php esc_html_e('Backup Database', 'wp-staging') ?>
+                <div class="wpstg--tooltip" style="position: absolute;">
+                    <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
+                    <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                            <?php
+                                printf(
+                                    esc_html__('This will backup all database tables starting with the prefix "%s". To backup a staging site, run the backup function again on the staging site', 'wp-staging'),
+                                    isset($GLOBALS['wpdb']->prefix) ? esc_html($GLOBALS['wpdb']->prefix) : 'wp_'
+                                );
+                                ?>
+                    </span>
+                </div>
                 <div id="backupUploadsWithoutDatabaseWarning" style="display:none;">
                     <?php esc_html_e('When backing up the Media Library without the Database, the attachments will be migrated but won\'t show up in the media library after restore.', 'wp-staging'); ?>
                 </div>

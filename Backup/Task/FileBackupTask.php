@@ -16,6 +16,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -26,7 +27,7 @@ abstract class FileBackupTask extends BackupTask
     /** @var Compressor */
     private $compressor;
 
-    /** @var int If a file couldn't be processed in a single request, this will be populated */
+    /** @var int|CompressorDto If a file couldn't be processed in a single request, this will be populated */
     private $bigFileBeingProcessed;
 
     /** @var Filesystem */
@@ -82,7 +83,7 @@ abstract class FileBackupTask extends BackupTask
 
         if ($this->bigFileBeingProcessed instanceof CompressorDto) {
             $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($this->bigFileBeingProcessed->getFilePath(), true));
-            $percentProcessed = ceil(($this->bigFileBeingProcessed->getWrittenBytesTotal() / $this->bigFileBeingProcessed->getFileSize()) * 100);
+            $percentProcessed       = ceil(($this->bigFileBeingProcessed->getWrittenBytesTotal() / $this->bigFileBeingProcessed->getFileSize()) * 100);
             $this->logger->info(sprintf('Adding big %s file: %s - %s/%s (%s%%) (%s)', $this->getFileIdentifier(), $relativePathForLogging, size_format($this->bigFileBeingProcessed->getWrittenBytesTotal(), 2), size_format($this->bigFileBeingProcessed->getFileSize(), 2), $percentProcessed, $this->getBackupSpeed()));
         } else {
             $this->logger->info(sprintf('Added %d/%d %s files to backup (%s)', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->getFileIdentifier(), $this->getBackupSpeed()));
@@ -110,7 +111,11 @@ abstract class FileBackupTask extends BackupTask
 
     protected function getBackupSpeed()
     {
-        $elapsed = microtime(true) - $this->start;
+        $elapsed        = microtime(true) - $this->start;
+
+        // Fixes a "division by zero fatal error" when $elapsed was 0. issue #2571
+        $elapsed = empty($elapsed) ? 1 : $elapsed;
+
         $bytesPerSecond = min(10 * GB_IN_BYTES, absint($this->compressor->getBytesWrittenInThisRequest() / $elapsed));
 
         if ($bytesPerSecond === 10 * GB_IN_BYTES) {
@@ -144,7 +149,9 @@ abstract class FileBackupTask extends BackupTask
             return;
         }
 
-        $path = trailingslashit(ABSPATH) . $path;
+        if (WPStaging::make(SiteInfo::class)->isWpContentOutsideAbspath() === false) {
+            $path = trailingslashit(ABSPATH) . $path;
+        }
 
         try {
             $this->multipartSplit->maybeIncrementBackupFileIndex($this->jobDataDto, $this->compressor, $this->getFileIdentifier(), $path);

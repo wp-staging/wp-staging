@@ -225,7 +225,7 @@ class RenameDatabaseTask extends RestoreTask
             'activePlugins'            => $this->tablesRenamer->getActivePluginsToPreserve()
         ];
 
-        if ($isNetworkActivatedPlugin) {
+        if (is_multisite()) {
             $dataToPreserve['activeSitewidePlugins'] = $this->tablesRenamer->getActiveSitewidePluginsToPreserve();
         }
 
@@ -317,6 +317,9 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->restorePreservedActivePlugins($databaseData['activePlugins'], $activeWpstgPlugin, $isNetworkActivatedPlugin);
         if ($isNetworkActivatedPlugin) {
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $activeWpstgPlugin);
+        } elseif (is_multisite()) {
+            // Don't activate any wp staging plugin if it is not network activated on current site
+            $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $wpstgPluginToActivate = '');
         }
 
         // Upgrade database if need be

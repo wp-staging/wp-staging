@@ -7,9 +7,11 @@ use WPStaging\Framework\Support\ThirdParty\Jetpack;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use RuntimeException;
+use WPStaging\Framework\SiteInfo;
 
 class UpdateWpConfigConstants extends FileCloningService
 {
+    /** @var string */
     protected $abspathRegex = "/if\s*\(\s*\s*!\s*defined\s*\(\s*['\"]ABSPATH['\"]\s*(.*)\s*\)\s*\)/";
 
     /**
@@ -25,9 +27,6 @@ class UpdateWpConfigConstants extends FileCloningService
         }
 
         $replaceOrAdd = [
-            "UPLOADS"             => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getUploadFolder())),
-            "WP_PLUGIN_DIR"       => '__DIR__ . "' . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH) . '"',
-            "WP_PLUGIN_URL"       => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl() . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH))),
             "WP_LANG_DIR"         => '__DIR__ . "/wp-content/languages"',
             "WP_HOME"             => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_SITEURL"          => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
@@ -35,6 +34,14 @@ class UpdateWpConfigConstants extends FileCloningService
             "DISABLE_WP_CRON"     => (isset($this->dto->getJob()->getOptions()->cronDisabled) && $this->dto->getJob()->getOptions()->cronDisabled) ? 'true' : 'false',
             "WP_ENVIRONMENT_TYPE" => sprintf("'%s'", 'staging'),
         ];
+
+        /** @var SiteInfo $siteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
+        if (!$siteInfo->isWpContentOutsideAbspath()) {
+            $replaceOrAdd["UPLOADS"]       = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getUploadFolder()));
+            $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH) . '"';
+            $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl() . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH)));
+        }
 
         if ($this->dto->isExternal()) {
             $replaceOrAdd['DB_HOST']     = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getExternalDatabaseHost()));
@@ -49,10 +56,13 @@ class UpdateWpConfigConstants extends FileCloningService
 
         $replaceOrSkip = [];
         if ($this->isNetworkClone()) {
-            $replaceOrAdd['DOMAIN_CURRENT_SITE'] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteDomain()));
-            $replaceOrAdd['PATH_CURRENT_SITE']   = sprintf("'%s'", trailingslashit($this->escapeSingleQuotes($this->dto->getStagingSitePath())));
-            $replaceOrSkip["WP_ALLOW_MULTISITE"] = 'true';
-            $replaceOrSkip["MULTISITE"]          = 'true';
+            $replaceOrAdd['DOMAIN_CURRENT_SITE']  = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteDomain()));
+            $replaceOrAdd['PATH_CURRENT_SITE']    = sprintf("'%s'", trailingslashit($this->escapeSingleQuotes($this->dto->getStagingSitePath())));
+            $replaceOrAdd["WP_ALLOW_MULTISITE"]   = 'true';
+            $replaceOrAdd["MULTISITE"]            = 'true';
+            $replaceOrAdd["SUBDOMAIN_INSTALL"]    = is_subdomain_install() ? 'true' : 'false';
+            $replaceOrAdd["SITE_ID_CURRENT_SITE"] = SITE_ID_CURRENT_SITE;
+            $replaceOrAdd["BLOG_ID_CURRENT_SITE"] = BLOG_ID_CURRENT_SITE;
         } else {
             //It's OK to attempt replacing multi-site constants even in single-site jobs as they will not be present in a single-site wp-config.php
             $replaceOrSkip["WP_ALLOW_MULTISITE"] = 'false';
@@ -70,6 +80,14 @@ class UpdateWpConfigConstants extends FileCloningService
             "WP_CONTENT_DIR",
             "WP_CONTENT_URL",
         ];
+
+        if ($siteInfo->isWpContentOutsideAbspath()) {
+            $delete[] = "UPLOADS";
+            $delete[] = "WP_PLUGIN_DIR";
+            $delete[] = "WP_PLUGIN_URL";
+            $delete[] = "WPMU_PLUGIN_DIR";
+            $delete[] = "WPMU_PLUGIN_URL";
+        }
 
         /**
          * Allows to filter the constants to be replaced/added.

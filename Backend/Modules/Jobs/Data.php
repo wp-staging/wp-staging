@@ -3,6 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\CloningProcess\Data\CleanThirdPartyConfigs;
 use WPStaging\Framework\CloningProcess\Data\CopyWpConfig;
 use WPStaging\Framework\CloningProcess\Data\Job as DataJob;
 use WPStaging\Framework\CloningProcess\Data\MultisiteAddNetworkAdministrators;
@@ -31,6 +32,26 @@ class Data extends DataJob
         $this->getTables();
     }
 
+    protected function initializeSteps()
+    {
+        $this->steps = [
+            CopyWpConfig::class, // Copy wp-config.php from the staging site if it is located outside of root one level up or copy default wp-config.php if production site uses bedrock or any other boilerplate solution that stores wp default config data elsewhere.
+            UpdateSiteUrlAndHome::class,
+            UpdateStagingOptionsTable::class,
+            UpdateTablePrefix::class,
+            UpdateWpConfigTablePrefix::class,
+            ResetIndexPhp::class, // This is needed if live site is located in subfolder. @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
+            UpdateWpOptionsTablePrefix::class, // This is important when custom folders are used
+            UpdateWpConfigConstants::class,
+            CleanThirdPartyConfigs::class, // Remove or use dummy config files for hosting like Flywheel etc
+        ];
+
+        if ($this->isMultisiteAndPro() && !$this->isNetworkClone()) {
+            $this->steps[] = MultisiteUpdateActivePlugins::class; // Merge sitewide active plugins and subsite active plugins
+            $this->steps[] = MultisiteAddNetworkAdministrators::class; // Add network administrators to _usermeta
+        }
+    }
+
     /**
      * Get a list of tables to copy
      */
@@ -55,114 +76,10 @@ class Data extends DataJob
      */
     protected function calculateTotalSteps()
     {
-        $this->options->totalSteps = 7;
+        $this->options->totalSteps = 8;
 
         if ($this->isMultisiteAndPro() && !$this->isNetworkClone()) {
-            $this->options->totalSteps = 9;
+            $this->options->totalSteps = 10;
         }
-    }
-
-    /**
-     * Copy wp-config.php from the staging site if it is located outside of root one level up or
-     * copy default wp-config.php if production site uses bedrock or any other boilerplate solution that stores wp default config data elsewhere.
-     * @return boolean
-     */
-    protected function step0()
-    {
-        return (new CopyWpConfig($this->getCloningDto(0)))->execute();
-    }
-
-    /**
-     * Replace "siteurl" and "home"
-     * @return bool
-     */
-    protected function step1()
-    {
-        return (new UpdateSiteUrlAndHome($this->getCloningDto(1)))->execute();
-    }
-
-    /**
-     * Update various options
-     * @return bool
-     */
-    protected function step2()
-    {
-        return (new UpdateStagingOptionsTable($this->getCloningDto(2)))->execute();
-    }
-
-    /**
-     * Update Table Prefix in wp_usermeta
-     * @return bool
-     */
-    protected function step3()
-    {
-        return (new UpdateTablePrefix($this->getCloningDto(3)))->execute();
-    }
-
-    /**
-     * Update Table prefix in wp-config.php
-     * @return bool
-     */
-    protected function step4()
-    {
-        return (new UpdateWpConfigTablePrefix($this->getCloningDto(4)))->execute();
-    }
-
-    /**
-     * Reset index.php to WordPress default
-     * This is needed if live site is located in subfolder
-     * Check first if main wordpress is used in subfolder and index.php in parent directory
-     * @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
-     * @return bool
-     */
-    protected function step5()
-    {
-        return (new ResetIndexPhp($this->getCloningDto(5)))->execute();
-    }
-
-    /**
-     * Update Table Prefix in wp_options
-     * @return bool
-     */
-    protected function step6()
-    {
-        return (new UpdateWpOptionsTablePrefix($this->getCloningDto(6)))->execute();
-    }
-
-    /**
-     * Add UPLOADS, WP_PLUGIN_DIR, WP_LANG_DIR, and WP_TEMP_DIR constants in wp-config.php or change them to correct destination.
-     * This is important when custom folders are used
-     * @return bool
-     */
-    protected function step7()
-    {
-        return (new UpdateWpConfigConstants($this->getCloningDto(7)))->execute();
-    }
-
-    /**
-     * Get active_sitewide_plugins from wp_sitemeta and active_plugins from subsite
-     * Merge both arrays and copy them to the staging site into active_plugins
-     */
-    protected function step8()
-    {
-        if ($this->isMultisiteAndPro() && !$this->isNetworkClone()) {
-            return (new MultisiteUpdateActivePlugins($this->getCloningDto(8)))->execute();
-        }
-
-        return true;
-    }
-
-    /**
-     * Check if there is a multisite super administrator.
-     * If not add it to _usermeta
-     * @return bool
-     */
-    protected function step9()
-    {
-        if ($this->isMultisiteAndPro() && !$this->isNetworkClone()) {
-            return (new MultisiteAddNetworkAdministrators($this->getCloningDto(9)))->execute();
-        }
-
-        return true;
     }
 }

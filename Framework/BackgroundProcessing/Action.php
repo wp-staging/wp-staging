@@ -100,6 +100,13 @@ class Action
     private $custom;
 
     /**
+     * Response of the the Action.
+     *
+     * @var mixed|null
+     */
+    private $response;
+
+    /**
      * Action constructor.
      *
      * @param int          $id        The Action id, its unique identifier in the Queue; `0` is a valid id
@@ -129,7 +136,8 @@ class Action
         $status = null,
         $claimedAt = null,
         $updatedAt = null,
-        $custom = null
+        $custom = null,
+        $response = null
     ) {
         if (!is_numeric($id) && absint($id) == $id) {
             throw new QueueException('Id MUST be a positive integer.');
@@ -147,15 +155,16 @@ class Action
             (int)$priority
             : $this->getDefaultPriority();
 
-        $this->id = $id;
-        $this->action = $action;
-        $this->args = $args;
-        $this->jobId = $jobId;
-        $this->priority = $priority;
-        $this->status = $status;
+        $this->id        = $id;
+        $this->action    = $action;
+        $this->args      = $args;
+        $this->jobId     = $jobId;
+        $this->priority  = $priority;
+        $this->status    = $status;
         $this->claimedAt = $claimedAt;
         $this->updatedAt = $updatedAt;
-        $this->custom = $custom;
+        $this->custom    = $custom;
+        $this->response  = $response;
     }
 
     /**
@@ -169,17 +178,18 @@ class Action
      */
     public static function fromDbRow(array $dbRow)
     {
-        $id = (int)$dbRow['id'];
-        $action = (string)$dbRow['action'];
-        $jobId = isset($dbRow['jobId']) ? (string)($dbRow['jobId']) : null;
-        $priority = isset($dbRow['priority']) ? (int)$dbRow['priority'] : self::getDefaultPriority();
-        $args = isset($dbRow['args']) ? (array)maybe_unserialize($dbRow['args']) : [];
-        $status = isset($dbRow['status']) ? (string)$dbRow['status'] : Queue::STATUS_READY;
+        $id        = (int)$dbRow['id'];
+        $action    = (string)$dbRow['action'];
+        $jobId     = isset($dbRow['jobId']) ? (string)($dbRow['jobId']) : null;
+        $priority  = isset($dbRow['priority']) ? (int)$dbRow['priority'] : self::getDefaultPriority();
+        $args      = isset($dbRow['args']) ? (array)maybe_unserialize($dbRow['args']) : [];
+        $status    = isset($dbRow['status']) ? (string)$dbRow['status'] : Queue::STATUS_READY;
         $claimedAt = isset($dbRow['claimed_at']) ? (string)$dbRow['claimed_at'] : null;
         $updatedAt = isset($dbRow['updated_at']) ? (string)$dbRow['updated_at'] : null;
-        $custom = isset($dbRow['custom']) ? maybe_unserialize($dbRow['custom']) : null;
+        $custom    = isset($dbRow['custom']) ? maybe_unserialize($dbRow['custom']) : null;
+        $response  = isset($dbRow['response']) ? maybe_unserialize($dbRow['response']) : null;
 
-        return new self($id, $action, $args, $jobId, $priority, $status, $claimedAt, $updatedAt, $custom);
+        return new self($id, $action, $args, $jobId, $priority, $status, $claimedAt, $updatedAt, $custom, $response);
     }
 
     /**
@@ -228,7 +238,7 @@ class Action
     public function equals(Action $toCompare, array $compareFieldsExclude = [])
     {
         $compareFields = array_diff(
-            ['id', 'action', 'jobId', 'priority', 'args','status'],
+            ['id', 'action', 'jobId', 'priority', 'args', 'status'],
             $compareFieldsExclude
         );
 
@@ -250,15 +260,16 @@ class Action
     public function toArray()
     {
         return [
-            'id' => $this->id,
-            'action' => $this->action,
-            'jobId' => $this->jobId,
-            'priority' => $this->priority,
-            'args' => $this->args,
-            'status' => $this->status,
+            'id'        => $this->id,
+            'action'    => $this->action,
+            'jobId'     => $this->jobId,
+            'priority'  => $this->priority,
+            'args'      => $this->args,
+            'status'    => $this->status,
             'claimedAt' => $this->claimedAt,
             'updatedAt' => $this->updatedAt,
-            'custom' => $this->custom
+            'custom'    => $this->custom,
+            'response'  => $this->response,
         ];
     }
 

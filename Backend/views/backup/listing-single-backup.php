@@ -168,6 +168,7 @@ $logUrl = add_query_arg([
                     $isExportingThemes              = $backup->isExportingThemes;
                     $isExportingUploads             = $backup->isExportingUploads;
                     $isExportingOtherWpContentFiles = $backup->isExportingOtherWpContentFiles;
+                    $indexPartSize                  = $backup->indexPartSize;
                     include(__DIR__ . '/modal/partials/backup-contains.php');
                     ?>
                 </li>

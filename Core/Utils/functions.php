@@ -34,7 +34,7 @@ function wpstg_replace_windows_directory_separator($path)
 function wpstg_replace_first_match($needle, $replace, $haystack)
 {
     $result = $haystack;
-    $pos = strpos($haystack, $needle);
+    $pos    = strpos($haystack, $needle);
     if ($pos !== false) {
         $result = substr_replace($haystack, $replace, $pos, strlen($needle));
     }
@@ -143,7 +143,7 @@ function wpstg_is_empty_dir($dir)
  * Get absolute WP uploads path e.g.
  * Multisites: /var/www/htdocs/example.com/wp-content/uploads/sites/1 or /var/www/htdocs/example.com/wp-content/blogs.dir/1/files
  * Single sites: /var/www/htdocs/example.com/wp-content/uploads
- * @return string
+ * @return string|false
  */
 function wpstg_get_upload_dir()
 {
@@ -157,11 +157,11 @@ function wpstg_get_upload_dir()
         if (strpos($baseDir, 'blogs.dir') !== false) {
             // remove this piece from the basedir: /blogs.dir/2/files
             $uploadDir = wpstg_replace_first_match('/blogs.dir/' . get_current_blog_id() . '/files', null, $baseDir);
-            $dir = wpstg_replace_windows_directory_separator($uploadDir . '/blogs.dir');
+            $dir       = wpstg_replace_windows_directory_separator($uploadDir . '/blogs.dir');
         } else {
             // remove this piece from the basedir: /sites/2
             $uploadDir = wpstg_replace_first_match('/sites/' . get_current_blog_id(), null, $baseDir);
-            $dir = wpstg_replace_windows_directory_separator($uploadDir . '/sites');
+            $dir       = wpstg_replace_windows_directory_separator($uploadDir . '/sites');
         }
 
 
@@ -178,17 +178,17 @@ function wpstg_get_upload_dir()
 function wpstg_base($input)
 {
     $keyStr = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-    $i = 0;
+    $i      = 0;
     $output = "";
-    $input = preg_replace("[^A-Za-z0-9\+\/\=]", "", $input);
+    $input  = preg_replace("[^A-Za-z0-9\+\/\=]", "", $input);
     do {
-        $enc1 = strpos($keyStr, substr($input, $i++, 1));
-        $enc2 = strpos($keyStr, substr($input, $i++, 1));
-        $enc3 = strpos($keyStr, substr($input, $i++, 1));
-        $enc4 = strpos($keyStr, substr($input, $i++, 1));
-        $chr1 = ($enc1 << 2) | ($enc2 >> 4);
-        $chr2 = (($enc2 & 15) << 4) | ($enc3 >> 2);
-        $chr3 = (($enc3 & 3) << 6) | $enc4;
+        $enc1   = strpos($keyStr, substr($input, $i++, 1));
+        $enc2   = strpos($keyStr, substr($input, $i++, 1));
+        $enc3   = strpos($keyStr, substr($input, $i++, 1));
+        $enc4   = strpos($keyStr, substr($input, $i++, 1));
+        $chr1   = ($enc1 << 2) | ($enc2 >> 4);
+        $chr2   = (($enc2 & 15) << 4) | ($enc3 >> 2);
+        $chr3   = (($enc3 & 3) << 6) | $enc4;
         $output = $output . chr((int)$chr1);
         if ($enc3 != 64) {
             $output = $output . chr((int)$chr2);

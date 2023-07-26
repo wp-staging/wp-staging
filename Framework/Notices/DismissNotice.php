@@ -28,11 +28,17 @@ class DismissNotice
      */
     private $wordFence;
 
-    public function __construct(DisabledItemsNotice $disabledItemsNotice, WarningsNotice $warningsNotice, WordFence $wordFence)
+    /**
+     * @var ObjectCacheNotice
+     */
+    private $objectCacheNotice;
+
+    public function __construct(DisabledItemsNotice $disabledItemsNotice, WarningsNotice $warningsNotice, WordFence $wordFence, ObjectCacheNotice $objectCacheNotice)
     {
         $this->disabledItemsNotice = $disabledItemsNotice;
         $this->warningsNotice      = $warningsNotice;
         $this->wordFence           = $wordFence;
+        $this->objectCacheNotice   = $objectCacheNotice;
     }
 
     public function dismiss($noticeToDismiss)
@@ -49,6 +55,11 @@ class DismissNotice
 
         // Dismiss wordfence user.ini renamed notice
         if ($noticeToDismiss === WordFence::NOTICE_NAME && $this->wordFence->disable() !== false) {
+            wp_send_json(true);
+            return;
+        }
+
+        if ($noticeToDismiss === ObjectCacheNotice::NOTICE_DISMISS_ACTION && $this->objectCacheNotice->disable() !== false) {
             wp_send_json(true);
             return;
         }

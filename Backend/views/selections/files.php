@@ -2,7 +2,9 @@
 
 /**
  * @var stdClass $options
- *
+ * @var $scan Object
+ * @var $excludeUtils Object
+ * @see src/Backend/views/clone/ajax/scan.php Context where this is included.
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
 
@@ -18,7 +20,7 @@ use WPStaging\Framework\Facades\Escape;
 <br/>
 <?php esc_html_e("and preselected the next time you update this staging site.", "wp-staging") ?>
 </p>
-<div id="wpstg-directories-listing" data-existing-excludes="<?php echo (($options->mainJob === 'updating' || $options->mainJob === 'resetting') && isset($options->currentClone['excludedDirectories'])) ? esc_html(implode(',', $options->currentClone['excludedDirectories'])) : '' ?>">
+<div id="wpstg-directories-listing" wpstg-data-existing-excludes="<?php echo (($options->mainJob === 'updating' || $options->mainJob === 'resetting') && isset($options->currentClone['excludedDirectories'])) ? esc_html(implode(',', $options->currentClone['excludedDirectories'])) : '' ?>">
     <div class="wpstg-mb-8px">
         <button type="button" class="wpstg-unselect-dirs button"><?php esc_html_e('Unselect All', 'wp-staging'); ?></button>
         <button type="button" class="wpstg-select-dirs-default button"> <?php esc_html_e('Select Default', 'wp-staging'); ?></button>

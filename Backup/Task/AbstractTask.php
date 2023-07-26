@@ -53,9 +53,9 @@ abstract class AbstractTask
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
         /** @var Logger logger */
-        $this->logger   = $logger;
-        $this->cache    = $cache;
-        $this->stepsDto = $stepsDto;
+        $this->logger    = $logger; // @phpstan-ignore-line
+        $this->cache     = $cache;
+        $this->stepsDto  = $stepsDto;
         $this->taskQueue = $taskQueue;
 
         if (method_exists($this, 'init')) {
@@ -121,7 +121,7 @@ abstract class AbstractTask
 
         // TODO Hydrate
         $response = $this->getResponseDto();
-        $response->setStatus($this->stepsDto->isFinished());
+        $response->setIsRunning($this->stepsDto->isFinished());
         $response->setPercentage($this->stepsDto->getPercentage());
         $response->setTotal($this->stepsDto->getTotal());
         $response->setStep($this->stepsDto->getCurrent());

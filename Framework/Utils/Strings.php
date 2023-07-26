@@ -14,8 +14,23 @@ class Strings
      * @param string $replace
      * @param string $subject
      * @return string
+     * 
+     * @deprecated use strReplaceFirst instead
+     * @todo replace all usage of str_replace_first with strReplaceFirst
      */
     public function str_replace_first($search, $replace, $subject)
+    {
+        return $this->strReplaceFirst($search, $replace, $subject);
+    }
+
+    /**
+     * Replace first occurrence of certain string
+     * @param string $search
+     * @param string $replace
+     * @param string $subject
+     * @return string
+     */
+    public function strReplaceFirst($search, $replace, $subject)
     {
         if (empty($search)) {
             return $subject;

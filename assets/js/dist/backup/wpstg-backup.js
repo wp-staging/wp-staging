@@ -1,6 +1,307 @@
 (function () {
   'use strict';
 
+  function _regeneratorRuntime() {
+    _regeneratorRuntime = function () {
+      return exports;
+    };
+    var exports = {},
+      Op = Object.prototype,
+      hasOwn = Op.hasOwnProperty,
+      defineProperty = Object.defineProperty || function (obj, key, desc) {
+        obj[key] = desc.value;
+      },
+      $Symbol = "function" == typeof Symbol ? Symbol : {},
+      iteratorSymbol = $Symbol.iterator || "@@iterator",
+      asyncIteratorSymbol = $Symbol.asyncIterator || "@@asyncIterator",
+      toStringTagSymbol = $Symbol.toStringTag || "@@toStringTag";
+    function define(obj, key, value) {
+      return Object.defineProperty(obj, key, {
+        value: value,
+        enumerable: !0,
+        configurable: !0,
+        writable: !0
+      }), obj[key];
+    }
+    try {
+      define({}, "");
+    } catch (err) {
+      define = function (obj, key, value) {
+        return obj[key] = value;
+      };
+    }
+    function wrap(innerFn, outerFn, self, tryLocsList) {
+      var protoGenerator = outerFn && outerFn.prototype instanceof Generator ? outerFn : Generator,
+        generator = Object.create(protoGenerator.prototype),
+        context = new Context(tryLocsList || []);
+      return defineProperty(generator, "_invoke", {
+        value: makeInvokeMethod(innerFn, self, context)
+      }), generator;
+    }
+    function tryCatch(fn, obj, arg) {
+      try {
+        return {
+          type: "normal",
+          arg: fn.call(obj, arg)
+        };
+      } catch (err) {
+        return {
+          type: "throw",
+          arg: err
+        };
+      }
+    }
+    exports.wrap = wrap;
+    var ContinueSentinel = {};
+    function Generator() {}
+    function GeneratorFunction() {}
+    function GeneratorFunctionPrototype() {}
+    var IteratorPrototype = {};
+    define(IteratorPrototype, iteratorSymbol, function () {
+      return this;
+    });
+    var getProto = Object.getPrototypeOf,
+      NativeIteratorPrototype = getProto && getProto(getProto(values([])));
+    NativeIteratorPrototype && NativeIteratorPrototype !== Op && hasOwn.call(NativeIteratorPrototype, iteratorSymbol) && (IteratorPrototype = NativeIteratorPrototype);
+    var Gp = GeneratorFunctionPrototype.prototype = Generator.prototype = Object.create(IteratorPrototype);
+    function defineIteratorMethods(prototype) {
+      ["next", "throw", "return"].forEach(function (method) {
+        define(prototype, method, function (arg) {
+          return this._invoke(method, arg);
+        });
+      });
+    }
+    function AsyncIterator(generator, PromiseImpl) {
+      function invoke(method, arg, resolve, reject) {
+        var record = tryCatch(generator[method], generator, arg);
+        if ("throw" !== record.type) {
+          var result = record.arg,
+            value = result.value;
+          return value && "object" == typeof value && hasOwn.call(value, "__await") ? PromiseImpl.resolve(value.__await).then(function (value) {
+            invoke("next", value, resolve, reject);
+          }, function (err) {
+            invoke("throw", err, resolve, reject);
+          }) : PromiseImpl.resolve(value).then(function (unwrapped) {
+            result.value = unwrapped, resolve(result);
+          }, function (error) {
+            return invoke("throw", error, resolve, reject);
+          });
+        }
+        reject(record.arg);
+      }
+      var previousPromise;
+      defineProperty(this, "_invoke", {
+        value: function (method, arg) {
+          function callInvokeWithMethodAndArg() {
+            return new PromiseImpl(function (resolve, reject) {
+              invoke(method, arg, resolve, reject);
+            });
+          }
+          return previousPromise = previousPromise ? previousPromise.then(callInvokeWithMethodAndArg, callInvokeWithMethodAndArg) : callInvokeWithMethodAndArg();
+        }
+      });
+    }
+    function makeInvokeMethod(innerFn, self, context) {
+      var state = "suspendedStart";
+      return function (method, arg) {
+        if ("executing" === state) throw new Error("Generator is already running");
+        if ("completed" === state) {
+          if ("throw" === method) throw arg;
+          return doneResult();
+        }
+        for (context.method = method, context.arg = arg;;) {
+          var delegate = context.delegate;
+          if (delegate) {
+            var delegateResult = maybeInvokeDelegate(delegate, context);
+            if (delegateResult) {
+              if (delegateResult === ContinueSentinel) continue;
+              return delegateResult;
+            }
+          }
+          if ("next" === context.method) context.sent = context._sent = context.arg;else if ("throw" === context.method) {
+            if ("suspendedStart" === state) throw state = "completed", context.arg;
+            context.dispatchException(context.arg);
+          } else "return" === context.method && context.abrupt("return", context.arg);
+          state = "executing";
+          var record = tryCatch(innerFn, self, context);
+          if ("normal" === record.type) {
+            if (state = context.done ? "completed" : "suspendedYield", record.arg === ContinueSentinel) continue;
+            return {
+              value: record.arg,
+              done: context.done
+            };
+          }
+          "throw" === record.type && (state = "completed", context.method = "throw", context.arg = record.arg);
+        }
+      };
+    }
+    function maybeInvokeDelegate(delegate, context) {
+      var methodName = context.method,
+        method = delegate.iterator[methodName];
+      if (undefined === method) return context.delegate = null, "throw" === methodName && delegate.iterator.return && (context.method = "return", context.arg = undefined, maybeInvokeDelegate(delegate, context), "throw" === context.method) || "return" !== methodName && (context.method = "throw", context.arg = new TypeError("The iterator does not provide a '" + methodName + "' method")), ContinueSentinel;
+      var record = tryCatch(method, delegate.iterator, context.arg);
+      if ("throw" === record.type) return context.method = "throw", context.arg = record.arg, context.delegate = null, ContinueSentinel;
+      var info = record.arg;
+      return info ? info.done ? (context[delegate.resultName] = info.value, context.next = delegate.nextLoc, "return" !== context.method && (context.method = "next", context.arg = undefined), context.delegate = null, ContinueSentinel) : info : (context.method = "throw", context.arg = new TypeError("iterator result is not an object"), context.delegate = null, ContinueSentinel);
+    }
+    function pushTryEntry(locs) {
+      var entry = {
+        tryLoc: locs[0]
+      };
+      1 in locs && (entry.catchLoc = locs[1]), 2 in locs && (entry.finallyLoc = locs[2], entry.afterLoc = locs[3]), this.tryEntries.push(entry);
+    }
+    function resetTryEntry(entry) {
+      var record = entry.completion || {};
+      record.type = "normal", delete record.arg, entry.completion = record;
+    }
+    function Context(tryLocsList) {
+      this.tryEntries = [{
+        tryLoc: "root"
+      }], tryLocsList.forEach(pushTryEntry, this), this.reset(!0);
+    }
+    function values(iterable) {
+      if (iterable) {
+        var iteratorMethod = iterable[iteratorSymbol];
+        if (iteratorMethod) return iteratorMethod.call(iterable);
+        if ("function" == typeof iterable.next) return iterable;
+        if (!isNaN(iterable.length)) {
+          var i = -1,
+            next = function next() {
+              for (; ++i < iterable.length;) if (hasOwn.call(iterable, i)) return next.value = iterable[i], next.done = !1, next;
+              return next.value = undefined, next.done = !0, next;
+            };
+          return next.next = next;
+        }
+      }
+      return {
+        next: doneResult
+      };
+    }
+    function doneResult() {
+      return {
+        value: undefined,
+        done: !0
+      };
+    }
+    return GeneratorFunction.prototype = GeneratorFunctionPrototype, defineProperty(Gp, "constructor", {
+      value: GeneratorFunctionPrototype,
+      configurable: !0
+    }), defineProperty(GeneratorFunctionPrototype, "constructor", {
+      value: GeneratorFunction,
+      configurable: !0
+    }), GeneratorFunction.displayName = define(GeneratorFunctionPrototype, toStringTagSymbol, "GeneratorFunction"), exports.isGeneratorFunction = function (genFun) {
+      var ctor = "function" == typeof genFun && genFun.constructor;
+      return !!ctor && (ctor === GeneratorFunction || "GeneratorFunction" === (ctor.displayName || ctor.name));
+    }, exports.mark = function (genFun) {
+      return Object.setPrototypeOf ? Object.setPrototypeOf(genFun, GeneratorFunctionPrototype) : (genFun.__proto__ = GeneratorFunctionPrototype, define(genFun, toStringTagSymbol, "GeneratorFunction")), genFun.prototype = Object.create(Gp), genFun;
+    }, exports.awrap = function (arg) {
+      return {
+        __await: arg
+      };
+    }, defineIteratorMethods(AsyncIterator.prototype), define(AsyncIterator.prototype, asyncIteratorSymbol, function () {
+      return this;
+    }), exports.AsyncIterator = AsyncIterator, exports.async = function (innerFn, outerFn, self, tryLocsList, PromiseImpl) {
+      void 0 === PromiseImpl && (PromiseImpl = Promise);
+      var iter = new AsyncIterator(wrap(innerFn, outerFn, self, tryLocsList), PromiseImpl);
+      return exports.isGeneratorFunction(outerFn) ? iter : iter.next().then(function (result) {
+        return result.done ? result.value : iter.next();
+      });
+    }, defineIteratorMethods(Gp), define(Gp, toStringTagSymbol, "Generator"), define(Gp, iteratorSymbol, function () {
+      return this;
+    }), define(Gp, "toString", function () {
+      return "[object Generator]";
+    }), exports.keys = function (val) {
+      var object = Object(val),
+        keys = [];
+      for (var key in object) keys.push(key);
+      return keys.reverse(), function next() {
+        for (; keys.length;) {
+          var key = keys.pop();
+          if (key in object) return next.value = key, next.done = !1, next;
+        }
+        return next.done = !0, next;
+      };
+    }, exports.values = values, Context.prototype = {
+      constructor: Context,
+      reset: function (skipTempReset) {
+        if (this.prev = 0, this.next = 0, this.sent = this._sent = undefined, this.done = !1, this.delegate = null, this.method = "next", this.arg = undefined, this.tryEntries.forEach(resetTryEntry), !skipTempReset) for (var name in this) "t" === name.charAt(0) && hasOwn.call(this, name) && !isNaN(+name.slice(1)) && (this[name] = undefined);
+      },
+      stop: function () {
+        this.done = !0;
+        var rootRecord = this.tryEntries[0].completion;
+        if ("throw" === rootRecord.type) throw rootRecord.arg;
+        return this.rval;
+      },
+      dispatchException: function (exception) {
+        if (this.done) throw exception;
+        var context = this;
+        function handle(loc, caught) {
+          return record.type = "throw", record.arg = exception, context.next = loc, caught && (context.method = "next", context.arg = undefined), !!caught;
+        }
+        for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+          var entry = this.tryEntries[i],
+            record = entry.completion;
+          if ("root" === entry.tryLoc) return handle("end");
+          if (entry.tryLoc <= this.prev) {
+            var hasCatch = hasOwn.call(entry, "catchLoc"),
+              hasFinally = hasOwn.call(entry, "finallyLoc");
+            if (hasCatch && hasFinally) {
+              if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0);
+              if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc);
+            } else if (hasCatch) {
+              if (this.prev < entry.catchLoc) return handle(entry.catchLoc, !0);
+            } else {
+              if (!hasFinally) throw new Error("try statement without catch or finally");
+              if (this.prev < entry.finallyLoc) return handle(entry.finallyLoc);
+            }
+          }
+        }
+      },
+      abrupt: function (type, arg) {
+        for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+          var entry = this.tryEntries[i];
+          if (entry.tryLoc <= this.prev && hasOwn.call(entry, "finallyLoc") && this.prev < entry.finallyLoc) {
+            var finallyEntry = entry;
+            break;
+          }
+        }
+        finallyEntry && ("break" === type || "continue" === type) && finallyEntry.tryLoc <= arg && arg <= finallyEntry.finallyLoc && (finallyEntry = null);
+        var record = finallyEntry ? finallyEntry.completion : {};
+        return record.type = type, record.arg = arg, finallyEntry ? (this.method = "next", this.next = finallyEntry.finallyLoc, ContinueSentinel) : this.complete(record);
+      },
+      complete: function (record, afterLoc) {
+        if ("throw" === record.type) throw record.arg;
+        return "break" === record.type || "continue" === record.type ? this.next = record.arg : "return" === record.type ? (this.rval = this.arg = record.arg, this.method = "return", this.next = "end") : "normal" === record.type && afterLoc && (this.next = afterLoc), ContinueSentinel;
+      },
+      finish: function (finallyLoc) {
+        for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+          var entry = this.tryEntries[i];
+          if (entry.finallyLoc === finallyLoc) return this.complete(entry.completion, entry.afterLoc), resetTryEntry(entry), ContinueSentinel;
+        }
+      },
+      catch: function (tryLoc) {
+        for (var i = this.tryEntries.length - 1; i >= 0; --i) {
+          var entry = this.tryEntries[i];
+          if (entry.tryLoc === tryLoc) {
+            var record = entry.completion;
+            if ("throw" === record.type) {
+              var thrown = record.arg;
+              resetTryEntry(entry);
+            }
+            return thrown;
+          }
+        }
+        throw new Error("illegal catch attempt");
+      },
+      delegateYield: function (iterable, resultName, nextLoc) {
+        return this.delegate = {
+          iterator: values(iterable),
+          resultName: resultName,
+          nextLoc: nextLoc
+        }, "next" === this.method && (this.arg = undefined), ContinueSentinel;
+      }
+    }, exports;
+  }
   function asyncGeneratorStep(gen, resolve, reject, _next, _throw, key, arg) {
     try {
       var info = gen[key](arg);
@@ -9,34 +310,28 @@
       reject(error);
       return;
     }
-
     if (info.done) {
       resolve(value);
     } else {
       Promise.resolve(value).then(_next, _throw);
     }
   }
-
   function _asyncToGenerator(fn) {
     return function () {
       var self = this,
-          args = arguments;
+        args = arguments;
       return new Promise(function (resolve, reject) {
         var gen = fn.apply(self, args);
-
         function _next(value) {
           asyncGeneratorStep(gen, resolve, reject, _next, _throw, "next", value);
         }
-
         function _throw(err) {
           asyncGeneratorStep(gen, resolve, reject, _next, _throw, "throw", err);
         }
-
         _next(undefined);
       });
     };
   }
-
   function _unsupportedIterableToArray(o, minLen) {
     if (!o) return;
     if (typeof o === "string") return _arrayLikeToArray(o, minLen);
@@ -45,38 +340,28 @@
     if (n === "Map" || n === "Set") return Array.from(o);
     if (n === "Arguments" || /^(?:Ui|I)nt(?:8|16|32)(?:Clamped)?Array$/.test(n)) return _arrayLikeToArray(o, minLen);
   }
-
   function _arrayLikeToArray(arr, len) {
     if (len == null || len > arr.length) len = arr.length;
-
     for (var i = 0, arr2 = new Array(len); i < len; i++) arr2[i] = arr[i];
-
     return arr2;
   }
-
   function _createForOfIteratorHelperLoose(o, allowArrayLike) {
-    var it;
-
-    if (typeof Symbol === "undefined" || o[Symbol.iterator] == null) {
-      if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
-        if (it) o = it;
-        var i = 0;
-        return function () {
-          if (i >= o.length) return {
-            done: true
-          };
-          return {
-            done: false,
-            value: o[i++]
-          };
+    var it = typeof Symbol !== "undefined" && o[Symbol.iterator] || o["@@iterator"];
+    if (it) return (it = it.call(o)).next.bind(it);
+    if (Array.isArray(o) || (it = _unsupportedIterableToArray(o)) || allowArrayLike && o && typeof o.length === "number") {
+      if (it) o = it;
+      var i = 0;
+      return function () {
+        if (i >= o.length) return {
+          done: true
         };
-      }
-
-      throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
+        return {
+          done: false,
+          value: o[i++]
+        };
+      };
     }
-
-    it = o[Symbol.iterator]();
-    return it.next.bind(it);
+    throw new TypeError("Invalid attempt to iterate non-iterable instance.\nIn order to be iterable, non-array objects must have a [Symbol.iterator]() method.");
   }
 
   /**
@@ -91,7 +376,6 @@
    *
    * @return {object}
    */
-
   function wpstgHoverIntent (parent, selector, onOver, onOut) {
     var x;
     var y;
@@ -108,24 +392,19 @@
       timeout: 0,
       handleFocus: false
     };
-
     function delay(el, e) {
       if (timer) {
         timer = clearTimeout(timer);
       }
-
       state = 0;
       return focused ? undefined : onOut(el, e);
     }
-
     function tracker(e) {
       x = e.clientX;
       y = e.clientY;
     }
-
     function compare(el, e) {
       if (timer) timer = clearTimeout(timer);
-
       if (Math.abs(pX - x) + Math.abs(pY - y) < options.sensitivity) {
         state = 1;
         return focused ? undefined : onOver(el, e);
@@ -136,29 +415,23 @@
           compare(el, e);
         }, options.interval);
       }
-    } // Public methods
+    }
 
-
+    // Public methods
     h.options = function (opt) {
       var focusOptionChanged = opt.handleFocus !== options.handleFocus;
       options = Object.assign({}, options, opt);
-
       if (focusOptionChanged) {
         options.handleFocus ? addFocus() : removeFocus();
       }
-
       return h;
     };
-
     function dispatchOver(el, e) {
       mouseOver = true;
-
       if (timer) {
         timer = clearTimeout(timer);
       }
-
       el.removeEventListener('mousemove', tracker, false);
-
       if (state !== 1) {
         pX = e.clientX;
         pY = e.clientY;
@@ -167,126 +440,109 @@
           compare(el, e);
         }, options.interval);
       }
-
       return this;
     }
+
     /**
      * Newly added method,
      * A wrapper around dispatchOver to support dynamically added elements to dom
      */
-
-
     function onMouseOver(event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         dispatchOver(event.target.closest(selector), event);
       }
     }
-
     function dispatchOut(el, e) {
       mouseOver = false;
-
       if (timer) {
         timer = clearTimeout(timer);
       }
-
       el.removeEventListener('mousemove', tracker, false);
-
       if (state === 1) {
         timer = setTimeout(function () {
           delay(el, e);
         }, options.timeout);
       }
-
       return this;
     }
+
     /**
      * Newly added method,
      * A wrapper around dispatchOut to support dynamically added elements to dom
      */
-
-
     function onMouseOut(event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         dispatchOut(event.target.closest(selector), event);
       }
     }
-
     function dispatchFocus(el, e) {
       if (!mouseOver) {
         focused = true;
         onOver(el, e);
       }
     }
+
     /**
      * Newly added method,
      * A wrapper around dispatchFocus to support dynamically added elements to dom
      */
-
-
     function onFocus(event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         dispatchFocus(event.target.closest(selector), event);
       }
     }
-
     function dispatchBlur(el, e) {
       if (!mouseOver && focused) {
         focused = false;
         onOut(el, e);
       }
     }
+
     /**
      * Newly added method,
      * A wrapper around dispatchBlur to support dynamically added elements to dom
      */
-
-
     function onBlur(event) {
       if (event.target.matches(selector + ', ' + selector + ' *')) {
         dispatchBlur(event.target.closest(selector), event);
       }
     }
+
     /**
      * Modified to support dynamically added element
      */
-
     function addFocus() {
       parent.addEventListener('focus', onFocus, false);
       parent.addEventListener('blur', onBlur, false);
     }
+
     /**
      * Modified to support dynamically added element
      */
-
-
     function removeFocus() {
       parent.removeEventListener('focus', onFocus, false);
       parent.removeEventListener('blur', onBlur, false);
     }
+
     /**
      * Modified to support dynamically added element
      */
-
-
     h.remove = function () {
       if (!parent) {
         return;
       }
-
       parent.removeEventListener('mouseover', onMouseOver, false);
       parent.removeEventListener('mouseout', onMouseOut, false);
       removeFocus();
     };
+
     /**
      * Modified to support dynamically added element
      */
-
-
     if (parent) {
       parent.addEventListener('mouseover', onMouseOver, false);
       parent.addEventListener('mouseout', onMouseOut, false);
     }
-
     return h;
   }
 
@@ -303,15 +559,12 @@
           if (incrementRatio === void 0) {
             incrementRatio = 1.25;
           }
-
           WPStagingCommon.retry.performingRequest = true;
-
           if (WPStagingCommon.retry.currentDelay === 0) {
             // start with a delay of 1sec
             WPStagingCommon.retry.currentDelay = 1000;
             WPStagingCommon.retry.count = 1;
           }
-
           WPStagingCommon.retry.currentDelay += 500 * WPStagingCommon.retry.count * incrementRatio;
           WPStagingCommon.retry.count++;
         },
@@ -331,9 +584,9 @@
           // It is already cached!
           if ($.inArray(selector, this.elements) !== -1) {
             return this.elements[selector];
-          } // Create cache and return
+          }
 
-
+          // Create cache and return
           this.elements[selector] = $(selector);
           return this.elements[selector];
         },
@@ -360,20 +613,19 @@
         if (isContentCentered === void 0) {
           isContentCentered = false;
         }
-
         if (customClasses === void 0) {
           customClasses = {};
         }
-
         // common style for all swal modal used in WP Staging
         var defaultCustomClasses = {
           confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-100-width',
           cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn wpstg-100-width',
           actions: 'wpstg--modal--actions',
           popup: isContentCentered ? 'wpstg-swal-popup centered-modal' : 'wpstg-swal-popup'
-        }; // If a attribute exists in both default and additional attributes,
-        // The class(es) of the additional attribute will overrite the default one.
+        };
 
+        // If a attribute exists in both default and additional attributes,
+        // The class(es) of the additional attribute will overrite the default one.
         var options = {
           customClass: Object.assign(defaultCustomClasses, customClasses),
           buttonsStyling: false,
@@ -420,7 +672,6 @@
       closeSwalModal: function closeSwalModal() {
         wpstgSwal.close();
       },
-
       /**
        * Treats a default response object generated by WordPress's
        * wp_send_json_success() or wp_send_json_error() functions in
@@ -434,15 +685,12 @@
         if (typeof response !== 'object') {
           throw new Error('Unexpected response (ERR 1341)');
         }
-
         if (!response.hasOwnProperty('success')) {
           throw new Error('Unexpected response (ERR 1342)');
         }
-
         if (!response.hasOwnProperty('data')) {
           throw new Error('Unexpected response (ERR 1343)');
         }
-
         if (response.success === false) {
           if (response.data instanceof Array && response.data.length > 0) {
             throw new Error(response.data.shift());
@@ -461,7 +709,6 @@
           WPStagingCommon.cache.get('.wpstg-loader').show();
         }
       },
-
       /**
        * Convert the given url to make it slug compatible
        * @param {string} url
@@ -473,13 +720,11 @@
       showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
         prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
         appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
-
         if (response === false) {
           WPStagingCommon.showError(prependMessage + ' Error: No response.' + appendMessage);
           window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
           return;
         }
-
         if (typeof response.error !== 'undefined' && response.error) {
           WPStagingCommon.showError(prependMessage + ' Error: ' + response.message + appendMessage);
           window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
@@ -490,7 +735,6 @@
         if (!response.ok) {
           WPStagingCommon.showError('Error: ' + response.status + ' - ' + response.statusText + '. Please try again or contact support.');
         }
-
         return response;
       },
       showError: function showError(message) {
@@ -498,7 +742,6 @@
         if (WPStagingCommon.retry.performingRequest) {
           return;
         }
-
         WPStagingCommon.cache.get('#wpstg-try-again').css('display', 'inline-block');
         WPStagingCommon.cache.get('#wpstg-cancel-cloning').text('Reset');
         WPStagingCommon.cache.get('#wpstg-resume-cloning').show();
@@ -511,7 +754,6 @@
       resetErrors: function resetErrors() {
         WPStagingCommon.cache.get('#wpstg-error-details').hide().html('');
       },
-
       /**
        * Ajax Requests
        * @param {Object} data
@@ -526,28 +768,22 @@
         if (incrementRatio === void 0) {
           incrementRatio = null;
         }
-
         if (errorCallback === void 0) {
           errorCallback = null;
         }
-
         if ('undefined' === typeof dataType) {
           dataType = 'json';
         }
-
         if (false !== showErrors) {
           showErrors = true;
         }
-
         tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
         var retryLimit = 10;
         var retryTimeout = 10000 * tryCount;
         incrementRatio = parseInt(incrementRatio);
-
         if (!isNaN(incrementRatio)) {
           retryTimeout *= incrementRatio;
         }
-
         $.ajax({
           url: ajaxurl + '?action=wpstg_processing&_=' + Date.now() / 1000,
           type: 'POST',
@@ -556,21 +792,18 @@
           data: data,
           error: function error(xhr, textStatus, errorThrown) {
             console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
-
             if (typeof errorCallback === 'function') {
               // Custom error handler
               errorCallback(xhr, textStatus, errorThrown);
-
               if (!WPStagingCommon.continueErrorHandle) {
                 // Reset state
                 WPStagingCommon.continueErrorHandle = true;
                 return;
               }
-            } // Default error handler
+            }
 
-
+            // Default error handler
             tryCount++;
-
             if (tryCount <= retryLimit) {
               setTimeout(function () {
                 WPStagingCommon.ajax(data, callback, dataType, showErrors, tryCount, incrementRatio);
@@ -630,107 +863,6 @@
   })(jQuery);
 
   /**
-   * Polyfills the `Element.prototype.closest` function if not available in the browser.
-   *
-   * @return {Function} A function that will return the closest element, by selector, to this element.
-   */
-  function polyfillClosest() {
-    if (Element.prototype.closest) {
-      if (!Element.prototype.matches) {
-        Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
-      }
-
-      Element.prototype.closest = function (s) {
-        var el = this;
-
-        do {
-          if (Element.prototype.matches.call(el, s)) return el;
-          el = el.parentElement || el.parentNode;
-        } while (el !== null && el.nodeType === 1);
-
-        return null;
-      };
-    }
-
-    return function (element, selector) {
-      return element instanceof Element ? element.closest(selector) : null;
-    };
-  }
-
-  polyfillClosest();
-
-  /**
-   * WP STAGING basic jQuery replacement
-   */
-
-  /**
-   * Shortcut for document.querySelector() or jQuery's $()
-   * Return single element only
-   */
-
-  function qs(selector) {
-    return document.querySelector(selector);
-  }
-  /**
-   * alternative of jQuery - $(parent).on(event, selector, handler)
-   */
-
-  function addEvent(parent, evt, selector, handler) {
-    if (!parent instanceof Element) {
-      return;
-    }
-
-    parent.addEventListener(evt, function (event) {
-      if (event.target.matches(selector + ', ' + selector + ' *')) {
-        handler(event.target.closest(selector), event);
-      }
-    }, false);
-  }
-  function slideDown(element, duration) {
-    if (duration === void 0) {
-      duration = 400;
-    }
-
-    element.style.display = 'block';
-    element.style.overflow = 'hidden';
-    var height = element.offsetHeight;
-    element.style.height = '0px';
-    element.style.transitionProperty = 'height';
-    element.style.transitionDuration = duration + 'ms';
-    setTimeout(function () {
-      element.style.height = height + 'px';
-      window.setTimeout(function () {
-        element.style.removeProperty('height');
-        element.style.removeProperty('overflow');
-        element.style.removeProperty('transition-duration');
-        element.style.removeProperty('transition-property');
-      }, duration);
-    }, 0);
-  }
-  function slideUp(element, duration) {
-    if (duration === void 0) {
-      duration = 400;
-    }
-
-    element.style.display = 'block';
-    element.style.overflow = 'hidden';
-    var height = element.offsetHeight;
-    element.style.height = height + 'px';
-    element.style.transitionProperty = 'height';
-    element.style.transitionDuration = duration + 'ms';
-    setTimeout(function () {
-      element.style.height = '0px';
-      window.setTimeout(function () {
-        element.style.display = 'none';
-        element.style.removeProperty('height');
-        element.style.removeProperty('overflow');
-        element.style.removeProperty('transition-duration');
-        element.style.removeProperty('transition-property');
-      }, duration);
-    }, 0);
-  }
-
-  /**
    * Copyright (c) 2014-present, Facebook, Inc.
    *
    * This source code is licensed under the MIT license found in the
@@ -741,6 +873,7 @@
 
     var Op = Object.prototype;
     var hasOwn = Op.hasOwnProperty;
+    var defineProperty = Object.defineProperty || function (obj, key, desc) { obj[key] = desc.value; };
     var undefined$1; // More compressible than void 0.
     var $Symbol = typeof Symbol === "function" ? Symbol : {};
     var iteratorSymbol = $Symbol.iterator || "@@iterator";
@@ -773,7 +906,7 @@
 
       // The ._invoke method unifies the implementations of the .next,
       // .throw, and .return methods.
-      generator._invoke = makeInvokeMethod(innerFn, self, context);
+      defineProperty(generator, "_invoke", { value: makeInvokeMethod(innerFn, self, context) });
 
       return generator;
     }
@@ -817,9 +950,9 @@
     // This is a polyfill for %IteratorPrototype% for environments that
     // don't natively support it.
     var IteratorPrototype = {};
-    IteratorPrototype[iteratorSymbol] = function () {
+    define(IteratorPrototype, iteratorSymbol, function () {
       return this;
-    };
+    });
 
     var getProto = Object.getPrototypeOf;
     var NativeIteratorPrototype = getProto && getProto(getProto(values([])));
@@ -833,8 +966,13 @@
 
     var Gp = GeneratorFunctionPrototype.prototype =
       Generator.prototype = Object.create(IteratorPrototype);
-    GeneratorFunction.prototype = Gp.constructor = GeneratorFunctionPrototype;
-    GeneratorFunctionPrototype.constructor = GeneratorFunction;
+    GeneratorFunction.prototype = GeneratorFunctionPrototype;
+    defineProperty(Gp, "constructor", { value: GeneratorFunctionPrototype, configurable: true });
+    defineProperty(
+      GeneratorFunctionPrototype,
+      "constructor",
+      { value: GeneratorFunction, configurable: true }
+    );
     GeneratorFunction.displayName = define(
       GeneratorFunctionPrototype,
       toStringTagSymbol,
@@ -944,13 +1082,13 @@
 
       // Define the unified helper method that is used to implement .next,
       // .throw, and .return (see defineIteratorMethods).
-      this._invoke = enqueue;
+      defineProperty(this, "_invoke", { value: enqueue });
     }
 
     defineIteratorMethods(AsyncIterator.prototype);
-    AsyncIterator.prototype[asyncIteratorSymbol] = function () {
+    define(AsyncIterator.prototype, asyncIteratorSymbol, function () {
       return this;
-    };
+    });
     exports.AsyncIterator = AsyncIterator;
 
     // Note that simple async functions are implemented on top of
@@ -1054,31 +1192,32 @@
     // delegate iterator, or by modifying context.method and context.arg,
     // setting context.delegate to null, and returning the ContinueSentinel.
     function maybeInvokeDelegate(delegate, context) {
-      var method = delegate.iterator[context.method];
+      var methodName = context.method;
+      var method = delegate.iterator[methodName];
       if (method === undefined$1) {
         // A .throw or .return when the delegate iterator has no .throw
-        // method always terminates the yield* loop.
+        // method, or a missing .next mehtod, always terminate the
+        // yield* loop.
         context.delegate = null;
 
-        if (context.method === "throw") {
-          // Note: ["return"] must be used for ES3 parsing compatibility.
-          if (delegate.iterator["return"]) {
-            // If the delegate iterator has a return method, give it a
-            // chance to clean up.
-            context.method = "return";
-            context.arg = undefined$1;
-            maybeInvokeDelegate(delegate, context);
+        // Note: ["return"] must be used for ES3 parsing compatibility.
+        if (methodName === "throw" && delegate.iterator["return"]) {
+          // If the delegate iterator has a return method, give it a
+          // chance to clean up.
+          context.method = "return";
+          context.arg = undefined$1;
+          maybeInvokeDelegate(delegate, context);
 
-            if (context.method === "throw") {
-              // If maybeInvokeDelegate(context) changed context.method from
-              // "return" to "throw", let that override the TypeError below.
-              return ContinueSentinel;
-            }
+          if (context.method === "throw") {
+            // If maybeInvokeDelegate(context) changed context.method from
+            // "return" to "throw", let that override the TypeError below.
+            return ContinueSentinel;
           }
-
+        }
+        if (methodName !== "return") {
           context.method = "throw";
           context.arg = new TypeError(
-            "The iterator does not provide a 'throw' method");
+            "The iterator does not provide a '" + methodName + "' method");
         }
 
         return ContinueSentinel;
@@ -1143,13 +1282,13 @@
     // iterator prototype chain incorrectly implement this, causing the Generator
     // object to not be returned from this call. This ensures that doesn't happen.
     // See https://github.com/facebook/regenerator/issues/274 for more details.
-    Gp[iteratorSymbol] = function() {
+    define(Gp, iteratorSymbol, function() {
       return this;
-    };
+    });
 
-    Gp.toString = function() {
+    define(Gp, "toString", function() {
       return "[object Generator]";
-    };
+    });
 
     function pushTryEntry(locs) {
       var entry = { tryLoc: locs[0] };
@@ -1182,7 +1321,8 @@
       this.reset(true);
     }
 
-    exports.keys = function(object) {
+    exports.keys = function(val) {
+      var object = Object(val);
       var keys = [];
       for (var key in object) {
         keys.push(key);
@@ -1468,14 +1608,111 @@
   } catch (accidentalStrictMode) {
     // This module should not be running in strict mode, so the above
     // assignment should always work unless something is misconfigured. Just
-    // in case runtime.js accidentally runs in strict mode, we can escape
+    // in case runtime.js accidentally runs in strict mode, in modern engines
+    // we can explicitly access globalThis. In older engines we can escape
     // strict mode using a global Function call. This could conceivably fail
     // if a Content Security Policy forbids using Function, but in that case
     // the proper solution is to fix the accidental strict mode problem. If
     // you've misconfigured your bundler to force strict mode and applied a
     // CSP to forbid Function, and you're not willing to fix either of those
     // problems, please detail your unique predicament in a GitHub issue.
-    Function("r", "regeneratorRuntime = r")(runtime);
+    if (typeof globalThis === "object") {
+      globalThis.regeneratorRuntime = runtime;
+    } else {
+      Function("r", "regeneratorRuntime = r")(runtime);
+    }
+  }
+
+  /**
+   * Polyfills the `Element.prototype.closest` function if not available in the browser.
+   *
+   * @return {Function} A function that will return the closest element, by selector, to this element.
+   */
+  function polyfillClosest() {
+    if (Element.prototype.closest) {
+      if (!Element.prototype.matches) {
+        Element.prototype.matches = Element.prototype.msMatchesSelector || Element.prototype.webkitMatchesSelector;
+      }
+      Element.prototype.closest = function (s) {
+        var el = this;
+        do {
+          if (Element.prototype.matches.call(el, s)) return el;
+          el = el.parentElement || el.parentNode;
+        } while (el !== null && el.nodeType === 1);
+        return null;
+      };
+    }
+    return function (element, selector) {
+      return element instanceof Element ? element.closest(selector) : null;
+    };
+  }
+  polyfillClosest();
+
+  /**
+   * WP STAGING basic jQuery replacement
+   */
+
+  /**
+   * Shortcut for document.querySelector() or jQuery's $()
+   * Return single element only
+   */
+  function qs(selector) {
+    return document.querySelector(selector);
+  }
+
+  /**
+   * alternative of jQuery - $(parent).on(event, selector, handler)
+   */
+  function addEvent(parent, evt, selector, handler) {
+    if (!parent instanceof Element) {
+      return;
+    }
+    parent.addEventListener(evt, function (event) {
+      if (event.target.matches(selector + ', ' + selector + ' *')) {
+        handler(event.target.closest(selector), event);
+      }
+    }, false);
+  }
+  function slideDown(element, duration) {
+    if (duration === void 0) {
+      duration = 400;
+    }
+    element.style.display = 'block';
+    element.style.overflow = 'hidden';
+    var height = element.offsetHeight;
+    element.style.height = '0px';
+    element.style.transitionProperty = 'height';
+    element.style.transitionDuration = duration + 'ms';
+    setTimeout(function () {
+      element.style.height = height + 'px';
+      window.setTimeout(function () {
+        element.style.removeProperty('height');
+        element.style.removeProperty('overflow');
+        element.style.removeProperty('transition-duration');
+        element.style.removeProperty('transition-property');
+      }, duration);
+    }, 0);
+  }
+  function slideUp(element, duration) {
+    if (duration === void 0) {
+      duration = 400;
+    }
+    element.style.display = 'block';
+    element.style.overflow = 'hidden';
+    var height = element.offsetHeight;
+    element.style.height = height + 'px';
+    element.style.transitionProperty = 'height';
+    element.style.transitionDuration = duration + 'ms';
+    setTimeout(function () {
+      element.style.height = '0px';
+      window.setTimeout(function () {
+        element.style.display = 'none';
+        element.style.removeProperty('height');
+        element.style.removeProperty('overflow');
+        element.style.removeProperty('transition-duration');
+        element.style.removeProperty('transition-property');
+      }, duration);
+    }, 0);
   }
 
   /**
@@ -1486,19 +1723,14 @@
       if (wpstgObject === void 0) {
         wpstgObject = wpstg;
       }
-
       this.wpstgObject = wpstgObject;
     }
-
     var _proto = WpstgDetectMemoryExhaust.prototype;
-
     _proto.sendRequest = function sendRequest(requestType, callback) {
       var _this = this;
-
       if (callback === void 0) {
         callback = null;
       }
-
       fetch(this.wpstgObject.ajaxUrl, {
         method: 'POST',
         credentials: 'same-origin',
@@ -1515,23 +1747,19 @@
         if (response.ok) {
           return response.json();
         }
-
         return Promise.reject(response);
       }).then(function (data) {
         if ('undefined' !== typeof data.status && data.status) {
           if (data.error && typeof callback === 'function') {
             callback(data.data, data.message);
           }
-
           return;
         }
-
         console.warn(data.message);
       })["catch"](function (error) {
         console.warn(_this.wpstgObject.i18n['somethingWentWrong'], error);
       });
     };
-
     return WpstgDetectMemoryExhaust;
   }();
 
@@ -1542,47 +1770,36 @@
     function WpstgSidebarMenu() {
       this.init();
     }
-
     var _proto = WpstgSidebarMenu.prototype;
-
     _proto.init = function init() {
       this.wpstdStagingTab = document.querySelector('#wpstg--tab--toggle--staging');
       this.wpstdBackupTab = document.querySelector('#wpstg--tab--toggle--backup');
       this.wpstdSidebarMenu = document.querySelector('#toplevel_page_wpstg_clone');
       this.addEvents();
     };
-
     _proto.addEvents = function addEvents() {
       var _this = this;
-
       if (this.wpstdStagingTab !== null) {
         this.wpstdStagingTab.addEventListener('click', function () {
           _this.setPageUrl('wpstg_clone');
-
           _this.setSidebarMenu('wpstg_clone');
         });
       }
-
       if (this.wpstdBackupTab !== null) {
         this.wpstdBackupTab.addEventListener('click', function () {
           _this.setPageUrl('wpstg_backup');
-
           _this.setSidebarMenu('wpstg_backup');
         });
       }
     };
-
     _proto.setPageUrl = function setPageUrl(page) {
       window.history.pushState(null, null, window.location.pathname + '?page=' + page);
     };
-
     _proto.setSidebarMenu = function setSidebarMenu(page) {
       var wpstgSidebarMenuElements = this.wpstdSidebarMenu.querySelector('ul').querySelectorAll('li');
-
       if (wpstgSidebarMenuElements.length > 0) {
         for (var i = 0; i < wpstgSidebarMenuElements.length; i++) {
           wpstgSidebarMenuElements[i].classList.remove('current');
-
           if (wpstgSidebarMenuElements[i].querySelector('a') !== null) {
             if (wpstgSidebarMenuElements[i].querySelector('a').getAttribute('href') === 'admin.php?page=' + page) {
               wpstgSidebarMenuElements[i].classList.add('current');
@@ -1591,12 +1808,10 @@
         }
       }
     };
-
     return WpstgSidebarMenu;
   }();
 
   var WPStagingBackup;
-
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackup.fetchListing();
@@ -1620,14 +1835,12 @@
         if (res.success !== undefined && res.success === false) {
           WPStagingCommon.showError('Error: ' + res.data);
         }
-
         var $ul = $('.wpstg-backup-list ul');
         $ul.empty();
         $ul.html(res);
         addEvent(qs('#wpstg-existing-backups'), 'click', '.wpstg-tab-header', function (el) {
           var target = qs(el.getAttribute('data-id'));
           el.classList.toggle('expand');
-
           if (el.classList.contains('expand')) {
             el.querySelector('span').classList.add('wpstg-rotate-90');
             slideDown(target);
@@ -1713,7 +1926,6 @@
           if (type === void 0) {
             type = WPStagingBackup.messages.ERROR;
           }
-
           return WPStagingBackup.messages.data[type].length;
         },
         addMessage: function addMessage(message) {
@@ -1723,15 +1935,11 @@
             });
             return;
           }
-
           var type = message.type.toLowerCase() || 'info';
-
           if (!WPStagingBackup.messages.data[type]) {
             WPStagingBackup.messages.data[type] = [];
           }
-
           WPStagingBackup.messages.data.all.push(message); // TODO RPoC
-
           WPStagingBackup.messages.data[type].push(message);
         },
         reset: function reset() {
@@ -1752,9 +1960,9 @@
           if (null !== WPStagingBackup.timer.interval) {
             return;
           }
-
           var prettify = function prettify(seconds) {
-            console.log("Process running for " + seconds + " seconds"); // If potentially anything can exceed 24h execution time than that;
+            console.log("Process running for " + seconds + " seconds");
+            // If potentially anything can exceed 24h execution time than that;
             // const _seconds = parseInt(seconds, 10)
             // const hours = Math.floor(_seconds / 3600)
             // const minutes = Math.floor(_seconds / 60) % 60
@@ -1766,10 +1974,8 @@
             //   .join(':')
             // ;
             // Are we sure we won't create anything that exceeds 24h execution time? If not then this;
-
             return "" + new Date(seconds * 1000).toISOString().substr(11, 8);
           };
-
           WPStagingBackup.timer.interval = setInterval(function () {
             $('.wpstg--modal--process--elapsed-time').text(prettify(WPStagingBackup.timer.totalSeconds));
             WPStagingBackup.timer.totalSeconds++;
@@ -1777,7 +1983,6 @@
         },
         stop: function stop() {
           WPStagingBackup.timer.totalSeconds = 0;
-
           if (WPStagingBackup.timer.interval) {
             clearInterval(WPStagingBackup.timer.interval);
             WPStagingBackup.timer.interval = null;
@@ -1792,14 +1997,11 @@
         if (isResetErrors === void 0) {
           isResetErrors = true;
         }
-
         WPStagingCommon.isLoading(true);
         $('#backup-messages').text('');
-
         if (isResetErrors) {
           WPStagingCommon.resetErrors();
         }
-
         return fetch(ajaxurl + "?action=wpstg--backups--listing&_=" + Math.random(), {
           method: 'POST',
           credentials: 'same-origin',
@@ -1815,12 +2017,10 @@
           return res.json();
         }).then(function (res) {
           WPStagingCommon.cache.get('#wpstg--tab--backup').html(res);
-
           if (res.success !== undefined && res.success === false) {
             WPStagingCommon.showError('Error: ' + res.data);
             return;
           }
-
           WPStagingCommon.showAjaxFatalError(res, '', 'Submit an error report.');
           WPStagingCommon.isLoading(false);
           window.dispatchEvent(new Event('backupListingFinished'));
@@ -1829,7 +2029,6 @@
           return WPStagingCommon.showAjaxFatalError(e, '', 'Submit an error report.');
         });
       },
-
       /**
        * The cancel & cleanup process when we cancel a backup job or when a backup job is stopped due to an error.
        *
@@ -1840,11 +2039,9 @@
         if (extraParams === void 0) {
           extraParams = {};
         }
-
         if (callback === void 0) {
           callback = null;
         }
-
         WPStagingBackup.timer.stop();
         clearInterval(WPStagingBackup.processInfo.interval);
         WPStagingBackup.isCancelled = true;
@@ -1873,7 +2070,6 @@
         if (WPStagingBackup.performingCancelRequest) {
           return;
         }
-
         WPStagingBackup.performingCancelRequest = true;
         WPStagingCommon.ajax(Object.assign({
           action: 'wpstg--backups--cancel',
@@ -1884,14 +2080,11 @@
           WPStagingBackup.performingCancelRequest = false;
           WPStagingBackup.isCancelled = false;
           WPStagingCommon.showAjaxFatalError(response, '', 'Submit an error report.');
-
-          if (!response.hasOwnProperty('status')) {
+          if (!response.hasOwnProperty('isRunning')) {
             WPStagingCommon.showErrorModal('Cancel process did not finish gracefully. Some temporary files might not have been cleaned up.');
           }
-
-          if (response.status === true) {
+          if (response.isRunning === true) {
             WPStagingCommon.closeSwalModal();
-
             if (callback !== undefined && callback !== null) {
               callback();
             }
@@ -1899,28 +2092,28 @@
             extraParams.isInit = 'no';
             WPStagingBackup.sendCancelRequest(extraParams, callback);
           }
-        }, 'json', false, 10, // Don't retry upon failure
+        }, 'json', false, 10,
+        // Don't retry upon failure
         1.25, function (xhr, textStatus, errorThrown) {
-          WPStagingBackup.performingCancelRequest = false; // Todo: Why do we need this?
+          WPStagingBackup.performingCancelRequest = false;
 
-          WPStagingCommon.continueErrorHandle = false; // Resource is busy, wait for request to finish and try again
+          // Todo: Why do we need this?
+          WPStagingCommon.continueErrorHandle = false;
 
+          // Resource is busy, wait for request to finish and try again
           if (xhr.status === 423) {
             setTimeout(function () {
               WPStagingBackup.sendCancelRequest(extraParams, callback);
             }, 1000);
             return;
           }
-
           WPStagingCommon.closeSwalModal();
           WPStagingCommon.showErrorModal('Cancel process did not finish gracefully. Some temporary files might not have been cleaned up.');
-
           if (callback !== undefined && callback !== null) {
             callback();
           }
         });
       },
-
       /**
       * If process.execute exists, process.data and process.onResponse is not used
       * process = { data: {}, onResponse: (resp) => {}, onAfterClose: () => {}, execute: () => {}, isShowCancelButton: bool }
@@ -1931,9 +2124,9 @@
           WPStagingCommon.closeSwalModal();
           WPStagingCommon.showError('process.data and / or process.onResponse is not set');
           return;
-        } // TODO move to backend and get the contents as xhr response?
+        }
 
-
+        // TODO move to backend and get the contents as xhr response?
         if (!WPStagingBackup.modal.process.html || !WPStagingBackup.modal.process.cancelBtnTxt) {
           var $modal = $('#wpstg--modal--backup--process');
           var html = $modal.html();
@@ -1942,14 +2135,12 @@
           WPStagingBackup.modal.process.cancelBtnTxt = btnTxt || null;
           $modal.remove();
         }
-
         $('body').off('click', '.wpstg--modal--process--logs--tail').on('click', '.wpstg--modal--process--logs--tail', function (e) {
           var logBtn = $(this);
           e.preventDefault();
           var container = WPStagingCommon.getSwalContainer();
           var $logs = $(container).find('.wpstg--modal--process--logs');
           $logs.toggle();
-
           if ($logs.is(':visible')) {
             logBtn.text(wpstg.i18n.hideLogs);
             container.childNodes[0].style.width = '97%';
@@ -1972,29 +2163,22 @@
           width: 600,
           onRender: function onRender() {
             var _btnCancel = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
-
             var btnCancel = _btnCancel.cloneNode(true);
-
             _btnCancel.parentNode.replaceChild(btnCancel, _btnCancel);
-
             btnCancel.addEventListener('click', function (e) {
               if (confirm('Do you want to cancel the process?')) {
                 WPStagingBackup.cancel();
               }
             });
-
             if (typeof _process.execute === 'function') {
               _process.execute();
-
               return;
             }
-
             if (!_process.data || !_process.onResponse) {
               WPStagingCommon.closeSwalModal();
               WPStagingCommon.showError('process.data and / or process.onResponse is not set');
               return;
             }
-
             WPStagingCommon.ajax(_process.data, _process.onResponse);
           },
           onAfterClose: function onAfterClose() {
@@ -2008,95 +2192,79 @@
           WPStagingCommon.showError('Invalid Response; null');
           throw new Error("Invalid Response; " + response);
         }
-
         var $container = $(WPStagingCommon.getSwalContainer());
-
         var title = function title() {
           if (response.title || response.statusTitle) {
             $container.find('.wpstg--modal--process--title').text(response.title || response.statusTitle);
           }
         };
-
         var percentage = function percentage() {
           if (response.percentage) {
             $container.find('.wpstg--modal--process--percent').text(response.percentage);
           }
         };
-
         var logs = function logs() {
           if (!response.messages) {
             return;
           }
-
           var $logsContainer = $container.find('.wpstg--modal--process--logs');
           var stoppingTypes = [WPStagingBackup.messages.ERROR, WPStagingBackup.messages.CRITICAL];
-
           var appendMessage = function appendMessage(message) {
             if (Array.isArray(message)) {
               for (var _iterator = _createForOfIteratorHelperLoose(message), _step; !(_step = _iterator()).done;) {
                 var item = _step.value;
                 appendMessage(item);
               }
-
               return;
             }
-
             var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
             $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
-
             if (stoppingTypes.includes(message.type.toLowerCase())) {
               window.dispatchEvent(new CustomEvent('finishedProcessWithError', {
                 detail: {
                   error: message.message
                 }
-              })); // Callback approach is used to make sure the logs modal is always shown,
+              }));
+              // Callback approach is used to make sure the logs modal is always shown,
               // after the completion of cancel/cleanup process.
               // Makes sure cancel/cleanup process doesn't close the logs modal.
               // Any other approach would have required a lot of refactoring.
-
               WPStagingBackup.cancel({}, function () {
                 setTimeout(WPStagingBackup.logsModal, 500);
               });
             }
           };
-
           for (var _iterator2 = _createForOfIteratorHelperLoose(response.messages), _step2; !(_step2 = _iterator2()).done;) {
             var message = _step2.value;
-
             if (!message) {
               continue;
             }
-
             WPStagingBackup.messages.addMessage(message);
             appendMessage(message);
           }
-
           if ($logsContainer.is(':visible')) {
             $logsContainer.scrollTop($logsContainer[0].scrollHeight);
           }
-
           if (!WPStagingBackup.messages.shouldWarn()) {
             return;
           }
-
           var $btnShowLogs = $container.find('.wpstg--modal--process--logs--tail');
           $btnShowLogs.html($btnShowLogs.attr('data-txt-bad'));
           $btnShowLogs.find('.wpstg--modal--logs--critical-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.CRITICAL));
           $btnShowLogs.find('.wpstg--modal--logs--error-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.ERROR));
           $btnShowLogs.find('.wpstg--modal--logs--warning-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.WARNING));
         };
-
         title();
         percentage();
         logs();
-
         if (response.jobId) {
           WPStagingCommon.setJobId(response.jobId);
         }
-
-        if (response.status === true && response.job_done === true) {
+        if (response.isRunning === true && response.job_done === true) {
           WPStagingBackup.timer.stop();
           WPStagingBackup.isCancelled = true;
+          // For other classes that require 'status'
+          response.status = response.isRunning;
           window.dispatchEvent(new CustomEvent('finishedProcess', {
             response: response
           }));
@@ -2118,19 +2286,15 @@
             var title = $translations.attr('data-modal-logs-title').replace('{critical}', messages.countByType(messages.CRITICAL)).replace('{errors}', messages.countByType(messages.ERROR)).replace('{warnings}', messages.countByType(messages.WARNING));
             $errorContainer.before("<h3>" + title + "</h3>");
             var warnings = [WPStagingBackup.messages.CRITICAL, WPStagingBackup.messages.ERROR, WPStagingBackup.messages.WARNING];
-
             if (!WPStagingBackup.messages.shouldWarn()) {
               $errorContainer.hide();
             }
-
             for (var _iterator3 = _createForOfIteratorHelperLoose(messages.data.all), _step3; !(_step3 = _iterator3()).done;) {
               var message = _step3.value;
               var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
-
               if (warnings.includes(message.type)) {
                 $errorContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
               }
-
               $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
             }
           },
@@ -2142,16 +2306,14 @@
       },
       downloadModal: function downloadModal(_ref) {
         var _ref$title = _ref.title,
-            title = _ref$title === void 0 ? null : _ref$title,
-            _ref$bodyText = _ref.bodyText,
-            bodyText = _ref$bodyText === void 0 ? null : _ref$bodyText;
-
+          title = _ref$title === void 0 ? null : _ref$title,
+          _ref$bodyText = _ref.bodyText,
+          bodyText = _ref$bodyText === void 0 ? null : _ref$bodyText;
         if (null === WPStagingBackup.modal.download.html) {
           var $el = $('#wpstg--modal--backup--download');
           WPStagingBackup.modal.download.html = $el.html();
           $el.remove();
         }
-
         WPStagingCommon.getSwalModal(true).fire({
           'icon': 'success',
           'html': WPStagingBackup.modal.download.html.replace('{title}', title).replace('{btnTxtLog}', '<span style="text-decoration: underline">Show Logs</span>').replace('{text}', bodyText !== null ? bodyText : 'You can download or restore this backup at any time on this website or even on another website to transfer this site.'),
@@ -2179,19 +2341,16 @@
       statusStart: function statusStart(process) {
         if (WPStagingBackup.processInfo.interval !== null) {
           return;
-        } // console.log('Status: Start 2');
-
-
+        }
+        // console.log('Status: Start 2');
         WPStagingBackup.processInfo.interval = setInterval(function () {
           if (true === WPStagingBackup.isCancelled) {
             WPStagingBackup.statusStop();
             return;
           }
-
           if (WPStagingBackup.status.hasResponse === false) {
             return;
           }
-
           WPStagingBackup.status.hasResponse = false;
           fetch(ajaxurl + "?action=wpstg--backups--status&" + process + "=restore", {
             method: 'POST',
@@ -2208,15 +2367,12 @@
             return res.json();
           }).then(function (res) {
             WPStagingBackup.status.hasResponse = true;
-
             if (typeof res === 'undefined') {
               WPStagingBackup.statusStop();
             }
-
             if (WPStagingBackup.processInfo.title === res.currentStatusTitle) {
               return;
             }
-
             WPStagingBackup.processInfo.title = res.currentStatusTitle;
             var $container = $(WPStagingCommon.getSwalContainer());
             $container.find('.wpstg--modal--process--title').text(res.currentStatusTitle);
@@ -2229,11 +2385,9 @@
       }
     };
   })(jQuery);
-
   var WPStagingBackup$1 = WPStagingBackup;
 
   var WPStagingBackupCreate;
-
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackupCreate.listen();
@@ -2243,110 +2397,97 @@
     });
     WPStagingBackupCreate = {
       listen: function listen() {
-        $('body').off('click', '#wpstg-new-backup', WPStagingBackupCreate.clickedBackup).on('click', '#wpstg-new-backup', WPStagingBackupCreate.clickedBackup).off('change', '.wpstg--swal2-container .wpstg-advanced-options-site input[type=checkbox]').on('change', '.wpstg--swal2-container .wpstg-advanced-options-site input[type=checkbox]', WPStagingBackupCreate.warnExportMediaWithoutDatabase).off('change', '[name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent').on('change', '[type="checkbox"][name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent', WPStagingBackupCreate.disableButtonIfNoSelection);
+        $('body').off('click', '#wpstg-new-backup', WPStagingBackupCreate.clickedBackup).on('click', '#wpstg-new-backup', WPStagingBackupCreate.clickedBackup).off('change', '.wpstg--swal2-container .wpstg-advanced-options-site input[type=checkbox]').on('change', '.wpstg--swal2-container .wpstg-advanced-options-site input[type=checkbox]', WPStagingBackupCreate.warnBackupMediaWithoutDatabase).off('change', '[name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent').on('change', '[type="checkbox"][name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent', WPStagingBackupCreate.disableBackupButtonIfNoSelection);
       },
       clickedBackup: function clickedBackup(e) {
-        return _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
           var $newBackupModal, html, btnTxt, _yield$WPStagingCommo, formValues;
-
-          return regeneratorRuntime.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  WPStagingCommon.resetErrors();
-                  e.preventDefault();
-                  WPStagingBackup$1.isCancelled = false;
-
-                  if (!WPStagingBackup$1.modal.create.html || !WPStagingBackup$1.modal.create.confirmBtnTxt) {
-                    $newBackupModal = $('#wpstg--modal--backup--new');
-                    html = $newBackupModal.html();
-                    btnTxt = $newBackupModal.attr('data-confirmButtonText');
-                    WPStagingBackup$1.modal.create.html = html || null;
-                    WPStagingBackup$1.modal.create.confirmBtnTxt = btnTxt || null;
-                    $newBackupModal.remove();
-                  }
-
-                  _context.next = 6;
-                  return WPStagingCommon.getSwalModal(false, {
-                    confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn'
-                  }).fire({
-                    title: '',
-                    html: WPStagingBackup$1.modal.create.html,
-                    focusConfirm: false,
-                    confirmButtonText: WPStagingBackup$1.modal.create.confirmBtnTxt,
-                    showCancelButton: true,
-                    preConfirm: function preConfirm() {
-                      var container = WPStagingCommon.getSwalContainer();
-                      WPStagingBackup$1.modal.create.hasBackupSchedule = WPStagingBackup$1.modal.create.hasBackupSchedule ? true : !container.querySelector('#repeatBackupOnSchedule').checked;
-                      WPStagingBackup$1.processInfo.isOnlySchedule = !container.querySelector('#repeatBackupOnSchedule').checked && !container.querySelector('#backupScheduleLaunch').checked;
-                      var selectedStorages = container.querySelectorAll('input[name="storages"]:checked');
-                      var storages = [];
-
-                      for (var _iterator = _createForOfIteratorHelperLoose(selectedStorages), _step; !(_step = _iterator()).done;) {
-                        var storage = _step.value;
-                        storages.push(storage.value);
-                      }
-
-                      return {
-                        name: container.querySelector('input[name="backup_name"]').value || null,
-                        isExportingPlugins: container.querySelector('#includePluginsInBackup:checked') !== null,
-                        isExportingMuPlugins: container.querySelector('#includeMuPluginsInBackup:checked') !== null,
-                        isExportingThemes: container.querySelector('#includeThemesInBackup:checked') !== null,
-                        isExportingUploads: container.querySelector('#includeMediaLibraryInBackup:checked') !== null,
-                        isExportingOtherWpContentFiles: container.querySelector('#includeOtherFilesInWpContent:checked') !== null,
-                        isExportingDatabase: container.querySelector('#includeDatabaseInBackup:checked') !== null,
-                        repeatBackupOnSchedule: container.querySelector('#repeatBackupOnSchedule:not(:checked)') !== null,
-                        scheduleRecurrence: container.querySelector('#backupScheduleRecurrence').value || null,
-                        scheduleTime: container.querySelector('#backupScheduleTime').value || null,
-                        scheduleRotation: container.querySelector('#backupScheduleRotation').value || null,
-                        storages: storages,
-                        isCreateScheduleBackupNow: container.querySelector('#backupScheduleLaunch:checked') !== null
-                      };
-                    },
-                    onRender: function onRender() {
-                      if (WPStagingBackup$1.modal.create.hasBackupSchedule === true) {
-                        document.querySelectorAll('#repeatBackupOnSchedule.wpstg-is-basic').forEach(function (el) {
-                          el.disabled = true;
-                        });
-                        document.querySelectorAll('.wpstg-basic-schedule-notice.wpstg-is-basic').forEach(function (el) {
-                          el.style.display = 'block';
-                        });
-                      }
-
-                      if (WPStagingBackup$1.modal.create.hasBackupSchedule === false) {
-                        document.querySelectorAll('#repeatBackupOnSchedule.wpstg-is-basic').forEach(function (el) {
-                          el.disabled = false;
-                        });
-                        document.querySelectorAll('.wpstg-basic-schedule-notice.wpstg-is-basic').forEach(function (el) {
-                          el.style.display = 'none';
-                        });
-                      }
+          return _regeneratorRuntime().wrap(function _callee$(_context) {
+            while (1) switch (_context.prev = _context.next) {
+              case 0:
+                WPStagingCommon.resetErrors();
+                e.preventDefault();
+                WPStagingBackup$1.isCancelled = false;
+                if (!WPStagingBackup$1.modal.create.html || !WPStagingBackup$1.modal.create.confirmBtnTxt) {
+                  $newBackupModal = $('#wpstg--modal--backup--new');
+                  html = $newBackupModal.html();
+                  btnTxt = $newBackupModal.attr('data-confirmButtonText');
+                  WPStagingBackup$1.modal.create.html = html || null;
+                  WPStagingBackup$1.modal.create.confirmBtnTxt = btnTxt || null;
+                  $newBackupModal.remove();
+                }
+                _context.next = 6;
+                return WPStagingCommon.getSwalModal(false, {
+                  confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn'
+                }).fire({
+                  title: '',
+                  html: WPStagingBackup$1.modal.create.html,
+                  focusConfirm: false,
+                  confirmButtonText: WPStagingBackup$1.modal.create.confirmBtnTxt,
+                  showCancelButton: true,
+                  preConfirm: function preConfirm() {
+                    var container = WPStagingCommon.getSwalContainer();
+                    WPStagingBackup$1.modal.create.hasBackupSchedule = WPStagingBackup$1.modal.create.hasBackupSchedule ? true : !container.querySelector('#repeatBackupOnSchedule').checked;
+                    WPStagingBackup$1.processInfo.isOnlySchedule = !container.querySelector('#repeatBackupOnSchedule').checked && !container.querySelector('#backupScheduleLaunch').checked;
+                    var selectedStorages = container.querySelectorAll('input[name="storages"]:checked');
+                    var storages = [];
+                    for (var _iterator = _createForOfIteratorHelperLoose(selectedStorages), _step; !(_step = _iterator()).done;) {
+                      var storage = _step.value;
+                      storages.push(storage.value);
                     }
-                  });
-
-                case 6:
-                  _yield$WPStagingCommo = _context.sent;
-                  formValues = _yield$WPStagingCommo.value;
-
-                  if (formValues) {
-                    _context.next = 10;
-                    break;
-                  }
-
-                  return _context.abrupt("return");
-
-                case 10:
-                  WPStagingBackup$1.process({
-                    execute: function execute() {
-                      WPStagingBackup$1.messages.reset();
-                      WPStagingBackupCreate.prepareBackup(formValues);
+                    return {
+                      name: container.querySelector('input[name="backup_name"]').value || null,
+                      isExportingPlugins: container.querySelector('#includePluginsInBackup:checked') !== null,
+                      isExportingMuPlugins: container.querySelector('#includeMuPluginsInBackup:checked') !== null,
+                      isExportingThemes: container.querySelector('#includeThemesInBackup:checked') !== null,
+                      isExportingUploads: container.querySelector('#includeMediaLibraryInBackup:checked') !== null,
+                      isExportingOtherWpContentFiles: container.querySelector('#includeOtherFilesInWpContent:checked') !== null,
+                      isExportingDatabase: container.querySelector('#includeDatabaseInBackup:checked') !== null,
+                      repeatBackupOnSchedule: container.querySelector('#repeatBackupOnSchedule:not(:checked)') !== null,
+                      scheduleRecurrence: container.querySelector('#backupScheduleRecurrence').value || null,
+                      scheduleTime: container.querySelector('#backupScheduleTime').value || null,
+                      scheduleRotation: container.querySelector('#backupScheduleRotation').value || null,
+                      storages: storages,
+                      isCreateScheduleBackupNow: container.querySelector('#backupScheduleLaunch:checked') !== null
+                    };
+                  },
+                  onRender: function onRender() {
+                    if (WPStagingBackup$1.modal.create.hasBackupSchedule === true) {
+                      document.querySelectorAll('#repeatBackupOnSchedule.wpstg-is-basic').forEach(function (el) {
+                        el.disabled = true;
+                      });
+                      document.querySelectorAll('.wpstg-basic-schedule-notice.wpstg-is-basic').forEach(function (el) {
+                        el.style.display = 'block';
+                      });
                     }
-                  });
-
-                case 11:
-                case "end":
-                  return _context.stop();
-              }
+                    if (WPStagingBackup$1.modal.create.hasBackupSchedule === false) {
+                      document.querySelectorAll('#repeatBackupOnSchedule.wpstg-is-basic').forEach(function (el) {
+                        el.disabled = false;
+                      });
+                      document.querySelectorAll('.wpstg-basic-schedule-notice.wpstg-is-basic').forEach(function (el) {
+                        el.style.display = 'none';
+                      });
+                    }
+                  }
+                });
+              case 6:
+                _yield$WPStagingCommo = _context.sent;
+                formValues = _yield$WPStagingCommo.value;
+                if (formValues) {
+                  _context.next = 10;
+                  break;
+                }
+                return _context.abrupt("return");
+              case 10:
+                WPStagingBackup$1.process({
+                  execute: function execute() {
+                    WPStagingBackup$1.messages.reset();
+                    WPStagingBackupCreate.prepareBackup(formValues);
+                  }
+                });
+              case 11:
+              case "end":
+                return _context.stop();
             }
           }, _callee);
         }))();
@@ -2383,99 +2524,89 @@
         var maxBackupSequentialReturnError = 10;
         var backupReturnedError = 0;
         WPStagingCommon.resetErrors();
-
         if (WPStagingBackup$1.isCancelled) {
           WPStagingBackup$1.statusStop();
           return;
         }
-
         WPStagingCommon.ajax({
           action: 'wpstg--backups--create',
           accessToken: wpstg.accessToken,
           nonce: wpstg.nonce
         }, function (response) {
           backupReturnedError = 0;
-
           if (WPStagingBackup$1.isCancelled) {
             return;
           }
-
           if (typeof response === 'undefined') {
             setTimeout(function () {
               WPStagingBackupCreate.createBackup();
             }, wpstg.delayReq);
             return;
           }
-
           WPStagingBackup$1.processResponse(response);
-
           if (!WPStagingBackup$1.processInfo.interval) {
             WPStagingBackup$1.statusStart('create');
           }
-
-          if (response.status === 'JOB_FAIL') {
-            WPStagingBackup$1.checkMemoryExhaustion(response, 'wpstg_backup');
-          }
-
-          if (response.status === false) {
-            WPStagingBackupCreate.createBackup();
-          } else if (response.status === true) {
+          if (response.isRunning === false) {
+            if (response.jobStatus === 'JOB_FAIL') {
+              WPStagingBackup$1.checkMemoryExhaustion(response, 'wpstg_backup');
+              setTimeout(function () {
+                WPStagingBackupCreate.createBackup();
+              }, wpstg.delayReq);
+            } else {
+              WPStagingBackupCreate.createBackup();
+            }
+          } else if (response.isRunning === true) {
             $('#wpstg--progress--status').text('Backup successfully created!');
-
             if (WPStagingBackup$1.messages.shouldWarn()) {
               // noinspection JSIgnoredPromiseFromCall
               WPStagingBackup$1.fetchListing();
               WPStagingBackup$1.logsModal();
               return;
             }
-
             WPStagingBackup$1.statusStop();
             WPStagingCommon.closeSwalModal();
             WPStagingBackup$1.fetchListing().then(function () {
               if (!response.backupMd5 && !WPStagingBackup$1.processInfo.isOnlySchedule) {
                 WPStagingCommon.showError('Failed to get backup md5 from response');
                 return;
-              } // Wait for fetchListing to populate the DOM with the backup data that we want to read
+              }
 
-
+              // Wait for fetchListing to populate the DOM with the backup data that we want to read
               var $el = '';
               var timesWaited = 0;
               var intervalWaitForBackupInDom = setInterval(function () {
                 if (!WPStagingBackup$1.processInfo.isOnlySchedule && response.isLocalBackup) {
                   timesWaited++;
                   var backupFound = false;
-
                   if (!response.isMultipartBackup) {
                     $el = $(".wpstg-backup[data-md5=\"" + response.backupMd5 + "\"] .wpstg--backup--download");
                     backupFound = $el.length > 0;
                   } else {
                     response.backupMd5.forEach(function (md5) {
                       $el = $(".wpstg-backup[data-md5=\"" + md5 + "\"] .wpstg--backup--download");
-
                       if ($el.length) {
                         backupFound = true;
                       }
                     });
-                  } // Could not find element, let's try again...
+                  }
 
-
+                  // Could not find element, let's try again...
                   if (!backupFound) {
                     if (timesWaited >= 20) {
                       // Bail: We tried too many times and couldn't find.
                       clearInterval(intervalWaitForBackupInDom);
                     }
-
                     return;
-                  } // Found it. No more need for the interval.
+                  }
 
-
+                  // Found it. No more need for the interval.
                   clearInterval(intervalWaitForBackupInDom);
                   response.hasOwnProperty('backupSize') ? ' (' + response.backupSize + ')' : '';
                 } else {
                   // Just clear the interval
                   clearInterval(intervalWaitForBackupInDom);
                 }
-
                 WPStagingBackup$1.downloadModal({
                   title: WPStagingBackup$1.processInfo.isOnlySchedule ? 'Backup Schedule Created' : 'Backup Complete',
                   bodyText: WPStagingBackup$1.processInfo.isOnlySchedule ? 'Backup is scheduled according to the provided settings.' : null
@@ -2488,20 +2619,18 @@
                 });
               }, 500);
             });
-          } else {
-            setTimeout(function () {
-              WPStagingBackupCreate.createBackup();
-            }, wpstg.delayReq);
           }
-        }, 'json', false, 0, // Don't retry upon failure
+        }, 'json', false, 0,
+        // Don't retry upon failure
         1.25, function (xhr, textStatus, errorThrown) {
           WPStagingCommon.continueErrorHandle = false;
           console.log(xhr);
           var response = {
             'messages': []
           };
-          backupReturnedError++; // Prevents loop in case PHP crashes constantly before being able to respond
+          backupReturnedError++;
 
+          // Prevents loop in case PHP crashes constantly before being able to respond
           if (backupReturnedError <= maxBackupSequentialReturnError) {
             WPStagingBackupCreate.createBackup();
           } else {
@@ -2515,21 +2644,19 @@
           }
         });
       },
-      warnExportMediaWithoutDatabase: function warnExportMediaWithoutDatabase() {
+      warnBackupMediaWithoutDatabase: function warnBackupMediaWithoutDatabase() {
         var isExportingDatabase = document.getElementById('includeDatabaseInBackup').checked;
         var isExportingMediaLibrary = document.getElementById('includeMediaLibraryInBackup').checked;
-
         if (isExportingMediaLibrary && !isExportingDatabase) {
           document.getElementById('backupUploadsWithoutDatabaseWarning').style.display = 'block';
         } else {
           document.getElementById('backupUploadsWithoutDatabaseWarning').style.display = 'none';
         }
       },
-      disableButtonIfNoSelection: function disableButtonIfNoSelection() {
+      disableBackupButtonIfNoSelection: function disableBackupButtonIfNoSelection() {
         var isExportingAnyDir = $('[type="checkbox"][name="includedDirectories\[\]"]:checked').length > 0;
         var isExportingDatabase = $('input#includeDatabaseInBackup:checked').length === 1;
         var isExportingOtherFilesInWpContent = $('input#includeOtherFilesInWpContent:checked').length === 1;
-
         if (!isExportingAnyDir && !isExportingDatabase && !isExportingOtherFilesInWpContent) {
           $('.wpstg--swal2-confirm').prop('disabled', true);
         } else {
@@ -2540,7 +2667,6 @@
   })(jQuery);
 
   var WPStagingBackupDelete;
-
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackupDelete.listen();
@@ -2551,7 +2677,6 @@
       },
       "delete": function _delete(e) {
         var _this = this;
-
         e.preventDefault();
         WPStagingCommon.resetErrors();
         var name = this.getAttribute('data-name');
@@ -2570,12 +2695,9 @@
           if (!result.value) {
             return;
           }
-
           WPStagingCommon.isLoading(true);
           WPStagingCommon.cache.get('#wpstg-existing-backups').hide();
-
           var md5 = _this.getAttribute('data-md5');
-
           WPStagingCommon.ajax({
             action: 'wpstg--backups--delete',
             md5: md5,
@@ -2592,7 +2714,6 @@
   })(jQuery);
 
   var WPStagingBackupEdit;
-
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackupEdit.listen();
@@ -2603,62 +2724,53 @@
       },
       edit: function edit(e) {
         var _this = this;
-
-        return _asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
+        return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
           var $this, name, notes, _yield$WPStagingCommo, formValues;
-
-          return regeneratorRuntime.wrap(function _callee$(_context) {
-            while (1) {
-              switch (_context.prev = _context.next) {
-                case 0:
-                  e.preventDefault();
-                  $this = $(_this);
-                  name = $this.data('name');
-                  notes = $this.data('notes');
-                  _context.next = 6;
-                  return WPStagingCommon.getSwalModal().fire({
-                    title: '',
-                    html: "\n                    <label id=\"wpstg-backup-edit-name\">Backup Name</label>\n                    <input id=\"wpstg-backup-edit-name-input\" class=\"wpstg--swal2-input\" value=\"" + name + "\" maxlength=\"100\">\n                    <label>Additional Notes</label>\n                    <textarea id=\"wpstg-backup-edit-notes-textarea\" class=\"wpstg--swal2-textarea\" maxlength=\"1000\">" + notes + "</textarea>\n                  ",
-                    focusConfirm: false,
-                    confirmButtonText: 'Save',
-                    showCancelButton: true,
-                    preConfirm: function preConfirm() {
-                      return {
-                        name: document.getElementById('wpstg-backup-edit-name-input').value || null,
-                        notes: document.getElementById('wpstg-backup-edit-notes-textarea').value || null
-                      };
-                    }
-                  });
-
-                case 6:
-                  _yield$WPStagingCommo = _context.sent;
-                  formValues = _yield$WPStagingCommo.value;
-
-                  if (formValues) {
-                    _context.next = 10;
-                    break;
+          return _regeneratorRuntime().wrap(function _callee$(_context) {
+            while (1) switch (_context.prev = _context.next) {
+              case 0:
+                e.preventDefault();
+                $this = $(_this);
+                name = $this.data('name');
+                notes = $this.data('notes');
+                _context.next = 6;
+                return WPStagingCommon.getSwalModal().fire({
+                  title: '',
+                  html: "\n                    <label id=\"wpstg-backup-edit-name\">Backup Name</label>\n                    <input id=\"wpstg-backup-edit-name-input\" class=\"wpstg--swal2-input\" value=\"" + name + "\" maxlength=\"100\">\n                    <label>Additional Notes</label>\n                    <textarea id=\"wpstg-backup-edit-notes-textarea\" class=\"wpstg--swal2-textarea\" maxlength=\"1000\">" + notes + "</textarea>\n                  ",
+                  focusConfirm: false,
+                  confirmButtonText: 'Save',
+                  showCancelButton: true,
+                  preConfirm: function preConfirm() {
+                    return {
+                      name: document.getElementById('wpstg-backup-edit-name-input').value || null,
+                      notes: document.getElementById('wpstg-backup-edit-notes-textarea').value || null
+                    };
                   }
-
-                  return _context.abrupt("return");
-
-                case 10:
-                  WPStagingCommon.ajax({
-                    action: 'wpstg--backups--edit',
-                    accessToken: wpstg.accessToken,
-                    nonce: wpstg.nonce,
-                    md5: $this.data('md5'),
-                    name: formValues.name,
-                    notes: formValues.notes
-                  }, function (response) {
-                    WPStagingCommon.showAjaxFatalError(response, '', 'Submit an error report.'); // noinspection JSIgnoredPromiseFromCall
-
-                    WPStagingBackup$1.fetchListing();
-                  });
-
-                case 11:
-                case "end":
-                  return _context.stop();
-              }
+                });
+              case 6:
+                _yield$WPStagingCommo = _context.sent;
+                formValues = _yield$WPStagingCommo.value;
+                if (formValues) {
+                  _context.next = 10;
+                  break;
+                }
+                return _context.abrupt("return");
+              case 10:
+                WPStagingCommon.ajax({
+                  action: 'wpstg--backups--edit',
+                  accessToken: wpstg.accessToken,
+                  nonce: wpstg.nonce,
+                  md5: $this.data('md5'),
+                  name: formValues.name,
+                  notes: formValues.notes
+                }, function (response) {
+                  WPStagingCommon.showAjaxFatalError(response, '', 'Submit an error report.');
+                  // noinspection JSIgnoredPromiseFromCall
+                  WPStagingBackup$1.fetchListing();
+                });
+              case 11:
+              case "end":
+                return _context.stop();
             }
           }, _callee);
         }))();
@@ -2667,7 +2779,6 @@
   })(jQuery);
 
   var WPStagingBackupRestore;
-
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackupRestore.listen();
@@ -2696,18 +2807,16 @@
           }
         }, function (response) {
           var responseData;
-
           try {
-            responseData = JSON.parse(WPStagingCommon.getDataFromWordPressResponse(response)); // Get the first item of the blogs object:
+            responseData = JSON.parse(WPStagingCommon.getDataFromWordPressResponse(response));
+            // Get the first item of the blogs object:
             // blogs {1: {someData}} => {someData}
-
             var mainNetwork = responseData.networks[Object.keys(responseData.networks)[0]];
             var mainBlog = mainNetwork.blogs[Object.keys(mainNetwork.blogs)[0]];
             responseData = mainBlog;
           } catch (e) {
             WPStagingCommon.showError(e);
           }
-
           WPStagingBackup$1.modal.restore.data.backupMetadata = responseData;
           var postData = new FormData();
           postData.append('action', 'wpstg--backups--restore--file-info');
@@ -2734,19 +2843,15 @@
           if (retryRequest === void 0) {
             retryRequest = false;
           }
-
           if (errorCode === void 0) {
             errorCode = null;
           }
-
           WPStagingCommon.resetErrors();
-
           if (WPStagingBackup$1.isCancelled) {
             // console.log('cancelled');
             WPStagingBackup$1.statusStop();
             return;
           }
-
           WPStagingBackup$1.timer.start();
           window.addEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
           WPStagingCommon.ajax({
@@ -2758,45 +2863,43 @@
           }, function (response) {
             if (WPStagingBackup$1.isCancelled) {
               return;
-            } // reset retry count on success
+            }
 
-
+            // reset retry count on success
             WPStagingCommon.retry.reset();
-
             if (typeof response === 'undefined') {
               setTimeout(function () {
                 importSiteBackup(data);
               }, wpstg.delayReq);
               return;
             }
-
             WPStagingBackup$1.processResponse(response);
-
             if (!WPStagingBackup$1.processInfo.interval) {
               WPStagingBackup$1.statusStart('restore');
             }
-
-            if (response.status === 'JOB_FAIL') {
-              WPStagingBackup$1.checkMemoryExhaustion(response, 'wpstg_restore');
-            }
-
-            if (response.status === false) {
-              importSiteBackup(data);
-            } else if (response.status === true) {
+            if (response.isRunning === false) {
+              if (response.jobStatus === 'JOB_FAIL') {
+                WPStagingBackup$1.checkMemoryExhaustion(response, 'wpstg_restore');
+                setTimeout(function () {
+                  importSiteBackup(data);
+                }, wpstg.delayReq);
+              } else {
+                importSiteBackup(data);
+              }
+            } else if (response.isRunning === true) {
               window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
               $('#wpstg--progress--status').text('Backup successfully imported!');
-
               if (WPStagingBackup$1.messages.shouldWarn()) {
                 WPStagingBackup$1.logsModal();
                 return;
               }
-
               WPStagingBackup$1.statusStop();
               var logEntries = $('.wpstg--modal--process--logs').get(1).innerHTML;
               var html = '<div class="wpstg--modal--process--logs">' + logEntries + '</div>';
               var issueFound = html.includes('wpstg--modal--process--msg--warning') || html.includes('wpstg--modal--process--msg--error') ? 'Issues(s) found!<br> ' : '';
-              var loginText = WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase ? 'You will be redirected to the login page after closing this modal.' : ''; // TODO: remove default classes.
+              var loginText = WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase ? 'You will be redirected to the login page after closing this modal.' : '';
 
+              // TODO: remove default classes.
               WPStagingCommon.getSwalModal(true, {
                 container: 'wpstg-restore-finished-container'
               }).fire({
@@ -2805,8 +2908,9 @@
                 html: '<div id="wpstg-restore-success" class="wpstg--grey">Site has been restored from backup. ' + loginText + '  <br/><br/><span class="wpstg--modal--process--msg-found">' + issueFound + '</span><button class="wpstg--modal--process--logs--tail" data-txt-bad="">Show Logs</button></div><br/>' + html,
                 onClose: function onClose() {
                   if (WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase) {
-                    document.getElementById('wpstg-restore-wait').style.display = 'flex'; // Reload in 15 seconds if something goes wrong with the Ajax call.
+                    document.getElementById('wpstg-restore-wait').style.display = 'flex';
 
+                    // Reload in 15 seconds if something goes wrong with the Ajax call.
                     setTimeout(function () {
                       document.location.reload(true);
                     }, 15000);
@@ -2825,48 +2929,38 @@
                   }
                 }
               });
-            } else {
-              setTimeout(function () {
-                importSiteBackup(data);
-              }, wpstg.delayReq);
             }
-          }, 'json', false, 10, // Don't retry upon failure
+          }, 'json', false, 10,
+          // Don't retry upon failure
           1.25, function (xhr, textStatus, errorThrown) {
             // Callback function to handle retry for Backup Restore
             var errorCode = parseInt(xhr.status);
             WPStagingBackup$1.checkMemoryExhaustion({
               messages: []
             }, 'wpstg_restore');
-
             if (!WPStagingCommon.retry.retryOnErrors.includes(errorCode)) {
               return;
             }
-
             if (!WPStagingCommon.retry.canRetry()) {
               return;
             }
-
             WPStagingCommon.continueErrorHandle = false;
             WPStagingCommon.retry.incrementRetry();
             var delay = WPStagingCommon.retry.currentDelay;
-            setTimeout( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/regeneratorRuntime.mark(function _callee() {
-              return regeneratorRuntime.wrap(function _callee$(_context) {
-                while (1) {
-                  switch (_context.prev = _context.next) {
-                    case 0:
-                      // Mark this try, retry
-                      importSiteBackup(data, true, errorCode);
-
-                    case 1:
-                    case "end":
-                      return _context.stop();
-                  }
+            setTimeout( /*#__PURE__*/_asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+              return _regeneratorRuntime().wrap(function _callee$(_context) {
+                while (1) switch (_context.prev = _context.next) {
+                  case 0:
+                    // Mark this try, retry
+                    importSiteBackup(data, true, errorCode);
+                  case 1:
+                  case "end":
+                    return _context.stop();
                 }
               }, _callee);
             })), delay);
           });
         };
-
         var $modal = $('#wpstg--modal--backup--restore');
         WPStagingBackup$1.modal.restore.html = $modal.html();
         WPStagingBackup$1.modal.restore.baseDirectory = $modal.attr('data-baseDirectory');
@@ -2886,17 +2980,13 @@
             $('.wpstg--modal--backup--restore--introduction .wpstg-backup-restore-contains-database').hide();
             $('.wpstg--modal--backup--restore--introduction .wpstg-backup-restore-contains-database-multisite').hide();
             $('.wpstg--modal--backup--restore--introduction .wpstg-backup-restore-contains-files').hide();
-
             if (WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase) {
               $('.wpstg--modal--backup--restore--introduction .wpstg-backup-restore-contains-database').show();
             }
-
             console.log(WPStagingBackup$1.modal.restore.data.backupMetadata);
-
             if (WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase && WPStagingBackup$1.modal.restore.data.backupMetadata.singleOrMulti === 'multi') {
               $('.wpstg--modal--backup--restore--introduction .wpstg-backup-restore-contains-database-multisite').show();
             }
-
             if (WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingMuPlugins || WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingPlugins || WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingThemes || WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingUploads || WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingOtherWpContentFiles) {
               $('.wpstg--modal--backup--restore--introduction .wpstg-backup-restore-contains-files').show();
             }
@@ -2912,16 +3002,16 @@
           // Early bail: Dismissed, canceled, or in a incoherent state.
           if (!res || !res.value) {
             return;
-          } // Early bail: Step 1 (Confirm) must be true.
+          }
 
-
+          // Early bail: Step 1 (Confirm) must be true.
           if (!res.value[1] || res.value[1] !== true) {
             return;
           }
-
           WPStagingBackup$1.isCancelled = false;
-          var data = WPStagingBackup$1.modal.restore.data; // Unset fileObject as we don't need it anymore, and it can't be converted to array.
+          var data = WPStagingBackup$1.modal.restore.data;
 
+          // Unset fileObject as we don't need it anymore, and it can't be converted to array.
           WPStagingBackup$1.modal.restore.data.fileObject = null;
           data['file'] = WPStagingBackup$1.modal.restore.baseDirectory + data['file'];
           WPStagingCommon.ajax({
@@ -2959,7 +3049,6 @@
   })(jQuery);
 
   var WPStagingBackupUpload;
-
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackupUpload.listen();
@@ -2975,7 +3064,6 @@
           }
         });
       },
-
       /**
        * @see https://caniuse.com/fileapi
        */
@@ -2995,11 +3083,8 @@
         qs('.wpstg--swal2-container .wpstg--modal--backup--upload--content .wpstg-linear-loader').style.display = 'block';
         qs('.wpstg--swal2-container .wpstg--modal--upload--process').style.display = 'flex';
         var _btnCancel = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
-
         var btnCancel = _btnCancel.cloneNode(true);
-
         _btnCancel.parentNode.replaceChild(btnCancel, _btnCancel);
-
         btnCancel.addEventListener('click', WPStagingBackupUpload.eventListenerConfirmCancelUpload);
       },
       eventListenerConfirmCancelUpload: function eventListenerConfirmCancelUpload() {
@@ -3014,7 +3099,8 @@
           action: 'wpstg--backups--uploads-delete-unfinished',
           accessToken: wpstg.accessToken,
           nonce: wpstg.nonce
-        }, function (response) {// no-op
+        }, function (response) {
+          // no-op
         });
       },
       uploadModal: function uploadModal() {
@@ -3051,13 +3137,11 @@
               forceChunkSize: true
             });
             WPStagingBackupUpload.resumable.resumableFile = null;
-
             if (!WPStagingBackupUpload.resumable.support) {
               WPStagingCommon.closeSwalModal();
               WPStagingBackupUpload.uploadNotSupported();
               return;
             }
-
             WPStagingBackupUpload.resumable.assignBrowse(qs('.wpstg--swal2-container .resumable-browse'));
             WPStagingBackupUpload.resumable.assignDrop(qs('.wpstg--swal2-container .resumable-drop'));
             WPStagingBackupUpload.resumable.on('fileAdded', WPStagingBackupUpload.handleFileAdded);
@@ -3085,7 +3169,6 @@
       handleError: function handleError(message, file) {
         try {
           var json = JSON.parse(message);
-
           if (json.hasOwnProperty('data') && json.data.hasOwnProperty('message')) {
             if (json.data.hasOwnProperty('isDiskFull') && json.data.isDiskFull) {
               WPStagingBackupUpload.resumable.cancel();
@@ -3093,7 +3176,6 @@
               WPStagingCommon.showErrorModal(json.data.message);
               return;
             }
-
             if (json.data.hasOwnProperty('backupFailedValidation') && json.data.backupFailedValidation) {
               WPStagingBackupUpload.resumable.cancel();
               WPStagingCommon.closeSwalModal();
@@ -3101,18 +3183,17 @@
               return;
             }
           }
-        } catch (e) {// not a JSON message, no-op
-        } // Reduce chunk by 10%, with a minimum of 256kb reduction
+        } catch (e) {
+          // not a JSON message, no-op
+        }
 
-
+        // Reduce chunk by 10%, with a minimum of 256kb reduction
         var reduceChunkBytes = Math.max(256 * 1024, WPStagingBackupUpload.resumable.opts.chunkSize * 0.1);
         WPStagingBackupUpload.resumable.opts.chunkSize = Math.ceil(WPStagingBackupUpload.resumable.opts.chunkSize - reduceChunkBytes);
-
         if (WPStagingBackupUpload.resumable.opts.chunkSize < 64 * 1024) {
           WPStagingCommon.closeSwalModal();
           WPStagingCommon.showErrorModal('We could not upload the backup file, please try uploading it directly using FTP to the folder wp-content/uploads/wp-staging/backups. Please also make sure you have enough free disk space on the server.');
         }
-
         WPStagingBackupUpload.deleteUnfinishedUploads();
         console.log(WPStagingBackupUpload.resumable.opts.chunkSize);
         WPStagingBackupUpload.resumable.files[0].retry();
@@ -3121,7 +3202,6 @@
   })(jQuery);
 
   var WPStagingBackupDownload;
-
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackupDownload.listen();
@@ -3166,26 +3246,24 @@
               if (WPStagingBackup$1.isCancelled) {
                 return;
               }
-
               if (typeof response === 'undefined') {
                 $('.wpstg--modal--download--parts-container .wpstg--modal--fetching--data').hide();
                 $('.wpstg--modal--download--parts-container .wpstg--modal--download--text').show();
                 return;
               }
-
               if (response.error === true) {
                 $('.wpstg--modal--download--parts-container .wpstg--modal--fetching--data').hide();
                 $('.wpstg--modal--download--parts-container .wpstg--modal--download--text').show();
                 return;
               }
-
               response.parts.forEach(function (part) {
                 WPStagingBackupDownload.renderPart(part, '.wpstg--modal--download--parts-container .wpstg--modal--download--parts');
               });
               $('.wpstg--modal--download--parts-container .wpstg--modal--fetching--data').hide();
               $('.wpstg--modal--download--parts-container .wpstg--modal--download--text').show();
               $('.wpstg--modal--download--parts-container .wpstg--modal--download--parts').show();
-            }, 'json', false, 0, // Don't retry upon failure
+            }, 'json', false, 0,
+            // Don't retry upon failure
             1.25);
           }
         }).then();
@@ -3194,7 +3272,6 @@
   })(jQuery);
 
   var WPStagingBackupManageSchedules;
-
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackupManageSchedules.listen();
@@ -3260,12 +3337,11 @@
             WPStagingCommon.showErrorModal(response.data);
             return;
           }
-
           console.log(response);
         });
       }
     };
   })(jQuery);
 
-}());
+})();
 //# sourceMappingURL=wpstg-backup.js.map

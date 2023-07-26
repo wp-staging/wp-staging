@@ -57,7 +57,7 @@ trait MySQLRowsGeneratorTrait
                     );
                 }*/
 
-        $rows = [];
+        $rows      = [];
         $lastFetch = false;
 
         $batchSize = null;
@@ -70,6 +70,7 @@ trait MySQLRowsGeneratorTrait
             if (!empty($averageRowLength) && is_array($averageRowLength) && array_key_exists('AVG_ROW_LENGTH', $averageRowLength)) {
                 $jobDataDto->setTableAverageRowLength(max(absint($averageRowLength['AVG_ROW_LENGTH']), 1));
 
+                // @phpstan-ignore-next-line
                 $batchSize = ($freeMemory / $jobDataDto->getTableAverageRowLength()) / 4;
             }
         } else {
@@ -110,9 +111,9 @@ trait MySQLRowsGeneratorTrait
         // At least 1, max 5k, integer
         $maxBatchSize = $jobDataDto->getIsSlowMySqlServer() ? 100 : 5000;
         $minBatchSize = 1;
-        $batchSize = max($minBatchSize, $batchSize);
-        $batchSize = min($maxBatchSize, $batchSize);
-        $batchSize = ceil($batchSize);
+        $batchSize    = max($minBatchSize, $batchSize);
+        $batchSize    = min($maxBatchSize, $batchSize);
+        $batchSize    = ceil($batchSize);
 
         $jobDataDto->setBatchSize($batchSize);
 
@@ -181,7 +182,7 @@ SQL;
             // Take the next row from the ready set.
             $row = array_pop($rows);
 
-            if (null === $row) {
+            if ($row === null) {
                 // We're done, no more rows to process.
                 break;
             }

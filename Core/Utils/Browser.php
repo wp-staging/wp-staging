@@ -249,7 +249,7 @@ use WPStaging\Framework\Facades\Sanitize;
 		/**
 		* Check to see if the specific browser is valid
 		* @param string $browserName
-		* @return True if the browser is the specified browser
+		* @return bool Returns true if the browser is the specified browser
 		*/
 		function isBrowser($browserName) { return( strcasecmp($this->_browser_name, trim($browserName)) == 0); }
 
@@ -877,7 +877,7 @@ use WPStaging\Framework\Facades\Sanitize;
 		    }
 		    else if( stripos($this->_agent,'mozilla') !== false && preg_match('/rv:[0-9]\.[0-9]/i',$this->_agent) && stripos($this->_agent,'netscape') === false ) {
 			    $aversion = explode('',stristr($this->_agent,'rv:'));
-			    $this->setVersion(str_replace('rv:','',$aversion[0]));
+			    $this->setVersion(str_replace('rv:','',$aversion[0])); // @phpstan-ignore-line
 			    $this->setBrowser($this->BROWSER_MOZILLA);
 			    return true;
 		    }

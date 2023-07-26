@@ -113,6 +113,11 @@ $wpStaging->registerErrorHandler();
  */
 $wpStaging->set('WPSTG_COMPATIBLE', WPSTG_COMPATIBLE);
 
+/*
+ * Used during testing to enable virtual filesystem.
+ */
+$wpStaging->set('WPSTG_ALLOW_VFS', false);
+
 // Wordpress DB Object
 global $wpdb;
 

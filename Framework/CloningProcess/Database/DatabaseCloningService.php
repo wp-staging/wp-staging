@@ -345,8 +345,6 @@ class DatabaseCloningService
     {
         $preparedValues = [];
         foreach ($row as $column => $value) {
-            $value = $escapeUtil->mysqlRealEscapeString($value);
-
             if (is_null($value)) {
                 $preparedValues[] = 'NULL';
                 continue;
@@ -360,6 +358,7 @@ class DatabaseCloningService
                 continue;
             }
 
+            $value            = $escapeUtil->mysqlRealEscapeString($value);
             $preparedValues[] = "'$value'";
         }
 

@@ -9,8 +9,8 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.2
-Stable tag: 2.16.0
-Requires PHP: 5.6
+Stable tag: 3.0.0
+Requires PHP: 7.0
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
 
@@ -259,7 +259,32 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
-= 2.16.0 =
+= 3.0.0 =
+* New: Drop support for php 5.6. Minimum php version is 7.0 #2579
+* New: Flywheel hosting compatibility. Create staging sites and create backups on hosting providers where the WordPress core is located outside the public dir. #2372
+* New: Add system info to backup log file #2309
+* Enh: Check if sftp backup directory path is writeable while testing remote connection #2506
+* Enh: Add a tooltip to inform that backups will be created only for the current site and do not contain other sites, like staging websites #2483
+* Enh: Allow the user to click on "Copy" to copy the generated login link #2443
+* Enh: Improved code to be compatible with PHPstan level 3 rules #2461
+* Enh: Changed the order of login link expiry to day, min, sec #2380
+* Enh: Update back button color to make clear it is an active button #2512
+* Enh: Display the size of backup index parts in the list of backups #1678
+* Enh: Show the "Push Changes" button always in WP STAGING PRO and disable it until the license is activated #2466
+* Fix: WP CLI command `wp wpstg backup-status` did not work as expected #2467
+* Fix: Unselect folders starting with wp-admin* and wp-includes* when creating a new staging site #2340
+* Fix: Show the "primary key" warning only on WP STAGING admin page #2477
+* Fix: Multisite related constants missing during network clone when the original wp-config.php is not valid defaul multisite configuration file #2504
+* Fix: Restoring a backup fails because redis/memcache not configured on the destination site. This disables object cache if object-cache.php is not identical on backup and restoring site #2517
+* Fix: Php error 'Undefined constant DOMAIN_CURRENT_SITE' #2512
+* Fix: Microsoft IIS 7.5 with php 8.1.9 produces unexpected time format when using microtime() resulting in fatal error "division by zero" while creating a backup #2571
+* Fix: `www` prefix is set in `domain` property of subsite would result into repeating `www` prefix during network clone #2544
+* Fix: Don't escape MySQL binary and blob data during cloning as this results into invalid data #2565
+* Tweak: Small visual glitches on tooltip in upload backup modal #2496
+* Dev: Improved usage of $status variable in backup and cloning #2332
+* Dev: This PR does a comprehensive pass on the codebase to verify that authorization checks are being done on callbacks that takes user input. #2531
+
+=2.16.0 =
 * New: Bring the premium high-performance pro backup feature into the basic version to allow creating a periodic backup of the WordPress website including backup restoring. #1979 #2487
 * Enh: Display Google Drive account info permanently on the settings page. Remove the option to customize the Google drive redirect uri. #2399
 * Enh: New styled back button #2444
@@ -768,5 +793,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-
 Recommended update! Several performance updates and bug fixes to improve reliability for PHP 8.1 and 8.2.

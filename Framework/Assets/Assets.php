@@ -72,11 +72,11 @@ class Assets
      *
      * @param string $assetsFile
      * @param string $assetsVersion Optional, use WPStaging::getVersion() instead if not given
-     * @return string
+     * @return string|int
      */
     public function getAssetsVersion($assetsFile, $assetsVersion = '')
     {
-        $filename = $this->getAssetsPath($assetsFile);
+        $filename  = $this->getAssetsPath($assetsFile);
         $filemtime = file_exists($filename) ? @filemtime($filename) : false;
 
         if ($filemtime !== false) {
@@ -234,7 +234,7 @@ class Assets
             "delayReq"               => 0,
             // TODO: move directorySeparator to consts?
             "settings"               => (object)[
-                "directorySeparator"         => ScanConst::DIRECTORIES_SEPARATOR
+                "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR
             ],
             "tblprefix"              => WPStaging::getTablePrefix(),
             "isMultisite"            => is_multisite(),
@@ -254,14 +254,14 @@ class Assets
                 'selectFileToRestore' => esc_html__('Select backup file to restore.', 'wp-staging'),
                 'cloneResetComplete'  => esc_html__('Reset Complete!', 'wp-staging'),
                 'cloneUpdateComplete' => esc_html__('Update Complete!', 'wp-staging'),
-                'success'    => esc_html__('Success', 'wp-staging'),
-                'resetClone' => esc_html__('Reset Staging Site', 'wp-staging'),
-                'showLogs'   => esc_html__('Show Logs', 'wp-staging'),
-                'hideLogs'   => esc_html__('Hide Logs', 'wp-staging'),
-                'noTableSelected' => esc_html__('No table selected', 'wp-staging'),
-                'tablesSelected'  => esc_html__('{d} tables(s) selected', 'wp-staging'),
-                'noFileSelected'  => esc_html__('No file selected', 'wp-staging'),
-                'filesSelected'   => esc_html__('{t} theme(s), {p} plugin(s) selected', 'wp-staging'),
+                'success'             => esc_html__('Success', 'wp-staging'),
+                'resetClone'          => esc_html__('Reset Staging Site', 'wp-staging'),
+                'showLogs'            => esc_html__('Show Logs', 'wp-staging'),
+                'hideLogs'            => esc_html__('Hide Logs', 'wp-staging'),
+                'noTableSelected'     => esc_html__('No table selected', 'wp-staging'),
+                'tablesSelected'      => esc_html__('{d} tables(s) selected', 'wp-staging'),
+                'noFileSelected'      => esc_html__('No file selected', 'wp-staging'),
+                'filesSelected'       => esc_html__('{t} theme(s), {p} plugin(s) selected', 'wp-staging'),
             ],
         ];
 
@@ -276,7 +276,7 @@ class Assets
         $lowerLimit = 64 * KB_IN_BYTES;
         $upperLimit = 16 * MB_IN_BYTES;
 
-        $maxPostSize = wp_convert_hr_to_bytes(ini_get('post_max_size'));
+        $maxPostSize       = wp_convert_hr_to_bytes(ini_get('post_max_size'));
         $uploadMaxFileSize = wp_convert_hr_to_bytes(ini_get('upload_max_filesize'));
 
         // The real limit, read from the PHP context.
