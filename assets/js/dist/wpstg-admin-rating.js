@@ -30,7 +30,8 @@
         url: ajaxurl,
         type: 'POST',
         data: {
-          action: 'wpstg_hide_rating'
+          action: 'wpstg_hide_rating',
+          nonce: wpstg.nonce
         },
         error: function error(xhr, textStatus, errorThrown) {
           console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
@@ -57,7 +58,8 @@
         url: ajaxurl,
         type: 'POST',
         data: {
-          action: 'wpstg_hide_rating'
+          action: 'wpstg_hide_rating',
+          nonce: wpstg.nonce
         },
         error: function error(xhr, textStatus, errorThrown) {
           console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
@@ -84,7 +86,8 @@
         url: ajaxurl,
         type: 'POST',
         data: {
-          action: 'wpstg_hide_later'
+          action: 'wpstg_hide_later',
+          nonce: wpstg.nonce
         },
         error: function error(xhr, textStatus, errorThrown) {
           console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);
@@ -106,27 +109,7 @@
       });
     });
   }
-  document.styleSheets[0].insertRule('@media only screen and (max-width:600px){.wpstg-welcome-box{display:block !important}.wpstg-welcome-video-container{width:100% !important;height:auto !important}.wpstg-welcome-text{padding-left:8px !important}}', '');
-  document.addEventListener('DOMContentLoaded', function () {
-    var accepted = wpstgYouTubeConfig.accepted;
-    var playerPlaceholder = document.getElementById('welcomeNoticeFree');
-    playerPlaceholder.addEventListener('click', function () {
-      if (!accepted) {
-        var message = wpstgYouTubeConfig.message + '\n \n' + wpstgYouTubeConfig.regards;
-        var conf = confirm(message);
-        if (conf) {
-          accepted = true;
-          wpstgFetchVideo();
-        }
-      }
-    });
-  });
-  function wpstgFetchVideo() {
-    var tag = document.createElement('script');
-    tag.src = 'https://www.youtube.com/iframe_api';
-    var firstScriptTag = document.getElementsByTagName('script')[0];
-    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
-  }
+  document.styleSheets[0].insertRule('@media only screen and (max-width:600px){.wpstg-welcome-box{display:block !important}.wpstg-welcome-text{padding-left:8px !important}}', '');
 
 })();
 //# sourceMappingURL=wpstg-admin-rating.js.map

@@ -85,11 +85,13 @@ class Extractor
                 throw $e;
             } catch (\OutOfRangeException $e) {
                 // Done processing, or failed
+                $this->logger->warning('OutOfRangeException. Error: ' .  $e->getMessage());
                 return $this->jobRestoreDataDto;
             } catch (\RuntimeException $e) {
                 $this->logger->warning($e->getMessage());
                 continue;
             } catch (MissingFileException $e) {
+                $this->logger->warning('MissingFileException. Error: ' .  $e->getMessage());
                 continue;
             }
 
@@ -99,6 +101,9 @@ class Extractor
         return $this->jobRestoreDataDto;
     }
 
+    /**
+     * @return void
+     */
     private function findFileToExtract()
     {
         if ($this->jobRestoreDataDto->getExtractorMetadataIndexPosition() === 0) {
@@ -234,7 +239,17 @@ class Extractor
             throw new \OutOfRangeException();
         }
 
+        if (strpos($destinationFilePath, '.sql') !== false) {
+            $this->logger->debug(sprintf('DEBUG: Restoring SQL file %s', $destinationFilePath));
+        }
+
         wp_mkdir_p(dirname($destinationFilePath));
+
+        // On some servers, sometimes fopen() can not create files. Seems to be caused by big files
+        // Issue: #2560, #2576
+        if (!file_exists($destinationFilePath)) {
+            touch($destinationFilePath);
+        }
 
         $destinationFileResource = @fopen($destinationFilePath, FileObject::MODE_APPEND);
 

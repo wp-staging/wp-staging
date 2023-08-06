@@ -121,7 +121,7 @@ class Administrator
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        if (!defined('WPSTGPRO_VERSION')) {
+        if (!defined('WPSTGPRO_VERSION') && $this->isPluginsPage()) {
             add_filter('admin_footer', [$this, 'loadFeedbackForm']);
         }
 
@@ -1327,5 +1327,16 @@ class Administrator
         }
 
         return true;
+    }
+
+    /**
+     * Check if current page is plugins.php
+     * @global array $pagenow
+     * @return bool
+     */
+    private function isPluginsPage()
+    {
+        global $pagenow;
+        return ($pagenow === 'plugins.php');
     }
 }

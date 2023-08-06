@@ -10,6 +10,8 @@
 
 use WPStaging\Framework\Facades\Escape;
 
+require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/download.php');
+require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
 ?>
 <div id="wpstg-step-1">
     <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning">

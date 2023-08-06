@@ -262,6 +262,25 @@ class Assets
                 'tablesSelected'      => esc_html__('{d} tables(s) selected', 'wp-staging'),
                 'noFileSelected'      => esc_html__('No file selected', 'wp-staging'),
                 'filesSelected'       => esc_html__('{t} theme(s), {p} plugin(s) selected', 'wp-staging'),
+                'wpstg_cloning'        => [
+                    'title'  => esc_html__('Staging Site Created Successfully!', 'wp-staging'),
+                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
+                ],
+                'wpstg_update'         => [
+                    'title'  => esc_html__('Staging Site Updated Successfully!', 'wp-staging'),
+                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
+                ],
+                'wpstg_push_processing' => [
+                    'title'  => esc_html__('Staging Site Pushed Successfully!', 'wp-staging'),
+                    'body'  => esc_html__('Clear the site cache if changes are not visible.', 'wp-staging'),
+                ],
+                'wpstg_reset'          => [
+                    'title'  => esc_html__('Staging Site Reset Successfully!', 'wp-staging'),
+                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
+                ],
+                'wpstg_delete_clone'    => [
+                    'title'  => esc_html__('Staging Site Deleted Successfully!', 'wp-staging'),
+                ],
             ],
         ];
 

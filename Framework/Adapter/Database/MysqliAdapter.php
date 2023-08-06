@@ -83,6 +83,20 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
+     * @param $result
+     * @return array
+     */
+    public function fetchAll($result)
+    {
+        $data = [];
+        while ($row = mysqli_fetch_assoc($result)) {
+            $data[] = $row;
+        }
+
+        return $data;
+    }
+
+    /**
      * @inheritDoc
      */
     public function fetchAssoc($result)

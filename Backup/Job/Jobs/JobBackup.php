@@ -43,7 +43,7 @@ class JobBackup extends AbstractJob
         try {
             $response = $this->getResponse($this->currentTask->execute());
         } catch (\Exception $e) {
-            $this->currentTask->getLogger()->critical($e->getMessage());
+            $this->currentTask->getLogger()->critical('Backup job failed! Error: ' . $e->getMessage());
             $response = $this->getResponse($this->currentTask->generateResponse(false));
         }
 

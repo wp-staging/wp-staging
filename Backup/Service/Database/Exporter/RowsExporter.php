@@ -11,6 +11,8 @@ use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
+use function WPStaging\functions\debug_log;
+
 class RowsExporter extends AbstractExporter
 {
     use MySQLRowsGeneratorTrait;
@@ -33,7 +35,7 @@ class RowsExporter extends AbstractExporter
     protected $totalRowsExported;
 
     /**
-     * @var int How many rows the current table has to backup
+     * @var int How many rows the current table has to back up
      */
     protected $totalRowsInCurrentTable;
 
@@ -119,17 +121,17 @@ class RowsExporter extends AbstractExporter
     }
 
     /**
-     * @return int|string
+     * @return int
      */
-    public function getTableRowsOffset()
+    public function getTableRowsOffset(): int
     {
-        return (int)$this->tableRowsOffset;
+        return $this->tableRowsOffset;
     }
 
     /**
-     * @param string
+     * @param int $tableRowsOffset
      */
-    public function setTableRowsOffset($tableRowsOffset)
+    public function setTableRowsOffset(int $tableRowsOffset)
     {
         $this->tableRowsOffset = $tableRowsOffset;
     }
@@ -137,23 +139,23 @@ class RowsExporter extends AbstractExporter
     /**
      * @return int
      */
-    public function getTableIndex()
+    public function getTableIndex(): int
     {
-        return (int)$this->tableIndex;
+        return $this->tableIndex;
     }
 
     /**
      * @return bool
      */
-    public function isTableExcluded()
+    public function isTableExcluded(): bool
     {
         return in_array($this->getTableBeingBackup(), $this->excludedTables);
     }
 
     /**
-     * @param string
+     * @param int $tableIndex
      */
-    public function setTableIndex($tableIndex)
+    public function setTableIndex(int $tableIndex)
     {
         $this->tableIndex = $tableIndex;
 
@@ -165,17 +167,17 @@ class RowsExporter extends AbstractExporter
     }
 
     /**
-     * @param string
+     * @param int $totalRowsExported
      */
-    public function setTotalRowsExported($totalRowsExported)
+    public function setTotalRowsExported(int $totalRowsExported)
     {
         $this->totalRowsExported = $totalRowsExported;
     }
 
     /**
-     * @param string
+     * @param int $totalRows
      */
-    public function setTotalRowsInCurrentTable($totalRows)
+    public function setTotalRowsInCurrentTable(int $totalRows)
     {
         $this->totalRowsInCurrentTable = $totalRows;
     }
@@ -183,28 +185,31 @@ class RowsExporter extends AbstractExporter
     /**
      * @return int
      */
-    public function getTotalRowsExported()
+    public function getTotalRowsExported(): int
     {
-        return (int)$this->totalRowsExported;
+        return $this->totalRowsExported;
     }
 
-    public function getTableBeingBackup()
+    /**
+     * @return string empty if no table is being backup
+     */
+    public function getTableBeingBackup(): string
     {
         return array_key_exists($this->tableIndex, $this->tables) ? $this->tables[$this->tableIndex] : '';
     }
 
     /**
-     * @param bool
+     * @param bool $isBackupSplit
      */
-    public function setIsBackupSplit($isBackupSplit)
+    public function setIsBackupSplit(bool $isBackupSplit)
     {
         $this->isBackupSplit = $isBackupSplit;
     }
 
     /**
-     * @param int
+     * @param int $maxSplitSize
      */
-    public function setMaxSplitSize($maxSplitSize)
+    public function setMaxSplitSize(int $maxSplitSize)
     {
         $this->maxSplitSize = $maxSplitSize;
     }
@@ -212,12 +217,12 @@ class RowsExporter extends AbstractExporter
     /**
      * @return bool
      */
-    public function doExceedSplitSize()
+    public function doExceedSplitSize(): bool
     {
         return $this->exceedSplitSize;
     }
 
-    public function countTotalRows()
+    public function countTotalRows(): int
     {
         // Early bail: Table not found
         if (!array_key_exists($this->tableIndex, $this->tables)) {
@@ -243,7 +248,6 @@ class RowsExporter extends AbstractExporter
                     $this->isRetryingAfterRepair = true;
 
                     return $this->countTotalRows();
-                    break;
                 default:
                     $this->throwUnableToCountException();
             }
@@ -340,7 +344,7 @@ class RowsExporter extends AbstractExporter
 
                 /*
                  * This can run hundreds of thousands of times,
-                 * so let's write every now and then.
+                 * so let's write sometimes.
                  */
                 if ($this->writeToFileCount >= 10) {
                     $this->file->fwrite($this->queriesToInsert);
@@ -362,24 +366,24 @@ class RowsExporter extends AbstractExporter
     }
 
     /**
-     * @return bool|\mysqli_result|resource Falsy if couldn't lock.
+     * @return bool|\mysqli_result|resource False if it couldn't lock.
      */
     public function lockTable()
     {
         if (!$result = $this->client->query("LOCK TABLES `$this->tableName` WRITE;")) {
-            \WPStaging\functions\debug_log("Backup: Could not lock table $this->tableName");
+            debug_log("Backup: Could not lock table $this->tableName");
         }
 
         return $result;
     }
 
     /**
-     * @return bool|\mysqli_result|resource Falsy if couldn't lock.
+     * @return bool|\mysqli_result|resource False if it couldn't lock.
      */
     public function unLockTables()
     {
         if (!$result = $this->client->query("UNLOCK TABLES;")) {
-            \WPStaging\functions\debug_log("WP STAGING: Could not unlock tables after locking tables $this->tableName");
+            debug_log("WP STAGING: Could not unlock tables after locking tables $this->tableName");
         }
 
         return $result;
@@ -392,37 +396,20 @@ class RowsExporter extends AbstractExporter
     }
 
     /** @var array $nonWpTables */
-    public function setNonWpTables($nonWpTables = [])
+    public function setNonWpTables(array $nonWpTables = [])
     {
         $this->nonWpTables = $nonWpTables;
     }
 
     /**
-     * @param string $tableName Table name
-     *
-     * @return array
-     */
-    private function getColumnTypes($tableName)
-    {
-        $column_types = [];
-
-        $result = $this->client->query("SHOW COLUMNS FROM `{$tableName}`");
-        while ($row = $this->client->fetchAssoc($result)) {
-            if (isset($row['Field'])) {
-                $column_types[strtolower($row['Field'])] = strtolower($row['Type']);
-            }
-        }
-
-        $this->client->freeResult($result);
-
-        return $column_types;
-    }
-
-    /**
      * @return string The primary key of the current table, if any.
      */
-    public function getPrimaryKey()
+    public function getPrimaryKey(): string
     {
+        if ($this->hasMoreThanOnePrimaryKey()) {
+            throw new \UnexpectedValueException();
+        }
+
         $query = "SELECT COLUMN_NAME 
                   FROM INFORMATION_SCHEMA.COLUMNS
                   WHERE TABLE_NAME = '$this->tableName'
@@ -457,20 +444,20 @@ class RowsExporter extends AbstractExporter
      * @todo: Do we want to add this to DbRowsGeneratorTrait?
      * @return bool
      */
-    private function isTableCorrupt()
+/*    private function isTableCorrupt()
     {
         return $this->client->errno() === 1194;
-    }
+    }*/
 
     /**
-     * @param array  $row
+     * @param array $row
      * @param string $prefixedTableName
-     * @param array  $tableColumns
+     * @param array $tableColumns
      *
      * @return void
      * @throws Exception
      */
-    protected function writeQueryInsert($row, $prefixedTableName, $tableColumns)
+    protected function writeQueryInsert(array $row, string $prefixedTableName, array $tableColumns)
     {
         try {
             foreach ($row as $column => &$value) {
@@ -561,5 +548,40 @@ class RowsExporter extends AbstractExporter
             $this->client->errno(),
             $this->client->error()
         ));
+    }
+
+    /**
+     * @param string $tableName Table name
+     *
+     * @return array
+     */
+    private function getColumnTypes(string $tableName): array
+    {
+        $column_types = [];
+
+        $result = $this->client->query("SHOW COLUMNS FROM `{$tableName}`");
+        while ($row = $this->client->fetchAssoc($result)) {
+            if (isset($row['Field'])) {
+                $column_types[strtolower($row['Field'])] = strtolower($row['Type']);
+            }
+        }
+
+        $this->client->freeResult($result);
+
+        return $column_types;
+    }
+
+    /**
+     * @return bool
+     */
+    private function hasMoreThanOnePrimaryKey(): bool
+    {
+        $query = "SHOW KEYS FROM $this->tableName WHERE Key_name = 'PRIMARY'";
+
+        $result = $this->client->query($query);
+
+        $primaryKeys = $this->client->fetchAll($result);
+
+        return count($primaryKeys) > 1;
     }
 }

@@ -19,7 +19,7 @@ class RatingNotice
     }
 
     /**
-     * Check if notice should be shown after certain days of installation
+     * Check if notice should be shown after certain days of installation or if it is dismissed
      * @param int $days default 10
      * @return bool
      */

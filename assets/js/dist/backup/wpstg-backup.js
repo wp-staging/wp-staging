@@ -1838,7 +1838,7 @@
         var $ul = $('.wpstg-backup-list ul');
         $ul.empty();
         $ul.html(res);
-        addEvent(qs('#wpstg-existing-backups'), 'click', '.wpstg-tab-header', function (el) {
+        addEvent(qs('#wpstg-existing-backups'), 'click', '.wpstg-tab-header', function (el, event) {
           var target = qs(el.getAttribute('data-id'));
           el.classList.toggle('expand');
           if (el.classList.contains('expand')) {
@@ -1848,6 +1848,7 @@
             el.querySelector('span').classList.remove('wpstg-rotate-90');
             slideUp(target);
           }
+          event.stopImmediatePropagation();
         });
       })["catch"](function (e) {
         return WPStagingCommon.showAjaxFatalError(e, '', 'Submit an error report.');
@@ -2342,7 +2343,6 @@
         if (WPStagingBackup.processInfo.interval !== null) {
           return;
         }
-        // console.log('Status: Start 2');
         WPStagingBackup.processInfo.interval = setInterval(function () {
           if (true === WPStagingBackup.isCancelled) {
             WPStagingBackup.statusStop();

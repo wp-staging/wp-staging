@@ -49,6 +49,13 @@ interface InterfaceDatabaseClient
     public function version();
 
     /**
+     * Returns all the rows from MySQL query resource as array of associative arrays
+     * @param resource|mysqli_result $result
+     * @return array
+     */
+    public function fetchAll($result);
+
+    /**
      * Returns the results from MySQL query resource as associative array
      * @param resource|mysqli_result $result
      * @return array

@@ -41,6 +41,7 @@ class BasicNotices
     public function renderNotices()
     {
         $viewsNoticesPath = $this->noticesViewPath;
+
         // Show notice "rate the plugin"
         if ($this->showAllNotices || $this->ratingNotice->shouldShowRatingNotice()) {
             require_once "{$viewsNoticesPath}rating.php";

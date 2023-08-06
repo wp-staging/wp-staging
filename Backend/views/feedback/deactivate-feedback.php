@@ -29,7 +29,10 @@ shuffle($reasons);
         <?php if ($email) : ?>
             <input type="hidden" name="wpstg_disable_from" value="<?php echo esc_attr($email); ?>"/>
         <?php endif; ?>
-        <input id="wpstg-feedback-submit" class="button button-primary" type="submit" name="wpstg_disable_submit" value="<?php esc_html_e('Submit & Deactivate', 'wp-staging'); ?>"/>
+        <button id="wpstg-feedback-submit" class="button button-primary" type="submit" name="wpstg_disable_submit">
+          <?php esc_html_e('Submit & Deactivate', 'wp-staging'); ?>
+        </button>
+
         <a class="button"><?php esc_html_e('Only Deactivate', 'wp-staging'); ?></a>
         <a class="wpstg-feedback-not-deactivate" href="#"><?php esc_html_e('Don\'t deactivate', 'wp-staging'); ?></a>
     </form>

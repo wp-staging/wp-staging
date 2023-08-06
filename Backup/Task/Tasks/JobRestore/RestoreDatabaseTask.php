@@ -52,12 +52,12 @@ class RestoreDatabaseTask extends RestoreTask
         $this->multipartRestore       = $multipartRestore;
     }
 
-    public static function getTaskName()
+    public static function getTaskName(): string
     {
         return 'backup_restore_database';
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Restoring Database';
     }
@@ -129,8 +129,14 @@ class RestoreDatabaseTask extends RestoreTask
         }
 
         $databaseFile = $this->pathIdentifier->transformIdentifiableToPath($metadata->getDatabaseFile());
+        $fileSize = filesize($databaseFile);
+
+        if ($fileSize === false || $fileSize === 0) {
+            throw new RuntimeException(sprintf('Could not get database file size for %s', $databaseFile));
+        }
+
         if (!file_exists($databaseFile)) {
-            throw new RuntimeException(__('Could not find database file to restore.', 'wp-staging'));
+            throw new RuntimeException(sprintf('Can not find database file %s', $databaseFile));
         }
 
         $this->databaseImporter->setFile($databaseFile);
