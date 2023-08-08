@@ -8,7 +8,8 @@
         url: ajaxurl,
         type: 'POST',
         data: {
-          action: 'wpstg_restore_settings'
+          action: 'wpstg_restore_settings',
+          nonce: wpstg.nonce
         },
         error: function error(xhr, textStatus, errorThrown) {
           alert('Unknown error. Please get in contact with us to solve it support@wp-staging.com');

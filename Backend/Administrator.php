@@ -40,6 +40,7 @@ use WPStaging\Framework\Utils\Escape;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
 use WPStaging\Backend\Feedback\Feedback;
+use WPStaging\Framework\Security\Nonce;
 
 /**
  * Class Administrator
@@ -121,7 +122,7 @@ class Administrator
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        if (!defined('WPSTGPRO_VERSION')) {
+        if (!defined('WPSTGPRO_VERSION') && $this->isPluginsPage()) {
             add_filter('admin_footer', [$this, 'loadFeedbackForm']);
         }
 
@@ -184,11 +185,14 @@ class Administrator
     }
 
     /**
-     * Send Feedback form via mail
+     * Send Feedback data via mail
      */
     public function sendFeedback()
     {
-        if (!$this->isAuthenticated()) {
+
+        $nonce = isset($_POST['nonce']) ? sanitize_text_field($_POST['nonce']) : '';
+
+        if (!$this->isAuthenticated($nonce)) {
             return;
         }
 
@@ -444,9 +448,9 @@ class Administrator
     /**
      * @return bool Whether the current request is considered to be authenticated.
      */
-    private function isAuthenticated()
+    private function isAuthenticated($nonce = Nonce::WPSTG_NONCE)
     {
-        return $this->auth->isAuthenticatedRequest();
+        return $this->auth->isAuthenticatedRequest($nonce);
     }
 
     /**
@@ -830,6 +834,9 @@ class Administrator
         wp_send_json(update_option("wpstg_beta", "no"));
     }
 
+    /**
+     * @return void
+     */
     public function ajaxDismissNotice()
     {
         if (!$this->isAuthenticated()) {
@@ -1293,7 +1300,7 @@ class Administrator
     }
 
     /**
-     * Enable cloning on staging site if it is not enabled already
+     * Restore Settings, can be used when settings are corrupted 
      */
     public function ajaxRestoreSettings()
     {
@@ -1327,5 +1334,16 @@ class Administrator
         }
 
         return true;
+    }
+
+    /**
+     * Check if current page is plugins.php
+     * @global array $pagenow
+     * @return bool
+     */
+    private function isPluginsPage()
+    {
+        global $pagenow;
+        return ($pagenow === 'plugins.php');
     }
 }

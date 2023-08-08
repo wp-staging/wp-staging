@@ -91,6 +91,9 @@ class BackupRequirementsCheckTask extends BackupTask
             return $this->generateResponse(false);
         }
 
+        $isMultipartBackup = $this->jobDataDto->getIsMultipartBackup() ? 'Yes' : 'No';
+        $this->logger->info(sprintf(__('Is Multipart Backup: %s ', 'wp-staging'), esc_html($isMultipartBackup)));
+
         $this->logger->info(__('Backup requirements passed...', 'wp-staging'));
 
         $this->backupScheduler->maybeDeleteOldBackups($this->jobDataDto);

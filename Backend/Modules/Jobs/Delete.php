@@ -45,11 +45,6 @@ class Delete extends Job
     private $job = null;
 
     /**
-     * @var bool
-     */
-    //private $forceDeleteDirectories = false;
-
-    /**
      *
      * @var wpdb
      */
@@ -89,7 +84,6 @@ class Delete extends Job
             $this->getCloneRecords();
         } else {
             $this->clone = (object)$clone;
-            //$this->forceDeleteDirectories = true;
         }
 
         if (!$this->isExternalDatabase()) {
@@ -102,7 +96,7 @@ class Delete extends Job
             return false;
         }
 
-        $this->wpdb = $this->getStagingDb();
+        $this->wpdb = $this->getExternalStagingDb();
         $this->getTableRecords();
         return true;
     }
@@ -110,7 +104,7 @@ class Delete extends Job
     /**
      * Get database object to interact with
      */
-    private function getStagingDb()
+    private function getExternalStagingDb()
     {
         if ($this->clone->databaseSsl && !defined('MYSQL_CLIENT_FLAGS')) {
             // phpcs:disable PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
@@ -139,7 +133,7 @@ class Delete extends Job
             return true;
         }
 
-        if (!empty($this->clone->databaseUser)) {
+        if (!empty($this->clone->databaseUser) && !empty($this->clone->databasePassword) && !empty($this->clone->databaseDatabase) && !empty($this->clone->databaseServer)) {
             return true;
         }
 
@@ -214,8 +208,9 @@ class Delete extends Job
      */
     private function getStagingPrefix()
     {
-        if ($this->isExternalDatabase() && !empty($this->clone->prefix)) {
-            return $this->clone->prefix;
+        if ($this->isExternalDatabase() && !empty($this->clone->databasePrefix)) {
+            $this->clone->prefix = $this->clone->databasePrefix;
+            return $this->clone->databasePrefix;
         }
 
         // Prefix not defined! Happens if staging site has been generated with older version of wpstg
@@ -365,7 +360,7 @@ class Delete extends Job
         $tables = $this->getTablesToRemove();
 
         foreach ($tables as $table) {
-            // PROTECTION: Never delete any table that beginns with wp prefix of live site
+            // PROTECTION: Never delete any table that begins with wp prefix of live site
             if (!$this->isExternalDatabase() && $this->strings->startsWith($table, $this->wpdb->prefix)) {
                 $this->log("Fatal Error: Trying to delete table $table of main WP installation!", Logger::TYPE_CRITICAL);
             }

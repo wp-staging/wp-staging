@@ -1909,7 +1909,14 @@
       handleDisplayDependencies: handleDisplayDependencies,
       handleToggleElement: handleToggleElement,
       handleCopyPaste: handleCopyPaste,
-      handleCopyToClipboard: handleCopyToClipboard
+      handleCopyToClipboard: handleCopyToClipboard,
+      messages: [],
+      modal: {
+        instance: '',
+        processTime: 0,
+        processInterval: '',
+        currentJob: ''
+      }
     };
     var cache = {
       elements: []
@@ -2248,22 +2255,89 @@
       .on('click', '.wpstg-remove-clone[data-clone]', function (e) {
         resetErrors();
         e.preventDefault();
-        var $existingClones = cache.get('#wpstg-existing-clones');
+        cache.get('#wpstg-existing-clones');
         $workFlow.removeClass('active');
         cache.get('.wpstg-loader').show();
+        var cloneData = $(this).data('clone');
+        var stagingSiteName = '';
+        if (document.getElementsByClassName('wpstg-clone').length > 0) {
+          stagingSiteName = '"' + document.getElementsByClassName('wpstg-clone')[0].id + '"';
+        }
         ajax({
           action: 'wpstg_confirm_delete_clone',
           accessToken: wpstg.accessToken,
           nonce: wpstg.nonce,
           clone: $(this).data('clone')
         }, function (response) {
-          cache.get('#wpstg-removing-clone').html(response);
-          $existingClones.children('img').remove();
-          cache.get('.wpstg-loader').hide();
-          $('html, body').animate({
-            // This logic is meant to be a "scrollBottom"
-            scrollTop: $('#wpstg-remove-clone').offset().top - $(window).height() + $('#wpstg-remove-clone').height() + 50
-          }, 100);
+          WPStagingCommon.getSwalModal(true, {
+            popup: 'wpstg-swal-popup wpstg-db-comparison-modal centered-modal',
+            content: 'wpstg--process--content'
+          }).fire({
+            title: 'Do you want to delete staging site ' + stagingSiteName + '?',
+            icon: 'error',
+            html: response,
+            width: '100%',
+            focusConfirm: false,
+            confirmButtonText: 'Delete',
+            confirmButtonColor: '#e01e5a',
+            showCancelButton: true,
+            onRender: function onRender() {
+              var wpstgUnselectAllTables = document.getElementById('wpstg-unselect-all-tables');
+              var wpstgUnselectAllTablesId = document.getElementById('wpstg-unselect-all-tables-id');
+              if (wpstgUnselectAllTables !== null) {
+                wpstgUnselectAllTables.addEventListener('click', function (e) {
+                  if (that.areAllTablesChecked === false) {
+                    cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', 'selected');
+                    cache.get('#wpstgUnselectAllTablesId').text('Unselect All');
+                    wpstgUnselectAllTablesId.textContent = 'Unselect All';
+                    cache.get('.wpstg-db-table-checkboxes').prop('checked', true);
+                    that.areAllTablesChecked = true;
+                  } else {
+                    cache.get('#wpstg_select_tables_cloning .wpstg-db-table').prop('selected', false);
+                    cache.get('#wpstgUnselectAllTablesId').text('Select All');
+                    wpstgUnselectAllTablesId.textContent = 'Select All';
+                    cache.get('.wpstg-db-table-checkboxes').prop('checked', false);
+                    that.areAllTablesChecked = false;
+                  }
+                });
+              }
+              var swalContainer = document.querySelector('.wpstg--swal2-html-container');
+              swalContainer.classList.remove('wpstg--swal2-html-container');
+              var _deleteButton = document.querySelector('.wpstg--swal2-confirm');
+              _deleteButton.style.background = '#e01e5a';
+              document.querySelector('.wpstg--swal2-x-mark-line-left').style.background = '#e01e5a';
+              document.querySelector('.wpstg--swal2-x-mark-line-right').style.background = '#e01e5a';
+              document.querySelector('.wpstg--swal2-icon.wpstg--swal2-error').style.borderColor = '#e01e5a';
+              var _btnCancel = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
+              var btnCancel = _btnCancel.cloneNode(true);
+              _btnCancel.parentNode.replaceChild(btnCancel, _btnCancel);
+              btnCancel.addEventListener('click', function (e) {
+                WPStagingCommon.closeSwalModal();
+                that.modal.instance = null;
+                cache.get('.wpstg-loader').removeClass('wpstg-finished');
+                cache.get('.wpstg-loader').hide();
+              });
+            }
+          }).then(function (result) {
+            if (result.value) {
+              var deleteDirectory = document.querySelector('#deleteDirectory:checked');
+              var deleteDir = '';
+              var excludedTables = [];
+              if (deleteDirectory !== null) {
+                deleteDir = deleteDirectory.getAttribute('data-deletepath');
+              }
+              $('.wpstg-db-table input:not(:checked)').each(function () {
+                excludedTables.push(this.name);
+              });
+              WPStagingCommon.closeSwalModal();
+              that.modal.instance = null;
+              var params = {
+                'job': 'delete'
+              };
+              that.wpstgProcessingModal(params, false, false);
+              deleteClone(cloneData, deleteDir, excludedTables);
+            }
+          });
         }, 'HTML');
       })
       // Delete clone - confirmed
@@ -2467,16 +2541,47 @@
         }
         if ($this.data('action') === 'wpstg_update' || $this.data('action') === 'wpstg_reset') {
           // Update / Reset Clone - confirmed
-          var onlyUpdateMessage = '';
           if ($this.data('action') === 'wpstg_update') {
-            onlyUpdateMessage = ' \n\nExclude all tables and folders you do not want to overwrite, first! \n\nDo not cancel the updating process! This can break your staging site. \n\n\Create a backup of your staging website before you proceed.';
-          }
-          if (!confirm('STOP! This will overwrite your staging site with all selected data from the production site! This should be used only if you want to clone again your production site. Are you sure you want to do this?' + onlyUpdateMessage)) {
+            var selectedSite = $this;
+            var selectedSiteWorkFlow = $workFlow;
+            var selectedAction = $this.data('action');
+            WPStagingCommon.getSwalModal(true, {
+              popup: 'wpstg-swal-popup wpstg-db-comparison-modal centered-modal',
+              content: 'wpstg--process--content'
+            }).fire({
+              title: 'Do you want to update the staging site?',
+              icon: 'warning',
+              html: '<div class="wpstg-confirm-text-line-height wpstg-mt-10px">This overwrites the staging site with all the selected data from the live site.<br>Use this only if you want to clone the live site again.<br><br> ' + 'Uncheck all tables and folders that you do not want to overwrite.<br>Do not cancel the update process! This could break the staging site.<br>' + 'If you are unsure, create a backup of the staging site before proceeding.<br>' + 'There is no automatic merging of database data!</div>',
+              width: '650px',
+              focusConfirm: false,
+              confirmButtonText: 'Update',
+              showCancelButton: true,
+              onRender: function onRender() {
+                var swalContainer = document.querySelector('.wpstg--swal2-html-container');
+                swalContainer.classList.remove('wpstg--swal2-html-container');
+                var _btnCancel = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
+                var btnCancel = _btnCancel.cloneNode(true);
+                _btnCancel.parentNode.replaceChild(btnCancel, _btnCancel);
+                btnCancel.addEventListener('click', function (e) {
+                  WPStagingCommon.closeSwalModal();
+                });
+              }
+            }).then(function (result) {
+              if (result.value) {
+                var selectedSiteDbCheck = document.querySelector('#wpstg-ext-db');
+                if (selectedAction === 'wpstg_cloning') {
+                  if (selectedSiteDbCheck.checked) {
+                    verifyExternalDatabase(selectedSite, selectedSiteWorkFlow);
+                    return;
+                  }
+                }
+                WPStagingCommon.closeSwalModal();
+                proceedCloning(selectedSite, selectedSiteWorkFlow);
+              }
+            });
             return false;
           }
         }
-
-        // Button is disabled
         if ($this.attr('disabled')) {
           return false;
         }
@@ -2784,15 +2889,16 @@
     /**
      * Delete Clone
      * @param {String} clone
+     * @param {String} deleteDir
+     * @param {array} excludedTables
      */
-    var deleteClone = function deleteClone(clone) {
-      var deleteDir = $('#deleteDirectory:checked').data('deletepath');
+    var deleteClone = function deleteClone(clone, deleteDir, excludedTables) {
       ajax({
         action: 'wpstg_delete_clone',
         clone: clone,
         accessToken: wpstg.accessToken,
         nonce: wpstg.nonce,
-        excludedTables: getExcludedTables(),
+        excludedTables: excludedTables,
         deleteDir: deleteDir
       }, function (response) {
         if (response) {
@@ -2812,12 +2918,20 @@
               cache.get('#wpstg-no-staging-site-results').show();
             }
             cache.get('.wpstg-loader').hide();
+            // finish modal popup
+            if (wpstg.i18n.wpstg_delete_clone !== null) {
+              var params = {
+                'job': 'finish'
+              };
+              that.wpstgProcessingModal(params, false, false);
+              setTimeout(that.openSuccessModalPopup(wpstg.i18n.wpstg_delete_clone, false), 2000);
+            }
             return;
           }
         }
         // continue
         if (true !== response) {
-          deleteClone(clone);
+          deleteClone(clone, deleteDir, excludedTables);
           return;
         }
       });
@@ -2913,39 +3027,39 @@
     };
 
     /**
-     * Scroll the window log to bottom
-     * @return void
-     */
-    var logscroll = function logscroll() {
-      var $div = cache.get('.wpstg-log-details');
-      if ('undefined' !== typeof $div[0]) {
-        $div.scrollTop($div[0].scrollHeight);
-      }
-    };
-
-    /**
      * Append the log to the logging window
      * @param string log
      * @return void
      */
     var getLogs = function getLogs(log) {
-      if (log != null && 'undefined' !== typeof log) {
-        if (log.constructor === Array) {
-          $.each(log, function (index, value) {
-            if (value === null) {
-              return;
+      if (Array.isArray(log)) {
+        log.forEach(function (logMessage) {
+          if (logMessage !== null) {
+            if (!that.messages.find(function (_ref) {
+              var message = _ref.message;
+              return message === logMessage.message;
+            })) {
+              that.messages.push(logMessage);
+              var $logsContainer = $('.wpstg--modal--process--logs');
+              var msgClass = "wpstg--modal--process--msg--" + (logMessage.type.toLowerCase() || 'info');
+              $logsContainer.append("<p class=\"" + msgClass + "\">[" + (logMessage.type || 'info') + "] - [" + logMessage.date + "] - " + logMessage.message + "</p>");
             }
-            if (value.type === 'ERROR') {
-              cache.get('.wpstg-log-details').append('<span class="wpstg--red">[' + value.type + ']</span>-' + '[' + value.date + '] ' + value.message + '</br>');
-            } else {
-              cache.get('.wpstg-log-details').append('[' + value.type + ']-' + '[' + value.date + '] ' + value.message + '</br>');
-            }
-          });
-        } else {
-          cache.get('.wpstg-log-details').append('[' + log.type + ']-' + '[' + log.date + '] ' + log.message + '</br>');
+          }
+        });
+      } else {
+        if (!that.messages.find(function (_ref2) {
+          var message = _ref2.message;
+          return message === log.message;
+        })) {
+          that.messages.push(log);
+          var $logsContainer = $('.wpstg--modal--process--logs');
+          var msgClass = "wpstg--modal--process--msg--" + (log.type.toLowerCase() || 'info');
+          $logsContainer.append("<p class=\"" + msgClass + "\">[" + (log.type || 'info') + "] - [" + log.date + "] - " + log.message + "</p>");
         }
       }
-      logscroll();
+      document.querySelectorAll('.wpstg--modal--process--logs').forEach(function (element) {
+        element.scrollTop = element.scrollHeight;
+      });
     };
 
     /**
@@ -3055,7 +3169,6 @@
           window.addEventListener('beforeunload', WPStaging$1.warnIfClosingDuringProcess);
           processing();
         }, wpstg.delayReq);
-        that.timer('start');
       }
 
       /**
@@ -3076,7 +3189,7 @@
         }
 
         // Show logging window
-        cache.get('.wpstg-log-details').show();
+
         WPStaging$1.ajax({
           action: 'wpstg_processing',
           accessToken: wpstg.accessToken,
@@ -3095,7 +3208,7 @@
           if (false === response.status) {
             progressBar(response);
             setTimeout(function () {
-              cache.get('.wpstg-loader').show();
+              // cache.get('.wpstg-loader').show();
               processing();
             }, wpstg.delayReq);
           } else if (true === response.status && 'finished' !== response.status) {
@@ -3143,23 +3256,15 @@
         cache.get('#wpstg-processing-header').html('Processing Complete');
 
         // show alert
-        var msg = wpstg.i18n.cloneResetComplete;
+        wpstg.i18n.cloneResetComplete;
         if (that.data.action === 'wpstg_update') {
-          msg = wpstg.i18n.cloneUpdateComplete;
+          wpstg.i18n.cloneUpdateComplete;
           cache.get('#wpstg-update-cloning-site-button').show();
         }
-        if (that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
-          cache.get('#wpstg-cancel-cloning-update').hide();
-          cache.get('.wpstg-prev-step-link').show();
-          WPStagingCommon.getSwalModal(true, {
-            confirmButton: 'wpstg--btn--confirm wpstg-green-button wpstg-button wpstg-link-btn wpstg-100-width'
-          }).fire({
-            title: '',
-            icon: 'success',
-            html: msg,
-            width: '500px',
-            focusConfirm: true
-          });
+        console.log(that.data.action, 'action');
+        console.log(wpstg.i18n[that.data.action], 'i18n');
+        if (wpstg.i18n[that.data.action] !== null) {
+          that.openSuccessModalPopup(wpstg.i18n[that.data.action], true, response.url);
         }
         return false;
       }
@@ -3170,42 +3275,10 @@
        * @return {Boolean}
        */
       var progressBar = function progressBar(response, restart) {
-        if ('undefined' === typeof response.percentage) {
-          return false;
+        if (response !== null) {
+          that.wpstgProcessingModal(response, true);
         }
-        if (response.job === 'database') {
-          cache.get('#wpstg-progress-db').width(response.percentage * 0.2 + '%').html(response.percentage + '%');
-          cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Step 1 of 4 Cloning Database Tables...');
-        }
-        if (response.job === 'SearchReplace') {
-          cache.get('#wpstg-progress-db').css('background-color', '#3bc36b');
-          cache.get('#wpstg-progress-db').html('1. Database');
-          // Assumption: All previous steps are done.
-          // This avoids bugs where some steps are skipped and the progress bar is incomplete as a result
-          cache.get('#wpstg-progress-db').width('20%');
-          cache.get('#wpstg-progress-sr').width(response.percentage * 0.1 + '%').html(response.percentage + '%');
-          cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Step 2 of 4 Preparing Database Data...');
-        }
-        if (response.job === 'directories') {
-          cache.get('#wpstg-progress-sr').css('background-color', '#3bc36b');
-          cache.get('#wpstg-progress-sr').html('2. Data');
-          cache.get('#wpstg-progress-sr').width('10%');
-          cache.get('#wpstg-progress-dirs').width(response.percentage * 0.1 + '%').html(response.percentage + '%');
-          cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Step 3 of 4 Getting files...');
-        }
-        if (response.job === 'files') {
-          cache.get('#wpstg-progress-dirs').css('background-color', '#3bc36b');
-          cache.get('#wpstg-progress-dirs').html('3. Files');
-          cache.get('#wpstg-progress-dirs').width('10%');
-          cache.get('#wpstg-progress-files').width(response.percentage * 0.6 + '%').html(response.percentage + '%');
-          cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Step 4 of 4 Copy files...');
-        }
-        if (response.job === 'finish') {
-          cache.get('#wpstg-progress-files').css('background-color', '#3bc36b');
-          cache.get('#wpstg-progress-files').html('4. Copy Files');
-          cache.get('#wpstg-progress-files').width('60%');
-          cache.get('#wpstg-processing-status').html(response.percentage.toFixed(0) + '%' + ' - Cloning Process Finished');
-        }
+        return false;
       };
     };
     that.switchStep = function (step) {
@@ -3247,6 +3320,207 @@
     };
 
     /**
+     * open success modal popup on staging site create, update, delete, reset and push
+     * @param object message to display title and body of modal popup, show logs and site url
+     */
+    that.openSuccessModalPopup = function (message, showLogs, siteUrl) {
+      if (showLogs === void 0) {
+        showLogs = false;
+      }
+      if (siteUrl === void 0) {
+        siteUrl = null;
+      }
+      var modal = document.getElementById('wpstg--modal--backup--download');
+      if (message.title !== null) {
+        modal.innerHTML = modal.innerHTML.replace('{title}', message.title);
+      }
+      if (showLogs) {
+        modal.innerHTML = modal.innerHTML.replace('{btnTxtLog}', '<span style="text-decoration: underline">Show Logs</span>');
+      }
+      if (message.body !== null && typeof message.body !== 'undefined') {
+        var messageBody = message.body;
+        if (siteUrl !== null) {
+          messageBody += '<br><strong><a href="' + siteUrl + '" target="_blank" id="wpstg-clone-url">' + siteUrl + '</a></strong>';
+        }
+        modal.innerHTML = modal.innerHTML.replace('{text}', messageBody);
+      } else {
+        modal.innerHTML = modal.innerHTML.replace('{text}', '');
+      }
+      WPStagingCommon.getSwalModal(true, {
+        confirmButton: 'wpstg--btn--confirm wpstg-green-button wpstg-button wpstg-link-btn wpstg-100-width'
+      }).fire({
+        'icon': 'success',
+        'html': modal.innerHTML,
+        'confirmButtonText': 'Close',
+        'showCancelButton': false,
+        'showConfirmButton': true
+      }).then(function (result) {
+        if (result.value) {
+          WPStagingCommon.closeSwalModal();
+          cache.get('.wpstg-loader').removeClass('wpstg-finished');
+          cache.get('.wpstg-loader').hide();
+          that.messages = [];
+          that.isProcessModalLoaded = false;
+          if (typeof that.data !== 'undefined' && that.data.action === 'wpstg_cloning') {
+            location.reload();
+          }
+        }
+      });
+      if (showLogs) {
+        $('.wpstg--modal--download--logs--wrapper').show();
+      }
+      cache.get('.wpstg-loader').removeClass('wpstg-finished');
+      cache.get('.wpstg-loader').hide();
+      that.messages = [];
+      that.isProcessModalLoaded = false;
+      if (message.title !== null && message.title !== 'Staging Site Deleted Successfully!') {
+        loadOverview();
+      }
+    };
+
+    /**
+     * open process modal popup on staging site create, update, delete, reset and push
+     * @param object message to display title and body of modal popup, show logs and site url
+     */
+    that.wpstgProcessingModal = function (response, showLogs, showCancelButton) {
+      if (showCancelButton === void 0) {
+        showCancelButton = true;
+      }
+      if (that.modal.processInterval === null || that.modal.processInterval === '') {
+        that.modal.processTime = 0;
+        that.modal.processInterval = setInterval(function () {
+          that.modal.processTime++;
+        }, 1000);
+      }
+      cache.get('.wpstg-prev-step-link').hide();
+      cache.get('#wpstg-start-updating').hide();
+      cache.get('.wpstg-loader').hide();
+      cache.get('#wpstg-cancel-cloning').hide();
+      cache.get('.wpstg-log-details').hide();
+      cache.get('.wpstg-log-details').hide();
+      cache.get('.wpstg-progress-bar').hide();
+      cache.get('#wpstg-processing-header').hide();
+      cache.get('.wpstg-processing-timer').hide();
+      cache.get('#wpstg-cancel-pushing').hide();
+      cache.get('.wpstg-progress-bar-wrapper').hide();
+      cache.get('#wpstg-cancel-pushing').hide();
+      if (document.getElementById('wpstg-cancel-cloning-update') !== null) {
+        document.getElementById('wpstg-cancel-cloning-update').style.display = 'none';
+      }
+      that.modal.currentJob = response.job;
+      if (that.isCancelled) {
+        WPStagingCommon.closeSwalModal();
+        that.modal.instance = null;
+        that.modal.processTime = 0;
+        that.modal.processInterval = null;
+        loadOverview();
+        setTimeout(function () {
+          that.isCancelled = false;
+          $('#wpstg-try-again, #wpstg-home-link, #wpstg-show-log-button, .wpstg-loader').hide();
+        }, 1000);
+      } else {
+        // console.log(showCancelButton);
+        if (!that.modal || !that.modal.instance) {
+          if (response.job === 'delete') {
+            $('.wpstg--modal--process--subtitle').remove();
+            $('#wpstg--modal--backup--process button').remove();
+          }
+          var $modal = $('#wpstg--modal--backup--process');
+          var html = $modal.html();
+          $modal.remove();
+          that.modal = {
+            html: null,
+            cancelBtnTxt: null,
+            processTime: 0,
+            instance: WPStagingCommon.getSwalModal(true, {
+              content: 'wpstg--process--content'
+            }).fire({
+              html: html,
+              cancelButtonText: 'Cancel',
+              showCancelButton: showCancelButton,
+              showConfirmButton: false,
+              showCloseButton: false,
+              showLoaderOnConfirm: false,
+              allowEscapeKey: false,
+              allowOutsideClick: false,
+              onRender: function onRender() {
+                var _btnCancel = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
+                var btnCancel = _btnCancel.cloneNode(true);
+                _btnCancel.parentNode.replaceChild(btnCancel, _btnCancel);
+                btnCancel.addEventListener('click', function (e) {
+                  if (confirm('Are you sure you want to cancel cloning process?')) {
+                    that.progressBar = 0;
+                    if (that.data.action === 'wpstg_cloning') {
+                      that.isCancelled = true;
+                      cancelCloning();
+                    } else if (that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
+                      that.isCancelled = true;
+                      cancelCloningUpdate();
+                    } else if (that.data.action === 'wpstg_push_processing') {
+                      var $container = $(WPStagingCommon.getSwalContainer());
+                      $container.find('.wpstg--modal--process--title').html('Canceling Please wait....');
+                      that.isCancelled = true;
+                    }
+                  }
+                });
+              }
+            })
+          };
+        } else {
+          var $container = $(WPStagingCommon.getSwalContainer());
+          var cancelButton = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
+          $container.find('.wpstg--modal--process--elapsed-time').text(that.modal.processTime + 's');
+          if (response.job) {
+            var title = response.job;
+            if (response.percentage !== null) {
+              $container.find('.wpstg--modal--process--percent').text(response.percentage);
+            }
+            if (response.job === 'database' || response.job === 'jobCopyDatabaseTmp') {
+              title = 'Copying Database';
+              cancelButton.disabled = false;
+            } else if (response.job === 'SearchReplace') {
+              title = 'Processing Data';
+              cancelButton.disabled = false;
+            } else if (response.job === 'directories' || response.job === 'jobFileScanning') {
+              title = 'Scanning Files';
+              cancelButton.disabled = false;
+            } else if (response.job === 'files' || response.job === 'data' || response.job === 'jobCopy' || response.job === 'jobSearchReplace') {
+              title = 'Copying Files';
+              cancelButton.disabled = false;
+            } else if (response.job === 'Backup') {
+              title = 'Backup Files Scanning';
+              cancelButton.disabled = false;
+            } else if (response.job === 'finish' || response.status === 'finished') {
+              title = 'Process Finished';
+              cancelButton.disabled = false;
+            } else if (response.job === 'jobDatabaseRename') {
+              title = 'Renaming Database';
+              cancelButton.disabled = true;
+            }
+            if (title !== response.job) {
+              $container.find('.wpstg--modal--process--title').html(title);
+            }
+            if (response.job === 'finish') {
+              that.modal.instance = null;
+              that.modal.processTime = 0;
+              that.modal.processInterval = null;
+              clearInterval(that.modal.processInterval);
+              WPStagingCommon.closeSwalModal();
+            }
+          } else {
+            if (response.status === 'finished') {
+              that.modal.instance = null;
+              that.modal.processTime = 0;
+              that.modal.processInterval = null;
+              clearInterval(that.modal.processInterval);
+              WPStagingCommon.closeSwalModal();
+            }
+          }
+        }
+      }
+    };
+
+    /**
      * Initiation
      * @type {Function}
      */
@@ -3273,7 +3547,6 @@
         }]
       });
     };
-
     /**
      * Ajax call
      * @type {ajax}
@@ -3312,7 +3585,21 @@
       sendIssueReport(self, 'false');
       e.preventDefault();
     });
-
+    $('body').on('click', '.wpstg--modal--process--logs--tail', function (e) {
+      var logBtn = $(this);
+      e.preventDefault();
+      var container = WPStagingCommon.getSwalContainer();
+      var $logs = $(container).find('.wpstg--modal--process--logs');
+      $logs.toggle();
+      if ($logs.is(':visible')) {
+        logBtn.text(wpstg.i18n.hideLogs);
+        container.childNodes[0].style.width = '97%';
+        container.style['z-index'] = 9999;
+      } else {
+        logBtn.text(wpstg.i18n.showLogs);
+        container.childNodes[0].style.width = '600px';
+      }
+    });
     /*
      * Close Success Modal
      */

@@ -81,6 +81,21 @@ class MysqlAdapter implements InterfaceDatabaseClient
     }
 
     /**
+     * @param $result
+     * @return array
+     */
+    public function fetchAll($result)
+    {
+        $data = [];
+        // phpcs:ignore PHPCompatibility.Extensions.RemovedExtensions.mysql_DeprecatedRemoved
+        while ($row = mysql_fetch_assoc($result)) {
+            $data[] = $row;
+        }
+
+        return $data;
+    }
+
+    /**
      * @inheritDoc
      */
     public function fetchAssoc($result)

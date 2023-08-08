@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.2
-Stable tag: 3.0.0
+Stable tag: 3.0.1
 Requires PHP: 7.0
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -258,6 +258,18 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.0.1 =
+* New: Make UI more consistent and use same success and processing modals for staging site creation as for backup creation #2221
+* Fix: Rating banner can not be dismissed #2632
+* Fix: Multipart backup scheduled to be sent to google drive does not send all parts #2516
+* Fix: Could not backup tables that contain multiple primary keys (composite keys) #2616
+* Fix: Stop backup restore and add better logging if sql file is not readable during backup restore #2560
+* Fix: New delete modal does not show all tables on sites with many db tables due to CSS issue #2221
+* Fix: Resolved conflict with plugin "Admin and Site Enhancements" #2513
+* Fix: Prevent UI issue and word wrapping on line that says: "No staging site found" on MacOS on Chrome #2552
+* Dev: Undefined method interfaceDatabaseClient::fetchAll() in phpstan #2622
+* Dev: e2e tests fail on multi sites #2631
 
 = 3.0.0 =
 * New: Drop support for php 5.6. Minimum php version is 7.0 #2579

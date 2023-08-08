@@ -7,6 +7,8 @@
 
 use WPStaging\Framework\Facades\Escape;
 
+require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/download.php');
+require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
 ?>
 <div class="successfullying-section">
     <h2 id="wpstg-processing-header"><?php echo esc_html__("Processing, please wait...", "wp-staging")?></h2>

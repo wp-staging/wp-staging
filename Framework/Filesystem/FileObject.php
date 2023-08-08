@@ -52,6 +52,10 @@ class FileObject extends SplFileObject
     {
         $fullPath = untrailingslashit($fullPath);
 
+        if (empty($fullPath)) {
+            throw new DiskNotWritableException("Empty path given. Please contact support@wp-staging.com");
+        }
+
         if (!file_exists($fullPath)) {
             WPStaging::make(Filesystem::class)->mkdir(dirname($fullPath), true);
         }
@@ -62,7 +66,7 @@ class FileObject extends SplFileObject
             // If this fails, it will throw an exception.
             WPStaging::make(DiskWriteCheck::class)->testDiskIsWriteable();
 
-            // If it didn't fail due to disk, re-throw
+            // If it didn't fail due to disk write check, re-throw
             throw $e;
         }
     }
