@@ -95,16 +95,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return string The .wpstg backup file being restored.
      */
-    public function getFile()
+    public function getFile(): string
     {
         return $this->file;
     }
 
     /**
      * Called dynamically
-     * @see \WPStaging\Backup\Ajax\Restore\PrepareRestore::setupInitialData
-     *
      * @param string $file
+     *@see \WPStaging\Backup\Ajax\Restore\PrepareRestore::setupInitialData
+     *
      */
     public function setFile($file)
     {

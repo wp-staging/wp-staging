@@ -2,7 +2,6 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
-use DateTime;
 use Exception;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
@@ -38,12 +37,12 @@ class DatabaseBackupTask extends BackupTask
         $this->multipartSplit = $multipartSplit;
     }
 
-    public static function getTaskName()
+    public static function getTaskName(): string
     {
         return 'backup_database';
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Backup Database';
     }
@@ -69,7 +68,7 @@ class DatabaseBackupTask extends BackupTask
 
         // First request: Create DDL
         if (!$this->stepsDto->getTotal()) {
-            /** @var DDLExporter */
+            /** @var DDLExporter $ddlExporter */
             $ddlExporter = WPStaging::make(DDLExporter::class);
             $ddlExporter->setFileName($this->jobDataDto->getDatabaseFile());
             $ddlExporter->setSubsites($subsites);
@@ -94,8 +93,8 @@ class DatabaseBackupTask extends BackupTask
         do_action('wpstg.tests.backup.export_database.before_rows_export');
 
         // Lazy instantiation
-        /** @var RowsExporter */
-        $rowsExporter = WPStaging::getInstance()->getContainer()->make(RowsExporter::class);
+        /** @var RowsExporter $rowsExporter */
+        $rowsExporter = WPStaging::make(RowsExporter::class);
         $rowsExporter->setSubsites($subsites);
         $rowsExporter->setupPrefixedValuesForSubsites();
         $rowsExporter->setFileName($this->jobDataDto->getDatabaseFile());
@@ -232,13 +231,13 @@ class DatabaseBackupTask extends BackupTask
 
     /**
      * @param object $wpdb
-     * @param int  $partIndex
+     * @param int $partIndex
      * @param bool $useCache If true, the filename will be retrieved from the job data dto if it exist,
      *                       otherwise a new name will be generated.
      *                       Use false to always generate a new name.
      * @return string
      */
-    private function getDatabaseFilename($wpdb, $partIndex = 0, $useCache = false)
+    private function getDatabaseFilename($wpdb, int $partIndex = 0, bool $useCache = false): string
     {
         if ($useCache) {
             $databaseFilename = $this->getCachedDatabaseFilenameForPart($partIndex);
@@ -267,7 +266,7 @@ class DatabaseBackupTask extends BackupTask
      * @param int $partIndex
      * @return string
      */
-    private function getCachedDatabaseFilenameForPart($partIndex)
+    private function getCachedDatabaseFilenameForPart(int $partIndex): string
     {
         $multipartFilesInfo = $this->jobDataDto->getMultipartFilesInfo();
         foreach ($multipartFilesInfo as $multipartFileInfo) {

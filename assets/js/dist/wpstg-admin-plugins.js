@@ -8,6 +8,7 @@
     // show overlay when clicked on "deactivate"
     var wpstg_deactivate_link = $('.wp-admin.plugins-php tr[data-slug="wp-staging"] .row-actions .deactivate a');
     var wpstg_deactivate_link_url = wpstg_deactivate_link.attr('href');
+    console.log('wpstg feedback loaded');
     wpstg_deactivate_link.on('click', function (e) {
       e.preventDefault();
 
@@ -41,7 +42,8 @@
           dataType: 'json',
           data: {
             action: 'wpstg_send_feedback',
-            data: $('#wpstg-feedback-content form').serialize()
+            data: $('#wpstg-feedback-content form').serialize(),
+            nonce: wpstg.nonce
           },
           complete: function complete(MLHttpRequest, textStatus, errorThrown) {
             // deactivate the plugin and close the popup

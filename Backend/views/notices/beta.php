@@ -1,4 +1,10 @@
-<!-- Not used any longer. So can be used for other purposes in the future //-->
+<?php
+
+/**
+ * @deprecated Not used any longer. But it can be used for other purposes in the future
+ */
+
+?>
 <div class="wpstg_beta_notice wpstg-box-shadow wpstg-error">
     <p>
         <?php esc_html_e("WP Staging is well tested and we did a lot to catch every possible error but

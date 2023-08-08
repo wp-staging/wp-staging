@@ -41,32 +41,33 @@ class Feedback
         include WPSTG_PLUGIN_DIR . 'Backend/views/feedback/deactivate-feedback.php';
     }
 
+    /**
+     * @return void
+     */
     public function sendMail()
     {
 
-        if (isset($_POST['data'])) {
-            parse_str(sanitize_text_field($_POST['data']), $form);
+        if (!empty($_POST['data'])) {
+            // phpcs:ignore
+            parse_str($_POST['data'], $form);  // This is a js serialised string. It needs to be parsed first. It will be sanitised on the next lines after parsing it.
         }
 
         $text = '';
-        if (isset($form['wpstg_disable_text'])) {
-            $text = implode("\n\r", (array)$form['wpstg_disable_text']);
+        if (!empty($form['wpstg_disable_text'])) {
+            $text = sanitize_text_field(implode("\n\r", (array)$form['wpstg_disable_text']));
         }
 
         $headers = [];
 
-        $from = isset($form['wpstg_disable_from']) ? $form['wpstg_disable_from'] : '';
+        $from = isset($form['wpstg_disable_from']) ? sanitize_email($form['wpstg_disable_from']) : '';
         if ($from) {
             $headers[] = "From: $from";
             $headers[] = "Reply-To: $from";
         }
 
-        $subject = isset($form['wpstg_disable_reason']) ? 'WP Staging Free: ' . $form['wpstg_disable_reason'] : 'WP Staging Free: (no reason given)';
+        $subject = isset($form['wpstg_disable_reason']) ? 'WP Staging Free: ' . sanitize_text_field($form['wpstg_disable_reason']) : 'WP Staging Free: (no reason given)';
 
         $success = wp_mail('feedback@wp-staging.com', $subject, $text, $headers);
-
-        //\WPStaging\functions\debug_log(print_r($success, true));
-        //\WPStaging\functions\debug_log($from . $subject . var_dump($form));
 
         if ($success) {
             wp_die(1);
@@ -74,78 +75,3 @@ class Feedback
         wp_die(0);
     }
 }
-
-/**
- * Helper method to check if user is in the plugins page.
- *
- * @author René Hermenau
- * @since  3.3.7
- *
- * @return bool
- */
-//function mashsb_is_plugins_page() {
-//    global $pagenow;
-//
-//    return ( 'plugins.php' === $pagenow );
-//}
-
-/**
- * display deactivation logic on plugins page
- *
- * @since 3.3.7
- */
-//function mashsb_add_deactivation_feedback_modal() {
-//
-//    $screen = get_current_screen();
-//    if( !is_admin() && !mashsb_is_plugins_page() ) {
-//        return;
-//    }
-//
-//    $current_user = wp_get_current_user();
-//    if( !($current_user instanceof WP_User) ) {
-//        $email = '';
-//    } else {
-//        $email = trim( $current_user->user_email );
-//    }
-//
-//    include WPSTG_PLUGIN_DIR . 'Backend/views/feedback/deactivate-feedback.php';
-//}
-
-/**
- * send feedback via email
- *
- * @since 1.4.0
- */
-//function wpstg_send_feedback() {
-//
-//    if( isset( $_POST['data'] ) ) {
-//        parse_str( $_POST['data'], $form );
-//    }
-//
-//    $text = '';
-//    if( isset( $form['wpstg_disable_text'] ) ) {
-//        $text = implode( "\n\r", $form['wpstg_disable_text'] );
-//    }
-//
-//    $headers = array();
-//
-//    $from = isset( $form['wpstg_disable_from'] ) ? $form['wpstg_disable_from'] : '';
-//    if( $from ) {
-//        $headers[] = "From: $from";
-//        $headers[] = "Reply-To: $from";
-//    }
-//
-//    $subject = isset( $form['wpstg_disable_reason'] ) ? $form['wpstg_disable_reason'] : '(no reason given)';
-//
-//    $success = wp_mail( 'makebetter@mashshare.net', $subject, $text, $headers );
-//
-//    if( $success ) {
-//        wp_die( 1 );
-//    }
-//    wp_die( 0 );
-//    //\WPStaging\functions\debug_log(print_r($success, true));
-//    //\WPStaging\functions\debug_log($from . $subject . var_dump($form));
-//    die();
-//}
-//
-//add_action( 'wp_ajax_wpstg_send_feedback', 'wpstg_send_feedback' );

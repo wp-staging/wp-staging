@@ -146,6 +146,7 @@ abstract class FileBackupTask extends BackupTask
         }
 
         if (empty($path)) {
+            //$this->logger->warning("Path is empty. Cannot add file to backup.");
             return;
         }
 

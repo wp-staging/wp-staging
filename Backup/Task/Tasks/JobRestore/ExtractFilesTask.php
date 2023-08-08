@@ -64,6 +64,7 @@ class ExtractFilesTask extends RestoreTask
         try {
             $this->extractorService->extract();
         } catch (DiskNotWritableException $e) {
+            $this->logger->warning($e->getMessage());
             // No-op, just stop execution
         } catch (FinishedQueueException $e) {
             if ($this->jobDataDto->getExtractorFilesExtracted() !== $this->stepsDto->getTotal()) {

@@ -41,14 +41,18 @@ class BasicNotices
     public function renderNotices()
     {
         $viewsNoticesPath = $this->noticesViewPath;
-        // Show notice "rate the plugin"
-        if ($this->showAllNotices || $this->ratingNotice->shouldShowRatingNotice()) {
-            require_once "{$viewsNoticesPath}rating.php";
-        }
 
         // Only show below notices on WP Staging admin pages
         if (!$this->isWPStagingAdminPage()) {
             return;
+        }
+
+        // Show notice "rate the plugin"
+        // We used to have this message on all pages but added a new nonce based authentication check.
+        // As the nonce is not loaded on all pages we had to move this message to wp staging pages only.
+        // @todo add our nonce to all wp staging pages and move this message back to all pages
+        if ($this->showAllNotices || $this->ratingNotice->shouldShowRatingNotice()) {
+            require_once "{$viewsNoticesPath}rating.php";
         }
 
         if ($this->showAllNotices || $this->proCronsCleaner->haveProCrons()) {

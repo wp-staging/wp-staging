@@ -22,6 +22,7 @@
         data: {
           action: 'wpstg_dismiss_notice',
           wpstg_notice: '<?php echo esc_html($wpstgNotice) ?>',
+          nonce: wpstg.nonce
         },
         error: function error(xhr, textStatus, errorThrown) {
           console.log(xhr.status + ' ' + xhr.statusText + '---' + textStatus);

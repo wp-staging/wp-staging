@@ -1,6 +1,9 @@
 (function () {
   'use strict';
 
+  /**
+   * @deprecated Not used any longer. But it can be used for other purposes in the future
+   */
   jQuery(document).ready(function ($) {
     $('.wpstg_hide_beta').on('click', function (e) {
       e.preventDefault();

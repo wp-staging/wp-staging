@@ -93,6 +93,8 @@ class Assets
     public function enqueueElements($hook)
     {
 
+        $this->loadGlobalAssets($hook);
+
         // Load this css file on frontend and backend on all pages if current site is a staging site
         if ((new SiteInfo())->isStagingSite()) {
             wp_register_style('wpstg-admin-bar', false);
@@ -100,8 +102,8 @@ class Assets
             wp_add_inline_style('wpstg-admin-bar', $this->getStagingAdminBarColor());
         }
 
-        // Load js file on page plugins.php in free version only
-        if (!defined('WPSTGPRO_VERSION') && $this->isPluginsPage()) {
+        // Load feedback form js file on page plugins.php in free version or in free dev version
+        if (!WPStaging::isPro() && $this->isPluginsPage()) {
             $asset = 'js/dist/wpstg-admin-plugins.min.js';
             if ($this->isDebugOrDevMode()) {
                 $asset = 'js/dist/wpstg-admin-plugins.js';
@@ -128,7 +130,8 @@ class Assets
             );
         }
 
-        if ($this->isDisabledAssets($hook)) {
+        // Load below assets only on wp staging admin pages
+        if ($this->isNotWPStagingAdminPage($hook)) {
             return;
         }
 
@@ -262,10 +265,48 @@ class Assets
                 'tablesSelected'      => esc_html__('{d} tables(s) selected', 'wp-staging'),
                 'noFileSelected'      => esc_html__('No file selected', 'wp-staging'),
                 'filesSelected'       => esc_html__('{t} theme(s), {p} plugin(s) selected', 'wp-staging'),
+                'wpstg_cloning'        => [
+                    'title'  => esc_html__('Staging Site Created Successfully!', 'wp-staging'),
+                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
+                ],
+                'wpstg_update'         => [
+                    'title'  => esc_html__('Staging Site Updated Successfully!', 'wp-staging'),
+                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
+                ],
+                'wpstg_push_processing' => [
+                    'title'  => esc_html__('Staging Site Pushed Successfully!', 'wp-staging'),
+                    'body'  => esc_html__('Clear the site cache if changes are not visible.', 'wp-staging'),
+                ],
+                'wpstg_reset'          => [
+                    'title'  => esc_html__('Staging Site Reset Successfully!', 'wp-staging'),
+                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
+                ],
+                'wpstg_delete_clone'    => [
+                    'title'  => esc_html__('Staging Site Deleted Successfully!', 'wp-staging'),
+                ],
             ],
         ];
 
         wp_localize_script("wpstg-admin-script", "wpstg", $wpstgConfig);
+    }
+
+    /**
+     * Load js vars globally but NOT on wp staging admin pages
+     * @return void
+     */
+    private function loadGlobalAssets($pageSlug)
+    {
+        if (!$this->isNotWPStagingAdminPage($pageSlug)) {
+            return;
+        }
+
+        wp_enqueue_script('wpstg-global', $this->getAssetsUrl('js/dist/wpstg-blank-loader.js'), [], [], false);
+
+        $vars = [
+            'nonce' => wp_create_nonce(Nonce::WPSTG_NONCE),
+        ];
+
+        wp_localize_script("wpstg-global", "wpstg", $vars);
     }
 
     /**
@@ -298,7 +339,7 @@ class Assets
      *
      * @return bool
      */
-    private function isDisabledAssets($page)
+    private function isNotWPStagingAdminPage($page)
     {
         if (defined('WPSTGPRO_VERSION')) {
             $availablePages = [
@@ -331,7 +372,7 @@ class Assets
      */
     public function removeWPCoreJs($hook)
     {
-        if ($this->isDisabledAssets($hook)) {
+        if ($this->isNotWPStagingAdminPage($hook)) {
             return;
         }
 

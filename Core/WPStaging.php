@@ -412,7 +412,8 @@ final class WPStaging
     public static function getVersion()
     {
         if (WPStaging::getInstance()->isWPStagingDevBasic()) {
-            return WPSTG_DEV_BASIC;
+            // @phpstan-ignore-next-line
+            return WPSTG_DEV_BASIC; // This constant will only be returned if it's a string e.g. '1.0.0'
         }
 
         if (self::isPro()) {
@@ -482,12 +483,15 @@ final class WPStaging
     }
 
     /**
-     * Const is used during development for building and testing basic features
+     * Const is used during development for building and testing basic/free features
+     * The constant expects a string value like a version number '1.0.0' to treat the plugin as a free version
+     * Boolean false and the plugin will be treated as a premium version or regular free version depending on
+     * the availability of the constants WPSTGPRO_VERSION or WPSTG_VERSION.
      *
      * @return bool
      */
     private function isWPStagingDevBasic()
     {
-        return defined('WPSTG_DEV_BASIC') && WPSTG_DEV_BASIC;
+        return defined('WPSTG_DEV_BASIC') && is_string(WPSTG_DEV_BASIC);
     }
 }
