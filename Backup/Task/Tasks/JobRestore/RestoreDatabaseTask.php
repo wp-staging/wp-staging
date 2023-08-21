@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
+use Exception;
 use RuntimeException;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
@@ -79,12 +80,17 @@ class RestoreDatabaseTask extends RestoreTask
 
         $start            = microtime(true);
         $getCurrentBefore = $this->stepsDto->getCurrent();
+        $getTotal         = $this->stepsDto->getTotal();
+
+        if ($getTotal === 0) {
+            $this->logger->critical('Total number of queries is 0. Stop restoring backup. Contact support@wp-staging.com.');
+            throw new Exception('Total number of queries is 0. Stop restoring backup');
+        }
 
         $this->setupExecutionTime();
         $this->databaseImporter->restore($this->jobDataDto->getTmpDatabasePrefix());
 
         $getCurrent = $this->stepsDto->getCurrent();
-        $getTotal   = $this->stepsDto->getTotal();
 
         if ($getCurrent > $getTotal) {
             $getCurrent = $getCurrent - ( $getCurrent - $getTotal );

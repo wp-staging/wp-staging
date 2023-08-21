@@ -58,6 +58,7 @@ class JobBackup extends AbstractJob
 
         if ($this->jobDataDto->getRepeatBackupOnSchedule() && !$this->jobDataDto->getIsCreateScheduleBackupNow()) {
             $this->addSchedulerTask();
+            $this->tasks[] = FinishBackupTask::class;
             return;
         }
 

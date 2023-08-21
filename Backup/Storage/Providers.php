@@ -19,6 +19,7 @@ class Providers
         $this->storages = [
             [
                 'id'   => 'googleDrive',
+                'cli'  => 'google-drive',
                 'name' => esc_html__('Google Drive', 'wp-staging'),
                 'enabled'   => true,
                 'authClass' => $this->filterAuthClassForPro(GoogleDriveAuth::class),
@@ -26,6 +27,7 @@ class Providers
             ],
             [
                 'id'   => 'amazonS3',
+                'cli'  => 'amazon-s3',
                 'name' => esc_html__('Amazon S3', 'wp-staging'),
                 'enabled'   => true,
                 'authClass' => $this->filterAuthClassForPro(AmazonS3Auth::class),
@@ -33,6 +35,7 @@ class Providers
             ],
             [
                 'id'   => 'dropbox',
+                'cli'  => 'dropbox',
                 'name' => esc_html__('Dropbox', 'wp-staging'),
                 'enabled'   => false,
                 'authClass' => '',
@@ -40,6 +43,7 @@ class Providers
             ],
             [
                 'id'   => 'oneDrive',
+                'cli'  => 'one-drive',
                 'name' => esc_html__('One Drive', 'wp-staging'),
                 'enabled'   => false,
                 'authClass' => '',
@@ -47,14 +51,15 @@ class Providers
             ],
             [
                 'id'   => 'sftp',
+                'cli'  => 'sftp',
                 'name' => esc_html__('FTP / SFTP', 'wp-staging'),
                 'enabled'   => true,
                 'authClass' => $this->filterAuthClassForPro(SftpAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('sftp'),
-
             ],
             [
                 'id'   => 'digitalocean-spaces',
+                'cli'  => 'digitalocean-spaces',
                 'name' => esc_html__('DigitalOcean Spaces', 'wp-staging'),
                 'enabled'   => true,
                 'authClass' => $this->filterAuthClassForPro(DSOAuth::class),
@@ -62,6 +67,7 @@ class Providers
             ],
             [
                 'id'   => 'wasabi-s3',
+                'cli'  => 'wasabi-s3',
                 'name' => esc_html__('Wasabi S3', 'wp-staging'),
                 'enabled'   => true,
                 'authClass' => $this->filterAuthClassForPro(WasabiAuth::class),
@@ -69,6 +75,7 @@ class Providers
             ],
             [
                 'id'   => 'generic-s3',
+                'cli'  => 'generic-s3',
                 'name' => esc_html__('Generic S3', 'wp-staging'),
                 'enabled'   => true,
                 'authClass' => $this->filterAuthClassForPro(GenericS3Auth::class),

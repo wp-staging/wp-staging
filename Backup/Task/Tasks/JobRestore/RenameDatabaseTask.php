@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
+use Exception;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Security\AccessToken;
@@ -214,7 +215,14 @@ class RenameDatabaseTask extends RestoreTask
         $this->keepOptions();
         $this->setupRemoveOptions();
 
-        $this->jobDataDto->setTotalTablesToRename($this->tablesRenamer->getTotalTables());
+        $totalTablesToRename = $this->tablesRenamer->getTotalTables();
+
+        if ($totalTablesToRename === 0) {
+            $this->logger->critical('Could not find any database table to restore. Backup seems to be corrupt. Contact support@wp-staging.com.');
+            throw new Exception("Could not find any databse table to restore. Backup seems to be corrupt.");
+        }
+
+        $this->jobDataDto->setTotalTablesToRename($totalTablesToRename);
         $this->jobDataDto->setTotalTablesRenamed(0);
 
         $dataToPreserve = [
@@ -245,19 +253,33 @@ class RenameDatabaseTask extends RestoreTask
         $this->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
         $this->setupTableRenamer();
 
-        $result = $this->tablesRenamer->renameConflictingTables();
+        // We will try restoring non conflicting tables first,
+        // If there are no non-conflicting tables renamed, we will stop the restore process.
+        $result = $this->tablesRenamer->renameNonConflictingTables();
         if ($result === false) {
-            $tablesRenamed = $this->tablesRenamer->getRenamedTables() + $this->jobDataDto->getTotalTablesRenamed();
+            $newTablesRenamed = $this->tablesRenamer->getRenamedTables();
+            if ($newTablesRenamed === 0) {
+                $this->logger->critical('Could not restore non-conflicting tables. Contact support@wp-staging.com.');
+                throw new Exception("Could not restore non-conflicting tables.");
+            }
+
+            $tablesRenamed = $newTablesRenamed + $this->jobDataDto->getTotalTablesRenamed();
             $this->logger->info(sprintf('Restored %d/%d tables', $tablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
             $this->jobDataDto->setTotalTablesRenamed($tablesRenamed);
             return false;
         }
 
-        $result = $this->tablesRenamer->renameNonConflictingTables();
-        $tablesRenamed = $this->tablesRenamer->getRenamedTables() + $this->jobDataDto->getTotalTablesRenamed();
+        $result = $this->tablesRenamer->renameConflictingTables();
+        $newTablesRenamed = $this->tablesRenamer->getRenamedTables();
+        $tablesRenamed = $newTablesRenamed + $this->jobDataDto->getTotalTablesRenamed();
         $this->logger->info(sprintf('Restored %d/%d tables', $tablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
         $this->jobDataDto->setTotalTablesRenamed($tablesRenamed);
         if ($result === false) {
+            if ($newTablesRenamed === 0) {
+                $this->logger->critical('Could not rename any database table. Please contact support@wp-staging.com.');
+                throw new Exception("Could not rename any database table.");
+            }
+
             return false;
         }
 

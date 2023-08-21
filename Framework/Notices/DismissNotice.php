@@ -2,8 +2,6 @@
 
 namespace WPStaging\Framework\Notices;
 
-use WPStaging\Framework\Notices\DisabledItemsNotice;
-use WPStaging\Framework\Notices\WarningsNotice;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Support\ThirdParty\WordFence;
 use WPStaging\Pro\Notices\DismissNotice as DismissProNotice;
@@ -33,12 +31,18 @@ class DismissNotice
      */
     private $objectCacheNotice;
 
-    public function __construct(DisabledItemsNotice $disabledItemsNotice, WarningsNotice $warningsNotice, WordFence $wordFence, ObjectCacheNotice $objectCacheNotice)
+    /**
+     * @var FreeBackupUpdateNotice
+     */
+    private $freeBackupUpdateNotice;
+
+    public function __construct(DisabledItemsNotice $disabledItemsNotice, WarningsNotice $warningsNotice, WordFence $wordFence, ObjectCacheNotice $objectCacheNotice, FreeBackupUpdateNotice $freeBackupUpdateNotice)
     {
         $this->disabledItemsNotice = $disabledItemsNotice;
         $this->warningsNotice      = $warningsNotice;
         $this->wordFence           = $wordFence;
         $this->objectCacheNotice   = $objectCacheNotice;
+        $this->freeBackupUpdateNotice   = $freeBackupUpdateNotice;
     }
 
     public function dismiss($noticeToDismiss)
@@ -64,12 +68,17 @@ class DismissNotice
             return;
         }
 
+        if ($noticeToDismiss === FreeBackupUpdateNotice::OPTION_NAME_FREE_BACKUP_NOTICE_DISMISSED && $this->freeBackupUpdateNotice->disable() !== false) {
+            wp_send_json(true);
+            return;
+        }
+
         if (!WPStaging::isPro()) {
             wp_send_json(null);
             return;
         }
 
-        /** @var DismissProNotice */
+        /** @var DismissProNotice $dismissProNotice */
         $dismissProNotice = WPStaging::make(DismissProNotice::class);
         $dismissProNotice->dismiss($noticeToDismiss);
     }

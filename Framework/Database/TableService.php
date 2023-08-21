@@ -311,4 +311,26 @@ class TableService
     {
         return $this->database;
     }
+
+    /**
+     * @param  string $likeCondition
+     * @return bool
+     */
+    public function dropTablesLike($likeCondition)
+    {
+        $wpdb = $this->database->getWpdb();
+        $tables = $wpdb->get_results(
+            $wpdb->prepare('SHOW TABLES LIKE %s;', $wpdb->esc_like($likeCondition) . '%')
+        );
+
+        if (!$tables) {
+            return false;
+        }
+
+        foreach ($tables as $tableObj) {
+            $tableName = current($tableObj);
+            $wpdb->query("DROP TABLE IF EXISTS `$tableName`");
+        }
+        return true;
+    }
 }

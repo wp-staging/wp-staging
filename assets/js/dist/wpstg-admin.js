@@ -2919,12 +2919,24 @@
             }
             cache.get('.wpstg-loader').hide();
             // finish modal popup
-            if (wpstg.i18n.wpstg_delete_clone !== null) {
+            if (wpstg.i18n.wpstg_delete_clone !== null && response["delete"] === 'finished') {
               var params = {
                 'job': 'finish'
               };
               that.wpstgProcessingModal(params, false, false);
-              setTimeout(that.openSuccessModalPopup(wpstg.i18n.wpstg_delete_clone, false), 2000);
+              WPStagingCommon.getSwalModal(true, {
+                confirmButton: 'wpstg--btn--confirm wpstg-green-button wpstg-button wpstg-link-btn wpstg-100-width'
+              }).fire({
+                'icon': 'success',
+                'html': '<div style="display:block"><h2 style="color: #565656;">' + wpstg.i18n.wpstg_delete_clone.title + '</h2></div>',
+                'confirmButtonText': 'Close',
+                'showCancelButton': false,
+                'showConfirmButton': true
+              }).then(function (result) {
+                if (result.value) {
+                  WPStagingCommon.closeSwalModal();
+                }
+              });
             }
             return;
           }
@@ -3261,8 +3273,6 @@
           wpstg.i18n.cloneUpdateComplete;
           cache.get('#wpstg-update-cloning-site-button').show();
         }
-        console.log(that.data.action, 'action');
-        console.log(wpstg.i18n[that.data.action], 'i18n');
         if (wpstg.i18n[that.data.action] !== null) {
           that.openSuccessModalPopup(wpstg.i18n[that.data.action], true, response.url);
         }

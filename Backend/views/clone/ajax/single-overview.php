@@ -76,7 +76,11 @@ require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
                 <div class="wpstg-staging-info">
                     <?php
                     $dbname   = ! empty($data['databaseDatabase']) ? $data['databaseDatabase'] : DB_NAME;
-                    $prefix   = ! empty($data['prefix']) ? $data['prefix'] : '';
+                    if (!empty($data['databaseUser']) && !empty($data['databasePassword']) && !empty($data['databaseDatabase']) && !empty($data['databaseServer'])) {
+                        $prefix   = !empty($data['databasePrefix']) ? $data['databasePrefix'] : '';
+                    } else {
+                        $prefix   = !empty($data['prefix']) ? $data['prefix'] : '';
+                    }
                     $cloneDir = ! empty($data['path']) ? $data['path'] : '';
                     $url      = ! empty($data['url']) ? sprintf('<a href="%1$s" target="_blank">%1$s</a>', esc_url($data['url'])) : '';
                     $datetime = ! empty($data['datetime']) ? get_date_from_gmt(date("Y-m-d H:i:s", $data['datetime']), "D, d M Y H:i:s T") : '&nbsp;&nbsp;&nbsp;';

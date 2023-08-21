@@ -51,7 +51,7 @@ class WordFence extends BooleanNotice
     /**
      * @inheritDoc
      */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         // Early bail if renamed file not exists.
         if (!file_exists(ABSPATH . '/.user.ini.bak')) {
@@ -66,7 +66,7 @@ class WordFence extends BooleanNotice
      *
      * @param string $viewsNoticesPath
      */
-    public function showNotice($viewsNoticesPath)
+    public function showNotice(string $viewsNoticesPath)
     {
         if (Notices::SHOW_ALL_NOTICES || $this->isEnabled()) {
             require "{$viewsNoticesPath}wordfence-userini-renamed.php";
@@ -78,7 +78,7 @@ class WordFence extends BooleanNotice
      *
      * @return string
      */
-    public function getOptionName()
+    public function getOptionName(): string
     {
         return self::NOTICE_OPTION;
     }

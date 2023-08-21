@@ -236,6 +236,11 @@ class Notices
 
         // Show notice Failed to prevent directory listing
         $this->showDirectoryListingWarningNotice($viewsNoticesPath);
+
+        // Show notice if db prefix does not exist
+        if (self::SHOW_ALL_NOTICES || empty($this->db->prefix)) {
+            require_once "{$viewsNoticesPath}no-db-prefix-notice.php";
+        }
     }
 
     /**

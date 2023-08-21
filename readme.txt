@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
-Tested up to: 6.2
-Stable tag: 3.0.1
+Tested up to: 6.3
+Stable tag: 3.0.2
 Requires PHP: 7.0
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -258,6 +258,20 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.0.2 =
+* New: Support for WordPress 6.3
+* New: Add more options to wp cli backup-create command #2668
+* Enh: Increase log file storing time to 14 days. #2625
+* Enh: Add admin notice to explain the new backup feature in free version #2524
+* Enh: Enhance free version backup modal UI #2608
+* Enh: Don't allow saving empty table prefix for a staging site when using the edit button #2572
+* Fix: Use DTO instead of separate file for managing index sizes while creating backup to avoid filesystem lock. #2640
+* Fix: Backup creation fails on PHP 8 because unable to get primary key for table. #2629
+* Fix: Stop backup restore if no sql query is found to be executed but the backup contains a database to be restored #2560
+* Fix: Show admin notice if there is no WordPress table prefix in the database #2586
+* Dev: Add changelog entries in dedicated files #2623
+* Dev: No changelog needed on release branches #2763
 
 = 3.0.1 =
 * New: Make UI more consistent and use same success and processing modals for staging site creation as for backup creation #2221

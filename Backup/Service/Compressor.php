@@ -72,9 +72,6 @@ class Compressor
     /** @var int */
     protected $bytesWrittenInThisRequest = 0;
 
-    /** @var string **/
-    private $tempFilePartsSize;
-
     // TODO telescoped
     public function __construct(BufferedCache $cacheIndex, BufferedCache $tempBackup, PathIdentifier $pathIdentifier, JobDataDto $jobDataDto, CompressorDto $compressorDto, PhpAdapter $phpAdapter, MultipartSplitInterface $multipartSplit)
     {
@@ -136,8 +133,6 @@ class Compressor
         $tempBackupIndexFilePrefix = 'temp_backup_index_';
         $this->tempBackupIndex->setFilename($tempBackupIndexFilePrefix . $postFix);
         $this->tempBackupIndex->setLifetime(DAY_IN_SECONDS);
-
-        $this->setTmpIndexPartSizeFile($tempBackupIndexFilePrefix);
     }
 
     /**
@@ -276,7 +271,11 @@ class Compressor
             $this->multipartSplit->updateMultipartMetadata($this->jobDataDto, $backupMetadata, $this->category, $this->categoryIndex);
         }
 
-        $backupMetadata->setIndexPartSize($this->getIndexPartSize());
+        if ($this->jobDataDto instanceof JobBackupDataDto) {
+            /** @var JobBackupDataDto */
+            $jobDataDto = $this->jobDataDto;
+            $backupMetadata->setIndexPartSize($jobDataDto->getCategorySizes());
+        }
 
         $this->tempBackup->append(json_encode($backupMetadata));
 
@@ -538,7 +537,8 @@ class Compressor
         $bytesWritten     = $this->tempBackupIndex->append($info);
         $this->compressorDto->setIndexPositionCreated(true, $this->category, $this->categoryIndex);
 
-        $this->addIndexPartSize($identifiablePath, $writtenBytesTotal);
+        // We only need to increment newly added bytes
+        $this->addIndexPartSize($identifiablePath, $writtenBytesTotal - (int)$writtenPreviously);
 
         return $bytesWritten;
     }
@@ -567,12 +567,19 @@ class Compressor
 
     /**
      * @param string $identifiablePath
-     * @param int $writtenBytesTotal
-     * @return int|false
+     * @param int    $newBytesWritten
      */
-    private function addIndexPartSize($identifiablePath, $writtenBytesTotal)
+    private function addIndexPartSize($identifiablePath, $newBytesWritten)
     {
-        $collectPartsize = $this->getIndexPartSize();
+        // Early bail if jobDataDto is not instance of jobBackupDataDto
+        if (!$this->jobDataDto instanceof JobBackupDataDto) {
+            return;
+        }
+
+        /** @var JobBackupDataDto $jobDataDto */
+        $jobDataDto = $this->jobDataDto;
+
+        $collectPartsize = $jobDataDto->getCategorySizes();
 
         $partName = 'unknownSize';
         switch ($identifiablePath) {
@@ -604,34 +611,7 @@ class Compressor
             $collectPartsize[$partName] = 0;
         }
 
-        $collectPartsize[$partName] += $writtenBytesTotal;
-        return file_put_contents($this->tempFilePartsSize, maybe_serialize($collectPartsize), LOCK_EX);
-    }
-
-    /** @return array */
-    private function getIndexPartSize()
-    {
-        $collectPartsize = [];
-        clearstatcache();
-        if (!file_exists($this->tempFilePartsSize)) {
-            return $collectPartsize;
-        }
-
-        $data = file_get_contents($this->tempFilePartsSize);
-        if (!empty($data)) {
-            $data = maybe_unserialize($data);
-            if (is_array($data)) {
-                $collectPartsize = $data;
-            }
-        }
-        unset($data);
-
-        return $collectPartsize;
-    }
-
-    /** @param string $tempBackupIndexFilePrefix */
-    private function setTmpIndexPartSizeFile($tempBackupIndexFilePrefix)
-    {
-        $this->tempFilePartsSize = str_replace($tempBackupIndexFilePrefix, $tempBackupIndexFilePrefix . 'partsize_', $this->tempBackupIndex->getFilePath());
+        $collectPartsize[$partName] += $newBytesWritten;
+        $jobDataDto->setCategorySizes($collectPartsize);
     }
 }

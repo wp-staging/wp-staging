@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Service\Database\Exporter;
 
 use Exception;
+use UnexpectedValueException;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
@@ -407,7 +408,7 @@ class RowsExporter extends AbstractExporter
     public function getPrimaryKey(): string
     {
         if ($this->hasMoreThanOnePrimaryKey()) {
-            throw new \UnexpectedValueException();
+            throw new UnexpectedValueException();
         }
 
         $query = "SELECT COLUMN_NAME 
@@ -421,20 +422,24 @@ class RowsExporter extends AbstractExporter
 
         $result = $this->client->query($query);
 
+        if (!$result) {
+            throw new UnexpectedValueException();
+        }
+
         $primaryKey = $this->client->fetchObject($result);
 
         $this->client->freeResult($result);
 
         if (!is_object($primaryKey)) {
-            throw new \UnexpectedValueException();
+            throw new UnexpectedValueException();
         }
 
         if (!property_exists($primaryKey, 'COLUMN_NAME')) {
-            throw new \UnexpectedValueException();
+            throw new UnexpectedValueException();
         }
 
         if (empty($primaryKey->COLUMN_NAME)) {
-            throw new \UnexpectedValueException();
+            throw new UnexpectedValueException();
         }
 
         return $primaryKey->COLUMN_NAME;
@@ -573,12 +578,18 @@ class RowsExporter extends AbstractExporter
 
     /**
      * @return bool
+     *
+     * @throws UnexpectedValueException
      */
     private function hasMoreThanOnePrimaryKey(): bool
     {
         $query = "SHOW KEYS FROM $this->tableName WHERE Key_name = 'PRIMARY'";
 
         $result = $this->client->query($query);
+
+        if (!$result) {
+            throw new UnexpectedValueException();
+        }
 
         $primaryKeys = $this->client->fetchAll($result);
 
