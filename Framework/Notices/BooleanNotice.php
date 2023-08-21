@@ -16,12 +16,12 @@ abstract class BooleanNotice
      *
      * @return string
      */
-    abstract public function getOptionName();
+    abstract public function getOptionName(): string;
 
     /**
      * Enable the option in database to show this notice
      */
-    public function enable()
+    public function enable(): bool
     {
         return add_option($this->getOptionName(), true);
     }
@@ -31,17 +31,17 @@ abstract class BooleanNotice
      *
      * @return bool
      */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         return get_option($this->getOptionName(), false);
     }
 
     /**
-     * Delete the option in database to disable showing the notice
+     * Delete the option in database to disable the notice
      *
      * @return bool
      */
-    public function disable()
+    public function disable(): bool
     {
         return delete_option($this->getOptionName());
     }

@@ -1087,7 +1087,8 @@ a#wpstg-check-space {
   color: #3bba68;
   background-color: white;
   padding: 5px 15px 5px 15px;
-  border-radius: 4px; }
+  border-radius: 4px;
+  cursor: pointer; }
 
 .wpstg-report-issue-button:hover {
   background-color: #3bba68;
@@ -2608,7 +2609,7 @@ body.toplevel_page_wpstg_clone .wpstg--swal2-container.wpstg--swal2-backdrop-sho
   outline: none; }
 
 .wpstg-swal-popup.wpstg--swal2-popup:not(.centered-modal) .wpstg--swal2-actions {
-  padding-bottom: 20px; }
+  padding-bottom: 0; }
 
 .wpstg-swal-popup .wpstg--swal2-actions > button {
   border-radius: 4px;
@@ -3165,7 +3166,8 @@ div#wpstg-backup-locked {
 .wpstg-backup-scheduling-options .wpstg-storage-option {
   display: block;
   margin: .5em 0;
-  font-size: 15px; }
+  font-size: 15px;
+  white-space: nowrap; }
 
 .wpstg-storage-settings a {
   color: #1a73e8; }
@@ -3549,16 +3551,14 @@ a#wpstg--button--manage--license:active {
 
 a.wpstg-pro-feature-link {
   color: #b70b72;
-  text-decoration: none;
-  font-weight: bold; }
+  text-decoration: none; }
 
 .wpstg-pro-feature-link:hover {
   color: #b91a79; }
 
 .wpstg-pro-feature {
   color: #b70b72;
-  text-decoration: none;
-  font-weight: bold; }
+  text-decoration: none; }
 
 .wpstg-pro-feature:hover {
   color: #b91a79;

@@ -109,7 +109,7 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                         <?php echo esc_html($cronMessage); ?>
                         <br>
                         <br>
-                        <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><?php echo sprintf(esc_html__('%sUpgrade to Pro%s to create unlimited backup plans, change the start time or upload backups to cloud storage.', 'wp-staging'), '<u>', '</u>'); ?></a>
+                        <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><?php echo sprintf(esc_html__('%sUpgrade to Pro%s to create unlimited backup plans, change the start time or upload backups to cloud storage.', 'wp-staging'), '<strong><u>', '</u></strong>'); ?></a>
                     </span>
 
                     <?php require_once trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/views/backup/modal/backup-scheduling-options.php'; ?>

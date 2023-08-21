@@ -209,4 +209,12 @@ class Database
 
         return new MysqlAdapter($link);
     }
+
+    /**
+     * @return wpdb
+     */
+    public function getWpdb()
+    {
+        return $this->wpdb;
+    }
 }

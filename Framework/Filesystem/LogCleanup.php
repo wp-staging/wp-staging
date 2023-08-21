@@ -22,8 +22,8 @@ class LogCleanup
             return;
         }
 
-        // Delete logs older than 7 days by default
-        $deleteOlderThanDays = absint(apply_filters('wpstg.logs.deleteOlderThanDays', 7));
+        // Delete logs older than 14 days by default
+        $deleteOlderThanDays = absint(apply_filters('wpstg.logs.deleteOlderThanDays', 14));
 
         // Delete logs bigger than 5mb by default
         $deleteBiggerThan = absint(apply_filters('wpstg.logs.deleteBiggerThanBytes', 5 * MB_IN_BYTES));

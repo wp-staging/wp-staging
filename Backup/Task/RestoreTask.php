@@ -8,7 +8,6 @@ use WPStaging\Backup\Dto\JobDataDto;
 
 abstract class RestoreTask extends AbstractTask
 {
-
     /** @var JobRestoreDataDto */
     protected $jobDataDto;
 

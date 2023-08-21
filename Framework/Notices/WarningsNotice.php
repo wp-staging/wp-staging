@@ -7,10 +7,10 @@ use WPStaging\Framework\SiteInfo;
 /**
  * Class WarningsNotice
  *
- * Single Dismissable Notice for showing all warnings on staging sites
+ * Single Dismissible Notice for showing all warnings on staging sites
  *
  * This notice is disabled for the moment as it was annoying to so many wp staging notices.
- * @see \WPStaging\Framework\Notices\Notices
+ * @see Notices
  */
 class WarningsNotice extends BooleanNotice
 {
@@ -23,7 +23,7 @@ class WarningsNotice extends BooleanNotice
         $this->siteInfo = $siteInfo;
     }
 
-    public function getOptionName()
+    public function getOptionName(): string
     {
         return self::OPTION_NAME;
     }
@@ -33,7 +33,7 @@ class WarningsNotice extends BooleanNotice
      *
      * @return bool
      */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         // Early bail if not staging site
         if (!$this->siteInfo->isStagingSite()) {

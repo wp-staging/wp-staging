@@ -39,6 +39,9 @@ abstract class FileBackupTask extends BackupTask
     /** @var MultipartSplitInterface */
     protected $multipartSplit;
 
+    /** @var bool */
+    protected $isWpContentOutsideAbspath = false;
+
     public function __construct(Compressor $compressor, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Filesystem $filesystem, MultipartSplitInterface $multipartSplit)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -62,6 +65,8 @@ abstract class FileBackupTask extends BackupTask
         $this->prepareFileBackupTask();
         $this->setupCompressor();
         $this->start = microtime(true);
+
+        $this->isWpContentOutsideAbspath = WPStaging::make(SiteInfo::class)->isWpContentOutsideAbspath();
 
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
             try {
@@ -111,8 +116,7 @@ abstract class FileBackupTask extends BackupTask
 
     protected function getBackupSpeed()
     {
-        $elapsed        = microtime(true) - $this->start;
-
+        $elapsed = microtime(true) - $this->start;
         // Fixes a "division by zero fatal error" when $elapsed was 0. issue #2571
         $elapsed = empty($elapsed) ? 1 : $elapsed;
 
@@ -150,7 +154,7 @@ abstract class FileBackupTask extends BackupTask
             return;
         }
 
-        if (WPStaging::make(SiteInfo::class)->isWpContentOutsideAbspath() === false) {
+        if ($this->isWpContentOutsideAbspath === false) {
             $path = trailingslashit(ABSPATH) . $path;
         }
 

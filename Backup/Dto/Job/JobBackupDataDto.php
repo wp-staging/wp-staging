@@ -132,6 +132,12 @@ class JobBackupDataDto extends JobDataDto
     private $multipartFilesInfo = [];
 
     /**
+     * @var array<string, int>
+     * Store total size for each category
+     */
+    private $categorySizes = [];
+
+    /**
      * @return string|null
      */
     public function getName()
@@ -847,5 +853,21 @@ class JobBackupDataDto extends JobDataDto
     public function updateMultipartFileInfo($multipartFileInfo, $index)
     {
         $this->multipartFilesInfo[$index] = $multipartFileInfo;
+    }
+
+    /**
+     * @param array<string, int> $categorySizes
+     */
+    public function setCategorySizes($categorySizes)
+    {
+        $this->categorySizes = $categorySizes;
+    }
+
+    /**
+     * @return array<string, int>
+     */
+    public function getCategorySizes()
+    {
+        return $this->categorySizes;
     }
 }

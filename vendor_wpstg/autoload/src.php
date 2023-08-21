@@ -1041,6 +1041,7 @@ return array(
     'WPStaging\\Framework\\Notices\\BooleanNotice' => $baseDir . '/Framework/Notices/BooleanNotice.php',
     'WPStaging\\Framework\\Notices\\DisabledItemsNotice' => $baseDir . '/Framework/Notices/DisabledItemsNotice.php',
     'WPStaging\\Framework\\Notices\\DismissNotice' => $baseDir . '/Framework/Notices/DismissNotice.php',
+    'WPStaging\\Framework\\Notices\\FreeBackupUpdateNotice' => $baseDir . '/Framework/Notices/FreeBackupUpdateNotice.php',
     'WPStaging\\Framework\\Notices\\Notices' => $baseDir . '/Framework/Notices/Notices.php',
     'WPStaging\\Framework\\Notices\\ObjectCacheNotice' => $baseDir . '/Framework/Notices/ObjectCacheNotice.php',
     'WPStaging\\Framework\\Notices\\OutdatedWpStagingNotice' => $baseDir . '/Framework/Notices/OutdatedWpStagingNotice.php',

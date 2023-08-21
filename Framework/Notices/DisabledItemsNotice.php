@@ -25,7 +25,7 @@ class DisabledItemsNotice extends BooleanNotice
         $this->siteInfo = $siteInfo;
     }
 
-    public function getOptionName()
+    public function getOptionName(): string
     {
         return self::OPTION_NAME;
     }
@@ -35,7 +35,7 @@ class DisabledItemsNotice extends BooleanNotice
      *
      * @return bool
      */
-    public function isEnabled()
+    public function isEnabled(): bool
     {
         // Early bail if not staging site
         if (!$this->siteInfo->isStagingSite()) {

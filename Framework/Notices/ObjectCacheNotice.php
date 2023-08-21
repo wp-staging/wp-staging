@@ -2,14 +2,12 @@
 
 namespace WPStaging\Framework\Notices;
 
-use WPStaging\Framework\SiteInfo;
-
 /**
  * Class ObjectCacheNotice
  *
  * This class is used to show notice whether object cache skipped during restore
  *
- * @see \WPStaging\Framework\Notices\Notices;
+ * @see Notices;
  */
 class ObjectCacheNotice extends BooleanNotice
 {
@@ -23,7 +21,7 @@ class ObjectCacheNotice extends BooleanNotice
      */
     const OPTION_NAME = 'wpstg_skipped_object_cache_notice';
 
-    public function getOptionName()
+    public function getOptionName(): string
     {
         return self::OPTION_NAME;
     }
