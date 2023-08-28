@@ -4,6 +4,12 @@ namespace WPStaging\Backup\Task\RestoreFileHandlers;
 
 class MoveHandler extends RestoreFileHandler
 {
+
+    /**
+     * @param string $source
+     * @param string $destination
+     * @return void
+     */
     public function handle($source, $destination)
     {
         $parentDirectory = dirname($destination);

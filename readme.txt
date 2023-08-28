@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
 Requires at least: 3.6+
 Tested up to: 6.3
-Stable tag: 3.0.2
+Stable tag: 3.0.3
 Requires PHP: 7.0
 
 Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
@@ -259,9 +259,9 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
-= 3.0.2 =
+= 3.0.3 =
 * New: Support for WordPress 6.3
-* New: Add more options to wp cli backup-create command #2668
+* New: Add more options to wp cli backup-create command #2468
 * Enh: Increase log file storing time to 14 days. #2625
 * Enh: Add admin notice to explain the new backup feature in free version #2524
 * Enh: Enhance free version backup modal UI #2608

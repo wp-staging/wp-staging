@@ -15,9 +15,8 @@ use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Framework\Database\WpDbInfo;
 use WPStaging\Framework\Security\UniqueIdentifier;
-
-use function WPStaging\functions\debug_log;
 
 /**
  * Class Job
@@ -342,5 +341,33 @@ abstract class Job implements ShutdownableInterface
     protected function isExternalDatabase()
     {
         return !(empty($this->options->databaseUser) && empty($this->options->databasePassword));
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isStagingDatabaseSameAsProductionDatabase()
+    {
+        if (empty($this->options->databaseUser) || empty($this->options->databaseServer) || empty($this->options->databaseDatabase)) {
+            return true;
+        }
+
+        if ($this->options->databaseServer === DB_HOST && $this->options->databaseDatabase === DB_NAME) {
+            return true;
+        }
+
+        $productionDb     = WPStaging::make('wpdb');
+        $productionDbInfo = new WpDbInfo($productionDb);
+        $productionServer = $productionDbInfo->getServer();
+
+        $stagingDb     = new \wpdb($this->options->databaseUser, str_replace("\\\\", "\\", $this->options->databasePassword), $this->options->databaseDatabase, $this->options->databaseServer);
+        $stagingDbInfo = new WpDbInfo($stagingDb);
+        $stagingServer = $stagingDbInfo->getServer();
+
+        if ($productionServer === $stagingServer && $this->options->databaseDatabase === DB_NAME) {
+            return true;
+        }
+
+        return false;
     }
 }

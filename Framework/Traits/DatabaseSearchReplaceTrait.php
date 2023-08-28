@@ -2,8 +2,8 @@
 
 namespace WPStaging\Framework\Traits;
 
-use WPStaging\Core\Utils\Helper;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Staging\Sites;
 
 /**
@@ -59,13 +59,13 @@ trait DatabaseSearchReplaceTrait
 
     private function getSourceHostname()
     {
-        $helper = WPStaging::getInstance()->getContainer()->make(Helper::class);
+        $urlsHelper = WPStaging::getInstance()->getContainer()->get(Urls::class);
 
         if ($this->isSubDir()) {
-            return trailingslashit($helper->getHomeUrlWithoutScheme()) . $this->getSubDir();
+            return trailingslashit($urlsHelper->getHomeUrlWithoutScheme()) . $this->getSubDir();
         }
 
-        return $helper->getHomeUrlWithoutScheme();
+        return $urlsHelper->getHomeUrlWithoutScheme();
     }
 
     /**

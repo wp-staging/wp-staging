@@ -303,7 +303,7 @@ class Database extends CloningProcess
      * @param string $table
      * @return bool
      */
-    private function isExcludedTable($table)
+    private function isExcludedTable(string $table)
     {
 
         if (

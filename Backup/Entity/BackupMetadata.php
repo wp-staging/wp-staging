@@ -193,6 +193,9 @@ class BackupMetadata implements JsonSerializable
         return $this->toArray();
     }
 
+    /**
+     * @return array<array<array>>
+     */
     public function toArray()
     {
         $array = get_object_vars($this);
@@ -208,6 +211,10 @@ class BackupMetadata implements JsonSerializable
         ];
     }
 
+    /**
+     * @param array $data
+     * @return $this
+     */
     public function hydrate(array $data = [])
     {
         if (key($data) === 'networks') {
@@ -481,21 +488,35 @@ class BackupMetadata implements JsonSerializable
         $this->isAutomatedBackup = $isAutomatedBackup;
     }
 
+    /**
+     * @return string
+     */
     public function getDatabaseFile()
     {
         return $this->databaseFile;
     }
 
+    /**
+     * @param $databaseFile
+     * @return void
+     */
     public function setDatabaseFile($databaseFile)
     {
         $this->databaseFile = $databaseFile;
     }
 
+    /**
+     * @return int
+     */
     public function getUploadedOn()
     {
         return $this->uploadedOn;
     }
 
+    /**
+     * @param int $uploadedOn
+     * @return void
+     */
     public function setUploadedOn($uploadedOn)
     {
         $this->uploadedOn = $uploadedOn;

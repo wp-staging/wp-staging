@@ -42,7 +42,7 @@ abstract class DBCloningService extends CloningService
      * @param string $table
      * @return bool
      */
-    protected function skipTable($table)
+    public function skipTable($table)
     {
         // during cloning process we are appending underscore to the staging prefix if it is not there
         // @see WPStaging/Backend/Modules/Jobs/Cloning.php#L293

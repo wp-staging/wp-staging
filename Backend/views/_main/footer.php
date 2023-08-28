@@ -1,3 +1,9 @@
+<?php
+
+use WPStaging\Core\WPStaging;
+
+?>
+
 <div id="wpstg-error-wrapper">
     <div id="wpstg-error-details"></div>
 </div>
@@ -51,4 +57,8 @@
 <div class="wpstg-footer-logo" style="">
     <a href="https://wp-staging.com/tell-me-more/"><img src="<?php echo esc_url($this->assets->getAssetsUrl("img/logo.svg")) ?>" width="140"></a>
 </div>
-
+<?php
+if (!WPStaging::isPro()) {
+    require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/contact-us-basic.php');
+}
+?>

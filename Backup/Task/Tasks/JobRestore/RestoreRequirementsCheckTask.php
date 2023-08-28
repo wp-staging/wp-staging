@@ -91,6 +91,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             $this->cannotRestoreIfBackupGeneratedOnProVersion();
             $this->cannotRestoreIfBackupGeneratedOnNewerWPStagingVersion();
             $this->cannotRestoreIfBackupGeneratedOnNewerWPDbVersion();
+            $this->cannotRestoreIfAnyTemporaryPrefixIsCurrentSitePrefix();
             $this->cannotRestoreBackupCreatedBeforeMVP();
             $this->cannotRestoreIfInvalidSiteOrHomeUrl();
         } catch (ThresholdException $e) {
@@ -416,14 +417,31 @@ class RestoreRequirementsCheckTask extends RestoreTask
         }
     }
 
+    protected function cannotRestoreIfAnyTemporaryPrefixIsCurrentSitePrefix()
+    {
+        // Early bail if not restoring database
+        if (!$this->jobDataDto->getBackupMetadata()->getIsExportingDatabase()) {
+            return;
+        }
+
+        global $wpdb;
+
+        $prefix = $wpdb->base_prefix;
+
+        // Should not happen but if it does, add a bail for such cases
+        if (PrepareRestore::TMP_DATABASE_PREFIX === $prefix || PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP === $prefix) {
+            throw new RuntimeException(sprintf('Restore stopped! Your current site prefix is %s. This is a temporary prefix used by WP Staging during restore. Please contact support to get help restoring the backup.', $prefix));
+        }
+    }
+
     protected function cannotRestoreIfInvalidSiteOrHomeUrl()
     {
         if (!parse_url($this->jobDataDto->getBackupMetadata()->getSiteUrl(), PHP_URL_HOST)) {
-            throw new RuntimeException('This backup contains an invalid Site URL. Please contact support if you need assistance.');
+            throw new RuntimeException('This backup contains an invalid Site URL. Please contact support to get help restoring the backup.');
         }
 
         if (!parse_url($this->jobDataDto->getBackupMetadata()->getHomeUrl(), PHP_URL_HOST)) {
-            throw new RuntimeException('This backup contains an invalid Home URL. Please contact support if you need assistance.');
+            throw new RuntimeException('This backup contains an invalid Home URL. Please contact support to get help restoring the backup.');
         }
     }
 

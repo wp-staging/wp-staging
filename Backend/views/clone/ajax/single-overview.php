@@ -8,20 +8,26 @@
  * @var        $license
  */
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
 
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/download.php');
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
+
+$isPro = WPStaging::isPro();
 ?>
 <div id="wpstg-step-1">
     <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning">
         <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
     </button>
     <div id="wpstg-report-issue-wrapper">
-        <button type="button" id="" class="wpstg-report-issue-button">
+        <button type="button" id="<?php echo $isPro ? "wpstg-report-issue-button" : "wpstg-contact-us-button"; ?>" class="wpstg-report-issue-button">
             <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
         </button>
-        <?php require_once($this->path . 'views/_main/report-issue.php'); ?>
+        <?php if (WPStaging::isPro()) {
+            require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/contact-us-pro.php');
+        }
+        ?>
     </div>
 </div>
 

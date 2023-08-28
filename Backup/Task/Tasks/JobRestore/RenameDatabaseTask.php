@@ -202,6 +202,10 @@ class RenameDatabaseTask extends RestoreTask
         }
     }
 
+    /**
+     * @return void
+     * @throws Exception
+     */
     protected function preDatabaseRenameActions()
     {
         $tmpPrefix = $this->jobDataDto->getTmpDatabasePrefix();
@@ -248,6 +252,10 @@ class RenameDatabaseTask extends RestoreTask
         $this->logger->info(sprintf('Found %d tables to restore', $this->jobDataDto->getTotalTablesToRename()));
     }
 
+    /**
+     * @return bool
+     * @throws Exception
+     */
     protected function performDatabaseRename()
     {
         $this->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());

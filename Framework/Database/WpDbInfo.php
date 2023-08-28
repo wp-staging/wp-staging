@@ -4,12 +4,12 @@ namespace WPStaging\Framework\Database;
 
 class WpDbInfo implements iDbInfo
 {
-    /*
+    /**
      * @var \wpdb
      */
     protected $wpdb;
 
-    /*
+    /**
      * @param \wpdb $wpdb
      */
     public function __construct($wpdb)
@@ -17,15 +17,15 @@ class WpDbInfo implements iDbInfo
         $this->wpdb = $wpdb;
     }
 
-    /*
+    /**
      * Get the database default collation: collation_database
-     * @return array
+     * @return string
      */
-    public function getDbCollation()
+    public function getDbCollation(): string
     {
         $result = $this->wpdb->dbh->query("SHOW VARIABLES LIKE 'collation_database'");
 
-        $output = null;
+        $output = '';
         if ($obj = $result->fetch_object()) {
             $output = $obj->Value;
         }
@@ -33,14 +33,14 @@ class WpDbInfo implements iDbInfo
         return $output;
     }
 
-    /*
-     * @return string|null
+    /**
+     * @return string
      */
-    public function getDbEngine()
+    public function getDbEngine(): string
     {
         $result = $this->wpdb->dbh->query("SHOW VARIABLES LIKE 'default_storage_engine'");
 
-        $output = null;
+        $output = '';
         if ($obj = $result->fetch_object()) {
             $output = $obj->Value;
         }
@@ -48,30 +48,57 @@ class WpDbInfo implements iDbInfo
         return $output;
     }
 
-    /*
+    /**
      * @return int
      */
-    public function getMySqlServerVersion()
+    public function getMySqlServerVersion(): int
     {
         return $this->wpdb->dbh->server_version;
     }
 
-    /*
+    /**
      * @return int
      */
-    public function getMySqlClientVersion()
+    public function getMySqlClientVersion(): int
     {
         return $this->wpdb->dbh->client_version;
     }
 
-    /*
+    /**
+     * @return string
+     */
+    public function getServerIp(): string
+    {
+        $queryToFindHost = "SHOW VARIABLES WHERE Variable_name = 'hostname';";
+        return $this->wpdb->get_var($queryToFindHost, 1);
+    }
+
+    /**
+     * @return int
+     */
+    public function getServerPort(): int
+    {
+        $queryToFindPort = "SHOW VARIABLES WHERE Variable_name = 'port';";
+        return (int)$this->wpdb->get_var($queryToFindPort, 1);
+    }
+
+    /**
+     * Return the server name and port as server:port
+     * @return string
+     */
+    public function getServer(): string
+    {
+        return $this->getServerIp() . ':' . $this->getServerPort();
+    }
+
+    /**
      * @return array
      */
-    public function toArray()
+    public function toArray(): array
     {
         return [
-            'db_engine' => $this->getDbEngine(),
-            'db_collation' => $this->getDbCollation(),
+            'db_engine'     => $this->getDbEngine(),
+            'db_collation'  => $this->getDbCollation(),
             'db_server_ver' => $this->getMySqlServerVersion(),
             'db_client_ver' => $this->getMySqlClientVersion()
         ];

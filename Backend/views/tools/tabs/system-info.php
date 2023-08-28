@@ -3,17 +3,21 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\DebugLogReader;
 
+$isPro = WPStaging::isPro();
 ?>
 
 <form action="<?php echo esc_url(admin_url("admin-post.php?action=wpstg_download_sysinfo")) ?>" method="post" dir="ltr">
     <!-- Keep the class wpstg--tab--active or the report issue form js can not grab the form values because the same form is embedded multiple times into the UI. See sendIssueReport() in wpstg-admin.js -->
     <div id="wpstg--systeminfo-header" style="">
         <input type="submit" name="wpstg-download-sysinfo" id="wpstg-download-sysinfo" class="wpstg-button wpstg-blue-primary" value="Download All Log Files">
-        <button type="button" id="" class="wpstg-report-issue-button">
+        <button type="button" id="<?php echo $isPro ? "wpstg-report-issue-button" : "wpstg-contact-us-button"; ?>" class="wpstg-report-issue-button">
             <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
         </button>
         <div class="wpstg--tab--active" id="wpstg-report-issue-wrapper" style="padding-bottom:7px;">
-            <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/report-issue.php'); ?>
+            <?php if (WPStaging::isPro()) {
+                require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/contact-us-pro.php');
+            }
+            ?>
         </div>
     </div>
     <div>
@@ -21,11 +25,15 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
     </div>
     <h3>WP STAGING Logs <a href="<?php echo esc_url(admin_url() . 'admin.php?page=wpstg-tools&tab=system-info&deleteLog=wpstaging&deleteLogNonce=' . wp_create_nonce('wpstgDeleteLogNonce')); ?>">(<?php esc_html_e('Delete', 'wp-staging'); ?>)</a></h3>
     <p><a href="#" id="btn-purge-queue-table" style="color: #E01E5A;"> <?php esc_html_e('Purge Backup Queue', 'wp-staging') ?></a></p>
-    <textarea class="wpstg-sysinfo" readonly="readonly" id="debug-logs-textarea" name="wpstg-debug-logs"><?php echo esc_textarea(WPStaging::make(DebugLogReader::class)->getLastLogEntries(8 * KB_IN_BYTES, true, false)); ?></textarea>
+    <textarea class="wpstg-sysinfo" readonly="readonly" id="debug-logs-textarea" name="wpstg-debug-logs"><?php echo esc_textarea(WPStaging::make(DebugLogReader::class)->getLastLogEntries(256 * KB_IN_BYTES, true, false)); ?></textarea>
     <h3>PHP debug.log <a href="<?php echo esc_url(admin_url() . 'admin.php?page=wpstg-tools&tab=system-info&deleteLog=php&deleteLogNonce=' . wp_create_nonce('wpstgDeleteLogNonce')); ?>">(<?php esc_html_e('Delete', 'wp-staging'); ?>)</a></h3>
-    <textarea class="wpstg-sysinfo" readonly="readonly" id="debug-logs-textarea" name="wpstg-debug-logs"><?php echo esc_textarea(WPStaging::make(DebugLogReader::class)->getLastLogEntries(8 * KB_IN_BYTES, false, true)); ?></textarea>
+    <textarea class="wpstg-sysinfo" readonly="readonly" id="debug-logs-textarea" name="wpstg-debug-logs"><?php echo esc_textarea(WPStaging::make(DebugLogReader::class)->getLastLogEntries(128 * KB_IN_BYTES, false, true)); ?></textarea>
 </form>
-
+<?php
+if (!WPStaging::isPro()) {
+    require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/contact-us-basic.php');
+}
+?>
 
 <script>
     jQuery(document).ready(function ($) {

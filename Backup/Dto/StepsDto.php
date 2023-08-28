@@ -50,7 +50,7 @@ class StepsDto extends AbstractDto
 
     /**
      * Sometimes we can't know how many steps there will be in total,
-     * so we can mimick an percentage using this method.
+     * so we can mimic an percentage using this method.
      *
      * For instance: FileScannerTask doesn't know how many total
      * steps it will have to process, so we can set a manual estimate.

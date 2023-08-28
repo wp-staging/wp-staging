@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup\Task\Tasks;
 
+use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
@@ -26,36 +27,48 @@ class CleanupTmpTablesTask extends AbstractTask
         $this->tableService = $tableService;
     }
 
-    public static function getTaskName()
+    /**
+     * Can be either wpstgtmp_ or wpstgbak_
+     *
+     * @return string
+     */
+    public static function getTempTableType(): string
     {
-        return 'backup_restore_cleanup_tables';
+        return PrepareRestore::TMP_DATABASE_PREFIX;
     }
 
-    public static function getTaskTitle()
+    public static function getTaskName(): string
+    {
+        $cleaningType = static::getTempTableType();
+        return "backup_restore_cleanup_{$cleaningType}tables";
+    }
+
+    public static function getTaskTitle(): string
     {
         return 'Cleaning Up Restore Tables';
     }
 
     /**
-     * @return \WPStaging\Backup\Dto\TaskResponseDto
+     * @return TaskResponseDto
      */
-    public function execute()
+    public function execute(): TaskResponseDto
     {
-        $this->prepareCleanupRestoreTask();
+        $tmpTableType = static::getTempTableType();
+        $this->prepareCleanupRestoreTask($tmpTableType);
 
-        $this->tables = $this->tableService->findTableNamesStartWith(null);
-        $this->views = $this->tableService->findViewsNamesStartWith(null);
+        $this->tables = $this->tableService->findTableNamesStartWith();
+        $this->views = $this->tableService->findViewsNamesStartWith();
 
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
             $tableOrViewName = $this->taskQueue->dequeue();
 
             // Double-check we are deleting a temporary table just to be extra-careful.
-            if (strpos($tableOrViewName, PrepareRestore::TMP_DATABASE_PREFIX) !== 0) {
+            if (strpos($tableOrViewName, $tmpTableType) !== 0) {
                 $this->logger->warning(sprintf(
                     __('%s: Temporary table "%s" did not start with temporary prefix "%s" and was skipped.', 'wp-staging'),
                     static::getTaskTitle(),
                     $tableOrViewName,
-                    PrepareRestore::TMP_DATABASE_PREFIX
+                    $tmpTableType
                 ));
 
                 continue;
@@ -72,8 +85,9 @@ class CleanupTmpTablesTask extends AbstractTask
                 $deleted = false;
             }
 
+            $this->stepsDto->incrementCurrentStep();
+
             if ($deleted) {
-                $this->stepsDto->incrementCurrentStep();
                 $this->logger->debug(sprintf(
                     __('%s: Deleted temporary %s "%s".', 'wp-staging'),
                     static::getTaskTitle(),
@@ -81,7 +95,6 @@ class CleanupTmpTablesTask extends AbstractTask
                     $tableOrViewName
                 ));
             } else {
-                $this->stepsDto->incrementCurrentStep();
                 $this->logger->warning(sprintf(
                     __('%s: Temporary %s "%s" was not successfully cleaned up.', 'wp-staging'),
                     static::getTaskTitle(),
@@ -98,7 +111,7 @@ class CleanupTmpTablesTask extends AbstractTask
             $this->logger->info(sprintf(
                 __('%s: Tables with temporary prefix "%s" successfully cleaned up.', 'wp-staging'),
                 static::getTaskTitle(),
-                PrepareRestore::TMP_DATABASE_PREFIX
+                $tmpTableType
             ));
         }
 
@@ -106,15 +119,30 @@ class CleanupTmpTablesTask extends AbstractTask
         return $this->generateResponse(false);
     }
 
-    public function prepareCleanupRestoreTask()
+    /**
+     * @param string $tmpTableType
+     */
+    public function prepareCleanupRestoreTask(string $tmpTableType)
     {
         // Early bail: Already prepared
         if ($this->stepsDto->getTotal() > 0) {
             return;
         }
 
-        $tmpViews = $this->tableService->findViewsNamesStartWith(PrepareRestore::TMP_DATABASE_PREFIX);
-        $tmpTables = $this->tableService->findTableNamesStartWith(PrepareRestore::TMP_DATABASE_PREFIX);
+        global $wpdb;
+
+        if ($wpdb->prefix === $tmpTableType) {
+            $this->logger->warning(sprintf(
+                __('%s: Temporary table prefix "%s" is the same as the WordPress table prefix. This is not allowed.', 'wp-staging'),
+                static::getTaskTitle(),
+                $tmpTableType
+            ));
+
+            return;
+        }
+
+        $tmpViews = $this->tableService->findViewsNamesStartWith($tmpTableType);
+        $tmpTables = $this->tableService->findTableNamesStartWith($tmpTableType);
 
         $toDelete = array_merge($tmpViews, $tmpTables);
 

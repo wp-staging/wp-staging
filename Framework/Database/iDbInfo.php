@@ -4,9 +4,9 @@ namespace WPStaging\Framework\Database;
 
 interface iDbInfo
 {
-    public function getDbCollation();
-    public function getDbEngine();
-    public function getMySqlServerVersion();
-    public function getMySqlClientVersion();
-    public function toArray();
+    public function getDbCollation(): string;
+    public function getDbEngine(): string;
+    public function getMySqlServerVersion(): int;
+    public function getMySqlClientVersion(): int;
+    public function toArray(): array;
 }

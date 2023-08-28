@@ -3,8 +3,9 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use Countable;
+use Exception;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
-use WPStaging\Core\Utils\Helper;
+use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Database\SelectedTables;
@@ -12,9 +13,12 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
-use WPStaging\Framework\Utils\SlashMode;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
+
+use function WPStaging\functions\debug_log;
 
 /**
  * Class Cloning
@@ -49,6 +53,11 @@ class Cloning extends Job
     private $sanitize;
 
     /**
+     * @var Urls
+     */
+    private $urls;
+
+    /**
      * Initialize is called in \Job
      */
     public function initialize()
@@ -57,9 +66,10 @@ class Cloning extends Job
         $this->dirUtils    = new WpDefaultDirectories();
         $this->sitesHelper = new Sites();
         $this->sanitize    = WPStaging::make(Sanitize::class);
+        $this->urls        = WPStaging::make(Urls::class);
     }
 
-    public function getErrorMessage()
+    public function getErrorMessage(): string
     {
         return $this->errorMessage;
     }
@@ -69,7 +79,7 @@ class Cloning extends Job
      * @return bool
      * @throws \Exception
      */
-    public function save()
+    public function save(): bool
     {
         if (!isset($_POST) || !isset($_POST["cloneID"])) {
             $this->errorMessage = __("clone ID missing", 'wp-staging');
@@ -238,11 +248,10 @@ class Cloning extends Job
             $this->options->cronDisabled = !empty($_POST['cronDisabled']) ? $this->sanitize->sanitizeBool($_POST['cronDisabled']) : false;
         }
 
-        $this->options->destinationHostname = $this->getDestinationHostname();
         $this->options->destinationDir      = $this->getDestinationDir();
+        $this->options->destinationHostname = $this->getDestinationHostname();
 
-        $helper                      = new Helper();
-        $this->options->homeHostname = $helper->getHomeUrlWithoutScheme();
+        $this->options->homeHostname = $this->urls->getHomeUrlWithoutScheme();
 
         // Process lock state
         $this->options->isRunning = true;
@@ -257,14 +266,6 @@ class Cloning extends Job
 
         $this->errorMessage = "";
         return $this->saveOptions();
-    }
-
-    /**
-     * @return bool
-     */
-    private function isDestinationDatabaseSameAsLiveDatabase()
-    {
-        return $this->options->databaseServer === DB_HOST && $this->options->databaseDatabase === DB_NAME;
     }
 
     /**
@@ -313,7 +314,7 @@ class Cloning extends Job
      * Get destination Hostname depending on whether WP has been installed in sub dir or not
      * @return string
      */
-    private function getDestinationUrl()
+    private function getDestinationUrl(): string
     {
         if (!empty($this->options->cloneHostname)) {
             return $this->options->cloneHostname;
@@ -326,11 +327,10 @@ class Cloning extends Job
      * Return target hostname
      * @return string
      */
-    private function getDestinationHostname()
+    private function getDestinationHostname(): string
     {
         if (empty($this->options->cloneHostname)) {
-            $helper = new Helper();
-            return $helper->getHomeUrlWithoutScheme();
+            return $this->urls->getHomeUrlWithoutScheme();
         }
         return $this->getHostnameWithoutScheme($this->options->cloneHostname);
     }
@@ -340,7 +340,7 @@ class Cloning extends Job
      * @param string $string
      * @return string
      */
-    private function getHostnameWithoutScheme($string)
+    private function getHostnameWithoutScheme(string $string): string
     {
         return preg_replace('#^https?://#', '', rtrim($string, '/'));
     }
@@ -349,20 +349,38 @@ class Cloning extends Job
      * Get Destination Directory including staging subdirectory
      * @return string
      */
-    private function getDestinationDir()
+    private function getDestinationDir(): string
     {
         // Throw fatal error
         if (!empty($this->options->cloneDir) & (trailingslashit($this->options->cloneDir) === trailingslashit(WPStaging::getWPpath()))) {
-            $this->returnException('Error: Target Directory must be different from the root of the production website.');
-            die();
+            $this->returnException('Error: Target path must be different from the root of the production website.');
         }
 
-        // No custom clone dir so clone path will be in subfolder of root
-        if (empty($this->options->cloneDir)) {
-            $this->options->cloneDir = trailingslashit(WPStaging::getWPpath() . $this->options->cloneDirectoryName);
-            return $this->options->cloneDir;
+        // custom destination has been set
+        if (!empty($this->options->cloneDir)) {
+            return trailingslashit($this->options->cloneDir);
         }
-        return trailingslashit($this->options->cloneDir);
+
+        // No custom destination so default path will be in a subfolder of root or inside wp-content
+        /** @var Directory $dirAdapter */
+        $dirAdapter = WPStaging::make(Directory::class);
+        $cloneDestinationPath = $dirAdapter->getAbsPath() . $this->options->cloneDirectoryName;
+
+        if ($this->isPro() && !is_writable($dirAdapter->getAbsPath())) {
+            $stagingSiteDirectory = $dirAdapter->getStagingSiteDirectoryInsideWpcontent();
+            if ($stagingSiteDirectory === false) {
+                debug_log(esc_html('Fail to get destination directory. The staging sites destination folder cannot be created.'));
+                $this->returnException('The staging sites directory is not writable. Please choose another path.');
+            }
+
+            $cloneDestinationPath = trailingslashit($stagingSiteDirectory) . $this->options->cloneDirectoryName;
+            if (empty($this->options->cloneHostname)) {
+                $this->options->cloneHostname = trailingslashit($dirAdapter->getStagingSiteUrl()) . $this->options->cloneDirectoryName;
+            }
+        }
+        $this->options->cloneDir = trailingslashit($cloneDestinationPath);
+        return $this->options->cloneDir;
+
     }
 
     /**
@@ -371,7 +389,7 @@ class Cloning extends Job
      * @param string $string
      * @return string
      */
-    private function maybeAppendUnderscorePrefix($string)
+    private function maybeAppendUnderscorePrefix(string $string): string
     {
         $lastCharacter = substr($string, -1);
         if ($lastCharacter === '_') {
@@ -425,8 +443,21 @@ class Cloning extends Job
             throw new JobNotFoundException($methodName);
         }
 
-        if ($this->options->databasePrefix === $this->db->prefix && $this->isDestinationDatabaseSameAsLiveDatabase()) {
+        if ($this->options->databasePrefix === $this->db->prefix && $this->isStagingDatabaseSameAsProductionDatabase()) {
             $this->returnException('Table prefix for staging site can not be identical to live database if staging site will be cloned into production database! Please start over and change the table prefix or destination database.');
+        }
+
+        if (defined('WPSTG_DEV') && WPSTG_DEV === true) {
+            return $this->{$methodName}();
+        }
+
+        $tmpPrefixes = [
+            PrepareRestore::TMP_DATABASE_PREFIX,
+            PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP,
+        ];
+
+        if (in_array($this->options->databasePrefix, $tmpPrefixes)) {
+            $this->returnException('Prefix wpstgtmp_ and wpstgbak_ are preserved by WP Staging and cannot be used for CLONING purpose! Please start over and change the table prefix.');
         }
 
         // Call the job
@@ -439,7 +470,7 @@ class Cloning extends Job
      * @return object
      * @throws \Exception
      */
-    private function handleJobResponse($response, $nextJob)
+    private function handleJobResponse($response, string $nextJob)
     {
         // Job is not done
         if ($response->status !== true) {
@@ -561,7 +592,7 @@ class Cloning extends Job
 
         $jobName = empty($this->options->mainJob) ? 'Unknown' : $this->options->mainJob;
 
-        switch($jobName) {
+        switch ($jobName) {
             case 'updating':
                 $jobName = 'Update';
                 break;

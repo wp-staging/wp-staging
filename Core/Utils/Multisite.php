@@ -2,7 +2,8 @@
 
 namespace WPStaging\Core\Utils;
 
-use WPStaging\Core\Utils\Helper;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Utils\Urls;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -11,7 +12,6 @@ if (!defined("WPINC")) {
 
 class Multisite
 {
-
    /**
     * @var string
     */
@@ -19,8 +19,8 @@ class Multisite
 
     public function __construct()
     {
-        $helper = new Helper();
-        $this->url = $helper->getHomeUrl();
+        $urlsHelper = WPStaging::make(Urls::class);
+        $this->url  = $urlsHelper->getHomeUrl();
     }
 
    /**

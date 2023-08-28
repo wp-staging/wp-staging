@@ -5,6 +5,7 @@
 
 namespace WPStaging\Framework\Database;
 
+use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Collection\Collection;
 use WPStaging\Framework\Utils\Strings;
@@ -23,10 +24,14 @@ class TableService
     /** @var array */
     private $errors = [];
 
+    /** @var Strings */
+    private $strHelper;
+
     public function __construct(Database $database = null)
     {
-        $this->database = $database ?: new Database();
-        $this->client = $this->database->getClient();
+        $this->database  = $database ?: new Database();
+        $this->client    = $this->database->getClient();
+        $this->strHelper = new Strings();
     }
 
     /**
@@ -245,15 +250,14 @@ class TableService
     public function deleteTables($tables)
     {
         foreach ($tables as $table) {
-            // PROTECTION: Never delete any table that beginns with wp prefix of live site
-            // TODO: inject class Strings using DI
-            if (!$this->database->isExternal() && (new Strings())->startsWith($table, $this->database->getProductionPrefix())) {
+            // PROTECTION: Never delete any table that begins with wp prefix of live site
+            if ($this->isProductionSiteTableOrView($table)) {
                 $this->errors[] = sprintf(__("Fatal Error: Trying to delete table %s of main WP installation!", 'wp-staging'), $table);
 
                 return false;
             }
 
-            $this->database->getWpdba()->exec("DROP TABLE `{$table}`;");
+            $this->database->getClient()->query("DROP TABLE `{$table}`;");
         }
 
         return true;
@@ -271,8 +275,7 @@ class TableService
     {
         foreach ($views as $view) {
             // PROTECTION: Never delete any table that begins with wp prefix of live site
-            // TODO: inject class Strings using DI
-            if (!$this->database->isExternal() && (new Strings())->startsWith($view, $this->database->getProductionPrefix())) {
+            if ($this->isProductionSiteTableOrView($view)) {
                 $this->errors[] = sprintf(__("Fatal Error: Trying to delete view %s of main WP installation!", 'wp-staging'), $view);
 
                 return false;
@@ -331,6 +334,43 @@ class TableService
             $tableName = current($tableObj);
             $wpdb->query("DROP TABLE IF EXISTS `$tableName`");
         }
+        return true;
+    }
+
+    /**
+     * @param string $tableOrView
+     * @return bool
+     */
+    private function isProductionSiteTableOrView($tableOrView): bool
+    {
+        // Early return if current database is external
+        if ($this->database->isExternal()) {
+            return false;
+        }
+
+        $productionPrefix = $this->database->getProductionPrefix();
+
+        // If table does not start with production prefix, it is not a production table
+        $result = $this->strHelper->startsWith($tableOrView, $productionPrefix);
+        if (!$result) {
+            return false;
+        }
+
+        $tmpPrefixes = [
+            PrepareRestore::TMP_DATABASE_PREFIX,
+            PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP,
+        ];
+
+        if (in_array($productionPrefix, $tmpPrefixes)) {
+            return true;
+        }
+
+        foreach ($tmpPrefixes as $tmpPrefix) {
+            if ($this->strHelper->startsWith($tableOrView, $tmpPrefix) && $this->strHelper->startsWith($tmpPrefix, $productionPrefix)) {
+                return false;
+            }
+        }
+
         return true;
     }
 }

@@ -35,11 +35,17 @@ class TablesRenamer
     /** @var array */
     protected $excludedTables = [];
 
+    /** @var array */
+    protected $tablesToBeDropped = [];
+
     /** @var int Total tables to be renamed */
     protected $totalTables = 0;
 
     /** @var int How many tables renamed */
     protected $tablesRenamed = 0;
+
+    /** @var int How many tables left to be dropped */
+    protected $tablesRemainingToBeDropped = 0;
 
     /** @var string */
     protected $productionTablePrefix;
@@ -73,9 +79,9 @@ class TablesRenamer
 
     /**
      * @param string $productionTablePrefix
-     * @return $this
+     * @return TablesRenamer
      */
-    public function setProductionTablePrefix($productionTablePrefix)
+    public function setProductionTablePrefix(string $productionTablePrefix): TablesRenamer
     {
         $this->productionTablePrefix = $productionTablePrefix;
         return $this;
@@ -83,9 +89,9 @@ class TablesRenamer
 
     /**
      * @param string $tmpPrefix
-     * @return $this
+     * @return TablesRenamer
      */
-    public function setTmpPrefix($tmpPrefix)
+    public function setTmpPrefix(string $tmpPrefix): TablesRenamer
     {
         $this->tmpPrefix = $tmpPrefix;
         return $this;
@@ -93,9 +99,9 @@ class TablesRenamer
 
     /**
      * @param string $dropPrefix
-     * @return $this
+     * @return TablesRenamer
      */
-    public function setDropPrefix($dropPrefix)
+    public function setDropPrefix(string $dropPrefix): TablesRenamer
     {
         $this->dropPrefix = $dropPrefix;
         return $this;
@@ -103,9 +109,9 @@ class TablesRenamer
 
     /**
      * @param bool $renameViews
-     * @return $this
+     * @return TablesRenamer
      */
-    public function setRenameViews($renameViews)
+    public function setRenameViews(bool $renameViews): TablesRenamer
     {
         $this->renameViews = $renameViews;
         return $this;
@@ -113,9 +119,9 @@ class TablesRenamer
 
     /**
      * @param bool $logEachRename
-     * @return $this
+     * @return TablesRenamer
      */
-    public function setLogEachRename($logEachRename)
+    public function setLogEachRename(bool $logEachRename): TablesRenamer
     {
         $this->logEachRename = $logEachRename;
         return $this;
@@ -123,9 +129,9 @@ class TablesRenamer
 
     /**
      * @param Logger $logger
-     * @return $this
+     * @return TablesRenamer
      */
-    public function setLogger(Logger $logger)
+    public function setLogger(Logger $logger): TablesRenamer
     {
         $this->logger = $logger;
         return $this;
@@ -133,9 +139,9 @@ class TablesRenamer
 
     /**
      * @param callable|null $thresholdCallable
-     * @return $this
+     * @return TablesRenamer
      */
-    public function setThresholdCallable($thresholdCallable)
+    public function setThresholdCallable($thresholdCallable): TablesRenamer
     {
         $this->thresholdCallable = $thresholdCallable;
         return $this;
@@ -143,8 +149,9 @@ class TablesRenamer
 
     /**
      * @param array $shortNamedTablesToRename
+     * @return TablesRenamer
      */
-    public function setShortNamedTablesToRename($shortNamedTablesToRename)
+    public function setShortNamedTablesToRename(array $shortNamedTablesToRename): TablesRenamer
     {
         $this->shortNamedTablesToRename = $shortNamedTablesToRename;
         return $this;
@@ -152,37 +159,44 @@ class TablesRenamer
 
     /**
      * @param array $shortNamedTablesToDrop
+     * @return TablesRenamer
      */
-    public function setShortNamedTablesToDrop($shortNamedTablesToDrop)
+    public function setShortNamedTablesToDrop(array $shortNamedTablesToDrop): TablesRenamer
     {
         $this->shortNamedTablesToDrop = $shortNamedTablesToDrop;
         return $this;
     }
 
     /**
-     * @param $excludedTables
-     * @return $this
+     * @param array $excludedTables
+     * @return TablesRenamer
      */
-    public function setExcludedTables($excludedTables)
+    public function setExcludedTables(array $excludedTables): TablesRenamer
     {
         $this->excludedTables = $excludedTables;
         return $this;
     }
 
     /** @return int */
-    public function getRenamedTables()
+    public function getRenamedTables(): int
     {
         return $this->tablesRenamed;
     }
 
     /** @return int */
-    public function getTotalTables()
+    public function getTotalTables(): int
     {
         return $this->totalTables;
     }
 
+    /** @return int */
+    public function getTablesRemainingToBeDropped(): int
+    {
+        return $this->tablesRemainingToBeDropped;
+    }
+
     /** @return array */
-    public function getViewsToBeRenamed()
+    public function getViewsToBeRenamed(): array
     {
         return $this->tablesBeingRenamedUnprefixed['views'];
     }
@@ -225,6 +239,9 @@ class TablesRenamer
                 return substr($tableName, strlen($productionTablePrefix));
             }, $this->existingTables[$viewsOrTables]);
         }
+
+        $this->tablesToBeDropped = $this->tableService->findTableNamesStartWith($this->dropPrefix) ?: [];
+        $this->tablesRemainingToBeDropped = count($this->tablesToBeDropped);
     }
 
     /**
@@ -267,7 +284,7 @@ class TablesRenamer
     }
 
     /**
-     * Return true if all conflicting tables renamed, false otherwse
+     * Return true if all conflicting tables renamed, false otherwise
      * @return bool
      */
     public function renameConflictingTables()
@@ -311,7 +328,7 @@ class TablesRenamer
     }
 
     /**
-     * Return true if all non-conflicting tables renamed, false otherwse
+     * Return true if all non-conflicting tables renamed, false otherwise
      * @return bool
      */
     public function renameNonConflictingTables()
@@ -339,6 +356,31 @@ class TablesRenamer
         return true;
     }
 
+    /**
+     * @return bool
+     */
+    public function cleanTemporaryBackupTables()
+    {
+        foreach ($this->tablesToBeDropped as $table) {
+            $result = $this->tableService->getDatabase()->exec(sprintf(
+                "DROP TABLE `%s`;",
+                $table
+            ));
+
+            // return false if drop table failed to try again
+            if ($result === false) {
+                return false;
+            }
+
+            $this->tablesRemainingToBeDropped--;
+        }
+
+        return true;
+    }
+
+    /**
+     * @return void
+     */
     public function renameTablesToDrop()
     {
         foreach ($this->getTablesThatExistInSiteButNotInTemp() as $table) {

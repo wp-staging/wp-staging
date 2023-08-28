@@ -1716,6 +1716,27 @@
   }
 
   /**
+   * Checks if a modal specified by the given selector is available in the DOM.
+   * If the modal is available, it waits for a delay and then initializes the Module.
+   * If the modal is not yet available, it recursively checks after a brief interval.
+   *
+   * @param {string} selector - CSS selector for the element to search for.
+   * @param {function} Module - Constructor function to create an instance of the module.
+   */
+  function initializeModuleDelayedIfElementIsAvailable(selector, Module) {
+    var element = document.querySelector(selector);
+    if (element) {
+      setTimeout(function () {
+        new Module();
+      }, 1000);
+    } else {
+      setTimeout(function () {
+        return initializeModuleDelayedIfElementIsAvailable(selector, Module);
+      }, 10);
+    }
+  }
+
+  /**
    * Detect memory exhaustion and show warning.
    */
   var WpstgDetectMemoryExhaust = /*#__PURE__*/function () {
@@ -1811,11 +1832,160 @@
     return WpstgSidebarMenu;
   }();
 
+  /**
+   * Handle toggle of contact us modal pupup
+   */
+  var WpstgContactUs = /*#__PURE__*/function () {
+    function WpstgContactUs(wpstgObject) {
+      if (wpstgObject === void 0) {
+        wpstgObject = wpstg;
+      }
+      this.wpstgObject = wpstgObject;
+      this.characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      this.currentDate = new Date();
+      this.init();
+    }
+    var _proto = WpstgContactUs.prototype;
+    _proto.init = function init() {
+      this.contactUsModal = document.querySelector('#wpstg-contact-us-modal');
+      this.contactUsButton = document.querySelector('#wpstg-contact-us-button');
+      this.contactUsButtonBackupTab = document.querySelector('#wpstg--tab--backup  #wpstg-contact-us-button');
+      this.reportIssueButton = document.querySelector('#wpstg-contact-us-report-issue');
+      this.askInTheForumForm = document.querySelector('#wpstg-contact-us-report-issue-form');
+      this.successForm = document.querySelector('#wpstg-contact-us-success-form');
+      this.contactUsReportIssueBtn = document.querySelector('#wpstg-contact-us-report-issue-btn');
+      this.contactUsCloseButton = document.querySelector('#wpstg-modal-close');
+      this.contactUsSuccessPopup = document.querySelector('#wpstg-contact-us-success-form');
+      this.contactUsSuccessPopupClose = document.querySelector('#wpstg-contact-us-success-modal-close');
+      this.debugCodeCopyButton = document.querySelector('#wpstg-contact-us-debug-code-copy');
+      this.contactUsLoader = document.querySelector('#wpstg-contact-us-report-issue-loader');
+      this.contactUsResponse = document.querySelector('#wpstg-contact-us-debug-response');
+      this.contactUsDebugCodeField = document.querySelector('#wpstg-contact-us-debug-code');
+      this.contactUsSupport = document.querySelector('#wpstg-contact-us-support-forum');
+      this.isDebugWindowOpened = false;
+      this.addEvents();
+      this.notyf = new Notyf({
+        duration: 6000,
+        position: {
+          x: 'center',
+          y: 'bottom'
+        },
+        dismissible: true,
+        types: [{
+          type: 'warning',
+          background: 'orange',
+          icon: true
+        }]
+      });
+    };
+    _proto.addEvents = function addEvents() {
+      var _this = this;
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          _this.hide(_this.contactUsModal);
+          _this.hide(_this.askInTheForumForm);
+          _this.hide(_this.contactUsSuccessPopup);
+          _this.hide(_this.contactUsSupport);
+          _this.isDebugWindowOpened = false;
+        }
+      });
+      this.contactUsButton.addEventListener('click', function () {
+        _this.show(_this.contactUsModal);
+      });
+      if (this.contactUsButtonBackupTab !== null) {
+        this.contactUsButtonBackupTab.addEventListener('click', function () {
+          _this.show(_this.contactUsModal);
+        });
+      }
+      this.reportIssueButton.addEventListener('click', function () {
+        if (_this.isDebugWindowOpened) {
+          _this.hide(_this.askInTheForumForm);
+        } else {
+          _this.show(_this.askInTheForumForm);
+        }
+        _this.isDebugWindowOpened = !_this.isDebugWindowOpened;
+      });
+      this.contactUsReportIssueBtn.addEventListener('click', function () {
+        _this.sendDebugInfo();
+      });
+      this.contactUsSuccessPopupClose.addEventListener('click', function () {
+        _this.hide(_this.contactUsSuccessPopup);
+      });
+      this.contactUsCloseButton.addEventListener('click', function () {
+        _this.hide(_this.contactUsModal);
+        _this.hide(_this.contactUsSupport);
+        _this.hide(_this.askInTheForumForm);
+        _this.isDebugWindowOpened = false;
+      });
+      this.debugCodeCopyButton.addEventListener('click', function () {
+        _this.copyDebugCode();
+        _this.notyf.success('Debug code copied to clipboard');
+      });
+    };
+    _proto.copyDebugCode = function copyDebugCode() {
+      this.contactUsDebugCodeField.select();
+      this.contactUsDebugCodeField.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(this.contactUsDebugCodeField.value);
+    };
+    _proto.show = function show(element) {
+      element.style.display = 'block';
+    };
+    _proto.hide = function hide(element) {
+      element.style.display = 'none';
+    };
+    _proto.generateDebugCode = function generateDebugCode(length) {
+      var result = '';
+      for (var i = 0; i < length; i++) {
+        result += this.characters.charAt(Math.floor(Math.random() * this.characters.length));
+      }
+      return 'wpstg-' + result + '-' + this.currentDate.getHours() + this.currentDate.getMinutes() + this.currentDate.getSeconds();
+    };
+    _proto.sendDebugInfo = function sendDebugInfo() {
+      var _this2 = this;
+      this.show(this.contactUsLoader);
+      this.contactUsReportIssueBtn.disabled = true;
+      var debugCode = this.generateDebugCode(8);
+      fetch(this.wpstgObject.ajaxUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: new URLSearchParams({
+          action: 'wpstg_send_debug_log_report',
+          accessToken: this.wpstgObject.accessToken,
+          nonce: this.wpstgObject.nonce,
+          debugCode: debugCode
+        }),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(function (response) {
+        _this2.contactUsReportIssueBtn.disabled = false;
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(function (data) {
+        if (data.response && data.response.sent === true) {
+          _this2.contactUsDebugCodeField.value = debugCode;
+          _this2.show(_this2.contactUsSuccessPopup);
+        } else {
+          _this2.contactUsDebugCodeField.value = debugCode;
+          _this2.show(_this2.contactUsSuccessPopup);
+        }
+        _this2.hide(_this2.contactUsLoader);
+      })["catch"](function (error) {
+        _this2.hide(_this2.contactUsLoader);
+        _this2.show(_this2.contactUsSupport);
+        console.warn(_this2.wpstgObject.i18n['somethingWentWrong'], error);
+      });
+    };
+    return WpstgContactUs;
+  }();
+
   var WPStagingBackup;
   (function ($) {
     window.addEventListener('backups-tab', function () {
       WPStagingBackup.fetchListing();
       new WpstgSidebarMenu();
+      initializeModuleDelayedIfElementIsAvailable('#wpstg-contact-us-modal', WpstgContactUs);
     });
     window.addEventListener('backupListingFinished', function () {
       fetch(ajaxurl + "?action=wpstg--backups--restore--file-list&_=" + Math.random() + "&withTemplate=true", {
@@ -2317,7 +2487,7 @@
         }
         WPStagingCommon.getSwalModal(true).fire({
           'icon': 'success',
-          'html': WPStagingBackup.modal.download.html.replace('{title}', title).replace('{btnTxtLog}', '<span style="text-decoration: underline">Show Logs</span>').replace('{text}', bodyText !== null ? bodyText : 'You can download or restore this backup at any time on this website or even on another website to transfer this site.'),
+          'html': WPStagingBackup.modal.download.html.replace('{title}', title).replace('{btnTxtLog}', '<span style="text-decoration: underline">Show Logs</span>').replace('{text}', bodyText !== null ? bodyText : 'You can restore this backup anytime or upload it to another website and restore it there.'),
           'confirmButtonText': 'Close',
           'showCancelButton': false,
           'showConfirmButton': true
