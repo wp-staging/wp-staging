@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 
 /**
@@ -26,13 +27,11 @@ class Cancel extends Job
         if (empty($cloneData)) {
             return true;
         }
-       // Delete data in external database
-        if (empty($this->options->databaseUser)) {
-            $delete = new Delete();
-        } else {
-            $delete = new Delete(true);
-        }
-        return $delete->start($cloneData);
+
+        $deleteJob = WPStaging::make(Delete::class);
+        $deleteJob->setIsExternalDb(!$this->isStagingDatabaseSameAsProductionDatabase());
+
+        return $deleteJob->start($cloneData);
     }
 
    /**

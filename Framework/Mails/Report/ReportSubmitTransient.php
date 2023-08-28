@@ -15,9 +15,9 @@ class ReportSubmitTransient implements TransientInterface
     const TRANSIENT_NAME = 'wpstg_issue_report_submitted';
 
     /**
-     * Set expiry time to 3600 seconds = 1 hour
+     * Set expiry time to 300 seconds = 5 mins
      */
-    const EXPIRY_TIME_IN_SEC = 3600;
+    const EXPIRY_TIME_IN_SEC = 300;
 
     /**
      * @return string

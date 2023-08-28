@@ -3,11 +3,13 @@
 namespace WPStaging\Backup\Job\Jobs;
 
 use RuntimeException;
+use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Backup\Job\AbstractJob;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Task\Tasks\CleanupBakTablesTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\StartRestoreTask;
 use WPStaging\Backup\Task\Tasks\CleanupTmpTablesTask;
 use WPStaging\Backup\Task\Tasks\CleanupTmpFilesTask;
@@ -34,12 +36,12 @@ class JobRestore extends AbstractJob
     /** @var array The array of tasks to execute for this job. Populated at init(). */
     protected $tasks = [];
 
-    public static function getJobName()
+    public static function getJobName(): string
     {
         return 'backup_restore';
     }
 
-    protected function getJobTasks()
+    protected function getJobTasks(): array
     {
         return $this->tasks;
     }
@@ -53,7 +55,7 @@ class JobRestore extends AbstractJob
         parent::onWpShutdown();
     }
 
-    protected function execute()
+    protected function execute(): TaskResponseDto
     {
         //$this->startBenchmark();
 
@@ -69,17 +71,16 @@ class JobRestore extends AbstractJob
         return $response;
     }
 
+    /**
+     * @throws \Exception
+     */
     protected function init()
     {
         if ($this->jobDataDto->getBackupMetadata()) {
             return;
         }
 
-        try {
-            $backupMetadata = (new BackupMetadata())->hydrateByFilePath($this->jobDataDto->getFile());
-        } catch (\Exception $e) {
-            throw $e;
-        }
+        $backupMetadata = (new BackupMetadata())->hydrateByFilePath($this->jobDataDto->getFile());
 
         if (!$this->isValidMetadata($backupMetadata)) {
             throw new RuntimeException('Failed to get backup metadata.');
@@ -92,6 +93,10 @@ class JobRestore extends AbstractJob
         $this->tasks[] = StartRestoreTask::class;
         $this->tasks[] = CleanupTmpFilesTask::class;
         $this->tasks[] = CleanupTmpTablesTask::class;
+        if ($backupMetadata->getIsExportingDatabase()) {
+            $this->tasks[] = CleanupBakTablesTask::class;
+        }
+
         $this->setRequirementTask();
 
         if ($backupMetadata->getIsExportingUploads()) {
@@ -147,7 +152,7 @@ class JobRestore extends AbstractJob
      * @param $backupMetadata
      * @return bool
      */
-    protected function isSameSiteBackupRestore($backupMetadata)
+    protected function isSameSiteBackupRestore($backupMetadata): bool
     {
         if (is_multisite()) {
             $isSameSite = site_url() === $backupMetadata->getSiteUrl() &&
@@ -164,7 +169,7 @@ class JobRestore extends AbstractJob
     /**
      * @return string
      */
-    private function getJobTmpDirectory()
+    private function getJobTmpDirectory(): string
     {
         $dir = $this->directory->getTmpDirectory() . $this->jobDataDto->getId();
         $this->filesystem->mkdir($dir);
@@ -176,7 +181,7 @@ class JobRestore extends AbstractJob
     {
         $metadata = $this->jobDataDto->getBackupMetadata();
         if ($metadata->getIsMultipartBackup()) {
-            foreach ($metadata->getMultipartMetadata()->getDatabaseParts() as $part) {
+            foreach ($metadata->getMultipartMetadata()->getDatabaseParts() as $ignored) {
                 $this->tasks[] = RestoreDatabaseTask::class;
             }
         } else {
@@ -198,7 +203,7 @@ class JobRestore extends AbstractJob
             return;
         }
 
-        foreach ($metadata->getMultipartMetadata()->getFileParts() as $part) {
+        foreach ($metadata->getMultipartMetadata()->getFileParts() as $ignored) {
             $this->tasks[] = ExtractFilesTask::class;
         }
     }
@@ -208,7 +213,7 @@ class JobRestore extends AbstractJob
      *
      * @return bool
      */
-    private function isValidMetadata($metadata)
+    private function isValidMetadata(BackupMetadata $metadata): bool
     {
         $extension = pathinfo($this->jobDataDto->getFile(), PATHINFO_EXTENSION);
         if ($extension !== 'sql') {

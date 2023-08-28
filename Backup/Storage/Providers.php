@@ -7,6 +7,7 @@ use WPStaging\Pro\Backup\Storage\Storages\Amazon\S3 as AmazonS3Auth;
 use WPStaging\Pro\Backup\Storage\Storages\DigitalOceanSpaces\Auth as DSOAuth;
 use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Auth as GenericS3Auth;
 use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth as GoogleDriveAuth;
+use WPStaging\Pro\Backup\Storage\Storages\Dropbox\Auth as DropboxAuth;
 use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth as SftpAuth;
 use WPStaging\Pro\Backup\Storage\Storages\Wasabi\Auth as WasabiAuth;
 
@@ -37,8 +38,8 @@ class Providers
                 'id'   => 'dropbox',
                 'cli'  => 'dropbox',
                 'name' => esc_html__('Dropbox', 'wp-staging'),
-                'enabled'   => false,
-                'authClass' => '',
+                'enabled'   => true,
+                'authClass' => $this->filterAuthClassForPro(DropboxAuth::class),
                 'settingsPath' => $this->getStorageAdminPage('dropbox'),
             ],
             [

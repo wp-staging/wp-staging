@@ -6,9 +6,15 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Backup\Job\Jobs\JobRestore;
 use WPStaging\Backup\Service\Compressor;
+use WPStaging\Framework\Utils\Urls;
 
 class Directory
 {
+    /**
+     * Staging site directory name
+     */
+    const STAGING_SITE_DIRECTORY = 'wp-staging-sites';
+
     /** @var string The directory that holds the uploads, usually wp-content/uploads */
     protected $uploadDir;
 
@@ -60,17 +66,70 @@ class Directory
     /** @var Strings */
     protected $strUtils;
 
-    public function __construct(Filesystem $filesystem, Strings $strings)
+    /**
+     * @var string
+     */
+    private $stagingSiteUrl;
+
+    /**
+     * @var Urls
+     */
+    private $urls;
+
+    public function __construct(Filesystem $filesystem, Strings $strings, Urls $urls)
     {
         $this->filesystem = $filesystem;
         $this->strUtils   = $strings;
+        $this->urls       = $urls;
+    }
+
+    /**
+     * Try to get a staging site main directory inside:
+     * wp-content/wp-staging-sites or wp-content/uploads/wp-staging-sites
+     *
+     * @param bool $createDir if true create dir if it does not exist
+     *
+     * @return bool|string false if dir is not writable otherwise return the full path of staging sites dir.
+     */
+    public function getStagingSiteDirectoryInsideWpcontent(bool $createDir = true)
+    {
+        // Try wp-content/wp-staging-sites
+        $baseDir              = WP_CONTENT_DIR;
+        $this->stagingSiteUrl = trailingslashit(WP_CONTENT_URL) . self::STAGING_SITE_DIRECTORY;
+
+        // wp-content/wp-staging-sites is not writeable. Try wp-content/uploads/wp-staging-sites
+        if (!is_writable($baseDir)) {
+            $baseDir              = $this->getUploadsDirectory();
+            $this->stagingSiteUrl = trailingslashit($this->urls->getUploadsUrl()) . self::STAGING_SITE_DIRECTORY;
+        }
+
+        // wp-content/uploads/wp-staging-sites is not writeable as well
+        if (!is_writable($baseDir)) {
+            $this->stagingSiteUrl = '';
+            return false;
+        }
+
+        $stagingSiteDir = trailingslashit($baseDir) . self::STAGING_SITE_DIRECTORY;
+        if ($createDir && !is_dir($stagingSiteDir)) {
+            wp_mkdir_p($stagingSiteDir);
+        }
+
+        return $stagingSiteDir;
+    }
+
+    /**
+     * @return string
+     */
+    public function getStagingSiteUrl(): string
+    {
+        return $this->stagingSiteUrl;
     }
 
     /**
      * @noinspection PhpUnused
      * @return string
      */
-    public function getCacheDirectory()
+    public function getCacheDirectory(): string
     {
         if (isset($this->cacheDirectory)) {
             return $this->cacheDirectory;
@@ -86,7 +145,7 @@ class Directory
     /**
      * @return string
      */
-    public function getTmpDirectory()
+    public function getTmpDirectory(): string
     {
         if (isset($this->tmpDirectory)) {
             return $this->tmpDirectory;
@@ -102,7 +161,7 @@ class Directory
     /**
      * @return string
      */
-    public function getLogDirectory()
+    public function getLogDirectory(): string
     {
         if (isset($this->logDirectory)) {
             return $this->logDirectory;
@@ -116,7 +175,7 @@ class Directory
     /**
      * @return string
      */
-    public function getBackupDirectory()
+    public function getBackupDirectory(): string
     {
         if (isset($this->backupDirectory)) {
             return $this->backupDirectory;
@@ -130,7 +189,7 @@ class Directory
     /**
      * @return string
      */
-    public function getPluginUploadsDirectory()
+    public function getPluginUploadsDirectory(): string
     {
         if (isset($this->pluginUploadsDirectory)) {
             return $this->pluginUploadsDirectory;
@@ -149,7 +208,7 @@ class Directory
      * Absolute Path
      * @return string
      */
-    public function getUploadsDirectory()
+    public function getUploadsDirectory(): string
     {
         if ($this->uploadDir) {
             return $this->uploadDir;
@@ -157,7 +216,7 @@ class Directory
 
         // Get absolute path to wordpress uploads directory e.g /var/www/wp-content/uploads/
         // Default is ABSPATH . 'wp-content/uploads', but it can be customized by the db option upload_path or the constant UPLOADS
-        $uploadDir = wp_upload_dir(null, false, false)['basedir'];
+        $uploadDir = wp_upload_dir(null, false)['basedir'];
 
         $this->uploadDir = trim(trailingslashit(wp_normalize_path($uploadDir)));
 
@@ -169,7 +228,7 @@ class Directory
      * If single site, return the uploads directory
      * @return string
      */
-    public function getMainSiteUploadsDirectory()
+    public function getMainSiteUploadsDirectory(): string
     {
         if (isset($this->mainSiteUploadsDir)) {
             return $this->mainSiteUploadsDir;
@@ -193,7 +252,7 @@ class Directory
     /**
      * @return array
      */
-    public function getDefaultWordPressFolders()
+    public function getDefaultWordPressFolders(): array
     {
         if (!isset($this->defaultWordPressFolders)) {
             $this->defaultWordPressFolders = array_merge(
@@ -218,7 +277,7 @@ class Directory
     /**
      * @return string
      */
-    public function getPluginsDirectory()
+    public function getPluginsDirectory(): string
     {
         if (!isset($this->pluginsDir)) {
             $this->pluginsDir = $this->filesystem->normalizePath(WP_PLUGIN_DIR, true);
@@ -230,7 +289,7 @@ class Directory
     /**
      * @return string
      */
-    public function getMuPluginsDirectory()
+    public function getMuPluginsDirectory(): string
     {
         if (!isset($this->muPluginsDir)) {
             $this->muPluginsDir = $this->filesystem->normalizePath(WPMU_PLUGIN_DIR, true);
@@ -244,7 +303,7 @@ class Directory
      *
      * @return array
      */
-    public function getAllThemesDirectories()
+    public function getAllThemesDirectories(): array
     {
         if (!isset($this->themesDirs)) {
             $this->themesDirs = array_map(function ($directory) {
@@ -279,7 +338,7 @@ class Directory
     /**
      * @return string
      */
-    public function getActiveThemeParentDirectory()
+    public function getActiveThemeParentDirectory(): string
     {
         if (!isset($this->activeThemeParentDir)) {
             $this->activeThemeParentDir = $this->filesystem->normalizePath(get_theme_root(get_template()), true);
@@ -291,7 +350,7 @@ class Directory
     /**
      * @return string
      */
-    public function getLangsDirectory()
+    public function getLangsDirectory(): string
     {
         if (!isset($this->langDir)) {
             $this->langDir = $this->filesystem->normalizePath(WP_LANG_DIR, true);
@@ -303,7 +362,7 @@ class Directory
     /**
      * @return string
      */
-    public function getAbsPath()
+    public function getAbsPath(): string
     {
         if (!isset($this->absPath)) {
             $this->absPath = $this->filesystem->normalizePath(ABSPATH, true);
@@ -315,7 +374,7 @@ class Directory
     /**
      * @return string
      */
-    public function getWpContentDirectory()
+    public function getWpContentDirectory(): string
     {
         if (!isset($this->wpContentDirectory)) {
             $this->wpContentDirectory = $this->filesystem->normalizePath(WP_CONTENT_DIR, true);
@@ -331,7 +390,7 @@ class Directory
      * @param string $path
      * @return bool
      */
-    public function isPathInWpRoot($path)
+    public function isPathInWpRoot(string $path): bool
     {
         $path = $this->filesystem->normalizePath($path);
         $path = $this->getAbsPath() . str_replace($this->getAbsPath(), '', $path);
@@ -341,7 +400,7 @@ class Directory
     /**
      * @return Filesystem
      */
-    public function getFileSystem()
+    public function getFileSystem(): Filesystem
     {
         return $this->filesystem;
     }
@@ -350,7 +409,7 @@ class Directory
     * Return true if the default backup paths has been changed by a filter and is outside abspath
     * @return bool
     */
-    public function isBackupPathOutsideAbspath()
+    public function isBackupPathOutsideAbspath(): bool
     {
         $defaultBackupDirAbsPath = $this->getPluginUploadsDirectory() . Compressor::BACKUP_DIR_NAME;
         $absPath                 = $this->getAbsPath();

@@ -178,7 +178,7 @@ class Filesystem extends FilterableDirectoryIterator
 
         /**
          * For UNC Paths
-         * If the path starts with two forwardslashes, we need to convert them to backwardslashes to allow directory creation
+         * If the path starts with two forward slashes, we need to convert them to backward slashes to allow directory creation
          * examples
          * //server/path/to/dir -> \\server/path/to/dir
          * //server\path\to\dir -> \\server\path\to\dir

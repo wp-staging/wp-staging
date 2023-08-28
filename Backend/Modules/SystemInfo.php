@@ -6,8 +6,8 @@ use WPStaging\Backend\Upgrade\Upgrade;
 use WPStaging\Backup\Ajax\FileList\ListableBackupsCollection;
 use WPStaging\Core\Utils\Browser;
 use WPStaging\Core\WPStaging;
-use WPStaging\Core\Utils;
 use WPStaging\Core\Utils\Multisite;
+use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Sanitize;
@@ -25,7 +25,6 @@ if (!defined("WPINC")) {
  */
 class SystemInfo
 {
-
     /**
      * @var bool
      */
@@ -35,16 +34,14 @@ class SystemInfo
     private $database;
 
     /**
-     *
-     * @var object
+     * @var Urls
      */
-    private $helper;
+    private $urlsHelper;
 
     public function __construct()
     {
         $this->isMultiSite = is_multisite();
-        $this->helper      = new Utils\Helper();
-        /** @var Database */
+        $this->urlsHelper  = WPStaging::make(Urls::class);
         $this->database = WPStaging::make(Database::class);
     }
 
@@ -120,7 +117,7 @@ class SystemInfo
         $output .= $this->info("Installed in subdir:", ($this->isSubDir() ? 'Yes' : 'No'));
         $output .= $this->info("Table Prefix:", $this->getTablePrefix());
         $output .= $this->info("site_url():", site_url());
-        $output .= $this->info("home_url():", $this->helper->getHomeUrl());
+        $output .= $this->info("home_url():", $this->urlsHelper->getHomeUrl());
         $output .= $this->info("get_home_path():", get_home_path());
         $output .= $this->info("ABSPATH:", ABSPATH);
         $output .= $this->info("WP_PLUGIN_DIR:", WP_PLUGIN_DIR);
@@ -144,7 +141,7 @@ class SystemInfo
             $output .= $this->info("WP_TEMP_DIR:", WP_TEMP_DIR);
         }
 
-        $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? WP_DEBUG ? "Enabled" : "Disabled" : "Not set");
+        $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? (WP_DEBUG ? "Enabled" : "Disabled") : "Not set");
         $output .= $this->info("WP_MEMORY_LIMIT:", WP_MEMORY_LIMIT);
         $output .= $this->info("WP_MAX_MEMORY_LIMIT:", WP_MAX_MEMORY_LIMIT);
         $output .= $this->info("Active Theme:", $this->theme());

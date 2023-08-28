@@ -5,6 +5,8 @@
  * @var \WPStaging\Backend\Modules\Jobs\Cloning $cloning
  */
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Facades\Escape;
 
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/download.php');
@@ -45,8 +47,8 @@ require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
     <h3><?php esc_html_e('Congratulations', 'wp-staing') ?></h3>
     <?php
     $subDirectory = str_replace(get_home_path(), '', ABSPATH);
-    $helper = new \WPStaging\Core\Utils\Helper();
-    $url = $helper->getHomeUrl() . str_replace('/', '', $subDirectory);
+    $urlsHelper   = WPStaging::make(Urls::class);
+    $url = $urlsHelper->getHomeUrl() . str_replace('/', '', $subDirectory);
     echo sprintf(
         Escape::escapeHtml(__('Successfully created a staging site in a subdirectory of your main site! You can access it from there:<br><strong><a href="%1$s" target="_blank" id="wpstg-clone-url-1">%1$s</a></strong>', 'wp-staging')),
         esc_url($url)

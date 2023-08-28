@@ -9,7 +9,7 @@ use WPStaging\Framework\Facades\Escape;
 
 ?>
 
-<span class="wpstg-notice--white">
+<div class="wpstg-notice--white">
     <?php echo esc_html__("If you want to transfer this staging site to the production site,", "wp-staging") ?>
     <br/>
     <?php echo sprintf(
@@ -17,10 +17,15 @@ use WPStaging\Framework\Facades\Escape;
         esc_url((new WPStaging\Framework\Utils\Urls())->getProductionHostname() . '/wp-admin/admin.php?page=wpstg_clone')
     ); ?>
     <br/> <br/>
-    <?php echo Escape::escapeHtml(__("If you want to clone this staging site, you can <a href='#' id='wpstg-enable-staging-cloning'>click here</a>!", 'wp-staging')); ?>
+    <div class="wpstg-enable-staging-site-clone">
+        <?php echo Escape::escapeHtml(__("If you want to clone this site, click on:", 'wp-staging')); ?>
+        <button id="wpstg-enable-staging-cloning" class="wpstg-button wpstg-blue-primary">
+            <?php echo esc_html__("Enable cloning of this site", "wp-staging") ?>
+        </button>
+    </div>
     <br/> <br/>
     <?php echo sprintf(
         Escape::escapeHtml(__("<a href='%s' target='_new'>Read this article</a> if you would like to know more about cloning a staging site.", 'wp-staging')),
         'https://wp-staging.com/docs/cloning-a-staging-site-testing-push-method/'
     ); ?>
-</span>
+</div>

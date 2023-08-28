@@ -3,11 +3,11 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
-use WPStaging\Core\Utils\Helper;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Adapter\SourceDatabase;
 
 /**
@@ -29,6 +29,11 @@ class Finish extends Job
     private $sourceDatabase;
 
     /**
+     * @var Urls
+     */
+    private $urls;
+
+    /**
      * Start Module
      * @return object
      * @throws \Exception
@@ -37,6 +42,7 @@ class Finish extends Job
     {
         $this->sourceDatabase = WPStaging::make(SourceDatabase::class);
         $this->sourceDatabase->setOptions($this->options);
+        $this->urls = WPStaging::make(Urls::class);
 
         // sanitize the clone name before saving
         $this->clone = preg_replace("#\W+#", '-', strtolower($this->options->clone));
@@ -200,6 +206,6 @@ class Finish extends Job
 
         // The relative path to the main multisite without appending a trailingslash e.g. wordpress
         $multisitePath = defined('PATH_CURRENT_SITE') ? PATH_CURRENT_SITE : '/';
-        return rtrim((new Helper())->getBaseUrl(), '/\\') . $multisitePath . $this->options->cloneDirectoryName;
+        return rtrim($this->urls->getBaseUrl(), '/\\') . $multisitePath . $this->options->cloneDirectoryName;
     }
 }

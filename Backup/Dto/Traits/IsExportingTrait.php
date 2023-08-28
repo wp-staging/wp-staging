@@ -5,7 +5,7 @@ namespace WPStaging\Backup\Dto\Traits;
 /**
  * Not changing `Export` term to `Backup` here for backward compatibility
  * Otherwise old backup may not work properly because these terms are used in backup metadata
- * @todo Change this later to term `backup*` but add a compatiblity layer on it to make it comnpatible with old backups
+ * @todo Change this later to term `backup*` but add a compatiblity layer on it to make it compatible with old backups
  */
 trait IsExportingTrait
 {

@@ -40,6 +40,8 @@ use WPStaging\Framework\Utils\Escape;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
 use WPStaging\Backend\Feedback\Feedback;
+use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Framework\Database\WpDbInfo;
 use WPStaging\Framework\Security\Nonce;
 
 /**
@@ -84,11 +86,15 @@ class Administrator
     /** @var Sanitize */
     private $sanitize;
 
+    /** @var Report */
+    private $report;
+
     public function __construct()
     {
         $this->auth     = WPStaging::make(Auth::class);
         $this->assets   = WPStaging::make(Assets::class);
         $this->siteInfo = WPStaging::make(SiteInfo::class);
+        $this->report   = WPStaging::make(Report::class);
 
         $this->defineHooks();
 
@@ -158,6 +164,7 @@ class Administrator
         add_action("wp_ajax_wpstg_modal_error", [$this, "ajaxModalError"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_dismiss_notice", [$this, "ajaxDismissNotice"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_restore_settings", [$this, "ajaxRestoreSettings"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("wp_ajax_wpstg_send_debug_log_report", [$this->report, "ajaxSendDebugLog"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         // Ajax hooks pro Version
         // TODO: move all below actions to pro service provider?
@@ -410,7 +417,7 @@ class Administrator
         echo esc_html(wp_strip_all_tags($wpstgLogs));
         echo esc_html(PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL);
         $wpCoreDebugLog =  WPStaging::make(DebugLogReader::class)->getLastLogEntries((256 * KB_IN_BYTES ), false, true);
-        echo esc_html(wp_strip_all_tags($wpCoreDebugLog ));
+        echo esc_html(wp_strip_all_tags($wpCoreDebugLog));
     }
 
     /**
@@ -1139,6 +1146,16 @@ class Administrator
             exit;
         }
 
+        $tmpPrefixes = [
+            PrepareRestore::TMP_DATABASE_PREFIX,
+            PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP,
+        ];
+
+        if (in_array($prefix, $tmpPrefixes)) {
+            echo json_encode(['success' => 'false', 'errors' => 'Prefix wpstgtmp_ and wpstgbak_ are preserved by WP Staging and cannot be used for CLONING purpose! Please use another prefix.']);
+            exit;
+        }
+
         // ensure tables with the given prefix exist, default false
         $ensurePrefixTableExist = !empty($args['databaseEnsurePrefixTableExist']) ? $this->sanitize->sanitizeBool($args['databaseEnsurePrefixTableExist']) : false;
 
@@ -1173,20 +1190,19 @@ class Administrator
         }
 
         // get production db
-        $productionDb = WPStaging::make('wpdb');
+        $productionDb     = WPStaging::make('wpdb');
+        $productionDbInfo = new WpDbInfo($productionDb);
+        $stagingDbInfo    = new WpDbInfo($wpdb);
 
-        $queryToFindHost = "SHOW VARIABLES WHERE Variable_name = 'hostname';";
-        $queryToFindPort = "SHOW VARIABLES WHERE Variable_name = 'port';";
-
-        $stagingSiteAddress    = gethostbyname($wpdb->get_var($wpdb->prepare($queryToFindHost), 1));
-        $productionSiteAddress = gethostbyname($productionDb->get_var($productionDb->prepare($queryToFindHost), 1));
+        $stagingSiteAddress    = $stagingDbInfo->getServerIp();
+        $productionSiteAddress = $productionDbInfo->getServerIp();
         if ($stagingSiteAddress === null || $productionSiteAddress === null) {
             echo json_encode(['success' => 'false', 'errors' => __('Unable to find database server hostname of the staging or the production site.', 'wp-staging')]);
             exit;
         }
 
         $isSameAddress = $productionSiteAddress === $stagingSiteAddress;
-        $isSamePort    = $wpdb->get_var($wpdb->prepare($queryToFindPort), 1) === $productionDb->get_var($productionDb->prepare($queryToFindPort), 1);
+        $isSamePort    = $productionDbInfo->getServerPort() === $stagingDbInfo->getServerPort();
 
         $isSameServer = ($isSameAddress && $isSamePort) || $server === DB_HOST;
 

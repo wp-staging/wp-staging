@@ -592,6 +592,12 @@ class JobBackupDataDto extends JobDataDto
     }
 
     /** @return bool */
+    public function isUploadToDropbox()
+    {
+        return in_array('dropbox', $this->getStorages());
+    }
+
+    /** @return bool */
     public function isUploadToSftp()
     {
         return in_array('sftp', $this->getStorages());

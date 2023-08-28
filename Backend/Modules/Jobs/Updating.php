@@ -5,10 +5,10 @@ namespace WPStaging\Backend\Modules\Jobs;
 use Exception;
 use stdClass;
 use WPStaging\Core\WPStaging;
-use WPStaging\Core\Utils\Helper;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
+use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
@@ -35,11 +35,6 @@ class Updating extends Job
     public $isExternalDb;
 
     /**
-     * @var mixed|null
-     */
-    private $db;
-
-    /**
      * @var string
      */
     private $mainJob;
@@ -55,14 +50,19 @@ class Updating extends Job
     private $sanitize;
 
     /**
+     * @var Urls
+     */
+    private $urls;
+
+    /**
      * Initialize is called in \Job
      */
     public function initialize()
     {
-        $this->db       = WPStaging::getInstance()->get("wpdb");
         $this->mainJob  = self::NORMAL_UPDATE;
         $this->dirUtils = new WpDefaultDirectories();
         $this->sanitize = WPStaging::make(Sanitize::class);
+        $this->urls     = WPStaging::make(Urls::class);
     }
 
     /**
@@ -152,8 +152,7 @@ class Updating extends Job
             $this->options->networkClone        = isset($this->options->existingClones[strtolower($this->options->clone)]['networkClone']) ? $this->options->existingClones[$this->options->clone]['networkClone'] : false;
             $this->options->networkClone        = filter_var($this->options->networkClone, FILTER_VALIDATE_BOOLEAN);
             //$this->options->prefix = $this->getStagingPrefix();
-            $helper                      = new Helper();
-            $this->options->homeHostname = $helper->getHomeUrlWithoutScheme();
+            $this->options->homeHostname        = $this->urls->getHomeUrlWithoutScheme();
         } else {
             $job = 'update';
             if ($this->mainJob === self::RESET_UPDATE) {

@@ -70,10 +70,13 @@ if ($cronMessage !== '') { ?>
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
     <div id="wpstg-report-issue-wrapper">
-        <button type="button" id="" class="wpstg-report-issue-button">
+        <button type="button" id="<?php echo WPStaging::isPro() ? "wpstg-report-issue-button" : "wpstg-contact-us-button"; ?>" class="wpstg-report-issue-button">
             <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
         </button>
-        <?php require_once($this->views . '_main/report-issue.php'); ?>
+        <?php if (WPStaging::isPro()) {
+            require_once($this->views . '_main/contact-us-pro.php');
+        }
+        ?>
     </div>
 </div>
 

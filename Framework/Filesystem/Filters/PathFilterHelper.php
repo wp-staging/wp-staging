@@ -107,14 +107,14 @@ class PathFilterHelper
             }
 
             // Support for windows absolute paths
-            if ((strpos($rule, '://') === 1 || strpos($rule, ':\\') === 1) && !$this->isGlobPattern($rule)) {
+            if ((strpos($rule, ':/') === 1 || strpos($rule, ':\\') === 1) && !$this->isGlobPattern($rule)) {
                 $this->absolutePathRules[] = $rule;
                 $this->rulesCount++;
                 continue;
             }
 
             // Support for vfs:// paths if vfs is allowed (used in tests)
-            if (WPStaging::make('WPSTG_ALLOW_VFS') === true && $this->strUtils->startsWith($rule, 'vfs://') && !$this->isGlobPattern($rule)) {
+            if (WPStaging::make('WPSTG_ALLOW_VFS') === true && $this->strUtils->startsWith($rule, 'vfs:/') && !$this->isGlobPattern($rule)) {
                 $this->absolutePathRules[] = $rule;
                 $this->rulesCount++;
                 continue;

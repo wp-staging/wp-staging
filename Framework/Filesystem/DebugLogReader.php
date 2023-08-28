@@ -80,7 +80,7 @@ class DebugLogReader
             if (defined('WPSTG_DEBUG_LOG_FILE')) {
                 if ($this->filesystem->isReadableFile(WPSTG_DEBUG_LOG_FILE)) {
                     $errors .= sprintf(
-                        "--- WPSTAGING Debug Logs\nFile: %s\nTotal file size: %s\nShowing last: %s\n\n=== START ===\n\n",
+                        "--- WP STAGING Debug Logs\nFile: %s\nTotal file size: %s\nShowing last: %s\n\n=== START ===\n\n",
                         WPSTG_DEBUG_LOG_FILE,
                         size_format(filesize(WPSTG_DEBUG_LOG_FILE)),
                         size_format($maxSizeEach)
@@ -139,7 +139,7 @@ class DebugLogReader
                 $debugLines[] = $line;
             } while ($debugFile->valid());
 
-            return implode("\n\n", $debugLines);
+            return implode("\n", $debugLines);
         } catch (\Exception $e) {
             return '';
         }

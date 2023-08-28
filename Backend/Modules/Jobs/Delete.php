@@ -62,15 +62,19 @@ class Delete extends Job
     /** @var Sanitize */
     private $sanitize;
 
-    public function __construct($isExternal = false)
+    public function __construct()
     {
         parent::__construct();
 
         /** @var Sanitize */
-        $this->sanitize     = WPStaging::make(Sanitize::class);
+        $this->sanitize  = WPStaging::make(Sanitize::class);
+        $this->deleteDir = !empty($_POST['deleteDir']) ? $this->sanitize->sanitizePath($_POST['deleteDir']) : '';
+        $this->strings   = new Strings();
+    }
+
+    public function setIsExternalDb($isExternal = false)
+    {
         $this->isExternalDb = $isExternal;
-        $this->deleteDir    = !empty($_POST['deleteDir']) ? $this->sanitize->sanitizePath($_POST['deleteDir']) : '';
-        $this->strings      = new Strings();
     }
 
     /**
@@ -129,8 +133,8 @@ class Delete extends Job
      */
     protected function isExternalDatabase()
     {
-        if ($this->isExternalDb) {
-            return true;
+        if (isset($this->isExternalDb)) {
+            return $this->isExternalDb;
         }
 
         if (!empty($this->clone->databaseUser) && !empty($this->clone->databasePassword) && !empty($this->clone->databaseDatabase) && !empty($this->clone->databaseServer)) {
@@ -175,7 +179,6 @@ class Delete extends Job
      */
     private function getTableRecords()
     {
-
         $stagingPrefix = $this->getStagingPrefix();
 
         // Escape "_" to allow searching for that character
@@ -186,7 +189,6 @@ class Delete extends Job
         } else {
             $tables = $this->wpdb->get_results("SHOW TABLE STATUS LIKE '$prefix%'");
         }
-
 
         $this->tables = [];
 
