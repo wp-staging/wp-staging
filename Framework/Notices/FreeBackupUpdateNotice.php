@@ -9,17 +9,13 @@ namespace WPStaging\Framework\Notices;
  *
  * @see Notices;
  */
-class FreeBackupUpdateNotice extends BooleanNotice
+class FreeBackupUpdateNotice
 {
     /**
+     * @var string
      * The option name to store the visibility of disabled backup notice
      */
-
     const OPTION_NAME_FREE_BACKUP_NOTICE_DISMISSED = 'wpstg_free_backup_notice_dismissed';
-
-    public function __construct()
-    {
-    }
 
     public function getOptionName(): string
     {
@@ -35,6 +31,7 @@ class FreeBackupUpdateNotice extends BooleanNotice
         if (get_option($this->getOptionName()) === false) {
             return true;
         }
+
         return false;
     }
 
@@ -46,5 +43,15 @@ class FreeBackupUpdateNotice extends BooleanNotice
     public function disable(): bool
     {
         return add_option($this->getOptionName(), true);
+    }
+
+    /**
+     * Enables the notice
+     *
+     * @return bool
+     */
+    public function enable(): bool
+    {
+        return delete_option($this->getOptionName());
     }
 }

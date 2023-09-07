@@ -33,10 +33,10 @@ class JobRestoreDataDto extends JobDataDto
     /** @var bool Whether a transaction is started. */
     private $transactionStarted;
 
-    /** @var array Store short names tables to drop */
+    /** @var array<string, string> Store short names tables to drop */
     private $shortNamesTablesToDrop = [];
 
-    /** @var array Store short names tables to restore */
+    /** @var array<string, string> Store short names tables to restore */
     private $shortNamesTablesToRestore = [];
 
     /** @var bool */
@@ -103,10 +103,10 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * Called dynamically
      * @param string $file
-     *@see \WPStaging\Backup\Ajax\Restore\PrepareRestore::setupInitialData
-     *
+     * @return void
+     * @see \WPStaging\Backup\Ajax\Restore\PrepareRestore::setupInitialData
      */
-    public function setFile($file)
+    public function setFile(string $file)
     {
         $this->file = untrailingslashit(wp_normalize_path($file));
     }
@@ -120,7 +120,8 @@ class JobRestoreDataDto extends JobDataDto
     }
 
     /**
-     * @param $backupMetadata
+     * @param BackupMetadata|array $backupMetadata
+     * @return void
      */
     public function setBackupMetadata($backupMetadata)
     {
@@ -148,13 +149,14 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return string
      */
-    public function getTmpDirectory()
+    public function getTmpDirectory(): string
     {
         return $this->tmpDirectory;
     }
 
     /**
-     * @param string $tmpPath
+     * @param string|null $tmpPath
+     * @return void
      */
     public function setTmpDirectory($tmpPath)
     {
@@ -164,16 +166,23 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getExtractorFilesExtracted()
+    public function getExtractorFilesExtracted(): int
     {
         return $this->extractorFilesExtracted;
     }
 
-    public function setExtractorFilesExtracted($extractorFilesExtracted)
+    /**
+     * @param int $extractorFilesExtracted
+     * @return void
+     */
+    public function setExtractorFilesExtracted(int $extractorFilesExtracted)
     {
-        $this->extractorFilesExtracted = (int)$extractorFilesExtracted;
+        $this->extractorFilesExtracted = $extractorFilesExtracted;
     }
 
+    /**
+     * @return void
+     */
     public function incrementExtractorFilesExtracted()
     {
         $this->extractorFilesExtracted++;
@@ -182,47 +191,50 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getExtractorFileWrittenBytes()
+    public function getExtractorFileWrittenBytes(): int
     {
         return $this->extractorFileWrittenBytes;
     }
 
     /**
      * @param int $fileWrittenBytes
+     * @return void
      */
-    public function setExtractorFileWrittenBytes($fileWrittenBytes)
+    public function setExtractorFileWrittenBytes(int $fileWrittenBytes)
     {
-        $this->extractorFileWrittenBytes = (int)$fileWrittenBytes;
+        $this->extractorFileWrittenBytes = $fileWrittenBytes;
     }
 
     /**
      * @return int
      */
-    public function getExtractorMetadataIndexPosition()
+    public function getExtractorMetadataIndexPosition(): int
     {
         return $this->extractorMetadataIndexPosition;
     }
 
     /**
      * @param int $extractorMetadataIndexPosition
+     * @return void
      */
-    public function setExtractorMetadataIndexPosition($extractorMetadataIndexPosition)
+    public function setExtractorMetadataIndexPosition(int $extractorMetadataIndexPosition)
     {
-        $this->extractorMetadataIndexPosition = (int)$extractorMetadataIndexPosition;
+        $this->extractorMetadataIndexPosition = $extractorMetadataIndexPosition;
     }
 
     /**
      * @return string
      */
-    public function getTmpDatabasePrefix()
+    public function getTmpDatabasePrefix(): string
     {
         return $this->tmpDatabasePrefix;
     }
 
     /**
      * @param string $tmpDatabasePrefix
+     * @return void
      */
-    public function setTmpDatabasePrefix($tmpDatabasePrefix)
+    public function setTmpDatabasePrefix(string $tmpDatabasePrefix)
     {
         $this->tmpDatabasePrefix = $tmpDatabasePrefix;
     }
@@ -236,7 +248,7 @@ class JobRestoreDataDto extends JobDataDto
     }
 
     /**
-     * @param string $tableToRestore
+     * @param string|null $tableToRestore
      */
     public function setTableToRestore($tableToRestore)
     {
@@ -246,13 +258,14 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return bool
      */
-    public function getTransactionStarted()
+    public function getTransactionStarted(): bool
     {
         return $this->transactionStarted;
     }
 
     /**
-     * @param bool $transactionStarted
+     * @param bool|null $transactionStarted
+     * @return void
      */
     public function setTransactionStarted($transactionStarted)
     {
@@ -260,17 +273,18 @@ class JobRestoreDataDto extends JobDataDto
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
-    public function getShortNamesTablesToDrop()
+    public function getShortNamesTablesToDrop(): array
     {
         return $this->shortNamesTablesToDrop;
     }
 
     /**
-     * @param array $tables
+     * @param array<string, string> $tables
+     * @return void
      */
-    public function setShortNamesTablesToDrop($tables = [])
+    public function setShortNamesTablesToDrop(array $tables = [])
     {
         $this->shortNamesTablesToDrop = $tables;
     }
@@ -278,24 +292,26 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @param string $originalName
      * @param string $shorterName
+     * @return void
      */
-    public function addShortNameTableToDrop($originalName, $shorterName)
+    public function addShortNameTableToDrop(string $originalName, string $shorterName)
     {
         $this->shortNamesTablesToDrop[$shorterName] = $originalName;
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
-    public function getShortNamesTablesToRestore()
+    public function getShortNamesTablesToRestore(): array
     {
         return $this->shortNamesTablesToRestore;
     }
 
     /**
-     * @param array $tables
+     * @param array<string, string> $tables
+     * @return void
      */
-    public function setShortNamesTablesToRestore($tables = [])
+    public function setShortNamesTablesToRestore(array $tables = [])
     {
         $this->shortNamesTablesToRestore = $tables;
     }
@@ -303,8 +319,9 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @param string $originalName
      * @param string $shorterName
+     * @return void
      */
-    public function addShortNameTableToRestore($originalName, $shorterName)
+    public function addShortNameTableToRestore(string $originalName, string $shorterName)
     {
         $this->shortNamesTablesToRestore[$shorterName] = $originalName;
     }
@@ -312,15 +329,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return bool
      */
-    public function getRequireShortNamesForTablesToRestore()
+    public function getRequireShortNamesForTablesToRestore(): bool
     {
         return $this->requireShortNamesForTablesToRestore;
     }
 
     /**
      * @param bool $require
+     * @return void
      */
-    public function setRequireShortNamesForTablesToRestore($require = false)
+    public function setRequireShortNamesForTablesToRestore(bool $require = false)
     {
         $this->requireShortNamesForTablesToRestore = $require;
     }
@@ -328,15 +346,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return bool
      */
-    public function getRequireShortNamesForTablesToDrop()
+    public function getRequireShortNamesForTablesToDrop(): bool
     {
         return $this->requireShortNamesForTablesToDrop;
     }
 
     /**
      * @param bool $require
+     * @return void
      */
-    public function setRequireShortNamesForTablesToDrop($require = false)
+    public function setRequireShortNamesForTablesToDrop(bool $require = false)
     {
         $this->requireShortNamesForTablesToDrop = $require;
     }
@@ -344,15 +363,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getDatabasePartIndex()
+    public function getDatabasePartIndex(): int
     {
         return $this->databasePartIndex;
     }
 
     /**
      * @param int $index
+     * @return void
      */
-    public function setDatabasePartIndex($index = 0)
+    public function setDatabasePartIndex(int $index = 0)
     {
         $this->databasePartIndex = $index;
     }
@@ -360,15 +380,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return bool
      */
-    public function getIsSameSiteBackupRestore()
+    public function getIsSameSiteBackupRestore(): bool
     {
         return $this->isSameSiteBackupRestore;
     }
 
     /**
      * @param bool $sameSite
+     * @return void
      */
-    public function setIsSameSiteBackupRestore($sameSite)
+    public function setIsSameSiteBackupRestore(bool $sameSite)
     {
         $this->isSameSiteBackupRestore = $sameSite;
     }
@@ -376,15 +397,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return bool
      */
-    public function getIsMissingDatabaseFile()
+    public function getIsMissingDatabaseFile(): bool
     {
         return $this->isMissingDatabaseFile;
     }
 
     /**
      * @param bool $missingFile
+     * @return void
      */
-    public function setIsMissingDatabaseFile($missingFile)
+    public function setIsMissingDatabaseFile(bool $missingFile)
     {
         $this->isMissingDatabaseFile = $missingFile;
     }
@@ -392,15 +414,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getFilePartIndex()
+    public function getFilePartIndex(): int
     {
         return $this->filePartIndex;
     }
 
     /**
      * @param int $index
+     * @return void
      */
-    public function setFilePartIndex($index = 0)
+    public function setFilePartIndex(int $index = 0)
     {
         $this->filePartIndex = $index;
     }
@@ -408,13 +431,14 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getCurrentFileHeaderStart()
+    public function getCurrentFileHeaderStart(): int
     {
         return $this->currentFileHeaderStart;
     }
 
     /**
-     * @param int $headerStart
+     * @param int|null $headerStart
+     * @return void
      */
     public function setCurrentFileHeaderStart($headerStart = 0)
     {
@@ -424,16 +448,22 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getNumberOfQueryAttemptsWithZeroResult()
+    public function getNumberOfQueryAttemptsWithZeroResult(): int
     {
         return $this->numberOfQueryAttemptsWithZeroResult;
     }
 
+    /**
+     * @return void
+     */
     public function incrementNumberOfQueryAttemptsWithZeroResult()
     {
         $this->numberOfQueryAttemptsWithZeroResult++;
     }
 
+    /**
+     * @return void
+     */
     public function resetNumberOfQueryAttemptsWithZeroResult()
     {
         $this->numberOfQueryAttemptsWithZeroResult = 0;
@@ -441,8 +471,9 @@ class JobRestoreDataDto extends JobDataDto
 
     /**
      * @param int $numberOfQueryAttemptsWithZeroResult
+     * @return void
      */
-    public function setNumberOfQueryAttemptsWithZeroResult($numberOfQueryAttemptsWithZeroResult = 0)
+    public function setNumberOfQueryAttemptsWithZeroResult(int $numberOfQueryAttemptsWithZeroResult = 0)
     {
         $this->numberOfQueryAttemptsWithZeroResult = $numberOfQueryAttemptsWithZeroResult;
     }
@@ -450,7 +481,7 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getCurrentExecutionTimeDatabaseRestore()
+    public function getCurrentExecutionTimeDatabaseRestore(): int
     {
         $time = $this->currentExecutionTimeDatabaseRestore;
         if ($time < 10) {
@@ -460,6 +491,9 @@ class JobRestoreDataDto extends JobDataDto
         return $time;
     }
 
+    /**
+     * @return void
+     */
     public function incrementCurrentExecutionTimeDatabaseRestore()
     {
         $this->currentExecutionTimeDatabaseRestore += 5;
@@ -467,6 +501,7 @@ class JobRestoreDataDto extends JobDataDto
 
     /**
      * @param int $currentExecutionTimeDatabaseRestore
+     * @return void
      */
     public function setCurrentExecutionTimeDatabaseRestore($currentExecutionTimeDatabaseRestore = 0)
     {
@@ -476,15 +511,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return array
      */
-    public function getDatabaseDataToPreserve()
+    public function getDatabaseDataToPreserve(): array
     {
         return $this->databaseDataToPreserve;
     }
 
     /**
      * @param array $databaseDataToPreserve
+     * @return void
      */
-    public function setDatabaseDataToPreserve($databaseDataToPreserve)
+    public function setDatabaseDataToPreserve(array $databaseDataToPreserve)
     {
         $this->databaseDataToPreserve = $databaseDataToPreserve;
     }
@@ -492,15 +528,16 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getTotalTablesToRename()
+    public function getTotalTablesToRename(): int
     {
         return $this->totalTablesToRename;
     }
 
     /**
      * @param int $totalTablesToRename
+     * @return void
      */
-    public function setTotalTablesToRename($totalTablesToRename)
+    public function setTotalTablesToRename(int $totalTablesToRename)
     {
         $this->totalTablesToRename = $totalTablesToRename;
     }
@@ -508,31 +545,32 @@ class JobRestoreDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getTotalTablesRenamed()
+    public function getTotalTablesRenamed(): int
     {
         return $this->totalTablesRenamed;
     }
 
     /**
      * @param int $totalTablesRenamed
+     * @return void
      */
-    public function setTotalTablesRenamed($totalTablesRenamed)
+    public function setTotalTablesRenamed(int $totalTablesRenamed)
     {
         $this->totalTablesRenamed = $totalTablesRenamed;
     }
 
     /**
-     * @return array
+     * @return array<string, string>
      */
-    public function getFilesChecksum()
+    public function getFilesChecksum(): array
     {
         return $this->filesChecksum;
     }
 
     /**
-     * @param array $filesChecksum
+     * @param array<string, string> $filesChecksum
      */
-    public function setFilesChecksum($filesChecksum)
+    public function setFilesChecksum(array $filesChecksum)
     {
         $this->filesChecksum = $filesChecksum;
     }
@@ -541,31 +579,37 @@ class JobRestoreDataDto extends JobDataDto
      * @param string $filePath
      * @param string $checksum
      */
-    public function addFileChecksum($filePath, $checksum)
+    public function addFileChecksum(string $filePath, string $checksum)
     {
         $this->filesChecksum[$filePath] = $checksum;
     }
 
     /**
      * @param string $filePath
+     * @return string
      */
-    public function getFileChecksum($filePath)
+    public function getFileChecksum(string $filePath): string
     {
-        return $this->filesChecksum[$filePath];
+        if (array_key_exists($filePath, $this->filesChecksum)) {
+            return $this->filesChecksum[$filePath];
+        }
+
+        return '';
     }
 
     /**
      * @return bool
      */
-    public function getObjectCacheSkipped()
+    public function getObjectCacheSkipped(): bool
     {
         return $this->objectCacheSkipped;
     }
 
     /**
      * @param bool $objectCacheSkipped
+     * @return void
      */
-    public function setObjectCacheSkipped($objectCacheSkipped)
+    public function setObjectCacheSkipped(bool $objectCacheSkipped)
     {
         $this->objectCacheSkipped = $objectCacheSkipped;
     }

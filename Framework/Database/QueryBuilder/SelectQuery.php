@@ -50,6 +50,7 @@ class SelectQuery
     public function prepareQueryWithFilter($tableName, $limit = 0, $offset = 0, $hook = 'cloning')
     {
         $this->preparedValues = [];
+        // TODO: the hook is not implemented for 'backup' for now
         if (!in_array($hook, ['cloning', 'pushing', 'backups'])) {
             throw new \Exception("Hook '$hook' not supported for filter row. Please use between 'cloning', 'pushing' or 'backup'");
         }
@@ -134,23 +135,38 @@ class SelectQuery
     {
         $whereClause = [];
         foreach ($filters as $field => $value) {
-            if (!is_array($value)) {
-                $whereClause[] = "$prefix$field = %s";
-                $this->preparedValues[] = $value;
+            if (is_array($value) && is_array(current($value))) {
+                foreach ($value as $subValue) {
+                    $whereClause[] = $this->writeWhereClauseStatement($subValue, $field, $prefix);
+                }
                 continue;
             }
-
-            $operator = strtoupper($value['operator']);
-            if (!in_array($operator, ['=', '>', '>=', '<', '<=', '<>', '!=', 'LIKE', 'NOT LIKE'])) {
-                throw new \Exception('Invalid SQL comparison operator used!');
-            }
-
-            $value = $value['value'];
-
-            $whereClause[] = "$field $operator %s";
-            $this->preparedValues[] = $value;
+            $whereClause[] = $this->writeWhereClauseStatement($value, $field, $prefix);
         }
 
         return $whereClause;
+    }
+
+    /**
+     * @param  array|string $value
+     * @param  string $field
+     * @param  string $prefix
+     * @return string
+     */
+    private function writeWhereClauseStatement($value, $field, $prefix)
+    {
+        if (!is_array($value)) {
+            $this->preparedValues[] = $value;
+            return "$prefix$field = %s";
+        }
+
+        $operator = strtoupper($value['operator']);
+        if (!in_array($operator, ['=', '>', '>=', '<', '<=', '<>', '!=', 'LIKE', 'NOT LIKE'])) {
+            throw new \Exception('Invalid SQL comparison operator used!');
+        }
+
+        $this->preparedValues[] = $value['value'];
+
+        return "$field $operator %s";
     }
 }

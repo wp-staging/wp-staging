@@ -197,7 +197,7 @@ class Upload extends AbstractTemplateComponent
         $metadata = $backupMetadata->hydrateByFilePath($fullPath);
 
         $isCreatedOnPro = $metadata->getCreatedOnPro();
-        $version = $metadata->getVersion();
+        $version = $metadata->getWpstgVersion();
 
         if ($isCreatedOnPro && version_compare($version, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT_PRO, '<')) {
             throw new Exception(__('This backup was generated on a beta version of WP STAGING and can not be used with this version. Please create a new Backup or get in touch with our support if you need assistance.', 'wp-staging'));

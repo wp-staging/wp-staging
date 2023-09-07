@@ -59,6 +59,10 @@ class SiteInfo
      */
     public function isStagingSite()
     {
+        if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
+            return true;
+        }
+
         if (get_option(self::IS_STAGING_KEY) === "true") {
             return true;
         }

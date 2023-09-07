@@ -117,7 +117,8 @@ class ListableBackupsCollection
                 $listableBackup->isExportingThemes                = $backupMetadata->getIsExportingThemes();
                 $listableBackup->isExportingUploads               = $backupMetadata->getIsExportingUploads();
                 $listableBackup->isMultipartBackup                = $backupMetadata->getIsMultipartBackup();
-                $listableBackup->generatedOnWPStagingVersion      = $backupMetadata->getVersion();
+                $listableBackup->generatedOnWPStagingVersion      = $backupMetadata->getWpstgVersion();
+                $listableBackup->generatedOnBackupVersion         = $backupMetadata->getBackupVersion();
                 $listableBackup->createdOnPro                     = $backupMetadata->getCreatedOnPro();
                 $listableBackup->name                             = $file->getFilename();
                 $listableBackup->notes                            = $backupMetadata->getNote();

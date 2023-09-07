@@ -131,7 +131,7 @@ class Report
      */
     protected function getAttachments(array $attachments): array
     {
-        $systemInformationFile = trailingslashit($this->getTempDirectoryForLogsAttachments()) . 'system_information.txt';
+        $systemInformationFile = trailingslashit($this->getTempDirectoryForLogsAttachments()) . 'wpstg-bundled-logs.txt';
         $this->copyDataToFile($systemInformationFile, $this->systemInfo->get());
         $attachments[] = $systemInformationFile;
 

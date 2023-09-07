@@ -76,6 +76,11 @@ class Directory
      */
     private $urls;
 
+    /**
+     * @param Filesystem $filesystem
+     * @param Strings $strings
+     * @param Urls $urls
+     */
     public function __construct(Filesystem $filesystem, Strings $strings, Urls $urls)
     {
         $this->filesystem = $filesystem;

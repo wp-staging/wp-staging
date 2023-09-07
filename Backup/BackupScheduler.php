@@ -40,6 +40,11 @@ class BackupScheduler
     /** @var int */
     protected $numberOverdueCronjobs = 0;
 
+    /**
+     * @param BackupsFinder $backupsFinder
+     * @param BackupProcessLock $processLock
+     * @param BackupDeleter $backupDeleter
+     */
     public function __construct(BackupsFinder $backupsFinder, BackupProcessLock $processLock, BackupDeleter $backupDeleter)
     {
         $this->backupsFinder = $backupsFinder;
@@ -53,7 +58,7 @@ class BackupScheduler
     /**
      * @return array
      */
-    public function getSchedules()
+    public function getSchedules(): array
     {
         $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
         if (is_array($schedules)) {
@@ -177,7 +182,7 @@ class BackupScheduler
      * @param $backupSchedule
      * @return bool false on error or if nothing would be updated
      */
-    protected function registerScheduleInDb($backupSchedule)
+    protected function registerScheduleInDb($backupSchedule): bool
     {
         $backupSchedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
         if (!is_array($backupSchedules)) {
@@ -249,7 +254,7 @@ class BackupScheduler
      *
      * @param string $scheduleId The schedule ID to delete.
      */
-    public function deleteSchedule($scheduleId, $reCreateCron = true)
+    public function deleteSchedule(string $scheduleId, $reCreateCron = true)
     {
         $schedules = $this->getSchedules();
 
@@ -282,7 +287,7 @@ class BackupScheduler
      *
      */
 
-    public function reCreateCron()
+    public function reCreateCron(): bool
     {
         $schedules = $this->getSchedules();
         static::removeBackupSchedulesFromCron();
@@ -337,7 +342,7 @@ class BackupScheduler
      * This is a low-level function that can run when WP STAGING has not been
      * bootstrapped, so there's no autoload nor Container available.
      */
-    public static function removeBackupSchedulesFromCron()
+    public static function removeBackupSchedulesFromCron(): bool
     {
         $cron = get_option('cron');
 
@@ -375,24 +380,39 @@ class BackupScheduler
      *
      * @return bool
      */
-    public function checkCronStatus()
+    public function checkCronStatus(): bool
     {
         global $wp_version;
 
         $this->cronMessage = '';
 
         if ($this->isCronjobsOverdue()) {
-            $this->cronMessage .= sprintf(
-                __('There are %s scheduled WordPress tasks overdue. This means the WordPress cron jobs are not working properly, unless this a development site or no users are visiting this website. <a href="%s">Read this article</a> to find a solution.<br><br>', 'wp-staging'),
-                $this->numberOverdueCronjobs,
-                'https://wp-staging.com/docs/wp-cron-is-not-working-correctly/'
-            );
-
-            if (WPStaging::make(ServerVars::class)->isLitespeed()) {
+            if (WPStaging::isPro()) {
                 $this->cronMessage .= sprintf(
-                    Escape::escapeHtml(__('This site is using LiteSpeed server, this could prevent the scheduled backups from working properly. Please read <a href="%s" target="_blank">this article here</a> if the backup scheduling is not working properly.', 'wp-staging')),
-                    'https://wp-staging.com/docs/scheduled-backups-do-not-work-hosting-company-uses-the-litespeed-webserver-fix-wp-cron/'
+                    __('There are %s scheduled WordPress tasks overdue. This means the WordPress cron jobs are not working properly, unless this a development site or no users are visiting this website. <a href="%s">Read this article</a> to find a solution.<br><br>', 'wp-staging'),
+                    $this->numberOverdueCronjobs,
+                    'https://wp-staging.com/docs/wp-cron-is-not-working-correctly/'
                 );
+
+                if (WPStaging::make(ServerVars::class)->isLitespeed()) {
+                    $this->cronMessage .= sprintf(
+                        Escape::escapeHtml(__('This site is using LiteSpeed server, this could prevent the scheduled backups from working properly. Please read <a href="%s" target="_blank">this article here</a> if the backup scheduling is not working properly.', 'wp-staging')),
+                        'https://wp-staging.com/docs/scheduled-backups-do-not-work-hosting-company-uses-the-litespeed-webserver-fix-wp-cron/'
+                    );
+                }
+            } else {
+                $this->cronMessage .= sprintf(
+                    __('There are %s scheduled WordPress tasks overdue. This means the WordPress cron jobs are not working properly, unless this a development site or no users are visiting this website.<br> <a href="%s">Write to us in the forum</a> to get a solution for this issue from the WP STAGING support team.<br><br>', 'wp-staging'),
+                    $this->numberOverdueCronjobs,
+                    'https://wordpress.org/support/plugin/wp-staging/'
+                );
+
+                if (WPStaging::make(ServerVars::class)->isLitespeed()) {
+                    $this->cronMessage .= sprintf(
+                        Escape::escapeHtml(__('This site is using LiteSpeed server, this could prevent the scheduled backups from working properly. <a href="%s">Write to us in the forum</a> to get a solution for that issue.', 'wp-staging')),
+                        'https://wordpress.org/support/plugin/wp-staging/'
+                    );
+                }
             }
         }
 
@@ -415,21 +435,31 @@ class BackupScheduler
         }
 
         if (defined('DISABLE_WP_CRON') && DISABLE_WP_CRON) {
-            $this->cronMessage .= sprintf(
-                __('The background backup creation depends on WP-Cron but %s is set to %s in wp-config.php. Background processing might not work. Remove this constant or set its value to %s. Ignore this if you use an external cron job.', 'wp-staging'),
-                '<code>DISABLE_WP_CRON</code>',
-                '<code>true</code>',
-                '<code>false</code>'
-            );
+            if (WPStaging::isPro()) {
+                $this->cronMessage .= sprintf(
+                    __('The background backup creation depends on WP-Cron but %s is set to %s in wp-config.php. Background processing might not work. Remove this constant or set its value to %s. Ignore this if you use an external cron job.', 'wp-staging'),
+                    '<code>DISABLE_WP_CRON</code>',
+                    '<code>true</code>',
+                    '<code>false</code>'
+                );
+            } else {
+                $this->cronMessage .= sprintf(
+                    __('The background backup creation depends on WP-Cron but %s is set to %s in wp-config.php. Background processing might not work. Remove this constant or set its value to %s. Ignore this if you use an external cron job. <a href="%s" target="_blank">Ask us in the forum</a> if you need more information.', 'wp-staging'),
+                    '<code>DISABLE_WP_CRON</code>',
+                    '<code>true</code>',
+                    '<code>false</code>',
+                    'https://wordpress.org/support/plugin/wp-staging/'
+                );
+            }
 
             return true;
         }
 
         if (defined('ALTERNATE_WP_CRON') && ALTERNATE_WP_CRON) {
-            $this->cronMessage .= sprintf(
-                __('The constant %s is set to true.', 'wp-staging'),
-                'ALTERNATE_WP_CRON'
-            );
+                $this->cronMessage .= sprintf(
+                    __('The constant %s is set to true.', 'wp-staging'),
+                    'ALTERNATE_WP_CRON'
+                );
 
             return true;
         }
@@ -483,13 +513,13 @@ class BackupScheduler
     /**
      * @return bool
      */
-    private function isCronjobsOverdue()
+    private function isCronjobsOverdue(): bool
     {
         return $this->numberOverdueCronjobs > 4;
     }
 
     /** @return string */
-    public function getCronMessage()
+    public function getCronMessage(): string
     {
         return $this->cronMessage;
     }
@@ -498,7 +528,7 @@ class BackupScheduler
      * @return array An array where the first item is the timestamp, and the second is the backup callback.
      * @throws \Exception When there is no backup scheduled or one could not be found.
      */
-    public function getNextBackupSchedule()
+    public function getNextBackupSchedule(): array
     {
         $cron = get_option('cron');
 
@@ -525,7 +555,7 @@ class BackupScheduler
     }
 
     /**
-     * Set date today or tommorrow for given DateTime object according to time
+     * Set date today or tomorrow for given DateTime object according to time
      *
      * @param \DateTime $datetime
      * @param string|array $time
@@ -552,7 +582,7 @@ class BackupScheduler
      * @param \DateTime $datetime
      * @param array $schedule
      */
-    protected function setNextSchedulingDate(&$datetime, $schedule)
+    protected function setNextSchedulingDate(&$datetime, array $schedule)
     {
         $next = $schedule['firstSchedule'];
         $now  = $datetime->getTimestamp();
@@ -574,7 +604,7 @@ class BackupScheduler
      *
      * @return bool
      */
-    protected function isWpstgError()
+    protected function isWpstgError(): bool
     {
         $error = error_get_last();
         if (!is_array($error)) {
@@ -587,7 +617,7 @@ class BackupScheduler
     /**
      * @param string $message
      */
-    public function sendErrorReport($message)
+    public function sendErrorReport(string $message)
     {
         if (get_option(self::BACKUP_SCHEDULE_ERROR_REPORT_OPTION) !== 'true') {
             return;
@@ -623,7 +653,7 @@ class BackupScheduler
     /**
      * @return bool
      */
-    private function isSchedulesEmpty()
+    private function isSchedulesEmpty(): bool
     {
         $schedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
         if (empty($schedules)) {
@@ -636,7 +666,7 @@ class BackupScheduler
     /**
      * @return array
      */
-    private function getCronJobs()
+    private function getCronJobs(): array
     {
         $cron = get_option('cron');
         if (!is_array($cron)) {

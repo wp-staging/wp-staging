@@ -750,7 +750,7 @@ class Scan extends Job
         ];
 
         foreach ($wpDirectories as $wpDirectory) {
-            if (strpos($path, $wpDirectory) !== false) {
+            if (strpos(trailingslashit($path), $wpDirectory) !== false) {
                 return false;
             }
         }

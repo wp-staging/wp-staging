@@ -17,8 +17,14 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class DatabaseBackupTask extends BackupTask
 {
+    /**
+     * @var string
+     */
     const FILE_FORMAT = 'sql';
 
+    /**
+     * @var string
+     */
     const PART_IDENTIFIER = 'wpstgdb';
 
     /** @var Directory */
@@ -76,6 +82,7 @@ class DatabaseBackupTask extends BackupTask
             $ddlExporter->backupDDLTablesAndViews();
             $this->jobDataDto->setTablesToBackup(array_merge($ddlExporter->getTables(), $ddlExporter->getNonWPTables()));
             $this->jobDataDto->setNonWpTables($ddlExporter->getNonWPTables());
+            $this->jobDataDto->setLastInsertId(-PHP_INT_MAX);
 
             $this->stepsDto->setTotal(count($this->jobDataDto->getTablesToBackup()));
 
@@ -92,6 +99,7 @@ class DatabaseBackupTask extends BackupTask
         // Action hook for internal use only: used during memory exhaust test
         do_action('wpstg.tests.backup.export_database.before_rows_export');
 
+        $useMemoryExhaustFix = $this->isMemoryExhaustFixEnabled();
         // Lazy instantiation
         /** @var RowsExporter $rowsExporter */
         $rowsExporter = WPStaging::make(RowsExporter::class);
@@ -103,6 +111,7 @@ class DatabaseBackupTask extends BackupTask
         $rowsExporter->setMaxSplitSize($this->jobDataDto->getMaxMultipartBackupSize());
         $rowsExporter->setTablesToExclude($tablesToExclude);
         $rowsExporter->setNonWpTables($this->jobDataDto->getNonWpTables());
+        $rowsExporter->setUseMemoryExhaustFix($useMemoryExhaustFix);
 
         do {
             $rowsExporter->setTableIndex($this->stepsDto->getCurrent());
@@ -172,8 +181,10 @@ class DatabaseBackupTask extends BackupTask
             }
 
             $this->stepsDto->setCurrent($rowsExporter->getTableIndex());
-            $this->jobDataDto->setTotalRowsBackup($rowsExporter->getTotalRowsExported());
-            $this->jobDataDto->setTableRowsOffset($rowsExporter->getTableRowsOffset());
+            if (!$useMemoryExhaustFix) {
+                $this->jobDataDto->setTotalRowsBackup($rowsExporter->getTotalRowsExported());
+                $this->jobDataDto->setTableRowsOffset($rowsExporter->getTableRowsOffset());
+            }
 
             $this->logger->info(sprintf(
                 __('Backup database: Table %s. Rows: %s/%s', 'wp-staging'),
@@ -195,6 +206,8 @@ class DatabaseBackupTask extends BackupTask
                 $this->jobDataDto->setTotalRowsBackup(0);
                 $this->jobDataDto->setTableRowsOffset(0);
                 $this->jobDataDto->setTableAverageRowLength(0);
+                // Reset for each table
+                $this->jobDataDto->setLastInsertId(-PHP_INT_MAX);
                 $this->stepsDto->incrementCurrentStep();
 
                 /*
@@ -213,6 +226,9 @@ class DatabaseBackupTask extends BackupTask
         return $this->generateResponse(false);
     }
 
+    /**
+     * @return void
+     */
     private function setupDatabaseFilePathName()
     {
         global $wpdb;
@@ -276,5 +292,13 @@ class DatabaseBackupTask extends BackupTask
         }
 
         return '';
+    }
+
+    /**
+     * @return bool
+     */
+    private function isMemoryExhaustFixEnabled()
+    {
+        return defined('WPSTG_MEMORY_EXHAUST_FIX') && (constant('WPSTG_MEMORY_EXHAUST_FIX') === true);
     }
 }

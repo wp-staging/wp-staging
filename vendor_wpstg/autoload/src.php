@@ -991,6 +991,7 @@ return array(
     'WPStaging\\Framework\\DI\\ServiceProvider' => $baseDir . '/Framework/DI/ServiceProvider.php',
     'WPStaging\\Framework\\Database\\DbInfo' => $baseDir . '/Framework/Database/DbInfo.php',
     'WPStaging\\Framework\\Database\\ExcludedTables' => $baseDir . '/Framework/Database/ExcludedTables.php',
+    'WPStaging\\Framework\\Database\\OptionPreservationHandler' => $baseDir . '/Framework/Database/OptionPreservationHandler.php',
     'WPStaging\\Framework\\Database\\QueryBuilder\\SelectQuery' => $baseDir . '/Framework/Database/QueryBuilder/SelectQuery.php',
     'WPStaging\\Framework\\Database\\SearchReplace' => $baseDir . '/Framework/Database/SearchReplace.php',
     'WPStaging\\Framework\\Database\\SelectedTables' => $baseDir . '/Framework/Database/SelectedTables.php',

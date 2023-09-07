@@ -98,17 +98,13 @@ abstract class Job implements ShutdownableInterface
         }
     }
 
+    /**
+     * @todo can be removed?
+     * @return void
+     */
     public function onWpShutdown()
     {
-        // Commit logs
-        /*if ($this->logger instanceof Logger) {
-            if (isset($this->options->mainJob)) {
-                $this->logger->setFileName($this->getLogFilename());
-            }
-            $this->logger->commit();
-        } else {
-            debug_log('Tried to commit log, but logger is no instance of Logger.');
-        }*/
+        // do nothing
     }
 
     /**

@@ -52,8 +52,10 @@ class RowsExporter extends AbstractExporter
     /** @var JobBackupDataDto */
     protected $jobDataDto;
 
+    /** @var LoggerInterface */
     protected $logger;
 
+    /** @var int */
     protected $writeToFileCount = 0;
 
     /** @var SearchReplace */
@@ -80,23 +82,28 @@ class RowsExporter extends AbstractExporter
     /** @var int */
     protected $unInsertedSqlSize = 0;
 
+    /** @var int */
+    protected $lastNumericInsertId = -PHP_INT_MAX;
+
     /** @var array Fields/Option name which need special care for search replace */
     protected $specialFields;
 
     /** @var array */
     protected $nonWpTables;
 
-    /*
+    /**
      * All values must be wrapped into single quotes due to
      * \WPStaging\Backup\Service\Database\DatabaseImporter::searchReplaceInsertQuery
      * So we use a special flag to null values, that will be replaced with
      * actual NULL during restore. All other types we leave to MySQL type-juggling.
+     * @var string
      */
     const NULL_FLAG = "{WPSTG_NULL}";
 
-    /*
+    /**
      * This flag indicates that this value has a binary data type in MySQL, such
      * as binary, blob, longblog, etc.
+     * @var string
      */
     const BINARY_FLAG = "{WPSTG_BINARY}";
 
@@ -257,6 +264,9 @@ class RowsExporter extends AbstractExporter
         return (int)$result->fetch_object()->totalRows;
     }
 
+    /**
+     * @return void
+     */
     public function setupPrefixedValuesForSubsites()
     {
         if (!is_multisite()) {
@@ -282,6 +292,7 @@ class RowsExporter extends AbstractExporter
     }
 
     /**
+     * @return void
      * @see \WPStaging\Backup\Task\Tasks\JobRestore\RestoreDatabaseTask::prepare For Restore Search/Replace.
      */
     protected function setupBackupSearchReplace()
@@ -319,10 +330,24 @@ class RowsExporter extends AbstractExporter
         $this->setupBackupSearchReplace();
 
         do {
+            if ($this->useMemoryExhaustFix) {
+                $this->tableRowsOffset     = $this->jobDataDto->getTableRowsOffset();
+                $this->lastNumericInsertId = (int)$this->jobDataDto->getLastInsertId();
+            }
+
             $data = $this->rowsGenerator($this->databaseName, $this->tableName, $numericPrimaryKey, $this->tableRowsOffset, "rowsExporter_$jobId", $this->client, $this->jobDataDto);
 
             foreach ($data as $row) {
+                if ($this->updateLastNumericInsertId($numericPrimaryKey ?? '', $row)) {
+                    continue;
+                }
+
                 $this->writeQueryInsert($row, $prefixedTableName, $tableColumns);
+
+                if ($this->useMemoryExhaustFix) {
+                    $this->writeToFileCount++;
+                }
+
                 if ($this->exceedSplitSize) {
                     if (!empty($this->queriesToInsert)) {
                         $this->file->fwrite($this->queriesToInsert);
@@ -334,13 +359,15 @@ class RowsExporter extends AbstractExporter
                     return max($this->totalRowsInCurrentTable - $this->totalRowsExported, 0);
                 }
 
-                $this->writeToFileCount++;
-                $this->totalRowsExported++;
+                if (!$this->useMemoryExhaustFix) {
+                    $this->writeToFileCount++;
+                    $this->totalRowsExported++;
 
-                if (!empty($numericPrimaryKey)) {
-                    $this->tableRowsOffset = $row[$numericPrimaryKey];
-                } else {
-                    $this->tableRowsOffset++;
+                    if (!empty($numericPrimaryKey)) {
+                        $this->tableRowsOffset = $row[$numericPrimaryKey];
+                    } else {
+                        $this->tableRowsOffset++;
+                    }
                 }
 
                 /*
@@ -350,8 +377,16 @@ class RowsExporter extends AbstractExporter
                 if ($this->writeToFileCount >= 10) {
                     $this->file->fwrite($this->queriesToInsert);
                     $this->queriesToInsert  = '';
+                    $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
                     $this->writeToFileCount = 0;
                 }
+            }
+
+            if (!empty($this->queriesToInsert) && $this->useMemoryExhaustFix) {
+                $this->file->fwrite($this->queriesToInsert);
+                $this->queriesToInsert  = '';
+                $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
+                $this->writeToFileCount = 0;
             }
 
             $rowsLeftToProcess = max($this->totalRowsInCurrentTable - $this->totalRowsExported, 0);
@@ -361,6 +396,7 @@ class RowsExporter extends AbstractExporter
         if (!empty($this->queriesToInsert)) {
             $this->file->fwrite($this->queriesToInsert);
             $this->queriesToInsert = '';
+            $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
         }
 
         return $rowsLeftToProcess;
@@ -543,6 +579,7 @@ class RowsExporter extends AbstractExporter
     }
 
     /**
+     * @return void
      * @throws \RuntimeException
      */
     protected function throwUnableToCountException()
@@ -553,6 +590,32 @@ class RowsExporter extends AbstractExporter
             $this->client->errno(),
             $this->client->error()
         ));
+    }
+
+    /**
+     * @param string $numericPrimaryKey
+     * @param int $filesWritten
+     * @return void
+     */
+    protected function updateOffset(string $numericPrimaryKey, int $filesWritten)
+    {
+        if (!$this->useMemoryExhaustFix) {
+            return;
+        }
+
+        $this->totalRowsExported = $this->jobDataDto->getTotalRowsBackup() + $filesWritten;
+        $this->jobDataDto->setTotalRowsBackup($this->totalRowsExported);
+
+        if (!empty($numericPrimaryKey)) {
+            $this->tableRowsOffset = $this->lastNumericInsertId;
+            $this->jobDataDto->setTableRowsOffset($this->lastNumericInsertId);
+            $this->jobDataDto->setLastInsertId($this->lastNumericInsertId);
+            return;
+        }
+
+        $this->tableRowsOffset = $this->jobDataDto->getTableRowsOffset() + $filesWritten;
+        $this->jobDataDto->setTableRowsOffset($this->jobDataDto->getTableRowsOffset() + $filesWritten);
+        $this->jobDataDto->setLastInsertId($this->lastNumericInsertId);
     }
 
     /**
@@ -594,5 +657,29 @@ class RowsExporter extends AbstractExporter
         $primaryKeys = $this->client->fetchAll($result);
 
         return count($primaryKeys) > 1;
+    }
+
+    /**
+     * @param string $numericPrimaryKey
+     * @param array $row
+     * @return bool
+     */
+    private function updateLastNumericInsertId(string $numericPrimaryKey, array $row): bool
+    {
+        if (!$this->useMemoryExhaustFix) {
+            return false;
+        }
+
+        if (!empty($numericPrimaryKey)) {
+            $lastInsertId = (int)$row[$numericPrimaryKey];
+
+            if ($lastInsertId <= $this->lastNumericInsertId) {
+                return true;
+            }
+
+            $this->lastNumericInsertId = $lastInsertId;
+        }
+
+        return false;
     }
 }

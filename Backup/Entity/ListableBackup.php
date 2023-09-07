@@ -67,6 +67,9 @@ class ListableBackup
     /** @var string The WP STAGING version this backup was generated on */
     public $generatedOnWPStagingVersion;
 
+    /** @var string The backup structure version this backup was generated on */
+    public $generatedOnBackupVersion;
+
     /** @var bool Whether this backup was automatically generated. (Eg: pushing staging into production) */
     public $automatedBackup = false;
 

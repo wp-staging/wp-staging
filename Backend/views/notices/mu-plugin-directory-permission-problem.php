@@ -15,13 +15,4 @@ use WPStaging\Framework\Notices\Notices;
         <br>
         <?php esc_html_e('Check if this folder exists! Folder permissions should be chmod 755 or 777.', 'wp-staging'); ?>
     </p>
-
-    <p>
-      <?php Notices::renderNoticeDismissAction(
-          $viewsNoticesPath,
-          'mu_dir_permission',
-          '.wpstg_dismiss_mu_dir_permission_notice',
-          '.wpstg-mu-dir-permission-notice'
-      ) ?>
-    </p>
 </div>

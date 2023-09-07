@@ -51,8 +51,8 @@ $isDatabaseOnlyBackup = $info->getIsExportingDatabase()
         <?php endif; ?>
         <div class="wpstg-db-table" style="margin-top:5px;display:none;">
             <?php
-            $backupGeneratedInVersion = $info->getVersion();
-            $thisVersion = \WPStaging\Core\WPStaging::getVersion();
+            $backupGeneratedInVersion = $info->getBackupVersion();
+            $thisVersion = BackupMetadata::BACKUP_VERSION;
             // Use this in the future if we need to warn the user about compatibility issues between backup version and current version.
             ?>
             <small><?php echo sprintf(wp_kses_post('This backup was generated on WP STAGING %s. </br> You are running WP STAGING %s.', 'wp-staging'), esc_html($backupGeneratedInVersion), esc_html($thisVersion)) ?></small>

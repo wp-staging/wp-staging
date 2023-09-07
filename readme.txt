@@ -1,4 +1,4 @@
-=== WP STAGING - Backup Duplicator & Migration  ===
+=== WP STAGING Backup - Migration Backup Restore  ===
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -6,13 +6,13 @@ Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, lucasbustamante,
 Donate link: https://wp-staging.com/backup-wordpress
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, backup plugin, database backup, wordpress backup, migrate, backup wordpress, backups
+Tags: backup, backups, migrate, migration, wordpress backup plugin
 Requires at least: 3.6+
 Tested up to: 6.3
-Stable tag: 3.0.3
+Stable tag: 3.0.4
 Requires PHP: 7.0
 
-Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate websites to staging, backup, and development sites for authorized users only.
+Backup Restore
 
 == Description ==
 
@@ -259,7 +259,46 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 
 == Changelog ==
 
+= 3.0.4 =
+* New: Allow the usage of wildcards characters in the push filter 'wpstg_preserved_options'. #2546
+* New: Exclude multiple database values from copying to a staging site table through the 'wpstg.cloning.database.queryRows' filter. #2545
+* New: You can add the new constant WPSTAGING_DEV_SITE into wp-config.php that determines if site is a staging/dev site or regular one. #2556
+* Fix: Cannot upload single backup files larger than 25GB on SFTP Storage. #2539
+* Enh: Removed console logs and clean up code. #2561
+* Enh: Rename logfile to wpstg-bundled-logs.txt while downloading and sending report to support team. #2593
+* Enh: Improve admin notice if cron jobs do not work. #2723
+* Fix: Fatal error due to foreign key constraints on tmp or bak tables when cleaning WP Staging tmp and bak tables before Pushing a staging site to live. #2728
+* Fix: Fatal error during backup restore if site has a drop in plugin like db.php or object-cache.php due to incorrect checking the checksum of the drop in plugin file. #2715
+* Fix: Add new constant `WPSTG_MEMORY_EXHAUST_FIX`, that can prevent memory exhausted errors during backup creation. #2551
+* Fix: A custom UPLOADS folder outside wp-content was not pre-selected and copied during cloning process and tustom UPLOADS folder was not copied during pushing a staging site as well. #2736
+* Fix: Improve admin notice when a pro backup is restored with the free version on another domain, host or server. #2697
+* Tweak: Adjust the requirements for restoring backup by making it dependant on backup structure instead of plugin version. #2717
+* Dev: Bump AWS PHP SDK package to latest version #2295
+* Dev: Remove PHP 5.6 compatibility code #2714
+* Dev: Reduce file size of the free plugin by removing unused backup cloud storages libraries from vendor packages. #2710
+* Dev: Add e2e tests for admin notices for backup and staging #2652
+* Dev: Delete tests output dir content while running `make reset` and `./wpstg build:webdriver-rebuild-dist` #2726
+
 = 3.0.3 =
+* New: Add dropbox cloud storage backup provider. #1881
+* New: Add support for custom domain based multisites. Network sites will be created in a subdomain. E.g.If the main site is "example.com" and the staging site destination url is "staging.example.com" then the live network site example.org will be cloned to staging.example.org and the network site example.net will be cloned to staging.example.net automatically. #2600
+* New: Add more options to wp cli backup backup-create command #2468
+* New: Add new contact us modal for free version to be able to provide better support to free users. #2246
+* New: Create staging site as default into 'example.com/wp-content/wp-staging-sites/staging-site- name' if root folder is not writable. #2438
+* Enh: Revise warnings in the symlink modal tooltip and improve the HTML syntax structure #2668
+* Enh: Transform the 'click here' hyperlink into a button on the staging site to enable staging site cloning #2664
+* Enh: Show admin notice on staging site if symlink option has been used to create it #2667
+* Enh: Added target URL when transferring staging site to live site #2362
+* Fix: Show admin notice on all pages on live or staging site if current site uses wpstgtmp_ or wpstgbak_ table prefixes as live table. #2666
+* Fix: Canceling the New CLONING process would delete all tables of production site if advanced settings were used to provide custom prefix for staging site with same database and host as production site. #2665
+* Fix: WP Staging backup folder gets deleted during restore on Windows OS. This can lead to an interuption and fatal error of the backup restore. #2690
+* Fix: Improve condition whether a table belongs to current site table during PUSH when cleaning temporary tables. #2686
+* Fix: If database tables prefix contains underscore like wp_12345, the sql backup part in multiparts backup is detected as separate backup. #2656
+* Fix: Having residual tables with wpstgbak_ prefix can leads to unsuccessful PUSH and backup RESTORE. Unless the current site prefix is wpstgbak_, these tables are now removed before starting RESTORE and PUSH #2576
+* Fix: Added style enhancement of changing the cursor to a pointer when interacting with the 'Contact Us' button #2662
+* Fix: Copied generated login link contains inline css style. #2654
+
+= 3.0.2 =
 * New: Support for WordPress 6.3
 * New: Add more options to wp cli backup-create command #2468
 * Enh: Increase log file storing time to 14 days. #2625
@@ -272,6 +311,18 @@ please open a [support request](https://wp-staging.com/support/ "Support Request
 * Fix: Show admin notice if there is no WordPress table prefix in the database #2586
 * Dev: Add changelog entries in dedicated files #2623
 * Dev: No changelog needed on release branches #2763
+
+= 3.0.1 =
+* New: Make UI more consistent and use same success and processing modals for staging site creation as for backup creation #2221
+* Fix: Rating banner can not be dismissed #2632
+* Fix: Multipart backup scheduled to be sent to google drive does not send all parts #2516
+* Fix: Could not backup tables that contain multiple primary keys (composite keys) #2616
+* Fix: Stop backup restore and add better logging if sql file is not readable during backup restore #2560
+* Fix: New delete modal does not show all tables on sites with many db tables due to CSS issue #2221
+* Fix: Resolved conflict with plugin "Admin and Site Enhancements" #2513
+* Fix: Prevent UI issue and word wrapping on line that says: "No staging site found" on MacOS on Chrome #2552
+* Dev: Undefined method interfaceDatabaseClient::fetchAll() in phpstan #2622
+* Dev: e2e tests fail on multi sites #2631
 
 = 3.0.1 =
 * New: Make UI more consistent and use same success and processing modals for staging site creation as for backup creation #2221

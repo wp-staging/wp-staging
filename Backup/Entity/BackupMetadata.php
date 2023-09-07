@@ -34,6 +34,13 @@ class BackupMetadata implements JsonSerializable
     use DateCreatedTrait;
     use WithPluginsThemesMuPluginsTrait;
 
+    /**
+     * Version of Backup Metadata
+     * This need to be bump whenever we make changes in backup structure
+     * @var string
+     */
+    const BACKUP_VERSION = '1.0.0';
+
     /** @var string */
     private $id;
 
@@ -44,7 +51,10 @@ class BackupMetadata implements JsonSerializable
     private $headerEnd;
 
     /** @var string */
-    private $version;
+    private $backupVersion;
+
+    /** @var string */
+    private $wpstgVersion;
 
     /** @var int */
     private $totalFiles;
@@ -161,7 +171,8 @@ class BackupMetadata implements JsonSerializable
         $siteInfo = new SiteInfo();
         $time     = new Times();
 
-        $this->setVersion(WPStaging::getVersion());
+        $this->setWpstgVersion(WPStaging::getVersion());
+        $this->setBackupVersion(self::BACKUP_VERSION);
         $this->setSiteUrl(get_option('siteurl'));
         $this->setHomeUrl(get_option('home'));
         $this->setAbsPath(ABSPATH);
@@ -307,17 +318,44 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getVersion()
+    public function getWpstgVersion(): string
     {
-        return $this->version;
+        return $this->wpstgVersion;
     }
 
     /**
+     * @param string $wpstgVersion
+     * @return void
+     */
+    public function setWpstgVersion(string $wpstgVersion)
+    {
+        $this->wpstgVersion = $wpstgVersion;
+    }
+
+    /**
+     * @deprecated T.B.D
      * @param string $version
      */
-    public function setVersion($version)
+    public function setVersion(string $version)
     {
-        $this->version = $version;
+        $this->setWpstgVersion($version);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackupVersion(): string
+    {
+        return $this->backupVersion;
+    }
+
+    /**
+     * @param string $backupVersion
+     * @return void
+     */
+    public function setBackupVersion(string $backupVersion)
+    {
+        $this->backupVersion = $backupVersion;
     }
 
     /**
