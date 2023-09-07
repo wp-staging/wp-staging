@@ -16,6 +16,7 @@ use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\DiskNotWritableException;
 use WPStaging\Backup\Exceptions\ThresholdException;
 use WPStaging\Backup\Task\RestoreTask;
@@ -89,7 +90,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             $this->cannotHaveTableThatWillExceedLength();
             $this->cannotRestoreIfThereIsNotEnoughFreeDiskSpaceForTheDatabase();
             $this->cannotRestoreIfBackupGeneratedOnProVersion();
-            $this->cannotRestoreIfBackupGeneratedOnNewerWPStagingVersion();
+            $this->cannotRestoreIfBackupGeneratedOnNewerBackupVersion();
             $this->cannotRestoreIfBackupGeneratedOnNewerWPDbVersion();
             $this->cannotRestoreIfAnyTemporaryPrefixIsCurrentSitePrefix();
             $this->cannotRestoreBackupCreatedBeforeMVP();
@@ -327,19 +328,25 @@ class RestoreRequirementsCheckTask extends RestoreTask
      * Disallows backups generated in newer versions of WP STAGING to be restored
      * using older versions of WP STAGING.
      */
-    protected function cannotRestoreIfBackupGeneratedOnNewerWPStagingVersion()
+    protected function cannotRestoreIfBackupGeneratedOnNewerBackupVersion()
     {
-        $backupVersion = $this->jobDataDto->getBackupMetadata()->getVersion();
-        if (version_compare($backupVersion, $this->getCurrentWpStagingVersion(), '<=')) {
+        $backupVersion = $this->jobDataDto->getBackupMetadata()->getBackupVersion();
+        // No backup version mean older backups, generated before this feature was implemented.
+        // So allow it to restore.
+        if (empty($backupVersion)) {
+            return;
+        }
+
+        if (version_compare($backupVersion, $this->getCurrentBackupVersion(), '<=')) {
             return;
         }
 
         if ($this->isDevVersion()) {
-            $this->logger->warning(sprintf("Backup generated on newer WP STAGING version: %s. Allowed to continue due to WPSTG_DEV...", esc_html($backupVersion)));
+            $this->logger->warning(sprintf("Backup generated on newer Backup version: %s. Allowed to continue due to WPSTG_DEV...", esc_html($backupVersion)));
             return;
         }
 
-        throw new RuntimeException(sprintf("This backup was generated on a newer version of WP STAGING: %s. Please upgrade WP STAGING to restore this Backup.", esc_html($backupVersion)));
+        throw new RuntimeException(sprintf("This backup was created with a newer WP STAGING version: %s. Please upgrade WP STAGING to restore this Backup.", esc_html($backupVersion)));
     }
 
     /**
@@ -412,7 +419,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             return;
         }
 
-        if (version_compare($metadata->getVersion(), self::BETA_VERSION_LIMIT_PRO, '<')) {
+        if (version_compare($metadata->getWpstgVersion(), self::BETA_VERSION_LIMIT_PRO, '<')) {
             throw new RuntimeException('This backup was generated on a beta version of WP STAGING. Create a new Backup using the latest version of WP STAGING. Please feel free to get in touch with our support if you need assistance.');
         }
     }
@@ -455,7 +462,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
     protected function cannotMigrate()
     {
         if (!$this->jobDataDto->getIsSameSiteBackupRestore()) {
-            throw new RuntimeException('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
+            throw new RuntimeException('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
         }
     }
 
@@ -477,8 +484,8 @@ class RestoreRequirementsCheckTask extends RestoreTask
     /**
      * @return string
      */
-    protected function getCurrentWpStagingVersion()
+    protected function getCurrentBackupVersion()
     {
-        return WPStaging::getVersion();
+        return BackupMetadata::BACKUP_VERSION;
     }
 }

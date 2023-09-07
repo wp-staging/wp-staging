@@ -22,9 +22,15 @@
       }
     });
     // show text fields
-    $('#wpstg-feedback-content input[type="radio"]').on('click', function () {
-      // show text field if there is one
-      $(this).parents('li').next('li').children('input[type="text"], textarea').show();
+    $('#wpstg-feedback-content input[type="checkbox"]').on('click', function () {
+      var $this = $(this);
+      if ($this.is(':checked')) {
+        // show text field if there is one
+        $(this).parents('li').next('li').children('input[type="text"], textarea').show();
+      } else {
+        // hide text field if there is one
+        $(this).parents('li').next('li').children('input[type="text"], textarea').hide();
+      }
     });
     // send form or close it
     $('#wpstg-feedback-content .button').on('click', function (e) {

@@ -36,7 +36,6 @@ use WPStaging\Backend\Pro\Modules\Jobs\Processing;
 use WPStaging\Backend\Pro\Modules\Jobs\Backups\BackupUploadsDir;
 use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Framework\Database\SelectedTables;
-use WPStaging\Framework\Utils\Escape;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
 use WPStaging\Backend\Feedback\Feedback;
@@ -196,10 +195,7 @@ class Administrator
      */
     public function sendFeedback()
     {
-
-        $nonce = isset($_POST['nonce']) ? sanitize_text_field($_POST['nonce']) : '';
-
-        if (!$this->isAuthenticated($nonce)) {
+        if (!$this->isAuthenticated()) {
             return;
         }
 
@@ -410,7 +406,7 @@ class Administrator
 
         nocache_headers();
         header("Content-Type: text/plain");
-        header('Content-Disposition: attachment; filename="wpstg-system-info.txt"');
+        header('Content-Disposition: attachment; filename="wpstg-bundled-logs.txt"');
         echo esc_html(wp_strip_all_tags(WPStaging::make(SystemInfo::class)->get("systemInfo")));
         echo esc_html("\n\n" . str_repeat("-", 25) . "\n\n");
         $wpstgLogs = WPStaging::make(DebugLogReader::class)->getLastLogEntries(100 * KB_IN_BYTES, true, false);

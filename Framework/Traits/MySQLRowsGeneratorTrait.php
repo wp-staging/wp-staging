@@ -23,6 +23,17 @@ trait MySQLRowsGeneratorTrait
 {
     use ResourceTrait;
 
+    /** @var bool */
+    protected $useMemoryExhaustFix = false;
+
+    /**
+     * @param bool $useMemoryExhaustFix
+     */
+    public function setUseMemoryExhaustFix(bool $useMemoryExhaustFix)
+    {
+        $this->useMemoryExhaustFix = $useMemoryExhaustFix;
+    }
+
     /**
      * Returns a generator of rows.
      *
@@ -88,12 +99,16 @@ trait MySQLRowsGeneratorTrait
             if (count($lastQueryInfo) === 4) {
                 $previousRequestId = $lastQueryInfo[0];
                 if ($previousRequestId === $requestId) {
-                    list($requestId, $table, $offset, $batchSize) = array_replace([$requestId, $table, $offset, $batchSize], $lastQueryInfo);
+                    list($requestId, $table, $oldOffset, $batchSize) = array_replace([$requestId, $table, $offset, $batchSize], $lastQueryInfo);
 
                     if ($batchSize <= 1000) {
                         $batchSize = $batchSize / 2;
                     } else {
                         $batchSize = $batchSize / 3;
+                    }
+
+                    if ((!$this->useMemoryExhaustFix) || ($offset > $oldOffset)) {
+                        $offset = $oldOffset;
                     }
 
                     /*                    if ($batchSize < 1) {

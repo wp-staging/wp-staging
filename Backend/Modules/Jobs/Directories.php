@@ -75,7 +75,7 @@ class Directories extends JobExecutable
     private $excludedPaths = [];
 
     /**
-     * Initialize
+     * @return void
      */
     public function initialize()
     {
@@ -102,6 +102,7 @@ class Directories extends JobExecutable
     /**
      * Start Module
      * @return object
+     * @throws Exception
      */
     public function start()
     {
@@ -118,8 +119,9 @@ class Directories extends JobExecutable
      * Step 0
      * Get WP Root files
      * Does not collect any sub folders
+     * @throws Exception
      */
-    private function getWpRootFiles()
+    private function scanWpRootFolder(): bool
     {
         // Skip scanning the root directory if all other directories are unselected
         if (
@@ -137,7 +139,7 @@ class Directories extends JobExecutable
 
         try {
             $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
-            $this->setIsExcludedWpConfig(true);
+            $this->setIsExcludedWpConfig();
             // Iterate over wp root directory
             $this->options->totalFiles         = $this->scanToCacheFile($files, $this->rootPath, false, $this->getFilteredExcludedPaths(), $this->getFilteredExcludedFileSizes());
             $this->options->isExcludedWpConfig = $this->getIsExcludedWpConfig();
@@ -155,9 +157,11 @@ class Directories extends JobExecutable
      *
      * @param string $directory
      * @param string $pluginDir - default const WP_PLUGIN_DIR  - testing purpose only
-     * @param string $wpRoot    - default const WP_CONTENT_DIR - testing purpose only
+     * @param string $wpRoot - default const WP_CONTENT_DIR - testing purpose only
+     * @return bool
+     * @throws Exception
      */
-    protected function getWpContentSubDirectory($directory, $pluginDir = WP_PLUGIN_DIR, $wpRoot = WP_CONTENT_DIR)
+    protected function scanWpContentSubDirectory(string $directory, string $pluginDir = WP_PLUGIN_DIR, string $wpRoot = WP_CONTENT_DIR): bool
     {
         // Skip if scanning uploads directory and symlink option selected
         if ($directory === $this->directory->getUploadsDirectory() && $this->options->uploadsSymlinked) {
@@ -202,8 +206,13 @@ class Directories extends JobExecutable
 
         $excludePaths = array_merge($this->getFilteredExcludedPaths(), $excludePaths);
 
+        $identifier = PathIdentifier::IDENTIFIER_WP_CONTENT;
+        if ($wpRoot === ABSPATH) {
+            $identifier = PathIdentifier::IDENTIFIER_ABSPATH;
+        }
+
         try {
-            $this->setPathIdentifier(PathIdentifier::IDENTIFIER_WP_CONTENT);
+            $this->setPathIdentifier($identifier);
             $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true, $excludePaths, $this->getFilteredExcludedFileSizes(), $wpRoot);
         } catch (Exception $e) {
             $this->returnException('Error: ' . $e->getMessage());
@@ -216,9 +225,10 @@ class Directories extends JobExecutable
 
     /**
      * Step 5
-     * Get WP Content Files for other files than plugins, mu plugins, themes and uploads.
+     * Scan and collect WP Content Files for other files than plugins, mu plugins, themes and uploads.
+     * @throws Exception
      */
-    private function getWpContentFiles()
+    private function scanWpContentFolder(): bool
     {
         $directory = WP_CONTENT_DIR;
 
@@ -268,95 +278,63 @@ class Directories extends JobExecutable
 
     /**
      * Step 6
-     * @return boolean
+     * @return bool
      * @throws Exception
      */
-    private function getWpIncludesFiles()
+    private function scanWpIncludesFolder(): bool
     {
         $directory = $this->rootPath . 'wp-includes';
 
-        $directory = $this->filesystem->normalizePath($directory, true);
-        $relPath   = str_replace($this->rootPath, '', $directory);
-
-        // Skip it
-        if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skipping " . $relPath);
-            return true;
-        }
-
-        // open file handle
-        $files = $this->open($this->filename, 'a');
-
-        $this->log("Scanning " . $relPath . " for its sub-directories and files");
-
-        try {
-            $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
-            $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true);
-        } catch (Exception $e) {
-            $this->returnException('Error: ' . $e->getMessage());
-        }
-
-        // close the file handler
-        $this->close($files);
-        return true;
+        return $this->scanDirectoryAndWriteCacheFile($directory);
     }
 
     /**
      * Step 7
-     * @return boolean
+     * @return bool
      * @throws Exception
      */
-    private function getWpAdminFiles()
+    private function scanWpAdminFolder(): bool
     {
         $directory = $this->rootPath . 'wp-admin';
 
-        $directory = $this->filesystem->normalizePath($directory, true);
-        $relPath   = str_replace($this->rootPath, '', $directory);
-
-        // Skip it
-        if ($this->isDirectoryExcluded($directory)) {
-            $this->log("Skipping " . $relPath);
-            return true;
-        }
-
-        // open file handle
-        $files = $this->open($this->filename, 'a');
-
-        $this->log("Scanning " . $relPath . " for its sub-directories and files");
-
-        try {
-            $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
-            $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true);
-        } catch (Exception $e) {
-            $this->returnException('Error: ' . $e->getMessage());
-        }
-
-        // close the file handler
-        $this->close($files);
-        return true;
+        return $this->scanDirectoryAndWriteCacheFile($directory);
     }
 
     /**
      * Step 8 - x
-     * Get extra folders of the wp root level
+     * Scan extra folders on the wp root level
      * Does not collect wp-includes, wp-admin and wp-content folder
      * @param string $folder
-     * @return boolean
+     * @return bool
+     * @throws Exception
      */
-    private function getExtraFiles($folder)
+    private function scanExtraFolders(string $folder): bool
     {
         if (empty($folder)) {
             return true;
         }
 
-        $absoluteExtraPath = $this->rootPath . $folder;
+        $absoluteExtraPath = '';
+        try {
+            $absoluteExtraPath = $this->pathAdapter->transformIdentifiableToPath($folder);
+        } catch (Exception $ex) {
+            $absoluteExtraPath = $this->rootPath . $folder;
+        }
+
+        // Skip if extra path belongs to default WordPress folders. Can be the case if extra path is the path to a custom uploads dir inside wp-content.
+        if (in_array(trailingslashit($absoluteExtraPath), $this->directory->getDefaultWordPressFolders())) {
+            return true;
+        }
+
         if (!is_dir($absoluteExtraPath)) {
             return true;
         }
 
+        $relativeExtraPath = str_replace($this->directory->getAbsPath(), '', $absoluteExtraPath);
+
         // open file handle and attach data to end of file
         $files = $this->open($this->filename, 'a');
-        $this->log("Scanning {$folder} for its sub-directories and files");
+        $this->log("Scanning {$relativeExtraPath} for its sub-directories and files");
 
         try {
             $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
@@ -374,9 +352,9 @@ class Directories extends JobExecutable
      * Closes a file handle
      *
      * @param resource $handle File handle to close
-     * @return boolean
+     * @return bool
      */
-    public function close($handle)
+    public function close($handle): bool
     {
         return @fclose($handle);
     }
@@ -389,7 +367,7 @@ class Directories extends JobExecutable
      * @return resource
      * @throws Exception
      */
-    public function open($file, $mode)
+    public function open(string $file, string $mode)
     {
         $file_handle = @fopen($file, $mode);
         if ($file_handle === false) {
@@ -404,7 +382,7 @@ class Directories extends JobExecutable
      *
      * @param resource $handle File handle to write to
      * @param string $content Contents to write to the file
-     * @return integer
+     * @return int
      * @throws Exception
      */
     public function write($handle, $content)
@@ -425,8 +403,9 @@ class Directories extends JobExecutable
      * Execute the Current Step
      * Returns false when over threshold limits are hit or when the job is done, true otherwise
      * @return bool
+     * @throws Exception
      */
-    protected function execute()
+    protected function execute(): bool
     {
         // No job left to execute
         if ($this->isFinished()) {
@@ -435,75 +414,92 @@ class Directories extends JobExecutable
         }
 
         if ($this->options->currentStep == 0) {
-            $this->getWpRootFiles();
-            $this->prepareResponse(false, true);
+            $this->scanWpRootFolder();
+            $this->prepareResponse();
             return false;
         }
 
         // Scan Plugins directory
         if ($this->options->currentStep == 1) {
-            $this->getWpContentSubDirectory(WP_PLUGIN_DIR);
-            $this->prepareResponse(false, true);
+            $this->scanWpContentSubDirectory(WP_PLUGIN_DIR);
+            $this->prepareResponse();
             return false;
         }
 
         // Scan Mu Plugins directory
         if ($this->options->currentStep == 2) {
-            $this->getWpContentSubDirectory(WPMU_PLUGIN_DIR);
-            $this->prepareResponse(false, true);
+            $this->scanWpContentSubDirectory(WPMU_PLUGIN_DIR);
+            $this->prepareResponse();
             return false;
         }
 
         // Scan Themes directory
         if ($this->options->currentStep == 3) {
-            $this->getWpContentSubDirectory(WP_CONTENT_DIR . '/themes');
-            $this->prepareResponse(false, true);
+            $this->scanWpContentSubDirectory(WP_CONTENT_DIR . '/themes');
+            $this->prepareResponse();
             return false;
         }
 
         // Scan Uploads directory
         if ($this->options->currentStep == 4) {
-            $this->getWpContentSubDirectory($this->directory->getUploadsDirectory());
-            $this->prepareResponse(false, true);
+            $this->scanUploadsDirectory($this->directory->getUploadsDirectory());
+            $this->prepareResponse();
             return false;
         }
 
         // Scan WP Content directory except plugins, mu-plugins, themes and uploads directory
         if ($this->options->currentStep == 5) {
-            $this->getWpContentFiles();
-            $this->prepareResponse(false, true);
+            $this->scanWpContentFolder();
+            $this->prepareResponse();
             return false;
         }
 
         if ($this->options->currentStep == 6) {
-            $this->getWpIncludesFiles();
-            $this->prepareResponse(false, true);
+            $this->scanWpIncludesFolder();
+            $this->prepareResponse();
             return false;
         }
 
         if ($this->options->currentStep == 7) {
-            $this->getWpAdminFiles();
-            $this->prepareResponse(false, true);
+            $this->scanWpAdminFolder();
+            $this->prepareResponse();
             return false;
         }
 
         if (isset($this->options->extraDirectories[$this->options->currentStep - $this->total])) {
-            $this->getExtraFiles($this->options->extraDirectories[$this->options->currentStep - $this->total]);
-            $this->prepareResponse(false, true);
+            $this->scanExtraFolders($this->options->extraDirectories[$this->options->currentStep - $this->total]);
+            $this->prepareResponse();
             return false;
         }
 
         // Prepare response
-        $this->prepareResponse(false, true);
+        $this->prepareResponse();
         // Not finished
         return true;
+    }
+
+    /**
+     * Scan uploads directory
+     * @param string $uploadsDir
+     * @return bool
+     * @throws Exception
+     */
+    protected function scanUploadsDirectory(string $uploadsDir): bool
+    {
+        $wpContentDir = $this->directory->getWpContentDirectory();
+        // When uploads dir is inside wp-content dir
+        if (strpos($uploadsDir, $wpContentDir) === 0) {
+            return $this->scanWpContentSubDirectory($uploadsDir);
+        }
+
+        return $this->scanWpContentSubDirectory($uploadsDir, $this->directory->getPluginsDirectory(), $this->directory->getAbsPath());
     }
 
     /**
      * Checks Whether There is Any Job to Execute or Not
      * @return bool
      */
-    protected function isFinished()
+    protected function isFinished(): bool
     {
         if ($this->options->currentStep >= $this->options->totalSteps) {
             return true;
@@ -515,8 +511,9 @@ class Directories extends JobExecutable
     /**
      * Save files
      * @return bool
+     * @throws Exception
      */
-    protected function saveProgress()
+    protected function saveProgress(): bool
     {
         return $this->saveOptions();
     }
@@ -544,20 +541,20 @@ class Directories extends JobExecutable
      *
      * @return bool
      */
-    protected function isDirectoryExcluded($directory)
+    protected function isDirectoryExcluded(string $directory): bool
     {
         if (empty($this->excludedPaths)) {
             $this->excludedPaths = $this->options->excludedDirectories;
         }
 
-        return $this->pathChecker->isPathInPathsList($directory, $this->excludedPaths, false);
+        return $this->pathChecker->isPathInPathsList($directory, $this->excludedPaths);
     }
 
     /**
      * Return List of all user defined file size excludes from hooks and through UI
      * @return array
      */
-    protected function getFilteredExcludedFileSizes()
+    protected function getFilteredExcludedFileSizes(): array
     {
         return apply_filters('wpstg_clone_file_size_exclude', $this->options->excludeSizeRules);
     }
@@ -568,7 +565,7 @@ class Directories extends JobExecutable
      * Defined by WP Staging i.e. cache or some plugins.
      * @return array
      */
-    protected function getFilteredExcludedPaths()
+    protected function getFilteredExcludedPaths(): array
     {
         $excludePaths = [];
         $abspath      = $this->rootPath;
@@ -602,5 +599,38 @@ class Directories extends JobExecutable
         }, $this->options->excludeGlobRules);
 
         return array_merge($excludePaths, $excludeGlobRules);
+    }
+
+    /**
+     * @param string $directory
+     * @return true
+     * @throws Exception
+     */
+    private function scanDirectoryAndWriteCacheFile(string $directory): bool
+    {
+        $directory = $this->filesystem->normalizePath($directory, true);
+        $relPath   = str_replace($this->rootPath, '', $directory);
+
+        // Skip it
+        if ($this->isDirectoryExcluded($directory)) {
+            $this->log("Skipping " . $relPath);
+            return true;
+        }
+
+        // open file handle
+        $files = $this->open($this->filename, 'a');
+
+        $this->log("Scanning " . $relPath . " for its sub-directories and files");
+
+        try {
+            $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
+            $this->options->totalFiles += $this->scanToCacheFile($files, $directory, true);
+        } catch (Exception $e) {
+            $this->returnException('Error: ' . $e->getMessage());
+        }
+
+        // close the file handler
+        $this->close($files);
+        return true;
     }
 }

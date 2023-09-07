@@ -58,6 +58,9 @@ class JobBackupDataDto extends JobDataDto
     /** @var int */
     private $totalRowsOfTableBeingBackup = 0;
 
+    /** @var int reset to PHP_INT_MIN for each table */
+    private $lastInsertId;
+
     /** @var array */
     private $tablesToBackup = [];
 
@@ -859,6 +862,22 @@ class JobBackupDataDto extends JobDataDto
     public function updateMultipartFileInfo($multipartFileInfo, $index)
     {
         $this->multipartFilesInfo[$index] = $multipartFileInfo;
+    }
+
+    /**
+     * @param int $lastInsertId
+     */
+    public function setLastInsertId($lastInsertId)
+    {
+        $this->lastInsertId = $lastInsertId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getLastInsertId()
+    {
+        return $this->lastInsertId;
     }
 
     /**

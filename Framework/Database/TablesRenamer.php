@@ -361,6 +361,9 @@ class TablesRenamer
      */
     public function cleanTemporaryBackupTables()
     {
+        $this->tableService->getDatabase()->exec('SET autocommit=0;');
+        $this->tableService->getDatabase()->exec('SET FOREIGN_KEY_CHECKS=0;');
+        $this->tableService->getDatabase()->exec('START TRANSACTION;');
         foreach ($this->tablesToBeDropped as $table) {
             $result = $this->tableService->getDatabase()->exec(sprintf(
                 "DROP TABLE `%s`;",
@@ -369,12 +372,16 @@ class TablesRenamer
 
             // return false if drop table failed to try again
             if ($result === false) {
+                $this->tableService->getDatabase()->exec('COMMIT;');
+                $this->tableService->getDatabase()->exec('SET autocommit=1;');
                 return false;
             }
 
             $this->tablesRemainingToBeDropped--;
         }
 
+        $this->tableService->getDatabase()->exec('COMMIT;');
+        $this->tableService->getDatabase()->exec('SET autocommit=1;');
         return true;
     }
 

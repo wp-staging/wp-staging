@@ -7,10 +7,12 @@
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
+use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
@@ -56,30 +58,49 @@ class FilesystemScannerTask extends BackupTask
      */
     protected $currentPathScanning;
 
+    /**
+     * @param Directory $directory
+     * @param PathIdentifier $pathIdentifier
+     * @param LoggerInterface $logger
+     * @param Cache $cache
+     * @param StepsDto $stepsDto
+     * @param SeekableQueueInterface $taskQueue
+     * @param SeekableQueueInterface $compressorQueue
+     * @param Filesystem $filesystem
+     */
     public function __construct(Directory $directory, PathIdentifier $pathIdentifier, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, SeekableQueueInterface $compressorQueue, Filesystem $filesystem)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
-        $this->directory = $directory;
-        $this->filesystem = $filesystem;
-        $this->pathIdentifier = $pathIdentifier;
+        $this->directory       = $directory;
+        $this->filesystem      = $filesystem;
+        $this->pathIdentifier  = $pathIdentifier;
         $this->compressorQueue = $compressorQueue;
     }
 
-    public static function getTaskName()
+    /**
+     * @return string
+     * @example 'backup_site_restore_themes'
+     */
+    public static function getTaskName(): string
     {
         return 'backup_filesystem_scan';
     }
 
-    public static function getTaskTitle()
+    /**
+     * @return string
+     * @example 'Restoring Themes From Backup'
+     */
+    public static function getTaskTitle(): string
     {
         return 'Discovering Files';
     }
 
     /**
      * @inheritDoc
+     * @throws DiskNotWritableException
      */
-    public function execute()
+    public function execute(): TaskResponseDto
     {
         $this->setupFilters();
         $this->setupFilesystemScanner();
@@ -89,35 +110,35 @@ class FilesystemScannerTask extends BackupTask
             $this->setupCompressorQueue();
             $this->scanWpContentDirectory();
             $this->unlockQueue();
-            return $this->generateResponse(true);
+            return $this->generateResponse();
         }
         if ($this->stepsDto->getCurrent() === 1) {
             $this->currentPathScanning = BackupPluginsTask::IDENTIFIER;
             $this->setupCompressorQueue();
             $this->scanPluginsDirectories();
             $this->unlockQueue();
-            return $this->generateResponse(true);
+            return $this->generateResponse();
         }
         if ($this->stepsDto->getCurrent() === 2) {
             $this->currentPathScanning = BackupMuPluginsTask::IDENTIFIER;
             $this->setupCompressorQueue();
             $this->scanMuPluginsDirectory();
             $this->unlockQueue();
-            return $this->generateResponse(true);
+            return $this->generateResponse();
         }
         if ($this->stepsDto->getCurrent() === 3) {
             $this->currentPathScanning = BackupThemesTask::IDENTIFIER;
             $this->setupCompressorQueue();
             $this->scanThemesDirectory();
             $this->unlockQueue();
-            return $this->generateResponse(true);
+            return $this->generateResponse();
         }
         if ($this->stepsDto->getCurrent() === 4) {
             $this->currentPathScanning = BackupUploadsTask::IDENTIFIER;
             $this->setupCompressorQueue();
             $this->scanUploadsDirectory();
             $this->unlockQueue();
-            return $this->generateResponse(true);
+            return $this->generateResponse();
         }
 
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
@@ -150,12 +171,18 @@ class FilesystemScannerTask extends BackupTask
         return $this->generateResponse(false);
     }
 
+    /**
+     * @return void
+     */
     protected function setupCompressorQueue()
     {
         $compressorTaskName = FileBackupTask::getTaskName() . '_' . $this->currentPathScanning;
         $this->compressorQueue->setup($compressorTaskName, SeekableQueueInterface::MODE_WRITE);
     }
 
+    /**
+     * @return void
+     */
     protected function setupFilters()
     {
         /**
@@ -181,6 +208,10 @@ class FilesystemScannerTask extends BackupTask
         $this->ignoreFileExtensions = array_flip($this->ignoreFileExtensions);
     }
 
+    /**
+     * @return void
+     * @throws DiskNotWritableException
+     */
     protected function scan()
     {
         try {
@@ -223,6 +254,9 @@ class FilesystemScannerTask extends BackupTask
         }
     }
 
+    /**
+     * @return void
+     */
     protected function setupFilesystemScanner()
     {
         if ($this->stepsDto->getTotal() > 0) {
@@ -312,7 +346,6 @@ class FilesystemScannerTask extends BackupTask
             if ($otherFiles->isDir()) {
                 if (!in_array($this->filesystem->normalizePath($otherFiles->getPathname(), true), $this->directory->getDefaultWordPressFolders())) {
                     $this->enqueueDirToBeScanned($otherFiles);
-                    continue;
                 }
             }
         }
@@ -412,6 +445,9 @@ class FilesystemScannerTask extends BackupTask
         }
     }
 
+    /**
+     * @return void
+     */
     protected function scanUploadsDirectory()
     {
         if (!$this->jobDataDto->getIsExportingUploads()) {
@@ -464,10 +500,14 @@ class FilesystemScannerTask extends BackupTask
         }
     }
 
+    /**
+     * @param \SplFileInfo $file
+     * @return void
+     */
     protected function enqueueFileInBackup(\SplFileInfo $file)
     {
         $normalizedPath = $this->filesystem->normalizePath($file->getPathname(), true);
-        $fileSize = $file->getSize();
+        $fileSize       = $file->getSize();
 
         $fileExtension = $file->getExtension();
 
@@ -500,20 +540,19 @@ class FilesystemScannerTask extends BackupTask
 
                 return;
             }
-        } else {
-            if ($fileSize > $this->ignoreFileBiggerThan) {
-                // Early bail: File is larger than max allowed size.
-                $this->logger->info(sprintf(
-                    __('%s: Skipped file "%s" (%s). It exceeds the maximum file size for backup (%s).', 'wp-staging'),
-                    static::getTaskTitle(),
-                    $relativePath,
-                    size_format($fileSize),
-                    size_format($this->ignoreFileBiggerThan)
-                ));
+        } elseif ($fileSize > $this->ignoreFileBiggerThan) {
+            // Early bail: File is larger than max allowed size.
+            $this->logger->info(sprintf(
+                __('%s: Skipped file "%s" (%s). It exceeds the maximum file size for backup (%s).', 'wp-staging'),
+                static::getTaskTitle(),
+                $relativePath,
+                size_format($fileSize),
+                size_format($this->ignoreFileBiggerThan)
+            ));
 
-                return;
-            }
+            return;
         }
+
 
         $this->jobDataDto->setDiscoveredFiles($this->jobDataDto->getDiscoveredFiles() + 1);
         $filesDiscoveredForCurrentPath = $this->jobDataDto->getDiscoveredFilesByCategory($this->currentPathScanning) + 1;
@@ -524,6 +563,10 @@ class FilesystemScannerTask extends BackupTask
         $this->compressorQueue->enqueue(rtrim($relativePath, '/'));
     }
 
+    /**
+     * @param \SplFileInfo $dir
+     * @return void
+     */
     protected function enqueueDirToBeScanned(\SplFileInfo $dir)
     {
         $normalizedPath = $this->filesystem->normalizePath($dir->getPathname(), true);
@@ -539,12 +582,21 @@ class FilesystemScannerTask extends BackupTask
         $this->taskQueue->enqueue($this->currentPathScanning . self::PATH_SEPARATOR . $normalizedPath);
     }
 
-    protected function isDot(\SplFileInfo $fileInfo)
+    /**
+     * @param \SplFileInfo $fileInfo
+     * @return bool
+     */
+    protected function isDot(\SplFileInfo $fileInfo): bool
     {
         return $fileInfo->getBasename() === '.' || $fileInfo->getBasename() === '..';
     }
 
-    protected function recursivePathScanning($path)
+    /**
+     * @param string $path
+     * @return void
+     * @throws FilesystemExceptions
+     */
+    protected function recursivePathScanning(string $path)
     {
         $iterator = (new FilterableDirectoryIterator())
             ->setDirectory(trailingslashit($path))
@@ -570,16 +622,19 @@ class FilesystemScannerTask extends BackupTask
         }
     }
 
+    /**
+     * @return void
+     */
     protected function unlockQueue()
     {
         $this->compressorQueue->shutdown();
     }
 
     /**
-     * @param  string $path
+     * @param string $path
      * @return bool
      */
-    protected function isExcludedDirectory($path)
+    protected function isExcludedDirectory(string $path): bool
     {
         $normalizedPath = $this->filesystem->normalizePath($path, true);
 

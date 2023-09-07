@@ -33,6 +33,7 @@ class UpdateWpConfigConstants extends FileCloningService
             "WP_CACHE"            => 'false',
             "DISABLE_WP_CRON"     => (isset($this->dto->getJob()->getOptions()->cronDisabled) && $this->dto->getJob()->getOptions()->cronDisabled) ? 'true' : 'false',
             "WP_ENVIRONMENT_TYPE" => sprintf("'%s'", 'staging'),
+            "WPSTAGING_DEV_SITE"  => 'true'
         ];
 
         /** @var SiteInfo $siteInfo */
@@ -219,7 +220,7 @@ EOT;
      */
     private function maybeAddDefinedCondition($constant)
     {
-        if ($constant === 'WP_ENVIRONMENT_TYPE') {
+        if ($constant === 'WP_ENVIRONMENT_TYPE' || $constant === 'WPSTAGING_DEV_SITE') {
             return true;
         }
         return false;

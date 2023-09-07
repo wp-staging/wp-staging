@@ -173,7 +173,7 @@ class BackupValidator
     public function isUnsupportedBackupVersion(BackupMetadata $metadata)
     {
         $isCreatedOnPro = $metadata->getCreatedOnPro();
-        $version = $metadata->getVersion();
+        $version = $metadata->getWpstgVersion();
         if (!$isCreatedOnPro) {
             return false;
         }

@@ -84,11 +84,6 @@ if (!defined('YEAR_IN_SECONDS')) {
     define('YEAR_IN_SECONDS', 365 * DAY_IN_SECONDS);
 }
 
-// PHP 5.6 compatibility
-if (file_exists(__DIR__ . '/php56-compatibilty.php')) {
-    include_once __DIR__ . '/php56-compatibilty.php';
-}
-
 /**
  * Register specific Pro and Free constants. We register them here instead of on the
  * entrypoint because we want to make sure we are defining constants for the plugins

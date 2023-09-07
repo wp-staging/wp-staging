@@ -4,6 +4,9 @@ namespace WPStaging\Backend\Feedback;
 
 use WP_User;
 
+/**
+ * @todo Move to src/Basic/Feedback/Feedback.php
+ */
 class Feedback
 {
 
@@ -12,7 +15,7 @@ class Feedback
      * @global array $pagenow
      * @return bool
      */
-    private function isPluginsPage()
+    private function isPluginsPage(): bool
     {
         global $pagenow;
         return ( $pagenow === 'plugins.php' );
@@ -20,8 +23,7 @@ class Feedback
 
     /**
      * Load feedback form
-     *
-     * @todo check if this is being used, remove otherwise.
+     * @return void
      */
     public function loadForm()
     {
@@ -52,10 +54,21 @@ class Feedback
             parse_str($_POST['data'], $form);  // This is a js serialised string. It needs to be parsed first. It will be sanitised on the next lines after parsing it.
         }
 
-        $text = '';
-        if (!empty($form['wpstg_disable_text'])) {
-            $text = sanitize_text_field(implode("\n\r", (array)$form['wpstg_disable_text']));
+        $reasons = isset($form['wpstg_disable_reason']) ? (array)$form['wpstg_disable_reason'] : [];
+
+        $body    = '';
+        $subject = [];
+        foreach ($reasons as $reason) {
+            $reasonText = ucwords(str_replace('_', ' ', sanitize_text_field($reason)));
+            $subject[]  = $reasonText;
+            if (isset($form['wpstg_disable_text'][$reason])) {
+                $body .= $reasonText . ": " . sanitize_text_field($form['wpstg_disable_text'][$reason]) . "\n\r";
+            } else {
+                $body .= $reasonText . "\n\r";
+            }
         }
+
+        $body = empty($body) ? 'No reason given' : $body;
 
         $headers = [];
 
@@ -65,9 +78,9 @@ class Feedback
             $headers[] = "Reply-To: $from";
         }
 
-        $subject = isset($form['wpstg_disable_reason']) ? 'WP Staging Free: ' . sanitize_text_field($form['wpstg_disable_reason']) : 'WP Staging Free: (no reason given)';
-
-        $success = wp_mail('feedback@wp-staging.com', $subject, $text, $headers);
+        $subject = empty($subject) ? '(no reason given)' : (count($subject) > 1 ? '(multiple reasons given)' : $subject[0]);
+        $subject = 'WP Staging Free: ' . $subject;
+        $success = wp_mail('feedback@wp-staging.com', $subject, $body, $headers);
 
         if ($success) {
             wp_die(1);

@@ -2132,7 +2132,6 @@
             return;
           }
           var prettify = function prettify(seconds) {
-            console.log("Process running for " + seconds + " seconds");
             // If potentially anything can exceed 24h execution time than that;
             // const _seconds = parseInt(seconds, 10)
             // const hours = Math.floor(_seconds / 3600)
@@ -3018,7 +3017,6 @@
           }
           WPStagingCommon.resetErrors();
           if (WPStagingBackup$1.isCancelled) {
-            // console.log('cancelled');
             WPStagingBackup$1.statusStop();
             return;
           }
@@ -3153,7 +3151,6 @@
             if (WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase) {
               $('.wpstg--modal--backup--restore--introduction .wpstg-backup-restore-contains-database').show();
             }
-            console.log(WPStagingBackup$1.modal.restore.data.backupMetadata);
             if (WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase && WPStagingBackup$1.modal.restore.data.backupMetadata.singleOrMulti === 'multi') {
               $('.wpstg--modal--backup--restore--introduction .wpstg-backup-restore-contains-database-multisite').show();
             }
