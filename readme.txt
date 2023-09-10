@@ -1,4 +1,4 @@
-=== Backup Migration WP STAGING  ===
+=== WP STAGING WordPress Backup Plugin - Migration Backup Restore  ===
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -12,11 +12,11 @@ Tested up to: 6.3
 Stable tag: 3.0.4
 Requires PHP: 7.0
 
-Backup Restore
+Backup Restore Migrate Staging Duplicator - 100% unit tested.
 
 == Description ==
 
-<h3>Staging, Backup, Cloning & Migration of WordPress Sites</h3>
+<h3>Backup, Staging, Cloning & Migration of WordPress Sites</h3>
 WP STAGING is a professional all in one <strong>duplicator, staging, and backup plugin</strong>. Create an exact copy and backup of your website in seconds. Perfect for staging, backup, or development purposes.
 (Cloning and backup time depends on the size of your website)
 <br /><br />
