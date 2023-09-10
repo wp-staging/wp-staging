@@ -1,4 +1,4 @@
-=== WP STAGING Backup - Migration Backup Restore  ===
+=== Backup Migration WP STAGING  ===
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -6,7 +6,7 @@ Contributors: WP-Staging, WPStagingBackup, ReneHermi, lucatume, lucasbustamante,
 Donate link: https://wp-staging.com/backup-wordpress
 License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
-Tags: backup, backups, migrate, migration, wordpress backup plugin
+Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.3
 Stable tag: 3.0.4
