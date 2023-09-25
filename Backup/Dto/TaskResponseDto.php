@@ -13,7 +13,7 @@ class TaskResponseDto extends AbstractDto
         toArray as traitToArray;
     }
 
-    /** @var boolean */
+    /** @var bool */
     protected $isRunning;
 
     /** @var string */
@@ -43,6 +43,9 @@ class TaskResponseDto extends AbstractDto
     /** @var string */
     protected $jobId;
 
+    /**
+     * @return array<string, mixed>
+     */
     public function toArray()
     {
         $data = $this->traitToArray();
@@ -53,17 +56,21 @@ class TaskResponseDto extends AbstractDto
         }
 
         // TODO REF: Remove
-        $data['last_msg'] = $lastMsg;
+        $data['last_msg']    = $lastMsg;
         $data['isForceSave'] = true;
-        $data['job_done'] = $data['isRunning'];
+        $data['job_done']    = !$data['isRunning'];
         return $data;
     }
 
+    /**
+     * @param string $message
+     */
     public function addMessage($message)
     {
         if (!is_array($this->messages)) {
             $this->messages = [];
         }
+
         $this->messages[] = $message;
     }
 

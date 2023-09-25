@@ -88,7 +88,7 @@ class CleanupTmpFilesTask extends AbstractTask
              * deleting it in the next request...
              */
             $response = $this->generateResponse(false);
-            $response->setIsRunning(false);
+            $response->setIsRunning(true);
 
             $this->logger->info(sprintf(
                 '%s: Re-enqueing path %s for deletion, as it couldn\'t be deleted in a single request without

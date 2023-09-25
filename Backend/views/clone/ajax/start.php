@@ -12,24 +12,6 @@ use WPStaging\Framework\Facades\Escape;
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/download.php');
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
 ?>
-<div class="successfullying-section">
-    <h2 id="wpstg-processing-header"><?php echo esc_html__("Processing, please wait...", "wp-staging")?></h2>
-    <div class="wpstg-progress-bar">
-        <div class="wpstg-progress" id="wpstg-progress-db"></div>
-        <div class="wpstg-progress" id="wpstg-progress-sr"></div>
-        <div class="wpstg-progress" id="wpstg-progress-dirs"></div>
-        <div class="wpstg-progress" id="wpstg-progress-files"></div>
-    </div>
-    <div class="wpstg-clear-both">
-        <div id="wpstg-processing-status"></div>
-        <div id="wpstg-processing-timer"></div>
-    </div>
-    <div class="wpstg-clear-both"></div>
-</div>
-
-<button type="button" id="wpstg-cancel-cloning" class="wpstg-button--primary wpstg-button--red">
-    <?php echo esc_html__("Cancel", "wp-staging")?>
-</button>
 
 <button type="button" id="wpstg-resume-cloning" class="wpstg-link-btn wpstg-button--primary wpstg-button--blue">
     <?php echo esc_html__("Resume", "wp-staging")?>

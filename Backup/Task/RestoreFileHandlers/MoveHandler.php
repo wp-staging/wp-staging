@@ -31,6 +31,9 @@ class MoveHandler extends RestoreFileHandler
 
         $this->lock($source);
         $moved = @rename($source, $destination);
+        if (!$moved) {
+            $moved = $this->filesystem->moveFileOrDir($source, $destination);
+        }
         $this->unlock();
 
         if (!$moved) {
@@ -39,10 +42,8 @@ class MoveHandler extends RestoreFileHandler
 
             $message   = 'Maybe a file permission issue?';
             $lastError = error_get_last();
-            if (!empty($lastError) && !empty($lastError['message'])) {
-                if (substr($lastError['message'], 0, 7) === 'rename(') {
-                    $message = preg_replace('@^rename.*?:\s+@', '', $lastError['message']);
-                }
+            if (!empty($lastError['message']) && substr($lastError['message'], 0, 7) === 'rename(') {
+                $message = preg_replace('@^rename.*?:\s+@', '', $lastError['message']);
             }
 
             $this->logger->warning(sprintf(

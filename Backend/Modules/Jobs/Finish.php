@@ -8,7 +8,6 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Utils\Urls;
-use WPStaging\Framework\Adapter\SourceDatabase;
 
 /**
  * Class Finish
@@ -16,17 +15,11 @@ use WPStaging\Framework\Adapter\SourceDatabase;
  */
 class Finish extends Job
 {
-
     /**
      * Clone Key
      * @var string
      */
     private $clone = '';
-
-    /**
-     * @var SourceDatabase
-     */
-    private $sourceDatabase;
 
     /**
      * @var Urls
@@ -40,8 +33,6 @@ class Finish extends Job
      */
     public function start()
     {
-        $this->sourceDatabase = WPStaging::make(SourceDatabase::class);
-        $this->sourceDatabase->setOptions($this->options);
         $this->urls = WPStaging::make(Urls::class);
 
         // sanitize the clone name before saving
@@ -51,8 +42,6 @@ class Finish extends Job
 
         // Prepare clone records & save scanned directories for delete job later
         $this->prepareCloneDataRecords();
-
-        $this->addExcludedFilesInCloneDB();
 
         $this->options->isRunning = false;
 
@@ -100,23 +89,6 @@ class Finish extends Job
         $this->cache->delete("files_to_copy");
 
         $this->log("Finish: Clone job's cache files have been deleted!");
-    }
-
-    /**
-     * Add excluded files data in clone database as option
-     *
-     * @return void
-     */
-    protected function addExcludedFilesInCloneDB()
-    {
-        $this->log("Finish: Adding Excluded files option...");
-        if (isset($this->options->tmpExcludedFilesFullPath)) {
-            if ($this->sourceDatabase->addOrUpdateClonedSiteOption(Sites::STAGING_EXCLUDED_FILES_OPTION, array_unique($this->options->tmpExcludedFilesFullPath)) === false) {
-                $this->log("Finish: Failed to add excluded files option in clone database!");
-            }
-            unset($this->options->tmpExcludedFilesFullPath);
-        }
-        $this->log("Finish: Successfully added excluded files option in clone database!");
     }
 
     /**

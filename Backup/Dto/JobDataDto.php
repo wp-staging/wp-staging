@@ -80,6 +80,9 @@ class JobDataDto extends AbstractDto
     /** @var int how often a request is retried */
     protected $retries;
 
+    /** @var array Data for the current task. */
+    protected $currentTaskData = [];
+
     /**
      * @return string|int|null
      */
@@ -488,5 +491,21 @@ class JobDataDto extends AbstractDto
     public function setRetries($retries)
     {
         $this->retries = $retries;
+    }
+
+    /**
+     * @return array
+     */
+    public function getCurrentTaskData(): array
+    {
+        return $this->currentTaskData;
+    }
+
+    /**
+     * @param array $currentTaskData
+     */
+    public function setCurrentTaskData(array $currentTaskData)
+    {
+        $this->currentTaskData = $currentTaskData;
     }
 }

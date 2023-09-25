@@ -254,7 +254,9 @@ class Directories extends JobExecutable
             rtrim($this->directory->getUploadsDirectory(), '/'),
             // In case the wp staging uploads directory is outside the uploads directory
             rtrim($this->directory->getPluginUploadsDirectory(), '/'),
-            rtrim($this->directory->getActiveThemeParentDirectory(), '/')
+            rtrim($this->directory->getActiveThemeParentDirectory(), '/'),
+            // To not copy the wp-staging sites directory inside wp-content
+            rtrim($this->directory->getStagingSiteDirectoryInsideWpcontent()),
         ];
 
         // Exclude main uploads directory if multisite and not main site

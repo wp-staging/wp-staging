@@ -89,12 +89,18 @@ class Notices
     /** @var SiteInfo */
     private $siteInfo;
 
-    /** @var string  */
+    /** @var string */
     private $viewsNoticesPath;
 
+    /** @var false|mixed|null  */
+    private $settings;
+
+    /**
+     * @param Assets $assets
+     */
     public function __construct(Assets $assets)
     {
-        $this->assets = $assets;
+        $this->assets           = $assets;
         $this->viewsNoticesPath = trailingslashit($this->getPluginPath()) . "Backend/views/notices/";
 
         // To avoid dependency hell and smooth transition we will be using service locator for below dependencies
@@ -127,7 +133,6 @@ class Notices
 
     /**
      * Load admin notices
-     * @todo refactor this method into smaller methods
      * @throws Exception
      */
     public function renderNotices()
@@ -136,133 +141,76 @@ class Notices
             return;
         }
 
-        // Added this as workaround to not break multiple notices after the recent refactor
-        // @todo refactor this class to avoid this workaround
-        $viewsNoticesPath = $this->viewsNoticesPath;
+        $this->settings = get_option('wpstg_settings', []);
 
+        $this->renderNoticesBasicVersion();
+        $this->renderNoticesProVersion();
+        $this->renderNoticesOnAllWpAdminPages();
+        $this->renderNoticesOnWpStagingAdminPages();
+    }
+
+    /**
+     * @return void
+     */
+    private function renderNoticesOnAllWpAdminPages()
+    {
+
+        $this->noticeListItemsDisabledOnStagingSite();
+        $this->noticeDbHasMissingOrUnexpectedPrimaryKeys();
+        $this->noticeWordFenceHasBeenDisabled();
+        $this->noticeSettingsAreCorrupted();
+        $this->noticeStagingUploadsFolderIsSymlinked();
+        $this->noticeTableTmpPrefixConflictNotice();
+    }
+
+    /**
+     * @return void
+     */
+    private function renderNoticesBasicVersion()
+    {
         if (!$this->isPro()) {
             do_action(self::BASIC_NOTICES_ACTION);
-        }
-
-        // Never show disable mail message if it's free version
-        $outgoingMailsDisabled = false;
-
-        // Show all notices of the pro version
-        if ($this->isPro()) {
-            // Check mails disabled against both the old and new way of emails disabled option
-            $outgoingMailsDisabled = $this->cloneOptions->get(FirstRun::MAILS_DISABLED_KEY) || (get_option(FirstRun::MAILS_DISABLED_KEY, false));
-            // This hook is for internal use only. Used in PRO version to display PRO version related notices.
-            do_action(self::PRO_NOTICES_ACTION);
-        }
-
-        // Show notice about what disabled in the staging site. (Show only on staging site)
-        if (self::SHOW_ALL_NOTICES || $this->disabledItemsNotice->isEnabled()) {
-            $excludedPlugins = (array)$this->excludedPlugins->getExcludedPlugins();
-            // Show freemius notice if freemius options were deleted during cloning.
-            $freemiusOptionsCleared = $this->freemiusScript->isNoticeEnabled();
-            // Show jetpack staging mode notice if the constant is set on staging site
-            $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
-            $excludedFiles              = get_option(Sites::STAGING_EXCLUDED_FILES_OPTION, []);
-            // use require here instead of require_once otherwise unit tests will always fail,
-            // as this notice is tested multiple times.
-            require $this->viewsNoticesPath . "disabled-items-notice.php";
-        }
-
-        $optionTable              = $this->db->prefix . 'options';
-        $isPrimaryKeyMissing      = $this->isOptionTablePrimaryKeyMissing($this->db, $optionTable);
-        $isPrimaryKeyIsOptionName = $this->isOptionTablePrimaryKeyIsOptionName($this->db, $optionTable);
-        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && ( $isPrimaryKeyMissing || $isPrimaryKeyIsOptionName ) && $this->isWPStagingAdminPage())) {
-            require $this->viewsNoticesPath . "wp-options-missing-pk.php";
-        }
-
-        // Show notice if WordFence Firewall is disabled
-        $this->wordfence->showNotice($this->viewsNoticesPath);
-
-        $settings = get_option('wpstg_settings', []);
-        if (self::SHOW_ALL_NOTICES || (!is_array($settings) && !is_object($settings))) {
-            require $this->viewsNoticesPath . "settings_option_corrupt.php";
-        }
-
-        $this->showWarningIfStagingUploadsFolderIsSymlinked();
-
-        $this->showTableTmpPrefixConflictNotice();
-
-        /**
-         * Display all notices below this line in WP STAGING admin pages only and only to administrators!
-         */
-        if (!current_user_can("update_plugins") || !$this->isWPStagingAdminPage()) {
-            return;
-        }
-
-        // Show notice if uploads dir is outside ABSPATH
-        if (self::SHOW_ALL_NOTICES || !$this->dirUtil->isPathInWpRoot($this->dirUtil->getUploadsDirectory())) {
-            require $this->viewsNoticesPath . "uploads-outside-wp-root.php";
-        }
-
-        /**
-         * Display outdated WP Staging version notice (Free Only)
-         */
-        $this->outdatedWpStagingNotice->showNotice($this->viewsNoticesPath);
-
-        // Show notice Outdated version of WP Staging Hooks
-        if (self::SHOW_ALL_NOTICES || ($this->objectCacheNotice->isEnabled())) {
-            require_once $this->viewsNoticesPath . "object-cache-skipped.php";
-        }
-
-        // Show notice Cache directory is not writable
-        $cacheDir = $this->cache->getCacheDir();
-        if (self::SHOW_ALL_NOTICES || (!is_dir($cacheDir) || !is_writable($cacheDir))) {
-            require_once $this->viewsNoticesPath . "cache-directory-permission-problem.php";
-        }
-
-        // Show notice Logger directory is not writable
-        $logsDir = $this->logger->getLogDir();
-        if (self::SHOW_ALL_NOTICES || (!is_dir($logsDir) || !is_writable($logsDir))) {
-            require_once $this->viewsNoticesPath . "logs-directory-permission-problem.php";
-        }
-
-        // Show notice Staging directory is not writable
-        if (self::SHOW_ALL_NOTICES || (!is_writable(ABSPATH))) {
-            require_once $this->viewsNoticesPath . "staging-directory-permission-problem.php";
-        }
-
-        // Show notice Different scheme in home and siteurl
-        if (self::SHOW_ALL_NOTICES || ($this->isDifferentScheme())) {
-            require_once $this->viewsNoticesPath . "wrong-scheme.php";
-        }
-
-        // Show notice Outdated version of WP Staging Hooks
-        if (self::SHOW_ALL_NOTICES || ($this->isUsingOutdatedWpstgHooksPlugin())) {
-            require_once $this->viewsNoticesPath . "outdated-wp-staging-hooks.php";
-        }
-
-        // Show notice mu-plugin directory is not executable
-        $varsDirectory = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
-        $wpstgSettings = (object) $settings;
-        if (
-            self::SHOW_ALL_NOTICES || (!is_writable($varsDirectory) || !is_readable($varsDirectory))
-            && isset($wpstgSettings->optimizer) && $wpstgSettings->optimizer
-        ) {
-            require $this->viewsNoticesPath . "mu-plugin-directory-permission-problem.php";
-        }
-
-        if (self::SHOW_ALL_NOTICES || empty($wpstgSettings->optimizer)) {
-            require_once $this->viewsNoticesPath . "disabled-optimizer-notice.php";
-        }
-
-        // Show notice Failed to prevent directory listing
-        $this->showDirectoryListingWarningNotice($this->viewsNoticesPath);
-
-        // Show notice if db prefix does not exist
-        if (self::SHOW_ALL_NOTICES || empty($this->db->prefix)) {
-            require_once $this->viewsNoticesPath . "no-db-prefix-notice.php";
         }
     }
 
     /**
      * @return void
      */
-    private function showWarningIfStagingUploadsFolderIsSymlinked()
+    private function renderNoticesProVersion()
+    {
+        if ($this->isPro()) {
+            // This hook is for internal use only. Used in PRO version to display PRO version related notices.
+            do_action(self::PRO_NOTICES_ACTION);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function renderNoticesOnWpStagingAdminPages()
+    {
+        if (!current_user_can("update_plugins") || !$this->isWPStagingAdminPage()) {
+            return;
+        }
+
+        $this->noticeUploadsDirIsOutsideAbspath();
+        $this->noticeWpStagingVersionIsOutdated();
+        $this->noticeObjectCachePluginNotRestored();
+        $this->noticeCacheDirectoryNotWriteable();
+        $this->noticeLoggerDirectoryNotWriteable();
+        $this->noticeAbspathDirectoryNotWriteable();
+        $this->noticeHomeAndSiteurlHaveDifferentScheme();
+        $this->noticeWpStagingHooksPluginIsOutdated();
+        $this->noticeMuPluginDirNotWriteable();
+        $this->noticeOptimizerIsDisabled();
+        $this->noticeShowDirectoryListingWarning($this->viewsNoticesPath);
+        $this->noticeDbPrefixDoesNotExist();
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeStagingUploadsFolderIsSymlinked()
     {
         $uploadsPath = wp_upload_dir()['basedir'];
         if (self::SHOW_ALL_NOTICES || (is_link($uploadsPath) && $this->siteInfo->isStagingSite())) {
@@ -273,7 +221,7 @@ class Notices
     /**
      * Show warning notice if current site prefix is equal to one of the WPSTG temporary prefixes wpstgtmp_ or wpstgbak_
      */
-    private function showTableTmpPrefixConflictNotice()
+    private function noticeTableTmpPrefixConflictNotice()
     {
         $disallowedPrefixes = [PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP, PrepareRestore::TMP_DATABASE_PREFIX];
         if (self::SHOW_ALL_NOTICES || in_array($this->db->prefix, $disallowedPrefixes, true)) {
@@ -358,7 +306,7 @@ class Notices
      * called only once, otherwise the message would be enqueued multiple times.
      *
      */
-    private function showDirectoryListingWarningNotice(string $viewsNoticesPath)
+    private function noticeShowDirectoryListingWarning(string $viewsNoticesPath)
     {
         $directoryListingErrors = WPStaging::getInstance()->getContainer()->getFromArray(static::$directoryListingErrors);
 
@@ -432,5 +380,195 @@ class Notices
     public static function renderNoticeDismissAction(string $viewsNoticesPath, $wpstgNotice, $cssClassSelectorDismiss, $cssClassSelectorNotice)
     {
         require "{$viewsNoticesPath}_partial/notice_dismiss_action.php";
+    }
+
+    /**
+     * @param $settings
+     * @return bool
+     */
+    private function isSettingsCorrupt(): bool
+    {
+        if (!is_array($this->settings) && !is_object($this->settings)) {
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeDbHasMissingOrUnexpectedPrimaryKeys()
+    {
+        $optionTable              = $this->db->prefix . 'options';
+        $isPrimaryKeyMissing      = $this->isOptionTablePrimaryKeyMissing($this->db, $optionTable);
+        $isPrimaryKeyIsOptionName = $this->isOptionTablePrimaryKeyIsOptionName($this->db, $optionTable);
+        if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && ($isPrimaryKeyMissing || $isPrimaryKeyIsOptionName) && $this->isWPStagingAdminPage())) {
+            require $this->viewsNoticesPath . "wp-options-missing-pk.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeDbPrefixDoesNotExist()
+    {
+        if (self::SHOW_ALL_NOTICES || empty($this->db->prefix)) {
+            require_once $this->viewsNoticesPath . "no-db-prefix-notice.php";
+        }
+    }
+
+    /**
+     * @param $wpstgSettings
+     * @return void
+     */
+    private function noticeOptimizerIsDisabled()
+    {
+        $wpstgSettings = (object)$this->settings;
+        if (self::SHOW_ALL_NOTICES || empty($wpstgSettings->optimizer)) {
+            require_once $this->viewsNoticesPath . "disabled-optimizer-notice.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeMuPluginDirNotWriteable()
+    {
+        $varsDirectory = defined('WPMU_PLUGIN_DIR') ? WPMU_PLUGIN_DIR : trailingslashit(WP_CONTENT_DIR) . 'mu-plugins';
+        $wpstgSettings = (object)$this->settings;
+        if (
+            self::SHOW_ALL_NOTICES || (!is_writable($varsDirectory) || !is_readable($varsDirectory))
+            && isset($wpstgSettings->optimizer) && $wpstgSettings->optimizer
+        ) {
+            require $this->viewsNoticesPath . "mu-plugin-directory-permission-problem.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeWpStagingHooksPluginIsOutdated()
+    {
+        if (self::SHOW_ALL_NOTICES || ($this->isUsingOutdatedWpstgHooksPlugin())) {
+            require_once $this->viewsNoticesPath . "outdated-wp-staging-hooks.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeHomeAndSiteurlHaveDifferentScheme()
+    {
+        if (self::SHOW_ALL_NOTICES || ($this->isDifferentScheme())) {
+            require_once $this->viewsNoticesPath . "wrong-scheme.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeAbspathDirectoryNotWriteable()
+    {
+        if (self::SHOW_ALL_NOTICES || (!is_writable(ABSPATH))) {
+            require_once $this->viewsNoticesPath . "staging-directory-permission-problem.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeLoggerDirectoryNotWriteable()
+    {
+        $logsDir = $this->logger->getLogDir();
+        if (self::SHOW_ALL_NOTICES || (!is_dir($logsDir) || !is_writable($logsDir))) {
+            require_once $this->viewsNoticesPath . "logs-directory-permission-problem.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeCacheDirectoryNotWriteable()
+    {
+        $cacheDir = $this->cache->getCacheDir();
+        if (self::SHOW_ALL_NOTICES || (!is_dir($cacheDir) || !is_writable($cacheDir))) {
+            require_once $this->viewsNoticesPath . "cache-directory-permission-problem.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeObjectCachePluginNotRestored()
+    {
+        if (self::SHOW_ALL_NOTICES || ($this->objectCacheNotice->isEnabled())) {
+            require_once $this->viewsNoticesPath . "object-cache-skipped.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeWpStagingVersionIsOutdated()
+    {
+        /**
+         * Display outdated WP Staging version notice (Free Only)
+         */
+        $this->outdatedWpStagingNotice->showNotice($this->viewsNoticesPath);
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeUploadsDirIsOutsideAbspath()
+    {
+        if (self::SHOW_ALL_NOTICES || !$this->dirUtil->isPathInWpRoot($this->dirUtil->getUploadsDirectory())) {
+            require $this->viewsNoticesPath . "uploads-outside-wp-root.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeSettingsAreCorrupted()
+    {
+        if (self::SHOW_ALL_NOTICES || ($this->isSettingsCorrupt())) {
+            require $this->viewsNoticesPath . "settings_option_corrupt.php";
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeWordFenceHasBeenDisabled()
+    {
+        $this->wordfence->showNotice($this->viewsNoticesPath);
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeListItemsDisabledOnStagingSite()
+    {
+        // free version has no option to disable outgoing mails
+        $outgoingMailsDisabled = false;
+
+        if ($this->isPro()) {
+            // Check mails disabled against both the old and new way of emails disabled option
+            $outgoingMailsDisabled = $this->cloneOptions->get(FirstRun::MAILS_DISABLED_KEY) || (get_option(FirstRun::MAILS_DISABLED_KEY, false));
+        }
+
+        // Show notice about what disabled in the staging site. (Show only on staging site)
+        if (self::SHOW_ALL_NOTICES || $this->disabledItemsNotice->isEnabled()) {
+            $excludedPlugins = (array)$this->excludedPlugins->getExcludedPlugins();
+            // Show freemius notice if freemius options were deleted during cloning.
+            $freemiusOptionsCleared = $this->freemiusScript->isNoticeEnabled();
+            // Show jetpack staging mode notice if the constant is set on staging site
+            $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
+            $excludedFiles              = get_option(Sites::STAGING_EXCLUDED_FILES_OPTION, []);
+            // use require here instead of require_once otherwise unit tests will always fail,
+            // as this notice is tested multiple times.
+            require $this->viewsNoticesPath . "disabled-items-notice.php";
+        }
     }
 }

@@ -11,8 +11,8 @@ use WPStaging\Framework\Facades\Escape;
         </h2>
         <h3 class="wpstg--grey">Is this the best backup & migration plugin?</h3>
         <li><strong>Enterprise Reliability</strong> - <?php echo sprintf(
-            Escape::escapeHtml(__('Your data is crucial so we run <a href="%s" target="_blank" style="text-decoration: underline;">thousands</a> of automated tests before every release.', 'wp-staging')),
-            'https://www.youtube.com/watch?v=Tf9C9Pgu7Bs&t=5s'
+            Escape::escapeHtml(__('Your data is important so we run <a href="%s" target="_blank" style="text-decoration: underline;">thousands</a> of automated tests before every release.', 'wp-staging')),
+            'https://wp-staging.com/quality-assurance-for-wp-staging/'
         ); ?></li>
         <li><strong>German Engineering</strong> - <?php esc_html_e('Our headquarter is located in Germany with a small team of highly skilled developers.', 'wp-staging'); ?></li>
         <li><strong>Cloning</strong> - <?php esc_html_e('Clone your entire website with one click.', 'wp-staging'); ?></li>

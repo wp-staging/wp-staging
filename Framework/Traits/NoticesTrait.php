@@ -34,7 +34,7 @@ trait NoticesTrait
      */
     public function isWPStagingAdminPage()
     {
-        // Early bail if not admin
+        // Early bail if it is not an admin page
         if (!is_admin()) {
             return false;
         }

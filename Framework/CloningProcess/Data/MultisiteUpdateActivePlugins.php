@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
+use WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable;
 
 class MultisiteUpdateActivePlugins extends DBCloningService
 {
@@ -30,10 +31,17 @@ class MultisiteUpdateActivePlugins extends DBCloningService
 
         $active_sitewide_plugins = unserialize($active_sitewide_plugins);
         $active_plugins = unserialize($active_plugins);
-        $all_plugins = array_merge($active_plugins, array_keys($active_sitewide_plugins));
-        sort($all_plugins);
+        $allPlugins = array_merge($active_plugins, array_keys($active_sitewide_plugins));
+        sort($allPlugins);
 
-        if ($this->updateDbOption('active_plugins', serialize($all_plugins)) === false) {
+        if ($this->dto->getMainJob() === 'cloning') {
+            $activePlugins = apply_filters(UpdateStagingOptionsTable::FILTER_CLONING_UPDATE_ACTIVE_PLUGINS, $allPlugins);
+            if (is_array($activePlugins)) {
+                $allPlugins = $activePlugins;
+            }
+        }
+
+        if ($this->updateDbOption('active_plugins', serialize($allPlugins)) === false) {
             throw new FatalException("Can not update option active_plugins in {$this->dto->getPrefix()}options");
         }
 

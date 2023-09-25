@@ -9,18 +9,19 @@
  * Do not use any of these methods in WP STAGING code base as this mu-plugin can be missing!
  *
  * Author: René Hermenau
- * Version: 1.5.1
+ * Version: 1.5.2
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
 
 // Version number of this mu-plugin. Important for automatic updates
+
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.1');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.2');
 }
 if (!function_exists('wpstgGetPluginsDir')) {
     /** @return string */
-    function wpstgGetPluginsDir()
+    function wpstgGetPluginsDir(): string
     {
         $pluginsDir = '';
         if (defined('WP_PLUGIN_DIR')) {
@@ -33,12 +34,11 @@ if (!function_exists('wpstgGetPluginsDir')) {
 }
 
 if (!function_exists('wpstgIsEnabledOptimizer')) {
-    /*
+    /**
      * Check if optimizer is enabled
-     * @return bool false if it's disabled
-     *
+     * @return bool
      */
-    function wpstgIsEnabledOptimizer()
+    function wpstgIsEnabledOptimizer(): bool
     {
         $status = (object)get_option('wpstg_settings');
 
@@ -52,23 +52,22 @@ if (!function_exists('wpstgIsEnabledOptimizer')) {
 
 if (!function_exists('wpstgIsExcludedPlugin')) {
     /**
-     * Check if certain plugins are excluded and still runing during wp staging requests
-     * @return boolean
+     * Check if a plugin should be excluded from the optimizer and still running during wp staging requests
+     * @param string $plugin
+     * @return bool
      */
-    function wpstgIsExcludedPlugin($plugin)
+    function wpstgIsExcludedPlugin(string $plugin): bool
     {
         $excludedPlugins = get_option('wpstg_optimizer_excluded', []);
 
-        if (empty($excludedPlugins)) {
-            return false;
-        }
+        // As a workaround for now we exclude all-in-one-wp-security-and-firewall AIOWPS plugin due
+        // to their salt postfix function which breaks WP STAGING completely.
+        //$excludedPlugins[] = 'all-in-one-wp-security-and-firewall';
 
         // Check for custom excluded plugins
         foreach ($excludedPlugins as $excludedPlugin) {
             if (strpos($plugin, $excludedPlugin) !== false) {
                 return true;
-            } else {
-                continue;
             }
         }
 
@@ -84,7 +83,7 @@ if (!function_exists('wpstgExcludePlugins')) {
      *
      * @return array
      */
-    function wpstgExcludePlugins($plugins)
+    function wpstgExcludePlugins(array $plugins): array
     {
         if (!is_array($plugins) || empty($plugins)) {
             return $plugins;
@@ -117,7 +116,7 @@ if (!function_exists('wpstgExcludeSitePlugins')) {
      *
      * @return array
      */
-    function wpstgExcludeSitePlugins($plugins)
+    function wpstgExcludeSitePlugins(array $plugins): array
     {
         if (!is_array($plugins) || empty($plugins)) {
             return $plugins;
@@ -146,14 +145,14 @@ if (!function_exists('wpstgExcludeSitePlugins')) {
 if (!function_exists('wpstgDisableTheme')) {
     /**
      *
-     * Disables the theme during WP Staging AJAX requests
+     * Disables the active theme during WP Staging AJAX requests
      *
      *
      * @param $dir
      *
      * @return string
      */
-    function wpstgDisableTheme($dir)
+    function wpstgDisableTheme($dir): string
     {
         $enableTheme = apply_filters('wpstg_optimizer_enable_theme', false);
 
@@ -189,7 +188,7 @@ if (!function_exists('wpstgIsOptimizerRequest')) {
      *
      * @return bool
      */
-    function wpstgIsOptimizerRequest()
+    function wpstgIsOptimizerRequest(): bool
     {
         if (!wpstgIsEnabledOptimizer()) {
             return false;
@@ -249,12 +248,12 @@ if (!function_exists('wpstgTgmpaCompatibility')) {
 
 if (!function_exists('wpstgIsStaging')) {
     /**
-     * @return bool True if is staging site. False otherwise.
+     * @return bool True if it is staging site. False otherwise.
      */
-    function wpstgIsStaging()
+    function wpstgIsStaging(): bool
     {
-        if (file_exists(ABSPATH . '.wp-staging-cloneable')) {
-            return false;
+        if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
+            return true;
         }
 
         if (get_option("wpstg_is_staging_site") === "true") {
@@ -274,10 +273,10 @@ if (!function_exists('wpstgGetCloneSettings')) {
      * Get the value of the given option in clone settings,
      * If no option given return all clone settings
      *
-     * @param string $option
+     * @param string|null $option
      * @return mixed
      */
-    function wpstgGetCloneSettings($option = null)
+    function wpstgGetCloneSettings(string $option = null)
     {
         $settings = get_option('wpstg_clone_settings', null);
 
@@ -304,9 +303,17 @@ if (!function_exists('wpstgGetCloneSettings')) {
  * Disable all outgoing e-mails on Staging site
  * Will check against both the old and new logic of storing emails disabled option
  */
-if (wpstgIsStaging() && (((bool)get_option("wpstg_emails_disabled") === true) || ((bool)wpstgGetCloneSettings('wpstg_emails_disabled')))) {
+if (wpstgIsStaging() && (((bool)get_option("wpstg_emails_disabled") === true) || (wpstgGetCloneSettings('wpstg_emails_disabled')))) {
     if (!function_exists('wp_mail')) {
-        function wp_mail($to, $subject, $message, $headers = '', $attachments = [])
+        /**
+         * @param string $to
+         * @param string $subject
+         * @param string $message
+         * @param string $headers
+         * @param array $attachments
+         * @return bool
+         */
+        function wp_mail(string $to, string $subject, string $message, string $headers = '', array $attachments = []): bool
         {
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
                 // Safely cast everything to string
@@ -334,10 +341,10 @@ LOG_ENTRY;
 
                 error_log($log_entry);
             }
+
+            return false;
         }
-    } else {
-        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+    } elseif (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
             error_log("WP STAGING: Could not override the wp_mail() function to disable e-mails on staging site, as it was already defined before the optimizer mu-plugin was loaded.");
-        }
     }
 }

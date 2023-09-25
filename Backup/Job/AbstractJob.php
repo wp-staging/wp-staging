@@ -176,10 +176,10 @@ abstract class AbstractJob implements ShutdownableInterface
                 $this->prepare();
             } catch (TaskHealthException $e) {
                 $response = new TaskResponseDto();
-                $response->setIsRunning(false);
 
                 if ($e->getCode() === TaskHealthException::CODE_TASK_FAILED_TOO_MANY_TIMES) {
                     // Signal to JavaScript that this Job failed if no further requests should be made.
+                    $response->setIsRunning(false);
                     $response->setJobStatus('JOB_FAIL');
                     $response->addMessage([
                         'type' => 'critical',
@@ -189,6 +189,7 @@ abstract class AbstractJob implements ShutdownableInterface
 
                     $this->jobDataCache->delete();
                 } else {
+                    $response->setIsRunning(true);
                     $response->setJobStatus('JOB_RETRY');
                     $response->addMessage([
                         'type' => 'warning',
@@ -409,12 +410,12 @@ abstract class AbstractJob implements ShutdownableInterface
         $response->setJob(substr($this->findCurrentJob(), 3));
 
         // Task is not done yet, add it to beginning of the queue again
-        if (!$response->isRunning()) {
+        if ($response->isRunning()) {
             $className = get_class($this->currentTask);
         }
 
         try {
-            if ($response->isRunning()) {
+            if (!$response->isRunning()) {
                 $this->jobDataDto->moveToNextTask();
             }
         } catch (FinishedQueueException $e) {
@@ -423,7 +424,7 @@ abstract class AbstractJob implements ShutdownableInterface
             return $response;
         }
 
-        $response->setIsRunning(false);
+        $response->setIsRunning(true);
 
         return $response;
     }

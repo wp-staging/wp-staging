@@ -150,6 +150,7 @@ class LoginForm
         // Don't delete! This is used in the views below
         $notice     = __('Enter your administrator credentials to access this site. (This message will be displayed only once!)', 'wp-staging');
         $showNotice = (new LoginNotice())->isLoginNoticeActive();
+        $isCustomLogin2faEnabled = get_option('wordfenceActivated');
 
         $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/pro/loginForm.php';
         if (!file_exists($loginFileView)) {

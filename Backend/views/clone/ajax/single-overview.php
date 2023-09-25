@@ -68,7 +68,7 @@ $isPro = WPStaging::isPro();
                                 <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" data-network="<?php echo is_multisite() && !empty($data['networkClone'])  ? 'yes' : 'no' ?>" title="<?php echo esc_attr__("Replace the selected staging site with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging") ?>">
                                     <?php esc_html_e("Reset", "wp-staging"); ?>
                                 </a>
-                                <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" title="<?php echo esc_html__("Delete the selected staging site. Select specific folders and database tables in the next step.", "wp-staging") ?>">
+                                <a href="#" class="wpstg-remove-clone wpstg-clone-action" data-clone="<?php echo esc_attr($cloneID) ?>" title="<?php echo esc_html__("Delete the selected staging site. Select specific folders and database tables in the next step.", "wp-staging") ?>" data-name="<?php echo esc_attr($data['cloneName']) ?>">
                                     <?php esc_html_e("Delete", "wp-staging"); ?>
                                 </a>
                                 <?php

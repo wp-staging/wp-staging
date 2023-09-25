@@ -14,11 +14,6 @@
 
 /* IMPORTS */
 /* Colors */
-/*$primary-button-color: #b70b72;
-$primary-button-color-hover: #97065e;*/
-/*
-$primary-button-color: #366df8;
-*/
 .wpstg-primary-color {
   color: #1a73e8; }
 
@@ -76,21 +71,26 @@ $primary-button-color: #366df8;
   border-radius: 3px;
   box-shadow: none;
   width: 18px;
-  height: 18px; }
+  height: 18px;
+  border: 2px solid #dcdbdb;
+  transition: border-color 0.2s; }
+  .wpstg_admin .wpstg-checkbox:hover, #wpstg-clonepage-wrapper .wpstg-checkbox:hover, .wpstg--swal2-container .wpstg-checkbox:hover {
+    border: 2px solid #1a73e8;
+    border-color: #185abc; }
   .wpstg_admin .wpstg-checkbox:checked, #wpstg-clonepage-wrapper .wpstg-checkbox:checked, .wpstg--swal2-container .wpstg-checkbox:checked {
     background-color: #1a73e8;
     border-color: #1a73e8; }
     .wpstg_admin .wpstg-checkbox:checked::before, #wpstg-clonepage-wrapper .wpstg-checkbox:checked::before, .wpstg--swal2-container .wpstg-checkbox:checked::before {
       display: inline-block;
-      width: 5px;
+      width: 4px;
       height: 10px;
       content: "";
       color: #fff;
       position: absolute;
-      left: 55%;
+      left: 8px;
       top: 3px;
       border: solid #fff;
-      border-width: 0 2px 2px 0;
+      border-width: 0 3px 3px 0;
       -webkit-transform: rotate(45deg);
       -ms-transform: rotate(45deg);
       transform: rotate(45deg); }
@@ -108,15 +108,12 @@ $primary-button-color: #366df8;
     height: 16px; }
     .wpstg_admin .wpstg-checkbox.wpstg-checkbox--small:checked::before, #wpstg-clonepage-wrapper .wpstg-checkbox.wpstg-checkbox--small:checked::before, .wpstg--swal2-container .wpstg-checkbox.wpstg-checkbox--small:checked::before {
       width: 5px;
-      height: 9px; }
+      height: 9px;
+      left: 6px;
+      top: 2px; }
 
 /* IMPORTS */
 /* Colors */
-/*$primary-button-color: #b70b72;
-$primary-button-color-hover: #97065e;*/
-/*
-$primary-button-color: #366df8;
-*/
 .wpstg-primary-color {
   color: #1a73e8; }
 
@@ -873,7 +870,6 @@ body.wp-staging-pro_page_wpstg-license {
   top: 0;
   transition: opacity 0.2s linear;
   width: 800px;
-  z-index: 9999;
   opacity: 0.9;
   /*transform: opacity 1s linear;*/
   font-size: 20px; }
@@ -937,7 +933,7 @@ body.wp-staging-pro_page_wpstg-license {
 .wpstg-clonepage-wrapper #wpstg-new-clone-id input[type=password],
 .wpstg-clonepage-wrapper #wpstg-new-clone-id input[type=email] {
   background-color: #f1f5fc;
-  border: 1px solid #e6e6e6; }
+  border: 2px solid #dcdbdb; }
 
 .wpstg_admin select, .wpstg_admin select[multiple],
 .wpstg--swal2-container select,
@@ -945,13 +941,13 @@ body.wp-staging-pro_page_wpstg-license {
 .wpstg-clonepage-wrapper #wpstg-new-clone-id select,
 .wpstg-clonepage-wrapper #wpstg-new-clone-id select[multiple] {
   background-color: #f1f5fc;
-  border: 1px solid #e6e6e6; }
+  border: 1px solid #dcdbdb; }
 
 .wpstg--swal2-input,
 .wpstg--swal2-file,
 .wpstg--swal2-textarea {
   background-color: #f1f5fc;
-  border: 1px solid #e6e6e6; }
+  border: 1px solid #dcdbdb; }
 
 #wpstg-new-clone-id.wpstg-error-input,
 #wpstg-clone-path.wpstg-error-input {
@@ -1219,7 +1215,7 @@ body.wp-staging-pro_page_wpstg-license {
 
 .wpstg-sysinfo {
   background-color: #e7f0ff;
-  border: 2px solid #e6e6e6;
+  border: 2px solid #dcdbdb;
   width: 100%;
   height: 400px;
   max-width: 1300px;
@@ -1361,7 +1357,7 @@ a#wpstg-check-space {
 .wpstg-footer-logo {
   padding-top: 10px;
   padding-bottom: 0;
-  border-top: 0 solid #e6e6e6;
+  border-top: 0 solid #dcdbdb;
   text-align: center;
   margin-bottom: 10px;
   clear: both;
@@ -1457,7 +1453,7 @@ a#wpstg-check-space {
 .wpstg-field input[type=checkbox],
 .wpstg-field textarea {
   background-color: #f1f5fc;
-  border: 2px solid #e6e6e6; }
+  border: 2px solid #dcdbdb; }
 
 .wpstg-report-email,
 .wpstg-report-hosting-provider {
@@ -2541,7 +2537,7 @@ code.wpstg-code {
   color: #222;
   border-radius: 3px !important;
   background-color: #f1f5fc;
-  border: 1px solid #e6e6e6;
+  border: 1px solid #dcdbdb;
   min-height: 24px !important;
   margin-top: 4px;
   margin-left: 4px;
@@ -2551,7 +2547,7 @@ code.wpstg-code {
 
 select.wpstg-exclude-rule-input, input.wpstg-exclude-rule-input {
   background-color: #f1f5fc;
-  border: 1px solid #e6e6e6;
+  border: 1px solid #dcdbdb;
   padding: 0.25rem 0.5rem; }
 
 .wpstg-excluded-filters-container tbody > tr:last-child .wpstg-exclude-rule-input {
@@ -3149,7 +3145,7 @@ body.toplevel_page_wpstg_clone .wpstg--swal2-container.wpstg--swal2-backdrop-sho
   margin-left: 5px; }
 
 input.wpstg-textbox, textarea.wpstg-textbox {
-  border: 1px solid #e6e6e6;
+  border: 1px solid #dcdbdb;
   border-radius: .25rem;
   padding: 0.25rem 0.5rem;
   font-size: 14px;

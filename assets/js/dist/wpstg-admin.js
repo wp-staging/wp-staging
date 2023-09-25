@@ -831,6 +831,32 @@
   }
 
   /**
+   * Hides elements in the DOM that match the given selector by setting their display style to 'none'.
+   *
+   * @param {string} selector - CSS selector for the elements to be hidden.
+   * @return {void}
+   */
+  function hide(selector) {
+    var elements = document.querySelectorAll(selector);
+    elements.forEach(function (element) {
+      element.style.display = 'none';
+    });
+  }
+
+  /**
+   * Displays elements in the DOM that match the given selector by setting their display style to 'block'.
+   *
+   * @param {string} selector - CSS selector for the elements to be displayed.
+   * @return {void}
+   */
+  function show(selector) {
+    var elements = document.querySelectorAll(selector);
+    elements.forEach(function (element) {
+      element.style.display = 'block';
+    });
+  }
+
+  /**
    * Enable side bar menu and set url on tab click
    */
   var WpstgSidebarMenu = /*#__PURE__*/function () {
@@ -2063,6 +2089,419 @@
     return WpstgMainMenu;
   }();
 
+  /**
+   * Represents a class for managing and displaying process and success modals in WPStaging.
+   * This class provides methods to start, open, initialize, update, and stop process modals.
+   *
+   * @class
+   */
+  var WpstgProcessModal = /*#__PURE__*/function () {
+    function WpstgProcessModal(wpstgObject) {
+      if (wpstgObject === void 0) {
+        wpstgObject = wpstg;
+      }
+      this.wpstgObject = wpstgObject;
+      this.action = '';
+      this.isProcessCancelled = false;
+      this.isProcessFinished = false;
+      this.processTime = 0;
+      this.processInterval = '';
+      this.modal = null;
+      this.disableCancelButton = false;
+      this.title = '';
+      this.showCancelButton = false;
+      this.percentage = 0;
+      this.cloneId = '';
+      this.successModal = '';
+      this.showProcessLogs = true;
+      this.stagingSiteUrl = '';
+    }
+
+    /**
+     * Starts the process, initializes intervals, and modifies UI elements as needed.
+     *
+     * @return {void}
+     */
+    var _proto = WpstgProcessModal.prototype;
+    _proto.start = function start() {
+      var _this = this;
+      this.showCancelButton = true;
+      this.processInterval = setInterval(function () {
+        _this.processTime++;
+        _this.updateElapsedTime();
+      }, 1000);
+      if (this.action === 'wpstg_delete_clone') {
+        hide('.wpstg--modal--process--logs--tail');
+        this.showCancelButton = false;
+        var container = WPStagingCommon.getSwalContainer();
+        var processPercentageElement = container.querySelector('.wpstg--modal--process--percent');
+        processPercentageElement.textContent = 100;
+      }
+      hide('.wpstg-prev-step-link, #wpstg-start-updating, .wpstg-loader, #wpstg-cancel-cloning, .wpstg-log-details, .wpstg-progress-bar, #wpstg-processing-header');
+      hide('.wpstg-processing-timer, #wpstg-cancel-pushing, .wpstg-progress-bar-wrapper, #wpstg-cancel-cloning-update, #wpstg-removing-clone');
+    }
+
+    /**
+     * Stops the ongoing process, resets values, and clears intervals.
+     *
+     * @return {void}
+     */;
+    _proto.stop = function stop() {
+      var _this2 = this;
+      this.processTime = 0;
+      this.modal = null;
+      this.percentage = '';
+      setTimeout(function () {
+        _this2.isProcessCancelled = false;
+        WPStaging.isCancelled = false;
+      }, 2000);
+      clearInterval(this.processInterval);
+      WPStagingCommon.closeSwalModal();
+      hide('#wpstg-try-again, #wpstg-home-link, #wpstg-show-log-button, .wpstg-loader');
+    }
+
+    /**
+     * Cancels the ongoing process if confirmed by the user.
+     *
+     * @return {void}
+     */;
+    _proto.cancelProcess = function cancelProcess() {
+      if (confirm('Are you sure you want to cancel cloning process?')) {
+        WPStaging.isCancelled = true;
+        this.isProcessCancelled = true;
+        if (this.action === 'wpstg_push_processing') {
+          var container = WPStagingCommon.getSwalContainer();
+          var processTitleElement = container.querySelector('.wpstg--modal--process--title');
+          processTitleElement.textContent = 'Canceling Please wait....';
+          this.stop();
+          show('#wpstg-workflow');
+          WPStaging.messages = [];
+        } else {
+          this.cancelCloneAction();
+        }
+      }
+    }
+
+    /**
+     * Sets the title and cancellation status based on the response job or status.
+     *
+     * @param {Object} response - The response object containing information about the process job and status.
+     * @return {void}
+     */;
+    _proto.setTitle = function setTitle(response) {
+      this.title = response.job;
+      if (response.job === 'database' || response.job === 'jobCopyDatabaseTmp') {
+        this.title = 'Copying Database';
+        this.disableCancelButton = false;
+      } else if (response.job === 'SearchReplace') {
+        this.title = 'Processing Data';
+        this.disableCancelButton = false;
+      } else if (response.job === 'directories' || response.job === 'jobFileScanning') {
+        this.title = 'Scanning Files';
+        this.disableCancelButton = false;
+      } else if (response.job === 'files' || response.job === 'data' || response.job === 'jobCopy' || response.job === 'jobSearchReplace') {
+        this.title = 'Copying Files';
+        this.disableCancelButton = false;
+      } else if (response.job === 'Backup') {
+        this.title = 'Backup Files Scanning';
+        this.disableCancelButton = false;
+      } else if (response.job === 'finish' || response.status === 'finished') {
+        this.title = 'Process Finished';
+        this.disableCancelButton = false;
+      } else if (response.job === 'jobDatabaseRename') {
+        this.title = 'Renaming Database';
+        this.disableCancelButton = true;
+      } else if (response.job === 'jobData') {
+        this.title = 'Updating Database Data';
+        this.disableCancelButton = true;
+      }
+    }
+
+    /**
+     * Sets the stored percentage value if the provided parameter is not null.
+     *
+     * @param {Object} params - Parameters containing the percentage value.
+     * @return {void}
+     */;
+    _proto.setPercentage = function setPercentage(params) {
+      if (params.percentage !== null) {
+        this.percentage = params.percentage;
+      }
+    }
+
+    /**
+     * Initializes the process modal with specific behavior and appearance configurations.
+     *
+     * @return {void}
+     */;
+    _proto.initializeProcessModal = function initializeProcessModal() {
+      var _this3 = this;
+      var modal = document.querySelector('#wpstg--modal--backup--process');
+      var html = modal.innerHTML;
+      modal.parentNode.removeChild(modal);
+      this.modal = {
+        html: null,
+        cancelBtnTxt: null,
+        processTime: 0,
+        instance: WPStagingCommon.getSwalModal(true, {
+          content: 'wpstg--process--content'
+        }).fire({
+          html: html,
+          cancelButtonText: 'Cancel',
+          showCancelButton: this.showCancelButton,
+          showConfirmButton: false,
+          showCloseButton: false,
+          showLoaderOnConfirm: false,
+          allowEscapeKey: false,
+          allowOutsideClick: false,
+          onRender: function onRender() {
+            var cancelButton = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
+            var btnCancel = cancelButton.cloneNode(true);
+            cancelButton.parentNode.replaceChild(btnCancel, cancelButton);
+            btnCancel.addEventListener('click', function () {
+              _this3.cancelProcess();
+            });
+          }
+        })
+      };
+      this.start();
+    }
+
+    /**
+     * Sets the content of the process modal based on the stored title, percentage, and cancellation status.
+     *
+     * @return {void}
+     */;
+    _proto.setProcessModal = function setProcessModal() {
+      var container = WPStagingCommon.getSwalContainer();
+      var cancelButton = container.getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
+      var processTitleElement = container.querySelector('.wpstg--modal--process--title');
+      var processPercentageElement = container.querySelector('.wpstg--modal--process--percent');
+      processTitleElement.textContent = this.title;
+      processPercentageElement.textContent = this.percentage;
+      cancelButton.disabled = this.disableCancelButton;
+    }
+
+    /**
+     * Opens and initializes a process modal with the provided data and parameters.
+     *
+     * @param {Object|undefined} data - Data related to the process.
+     * @param {Object} params - Parameters for configuring the process modal.
+     * @param {boolean} [showLogs=false] - Whether to display logs in the modal.
+     * @param {boolean} [showCancelButton=true] - Whether to show the cancel button in the modal.
+     * @return {void}
+     */;
+    _proto.openProcessModal = function openProcessModal(data, params, showLogs, showCancelButton) {
+      if (showLogs === void 0) {
+        showLogs = false;
+      }
+      if (showCancelButton === void 0) {
+        showCancelButton = true;
+      }
+      if (!this.isProcessCancelled && !WPStaging.isCancelled) {
+        if (data !== undefined) {
+          this.action = data.action;
+          this.cloneId = data.cloneID;
+        }
+        this.showCancelButton = showCancelButton;
+        this.showLogs = showLogs;
+        if (!this.modal) {
+          this.initializeProcessModal();
+        } else {
+          if (params.job) {
+            this.setTitle(params);
+            this.setPercentage(params);
+            this.setProcessModal();
+            if (params.job === 'finish') {
+              this.stop();
+            }
+          } else {
+            if (params.status === 'finished') {
+              this.stop();
+            }
+          }
+        }
+      }
+    };
+    /**
+     * Formats the given time duration (in seconds) into a string representation (HH:mm:ss).
+     *
+     * @return {string} The formatted time duration string.
+     */
+    _proto.formatTimeDuration = function formatTimeDuration() {
+      return new Date(this.processTime * 1000).toISOString().slice(11, 19) + 's';
+    }
+
+    /**
+     * Updates the displayed elapsed time in the modal if a process interval is set.
+     *
+     * @return {void}
+     */;
+    _proto.updateElapsedTime = function updateElapsedTime() {
+      if (this.processInterval !== null) {
+        var container = WPStagingCommon.getSwalContainer();
+        var elapsedTimeElement = container.querySelector('.wpstg--modal--process--elapsed-time');
+        elapsedTimeElement.textContent = this.formatTimeDuration();
+      }
+    };
+    /**
+     * Determines the corresponding cancellation action name based on the current action.
+     *
+     * @return {string|undefined} The cancellation action name or undefined if no match is found.
+     */
+    _proto.getCancelCloneAction = function getCancelCloneAction() {
+      var _this4 = this;
+      var actions = [{
+        name: 'wpstg_cloning',
+        cancel: 'wpstg_cancel_clone'
+      }, {
+        name: 'wpstg_reset',
+        cancel: 'wpstg_cancel_update'
+      }, {
+        name: 'wpstg_update',
+        cancel: 'wpstg_cancel_update'
+      }, {
+        name: 'wpstg_push_processing',
+        cancel: 'wpstg_cancel_push_processing'
+      }];
+      if (this.action !== '') {
+        var result = actions.find(function (action) {
+          return action.name === _this4.action;
+        });
+        return result.cancel;
+      }
+    }
+
+    /**
+     * Cancels the ongoing clone action if there is one, using a fetch request.
+     * If the cancellation is successful, it stops the action and optionally reloads the page.
+     * If there are further actions or the cancellation is not successful, it retries the cancellation process recursively.
+     *
+     * @return {void}
+     */;
+    _proto.cancelCloneAction = function cancelCloneAction() {
+      var _this5 = this;
+      if (this.action) {
+        fetch(this.wpstgObject.ajaxUrl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          body: new URLSearchParams({
+            action: this.getCancelCloneAction(),
+            accessToken: this.wpstgObject.accessToken,
+            nonce: this.wpstgObject.nonce,
+            clone: this.cloneId
+          }),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then(function (response) {
+          if (response.ok) {
+            return response.json();
+          }
+          return Promise.reject(response);
+        }).then(function (response) {
+          if (response && 'undefined' !== typeof response["delete"] && response["delete"] === 'finished' || response === true) {
+            _this5.stop();
+            WPStaging.loadOverview();
+            WPStaging.messages = [];
+          }
+          if (response !== true) {
+            _this5.cancelCloneAction();
+          }
+        })["catch"](function (error) {
+          console.log(_this5.wpstgObject.i18n['somethingWentWrong'], error);
+        });
+      }
+    }
+
+    /**
+     * Initializes the success modal with the provided parameters and displays it.
+     *
+     * @param {Object} params - The parameters for configuring the success modal content.
+     * @return {void}
+     */;
+    _proto.initializeSuccessModal = function initializeSuccessModal(params) {
+      var _this6 = this;
+      this.successModal = this.setSuccessModalContent(params);
+      WPStagingCommon.getSwalModal(true, {
+        confirmButton: 'wpstg--btn--confirm wpstg-green-button wpstg-button wpstg-link-btn wpstg-100-width'
+      }).fire({
+        'icon': 'success',
+        'html': this.successModal.innerHTML,
+        'confirmButtonText': 'Close',
+        'showCancelButton': false,
+        'showConfirmButton': true,
+        'allowOutsideClick': false
+      }).then(function (result) {
+        if (result.value) {
+          _this6.action = '';
+          WPStagingCommon.closeSwalModal();
+          hide('.wpstg-loader');
+          WPStaging.messages = [];
+          if (_this6.action !== 'wpstg_delete_clone') {
+            location.reload();
+          }
+        }
+      });
+      if (this.showProcessLogs) {
+        show('.wpstg--modal--download--logs--wrapper');
+      }
+      hide('.wpstg-loader');
+      if (this.action !== 'wpstg_delete_clone') {
+        WPStaging.loadOverview();
+      }
+    }
+
+    /**
+     * Sets the content of the success modal based on the provided parameters.
+     *
+     * @param {Object} params - The parameters for configuring the modal content.
+     * @param {string|null} params.title - The title to be displayed in the modal.
+     * @param {string|null|undefined} params.body - The body content of the modal.
+     * @returns {HTMLElement} The modified modal element.
+     */;
+    _proto.setSuccessModalContent = function setSuccessModalContent(params) {
+      var modal = document.getElementById('wpstg--modal--backup--download');
+      if (params.title !== null) {
+        modal.innerHTML = modal.innerHTML.replace('{title}', params.title);
+      }
+      if (this.showProcessLogs) {
+        modal.innerHTML = modal.innerHTML.replace('{btnTxtLog}', '<span style="text-decoration: underline">Show Logs</span>');
+      }
+      if (params.body !== null && typeof params.body !== 'undefined') {
+        var messageBody = params.body;
+        if (this.stagingSiteUrl !== null) {
+          messageBody += '<br><strong><a href="' + this.stagingSiteUrl + '" target="_blank" id="wpstg-clone-url">' + this.stagingSiteUrl + '</a></strong>';
+        }
+        modal.innerHTML = modal.innerHTML.replace('{text}', messageBody);
+      } else {
+        modal.innerHTML = modal.innerHTML.replace('{text}', '');
+      }
+      return modal;
+    }
+
+    /**
+     * Opens a success modal after successfully cloning process.
+     *
+     * @param {Object} params - The parameters for initializing the success modal.
+     * @param {boolean} [showLogs=false] - Whether to display process logs in the modal.
+     * @param {string|null} [siteUrl=null] - The URL of the staging site, if applicable.
+     * @return {void}
+     */;
+    _proto.openSuccessModal = function openSuccessModal(params, showLogs, siteUrl) {
+      if (showLogs === void 0) {
+        showLogs = false;
+      }
+      if (siteUrl === void 0) {
+        siteUrl = null;
+      }
+      this.stagingSiteUrl = siteUrl;
+      this.showProcessLogs = showLogs;
+      this.initializeSuccessModal(params);
+    };
+    return WpstgProcessModal;
+  }();
+
   var WPStaging$1 = function ($) {
     var that = {
       isCancelled: false,
@@ -2088,6 +2527,7 @@
         currentJob: ''
       }
     };
+    that.wpstgProcessModal = new WpstgProcessModal();
     var cache = {
       elements: []
     };
@@ -2425,14 +2865,10 @@
       .on('click', '.wpstg-remove-clone[data-clone]', function (e) {
         resetErrors();
         e.preventDefault();
-        cache.get('#wpstg-existing-clones');
         $workFlow.removeClass('active');
         cache.get('.wpstg-loader').show();
         var cloneData = $(this).data('clone');
-        var stagingSiteName = '';
-        if (document.getElementsByClassName('wpstg-clone').length > 0) {
-          stagingSiteName = '"' + document.getElementsByClassName('wpstg-clone')[0].id + '"';
-        }
+        var stagingSiteName = $(this).data('name');
         ajax({
           action: 'wpstg_confirm_delete_clone',
           accessToken: wpstg.accessToken,
@@ -2443,7 +2879,7 @@
             popup: 'wpstg-swal-popup wpstg-db-comparison-modal centered-modal',
             content: 'wpstg--process--content'
           }).fire({
-            title: 'Do you want to delete staging site ' + stagingSiteName + '?',
+            title: 'Do you want to delete staging site "' + stagingSiteName + '"?',
             icon: 'error',
             html: response,
             width: '100%',
@@ -2499,12 +2935,16 @@
               $('.wpstg-db-table input:not(:checked)').each(function () {
                 excludedTables.push(this.name);
               });
-              WPStagingCommon.closeSwalModal();
+
+              // WPStagingCommon.closeSwalModal();
               that.modal.instance = null;
               var params = {
                 'job': 'delete'
               };
-              that.wpstgProcessingModal(params, false, false);
+              that.wpstgProcessModal.openProcessModal({
+                'action': 'wpstg_delete_clone',
+                'cloneID': cloneData
+              }, params, false, false);
               deleteClone(cloneData, deleteDir, excludedTables);
             }
           });
@@ -2787,11 +3227,12 @@
           if (response.success) {
             cache.get('.wpstg-loader').hide();
             resolve(true);
+          } else {
+            showError('Something went wrong! Error: ' + response.data.message);
+            cache.get('.wpstg-loader').hide();
+            document.getElementById('wpstg-error-wrapper').scrollIntoView();
+            resolve(false);
           }
-          showError('Something went wrong! Error: ' + response.data.message);
-          cache.get('.wpstg-loader').hide();
-          document.getElementById('wpstg-error-wrapper').scrollIntoView();
-          resolve(false);
         }, 'json', false);
       });
     };
@@ -3126,9 +3567,12 @@
             // finish modal popup
             if (wpstg.i18n.wpstg_delete_clone !== null && response["delete"] === 'finished') {
               var params = {
-                'job': 'finish'
+                'status': 'finished'
               };
-              that.wpstgProcessingModal(params, false, false);
+              that.wpstgProcessModal.openProcessModal({
+                'action': 'wpstg_delete_clone',
+                'cloneID': clone
+              }, params, false, false);
               WPStagingCommon.getSwalModal(true, {
                 confirmButton: 'wpstg--btn--confirm wpstg-green-button wpstg-button wpstg-link-btn wpstg-100-width'
               }).fire({
@@ -3451,37 +3895,9 @@
         if ('undefined' !== typeof response.last_msg) {
           getLogs(response.last_msg);
         }
-        cache.get('.wpstg-loader').hide();
-        cache.get('#wpstg-processing-header').html('Processing Complete');
-        $('#wpstg-processing-status').text('Succesfully finished');
-        cache.get('#wpstg_staging_name').html(that.data.cloneID);
-        cache.get('#wpstg-finished-result').show();
-        cache.get('#wpstg-cancel-cloning').hide();
-        cache.get('#wpstg-resume-cloning').hide();
-        cache.get('#wpstg-cancel-cloning-update').prop('disabled', true);
-        var $link1 = cache.get('#wpstg-clone-url-1');
-        var $link = cache.get('#wpstg-clone-url');
-        $link1.attr('href', response.url);
-        $link1.html(response.url);
-        $link.attr('href', response.url);
-        cache.get('#wpstg-remove-clone').data('clone', that.data.cloneID);
-
-        // Finished
-        that.isFinished = true;
-        that.timer('stop');
-        cache.get('.wpstg-loader').hide();
-        cache.get('#wpstg-processing-header').html('Processing Complete');
-
-        // show alert
-        wpstg.i18n.cloneResetComplete;
-        if (that.data.action === 'wpstg_update') {
-          wpstg.i18n.cloneUpdateComplete;
-          cache.get('#wpstg-update-cloning-site-button').show();
-        }
         if (wpstg.i18n[that.data.action] !== null) {
-          that.openSuccessModalPopup(wpstg.i18n[that.data.action], true, response.url);
+          that.wpstgProcessModal.openSuccessModal(wpstg.i18n[that.data.action], true, response.url);
         }
-        return false;
       }
 
       /**
@@ -3491,9 +3907,8 @@
        */
       var progressBar = function progressBar(response, restart) {
         if (response !== null) {
-          that.wpstgProcessingModal(response, true);
+          that.wpstgProcessModal.openProcessModal(that.data, response, true);
         }
-        return false;
       };
     };
     that.switchStep = function (step) {
@@ -3535,207 +3950,6 @@
     };
 
     /**
-     * open success modal popup on staging site create, update, delete, reset and push
-     * @param object message to display title and body of modal popup, show logs and site url
-     */
-    that.openSuccessModalPopup = function (message, showLogs, siteUrl) {
-      if (showLogs === void 0) {
-        showLogs = false;
-      }
-      if (siteUrl === void 0) {
-        siteUrl = null;
-      }
-      var modal = document.getElementById('wpstg--modal--backup--download');
-      if (message.title !== null) {
-        modal.innerHTML = modal.innerHTML.replace('{title}', message.title);
-      }
-      if (showLogs) {
-        modal.innerHTML = modal.innerHTML.replace('{btnTxtLog}', '<span style="text-decoration: underline">Show Logs</span>');
-      }
-      if (message.body !== null && typeof message.body !== 'undefined') {
-        var messageBody = message.body;
-        if (siteUrl !== null) {
-          messageBody += '<br><strong><a href="' + siteUrl + '" target="_blank" id="wpstg-clone-url">' + siteUrl + '</a></strong>';
-        }
-        modal.innerHTML = modal.innerHTML.replace('{text}', messageBody);
-      } else {
-        modal.innerHTML = modal.innerHTML.replace('{text}', '');
-      }
-      WPStagingCommon.getSwalModal(true, {
-        confirmButton: 'wpstg--btn--confirm wpstg-green-button wpstg-button wpstg-link-btn wpstg-100-width'
-      }).fire({
-        'icon': 'success',
-        'html': modal.innerHTML,
-        'confirmButtonText': 'Close',
-        'showCancelButton': false,
-        'showConfirmButton': true
-      }).then(function (result) {
-        if (result.value) {
-          WPStagingCommon.closeSwalModal();
-          cache.get('.wpstg-loader').removeClass('wpstg-finished');
-          cache.get('.wpstg-loader').hide();
-          that.messages = [];
-          that.isProcessModalLoaded = false;
-          if (typeof that.data !== 'undefined' && that.data.action === 'wpstg_cloning') {
-            location.reload();
-          }
-        }
-      });
-      if (showLogs) {
-        $('.wpstg--modal--download--logs--wrapper').show();
-      }
-      cache.get('.wpstg-loader').removeClass('wpstg-finished');
-      cache.get('.wpstg-loader').hide();
-      that.messages = [];
-      that.isProcessModalLoaded = false;
-      if (message.title !== null && message.title !== 'Staging Site Deleted Successfully!') {
-        loadOverview();
-      }
-    };
-
-    /**
-     * open process modal popup on staging site create, update, delete, reset and push
-     * @param object message to display title and body of modal popup, show logs and site url
-     */
-    that.wpstgProcessingModal = function (response, showLogs, showCancelButton) {
-      if (showCancelButton === void 0) {
-        showCancelButton = true;
-      }
-      if (that.modal.processInterval === null || that.modal.processInterval === '') {
-        that.modal.processTime = 0;
-        that.modal.processInterval = setInterval(function () {
-          that.modal.processTime++;
-        }, 1000);
-      }
-      cache.get('.wpstg-prev-step-link').hide();
-      cache.get('#wpstg-start-updating').hide();
-      cache.get('.wpstg-loader').hide();
-      cache.get('#wpstg-cancel-cloning').hide();
-      cache.get('.wpstg-log-details').hide();
-      cache.get('.wpstg-log-details').hide();
-      cache.get('.wpstg-progress-bar').hide();
-      cache.get('#wpstg-processing-header').hide();
-      cache.get('.wpstg-processing-timer').hide();
-      cache.get('#wpstg-cancel-pushing').hide();
-      cache.get('.wpstg-progress-bar-wrapper').hide();
-      cache.get('#wpstg-cancel-pushing').hide();
-      if (document.getElementById('wpstg-cancel-cloning-update') !== null) {
-        document.getElementById('wpstg-cancel-cloning-update').style.display = 'none';
-      }
-      that.modal.currentJob = response.job;
-      if (that.isCancelled) {
-        WPStagingCommon.closeSwalModal();
-        that.modal.instance = null;
-        that.modal.processTime = 0;
-        that.modal.processInterval = null;
-        loadOverview();
-        setTimeout(function () {
-          that.isCancelled = false;
-          $('#wpstg-try-again, #wpstg-home-link, #wpstg-show-log-button, .wpstg-loader').hide();
-        }, 1000);
-      } else {
-        // console.log(showCancelButton);
-        if (!that.modal || !that.modal.instance) {
-          if (response.job === 'delete') {
-            $('.wpstg--modal--process--subtitle').remove();
-            $('#wpstg--modal--backup--process button').remove();
-          }
-          var $modal = $('#wpstg--modal--backup--process');
-          var html = $modal.html();
-          $modal.remove();
-          that.modal = {
-            html: null,
-            cancelBtnTxt: null,
-            processTime: 0,
-            instance: WPStagingCommon.getSwalModal(true, {
-              content: 'wpstg--process--content'
-            }).fire({
-              html: html,
-              cancelButtonText: 'Cancel',
-              showCancelButton: showCancelButton,
-              showConfirmButton: false,
-              showCloseButton: false,
-              showLoaderOnConfirm: false,
-              allowEscapeKey: false,
-              allowOutsideClick: false,
-              onRender: function onRender() {
-                var _btnCancel = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
-                var btnCancel = _btnCancel.cloneNode(true);
-                _btnCancel.parentNode.replaceChild(btnCancel, _btnCancel);
-                btnCancel.addEventListener('click', function (e) {
-                  if (confirm('Are you sure you want to cancel cloning process?')) {
-                    that.progressBar = 0;
-                    if (that.data.action === 'wpstg_cloning') {
-                      that.isCancelled = true;
-                      cancelCloning();
-                    } else if (that.data.action === 'wpstg_update' || that.data.action === 'wpstg_reset') {
-                      that.isCancelled = true;
-                      cancelCloningUpdate();
-                    } else if (that.data.action === 'wpstg_push_processing') {
-                      var $container = $(WPStagingCommon.getSwalContainer());
-                      $container.find('.wpstg--modal--process--title').html('Canceling Please wait....');
-                      that.isCancelled = true;
-                    }
-                  }
-                });
-              }
-            })
-          };
-        } else {
-          var $container = $(WPStagingCommon.getSwalContainer());
-          var cancelButton = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
-          $container.find('.wpstg--modal--process--elapsed-time').text(that.modal.processTime + 's');
-          if (response.job) {
-            var title = response.job;
-            if (response.percentage !== null) {
-              $container.find('.wpstg--modal--process--percent').text(response.percentage);
-            }
-            if (response.job === 'database' || response.job === 'jobCopyDatabaseTmp') {
-              title = 'Copying Database';
-              cancelButton.disabled = false;
-            } else if (response.job === 'SearchReplace') {
-              title = 'Processing Data';
-              cancelButton.disabled = false;
-            } else if (response.job === 'directories' || response.job === 'jobFileScanning') {
-              title = 'Scanning Files';
-              cancelButton.disabled = false;
-            } else if (response.job === 'files' || response.job === 'data' || response.job === 'jobCopy' || response.job === 'jobSearchReplace') {
-              title = 'Copying Files';
-              cancelButton.disabled = false;
-            } else if (response.job === 'Backup') {
-              title = 'Backup Files Scanning';
-              cancelButton.disabled = false;
-            } else if (response.job === 'finish' || response.status === 'finished') {
-              title = 'Process Finished';
-              cancelButton.disabled = false;
-            } else if (response.job === 'jobDatabaseRename') {
-              title = 'Renaming Database';
-              cancelButton.disabled = true;
-            }
-            if (title !== response.job) {
-              $container.find('.wpstg--modal--process--title').html(title);
-            }
-            if (response.job === 'finish') {
-              that.modal.instance = null;
-              that.modal.processTime = 0;
-              that.modal.processInterval = null;
-              clearInterval(that.modal.processInterval);
-              WPStagingCommon.closeSwalModal();
-            }
-          } else {
-            if (response.status === 'finished') {
-              that.modal.instance = null;
-              that.modal.processTime = 0;
-              that.modal.processInterval = null;
-              clearInterval(that.modal.processInterval);
-              WPStagingCommon.closeSwalModal();
-            }
-          }
-        }
-      }
-    };
-
-    /**
      * Initiation
      * @type {Function}
      */
@@ -3748,6 +3962,7 @@
       new WpstgMainMenu();
       new WpstgCloneStaging();
       new WpstgCloningAdvanceSettings();
+      new WpstgProcessModal();
       that.notyf = new Notyf({
         duration: 10000,
         position: {
@@ -3800,6 +4015,7 @@
       e.preventDefault();
     });
     $('body').on('click', '.wpstg--modal--process--logs--tail', function (e) {
+      showProcessLogs();
       var logBtn = $(this);
       e.preventDefault();
       var container = WPStagingCommon.getSwalContainer();
@@ -3937,6 +4153,26 @@
         }
       });
     });
+
+    /**
+     * Display logs in a modal.
+     * and avoid mixing of different processes logs
+     * @return {void}
+     */
+    function showProcessLogs() {
+      if (window.WPStaging.messages.length !== 0) {
+        var container = WPStagingCommon.getSwalContainer();
+        var logsContainer = container.querySelector('.wpstg--modal--process--logs');
+        logsContainer.innerHTML = '';
+        window.WPStaging.messages.forEach(function (message) {
+          var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
+          var pElement = document.createElement('p');
+          pElement.className = msgClass;
+          pElement.textContent = "[" + message.type + "] - [" + message.date + "] - " + message.message;
+          logsContainer.appendChild(pElement);
+        });
+      }
+    }
   });
 
 })();

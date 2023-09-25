@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Traits;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Hooks;
 
 trait ResourceTrait
 {
@@ -158,7 +159,7 @@ trait ResourceTrait
             $this->executionTimeLimit = max(min($phpMaxExecutionTime - static::$executionTimeGapInSeconds, $phpMaxExecutionTime * 0.8), 10);
 
             // Internal Use only. Allow overwriting of the max execution time limit for testing database rename task.
-            $this->executionTimeLimit = (int)apply_filters('wpstg.tests.databaseRenameTask', $this->executionTimeLimit);
+            $this->executionTimeLimit = (int)Hooks::applyFilters('wpstg.tests.databaseRenameTask', $this->executionTimeLimit);
 
             return $this->executionTimeLimit;
         }
