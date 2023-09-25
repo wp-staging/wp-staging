@@ -165,7 +165,7 @@ please open a [support request](https://wordpress.org/support/plugin/wp-staging/
 
 == WP STAGING | PRO - BACKUP & STAGING FEATURES ==
 
-The backup & cloning features below are Premium. You need WP STAGING | PRO to use those features. [More about WP STAGING | PRO](https://wp-staging.com/backup-wordpress)!
+The backup & cloning features below are Premium. You need WP STAGING | PRO to use those features. [More about WP STAGING | PRO](https://wp-staging.com/backup-pro-features)!
 
 * Migration - Migrate and transfer WordPress to another host or domain
 * Push staging website including all plugins, themes, and media files to the production website wth one click
