@@ -2,7 +2,6 @@
 
 /**
  * @var $this \WPStaging\Framework\Notices\Notices
- * @var $viewsNoticesPath
  * @see \WPStaging\Framework\Notices\Notices::renderNotices
  * @var bool  $outgoingMailsDisabled
  * @var bool  $freemiusOptionsCleared
@@ -71,7 +70,7 @@ if (empty(get_option('permalink_structure'))) {
     </ol>    
     <p>
       <?php Notices::renderNoticeDismissAction(
-          $viewsNoticesPath,
+          $this->viewsNoticesPath,
           'disabled_items',
           '.wpstg_dismiss_disabled_items_notice',
           '.wpstg-disabled-items-notice'

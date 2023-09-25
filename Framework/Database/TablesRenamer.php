@@ -2,8 +2,10 @@
 
 namespace WPStaging\Framework\Database;
 
+use WPStaging\Backup\Dto\Task\Restore\RenameDatabaseTaskDto;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\PhpAdapter;
+use WPStaging\Framework\Facades\Hooks;
 
 class TablesRenamer
 {
@@ -41,7 +43,10 @@ class TablesRenamer
     /** @var int Total tables to be renamed */
     protected $totalTables = 0;
 
-    /** @var int How many tables renamed */
+    /**
+     * @var int How many tables renamed in current request
+     *          If no tables renamed, we can use it to throw an error.
+     */
     protected $tablesRenamed = 0;
 
     /** @var int How many tables left to be dropped */
@@ -70,6 +75,12 @@ class TablesRenamer
 
     /** @var callable|null */
     protected $thresholdCallable = null;
+
+    /** @var int */
+    protected $conflictingTablesRenamed = 0;
+
+    /** @var int */
+    protected $nonConflictingTablesRenamed = 0;
 
     public function __construct(TableService $tableService, PhpAdapter $phpAdapter)
     {
@@ -201,19 +212,64 @@ class TablesRenamer
         return $this->tablesBeingRenamedUnprefixed['views'];
     }
 
-    public function setupRenamer()
+    /**
+     * @return int
+     */
+    public function getConflictingTablesRenamed(): int
     {
-        $this->tablesBeingRenamed = [];
+        return $this->conflictingTablesRenamed;
+    }
 
-        $this->tablesBeingRenamed['tables'] = $this->tableService->findTableNamesStartWith($this->tmpPrefix) ?: [];
-        $this->tablesBeingRenamed['views']  = [];
+    /**
+     * @return int
+     */
+    public function getNonConflictingTablesRenamed(): int
+    {
+        return $this->nonConflictingTablesRenamed;
+    }
+
+    /**
+     * @return RenameDatabaseTaskDto
+     */
+    public function setupRenamer(): RenameDatabaseTaskDto
+    {
+        $taskDto = new RenameDatabaseTaskDto();
+        $taskDto->tablesBeingRenamed = $this->tableService->findTableNamesStartWith($this->tmpPrefix) ?: [];
+        $taskDto->viewsBeingRenamed  = [];
         if ($this->renameViews) {
-            $this->tablesBeingRenamed['views'] = $this->tableService->findViewsNamesStartWith($this->tmpPrefix) ?: [];
+            $taskDto->viewsBeingRenamed = $this->tableService->findViewsNamesStartWith($this->tmpPrefix) ?: [];
         }
 
-        $this->tablesBeingRenamed['all'] = array_merge($this->tablesBeingRenamed['tables'], $this->tablesBeingRenamed['views']);
+        $taskDto->existingTables = $this->tableService->findTableNamesStartWith($this->productionTablePrefix) ?: [];
+        $taskDto->existingViews  = [];
+        if ($this->renameViews) {
+            $taskDto->existingViews  = $this->tableService->findViewsNamesStartWith($this->productionTablePrefix) ?: [];
+        }
 
-        $this->totalTables = count($this->tablesBeingRenamed['all']);
+        $taskDto->conflictingTablesRenamed    = 0;
+        $taskDto->nonConflictingTablesRenamed = 0;
+        $this->setTaskDto($taskDto);
+
+        return $taskDto;
+    }
+
+    /**
+     * @param RenameDatabaseTaskDto $taskDto
+     * @return void
+     */
+    public function setTaskDto(RenameDatabaseTaskDto $taskDto)
+    {
+        $this->tablesBeingRenamed           = [];
+        $this->tablesBeingRenamed['tables'] = $taskDto->tablesBeingRenamed ?: [];
+        $this->tablesBeingRenamed['views']  = $taskDto->viewsBeingRenamed ?: [];
+        $this->tablesBeingRenamed['all']    = array_merge($this->tablesBeingRenamed['tables'], $this->tablesBeingRenamed['views']);
+
+        $this->existingTables           = [];
+        $this->existingTables['tables'] = $taskDto->existingTables ?: [];
+        $this->existingTables['views']  = $taskDto->existingViews ?: [];
+        $this->existingTables['all']    = array_merge($this->existingTables['tables'], $this->existingTables['views']);
+
+        $this->totalTables = count($this->tablesBeingRenamed['tables']);
         $tmpDatabasePrefix = $this->tmpPrefix;
 
         foreach ($this->tablesBeingRenamed as $viewsOrTables => $tableName) {
@@ -223,15 +279,6 @@ class TablesRenamer
             }, $this->tablesBeingRenamed[$viewsOrTables]);
         }
 
-        $this->existingTables = [];
-        $this->existingTables['tables'] = $this->tableService->findTableNamesStartWith($this->productionTablePrefix) ?: [];
-        $this->existingTables['views']  = [];
-        if ($this->renameViews) {
-            $this->existingTables['views']  = $this->tableService->findViewsNamesStartWith($this->productionTablePrefix) ?: [];
-        }
-
-        $this->existingTables['all'] = array_merge($this->existingTables['tables'], $this->existingTables['views']);
-
         $productionTablePrefix = $this->productionTablePrefix;
 
         foreach ($this->existingTables as $viewsOrTables => $tableName) {
@@ -240,8 +287,8 @@ class TablesRenamer
             }, $this->existingTables[$viewsOrTables]);
         }
 
-        $this->tablesToBeDropped = $this->tableService->findTableNamesStartWith($this->dropPrefix) ?: [];
-        $this->tablesRemainingToBeDropped = count($this->tablesToBeDropped);
+        $this->conflictingTablesRenamed    = (int)$taskDto->conflictingTablesRenamed;
+        $this->nonConflictingTablesRenamed = (int)$taskDto->nonConflictingTablesRenamed;
     }
 
     /**
@@ -289,11 +336,23 @@ class TablesRenamer
      */
     public function renameConflictingTables()
     {
-        $this->tableService->getDatabase()->exec('START TRANSACTION;');
+        $conflictingTablesWithoutPrefix = array_values($this->getTablesThatExistInBothExistingAndTempUnprefixed());
+        // Early bail: if no tables to rename
+        if (empty($conflictingTablesWithoutPrefix)) {
+            return true;
+        }
 
-        foreach ($this->getTablesThatExistInBothExistingAndTempUnprefixed() as $conflictingTableWithoutPrefix) {
+        // Early bail: if all tables renamed
+        if (count($conflictingTablesWithoutPrefix) <= $this->conflictingTablesRenamed) {
+            return true;
+        }
+
+        $this->tableService->getDatabase()->exec('START TRANSACTION;');
+        for ($i = $this->conflictingTablesRenamed; $i < count($conflictingTablesWithoutPrefix); $i++) {
+            $conflictingTableWithoutPrefix = $conflictingTablesWithoutPrefix[$i];
             if ($this->isExcludedTable($conflictingTableWithoutPrefix)) {
                 $this->tablesRenamed++;
+                $this->conflictingTablesRenamed++;
                 continue;
             }
 
@@ -304,19 +363,22 @@ class TablesRenamer
             }
 
             // Prefix existing table with toDrop prefix
-            $this->tableService->getDatabase()->exec(sprintf(
+            $result = $this->tableService->getDatabase()->exec(sprintf(
                 "RENAME TABLE `%s` TO `%s`;",
                 $currentTable,
                 $tableToDrop
             ));
 
-            $this->renameTable($conflictingTableWithoutPrefix);
-
-            if (!$this->phpAdapter->isCallable($this->thresholdCallable)) {
-                continue;
+            if ($result === false && ($this->logEachRename && $this->logger instanceof Logger)) {
+                /** @var \wpdb */
+                $wpdb  = $this->tableService->getDatabase()->getWpdba()->getClient();
+                $error = $wpdb->last_error;
+                $this->logger->warning("DB Rename: Unable to rename table {$currentTable} to {$tableToDrop}. Error: " . $error);
             }
 
-            if (call_user_func($this->thresholdCallable)) {
+            $this->renameTable($conflictingTableWithoutPrefix, $this->conflictingTablesRenamed);
+
+            if ($this->isThresholdReached()) {
                 $this->tableService->getDatabase()->exec('COMMIT;');
                 return false;
             }
@@ -333,19 +395,29 @@ class TablesRenamer
      */
     public function renameNonConflictingTables()
     {
+        $nonConflictingTables = array_values($this->getTablesThatExistInTempButNotInSite());
+        // Early bail: if no tables to rename
+        if (empty($nonConflictingTables)) {
+            return true;
+        }
+
+        // Early bail: if all tables renamed
+        if (count($nonConflictingTables) <= $this->nonConflictingTablesRenamed) {
+            return true;
+        }
+
         $this->tableService->getDatabase()->exec('START TRANSACTION;');
-        foreach ($this->getTablesThatExistInTempButNotInSite() as $nonConflictingTable) {
+        for ($i = $this->nonConflictingTablesRenamed; $i < count($nonConflictingTables); $i++) {
+            $nonConflictingTable = $nonConflictingTables[$i];
             if ($this->isExcludedTable($nonConflictingTable)) {
+                $this->tablesRenamed++;
+                $this->nonConflictingTablesRenamed++;
                 continue;
             }
 
-            $this->renameTable($nonConflictingTable);
+            $this->renameTable($nonConflictingTable, $this->nonConflictingTablesRenamed);
 
-            if (!$this->phpAdapter->isCallable($this->thresholdCallable)) {
-                continue;
-            }
-
-            if (call_user_func($this->thresholdCallable)) {
+            if ($this->isThresholdReached()) {
                 $this->tableService->getDatabase()->exec('COMMIT;');
                 return false;
             }
@@ -361,6 +433,14 @@ class TablesRenamer
      */
     public function cleanTemporaryBackupTables()
     {
+        // Early bail if tables cleaned already
+        if ($this->nonConflictingTablesRenamed !== 0 || $this->conflictingTablesRenamed !== 0) {
+            return true;
+        }
+
+        $this->tablesToBeDropped = $this->tableService->findTableNamesStartWith($this->dropPrefix) ?: [];
+        $this->tablesRemainingToBeDropped = count($this->tablesToBeDropped);
+
         $this->tableService->getDatabase()->exec('SET autocommit=0;');
         $this->tableService->getDatabase()->exec('SET FOREIGN_KEY_CHECKS=0;');
         $this->tableService->getDatabase()->exec('START TRANSACTION;');
@@ -535,8 +615,10 @@ class TablesRenamer
 
     /**
      * @param string $tableWithoutPrefix
+     * @param int $tablesRenamed
+     * @return void
      */
-    protected function renameTable($tableWithoutPrefix)
+    protected function renameTable(string $tableWithoutPrefix, int &$tablesRenamed)
     {
         $tmpDatabasePrefix = $this->tmpPrefix;
         $tableToRename     = $tmpDatabasePrefix . $tableWithoutPrefix;
@@ -556,6 +638,7 @@ class TablesRenamer
 
         if ($result !== false) {
             $this->tablesRenamed++;
+            $tablesRenamed++;
             if ($this->logEachRename && $this->logger instanceof Logger) {
                 $this->logger->info("DB Rename: Renamed table {$tableToRename} to {$tableAfterRenamed}.");
             }
@@ -564,7 +647,10 @@ class TablesRenamer
         }
 
         if ($this->logEachRename && $this->logger instanceof Logger) {
-            $this->logger->warning("DB Rename: Unable to rename table {$tableToRename} to {$tableAfterRenamed}.");
+            /** @var \wpdb */
+            $wpdb  = $database->getWpdba()->getClient();
+            $error = $wpdb->last_error;
+            $this->logger->warning("DB Rename: Unable to rename table {$tableToRename} to {$tableAfterRenamed}. Error: " . $error);
         }
     }
 
@@ -646,5 +732,27 @@ class TablesRenamer
         $sql        = "UPDATE {$tableName} SET meta_value = '{$optionValue}' WHERE meta_key LIKE '{$optionName}'";
 
         return $database->query($sql);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isThresholdReached(): bool
+    {
+        if (!$this->phpAdapter->isCallable($this->thresholdCallable)) {
+            return $this->customThreshold(false);
+        }
+
+        $result = call_user_func($this->thresholdCallable);
+        return $this->customThreshold($result);
+    }
+
+    /**
+     * @param bool $isThreshold
+     * @return bool
+     */
+    private function customThreshold(bool $isThreshold): bool
+    {
+        return Hooks::applyFilters('wpstg.tests.tablesRenamingThreshold', $isThreshold);
     }
 }

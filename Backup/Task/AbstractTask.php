@@ -2,9 +2,11 @@
 
 namespace WPStaging\Backup\Task;
 
+use Exception;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
+use WPStaging\Backup\Dto\AbstractTaskDto;
 use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Dto\TaskResponseDto;
@@ -14,6 +16,7 @@ use WPStaging\Backup\Task\Tasks\JobRestore\ExtractFilesTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Core\WPStaging;
 
 abstract class AbstractTask
 {
@@ -47,6 +50,9 @@ abstract class AbstractTask
     /** @var AbstractJob */
     protected $job;
 
+    /** @var AbstractTaskDto */
+    protected $currentTaskDto;
+
     /** @var SeekableQueueInterface */
     protected $taskQueue;
 
@@ -64,7 +70,7 @@ abstract class AbstractTask
     }
 
     /**
-     * @return \WPStaging\Backup\Dto\TaskResponseDto
+     * @return TaskResponseDto
      */
     abstract public function execute();
 
@@ -86,6 +92,10 @@ abstract class AbstractTask
         throw new WPStagingException('Any extending class MUST override the getTaskTitle method.');
     }
 
+    /**
+     * @param AbstractJob $job
+     * @return void
+     */
     public function setJobContext(AbstractJob $job)
     {
         $this->cache->setLifetime(HOUR_IN_SECONDS);
@@ -99,11 +109,16 @@ abstract class AbstractTask
         $this->job = $job;
     }
 
+    /**
+     * @param JobDataDto $jobDataDto
+     * @return void
+     */
     public function setJobDataDto(JobDataDto $jobDataDto)
     {
         $this->jobDataDto = $jobDataDto;
         $this->taskQueue->setup(static::getTaskName());
         $this->taskQueue->seek($this->jobDataDto->getQueueOffset());
+        $this->setupCurrentTaskDto();
     }
 
     /**
@@ -111,9 +126,9 @@ abstract class AbstractTask
      *                          This might be false when you want to generate a response and still be
      *                          able to retry the same step in the next request.
      *
-     * @return \WPStaging\Backup\Dto\TaskResponseDto
+     * @return TaskResponseDto
      */
-    public function generateResponse($incrementStep = true)
+    public function generateResponse($incrementStep = true): TaskResponseDto
     {
         if ($incrementStep) {
             $this->stepsDto->incrementCurrentStep();
@@ -121,7 +136,7 @@ abstract class AbstractTask
 
         // TODO Hydrate
         $response = $this->getResponseDto();
-        $response->setIsRunning($this->stepsDto->isFinished());
+        $response->setIsRunning(!$this->stepsDto->isFinished());
         $response->setPercentage($this->stepsDto->getPercentage());
         $response->setTotal($this->stepsDto->getTotal());
         $response->setStep($this->stepsDto->getCurrent());
@@ -158,6 +173,7 @@ abstract class AbstractTask
             $this->jobDataDto->setQueueOffset(0);
             $response->setPercentage(0);
             $this->cache->delete();
+            $this->jobDataDto->setCurrentTaskData([]);
         } else {
             $this->persistStepsDto();
         }
@@ -171,6 +187,7 @@ abstract class AbstractTask
      * Save StepsDto to disk.
      * This happens automatically during the shutdown process,
      * but it can also be called manually.
+     * @return void
      */
     public function persistStepsDto()
     {
@@ -217,18 +234,61 @@ abstract class AbstractTask
         $this->debug = (bool)$debug;
     }
 
+    /**
+     * @return Logger
+     */
+    public function getLogger(): Logger
+    {
+        return $this->logger;
+    }
+
+    /**
+     * @return SeekableQueueInterface
+     */
+    public function getQueue(): SeekableQueueInterface
+    {
+        return $this->taskQueue;
+    }
+
+    /**
+     * @param AbstractTaskDto $taskDto
+     * @return void
+     */
+    public function setCurrentTaskDto(AbstractTaskDto $taskDto)
+    {
+        $this->currentTaskDto = $taskDto;
+        $this->jobDataDto->setCurrentTaskData($taskDto->toArray());
+    }
+
+    /**
+     * @return TaskResponseDto
+     */
     protected function getResponseDto()
     {
         return new TaskResponseDto();
     }
 
-    public function getLogger()
+    /** @return string */
+    protected function getCurrentTaskType(): string
     {
-        return $this->logger;
+        return '';
     }
 
-    public function getQueue()
+    /**
+     * @return void
+     */
+    protected function setupCurrentTaskDto()
     {
-        return $this->taskQueue;
+        $currentTaskType = $this->getCurrentTaskType();
+        if (empty($currentTaskType) || !class_exists($currentTaskType)) {
+            return;
+        }
+
+        try {
+            $currentTaskData      = $this->jobDataDto->getCurrentTaskData();
+            $this->currentTaskDto = WPStaging::make($currentTaskType);
+            $this->currentTaskDto->hydrateProperties($currentTaskData);
+        } catch (Exception $e) {
+        }
     }
 }

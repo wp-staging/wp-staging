@@ -5,7 +5,7 @@ namespace WPStaging\Framework\Notices;
 /**
  * Class ObjectCacheNotice
  *
- * This class is used to show notice whether object cache skipped during restore
+ * This class is used to show notice whether object cache has been skipped during restore
  *
  * @see Notices;
  */

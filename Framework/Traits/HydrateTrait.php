@@ -37,6 +37,26 @@ trait HydrateTrait
         return $this;
     }
 
+    /**
+     * Use to hydrate public properties
+     * @param array $data
+     * @return $this
+     * @noinspection PhpDocMissingThrowsInspection
+     */
+    public function hydrateProperties(array $data = [])
+    {
+        foreach ($data as $key => $value) {
+            if (!property_exists($this, $key)) {
+                $this->debugLog("Trying to hydrate DTO with property that does not exist. {$key}");
+                continue;
+            }
+
+            $this->{$key} = $value;
+        }
+
+        return $this;
+    }
+
     protected function debugLog($message)
     {
         if (WPStaging::areLogsSilenced()) {

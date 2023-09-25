@@ -168,6 +168,84 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
+     * This function moves file without using php's function rename, since rename does not work in all cases.
+     *
+     * @see https://github.com/wp-staging/wp-staging-pro/pull/2558
+     *
+     * @param string $source
+     * @param string $target
+     *
+     * @return bool — true on success or false on failure.
+     */
+    public function moveFileOrDir($source, $dest)
+    {
+        if (is_dir($source)) {
+            return $this->moveDirRecursively($source, $dest);
+        }
+
+        try {
+            if (!@copy($source, $dest)) {
+                return false;
+            }
+            @unlink($source);
+            return true;
+        } catch (\Throwable $th) {
+            debug_log("Failed to copy $source in moveFileOrDir. Error message: " . $th->getMessage());
+            return false;
+        }
+    }
+
+    /**
+     * @param string $source
+     * @param string $target
+     *
+     * @return bool — true on success or false on failure.
+     */
+    private function moveDirRecursively($source, $dest)
+    {
+        if (!is_dir($source)) {
+            debug_log("moveDirRecursively() - Is no dir: $source.");
+            return false;
+        }
+
+        if (!$this->mkdir($dest)) {
+            return false;
+        }
+
+        $iterator = new \RecursiveIteratorIterator(
+            new \RecursiveDirectoryIterator($source, \RecursiveDirectoryIterator::SKIP_DOTS),
+            \RecursiveIteratorIterator::SELF_FIRST
+        );
+
+        $copySucceed = true;
+        foreach ($iterator as $item) {
+            // Skip if a link
+            if ($item->isLink()) {
+                continue;
+            }
+
+            if ($item->isDir() && !$this->mkdir(trailingslashit($dest) . $iterator->getSubPathname())) {
+                $copySucceed = false;
+                continue;
+            }
+
+            if (!$item->isFile()) {
+                continue;
+            }
+
+            if (!$this->moveFileOrDir($item->getPathname(), trailingslashit($dest) . $iterator->getSubPathname())) {
+                $copySucceed = false;
+            }
+        }
+
+        if ($copySucceed && !$this->delete($source, true)) {
+            debug_log("moveDirRecursively() - Failed to delete $source.");
+        }
+
+        return true;
+    }
+
+    /**
      * @param string|null $path The path to the new folder, or null to use FileSystem's path.
      *
      * @return string Path to newly created folder, or empty string if couldn't create it.
@@ -198,7 +276,7 @@ class Filesystem extends FilterableDirectoryIterator
 
         if ($preventDirectoryListing) {
             /** @var DirectoryListing $directoryListing */
-            $directoryListing = WPStaging::getInstance()->getContainer()->make(DirectoryListing::class);
+            $directoryListing = WPStaging::getInstance()->getContainer()->get(DirectoryListing::class);
             try {
                 $directoryListing->preventDirectoryListing($path);
             } catch (\Exception $e) {
@@ -223,7 +301,7 @@ class Filesystem extends FilterableDirectoryIterator
      */
     public function copy($source, $target)
     {
-        // if $source is link or file, move it and stop execution
+        // if $source is link or file, copy it and stop execution
         if (is_link($source) || is_file($source)) {
             $this->mkdir(dirname($target));
             return copy($source, $target);

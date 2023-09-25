@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
+use Exception;
 use RuntimeException;
 use WPStaging\Backend\Modules\Jobs\Cleaners\WpContentCleaner;
 use WPStaging\Backup\Exceptions\DiskNotWritableException;
@@ -600,7 +601,14 @@ class Files extends JobExecutable
     {
         // If path + file exists
         foreach ($this->options->excludedFilesFullPath as $excludedFile) {
-            if ($file === trailingslashit(ABSPATH) . $excludedFile) {
+            // If the path is not transformable, it will throw exception, in that case we treat the original path already absolute path
+            try {
+                $excludedFileFullPath = $this->pathAdapter->transformIdentifiableToPath($excludedFile);
+            } catch (Exception $ex) {
+                $excludedFileFullPath = $excludedFile;
+            }
+
+            if ($file === $excludedFileFullPath) {
                 return true;
             }
         }

@@ -11,6 +11,8 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Backup\Dto\Task\Restore\RenameDatabaseTaskDto;
+use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
 use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
@@ -44,6 +46,9 @@ class RenameDatabaseTask extends RestoreTask
     /** @var ViewDDLOrder */
     protected $viewDDLOrder;
 
+    /** @var RenameDatabaseTaskDto */
+    protected $currentTaskDto;
+
     public function __construct(SiteInfo $siteinfo, TablesRenamer $tablesRenamer, ViewDDLOrder $viewDDLOrder, TableService $tableService, TableViewsRenamer $tableViewsRenamer, AccessToken $accessToken, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -55,17 +60,20 @@ class RenameDatabaseTask extends RestoreTask
         $this->tableViewsRenamer = $tableViewsRenamer;
     }
 
-    public static function getTaskName()
+    public static function getTaskName(): string
     {
         return 'backup_restore_rename_database';
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Renaming Database Tables';
     }
 
-    public function execute()
+    /**
+     * @return TaskResponseDto
+     */
+    public function execute(): TaskResponseDto
     {
         $this->setupTask();
 
@@ -94,6 +102,15 @@ class RenameDatabaseTask extends RestoreTask
         return $this->generateResponse();
     }
 
+    /** @return string */
+    protected function getCurrentTaskType(): string
+    {
+        return RenameDatabaseTaskDto::class;
+    }
+
+    /**
+     * @return void
+     */
     protected function setupTableRenamer()
     {
         $this->tablesRenamer->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
@@ -106,8 +123,6 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->setExcludedTables([
             'wpstg_queue'
         ]);
-
-        $this->tablesRenamer->setupRenamer();
     }
 
     /**
@@ -133,6 +148,9 @@ class RenameDatabaseTask extends RestoreTask
         return $allOptions;
     }
 
+    /**
+     * @return void
+     */
     protected function keepOptions()
     {
         $allOptions = $this->getAutoloadedOptions();
@@ -195,6 +213,9 @@ class RenameDatabaseTask extends RestoreTask
         }
     }
 
+    /**
+     * @return void
+     */
     protected function setupRemoveOptions()
     {
         if (!$this->siteInfo->isStagingSite()) {
@@ -211,6 +232,7 @@ class RenameDatabaseTask extends RestoreTask
         $tmpPrefix = $this->jobDataDto->getTmpDatabasePrefix();
         $this->setTmpPrefix($tmpPrefix);
         $this->setupTableRenamer();
+        $this->setCurrentTaskDto($this->tablesRenamer->setupRenamer());
 
         // Store some information to re-add after we restore the database.
         $accessToken              = $this->accessToken->getToken();
@@ -256,34 +278,36 @@ class RenameDatabaseTask extends RestoreTask
      * @return bool
      * @throws Exception
      */
-    protected function performDatabaseRename()
+    protected function performDatabaseRename(): bool
     {
         $this->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
         $this->setupTableRenamer();
+        $this->tablesRenamer->setTaskDto($this->currentTaskDto);
 
         // We will try restoring non conflicting tables first,
         // If there are no non-conflicting tables renamed, we will stop the restore process.
         $result = $this->tablesRenamer->renameNonConflictingTables();
         if ($result === false) {
-            $newTablesRenamed = $this->tablesRenamer->getRenamedTables();
-            if ($newTablesRenamed === 0) {
+            if ($this->tablesRenamer->getRenamedTables() === 0) {
                 $this->logger->critical('Could not restore non-conflicting tables. Contact support@wp-staging.com.');
                 throw new Exception("Could not restore non-conflicting tables.");
             }
 
-            $tablesRenamed = $newTablesRenamed + $this->jobDataDto->getTotalTablesRenamed();
-            $this->logger->info(sprintf('Restored %d/%d tables', $tablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
-            $this->jobDataDto->setTotalTablesRenamed($tablesRenamed);
+            $this->currentTaskDto->nonConflictingTablesRenamed = $this->tablesRenamer->getNonConflictingTablesRenamed();
+            $this->logger->info(sprintf('Restored %d/%d tables', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
+            $this->setCurrentTaskDto($this->currentTaskDto);
             return false;
         }
 
         $result = $this->tablesRenamer->renameConflictingTables();
-        $newTablesRenamed = $this->tablesRenamer->getRenamedTables();
-        $tablesRenamed = $newTablesRenamed + $this->jobDataDto->getTotalTablesRenamed();
+
+        $this->currentTaskDto->conflictingTablesRenamed = $this->tablesRenamer->getConflictingTablesRenamed();
+        $tablesRenamed = $this->currentTaskDto->nonConflictingTablesRenamed + $this->currentTaskDto->conflictingTablesRenamed;
         $this->logger->info(sprintf('Restored %d/%d tables', $tablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
-        $this->jobDataDto->setTotalTablesRenamed($tablesRenamed);
+        $this->setCurrentTaskDto($this->currentTaskDto);
+
         if ($result === false) {
-            if ($newTablesRenamed === 0) {
+            if ($this->tablesRenamer->getRenamedTables() === 0) {
                 $this->logger->critical('Could not rename any database table. Please contact support@wp-staging.com.');
                 throw new Exception("Could not rename any database table.");
             }
@@ -299,6 +323,7 @@ class RenameDatabaseTask extends RestoreTask
 
     /**
      * Executes actions after a database has been restored.
+     * @return void
      */
     protected function postDatabaseRenameActions()
     {
@@ -378,6 +403,9 @@ class RenameDatabaseTask extends RestoreTask
         wp_logout();
     }
 
+    /**
+     * @return void
+     */
     protected function renameViewReferences()
     {
         $views = $this->tablesRenamer->getViewsToBeRenamed();
@@ -392,6 +420,9 @@ class RenameDatabaseTask extends RestoreTask
         }
     }
 
+    /**
+     * @return void
+     */
     protected function setupTask()
     {
         if ($this->stepsDto->getTotal() > 0) {

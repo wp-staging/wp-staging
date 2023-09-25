@@ -294,6 +294,12 @@ class FilesystemScannerTask extends BackupTask
         $excludedDirs[] = $this->directory->getUploadsDirectory() . 'wio_backup';
 
         /**
+         * This is default directory that contains staging sites created by WP STAGING when ABSPATH is not writable.
+         * There is no need to backup the staging sites directory
+         */
+        $excludedDirs[] = $this->directory->getStagingSiteDirectoryInsideWpcontent();
+
+        /**
          * Allow user to filter the excluded directories in a site backup.
          *
          * @param array $excludedDirectories

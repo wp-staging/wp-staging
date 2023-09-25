@@ -74,7 +74,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 
             if ($files->isDir()) {
                 $normalizedPath = $this->filesystem->normalizePath($files->getPathname(), true);
-                $defaultWordPressFoldersWithLang = array_merge($this->directory->getDefaultWordPressFolders(), [$this->directory->getLangsDirectory()]);
+                $defaultWordPressFoldersWithLang = array_merge($this->directory->getDefaultWordPressFolders(), [$this->directory->getLangsDirectory(), trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent())]);
                 if (!in_array($normalizedPath, $defaultWordPressFoldersWithLang)) {
                     $this->enqueueDelete($normalizedPath);
                 }

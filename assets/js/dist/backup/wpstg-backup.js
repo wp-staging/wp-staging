@@ -2253,7 +2253,7 @@
           if (!response.hasOwnProperty('isRunning')) {
             WPStagingCommon.showErrorModal('Cancel process did not finish gracefully. Some temporary files might not have been cleaned up.');
           }
-          if (response.isRunning === true) {
+          if (response.isRunning === false) {
             WPStagingCommon.closeSwalModal();
             if (callback !== undefined && callback !== null) {
               callback();
@@ -2306,6 +2306,7 @@
           $modal.remove();
         }
         $('body').off('click', '.wpstg--modal--process--logs--tail').on('click', '.wpstg--modal--process--logs--tail', function (e) {
+          WPStagingBackup.showLogsInModal();
           var logBtn = $(this);
           e.preventDefault();
           var container = WPStagingCommon.getSwalContainer();
@@ -2430,11 +2431,11 @@
         if (response.jobId) {
           WPStagingCommon.setJobId(response.jobId);
         }
-        if (response.isRunning === true && response.job_done === true) {
+        if (response.isRunning === false && response.job_done === true) {
           WPStagingBackup.timer.stop();
           WPStagingBackup.isCancelled = true;
           // For other classes that require 'status'
-          response.status = response.isRunning;
+          response.status = !response.isRunning;
           window.dispatchEvent(new CustomEvent('finishedProcess', {
             response: response
           }));
@@ -2551,6 +2552,20 @@
             WPStagingCommon.showAjaxFatalError(e, '', 'Submit an error report.');
           });
         }, 5000);
+      },
+      showLogsInModal: function showLogsInModal() {
+        if (WPStagingBackup.messages.data.all) {
+          var container = WPStagingCommon.getSwalContainer();
+          var logsContainer = container.querySelector('.wpstg--modal--process--logs');
+          logsContainer.innerHTML = '';
+          WPStagingBackup.messages.data.all.forEach(function (message) {
+            var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
+            var pElement = document.createElement('p');
+            pElement.className = msgClass;
+            pElement.textContent = "[" + message.type + "] - [" + message.date + "] - " + message.message;
+            logsContainer.appendChild(pElement);
+          });
+        }
       }
     };
   })(jQuery);
@@ -2716,16 +2731,14 @@
           if (!WPStagingBackup$1.processInfo.interval) {
             WPStagingBackup$1.statusStart('create');
           }
-          if (response.isRunning === false) {
-            if (response.jobStatus === 'JOB_FAIL') {
-              WPStagingBackup$1.checkMemoryExhaustion(response, 'wpstg_backup');
-              setTimeout(function () {
-                WPStagingBackupCreate.createBackup();
-              }, wpstg.delayReq);
-            } else {
+          if (response.isRunning === true) {
+            WPStagingBackupCreate.createBackup();
+          } else if (response.jobStatus === 'JOB_FAIL') {
+            WPStagingBackup$1.checkMemoryExhaustion(response, 'wpstg_backup');
+            setTimeout(function () {
               WPStagingBackupCreate.createBackup();
-            }
-          } else if (response.isRunning === true) {
+            }, wpstg.delayReq);
+          } else {
             $('#wpstg--progress--status').text('Backup successfully created!');
             if (WPStagingBackup$1.messages.shouldWarn()) {
               // noinspection JSIgnoredPromiseFromCall
@@ -3045,16 +3058,14 @@
             if (!WPStagingBackup$1.processInfo.interval) {
               WPStagingBackup$1.statusStart('restore');
             }
-            if (response.isRunning === false) {
-              if (response.jobStatus === 'JOB_FAIL') {
-                WPStagingBackup$1.checkMemoryExhaustion(response, 'wpstg_restore');
-                setTimeout(function () {
-                  importSiteBackup(data);
-                }, wpstg.delayReq);
-              } else {
+            if (response.isRunning === true) {
+              importSiteBackup(data);
+            } else if (response.jobStatus === 'JOB_FAIL') {
+              WPStagingBackup$1.checkMemoryExhaustion(response, 'wpstg_restore');
+              setTimeout(function () {
                 importSiteBackup(data);
-              }
-            } else if (response.isRunning === true) {
+              }, wpstg.delayReq);
+            } else {
               window.removeEventListener('beforeunload', WPStaging.warnIfClosingDuringProcess);
               $('#wpstg--progress--status').text('Backup successfully imported!');
               if (WPStagingBackup$1.messages.shouldWarn()) {

@@ -11,6 +11,7 @@ use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -97,7 +98,7 @@ class DatabaseBackupTask extends BackupTask
         }
 
         // Action hook for internal use only: used during memory exhaust test
-        do_action('wpstg.tests.backup.export_database.before_rows_export');
+        Hooks::doAction('wpstg.tests.backup.export_database.before_rows_export');
 
         $useMemoryExhaustFix = $this->isMemoryExhaustFixEnabled();
         // Lazy instantiation

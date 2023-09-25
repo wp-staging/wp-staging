@@ -16,8 +16,8 @@ class SourceDatabase
 
     public function __construct($options = stdClass::class)
     {
-        $this->wpdb = WPStaging::make('wpdb');
         $this->options = $options;
+        $this->wpdb    = WPStaging::make('wpdb');
     }
 
     /**
@@ -43,7 +43,6 @@ class SourceDatabase
      * Check if source database is a local or external one and get the corresponding database object
      *
      * @return wpdb
-     *
      */
     public function getDatabase()
     {
@@ -51,74 +50,6 @@ class SourceDatabase
             return $this->getExternalDb();
         }
         return $this->wpdb;
-    }
-
-    /**
-     * Add or update a cloned site option in the database.
-     *
-     * No need to serialize values. If the value needs to be serialized,
-     *  then it will be serialized before it is inserted into the database.
-     *
-     * If the option does not exist, it will be created.
-     *
-     * @param  string $optionName
-     * @param  mixed $optionValue
-     *
-     * @return int|false int for the number of rows affected during the updating of the clone's DB, or false on failure.
-     */
-    public function addOrUpdateClonedSiteOption($optionName, $optionValue)
-    {
-        if (!isset($this->options->prefix)) {
-            return false;
-        }
-
-        $cloneOptionsTable = $this->options->prefix . 'options';
-        $cloneOptions = $this->wpdb->query("SELECT * FROM  {$cloneOptionsTable} WHERE option_name='{$optionName}';");
-        if (empty($cloneOptions)) {
-            $result = $this->addOption($optionName, $optionValue);
-        } else {
-            $result = $this->wpdb->update(
-                $cloneOptionsTable,
-                [
-                    'option_value' => maybe_serialize($optionValue),
-                ],
-                ['option_name' => $optionName]
-            );
-        }
-        return $result;
-    }
-
-    /**
-     * Add option to cloned site.
-     *
-     * No need to serialize values. If the value needs to be serialized,
-     *  then it will be serialized before it is inserted into the database.
-     *
-     * @param  string $optionName
-     * @param  mixed $optionValue
-     *
-     * @return int|false int for the number of rows affected during the updating of the clone's DB, or false on failure.
-     */
-    public function addOption($optionName, $optionValue)
-    {
-        if (!isset($this->options->prefix)) {
-            return false;
-        }
-
-        $cloneOptionsTable = $this->options->prefix . 'options';
-        $cloneOptions = $this->wpdb->query("SELECT * FROM  {$cloneOptionsTable} WHERE option_name='{$optionName}';");
-        if (!empty($cloneOptions)) {
-            return false;
-        }
-
-        $result = $this->wpdb->insert(
-            $cloneOptionsTable,
-            [
-                'option_name' => $optionName,
-                'option_value' => maybe_serialize($optionValue),
-            ]
-        );
-        return $result;
     }
 
     /**

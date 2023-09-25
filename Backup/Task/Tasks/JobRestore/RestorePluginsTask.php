@@ -7,6 +7,8 @@ use WPStaging\Backup\Task\FileRestoreTask;
 
 class RestorePluginsTask extends FileRestoreTask
 {
+    const FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS = 'wpstg.backup.restore.exclude_plugins';
+
     public static function getTaskName()
     {
         return 'backup_restore_plugins';
@@ -126,8 +128,10 @@ class RestorePluginsTask extends FileRestoreTask
                 continue;
             }
 
-            // wp-content/plugins/foo | Skip the current active wp staging plugin slug e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1, etc.
-            if ($fileInfo->isDir() && $fileInfo->getFilename() !== WPSTG_PLUGIN_SLUG) {
+            $pluginsToExclude = apply_filters(self::FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS, [
+                WPSTG_PLUGIN_SLUG, // Skip the current active wp staging plugin slug e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1, etc.
+            ]);
+            if ($fileInfo->isDir() && !in_array($fileInfo->getFilename(), $pluginsToExclude)) {
                 $plugins[$fileInfo->getBasename()] = $fileInfo->getPathname();
 
                 continue;

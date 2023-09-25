@@ -193,7 +193,7 @@ class PrepareBackup
                 return new WP_Error(400, $errorMessage);
             }
 
-            if ($taskResponseDto->isRunning()) {
+            if (!$taskResponseDto->isRunning()) {
                 // Cleanup the pending/ready actions for this scheduleId.
                 $this->queue->cleanupActionsByScheduleId($args['scheduleId'], [Queue::STATUS_READY]);
 

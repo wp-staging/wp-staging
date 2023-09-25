@@ -1,7 +1,7 @@
 <?php
 
 /**
- * @var $viewsNoticesPath
+ * @var $this
  * @see \WPStaging\Framework\Support\ThirdParty\WordFence::showNotice
  */
 
@@ -20,7 +20,7 @@ $linkToArticle = "https://wp-staging.com/docs/object-caching-and-how-to-activate
     </p>
     <p>
     <?php Notices::renderNoticeDismissAction(
-        $viewsNoticesPath,
+        $this->viewsNoticesPath,
         ObjectCacheNotice::NOTICE_DISMISS_ACTION,
         '.wpstg_dismiss_skipped_object_cache_notice',
         '.wpstg-skipped-object-cache-notice'

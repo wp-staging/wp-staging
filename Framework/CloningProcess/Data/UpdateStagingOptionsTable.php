@@ -12,6 +12,8 @@ use WPStaging\Pro\Staging\NetworkClone;
 
 class UpdateStagingOptionsTable extends DBCloningService
 {
+    const FILTER_CLONING_UPDATE_ACTIVE_PLUGINS = 'wpstg.cloning.update_active_plugins';
+
     /**
      * @inheritDoc
      */
@@ -96,6 +98,10 @@ class UpdateStagingOptionsTable extends DBCloningService
             $updateOrInsert[FreemiusScript::NOTICE_OPTION] = true;
         }
 
+        if (isset($this->dto->getJob()->getOptions()->tmpExcludedFilesFullPath)) {
+            $updateOrInsert[Sites::STAGING_EXCLUDED_FILES_OPTION] = serialize(array_unique((array)$this->dto->getJob()->getOptions()->tmpExcludedFilesFullPath));
+        }
+
         $this->updateOrInsertOptions($updateOrInsert);
 
         $update = [
@@ -104,6 +110,13 @@ class UpdateStagingOptionsTable extends DBCloningService
         ];
         if ($this->dto->getMainJob() !== 'updating') {
             $update[Sites::STAGING_SITES_OPTION] = serialize([]);
+        }
+
+        if ($this->dto->getMainJob() === 'cloning') {
+            $activePluginsToUpdate = $this->getActivePluginsToUpdate();
+            if (is_array($activePluginsToUpdate)) {
+                $update['active_plugins'] = serialize($activePluginsToUpdate);
+            }
         }
 
         $this->updateOptions($update);
@@ -159,5 +172,27 @@ class UpdateStagingOptionsTable extends DBCloningService
                 $this->log("Failed to delete $option {$this->dto->getStagingDb()->last_error}", Logger::TYPE_WARNING);
             }
         }
+    }
+
+    /**
+     * @return void|array
+     */
+    protected function getActivePluginsToUpdate()
+    {
+        $excludedTable = $this->dto->getPrefix() . 'options';
+        if (!in_array($excludedTable, $this->dto->getTables())) {
+            return;
+        }
+
+        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+        remove_all_filters('option_active_plugins');
+
+        $activePlugins = get_option('active_plugins');
+        if (!is_array($activePlugins)) {
+            $activePlugins = [];
+        }
+        $activePlugins = apply_filters(self::FILTER_CLONING_UPDATE_ACTIVE_PLUGINS, $activePlugins);
+
+        return $activePlugins;
     }
 }

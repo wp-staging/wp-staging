@@ -74,11 +74,9 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
         <label for="wpstg_db_prefix"><?php esc_html_e('Database Prefix: ', 'wp-staging'); ?></label>
         <input type="text" class="wpstg-textbox" name="wpstg_db_prefix" id="wpstg_db_prefix" value="<?php echo esc_attr($prefix); ?>" placeholder="<?php echo $db->prefix; ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
     </div>
-    <div class="wpstg-form-group">
-        <div class="wpstg-checkbox">
+    <div class="wpstg--advance-settings--checkbox">
             <label for="wpstg_db_ssl"><?php esc_html_e('Enable SSL: ', 'wp-staging'); ?></label>
             <input type="checkbox" id="wpstg_db_ssl" name="wpstg_db_ssl" value="true" class="wpstg-checkbox" <?php echo $useSsl ? "checked" : '';?> readonly />
-        </div>
     </div>
     <div class="wpstg-form-group wpstg-text-field wpstg-mt-10px">
         <a href="#" id="wpstg-db-connect"><?php esc_html_e("Test Database Connection", "wp-staging"); ?></a>
