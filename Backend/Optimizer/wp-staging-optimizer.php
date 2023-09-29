@@ -9,15 +9,16 @@
  * Do not use any of these methods in WP STAGING code base as this mu-plugin can be missing!
  *
  * Author: René Hermenau
- * Version: 1.5.2
+ * Version: 1.5.3
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
 
 // Version number of this mu-plugin. Important for automatic updates
+// Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.2');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.3');
 }
 if (!function_exists('wpstgGetPluginsDir')) {
     /** @return string */
@@ -138,9 +139,10 @@ if (!function_exists('wpstgExcludeSitePlugins')) {
         return $plugins;
     }
 
-    add_filter('site_option_active_sitewide_plugins', 'wpstgExcludeSitePlugins');
+    if (is_multisite()) {
+        add_filter('site_option_active_sitewide_plugins', 'wpstgExcludeSitePlugins');
+    }
 }
-
 
 if (!function_exists('wpstgDisableTheme')) {
     /**
