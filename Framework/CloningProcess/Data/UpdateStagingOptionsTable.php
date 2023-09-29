@@ -122,7 +122,9 @@ class UpdateStagingOptionsTable extends DBCloningService
         $this->updateOptions($update);
 
         // Options to delete on the staging site
-        $toDelete = [];
+        $toDelete = [
+            '_transient_wp_core_block_css_files' // Transient that breaks the css on staging site for Twenty Twenty Three theme
+        ];
 
         if (!$this->isNetworkClone() && $freemiusHelper->hasFreemiusOptions()) {
             $toDelete = array_merge($toDelete, $freemiusHelper->getFreemiusOptions());

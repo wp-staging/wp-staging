@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.3
-Stable tag: 3.0.5
+Stable tag: 3.0.6
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,11 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.0.6 =
+* Fix: There could be a fatal error after plugin activation on multisites if a plugin uses the filter `site_option_active_sitewide_plugins`. #2785
+* Fix: Theme Twenty Twenty Three has a bug that leads to corrupt staging sites. The transient `_transient_wp_core_block_css_files` breaks the css after migrating or creating a new staging site. This transient will be deleted on a freshly created staging site. Related: https://wordpress.org/support/topic/wordpress-block-styles-not-loading-in-frontend/ #2778
+* Dev: Add make command to check class method return type hints #2769
 
 = 3.0.5 =
 * New: Compatible up to WordPress 6.3.1
