@@ -13,8 +13,10 @@ class LoginForm
     /**
      * @var string
      * Read in src/Frontend/views/loginForm.php
+     * Important! Keep the empty string assignment to prevent login issues.
+     * See https://github.com/wp-staging/wp-staging-pro/issues/2804
      */
-    private $error;
+    private $error = '';
 
     /** @var Sanitize */
     private $sanitize;
@@ -28,7 +30,7 @@ class LoginForm
     /**
      * @return false
      */
-    private function login()
+    private function login(): bool
     {
         if (is_user_logged_in()) {
             return false;
@@ -74,10 +76,10 @@ class LoginForm
             do_action('wp_login', $username, get_userdata($user_data->ID));
 
             if (!empty($_POST['redirect_to'])) {
-                $redirectTo = $this->sanitize->sanitizeUrl($_POST['redirect_to']);
+                $redirectUrl = $this->sanitize->sanitizeUrl($_POST['redirect_to']);
             }
 
-            header('Location:' . $redirectTo);
+            header('Location:' . $redirectUrl);
         } else {
             $msg = sprintf(__('Login not possible! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
 
@@ -90,7 +92,11 @@ class LoginForm
         return false;
     }
 
-    public function renderForm($args = [])
+    /**
+     * @param array $args
+     * @return void
+     */
+    public function renderForm(array $args = [])
     {
         $this->args = $args;
         $this->getHeader();
@@ -98,6 +104,9 @@ class LoginForm
         $this->getFooter();
     }
 
+    /**
+     * @return void
+     */
     private function getHeader()
     {
         require_once __DIR__ . '/views/header.php';
@@ -150,7 +159,9 @@ class LoginForm
         // Don't delete! This is used in the views below
         $notice     = __('Enter your administrator credentials to access this site. (This message will be displayed only once!)', 'wp-staging');
         $showNotice = (new LoginNotice())->isLoginNoticeActive();
-        $isCustomLogin2faEnabled = get_option('wordfenceActivated');
+
+        // Detect if wordfence is active and 2fa enabled
+        $isCustomLogin2faEnabled = class_exists('wordfence') && get_option('wordfenceActivated');
 
         $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/pro/loginForm.php';
         if (!file_exists($loginFileView)) {
@@ -169,8 +180,9 @@ class LoginForm
     /**
      * set error to show
      * @param string $error Error message to set
+     * @return void
      */
-    public function setError($error)
+    public function setError(string $error)
     {
         $this->error = $error;
     }
@@ -184,7 +196,7 @@ class LoginForm
      * @since TBD
      *
      */
-    public function getDefaultArguments(array $overrides = [])
+    public function getDefaultArguments(array $overrides = []): array
     {
         // Default 'redirect' value takes the user back to the request URI.
         $httpHost        = !empty($_SERVER['HTTP_HOST']) ? $this->sanitize->sanitizeString($_SERVER['HTTP_HOST']) : '';

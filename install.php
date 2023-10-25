@@ -11,6 +11,10 @@ use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\Utils\Htaccess;
 
+if (!class_exists('WPStaging\Core\Cron\Cron')) {
+    return;
+}
+
 /**
  * Register Cron Events
  */

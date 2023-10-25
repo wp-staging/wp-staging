@@ -47,6 +47,11 @@ class Sites
     const STAGING_EXCLUDED_FILES_OPTION = 'wpstg_clone_excluded_files_list';
 
     /**
+     * The option that stores Godaddy the excluded files from cloning process
+     */
+    const STAGING_EXCLUDED_GD_FILES_OPTION = 'wpstg_clone_excluded_gd_files_list';
+
+    /**
      * Return list of staging sites in descending order of their creation time.
      *
      * @return array

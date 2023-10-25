@@ -5,6 +5,7 @@ namespace WPStaging\Backend\Upgrade;
 use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Staging\Sites;
 
 /**
@@ -68,8 +69,24 @@ class Upgrade
         $this->upgrade2_4_4();
         $this->upgrade2_5_9();
         $this->upgrade2_8_7();
+        $this->upgrade3_0_7();
 
         $this->setVersion();
+    }
+
+    /**
+     * Add response field to queue table if not exist
+     * @return void
+     */
+    private function upgrade3_0_7()
+    {
+        // Early bail: Previous version is greater than 3.0.6
+        if (version_compare($this->previousVersion, '3.0.6', '>')) {
+            return;
+        }
+
+        $queueUtil = WPStaging::make(Queue::class);
+        $queueUtil->maybeAddResponseColumnToTable();
     }
 
     /**

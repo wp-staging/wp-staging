@@ -43,7 +43,7 @@ class ServerVars
      */
     public function isApache()
     {
-        return stripos($this->getServerSoftware(), 'apache') === 0; 
+        return stripos($this->getServerSoftware(), 'apache') === 0;
     }
 
     /**
@@ -51,6 +51,6 @@ class ServerVars
      */
     public function isLitespeed()
     {
-        return stripos($this->getServerSoftware(), 'LiteSpeed') === 0; 
+        return stripos($this->getServerSoftware(), 'LiteSpeed') === 0;
     }
 }

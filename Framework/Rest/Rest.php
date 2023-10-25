@@ -28,20 +28,30 @@ class Rest
         if (empty($_SERVER['REQUEST_URI'])) {
             return false;
         }
-
         $requestPath = trim($this->sanitize->sanitizeUrl($_SERVER['REQUEST_URI']), '/');
 
-        $url = trailingslashit(get_home_url(get_current_blog_id(), ''));
-        // nginx only allows HTTP/1.0 methods when redirecting from / to /index.php.
-        // To work around this, we manually add index.php to the URL, avoiding the redirect.
-        if ('index.php/' !== substr($url, -10)) {
-            $url .= 'index.php';
+        $originalUrl = trailingslashit(get_home_url(get_current_blog_id(), ''));
+
+        $url               = add_query_arg('rest_route', '/', $originalUrl);
+        $restPath          = $this->getApiRequestURI($url);
+        $requestPathApiURI = $this->getApiRequestURI($requestPath);
+        if (!empty($restPath) && strpos($requestPathApiURI, $restPath) === 0) {
+            return true;
         }
 
-        $url      = add_query_arg('rest_route', '/', $url);
-        $restPath = $this->getApiRequestURI($url);
-        if (!empty($restPath) && strpos($requestPath, $restPath) === 0) {
-            return true;
+        // nginx only allows HTTP/1.0 methods when redirecting from / to /index.php.
+        // To work around this, we manually add index.php to the URL, avoiding the redirect.
+        if ('index.php/' !== substr($originalUrl, -10)) {
+            $urlWithIndex = $originalUrl . 'index.php';
+        }
+
+        if (!empty($urlWithIndex)) {
+            $urlWithIndex      = add_query_arg('rest_route', '/', $urlWithIndex);
+            $restPathWithIndex = $this->getApiRequestURI($urlWithIndex);
+            $requestPathApiURI = $this->getApiRequestURI($requestPath);
+            if (!empty($restPathWithIndex) && strpos($requestPathApiURI, $restPathWithIndex) === 0) {
+                return true;
+            }
         }
 
         // Early bail rest url function not exists

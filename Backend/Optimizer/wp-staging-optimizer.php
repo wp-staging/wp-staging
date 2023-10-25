@@ -8,8 +8,12 @@
  * This is a must-use standalone plugin -
  * Do not use any of these methods in WP STAGING code base as this mu-plugin can be missing!
  *
- * Author: René Hermenau
- * Version: 1.5.3
+ * Do not implement PHP type declarations into this file!
+ * This can lead to fatal errors due to mixed return results in the used wp core functions.
+ * See https://github.com/wp-staging/wp-staging-pro/issues/2830
+ *
+ * Author: WP STAGING
+ * Version: 1.5.4
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -18,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.3');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.4');
 }
 if (!function_exists('wpstgGetPluginsDir')) {
     /** @return string */
@@ -84,10 +88,10 @@ if (!function_exists('wpstgExcludePlugins')) {
      *
      * @return array
      */
-    function wpstgExcludePlugins(array $plugins): array
+    function wpstgExcludePlugins($plugins)
     {
         if (!is_array($plugins) || empty($plugins)) {
-            return $plugins;
+            return [];
         }
 
         if (!wpstgIsOptimizerRequest()) {
@@ -117,10 +121,10 @@ if (!function_exists('wpstgExcludeSitePlugins')) {
      *
      * @return array
      */
-    function wpstgExcludeSitePlugins(array $plugins): array
+    function wpstgExcludeSitePlugins($plugins)
     {
         if (!is_array($plugins) || empty($plugins)) {
-            return $plugins;
+            return [];
         }
 
         if (!wpstgIsOptimizerRequest()) {
@@ -150,11 +154,11 @@ if (!function_exists('wpstgDisableTheme')) {
      * Disables the active theme during WP Staging AJAX requests
      *
      *
-     * @param $dir
+     * @param string $dir
      *
      * @return string
      */
-    function wpstgDisableTheme($dir): string
+    function wpstgDisableTheme($dir)
     {
         $enableTheme = apply_filters('wpstg_optimizer_enable_theme', false);
 

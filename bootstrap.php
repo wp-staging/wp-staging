@@ -8,7 +8,7 @@ use WPStaging\Core\WPStaging;
 
 if (file_exists(__DIR__ . '/autoloader_dev.php')) {
     include_once __DIR__ . '/autoloader_dev.php';
-} else {
+} elseif (wpstgDoLoadPluginAutoLoad($pluginFilePath)) {
     include_once __DIR__ . '/autoloader.php';
 }
 
@@ -34,7 +34,7 @@ if (!defined('WPSTG_PLUGIN_URL')) {
 
 // Expected version number of the must-use plugin 'optimizer'. Used for automatic updates of the mu-plugin
 if (!defined('WPSTG_OPTIMIZER_MUVERSION')) {
-    define('WPSTG_OPTIMIZER_MUVERSION', '1.5.3');
+    define('WPSTG_OPTIMIZER_MUVERSION', '1.5.4');
 }
 
 // /var/www/single/wp-content/plugins/wp-staging-pro/wp-staging-pro.php => wp-staging-pro
@@ -95,7 +95,7 @@ if (file_exists(__DIR__ . '/constantsPro.php')) {
     include_once __DIR__ . '/constantsFree.php';
 }
 
-if (file_exists(__DIR__ . '/wp-staging-error-handler.php')) {
+if (!function_exists('\WPStaging\functions\debug_log') && file_exists(__DIR__ . '/wp-staging-error-handler.php')) {
     include_once __DIR__ . '/wp-staging-error-handler.php';
 }
 

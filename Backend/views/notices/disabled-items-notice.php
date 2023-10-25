@@ -1,24 +1,24 @@
 <?php
 
 /**
- * @var $this \WPStaging\Framework\Notices\Notices
  * @see \WPStaging\Framework\Notices\Notices::renderNotices
+ *
+ * @var $this \WPStaging\Framework\Notices\Notices (Don't switch the order to avoid phpstan error)
  * @var bool  $outgoingMailsDisabled
  * @var bool  $freemiusOptionsCleared
  * @var bool  $isJetpackStagingModeActive
  * @var array $excludedPlugins
  * @var array $excludedFiles
+ * @var array $excludedGoDaddyFiles
  */
 
 use WPStaging\Framework\Notices\Notices;
-use WPStaging\Framework\Utils\ServerVars;
-use WPStaging\Core\WPStaging;
 
 if (empty(get_option('permalink_structure'))) {
     $permalinksMessage = sprintf(__('Post name permalinks are disabled. <a href="%s" target="_blank">How to activate permalinks</a>', 'wp-staging'), 'https://wp-staging.com/docs/activate-permalinks-staging-site/');
-} elseif (WPStaging::make(ServerVars::class)->isApache() &&  !file_exists(get_home_path() . '.htaccess')) {
+} elseif ($this->serverVars->isApache() &&  !file_exists(get_home_path() . '.htaccess')) {
     $permalinksMessage = __('.haccess is missing but required for permalinks! Go to Settings > Permalinks and click on Save Settings to create the .htaccess to make permalinks work!', 'wp-staging');
-} elseif (!WPStaging::make(ServerVars::class)->isApache()) {
+} elseif (!$this->serverVars->isApache()) {
     $permalinksMessage = sprintf(__('Permalinks are active but may not work. Please <a href="%s" target="_blank">read this article</a> to find out how to make them work.', 'wp-staging'), 'https://wp-staging.com/docs/activate-permalinks-staging-site/');
 }
 
@@ -55,7 +55,7 @@ if (empty(get_option('permalink_structure'))) {
             </ul>
         </li>
         <?php endif; ?>
-        <?php if (isset($excludedFiles) && is_array($excludedFiles) && count($excludedFiles) > 0) : ?>
+        <?php if (is_array($excludedFiles) && count($excludedFiles) > 0) : ?>
         <li>
             <?php echo wp_kses_post(__('<a href="#" id="wpstg-excluded-files-link">These files</a> were excluded and not copied to the staging site:', 'wp-staging')); ?>
             <br>
@@ -65,6 +65,18 @@ if (empty(get_option('permalink_structure'))) {
                 <?php endforeach; ?>
             </ul>
             <?php echo wp_kses_post(sprintf(__('You can use <a href="%s" target="_blank" rel="external nofollow">this filter</a> to change this.', 'wp-staging'), 'https://wp-staging.com/docs/actions-and-filters/#Exclude_Files')); ?>
+        </li>
+        <?php endif; ?>
+        <?php if (is_array($excludedGoDaddyFiles) && count($excludedGoDaddyFiles) > 0) : ?>
+        <li>
+            <?php echo wp_kses_post(__('<a href="#" id="wpstg-excluded-godaddy-files-link">These GoDaddy files/folders</a> were excluded and not copied to the staging site:', 'wp-staging')); ?>
+            <br>
+            <ul id="wpstg-excluded-godaddy-files-list" style="margin-left: 0px; margin-top: 4px;">
+                <?php foreach ($excludedGoDaddyFiles as $excludedGoDaddyFile) : ?>
+                    <li><span style="font-size: 13px;">➜</span> <?php echo esc_html($excludedGoDaddyFile); ?></li>
+                <?php endforeach; ?>
+            </ul>
+            <?php echo esc_html__('Excluding these files/folders allows you to connect to this staging site and update WordPress without errors.', 'wp-staging'); ?>
         </li>
         <?php endif; ?>
     </ol>    
@@ -88,6 +100,18 @@ if (empty(get_option('permalink_structure'))) {
                 return;
             }
             el.show('slow');
+            });
+
+            //display or hide excluded godaddy files list
+            const goElement = $('#wpstg-excluded-godaddy-files-list');
+            goElement.hide();
+            $('#wpstg-excluded-godaddy-files-link').click(function(e) {
+                e.preventDefault();
+                if (goElement.is(':visible')) {
+                    goElement.hide('slow');
+                    return;
+                }
+                goElement.show('slow');
             });
         });
     </script>

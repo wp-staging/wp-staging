@@ -26,7 +26,6 @@ use function WPStaging\functions\debug_log;
  */
 class Cloning extends Job
 {
-
     /**
      * @var object
      */
@@ -57,6 +56,9 @@ class Cloning extends Job
      */
     private $urls;
 
+    /** @var Directory */
+    private $dirAdapter;
+
     /**
      * Initialize is called in \Job
      */
@@ -67,6 +69,7 @@ class Cloning extends Job
         $this->sitesHelper = new Sites();
         $this->sanitize    = WPStaging::make(Sanitize::class);
         $this->urls        = WPStaging::make(Urls::class);
+        $this->dirAdapter  = WPStaging::make(Directory::class);
     }
 
     public function getErrorMessage(): string
@@ -120,12 +123,21 @@ class Cloning extends Job
             '.wp-staging-cloneable', // File that makes the staging site cloneable.
         ]);
 
-        $this->options->excludedFilesFullPath = apply_filters('wpstg.clone.excluded_files_full_path', [
+        $excludedFilesFullPath = [
             '.htaccess',
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'db.php',
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'object-cache.php',
-            PathIdentifier::IDENTIFIER_WP_CONTENT . 'advanced-cache.php'
-        ]);
+            PathIdentifier::IDENTIFIER_WP_CONTENT . 'advanced-cache.php',
+        ];
+
+        $this->options->tmpExcludedGoDaddyFiles = [];
+        $muPluginsDir                           = trailingslashit($this->dirAdapter->getMuPluginsDirectory());
+        if (file_exists($muPluginsDir . 'gd-system-plugin.php')) {
+            $excludedFilesFullPath[]                  = PathIdentifier::IDENTIFIER_MUPLUGINS . 'gd-system-plugin.php';
+            $this->options->tmpExcludedGoDaddyFiles[] = $muPluginsDir . 'gd-system-plugin.php';
+        }
+
+        $this->options->excludedFilesFullPath = apply_filters('wpstg.clone.excluded_files_full_path', $excludedFilesFullPath);
 
         $this->options->currentStep = 0;
 
@@ -178,6 +190,14 @@ class Cloning extends Job
         $excludedDirectories = [
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'cache',
         ];
+
+        if (is_dir(trailingslashit($this->dirAdapter->getMuPluginsDirectory()) . 'gd-system-plugin')) {
+            $excludedDirectories[] = PathIdentifier::IDENTIFIER_MUPLUGINS . 'gd-system-plugin';
+            $excludedDirectories[] = PathIdentifier::IDENTIFIER_MUPLUGINS . 'vendor';
+
+            $this->options->tmpExcludedGoDaddyFiles[] = $muPluginsDir . 'gd-system-plugin';
+            $this->options->tmpExcludedGoDaddyFiles[] = $muPluginsDir . 'vendor';
+        }
 
         // Add upload folder to list of excluded directories for push if symlink option is enabled
         if ($this->options->uploadsSymlinked) {
@@ -362,12 +382,10 @@ class Cloning extends Job
         }
 
         // No custom destination so default path will be in a subfolder of root or inside wp-content
-        /** @var Directory $dirAdapter */
-        $dirAdapter = WPStaging::make(Directory::class);
-        $cloneDestinationPath = $dirAdapter->getAbsPath() . $this->options->cloneDirectoryName;
+        $cloneDestinationPath = $this->dirAdapter->getAbsPath() . $this->options->cloneDirectoryName;
 
-        if ($this->isPro() && !is_writable($dirAdapter->getAbsPath())) {
-            $stagingSiteDirectory = $dirAdapter->getStagingSiteDirectoryInsideWpcontent();
+        if ($this->isPro() && !is_writable($this->dirAdapter->getAbsPath())) {
+            $stagingSiteDirectory = $this->dirAdapter->getStagingSiteDirectoryInsideWpcontent();
             if ($stagingSiteDirectory === false) {
                 debug_log(esc_html('Fail to get destination directory. The staging sites destination folder cannot be created.'));
                 $this->returnException('The staging sites directory is not writable. Please choose another path.');
@@ -375,12 +393,11 @@ class Cloning extends Job
 
             $cloneDestinationPath = trailingslashit($stagingSiteDirectory) . $this->options->cloneDirectoryName;
             if (empty($this->options->cloneHostname)) {
-                $this->options->cloneHostname = trailingslashit($dirAdapter->getStagingSiteUrl()) . $this->options->cloneDirectoryName;
+                $this->options->cloneHostname = trailingslashit($this->dirAdapter->getStagingSiteUrl()) . $this->options->cloneDirectoryName;
             }
         }
         $this->options->cloneDir = trailingslashit($cloneDestinationPath);
         return $this->options->cloneDir;
-
     }
 
     /**

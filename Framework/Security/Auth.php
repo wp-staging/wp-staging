@@ -50,13 +50,20 @@ class Auth
      *
      *
      * @param string $nonce
+     * @param string $capability
+     * @todo In case we need it later, we can consider updating $capability to be an array of capabilities
+     *
      * @return bool
      */
-    public function isAuthenticatedRequest($nonce = Nonce::WPSTG_NONCE)
+    public function isAuthenticatedRequest(string $nonce = Nonce::WPSTG_NONCE, string $capability = ''): bool
     {
+        if (empty($capability)) {
+            $capability = $this->capabilities->manageWPSTG();
+        }
+
         if (
             $this->nonce->requestHasValidNonce($nonce) &&
-            current_user_can($this->capabilities->manageWPSTG())
+            current_user_can($capability)
         ) {
             return true;
         }

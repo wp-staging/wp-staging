@@ -51,6 +51,11 @@ $classLicenseActive     = isset($isActiveLicensePage) ? 'wpstg--tab--active' : '
             <?php
         }
         ?>
+        <li class="wpstg-contact-us-wrapper">
+            <?php
+            require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/contact-us.php');
+            ?>
+        </li>
         <li class="wpstg-tab-item--vert-center">
             <span class="wpstg-loader"></span>
         </li>

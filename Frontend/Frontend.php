@@ -23,20 +23,16 @@ class Frontend
      */
     private $accessDenied = false;
 
+    /** @var LoginForm  */
+    private $loginForm;
+
     public function __construct()
     {
         $this->defineHooks();
 
         $this->settings = json_decode(json_encode(get_option("wpstg_settings", [])));
-    }
 
-    /**
-     * Define Hooks
-     */
-    private function defineHooks()
-    {
-        add_action("init", [$this, "checkPermissions"]);
-        add_filter("wp_before_admin_bar_render", [$this, "changeSiteName"]);
+        $this->loginForm = WPStaging::make(LoginForm::class);
     }
 
     /**
@@ -62,32 +58,41 @@ class Frontend
     }
 
     /**
-     * Check permissions for the page to decide whether or not to disable the page
+     * Check permissions for the page to decide whether to disable the page
+     * @return void
      */
     public function checkPermissions()
     {
         $this->resetPermaLinks();
 
         if ($this->showLoginForm()) {
-            $login = new LoginForm();
             if ($this->accessDenied) {
                 wp_logout();
-                $login->setError(__('Access Denied', 'wp-staging'));
+                $this->loginForm->setError(__('Access Denied', 'wp-staging'));
             }
             $overrides = [
                 'label_username' => __('Username or Email Address', 'wp-staging'),
             ];
-            $login->renderForm($login->getDefaultArguments($overrides));
+            $this->loginForm->renderForm($this->loginForm->getDefaultArguments($overrides));
             die();
         }
     }
 
+    /**
+     * Define Hooks
+     * @return void
+     */
+    private function defineHooks()
+    {
+        add_action("init", [$this, "checkPermissions"]);
+        add_filter("wp_before_admin_bar_render", [$this, "changeSiteName"]);
+    }
 
     /**
      * Show a login form if user is not authorized
      * @return bool
      */
-    private function showLoginForm()
+    private function showLoginForm(): bool
     {
         $this->accessDenied = false;
 
@@ -103,7 +108,7 @@ class Frontend
 
         // Don't show login form for rest requests
 
-        /** @var Rest */
+        /** @var Rest $rest */
         $rest = WPStaging::make(Rest::class);
         if ($rest->isRestUrl()) {
             return false;
@@ -178,7 +183,7 @@ class Frontend
      * Check if it is a staging site
      * @return bool
      */
-    private function isStagingSite()
+    private function isStagingSite(): bool
     {
         return (new SiteInfo())->isStagingSite();
     }
@@ -187,7 +192,7 @@ class Frontend
      * Check if it is the login page
      * @return bool
      */
-    private function isLoginPage()
+    private function isLoginPage(): bool
     {
         return ($GLOBALS["pagenow"] === "wp-login.php");
     }

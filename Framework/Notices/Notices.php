@@ -8,6 +8,7 @@ use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Security\Capabilities;
@@ -19,6 +20,7 @@ use WPStaging\Framework\Support\ThirdParty\WordFence;
 use WPStaging\Framework\Traits\NoticesTrait;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Utils\ServerVars;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 
 /**
@@ -92,12 +94,12 @@ class Notices
     /** @var string */
     private $viewsNoticesPath;
 
-    /** @var false|mixed|null  */
+    /** @var false|mixed|null */
     private $settings;
 
-    /**
-     * @param Assets $assets
-     */
+    /** @var ServerVars */
+    private $serverVars;
+
     public function __construct(Assets $assets)
     {
         $this->assets           = $assets;
@@ -119,6 +121,7 @@ class Notices
         $this->outdatedWpStagingNotice = WPStaging::make(OutdatedWpStagingNotice::class);
         $this->objectCacheNotice       = WPStaging::make(ObjectCacheNotice::class);
         $this->siteInfo                = WPStaging::make(SiteInfo::class);
+        $this->serverVars              = WPStaging::make(ServerVars::class);
     }
 
     /**
@@ -154,13 +157,13 @@ class Notices
      */
     private function renderNoticesOnAllWpAdminPages()
     {
-
         $this->noticeListItemsDisabledOnStagingSite();
         $this->noticeDbHasMissingOrUnexpectedPrimaryKeys();
         $this->noticeWordFenceHasBeenDisabled();
         $this->noticeSettingsAreCorrupted();
         $this->noticeStagingUploadsFolderIsSymlinked();
         $this->noticeTableTmpPrefixConflictNotice();
+        $this->showAnalyticsModal();
     }
 
     /**
@@ -205,6 +208,7 @@ class Notices
         $this->noticeOptimizerIsDisabled();
         $this->noticeShowDirectoryListingWarning($this->viewsNoticesPath);
         $this->noticeDbPrefixDoesNotExist();
+        $this->noticeWPEnginePermalinkWarning();
     }
 
     /**
@@ -418,6 +422,16 @@ class Notices
     }
 
     /**
+     * @return void
+     */
+    private function noticeWPEnginePermalinkWarning()
+    {
+        if (self::SHOW_ALL_NOTICES || class_exists('WPE_API')) {
+            require_once $this->viewsNoticesPath . "wpe-permalink-issue-notice.php";
+        }
+    }
+
+    /**
      * @param $wpstgSettings
      * @return void
      */
@@ -566,9 +580,39 @@ class Notices
             // Show jetpack staging mode notice if the constant is set on staging site
             $isJetpackStagingModeActive = defined(Jetpack::STAGING_MODE_CONST) && constant(Jetpack::STAGING_MODE_CONST) === true;
             $excludedFiles              = get_option(Sites::STAGING_EXCLUDED_FILES_OPTION, []);
+            $excludedGoDaddyFiles       = get_option(Sites::STAGING_EXCLUDED_GD_FILES_OPTION, []);
             // use require here instead of require_once otherwise unit tests will always fail,
             // as this notice is tested multiple times.
             require $this->viewsNoticesPath . "disabled-items-notice.php";
         }
+    }
+
+    /**
+     * @return void
+     */
+    public function showAnalyticsModal()
+    {
+        if (get_option(AnalyticsConsent::OPTION_NAME_ANALYTICS_MODAL_DISMISSED)) {
+            return;
+        }
+
+        if (!$this->isWPStagingAdminPage()) {
+            return;
+        }
+
+        if (WPStaging::make(AnalyticsConsent::class)->hasUserConsent()) {
+            return;
+        }
+
+        wp_enqueue_script(
+            "wpstg-show-analytics-modal",
+            WPSTG_PLUGIN_URL . './assets/js/dist/analytics-consent-modal.js'
+        );
+        wp_enqueue_style(
+            'wpstg-plugin-activation',
+            WPSTG_PLUGIN_URL . './assets/css/dist/analytics-consent-modal.css'
+        );
+
+        require_once "{$this->getPluginPath()}/Backend/views/notices/analytics-modal.php";
     }
 }

@@ -7,6 +7,7 @@ use WPStaging\Framework\Support\ThirdParty\Jetpack;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use RuntimeException;
+use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\SiteInfo;
 
 class UpdateWpConfigConstants extends FileCloningService
@@ -26,8 +27,10 @@ class UpdateWpConfigConstants extends FileCloningService
             return true;
         }
 
+        $isWpContentOutsideAbspath = $this->isWpContentOutsideAbspath();
+
         $replaceOrAdd = [
-            "WP_LANG_DIR"         => '__DIR__ . "/wp-content/languages"',
+            "WP_LANG_DIR"         => $this->getStagingLangPath(),
             "WP_HOME"             => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_SITEURL"          => sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl())),
             "WP_CACHE"            => 'false',
@@ -36,9 +39,7 @@ class UpdateWpConfigConstants extends FileCloningService
             "WPSTAGING_DEV_SITE"  => 'true'
         ];
 
-        /** @var SiteInfo $siteInfo */
-        $siteInfo = WPStaging::make(SiteInfo::class);
-        if (!$siteInfo->isWpContentOutsideAbspath()) {
+        if (!$isWpContentOutsideAbspath) {
             $replaceOrAdd["UPLOADS"]       = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getUploadFolder()));
             $replaceOrAdd["WP_PLUGIN_DIR"] = '__DIR__ . "' . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH) . '"';
             $replaceOrAdd["WP_PLUGIN_URL"] = sprintf("'%s'", $this->escapeSingleQuotes($this->dto->getStagingSiteUrl() . (new WpDefaultDirectories())->getRelativePluginPath(SlashMode::LEADING_SLASH)));
@@ -76,13 +77,15 @@ class UpdateWpConfigConstants extends FileCloningService
             $replaceOrAdd[Jetpack::STAGING_MODE_CONST] = 'true';
         }
 
-        //In the old job structure, these were deleted for the single-site non-external job only. Now they are deleted everywhere
-        $delete = [
-            "WP_CONTENT_DIR",
-            "WP_CONTENT_URL",
-        ];
+        $delete = [];
 
-        if ($siteInfo->isWpContentOutsideAbspath()) {
+        // Don't delete custom wp-content path constants
+        if ('wp-content' === trim($this->getRelativeWpContentDir(), '/')) {
+            $delete[] = "WP_CONTENT_DIR";
+            $delete[] = "WP_CONTENT_URL";
+        }
+
+        if ($isWpContentOutsideAbspath) {
             $delete[] = "UPLOADS";
             $delete[] = "WP_PLUGIN_DIR";
             $delete[] = "WP_PLUGIN_URL";
@@ -103,14 +106,49 @@ class UpdateWpConfigConstants extends FileCloningService
         foreach ($replaceOrAdd as $constant => $newDefinition) {
             $content = $this->replaceOrAddDefinition($constant, $content, $newDefinition);
         }
+
         foreach ($replaceOrSkip as $constant => $newDefinition) {
             $content = $this->replaceOrSkipDefinition($constant, $content, $newDefinition);
         }
+
         foreach ($delete as $constant) {
             $content = $this->deleteDefinition($constant, $content);
         }
+
         $this->writeWpConfig($content);
+
         return true;
+    }
+
+    protected function isWpContentOutsideAbspath(): bool
+    {
+        /** @var SiteInfo $siteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
+
+        return $siteInfo->isWpContentOutsideAbspath();
+    }
+
+    /**
+     * @return string
+     */
+    protected function getRelativeWpContentDir(): string
+    {
+        /** @var Directory $directory */
+        $directory = WPStaging::make(Directory::class);
+
+        return str_replace($directory->getAbsPath(), '', $directory->getWpContentDirectory());
+    }
+
+    /**
+     * @return string
+     */
+    protected function getStagingLangPath(): string
+    {
+        if ($this->isWpContentOutsideAbspath()) {
+            return '__DIR__ . "/wp-content/languages"';
+        }
+
+        return sprintf("__DIR__ . '/%s/languages'", $this->escapeSingleQuotes(trim($this->getRelativeWpContentDir(), '/')));
     }
 
     /**

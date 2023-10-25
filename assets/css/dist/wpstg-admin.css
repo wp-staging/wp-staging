@@ -1,10 +1,9 @@
-@charset "UTF-8";
 /**
  * WPSTG Admin CSS
  *
  * @package     WPSTG
  * @subpackage  Admin CSS
- * @copyright   Copyright (c) 2021, René Hermenau
+ * @copyright   Copyright (c) 2023, WP STAGING
  * @license     http://opensource.org/licenses/gpl-2.0.php GNU Public License
 */
 /* vars */
@@ -485,6 +484,81 @@
   #wpstg-show-files-container {
     height: 80px; } }
 
+#wpstg-footer {
+  max-width: 750px;
+  display: block;
+  clear: both;
+  margin-top: 0;
+  margin-bottom: 18px;
+  margin-right: 20px;
+  vertical-align: bottom;
+  background-color: #ffffff;
+  position: relative;
+  transition: border-color .2s ease-in-out;
+  color: #3e3e3e;
+  border-radius: 6px;
+  padding: 30px;
+  box-shadow: 0 0 1px RGB(0 0 0/13%), 0 1px 3px RGB(0 0 0/10%); }
+  #wpstg-footer li a {
+    text-decoration: none;
+    color: #000000; }
+  #wpstg-footer a:hover {
+    text-decoration: underline;
+    color: #185abc; }
+  #wpstg-footer li {
+    line-height: 1.5em;
+    margin-bottom: 2px;
+    list-style: circle; }
+  #wpstg-footer ul {
+    margin-left: 15px;
+    margin-top: 15px; }
+
+.wpstg-footer--title {
+  display: block;
+  font-size: 1.25rem;
+  color: #1a73e8;
+  margin-left: 0;
+  margin-top: 0; }
+
+.wpstg-footer-logo {
+  padding-top: 0px;
+  padding-bottom: 0;
+  text-align: center;
+  margin-bottom: 10px;
+  clear: both;
+  margin-right: 0px; }
+  .wpstg-footer-logo a {
+    margin: 0 auto; }
+
+.wpstg-partner-footer {
+  display: block;
+  text-align: center;
+  margin-bottom: 30px;
+  height: 30px; }
+  .wpstg-partner-footer ul {
+    display: flex;
+    justify-content: center;
+    list-style-type: none;
+    padding: 0;
+    margin: 2px 0 0; }
+  .wpstg-partner-footer li {
+    border-right: 1px solid #a7a7a7;
+    display: inline-block;
+    float: left;
+    padding: 0 6px; }
+  .wpstg-partner-footer li:last-child {
+    border-right: 0; }
+  .wpstg-partner-footer a {
+    color: #2271b1; }
+  .wpstg-partner-footer a:hover {
+    background-color: #fefefe;
+    background-image: linear-gradient(40deg, #1c93cd 30%, #22875d 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent; }
+
+#wpfooter {
+  display: none !important; }
+
 /* Font Faces */
 /* roboto-regular - latin */
 @font-face {
@@ -852,9 +926,6 @@ body.wp-staging-pro_page_wpstg-license {
   clear: both;
   padding-top: 0;
   min-width: 500px;
-  /*
-    padding-bottom: 20px;
-    */
   background-color: #ffffff; }
 
 #wpstg-workflow.wpstg-loading::after,
@@ -871,7 +942,6 @@ body.wp-staging-pro_page_wpstg-license {
   transition: opacity 0.2s linear;
   width: 800px;
   opacity: 0.9;
-  /*transform: opacity 1s linear;*/
   font-size: 20px; }
 
 #wpstg-removing-clone.wpstg-loading::after {
@@ -1314,58 +1384,6 @@ a#wpstg-check-space {
   margin-top: 40px;
   font-style: italic; }
 
-#wpstg-footer {
-  max-width: 750px;
-  display: block;
-  clear: both;
-  margin-top: 0;
-  margin-bottom: 18px;
-  margin-right: 20px;
-  vertical-align: bottom;
-  background-color: #ffffff;
-  position: relative;
-  transition: border-color .2s ease-in-out;
-  color: #3e3e3e;
-  border-radius: 6px;
-  padding: 30px;
-  box-shadow: 0 0 1px RGB(0 0 0/13%), 0 1px 3px RGB(0 0 0/10%); }
-
-#wpstg-footer li a {
-  text-decoration: none;
-  color: #000000; }
-
-#wpstg-footer a:hover {
-  text-decoration: underline;
-  color: #185abc; }
-
-#wpstg-footer li {
-  line-height: 1.5em;
-  margin-bottom: 2px;
-  list-style: circle; }
-
-#wpstg-footer ul {
-  margin-left: 15px;
-  margin-top: 15px; }
-
-.wpstg-footer--title {
-  display: block;
-  font-size: 1.25rem;
-  color: #1a73e8;
-  margin-left: 0;
-  margin-top: 0; }
-
-.wpstg-footer-logo {
-  padding-top: 10px;
-  padding-bottom: 0;
-  border-top: 0 solid #dcdbdb;
-  text-align: center;
-  margin-bottom: 10px;
-  clear: both;
-  margin-right: 20px; }
-
-.wpstg-footer-logo a {
-  margin: 0 auto; }
-
 .wpstg-staging-info {
   margin-top: 8px;
   color: #3e3e3e;
@@ -1393,7 +1411,6 @@ a#wpstg-check-space {
   float: right; }
 
 .wpstg-report-issue-button {
-  margin-left: 30px;
   border: 1px solid #3bba68;
   color: #3bba68;
   background-color: white;
@@ -1609,13 +1626,12 @@ a#wpstg-check-space {
   margin: 0; }
 
 .wpstg--tab--header ul li {
-  margin-bottom: 0;
-  margin-top: 3px; }
+  margin-bottom: 0; }
 
 .wpstg--tab--header ul li:last-child {
   margin-right: 0; }
 
-.wpstg--tab--header a {
+.wpstg--tab--header > ul > li > a {
   text-align: center;
   cursor: pointer;
   display: inline-block;
@@ -3856,6 +3872,16 @@ a.wpstg-pro-feature-link {
   align-items: center;
   gap: 10px 5px; }
 
+.wpstg-magic-logic-warning-title {
+  background: #ffe26e;
+  color: #3d3d3d; }
+
+.wpstg-contact-us-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0 15px; }
+
 @media screen and (max-width: 782px) {
   body.wp-staging-pro_page_wpstg_backup.auto-fold #wpcontent,
   body.wp-staging-pro_page_wpstg-settings.auto-fold #wpcontent,
@@ -3922,11 +3948,22 @@ a.wpstg-pro-feature-link {
     body.wp-staging_page_wpstg-settings.auto-fold #wpcontent .wpstg-nav-tab-wrapper,
     body.wp-staging_page_wpstg-tools.auto-fold #wpcontent .wpstg-nav-tab-wrapper,
     body.wp-staging_page_wpstg_backup.auto-fold #wpcontent .wpstg-nav-tab-wrapper {
-      margin-right: 10px; } }
+      margin-right: 10px; }
+  .wpstg-contact-us-wrapper {
+    padding-left: 15px; } }
 
 @media only screen and (max-width: 600px) {
   .wpstg-report-issue-form {
-    position: relative; } }
+    right: 0; }
+  #wpstg-report-issue-wrapper .arrow-up {
+    left: 261px; }
+  #wpstg-contact-us-report-issue-btn {
+    white-space: normal;
+    line-height: 1.5; }
+  .wpstg--tab--header > ul > li > a {
+    padding: 12px 10px 15px 8px; }
+  .wpstg-contact-us-wrapper {
+    padding: 0 10px 0 8px; } }
 
 @media only screen and (max-width: 680px) {
   #wpstg-tab-container ul {

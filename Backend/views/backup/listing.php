@@ -69,15 +69,6 @@ if ($cronMessage !== '') { ?>
     <button id="wpstg-manage-backup-schedules" class="wpstg-button wpstg-border-thin-button" <?php echo esc_attr($disabledProperty) ?>>
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
-    <div id="wpstg-report-issue-wrapper">
-        <button type="button" id="<?php echo WPStaging::isPro() ? "wpstg-report-issue-button" : "wpstg-contact-us-button"; ?>" class="wpstg-report-issue-button">
-            <i class="wpstg-icon-issue"></i><?php echo esc_html__("Contact Us", "wp-staging"); ?>
-        </button>
-        <?php if (WPStaging::isPro()) {
-            require_once($this->views . '_main/contact-us-pro.php');
-        }
-        ?>
-    </div>
 </div>
 
 <div id="wpstg-backup-runs-info">

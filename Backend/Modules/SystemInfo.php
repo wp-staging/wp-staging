@@ -111,8 +111,8 @@ class SystemInfo
     {
         global $wpdb;
 
-        $output = $this->header("WordPress");
-
+        $output  = $this->header("WordPress");
+        $output .= $this->info("Site:", ($this->isMultiSite) ? 'Multi Site' : 'Single Site');
         $output .= $this->info("WP Version:", get_bloginfo("version"));
         $output .= $this->info("Installed in subdir:", ($this->isSubDir() ? 'Yes' : 'No'));
         $output .= $this->info("Table Prefix:", $this->getTablePrefix());

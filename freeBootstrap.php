@@ -27,28 +27,6 @@ add_action('plugins_loaded', function () use ($pluginFilePath) {
 
 register_activation_hook($pluginFilePath, function () use ($pluginFilePath) {
     // Unused $pluginFilePath: Other code will fail if removed it
-    // Prevent WPSTAGING Free activation when Pro is active
-    if (is_multisite()) {
-        foreach (wp_get_active_network_plugins() as $networkActivePlugin) {
-            if (strpos($networkActivePlugin, 'wp-staging-pro.php') !== false) {
-                set_site_transient('wpstgActivatingFreeWhileProIsActive', true, 1 * HOUR_IN_SECONDS);
-                wp_safe_redirect(self_admin_url('plugins.php'));
-                exit;
-            }
-        }
-    }
-    foreach (wp_get_active_and_valid_plugins() as $sitewidePlugin) {
-        if (strpos($sitewidePlugin, 'wp-staging-pro.php') !== false) {
-            // Set a transient that Pro picks up to render a notice to the user.
-            set_site_transient('wpstgActivatingFreeWhileProIsActive', true, 1 * HOUR_IN_SECONDS);
-
-            // Redirects to prevent "Plugin could not be activated because it triggered a fatal error notice".
-            wp_safe_redirect(self_admin_url('plugins.php'));
-
-            // Prevents the activation of this plugin.
-            exit;
-        }
-    }
 
     try {
         require __DIR__ . '/runtimeRequirements.php';

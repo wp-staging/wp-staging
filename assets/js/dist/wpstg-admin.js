@@ -810,27 +810,6 @@
   }
 
   /**
-   * Checks if a modal specified by the given selector is available in the DOM.
-   * If the modal is available, it waits for a delay and then initializes the Module.
-   * If the modal is not yet available, it recursively checks after a brief interval.
-   *
-   * @param {string} selector - CSS selector for the element to search for.
-   * @param {function} Module - Constructor function to create an instance of the module.
-   */
-  function initializeModuleDelayedIfElementIsAvailable(selector, Module) {
-    var element = document.querySelector(selector);
-    if (element) {
-      setTimeout(function () {
-        new Module();
-      }, 1000);
-    } else {
-      setTimeout(function () {
-        return initializeModuleDelayedIfElementIsAvailable(selector, Module);
-      }, 10);
-    }
-  }
-
-  /**
    * Hides elements in the DOM that match the given selector by setting their display style to 'none'.
    *
    * @param {string} selector - CSS selector for the elements to be hidden.
@@ -961,9 +940,11 @@
           _this.isDebugWindowOpened = false;
         }
       });
-      this.contactUsButton.addEventListener('click', function () {
-        _this.show(_this.contactUsModal);
-      });
+      if (this.contactUsButton !== null) {
+        this.contactUsButton.addEventListener('click', function () {
+          _this.show(_this.contactUsModal);
+        });
+      }
       if (this.contactUsButtonBackupTab !== null) {
         this.contactUsButtonBackupTab.addEventListener('click', function () {
           _this.show(_this.contactUsModal);
@@ -1092,7 +1073,6 @@
         _this.sendRequest(_this.enableAction);
       });
       new WpstgSidebarMenu();
-      initializeModuleDelayedIfElementIsAvailable('#wpstg-contact-us-modal', WpstgContactUs);
     };
     _proto.init = function init() {
       this.addEvents();
@@ -3228,7 +3208,8 @@
             cache.get('.wpstg-loader').hide();
             resolve(true);
           } else {
-            showError('Something went wrong! Error: ' + response.data.message);
+            var _response$data;
+            showError('Something went wrong! Error: ' + ((_response$data = response.data) == null ? void 0 : _response$data.message));
             cache.get('.wpstg-loader').hide();
             document.getElementById('wpstg-error-wrapper').scrollIntoView();
             resolve(false);
@@ -3998,6 +3979,11 @@
    */
   jQuery(document).ready(function ($) {
     $('body').on('click', '.wpstg-report-issue-button', function (e) {
+      var contactUsModal = document.querySelector('#wpstg-contact-us-modal');
+      if (contactUsModal != null && typeof contactUsModal !== 'undefined') {
+        show('#wpstg-contact-us-modal');
+        new WpstgContactUs();
+      }
       $('.wpstg-report-issue-form').toggleClass('wpstg-report-show');
       e.preventDefault();
     });
@@ -4042,12 +4028,11 @@
         forceSend = 'false';
       }
       var spinner = button.next();
-      var email = $('.wpstg--tab--active .wpstg-report-email').val();
-      var hosting_provider = $('.wpstg--tab--active .wpstg-report-hosting-provider').val();
-      var message = $('.wpstg--tab--active .wpstg-report-description').val();
-      var syslog = $('.wpstg--tab--active .wpstg-report-syslog').is(':checked');
-      var terms = $('.wpstg--tab--active .wpstg-report-terms').is(':checked');
-      console.log(hosting_provider);
+      var email = $('.wpstg--tab--header .wpstg-report-email').val();
+      var hosting_provider = $('.wpstg--tab--header .wpstg-report-hosting-provider').val();
+      var message = $('.wpstg--tab--header .wpstg-report-description').val();
+      var syslog = $('.wpstg--tab--header .wpstg-report-syslog').is(':checked');
+      var terms = $('.wpstg--tab--header .wpstg-report-terms').is(':checked');
       button.attr('disabled', true);
       spinner.css('visibility', 'visible');
       $.ajax({
@@ -4099,14 +4084,14 @@
         } else {
           var successMessage = $('<div />').addClass('wpstg-message wpstg-success-message');
           successMessage.append('<p>Thanks for submitting your request! You should receive an auto reply mail with your ticket ID immediately for confirmation!<br><br>If you do not get that mail please contact us directly at <strong>support@wp-staging.com</strong></p>');
-          $('.wpstg--tab--active .wpstg-report-issue-form').html(successMessage);
+          $('.wpstg--tab--header .wpstg-report-issue-form').html(successMessage);
           if (document.getElementById('wpstg-modal-close') === null || document.getElementById('wpstg-modal-close') === undefined) {
-            $('.wpstg--tab--active .wpstg-success-message').append('<div class="wpstg-mt-10px wpstg-float-right"><a id="wpstg-success-button" href="#" class="wpstg--red"><span class="wpstg-ml-8px">Close</span></a></div>');
+            $('.wpstg--tab--header .wpstg-success-message').append('<div class="wpstg-mt-10px wpstg-float-right"><a id="wpstg-success-button" href="#" class="wpstg--red"><span class="wpstg-ml-8px">Close</span></a></div>');
           }
 
           // Hide message
           setTimeout(function () {
-            $('.wpstg--tab--active .wpstg-report-issue-form').removeClass('wpstg-report-active');
+            $('.wpstg--tab--header .wpstg-report-issue-form').removeClass('wpstg-report-active');
           }, 2000);
         }
       });

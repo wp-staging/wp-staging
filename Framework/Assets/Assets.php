@@ -10,6 +10,7 @@ use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask;
+use WPStaging\Framework\Analytics\AnalyticsConsent;
 
 class Assets
 {
@@ -25,10 +26,13 @@ class Assets
 
     private $settings;
 
-    public function __construct(AccessToken $accessToken, Settings $settings)
+    private $analyticsConsent;
+
+    public function __construct(AccessToken $accessToken, Settings $settings, AnalyticsConsent $analyticsConsent)
     {
-        $this->accessToken = $accessToken;
-        $this->settings    = $settings;
+        $this->accessToken      = $accessToken;
+        $this->settings         = $settings;
+        $this->analyticsConsent = $analyticsConsent;
     }
 
     /**
@@ -127,6 +131,22 @@ class Assets
                 $this->getAssetsUrl($asset),
                 [],
                 $this->getAssetsVersion($asset)
+            );
+        }
+
+        // Load js file on page plugins.php for pro version
+        if (WPStaging::isPro()) {
+            $asset = 'js/dist/pro/wpstg-admin-all-pages.min.js';
+            if ($this->isDebugOrDevMode()) {
+                $asset = 'js/dist/pro/wpstg-admin-all-pages.js';
+            }
+
+            wp_enqueue_script(
+                "wpstg-admin-all-pages-script",
+                $this->getAssetsUrl($asset),
+                ["jquery"],
+                $this->getAssetsVersion($asset),
+                false
             );
         }
 
@@ -248,6 +268,8 @@ class Assets
             'wpstgIcon'              => $this->getAssetsUrl('img/wpstaging-icon.png'),
             'maxUploadChunkSize'     => $this->getMaxUploadChunkSize(),
             'backupDBExtension'      => DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
+            'analyticsConsentAllow'  => esc_url($this->analyticsConsent->getConsentLink(true)),
+            'analyticsConsentDeny'   => esc_url($this->analyticsConsent->getConsentLink(false)),
             // TODO: handle i18n translations through Class/Service Provider?
             'i18n'                   => [
                 'dbConnectionSuccess' => esc_html__('Database Connection - Success', 'wp-staging'),

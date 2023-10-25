@@ -56,8 +56,22 @@ class Queue
     /**
      * Option name where we store queue table version
      * @var string
+     * @deprecated use QUEUE_TABLE_STRUCTURE_VERSION_KEY instead
      */
     const QUEUE_TABLE_VERSION_KEY = 'wpstg_queue_table_version';
+
+    /**
+     * Option name where we store queue table version
+     * @var string
+     */
+    const QUEUE_TABLE_STRUCTURE_VERSION_KEY = 'wpstg_queue_table_structure_version';
+
+    /**
+     * Current Queue Table structure version number
+     * Bump this when there is change in structure
+     * @var string
+     */
+    const QUEUE_TABLE_STRUCTURE_VERSION = '1.0.0';
 
     /**
      * A reference to te current Background Processing Feature detection service.
@@ -234,7 +248,7 @@ class Queue
 
         $this->tableState = self::TABLE_NOT_EXIST;
 
-        $currentTableVersion = get_option(self::QUEUE_TABLE_VERSION_KEY, '0.0.0');
+        $currentTableVersion = $this->getCurrentTableVersion();
 
         // Trigger an update or creation if either the table should be update, or it does not exist.
         if (version_compare($currentTableVersion, $this->getLatestTableVersion(), '<') || !$this->tableExists()) {
@@ -254,17 +268,23 @@ class Queue
     }
 
     /**
+     * Returns the current table version.
+     *
+     * @return string The current table version, in semantic format.
+     */
+    protected function getCurrentTableVersion()
+    {
+        return get_option(self::QUEUE_TABLE_STRUCTURE_VERSION_KEY, '0.0.0');
+    }
+
+    /**
      * Returns the latest table version.
      *
      * @return string The latest table version, in semantic format.
      */
-    private function getLatestTableVersion()
+    protected function getLatestTableVersion()
     {
-        if (defined('WPSTGPRO_VERSION')) {
-            return WPSTGPRO_VERSION;
-        }
-
-        return '1.0.0';
+        return self::QUEUE_TABLE_STRUCTURE_VERSION;
     }
 
     /**
@@ -346,7 +366,7 @@ class Queue
      */
     private function updateTableVersionOption($tableVersion)
     {
-        update_option(self::QUEUE_TABLE_VERSION_KEY, $tableVersion);
+        update_option(self::QUEUE_TABLE_STRUCTURE_VERSION_KEY, $tableVersion);
     }
 
     /**
@@ -1353,15 +1373,64 @@ class Queue
     }
 
     /**
+     * @return bool
+     */
+    public function maybeAddResponseColumnToTable(): bool
+    {
+        $tablename = self::getTableName();
+        // check if column already exist in table
+        $query  = "SHOW COLUMNS FROM {$tablename} LIKE 'response'";
+        $result = $this->database->query($query);
+
+        // Don't add if column already exist
+        if ($result === true) {
+            return true;
+        }
+
+        return $this->database->query($this->getQueryToAddResponseColumnToTable($tablename));
+    }
+
+    /**
+     * @param string $tablename
+     * @return string
+     */
+    protected function getQueryToAddResponseColumnToTable(string $tablename): string
+    {
+        return "ALTER TABLE `{$tablename}` ADD COLUMN `response` LONGTEXT DEFAULT NULL AFTER `args`";
+    }
+
+    /**
      * @param array $dbdeltaQueries
      */
     protected function addUpgradeQueries(&$dbdeltaQueries)
     {
         $tablename           = self::getTableName();
-        $currentTableVersion = get_option(self::QUEUE_TABLE_VERSION_KEY, '0.0.0');
+        $currentTableVersion = $this->getCurrentTableVersion();
 
-        if (version_compare($currentTableVersion, '4.9.1', '<')) {
-            $dbdeltaQueries[] = "ALTER TABLE `{$tablename}` ADD COLUMN `response` LONGTEXT DEFAULT NULL AFTER `args`";
+        $this->maybeAddUpgradeTableQueryForResponseField($tablename, $currentTableVersion, $dbdeltaQueries);
+    }
+
+    /**
+     * @param string $tablename
+     * @param string $version
+     * @param array &$dbdeltaQueries
+     * @return void
+     */
+    protected function maybeAddUpgradeTableQueryForResponseField(string $tablename, string $version, array &$dbdeltaQueries)
+    {
+        // False when the option is not set
+        $deprecatedTableVersionOption = get_option(self::QUEUE_TABLE_VERSION_KEY, false);
+
+        // Case when deprecated QUEUE_TABLE_VERSION_KEY is not set, prefer QUEUE_TABLE_STRUCTURE_VERSION_KEY option
+        if (version_compare($version, '1.0.0', '<') && $deprecatedTableVersionOption === false) {
+            $dbdeltaQueries[] = $this->getQueryToAddResponseColumnToTable($tablename);
+            return;
+        }
+
+        // Delete the option as it is not required anymore
+        delete_option(self::QUEUE_TABLE_VERSION_KEY);
+        if (version_compare($deprecatedTableVersionOption, '4.9.1', '<')) {
+            $dbdeltaQueries[] = $this->getQueryToAddResponseColumnToTable($tablename);
         }
     }
 
