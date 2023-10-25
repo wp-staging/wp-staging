@@ -12,6 +12,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\BackgroundProcessing\BackgroundProcessingServiceProvider;
 use WPStaging\Framework\DI\ServiceProvider;
+use WPStaging\Framework\Auth\LoginByLink;
 
 /**
  * Class CoreServiceProvider
@@ -38,8 +39,8 @@ class CoreServiceProvider extends ServiceProvider
     private function registerEarlyBindings()
     {
         $this->container->bind(LoggerInterface::class, Logger::class);
+        $this->container->make(LoginByLink::class);
     }
-
 
     /**
      * Binds and sets up implementations at boot time.

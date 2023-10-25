@@ -56,6 +56,11 @@ class Extractor
     /** @var diskWriteCheck */
     protected $diskWriteCheck;
 
+    /**
+     * @param PathIdentifier $pathIdentifier
+     * @param Directory $directory
+     * @param DiskWriteCheck $diskWriteCheck
+     */
     public function __construct(PathIdentifier $pathIdentifier, Directory $directory, DiskWriteCheck $diskWriteCheck)
     {
         $this->pathIdentifier = $pathIdentifier;
@@ -63,6 +68,11 @@ class Extractor
         $this->diskWriteCheck = $diskWriteCheck;
     }
 
+    /**
+     * @param JobRestoreDataDto $jobRestoreDataDto
+     * @param LoggerInterface $logger
+     * @return void
+     */
     public function inject(JobRestoreDataDto $jobRestoreDataDto, LoggerInterface $logger)
     {
         $this->jobRestoreDataDto = $jobRestoreDataDto;
@@ -75,7 +85,7 @@ class Extractor
      * @return JobRestoreDataDto
      * @throws DiskNotWritableException
      */
-    public function extract()
+    public function extract(): JobRestoreDataDto
     {
         while (!$this->isThreshold()) {
             try {
@@ -158,12 +168,19 @@ class Extractor
         $this->wpstgFile->fseek($this->extractingFile->getStart() + $this->jobRestoreDataDto->getExtractorFileWrittenBytes());
     }
 
-    public function getBytesWrittenInThisRequest()
+    /**
+     * @return int
+     */
+    public function getBytesWrittenInThisRequest(): int
     {
         return $this->bytesWrittenThisRequest;
     }
 
-    public function setFileToExtract($filePath)
+    /**
+     * @param string $filePath
+     * @return void
+     */
+    public function setFileToExtract(string $filePath)
     {
         try {
             $this->wpstgFile = new FileObject($filePath);
@@ -176,6 +193,7 @@ class Extractor
     }
 
     /**
+     * @return void
      * @throws DiskNotWritableException
      */
     private function extractCurrentFile()
@@ -216,6 +234,11 @@ class Extractor
             }
         }
 
+        $destinationFilePath = $this->extractingFile->getBackupPath();
+        if (filesize($destinationFilePath) === 0 && $this->extractingFile->getTotalBytes() !== 0) {
+            throw new \RuntimeException(sprintf('File %s is empty', $destinationFilePath));
+        }
+
         // Jump to the next file of the index
         $this->jobRestoreDataDto->setExtractorMetadataIndexPosition($this->wpstgIndexOffsetForNextFile);
 
@@ -248,7 +271,10 @@ class Extractor
         // On some servers, sometimes fopen() can not create files. Seems to be caused by big files
         // Issue: #2560, #2576
         if (!file_exists($destinationFilePath)) {
-            touch($destinationFilePath);
+            // touch() didn't work consistently on a client server, but file_put_contents() worked
+            // also file_put_contents performs better than touch()
+            // @see https://github.com/wp-staging/wp-staging-pro/issues/2807
+            file_put_contents($destinationFilePath, '');
         }
 
         $destinationFileResource = @fopen($destinationFilePath, FileObject::MODE_APPEND);
@@ -262,10 +288,13 @@ class Extractor
             $writtenBytes = fwrite($destinationFileResource, $this->wpstgFile->fread($this->extractingFile->findReadTo()), (int)$this->getScriptMemoryLimit());
 
             if ($writtenBytes === false || $writtenBytes <= 0) {
+                fclose($destinationFileResource);
                 throw DiskNotWritableException::diskNotWritable();
             }
 
             $this->extractingFile->addWrittenBytes($writtenBytes);
         }
+
+        fclose($destinationFileResource);
     }
 }

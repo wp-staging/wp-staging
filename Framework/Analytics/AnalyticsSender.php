@@ -147,8 +147,10 @@ class AnalyticsSender
                         $this->consent->giveConsent();
                     } catch (\Exception $e) {
                         // We could not re-validate the consent.
-                        // Let's ask it again to the user, which will handle notices and a scenario of connection failure.
-                        $this->consent->invalidateConsent();
+                        // Don't do anything here.
+                        // E.g. If user gives his consent but wp-staging.com is not reachable
+                        // we should save the setting and fail silently. Next time wp-staging.com is available again we automatically can send usage information.
+                        // No need then to ask again for consent.
                     }
                 }
             }

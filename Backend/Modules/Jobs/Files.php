@@ -16,6 +16,7 @@ use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
+use WPStaging\Framework\SiteInfo;
 
 /**
  * Class Files
@@ -41,7 +42,7 @@ class Files extends JobExecutable
     /**
      * @var string
      */
-    private $destination;
+    protected $destination;
 
     /**
      * @var Permissions
@@ -73,6 +74,11 @@ class Files extends JobExecutable
     private $contentPath;
 
     /**
+     * @var SiteInfo
+     */
+    private $siteInfo;
+
+    /**
      * Initialization
      * @throws DiskNotWritableException|FilesystemExceptions
      */
@@ -86,6 +92,7 @@ class Files extends JobExecutable
         $this->directory   = WPStaging::make(Directory::class);
         $this->pathAdapter = WPStaging::make(PathIdentifier::class);
         $this->pathChecker = WPStaging::make(PathChecker::class);
+        $this->siteInfo    = WPStaging::make(SiteInfo::class);
         $this->rootPath    = rtrim($this->directory->getAbsPath(), '/');
         $this->contentPath = rtrim($this->directory->getWpContentDirectory(), '/');
         $this->destination = $this->filesystem->normalizePath($this->options->destinationDir);
@@ -470,15 +477,19 @@ class Files extends JobExecutable
      * @param string $file
      * @param string $basePath
      * @param bool   $isContent
-     * @return bool|string
+     * @return string|false
      */
-    private function getDestination($file, $basePath, $isContent = false)
+    protected function getDestination($file, $basePath, $isContent = false)
     {
-        $file                 = $this->filesystem->normalizePath($file);
-        $relativePath         = str_replace($basePath, '', $file);
-        $destinationPath      = $this->destination . $relativePath;
-        if ($isContent) {
-            $destinationPath  = $this->destination . 'wp-content/' . $relativePath;
+        $file            = $this->filesystem->normalizePath($file);
+        $relativePath    = str_replace($basePath, '', $file);
+        $destinationPath = $this->destination . $relativePath;
+
+        if ($isContent && $this->isFlywheelHost()) {
+            $destinationPath = $this->destination . 'wp-content/' . $relativePath;
+        } elseif ($isContent) {
+            $relativePath    = str_replace($this->filesystem->normalizePath(ABSPATH), '', $file);
+            $destinationPath = $this->destination . $relativePath;
         }
 
         $destinationDirectory = dirname($destinationPath);
@@ -490,6 +501,14 @@ class Files extends JobExecutable
         }
 
         return $this->filesystem->normalizePath($destinationPath);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isFlywheelHost(): bool
+    {
+        return $this->siteInfo->isFlyWheel();
     }
 
     /**

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.3
-Stable tag: 3.0.6
+Stable tag: 3.1.0
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,26 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.1.0 =
+* New: Compatible up to WordPress 6.3.2
+* New: Exclude GoDaddy mu-plugin by default when creating a staging site. #2744
+* New: Add modal to opt-in for diagnostic monitoring after first installation. #2391
+* New: An active installation of the free core plugin will be mandatory for pro version 5.1.0 and later. #2612
+* Enh: Added information into system info logs to indicate whether the site is a single site or a multi-site. #2790
+* Enh: Show notice that permalinks won't work on WP Engine sites. #2142
+* Enh: Add Contact Us button to the main menu bar. #2763
+* Enh: Update license updater and fix a small error that can lead to broken API requests. #2817
+* Enh: Remove type strictness from optimizer plugin functions which are used with wp hooks to avoid conflict with other plugins. #2830
+* Fix: Backup uploading to FTP fails if ftpclient is used and ssl enabled. #2750
+* Fix: Staging login doesn't work if Wordfence Activated option exists in the database but there is no Wordfence plugin active. #2812
+* Fix: Magic login link does not work if only the free version is active on the staging site. This requires updating WP Staging Free and Pro plugin on staging site. #2781
+* Fix: Custom WP content paths inside ABSPATH were not correctly cloned for newly created staging site. This could led to missing images and languages. #2740
+* Fix: When editing staging sites database connection, don't make live sites database prefix mandatory when staging site uses an external database. #2768
+* Fix: Deprecated warning in login form can prevent login to staging site. #2804
+* Fix: Upgrade routine was not working for wpstg_queue table for adding response field in the table for FREE version. #2828
+* Fix: During the file extraction of backup restore, `file_put_contents` is more consistent and faster than `touch`. Can prevent a site from being broken after backup restore due to possible bug in php 8.1.22. #2807
+* Dev: Add setup for e2e testing of wordpress.com support. #2739
 
 = 3.0.6 =
 * Fix: There could be a fatal error after plugin activation on multisites if a plugin uses the filter `site_option_active_sitewide_plugins`. #2785

@@ -5,9 +5,16 @@ namespace WPStaging\Framework\Analytics;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Core\WPStaging;
 
+use function WPStaging\functions\debug_log;
+
 class AnalyticsConsent
 {
     use WithAnalyticsAPI;
+
+    const OPTION_NAME_ANALYTICS_HAS_CONSENT = 'wpstg_analytics_has_consent';
+    const OPTION_NAME_ANALYTICS_NOTICE_DISMISSED = 'wpstg_analytics_notice_dismissed';
+    const OPTION_NAME_ANALYTICS_MODAL_DISMISSED = 'wpstg_analytics_modal_dismissed';
+    const OPTION_NAME_ANALYTICS_REMIND_ME = 'wpstg_analytics_consent_remind_me';
 
     /**
      * Shows the admin notice asking the user whether he consents to sending usage information to WP STAGING.
@@ -21,11 +28,11 @@ class AnalyticsConsent
         }
 
         // Early bail: User does not have enough access to consent, or has consented already.
-        if (!current_user_can('manage_options') || get_option('wpstg_analytics_notice_dismissed')) {
+        if (!current_user_can('manage_options') || get_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED)) {
             return;
         }
 
-        $remindMe = get_option('wpstg_analytics_consent_remind_me');
+        $remindMe = get_option(self::OPTION_NAME_ANALYTICS_REMIND_ME);
 
         if (!empty($remindMe) && time() < $remindMe) {
             return;
@@ -85,16 +92,17 @@ class AnalyticsConsent
         check_ajax_referer('wpstg_consent_nonce', 'wpstgConsentNonce');
 
         if ($_GET['wpstgConsent'] == 'later') {
-            update_option('wpstg_analytics_consent_remind_me', strtotime('+7 days'), false);
+            update_option(self::OPTION_NAME_ANALYTICS_REMIND_ME, strtotime('+7 days'), false);
 
             return;
         }
 
         // Early bail: User has not consented
         if ($_GET['wpstgConsent'] == 'no') {
-            update_option('wpstg_analytics_notice_dismissed', '1', false);
-            update_option('wpstg_analytics_has_consent', '0', false);
-            delete_option('wpstg_analytics_consent_remind_me');
+            update_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED, '1', false);
+            update_option(self::OPTION_NAME_ANALYTICS_MODAL_DISMISSED, '1', false);
+            update_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT, '0', false);
+            delete_option(self::OPTION_NAME_ANALYTICS_REMIND_ME);
 
             add_action('admin_notices', [$this, 'showNoticeConsentRefused']);
 
@@ -112,9 +120,10 @@ class AnalyticsConsent
                 exit;
             }
 
-            update_option('wpstg_analytics_notice_dismissed', '1', false);
-            update_option('wpstg_analytics_has_consent', '1', false);
-            delete_option('wpstg_analytics_consent_remind_me');
+            update_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED, '1', false);
+            update_option(self::OPTION_NAME_ANALYTICS_MODAL_DISMISSED, '1', false);
+            update_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT, '1', false);
+            delete_option(self::OPTION_NAME_ANALYTICS_REMIND_ME);
         }
     }
 
@@ -156,10 +165,16 @@ class AnalyticsConsent
         // Early bail: Something went wrong with the consent request.
         if (is_wp_error($response) || !in_array(wp_remote_retrieve_response_code($response), [201, 409])) {
             $errorMessage = is_wp_error($response) ? $response->get_error_message() : wp_remote_retrieve_body($response);
-            \WPStaging\functions\debug_log('WP STAGING Analytics Send Error: ' . $errorMessage, 'debug');
+            debug_log('WP STAGING Analytics Send Error: ' . $errorMessage, 'debug');
 
             // Dismiss the consent notice so that it doesn't appear anymore
-            update_option('wpstg_analytics_notice_dismissed', '1', false);
+            update_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED, '1', false);
+
+            // Dismiss the consent modal so that id doesn't appear anymore
+            update_option(self::OPTION_NAME_ANALYTICS_MODAL_DISMISSED, '1', false);
+
+            // give consent to be able to send data when network is back
+            update_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT, '1', false);
 
             throw new \Exception();
         }
@@ -170,19 +185,20 @@ class AnalyticsConsent
      */
     public function hasUserConsent()
     {
-        return get_option('wpstg_analytics_has_consent', null);
+        return get_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT, null);
     }
 
     /**
      * Invalidate the fact that the user has consented.
+     * @todo remove this after testing
      */
     public function invalidateConsent()
     {
-        delete_option('wpstg_analytics_notice_dismissed');
-        delete_option('wpstg_analytics_has_consent');
+        delete_option(self::OPTION_NAME_ANALYTICS_NOTICE_DISMISSED);
+        delete_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT);
     }
 
-    protected function getReturnUrl()
+    protected function getReturnUrl(): string
     {
         global $pagenow, $plugin_page;
 
@@ -194,7 +210,7 @@ class AnalyticsConsent
      *
      * @return string The link to either agree or decline analytics.
      */
-    public function getConsentLink($agreeOrDecline)
+    public function getConsentLink(bool $agreeOrDecline): string
     {
         return add_query_arg([
             'wpstgConsent' => $agreeOrDecline ? 'yes' : 'no',
@@ -202,7 +218,7 @@ class AnalyticsConsent
         ], $this->getReturnUrl());
     }
 
-    public function getRemindMeLaterConsentLink()
+    public function getRemindMeLaterConsentLink(): string
     {
         return add_query_arg([
             'wpstgConsent' => 'later',

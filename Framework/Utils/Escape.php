@@ -41,6 +41,7 @@ class Escape
                 'title'  => [],
                 'target' => [],
                 'rel'    => [],
+                'class'  => [],
             ],
             'span'   => [
                 'class'  => [],

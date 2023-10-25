@@ -102,6 +102,10 @@ class UpdateStagingOptionsTable extends DBCloningService
             $updateOrInsert[Sites::STAGING_EXCLUDED_FILES_OPTION] = serialize(array_unique((array)$this->dto->getJob()->getOptions()->tmpExcludedFilesFullPath));
         }
 
+        if (isset($this->dto->getJob()->getOptions()->tmpExcludedGoDaddyFiles)) {
+            $updateOrInsert[Sites::STAGING_EXCLUDED_GD_FILES_OPTION] = serialize(array_unique((array)$this->dto->getJob()->getOptions()->tmpExcludedGoDaddyFiles));
+        }
+
         $this->updateOrInsertOptions($updateOrInsert);
 
         $update = [

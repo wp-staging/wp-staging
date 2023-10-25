@@ -6,7 +6,7 @@ namespace WPStaging\Framework\Security;
  * Class Capabilities
  *
  * This class should return capabilities to be used in all
- * placed we do a capability check on the plugin.
+ * places where we do a capability check on the plugin.
  *
  * @package WPStaging\Framework\Security
  */

@@ -1,3 +1,12 @@
+<?php
+/**
+ * Login form template
+ *
+ * @var bool $showNotice
+ * @var string $notice
+ * @var array $args
+ */
+?>
         <main class="wp-staging-login" >
             <div class="wpstg-text-center">
               <img width="220" src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/img/logo.svg'); ?>" alt="WP Staging Login" />

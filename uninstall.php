@@ -117,6 +117,9 @@ class uninstall
             /* @see \WPStaging\Framework\BackgroundProcessing\Queue::QUEUE_TABLE_VERSION_KEY */
             delete_option('wpstg_queue_table_version');
 
+            /** @see \WPStaging\Framework\BackgroundProcessing\Queue::QUEUE_TABLE_STRUCTURE_VERSION_KEY */
+            delete_option('wpstg_queue_table_structure_version');
+
             /** @see \WPStaging\Framework\Notices\WarningsNotice::OPTION_NAME */
             delete_option('wpstg_warnings_notice');
 

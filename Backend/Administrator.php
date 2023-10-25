@@ -41,6 +41,7 @@ use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
 use WPStaging\Backend\Feedback\Feedback;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Framework\Database\WpDbInfo;
+use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
 
 /**
@@ -49,7 +50,6 @@ use WPStaging\Framework\Security\Nonce;
  */
 class Administrator
 {
-
     /**
      * @var int Place WP Staging Menu below Plugins
      */
@@ -59,7 +59,6 @@ class Administrator
      * @var int Place WP Staging Menu below Plugins for multisite
      */
     const MENU_POSITION_ORDER_MULTISITE = 20;
-
 
     /**
      * Path to plugin's Backend Dir
@@ -88,12 +87,16 @@ class Administrator
     /** @var Report */
     private $report;
 
+    /** @var PluginInfo */
+    private $pluginInfo;
+
     public function __construct()
     {
-        $this->auth     = WPStaging::make(Auth::class);
-        $this->assets   = WPStaging::make(Assets::class);
-        $this->siteInfo = WPStaging::make(SiteInfo::class);
-        $this->report   = WPStaging::make(Report::class);
+        $this->auth       = WPStaging::make(Auth::class);
+        $this->assets     = WPStaging::make(Assets::class);
+        $this->siteInfo   = WPStaging::make(SiteInfo::class);
+        $this->report     = WPStaging::make(Report::class);
+        $this->pluginInfo = WPStaging::make(PluginInfo::class);
 
         $this->defineHooks();
 
@@ -123,7 +126,10 @@ class Administrator
             new Activation\Welcome();
         }
 
-        add_action("admin_menu", [$this, "addMenu"], 10);
+        if ($this->pluginInfo->canShowAdminMenu()) {
+            add_action("admin_menu", [$this, "addMenu"], 10);
+        }
+
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 

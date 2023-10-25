@@ -12,6 +12,9 @@ class Deactivate
      */
     private $currentPluginFile;
 
+    /**
+     * @param string $currentPluginFile
+     */
     public function __construct($currentPluginFile)
     {
         $this->currentPluginFile = $currentPluginFile;

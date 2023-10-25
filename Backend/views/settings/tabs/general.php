@@ -467,3 +467,11 @@ use WPStaging\Framework\Facades\Escape;
         ?>
     </form>
 </div>
+<?php
+if (defined('WPSTGPRO_VERSION')) {
+    require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/contact-us-pro.php');
+} else {
+    require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/contact-us-basic.php');
+}
+
+?>
