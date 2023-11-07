@@ -27,12 +27,12 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
     $password         = !empty($options['password']) ? $options['password'] : '';
     $ssl              = isset($options['ssl']) ? $options['ssl'] : false;
     $passive          = isset($options['passive']) ? $options['passive'] : false;
+    $useFtpExtension  = isset($options['useFtpExtension']) ? $options['useFtpExtension'] : false;
     $privateKey       = !empty($options['key']) ? $options['key'] : '';
     $passphrase       = !empty($options['passphrase']) ? $options['passphrase'] : '';
     $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
     $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
     $location         = isset($options['location']) ? $options['location'] : '';
-
 
     ?>
     <p>
@@ -71,26 +71,31 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Password', 'wp-staging') ?></label>
                     <input class="wpstg-form-control" type="password" name="password" autocomplete="new-password" value="<?php echo esc_attr($password); ?>" />
-                    <p class="only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>"><?php esc_html_e("Your login may be either password or key-based - you only need to enter one, not both.", 'wp-staging') ?></p>
+                    <p class="wpstg-only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>"><?php esc_html_e("Your login may be either password or key-based - you only need to enter one, not both.", 'wp-staging') ?></p>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('SSL', 'wp-staging') ?></label>
                     <input type="checkbox" class="wpstg-checkbox" name="ssl" value="true" <?php echo $ssl === true ? 'checked ' : '' ?>/>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Passive', 'wp-staging') ?></label>
                     <input type="checkbox" class="wpstg-checkbox" name="passive" value="true" <?php echo $passive === true ? 'checked ' : '' ?>/>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
+                    <label><?php esc_html_e('Activate ftp extension instead of curl', 'wp-staging') ?></label>
+                    <input type="checkbox" class="wpstg-checkbox" name="use_ftp_extension" value="true" <?php echo $useFtpExtension === true ? 'checked ' : '' ?>/>
+                </fieldset>
+
+                <fieldset class="wpstg-fieldset wpstg-only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Key', 'wp-staging') ?></label>
                     <textarea class="wpstg-form-control wpstg-sftp-key-input" name="key"><?php echo esc_textarea($privateKey); ?></textarea>
                     <p><?php esc_html_e("PKCS1 (PEM header: BEGIN RSA PRIVATE KEY), XML and PuTTY format keys are accepted.", 'wp-staging') ?></p>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Passphrase', 'wp-staging') ?></label>
                     <input class="wpstg-form-control" type="password" name="passphrase" value="<?php echo esc_attr($passphrase); ?>" />
                     <p><?php esc_html_e("Passphrase for the key.", 'wp-staging') ?></p>

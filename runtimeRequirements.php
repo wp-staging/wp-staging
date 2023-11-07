@@ -198,11 +198,11 @@ if (!function_exists('wpstgCanThrowAnotherInstanceLoadedException')) {
      */
     function wpstgCanThrowAnotherInstanceLoadedException(): bool
     {
-        if (!defined('WPSTG_VERSION') || version_compare(WPSTG_VERSION, WPSTGPRO_MINIMUM_FREE_VERSION, '<')) {
+        if (defined('WPSTG_VERSION') && version_compare(WPSTG_VERSION, WPSTGPRO_MINIMUM_FREE_VERSION, '<')) {
             return true;
         }
 
-        if (!defined('WPSTGPRO_VERSION') || version_compare(WPSTGPRO_VERSION, '5.1.0', '<')) {
+        if (defined('WPSTGPRO_VERSION') && version_compare(WPSTGPRO_VERSION, '5.1.0', '<')) {
             return true;
         }
 

@@ -329,7 +329,7 @@
           confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-100-width',
           cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn wpstg-100-width',
           actions: 'wpstg--modal--actions',
-          popup: isContentCentered ? 'wpstg-swal-popup centered-modal' : 'wpstg-swal-popup'
+          popup: isContentCentered ? 'wpstg-swal-popup wpstg-centered-modal' : 'wpstg-swal-popup'
         };
 
         // If a attribute exists in both default and additional attributes,
@@ -1934,7 +1934,7 @@
               confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
               cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
               actions: 'wpstg--modal--actions',
-              popup: 'wpstg-swal-popup centered-modal'
+              popup: 'wpstg-swal-popup wpstg-centered-modal'
             },
             buttonsStyling: false,
             reverseButtons: true
@@ -2856,7 +2856,7 @@
           clone: $(this).data('clone')
         }, function (response) {
           WPStagingCommon.getSwalModal(true, {
-            popup: 'wpstg-swal-popup wpstg-db-comparison-modal centered-modal',
+            popup: 'wpstg-swal-popup wpstg-centered-modal wpstg-delete-staging-site-modal',
             content: 'wpstg--process--content'
           }).fire({
             title: 'Do you want to delete staging site "' + stagingSiteName + '"?',
@@ -3136,7 +3136,7 @@
             var selectedSiteWorkFlow = $workFlow;
             var selectedAction = $this.data('action');
             WPStagingCommon.getSwalModal(true, {
-              popup: 'wpstg-swal-popup wpstg-db-comparison-modal centered-modal',
+              popup: 'wpstg-swal-popup wpstg-db-comparison-modal wpstg-centered-modal',
               content: 'wpstg--process--content'
             }).fire({
               title: 'Do you want to update the staging site?',
@@ -3276,7 +3276,7 @@
           });
           render += '</tbody></table><p>Note: Some MySQL/MariaDB properties do not match. You may proceed but the staging site may not work as expected.</p>';
           WPStagingCommon.getSwalModal(true, {
-            popup: 'wpstg-swal-popup wpstg-db-comparison-modal centered-modal'
+            popup: 'wpstg-swal-popup wpstg-db-comparison-modal wpstg-centered-modal'
           }).fire({
             title: 'Different Database Properties',
             icon: 'warning',
@@ -3433,7 +3433,7 @@
           confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn',
           cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn',
           actions: 'wpstg--modal--actions',
-          popup: 'wpstg-swal-popup centered-modal'
+          popup: 'wpstg-swal-popup wpstg-centered-modal'
         },
         buttonsStyling: false,
         reverseButtons: true

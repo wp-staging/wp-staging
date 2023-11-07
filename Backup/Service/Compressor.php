@@ -308,17 +308,6 @@ class Compressor
             throw new NotFoundException('Nothing to backup, no index resource found!');
         }
 
-        //debug_log('[Add File Index] Resource index found! Index: ' . $this->tempBackupIndex->getFilePath());
-
-        $lastLine     = $this->tempBackup->readLastLine();
-        $writtenBytes = $this->compressorDto->getWrittenBytesTotal();
-        if ($lastLine !== PHP_EOL && $writtenBytes === 0) {
-            // See if this is really needed, removing an extra empty line should not impact backup performance
-            if (empty($lastLine)) {
-                $this->tempBackup->deleteBottomBytes(strlen(PHP_EOL));
-            }
-        }
-
         static $isFirstInsert = false;
         $insertSeparator      = '';
         if ($isFirstInsert === false) {

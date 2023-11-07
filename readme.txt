@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.3
-Stable tag: 3.1.0
+Stable tag: 3.1.1
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,18 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.1.1 =
+* New: Make WP Staging compatible up to PHP 8.3 RC. #2543
+* New: Add option in settings UI to force use FTP extension over FTP curl method for remote uploading backup using FTP. #2731
+* New: Add constant `WP_DEVELOPMENT_MODE` with value `all` to new staging site. `WP_DEVELOPMENT_MODE` constant was added in WordPress 6.3. #2792
+* New: If the "wpstg_push_excluded_tables" filter is used to exclude tables from the push process, these tables are deactivated in the push table selection. #2776
+* Enh: Make sure pro upgrade button font color can not be overwritten by third party. #2846
+* Fix: Improve design of the "delete staging site" modal. #2843
+* Fix: Existing previously created backup files may be invalid under certain circumstances and can lead to a faulty website after restoration. This is a highly recommended update! Please create a new backup after installing this update to ensure that this potential error does not affect your backup file. #2861
+* Fix: Remove warnings in debug.log that say "WP STAGING: Another instance of WPSTAGING active...". #2849
+* Dev: Use 7zip instead of zip to achieve better compression ratio to create smaller plugin zip packages. #2854
+* Dev: Make Flywheel e2e tests pass that were failing due to missing file in flywheel structure. #2871
 
 = 3.1.0 =
 * New: Compatible up to WordPress 6.3.2
@@ -901,4 +913,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-Recommended update! Several performance updates and bug fixes to improve reliability for PHP 8.1 and 8.2.
+Important Update! Existing previously created backup files may be invalid under certain circumstances and can lead to a faulty website after restoration. This is a highly recommended update! Please create a new backup after installing this update to ensure that this potential error does not affect your backup file.
