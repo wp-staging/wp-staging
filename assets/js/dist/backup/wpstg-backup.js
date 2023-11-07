@@ -621,7 +621,7 @@
           confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-100-width',
           cancelButton: 'wpstg--btn--cancel wpstg-blue-primary wpstg-link-btn wpstg-100-width',
           actions: 'wpstg--modal--actions',
-          popup: isContentCentered ? 'wpstg-swal-popup centered-modal' : 'wpstg-swal-popup'
+          popup: isContentCentered ? 'wpstg-swal-popup wpstg-centered-modal' : 'wpstg-swal-popup'
         };
 
         // If a attribute exists in both default and additional attributes,
@@ -2273,7 +2273,7 @@
       },
       logsModal: function logsModal() {
         WPStagingCommon.getSwalModal(true, {
-          popup: 'wpstg-swal-popup centered-modal'
+          popup: 'wpstg-swal-popup wpstg-centered-modal'
         }).fire({
           html: "<div class=\"wpstg--modal--error--logs\" style=\"display:block\"></div><div class=\"wpstg--modal--process--logs\" style=\"display:block\"></div>",
           width: '97%',

@@ -11,26 +11,25 @@
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
 
 if ($isDatabaseConnected) { ?>
-    <div class="wpstg-display-flex">
-        <div class="wpstg-confirm-container">
-            <div>
-                <div class="wpstg-confirm-inner-content">
+    <div class="wpstg-delete-confirm-modal">
+        <div class="wpstg-delete-confirm-container">
+                <div class="wpstg-delete-confirm-inner-content wpstg-delete-confirm-header">
                     <strong><?php esc_html_e('Database Name:', 'wp-staging'); ?>
                         <span><?php
                             echo empty($clone->databaseDatabase) ? esc_html($dbname) : esc_html($clone->databaseDatabase);
                             echo empty($clone->databaseDatabase) ? " (Production Database)" : " (Separate Database)"; ?></span>
                     </strong>
                 </div>
-                <div class="wpstg-confirm-inner-content wpstg-pointer" id="wpstg-show-database-tables">
-                    <strong class="wpstg-display-content-left"><?php echo esc_html__("Selected database tables will be deleted:", "wp-staging") ?></strong>
+                <div class="wpstg-delete-confirm-inner-content wpstg-pointer wpstg-mt-10px" id="wpstg-show-database-tables">
+                    <span class="wpstg-display-content-left"><?php echo esc_html__("Selected database tables will be deleted:", "wp-staging") ?></span>
                 </div>
                 <div>
-                    <div class="wpstg-show-tables-inner-wrapper wpstg-confirm-inner-content-text wpstg-margin-l7">
+                    <div class="wpstg-show-tables-inner-wrapper wpstg-delete-confirm-inner-content-text">
                         <label>
                             <input id="wpstg-unselect-all-tables" type="checkbox" class="wpstg-checkbox wpstg-button-unselect wpstg-unselect-all-tables" value="1" checked>
                             <span id="wpstg-unselect-all-tables-id"><?php echo esc_html__("Unselect All", "wp-staging"); ?></span>
                         </label>
-                        <div class="wpstg-confirm-inner-content-text">
+                        <div class="wpstg-delete-confirm-inner-content-text">
                             <?php foreach ($delete->getTables() as $table) : ?>
                                 <div class="wpstg-db-table">
                                     <label>
@@ -46,17 +45,15 @@ if ($isDatabaseConnected) { ?>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
-        <div class="wpstg-confirm-container wpstg-confirm-container-overflow-hidden">
-            <div>
+        <div class="wpstg-delete-confirm-container wpstg-delete-confirm-container-overflow-hidden">
                 <div id="wpstg-show-files-container">
                     <div id="wpstg-show-files-inner-container">
-                        <div class="wpstg-display-content-left wpstg-confirm-inner-content-text wpstg-margin-l7">
-                            <strong>
+                        <div class="wpstg-display-content-left wpstg-delete-confirm-inner-content-text">
+                            <span>
                                 <?php echo wp_kses_post(__("Selected folder will be deleted:", "wp-staging")) ?>
-                            </strong>
-                            <div class="wpstg-confirm-inner-content-text wpstg-mt-10px">
+                            </span>
+                            <div class="wpstg-delete-confirm-inner-content-text wpstg-mt-10px">
                                 <label>
                                     <input id="deleteDirectory" type="checkbox" class="wpstg-checkbox" name="deleteDirectory" value="1" checked data-deletepath="<?php echo urlencode($clone->path); ?>">
                                     <?php echo esc_html($clone->path); ?>
@@ -66,13 +63,12 @@ if ($isDatabaseConnected) { ?>
                         </div>
                     </div>
                 </div>
-            </div>
         </div>
     </div>
 <?php } ?>
 
 <?php if (!$isDatabaseConnected) { ?>
-    <div id="wpstg-confirm-error-container" class="wpstg-failed">
+    <div id="wpstg-delete-confirm-error-container" class="wpstg-failed">
         <h4 class="wpstg-mb-0"><?php esc_html_e('Error: Can not connect to database! ', 'wp-staging');
             echo esc_html($clone->databaseDatabase); ?></h4>
         <ul class="wpstg-mb-0">
