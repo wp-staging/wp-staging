@@ -34,6 +34,7 @@ class MoveHandler extends RestoreFileHandler
         if (!$moved) {
             $moved = $this->filesystem->moveFileOrDir($source, $destination);
         }
+
         $this->unlock();
 
         if (!$moved) {

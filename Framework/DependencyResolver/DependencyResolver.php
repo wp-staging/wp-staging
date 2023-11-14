@@ -23,6 +23,7 @@ class DependencyResolver
         if (is_null($resolveBehaviour)) {
             $resolveBehaviour = ResolveBehaviour::create()->setThrowOnCircularReference(true);
         }
+
         $resolved = [];
         $unresolved = [];
 

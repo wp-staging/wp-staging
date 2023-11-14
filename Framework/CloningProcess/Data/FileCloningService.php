@@ -17,6 +17,7 @@ abstract class FileCloningService extends CloningService
         if (($content = file_get_contents($path)) === false) {
             throw new FatalException("Error - can't read " . $file);
         }
+
         return $content;
     }
 

@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\CloningProcess\Data;
 
+use WPStaging\Backend\Modules\Jobs\Job as MainJob;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
@@ -74,7 +75,7 @@ class UpdateStagingOptionsTable extends DBCloningService
 
         // only insert or update clone option if job is not updating
         // during update this data will be preserved
-        if ($this->dto->getMainJob() !== 'updating') {
+        if ($this->dto->getMainJob() !== MainJob::UPDATE) {
             $updateOrInsert[CloneOptions::WPSTG_CLONE_SETTINGS_KEY] = serialize((object) $cloneOptions);
         }
 
@@ -112,11 +113,11 @@ class UpdateStagingOptionsTable extends DBCloningService
             'upload_path' => '',
             'wpstg_connection' => json_encode(['prodHostname' => get_site_url()]),
         ];
-        if ($this->dto->getMainJob() !== 'updating') {
+        if ($this->dto->getMainJob() !== MainJob::UPDATE) {
             $update[Sites::STAGING_SITES_OPTION] = serialize([]);
         }
 
-        if ($this->dto->getMainJob() === 'cloning') {
+        if ($this->dto->getMainJob() === MainJob::STAGING) {
             $activePluginsToUpdate = $this->getActivePluginsToUpdate();
             if (is_array($activePluginsToUpdate)) {
                 $update['active_plugins'] = serialize($activePluginsToUpdate);
@@ -135,7 +136,7 @@ class UpdateStagingOptionsTable extends DBCloningService
         }
 
         // Delete options for new clone or reset job
-        if ($this->dto->getMainJob() !== 'updating') {
+        if ($this->dto->getMainJob() !== MainJob::UPDATE) {
             // @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
             $toDelete[] = 'wpstg_googledrive';
         }
@@ -197,6 +198,7 @@ class UpdateStagingOptionsTable extends DBCloningService
         if (!is_array($activePlugins)) {
             $activePlugins = [];
         }
+
         $activePlugins = apply_filters(self::FILTER_CLONING_UPDATE_ACTIVE_PLUGINS, $activePlugins);
 
         return $activePlugins;

@@ -235,6 +235,7 @@ class BufferedCache extends AbstractCache
         if ($position === self::POSITION_BOTTOM) {
             return $this->readBottomLine($lines);
         }
+
         return $this->readTopLine($lines);
     }
 
@@ -421,6 +422,7 @@ class BufferedCache extends AbstractCache
         if (!$data) {
             return null;
         }
+
         return $data;
     }
 

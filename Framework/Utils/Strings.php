@@ -41,6 +41,7 @@ class Strings
             if ($replace === null) {
                 $replace = '';
             }
+
             return substr_replace($subject, $replace, $pos, strlen($search));
         }
 

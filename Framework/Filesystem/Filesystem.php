@@ -70,6 +70,7 @@ class Filesystem extends FilterableDirectoryIterator
         if (!$safePath) {
             return null;
         }
+
         $safePath = ABSPATH . str_replace(ABSPATH, null, $safePath);
         $safePath .= DIRECTORY_SEPARATOR . basename($fullPath);
         return $safePath;
@@ -187,6 +188,7 @@ class Filesystem extends FilterableDirectoryIterator
             if (!@copy($source, $dest)) {
                 return false;
             }
+
             @unlink($source);
             return true;
         } catch (\Throwable $th) {
@@ -369,6 +371,7 @@ class Filesystem extends FilterableDirectoryIterator
             $iterator = new \FilesystemIterator($dir);
             return !$iterator->valid();
         }
+
         return true;
     }
 
@@ -510,6 +513,7 @@ class Filesystem extends FilterableDirectoryIterator
             if ($returnPattern) {
                 return $filename;
             }
+
             return true;
         }
 
@@ -519,9 +523,11 @@ class Filesystem extends FilterableDirectoryIterator
                 if ($returnPattern) {
                     return $pattern;
                 }
+
                 return true;
             }
         }
+
         return false;
     }
 

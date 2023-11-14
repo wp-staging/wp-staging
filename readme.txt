@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.3
-Stable tag: 3.1.1
+Stable tag: 3.1.2
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,20 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.1.2 =
+* New: Compatible up to WordPress 6.4.1
+* New: Add latest cloning, pushing, backup and backup restore logs when the user downloads the log files or opens support ticket and share debug information. #2806
+* Fix: Warnings in WordPress 6.4 because WordPress removed property $wpdb->use_mysqli. This could lead to a backup error. #2881
+* Dev: Add missing twentytwentyone theme to multi_tests to make backup tests work. #2888
+* Dev: Add a Sniff rule to check for proper use of esc_html_e. #2875
+* Dev: Use cache and run unit tests in parallel to reduce time taken by fast backup tests. #2862
+* Dev: Fix DB version in DB seed file for multisites backup tests. #2891
+* Dev: Fix issue with WP CLI e2e backup test not running due to missing core plugin. #2896
+* Dev: Add make command to update DB backup seed files. #2893
+* Dev: Make sure that the .gitignore file remains intact and doesn't get deleted when running ./wpstg changelog:update command. #2873
+* Dev: PHPCS rule for adding a newline after "for, foreach, if" block statements. #2831
+* Dev: Use constants for job type for cloning/pushing process instead of hard coding them. #2850
 
 = 3.1.1 =
 * New: Make WP Staging compatible up to PHP 8.3 RC. #2543
@@ -913,4 +927,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-Important Update! Existing previously created backup files may be invalid under certain circumstances and can lead to a faulty website after restoration. This is a highly recommended update! Please create a new backup after installing this update to ensure that this potential error does not affect your backup file.
+This is a maintenance update. We recommend to update to this version.

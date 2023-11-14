@@ -81,6 +81,7 @@ abstract class CloningProcess extends JobExecutable
             $this->returnException(sprintf('Error: Can\'t select database %s. Either it does not exist or you don\'t have privileges to access it.', $this->options->databaseDatabase));
             exit;
         }
+
         return true;
     }
 }

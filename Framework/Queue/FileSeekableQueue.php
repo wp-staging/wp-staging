@@ -69,6 +69,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         if ($queueMode !== SeekableQueueInterface::MODE_WRITE && $queueMode !== SeekableQueueInterface::MODE_READ_WRITE) {
             throw new \BadMethodCallException();
         }
+
         $this->handle = new FileObject($path, $queueMode);
         $this->handle->setFlags(FileObject::DROP_NEW_LINE);
         $this->fileGenerator = $this->initializeGenerator();

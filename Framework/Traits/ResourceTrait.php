@@ -307,6 +307,7 @@ trait ResourceTrait
         if (!isset($this->resourceTraitSettings)) {
             $this->resourceTraitSettings = json_decode(json_encode(get_option('wpstg_settings', [])));
         }
+
         if ($cpuLoadSetting === null) {
             $cpuLoadSetting = isset($this->resourceTraitSettings->cpuLoad) ? $this->resourceTraitSettings->cpuLoad : 'medium';
         }

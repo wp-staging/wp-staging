@@ -27,6 +27,26 @@ abstract class Job implements ShutdownableInterface
     use ResourceTrait;
 
     /**
+     * @var string
+     */
+    const PUSH    = 'push';
+
+    /**
+     * @var string
+     */
+    const STAGING = 'cloning';
+
+    /**
+     * @var string
+     */
+    const RESET   = 'resetting';
+
+    /**
+     * @var string
+     */
+    const UPDATE  = 'updating';
+
+    /**
      * @var Cache
      */
     protected $cache;
@@ -224,7 +244,7 @@ abstract class Job implements ShutdownableInterface
     {
         $uniqueId = $this->identifier->getIdentifier();
         // If job is not cloning i.e. updating, resetting, pushing
-        if (!empty($this->options->mainJob) && $this->options->mainJob !== 'cloning') {
+        if (!empty($this->options->mainJob) && $this->options->mainJob !== Job::STAGING) {
             return $this->options->mainJob . '_' . $uniqueId . '_' . date('Y-m-d', time());
         }
 
@@ -327,7 +347,7 @@ abstract class Job implements ShutdownableInterface
      */
     public function excludeWpConfigDuringUpdate()
     {
-        return $this->options->mainJob === Updating::NORMAL_UPDATE;
+        return $this->options->mainJob === self::UPDATE;
     }
 
     /**
@@ -365,5 +385,15 @@ abstract class Job implements ShutdownableInterface
         }
 
         return false;
+    }
+
+    /**
+     * Is the current main job UPDATE or RESET
+     *
+     * @return bool
+     */
+    public function isUpdateOrResetJob(): bool
+    {
+        return isset($this->options->mainJob) && ($this->options->mainJob === self::RESET || $this->options->mainJob === self::UPDATE);
     }
 }

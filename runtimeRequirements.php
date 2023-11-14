@@ -316,6 +316,7 @@ if (isset($_REQUEST['action'])) {
                     throw new Exception("Activating another WPSTAGING Plugin. Plugin that bailed bootstrapping: $pluginFilePath");
                 }
             }
+
             break;
         case 'activate-selected':
         case 'activate-multi':
@@ -331,6 +332,7 @@ if (isset($_REQUEST['action'])) {
                     }
                 }
             }
+
             break;
     endswitch;
 }

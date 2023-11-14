@@ -395,6 +395,7 @@ class Notices
         if (!is_array($this->settings) && !is_object($this->settings)) {
             return true;
         }
+
         return false;
     }
 

@@ -81,6 +81,7 @@ class SelectedTables
                 // phpcs:disable PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
                 define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT);
             }
+
             $this->wpdb = new wpdb($username, str_replace("\\\\", "\\", $password), $database, $server);
         }
 

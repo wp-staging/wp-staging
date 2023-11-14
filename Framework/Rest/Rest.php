@@ -28,6 +28,7 @@ class Rest
         if (empty($_SERVER['REQUEST_URI'])) {
             return false;
         }
+
         $requestPath = trim($this->sanitize->sanitizeUrl($_SERVER['REQUEST_URI']), '/');
 
         $originalUrl = trailingslashit(get_home_url(get_current_blog_id(), ''));

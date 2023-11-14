@@ -269,6 +269,7 @@ class SystemInfo
                 $output .= $this->info($key, empty($value) ? 'not set' : $this->removeCredentials($key, $value));
             }
         }
+
         $output .= PHP_EOL . "-- Generic S3 Settings" . PHP_EOL;
 
         $genericS3Settings = (array)get_option('wpstg_generic-s3', []);
@@ -277,6 +278,7 @@ class SystemInfo
                 $output .= $this->info($key, empty($value) ? 'not set' : $this->removeCredentials($key, $value));
             }
         }
+
         $output .= PHP_EOL . "-- SFTP Settings" . PHP_EOL;
 
         $sftpSettings = (array)get_option('wpstg_sftp', []);
@@ -285,6 +287,7 @@ class SystemInfo
                 $output .= $this->info($key, empty($value) ? '[not set]' : $this->removeCredentials($key, $value));
             }
         }
+
         $output .= PHP_EOL . "-- Existing Staging Sites" . PHP_EOL . PHP_EOL;
 
         // Clones data version > 2.x
@@ -459,6 +462,7 @@ class SystemInfo
 
             $output .= "{$plugin["Name"]}: {$plugin["Version"]}" . PHP_EOL;
         }
+
         unset($plugins, $activePlugins);
 
         return $output;
@@ -658,6 +662,7 @@ class SystemInfo
         if ($home !== $siteurl) {
             return true;
         }
+
         return false;
     }
 
@@ -722,6 +727,7 @@ class SystemInfo
         if (empty($matches[1])) {
             return "Error: Cannot detect WP version";
         }
+
         return $matches[1];
     }
 
@@ -736,6 +742,7 @@ class SystemInfo
         if (!empty($value) && in_array($key, $protectedFields)) {
             return '[REMOVED]';
         }
+
         return empty($value) ? '[not set]' : $value;
     }
 
@@ -786,6 +793,7 @@ class SystemInfo
         foreach ($backups as $backup) {
             $totalBackupSize += (float)$backup->size;
         }
+
         $output .= $this->info("Backup Total File Size:", esc_html($totalBackupSize) . 'M');
 
         return $output;

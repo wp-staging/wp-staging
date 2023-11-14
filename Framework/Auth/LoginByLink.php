@@ -139,6 +139,7 @@ class LoginByLink
         if (!isset($existingClones[$cloneID])) {
             return;
         }
+
         $currentClone = $existingClones[$cloneID];
 
         $cloneDB           = (new SourceDatabase((object)$currentClone))->getDatabase();
@@ -159,6 +160,7 @@ class LoginByLink
                 ]
             );
         }
+
         wp_clear_scheduled_hook('wpstg_clean_login_link_data', [$cloneID]);
     }
 }

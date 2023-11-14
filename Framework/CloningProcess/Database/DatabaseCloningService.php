@@ -320,6 +320,7 @@ class DatabaseCloningService
             if ($this->removeDbBasePrefix($tableName) === 'users') {
                 $statement = str_replace($tableName, $productionDb->base_prefix . 'users', $statement);
             }
+
             // Build full qualified statement for table [prefix_]usermeta from main site e.g. wp_usermeta
             if ($this->removeDbBasePrefix($tableName) === 'usermeta') {
                 $statement = str_replace($tableName, $productionDb->base_prefix . 'usermeta', $statement);

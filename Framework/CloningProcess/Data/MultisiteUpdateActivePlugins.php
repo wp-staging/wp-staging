@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
+use WPStaging\Backend\Modules\Jobs\Job as MainJob;
 use WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable;
 
 class MultisiteUpdateActivePlugins extends DBCloningService
@@ -22,6 +23,7 @@ class MultisiteUpdateActivePlugins extends DBCloningService
             $this->log("Option name 'active_plugins' is empty ");
             $active_plugins = serialize([]);
         }
+
         // Get active_sitewide_plugins value from main multisite wp_sitemeta table
         $active_sitewide_plugins = $productionDb->get_var("SELECT meta_value FROM {$productionDb->base_prefix}sitemeta WHERE meta_key = 'active_sitewide_plugins' ");
         if (!$active_sitewide_plugins) {
@@ -34,7 +36,7 @@ class MultisiteUpdateActivePlugins extends DBCloningService
         $allPlugins = array_merge($active_plugins, array_keys($active_sitewide_plugins));
         sort($allPlugins);
 
-        if ($this->dto->getMainJob() === 'cloning') {
+        if ($this->dto->getMainJob() === MainJob::STAGING) {
             $activePlugins = apply_filters(UpdateStagingOptionsTable::FILTER_CLONING_UPDATE_ACTIVE_PLUGINS, $allPlugins);
             if (is_array($activePlugins)) {
                 $allPlugins = $activePlugins;

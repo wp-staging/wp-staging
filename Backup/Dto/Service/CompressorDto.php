@@ -137,6 +137,7 @@ class CompressorDto
         if (!$this->backupMetadata) {
             $this->backupMetadata = new BackupMetadata();
         }
+
         return $this->backupMetadata;
     }
 

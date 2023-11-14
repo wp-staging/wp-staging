@@ -121,6 +121,7 @@ class RestoreThemesTask extends FileRestoreTask
             if ($item->isDot()) {
                 continue;
             }
+
             if ($item->isDir()) {
                 $themes[$item->getBasename()] = $item->getPathname();
             }

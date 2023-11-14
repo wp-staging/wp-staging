@@ -162,6 +162,7 @@ class SearchReplace extends CloningProcess
         if (!$this->startJob($newTableName, $tableName)) {
             return true;
         }
+
         // Copy data
         $this->startReplace($newTableName);
 
@@ -183,11 +184,12 @@ class SearchReplace extends CloningProcess
     private function getDestinationHostname()
     {
         // Update process: Neither 'push' nor 'clone'
-        if ($this->options->mainJob === 'updating') {
+        if ($this->options->mainJob === Job::UPDATE) {
             // Defined and created in advanced settings with pro version
             if (!empty($this->options->cloneHostname)) {
                 return $this->strings->getUrlWithoutScheme($this->options->cloneHostname);
             }
+
             return $this->strings->getUrlWithoutScheme($this->options->destinationHostname);
         }
 
@@ -385,6 +387,7 @@ class SearchReplace extends CloningProcess
             ) {
                 continue;
             }
+
             // Skip rows with more than 5MB to save memory. These rows contain log data or something similiar but never site relevant data
             if (isset($row['option_value']) && strlen($row['option_value']) >= 5000000) {
                 continue;

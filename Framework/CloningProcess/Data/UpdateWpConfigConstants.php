@@ -244,6 +244,7 @@ EOT;
         if (empty($matches[0])) {
             return false;
         }
+
         return true;
     }
 
@@ -262,6 +263,7 @@ EOT;
         if ($constant === 'WP_ENVIRONMENT_TYPE' || $constant === 'WPSTAGING_DEV_SITE') {
             return true;
         }
+
         return false;
     }
 
@@ -279,10 +281,12 @@ EOT;
         if (empty($matches[0])) {
             return $content;
         }
+
         $replace = "";
         if (($content = preg_replace([$pattern], $replace, $content)) === null) {
             throw new RuntimeException("Failed to change " . $constant);
         }
+
         $this->log("Deleted: " . $constant);
         return $content;
     }
@@ -300,6 +304,7 @@ EOT;
             $this->debugLog("Constant" . $constant . " not defined in wp-config.php. Creating new entry.");
             $newContent = $this->addDefinition($constant, $content, $newDefinition);
         }
+
         return $newContent;
     }
 
@@ -316,6 +321,7 @@ EOT;
             $this->log("Skipping: " . $constant . " not defined in wp-config.php.");
             return $content;
         }
+
         return $newContent;
     }
 }

@@ -119,6 +119,7 @@ class Queue implements QueueInterface
         if (!$this->name || !$this->storage) {
             return;
         }
+
         $this->storage->setKey($this->name);
     }
 

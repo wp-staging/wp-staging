@@ -760,6 +760,7 @@ class Queue
         if ($this->database === null) {
             return '';
         }
+
         return (string)$this->database->error();
     }
 
@@ -1185,6 +1186,7 @@ class Queue
 
             return 0;
         }
+
         if (isset($this->database->link->affected_rows)) {
             $removed = $this->database->link->affected_rows;
         } else {
@@ -1267,6 +1269,7 @@ class Queue
 
             return false;
         }
+
         if (isset($this->database->link->affected_rows)) {
             $removed = $this->database->link->affected_rows;
         } else {
@@ -1304,6 +1307,7 @@ class Queue
 
             return false;
         }
+
         if (isset($this->database->link->affected_rows)) {
             $removed = $this->database->link->affected_rows;
         } else {

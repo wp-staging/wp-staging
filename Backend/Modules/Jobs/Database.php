@@ -50,7 +50,7 @@ class Database extends CloningProcess
         $this->addMissingTables();
         $this->total = count($this->options->tables);
         // if mainJob is 'Reset', add one extra pre step for deleting all tables
-        if ($this->options->mainJob === 'resetting') {
+        if ($this->options->mainJob === Job::RESET) {
             $this->total++;
         }
     }
@@ -108,7 +108,7 @@ class Database extends CloningProcess
 
         // decrement the tableIndex if mainJob is 'resetting'
         $tableIndex = $this->options->currentStep;
-        if ($this->options->mainJob === 'resetting') {
+        if ($this->options->mainJob === Job::RESET) {
             $tableIndex--;
         }
 
@@ -135,7 +135,7 @@ class Database extends CloningProcess
      */
     private function deleteAllTables()
     {
-        if ($this->options->mainJob !== 'resetting') {
+        if ($this->options->mainJob !== Job::RESET) {
             return true;
         }
 
@@ -197,7 +197,7 @@ class Database extends CloningProcess
      */
     private function shouldAbortIfTableExist($name)
     {
-        return isset($this->options->mainJob) && $this->options->mainJob !== 'updating' && $this->isTableExist($name);
+        return isset($this->options->mainJob) && $this->options->mainJob !== Job::UPDATE && $this->isTableExist($name);
     }
 
     /**
@@ -264,6 +264,7 @@ class Database extends CloningProcess
             if ($this->databaseCloningService->removeDBPrefix($srcTableName) === 'users') {
                 $srcTableName = $this->productionDb->base_prefix . 'users';
             }
+
             // Build full name of table 'usermeta' from main site e.g. wp_usermeta
             if ($this->databaseCloningService->removeDBPrefix($srcTableName) === 'usermeta') {
                 $srcTableName = $this->productionDb->base_prefix . 'usermeta';
@@ -375,7 +376,7 @@ class Database extends CloningProcess
     {
         $dbPrefix = WPStaging::getTablePrefix();
         // Early bail: if updating
-        if (isset($this->options->mainJob) && $this->options->mainJob === 'updating') {
+        if (isset($this->options->mainJob) && $this->options->mainJob === Job::UPDATE) {
             return;
         }
 
@@ -430,7 +431,7 @@ class Database extends CloningProcess
     private function abortIfDirectoryNotEmpty()
     {
         $path = trailingslashit($this->options->cloneDir);
-        if (isset($this->options->mainJob) && $this->options->mainJob !== 'resetting' && $this->options->mainJob !== 'updating' && is_dir($path) && !wpstg_is_empty_dir($path)) {
+        if (isset($this->options->mainJob) && $this->options->mainJob !== Job::RESET && $this->options->mainJob !== Job::UPDATE && is_dir($path) && !wpstg_is_empty_dir($path)) {
             $this->returnException(" Can not continue for security purposes. Directory {$path} is not empty! Use FTP or a file manager plugin and make sure it does not contain any files. ");
             return true;
         }
@@ -445,7 +446,7 @@ class Database extends CloningProcess
     private function abortIfDirectoryNotCreated()
     {
         // Early bail if not a new staging site
-        if (isset($this->options->mainJob) && ($this->options->mainJob === 'resetting' || $this->options->mainJob === 'updating')) {
+        if (isset($this->options->mainJob) && ($this->isUpdateOrResetJob())) {
             return false;
         }
 

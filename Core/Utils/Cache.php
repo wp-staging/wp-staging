@@ -54,9 +54,8 @@ class Cache
         // Set cache directory
         if (!empty($cacheDir) && is_dir($cacheDir)) {
             $this->cacheDir = $cacheDir;
-        }
-        // Set default
-        else {
+        } else {
+            // Set default
             $this->cacheDir = \WPStaging\Core\WPStaging::getContentDir();
         }
 

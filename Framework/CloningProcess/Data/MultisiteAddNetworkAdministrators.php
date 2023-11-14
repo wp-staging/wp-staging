@@ -49,9 +49,11 @@ class MultisiteAddNetworkAdministrators extends DBCloningService
                 )
             );
         }
+
         if (!empty($sql)) {
             $this->executeSql($sql);
         }
+
         //$this->log("Done");
         return true;
     }
@@ -70,6 +72,7 @@ class MultisiteAddNetworkAdministrators extends DBCloningService
                 $this->log("Could not execute query {$query}", Logger::TYPE_WARNING);
             }
         }
+
         return true;
     }
 }

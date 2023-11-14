@@ -106,6 +106,7 @@ class Aios
         if ($key !== false) {
             unset($this->whitelistedPlugins[$key]);
         }
+
         update_option(self::WHITELISTED_PLUGINS_OPTION, $this->whitelistedPlugins);
     }
 
@@ -135,6 +136,7 @@ class Aios
         if (in_array(self::AIOS_PLUGIN_SLUG, $this->whitelistedPlugins)) {
             return true;
         }
+
         return false;
     }
 }

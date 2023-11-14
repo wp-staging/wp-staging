@@ -79,6 +79,7 @@ class DbInfo extends WpDbInfo
             $this->connected = false;
             return;
         }
+
         $db->close();
 
         $wpdb = new \wpdb($this->user, $this->password, $this->database, $this->server);

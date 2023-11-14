@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\CloningProcess\Data;
 
+use WPStaging\Backend\Modules\Jobs\Job as MainJob;
+
 abstract class DBCloningService extends CloningService
 {
     private $optionTable = 'options';
@@ -22,6 +24,7 @@ abstract class DBCloningService extends CloningService
             $this->log("Table {$table} does not exist.");
             return false;
         }
+
         return true;
     }
 
@@ -35,6 +38,7 @@ abstract class DBCloningService extends CloningService
             $this->log("\"Keep permalinks\" enabled in settings - skipping");
             return true;
         }
+
         return false;
     }
 
@@ -54,7 +58,7 @@ abstract class DBCloningService extends CloningService
         // It will be good to check against users that without forced appending underscore
         // Code below solves this issue https://github.com/WP-Staging/wp-staging-pro/issues/925
         // If the main job is UPDATE or RESET and users table without post underscore exists then use prefix without post underscore
-        if ($this->dto->getMainJob() !== 'cloning' && $this->tableExists($this->dto->getPrefix() . 'users')) {
+        if ($this->dto->getMainJob() !== MainJob::STAGING && $this->tableExists($this->dto->getPrefix() . 'users')) {
             $prefix = $this->dto->getPrefix();
         }
 
@@ -63,6 +67,7 @@ abstract class DBCloningService extends CloningService
             $this->log("Table " . $prefix . $table . ' not found. Skipping');
             return true;
         }
+
         // during update process option table was not skipped even though it was not selected
         // that was causing problem if staging site prefix is basically something string appended to,
         // production site prefix i.e. staging prefix: wp_stagging_ and production prefix: wp_

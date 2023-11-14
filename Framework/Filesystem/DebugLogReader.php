@@ -3,18 +3,28 @@
 namespace WPStaging\Framework\Filesystem;
 
 use WPStaging\Framework\Security\Capabilities;
+use WPStaging\Framework\Adapter\Directory;
 
-class DebugLogReader
+class DebugLogReader extends LogFiles
 {
+    /**
+     * @var Filesystem
+     */
     protected $filesystem;
 
-    public function __construct(Filesystem $filesystem)
+    /**
+     * @param Filesystem $filesystem
+     * @param Directory $logsDirectory
+     */
+    public function __construct(Filesystem $filesystem, Directory $logsDirectory)
     {
+        parent::__construct($logsDirectory);
         $this->filesystem = $filesystem;
     }
 
     /**
      * Deletes a log file if requested.
+     * Used by WPStaging\Framework\CommonServiceProvider::registerClasses()
      */
     public function listenDeleteLogRequest()
     {
@@ -72,7 +82,7 @@ class DebugLogReader
      *
      * @return string A formatted text with the last log entries from the debug log files.
      */
-    public function getLastLogEntries($maxSizeEach, $withWpstgDebugLog = true, $withPhpDebugLog = true)
+    public function getLastLogEntries(int $maxSizeEach, bool $withWpstgDebugLog = true, bool $withPhpDebugLog = true): string
     {
         $errors = '';
 
@@ -116,7 +126,12 @@ class DebugLogReader
         return $errors;
     }
 
-    protected function getDebugLogLines($debugLogPath, $maxSize)
+    /**
+     * @param $debugLogPath
+     * @param $maxSize
+     * @return string
+     */
+    protected function getDebugLogLines($debugLogPath, $maxSize): string
     {
         if (!is_file($debugLogPath) || !is_readable($debugLogPath)) {
             return '';

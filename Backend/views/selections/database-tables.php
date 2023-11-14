@@ -1,9 +1,13 @@
 <?php
+
 /**
  * @var stdClass $options
  *
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
+
+use WPStaging\Backend\Modules\Jobs\Job;
+
 ?>
 <?php
     do_action("wpstg_scanning_db");
@@ -26,7 +30,7 @@
     <?php
     foreach ($options->tables as $table) :
         $attributes = !in_array($table->name, $options->excludedTables) && (strpos($table->name, $dbPrefix) === 0) ? "selected='selected'" : "";
-        if (($options->mainJob === 'updating' || $options->mainJob === 'resetting') && isset($options->currentClone['includedTables'])) {
+        if (($options->mainJob === Job::UPDATE || $options->mainJob === Job::RESET) && isset($options->currentClone['includedTables'])) {
             $attributes = !in_array($table->name, $options->excludedTables) && in_array($table->name, $options->currentClone['includedTables']) ? "selected='selected'" : "";
         }
 

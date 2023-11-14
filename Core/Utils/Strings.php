@@ -28,6 +28,7 @@ class Strings
         if ($pos !== false) {
             return substr_replace($subject, $replace, $pos, strlen($search));
         }
+
         return $subject;
     }
 

@@ -51,7 +51,7 @@ class UpdateBackupsScheduleTask extends RestoreTask
     protected function updateWpStagingCronJobs()
     {
         $prodOptionsTable = $this->wpdb->prefix . 'options';
-        $tmpOptionsTable = PrepareRestore::TMP_DATABASE_PREFIX . 'options';
+        $tmpOptionsTable  = PrepareRestore::TMP_DATABASE_PREFIX . 'options';
 
         // Cron jobs contained in the production site
         $productionCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$prodOptionsTable} WHERE option_name = 'cron';");
@@ -59,7 +59,10 @@ class UpdateBackupsScheduleTask extends RestoreTask
 
         // Cron jobs contained in the backup file
         $backupCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$tmpOptionsTable} WHERE option_name = 'cron';");
-        $backupCronJobs = maybe_unserialize($backupCronJobs[0]);
+
+        if (isset($backupCronJobs[0])) {
+            $backupCronJobs = maybe_unserialize($backupCronJobs[0]);
+        }
 
         // WP STAGING Cron jobs from production site
         $wpstgCronJobs = $this->extractWpStagingCrons($productionCronJobs);

@@ -127,6 +127,7 @@ class AnalyticsSender
                 return;
             }
         }
+
         $response = wp_remote_post($url, [
             'method' => 'POST',
             'headers' => ['Content-Type' => 'application/json; charset=utf-8'],

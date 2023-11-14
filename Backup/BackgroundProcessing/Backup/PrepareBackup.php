@@ -241,6 +241,7 @@ class PrepareBackup
         if (empty($this->lastQueuedActionId)) {
             return null;
         }
+
         try {
             return $this->queue->getAction($this->lastQueuedActionId)->jobId;
         } catch (QueueException $e) {

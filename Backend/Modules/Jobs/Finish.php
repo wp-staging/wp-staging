@@ -59,13 +59,13 @@ class Finish extends Job
         ];
 
         switch ($this->options->mainJob) {
-            case 'cloning':
+            case Job::STAGING:
                 WPStaging::make(AnalyticsStagingCreate::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
                 break;
-            case 'updating':
+            case Job::UPDATE:
                 WPStaging::make(AnalyticsStagingUpdate::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
                 break;
-            case 'resetting':
+            case Job::RESET:
                 WPStaging::make(AnalyticsStagingReset::class)->enqueueFinishEvent($this->options->jobIdentifier, $this->options);
                 break;
         }

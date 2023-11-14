@@ -122,6 +122,7 @@ class Database
         if (!$prefix) {
             $prefix = $this->getPrefix();
         }
+
         return str_replace('_', '\_', $prefix);
     }
 
@@ -203,11 +204,11 @@ class Database
             throw new RuntimeException('Database handler / link is not set');
         }
 
-        if ($this->wpdb->use_mysqli) {
-            return new MysqliAdapter($link);
+        if (isset($this->wpdb->use_mysqli) && (bool)$this->wpdb->use_mysqli !== true) {
+            return new MysqlAdapter($link);
         }
 
-        return new MysqlAdapter($link);
+        return new MysqliAdapter($link);
     }
 
     /**

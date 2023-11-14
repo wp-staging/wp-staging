@@ -1041,6 +1041,7 @@ return array(
     'WPStaging\\Framework\\Filesystem\\Filters\\RecursiveFileSizeFilter' => $baseDir . '/Framework/Filesystem/Filters/RecursiveFileSizeFilter.php',
     'WPStaging\\Framework\\Filesystem\\Filters\\RecursivePathExcludeFilter' => $baseDir . '/Framework/Filesystem/Filters/RecursivePathExcludeFilter.php',
     'WPStaging\\Framework\\Filesystem\\LogCleanup' => $baseDir . '/Framework/Filesystem/LogCleanup.php',
+    'WPStaging\\Framework\\Filesystem\\LogFiles' => $baseDir . '/Framework/Filesystem/LogFiles.php',
     'WPStaging\\Framework\\Filesystem\\MissingFileException' => $baseDir . '/Framework/Filesystem/MissingFileException.php',
     'WPStaging\\Framework\\Filesystem\\PathChecker' => $baseDir . '/Framework/Filesystem/PathChecker.php',
     'WPStaging\\Framework\\Filesystem\\PathIdentifier' => $baseDir . '/Framework/Filesystem/PathIdentifier.php',
