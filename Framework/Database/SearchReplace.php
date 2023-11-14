@@ -206,6 +206,7 @@ class SearchReplace
         foreach ($data as $key => $value) {
             $data[$key] = $this->walker($value);
         }
+
         return $data;
     }
 
@@ -223,6 +224,7 @@ class SearchReplace
             if ($key === '' || (isset($key[0]) && ord($key[0]) === 0)) {
                 continue;
             }
+
             $data->{$key} = $this->walker($value);
         }
 

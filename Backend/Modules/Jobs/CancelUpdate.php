@@ -26,6 +26,7 @@ class CancelUpdate extends Job
         if (empty($cloneData)) {
             return true;
         }
+
         // Delete Cache Files
         $this->deleteCacheFiles();
 

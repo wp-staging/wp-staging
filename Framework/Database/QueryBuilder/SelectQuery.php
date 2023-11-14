@@ -139,8 +139,10 @@ class SelectQuery
                 foreach ($value as $subValue) {
                     $whereClause[] = $this->writeWhereClauseStatement($subValue, $field, $prefix);
                 }
+
                 continue;
             }
+
             $whereClause[] = $this->writeWhereClauseStatement($value, $field, $prefix);
         }
 

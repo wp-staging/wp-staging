@@ -111,6 +111,7 @@ class DatabaseImporter
         if (!$this->file) {
             throw new RuntimeException('Restore file is not set');
         }
+
         $this->file->seek($line);
 
         return $this;
@@ -404,6 +405,7 @@ class DatabaseImporter
 
             throw new RuntimeException(sprintf('Could not restore query. MySQL has returned the error code %d, with message "%s".', $errorNo, $errorMsg) . $additionalInfo);
         }
+
         return $result;
     }
 

@@ -28,6 +28,7 @@ class OptionPreservationHandler
                 $likeStatement .= " OR option_name LIKE '$option'";
             }
         }
+
         return $likeStatement;
     }
 
@@ -64,6 +65,7 @@ class OptionPreservationHandler
                 $option['autoload']
             );
         }
+
         return $sql;
     }
 

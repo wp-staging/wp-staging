@@ -134,6 +134,7 @@ trait WithAnalyticsSiteInfo
 
             $plugins['siteActive'][$name] = $version;
         }
+
         remove_filter('pre_site_option_active_sitewide_plugins', $callback);
 
         // mu-plugins

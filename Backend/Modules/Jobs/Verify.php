@@ -106,6 +106,7 @@ class Verify extends JobExecutable
             $this->saveOptions();
             return false;
         }
+
         $this->saveVerifyFiles();
         $this->saveOptions();
         //$this->log(json_encode(array_diff($this->files, $this->verifyFiles)));

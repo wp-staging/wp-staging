@@ -112,6 +112,7 @@ class FilesystemScannerTask extends BackupTask
             $this->unlockQueue();
             return $this->generateResponse();
         }
+
         if ($this->stepsDto->getCurrent() === 1) {
             $this->currentPathScanning = BackupPluginsTask::IDENTIFIER;
             $this->setupCompressorQueue();
@@ -119,6 +120,7 @@ class FilesystemScannerTask extends BackupTask
             $this->unlockQueue();
             return $this->generateResponse();
         }
+
         if ($this->stepsDto->getCurrent() === 2) {
             $this->currentPathScanning = BackupMuPluginsTask::IDENTIFIER;
             $this->setupCompressorQueue();
@@ -126,6 +128,7 @@ class FilesystemScannerTask extends BackupTask
             $this->unlockQueue();
             return $this->generateResponse();
         }
+
         if ($this->stepsDto->getCurrent() === 3) {
             $this->currentPathScanning = BackupThemesTask::IDENTIFIER;
             $this->setupCompressorQueue();
@@ -133,6 +136,7 @@ class FilesystemScannerTask extends BackupTask
             $this->unlockQueue();
             return $this->generateResponse();
         }
+
         if ($this->stepsDto->getCurrent() === 4) {
             $this->currentPathScanning = BackupUploadsTask::IDENTIFIER;
             $this->setupCompressorQueue();
@@ -655,6 +659,7 @@ class FilesystemScannerTask extends BackupTask
 
             return true;
         }
+
         return false;
     }
 }

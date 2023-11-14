@@ -315,6 +315,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
                     $percentage = (int)(($writtenBytes / $estimatedSizeNeeded) * 100);
                     throw ThresholdException::thresholdHit(sprintf(__('Checking if there is enough free disk space to restore... (%d%%)', 'wp-staging'), $percentage));
                 }
+
                 $timesWritten = 0;
             }
         }

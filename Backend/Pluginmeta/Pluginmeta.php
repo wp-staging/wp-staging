@@ -2,14 +2,8 @@
 
 namespace WPStaging\Backend\Pluginmeta;
 
-/*
- *  Admin Plugins Meta Data
- */
+/* Admin Plugins Meta Data */
 
-// No Direct Access
-if (!defined("WPINC")) {
-    die;
-}
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\PluginInfo;
 

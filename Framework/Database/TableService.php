@@ -334,6 +334,7 @@ class TableService
             $tableName = current($tableObj);
             $wpdb->query("DROP TABLE IF EXISTS `$tableName`");
         }
+
         return true;
     }
 

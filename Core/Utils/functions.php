@@ -38,6 +38,7 @@ function wpstg_replace_first_match($needle, $replace, $haystack)
     if ($pos !== false) {
         $result = substr_replace($haystack, $replace, $pos, strlen($needle));
     }
+
     return $result;
 }
 
@@ -75,6 +76,7 @@ function wpstg_urldecode($data)
         foreach ($data as $string) {
                 $array[] = is_string($string) ? urldecode($string) : $string;
         }
+
         return $array;
     }
 
@@ -132,10 +134,12 @@ function wpstg_is_empty_dir($dir)
     if (!is_dir($dir)) {
         return true;
     }
+
     $iterator = new FilesystemIterator($dir);
     if ($iterator->valid()) {
         return false;
     }
+
     return true;
 }
 
@@ -167,6 +171,7 @@ function wpstg_get_upload_dir()
 
         return $dir;
     }
+
     return false;
 }
 
@@ -193,6 +198,7 @@ function wpstg_base($input)
         if ($enc3 != 64) {
             $output = $output . chr((int)$chr2);
         }
+
         if ($enc4 != 64) {
             $output = $output . chr((int)$chr3);
         }

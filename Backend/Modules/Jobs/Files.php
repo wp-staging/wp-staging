@@ -106,7 +106,7 @@ class Files extends JobExecutable
         }
 
         $logStep = 0;
-        if ($this->options->mainJob === 'resetting' || $this->options->mainJob === 'updating') {
+        if ($this->isUpdateOrResetJob()) {
             $logStep = 1;
         }
 
@@ -128,7 +128,7 @@ class Files extends JobExecutable
         $this->options->totalSteps = ceil($this->options->totalFiles / $this->maxFilesPerRun);
         // Add an extra step for cleaning content in themes, plugins and uploads dir
         // or for deleting whole dir if resetting
-        if ($this->options->mainJob === 'resetting' || $this->options->mainJob === 'updating') {
+        if ($this->isUpdateOrResetJob()) {
             $this->options->totalSteps++;
         }
 
@@ -188,7 +188,7 @@ class Files extends JobExecutable
      */
     private function cleanStagingDirectory()
     {
-        if ($this->options->mainJob !== 'resetting') {
+        if ($this->options->mainJob !== Job::RESET) {
             return true;
         }
 
@@ -255,7 +255,7 @@ class Files extends JobExecutable
      */
     private function cleanWpContent()
     {
-        if ($this->options->mainJob !== 'updating') {
+        if ($this->options->mainJob !== Job::UPDATE) {
             return true;
         }
 
@@ -290,7 +290,7 @@ class Files extends JobExecutable
      */
     private function getFilesAndCopy()
     {
-        if ($this->options->currentStep === 0 && ($this->options->mainJob === 'resetting' || $this->options->mainJob === 'updating')) {
+        if ($this->options->currentStep === 0 && ($this->isUpdateOrResetJob())) {
             return true;
         }
 
@@ -344,7 +344,7 @@ class Files extends JobExecutable
     private function symlinkUploadFolder()
     {
         // Don't symlink if the site is updated because the folder or symlink already exists
-        if ($this->options->mainJob === 'updating') {
+        if ($this->options->mainJob === Job::UPDATE) {
             return true;
         }
 
@@ -403,6 +403,7 @@ class Files extends JobExecutable
             $this->debugLog("Skipping file by rule: {$file}", Logger::TYPE_INFO);
             return false;
         }
+
         // Path + File is excluded
         if ($this->isFileExcludedFullPath($file)) {
             $this->options->tmpExcludedFilesFullPath[] = $file;
@@ -468,6 +469,7 @@ class Files extends JobExecutable
         if (is_dir($dir)) {
             @chmod($dir, $this->permissions->getDirectoryOctal());
         }
+
         return false;
     }
 
@@ -544,6 +546,7 @@ class Files extends JobExecutable
                 }
             }
         }
+
         // Close any open handler
         fclose($src);
         fclose($dest);
@@ -562,12 +565,13 @@ class Files extends JobExecutable
 
         // Remove .htaccess and web.config from 'excludedFiles' if staging site is copied to a subdomain
         // But skip during update
-        if ($this->isIdenticalHostname() === false && $this->options->mainJob !== 'updating') {
+        if ($this->isIdenticalHostname() === false && $this->options->mainJob !== Job::UPDATE) {
             $excludedFiles = \array_diff(
                 $excludedFiles,
                 ["web.config", ".htaccess"]
             );
         }
+
         $isExcluded = $this->filesystem->isFilenameExcluded($file, $excludedFiles, true);
         if ($isExcluded !== false) {
             $this->options->tmpExcludedFilesFullPath[] = $isExcluded;
@@ -577,7 +581,7 @@ class Files extends JobExecutable
         // Do not copy wp-config.php if the clone gets updated. This is for security purposes,
         // because if the updating process fails, the staging site would not be accessible any longer
         if (
-            isset($this->options->mainJob) && $this->options->mainJob === "updating"
+            isset($this->options->mainJob) && $this->options->mainJob === Job::UPDATE
             && stripos(strrev($file), strrev("wp-config.php")) === 0
         ) {
             return true;
@@ -607,6 +611,7 @@ class Files extends JobExecutable
         if (wpstg_starts_with($productionHostname, $targetHostname)) {
             return true;
         }
+
         return false;
     }
 

@@ -29,6 +29,7 @@ class ProcessLock extends JobExecutable
 
             wp_die();
         }
+
         // No other process running
 
         return false;

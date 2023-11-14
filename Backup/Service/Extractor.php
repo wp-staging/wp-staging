@@ -64,7 +64,7 @@ class Extractor
     public function __construct(PathIdentifier $pathIdentifier, Directory $directory, DiskWriteCheck $diskWriteCheck)
     {
         $this->pathIdentifier = $pathIdentifier;
-        $this->directory = $directory;
+        $this->directory      = $directory;
         $this->diskWriteCheck = $diskWriteCheck;
     }
 
@@ -76,9 +76,9 @@ class Extractor
     public function inject(JobRestoreDataDto $jobRestoreDataDto, LoggerInterface $logger)
     {
         $this->jobRestoreDataDto = $jobRestoreDataDto;
-        $this->wpstgFile = new FileObject($this->jobRestoreDataDto->getFile());
-        $this->dirRestore = $this->jobRestoreDataDto->getTmpDirectory();
-        $this->logger = $logger;
+        $this->wpstgFile         = new FileObject($this->jobRestoreDataDto->getFile());
+        $this->dirRestore        = $this->jobRestoreDataDto->getTmpDirectory();
+        $this->logger            = $logger;
     }
 
     /**
@@ -184,8 +184,8 @@ class Extractor
     {
         try {
             $this->wpstgFile = new FileObject($filePath);
-            $metadata = new BackupMetadata();
-            $metadata = $metadata->hydrateByFile($this->wpstgFile);
+            $metadata        = new BackupMetadata();
+            $metadata        = $metadata->hydrateByFile($this->wpstgFile);
             $this->jobRestoreDataDto->setCurrentFileHeaderStart($metadata->getHeaderStart());
         } catch (Exception $ex) {
             throw new MissingFileException(sprintf("Following backup part missing: %s", $filePath));
@@ -235,7 +235,7 @@ class Extractor
         }
 
         $destinationFilePath = $this->extractingFile->getBackupPath();
-        if (filesize($destinationFilePath) === 0 && $this->extractingFile->getTotalBytes() !== 0) {
+        if (file_exists($destinationFilePath) && filesize($destinationFilePath) === 0 && $this->extractingFile->getTotalBytes() !== 0) {
             throw new \RuntimeException(sprintf('File %s is empty', $destinationFilePath));
         }
 

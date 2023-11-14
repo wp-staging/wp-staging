@@ -130,6 +130,7 @@ class Container extends \WPStaging\Vendor\lucatume\DI52\Container
         if (defined('WPSTG_DEV') && WPSTG_DEV) {
             parent::bind(str_replace($this->prefix, '', $classOrInterface), $implementation, $afterBuildMethods);
         }
+
         parent::bind($classOrInterface, $implementation, $afterBuildMethods);
     }
 
@@ -145,6 +146,7 @@ class Container extends \WPStaging\Vendor\lucatume\DI52\Container
         if (defined('WPSTG_DEV') && WPSTG_DEV) {
             parent::singleton(str_replace($this->prefix, '', $classOrInterface), $implementation, $afterBuildMethods);
         }
+
         parent::singleton($classOrInterface, $implementation, $afterBuildMethods);
     }
 }

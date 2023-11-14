@@ -130,6 +130,7 @@ class JobRestoreDataDto extends JobDataDto
 
             return;
         }
+
         if (is_array($backupMetadata)) {
             try {
                 $this->backupMetadata = (new BackupMetadata())->hydrate($backupMetadata);

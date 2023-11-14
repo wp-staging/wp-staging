@@ -24,6 +24,7 @@
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
     define('WPSTG_OPTIMIZER_VERSION', '1.5.4');
 }
+
 if (!function_exists('wpstgGetPluginsDir')) {
     /** @return string */
     function wpstgGetPluginsDir(): string
@@ -103,6 +104,7 @@ if (!function_exists('wpstgExcludePlugins')) {
             if (strpos($plugin, 'wp-staging') !== false || wpstgIsExcludedPlugin($plugin)) {
                 continue;
             }
+
             unset($plugins[$key]);
         }
 
@@ -228,6 +230,7 @@ if (!function_exists('wpstgTgmpaCompatibility')) {
         if (isset($_GET['page']) && $_GET['page'] == 'wpstg_clone') {
             $remove_function = true;
         }
+
         // run on wpstg ajax requests
         if (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && strpos(sanitize_text_field($_POST['action']), 'wpstg') !== false) {
             $remove_function = true;

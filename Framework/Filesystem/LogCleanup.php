@@ -35,6 +35,7 @@ class LogCleanup
                     unlink($splFileInfo->getPathname());
                     continue;
                 }
+
                 if ($splFileInfo->getMTime() < strtotime("-$deleteOlderThanDays days")) {
                     // Not silenced nor logged
                     unlink($splFileInfo->getPathname());

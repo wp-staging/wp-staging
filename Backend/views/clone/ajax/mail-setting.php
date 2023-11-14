@@ -19,6 +19,7 @@ $emailsAllowed   = true;
 if (!$isPro) {
     $settingsEnabled = false;
 }
+
 // Only change default check status when clone options exists plugin is PRO
 if ($isPro && !empty($options->current)) {
     /**

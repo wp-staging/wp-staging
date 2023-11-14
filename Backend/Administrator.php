@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backend;
 
+use WPStaging\Backend\Modules\Jobs\Job;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
@@ -131,7 +132,7 @@ class Administrator
         }
 
         add_action("admin_init", [$this, "upgrade"]);
-        add_action("admin_post_wpstg_download_sysinfo", [$this, "systemInfoDownload"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action("admin_post_wpstg_download_sysinfo", [$this, "downloadSystemInfoAndLogFiles"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         if (!defined('WPSTGPRO_VERSION') && $this->isPluginsPage()) {
             add_filter('admin_footer', [$this, 'loadFeedbackForm']);
@@ -378,6 +379,7 @@ class Administrator
         if (defined('WPSTGPRO_VERSION')) {
             return;
         }
+
         require_once "{$this->path}views/welcome/welcome.php";
     }
 
@@ -402,9 +404,10 @@ class Administrator
     }
 
     /**
-     * System Information Download
+     * Download System Information and latest log files.
+     * @return void
      */
-    public function systemInfoDownload()
+    public function downloadSystemInfoAndLogFiles()
     {
         if (!current_user_can("update_plugins")) {
             return;
@@ -420,6 +423,17 @@ class Administrator
         echo esc_html(PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL);
         $wpCoreDebugLog =  WPStaging::make(DebugLogReader::class)->getLastLogEntries((256 * KB_IN_BYTES ), false, true);
         echo esc_html(wp_strip_all_tags($wpCoreDebugLog));
+
+        $latestLogFiles = WPStaging::make(DebugLogReader::class)->getLatestLogFiles();
+        if (count($latestLogFiles) === 0) {
+            return;
+        }
+
+        foreach ($latestLogFiles as $logFile) {
+            echo esc_html(PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL);
+            $logs = file_get_contents($logFile);
+            echo esc_html($logs);
+        }
     }
 
     /**
@@ -631,7 +645,7 @@ class Administrator
         }
 
         $cloning = WPStaging::make(Updating::class);
-        $cloning->setMainJob(Updating::RESET_UPDATE);
+        $cloning->setMainJob(Job::RESET);
         if (!$cloning->save()) {
             wp_die('can not save clone data');
         }
@@ -763,6 +777,7 @@ class Administrator
         if (!$this->isAuthenticated()) {
             return;
         }
+
         $delete = WPStaging::make(Delete::class);
 
         wp_send_json($delete->start());
@@ -1082,6 +1097,7 @@ class Administrator
         if (empty($args)) {
             $args = stripslashes_deep($_POST);
         }
+
         // Set e-mail
         $emailRecipient = null;
         if (isset($args['wpstg_email'])) {

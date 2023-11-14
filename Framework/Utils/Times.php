@@ -149,6 +149,7 @@ class Times
             if (!((bool)preg_match('/^([0-9]+):([0-5]?[0-9]):([0-5]?[0-9])$/', $duration))) {
                 return false;
             }
+
             // Three parts: hours, minutes & seconds.
             list($second, $minute, $hour) = $duration_parts;
         } elseif (2 === $duration_count) {
@@ -156,6 +157,7 @@ class Times
             if (!((bool)preg_match('/^([0-5]?[0-9]):([0-5]?[0-9])$/', $duration))) {
                 return false;
             }
+
             // Two parts: minutes & seconds.
             list($second, $minute) = $duration_parts;
         } else {
@@ -213,6 +215,7 @@ class Times
             if ($secs <= 1) {
                 $secs = 1;
             }
+
             /* translators: Time difference between two dates, in seconds. %s: Number of seconds. */
             $since = sprintf(_n('%s second', '%s seconds', $secs, 'wp-staging'), $secs);
         } elseif ($diff < HOUR_IN_SECONDS) {
@@ -220,6 +223,7 @@ class Times
             if ($mins <= 1) {
                 $mins = 1;
             }
+
             /* translators: Time difference between two dates, in minutes (min=minute). %s: Number of minutes. */
             $since = sprintf(_n('%s min', '%s mins', $mins, 'wp-staging'), $mins);
         } elseif ($diff < DAY_IN_SECONDS) {
@@ -227,6 +231,7 @@ class Times
             if ($hours <= 1) {
                 $hours = 1;
             }
+
             /* translators: Time difference between two dates, in hours. %s: Number of hours. */
             $since = sprintf(_n('%s hour', '%s hours', $hours, 'wp-staging'), $hours);
         } elseif ($diff < WEEK_IN_SECONDS) {
@@ -234,6 +239,7 @@ class Times
             if ($days <= 1) {
                 $days = 1;
             }
+
             /* translators: Time difference between two dates, in days. %s: Number of days. */
             $since = sprintf(_n('%s day', '%s days', $days, 'wp-staging'), $days);
         } elseif ($diff < MONTH_IN_SECONDS) {
@@ -241,6 +247,7 @@ class Times
             if ($weeks <= 1) {
                 $weeks = 1;
             }
+
             /* translators: Time difference between two dates, in weeks. %s: Number of weeks. */
             $since = sprintf(_n('%s week', '%s weeks', $weeks, 'wp-staging'), $weeks);
         } elseif ($diff < YEAR_IN_SECONDS) {
@@ -248,6 +255,7 @@ class Times
             if ($months <= 1) {
                 $months = 1;
             }
+
             /* translators: Time difference between two dates, in months. %s: Number of months. */
             $since = sprintf(_n('%s month', '%s months', $months, 'wp-staging'), $months);
         } elseif ($diff >= YEAR_IN_SECONDS) {
@@ -255,6 +263,7 @@ class Times
             if ($years <= 1) {
                 $years = 1;
             }
+
             /* translators: Time difference between two dates, in years. %s: Number of years. */
             $since = sprintf(_n('%s year', '%s years', $years, 'wp-staging'), $years);
         }

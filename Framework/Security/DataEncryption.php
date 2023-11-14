@@ -85,6 +85,7 @@ class DataEncryption
             if (!isset($pad[$x])) {
                 $x = 0;
             }
+
             $padi = $pad[$x];
             $encrypted .= chr(ord($value[$i]) ^ ord($padi));
         }
@@ -115,6 +116,7 @@ class DataEncryption
             if (!isset($pad[$x])) {
                 $x = 0;
             }
+
             $padi = $pad[$x];
             $decrypted .= chr(ord($encrypted[$i]) ^ ord($padi));
         }

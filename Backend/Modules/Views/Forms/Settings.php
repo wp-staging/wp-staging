@@ -193,6 +193,7 @@ class Settings
                    ->setDefault((isset($settings->disableAdminLogin)) ? $settings->disableAdminLogin : null)
             );
         }
+
         // Keep permalinks
         if (defined('WPSTGPRO_VERSION')) {
             $element = new Check(
@@ -276,6 +277,7 @@ class Settings
         foreach (get_editable_roles() as $key => $value) {
             $userRoles[$key] = $key;
         }
+
         return array_merge(['all' => __('Allow access from all visitors', 'wp-staging')], $userRoles);
     }
 

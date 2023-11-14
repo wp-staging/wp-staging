@@ -140,6 +140,7 @@ class BufferedCacheStorage implements StorageInterface, ShutdownableInterface
         if (!$item) {
             return null;
         }
+
         $item = isset($item[1]) ? $item[1] : $item[0];
         $this->cache->deleteBottomBytes(strlen($item));
         return $item;
@@ -162,6 +163,7 @@ class BufferedCacheStorage implements StorageInterface, ShutdownableInterface
         if (!file_exists($this->cache->getFilePath())) {
             return 0;
         }
+
         clearstatcache();
         return (int) filesize($this->cache->getFilePath());
     }

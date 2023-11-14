@@ -53,11 +53,14 @@ class Glob
                 if ($strictLeadingDot && '.' !== $car) {
                     $regex .= '(?=[^\\.])';
                 }
+
                 $firstByte = \false;
             }
+
             if ('/' === $car) {
                 $firstByte = \true;
             }
+
             if ($delimiter === $car || '.' === $car || '(' === $car || ')' === $car || '|' === $car || '+' === $car || '^' === $car || '$' === $car) {
                 $regex .= "\\{$car}";
             } elseif ('*' === $car) {
@@ -89,6 +92,7 @@ class Glob
             }
             $escaping = \false;
         }
+
         return $delimiter . '^' . $regex . '$' . $delimiter;
     }
 }

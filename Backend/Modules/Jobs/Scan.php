@@ -261,16 +261,16 @@ class Scan extends Job
         $this->options->totalSteps  = 0;
 
         // Define mainJob to differentiate between cloning, updating and pushing
-        $this->options->mainJob = 'cloning';
+        $this->options->mainJob = Job::STAGING;
         $job                    = '';
         if (isset($_POST["job"])) {
             $job = $this->sanitize->sanitizeString($_POST['job']);
         }
 
         if ($this->options->current !== null && $job === 'resetting') {
-            $this->options->mainJob = 'resetting';
+            $this->options->mainJob = Job::RESET;
         } elseif ($this->options->current !== null) {
-            $this->options->mainJob = 'updating';
+            $this->options->mainJob = Job::UPDATE;
         }
 
         // Delete previous cached files
@@ -680,16 +680,6 @@ class Scan extends Job
     protected function isPathInDirectories($path, $directories)
     {
         return $this->pathChecker->isPathInPathsList($path, $directories, true);
-    }
-
-    /**
-     * Is the current main job UPDATE or RESET
-     *
-     * @return bool
-     */
-    protected function isUpdateOrResetJob()
-    {
-        return isset($this->options->mainJob) && ($this->options->mainJob === 'updating' || $this->options->mainJob === 'resetting');
     }
 
     /**

@@ -79,9 +79,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
         // Set log directory
         if (!empty($logDir) && is_dir($logDir)) {
             $this->logDir = rtrim($logDir, "/\\") . DIRECTORY_SEPARATOR;
-        }
-        // Set default
-        else {
+        } else {
+            // Set default
             $this->logDir = WPStaging::getContentDir() . "logs" . DIRECTORY_SEPARATOR;
         }
 

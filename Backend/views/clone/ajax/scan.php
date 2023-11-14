@@ -10,6 +10,7 @@
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
 
+use WPStaging\Backend\Modules\Jobs\Job;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Sanitize;
 
@@ -79,9 +80,10 @@ $isPro = defined('WPSTGPRO_VERSION');
         <?php
         require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
         require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
-        if ($options->mainJob === 'cloning') {
+        if ($options->mainJob === Job::STAGING) {
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'cron-setting.php');
         }
+
         require_once(__DIR__ . DIRECTORY_SEPARATOR . 'mail-setting.php');
         ?>
     </div>
@@ -89,7 +91,7 @@ $isPro = defined('WPSTGPRO_VERSION');
 
 <?php
 
-if ($options->current !== null && $options->mainJob === 'updating') {
+if ($options->current !== null && $options->mainJob === Job::UPDATE) {
     $uploadsSymlinked = isset($options->existingClones[$options->current]['uploadsSymlinked']) ? (bool)$options->existingClones[$options->current]['uploadsSymlinked'] : false;
 
     ?>
@@ -130,7 +132,7 @@ if ($options->current !== null && $options->mainJob === 'updating') {
  $label  = esc_html__("Start Cloning", "wp-staging");
  $action = 'wpstg_cloning';
  $btnId  = 'wpstg-start-cloning';
-if ($options->current !== null && $options->mainJob === 'updating') {
+if ($options->current !== null && $options->mainJob === Job::UPDATE) {
     $label  = esc_html__("Update Clone", "wp-staging");
     $action = 'wpstg_update';
     $btnId  = 'wpstg-start-updating';

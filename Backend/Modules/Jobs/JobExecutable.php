@@ -116,6 +116,7 @@ abstract class JobExecutable extends Job
             if (!$this->execute()) {
                 break;
             }
+
             // Return after every step to create lower batches
             // This also gets a smoother progress bar and to a less consumptive php cpu load
             // This decrease performance tremendous but also lowers memory consumption

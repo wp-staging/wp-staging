@@ -19,16 +19,6 @@ use WPStaging\Framework\Utils\WpDefaultDirectories;
 class Updating extends Job
 {
     /**
-     * @var string
-     */
-    const NORMAL_UPDATE = 'updating';
-
-    /**
-     * @var string
-     */
-    const RESET_UPDATE = 'resetting';
-
-    /**
      * External Database Used
      * @var bool
      */
@@ -59,7 +49,7 @@ class Updating extends Job
      */
     public function initialize()
     {
-        $this->mainJob  = self::NORMAL_UPDATE;
+        $this->mainJob  = Job::UPDATE;
         $this->dirUtils = new WpDefaultDirectories();
         $this->sanitize = WPStaging::make(Sanitize::class);
         $this->urls     = WPStaging::make(Urls::class);
@@ -155,7 +145,7 @@ class Updating extends Job
             $this->options->homeHostname        = $this->urls->getHomeUrlWithoutScheme();
         } else {
             $job = 'update';
-            if ($this->mainJob === self::RESET_UPDATE) {
+            if ($this->mainJob === Job::RESET) {
                 $job = 'reset';
             }
 
@@ -207,6 +197,7 @@ class Updating extends Job
         if (empty($this->options->cloneDir)) {
             return trailingslashit(WPStaging::getWPpath() . $this->options->cloneDirectoryName);
         }
+
         return trailingslashit($this->options->cloneDir);
     }
 

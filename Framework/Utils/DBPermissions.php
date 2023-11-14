@@ -47,6 +47,7 @@ class DBPermissions
         if ($type === 'push') {
             $message = __("The database user might not have sufficient permissions to use the push action. Continue the process anyway by clicking the 'Proceed' button or alter the user's DB permissions and resume the process.<br/><br/> Required permissions are: CREATE, UPDATE, ALTER, INSERT, DROP.", 'wp-staging');
         }
+
         $message = '<span id="wpstg-permission-info-output">' . $message . '</span>';
         $message .= '<span id="wpstg-permission-info-data">' . $this->getDebugInfo() . '</span>';
         $message .= '<br/><br/><button type="button" id="wpstg-db-permission-show-full-message" class="wpstg-link-btn wpstg-blue-primary">' . __("Show Full Message", "wp-staging") . '</button>';
@@ -77,6 +78,7 @@ class DBPermissions
                         return false;
                     }
                 }
+
                 return true;
             }
         });
@@ -103,6 +105,7 @@ class DBPermissions
             $data .= PHP_EOL . __('wpdb query error: ', 'wp-staging') . $this->wpdb->last_error;
             return wp_kses_post($data);
         }
+
         $grantsHtml = '';
         foreach ($grants as $grant) {
             $grantsHtml .= PHP_EOL . (new ArrayIterator($grant))->current() . ';';

@@ -85,6 +85,7 @@ class Feedback
         if ($success) {
             wp_die(1);
         }
+
         wp_die(0);
     }
 }

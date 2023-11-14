@@ -155,6 +155,7 @@ class ExtendedInserterWithoutTransaction extends QueryInserter
             if (!empty($this->extendedQuery)) {
                 throw new \UnexpectedValueException('Query is not empty, cannot proceed.');
             }
+
             $this->jobRestoreDataDto->setTableToRestore($insertingIntoTableName);
             $this->extendedQuery .= $insertingIntoHeader;
             $isFirstValue = true;

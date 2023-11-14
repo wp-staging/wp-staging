@@ -170,6 +170,7 @@ class Assets
         if ($this->isDebugOrDevMode()) {
             $asset = 'js/dist/wpstg-admin.js';
         }
+
         wp_enqueue_script(
             "wpstg-admin-script",
             $this->getAssetsUrl($asset),
@@ -183,6 +184,7 @@ class Assets
         if ($this->isDebugOrDevMode()) {
             $asset = 'js/dist/wpstg-sweetalert2.js';
         }
+
         wp_enqueue_script(
             'wpstg-admin-sweetalerts',
             $this->getAssetsUrl($asset),
@@ -195,6 +197,7 @@ class Assets
         if ($this->isDebugOrDevMode()) {
             $asset = 'css/dist/wpstg-sweetalert2.css';
         }
+
         wp_enqueue_style(
             'wpstg-admin-sweetalerts',
             $this->getAssetsUrl($asset),

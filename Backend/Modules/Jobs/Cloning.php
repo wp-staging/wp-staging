@@ -147,12 +147,11 @@ class Cloning extends Job
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
             $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;
-
             $this->options->prefix = isset($this->options->existingClones[$this->options->clone]->prefix) ? $this->options->existingClones[$this->options->clone]->prefix : $this->setStagingPrefix();
-        }
+
         // Clone does not exist but there are other clones in db
         // Get data and increment it
-        elseif (!empty($this->options->existingClones)) {
+        } elseif (!empty($this->options->existingClones)) {
             $this->options->cloneNumber = count($this->options->existingClones) + 1;
         }
 
@@ -352,6 +351,7 @@ class Cloning extends Job
         if (empty($this->options->cloneHostname)) {
             return $this->urls->getHomeUrlWithoutScheme();
         }
+
         return $this->getHostnameWithoutScheme($this->options->cloneHostname);
     }
 
@@ -396,6 +396,7 @@ class Cloning extends Job
                 $this->options->cloneHostname = trailingslashit($this->dirAdapter->getStagingSiteUrl()) . $this->options->cloneDirectoryName;
             }
         }
+
         $this->options->cloneDir = trailingslashit($cloneDestinationPath);
         return $this->options->cloneDir;
     }
@@ -412,6 +413,7 @@ class Cloning extends Job
         if ($lastCharacter === '_') {
             return $string;
         }
+
         return $string . '_';
     }
 
@@ -610,13 +612,13 @@ class Cloning extends Job
         $jobName = empty($this->options->mainJob) ? 'Unknown' : $this->options->mainJob;
 
         switch ($jobName) {
-            case 'updating':
+            case Job::UPDATE:
                 $jobName = 'Update';
                 break;
-            case 'resetting':
+            case Job::RESET:
                 $jobName = 'Reset';
                 break;
-            case 'cloning':
+            case Job::STAGING:
                 $jobName = 'Cloning';
                 break;
             default:

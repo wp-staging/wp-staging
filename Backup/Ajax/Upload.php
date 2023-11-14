@@ -151,6 +151,7 @@ class Upload extends AbstractTemplateComponent
                 if (file_exists($fullPath) && is_file($fullPath)) {
                     unlink($fullPath);
                 }
+
                 wp_send_json_error([
                     'message' => $e->getMessage(),
                     'backupFailedValidation' => true,

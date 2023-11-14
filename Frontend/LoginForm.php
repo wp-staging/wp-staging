@@ -62,6 +62,7 @@ class LoginForm
             if (defined('WPSTGPRO_VERSION')) {
                 $msg = sprintf(__('Incorrect credentials! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
             }
+
             $this->error = $msg;
             return false;
         }
@@ -86,6 +87,7 @@ class LoginForm
             if (defined('WPSTGPRO_VERSION')) {
                 $msg = sprintf(__('Login not possible! Only administrators or explicitly authorized users can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
             }
+
             $this->error = $msg;
         }
 

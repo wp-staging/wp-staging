@@ -120,6 +120,7 @@ class Hash {
 
             $this->addVars( $a, $b, $c, $d, $A, $B, $C, $D );
         }
+
         $nonce = '';
         foreach ( [$a, $b, $c, $d] as $x ) {
             $nonce .= implode( '', array_reverse( str_split( $this->leftpad( $x, 8 ), 2 ) ) );
@@ -158,6 +159,7 @@ class Hash {
         for ( $i = 0; $i < strlen( $str ); $i++ ) {
             $bin .= $hexbinmap[$str[$i]];
         }
+
         $bin = ltrim( $bin, '0' );
         // echo "Original: ".$str."  New: ".$bin."<br />";
         return $bin;
@@ -168,6 +170,7 @@ class Hash {
         for ( $i = 0; $i < strlen( $str ); $i++ ) {
             $hex = $hex . $this->leftpad( dechex( ord( $str[$i] ) ), 2 );
         }
+
         return $hex;
     }
 
@@ -198,9 +201,9 @@ class Hash {
                     $bin = $bin . "0";
                 }
             }
-        }
+
         // append length (b) of string to latter 64 bits
-        elseif( $type == 1 ) {
+        } elseif( $type == 1 ) {
             $bLen = $this->leftpad( decbin( $len ), 64 );
             $bin .= implode( '', array_reverse( str_split( $bLen, 8 ) ) );
         }
@@ -318,6 +321,7 @@ class Hash {
             $left_pad      = implode( '', array_fill( 0, $pad_amount, '0' ) );
             $needs_padding = $left_pad . $needs_padding;
         }
+
         return $needs_padding;
     }
 

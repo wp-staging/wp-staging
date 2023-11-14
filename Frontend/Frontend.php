@@ -70,6 +70,7 @@ class Frontend
                 wp_logout();
                 $this->loginForm->setError(__('Access Denied', 'wp-staging'));
             }
+
             $overrides = [
                 'label_username' => __('Username or Email Address', 'wp-staging'),
             ];

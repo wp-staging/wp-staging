@@ -147,6 +147,20 @@ class Report
             $this->copyDataToFile($destinationDebugLogFilePath, $this->debugLogReader->getLastLogEntries(512 * KB_IN_BYTES, false));
             $attachments[] = $destinationDebugLogFilePath;
         }
+
+        $latestLogFiles = $this->debugLogReader->getLatestLogFiles();
+        if (count($latestLogFiles) === 0) {
+            return $attachments;
+        }
+
+        foreach ($latestLogFiles as $logFilePrefix => $logFile) {
+            if (file_exists($logFile)) {
+                $destinationLogFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . $logFilePrefix . '.log';
+                $this->copyDataToFile($destinationLogFilePath, @file_get_contents($logFile));
+                $attachments[] = $destinationLogFilePath;
+            }
+        }
+
         return $attachments;
     }
 

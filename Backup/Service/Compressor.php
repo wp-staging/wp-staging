@@ -589,6 +589,7 @@ class Compressor
                 if (substr($identifiablePath, -4) === '.sql') {
                     $partName = 'sqlSize';
                 }
+
                 break;
             case ($this->pathIdentifier::IDENTIFIER_LANG === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_LANG))):
                 $partName = 'langSize';

@@ -49,6 +49,7 @@ class SourceDatabase
         if ($this->isExternalDatabase()) {
             return $this->getExternalDb();
         }
+
         return $this->wpdb;
     }
 
