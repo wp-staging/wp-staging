@@ -268,14 +268,7 @@ class Extractor
 
         wp_mkdir_p(dirname($destinationFilePath));
 
-        // On some servers, sometimes fopen() can not create files. Seems to be caused by big files
-        // Issue: #2560, #2576
-        if (!file_exists($destinationFilePath)) {
-            // touch() didn't work consistently on a client server, but file_put_contents() worked
-            // also file_put_contents performs better than touch()
-            // @see https://github.com/wp-staging/wp-staging-pro/issues/2807
-            file_put_contents($destinationFilePath, '');
-        }
+        $this->createEmptyFile($destinationFilePath);
 
         $destinationFileResource = @fopen($destinationFilePath, FileObject::MODE_APPEND);
 
@@ -289,6 +282,7 @@ class Extractor
 
             if ($writtenBytes === false || $writtenBytes <= 0) {
                 fclose($destinationFileResource);
+                $destinationFileResource = null;
                 throw DiskNotWritableException::diskNotWritable();
             }
 
@@ -296,5 +290,45 @@ class Extractor
         }
 
         fclose($destinationFileResource);
+        $destinationFileResource = null;
+    }
+
+    /**
+     * On some servers, sometimes fopen() can not create files. Seems to be caused by big files
+     * Issue: #2560, #2576
+     *
+     * @param string $filePath
+     * @return bool
+     */
+    protected function createEmptyFile(string $filePath): bool
+    {
+        // Early bail: file already exists
+        if (file_exists($filePath)) {
+            return true;
+        }
+
+        // touch() didn't work consistently on a client server, but file_put_contents() worked
+        // also file_put_contents performs better than touch()
+        // @see https://github.com/wp-staging/wp-staging-pro/issues/2807
+        return $this->filePutContents($filePath, '') !== false;
+    }
+
+    /**
+     * file_put_contents doesn't release the resource properly. This is a workaround to release the resource properly
+     * @see https://github.com/wp-staging/wp-staging-pro/issues/2868
+     * @param string $filePath
+     * @param string $content
+     * @return bool
+     */
+    protected function filePutContents(string $filePath, string $content): bool
+    {
+        if ($fp = fopen($filePath, 'wb')) {
+            $bytes = fwrite($fp, $content);
+            fclose($fp);
+            $fp = null; // This is important to release the resource properly
+            return $bytes;
+        }
+
+        return false;
     }
 }

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.4
-Stable tag: 3.1.2
+Stable tag: 3.1.3
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -271,19 +271,24 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 
 == Changelog ==
 
+= 3.1.3 =
+* Fix: There was a potential security vulnerability due to which a malicious user could eventually exploit and access the wp staging cache folder. This issue is now fixed. The security issue was found by Thanks to Dmitrii Ignatyev from cleantalk.org. #2908
+* Fix: Siteground related issue: file_put_contents() doesn't free up resource automatically immediately, which caused error 500 during backup extraction on SiteGround hosting (due to limited resources). #2868
+* Fix: For domain based subsites during backup restore, home and site_url were not adjusted properly automatically. #2857
+
 = 3.1.2 =
 * New: Compatible up to WordPress 6.4.1
 * New: Add latest cloning, pushing, backup and backup restore logs when the user downloads the log files or opens support ticket and share debug information. #2806
 * Fix: Warnings in WordPress 6.4 because WordPress removed property $wpdb->use_mysqli. This could lead to a backup error. #2881
 * Dev: Add missing twentytwentyone theme to multi_tests to make backup tests work. #2888
-* Dev: Add a Sniff rule to check for proper use of esc_html_e. #2875
+* Dev: Add a Sniff rule to check for proper use of esc_html_e in backup related code. #2875
 * Dev: Use cache and run unit tests in parallel to reduce time taken by fast backup tests. #2862
 * Dev: Fix DB version in DB seed file for multisites backup tests. #2891
 * Dev: Fix issue with WP CLI e2e backup test not running due to missing core plugin. #2896
 * Dev: Add make command to update DB backup seed files. #2893
 * Dev: Make sure that the .gitignore file remains intact and doesn't get deleted when running ./wpstg changelog:update command. #2873
 * Dev: PHPCS rule for adding a newline after "for, foreach, if" block statements. #2831
-* Dev: Use constants for job type for cloning/pushing process instead of hard coding them. #2850
+* Dev: Use constants for job type for cloning/pushing backup process instead of hard coding them. #2850
 
 = 3.1.1 =
 * New: Make WP Staging compatible up to PHP 8.3 RC. #2543

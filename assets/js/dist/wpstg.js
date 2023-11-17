@@ -1,5 +1,5 @@
 /**
- * version: 3.1.2
+ * version: 3.1.3
  */ 
  (function () {
   'use strict';

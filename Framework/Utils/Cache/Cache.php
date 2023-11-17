@@ -10,6 +10,12 @@ use WPStaging\Framework\Filesystem\FileObject;
 
 class Cache extends AbstractCache
 {
+    /** @var string */
+    const PHP_HEADER = "<?php exit(); ?>\n";
+
+    /** @var string */
+    const FILE_EXTENSION = 'cache.php';
+
     /**
      * @inheritDoc
      */
@@ -19,7 +25,13 @@ class Cache extends AbstractCache
             return $default;
         }
 
-        return json_decode(file_get_contents($this->filePath), true);
+        $content = file_get_contents($this->filePath);
+        if (strpos($content, self::PHP_HEADER) !== 0) {
+            return $default;
+        }
+
+        $content = substr($content, strlen(self::PHP_HEADER));
+        return json_decode(trim($content), true);
     }
 
     /**
@@ -28,9 +40,17 @@ class Cache extends AbstractCache
     public function save($value, $pretty = false)
     {
         if ($pretty) {
-            return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe(json_encode($value, JSON_PRETTY_PRINT));
-        } else {
-            return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe(json_encode($value));
+            return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe(self::PHP_HEADER . json_encode($value, JSON_PRETTY_PRINT));
         }
+
+        return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe(self::PHP_HEADER . json_encode($value));
+    }
+
+    /**
+     * @return string
+     */
+    protected function getFileExtension(): string
+    {
+        return self::FILE_EXTENSION;
     }
 }
