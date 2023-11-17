@@ -391,7 +391,7 @@ abstract class AbstractJob implements ShutdownableInterface
     protected function cleanup()
     {
         // This excludes all files except cache files from deleting i.e. only delete .cache files
-        $this->filesystem->setExcludePaths(['*.*', '!*.cache', '!*.wpstg', '!*.sql']);
+        $this->filesystem->setExcludePaths(['*.*', '!*.cache.php', '!*.cache', '!*.wpstg', '!*.sql']);
         $this->filesystem->delete($this->directory->getCacheDirectory(), $deleteSelf = false);
         $this->filesystem->setExcludePaths([]);
         $this->filesystem->mkdir($this->directory->getCacheDirectory(), true);

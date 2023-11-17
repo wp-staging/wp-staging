@@ -14,7 +14,10 @@ use function WPStaging\functions\debug_log;
 
 abstract class AbstractCache
 {
+    /** @var int */
     const DEFAULT_LIFETIME = 2592000; // 30 days
+
+    /** @var string */
     const EXTENSION        = 'cache';
 
     /** @var int */
@@ -155,11 +158,22 @@ abstract class AbstractCache
         return $this->lifetime <= time() - filemtime($this->filePath);
     }
 
+    /**
+     * @return string
+     */
+    protected function getFileExtension(): string
+    {
+        return self::EXTENSION;
+    }
+
+    /**
+     * @return void
+     */
     private function initializeFilePath()
     {
         $this->filePath = $this->path;
         if ($this->filename) {
-            $this->filePath .= $this->filename . '.' . self::EXTENSION;
+            $this->filePath .= $this->filename . '.' . $this->getFileExtension();
         }
     }
 }

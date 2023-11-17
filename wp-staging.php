@@ -4,7 +4,7 @@
  * Plugin Name: WP STAGING - Backup Duplicator & Migration
  * Plugin URI: https://wordpress.org/plugins/wp-staging
  * Description: Backup Restore
- * Version: 3.1.2
+ * Version: 3.1.3
  * Requires at least: 3.6+
  * Requires PHP: 7.0
  * Author: WP-STAGING, WPStagingBackup

@@ -21,11 +21,19 @@ class BufferedCache extends AbstractCache
 {
     use ResourceTrait;
 
+    /** @var string */
     const POSITION_TOP = 'top';
+
+    /** @var string */
     const POSITION_BOTTOM = 'bottom';
 
+    /** @var int */
     const AVERAGE_LINE_LENGTH = 4096;
 
+    /** @var string */
+    const FILE_EXTENSION = 'cache.php';
+
+    /** @var int */
     protected $chunkReadingSizeForAppendingFile = 500 * 1024; // 500KB
 
     /**
@@ -73,7 +81,7 @@ class BufferedCache extends AbstractCache
     }
 
     /**
-     * @param $value
+     * @param string $value
      * @return int
      * @throws DiskNotWritableException
      */
@@ -278,6 +286,7 @@ class BufferedCache extends AbstractCache
             fwrite($handle, $buffer);
             fseek($handle, $pos);
         }
+
         fflush($handle);
         ftruncate($handle, $size - $offset);
         flock($handle, LOCK_UN);
@@ -311,7 +320,7 @@ class BufferedCache extends AbstractCache
     }
 
     /**
-     * @param $default
+     * @param string|null $default
      * @return array|false|mixed|object|string|null
      * @throws IOException
      */
@@ -325,7 +334,7 @@ class BufferedCache extends AbstractCache
     }
 
     /**
-     * @param $value
+     * @param string $value
      * @return int
      * @throws DiskNotWritableException
      */
@@ -356,6 +365,7 @@ class BufferedCache extends AbstractCache
         while (!feof($handle)) {
             $total += substr_count(fread($handle, self::AVERAGE_LINE_LENGTH), PHP_EOL);
         }
+
         fclose($handle);
         return $total;
     }
@@ -461,6 +471,7 @@ class BufferedCache extends AbstractCache
                 break;
             }
         }
+
         return $bytesWrittenTotal;
     }
 }

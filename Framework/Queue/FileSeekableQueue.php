@@ -4,15 +4,20 @@ namespace WPStaging\Framework\Queue;
 
 use Error;
 use Exception;
+use RuntimeException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Utils\Cache\Cache;
 
 use function WPStaging\functions\debug_log;
 
 class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 {
+    /** @var string */
+    const FILE_EXTENSION = 'cache.php';
+
     /** @var string The string identifier of this task */
     protected $taskName;
 
@@ -49,21 +54,20 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     }
 
     /**
-     * @param        $taskName
+     * @param string $taskName
      * @param string $queueMode Either opens the Queue for read and write, or optimized to write-only.
+     * @return void
      */
     public function setup($taskName, $queueMode = SeekableQueueInterface::MODE_READ_WRITE)
     {
         $this->taskName = $taskName;
 
-        $path = "{$this->directory->getCacheDirectory()}$taskName.cache";
+        $extension = self::FILE_EXTENSION;
+        $path      = "{$this->directory->getCacheDirectory()}$taskName.$extension";
 
         $this->filesystem->mkdir(dirname($path), true);
 
-        if (!file_exists($path) && !touch($path)) {
-            debug_log("Check if there is enough free space and the file permissions are 644 or 755. Could not create file: $path");
-            throw new \RuntimeException(sprintf(esc_html__("Check if there is enough free space and the file permissions are 644 or 755. Could not create file: %s", 'wp-staging'), $path));
-        }
+        $isNewQueue = $this->createQueue($path);
 
         // Developer exception
         if ($queueMode !== SeekableQueueInterface::MODE_WRITE && $queueMode !== SeekableQueueInterface::MODE_READ_WRITE) {
@@ -98,8 +102,16 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
             $this->needsUnlock = true;
         }
+
+        // Add the PHP header to the queue if it is a new queue
+        if ($isNewQueue) {
+            $this->enqueue(Cache::PHP_HEADER);
+        }
     }
 
+    /**
+     * @return \Generator
+     */
     protected function initializeGenerator()
     {
         while ($this->handle->valid()) {
@@ -144,14 +156,17 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         $this->handle->fseek($offset);
     }
 
-    public function isFinished()
+    /**
+     * @return bool
+     */
+    public function isFinished(): bool
     {
         return $this->handle->eof();
     }
 
     /**
-     * @param $dequeue
-     * @return mixed|void
+     * @param bool $dequeue
+     * @return string|void
      */
     public function retry($dequeue = true)
     {
@@ -163,7 +178,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     }
 
     /**
-     * @param $data
+     * @param string $data
      * @return false|int
      */
     public function enqueue($data)
@@ -189,7 +204,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     }
 
     /**
-     * @return mixed
+     * @return string|false
      */
     public function dequeue()
     {
@@ -203,6 +218,12 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
             $this->next();
         }
 
+        $current = $this->current();
+        if ($current !== rtrim(Cache::PHP_HEADER)) {
+            return $current;
+        }
+
+        $this->next();
         return $this->current();
     }
 
@@ -221,6 +242,9 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         return $this->handle->ftell();
     }
 
+    /**
+     * @return void
+     */
     public function reset()
     {
         $this->handle->ftruncate(0);
@@ -249,6 +273,9 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
         }
     }
 
+    /**
+     * @return void
+     */
     protected function unlockObject()
     {
         try {
@@ -264,5 +291,24 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
                 debug_log("Unable to unlock handle " . $this->taskName . '.task : ' . $message, Logger::TYPE_DEBUG);
             }
         }
+    }
+
+    /**
+     * @param string $path
+     * @return bool True if the file was created, false if it already existed
+     * @throws RuntimeException when file cannot be created
+     */
+    protected function createQueue(string $path): bool
+    {
+        if (file_exists($path)) {
+            return false;
+        }
+
+        if (!touch($path)) {
+            debug_log("Check if there is enough free space and the file permissions are 644 or 755. Could not create file: $path");
+            throw new RuntimeException(sprintf(esc_html__("Check if there is enough free space and the file permissions are 644 or 755. Could not create file: %s", 'wp-staging'), $path));
+        }
+
+        return true;
     }
 }

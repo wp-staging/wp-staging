@@ -28,7 +28,7 @@ abstract class PrepareJob
 
     protected function clearCacheFolder()
     {
-        $this->filesystem->setExcludePaths(['*.*', '!*.cache', '!*.wpstg']);
+        $this->filesystem->setExcludePaths(['*.*', '!*.cache.php', '!*.cache', '!*.wpstg']);
         $this->filesystem->delete($this->directory->getCacheDirectory(), $deleteSelf = false);
         $this->filesystem->setExcludePaths([]);
         $this->filesystem->mkdir($this->directory->getCacheDirectory(), true);
