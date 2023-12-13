@@ -270,6 +270,13 @@ class PrepareBackup
             'sitesToBackup' => [],
             'storages' => ['localStorage'],
             'isInit' => true,
+            'isSmartExclusion' => false,
+            'isExcludingSpamComments' => false,
+            'isExcludingPostRevision' => false,
+            'isExcludingDeactivatedPlugins' => false,
+            'isExcludingUnusedThemes' => false,
+            'isExcludingLogs' => false,
+            'isExcludingCaches' => false,
         ];
     }
 

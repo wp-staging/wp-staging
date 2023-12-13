@@ -102,11 +102,15 @@ class RowsExporter extends AbstractExporter
 
     /**
      * This flag indicates that this value has a binary data type in MySQL, such
-     * as binary, blob, longblog, etc.
+     * as binary, blob, longblob, etc.
      * @var string
      */
     const BINARY_FLAG = "{WPSTG_BINARY}";
 
+    /**
+     * @param Database $database
+     * @param JobDataDto $jobDataDto
+     */
     public function __construct(Database $database, JobDataDto $jobDataDto)
     {
         parent::__construct($database);
@@ -230,6 +234,9 @@ class RowsExporter extends AbstractExporter
         return $this->exceedSplitSize;
     }
 
+    /**
+     * @return int
+     */
     public function countTotalRows(): int
     {
         // Early bail: Table not found
@@ -237,7 +244,14 @@ class RowsExporter extends AbstractExporter
             throw new \RuntimeException('Table not found.');
         }
 
-        $result = $this->client->query("SELECT COUNT(*) as `totalRows` FROM `$this->tableName`");
+        $query = "SELECT COUNT(*) as `totalRows` FROM `$this->tableName`";
+
+        $this->initDbExclusionValues();
+        if ($this->columnToExclude && $this->valuesToExclude) {
+            $query .= " WHERE `{$this->columnToExclude}` NOT IN ({$this->valuesToExclude})";
+        }
+
+        $result = $this->client->query($query);
 
         if (!$result) {
             if ($this->isRetryingAfterRepair) {
@@ -585,7 +599,7 @@ class RowsExporter extends AbstractExporter
     protected function throwUnableToCountException()
     {
         throw new \RuntimeException(sprintf(
-            'We could not count the rows of a given table. Table: %s MySQL Erro No: %s MySQL Error: %s',
+            'We could not count the rows of a given table. Table: %s MySQL Error No: %s MySQL Error: %s',
             $this->tableName,
             $this->client->errno(),
             $this->client->error()

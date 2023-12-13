@@ -120,6 +120,24 @@ class SystemInfo
         $output .= $this->info("home_url():", $this->urlsHelper->getHomeUrl());
         $output .= $this->info("get_home_path():", get_home_path());
         $output .= $this->info("ABSPATH:", ABSPATH);
+
+        $permissions = fileperms(ABSPATH);
+
+        $output .= $this->info("ABSPATH Fileperms:", $permissions);
+
+        $permissions = substr(sprintf('%o', $permissions), -4);
+
+        $output .= $this->info("ABSPATH Permissions:", $permissions);
+
+        $absPathStat = stat(ABSPATH);
+        if (!$absPathStat) {
+            $absPathStat = "";
+        } else {
+            $absPathStat = json_encode($absPathStat);
+        }
+
+        $output .= $this->info("ABSPATH Stat:", $absPathStat);
+
         $output .= $this->info("WP_PLUGIN_DIR:", WP_PLUGIN_DIR);
         $output .= $this->info("WP_CONTENT_DIR:", WP_CONTENT_DIR);
 

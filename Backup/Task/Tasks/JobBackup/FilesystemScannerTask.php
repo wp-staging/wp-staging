@@ -23,6 +23,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Task\FileBackupTask;
+use WPStaging\Framework\Utils\PluginInfo;
 
 class FilesystemScannerTask extends BackupTask
 {
@@ -39,6 +40,9 @@ class FilesystemScannerTask extends BackupTask
 
     /** @var PathIdentifier */
     protected $pathIdentifier;
+
+    /** @var PluginInfo */
+    private $pluginInfo;
 
     protected $ignoreFileExtensions;
     protected $ignoreFileBiggerThan;
@@ -68,7 +72,7 @@ class FilesystemScannerTask extends BackupTask
      * @param SeekableQueueInterface $compressorQueue
      * @param Filesystem $filesystem
      */
-    public function __construct(Directory $directory, PathIdentifier $pathIdentifier, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, SeekableQueueInterface $compressorQueue, Filesystem $filesystem)
+    public function __construct(Directory $directory, PathIdentifier $pathIdentifier, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, SeekableQueueInterface $compressorQueue, Filesystem $filesystem, PluginInfo $pluginInfo)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
@@ -76,6 +80,7 @@ class FilesystemScannerTask extends BackupTask
         $this->filesystem      = $filesystem;
         $this->pathIdentifier  = $pathIdentifier;
         $this->compressorQueue = $compressorQueue;
+        $this->pluginInfo      = $pluginInfo;
     }
 
     /**
@@ -382,9 +387,10 @@ class FilesystemScannerTask extends BackupTask
 
             if ($plugin->isFile()) {
                 $this->enqueueFileInBackup($plugin);
+                continue;
             }
 
-            if ($plugin->isDir()) {
+            if ($this->canEnqueuePluginDir($plugin)) {
                 $this->enqueueDirToBeScanned($plugin);
             }
         }
@@ -446,9 +452,10 @@ class FilesystemScannerTask extends BackupTask
 
                 if ($theme->isFile()) {
                     $this->enqueueFileInBackup($theme);
+                    continue;
                 }
 
-                if ($theme->isDir()) {
+                if ($this->canEnqueueThemeDir($theme)) {
                     $this->enqueueDirToBeScanned($theme);
                 }
             }
@@ -524,7 +531,7 @@ class FilesystemScannerTask extends BackupTask
         // Lazy-built relative path
         $relativePath = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $normalizedPath);
 
-        if (isset($this->ignoreFileExtensions[$fileExtension])) {
+        if ($this->canExcludeLogFile($fileExtension) || $this->canExcludeCacheFile($fileExtension) || isset($this->ignoreFileExtensions[$fileExtension])) {
             // Early bail: File has an ignored extension
             $this->logger->info(sprintf(
                 __('%s: Skipped file "%s." Extension "%s" is excluded by rule.', 'wp-staging'),
@@ -563,7 +570,6 @@ class FilesystemScannerTask extends BackupTask
             return;
         }
 
-
         $this->jobDataDto->setDiscoveredFiles($this->jobDataDto->getDiscoveredFiles() + 1);
         $filesDiscoveredForCurrentPath = $this->jobDataDto->getDiscoveredFilesByCategory($this->currentPathScanning) + 1;
         $this->jobDataDto->setDiscoveredFilesByCategory($this->currentPathScanning, $filesDiscoveredForCurrentPath);
@@ -574,6 +580,80 @@ class FilesystemScannerTask extends BackupTask
     }
 
     /**
+     * @param  string $fileExtension
+     * @return bool
+     */
+    private function canExcludeLogFile(string $fileExtension): bool
+    {
+        if ($fileExtension !== 'log') {
+            return false;
+        }
+
+        if (!$this->jobDataDto->getIsExcludingLogs()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  string $fileExtension
+     * @return bool
+     */
+    private function canExcludeCacheFile(string $fileExtension): bool
+    {
+        if ($fileExtension !== 'cache') {
+            return false;
+        }
+
+        if (!$this->jobDataDto->getIsExcludingCaches()) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param \SplFileInfo $dir
+     * @return bool
+     */
+    private function canExcludeCacheDir(\SplFileInfo $dir): bool
+    {
+        if (!$dir->isDir()) {
+            return false;
+        }
+
+        if (!$this->jobDataDto->getIsExcludingCaches()) {
+            return false;
+        }
+
+        if (!$this->isPathContainsCache($dir->getRealPath())) {
+            return false;
+        }
+
+        $this->logger->info(sprintf(
+            __('%s: Skipped directory "%s". Excluded by smart exclusion rule: Excluding cache folder.', 'wp-staging'),
+            static::getTaskTitle(),
+            $dir->getRealPath()
+        ));
+
+        return true;
+    }
+
+    /**
+     * Check if "cache" is one of the directory names.
+     *
+     * @param $path
+     * @return bool
+     */
+    private function isPathContainsCache($path): bool
+    {
+        $pathParts = explode(DIRECTORY_SEPARATOR, $path);
+
+        return in_array('cache', $pathParts);
+    }
+
+    /**
      * @param \SplFileInfo $dir
      * @return void
      */
@@ -581,7 +661,7 @@ class FilesystemScannerTask extends BackupTask
     {
         $normalizedPath = $this->filesystem->normalizePath($dir->getPathname(), true);
 
-        if ($this->isExcludedDirectory($dir->getPathname())) {
+        if ($this->isExcludedDirectory($dir->getPathname()) || $this->canExcludeCacheDir($dir)) {
             return;
         }
 
@@ -658,6 +738,77 @@ class FilesystemScannerTask extends BackupTask
             ));
 
             return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param \DirectoryIterator $theme
+     * @return bool
+     */
+    private function canEnqueueThemeDir(\DirectoryIterator $theme): bool
+    {
+        if (!$theme->isDir()) {
+            return false;
+        }
+
+        if (!$this->jobDataDto->getIsExcludingUnusedThemes()) {
+            return true;
+        }
+
+        remove_all_filters('stylesheet_directory'); // to get the real value of get_stylesheet_directory().
+        remove_all_filters('template_directory'); // to get the real value of get_template_directory().
+
+        $activeThemes = [];
+        if (is_multisite()) {
+            $activeThemes = $this->pluginInfo->getAllActiveThemesInSubsites();
+        } else {
+            $activeThemes[] = get_stylesheet_directory();
+            $activeThemes[] = get_template_directory();
+        }
+
+        $activeThemes = array_unique($activeThemes);
+
+        if (in_array($theme->getRealPath(), $activeThemes)) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @param \DirectoryIterator $plugin
+     * @return bool
+     */
+    private function canEnqueuePluginDir(\DirectoryIterator $plugin): bool
+    {
+        if (!$plugin->isDir()) {
+            return false;
+        }
+
+        if (!$this->jobDataDto->getIsExcludingDeactivatedPlugins()) {
+            return true;
+        }
+
+        // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+        remove_all_filters('option_active_plugins');
+
+        if (is_multisite()) {
+            // Prevent filters tampering with the active plugins list, such as wpstg-optimizer.php itself.
+            remove_all_filters('site_option_active_sitewide_plugins');
+
+            $activePlugins = array_merge(wp_get_active_network_plugins(), $this->pluginInfo->getAllActivePluginsInSubsites());
+        } else {
+            $activePlugins = wp_get_active_and_valid_plugins();
+        }
+
+        $activePlugins = array_unique($activePlugins);
+
+        foreach ($activePlugins as $activePlugin) {
+            if (strpos($activePlugin, $plugin->getRealPath()) !== false) {
+                return true;
+            }
         }
 
         return false;

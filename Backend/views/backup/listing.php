@@ -90,6 +90,7 @@ if ($cronMessage !== '') { ?>
 <?php include(__DIR__ . '/modal/download-modal.php'); ?>
 <?php include(__DIR__ . '/modal/upload.php'); ?>
 <?php include(__DIR__ . '/modal/manage-schedules.php'); ?>
+<?php include(__DIR__ . '/modal/remote-upload.php'); ?>
 <?php include(__DIR__ . '/modal/edit-schedule-modal.php'); ?>
 <?php include(__DIR__ . '/modal/restore.php'); ?>
 

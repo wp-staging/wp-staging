@@ -26,13 +26,14 @@ $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterv
 
 $disabledProAttribute = $isProVersion ? '' : ' disabled';
 
+$disabledClass = !$isProVersion ? 'wpstg-storage-settings-disabled' : '';
+
 $classPropertyHasScheduleAndIsFree = ($hasSchedule && !$isProVersion) ? 'wpstg-free-has-schedule-message ' : '';
 
 $haveProCrons = WPStaging::make(ProCronsCleaner::class)->haveProCrons();
 
 $cronMessage = $haveProCrons ? __('There are backup plans created with WP Staging Pro. Delete them first to create a backup plan with the free version of WP Staging. ', 'wp-staging') :
     __('A backup is created every day at 12:00 noon!', 'wp-staging');
-
 
 ?>
 <div id="wpstg--modal--backup--new" data-confirmButtonText="<?php esc_attr_e('Start Backup', 'wp-staging') ?>" style="display: none">
@@ -69,7 +70,7 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                     </span>
                 </div>
             </label>
-            <label style="display: block;margin: .5em 0;">
+            <label>
                 <input type="checkbox" class="wpstg-checkbox" name="backup_database" id="includeDatabaseInBackup" value="true" checked/>
                 <?php esc_html_e('Backup Database', 'wp-staging') ?>
                 <div class="wpstg--tooltip" style="position: absolute;">
@@ -91,6 +92,30 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
             <input type="hidden" name="wpStagingDir" value="<?php echo esc_attr($directories['wpStaging']); ?>"/>
             <?php unset($directories['wpContent'], $directories['wpStaging']) ?>
             <input type="hidden" name="availableDirectories" value="<?php echo esc_attr(implode('|', (array)$directories)); ?>"/>
+
+            <!-- Advanced Exclude Options -->
+            <div class="wpstg-backup-options-section">
+                <h4 class="swal2-title wpstg-w-100">
+                    <?php esc_html_e('Advanced Exclude Options', 'wp-staging'); ?>
+                </h4>
+
+                <div class="wpstg-container">
+                    <label class="wpstg-storage-option">
+                        <input type="checkbox" class="wpstg-checkbox <?php echo $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic' ?>" name="smartExclusion" id="wpstgSmartExclusion"
+                               onchange="WPStaging.handleDisplayDependencies(this)">
+                        <span class="<?php echo esc_attr($disabledClass) ?>">
+                            <?php esc_html_e('Add Exclusions', 'wp-staging'); ?>
+                        </span>
+                        <?php if (!$isProVersion) : ?>
+                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade to Pro', 'wp-staging'); ?></span></a>
+                        <?php endif; ?>
+                    </label>
+
+                    <?php require_once trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/views/backup/modal/advanced-exclude-options.php'; ?>
+
+                </div>
+            </div>
+            <!-- End Advanced Exclude Options -->
 
             <div class="wpstg-backup-options-section">
                 <h4 class="swal2-title wpstg-w-100">
@@ -148,6 +173,7 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                     <?php endforeach; ?>
                 </div>
             </div>
+
         </div>
 
         <!-- ADVANCED OPTIONS DROPDOWN -->

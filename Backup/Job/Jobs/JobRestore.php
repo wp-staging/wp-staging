@@ -149,21 +149,37 @@ class JobRestore extends AbstractJob
     }
 
     /**
-     * @param $backupMetadata
+     * @param BackupMetadata $backupMetadata
      * @return bool
      */
-    protected function isSameSiteBackupRestore($backupMetadata): bool
+    protected function isSameSiteBackupRestore(BackupMetadata $backupMetadata): bool
     {
-        if (is_multisite()) {
-            $isSameSite = site_url() === $backupMetadata->getSiteUrl() &&
-                ABSPATH === $backupMetadata->getAbsPath() &&
-                is_subdomain_install() === $backupMetadata->getSubdomainInstall();
-        } else {
-            $isSameSite = site_url() === $backupMetadata->getSiteUrl() &&
-                ABSPATH === $backupMetadata->getAbsPath();
+        $this->jobDataDto->setIsUrlSchemeMatched(true);
+
+        // Exclusive check for multisite subdomain installs
+        if (is_multisite() && is_subdomain_install() !== $backupMetadata->getSubdomainInstall()) {
+            return false;
         }
 
-        return $isSameSite;
+        // If ABSPATH is different
+        if (ABSPATH !== $backupMetadata->getAbsPath()) {
+            return false;
+        }
+
+        $currentSiteURL = site_url();
+        $backupSiteURL  = $backupMetadata->getSiteUrl();
+        if ($currentSiteURL === $backupSiteURL) {
+            return true;
+        }
+
+        $currentSiteURLWithoutScheme = preg_replace('#^https?://#', '', rtrim($currentSiteURL, '/'));
+        $backupSiteURLWithoutScheme  = preg_replace('#^https?://#', '', rtrim($backupSiteURL, '/'));
+        if ($currentSiteURLWithoutScheme === $backupSiteURLWithoutScheme) {
+            $this->jobDataDto->setIsUrlSchemeMatched(false);
+            return false;
+        }
+
+        return false;
     }
 
     /**

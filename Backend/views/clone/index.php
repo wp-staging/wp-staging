@@ -107,6 +107,9 @@ use WPStaging\Framework\Notices\OutdatedWpStagingNotice;
 
             <?php } ?>
         </div>
+        <div class="wpstg-loading-bar-container">
+            <div class="wpstg-loading-bar"></div>
+        </div>
         <div class="wpstg--tab--contents">
             <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">
                 <?php
@@ -141,5 +144,9 @@ use WPStaging\Framework\Notices\OutdatedWpStagingNotice;
         }
         ?>
     </div>
+    <div id="wpstg-error-wrapper">
+        <div id="wpstg-error-details"></div>
+    </div>
+    <?php require_once($this->path . 'views/_main/faq.php') ?>
     <?php require_once($this->path . 'views/_main/footer.php') ?>
 </div>

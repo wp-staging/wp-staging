@@ -423,6 +423,17 @@ class Compressor
         return $delay * 1000;
     }
 
+    /**
+     * Convert PIPE character (|) to {WPSTG_PIPE}
+     * Convert COLON character (:) to {WPSTG_COLON}
+     * @param string $filePath
+     * @return string
+     */
+    protected function filterPathForFileIndex(string $filePath): string
+    {
+        return str_replace(['|', ':'], ['{WPSTG_PIPE}', '{WPSTG_COLON}'], $filePath);
+    }
+
     /** @var string $renameFileTo */
     private function renameBackup($renameFileTo = '')
     {
@@ -463,6 +474,7 @@ class Compressor
         }
 
         $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getFilePath());
+        $identifiablePath = $this->filterPathForFileIndex($identifiablePath);
         $info             = $identifiablePath . '|' . $start . ':' . $writtenBytesTotal;
         $bytesWritten     = $this->tempBackupIndex->append($info);
         $this->compressorDto->setIndexPositionCreated(true);
@@ -522,6 +534,7 @@ class Compressor
         $this->tempBackupIndex->deleteBottomBytes(strlen($lastLine));
 
         $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getFilePath());
+        $identifiablePath = $this->filterPathForFileIndex($identifiablePath);
         $info             = $identifiablePath . '|' . $offsetStart . ':' . $writtenBytesTotal;
         $bytesWritten     = $this->tempBackupIndex->append($info);
         $this->compressorDto->setIndexPositionCreated(true, $this->category, $this->categoryIndex);

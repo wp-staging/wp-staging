@@ -26,6 +26,12 @@ trait MySQLRowsGeneratorTrait
     /** @var bool */
     protected $useMemoryExhaustFix = false;
 
+    /** @var string */
+    protected $columnToExclude = '';
+
+    /** @var string */
+    protected $valuesToExclude = '';
+
     /**
      * @param bool $useMemoryExhaustFix
      */
@@ -44,15 +50,17 @@ trait MySQLRowsGeneratorTrait
      *
      * @param string $databaseName The database name.
      * @param string $table The prefixed name of the table to pull rows from.
+     * @param string|null $numericPrimaryKey
      * @param int $offset The number of row to start the work from.
      *                                                         processed will depend on the server available memory and max request execution time.
      * @param string $requestId A unique identifier for the job/task this generator is running on, as to make sure
      *                                                         that if we need to retry a query, we retry for this request.
      * @param InterfaceDatabaseClient|MysqliAdapter $db A reference to the database instance to fetch rows from.
+     * @param JobDataDto $jobDataDto
      *
      * @return Generator  A generator yielding rows one by one; refetching them if and when required.
      */
-    protected function rowsGenerator($databaseName, $table, $numericPrimaryKey, $offset, $requestId, InterfaceDatabaseClient $db, JobDataDto $jobDataDto)
+    protected function rowsGenerator(string $databaseName, string $table, $numericPrimaryKey, int $offset, string $requestId, InterfaceDatabaseClient $db, JobDataDto $jobDataDto): Generator
     {
         /*        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
                     \WPStaging\functions\debug_log(
@@ -138,18 +146,14 @@ trait MySQLRowsGeneratorTrait
                     break;
                 }
 
-                if (!empty($numericPrimaryKey)) {
-                    // Optimal! We have Primary Keys, so it doesn't get slower on large offsets.
-                    $query = <<<SQL
-SELECT  *
-FROM `{$table}`
-WHERE `{$numericPrimaryKey}` > {$offset}
-ORDER BY `{$numericPrimaryKey}` ASC
-LIMIT 0, {$batchSize}
-SQL;
+                if ($this->columnToExclude && $this->valuesToExclude) {
+                    $query = $this->getQueryForExclusion($numericPrimaryKey, $table, $offset, $batchSize);
+                    $this->columnToExclude = '';
+                    $this->valuesToExclude = '';
                 } else {
-                    $query = "SELECT * FROM `{$table}` LIMIT {$offset}, {$batchSize}";
+                    $query = $this->getQueryWithoutExclusion($numericPrimaryKey, $table, $offset, $batchSize);
                 }
+
                 $jobDataDto->setLastQueryInfoJSON(json_encode([$requestId, $table, $offset, $batchSize]));
 
                 $requestStartTime = microtime(true);
@@ -228,5 +232,97 @@ SQL;
                 $offset = $row[$numericPrimaryKey];
             }
         } while (!$this->isThreshold());
+    }
+
+    /**
+     * @param string|null $numericPrimaryKey
+     * @param string $table
+     * @param string $offset
+     * @param string $batchSize
+     *
+     * @return string
+     */
+    private function getQueryForExclusion($numericPrimaryKey, string $table, string $offset, string $batchSize): string
+    {
+        if (empty($numericPrimaryKey)) {
+            return "SELECT * FROM `{$table}` WHERE `{$this->columnToExclude}` NOT IN ({$this->valuesToExclude}) AND LIMIT {$offset}, {$batchSize}";
+        }
+
+        // Optimal! We have Primary Keys, so it doesn't get slower on large offsets.
+        return <<<SQL
+SELECT  * 
+FROM `{$table}` 
+WHERE `{$numericPrimaryKey}` > {$offset} 
+AND `{$this->columnToExclude}` NOT IN ({$this->valuesToExclude}) 
+ORDER BY `{$numericPrimaryKey}` ASC 
+LIMIT 0, {$batchSize} 
+SQL;
+    }
+
+    /**
+     * @param string|null $numericPrimaryKey
+     * @param string $table
+     * @param string $offset
+     * @param string $batchSize
+     *
+     * @return string
+     */
+    private function getQueryWithoutExclusion($numericPrimaryKey, string $table, string $offset, string $batchSize): string
+    {
+        if (empty($numericPrimaryKey)) {
+            return "SELECT * FROM `{$table}` LIMIT {$offset}, {$batchSize}";
+        }
+
+        // Optimal! We have Primary Keys, so it doesn't get slower on large offsets.
+        return <<<SQL
+SELECT  *
+FROM `{$table}`
+WHERE `{$numericPrimaryKey}` > {$offset}
+ORDER BY `{$numericPrimaryKey}` ASC
+LIMIT 0, {$batchSize}
+SQL;
+    }
+
+    /**
+     * @return void
+     */
+    private function initDbExclusionValues()
+    {
+        if ($this->jobDataDto->getIsExcludingSpamComments() && strpos($this->tableName, $this->database->getPrefix() . 'comment') !== false) {
+            $this->columnToExclude  = 'comment_id';
+            $rowsToExclude          = $this->getSpamComments();
+            $this->valuesToExclude  = implode(',', $rowsToExclude);
+        } elseif ($this->jobDataDto->getIsExcludingPostRevision() && strpos($this->tableName, $this->database->getPrefix() . 'posts') !== false) {
+            $this->columnToExclude  = 'id';
+            $rowsToExclude          = $this->getPostsRevision();
+            $this->valuesToExclude  = implode(',', $rowsToExclude);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    private function getSpamComments(): array
+    {
+        $args = [
+            'status'  => 'spam',
+            'fields'  => 'ids',
+        ];
+
+        return get_comments($args);
+    }
+
+    /**
+     * @return array
+     */
+    private function getPostsRevision(): array
+    {
+        $args = [
+            'post_type'   => 'revision',
+            'post_status' => 'any',
+            'fields'      => 'ids',
+        ];
+
+        return get_posts($args);
     }
 }

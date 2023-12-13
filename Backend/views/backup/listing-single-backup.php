@@ -8,8 +8,9 @@ use WPStaging\Framework\Utils\Urls;
 
 /**
  * @var \WPStaging\Framework\TemplateEngine\TemplateEngine $this
- * @var \WPStaging\Backup\Entity\ListableBackup $backup
- * @var string $urlAssets
+ * @var \WPStaging\Backup\Entity\ListableBackup            $backup
+ * @var string                                             $urlAssets
+ * @var bool                                               $isProVersion
  */
 $backupName             = $backup->backupName;
 $notes                  = $backup->notes;
@@ -28,6 +29,7 @@ $existingBackupParts    = $backup->existingBackupParts;
 $isValidFileIndex       = $backup->isValidFileIndex;
 $indexFileError         = $backup->errorMessage;
 $isUnsupported          = $backup->isUnsupported;
+$canUploadBackup        = defined('WPSTG_ALLOW_REMOTE_UPLOAD') && WPSTG_ALLOW_REMOTE_UPLOAD;
 
 // Default error message
 if (empty($indexFileError)) {
@@ -106,6 +108,13 @@ $logUrl = add_query_arg([
                            data-notes="<?php echo esc_attr($notes); ?>"
                            title="<?php esc_attr_e('Edit backup name and / or notes', 'wp-staging') ?>">
                             <?php esc_html_e('Edit', 'wp-staging') ?>
+                        </a>
+                    <?php endif ?>
+                    <?php if (!$isLegacy && !$isCorrupt && $canUploadBackup) : ?>
+                        <a href="#" class="wpstg--backup--remote-upload wpstg-clone-action"
+                           data-filePath="<?php echo esc_attr($backup->relativePath) ?>"
+                           title="<?php esc_attr_e('Upload to remote storage', 'wp-staging') ?>">
+                            <?php esc_html_e('Upload', 'wp-staging') ?>
                         </a>
                     <?php endif ?>
                     <a href="#" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-backup"

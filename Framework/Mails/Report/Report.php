@@ -70,7 +70,7 @@ class Report
      *
      * @return array
      */
-    public function send(string $email, string $message, bool $terms, bool $sendLogFiles, string $provider = null, bool $forceSend = false): array
+    public function send(string $email, string $message, bool $terms, bool $sendLogFiles, string $provider = '', bool $forceSend = false): array
     {
         $errors = [];
 

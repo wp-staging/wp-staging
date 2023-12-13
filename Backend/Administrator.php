@@ -1099,20 +1099,20 @@ class Administrator
         }
 
         // Set e-mail
-        $emailRecipient = null;
+        $emailRecipient = '';
         if (isset($args['wpstg_email'])) {
             $emailRecipient = trim($this->sanitize->sanitizeString($args['wpstg_email']));
         }
 
         // Set hosting provider
-        $providerName = null;
-        if (isset($args['wpstg_provider'])) {
+        $providerName = '';
+        if (!empty($args['wpstg_provider'])) {
             $providerName = trim($this->sanitize->sanitizeString($args['wpstg_provider']));
         }
 
         // Set message
-        $messageBody = null;
-        if (isset($args['wpstg_message'])) {
+        $messageBody = '';
+        if (!empty($args['wpstg_message'])) {
             $messageBody = trim($this->sanitize->sanitizeString($args['wpstg_message']));
         }
 

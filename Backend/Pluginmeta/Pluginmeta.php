@@ -150,13 +150,15 @@ class Pluginmeta
      *
      * @param array $input already defined meta links
      * @param string $file plugin file path and name being processed
-     * @return array $input
-     * @since 2.0
-     * @author Michael Cannon <mc@aihr.us>
+     * @return array
      */
     public function rowMeta(array $input, string $file): array
     {
         if ($file != 'wp-staging/wp-staging.php' && $file != 'wp-staging-pro/wp-staging-pro.php') {
+            return $input;
+        }
+
+        if (!$this->canShowSettingsLink($file)) {
             return $input;
         }
 

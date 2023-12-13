@@ -165,6 +165,13 @@ class BackupScheduler
             'sitesToBackup' => $jobBackupDataDto->getSitesToBackup(),
             'storages' => $jobBackupDataDto->getStorages(),
             'firstSchedule' => $firstSchedule->getTimestamp(),
+            'isSmartExclusion' => $jobBackupDataDto->getIsSmartExclusion(),
+            'isExcludingSpamComments' => $jobBackupDataDto->getIsExcludingSpamComments(),
+            'isExcludingPostRevision' => $jobBackupDataDto->getIsExcludingPostRevision(),
+            'isExcludingDeactivatedPlugins' => $jobBackupDataDto->getIsExcludingDeactivatedPlugins(),
+            'isExcludingUnusedThemes' => $jobBackupDataDto->getIsExcludingUnusedThemes(),
+            'isExcludingLogs' => $jobBackupDataDto->getIsExcludingLogs(),
+            'isExcludingCaches' => $jobBackupDataDto->getIsExcludingCaches(),
         ];
 
         if (wp_next_scheduled('wpstg_create_cron_backup', [$backupSchedule])) {
