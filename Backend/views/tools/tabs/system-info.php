@@ -20,11 +20,6 @@ $isPro = WPStaging::isPro();
     <h3>PHP debug.log <a href="<?php echo esc_url(admin_url() . 'admin.php?page=wpstg-tools&tab=system-info&deleteLog=php&deleteLogNonce=' . wp_create_nonce('wpstgDeleteLogNonce')); ?>">(<?php esc_html_e('Delete', 'wp-staging'); ?>)</a></h3>
     <textarea class="wpstg-sysinfo" readonly="readonly" id="debug-logs-textarea" name="wpstg-debug-logs"><?php echo esc_textarea(WPStaging::make(DebugLogReader::class)->getLastLogEntries(128 * KB_IN_BYTES, false, true)); ?></textarea>
 </form>
-<?php
-if (!WPStaging::isPro()) {
-    require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/contact-us-basic.php');
-}
-?>
 
 <script>
     jQuery(document).ready(function ($) {

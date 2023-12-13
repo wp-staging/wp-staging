@@ -150,9 +150,9 @@
     top: 0;
     opacity: 1; } }
 
-#wpstg-workflow.wpstg-loading::after {
-  display: none !important; }
-
+/*#wpstg-workflow.wpstg-loading::after {
+  display: none !important;
+}*/
 @media screen and (max-width: 612px) {
   .wpstg-consent-modal-install-image-block {
     width: 100%;

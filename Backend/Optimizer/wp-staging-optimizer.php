@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.5.4
+ * Version: 1.5.5
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.4');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.5');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
@@ -35,6 +35,7 @@ if (!function_exists('wpstgGetPluginsDir')) {
         } elseif (defined('WP_CONTENT_DIR')) {
             $pluginsDir = trailingslashit(WP_CONTENT_DIR) . 'plugins/';
         }
+
         return $pluginsDir;
     }
 }
@@ -315,14 +316,15 @@ if (!function_exists('wpstgGetCloneSettings')) {
 if (wpstgIsStaging() && (((bool)get_option("wpstg_emails_disabled") === true) || (wpstgGetCloneSettings('wpstg_emails_disabled')))) {
     if (!function_exists('wp_mail')) {
         /**
-         * @param string $to
-         * @param string $subject
-         * @param string $message
-         * @param string $headers
-         * @param array $attachments
+         * @param array|string $to
+         * @param string       $subject
+         * @param string       $message
+         * @param array|string $headers
+         * @param array|string $attachments
+         *
          * @return bool
          */
-        function wp_mail(string $to, string $subject, string $message, string $headers = '', array $attachments = []): bool
+        function wp_mail($to, $subject, $message, $headers = '', $attachments = [])
         {
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
                 // Safely cast everything to string
@@ -354,6 +356,6 @@ LOG_ENTRY;
             return false;
         }
     } elseif (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-            error_log("WP STAGING: Could not override the wp_mail() function to disable e-mails on staging site, as it was already defined before the optimizer mu-plugin was loaded.");
+        error_log("WP STAGING: Could not override the wp_mail() function to disable e-mails on staging site, as it was already defined before the optimizer mu-plugin was loaded.");
     }
 }

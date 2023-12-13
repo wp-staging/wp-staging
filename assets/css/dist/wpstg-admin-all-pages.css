@@ -1,0 +1,51 @@
+/* Colors */
+.wpstg-primary-color {
+  color: #1a73e8; }
+
+.wpstg--violet {
+  color: #9d37ae; }
+
+.wpstg-border--violet {
+  border: 1px solid #9d37ae; }
+
+.wpstg--red {
+  color: #e01e5a; }
+
+.wpstg--red-warning {
+  color: #e01e5a; }
+
+.wpstg-cta--red {
+  color: #1a73e8; }
+
+.wpstg--blue {
+  color: #1a73e8; }
+
+.wpstg--darkblue {
+  color: #0e86d9; }
+
+.wpstg--green {
+  color: #3bba68; }
+
+.wpstg--grey {
+  color: #393939; }
+
+.wpstg--darkgrey {
+  color: #1b1b1b; }
+
+.wpstg--filter--svg {
+  filter: invert(24%) sepia(11%) saturate(558%) hue-rotate(169deg) brightness(97%) contrast(91%); }
+
+.wpstg-require-free {
+  background-color: #e01e5a;
+  color: #fff;
+  border: 1px solid white;
+  font-weight: 500; }
+  .wpstg-require-free a {
+    color: #fff; }
+
+#wpstg-activate-free {
+  margin-left: 10px;
+  color: #fff;
+  background-color: #1a73e8; }
+
+/*# sourceMappingURL=wpstg-admin-all-pages.css.map */

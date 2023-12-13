@@ -1,5 +1,5 @@
 /**
- * version: 3.1.3
+ * version: 3.1.4
  */ 
  (function () {
   'use strict';
@@ -264,8 +264,8 @@
           popup: isContentCentered ? 'wpstg-swal-popup wpstg-centered-modal' : 'wpstg-swal-popup'
         };
 
-        // If a attribute exists in both default and additional attributes,
-        // The class(es) of the additional attribute will overrite the default one.
+        // If an attribute exists in both default and additional attributes,
+        // The class(es) of the additional attribute will overwrite the default one.
         var options = {
           customClass: Object.assign(defaultCustomClasses, customClasses),
           buttonsStyling: false,

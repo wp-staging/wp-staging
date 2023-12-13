@@ -130,6 +130,19 @@ if (!function_exists('wpstgGetFreeVersionNumberIfInstalled')) {
     }
 }
 
+if (!function_exists('wpstgGetProVersionNumberIfInstalled')) {
+    /**
+     * @return string returns empty string if pro is not installed.
+     */
+    function wpstgGetProVersionNumberIfInstalled(): string
+    {
+        $freeData                   = wpstgGetPluginData(WPSTG_PRO_VERSION_PLUGIN_FILE);
+        $installedFreeVersionNumber = isset($freeData['Version']) ? $freeData['Version'] : '';
+
+        return $installedFreeVersionNumber;
+    }
+}
+
 if (!function_exists('wpstgIsFreeVersionCompatible')) {
     /**
      * @return bool

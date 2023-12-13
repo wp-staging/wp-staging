@@ -624,8 +624,8 @@
           popup: isContentCentered ? 'wpstg-swal-popup wpstg-centered-modal' : 'wpstg-swal-popup'
         };
 
-        // If a attribute exists in both default and additional attributes,
-        // The class(es) of the additional attribute will overrite the default one.
+        // If an attribute exists in both default and additional attributes,
+        // The class(es) of the additional attribute will overwrite the default one.
         var options = {
           customClass: Object.assign(defaultCustomClasses, customClasses),
           buttonsStyling: false,
@@ -1716,6 +1716,32 @@
   }
 
   /**
+   * Hides elements in the DOM that match the given selector by setting their display style to 'none'.
+   *
+   * @param {string} selector - CSS selector for the elements to be hidden.
+   * @return {void}
+   */
+  function hide(selector) {
+    var elements = document.querySelectorAll(selector);
+    elements.forEach(function (element) {
+      element.style.display = 'none';
+    });
+  }
+
+  /**
+   * Displays elements in the DOM that match the given selector by setting their display style to 'block'.
+   *
+   * @param {string} selector - CSS selector for the elements to be displayed.
+   * @return {void}
+   */
+  function show(selector) {
+    var elements = document.querySelectorAll(selector);
+    elements.forEach(function (element) {
+      element.style.display = 'block';
+    });
+  }
+
+  /**
    * Detect memory exhaustion and show warning.
    */
   var WpstgDetectMemoryExhaust = /*#__PURE__*/function () {
@@ -1811,6 +1837,165 @@
     return WpstgSidebarMenu;
   }();
 
+  /**
+   * Handle toggle of contact us modal
+   */
+  var WpstgContactUs = /*#__PURE__*/function () {
+    function WpstgContactUs(modalType, wpstgObject) {
+      if (modalType === void 0) {
+        modalType = 'contact-us';
+      }
+      if (wpstgObject === void 0) {
+        wpstgObject = wpstg;
+      }
+      this.wpstgObject = wpstgObject;
+      this.characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+      this.currentDate = new Date();
+      this.modalType = modalType;
+      this.init();
+    }
+    var _proto = WpstgContactUs.prototype;
+    _proto.init = function init() {
+      this.contactUsModal = '#wpstg-' + this.modalType + '-modal';
+      this.askInTheForumForm = this.contactUsModal + ' #wpstg-' + this.modalType + '-report-issue-form';
+      this.contactUsSuccessPopup = this.contactUsModal + ' #wpstg-' + this.modalType + '-success-form';
+      this.contactUsLoader = this.contactUsModal + ' #wpstg-' + this.modalType + '-report-issue-loader';
+      this.contactUsSupport = this.contactUsModal + ' #wpstg-' + this.modalType + '-support-forum';
+      this.contactUsButton = document.querySelector('#wpstg-' + this.modalType + '-button');
+      this.contactUsButtonBackupTab = document.querySelector('#wpstg--tab--backup  #wpstg-' + this.modalType + '-button');
+      this.reportIssueButton = document.querySelector('#wpstg-contact-us-report-issue');
+      this.successForm = document.querySelector(this.contactUsModal + ' #wpstg-' + this.modalType + '-success-form');
+      this.contactUsReportIssueBtn = document.querySelector(this.contactUsModal + ' #wpstg-' + this.modalType + '-report-issue-btn');
+      this.contactUsCloseButton = document.querySelector(this.contactUsModal + ' #wpstg-modal-close');
+      this.contactUsSuccessPopupClose = document.querySelector(this.contactUsModal + ' #wpstg-' + this.modalType + '-success-modal-close');
+      this.debugCodeCopyButton = document.querySelector(this.contactUsModal + ' #wpstg-' + this.modalType + '-debug-code-copy');
+      this.contactUsResponse = document.querySelector(this.contactUsModal + ' #wpstg-' + this.modalType + '-debug-response');
+      this.contactUsDebugCodeField = document.querySelector(this.contactUsModal + ' #wpstg-' + this.modalType + '-debug-code');
+      this.isDebugWindowOpened = false;
+      this.addEvents();
+      this.notyf = new Notyf({
+        duration: 6000,
+        position: {
+          x: 'center',
+          y: 'bottom'
+        },
+        dismissible: true,
+        types: [{
+          type: 'warning',
+          background: 'orange',
+          icon: true
+        }]
+      });
+    };
+    _proto.addEvents = function addEvents() {
+      var _this = this;
+      document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+          hide(_this.contactUsModal);
+          hide(_this.askInTheForumForm);
+          hide(_this.contactUsSuccessPopup);
+          hide(_this.contactUsSupport);
+          _this.isDebugWindowOpened = false;
+        }
+      });
+      if (this.contactUsButton !== null) {
+        this.contactUsButton.addEventListener('click', function () {
+          show(_this.contactUsModal);
+        });
+      }
+      if (this.contactUsButtonBackupTab !== null) {
+        this.contactUsButtonBackupTab.addEventListener('click', function () {
+          show(_this.contactUsModal);
+        });
+      }
+      if (this.reportIssueButton !== null) {
+        this.reportIssueButton.addEventListener('click', function () {
+          if (_this.isDebugWindowOpened) {
+            hide(_this.askInTheForumForm);
+          } else {
+            show(_this.askInTheForumForm);
+          }
+          _this.isDebugWindowOpened = !_this.isDebugWindowOpened;
+        });
+      }
+      if (this.contactUsReportIssueBtn !== null) {
+        this.contactUsReportIssueBtn.addEventListener('click', function () {
+          _this.sendDebugInfo();
+        });
+      }
+      if (this.contactUsSuccessPopupClose !== null) {
+        this.contactUsSuccessPopupClose.addEventListener('click', function () {
+          hide(_this.contactUsSuccessPopup);
+        });
+      }
+      if (this.contactUsCloseButton !== null) {
+        this.contactUsCloseButton.addEventListener('click', function () {
+          hide(_this.contactUsModal);
+          hide(_this.contactUsSupport);
+          hide(_this.askInTheForumForm);
+          _this.isDebugWindowOpened = false;
+        });
+      }
+      if (this.debugCodeCopyButton !== null) {
+        this.debugCodeCopyButton.addEventListener('click', function () {
+          _this.copyDebugCode();
+          _this.notyf.success('Debug code copied to clipboard');
+        });
+      }
+    };
+    _proto.copyDebugCode = function copyDebugCode() {
+      this.contactUsDebugCodeField.select();
+      this.contactUsDebugCodeField.setSelectionRange(0, 99999);
+      navigator.clipboard.writeText(this.contactUsDebugCodeField.value);
+    };
+    _proto.generateDebugCode = function generateDebugCode(length) {
+      var result = '';
+      for (var i = 0; i < length; i++) {
+        result += this.characters.charAt(Math.floor(Math.random() * this.characters.length));
+      }
+      return 'wpstg-' + result + '-' + this.currentDate.getHours() + this.currentDate.getMinutes() + this.currentDate.getSeconds();
+    };
+    _proto.sendDebugInfo = function sendDebugInfo() {
+      var _this2 = this;
+      show(this.contactUsLoader);
+      this.contactUsReportIssueBtn.disabled = true;
+      var debugCode = this.generateDebugCode(8);
+      fetch(this.wpstgObject.ajaxUrl, {
+        method: 'POST',
+        credentials: 'same-origin',
+        body: new URLSearchParams({
+          action: 'wpstg_send_debug_log_report',
+          accessToken: this.wpstgObject.accessToken,
+          nonce: this.wpstgObject.nonce,
+          debugCode: debugCode
+        }),
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded'
+        }
+      }).then(function (response) {
+        _this2.contactUsReportIssueBtn.disabled = false;
+        if (response.ok) {
+          return response.json();
+        }
+      }).then(function (data) {
+        if (data.response && data.response.sent === true) {
+          _this2.contactUsDebugCodeField.value = debugCode;
+          show(_this2.contactUsSuccessPopup);
+          window.debugCode = debugCode;
+        } else {
+          _this2.contactUsDebugCodeField.value = window.debugCode === undefined ? debugCode : window.debugCode;
+          show(_this2.contactUsSuccessPopup);
+        }
+        hide(_this2.contactUsLoader);
+      })["catch"](function (error) {
+        hide(_this2.contactUsLoader);
+        show(_this2.contactUsSupport);
+        console.warn(_this2.wpstgObject.i18n['somethingWentWrong'], error);
+      });
+    };
+    return WpstgContactUs;
+  }();
+
   var WPStagingBackup;
   (function ($) {
     window.addEventListener('backups-tab', function () {
@@ -1862,6 +2047,8 @@
     });
     WPStagingBackup = {
       performingCancelRequest: false,
+      isBackupSlowerThanUsual: false,
+      isBackupSpeedModalDisplayed: false,
       isCancelled: false,
       isFinished: false,
       processInfo: {
@@ -1887,6 +2074,15 @@
             files: []
           }
         },
+        upload: {
+          html: null,
+          confirmBtnTxt: null,
+          retryCount: 0,
+          data: {
+            file: null // file path
+          }
+        },
+
         restore: {
           html: null,
           btnTxtNext: null,
@@ -2262,6 +2458,7 @@
           WPStagingCommon.setJobId(response.jobId);
         }
         if (response.isRunning === false && response.job_done === true) {
+          WPStagingBackup.calculateBackupSpeedIndex(response.backupSize, WPStagingBackup.timer.totalSeconds);
           WPStagingBackup.timer.stop();
           WPStagingBackup.isCancelled = true;
           // For other classes that require 'status'
@@ -2310,6 +2507,9 @@
           title = _ref$title === void 0 ? null : _ref$title,
           _ref$bodyText = _ref.bodyText,
           bodyText = _ref$bodyText === void 0 ? null : _ref$bodyText;
+        if (WPStagingBackup.isBackupSlowerThanUsual && WPStagingBackup.isBackupSpeedModalDisplayed === false) {
+          return;
+        }
         if (null === WPStagingBackup.modal.download.html) {
           var $el = $('#wpstg--modal--backup--download');
           WPStagingBackup.modal.download.html = $el.html();
@@ -2396,6 +2596,38 @@
             logsContainer.appendChild(pElement);
           });
         }
+      },
+      calculateBackupSpeedIndex: function calculateBackupSpeedIndex(size, totalTime) {
+        fetch(ajaxurl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          body: new URLSearchParams({
+            action: 'wpstg_calculate_backup_speed_index',
+            accessToken: wpstg.accessToken,
+            nonce: wpstg.nonce,
+            size: size,
+            time: totalTime
+          }),
+          headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+          }
+        }).then(function (response) {
+          if (response.ok) {
+            return response.json();
+          }
+        }).then(function (data) {
+          WPStagingBackup.isBackupSlowerThanUsual = data.isBackupSlowerThanUsual;
+          WPStagingBackup.isBackupSpeedModalDisplayed = data.isBackupSpeedModalDisplayed;
+          if (data.isBackupSlowerThanUsual && data.isBackupSpeedModalDisplayed === false) {
+            var reportModal = document.querySelector('#wpstg-general-error-modal');
+            if (reportModal != null && reportModal != undefined) {
+              show('#wpstg-general-error-modal');
+              new WpstgContactUs('general-error');
+            }
+          }
+        })["catch"](function (error) {
+          console.log(error);
+        });
       }
     };
   })(jQuery);
@@ -2411,7 +2643,7 @@
     });
     WPStagingBackupCreate = {
       listen: function listen() {
-        $('body').off('click', '#wpstg-new-backup', WPStagingBackupCreate.clickedBackup).on('click', '#wpstg-new-backup', WPStagingBackupCreate.clickedBackup).off('change', '.wpstg--swal2-container .wpstg-advanced-options-site input[type=checkbox]').on('change', '.wpstg--swal2-container .wpstg-advanced-options-site input[type=checkbox]', WPStagingBackupCreate.warnBackupMediaWithoutDatabase).off('change', '[name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent').on('change', '[type="checkbox"][name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent', WPStagingBackupCreate.disableBackupButtonIfNoSelection);
+        $('body').off('click', '#wpstg-new-backup', WPStagingBackupCreate.clickedBackup).on('click', '#wpstg-new-backup', WPStagingBackupCreate.clickedBackup).off('change', '.wpstg--swal2-container .wpstg-advanced-options-site input[type=checkbox]').on('change', '.wpstg--swal2-container .wpstg-advanced-options-site input[type=checkbox]', WPStagingBackupCreate.warnBackupMediaWithoutDatabase).off('change', '[type="checkbox"][name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent, [type="checkbox"][name="storages"]').on('change', '[type="checkbox"][name="includedDirectories\[\]"], input#includeDatabaseInBackup, input#includeOtherFilesInWpContent, [type="checkbox"][name="storages"]', WPStagingBackupCreate.disableBackupButtonIfNoSelection);
       },
       clickedBackup: function clickedBackup(e) {
         return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
@@ -2462,7 +2694,14 @@
                       scheduleTime: container.querySelector('#backupScheduleTime').value || null,
                       scheduleRotation: container.querySelector('#backupScheduleRotation').value || null,
                       storages: storages,
-                      isCreateScheduleBackupNow: container.querySelector('#backupScheduleLaunch:checked') !== null
+                      isCreateScheduleBackupNow: container.querySelector('#backupScheduleLaunch:checked') !== null,
+                      isSmartExclusion: container.querySelector('#wpstgSmartExclusion:checked') !== null,
+                      isExcludingSpamComments: container.querySelector('#wpstgExcludeSpamComments:checked') !== null,
+                      isExcludingPostRevision: container.querySelector('#wpstgExcludePostRevision:checked') !== null,
+                      isExcludingDeactivatedPlugins: container.querySelector('#wpstgExcludeDeactivatedPlugins:checked') !== null,
+                      isExcludingUnusedThemes: container.querySelector('#wpstgExcludeUnusedThemes:checked') !== null,
+                      isExcludingLogs: container.querySelector('#wpstgExcludeLogs:checked') !== null,
+                      isExcludingCaches: container.querySelector('#wpstgExcludeCaches:checked') !== null
                     };
                   },
                   onRender: function onRender() {
@@ -2636,7 +2875,6 @@
         // Don't retry upon failure
         1.25, function (xhr, textStatus, errorThrown) {
           WPStagingCommon.continueErrorHandle = false;
-          console.log(xhr);
           var response = {
             'messages': []
           };
@@ -2656,24 +2894,30 @@
           }
         });
       },
-      warnBackupMediaWithoutDatabase: function warnBackupMediaWithoutDatabase() {
-        var isExportingDatabase = document.getElementById('includeDatabaseInBackup').checked;
-        var isExportingMediaLibrary = document.getElementById('includeMediaLibraryInBackup').checked;
+      warnBackupMediaWithoutDatabase: function warnBackupMediaWithoutDatabase(event) {
+        var container = event.currentTarget.closest('.wpstg--swal2-container');
+        event.preventDefault();
+        var isExportingDatabase = container.querySelector('#includeDatabaseInBackup').checked;
+        var isExportingMediaLibrary = container.querySelector('#includeMediaLibraryInBackup').checked;
         if (isExportingMediaLibrary && !isExportingDatabase) {
-          document.getElementById('backupUploadsWithoutDatabaseWarning').style.display = 'block';
+          container.querySelector('#backupUploadsWithoutDatabaseWarning').style.display = 'block';
         } else {
-          document.getElementById('backupUploadsWithoutDatabaseWarning').style.display = 'none';
+          container.querySelector('#backupUploadsWithoutDatabaseWarning').style.display = 'none';
         }
       },
-      disableBackupButtonIfNoSelection: function disableBackupButtonIfNoSelection() {
-        var isExportingAnyDir = $('[type="checkbox"][name="includedDirectories\[\]"]:checked').length > 0;
-        var isExportingDatabase = $('input#includeDatabaseInBackup:checked').length === 1;
-        var isExportingOtherFilesInWpContent = $('input#includeOtherFilesInWpContent:checked').length === 1;
-        if (!isExportingAnyDir && !isExportingDatabase && !isExportingOtherFilesInWpContent) {
-          $('.wpstg--swal2-confirm').prop('disabled', true);
-        } else {
-          $('.wpstg--swal2-confirm').prop('disabled', false);
-        }
+      disableBackupButtonIfNoSelection: function disableBackupButtonIfNoSelection(event) {
+        var container = event.currentTarget.closest('.wpstg--swal2-container');
+        event.preventDefault();
+        var checkboxesDirs = Array.from(container.querySelectorAll('[type="checkbox"][name="includedDirectories[]"]:checked'));
+        var isExportingAnyDir = checkboxesDirs.length > 0;
+        var checkboxesDatabase = Array.from(container.querySelectorAll('input#includeDatabaseInBackup:checked'));
+        var isExportingDatabase = checkboxesDatabase.length === 1;
+        var checkboxesOtherFiles = Array.from(container.querySelectorAll('input#includeOtherFilesInWpContent:checked'));
+        var isExportingOtherFilesInWpContent = checkboxesOtherFiles.length === 1;
+        var checkboxesStorages = Array.from(container.querySelectorAll('[type="checkbox"][name="storages"]:checked'));
+        var isStorageSelected = checkboxesStorages.length > 0;
+        var confirmButton = container.querySelector('.wpstg--swal2-confirm');
+        confirmButton.disabled = !isExportingAnyDir && !isExportingDatabase && !isExportingOtherFilesInWpContent || !isStorageSelected;
       }
     };
   })(jQuery);

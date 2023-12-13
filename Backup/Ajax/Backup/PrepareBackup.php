@@ -34,17 +34,29 @@ class PrepareBackup extends PrepareJob
     /** @var wpdb */
     private $wpdb;
 
+    /**
+     * @param Filesystem $filesystem
+     * @param Directory $directory
+     * @param Auth $auth
+     * @param BackupProcessLock $processLock
+     * @param Urls $urls
+     * @param AnalyticsBackupCreate $analyticsBackupCreate
+     */
     public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, BackupProcessLock $processLock, Urls $urls, AnalyticsBackupCreate $analyticsBackupCreate)
     {
         parent::__construct($filesystem, $directory, $auth, $processLock);
 
         global $wpdb;
 
-        $this->wpdb = $wpdb;
-        $this->urls = $urls;
+        $this->wpdb                  = $wpdb;
+        $this->urls                  = $urls;
         $this->analyticsBackupCreate = $analyticsBackupCreate;
     }
 
+    /**
+     * @param $data
+     * @return void
+     */
     public function ajaxPrepare($data)
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -67,20 +79,31 @@ class PrepareBackup extends PrepareJob
         }
     }
 
+    /**
+     * @param $data
+     * @return array|\WP_Error
+     */
     public function prepare($data = null)
     {
         if (empty($data) && array_key_exists('wpstgBackupData', $_POST)) {
-            $data = Sanitize::sanitizeArray($_POST['wpstgBackupData'], [
-                'isExportingPlugins' => 'bool',
-                'isExportingMuPlugins' => 'bool',
-                'isExportingThemes' => 'bool',
-                'isExportingUploads' => 'bool',
+            $data         = Sanitize::sanitizeArray($_POST['wpstgBackupData'], [
+                'isExportingPlugins'             => 'bool',
+                'isExportingMuPlugins'           => 'bool',
+                'isExportingThemes'              => 'bool',
+                'isExportingUploads'             => 'bool',
                 'isExportingOtherWpContentFiles' => 'bool',
-                'isExportingDatabase' => 'bool',
-                'isAutomatedBackup' => 'bool',
-                'repeatBackupOnSchedule' => 'bool',
-                'scheduleRotation' => 'int',
-                'isCreateScheduleBackupNow' => 'bool',
+                'isExportingDatabase'            => 'bool',
+                'isAutomatedBackup'              => 'bool',
+                'repeatBackupOnSchedule'         => 'bool',
+                'scheduleRotation'               => 'int',
+                'isCreateScheduleBackupNow'      => 'bool',
+                'isSmartExclusion'               => 'bool',
+                'isExcludingSpamComments'        => 'bool',
+                'isExcludingPostRevision'        => 'bool',
+                'isExcludingDeactivatedPlugins'  => 'bool',
+                'isExcludingUnusedThemes'        => 'bool',
+                'isExcludingLogs'                => 'bool',
+                'isExcludingCaches'              => 'bool',
             ]);
             $data['name'] = isset($_POST['wpstgBackupData']['name']) ? sanitize_text_field($_POST['wpstgBackupData']['name']) : '';
         }
@@ -94,13 +117,17 @@ class PrepareBackup extends PrepareJob
         return $sanitizedData;
     }
 
-    private function setupInitialData($sanitizedData)
+    /**
+     * @param $sanitizedData
+     * @return array
+     */
+    private function setupInitialData($sanitizedData): array
     {
         $sanitizedData = $this->validateAndSanitizeData($sanitizedData);
         $this->clearCacheFolder();
 
         // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
-        $services = WPStaging::getInstance()->getContainer();
+        $services         = WPStaging::getInstance()->getContainer();
         $this->jobDataDto = $services->get(JobBackupDataDto::class);
         $this->jobBackup  = $services->get(JobBackupProvider::class)->getJob();
 
@@ -108,6 +135,7 @@ class PrepareBackup extends PrepareJob
         $this->jobDataDto->setInit(true);
         $this->jobDataDto->setFinished(false);
         $this->jobDataDto->setStartTime(time());
+        $this->jobDataDto->setIsOnlyUpload(false);
 
         $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
 
@@ -117,9 +145,10 @@ class PrepareBackup extends PrepareJob
     }
 
     /**
+     * @param $data
      * @return array
      */
-    public function validateAndSanitizeData($data)
+    public function validateAndSanitizeData($data): array
     {
         // Unset any empty value so that we replace them with the defaults.
         foreach ($data as $key => $value) {
@@ -143,23 +172,30 @@ class PrepareBackup extends PrepareJob
         }
 
         $defaults = [
-            'name' => $this->urls->getBaseUrlWithoutScheme(),
-            'isExportingPlugins' => false,
-            'isExportingMuPlugins' => false,
-            'isExportingThemes' => false,
-            'isExportingUploads' => false,
+            'name'                           => $this->urls->getBaseUrlWithoutScheme(),
+            'isExportingPlugins'             => false,
+            'isExportingMuPlugins'           => false,
+            'isExportingThemes'              => false,
+            'isExportingUploads'             => false,
             'isExportingOtherWpContentFiles' => false,
-            'isExportingDatabase' => false,
-            'isAutomatedBackup' => false,
-            'repeatBackupOnSchedule' => false,
-            'scheduleRecurrence' => '',
-            'scheduleTime' => [0, 0],
-            'scheduleRotation' => 1,
+            'isExportingDatabase'            => false,
+            'isAutomatedBackup'              => false,
+            'repeatBackupOnSchedule'         => false,
+            'scheduleRecurrence'             => '',
+            'scheduleTime'                   => [0, 0],
+            'scheduleRotation'               => 1,
             // scheduleId will only be set for backups created automatically on a schedule.
-            'scheduleId' => null,
-            'storages' => [],
-            'isCreateScheduleBackupNow' => false,
-            'sitesToBackup' => $sites
+            'scheduleId'                     => null,
+            'storages'                       => [],
+            'isCreateScheduleBackupNow'      => false,
+            'sitesToBackup'                  => $sites,
+            'isSmartExclusion'               => false,
+            'isExcludingSpamComments'        => false,
+            'isExcludingPostRevision'        => false,
+            'isExcludingDeactivatedPlugins'  => false,
+            'isExcludingUnusedThemes'        => false,
+            'isExcludingLogs'                => false,
+            'isExcludingCaches'              => false,
         ];
 
         $data = wp_parse_args($data, $defaults);
@@ -180,16 +216,16 @@ class PrepareBackup extends PrepareJob
         // Foo\'s Backup => Foo's Backup
         $data['name'] = str_replace('\\\'', '\'', $data['name']);
 
-        $data['isExportingPlugins'] = $this->jsBoolean($data['isExportingPlugins']);
-        $data['isExportingMuPlugins'] = $this->jsBoolean($data['isExportingMuPlugins']);
-        $data['isExportingThemes'] = $this->jsBoolean($data['isExportingThemes']);
-        $data['isExportingUploads'] = $this->jsBoolean($data['isExportingUploads']);
+        $data['isExportingPlugins']             = $this->jsBoolean($data['isExportingPlugins']);
+        $data['isExportingMuPlugins']           = $this->jsBoolean($data['isExportingMuPlugins']);
+        $data['isExportingThemes']              = $this->jsBoolean($data['isExportingThemes']);
+        $data['isExportingUploads']             = $this->jsBoolean($data['isExportingUploads']);
         $data['isExportingOtherWpContentFiles'] = $this->jsBoolean($data['isExportingOtherWpContentFiles']);
-        $data['isExportingDatabase'] = $this->jsBoolean($data['isExportingDatabase']);
+        $data['isExportingDatabase']            = $this->jsBoolean($data['isExportingDatabase']);
 
         $data['repeatBackupOnSchedule'] = $this->jsBoolean($data['repeatBackupOnSchedule']);
-        $data['scheduleRecurrence'] = sanitize_text_field(html_entity_decode($data['scheduleRecurrence']));
-        $data['scheduleRotation'] = absint($data['scheduleRotation']);
+        $data['scheduleRecurrence']     = sanitize_text_field(html_entity_decode($data['scheduleRecurrence']));
+        $data['scheduleRotation']       = absint($data['scheduleRotation']);
 
         $data['scheduleTime'] = $this->createScheduleTimeArray($data['scheduleTime']);
 
@@ -203,10 +239,10 @@ class PrepareBackup extends PrepareJob
      * @param $scheduleTime
      * @return array containing hour and minute ["18", "32"]
      */
-    private function createScheduleTimeArray($scheduleTime)
+    private function createScheduleTimeArray($scheduleTime): array
     {
         if (empty($scheduleTime)) {
-            return [0,0];
+            return [0, 0];
         }
 
         // It's already an array. Convert it into a string like "18:28" to process it further
@@ -238,7 +274,7 @@ class PrepareBackup extends PrepareJob
      *
      * @return bool Whether the current Job status was persisted or not.
      */
-    public function persist()
+    public function persist(): bool
     {
         if (!$this->jobBackup instanceof JobBackup) {
             return false;

@@ -1,4 +1,4 @@
-=== WP STAGING WordPress Backup Plugin - Migration Backup Restore  ===
+=== WP STAGING Backup Plugin - Migration Backup Restore  ===
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.4
-Stable tag: 3.1.3
+Stable tag: 3.1.4
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,30 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.1.4 =
+* New: Add smart exclusion options for backup creation and allow exclusion of cache files, post revisions, spam comments, unused plugins and themes and deactivated plugins with a single click. #2758
+* New: Add 'Refresh License Status' button beside 'Activate License' and 'Deactivate License' button. #2809
+* New: Show modal in free version when there are performance issues after creating backup. #2721
+* New: Add option to upload already created backup to a cloud storage. This feature will be disabled by default. But can be enabled by defining WPSTG_ALLOW_REMOTE_UPLOAD constant to true. #2610
+* Enh: Formatting and cleaning up legacy backup related core/utils code. #2910
+* Enh: Improve the admin notice about the required free version during plugin installation to make it more visually striking. #2885
+* Enh: Add placeholders for pipe and colon characters in file and path names so that they can easily be extracted from backup file index. #2575
+* Enh: Disable the 'start backup' button when no storage is selected. #2921
+* Enh: Formatting and clean up for WPStaging PHPCS Sniff code. #2851
+* Fix: Page loading wrapper was overlapping elements on staging page. Add a loading bar below the header menu when switching between staging and backup main tabs. Adjust the delete modal! #2952 #2938
+* Fix: Exclude unused themes filter doesn't work properly for entire multisite backup. #2927
+* Fix: Urls containing port i.e. example.com:8080 were not correctly replaced during using backup for site migration if destination site has different port. #2919
+* Fix: Due to presence of www prefix in constant DOMAIN_CURRENT_SITE on the destination site during backup restore, both source and destination weren't considered same site for updating subsites related URLs. #2954
+* Fix: Remove Type strictness from custom wp_mail function used in staging site when mail sending is blocked to avoid "Uncaught TypeError". #2932
+* Fix: Unable to create directory with correct permissions in ABSPATH when ABSPATH has wrong or custom permission i.e. 0170 but ABSPATH is writeable during staging site creation. #2925
+* Fix: Upsell welcome page shows up when pro is installed and free activated. #2939
+* Tweak: Show a proper message on FREE version why the backup cannot be restored if backup has same site url with a different url scheme. #2841
+* Dev: Some e2e tests were still using old checksum file for comparing plugin dist package, which leads to plugin not being latest for those tests. #2916
+* Dev: Add PHPCS rule improvements for return type hint. #2899
+* Dev: Moved backup cloud storage related e2e tests to separate suite and DRY workflows generation for e2e tests. #2951
+* Dev: Don't run storage related tests on basic e2e backup tests. #2930
+* Dev: Add digitalocean backup dev credentials into dev doc. #2963
 
 = 3.1.3 =
 * Fix: There was a potential security vulnerability due to which a malicious user could eventually exploit and access the wp staging cache folder. This issue is now fixed. The security issue was found by Thanks to Dmitrii Ignatyev from cleantalk.org. #2908

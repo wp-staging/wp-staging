@@ -71,7 +71,7 @@ class Filesystem extends FilterableDirectoryIterator
             return null;
         }
 
-        $safePath = ABSPATH . str_replace(ABSPATH, null, $safePath);
+        $safePath = ABSPATH . str_replace(ABSPATH, '', $safePath);
         $safePath .= DIRECTORY_SEPARATOR . basename($fullPath);
         return $safePath;
     }
@@ -99,6 +99,7 @@ class Filesystem extends FilterableDirectoryIterator
         $this->setDirectory($source);
         $iterator = null;
         try {
+            /** @var \RecursiveDirectoryIterator $iterator */
             $iterator = $this->setIteratorMode(\RecursiveIteratorIterator::CHILD_FIRST)->get();
         } catch (FilesystemExceptions $e) {
             $this->log('Permission Error: Can not create recursive iterator for ' . $source);
@@ -214,6 +215,7 @@ class Filesystem extends FilterableDirectoryIterator
             return false;
         }
 
+        /** @var \RecursiveDirectoryIterator $iterator */
         $iterator = new \RecursiveIteratorIterator(
             new \RecursiveDirectoryIterator($source, \RecursiveDirectoryIterator::SKIP_DOTS),
             \RecursiveIteratorIterator::SELF_FIRST
@@ -268,7 +270,7 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         set_error_handler([$this, 'handleMkdirError']);
-        $result = wp_mkdir_p($path);
+        $result = $this->recursiveCreateDirectory($path);
         restore_error_handler();
         if (!$result) {
             \WPStaging\functions\debug_log("Failed to create directory $path");
@@ -317,6 +319,7 @@ class Filesystem extends FilterableDirectoryIterator
         $this->setDirectory($source);
         $iterator = null;
         try {
+            /** @var \RecursiveDirectoryIterator $iterator */
             $iterator = $this->setIteratorMode(\RecursiveIteratorIterator::CHILD_FIRST)->get();
         } catch (FilesystemExceptions $e) {
             $this->log('Permission Error: Can not create recursive iterator for ' . $source);
@@ -1045,5 +1048,23 @@ class Filesystem extends FilterableDirectoryIterator
     protected function isWindowsOs()
     {
         return WPStaging::isWindowsOs();
+    }
+
+    /**
+     * wp_mkdir_p doesn't work properly if the ABSPATH has custom/wrong permissions,
+     * which leads to permission denied error on accessing the created directory
+     * @see https://github.com/wp-staging/wp-staging-pro/issues/2925
+     * So we will try to create the directory with 0775 permission and recursively create all parent which doesn't exist
+     *
+     * @param string $directory
+     * @return bool
+     */
+    protected function recursiveCreateDirectory(string $directory): bool
+    {
+        if (is_dir($directory)) {
+            return true;
+        }
+
+        return mkdir($directory, 0775, true);
     }
 }

@@ -2,21 +2,23 @@
 
 namespace WPStaging\Backup\Dto\Job;
 
+use WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface;
 use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
+use WPStaging\Backup\Dto\Traits\IsExcludingTrait;
+use WPStaging\Backup\Dto\Traits\RemoteUploadTrait;
 
-class JobBackupDataDto extends JobDataDto
+class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 {
     use IsExportingTrait;
+    use IsExcludingTrait;
+    use RemoteUploadTrait;
 
     /** @var string|null */
     private $name;
 
     /** @var array */
     private $excludedDirectories = [];
-
-    /** @var bool */
-    private $isAutomatedBackup = false;
 
     /** @var int */
     private $totalDirectories;
@@ -32,12 +34,6 @@ class JobBackupDataDto extends JobDataDto
 
     /** @var array The number of files the FilesystemScanner discovered in themes,plugins,muplugins,uploads,others */
     private $discoveredFilesArray = [];
-
-    /** @var array */
-    private $filesToUpload = [];
-
-    /** @var array */
-    private $uploadedFiles = [];
 
     /** @var string */
     private $databaseFile;
@@ -73,9 +69,6 @@ class JobBackupDataDto extends JobDataDto
     /** @var int The size in bytes of the filesystem in this backup */
     private $filesystemSize = 0;
 
-    /** @var int The size of all backup multipart files or single full backup file */
-    private $totalBackupSize = 0;
-
     /** @var int The number of requests that the Discovering Files task has executed so far */
     private $discoveringFilesRequests = 0;
 
@@ -96,16 +89,6 @@ class JobBackupDataDto extends JobDataDto
 
     /** @var string If set, this backup was created as part of this schedule ID. */
     private $scheduleId;
-
-    /** @var array Selected storages for backup. */
-    private $storages;
-
-    /**
-     * @var array The meta data used by used by Remote Storages to help uploading.
-     * Stores ResumeURI for Google Drive
-     * Stores UploadId and UploadedParts Meta for Amazon S3
-     */
-    private $remoteStorageMeta;
 
     /** @var bool Should this scheduled backup be created right now. Matters only if this backup is repeated on schedule */
     private $isCreateScheduleBackupNow;
@@ -169,24 +152,6 @@ class JobBackupDataDto extends JobDataDto
     public function setExcludedDirectories(array $excludedDirectories = [])
     {
         $this->excludedDirectories = $excludedDirectories;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getIsAutomatedBackup()
-    {
-        return (bool)$this->isAutomatedBackup;
-    }
-
-    /**
-     * Hydrated dynamically.
-     *
-     * @param bool $isAutomatedBackup
-     */
-    public function setIsAutomatedBackup($isAutomatedBackup)
-    {
-        $this->isAutomatedBackup = $isAutomatedBackup;
     }
 
     /**
@@ -384,22 +349,6 @@ class JobBackupDataDto extends JobDataDto
     /**
      * @return int
      */
-    public function getTotalBackupSize()
-    {
-        return $this->totalBackupSize;
-    }
-
-    /**
-     * @param int $totalBackupSize
-     */
-    public function setTotalBackupSize($totalBackupSize)
-    {
-        $this->totalBackupSize = $totalBackupSize;
-    }
-
-    /**
-     * @return int
-     */
     public function getDiscoveringFilesRequests()
     {
         return $this->discoveringFilesRequests;
@@ -512,42 +461,6 @@ class JobBackupDataDto extends JobDataDto
     }
 
     /**
-     * @return array
-     */
-    public function getStorages()
-    {
-        return $this->storages;
-    }
-
-    /**
-     * @param string|array $storages
-     */
-    public function setStorages($storages)
-    {
-        if (!is_array($storages)) {
-            $storages = json_decode($storages, true);
-        }
-
-        $this->storages = $storages;
-    }
-
-    /**
-     * @return array
-     */
-    public function getRemoteStorageMeta()
-    {
-        return $this->remoteStorageMeta;
-    }
-
-    /**
-     * @param array $remoteStorageMeta
-     */
-    public function setRemoteStorageMeta($remoteStorageMeta)
-    {
-        $this->remoteStorageMeta = $remoteStorageMeta;
-    }
-
-    /**
      * @return bool
      */
     public function getIsCreateScheduleBackupNow()
@@ -574,36 +487,6 @@ class JobBackupDataDto extends JobDataDto
     public function setSitesToBackup(array $sitesToBackup = [])
     {
         $this->sitesToBackup = $sitesToBackup;
-    }
-
-    /** @return bool */
-    public function isLocalBackup()
-    {
-        return in_array('localStorage', $this->getStorages());
-    }
-
-    /** @return bool */
-    public function isUploadToGoogleDrive()
-    {
-        return in_array('googleDrive', $this->getStorages());
-    }
-
-    /** @return bool */
-    public function isUploadToAmazonS3()
-    {
-        return in_array('amazonS3', $this->getStorages());
-    }
-
-    /** @return bool */
-    public function isUploadToDropbox()
-    {
-        return in_array('dropbox', $this->getStorages());
-    }
-
-    /** @return bool */
-    public function isUploadToSftp()
-    {
-        return in_array('sftp', $this->getStorages());
     }
 
     /**
@@ -727,47 +610,6 @@ class JobBackupDataDto extends JobDataDto
     /**
      * @return array
      */
-    public function getFilesToUpload()
-    {
-        return $this->filesToUpload;
-    }
-
-    /**
-     * @param array $filesToUpload
-     */
-    public function setFilesToUpload($filesToUpload = [])
-    {
-        $this->filesToUpload = $filesToUpload;
-    }
-
-    /**
-     * @return array
-     */
-    public function getUploadedFiles()
-    {
-        return $this->uploadedFiles;
-    }
-
-    /**
-     * @param array $uploadedFiles
-     */
-    public function setUploadedFiles($uploadedFiles = [])
-    {
-        $this->uploadedFiles = $uploadedFiles;
-    }
-
-    /**
-     * @param string $uploadedFile
-     * @param int    $fileSize
-     */
-    public function setUploadedFile($uploadedFile, $fileSize)
-    {
-        $this->uploadedFiles[$uploadedFile] = $fileSize;
-    }
-
-    /**
-     * @return array
-     */
     public function getFileBackupIndices()
     {
         return $this->fileBackupIndices;
@@ -795,24 +637,6 @@ class JobBackupDataDto extends JobDataDto
     public function setMaxDbPartIndex($maxDbPartIndex)
     {
         $this->maxDbPartIndex = $maxDbPartIndex;
-    }
-
-    /** @return bool */
-    public function isUploadToWasabi()
-    {
-        return in_array('wasabi-s3', $this->getStorages());
-    }
-
-    /** @return bool */
-    public function isUploadToDigitalOceanSpaces()
-    {
-        return in_array('digitalocean-spaces', $this->getStorages());
-    }
-
-    /** @return bool */
-    public function isUploadToGenericS3()
-    {
-        return in_array('generic-s3', $this->getStorages());
     }
 
     /**

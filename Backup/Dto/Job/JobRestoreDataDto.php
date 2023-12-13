@@ -55,6 +55,9 @@ class JobRestoreDataDto extends JobDataDto
     private $isSameSiteBackupRestore = false;
 
     /** @var bool */
+    private $isUrlSchemeMatched = false;
+
+    /** @var bool */
     private $isMissingDatabaseFile = false;
 
     /** @var int */
@@ -393,6 +396,23 @@ class JobRestoreDataDto extends JobDataDto
     public function setIsSameSiteBackupRestore(bool $sameSite)
     {
         $this->isSameSiteBackupRestore = $sameSite;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsUrlSchemeMatched(): bool
+    {
+        return $this->isUrlSchemeMatched;
+    }
+
+    /**
+     * @param bool $matched
+     * @return void
+     */
+    public function setIsUrlSchemeMatched(bool $matched)
+    {
+        $this->isUrlSchemeMatched = $matched;
     }
 
     /**

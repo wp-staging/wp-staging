@@ -462,6 +462,10 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
     protected function cannotMigrate()
     {
+        if (!$this->jobDataDto->getIsUrlSchemeMatched()) {
+            throw new RuntimeException(sprintf("Cannot Restore this backup! This backup has different URL scheme (%s) than your current site scheme (%s). <a href='https://wp-staging.com' target='_blank'>Get WP Staging Pro</a> to restore this backup on this website.", esc_html($this->getUrlScheme($this->jobDataDto->getBackupMetadata()->getSiteUrl())), esc_html($this->getUrlScheme(site_url()))));
+        }
+
         if (!$this->jobDataDto->getIsSameSiteBackupRestore()) {
             throw new RuntimeException('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
         }
@@ -488,5 +492,14 @@ class RestoreRequirementsCheckTask extends RestoreTask
     protected function getCurrentBackupVersion()
     {
         return BackupMetadata::BACKUP_VERSION;
+    }
+
+    /**
+     * @param string $tableName
+     * @return string
+     */
+    protected function getUrlScheme(string $url): string
+    {
+        return parse_url($url, PHP_URL_SCHEME);
     }
 }

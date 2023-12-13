@@ -141,7 +141,9 @@ class Extractor
         // ['9378469', '4491']
         list($offsetStart, $length) = explode(':', trim($indexPosition));
 
-        $identifier = $this->pathIdentifier->getIdentifierFromPath($identifiablePath);
+        /** Convert {WPSTG_PIPE}, {WPSTG_COLON} to | and : respectively */
+        $identifiablePath = $this->getRestorableIdentifiablePath($identifiablePath);
+        $identifier       = $this->pathIdentifier->getIdentifierFromPath($identifiablePath);
 
         if ($identifier === PathIdentifier::IDENTIFIER_UPLOADS) {
             $extractFolder = $this->directory->getUploadsDirectory();
@@ -190,6 +192,17 @@ class Extractor
         } catch (Exception $ex) {
             throw new MissingFileException(sprintf("Following backup part missing: %s", $filePath));
         }
+    }
+
+    /**
+     * Convert {WPSTG_PIPE}, {WPSTG_COLON} to | and : respectively
+     *
+     * @param string $identifiablePath
+     * @return string
+     */
+    protected function getRestorableIdentifiablePath(string $identifiablePath): string
+    {
+        return str_replace(['{WPSTG_PIPE}', '{WPSTG_COLON}'], ['|', ':'], $identifiablePath);
     }
 
     /**

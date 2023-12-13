@@ -148,6 +148,18 @@ class Assets
                 $this->getAssetsVersion($asset),
                 false
             );
+
+            $asset = 'css/dist/wpstg-admin-all-pages.min.css';
+            if ($this->isDebugOrDevMode()) {
+                $asset = 'css/dist/wpstg-admin-all-pages.css';
+            }
+
+            wp_enqueue_style(
+                "wpstg-admin-all-pages-style",
+                $this->getAssetsUrl($asset),
+                [],
+                $this->getAssetsVersion($asset)
+            );
         }
 
         // Load below assets only on wp staging admin pages

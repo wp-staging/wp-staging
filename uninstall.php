@@ -83,6 +83,9 @@ class uninstall
             delete_option('wpstg_digitalocean');
             delete_option('wpstg_wasabi');
             delete_option('wpstg_free_backup_notice_dismissed');
+            delete_option('wpstg_first_backup_speed_index');
+            delete_option('wpstg_backup_speed_index');
+            delete_option('wpstg_backup_speed_modal_shown');
 
             // @see \WPStaging\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
             delete_option('wpstg_backup_schedules');
