@@ -1,10 +1,3 @@
-# Security Policy
-
-## Supported Versions
-
-Use this section to tell people about which versions of your project are
-currently being supported with security updates.
-
 ## Reporting a Vulnerability
 
 WP Staging, being a major backup plugin in the WordPress environment, 
@@ -13,6 +6,9 @@ security aspects is challenging, we encourage our users and the security
 community to directly communicate any security-related discoveries to us. 
 This article will guide you on submitting your reports, 
 the applicable guidelines, and the rewards you can expect for your contributions.
+
+You can find the latest version of this this document at
+[https://wp-staging.com/submit-a-security-report-for-wp-staging/](https://wp-staging.com/submit-a-security-report-for-wp-staging/)
 
 | Severity     | Reward    |
 | ------------ | ----------|
