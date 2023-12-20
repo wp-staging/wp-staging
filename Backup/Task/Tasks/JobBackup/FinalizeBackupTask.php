@@ -8,9 +8,9 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
 use RuntimeException;
+use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
-use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
@@ -19,9 +19,7 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Entity\MultipartMetadata;
 use WPStaging\Backup\Service\BackupMetadataEditor;
-use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Backup\Service\Compressor;
@@ -34,8 +32,10 @@ class FinalizeBackupTask extends BackupTask
     use WithBackupIdentifier;
 
     /** @var Compressor */
-    private $compressor;
-    private $wpdb;
+    protected $compressor;
+
+    /** @var \wpdb */
+    protected $wpdb;
 
     /** @var PathIdentifier */
     protected $pathIdentifier;
@@ -49,15 +49,23 @@ class FinalizeBackupTask extends BackupTask
     /** @var BufferedCache */
     protected $sqlCache;
 
-    /** @var array */
-    protected $databaseParts = [];
-
     /** @var int */
     protected $currentFileIndex = 0;
 
     /** @var array */
     protected $currentFileInfo = [];
 
+    /**
+     * @param Compressor $compressor
+     * @param BufferedCache $sqlCache
+     * @param LoggerInterface $logger
+     * @param Cache $cache
+     * @param StepsDto $stepsDto
+     * @param SeekableQueueInterface $taskQueue
+     * @param PathIdentifier $pathIdentifier
+     * @param BackupMetadataEditor $backupMetadataEditor
+     * @param AnalyticsBackupCreate $analyticsBackupCreate
+     */
     public function __construct(Compressor $compressor, BufferedCache $sqlCache, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, PathIdentifier $pathIdentifier, BackupMetadataEditor $backupMetadataEditor, AnalyticsBackupCreate $analyticsBackupCreate)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -71,17 +79,28 @@ class FinalizeBackupTask extends BackupTask
         $this->analyticsBackupCreate = $analyticsBackupCreate;
     }
 
-    public static function getTaskName()
+    /**
+     * @example 'backup_site_restore_themes'
+     * @return string
+     */
+    public static function getTaskName(): string
     {
         return 'backup_combine';
     }
 
-    public static function getTaskTitle()
+    /**
+     * @example 'Restoring Themes From Backup'
+     * @return string
+     */
+    public static function getTaskTitle(): string
     {
         return 'Preparing Backup File';
     }
 
-    public function execute()
+    /**
+     * @return TaskResponseDto
+     */
+    public function execute(): TaskResponseDto
     {
         $this->prepareSetup();
         $this->prepareCompressor();
@@ -117,6 +136,9 @@ class FinalizeBackupTask extends BackupTask
         return $this->generateResponse($incrementStep);
     }
 
+    /**
+     * @return void
+     */
     protected function prepareSetup()
     {
         if ($this->stepsDto->getTotal() > 0) {
@@ -144,6 +166,9 @@ class FinalizeBackupTask extends BackupTask
         $this->stepsDto->setTotal(count($this->jobDataDto->getMultipartFilesInfo()));
     }
 
+    /**
+     * @return void
+     */
     protected function prepareCompressor()
     {
         $multipartFilesInfo     = $this->jobDataDto->getMultipartFilesInfo();
@@ -155,11 +180,23 @@ class FinalizeBackupTask extends BackupTask
     }
 
     /**
+     * @return string
+     */
+    protected function getPrefix(): string
+    {
+        if (is_multisite() && !$this->jobDataDto->getIsNetworkSiteBackup()) {
+            return $this->wpdb->base_prefix;
+        }
+
+        return $this->wpdb->prefix;
+    }
+
+    /**
      * @param CompressorDto $compressorDto
-     * @param bool          $isUploadBackup
+     * @param bool $isUploadBackup
      * @return BackupMetadata
      */
-    protected function prepareBackupMetadata(CompressorDto $compressorDto, $isUploadBackup)
+    protected function prepareBackupMetadata(CompressorDto $compressorDto, bool $isUploadBackup): BackupMetadata
     {
         $backupMetadata = $compressorDto->getBackupMetadata();
         $backupMetadata->setId($this->jobDataDto->getId());
@@ -167,9 +204,7 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setTotalFiles($this->jobDataDto->getTotalFiles());
         $backupMetadata->setName($this->jobDataDto->getName());
         $backupMetadata->setIsAutomatedBackup($this->jobDataDto->getIsAutomatedBackup());
-
-        global $wpdb;
-        $backupMetadata->setPrefix($wpdb->base_prefix);
+        $backupMetadata->setPrefix($this->getPrefix());
 
         // What the backup includes
         $backupMetadata->setIsExportingPlugins($this->jobDataDto->getIsExportingPlugins());
@@ -206,12 +241,13 @@ class FinalizeBackupTask extends BackupTask
         $themes = search_theme_directories() ?: [];
         $backupMetadata->setThemes(array_keys($themes));
 
-        if (is_multisite() && is_main_site()) {
-            $backupMetadata->setSites($this->jobDataDto->getSitesToBackup());
-        }
-
         if ($this->jobDataDto->getIsMultipartBackup()) {
             $this->addSplitMetadata($backupMetadata, $isUploadBackup);
+        }
+
+        $backupMetadata->setNetworkAdmins([]);
+        if (is_multisite()) {
+            $this->addMultisiteMetadata($backupMetadata);
         }
 
         return $backupMetadata;
@@ -230,7 +266,7 @@ class FinalizeBackupTask extends BackupTask
          */
         include ABSPATH . WPINC . '/version.php';
 
-        /** @var Database */
+        /** @var Database $database */
         $database = WPStaging::make(Database::class);
 
         $serverType = $database->getServerType();
@@ -246,7 +282,10 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setSqlServerVersion($serverType . ' ' . $mysqlVersion);
     }
 
-    protected function getResponseDto()
+    /**
+     * @return FinalizeBackupResponseDto
+     */
+    protected function getResponseDto(): FinalizeBackupResponseDto
     {
         return new FinalizeBackupResponseDto();
     }
@@ -254,59 +293,21 @@ class FinalizeBackupTask extends BackupTask
     /**
      * @param BackupMetadata $backupMetadata
      * @param bool $isUploadBackup
+     * @return void
      * @throws RuntimeException
      */
-    protected function addSplitMetadata($backupMetadata, $isUploadBackup)
+    protected function addSplitMetadata(BackupMetadata $backupMetadata, bool $isUploadBackup)
     {
-        $backupsDirectory = $this->getFinalBackupParentDirectory();
+        // no-op, used in pro version.
+    }
 
-        $filesToUpload = [];
-
-        $splitMetadata = new MultipartMetadata();
-
-        foreach ($this->jobDataDto->getMultipartFilesInfo() as $backupFileInfo) {
-            $destinationFile = $backupFileInfo['destination'];
-            $destination     = $backupsDirectory . $destinationFile;
-
-            if ($isUploadBackup) {
-                $filesToUpload[$destinationFile] = $destination;
-            }
-
-            $dbExtension = DatabaseBackupTask::FILE_FORMAT;
-            $dbIdentifier = DatabaseBackupTask::PART_IDENTIFIER;
-            if (preg_match("#.{$dbIdentifier}(.[0-9]+)?.{$dbExtension}$#", $destinationFile)) {
-                $splitMetadata->pushBackupPart('database', $destinationFile);
-                continue;
-            }
-
-            if ($this->checkPartByIdentifier(BackupMuPluginsTask::IDENTIFIER, $destinationFile)) {
-                $splitMetadata->pushBackupPart('muplugins', $destinationFile);
-                continue;
-            }
-
-            if ($this->checkPartByIdentifier(BackupPluginsTask::IDENTIFIER, $destinationFile)) {
-                $splitMetadata->pushBackupPart('plugins', $destinationFile);
-                continue;
-            }
-
-            if ($this->checkPartByIdentifier(BackupThemesTask::IDENTIFIER, $destinationFile)) {
-                $splitMetadata->pushBackupPart('themes', $destinationFile);
-                continue;
-            }
-
-            if ($this->checkPartByIdentifier(BackupUploadsTask::IDENTIFIER, $destinationFile)) {
-                $splitMetadata->pushBackupPart('uploads', $destinationFile);
-                continue;
-            }
-
-            if ($this->checkPartByIdentifier(BackupOtherFilesTask::IDENTIFIER, $destinationFile)) {
-                $splitMetadata->pushBackupPart('others', $destinationFile);
-                continue;
-            }
-        }
-
-        $this->jobDataDto->setFilesToUpload($filesToUpload);
-        $backupMetadata->setMultipartMetadata($splitMetadata);
+    /**
+     * @param BackupMetadata $backupMetadata
+     * @return void
+     */
+    protected function addMultisiteMetadata(BackupMetadata $backupMetadata)
+    {
+        // no-op, used in pro version.
     }
 
     /**
@@ -324,7 +325,6 @@ class FinalizeBackupTask extends BackupTask
             return;
         }
 
-        $backupSizeBeforeAddingIndex = 0;
         try {
             $backupSizeBeforeAddingIndex = $this->compressor->addFileIndex();
         } catch (NotFoundException $ex) {
@@ -346,8 +346,10 @@ class FinalizeBackupTask extends BackupTask
     /**
      * @param CompressorDto $compressorDto
      * @param bool $isUploadBackup
+     * @return void
+     * @throws RuntimeException
      */
-    protected function addBackupMetadata($compressorDto, $isUploadBackup)
+    protected function addBackupMetadata(CompressorDto $compressorDto, bool $isUploadBackup)
     {
         if ($this->currentFileInfo['status'] !== 'IndexAdded') {
             return;
@@ -369,43 +371,23 @@ class FinalizeBackupTask extends BackupTask
             return;
         }
 
-        $multipartFilesInfo = $this->jobDataDto->getMultipartFilesInfo();
-        if (empty($multipartFilesInfo)) {
-            throw new RuntimeException('No multipart backup files to finalize.');
-        }
-
-        $destinationDirectory = $this->getFinalBackupParentDirectory();
-        $destinationPath = $destinationDirectory . $this->currentFileInfo['destination'];
-        if ($this->currentFileInfo['category'] === DatabaseBackupTask::PART_IDENTIFIER) {
-            $this->addMetadataToSql($backupMetadata, $this->currentFileInfo['filePath'], $destinationPath);
-            return;
-        }
-
-        $this->compressor->generateBackupMetadataForBackupPart($this->currentFileInfo['sizeBeforeAddingIndex'], $this->currentFileInfo['category'], $this->currentFileInfo['destination'], $this->currentFileInfo['index']);
-        $this->jobDataDto->setCurrentMultipartFileInfoIndex($this->currentFileIndex + 1);
+        $this->addMultipartInfoToMetadata($backupMetadata);
     }
 
     /**
      * @param BackupMetadata $backupMetadata
-     * @param string $tmpSqlFilePath
-     * @param string $destinationSqlFilePath
+     * @return void
+     * @throws RuntimeException
      */
-    protected function addMetadataToSql($backupMetadata, $tmpSqlFilePath, $destinationSqlFilePath)
+    protected function addMultipartInfoToMetadata(BackupMetadata $backupMetadata)
     {
-        $sqlHandle = fopen($tmpSqlFilePath, 'a');
-        fwrite($sqlHandle, PHP_EOL);
-        fwrite($sqlHandle, '-- ' . json_encode($backupMetadata) . PHP_EOL);
-        fclose($sqlHandle);
-
-        if (!rename($tmpSqlFilePath, $destinationSqlFilePath)) {
-            throw new RuntimeException("Cannot add metadata to Multipart SQL file.");
-        }
+        // no-op, used in pro version.
     }
 
     /**
      * @return string
      */
-    protected function getFinalBackupParentDirectory()
+    protected function getFinalBackupParentDirectory(): string
     {
         return $this->compressor->getFinalBackupParentDirectory($this->jobDataDto->isLocalBackup());
     }

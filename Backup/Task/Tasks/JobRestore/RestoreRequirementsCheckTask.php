@@ -172,25 +172,24 @@ class RestoreRequirementsCheckTask extends RestoreTask
      */
     protected function cannotRestoreSingleSiteBackupIntoMultisiteAndViceVersa()
     {
-        if ($this->jobDataDto->getBackupMetadata()->getSingleOrMulti() === 'single' && !is_multisite()) {
-            // Early bail: .wpstg file is for "single" site, and we are in single-site.
+        $backupType = $this->jobDataDto->getBackupMetadata()->getBackupType();
+        if ($backupType !== BackupMetadata::BACKUP_TYPE_MULTISITE && !is_multisite()) {
+            // Early bail: only multisite backup type cannot be restored on single site.
             return;
         }
 
-        if ($this->jobDataDto->getBackupMetadata()->getSingleOrMulti() === 'multi' && is_multisite()) {
-            // Early bail: .wpstg file is for "multi" site, and we are in multi-site.
+        if ($backupType === BackupMetadata::BACKUP_TYPE_MULTISITE && is_multisite()) {
+            // Early bail: For the moment only multisite backup type can be restore on multisite.
             return;
         }
 
-        if ($this->jobDataDto->getBackupMetadata()->getSingleOrMulti() === 'single' && is_multisite()) {
-            throw new \RuntimeException('This backup file was generated from a single-site WordPress installation. This website uses a multi-site WordPress installation, therefore the restorer cannot proceed.');
+        if ($backupType !== BackupMetadata::BACKUP_TYPE_MULTISITE && is_multisite()) {
+            throw new \RuntimeException('This website is a WordPress installation with multiple sites. Currently, only the recovery of a full multisite backup is supported, so the recovery program cannot proceed.');
         }
 
-        if ($this->jobDataDto->getBackupMetadata()->getSingleOrMulti() === 'multi' && !is_multisite()) {
-            throw new \RuntimeException('This backup file was generated from a multi-site WordPress installation. This website uses a single-site WordPress installation, therefore the restorer cannot proceed.');
+        if ($backupType === BackupMetadata::BACKUP_TYPE_MULTISITE && !is_multisite()) {
+            throw new \RuntimeException('This is a full multisite backup, but this site is a single-site WordPress installation, so the recovery program cannot proceed.');
         }
-
-        throw new \RuntimeException('This backup is in an unknown format. It was not possible to determine whether it was generated from a single-site WordPress installation, or a multi-site WordPress installation, therefore the restorer cannot proceed.');
     }
 
     protected function cannotHaveConflictingPrefix()

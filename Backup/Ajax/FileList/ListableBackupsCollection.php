@@ -99,7 +99,7 @@ class ListableBackupsCollection
 
                 $fileObject                                       = new FileObject($file->getRealPath());
                 $listableBackup                                   = new ListableBackup();
-                $listableBackup->type                             = $backupMetadata->getSingleOrMulti();
+                $listableBackup->type                             = $backupMetadata->getBackupType();
                 $listableBackup->subsiteType                      = $listableBackup->type === 'single' ? '' : ($backupMetadata->getSubdomainInstall() ? 'Subdomains' : 'Subdirectories');
                 $listableBackup->automatedBackup                  = $backupMetadata->getIsAutomatedBackup();
                 $listableBackup->backupName                       = $backupMetadata->getName();

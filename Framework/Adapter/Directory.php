@@ -192,16 +192,17 @@ class Directory
     }
 
     /**
+     * @param bool $refresh
      * @return string
      */
-    public function getPluginUploadsDirectory(): string
+    public function getPluginUploadsDirectory(bool $refresh = false): string
     {
-        if (isset($this->pluginUploadsDirectory)) {
+        if (isset($this->pluginUploadsDirectory) && !$refresh) {
             return $this->pluginUploadsDirectory;
         }
 
         /** This is deprecated filter and its value should always be replaced by newer filter */
-        $pluginUploadsDir = apply_filters('wpstg_get_upload_dir', wp_normalize_path($this->getUploadsDirectory() . WPSTG_PLUGIN_DOMAIN));
+        $pluginUploadsDir = apply_filters('wpstg_get_upload_dir', wp_normalize_path($this->getUploadsDirectory($refresh) . WPSTG_PLUGIN_DOMAIN));
         $pluginUploadsDir = apply_filters('wpstg.directory.pluginUploadsDirectory', $pluginUploadsDir);
 
         $this->pluginUploadsDirectory = trailingslashit($pluginUploadsDir);
@@ -210,12 +211,13 @@ class Directory
     }
 
     /**
-     * Absolute Path
+     * Absolute Path to Upload URL of current single site / network site
+     * @param bool $refresh
      * @return string
      */
-    public function getUploadsDirectory(): string
+    public function getUploadsDirectory(bool $refresh = false): string
     {
-        if ($this->uploadDir) {
+        if ($this->uploadDir && !$refresh) {
             return $this->uploadDir;
         }
 
@@ -268,6 +270,10 @@ class Directory
                 ],
                 $this->getAllThemesDirectories()
             );
+
+            if (!in_array($this->getMainSiteUploadsDirectory(), $this->defaultWordPressFolders)) {
+                $this->defaultWordPressFolders[] = $this->getMainSiteUploadsDirectory();
+            }
 
             // For edge cases when actual uploads is within wp-content/uploads/some-uploads-dir i.e. subsites clones
             $baseUploadsFolder = trailingslashit($this->getWpContentDirectory() . 'uploads');

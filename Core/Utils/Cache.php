@@ -9,6 +9,7 @@ if (!defined("WPINC")) {
 
 use Exception;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Utils\Cache\Cache as FrameworkCache;
 
 /**
  * Class Cache
@@ -27,7 +28,7 @@ class Cache
      * Cache file extension
      * @var string
      */
-    private $cacheExtension = "cache";
+    private $cacheExtension = "cache.php";
 
     /**
      * Lifetime of cache files in seconds
@@ -89,7 +90,14 @@ class Cache
             return $defaultValue;
         }
 
-        return @unserialize(file_get_contents($cacheFile));
+        $content = file_get_contents($cacheFile);
+
+        if (strpos($content, FrameworkCache::PHP_HEADER) !== 0) {
+            return $defaultValue;
+        }
+
+        $content = substr($content, strlen(FrameworkCache::PHP_HEADER));
+        return @unserialize($content);
     }
 
     /**
@@ -111,7 +119,7 @@ class Cache
 
         try {
             // Save it to file
-            if (!wpstg_put_contents($cacheFile, @serialize($value))) {
+            if (!wpstg_put_contents($cacheFile, FrameworkCache::PHP_HEADER . @serialize($value))) {
                 $this->returnException(" Can't save data to: " . $cacheFile . " Disk quota exceeded or not enough free disk space left. Ask your host to increase the storage disk space.");
                 return false;
             }

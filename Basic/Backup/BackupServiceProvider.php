@@ -10,6 +10,11 @@ use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Backup\Job\Jobs\JobRestore;
+use WPStaging\Backup\Service\Database\Exporter\AbstractExporter;
+use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
+use WPStaging\Backup\Service\Database\Exporter\DDLExporterProvider;
+use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
+use WPStaging\Backup\Service\Database\Exporter\RowsExporterProvider;
 use WPStaging\Backup\Service\Database\Importer\BasicDatabaseSearchReplacer;
 use WPStaging\Backup\Service\Database\Importer\DatabaseSearchReplacerInterface;
 use WPStaging\Backup\Service\Multipart\MultipartInjection;
@@ -49,6 +54,18 @@ class BackupServiceProvider extends ServiceProvider
                 ->needs(AbstractJob::class)
                 ->give(function () use (&$container) {
                     return $container->make(JobRestore::class);
+                });
+
+        $this->container->when(DDLExporterProvider::class)
+                ->needs(AbstractExporter::class)
+                ->give(function () use (&$container) {
+                    return $container->make(DDLExporter::class);
+                });
+
+        $this->container->when(RowsExporterProvider::class)
+                ->needs(AbstractExporter::class)
+                ->give(function () use (&$container) {
+                    return $container->make(RowsExporter::class);
                 });
 
         foreach (MultipartInjection::MULTIPART_CLASSES as $classId) {

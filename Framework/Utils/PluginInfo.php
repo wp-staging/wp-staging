@@ -85,4 +85,21 @@ class PluginInfo
 
         return array_unique($activeThemes);
     }
+
+    /**
+     * Get active parent and child themes
+     * @return array
+     */
+    public function getActiveThemes(): array
+    {
+        $activeThemes = [];
+
+        remove_all_filters('stylesheet_directory'); // to get the real value of get_stylesheet_directory().
+        remove_all_filters('template_directory'); // to get the real value of get_template_directory().
+
+        $activeThemes[] = get_stylesheet_directory(); // child theme
+        $activeThemes[] = get_template_directory(); // parent theme
+
+        return array_unique($activeThemes);
+    }
 }

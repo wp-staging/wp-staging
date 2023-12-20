@@ -51,6 +51,8 @@ class FinishBackupTask extends BackupTask
 
         $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
 
+        $this->saveBackupsInDB();
+
         $this->stepsDto->finish();
 
         $this->jobDataDto->setEndTime(time());
@@ -92,6 +94,16 @@ class FinishBackupTask extends BackupTask
         });
 
         return $this->generateResponse();
+    }
+
+    /**
+     * Retains backups that if at least one remote storage is set.
+     *
+     * @return void
+     */
+    protected function saveBackupsInDB()
+    {
+        // Used in PRO version
     }
 
     protected function getResponseDto()

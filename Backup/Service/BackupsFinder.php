@@ -45,10 +45,10 @@ class BackupsFinder
      * @return string
      * @throws BackupRuntimeException
      */
-    public function getBackupsDirectory($refresh = false)
+    public function getBackupsDirectory(bool $refresh = false): string
     {
         if ($refresh || $this->filteredBackupsDirectory === null) {
-            $defaultBackupUploadsDirectory = $this->directory->getPluginUploadsDirectory() . Compressor::BACKUP_DIR_NAME;
+            $defaultBackupUploadsDirectory = $this->directory->getPluginUploadsDirectory($refresh = true) . Compressor::BACKUP_DIR_NAME;
 
             /**
              * Allows filtering the path to the directory Backups will be written to and read from.
@@ -93,7 +93,7 @@ class BackupsFinder
     /**
      * @return array An array of SplFileInfo objects of .wpstg backup files.
      */
-    public function findBackups()
+    public function findBackups(): array
     {
         try {
             $it = new \DirectoryIterator($this->getBackupsDirectory(true));
@@ -122,11 +122,11 @@ class BackupsFinder
     }
 
     /**
-     * @param $md5
+     * @param string $md5
      *
-     * @return \SplFileInfo
+     * @return SplFileInfo
      */
-    public function findBackupByMd5Hash($md5)
+    public function findBackupByMd5Hash(string $md5): SplFileInfo
     {
         $backup = array_filter($this->findBackups(), function ($splFileInfo) use ($md5) {
             return md5($splFileInfo->getBasename()) === $md5;
@@ -140,11 +140,11 @@ class BackupsFinder
     }
 
     /**
-     * @param $scheduleId
+     * @param string $scheduleId
      *
      * @return SplFileInfo[]
      */
-    public function findBackupByScheduleId($scheduleId)
+    public function findBackupByScheduleId(string $scheduleId): array
     {
         $backups = array_filter($this->findBackups(), function ($splFileInfo) use ($scheduleId) {
             $backupFile = $splFileInfo->getPathname();
@@ -170,7 +170,7 @@ class BackupsFinder
      * @return bool
      * @throws \WPStaging\Backup\Exceptions\DiskNotWritableException
      */
-    public function hasInvalidFileIndex()
+    public function hasInvalidFileIndex(): bool
     {
         $backupFiles = $this->findBackups();
         $hasInvalidFilesIndexBackup = false;
@@ -208,7 +208,7 @@ class BackupsFinder
      *
      * @throws RuntimeException
      */
-    protected function validateBackupFileIndex($backupValidator, $backupPath)
+    protected function validateBackupFileIndex(BackupValidator $backupValidator, string $backupPath): bool
     {
         $backupMetadata = new BackupMetadata();
         $backupMetadata = $backupMetadata->hydrateByFilePath($backupPath);

@@ -52,17 +52,20 @@ class JobBackup extends AbstractJob
         return $response;
     }
 
+    /**
+     * @return void
+     */
     protected function init()
     {
         $this->setRequirementTask();
 
         if ($this->jobDataDto->getRepeatBackupOnSchedule() && !$this->jobDataDto->getIsCreateScheduleBackupNow()) {
             $this->addSchedulerTask();
-            $this->tasks[] = FinishBackupTask::class;
+            $this->addFinishBackupTask();
             return;
         }
 
-        $this->tasks[] = FilesystemScannerTask::class;
+        $this->setScannerTask();
         if ($this->jobDataDto->getIsExportingOtherWpContentFiles()) {
             $this->tasks[] = BackupOtherFilesTask::class;
         }
@@ -91,7 +94,7 @@ class JobBackup extends AbstractJob
             $this->tasks[] = IncludeDatabaseTask::class;
         }
 
-        $this->tasks[] = FinalizeBackupTask::class;
+        $this->addFinalizeTask();
         if ($this->jobDataDto->getRepeatBackupOnSchedule()) {
             $this->addSchedulerTask();
         }
@@ -100,21 +103,54 @@ class JobBackup extends AbstractJob
 
         $this->addStoragesTasks();
 
-        $this->tasks[] = FinishBackupTask::class;
+        $this->addFinishBackupTask();
     }
 
+    /**
+     * @return void
+     */
     protected function addStoragesTasks()
     {
         // Used in PRO version
     }
 
+    /**
+     * @return void
+     */
+    protected function addFinalizeTask()
+    {
+        $this->tasks[] = FinalizeBackupTask::class;
+    }
+
+    /**
+     * @return void
+     */
+    protected function addFinishBackupTask()
+    {
+        $this->tasks[] = FinishBackupTask::class;
+    }
+
+    /**
+     * @return void
+     */
     protected function addSchedulerTask()
     {
         $this->tasks[] = ScheduleBackupTask::class;
     }
 
+    /**
+     * @return void
+     */
     protected function setRequirementTask()
     {
         $this->tasks[] = BackupRequirementsCheckTask::class;
+    }
+
+    /**
+     * @return void
+     */
+    protected function setScannerTask()
+    {
+        $this->tasks[] = FilesystemScannerTask::class;
     }
 }

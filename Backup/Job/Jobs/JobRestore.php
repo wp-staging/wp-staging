@@ -138,11 +138,17 @@ class JobRestore extends AbstractJob
         $this->tasks[] = RestoreFinishTask::class;
     }
 
+    /**
+     * @return void
+     */
     protected function setRequirementTask()
     {
         $this->tasks[] = RestoreRequirementsCheckTask::class;
     }
 
+    /**
+     * @return void
+     */
     protected function addMultisiteTasks()
     {
         // no-op
@@ -193,6 +199,9 @@ class JobRestore extends AbstractJob
         return trailingslashit($dir);
     }
 
+    /**
+     * @return void
+     */
     private function addDatabaseTasks()
     {
         $metadata = $this->jobDataDto->getBackupMetadata();
@@ -205,12 +214,24 @@ class JobRestore extends AbstractJob
         }
 
         $this->addMultisiteTasks();
+        $this->addNetworkSiteTasks();
 
         $this->tasks[] = UpdateBackupsScheduleTask::class;
         $this->tasks[] = RenameDatabaseTask::class;
         $this->tasks[] = CleanupTmpTablesTask::class;
     }
 
+    /**
+     * @return void
+     */
+    protected function addNetworkSiteTasks()
+    {
+        // no-op
+    }
+
+    /**
+     * @return void
+     */
     private function addExtractFilesTasks()
     {
         $metadata = $this->jobDataDto->getBackupMetadata();

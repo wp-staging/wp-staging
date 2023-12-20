@@ -218,4 +218,17 @@ class Database
     {
         return $this->wpdb;
     }
+
+    /**
+     * @param int $subsiteId
+     * @return string
+     */
+    public function getPrefixBySubsiteId(int $subsiteId): string
+    {
+        if ($subsiteId === 0 || $subsiteId === 1) {
+            return $this->getBasePrefix();
+        }
+
+        return $this->getBasePrefix() . $subsiteId . '_';
+    }
 }

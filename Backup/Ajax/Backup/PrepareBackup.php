@@ -13,6 +13,7 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Backup\Ajax\PrepareJob;
 use WPStaging\Backup\BackupProcessLock;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\ProcessLockedException;
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
@@ -104,6 +105,7 @@ class PrepareBackup extends PrepareJob
                 'isExcludingUnusedThemes'        => 'bool',
                 'isExcludingLogs'                => 'bool',
                 'isExcludingCaches'              => 'bool',
+                'backupType'                     => 'string',
             ]);
             $data['name'] = isset($_POST['wpstgBackupData']['name']) ? sanitize_text_field($_POST['wpstgBackupData']['name']) : '';
         }
@@ -128,7 +130,9 @@ class PrepareBackup extends PrepareJob
 
         // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
         $services         = WPStaging::getInstance()->getContainer();
+        /** @var JobBackupDataDto */
         $this->jobDataDto = $services->get(JobBackupDataDto::class);
+        /** @var JobBackup */
         $this->jobBackup  = $services->get(JobBackupProvider::class)->getJob();
 
         $this->jobDataDto->hydrate($sanitizedData);
@@ -189,6 +193,8 @@ class PrepareBackup extends PrepareJob
             'storages'                       => [],
             'isCreateScheduleBackupNow'      => false,
             'sitesToBackup'                  => $sites,
+            'backupType'                     => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
+            'subsiteBlogId'                  => get_current_blog_id(),
             'isSmartExclusion'               => false,
             'isExcludingSpamComments'        => false,
             'isExcludingPostRevision'        => false,
@@ -196,6 +202,7 @@ class PrepareBackup extends PrepareJob
             'isExcludingUnusedThemes'        => false,
             'isExcludingLogs'                => false,
             'isExcludingCaches'              => false,
+            'isWpCliRequest'                 => false,
         ];
 
         $data = wp_parse_args($data, $defaults);
@@ -223,15 +230,69 @@ class PrepareBackup extends PrepareJob
         $data['isExportingOtherWpContentFiles'] = $this->jsBoolean($data['isExportingOtherWpContentFiles']);
         $data['isExportingDatabase']            = $this->jsBoolean($data['isExportingDatabase']);
 
-        $data['repeatBackupOnSchedule'] = $this->jsBoolean($data['repeatBackupOnSchedule']);
-        $data['scheduleRecurrence']     = sanitize_text_field(html_entity_decode($data['scheduleRecurrence']));
-        $data['scheduleRotation']       = absint($data['scheduleRotation']);
-
-        $data['scheduleTime'] = $this->createScheduleTimeArray($data['scheduleTime']);
-
+        $data['repeatBackupOnSchedule']    = $this->jsBoolean($data['repeatBackupOnSchedule']);
+        $data['scheduleRecurrence']        = sanitize_text_field(html_entity_decode($data['scheduleRecurrence']));
+        $data['scheduleRotation']          = absint($data['scheduleRotation']);
+        $data['scheduleTime']              = $this->createScheduleTimeArray($data['scheduleTime']);
         $data['isCreateScheduleBackupNow'] = $this->jsBoolean($data['isCreateScheduleBackupNow']);
 
+        $data['backupType']          = $this->validateAndSanitizeBackupType($data['backupType']);
+        $data['isNetworkSiteBackup'] = (is_multisite() && $data['backupType'] !== BackupMetadata::BACKUP_TYPE_MULTISITE) ? true : false;
+        if ($data['isNetworkSiteBackup']) {
+            $data['subsiteBlogId'] = $this->validateAndSanitizeSubsiteBlogId($data['subsiteBlogId']);
+        }
+
         return $data;
+    }
+
+    /**
+     * @param int|null $subsiteBlogId
+     * @return int
+     */
+    protected function validateAndSanitizeSubsiteBlogId($subsiteBlogId): int
+    {
+        if (!is_multisite()) {
+            return get_current_blog_id();
+        }
+
+        if (!is_numeric($subsiteBlogId)) {
+            return get_current_blog_id();
+        }
+
+        if ($subsiteBlogId < 0) {
+            return get_current_blog_id();
+        }
+
+        if (get_blog_details($subsiteBlogId) === false) {
+            return get_current_blog_id();
+        }
+
+        return $subsiteBlogId;
+    }
+
+    /**
+     * @param string|null $backupType
+     * @return string
+     */
+    protected function validateAndSanitizeBackupType($backupType): string
+    {
+        if (in_array($backupType, [BackupMetadata::BACKUP_TYPE_SINGLE, BackupMetadata::BACKUP_TYPE_NETWORK_SUBSITE, BackupMetadata::BACKUP_TYPE_MAIN_SITE, BackupMetadata::BACKUP_TYPE_MULTISITE])) {
+            return $backupType;
+        }
+
+        // If we are here, it means the backup type is invalid. Let's try to guess it.
+        // If it's not a multisite, it is a single site backup type
+        if (!is_multisite()) {
+            return BackupMetadata::BACKUP_TYPE_SINGLE;
+        }
+
+        // If it's a multisite, but not the main site, it is a network subsite backup type by the default select option
+        if (!is_main_site()) {
+            return BackupMetadata::BACKUP_TYPE_NETWORK_SUBSITE;
+        }
+
+        // If it's a multisite and the main site, it is an entire multisite backup type by the default select option
+        return BackupMetadata::BACKUP_TYPE_MULTISITE;
     }
 
     /**
@@ -256,6 +317,7 @@ class PrepareBackup extends PrepareJob
         } else {
             $scheduleTime = [0, 0];
         }
+
         return $scheduleTime;
     }
 

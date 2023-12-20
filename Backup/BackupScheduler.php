@@ -24,6 +24,8 @@ class BackupScheduler
 
     const BACKUP_SCHEDULE_REPORT_SENT_TRANSIENT = 'wpstg.backup.schedules.report_sent';
 
+    const OPTION_BACKUP_SCHEDULES = 'wpstg_backup_schedules';
+
     protected $backupsFinder;
 
     protected $processLock;
@@ -52,8 +54,6 @@ class BackupScheduler
         $this->backupDeleter = $backupDeleter;
         $this->countOverdueCronjobs();
     }
-
-    const OPTION_BACKUP_SCHEDULES = 'wpstg_backup_schedules';
 
     /**
      * @return array
@@ -172,6 +172,7 @@ class BackupScheduler
             'isExcludingUnusedThemes' => $jobBackupDataDto->getIsExcludingUnusedThemes(),
             'isExcludingLogs' => $jobBackupDataDto->getIsExcludingLogs(),
             'isExcludingCaches' => $jobBackupDataDto->getIsExcludingCaches(),
+            'isWpCliRequest' => true, // should be true otherwise multisite backup will not work
         ];
 
         if (wp_next_scheduled('wpstg_create_cron_backup', [$backupSchedule])) {

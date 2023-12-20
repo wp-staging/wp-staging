@@ -7,6 +7,7 @@
  * @var bool $hasSchedule
  */
 
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Times;
@@ -92,6 +93,11 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
             <input type="hidden" name="wpStagingDir" value="<?php echo esc_attr($directories['wpStaging']); ?>"/>
             <?php unset($directories['wpContent'], $directories['wpStaging']) ?>
             <input type="hidden" name="availableDirectories" value="<?php echo esc_attr(implode('|', (array)$directories)); ?>"/>
+            <?php if (!is_multisite()) { ?>
+                <input type="hidden" name="backupType" value="<?php echo esc_attr(BackupMetadata::BACKUP_TYPE_SINGLE) ?>"/>
+            <?php } else { ?>
+                <?php require_once trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/Pro/views/backup/modal/network-options.php'; ?>
+            <?php } ?>
 
             <!-- Advanced Exclude Options -->
             <div class="wpstg-backup-options-section">
@@ -107,7 +113,7 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                             <?php esc_html_e('Add Exclusions', 'wp-staging'); ?>
                         </span>
                         <?php if (!$isProVersion) : ?>
-                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade to Pro', 'wp-staging'); ?></span></a>
+                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade to activate this feature!', 'wp-staging'); ?></span></a>
                         <?php endif; ?>
                     </label>
 

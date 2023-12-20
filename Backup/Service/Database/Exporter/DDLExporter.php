@@ -8,12 +8,22 @@ use WPStaging\Framework\Database\TableService;
 
 class DDLExporter extends AbstractExporter
 {
+    /** @var TableService */
     protected $tableService;
+
+    /** @var ViewDDLOrder */
     protected $viewDDLOrder;
 
+    /** @var array */
     protected $tables         = [];
+
+    /** @var array */
     protected $views          = [];
+
+    /** @var array */
     protected $excludedTables = [];
+
+    /** @var array */
     protected $nonWpTables    = [];
 
     public function __construct(Database $database, TableService $tableService, ViewDDLOrder $viewDDLOrder)
@@ -32,8 +42,10 @@ class DDLExporter extends AbstractExporter
 
         $this->client->query("SET SESSION sql_mode = ''");
 
-        $this->tables = $this->tableService->findTableNamesStartWith($this->database->getPrefix());
-        $this->views  = $this->tableService->findViewsNamesStartWith($this->database->getPrefix());
+        $this->tables = $this->tableService->findTableNamesStartWith($this->getPrefix());
+        $this->views  = $this->tableService->findViewsNamesStartWith($this->getPrefix());
+
+        $this->filterOtherSubsitesTables();
 
         // Add views to bottom of the array to make sure they can be created. Views are based on tables. So tables need to be created before views
         $tablesThenViews = array_merge($this->tables, $this->views);
@@ -52,6 +64,8 @@ class DDLExporter extends AbstractExporter
             $this->writeQueryCreateTable($tableOrView);
         }
 
+        $this->addUsersTablesForSubsite();
+
         $this->writeQueryNonWpTables();
 
         foreach ($this->viewDDLOrder->tryGetOrderedViews() as $viewName => $query) {
@@ -67,6 +81,22 @@ class DDLExporter extends AbstractExporter
     public function getNonWPTables()
     {
         return $this->nonWpTables;
+    }
+
+    /**
+     * @return void
+     */
+    protected function addUsersTablesForSubsite()
+    {
+        // no-op, used in Pro version
+    }
+
+    /**
+     * @return void
+     */
+    protected function filterOtherSubsitesTables()
+    {
+        // no-op, used in Pro version
     }
 
     protected function writeQueryNonWpTables()
@@ -101,12 +131,20 @@ class DDLExporter extends AbstractExporter
         }
     }
 
-    protected function writeQueryCreateTable($tableName, $isWpTable = true)
+    /**
+     * @param string $tableName
+     * @param bool $isWpTable
+     * @param bool $isBaseTable
+     * @return string|false
+     */
+    protected function writeQueryCreateTable(string $tableName, bool $isWpTable = true, bool $isBaseTable = false)
     {
         $newTableName = $tableName;
 
-        if ($isWpTable) {
+        if ($isWpTable && !$isBaseTable) {
             $newTableName = $this->getPrefixedTableName($tableName);
+        } elseif ($isWpTable && $isBaseTable) {
+            $newTableName = $this->getPrefixedBaseTableName($tableName);
         }
 
         $createTableQuery = $this->tableService->getCreateTableQuery($tableName);
@@ -215,6 +253,14 @@ class DDLExporter extends AbstractExporter
         $this->file->fwrite($createViewQuery);
 
         $this->file->fwrite(";\n");
+    }
+
+    /**
+     * @return string
+     */
+    protected function getPrefix(): string
+    {
+        return $this->database->getPrefix();
     }
 
     /**

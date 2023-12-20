@@ -35,11 +35,35 @@ class BackupMetadata implements JsonSerializable
     use WithPluginsThemesMuPluginsTrait;
 
     /**
+     * Backup created on single site
+     * @var string
+     */
+    const BACKUP_TYPE_SINGLE = 'single';
+
+    /**
+     * Full network backup created on multisite
+     * @var string
+     */
+    const BACKUP_TYPE_MULTISITE = 'multi';
+
+    /**
+     * Single site backup created on non-main network subsite
+     * @var string
+     */
+    const BACKUP_TYPE_NETWORK_SUBSITE = 'network-subsite';
+
+    /**
+     * Single site backup created on main network site
+     * @var string
+     */
+    const BACKUP_TYPE_MAIN_SITE = 'main-network-site';
+
+    /**
      * Version of Backup Metadata
      * This need to be bump whenever we make changes in backup structure
      * @var string
      */
-    const BACKUP_VERSION = '1.0.0';
+    const BACKUP_VERSION = '1.0.1';
 
     /** @var string */
     private $id;
@@ -74,8 +98,8 @@ class BackupMetadata implements JsonSerializable
     /** @var string */
     private $prefix;
 
-    /** @var bool */
-    private $singleOrMulti;
+    /** @var string */
+    private $backupType;
 
     /** @var string */
     private $name;
@@ -124,6 +148,9 @@ class BackupMetadata implements JsonSerializable
 
     /** @var int The network ID for this metadata. */
     private $networkId;
+
+    /** @var array The network admins, only used in network site backups */
+    private $networkAdmins;
 
     /** @var string The uploads path */
     private $uploadsPath;
@@ -180,7 +207,7 @@ class BackupMetadata implements JsonSerializable
         $this->setNetworkId(get_current_network_id());
         $this->setDateCreated(time());
         $this->setDateCreatedTimezone($time->getSiteTimezoneString());
-        $this->setSingleOrMulti(is_multisite() ? 'multi' : 'single');
+        $this->setBackupType(is_multisite() ? self::BACKUP_TYPE_MULTISITE : self::BACKUP_TYPE_SINGLE);
         $this->setPhpShortOpenTags($siteInfo->isPhpShortTagsEnabled());
 
         $this->setWpBakeryActive($siteInfo->isWpBakeryActive());
@@ -406,7 +433,7 @@ class BackupMetadata implements JsonSerializable
         // siteurl is always untrail-slashed, @see wp-includes/option.php:162
         $siteUrl = untrailingslashit($siteUrl);
 
-        // mimick WordPress rules, see wp-includes/formatting.php:4763
+        // mimic WordPress rules, see wp-includes/formatting.php:4763
         if (!preg_match('#http(s?)://(.+)#i', $siteUrl)) {
             throw new \RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
         }
@@ -434,7 +461,7 @@ class BackupMetadata implements JsonSerializable
         // homeurl is always untrail-slashed, @see wp-includes/option.php:162
         $homeUrl = untrailingslashit($homeUrl);
 
-        // mimick WordPress rules, see wp-includes/formatting.php:4763
+        // mimic WordPress rules, see wp-includes/formatting.php:4763
         if (!preg_match('#http(s?)://(.+)#i', $homeUrl)) {
             throw new \RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
         }
@@ -463,19 +490,31 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @return bool
-     */
-    public function getSingleOrMulti()
-    {
-        return $this->singleOrMulti;
-    }
-
-    /**
-     * @param bool $singleOrMulti
+     * @param string $singleOrMulti
+     * @return void
+     * @deprecated since 5.2.0, Use setBackupType instead,
+     *             kept for backward compatibility i.e. to support old backups which have singleOrMulti field in metadata and convert it properly to backup.
      */
     public function setSingleOrMulti($singleOrMulti)
     {
-        $this->singleOrMulti = $singleOrMulti;
+        $this->setBackupType($singleOrMulti);
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackupType(): string
+    {
+        return $this->backupType;
+    }
+
+    /**
+     * @param string $backupType
+     * @return void
+     */
+    public function setBackupType(string $backupType)
+    {
+        $this->backupType = $backupType;
     }
 
     /**
@@ -782,6 +821,28 @@ class BackupMetadata implements JsonSerializable
     public function setNetworkId($networkId)
     {
         $this->networkId = $networkId;
+    }
+
+    /**
+     * @return array
+     */
+    public function getNetworkAdmins(): array
+    {
+        if (!is_array($this->networkAdmins)) {
+            $this->networkAdmins = [];
+        }
+
+        return $this->networkAdmins;
+    }
+
+    /**
+     * Can be null for old backups
+     * @param array|null $networkAdmins
+     * @return void
+     */
+    public function setNetworkAdmins($networkAdmins)
+    {
+        $this->networkAdmins = $networkAdmins;
     }
 
     /**

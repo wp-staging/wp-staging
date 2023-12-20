@@ -15,6 +15,7 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
+use WPStaging\Backup\BackupValidator;
 
 class Extractor
 {
@@ -56,16 +57,20 @@ class Extractor
     /** @var diskWriteCheck */
     protected $diskWriteCheck;
 
+    /** @var BackupValidator */
+    private $backupValidator;
+
     /**
      * @param PathIdentifier $pathIdentifier
      * @param Directory $directory
      * @param DiskWriteCheck $diskWriteCheck
      */
-    public function __construct(PathIdentifier $pathIdentifier, Directory $directory, DiskWriteCheck $diskWriteCheck)
+    public function __construct(PathIdentifier $pathIdentifier, Directory $directory, DiskWriteCheck $diskWriteCheck, BackupValidator $backupValidator)
     {
         $this->pathIdentifier = $pathIdentifier;
         $this->directory      = $directory;
         $this->diskWriteCheck = $diskWriteCheck;
+        $this->backupValidator = $backupValidator;
     }
 
     /**
@@ -257,6 +262,8 @@ class Extractor
 
         $this->jobRestoreDataDto->incrementExtractorFilesExtracted();
 
+        $this->maybeApplyPatch2861();
+
         // Reset offset pointer
         $this->jobRestoreDataDto->setExtractorFileWrittenBytes(0);
     }
@@ -343,5 +350,45 @@ class Extractor
         }
 
         return false;
+    }
+
+    /**
+     * @return void
+     */
+    private function maybeApplyPatch2861()
+    {
+        $backupMetadata = $this->jobRestoreDataDto->getBackupMetadata();
+        if ($backupMetadata->getTotalFiles() !== $this->jobRestoreDataDto->getExtractorFilesExtracted()) {
+            return;
+        }
+
+        if ($this->backupValidator->validateFileIndexFirstLine($this->wpstgFile, $backupMetadata)) {
+            return;
+        }
+
+        $this->removeLastCharInExtractedFile();
+    }
+
+    /**
+     * This function deletes the "w" character which is added at the end of the last restored file.
+     * @see https://github.com/wp-staging/wp-staging-pro/issues/2861
+     *
+     * @return void
+     */
+    private function removeLastCharInExtractedFile()
+    {
+        $destinationFilePath = $this->extractingFile->getBackupPath();
+        $fileContent         = file_get_contents($destinationFilePath);
+
+        if (empty($fileContent)) {
+            return;
+        }
+
+        if (substr($fileContent, -1) !== 'w') {
+            return;
+        }
+
+        $fileContent = substr($fileContent, 0, -1); // Remove the last character
+        file_put_contents($destinationFilePath, $fileContent);
     }
 }

@@ -20,6 +20,7 @@ use WP_Error;
 use WPStaging\Backup\BackupProcessLock;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\ProcessLockedException;
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
@@ -277,6 +278,8 @@ class PrepareBackup
             'isExcludingUnusedThemes' => false,
             'isExcludingLogs' => false,
             'isExcludingCaches' => false,
+            'backupType' => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
+            'subsiteBlogId' => null,
         ];
     }
 
