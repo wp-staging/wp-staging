@@ -12,6 +12,7 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Traits\FileScanToCacheTrait;
+use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\Strings;
 
 /**
@@ -88,6 +89,21 @@ class Directories extends JobExecutable
         $this->strUtils        = new Strings();
         $this->rootPath        = $this->filesystem->normalizePath($this->directory->getAbsPath());
         $this->excludedPlugins = new ExcludedPlugins($this->directory);
+
+        $this->initCacheFile();
+    }
+
+    /**
+     * Initialize Cache File with PHP Header if does not exist
+     * @return void
+     */
+    protected function initCacheFile()
+    {
+        if (is_file($this->filename)) {
+            return;
+        }
+
+        file_put_contents($this->filename, Cache::PHP_HEADER);
     }
 
     /**

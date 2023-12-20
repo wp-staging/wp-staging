@@ -83,6 +83,9 @@ class JobDataDto extends AbstractDto
     /** @var array Data for the current task. */
     protected $currentTaskData = [];
 
+    /** @var bool */
+    protected $isWpCliRequest = false;
+
     /**
      * @return string|int|null
      */
@@ -507,5 +510,21 @@ class JobDataDto extends AbstractDto
     public function setCurrentTaskData(array $currentTaskData)
     {
         $this->currentTaskData = $currentTaskData;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsWpCliRequest(): bool
+    {
+        return $this->isWpCliRequest;
+    }
+
+    /**
+     * @param bool $isWpCliRequest
+     */
+    public function setIsWpCliRequest(bool $isWpCliRequest)
+    {
+        $this->isWpCliRequest = $isWpCliRequest;
     }
 }

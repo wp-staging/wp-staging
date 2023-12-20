@@ -120,14 +120,7 @@ class RowsExporter extends AbstractExporter
 
         $this->specialFields = ['user_roles', 'capabilities', 'user_level', 'dashboard_quick_press_last_post_id', 'user-settings', 'user-settings-time'];
 
-        /*
-         * We do an array_reverse for performance reasons, to use the performant
-         * isset($this->prefixedValues['someValue']),
-         * since this function can be called millions of times.
-         */
-        $this->prefixedValues = array_flip(array_map(function ($unprefixedValue) {
-            return $this->database->getPrefix() . $unprefixedValue;
-        }, $this->specialFields));
+        $this->prefixSpecialFields();
 
         $this->databaseName = $this->database->getWpdba()->getClient()->__get('dbname');
     }
@@ -311,8 +304,7 @@ class RowsExporter extends AbstractExporter
      */
     protected function setupBackupSearchReplace()
     {
-        global $wpdb;
-        $this->searchReplaceForPrefix = new SearchReplace([$wpdb->base_prefix], ['{WPSTG_FINAL_PREFIX}'], true, []);
+        $this->searchReplaceForPrefix = new SearchReplace([$this->getPrefix()], ['{WPSTG_FINAL_PREFIX}'], true, []);
     }
 
     /**
@@ -496,13 +488,39 @@ class RowsExporter extends AbstractExporter
     }
 
     /**
-     * @todo: Do we want to add this to DbRowsGeneratorTrait?
+     * @return void
+     */
+    protected function prefixSpecialFields()
+    {
+        $prefix = $this->getPrefix();
+
+        /**
+         * We do an array_flip for performance reasons, to use the performant
+         * isset($this->prefixedValues['someValue']),
+         * since this function can be called millions of times.
+         */
+        $this->prefixedValues = array_flip(array_map(function ($unprefixedValue) use ($prefix) {
+            return $prefix . $unprefixedValue;
+        }, $this->specialFields));
+    }
+
+    /**
+     * @return string
+     */
+    protected function getPrefix(): string
+    {
+        return $this->database->getBasePrefix();
+    }
+
+    /**
+     * Used in the Pro version
+     * @param string $value
      * @return bool
      */
-/*    private function isTableCorrupt()
+    protected function isOtherSitePrefixValue(string $value): bool
     {
-        return $this->client->errno() === 1194;
-    }*/
+        return false;
+    }
 
     /**
      * @param array $row
@@ -555,6 +573,11 @@ class RowsExporter extends AbstractExporter
                 }
 
                 if ($prefixedTableName === '{WPSTG_TMP_PREFIX}usermeta' && $column === 'meta_key') {
+                    // Rows not to back up
+                    if ($this->isOtherSitePrefixValue($value)) {
+                        throw new \OutOfBoundsException();
+                    }
+
                     // Rows that need special prefix
                     if (isset($this->prefixedValues[$value])) {
                         $value = $this->searchReplaceForPrefix->replace($value);

@@ -17,6 +17,7 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Utils\Cache\Cache;
 
 /**
  * Class Files
@@ -320,6 +321,11 @@ class Files extends JobExecutable
             }
 
             $file = trim($this->file->readAndMoveNext());
+
+            // Skip PHP header content
+            if ($file === trim(Cache::PHP_HEADER)) {
+                continue;
+            }
 
             if (empty($file)) {
                 continue;

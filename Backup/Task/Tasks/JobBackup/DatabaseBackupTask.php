@@ -9,6 +9,8 @@ use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
 use WPStaging\Backup\Service\Multipart\MultipartSplitInterface;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Backup\Service\Database\Exporter\DDLExporterProvider;
+use WPStaging\Backup\Service\Database\Exporter\RowsExporterProvider;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Hooks;
@@ -68,15 +70,28 @@ class DatabaseBackupTask extends BackupTask
             'wpr_rucss_used_css',
         ];
 
+        // Exclude these tables for main network site backups
+        if (is_multisite() && $this->jobDataDto->getIsNetworkSiteBackup() && is_main_site($this->jobDataDto->getSubsiteBlogId())) {
+            $tablesToExclude[] = 'blogmeta';
+            $tablesToExclude[] = 'blogs';
+            $tablesToExclude[] = 'blog_versions';
+            $tablesToExclude[] = 'registration_log';
+            $tablesToExclude[] = 'signups';
+            $tablesToExclude[] = 'site';
+            $tablesToExclude[] = 'sitemeta';
+        }
+
         $subsites = [];
-        if (is_multisite()) {
+        if (is_multisite() && !$this->jobDataDto->getIsNetworkSiteBackup()) {
             $subsites = $this->jobDataDto->getSitesToBackup();
         }
 
         // First request: Create DDL
         if (!$this->stepsDto->getTotal()) {
             /** @var DDLExporter $ddlExporter */
-            $ddlExporter = WPStaging::make(DDLExporter::class);
+            $ddlExporter = WPStaging::make(DDLExporterProvider::class)->getExporter();
+            $ddlExporter->setIsNetworkSiteBackup($this->jobDataDto->getIsNetworkSiteBackup());
+            $ddlExporter->setSubsiteBlogId($this->jobDataDto->getSubsiteBlogId());
             $ddlExporter->setFileName($this->jobDataDto->getDatabaseFile());
             $ddlExporter->setSubsites($subsites);
             $ddlExporter->setTablesToExclude($tablesToExclude);
@@ -103,9 +118,10 @@ class DatabaseBackupTask extends BackupTask
         $useMemoryExhaustFix = $this->isMemoryExhaustFixEnabled();
         // Lazy instantiation
         /** @var RowsExporter $rowsExporter */
-        $rowsExporter = WPStaging::make(RowsExporter::class);
+        $rowsExporter = WPStaging::make(RowsExporterProvider::class)->getExporter();
         $rowsExporter->setSubsites($subsites);
         $rowsExporter->setupPrefixedValuesForSubsites();
+        $rowsExporter->setIsNetworkSiteBackup($this->jobDataDto->getIsNetworkSiteBackup());
         $rowsExporter->setFileName($this->jobDataDto->getDatabaseFile());
         $rowsExporter->setTables($this->jobDataDto->getTablesToBackup());
         $rowsExporter->setIsBackupSplit($this->jobDataDto->getIsMultipartBackup());

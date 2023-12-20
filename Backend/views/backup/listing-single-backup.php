@@ -64,7 +64,7 @@ $logUrl = add_query_arg([
         </span>
         <?php if (!$isCorrupt) : ?>
             <div class="wpstg-clone-labels">
-                <span class="wpstg-clone-label"><?php echo $backup->type === 'single' ? esc_html__('Single Site', 'wp-staging') : esc_html__('Multisite', 'wp-staging') ?></span>
+                <span class="wpstg-clone-label"><?php echo esc_html($backup->getBackupType()) ?></span>
                 <?php echo $backup->isMultipartBackup ? '<span class="wpstg-clone-label">' . esc_html__('Multipart Backup', 'wp-staging') . '</span>' : '' ?>
             </div>
         <?php endif ?>

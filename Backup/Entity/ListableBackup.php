@@ -108,4 +108,28 @@ class ListableBackup
 
     /** @var array */
     public $indexPartSize = [];
+
+    /**
+     * @return string
+     */
+    public function getBackupType(): string
+    {
+        if ($this->type === BackupMetadata::BACKUP_TYPE_SINGLE) {
+            return esc_html__('Single Site', 'wp-staging');
+        }
+
+        if ($this->type === BackupMetadata::BACKUP_TYPE_MULTISITE) {
+            return esc_html__('Entire Network', 'wp-staging');
+        }
+
+        if ($this->type === BackupMetadata::BACKUP_TYPE_NETWORK_SUBSITE) {
+            return esc_html__('Network Subsite', 'wp-staging');
+        }
+
+        if ($this->type === BackupMetadata::BACKUP_TYPE_MAIN_SITE) {
+            return esc_html__('Main Network Site', 'wp-staging');
+        }
+
+        return esc_html__('Unknown Backup Type', 'wp-staging');
+    }
 }

@@ -94,6 +94,8 @@ class BackupRequirementsCheckTask extends BackupTask
         $isMultipartBackup = $this->jobDataDto->getIsMultipartBackup() ? 'Yes' : 'No';
         $this->logger->info(sprintf(__('Is Multipart Backup: %s ', 'wp-staging'), esc_html($isMultipartBackup)));
 
+        $this->addBackupSettingsToLogs();
+
         $this->logger->info(__('Backup requirements passed...', 'wp-staging'));
 
         $this->backupScheduler->maybeDeleteOldBackups($this->jobDataDto);
@@ -204,5 +206,83 @@ class BackupRequirementsCheckTask extends BackupTask
         }
 
         $this->compressor->setCategory('', $create = true);
+    }
+
+    /**
+     * @return void
+     */
+    protected function addBackupSettingsToLogs()
+    {
+        $this->logInformation('Backup Contents', $this->getBackupContents());
+
+        $this->logInformation('Advanced Exclude Options', $this->getSmartExclusion());
+
+        $this->logInformation('Schedule Options', $this->getBackupScheduleOptions());
+
+        $this->logInformation('Storages', $this->jobDataDto->getStorages());
+    }
+
+    /**
+     * @return array
+     */
+    private function getBackupContents(): array
+    {
+        return [
+            'Media Library'             => $this->jobDataDto->getIsExportingUploads(),
+            'Themes'                    => $this->jobDataDto->getIsExportingThemes(),
+            'Must-Use Plugins'          => $this->jobDataDto->getIsExportingMuPlugins(),
+            'Plugins'                   => $this->jobDataDto->getIsExportingPlugins(),
+            'Other Files In wp-content' => $this->jobDataDto->getIsExportingOtherWpContentFiles(),
+            'Database'                  => $this->jobDataDto->getIsExportingDatabase(),
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    private function getSmartExclusion(): array
+    {
+        $smartExclusion = ['No'];
+        if ($this->jobDataDto->getIsSmartExclusion()) {
+            $smartExclusion = [
+                'Exclude log files'           => $this->jobDataDto->getIsExcludingLogs(),
+                'Exclude cache files'         => $this->jobDataDto->getIsExcludingCaches(),
+                'Exclude post revisions'      => $this->jobDataDto->getIsExcludingPostRevision(),
+                'Exclude spam comments'       => $this->jobDataDto->getIsExcludingSpamComments(),
+                'Exclude unused themes'       => $this->jobDataDto->getIsExcludingUnusedThemes(),
+                'Exclude deactivated plugins' => $this->jobDataDto->getIsExcludingDeactivatedPlugins(),
+            ];
+        }
+
+        return $smartExclusion;
+    }
+
+    /**
+     * @return array
+     */
+    private function getBackupScheduleOptions(): array
+    {
+        $scheduleOptions = ['No'];
+        if ($this->jobDataDto->getRepeatBackupOnSchedule()) {
+            $scheduleOptions = [
+                'Recurrence' => $this->jobDataDto->getScheduleRecurrence(),
+                'Time'       => $this->jobDataDto->getScheduleTime(),
+                'Retention'  => $this->jobDataDto->getScheduleRotation(),
+                'Launch Now' => $this->jobDataDto->getIsCreateScheduleBackupNow(),
+            ];
+        }
+
+        return $scheduleOptions;
+    }
+
+    /**
+     * @param string message
+     * @param array data
+     *
+     * @return void
+     */
+    private function logInformation(string $message, array $data)
+    {
+        $this->logger->info(sprintf(esc_html('%s: %s'), $message, wp_json_encode($data)));
     }
 }

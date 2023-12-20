@@ -323,6 +323,12 @@ class Compressor
         $indexStats = fstat($indexResource);
         $this->initiateDtoByFilePath($this->tempBackupIndex->getFilePath(), $indexStats);
 
+        $lastLine     = $this->tempBackup->readLastLine();
+        $writtenBytes = $this->compressorDto->getWrittenBytesTotal();
+        if ($lastLine !== PHP_EOL && $writtenBytes === 0) {
+            $this->tempBackup->append(''); // ensure that file index start from new line. See https://github.com/wp-staging/wp-staging-pro/issues/2861
+        }
+
         clearstatcache();
         $backupSizeBeforeAddingIndex = filesize($this->tempBackup->getFilePath());
 

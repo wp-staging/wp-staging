@@ -1,4 +1,4 @@
-=== WP STAGING Backup Plugin - Migration Backup Restore  ===
+=== WP STAGING WordPress Backup Plugin - Migration Backup Restore  ===
 
 Author URL: https://wp-staging.com/backup-wordpress
 Plugin URL: https://wordpress.org/plugins/wp-staging
@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.4
-Stable tag: 3.1.4
+Stable tag: 3.2.0
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,14 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.2.0 =
+* New: Support up to WordPress 6.4.2
+* New: Adding feature to create backup of individual network site in multisite installations. #2795
+* New: Add backup settings in backup logs. #2969
+* Fix: Automatic backup repair if the backup file index is corrupted. #2861
+* Fix: Saves remote storage backups in the database for use when calculating the number of backup to keep on remote storage. #2856
+* Fix: Prevent accessing the content of backup cache files created during cloning and pushing jobs. #2984
 
 = 3.1.4 =
 * New: Add smart exclusion options for backup creation and allow exclusion of cache files, post revisions, spam comments, unused plugins and themes and deactivated plugins with a single click. #2758
@@ -956,4 +964,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-This is a maintenance update. We recommend to update to this version.
+This is a security and feature update. It's highly recommended to update!

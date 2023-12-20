@@ -34,10 +34,6 @@ class Listing extends AbstractTemplateComponent
 
         if (!WPStaging::isPro() && is_multisite()) {
             $result = $this->templateEngine->render('Backend/views/backup/free-version.php');
-        } elseif (is_multisite() && !is_main_site()) {
-            $result = $this->templateEngine->render('Backend/views/backup/multisite-disabled.php', [
-                'mainsiteWpstgURL' => get_admin_url(get_main_site_id(), 'admin.php?page=wpstg_backup')
-            ]);
         } else {
             $directories = [
                 'uploads' => $this->directory->getUploadsDirectory(),

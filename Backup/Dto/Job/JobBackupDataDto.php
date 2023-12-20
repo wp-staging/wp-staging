@@ -96,6 +96,11 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /** @var array Site selected to backup */
     private $sitesToBackup = [];
 
+    /**
+    * is network subsite or network main site backup
+    * @var bool */
+    private $isNetworkSiteBackup = false;
+
     /** @var bool */
     private $isMultipartBackup = false;
 
@@ -122,6 +127,12 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
      * Store total size for each category
      */
     private $categorySizes = [];
+
+    /** @var string */
+    private $backupType;
+
+    /** @var int */
+    private $subsiteBlogId;
 
     /**
      * @return string|null
@@ -718,5 +729,60 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function getCategorySizes()
     {
         return $this->categorySizes;
+    }
+
+    /**
+     * @param bool $isNetworkSiteBackup
+     * @return void
+     */
+    public function setIsNetworkSiteBackup(bool $isNetworkSiteBackup)
+    {
+        $this->isNetworkSiteBackup = $isNetworkSiteBackup;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsNetworkSiteBackup(): bool
+    {
+        return (bool)$this->isNetworkSiteBackup;
+    }
+
+    /**
+     * @param string $backupType
+     * @return void
+     */
+    public function setBackupType(string $backupType)
+    {
+        $this->backupType = $backupType;
+    }
+
+    /**
+     * @return string
+     */
+    public function getBackupType(): string
+    {
+        return $this->backupType;
+    }
+
+    /**
+     * @param int|null $subsiteBlogId
+     * @return void
+     */
+    public function setSubsiteBlogId($subsiteBlogId)
+    {
+        $this->subsiteBlogId = $subsiteBlogId;
+    }
+
+    /**
+     * @return int
+     */
+    public function getSubsiteBlogId(): int
+    {
+        if (empty($this->subsiteBlogId)) {
+            $this->subsiteBlogId = get_current_blog_id();
+        }
+
+        return (int)$this->subsiteBlogId;
     }
 }

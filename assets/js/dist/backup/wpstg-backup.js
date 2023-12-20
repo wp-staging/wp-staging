@@ -2695,6 +2695,7 @@
                       scheduleRotation: container.querySelector('#backupScheduleRotation').value || null,
                       storages: storages,
                       isCreateScheduleBackupNow: container.querySelector('#backupScheduleLaunch:checked') !== null,
+                      backupType: container.querySelector('[name="backupType"]').value || null,
                       isSmartExclusion: container.querySelector('#wpstgSmartExclusion:checked') !== null,
                       isExcludingSpamComments: container.querySelector('#wpstgExcludeSpamComments:checked') !== null,
                       isExcludingPostRevision: container.querySelector('#wpstgExcludePostRevision:checked') !== null,
