@@ -133,7 +133,8 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->persist();
     }
 
-    /** @return string
+    /**
+     * @return string
      * @throws WPStagingException
      */
     public static function getJobName()
@@ -371,15 +372,18 @@ abstract class AbstractJob implements ShutdownableInterface
         return $this->currentTask;
     }
 
-    /** @param string|false $memoryExhaustErrorTmpFile */
-    public function setMemoryExhaustErrorTmpFile($memoryExhaustErrorTmpFile)
+    /**
+     * @param string $memoryExhaustErrorTmpFile
+     * @return void
+     */
+    public function setMemoryExhaustErrorTmpFile(string $memoryExhaustErrorTmpFile)
     {
         $this->memoryExhaustErrorTmpFile = $memoryExhaustErrorTmpFile;
     }
 
     protected function removeMemoryExhaustErrorTmpFile()
     {
-        if ($this->memoryExhaustErrorTmpFile === false) {
+        if ($this->memoryExhaustErrorTmpFile === '') {
             return;
         }
 

@@ -85,8 +85,8 @@ class Finish extends Job
     {
         $this->log("Finish: Deleting clone job's cache files...");
 
-        $this->cache->delete("clone_options");
-        $this->cache->delete("files_to_copy");
+        $this->cloneOptionCache->delete();
+        $this->filesIndexCache->delete();
 
         $this->log("Finish: Clone job's cache files have been deleted!");
     }

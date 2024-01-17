@@ -116,7 +116,11 @@ class Pluginmeta
             return false;
         }
 
-        if (!wpstgIsFreeActiveInNetworkOrCurrentSite()) {
+        if (is_network_admin() && !wpstgIsFreeVersionActiveInNetwork()) {
+            return false;
+        }
+
+        if (!is_network_admin() && !wpstgIsFreeVersionActive()) {
             return false;
         }
 

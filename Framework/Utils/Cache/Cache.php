@@ -47,6 +47,19 @@ class Cache extends AbstractCache
     }
 
     /**
+     * If the file doesn't exist, create it and add the PHP header
+     * @return void
+     */
+    public function initWithPhpHeader()
+    {
+        if (is_file($this->filePath)) {
+            return;
+        }
+
+        file_put_contents($this->filePath, self::PHP_HEADER);
+    }
+
+    /**
      * @return string
      */
     protected function getFileExtension(): string

@@ -2,13 +2,13 @@
 
 namespace WPStaging\Framework;
 
-use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 use WPStaging\Framework\Analytics\AnalyticsSender;
 use WPStaging\Framework\DI\FeatureServiceProvider;
 use WPStaging\Framework\Security\Auth;
+use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\Sanitize;
 
 class AnalyticsServiceProvider extends FeatureServiceProvider
@@ -87,8 +87,12 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
             /**
              * Get the "options" object from cache
              * @see \WPStaging\Backend\Modules\Jobs\Job::__construct
+             * @var Cache $cache
              */
-            $cache = new Cache(-1, WPStaging::getContentDir());
+            $cache = WPStaging::make(Cache::class);
+            $cache->setLifetime(-1); // Non-expireable file
+            $cache->setPath(WPStaging::getContentDir());
+
             $options = $cache->get("clone_options");
 
             if (is_object($options) && property_exists($options, 'jobIdentifier')) {

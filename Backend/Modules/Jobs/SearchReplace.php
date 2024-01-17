@@ -77,6 +77,7 @@ class SearchReplace extends CloningProcess
      */
     public function initialize()
     {
+        $this->setupMemoryExhaustFile();
         $this->initializeDbObjects();
         $this->total = count($this->options->tables);
         $this->tmpPrefix = $this->options->prefix;
@@ -152,7 +153,7 @@ class SearchReplace extends CloningProcess
     private function updateTable($tableName)
     {
         $strings      = new Strings();
-        $table        = $strings->str_replace_first(WPStaging::getTablePrefix(), '', $tableName);
+        $table        = $strings->strReplaceFirst(WPStaging::getTablePrefix(), '', $tableName);
         $newTableName = $this->tmpPrefix . $table;
 
         // Save current job
@@ -238,7 +239,7 @@ class SearchReplace extends CloningProcess
         // Search & Replace
         $this->searchReplace($table, []);
 
-        if (defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') && WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR) {
+        if ($this->isSearchReplaceGeneratorDisabled()) {
             $this->options->job->start += $this->settings->querySRLimit;
         }
     }
@@ -319,21 +320,7 @@ class SearchReplace extends CloningProcess
         $offset = $this->options->job->start;
         $limit = $this->settings->querySRLimit;
 
-        /// DEBUG
-/*        $this->logDebug(
-            sprintf(
-                'SearchReplace-beforeRowsGenerator: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
-                $this->getMaxMemoryLimit(),
-                $this->getScriptMemoryLimit(),
-                $this->getMemoryUsage(),
-                $this->findExecutionTimeLimit(),
-                $this->getRunningTime(),
-                ($this->isThreshold() ? 'yes' : 'no')
-            )
-        );*/
-        /// DEBUG
-
-        if (defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') && WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR) {
+        if ($this->isSearchReplaceGeneratorDisabled()) {
             $data = $this->stagingDb->get_results("SELECT * FROM $table LIMIT $offset, $limit", ARRAY_A);
         } else {
             $this->lastFetchedPrimaryKeyValue = property_exists($this->options->job, 'lastProcessedId') ? $this->options->job->lastProcessedId : false;
@@ -346,22 +333,6 @@ class SearchReplace extends CloningProcess
         $filter = apply_filters('wpstg_clone_searchreplace_excl_rows', $filter);
 
         $processed = 0;
-
-        /// DEBUG
-        /*
-        $this->logDebug(
-            sprintf(
-                'SearchReplace-beforeRowProcessing: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
-                $this->getMaxMemoryLimit(),
-                $this->getScriptMemoryLimit(),
-                $this->getMemoryUsage(),
-                $this->findExecutionTimeLimit(),
-                $this->getRunningTime(),
-                ($this->isThreshold() ? 'yes' : 'no')
-            )
-        );
-        */
-        /// DEBUG
 
         // Go through the table rows
         foreach ($data as $row) {
@@ -446,27 +417,9 @@ class SearchReplace extends CloningProcess
             }
         } // end row loop
 
-        /// DEBUG
-/*        $this->logDebug(
-            sprintf(
-                'SearchReplace-afterRowsProcessing: processed=%s; max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
-                $processed,
-                $this->getMaxMemoryLimit(),
-                $this->getScriptMemoryLimit(),
-                $this->getMemoryUsage(),
-                $this->findExecutionTimeLimit(),
-                $this->getRunningTime(),
-                ($this->isThreshold() ? 'yes' : 'no')
-            )
-        );*/
-        /// DEBUG
-
         unset($row,$updateSql,$whereSql,$sql,$currentRow);
 
-        if (
-            !defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') ||
-            (defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR') && !WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR)
-        ) {
+        if (!$this->isSearchReplaceGeneratorDisabled()) {
             $this->updateJobStart($processed, $this->stagingDb, $table);
         }
 
@@ -483,6 +436,11 @@ class SearchReplace extends CloningProcess
     {
         if (!empty($this->options->job->current)) {
             return;
+        }
+
+        // Create job object if not exists
+        if (!is_object($this->options->job)) {
+            $this->options->job = new stdClass();
         }
 
         $this->options->job->current = $table;
@@ -635,5 +593,17 @@ class SearchReplace extends CloningProcess
     protected function logDebug($message)
     {
         \WPStaging\functions\debug_log($message, 'debug');
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isSearchReplaceGeneratorDisabled(): bool
+    {
+        if (!defined('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR')) {
+            return false;
+        }
+
+        return constant('WPSTG_DISABLE_SEARCH_REPLACE_GENERATOR');
     }
 }

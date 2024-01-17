@@ -82,6 +82,9 @@ class TablesRenamer
     /** @var int */
     protected $nonConflictingTablesRenamed = 0;
 
+    /** @var bool */
+    protected $isNonConflictingTablesRenamingTaskExecuted = false;
+
     public function __construct(TableService $tableService, PhpAdapter $phpAdapter)
     {
         $this->tableService = $tableService;
@@ -226,6 +229,14 @@ class TablesRenamer
     public function getNonConflictingTablesRenamed(): int
     {
         return $this->nonConflictingTablesRenamed;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsNonConflictingTablesRenamingTaskExecuted(): bool
+    {
+        return $this->isNonConflictingTablesRenamingTaskExecuted;
     }
 
     /**
@@ -416,6 +427,7 @@ class TablesRenamer
             }
 
             $this->renameTable($nonConflictingTable, $this->nonConflictingTablesRenamed);
+            $this->isNonConflictingTablesRenamingTaskExecuted = true;
 
             if ($this->isThresholdReached()) {
                 $this->tableService->getDatabase()->exec('COMMIT;');

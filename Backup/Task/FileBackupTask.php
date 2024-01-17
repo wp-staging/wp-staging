@@ -12,6 +12,7 @@ use WPStaging\Backup\Exceptions\DiskNotWritableException;
 use WPStaging\Backup\Service\Compressor;
 use WPStaging\Backup\Service\Multipart\MultipartSplitInterface;
 use WPStaging\Backup\Task\BackupTask;
+use WPStaging\Backup\Task\Tasks\JobBackup\FilesystemScannerTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\FinishedQueueException;
@@ -66,7 +67,9 @@ abstract class FileBackupTask extends BackupTask
         $this->setupCompressor();
         $this->start = microtime(true);
 
-        $this->isWpContentOutsideAbspath = WPStaging::make(SiteInfo::class)->isWpContentOutsideAbspath();
+        /** @var SiteInfo */
+        $siteInfo                        = WPStaging::make(SiteInfo::class);
+        $this->isWpContentOutsideAbspath = $siteInfo->isWpContentOutsideAbspath();
 
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
             try {
@@ -154,13 +157,18 @@ abstract class FileBackupTask extends BackupTask
             return;
         }
 
+        $indexPath = '';
+        if (strpos($path, FilesystemScannerTask::PATH_SEPARATOR) !== false) {
+            list($path, $indexPath) = explode(FilesystemScannerTask::PATH_SEPARATOR, $path);
+        }
+
         if ($this->isWpContentOutsideAbspath === false) {
             $path = trailingslashit(ABSPATH) . $path;
         }
 
         try {
             $this->multipartSplit->maybeIncrementBackupFileIndex($this->jobDataDto, $this->compressor, $this->getFileIdentifier(), $path);
-            $isFileWrittenCompletely = $this->compressor->appendFileToBackup($path);
+            $isFileWrittenCompletely = $this->compressor->appendFileToBackup($path, $indexPath);
         } catch (\RuntimeException $e) {
             debug_log("Backup error: cannot append file to backup: $path");
             $isFileWrittenCompletely = null;

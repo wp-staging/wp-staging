@@ -36,16 +36,25 @@ class JobRestore extends AbstractJob
     /** @var array The array of tasks to execute for this job. Populated at init(). */
     protected $tasks = [];
 
+    /**
+     * @return string
+     */
     public static function getJobName(): string
     {
         return 'backup_restore';
     }
 
+    /**
+     * @return array
+     */
     protected function getJobTasks(): array
     {
         return $this->tasks;
     }
 
+    /**
+     * @return void
+     */
     public function onWpShutdown()
     {
         if ($this->jobDataDto->isFinished()) {
@@ -55,6 +64,9 @@ class JobRestore extends AbstractJob
         parent::onWpShutdown();
     }
 
+    /**
+     * @return TaskResponseDto
+     */
     protected function execute(): TaskResponseDto
     {
         //$this->startBenchmark();
@@ -73,6 +85,7 @@ class JobRestore extends AbstractJob
 
     /**
      * @throws \Exception
+     * @return void
      */
     protected function init()
     {
@@ -155,6 +168,14 @@ class JobRestore extends AbstractJob
     }
 
     /**
+     * @return void
+     */
+    protected function addWordPressComTasks()
+    {
+        // no-op
+    }
+
+    /**
      * @param BackupMetadata $backupMetadata
      * @return bool
      */
@@ -213,6 +234,7 @@ class JobRestore extends AbstractJob
             $this->tasks[] = RestoreDatabaseTask::class;
         }
 
+        $this->addWordPressComTasks();
         $this->addMultisiteTasks();
         $this->addNetworkSiteTasks();
 

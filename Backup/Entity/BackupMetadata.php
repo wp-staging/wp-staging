@@ -6,6 +6,7 @@
 namespace WPStaging\Backup\Entity;
 
 use JsonSerializable;
+use RuntimeException;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\HydrateTrait;
@@ -63,7 +64,7 @@ class BackupMetadata implements JsonSerializable
      * This need to be bump whenever we make changes in backup structure
      * @var string
      */
-    const BACKUP_VERSION = '1.0.1';
+    const BACKUP_VERSION = '1.0.2';
 
     /** @var string */
     private $id;
@@ -164,6 +165,12 @@ class BackupMetadata implements JsonSerializable
     /** @var bool Whether WP Bakery / Visual Composer installed and active. */
     private $wpBakeryActive;
 
+    /** @var bool Whether Jetpack plugin installed and active. */
+    private $isJetpackActive;
+
+    /** @var bool Whether the backup created on wordpress.com. */
+    private $isCreatedOnWordPressCom;
+
     /** @var string If this backup was created automatically as part of a schedule, this will hold the schedule ID. */
     private $scheduleId;
 
@@ -189,6 +196,12 @@ class BackupMetadata implements JsonSerializable
     private $indexPartSize = [];
 
     /**
+     * Backup is created on which hosting type flywheel, wp.com or other
+     * @var string
+     */
+    private $hostingType;
+
+    /**
      * BackupMetadata constructor.
      *
      * Sets reasonable defaults.
@@ -211,6 +224,8 @@ class BackupMetadata implements JsonSerializable
         $this->setPhpShortOpenTags($siteInfo->isPhpShortTagsEnabled());
 
         $this->setWpBakeryActive($siteInfo->isWpBakeryActive());
+        $this->setIsJetpackActive($siteInfo->isJetpackActive());
+        $this->setIsCreatedOnWordPressCom($siteInfo->isHostedOnWordPressCom());
 
         $uploadDir = wp_upload_dir(null, false, true);
 
@@ -226,7 +241,7 @@ class BackupMetadata implements JsonSerializable
     }
 
     #[\ReturnTypeWillChange]
-    public function jsonSerialize()
+    public function jsonSerialize(): array
     {
         return $this->toArray();
     }
@@ -234,7 +249,7 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return array<array<array>>
      */
-    public function toArray()
+    public function toArray(): array
     {
         $array = get_object_vars($this);
 
@@ -251,9 +266,9 @@ class BackupMetadata implements JsonSerializable
 
     /**
      * @param array $data
-     * @return $this
+     * @return BackupMetadata
      */
-    public function hydrate(array $data = [])
+    public function hydrate(array $data = []): BackupMetadata
     {
         if (key($data) === 'networks') {
             if (array_key_exists(get_current_network_id(), $data['networks'])) {
@@ -277,9 +292,10 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @throws \RuntimeException
+     * @throws RuntimeException
+     * @return BackupMetadata
      */
-    public function hydrateByFile(FileObject $file)
+    public function hydrateByFile(FileObject $file): BackupMetadata
     {
         $backupMetadataArray = $file->readBackupMetadata();
 
@@ -287,9 +303,10 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @throws \RuntimeException
+     * @throws RuntimeException
+     * @return BackupMetadata
      */
-    public function hydrateByFilePath($filePath)
+    public function hydrateByFilePath($filePath): BackupMetadata
     {
         return $this->hydrateByFile(new FileObject($filePath));
     }
@@ -297,15 +314,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getId()
+    public function getId(): string
     {
         return $this->id;
     }
 
     /**
      * @param string $id
+     * @return void
      */
-    public function setId($id)
+    public function setId(string $id)
     {
         $this->id = $id;
     }
@@ -319,7 +337,8 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param int $headerStart
+     * @param int|null $headerStart
+     * @return void
      */
     public function setHeaderStart($headerStart)
     {
@@ -335,7 +354,8 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param int $headerEnd
+     * @param int|null $headerEnd
+     * @return void
      */
     public function setHeaderEnd($headerEnd)
     {
@@ -360,8 +380,10 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @deprecated T.B.D
+     * @deprecated PRO 5.0.4
+     * @deprecated FREE 3.0.4
      * @param string $version
+     * @return void
      */
     public function setVersion(string $version)
     {
@@ -394,7 +416,8 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param int $totalFiles
+     * @param int|null $totalFiles
+     * @return void
      */
     public function setTotalFiles($totalFiles)
     {
@@ -410,7 +433,8 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param int $totalDirectories
+     * @param int|null $totalDirectories
+     * @return void
      */
     public function setTotalDirectories($totalDirectories)
     {
@@ -420,26 +444,29 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getSiteUrl()
+    public function getSiteUrl(): string
     {
         return $this->siteUrl;
     }
 
     /**
      * @param string $siteUrl
+     * @return void
+     *
+     * @throws RuntimeException
      */
-    public function setSiteUrl($siteUrl)
+    public function setSiteUrl(string $siteUrl)
     {
         // siteurl is always untrail-slashed, @see wp-includes/option.php:162
         $siteUrl = untrailingslashit($siteUrl);
 
         // mimic WordPress rules, see wp-includes/formatting.php:4763
         if (!preg_match('#http(s?)://(.+)#i', $siteUrl)) {
-            throw new \RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
+            throw new RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
         }
 
         if (!parse_url($siteUrl, PHP_URL_HOST)) {
-            throw new \RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
+            throw new RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
         }
 
         $this->siteUrl = $siteUrl;
@@ -448,26 +475,29 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getHomeUrl()
+    public function getHomeUrl(): string
     {
         return $this->homeUrl;
     }
 
     /**
      * @param string $homeUrl
+     * @return void
+     *
+     * @throws RuntimeException
      */
-    public function setHomeUrl($homeUrl)
+    public function setHomeUrl(string $homeUrl)
     {
         // homeurl is always untrail-slashed, @see wp-includes/option.php:162
         $homeUrl = untrailingslashit($homeUrl);
 
         // mimic WordPress rules, see wp-includes/formatting.php:4763
         if (!preg_match('#http(s?)://(.+)#i', $homeUrl)) {
-            throw new \RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
+            throw new RuntimeException('Please check the Site URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
         }
 
         if (!parse_url($homeUrl, PHP_URL_HOST)) {
-            throw new \RuntimeException('Please check the Home URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
+            throw new RuntimeException('Please check the Home URL option of this WordPress installation. Contact WP STAGING support if you need assistance.');
         }
 
         $this->homeUrl = $homeUrl;
@@ -482,7 +512,8 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param string $prefix
+     * @param string|null $prefix
+     * @return void
      */
     public function setPrefix($prefix)
     {
@@ -495,7 +526,7 @@ class BackupMetadata implements JsonSerializable
      * @deprecated since 5.2.0, Use setBackupType instead,
      *             kept for backward compatibility i.e. to support old backups which have singleOrMulti field in metadata and convert it properly to backup.
      */
-    public function setSingleOrMulti($singleOrMulti)
+    public function setSingleOrMulti(string $singleOrMulti)
     {
         $this->setBackupType($singleOrMulti);
     }
@@ -520,21 +551,22 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getName()
+    public function getName(): string
     {
         return $this->name;
     }
 
     /**
      * @param string $name
+     * @return void
      */
-    public function setName($name)
+    public function setName(string $name)
     {
         $this->name = $name;
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getNote()
     {
@@ -542,7 +574,8 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param string $note
+     * @param string|null $note
+     * @return void
      */
     public function setNote($note)
     {
@@ -552,15 +585,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return bool
      */
-    public function getIsAutomatedBackup()
+    public function getIsAutomatedBackup(): bool
     {
         return $this->isAutomatedBackup;
     }
 
     /**
      * @param bool $isAutomatedBackup
+     * @return void
      */
-    public function setIsAutomatedBackup($isAutomatedBackup)
+    public function setIsAutomatedBackup(bool $isAutomatedBackup)
     {
         $this->isAutomatedBackup = $isAutomatedBackup;
     }
@@ -574,7 +608,7 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param $databaseFile
+     * @param string|null $databaseFile
      * @return void
      */
     public function setDatabaseFile($databaseFile)
@@ -585,7 +619,7 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return int
      */
-    public function getUploadedOn()
+    public function getUploadedOn(): int
     {
         return $this->uploadedOn;
     }
@@ -608,7 +642,8 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param int $maxTableLength
+     * @param int|null $maxTableLength
+     * @return void
      */
     public function setMaxTableLength($maxTableLength)
     {
@@ -624,7 +659,8 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param int $databaseFileSize
+     * @param int|null $databaseFileSize
+     * @return void
      */
     public function setDatabaseFileSize($databaseFileSize)
     {
@@ -634,15 +670,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getPhpVersion()
+    public function getPhpVersion(): string
     {
         return (string)$this->phpVersion;
     }
 
     /**
      * @param string $phpVersion
+     * @return void
      */
-    public function setPhpVersion($phpVersion)
+    public function setPhpVersion(string $phpVersion)
     {
         $this->phpVersion = (string)$phpVersion;
     }
@@ -650,15 +687,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getWpVersion()
+    public function getWpVersion(): string
     {
         return (string)$this->wpVersion;
     }
 
     /**
      * @param string $wpVersion
+     * @return void
      */
-    public function setWpVersion($wpVersion)
+    public function setWpVersion(string $wpVersion)
     {
         $this->wpVersion = (string)$wpVersion;
     }
@@ -666,15 +704,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getWpDbVersion()
+    public function getWpDbVersion(): string
     {
         return (string)$this->wpDbVersion;
     }
 
     /**
      * @param string $wpDbVersion
+     * @return void
      */
-    public function setWpDbVersion($wpDbVersion)
+    public function setWpDbVersion(string $wpDbVersion)
     {
         $this->wpDbVersion = (string)$wpDbVersion;
     }
@@ -682,15 +721,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getDbCollate()
+    public function getDbCollate(): string
     {
         return (string)$this->dbCollate;
     }
 
     /**
      * @param string $dbCollate
+     * @return void
      */
-    public function setDbCollate($dbCollate)
+    public function setDbCollate(string $dbCollate)
     {
         $this->dbCollate = (string)$dbCollate;
     }
@@ -698,15 +738,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getSqlServerVersion()
+    public function getSqlServerVersion(): string
     {
         return (string)$this->sqlServerVersion;
     }
 
     /**
      * @param string $sqlServerVersion
+     * @return void
      */
-    public function setSqlServerVersion($sqlServerVersion)
+    public function setSqlServerVersion(string $sqlServerVersion)
     {
         $this->sqlServerVersion = (string)$sqlServerVersion;
     }
@@ -714,15 +755,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getDbCharset()
+    public function getDbCharset(): string
     {
         return (string)$this->dbCharset;
     }
 
     /**
      * @param string $dbCharset
+     * @return void
      */
-    public function setDbCharset($dbCharset)
+    public function setDbCharset(string $dbCharset)
     {
         $this->dbCharset = (string)$dbCharset;
     }
@@ -730,13 +772,14 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return int
      */
-    public function getBackupSize()
+    public function getBackupSize(): int
     {
         return (int)$this->backupSize;
     }
 
     /**
      * @param int $backupSize
+     * @return void
      */
     public function setBackupSize($backupSize)
     {
@@ -746,15 +789,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getAbsPath()
+    public function getAbsPath(): string
     {
         return $this->absPath;
     }
 
     /**
      * @param string $absPath
+     * @return void
      */
-    public function setAbsPath($absPath)
+    public function setAbsPath(string $absPath)
     {
         $this->absPath = $absPath;
     }
@@ -762,15 +806,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return int
      */
-    public function getBlogId()
+    public function getBlogId(): int
     {
         return $this->blogId;
     }
 
     /**
      * @param int $blogId
+     * @return void
      */
-    public function setBlogId($blogId)
+    public function setBlogId(int $blogId)
     {
         $this->blogId = $blogId;
     }
@@ -778,15 +823,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getUploadsPath()
+    public function getUploadsPath(): string
     {
         return $this->uploadsPath;
     }
 
     /**
-     * @param mixed $uploadsPath
+     * @param string $uploadsPath
+     * @return void
      */
-    public function setUploadsPath($uploadsPath)
+    public function setUploadsPath(string $uploadsPath)
     {
         $this->uploadsPath = $uploadsPath;
     }
@@ -794,15 +840,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return string
      */
-    public function getUploadsUrl()
+    public function getUploadsUrl(): string
     {
         return $this->uploadsUrl;
     }
 
     /**
-     * @param mixed $uploadsUrl
+     * @param string $uploadsUrl
+     * @return void
      */
-    public function setUploadsUrl($uploadsUrl)
+    public function setUploadsUrl(string $uploadsUrl)
     {
         $this->uploadsUrl = $uploadsUrl;
     }
@@ -810,15 +857,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return int
      */
-    public function getNetworkId()
+    public function getNetworkId(): int
     {
         return $this->networkId;
     }
 
     /**
      * @param int $networkId
+     * @return void
      */
-    public function setNetworkId($networkId)
+    public function setNetworkId(int $networkId)
     {
         $this->networkId = $networkId;
     }
@@ -848,15 +896,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return bool Whether PHP can execute short open tags. Null if undefined.
      */
-    public function getPhpShortOpenTags()
+    public function getPhpShortOpenTags(): bool
     {
         return $this->phpShortOpenTags;
     }
 
     /**
      * @param bool $phpShortOpenTags
+     * @return void
      */
-    public function setPhpShortOpenTags($phpShortOpenTags)
+    public function setPhpShortOpenTags(bool $phpShortOpenTags)
     {
         $this->phpShortOpenTags = $phpShortOpenTags;
     }
@@ -864,29 +913,65 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return bool
      */
-    public function getWpBakeryActive()
+    public function getWpBakeryActive(): bool
     {
         return $this->wpBakeryActive;
     }
 
     /**
      * @param bool $wpBakeryActive
+     * @return void
      */
-    public function setWpBakeryActive($wpBakeryActive)
+    public function setWpBakeryActive(bool $wpBakeryActive)
     {
         $this->wpBakeryActive = $wpBakeryActive;
     }
 
-    /*
+    /**
+     * @return bool
+     */
+    public function getIsJetpackActive(): bool
+    {
+        return $this->isJetpackActive ?? false;
+    }
+
+    /**
+     * @param bool|null $isJetpackActive
+     * @return void
+     */
+    public function setIsJetpackActive($isJetpackActive)
+    {
+        $this->isJetpackActive = $isJetpackActive;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsCreatedOnWordPressCom(): bool
+    {
+        return $this->isCreatedOnWordPressCom ?? false;
+    }
+
+    /**
+     * @param bool|null $isCreatedOnWordPressCom
+     * @return void
+     */
+    public function setIsCreatedOnWordPressCom($isCreatedOnWordPressCom)
+    {
+        $this->isCreatedOnWordPressCom = $isCreatedOnWordPressCom;
+    }
+
+    /**
      * @return string
      */
-    public function getScheduleId()
+    public function getScheduleId(): string
     {
         return $this->scheduleId;
     }
 
     /**
      * @param string $scheduleId
+     * @return void
      */
     public function setScheduleId($scheduleId)
     {
@@ -903,6 +988,7 @@ class BackupMetadata implements JsonSerializable
 
     /**
      * @param array|null $sites
+     * @return void
      */
     public function setSites($sites)
     {
@@ -912,15 +998,16 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return bool
      */
-    public function getSubdomainInstall()
+    public function getSubdomainInstall(): bool
     {
         return $this->subdomainInstall;
     }
 
     /**
      * @param bool $subdomainInstall
+     * @return void
      */
-    public function setSubdomainInstall($subdomainInstall)
+    public function setSubdomainInstall(bool $subdomainInstall)
     {
         $this->subdomainInstall = $subdomainInstall;
     }
@@ -928,7 +1015,7 @@ class BackupMetadata implements JsonSerializable
     /**
      * @return bool
      */
-    public function getCreatedOnPro()
+    public function getCreatedOnPro(): bool
     {
         // Backward compatbility for PRO backups
         if (!isset($this->createdOnPro) || is_null($this->createdOnPro)) {
@@ -940,6 +1027,7 @@ class BackupMetadata implements JsonSerializable
 
     /**
      * @param bool $createdOnPro
+     * @return void
      */
     public function setCreatedOnPro($createdOnPro)
     {
@@ -968,6 +1056,7 @@ class BackupMetadata implements JsonSerializable
 
     /**
      * @param MultipartMetadata|array|null $multipartMetadata
+     * @return void
      */
     public function setMultipartMetadata($multipartMetadata)
     {
@@ -975,7 +1064,7 @@ class BackupMetadata implements JsonSerializable
     }
 
     /** @return bool */
-    public function getIsMultipartBackup()
+    public function getIsMultipartBackup(): bool
     {
         return !empty($this->multipartMetadata);
     }
@@ -990,25 +1079,55 @@ class BackupMetadata implements JsonSerializable
 
     /**
      * @param array|null $tables
+     * @return void
      */
     public function setNonWpTables($tables)
     {
         $this->nonWpTables = $tables;
     }
 
-    public function setLogFile($fileName)
+    /**
+     * @param string $fileName
+     * @return void
+     */
+    public function setLogFile(string $fileName)
     {
         $this->logFile = $fileName;
     }
 
-    public function setIndexPartSize($indexPartSize)
+    /**
+     * @param array $indexPartSize
+     * @return void
+     */
+    public function setIndexPartSize(array $indexPartSize)
     {
         $this->indexPartSize = $indexPartSize;
     }
 
     /** @return array */
-    public function getIndexPartSize()
+    public function getIndexPartSize(): array
     {
         return $this->indexPartSize;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHostingType(): string
+    {
+        if (empty($this->hostingType)) {
+            $this->hostingType = SiteInfo::OTHER_HOST;
+        }
+
+        return $this->hostingType;
+    }
+
+    /**
+     * @param string $hostingType
+     * @return void
+     */
+    public function setHostingType(string $hostingType)
+    {
+        $this->hostingType = $hostingType;
     }
 }

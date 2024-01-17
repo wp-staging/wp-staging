@@ -246,39 +246,57 @@ class Administrator
 
         $proSlug = defined('WPSTGPRO_VERSION') ? 'Pro' : '';
 
+        $defaultPageSlug       = "wpstg_clone";
+        $defaultPageCallback   = "getClonePage";
+        $defaultPageTitle      = esc_html__("Staging Sites", "wp-staging");
+        $secondaryPageSlug     = "wpstg_backup";
+        $secondaryPageCallback = "getBackupPage";
+        $secondaryPageTitle    = esc_html__("Backup & Migration", "wp-staging");
+        /** @var SiteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
+        if ($siteInfo->isHostedOnWordPressCom()) {
+            $defaultPageSlug       = "wpstg_backup";
+            $defaultPageCallback   = "getBackupPage";
+            $defaultPageTitle      = esc_html__("Backup & Migration", "wp-staging");
+            $secondaryPageSlug     = "wpstg_clone";
+            $secondaryPageCallback = "getClonePage";
+            $secondaryPageTitle    = esc_html__("Staging Sites", "wp-staging");
+        }
+
         // Main WP Staging Menu
         add_menu_page(
             "WP STAGING",
             __("WP Staging " . $proSlug, "wp-staging"),
             "manage_options",
-            "wpstg_clone",
-            [$this, "getClonePage"],
+            $defaultPageSlug,
+            [$this, $defaultPageCallback],
             $logo,
             $pos
         );
 
-        // Page: Clone
+        // Clone page normally but backup page on WordPress.com
         add_submenu_page(
-            "wpstg_clone",
+            $defaultPageSlug,
             __("WP Staging Jobs", "wp-staging"),
-            __("Staging Sites", "wp-staging"),
+            $defaultPageTitle,
             "manage_options",
-            "wpstg_clone",
-            [$this, "getClonePage"]
+            $defaultPageSlug,
+            [$this, $defaultPageCallback]
         );
 
+        // Backup page normally but clone page on WordPress.com
         add_submenu_page(
-            "wpstg_clone",
+            $defaultPageSlug,
             __("WP Staging Jobs", "wp-staging"),
-            __("Backup & Migration", "wp-staging"),
+            $secondaryPageTitle,
             "manage_options",
-            "wpstg_backup",
-            [$this, "getBackupPage"]
+            $secondaryPageSlug,
+            [$this, $secondaryPageCallback]
         );
 
         // Page: Settings
         add_submenu_page(
-            "wpstg_clone",
+            $defaultPageSlug,
             __("WP Staging Settings", "wp-staging"),
             __("Settings", "wp-staging"),
             "manage_options",
@@ -288,7 +306,7 @@ class Administrator
 
         // Page: Tools
         add_submenu_page(
-            "wpstg_clone",
+            $defaultPageSlug,
             __("WP Staging Tools", "wp-staging"),
             __("System Info", "wp-staging"),
             "manage_options",
@@ -299,7 +317,7 @@ class Administrator
         if (!defined('WPSTGPRO_VERSION')) {
             // Page: Tools
             add_submenu_page(
-                "wpstg_clone",
+                $defaultPageSlug,
                 __("WP Staging Welcome", "wp-staging"),
                 __("Get WP Staging Pro", "wp-staging"),
                 "manage_options",
@@ -311,7 +329,7 @@ class Administrator
         if (defined('WPSTGPRO_VERSION')) {
             // Page: License
             add_submenu_page(
-                "wpstg_clone",
+                $defaultPageSlug,
                 __("WP Staging License", "wp-staging"),
                 __("License", "wp-staging"),
                 "manage_options",
@@ -496,6 +514,13 @@ class Administrator
     {
         if (!$this->isAuthenticated()) {
             return;
+        }
+
+        /** @var SiteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
+        if ($siteInfo->isHostedOnWordPressCom()) {
+            require_once "{$this->path}views/clone/wordpress-com/index.php";
+            wp_die(); // Using wp_die instead of return here to make sure no 0 is appended to the response
         }
 
         // Existing clones

@@ -175,7 +175,13 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
             $parameterImplementation = $this->resolver->whenNeedsGive($this->id, $paramClass);
             $resolved = $parameterImplementation instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface ? $parameterImplementation->build() : $this->resolver->resolve($parameterImplementation);
         } else {
-            $resolved = $parameter->getDefaultValueOrFail();
+            $name = $parameter->getName();
+            $parameterImplementation = $this->resolver->whenNeedsGive($this->id, "\${$name}");
+            try {
+                $resolved = $parameterImplementation instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface ? $parameterImplementation->build() : $this->resolver->resolve($parameterImplementation);
+            } catch (\WPStaging\Vendor\lucatume\DI52\NotFoundException $e) {
+                $resolved = $parameter->getDefaultValueOrFail();
+            }
         }
         return $resolved;
     }

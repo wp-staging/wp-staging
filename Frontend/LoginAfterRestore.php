@@ -5,10 +5,12 @@ namespace WPStaging\Frontend;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Security\AccessToken;
+use WPStaging\Framework\SiteInfo;
 
 class LoginAfterRestore
 {
     /**
+     * @return void
      * @see \WPStaging\Frontend\FrontendServiceProvider::registerLoginAfterRestore
      */
     public function showMessage()
@@ -34,9 +36,35 @@ class LoginAfterRestore
 
         // Used by loginAfterRestore
         $adminEmails = $this->getListOfAdminEmails();
+
+        $isRestoredFromWpCom      = $this->getIsRestoredFromWpCom();
+        $resetPasswordArticleLink = 'https://wp-staging.com/reset-your-wordpress-admin-password-manually/';
+
         include __DIR__ . '/views/loginAfterRestore.php';
     }
 
+    /**
+     * @return bool
+     */
+    protected function getIsRestoredFromWpCom(): bool
+    {
+        /** @var SiteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
+        // Should not be shown when restoring wp.com backup on wp.com site
+        if ($siteInfo->isHostedOnWordPressCom()) {
+            return false;
+        }
+
+        if (isset($_GET['wpstgIsBackupCreatedOnWordPressCom']) && Sanitize::sanitizeBool($_GET['wpstgIsBackupCreatedOnWordPressCom'])) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * @return string[] List of admin emails
+     */
     private function getListOfAdminEmails()
     {
         $adminEmails = get_users([

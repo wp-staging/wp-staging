@@ -50,6 +50,13 @@ class RestoreMuPluginsTask extends FileRestoreTask
         }
 
         foreach ($muPluginsToRestore as $muPluginSlug => $muPluginPath) {
+            /**
+             * Scenario: Skip restoring a mu-plugin whose destination is symlink and the site is hosted on WordPress.com
+             */
+            if ($this->isSiteHostedOnWordPressCom && is_link("$destDir$muPluginSlug")) {
+                continue;
+            }
+
             /*
              * Scenario: Restoring a mu-plugin that already exists
              * 1. Backup old mu-plugin

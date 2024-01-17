@@ -40,6 +40,9 @@ register_activation_hook($pluginFilePath, function () use ($pluginFilePath) {
 });
 
 register_deactivation_hook($pluginFilePath, function () use ($pluginFilePath) {
-    require_once __DIR__ . '/Deactivate.php';
+    if (!class_exists('WPStaging\Deactivate')) {
+        require_once __DIR__ . '/Deactivate.php';
+    }
+
     new WPStaging\Deactivate($pluginFilePath);
 });

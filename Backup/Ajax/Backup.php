@@ -7,40 +7,32 @@ namespace WPStaging\Backup\Ajax;
 
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\ErrorHandler;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
+use WPStaging\Framework\Traits\MemoryExhaustTrait;
 
 class Backup extends AbstractTemplateComponent
 {
+    use MemoryExhaustTrait;
+
+    /**
+     * @var string
+     */
     const WPSTG_REQUEST = 'wpstg_backup';
 
+    /**
+     * @return void
+     */
     public function render()
     {
         if (!$this->canRenderAjax()) {
             return;
         }
 
-        $tmpFileToDelete = $this->setupTmpErrorFile();
+        $tmpFileToDelete = $this->getMemoryExhaustErrorTmpFile(self::WPSTG_REQUEST);
 
         $jobBackup = WPStaging::make(JobBackupProvider::class)->getJob();
         $jobBackup->setMemoryExhaustErrorTmpFile($tmpFileToDelete);
 
         wp_send_json($jobBackup->prepareAndExecute());
-    }
-
-    /**
-     * @return string|false
-     */
-    protected function setupTmpErrorFile()
-    {
-        if (!defined('WPSTG_UPLOADS_DIR')) {
-            return false;
-        }
-
-        if (!defined('WPSTG_REQUEST')) {
-            define('WPSTG_REQUEST', self::WPSTG_REQUEST);
-        }
-
-        return WPSTG_UPLOADS_DIR . self::WPSTG_REQUEST . ErrorHandler::ERROR_FILE_EXTENSION;
     }
 }

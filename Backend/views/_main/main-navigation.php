@@ -1,5 +1,7 @@
 <?php
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Pro\License\License;
 
 $classStagingPageActive = '';
@@ -8,6 +10,7 @@ $classSystemInfoActive  = isset($isActiveSystemInfoPage) ? 'wpstg--tab--active' 
 $classSettingsActive    = isset($isActiveSettingsPage) ? 'wpstg--tab--active' : '';
 $classLicenseActive     = isset($isActiveLicensePage) ? 'wpstg--tab--active' : '';
 
+$backupNotice = WPStaging::make(BackupPluginsNotice::class);
 ?>
 <div class="wpstg--tab--header">
     <ul>
@@ -20,6 +23,7 @@ $classLicenseActive     = isset($isActiveLicensePage) ? 'wpstg--tab--active' : '
             <a href="<?php echo esc_url(get_admin_url()) . 'admin.php?page=wpstg_backup'; ?>" class="wpstg-button <?php echo esc_attr($classBackupPageActive); ?>" data-target="" id="wpstg--tab--toggle--backup">
                 <?php esc_html_e('Backup & Migration', 'wp-staging') ?>
             </a>
+            <?php $backupNotice->maybeShowBackupNotice(); ?>
         </li>
         <li>
             <a href="<?php echo esc_url(get_admin_url()) . 'admin.php?page=wpstg-settings'; ?>" class="wpstg-button <?php echo esc_attr($classSettingsActive); ?>" data-target="" id="wpstg--tab--toggle--settings">

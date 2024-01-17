@@ -85,25 +85,12 @@ class Directories extends JobExecutable
         $this->directory       = WPStaging::make(Directory::class);
         $this->pathAdapter     = WPStaging::make(PathIdentifier::class);
         $this->pathChecker     = WPStaging::make(PathChecker::class);
-        $this->filename        = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
+        $this->filename        = $this->getFilesIndexCacheFilePath();
         $this->strUtils        = new Strings();
         $this->rootPath        = $this->filesystem->normalizePath($this->directory->getAbsPath());
         $this->excludedPlugins = new ExcludedPlugins($this->directory);
 
-        $this->initCacheFile();
-    }
-
-    /**
-     * Initialize Cache File with PHP Header if does not exist
-     * @return void
-     */
-    protected function initCacheFile()
-    {
-        if (is_file($this->filename)) {
-            return;
-        }
-
-        file_put_contents($this->filename, Cache::PHP_HEADER);
+        $this->filesIndexCache->initWithPhpHeader();
     }
 
     /**
@@ -272,7 +259,7 @@ class Directories extends JobExecutable
             rtrim($this->directory->getPluginUploadsDirectory(), '/'),
             rtrim($this->directory->getActiveThemeParentDirectory(), '/'),
             // To not copy the wp-staging sites directory inside wp-content
-            rtrim($this->directory->getStagingSiteDirectoryInsideWpcontent()),
+            rtrim($this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false)),
         ];
 
         // Exclude main uploads directory if multisite and not main site
@@ -534,23 +521,6 @@ class Directories extends JobExecutable
     protected function saveProgress(): bool
     {
         return $this->saveOptions();
-    }
-
-    /**
-     * Get files
-     * @return void
-     */
-    protected function getFiles()
-    {
-        $fileName = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
-
-        $fileContent = file_get_contents($fileName);
-        if ($fileContent === false) {
-            $this->files = [];
-            return;
-        }
-
-        $this->files = explode(PHP_EOL, $fileContent);
     }
 
     /**

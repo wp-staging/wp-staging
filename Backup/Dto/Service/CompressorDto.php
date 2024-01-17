@@ -12,6 +12,9 @@ class CompressorDto
     /** @var string */
     private $filePath;
 
+    /** @var string */
+    private $indexPath;
+
     /** @var int */
     private $writtenBytesTotal = 0;
 
@@ -66,6 +69,23 @@ class CompressorDto
     public function setFilePath($filePath)
     {
         $this->filePath = wp_normalize_path((string)$filePath);
+    }
+
+    /**
+     * @return string
+     */
+    public function getIndexPath(): string
+    {
+        return $this->indexPath;
+    }
+
+    /**
+     * @param string $indexPath
+     * @return void
+     */
+    public function setIndexPath(string $indexPath)
+    {
+        $this->indexPath = wp_normalize_path((string)$indexPath);
     }
 
     /**

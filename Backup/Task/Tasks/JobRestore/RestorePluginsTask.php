@@ -47,6 +47,13 @@ class RestorePluginsTask extends FileRestoreTask
         }
 
         foreach ($pluginsToRestore as $pluginSlug => $pluginPath) {
+            /**
+             * Scenario: Skip restoring a plugin whose destination is symlink and the site is hosted on WordPress.com
+             */
+            if ($this->isSiteHostedOnWordPressCom && is_link("{$destDir}{$pluginSlug}")) {
+                continue;
+            }
+
             /*
              * Scenario: Restoring a plugin that already exists
              * 1. Backup old plugin

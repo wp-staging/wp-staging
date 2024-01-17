@@ -47,6 +47,7 @@ if (WPStaging::make(Directory::class)->isBackupPathOutsideAbspath() || ( defined
 }
 
 // Fix mixed http/https
+$downloadFileUrl = $downloadUrl;
 $downloadUrl = (new Urls())->maybeUseProtocolRelative($downloadUrl);
 
 $logUrl = add_query_arg([
@@ -122,6 +123,11 @@ $logUrl = add_query_arg([
                        data-md5="<?php echo esc_attr($backup->md5BaseName) ?>"
                        title="<?php esc_attr_e('Delete this backup. This action can not be undone!', 'wp-staging') ?>">
                         <?php esc_html_e('Delete', 'wp-staging') ?>
+                    </a>
+                    <a href="#" id="wpstg-copy-backup-url" class="wpstg-clone-action"
+                       data-copy-content="<?php echo esc_attr($downloadFileUrl); ?>"
+                       title="<?php esc_attr_e('Copy url to backup file to restore it quickly on another website.', 'wp-staging') ?>">
+                        <?php esc_html_e('Copy Backup URL', 'wp-staging') ?>
                     </a>
                     <?php
                     do_action('wpstg.views.backup.listing.single.after_actions', $backup);

@@ -191,7 +191,7 @@ class Scan extends Job
     /**
      * Upon class initialization
      */
-    protected function initialize()
+    public function initialize()
     {
         $this->objDirectories = new DirectoriesUtil();
 
@@ -274,8 +274,8 @@ class Scan extends Job
         }
 
         // Delete previous cached files
-        $this->cache->delete("files_to_copy");
-        $this->cache->delete("clone_options");
+        $this->cloneOptionCache->delete();
+        $this->filesIndexCache->delete();
 
         $this->saveOptions();
 

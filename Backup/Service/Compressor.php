@@ -101,8 +101,8 @@ class Compressor
     }
 
     /**
-     * @param $category
-     * @param $isCreateBinaryHeader
+     * @param string $category
+     * @param bool $isCreateBinaryHeader
      */
     public function setCategory($category = '', $isCreateBinaryHeader = false)
     {
@@ -173,6 +173,7 @@ class Compressor
 
     /**
      * @param string $fullFilePath
+     * @param string $indexPath
      *
      * `true` -> finished
      * `false` -> not finished
@@ -183,7 +184,7 @@ class Compressor
      *
      * @return bool|null
      */
-    public function appendFileToBackup($fullFilePath)
+    public function appendFileToBackup(string $fullFilePath, string $indexPath = '')
     {
         // We can use evil '@' as we don't check is_file || file_exists to speed things up.
         // Since in this case speed > anything else
@@ -194,8 +195,13 @@ class Compressor
             return null;
         }
 
+        if (empty($indexPath)) {
+            $indexPath = $fullFilePath;
+        }
+
         $fileStats = fstat($resource);
         $this->initiateDtoByFilePath($fullFilePath, $fileStats);
+        $this->compressorDto->setIndexPath($indexPath);
         $writtenBytesBefore = $this->compressorDto->getWrittenBytesTotal();
         $writtenBytesTotal  = $this->appendToCompressedFile($resource, $fullFilePath);
         $bytesAddedForIndex = $this->addIndex($writtenBytesTotal);
@@ -479,7 +485,7 @@ class Compressor
             return $this->updateIndexInformationForAlreadyAddedIndex($writtenBytesTotal);
         }
 
-        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getFilePath());
+        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getIndexPath());
         $identifiablePath = $this->filterPathForFileIndex($identifiablePath);
         $info             = $identifiablePath . '|' . $start . ':' . $writtenBytesTotal;
         $bytesWritten     = $this->tempBackupIndex->append($info);
@@ -539,7 +545,7 @@ class Compressor
         // @todo Should we use mb_strlen($_writtenBytes, '8bit') instead of strlen?
         $this->tempBackupIndex->deleteBottomBytes(strlen($lastLine));
 
-        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getFilePath());
+        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getIndexPath());
         $identifiablePath = $this->filterPathForFileIndex($identifiablePath);
         $info             = $identifiablePath . '|' . $offsetStart . ':' . $writtenBytesTotal;
         $bytesWritten     = $this->tempBackupIndex->append($info);

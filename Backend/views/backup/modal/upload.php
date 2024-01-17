@@ -80,10 +80,14 @@ try {
                             <strong><?php echo esc_html('Drop here to start the upload!') ?></strong>
                         </div>
                     </div>
+                    <div class="wpstg-backup-url-container" >
+                        <label for="wpstg-backup-url"><?php esc_html_e('Or upload a backup file from a URL:', 'wp-staging') ?></label>
+                        <input id="wpstg-backup-url" class="wpstg--swal2-input" name="wpstg-backup-url" type="text" placeholder="https://example.com/.../backups/your-backup.wpstg"/>
+                        <div class="wpstg-backup-url-container-desc"><?php esc_html_e("Get backup URL from Actions / Copy Backup URL", "wp-staging") ?></div>
+                    </div>
                     <p class="wpstg-backup-direct-upload-notice">
-                        <strong><?php esc_html_e('Did you know?', 'wp-staging') ?></strong><br>
-                        <?php esc_html_e('You can optionally upload a backup via FTP to the directory:', 'wp-staging') ?><br>
-                        <strong><?php echo esc_html($uploadDirectory) ?></strong>
+                        <?php esc_html_e('Or upload a backup file via FTP to:', 'wp-staging') ?><br>
+                        <code><?php echo esc_html($uploadDirectory) ?></code>
                     </p>
                 </div>
 

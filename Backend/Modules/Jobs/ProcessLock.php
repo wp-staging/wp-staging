@@ -2,10 +2,6 @@
 
 namespace WPStaging\Backend\Modules\Jobs;
 
-use WPStaging\Core\WPStaging;
-
-//use WPStaging\Core\Utils\Cache;
-
 /**
  * Class Cloning
  * @package WPStaging\Backend\Modules\Jobs
@@ -66,8 +62,8 @@ class ProcessLock extends JobExecutable
     public function restart()
     {
         unset($this->options->isRunning);
-        $this->cache->delete("clone_options");
-        $this->cache->delete("files_to_copy");
+        $this->cloneOptionCache->delete();
+        $this->filesIndexCache->delete();
     }
 
     /**

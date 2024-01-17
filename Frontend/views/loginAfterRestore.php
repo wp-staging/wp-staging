@@ -1,6 +1,8 @@
 <?php
 /**
  * @var array $adminEmails
+ * @var bool $isRestoredFromWpCom // true if the backup was restored from wordpress.com but current site is not a wordpress.com site
+ * @var string $resetPasswordArticleLink // link to article on how to reset password in different ways
  */
 ?>
 <style>
@@ -56,6 +58,12 @@
             <?php endif; ?>
     </div>
     </p>
+    <?php if ($isRestoredFromWpCom) : ?>
+    <p>
+        <?php esc_html_e('This site was restored from a WordPress.com backup. Your WordPress.com password may not work and you will need to reset your password to get a new one!', 'wp-staging'); ?>
+        <?php echo sprintf(esc_html__('Read this %s to find out how to reset the password.', 'wp-staging'), '<a href="' . esc_url($resetPasswordArticleLink) . '" target="_blank">' . esc_html__('article', 'wp-staging') . '</a>') ?>
+    </p>
+    <?php endif; ?>
 </div>
 <script>
     document.getElementById('showAdminEmails').addEventListener('click', function() {

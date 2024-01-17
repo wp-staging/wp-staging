@@ -55,8 +55,12 @@ class Auth
      *
      * @return bool
      */
-    public function isAuthenticatedRequest(string $nonce = Nonce::WPSTG_NONCE, string $capability = ''): bool
+    public function isAuthenticatedRequest(string $nonce = '', string $capability = ''): bool
     {
+        if (empty($nonce)) {
+            $nonce = Nonce::WPSTG_NONCE;
+        }
+
         if (empty($capability)) {
             $capability = $this->capabilities->manageWPSTG();
         }

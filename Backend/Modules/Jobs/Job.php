@@ -7,7 +7,6 @@ use DateTime;
 use Exception;
 use stdClass;
 use WPStaging\Core\DTO\Settings;
-use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Database\ExcludedTables;
@@ -17,6 +16,7 @@ use WPStaging\Framework\Utils\Math;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Framework\Database\WpDbInfo;
 use WPStaging\Framework\Security\UniqueIdentifier;
+use WPStaging\Framework\Utils\Cache\Cache;
 
 /**
  * Class Job
@@ -45,6 +45,28 @@ abstract class Job implements ShutdownableInterface
      * @var string
      */
     const UPDATE  = 'updating';
+
+    /**
+     * Temp file base name for files index for cloning and push
+     * @var string
+     */
+    const FILES_INDEX_KEY = 'clone_files_index';
+
+    /**
+     * Temp file base name that contain clone related data for cloning and push
+     * @var string
+     */
+    const CLONE_OPTIONS_KEY = 'clone_options';
+
+    /**
+     * @var Cache
+     */
+    protected $cloneOptionCache;
+
+    /**
+     * @var Cache
+     */
+    protected $filesIndexCache;
 
     /**
      * @var Cache
@@ -95,14 +117,17 @@ abstract class Job implements ShutdownableInterface
         $this->excludedTableService = new ExcludedTables();
 
         // Services
-        $this->cache      = new Cache(-1, WPStaging::getContentDir());
         //$this->logger     = WPStaging::make(Logger::class);
         $this->logger     = WPStaging::getInstance()->get("logger");
         $this->systemInfo = WPStaging::make(SystemInfo::class);
         $this->identifier = WPStaging::make(UniqueIdentifier::class);
 
+        $this->setupCacheFiles();
+
         // Settings and Options
-        $this->options  = $this->cache->get("clone_options");
+        $this->options  = $this->cloneOptionCache->get();
+        // Convert into object
+        $this->options  = json_decode(json_encode($this->options));
         $this->settings = (object)((new Settings())->setDefault());
 
         if (!$this->options) {
@@ -113,9 +138,16 @@ abstract class Job implements ShutdownableInterface
             $this->options->existingClones = json_decode(json_encode($this->options->existingClones), true);
         }
 
-        if (method_exists($this, "initialize")) {
-            $this->initialize();
-        }
+        $this->initialize();
+    }
+
+    /**
+     * To be override by child classes
+     * @return void
+     */
+    public function initialize()
+    {
+        // do nothing
     }
 
     /**
@@ -125,6 +157,26 @@ abstract class Job implements ShutdownableInterface
     public function onWpShutdown()
     {
         // do nothing
+    }
+
+    protected function setupCacheFiles()
+    {
+        // For clone options
+        $this->cloneOptionCache = WPStaging::make(Cache::class);
+        $this->cloneOptionCache->setLifetime(-1); // Non-expireable file
+        $this->cloneOptionCache->setPath(WPStaging::getContentDir());
+        $this->cloneOptionCache->setFileName(self::CLONE_OPTIONS_KEY);
+
+        // For files index to copy files
+        $this->filesIndexCache = WPStaging::make(Cache::class);
+        $this->filesIndexCache->setLifetime(-1); // Non-expireable file
+        $this->filesIndexCache->setPath(WPStaging::getContentDir());
+        $this->filesIndexCache->setFileName(self::FILES_INDEX_KEY);
+
+        // For other purposes
+        $this->cache = WPStaging::make(Cache::class);
+        $this->cache->setLifetime(-1); // Non-expireable file
+        $this->cache->setPath(WPStaging::getContentDir());
     }
 
     /**
@@ -148,8 +200,9 @@ abstract class Job implements ShutdownableInterface
 
         // Ensure that it is an object
         $options = json_decode(json_encode($options));
+        $result  = $this->cloneOptionCache->save($options);
 
-        return $this->cache->save('clone_options', $options);
+        return $result !== false;
     }
 
     /**
@@ -235,6 +288,14 @@ abstract class Job implements ShutdownableInterface
         $this->logger->setFileName($this->getLogFilename());
 
         $this->logger->add($msg, $type);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getFilesIndexCacheFilePath(): string
+    {
+        return trailingslashit($this->cache->getPath()) . self::FILES_INDEX_KEY . '.' . Cache::FILE_EXTENSION;
     }
 
     /**
