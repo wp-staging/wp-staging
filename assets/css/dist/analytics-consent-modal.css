@@ -1,39 +1,51 @@
 /* Colors */
 .wpstg-primary-color {
-  color: #1a73e8; }
+  color: #1a73e8;
+}
 
 .wpstg--violet {
-  color: #9d37ae; }
+  color: #9d37ae;
+}
 
 .wpstg-border--violet {
-  border: 1px solid #9d37ae; }
+  border: 1px solid #9d37ae;
+}
 
 .wpstg--red {
-  color: #e01e5a; }
+  color: #e01e5a;
+}
 
 .wpstg--red-warning {
-  color: #e01e5a; }
+  color: #e01e5a;
+}
 
 .wpstg-cta--red {
-  color: #1a73e8; }
+  color: #1a73e8;
+}
 
 .wpstg--blue {
-  color: #1a73e8; }
+  color: #1a73e8;
+}
 
 .wpstg--darkblue {
-  color: #0e86d9; }
+  color: #0e86d9;
+}
 
 .wpstg--green {
-  color: #3bba68; }
+  color: #3bba68;
+}
 
 .wpstg--grey {
-  color: #393939; }
+  color: #393939;
+}
 
 .wpstg--darkgrey {
-  color: #1b1b1b; }
+  color: #1b1b1b;
+}
 
 .wpstg--filter--svg {
-  filter: invert(24%) sepia(11%) saturate(558%) hue-rotate(169deg) brightness(97%) contrast(91%); }
+  filter: invert(24%) sepia(11%) saturate(558%) hue-rotate(169deg) brightness(97%) contrast(91%);
+}
 
 .wpstg-consent-modal-main-wrapper {
   display: flex;
@@ -43,7 +55,8 @@
   bottom: 0;
   left: 0;
   z-index: 1000;
-  background-color: rgba(0, 0, 0, 0.55); }
+  background-color: rgba(0, 0, 0, 0.55);
+}
 
 .wpstg-consent-modal-content {
   position: fixed;
@@ -63,7 +76,8 @@
   overflow: auto;
   top: 50%;
   left: 50%;
-  transform: translate(-50%, -50%); }
+  transform: translate(-50%, -50%);
+}
 
 #wpstg-consent-modal-btn-success {
   cursor: pointer;
@@ -74,28 +88,34 @@
   padding: 8px;
   font-weight: bold;
   border-radius: 6px;
-  background-image: linear-gradient(40deg, #1c93cd 30%, #22875d 100%); }
+  background-image: linear-gradient(40deg, #1c93cd 30%, #22875d 100%);
+}
 
 .wpstg-consent-modal-header {
   font-size: 20px;
-  font-weight: bold; }
+  font-weight: bold;
+}
 
 .wpstg-consent-modal-install-footer {
   padding-top: 20px;
   text-align: center;
-  width: 100%; }
+  width: 100%;
+}
 
 .wpstg-consent-modal-install-image-block img {
   width: inherit;
   max-width: 120px;
-  height: auto; }
+  height: auto;
+}
 
 .wpstg-consent-modal-install-description-block {
   padding-top: 5px;
-  margin-left: 25px; }
+  margin-left: 25px;
+}
 
 .wpstg-consent-modal-install-description-text {
-  font-size: 16px; }
+  font-size: 16px;
+}
 
 .wpstg-consent-modal-install-permissions-list {
   list-style: disc inside;
@@ -103,53 +123,66 @@
   -webkit-animation-name: wpstg-consent-modal-animatetop;
   -webkit-animation-duration: 0.4s;
   animation-name: wpstg-consent-modal-animatetop;
-  animation-duration: 0.4s; }
+  animation-duration: 0.4s;
+}
 
 .wpstg-consent-modal-install-permissions-list li {
   margin-bottom: 2px;
-  list-style-position: outside; }
+  list-style-position: outside;
+}
 
 .wpstg-consent-modal-install-footer span {
   padding-right: 10px;
-  padding-left: 5px; }
+  padding-left: 5px;
+}
 
 .wpstg-consent-modal-install-footer span:not(:nth-child(2)):hover, .wpstg-consent-modal-install-footer span a:hover {
-  color: #2E9A54; }
+  color: #2E9A54;
+}
 
 .wpstg-consent-modal-install-footer span:not(:last-child) {
-  border-right: 1px solid #1c93cd; }
+  border-right: 1px solid #1c93cd;
+}
 
 #wpstg-consent-modal-deactivation-reasons li {
   padding-bottom: 3px;
   font-size: 16px;
-  color: #303030; }
+  color: #303030;
+}
 
 .wpstg-consent-modal-display-flex {
-  display: flex; }
+  display: flex;
+}
 
 .wpstg-consent-modal-button {
-  cursor: pointer; }
+  cursor: pointer;
+}
 
 #wpstg-consent-modal-permission-list {
   display: none;
-  padding-top: 20px; }
+  padding-top: 20px;
+}
 
 @-webkit-keyframes wpstg-consent-modal-animatetop {
   from {
     top: -300px;
-    opacity: 0; }
+    opacity: 0;
+  }
   to {
     top: 0;
-    opacity: 1; } }
-
+    opacity: 1;
+  }
+}
 @keyframes wpstg-consent-modal-animatetop {
   from {
     top: -300px;
-    opacity: 0; }
+    opacity: 0;
+  }
   to {
     top: 0;
-    opacity: 1; } }
-
+    opacity: 1;
+  }
+}
 /*#wpstg-workflow.wpstg-loading::after {
   display: none !important;
 }*/
@@ -157,16 +190,21 @@
   .wpstg-consent-modal-install-image-block {
     width: 100%;
     margin-left: -15px;
-    max-width: 100%; }
+    max-width: 100%;
+  }
   .wpstg-consent-modal-install-description-block {
     padding-left: unset;
-    margin-left: unset; }
+    margin-left: unset;
+  }
   .wpstg-consent-modal-install-footer span:not(:last-child) {
     display: inline-grid;
-    border-right: unset; }
+    border-right: unset;
+  }
   .wpstg-consent-modal-install-footer {
-    display: inline-grid; }
+    display: inline-grid;
+  }
   .wpstg-consent-modal-install-footer span:nth-child(2) {
-    display: block; } }
-
+    display: block;
+  }
+}
 /*# sourceMappingURL=analytics-consent-modal.css.map */

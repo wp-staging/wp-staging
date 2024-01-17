@@ -3,8 +3,11 @@
 // TODO PHP7.x; declare(strict_type=1);
 // TODO PHP7.x; type hints & return types
 
-namespace WPStaging\Backup\Ajax;
+namespace WPStaging\Duplicator\Ajax;
 
+use WPStaging\Backend\Modules\Jobs\Cloning;
+use WPStaging\Backup\Ajax\Backup;
+use WPStaging\Backup\Ajax\Restore;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\ErrorHandler;
 use WPStaging\Framework\Facades\Sanitize;
@@ -14,11 +17,17 @@ use function WPStaging\functions\debug_log;
 
 class MemoryExhaust extends AbstractTemplateComponent
 {
+    /**
+     * @param TemplateEngine $templateEngine
+     */
     public function __construct(TemplateEngine $templateEngine)
     {
         parent::__construct($templateEngine);
     }
 
+    /**
+     * @return void
+     */
     public function ajaxResponse()
     {
         if (!$this->canRenderAjax()) {
@@ -30,6 +39,7 @@ class MemoryExhaust extends AbstractTemplateComponent
         $validWpstgRequests = [
             Backup::WPSTG_REQUEST,
             Restore::WPSTG_REQUEST,
+            Cloning::WPSTG_REQUEST,
         ];
 
         if ($wpstgRequest === '') {
@@ -71,7 +81,7 @@ class MemoryExhaust extends AbstractTemplateComponent
             'error' => true,
             'data' => $data,
             'message' => sprintf(
-                esc_html__('Memory exhaust issue is detected during the process. Error occured when allocating more %s on top of current usage of %s. Peak memory usage: %s, Allowed memory limit: %s, PHP memory limit: %s, WP memory limit: %s', 'wp-staging'),
+                esc_html__('Memory exhaust issue is detected during the process. Error occurred when allocating more %s on top of current usage of %s. Peak memory usage: %s, Allowed memory limit: %s, PHP memory limit: %s, WP memory limit: %s', 'wp-staging'),
                 size_format($data['exhaustedMemorySize']),
                 size_format($data['memoryUsage']),
                 size_format($data['peakMemoryUsage']),

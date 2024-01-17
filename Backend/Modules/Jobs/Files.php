@@ -98,7 +98,7 @@ class Files extends JobExecutable
         $this->contentPath = rtrim($this->directory->getWpContentDirectory(), '/');
         $this->destination = $this->filesystem->normalizePath($this->options->destinationDir);
 
-        $filePath = $this->cache->getCacheDir() . "files_to_copy." . $this->cache->getCacheExtension();
+        $filePath = $this->getFilesIndexCacheFilePath();
 
         if (is_file($filePath)) {
             $this->file = new FileObject($filePath, 'r');

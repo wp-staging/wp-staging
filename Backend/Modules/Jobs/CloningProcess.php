@@ -18,6 +18,14 @@ abstract class CloningProcess extends JobExecutable
      */
     protected $productionDb;
 
+    /**
+     * @return void
+     */
+    protected function setupMemoryExhaustFile()
+    {
+        $this->memoryExhaustErrorTmpFile = $this->getMemoryExhaustErrorTmpFile(Cloning::WPSTG_REQUEST);
+    }
+
     protected function initializeDbObjects()
     {
         $this->productionDb = WPStaging::getInstance()->get("wpdb");

@@ -74,7 +74,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 
             if ($files->isDir()) {
                 $normalizedPath = $this->filesystem->normalizePath($files->getPathname(), true);
-                $defaultWordPressFoldersWithLang = array_merge($this->directory->getDefaultWordPressFolders(), [$this->directory->getLangsDirectory(), trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent())]);
+                $defaultWordPressFoldersWithLang = array_merge($this->directory->getDefaultWordPressFolders(), [$this->directory->getLangsDirectory(), trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false))]);
                 if (!in_array($normalizedPath, $defaultWordPressFoldersWithLang)) {
                     $this->enqueueDelete($normalizedPath);
                 }
@@ -101,6 +101,13 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             $absDestPath = $destinationWpContentDir . $relativePath;
 
             if ($this->isExcludedOtherFile($absDestPath)) {
+                continue;
+            }
+
+            /**
+             * Scenario: Skip restoring drop-ins whose destination is symlink and the site is hosted on WordPress.com
+             */
+            if ($this->isSiteHostedOnWordPressCom && is_link($absDestPath)) {
                 continue;
             }
 

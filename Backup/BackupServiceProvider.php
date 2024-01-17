@@ -4,6 +4,7 @@ namespace WPStaging\Backup;
 
 use WPStaging\Framework\DI\FeatureServiceProvider;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Network\AjaxBackupDownloader;
 use WPStaging\Framework\Queue\FileSeekableQueue;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup;
@@ -19,7 +20,6 @@ use WPStaging\Backup\Ajax\Listing;
 use WPStaging\Backup\Ajax\Restore;
 use WPStaging\Backup\Ajax\FileInfo;
 use WPStaging\Backup\Ajax\FileList;
-use WPStaging\Backup\Ajax\MemoryExhaust;
 use WPStaging\Backup\Ajax\Parts;
 use WPStaging\Backup\Ajax\Status;
 use WPStaging\Backup\Ajax\Upload;
@@ -33,17 +33,6 @@ use WPStaging\Backup\Ajax\BackupSpeedIndex;
 
 class BackupServiceProvider extends FeatureServiceProvider
 {
-    /**
-     * Toggle the experimental backup feature on/off.
-     * Used only for developers of WP STAGING while the backups feature is being developed.
-     * Do not turn this on unless you know what you're doing, as it might irreversibly delete
-     * files, databases, etc.
-     */
-/*    public static function getFeatureTrigger()
-    {
-        return 'WPSTG_FEATURE_ENABLE_BACKUP';
-    }*/
-
     public function createBackupsDirectory()
     {
         $backupsDirectory = $this->container->make(BackupsFinder::class)->getBackupsDirectory();
@@ -97,7 +86,6 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--backups--restore--file-upload', $this->container->callback(Upload::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--uploads-delete-unfinished', $this->container->callback(Upload::class, 'ajaxDeleteIncompleteUploads')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_raw_wpstg--backups--login-url', $this->container->callback(LoginUrl::class, 'getLoginUrl')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg--detect-memory-exhaust', $this->container->callback(MemoryExhaust::class, 'ajaxResponse')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_calculate_backup_speed_index', $this->container->callback(BackupSpeedIndex::class, 'ajaxMaybeShowModal')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         // Nopriv
@@ -113,6 +101,7 @@ class BackupServiceProvider extends FeatureServiceProvider
 
         // Event that we can run on daily basis to repair any corrupted backup create cron jobs
         add_action('wpstg_daily_event', $this->container->callback(BackupScheduler::class, 'reCreateCron'), 10, 0);
+        add_action('wp_ajax_wpstg-backups-download-url', $this->container->callback(AjaxBackupDownloader::class, 'ajaxDownloadBackupFromRemoteServer'), 10, 0); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     protected function hookDatabaseImporterQueryInserter()

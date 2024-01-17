@@ -3,6 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Traits\MemoryExhaustTrait;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\ServerVars;
 
@@ -11,7 +12,6 @@ if (!defined("WPINC")) {
     die;
 }
 
-
 /**
  * Class JobExecutable
  * I'm sorry for such mess, we need to support PHP 5.3
@@ -19,6 +19,8 @@ if (!defined("WPINC")) {
  */
 abstract class JobExecutable extends Job
 {
+    use MemoryExhaustTrait;
+
     /**
      * @var Strings
      */
@@ -79,6 +81,7 @@ abstract class JobExecutable extends Job
             $percentage = ($percentage > 100) ? 100 : $percentage;
         }
 
+        $this->removeMemoryExhaustErrorTmpFile();
         return $this->response = [
             "status"        => $status,
             "percentage"    => $percentage,

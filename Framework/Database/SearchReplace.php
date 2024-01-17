@@ -33,10 +33,10 @@ class SearchReplace
 
     public function __construct(array $search = [], array $replace = [], $caseSensitive = true, array $exclude = [])
     {
-        $this->search = $search;
-        $this->replace = $replace;
-        $this->caseSensitive = $caseSensitive;
-        $this->exclude = $exclude;
+        $this->search           = $search;
+        $this->replace          = $replace;
+        $this->caseSensitive    = $caseSensitive;
+        $this->exclude          = $exclude;
         $this->isWpBakeryActive = false;
     }
 
@@ -72,7 +72,7 @@ class SearchReplace
             return $data;
         }
 
-        $totalSearch = count($this->search);
+        $totalSearch  = count($this->search);
         $totalReplace = count($this->replace);
         if ($totalSearch !== $totalReplace) {
             throw new RuntimeException(
@@ -85,9 +85,9 @@ class SearchReplace
         }
 
         for ($i = 0; $i < $totalSearch; $i++) {
-            $this->currentSearch = (string)$this->search[$i];
+            $this->currentSearch  = (string)$this->search[$i];
             $this->currentReplace = (string)$this->replace[$i];
-            $data = $this->walker($data);
+            $data                 = $this->walker($data);
         }
 
         return $data;
@@ -185,13 +185,28 @@ class SearchReplace
             return $data;
         }
 
+        // If the string has an object format, check if it has a stdClass, otherwise, return the original data.
+        // The logic here, we can't serialize unserialized data that has an instance of a class in the object.
+        // This may lead to "class not found" or will replaced with "__PHP_Incomplete_Class_Name" if the class hasn't been initialized yet.
+        if (strpos($data, 'O:') !== false && preg_match_all('@O:\d+:"([^"]+)"@', $data, $match) && !empty($match) && !empty($match[1])) {
+            foreach ($match[1] as $value) {
+                if ($value !== 'stdClass') {
+                    return $data;
+                }
+            }
+
+            unset($match);
+        }
+
         // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
         try {
             $unserialized = @unserialize($data);
         } catch (\Exception $e) {
             debug_log('replaceString. Can not unserialize data. Error: ' . $e->getMessage() . ' Data: ' . $data);
+            $unserialized = false;
         } catch (\TypeError $err) {
             debug_log('replaceString. Can not unserialize data. Error: ' . $err->getMessage() . ' Data: ' . $data);
+            $unserialized = false;
         }
 
         if ($unserialized !== false) {

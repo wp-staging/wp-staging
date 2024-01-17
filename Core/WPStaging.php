@@ -9,8 +9,8 @@ use WPStaging\Backend\Pro\Licensing\Licensing;
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Basic\BasicServiceProvider;
 use WPStaging\Core\Cron\Cron;
-use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Duplicator\DuplicatorServiceProvider;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\AnalyticsServiceProvider;
 use WPStaging\Framework\AssetServiceProvider;
@@ -25,6 +25,7 @@ use WPStaging\Framework\SettingsServiceProvider;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Framework\Url;
+use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Frontend\Frontend;
 use WPStaging\Frontend\FrontendServiceProvider;
 use WPStaging\Pro\ProServiceProvider;
@@ -109,6 +110,7 @@ final class WPStaging
 
         $this->container->register(AnalyticsServiceProvider::class);
 
+        $this->container->register(DuplicatorServiceProvider::class);
         $this->container->register(BackupServiceProvider::class);
 
         // Register Pro or Basic Provider, Always prefer registering Pro if both classes found. If both not present throw error
@@ -281,7 +283,10 @@ final class WPStaging
         // Load globally available functions
         require_once(__DIR__ . "/Utils/functions.php");
 
-        $this->set("cache", new Cache());
+        $cache = WPStaging::make(Cache::class);
+        $cache->setLifetime(-1); // Non-expireable file
+        $cache->setPath(WPStaging::getContentDir());
+        $this->set("cache", $cache);
 
         $this->set("logger", new Logger());
 

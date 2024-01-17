@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Job as MainJob;
+use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
@@ -139,6 +140,8 @@ class UpdateStagingOptionsTable extends DBCloningService
         if ($this->dto->getMainJob() !== MainJob::UPDATE) {
             // @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
             $toDelete[] = 'wpstg_googledrive';
+            // Should we delete other cloud storage options too?
+            $toDelete[] = FinishBackupTask::OPTION_LAST_BACKUP;
         }
 
         $this->deleteOptions($toDelete);

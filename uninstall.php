@@ -86,6 +86,8 @@ class uninstall
             delete_option('wpstg_first_backup_speed_index');
             delete_option('wpstg_backup_speed_index');
             delete_option('wpstg_backup_speed_modal_shown');
+            delete_option('wpstg_backup_notice_is_closed');
+            delete_option('wpstg_backup_notice_remind_me');
 
             // @see \WPStaging\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
             delete_option('wpstg_backup_schedules');

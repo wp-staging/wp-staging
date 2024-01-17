@@ -52,7 +52,7 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * @return array
+     * @return string[]
      */
     public function getLogs()
     {
@@ -64,7 +64,7 @@ class Filesystem extends FilterableDirectoryIterator
      * @param string $fullPath
      * @return string|null
      */
-    public function safePath($fullPath)
+    public function safePath(string $fullPath)
     {
         $safePath = realpath(dirname($fullPath));
         if (!$safePath) {
@@ -82,9 +82,9 @@ class Filesystem extends FilterableDirectoryIterator
      * @param string $source
      * @param string $target
      *
-     * @return boolean Whether the move was successful or not.
+     * @return bool Whether the move was successful or not.
      */
-    public function move($source, $target)
+    public function move(string $source, string $target): bool
     {
         // if $source is link or file, move it and stop execution
         if (is_link($source) || is_file($source)) {
@@ -153,7 +153,7 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @return bool Whether the rename was successful or not.
      */
-    public function renameDirect($source, $target)
+    public function renameDirect(string $source, string $target): bool
     {
         $dir = dirname($target);
         if (!file_exists($dir)) {
@@ -179,7 +179,7 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @return bool — true on success or false on failure.
      */
-    public function moveFileOrDir($source, $dest)
+    public function moveFileOrDir(string $source, string $dest): bool
     {
         if (is_dir($source)) {
             return $this->moveDirRecursively($source, $dest);
@@ -204,7 +204,7 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @return bool — true on success or false on failure.
      */
-    private function moveDirRecursively($source, $dest)
+    private function moveDirRecursively(string $source, string $dest): bool
     {
         if (!is_dir($source)) {
             debug_log("moveDirRecursively() - Is no dir: $source.");
@@ -251,10 +251,11 @@ class Filesystem extends FilterableDirectoryIterator
 
     /**
      * @param string|null $path The path to the new folder, or null to use FileSystem's path.
+     * @param bool $detectDirectoryListing Whether to detect directory listing for notice.
      *
      * @return string Path to newly created folder, or empty string if couldn't create it.
      */
-    public function mkdir($path, $preventDirectoryListing = false)
+    public function mkdir($path, bool $detectDirectoryListing = false): string
     {
         $path = $this->findPath($path);
 
@@ -278,19 +279,21 @@ class Filesystem extends FilterableDirectoryIterator
             return '';
         }
 
-        if ($preventDirectoryListing) {
-            /** @var DirectoryListing $directoryListing */
-            $directoryListing = WPStaging::getInstance()->getContainer()->get(DirectoryListing::class);
-            try {
-                $directoryListing->preventDirectoryListing($path);
-            } catch (\Exception $e) {
-                /**
-                 * Enqueue this error. All enqueued errors will be shown as a single notice.
-                 *
-                 * @see \WPStaging\Framework\Notices\Notices::showDirectoryListingWarningNotice
-                 */
-                WPStaging::getInstance()->getContainer()->pushToArray(Notices::$directoryListingErrors, $e->getMessage());
-            }
+        if (!$detectDirectoryListing) {
+            return trailingslashit($path);
+        }
+
+        /** @var DirectoryListing $directoryListing */
+        $directoryListing = WPStaging::getInstance()->getContainer()->get(DirectoryListing::class);
+        try {
+            $directoryListing->preventDirectoryListing($path);
+        } catch (\Exception $e) {
+            /**
+             * Enqueue this error. All enqueued errors will be shown as a single notice.
+             *
+             * @see \WPStaging\Framework\Notices\Notices::showDirectoryListingWarningNotice
+             */
+            WPStaging::getInstance()->getContainer()->pushToArray(Notices::$directoryListingErrors, $e->getMessage());
         }
 
         return trailingslashit($path);
@@ -301,9 +304,9 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @param string $source
      * @param string $target
-     * @return boolean
+     * @return bool
      */
-    public function copy($source, $target)
+    public function copy(string $source, string $target): bool
     {
         // if $source is link or file, copy it and stop execution
         if (is_link($source) || is_file($source)) {
@@ -368,7 +371,7 @@ class Filesystem extends FilterableDirectoryIterator
      * @param string $dir
      * @return bool
      */
-    public function isEmptyDir($dir)
+    public function isEmptyDir(string $dir): bool
     {
         if (is_dir($dir)) {
             $iterator = new \FilesystemIterator($dir);
@@ -383,13 +386,14 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @see \WPStaging\Framework\Filesystem\FilterableDirectoryIterator::setRecursive To control whether this function should delete recursively.
      *
-     * @param string $path
+     * @param string|null $path
      * @param bool   $deleteSelf Whether to delete the target folder after deleting it's contents.
+     * @param bool   $throw Whether to throw an exception if the directory could not be deleted.
      * @throws FilesystemExceptions Only if $throw is true.
      *
      * @return bool True if target was completely deleted, false if file not deleted or folder still have contents.
      */
-    public function delete($path = null, $deleteSelf = true, $throw = false)
+    public function delete($path = null, bool $deleteSelf = true, bool $throw = false): bool
     {
         $path = $this->findPath($path);
 
@@ -502,12 +506,12 @@ class Filesystem extends FilterableDirectoryIterator
 
     /**
      * @param string $file full path + filename
-     * @param array $excludedFiles List of filenames. Can be wildcard pattern like data.php, data*.php, *.php, .php
+     * @param string[] $excludedFiles List of filenames. Can be wildcard pattern like data.php, data*.php, *.php, .php
      * @param bool $returnPattern If true, returns the pattern that matched the filename.
      *
      * @return bool|string false if not excluded, true if excluded and $returnPattern is false, string if $returnPattern is true
      */
-    public function isFilenameExcluded($file, $excludedFiles, $returnPattern = false)
+    public function isFilenameExcluded(string $file, array $excludedFiles, bool $returnPattern = false)
     {
         $filename = basename($file);
 
@@ -539,7 +543,7 @@ class Filesystem extends FilterableDirectoryIterator
      * This function emulates [[fnmatch()]], which may be unavailable at certain environment, using PCRE.
      * @param string $pattern the shell wildcard pattern.
      * @param string $string the tested string.
-     * @param array $options options for matching. Valid options are:
+     * @param string[] $options options for matching. Valid options are:
      *
      * - caseSensitive: bool, whether pattern should be case sensitive. Defaults to `true`.
      * - escape: bool, whether backslash escaping is enabled. Defaults to `true`.
@@ -547,7 +551,7 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @return bool whether the string matches pattern or not.
      */
-    protected function fnmatch($pattern, $string, $options = [])
+    protected function fnmatch(string $pattern, string $string, array $options = []): bool
     {
         if ($pattern === '*' && empty($options['filePath'])) {
             return true;
@@ -584,10 +588,10 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * @param array $paths
-     * @return boolean
+     * @param string[] $paths
+     * @return bool
      */
-    public function deletePaths($paths)
+    public function deletePaths(array $paths): bool
     {
         foreach ($paths as $path) {
             // only delete the dir if empty
@@ -611,7 +615,7 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * @param $path
+     * @param string|null $path
      * @return string|null
      */
     public function findPath($path)
@@ -620,7 +624,7 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * @return boolean|null
+     * @return bool|null
      */
     public function arePermissionExceptionsBypassed()
     {
@@ -628,7 +632,7 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * @param boolean|null $flag
+     * @param bool|null $flag
      * @return self
      */
     public function shouldPermissionExceptionsBypass($flag)
@@ -692,18 +696,18 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * @return array|string[]
+     * @return string[]
      */
-    public function getFileNames()
+    public function getFileNames(): array
     {
         return $this->fileNames ?: [];
     }
 
     /**
-     * @param array|string[] $fileNames
+     * @param string[] $fileNames
      * @return self
      */
-    public function setFileNames($fileNames)
+    public function setFileNames(array $fileNames)
     {
         $this->fileNames = $fileNames;
         return $this;
@@ -713,7 +717,7 @@ class Filesystem extends FilterableDirectoryIterator
      * @param string $fileName
      * @return self
      */
-    public function addFileName($fileName)
+    public function addFileName(string $fileName)
     {
         $this->fileNames[] = $fileName;
         return $this;
@@ -734,7 +738,7 @@ class Filesystem extends FilterableDirectoryIterator
      * @param SplFileInfo $item
      * @return bool
      */
-    protected function deleteItem($item)
+    protected function deleteItem(SplFileInfo $item): bool
     {
         $path = $item->getPathname();
 
@@ -778,9 +782,9 @@ class Filesystem extends FilterableDirectoryIterator
     /**
      * Remove symlink for both windows and other OSes
      * @param string $path Path to the link
-     * @return boolean
+     * @return bool
      */
-    protected function removeSymlink($path)
+    protected function removeSymlink(string $path): bool
     {
         // remove symlink using rmdir if OS is windows
         if (PHP_SHLIB_SUFFIX === 'dll') {
@@ -791,9 +795,9 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * @param $string
+     * @param string $string
      */
-    protected function log($string)
+    protected function log(string $string)
     {
         if ($this->logger instanceof LoggerInterface) {
             $this->logger->warning($string);
@@ -808,9 +812,9 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @param  string $path    Path to the file
      * @param  string $content Content of the file
-     * @return boolean
+     * @return bool
      */
-    public function create($path, $content)
+    public function create(string $path, string $content): bool
     {
         if (!@file_exists($path)) {
             if (!@is_writable(dirname($path))) {
@@ -841,10 +845,10 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @param  string $path    Path to the file
      * @param  string $marker  Name of the marker
-     * @param  string $content Content of the file
-     * @return boolean
+     * @param  array|string $content Content of the file.
+     * @return bool
      */
-    public function createWithMarkers($path, $marker, $content)
+    public function createWithMarkers(string $path, string $marker, $content): bool
     {
         return @insert_with_markers($path, $marker, $content);
     }
@@ -864,7 +868,7 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @return string
      */
-    public function maybeNormalizePath($path, $addTrailingslash = false)
+    public function maybeNormalizePath(string $path, bool $addTrailingslash = false): string
     {
         if ($this->isWindowsOs() || !strpos($path, '\\')) {
             return $this->normalizePath($path, $addTrailingslash);
@@ -885,7 +889,7 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @return string
      */
-    public function normalizePath($path, $addTrailingslash = false)
+    public function normalizePath(string $path, bool $addTrailingslash = false): string
     {
         /**
          * For UNC Paths
@@ -910,7 +914,12 @@ class Filesystem extends FilterableDirectoryIterator
         return wp_normalize_path($path);
     }
 
-    public function handleMkdirError($errno, $errstr)
+    /**
+     * @param int $errno
+     * @param string $errstr
+     * @return void
+     */
+    public function handleMkdirError(int $errno, string $errstr)
     {
         $this->logs[] = "Unable to create directory. Reason: " . $errstr;
     }
@@ -918,15 +927,15 @@ class Filesystem extends FilterableDirectoryIterator
     /**
      * Build a temporary path for plugins and themes
      * Add temporary prefix to plugin or theme main dir during the file copying push process.
-     * E.g. wpstg-tmp-yoast or wpstg-tmp-avada
-     *
+     * E.g. wpstg-tmp-plugins/yoast or wpstg-tmp-themes/avada
+     * @param string $fullPath
      * @return string
      */
-    public function tmpDestinationPath($fullPath)
+    public function tmpDestinationPath(string $fullPath): string
     {
         return preg_replace(
             '#wp-content/(plugins|themes)/([A-Za-z0-9-_]+)#',
-            'wp-content/$1/' . Copier::PREFIX_TEMP . '$2',
+            'wp-content/' . Copier::PREFIX_TEMP . '$1/$2',
             $fullPath
         );
     }
@@ -939,7 +948,7 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @return bool Whether the file exists and is readable.
      */
-    public function isReadableFile($filePath)
+    public function isReadableFile(string $filePath): bool
     {
         if (is_readable($filePath)) {
             return true;
@@ -970,8 +979,9 @@ class Filesystem extends FilterableDirectoryIterator
 
     /**
      * @param int $processed
+     * @return void
      */
-    public function setProcessedCount($processed = 0)
+    public function setProcessedCount(int $processed = 0)
     {
         $this->processed = $processed;
     }
@@ -979,7 +989,7 @@ class Filesystem extends FilterableDirectoryIterator
     /**
      * @return int
      */
-    public function getProcessedCount()
+    public function getProcessedCount(): int
     {
         return $this->processed;
     }
@@ -994,7 +1004,7 @@ class Filesystem extends FilterableDirectoryIterator
      *          ]
      *
      */
-    public function findFilesInDir($path)
+    public function findFilesInDir(string $path): array
     {
         $path = $this->normalizePath($path);
 
@@ -1027,7 +1037,7 @@ class Filesystem extends FilterableDirectoryIterator
      * @param string $path
      * @return string
      */
-    public function trailingSlashit($path)
+    public function trailingSlashit(string $path): string
     {
         if ($this->isWindowsOs()) {
             return trailingslashit($path);
@@ -1045,7 +1055,7 @@ class Filesystem extends FilterableDirectoryIterator
      *
      * @return bool
      */
-    protected function isWindowsOs()
+    protected function isWindowsOs(): bool
     {
         return WPStaging::isWindowsOs();
     }

@@ -26,6 +26,7 @@ use WPStaging\Backup\Service\Compressor;
 use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Vendor\lucatume\DI52\NotFoundException;
 use WPStaging\Backup\Dto\Service\CompressorDto;
+use WPStaging\Framework\SiteInfo;
 
 class FinalizeBackupTask extends BackupTask
 {
@@ -49,6 +50,12 @@ class FinalizeBackupTask extends BackupTask
     /** @var BufferedCache */
     protected $sqlCache;
 
+    /** @var SiteInfo */
+    protected $siteInfo;
+
+    /** @var array */
+    protected $databaseParts = [];
+
     /** @var int */
     protected $currentFileIndex = 0;
 
@@ -65,18 +72,30 @@ class FinalizeBackupTask extends BackupTask
      * @param PathIdentifier $pathIdentifier
      * @param BackupMetadataEditor $backupMetadataEditor
      * @param AnalyticsBackupCreate $analyticsBackupCreate
+     * @param SiteInfo $siteInfo
      */
-    public function __construct(Compressor $compressor, BufferedCache $sqlCache, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, PathIdentifier $pathIdentifier, BackupMetadataEditor $backupMetadataEditor, AnalyticsBackupCreate $analyticsBackupCreate)
-    {
+    public function __construct(
+        Compressor $compressor,
+        BufferedCache $sqlCache,
+        LoggerInterface $logger,
+        Cache $cache,
+        StepsDto $stepsDto,
+        SeekableQueueInterface $taskQueue,
+        PathIdentifier $pathIdentifier,
+        BackupMetadataEditor $backupMetadataEditor,
+        AnalyticsBackupCreate $analyticsBackupCreate,
+        SiteInfo $siteInfo
+    ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
         global $wpdb;
-        $this->compressor = $compressor;
-        $this->sqlCache = $sqlCache;
-        $this->wpdb = $wpdb;
-        $this->pathIdentifier = $pathIdentifier;
-        $this->backupMetadataEditor = $backupMetadataEditor;
+        $this->compressor            = $compressor;
+        $this->sqlCache              = $sqlCache;
+        $this->wpdb                  = $wpdb;
+        $this->pathIdentifier        = $pathIdentifier;
+        $this->backupMetadataEditor  = $backupMetadataEditor;
         $this->analyticsBackupCreate = $analyticsBackupCreate;
+        $this->siteInfo              = $siteInfo;
     }
 
     /**
@@ -216,6 +235,7 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setScheduleId($this->jobDataDto->getScheduleId());
         $backupMetadata->setMultipartMetadata(null);
         $backupMetadata->setCreatedOnPro(WPStaging::isPro());
+        $backupMetadata->setHostingType($this->siteInfo->isHostedOnWordPressCom() ? SiteInfo::HOSTED_ON_WP : ($this->siteInfo->isFlywheel() ? SiteInfo::HOSTED_ON_FLYWHEEL : SiteInfo::OTHER_HOST));
 
         $this->addSystemInfoToBackupMetadata($backupMetadata);
 

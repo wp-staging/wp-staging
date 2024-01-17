@@ -45,6 +45,13 @@ class RestoreThemesTask extends FileRestoreTask
         }
 
         foreach ($themesToRestore as $themeName => $themePath) {
+            /**
+             * Scenario: Skip restoring a theme whose destination is symlink and the site is hosted on WordPress.com
+             */
+            if ($this->isSiteHostedOnWordPressCom && is_link("$destDir$themeName")) {
+                continue;
+            }
+
             /*
              * Scenario: Restoring a theme that already exists
              * 1. Backup old theme

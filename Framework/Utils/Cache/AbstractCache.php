@@ -124,8 +124,8 @@ abstract class AbstractCache
     }
 
     /**
-     * If cache is not valid, it will be deleted
-     * @param $delete
+     * If cache is not valid, it will be deleted by default, this option can be turned off
+     * @param bool $delete
      * @return bool
      * @throws IOException
      */

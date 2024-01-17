@@ -15,6 +15,7 @@ use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Vendor\Psr\Log\LogLevel;
 use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Framework\SiteInfo;
 
 /**
  * Class Logger
@@ -113,11 +114,22 @@ class Logger implements LoggerInterface, ShutdownableInterface
     {
         $systemInfo = WPStaging::make(SystemInfo::class);
 
+        /** @var SiteInfo */
+        $siteInfo   = WPStaging::make(SiteInfo::class);
+        // Keeping these non-translated
+        $host       = 'General';
+        if ($siteInfo->isHostedOnWordPressCom()) {
+            $host   = 'WordPress.com';
+        } elseif ($siteInfo->isFlywheel()) {
+            $host   = 'Flywheel';
+        }
+
         $this->info(esc_html('WP Staging Version: ' . $systemInfo->getWpStagingVersion()));
         $this->info(esc_html('PHP Version: ' . $systemInfo->getPhpVersion()));
         $this->info(esc_html('Server: ' . $systemInfo->getWebServerInfo()));
         $this->info(esc_html('MySQL: ' . $systemInfo->getMySqlVersionCompact()));
         $this->info(esc_html('WP Version: ' . get_bloginfo("version")));
+        $this->info(esc_html('Host: ' . $host));
         $this->info(esc_html('PHP Memory Limit: ' . wp_convert_hr_to_bytes(ini_get("memory_limit"))));
         $this->info(esc_html('WP Memory Limit: ' . (defined('WP_MEMORY_LIMIT') ? wp_convert_hr_to_bytes(WP_MEMORY_LIMIT) : '')));
         $this->info(esc_html('PHP Max Execution Time: ' . ini_get("max_execution_time")));

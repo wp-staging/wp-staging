@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Traits;
 
+use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Staging\Sites;
@@ -30,6 +31,7 @@ trait DatabaseSearchReplaceTrait
         'wpstg_existing_clones_beta',
         'wpstg_existing_clones',
         Sites::STAGING_SITES_OPTION,
+        FinishBackupTask::OPTION_LAST_BACKUP,
         'wpstg_settings',
         'wpstg_license_status',
         'wpstg_tmp_data',

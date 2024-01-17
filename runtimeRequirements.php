@@ -207,9 +207,10 @@ if (!function_exists('wpstgCanShowAnotherInstanceRunningNotice')) {
 
 if (!function_exists('wpstgCanThrowAnotherInstanceLoadedException')) {
     /**
+     * @param string $pluginFilePath
      * @return bool
      */
-    function wpstgCanThrowAnotherInstanceLoadedException(): bool
+    function wpstgCanThrowAnotherInstanceLoadedException(string $pluginFilePath = ''): bool
     {
         if (defined('WPSTG_VERSION') && version_compare(WPSTG_VERSION, WPSTGPRO_MINIMUM_FREE_VERSION, '<')) {
             return true;
@@ -219,7 +220,7 @@ if (!function_exists('wpstgCanThrowAnotherInstanceLoadedException')) {
             return true;
         }
 
-        if (!wpstgIsProActiveInNetworkOrInCurrentSite()) {
+        if (!wpstgIsProActiveInNetworkOrInCurrentSite() && strpos($pluginFilePath, 'wp-staging-pro.php') === false) {
             return true;
         }
 
@@ -325,7 +326,7 @@ if (isset($_REQUEST['action'])) {
                 $isActivatingWpStaging        = strpos($plugin, 'wp-staging.php') || strpos($plugin, 'wp-staging-pro.php');
                 $isActivatingAnotherWpStaging = plugin_basename($plugin) !== plugin_basename($pluginFilePath);
 
-                if ($isActivatingWpStaging && $isActivatingAnotherWpStaging && current_user_can('deactivate_plugin', plugin_basename($pluginFilePath))) {
+                if ($isActivatingWpStaging && $isActivatingAnotherWpStaging && wpstgCanThrowAnotherInstanceLoadedException($plugin) && current_user_can('deactivate_plugin', plugin_basename($pluginFilePath))) {
                     throw new Exception("Activating another WPSTAGING Plugin. Plugin that bailed bootstrapping: $pluginFilePath");
                 }
             }
@@ -340,7 +341,7 @@ if (isset($_REQUEST['action'])) {
                     $isActivatingWpStaging        = strpos($plugin, 'wp-staging.php') || strpos($plugin, 'wp-staging-pro.php');
                     $isActivatingAnotherWpStaging = plugin_basename($plugin) !== plugin_basename($pluginFilePath);
 
-                    if ($isActivatingWpStaging && $isActivatingAnotherWpStaging && current_user_can('deactivate_plugin', plugin_basename($pluginFilePath))) {
+                    if ($isActivatingWpStaging && $isActivatingAnotherWpStaging && wpstgCanThrowAnotherInstanceLoadedException($plugin) && current_user_can('deactivate_plugin', plugin_basename($pluginFilePath))) {
                         throw new Exception("Activating another WPSTAGING Plugin. Plugin that bailed bootstrapping: $pluginFilePath");
                     }
                 }
@@ -368,7 +369,7 @@ if (
         });
     }
 
-    if (!wpstgCanThrowAnotherInstanceLoadedException()) {
+    if (!wpstgCanThrowAnotherInstanceLoadedException($pluginFilePath)) {
         return;
     }
 

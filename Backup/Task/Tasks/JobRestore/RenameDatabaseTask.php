@@ -16,6 +16,7 @@ use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
 use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\Database\TablesRenamer;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -52,11 +53,11 @@ class RenameDatabaseTask extends RestoreTask
     public function __construct(SiteInfo $siteinfo, TablesRenamer $tablesRenamer, ViewDDLOrder $viewDDLOrder, TableService $tableService, TableViewsRenamer $tableViewsRenamer, AccessToken $accessToken, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->tableService = $tableService;
-        $this->tablesRenamer = $tablesRenamer;
-        $this->accessToken  = $accessToken;
-        $this->viewDDLOrder = $viewDDLOrder;
-        $this->siteInfo     = $siteinfo;
+        $this->tableService      = $tableService;
+        $this->tablesRenamer     = $tablesRenamer;
+        $this->accessToken       = $accessToken;
+        $this->viewDDLOrder      = $viewDDLOrder;
+        $this->siteInfo          = $siteinfo;
         $this->tableViewsRenamer = $tableViewsRenamer;
     }
 
@@ -198,6 +199,13 @@ class RenameDatabaseTask extends RestoreTask
             'autoload' => in_array('blog_public', $allOptions),
         ];
 
+        // Last Backup option
+        $this->optionsToKeep[] = [
+            'name' => FinishBackupTask::OPTION_LAST_BACKUP,
+            'value' => get_option(FinishBackupTask::OPTION_LAST_BACKUP),
+            'autoload' => in_array(FinishBackupTask::OPTION_LAST_BACKUP, $allOptions),
+        ];
+
         global $wpdb;
 
         $analyticsEvents = $wpdb->get_results("SELECT * FROM $wpdb->options WHERE `option_name` LIKE 'wpstg_analytics_event_%' LIMIT 0, 200");
@@ -299,6 +307,14 @@ class RenameDatabaseTask extends RestoreTask
             return false;
         }
 
+        // This condition is only fulfilled if all existing non-conflicting tables have been renamed in this current request and no other non-conflicting tables needs to be renamed.
+        if ($this->tablesRenamer->getIsNonConflictingTablesRenamingTaskExecuted()) {
+            $this->currentTaskDto->nonConflictingTablesRenamed = $this->tablesRenamer->getNonConflictingTablesRenamed();
+            $this->logger->info(sprintf('Restored %d/%d tables', $this->currentTaskDto->nonConflictingTablesRenamed, $this->jobDataDto->getTotalTablesToRename()));
+            $this->setCurrentTaskDto($this->currentTaskDto);
+            return false;
+        }
+
         $result = $this->tablesRenamer->renameConflictingTables();
 
         $this->currentTaskDto->conflictingTablesRenamed = $this->tablesRenamer->getConflictingTablesRenamed();
@@ -342,13 +358,16 @@ class RenameDatabaseTask extends RestoreTask
         $originalAccessToken      = $databaseData['accessToken'];
         $isNetworkActivatedPlugin = $databaseData['isNetworkActivatedPlugin'];
 
-        // Reset cache
-        wp_cache_init();
+        // Otherwise wp.com might throw a private site error, stopping restore to continue further.
+        if (!$this->siteInfo->isHostedOnWordPressCom()) {
+            // Reset cache
+            wp_cache_init();
 
-        // Make sure WordPress does not try to re-use any values fetched from the database thus far.
-        $wpdb->flush();
-        $wp_object_cache->flush();
-        wp_suspend_cache_addition(true);
+            // Make sure WordPress does not try to re-use any values fetched from the database thus far.
+            $wpdb->flush();
+            $wp_object_cache->flush();
+            wp_suspend_cache_addition(true);
+        }
 
         foreach ($this->optionsToKeep as $optionToKeep) {
             update_option($optionToKeep['name'], $optionToKeep['value'], $optionToKeep['autoload']);
@@ -399,8 +418,11 @@ class RenameDatabaseTask extends RestoreTask
 
         do_action('wpstg.backup.import.database.postDatabaseRestoreActions');
 
-        // Logs the user out
-        wp_logout();
+        // Otherwise wp.com might throw a private site error, stopping restore to continue further.
+        if (!$this->siteInfo->isHostedOnWordPressCom()) {
+            // Logs the user out
+            wp_logout();
+        }
     }
 
     /**

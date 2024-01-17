@@ -58,7 +58,7 @@ class SystemInfo
      * Get System Information as text
      * @return string
      */
-    public function get()
+    public function get(): string
     {
         $output = $this->server();
 
@@ -66,9 +66,9 @@ class SystemInfo
 
         $output .= $this->wp();
 
-        $output .= $this->wpstaging();
-
         $output .= $this->getMultisiteInfo();
+
+        $output .= $this->wpstaging();
 
         $output .= $this->plugins();
 
@@ -87,18 +87,18 @@ class SystemInfo
      * @param string $string
      * @return string
      */
-    public function header($string)
+    public function header(string $string): string
     {
         return PHP_EOL . "### {$string} ###" . PHP_EOL . PHP_EOL;
     }
 
     /**
-     * Formating title and the value
+     * Formatting title and the value
      * @param string $title
-     * @param string $value
+     * @param string|array $value
      * @return string
      */
-    public function info($title, $value)
+    public function info(string $title, $value): string
     {
         return str_pad($title, 56, ' ', STR_PAD_RIGHT) . print_r($value, true) . PHP_EOL;
     }
@@ -107,7 +107,7 @@ class SystemInfo
      * WordPress Configuration
      * @return string
      */
-    public function wp()
+    public function wp(): string
     {
         global $wpdb;
 
@@ -137,13 +137,16 @@ class SystemInfo
         }
 
         $output .= $this->info("ABSPATH Stat:", $absPathStat);
+        $output .= $this->constantInfo('WP_PLUGIN_DIR');
+        $output .= $this->constantInfo('WP_CONTENT_DIR');
 
-        $output .= $this->info("WP_PLUGIN_DIR:", WP_PLUGIN_DIR);
-        $output .= $this->info("WP_CONTENT_DIR:", WP_CONTENT_DIR);
-
-        if (defined('UPLOADS')) {
-            $output .= $this->info("WP UPLOADS CONST:", UPLOADS);
+        $output .= $this->info("Is wp-content link:", is_link(WP_CONTENT_DIR) ? 'Yes' : 'No');
+        if (is_link(WP_CONTENT_DIR)) {
+            $output .= $this->info("wp-content link target:", readlink(WP_CONTENT_DIR));
+            $output .= $this->info("wp-content realpath:", realpath(WP_CONTENT_DIR));
         }
+
+        $output .= $this->constantInfo('UPLOADS');
 
         $uploads = wp_upload_dir();
         $output  .= $this->info("uploads['path']:", $uploads['path']);
@@ -155,13 +158,11 @@ class SystemInfo
         $output .= $this->info("UPLOAD_PATH in wp-config.php:", (defined("UPLOAD_PATH")) ? UPLOAD_PATH : '[not set]');
         $output .= $this->info("upload_path in " . $wpdb->prefix . 'options:', get_option("upload_path") ?: "[not set]");
 
-        if (defined('WP_TEMP_DIR')) {
-            $output .= $this->info("WP_TEMP_DIR:", WP_TEMP_DIR);
-        }
+        $output .= $this->constantInfo('WP_TEMP_DIR');
 
         $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? (WP_DEBUG ? "Enabled" : "Disabled") : "Not set");
-        $output .= $this->info("WP_MEMORY_LIMIT:", WP_MEMORY_LIMIT);
-        $output .= $this->info("WP_MAX_MEMORY_LIMIT:", WP_MAX_MEMORY_LIMIT);
+        $output .= $this->constantInfo('WP_MEMORY_LIMIT');
+        $output .= $this->constantInfo('WP_MAX_MEMORY_LIMIT');
         $output .= $this->info("Active Theme:", $this->theme());
         $output .= $this->info("Permalink Structure:", get_option("permalink_structure") ?: "Default");
         $output .= $this->wpRemotePost();
@@ -175,7 +176,7 @@ class SystemInfo
      * Theme Information
      * @return string
      */
-    public function theme()
+    public function theme(): string
     {
         // Versions earlier than 3.4
         if (get_bloginfo("version") < "3.4") {
@@ -191,7 +192,7 @@ class SystemInfo
      * Multisite information
      * @return string
      */
-    private function getMultisiteInfo()
+    private function getMultisiteInfo(): string
     {
         if (!$this->isMultiSite) {
             return '';
@@ -205,6 +206,28 @@ class SystemInfo
         $output .= $this->info("MultiSite URL without scheme:", $multisite->getHomeUrlWithoutScheme());
         $output .= $this->info("MultiSite is Main Site:", is_main_site() ? 'Yes' : 'No');
 
+        $output .= $this->constantInfo('SUBDOMAIN_INSTALL');
+        $output .= $this->constantInfo('DOMAIN_CURRENT_SITE');
+        $output .= $this->constantInfo('PATH_CURRENT_SITE');
+        $output .= $this->constantInfo('SITE_ID_CURRENT_SITE');
+        $output .= $this->constantInfo('BLOG_ID_CURRENT_SITE');
+
+        $networkSites = get_sites();
+        $output .= PHP_EOL . $this->info("Network Sites:", count($networkSites)) . PHP_EOL;
+        foreach ($networkSites as $site) {
+            $siteDetails = get_blog_details($site->blog_id);
+            if (!$siteDetails) {
+                continue;
+            }
+
+            $output .= $this->info("Blog ID:", $site->blog_id);
+            $output .= $this->info("Home URL:", get_home_url($site->blog_id));
+            $output .= $this->info("Site URL:", get_site_url($site->blog_id));
+            $output .= $this->info("Domain:", $site->domain);
+            $output .= $this->info("Path:", $site->path);
+            $output .= PHP_EOL;
+        }
+
         return $output;
     }
 
@@ -212,7 +235,7 @@ class SystemInfo
      * Wp Staging plugin Information
      * @return string
      */
-    public function wpstaging()
+    public function wpstaging(): string
     {
         $settings = (object)get_option('wpstg_settings', []);
 
@@ -342,7 +365,7 @@ class SystemInfo
     /**
      * @return string
      */
-    public function getWpStagingVersion()
+    public function getWpStagingVersion(): string
     {
         if (defined('WPSTG_VERSION')) {
             return WPSTG_VERSION;
@@ -359,7 +382,7 @@ class SystemInfo
      * Browser Information
      * @return string
      */
-    public function browser()
+    public function browser(): string
     {
         $output = $this->header("User Browser");
         $output .= (new Browser());
@@ -371,7 +394,7 @@ class SystemInfo
      * Check wp_remote_post() functionality
      * @return string
      */
-    public function wpRemotePost()
+    public function wpRemotePost(): string
     {
         // Make sure wp_remote_post() is working
         $wpRemotePost = "does not work";
@@ -401,7 +424,7 @@ class SystemInfo
      * @param array $activePlugins
      * @return string
      */
-    public function activePlugins($plugins, $activePlugins)
+    public function activePlugins(array $plugins, array $activePlugins): string
     {
         $output = $this->header("WordPress Active Plugins");
 
@@ -422,7 +445,7 @@ class SystemInfo
      * @param array $activePlugins
      * @return string
      */
-    public function inactivePlugins($plugins, $activePlugins)
+    public function inactivePlugins(array $plugins, array $activePlugins): string
     {
         $output = $this->header("WordPress Inactive Plugins");
 
@@ -441,7 +464,7 @@ class SystemInfo
      * Get list of active and inactive plugins
      * @return string
      */
-    public function plugins()
+    public function plugins(): string
     {
         // Get plugins and active plugins
         $plugins       = get_plugins();
@@ -458,7 +481,7 @@ class SystemInfo
      * Multisite Plugins
      * @return string
      */
-    public function multiSitePlugins()
+    public function multiSitePlugins(): string
     {
         if (!$this->isMultiSite) {
             return '';
@@ -490,7 +513,7 @@ class SystemInfo
      * Server Information
      * @return string
      */
-    public function server()
+    public function server(): string
     {
         $output = $this->header("Start System Info");
 
@@ -509,7 +532,7 @@ class SystemInfo
     /**
      * @return string
      */
-    public function getMySqlServerType()
+    public function getMySqlServerType(): string
     {
         return $this->database->getServerType();
     }
@@ -517,7 +540,7 @@ class SystemInfo
     /**
      * @return string
      */
-    public function getMySqlFullVersion()
+    public function getMySqlFullVersion(): string
     {
         return $this->database->getSqlVersion();
     }
@@ -525,7 +548,7 @@ class SystemInfo
     /**
      * @return string
      */
-    public function getMySqlVersionCompact()
+    public function getMySqlVersionCompact(): string
     {
         return $this->database->getSqlVersion($compact = true);
     }
@@ -533,15 +556,15 @@ class SystemInfo
     /**
      * @return string
      */
-    public function getPhpVersion()
+    public function getPhpVersion(): string
     {
         return PHP_VERSION;
     }
 
     /**
-     * @return array|string
+     * @return string
      */
-    public function getWebServerInfo()
+    public function getWebServerInfo(): string
     {
         return isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '';
     }
@@ -550,7 +573,7 @@ class SystemInfo
      * PHP Configuration
      * @return string
      */
-    public function php()
+    public function php(): string
     {
         $output        = $this->info("PHP memory_limit:", ini_get("memory_limit"));
         $output        .= $this->info("PHP memory_limit in Bytes:", wp_convert_hr_to_bytes(ini_get("memory_limit")));
@@ -568,10 +591,9 @@ class SystemInfo
     }
 
     /**
-     *
      * @return string
      */
-    public function getPHPUser()
+    public function getPHPUser(): string
     {
 
         $user = '';
@@ -593,7 +615,7 @@ class SystemInfo
      * Check if PHP is on Safe Mode
      * @return bool
      */
-    public function isSafeModeEnabled()
+    public function isSafeModeEnabled(): bool
     {
         return (
             version_compare(PHP_VERSION, "5.4.0", '<') &&
@@ -607,7 +629,7 @@ class SystemInfo
      * @param string $functionName
      * @return string
      */
-    public function isSupported($functionName)
+    public function isSupported(string $functionName): string
     {
         return (function_exists($functionName)) ? "Supported" : "Not Supported";
     }
@@ -618,7 +640,7 @@ class SystemInfo
      * @param bool $isClass
      * @return string
      */
-    public function isInstalled($name, $isClass = true)
+    public function isInstalled(string $name, bool $isClass = true): string
     {
         if ($isClass === true) {
             return (class_exists($name)) ? "Installed" : "Not Installed";
@@ -631,7 +653,7 @@ class SystemInfo
      * Gets Installed Important PHP Extensions
      * @return string
      */
-    public function phpExtensions()
+    public function phpExtensions(): string
     {
         // Important PHP Extensions
         $version = function_exists('curl_version') ? curl_version() : ['version' => 'Error: not available', 'ssl_version' => 'Error: not available', 'host' => 'Error: not available', 'protocols' => [], 'features' => []];
@@ -670,7 +692,7 @@ class SystemInfo
      * Check if WP is installed in subdir
      * @return bool
      */
-    private function isSubDir()
+    private function isSubDir(): bool
     {
         // Compare names without scheme to bypass cases where siteurl and home have different schemes http / https
         // This is happening much more often than you would expect
@@ -693,7 +715,7 @@ class SystemInfo
      * @param array $clone
      * @return string
      */
-    private function getStagingPrefix($clone = [])
+    private function getStagingPrefix(array $clone = []): string
     {
         // Throw error
         $path = ABSPATH . $clone['directoryName'] . DIRECTORY_SEPARATOR . "wp-config.php";
@@ -720,9 +742,10 @@ class SystemInfo
 
     /**
      * Get staging site wordpress version number
+     * @param string $path
      * @return string
      */
-    private function getStagingWpVersion($path)
+    private function getStagingWpVersion(string $path): string
     {
 
         if ($path === '[not set]') {
@@ -764,7 +787,10 @@ class SystemInfo
         return empty($value) ? '[not set]' : $value;
     }
 
-    private function getScheduleInfo()
+    /**
+     * @return string
+     */
+    private function getScheduleInfo(): string
     {
         $output          = '';
         $backupSchedules = get_option('wpstg_backup_schedules', []);
@@ -788,7 +814,10 @@ class SystemInfo
         return $output;
     }
 
-    private function getTablePrefix()
+    /**
+     * @return string
+     */
+    private function getTablePrefix(): string
     {
         global $wpdb;
         $tablePrefix = "DB Prefix: " . $wpdb->prefix . ' ';
@@ -801,7 +830,7 @@ class SystemInfo
     /**
      * @return string
      */
-    private function getBackupDetails()
+    private function getBackupDetails(): string
     {
         $backups = WPStaging::make(ListableBackupsCollection::class)->getListableBackups();
 
@@ -815,5 +844,23 @@ class SystemInfo
         $output .= $this->info("Backup Total File Size:", esc_html($totalBackupSize) . 'M');
 
         return $output;
+    }
+
+    /**
+     * @param string $constantName
+     * @return string
+     */
+    protected function constantInfo(string $constantName): string
+    {
+        if (!defined($constantName)) {
+            return $this->info($constantName . ':', '[not set]');
+        }
+
+        $constantValue = constant($constantName);
+        if (is_bool($constantValue)) {
+            $constantValue = $constantValue ? 'Yes' : 'No';
+        }
+
+        return $this->info($constantName . ':', $constantValue);
     }
 }

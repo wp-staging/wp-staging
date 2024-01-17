@@ -36,6 +36,7 @@ class Database extends CloningProcess
      */
     public function initialize()
     {
+        $this->setupMemoryExhaustFile();
         $this->initializeDbObjects();
         $this->abortIfDirectoryNotEmpty();
         $this->abortIfDirectoryNotCreated();
@@ -242,6 +243,11 @@ class Database extends CloningProcess
     {
         if (isset($this->options->job->current)) {
             return;
+        }
+
+        // Create job object if not exists
+        if (!is_object($this->options->job)) {
+            $this->options->job = new stdClass();
         }
 
         $this->options->job->current = $table;

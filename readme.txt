@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.4
-Stable tag: 3.2.0
+Stable tag: 3.3.1
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,38 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.3.1 =
+* Fix: Handle warnings when unable to unserialize serialized data during cloning. #3004
+* Fix: Don't logout when restoring backup wp.com site on last step when database was not restored. #3031
+* Fix: PHP Fatal error: Uncaught TypeError when using Litespeed server. #3060
+
+= 3.3.0 =
+* New: Add backup and restore support for sites hosted on WordPress.com. #2433
+* New: Add input form for backup URL directly migrate a backup to another site. #2752
+* Enh: Allow to re-authenticate if current session expires during creating staging site, backup or push process. #2285
+* Enh: Show all network site host-names in system info. #2953
+* Enh: During PUSH, use temp directory outside of plugins and themes directories to avoid plugin duplication and conflicts in case of a failure. #1595
+* Enh: Refactor and DRY backup cache class. #2991
+* Enh: Show admin message if user has another backup plugin installed and tell how amazing the WP Staging feature is:-) #2966
+* Enh: Add dev filter activation. #2976
+* Enh: Don't reload all staging sites after creating staging site for smooth user experience. #2940
+* Enh: Show better error message when cloning process stops due to memory exhaustion. #2935
+* Fix: Although all tables were renamed correctly during backup restore, the backup restore log sometimes show incorrect number of tables restored. #2974
+* Fix: Can't serialize unserialized data that has an instance of a class in the object. Relevant for backup and backup restore. #2981
+* Fix: Make sure to execute backup performance javascript only when creating a backup. #3019
+* Fix: Installing the required free version when installing the pro version might disable all network active plugins on a multisite network. #2997
+* Fix: Improve cleaning up of cache files after pushing and backup. #3021
+* Fix: If only one file is selected for pushing, that file is not copied. #3011
+* Fix: Under rare circumstances a push could miss to copy the last file of a queue. #2901
+* Fix: On Bitnami Hosted WordPress Sites, Plugins and Themes are not replaced during PUSH due to symlinked wp-content folder. #2692
+* Fix: Undefined index of databaseSsl #2995
+* Fix: Notice "Free version required" may show up on network admin page while backup free version is not network activated. #2949
+* Fix: Don't show "Customized uploads folder notice" when host is flywheel. #2970
+* Fix: Make sure javascript events are only registered when the corresponding element is loaded in the DOM. #3039
+* Dev: Fix reauthentication e2e when creating backup. #3006
+* Dev: Add a windows based docker setup to run all backup and staging e2e and unit tests on a real Windows environment. #2699
+* Dev: Update nodejs docker image for building and compiling assets.#3016
 
 = 3.2.0 =
 * New: Support up to WordPress 6.4.2
@@ -964,4 +996,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-This is a security and feature update. It's highly recommended to update!
+New support for WordPress.com hosts. Multiple security enhancements. Updating is recommended!

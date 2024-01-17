@@ -285,6 +285,7 @@ class Assets
             'backupDBExtension'      => DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
             'analyticsConsentAllow'  => esc_url($this->analyticsConsent->getConsentLink(true)),
             'analyticsConsentDeny'   => esc_url($this->analyticsConsent->getConsentLink(false)),
+            'isPro'                  => WPStaging::isPro(),
             // TODO: handle i18n translations through Class/Service Provider?
             'i18n'                   => [
                 'dbConnectionSuccess' => esc_html__('Database Connection - Success', 'wp-staging'),
@@ -381,6 +382,8 @@ class Assets
         if (defined('WPSTGPRO_VERSION')) {
             $availablePages = [
                 "toplevel_page_wpstg_clone",
+                "toplevel_page_wpstg_backup",
+                "wp-staging-pro_page_wpstg_clone",
                 "wp-staging-pro_page_wpstg_backup",
                 "wp-staging-pro_page_wpstg-settings",
                 "wp-staging-pro_page_wpstg-tools",
@@ -389,6 +392,8 @@ class Assets
         } else {
             $availablePages = [
                 "toplevel_page_wpstg_clone",
+                "toplevel_page_wpstg_backup",
+                "wp-staging_page_wpstg_clone",
                 "wp-staging_page_wpstg_backup",
                 "wp-staging_page_wpstg-settings",
                 "wp-staging_page_wpstg-tools",

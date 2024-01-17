@@ -83,7 +83,7 @@ class Updating extends Job
         }
 
         // Delete files to copy listing
-        $this->cache->delete("files_to_copy");
+        $this->filesIndexCache->delete();
 
         // Generate Options
         $this->options->clone               = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
@@ -134,14 +134,13 @@ class Updating extends Job
             $this->options->databaseDatabase    = $this->options->existingClones[$this->options->clone]['databaseDatabase'];
             $this->options->databaseServer      = $this->options->existingClones[$this->options->clone]['databaseServer'];
             $this->options->databasePrefix      = $this->options->existingClones[$this->options->clone]['databasePrefix'];
-            $this->options->databaseSsl         = $this->options->existingClones[$this->options->clone]['databaseSsl'];
+            $this->options->databaseSsl         = isset($this->options->existingClones[$this->options->clone]['databaseSsl']) ? $this->options->existingClones[$this->options->clone]['databaseSsl'] : false;
             $this->options->destinationHostname = $this->options->existingClones[$this->options->clone]['url'];
             $this->options->uploadsSymlinked    = isset($this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked']) ? $this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked'] : false;
             $this->options->prefix              = $this->options->existingClones[$this->options->clone]['prefix'];
             $this->options->emailsAllowed       = $this->options->existingClones[$this->options->clone]['emailsAllowed'];
             $this->options->networkClone        = isset($this->options->existingClones[strtolower($this->options->clone)]['networkClone']) ? $this->options->existingClones[$this->options->clone]['networkClone'] : false;
             $this->options->networkClone        = filter_var($this->options->networkClone, FILTER_VALIDATE_BOOLEAN);
-            //$this->options->prefix = $this->getStagingPrefix();
             $this->options->homeHostname        = $this->urls->getHomeUrlWithoutScheme();
         } else {
             $job = 'update';

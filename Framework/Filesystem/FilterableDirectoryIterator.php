@@ -42,9 +42,9 @@ class FilterableDirectoryIterator
 
     /**
      * Iterator recursively including sub folders or only items located in root of $this->$directory
-     * @var bool|null
+     * @var bool
      */
-    private $isRecursive = null;
+    private $isRecursive = false;
 
     /**
      * skip dot in non recursive iterator depending on value
@@ -72,16 +72,16 @@ class FilterableDirectoryIterator
     /**
      * @return string
      */
-    public function getWpRootPath()
+    public function getWpRootPath(): string
     {
         return $this->wpRootPath;
     }
 
     /**
      * @param string $wpRootPath
-     * @return self
+     * @return static
      */
-    public function setWpRootPath($wpRootPath)
+    public function setWpRootPath(string $wpRootPath)
     {
         $this->wpRootPath = $wpRootPath;
         return $this;
@@ -90,16 +90,16 @@ class FilterableDirectoryIterator
     /**
      * @return string
      */
-    public function getDirectory()
+    public function getDirectory(): string
     {
         return $this->directory;
     }
 
     /**
      * @param string $directory
-     * @return self
+     * @return static
      */
-    public function setDirectory($directory)
+    public function setDirectory(string $directory)
     {
         $this->directory = $directory;
         return $this;
@@ -108,16 +108,16 @@ class FilterableDirectoryIterator
     /**
      * @return bool
      */
-    public function isIteratorRecursive()
+    public function isIteratorRecursive(): bool
     {
         return $this->isRecursive;
     }
 
     /**
      * @param bool $isRecursive
-     * @return self
+     * @return static
      */
-    public function setRecursive($isRecursive = true)
+    public function setRecursive(bool $isRecursive = true)
     {
         $this->isRecursive = $isRecursive;
         return $this;
@@ -126,34 +126,34 @@ class FilterableDirectoryIterator
     /**
      * @return bool
      */
-    public function isDotSkipped()
+    public function isDotSkipped(): bool
     {
         return $this->isDotSkip;
     }
 
     /**
      * @param bool $isDotSkip
-     * @return self
+     * @return static
      */
-    public function setDotSkip($isDotSkip = true)
+    public function setDotSkip(bool $isDotSkip = true)
     {
         $this->isDotSkip = $isDotSkip;
         return $this;
     }
 
     /**
-     * @return array
+     * @return string[]
      */
-    public function getExcludePaths()
+    public function getExcludePaths(): array
     {
         return $this->excludePaths;
     }
 
     /**
-     * @param array $paths
-     * @return self
+     * @param string[] $paths
+     * @return static
      */
-    public function setExcludePaths($paths)
+    public function setExcludePaths(array $paths)
     {
         $this->excludePaths = $paths;
         return $this;
@@ -161,27 +161,27 @@ class FilterableDirectoryIterator
 
     /**
      * @param string $path
-     * @return self
+     * @return static
      */
-    public function addExcludePath($path)
+    public function addExcludePath(string $path)
     {
         $this->excludePaths[] = $path;
         return $this;
     }
 
     /**
-     * @return array
+     * @return string[]
      */
-    public function getExcludeSizeRules()
+    public function getExcludeSizeRules(): array
     {
         return $this->sizes;
     }
 
     /**
-     * @param array $rules
-     * @return self
+     * @param string[] $rules
+     * @return static
      */
-    public function setExcludeSizeRules($rules)
+    public function setExcludeSizeRules(array $rules)
     {
         $this->sizes = $rules;
         return $this;
@@ -189,9 +189,9 @@ class FilterableDirectoryIterator
 
     /**
      * @param string $rule
-     * @return self
+     * @return static
      */
-    public function addExcludeSizeRule($rule)
+    public function addExcludeSizeRule(string $rule)
     {
         $this->sizes[] = $rule;
         return $this;
@@ -200,16 +200,16 @@ class FilterableDirectoryIterator
     /**
      * @return int
      */
-    public function getIteratorMode()
+    public function getIteratorMode(): int
     {
         return $this->iteratorMode;
     }
 
     /**
      * @param int $iteratorMode
-     * @return self
+     * @return static
      */
-    public function setIteratorMode($iteratorMode)
+    public function setIteratorMode(int $iteratorMode)
     {
         $this->iteratorMode = $iteratorMode;
         return $this;
@@ -241,7 +241,7 @@ class FilterableDirectoryIterator
      * Get recursive iterator for iterations
      * @return RecursiveIteratorIterator
      */
-    private function getRecursiveIterator()
+    private function getRecursiveIterator(): RecursiveIteratorIterator
     {
         // force Dot Skip to avoid unlimited loop iteration.
         $this->isDotSkip = true;
@@ -265,7 +265,7 @@ class FilterableDirectoryIterator
      * Get non recursive iterator for iterations
      * @return IteratorIterator
      */
-    private function getIterator()
+    private function getIterator(): IteratorIterator
     {
         $iterator = new DirectoryIterator($this->directory);
 

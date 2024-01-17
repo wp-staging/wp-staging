@@ -17,6 +17,7 @@ class CloneOptions
 {
     /**
      * The option_name that is stored in the database to check first run is executed or not
+     * @var string
      */
     const WPSTG_CLONE_SETTINGS_KEY = 'wpstg_clone_settings';
 
@@ -24,15 +25,15 @@ class CloneOptions
      * Get the value of the given option,
      * If no option given return all settings
      *
-     * @param string $option
+     * @param string|null $option
      *
      * @return mixed
      */
-    public function get($option = null)
+    public function get($option = null, $default = null)
     {
         // Early bail if not a staging site
         if (!WPStaging::make(SiteInfo::class)->isStagingSite()) {
-            return null;
+            return $default;
         }
 
         $settings = get_option(self::WPSTG_CLONE_SETTINGS_KEY, null);
@@ -44,12 +45,12 @@ class CloneOptions
 
         // Early Bail: if settings is null or if settings isn't object
         if ($settings === null || !is_object($settings)) {
-            return null;
+            return $default;
         }
 
         // Early bail if given option not exists
         if (!property_exists($settings, $option)) {
-            return null;
+            return $default;
         }
 
         return $settings->{$option};
@@ -63,7 +64,7 @@ class CloneOptions
      *
      * @return bool
      */
-    public function set($option, $value)
+    public function set(string $option, $value): bool
     {
         // Early bail if not a staging site
         if (!WPStaging::make(SiteInfo::class)->isStagingSite()) {
@@ -89,7 +90,7 @@ class CloneOptions
      *
      * @return bool
      */
-    public function delete($option)
+    public function delete(string $option): bool
     {
         // Early bail if not a staging site
         if (!WPStaging::make(SiteInfo::class)->isStagingSite()) {

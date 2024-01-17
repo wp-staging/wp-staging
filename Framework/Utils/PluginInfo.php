@@ -8,12 +8,17 @@ class PluginInfo
      * Checks if the admin menu can be displayed. The different cases are:
      *  - if the free only version is active;
      *  - if the pro version is active then the free version must be active and compatible with the pro version.
+     *  - if the free is not require for pro.
      *
      * @return bool
      */
     public function canShowAdminMenu(): bool
     {
         if (!defined('WPSTGPRO_VERSION')) {
+            return true;
+        }
+
+        if (defined('WPSTG_REQUIRE_FREE') && !WPSTG_REQUIRE_FREE) {
             return true;
         }
 

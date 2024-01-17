@@ -4,7 +4,6 @@ namespace WPStaging\Framework\Notices;
 
 use Exception;
 use wpdb;
-use WPStaging\Core\Utils\Cache;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
@@ -22,6 +21,7 @@ use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\ServerVars;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Framework\Utils\Cache\Cache;
 
 /**
  * Show Admin Notices | Warnings | Messages
@@ -100,6 +100,9 @@ class Notices
     /** @var ServerVars */
     private $serverVars;
 
+    /** @var bool */
+    private $isWpComSite;
+
     public function __construct(Assets $assets)
     {
         $this->assets           = $assets;
@@ -122,6 +125,8 @@ class Notices
         $this->objectCacheNotice       = WPStaging::make(ObjectCacheNotice::class);
         $this->siteInfo                = WPStaging::make(SiteInfo::class);
         $this->serverVars              = WPStaging::make(ServerVars::class);
+
+        $this->isWpComSite = $this->siteInfo->isHostedOnWordPressCom();
     }
 
     /**
@@ -484,7 +489,8 @@ class Notices
      */
     private function noticeAbspathDirectoryNotWriteable()
     {
-        if (self::SHOW_ALL_NOTICES || (!is_writable(ABSPATH))) {
+        // Don't show this notice on WP Com Sites
+        if (self::SHOW_ALL_NOTICES || ((!is_writable(ABSPATH)) && !$this->isWpComSite)) {
             require_once $this->viewsNoticesPath . "staging-directory-permission-problem.php";
         }
     }
@@ -505,7 +511,7 @@ class Notices
      */
     private function noticeCacheDirectoryNotWriteable()
     {
-        $cacheDir = $this->cache->getCacheDir();
+        $cacheDir = $this->cache->getPath();
         if (self::SHOW_ALL_NOTICES || (!is_dir($cacheDir) || !is_writable($cacheDir))) {
             require_once $this->viewsNoticesPath . "cache-directory-permission-problem.php";
         }
@@ -537,7 +543,7 @@ class Notices
      */
     private function noticeUploadsDirIsOutsideAbspath()
     {
-        if (self::SHOW_ALL_NOTICES || !$this->dirUtil->isPathInWpRoot($this->dirUtil->getUploadsDirectory())) {
+        if (self::SHOW_ALL_NOTICES || (!$this->dirUtil->isPathInWpRoot($this->dirUtil->getUploadsDirectory()) && !$this->siteInfo->isFlywheel() && !$this->isWpComSite)) {
             require $this->viewsNoticesPath . "uploads-outside-wp-root.php";
         }
     }

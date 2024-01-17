@@ -11,6 +11,7 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Task\RestoreFileHandlers\RestoreFileProcessor;
+use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 /**
@@ -26,21 +27,53 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
  */
 abstract class FileRestoreTask extends RestoreTask
 {
+    /**
+     * @var Filesystem
+     */
     protected $filesystem;
+
+    /**
+     * @var Directory
+     */
     protected $directory;
 
+    /**
+     * @var RestoreFileProcessor
+     */
     private $restoreFileProcessor;
 
+    /**
+     * @var int
+     */
     protected $processedNow;
+
+    /**
+     * @var PathIdentifier
+     */
     protected $pathIdentifier;
 
-    public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Filesystem $filesystem, Directory $directory, RestoreFileProcessor $restoreFileProcessor, PathIdentifier $pathIdentifier)
-    {
+    /**
+     * @var bool
+     */
+    protected $isSiteHostedOnWordPressCom = false;
+
+    public function __construct(
+        LoggerInterface $logger,
+        Cache $cache,
+        StepsDto $stepsDto,
+        SeekableQueueInterface $taskQueue,
+        Filesystem $filesystem,
+        Directory $directory,
+        RestoreFileProcessor $restoreFileProcessor,
+        PathIdentifier $pathIdentifier,
+        SiteInfo $siteInfo
+    ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->filesystem = $filesystem;
-        $this->directory = $directory;
-        $this->restoreFileProcessor = $restoreFileProcessor;
-        $this->pathIdentifier = $pathIdentifier;
+        $this->filesystem                 = $filesystem;
+        $this->directory                  = $directory;
+        $this->restoreFileProcessor       = $restoreFileProcessor;
+        $this->pathIdentifier             = $pathIdentifier;
+        $this->isSiteHostedOnWordPressCom = $siteInfo->isHostedOnWordPressCom();
     }
 
     public function prepareFileRestore()

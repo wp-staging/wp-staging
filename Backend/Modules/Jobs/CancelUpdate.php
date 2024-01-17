@@ -94,8 +94,8 @@ class CancelUpdate extends Job
         $this->log("Cancel Updating: Deleting clone job's cache files...");
 
         // Clean cache files
-        $this->cache->delete("clone_options");
-        $this->cache->delete("files_to_copy");
+        $this->cloneOptionCache->delete();
+        $this->filesIndexCache->delete();
 
         $this->log("Updating process canceled");
     }

@@ -103,7 +103,7 @@ class ListableBackupsCollection
                 $listableBackup->subsiteType                      = $listableBackup->type === 'single' ? '' : ($backupMetadata->getSubdomainInstall() ? 'Subdomains' : 'Subdirectories');
                 $listableBackup->automatedBackup                  = $backupMetadata->getIsAutomatedBackup();
                 $listableBackup->backupName                       = $backupMetadata->getName();
-                $listableBackup->dateCreatedTimestamp             = $backupMetadata->getDateCreated();
+                $listableBackup->dateCreatedTimestamp             = intval($backupMetadata->getDateCreated());
                 $listableBackup->dateCreatedFormatted             = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($backupMetadata->getDateCreated()));
                 $listableBackup->dateUploadedTimestamp            = $file->getCTime();
                 $listableBackup->dateUploadedFormatted            = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));

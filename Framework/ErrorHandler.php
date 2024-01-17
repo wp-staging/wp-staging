@@ -2,8 +2,6 @@
 
 namespace WPStaging\Framework;
 
-use WPStaging\Core\Utils\Logger;
-
 /**
  * @package WPStaging\Framework
  */
@@ -29,11 +27,13 @@ class ErrorHandler
 
         /**
          * Requests for which to check for memory exhaustion
+         * Using hardcoded values below to avoid loading all classes
          * @var array $wpStagingRequests
          */
         $wpStagingRequests = [
-            'wpstg_backup',
-            'wpstg_restore',
+            'wpstg_backup', // @see WPStaging\Backup\Ajax\Backup::WPSTG_REQUEST
+            'wpstg_restore', // @see WPStaging\Backup\Ajax\Restore::WPSTG_REQUEST
+            'wpstg_cloning', // @see WPStaging\Backend\Modules\Jobs\Cloning::WPSTG_REQUEST
         ];
 
         $wpStagingRequest = WPSTG_REQUEST;
@@ -67,7 +67,7 @@ class ErrorHandler
             'wpMemoryLimit'       => defined('WP_MEMORY_LIMIT') ? WP_MEMORY_LIMIT : '',
             'allowedMemoryLimit'  => $data[1],
             'exhaustedMemorySize' => $data[2],
-            'time'                => date(Logger::LOG_DATETIME_FORMAT, time()),
+            'time'                => date('Y/m/d H:i:s', time()), // @see WPStaging\Core\Utils\Logger::LOG_DATETIME_FORMAT, use hardcoded value to avoid loading class
         ]);
 
         if (is_resource($fileHandler)) {

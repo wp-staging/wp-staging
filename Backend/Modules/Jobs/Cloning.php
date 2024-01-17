@@ -27,6 +27,11 @@ use function WPStaging\functions\debug_log;
 class Cloning extends Job
 {
     /**
+     * @var string
+     */
+    const WPSTG_REQUEST = 'wpstg_cloning';
+
+    /**
      * @var object
      */
     private $db;
@@ -89,8 +94,8 @@ class Cloning extends Job
             return false;
         }
 
-        // Delete files_to_copy.cache
-        $this->cache->delete("files_to_copy");
+        // Delete files index cache file
+        $this->filesIndexCache->delete();
 
         // Generate Options
         // Clone ID -> timestamp (time at which this clone creation initiated)

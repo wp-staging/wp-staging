@@ -11,9 +11,22 @@ use WPStaging\Framework\Utils\Urls;
 class Directory
 {
     /**
-     * Staging site directory name
+     * Staging site directory name, used when ABSPATH is not writeable
+     * @var string
      */
     const STAGING_SITE_DIRECTORY = 'wp-staging-sites';
+
+    /**
+     * Used during PUSH, to avoid conflicts with existing plugins
+     * @var string
+     */
+    const TMP_PLUGINS_DIRECTORY = 'wpstg-tmp-plugins';
+
+    /**
+     * Used during PUSH, to avoid conflicts with existing themes
+     * @var string
+     */
+    const TMP_THEMES_DIRECTORY = 'wpstg-tmp-themes';
 
     /** @var string The directory that holds the uploads, usually wp-content/uploads */
     protected $uploadDir;
@@ -307,6 +320,22 @@ class Directory
         }
 
         return $this->muPluginsDir;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPluginsTmpDirectory(): string
+    {
+        return $this->getWpContentDirectory() . trailingslashit(self::TMP_PLUGINS_DIRECTORY);
+    }
+
+    /**
+     * @return string
+     */
+    public function getThemesTmpDirectory(): string
+    {
+        return $this->getWpContentDirectory() . trailingslashit(self::TMP_THEMES_DIRECTORY);
     }
 
     /**
