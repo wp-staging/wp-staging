@@ -10,6 +10,7 @@ use Exception;
 use ReflectionClass;
 use ReflectionException;
 use ReflectionMethod;
+use TypeError;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\DateTimeAdapter;
 
@@ -17,7 +18,6 @@ use function WPStaging\functions\debug_log;
 
 trait HydrateTrait
 {
-
     /**
      * @param array $data
      * @return $this
@@ -29,6 +29,8 @@ trait HydrateTrait
             /** @noinspection PhpUnhandledExceptionInspection */
             try {
                 $this->hydrateByMethod('set' . ucfirst($key), $value);
+            } catch (TypeError $e) {
+                $this->debugLog($e->getMessage());
             } catch (Exception $e) {
                 $this->debugLog($e->getMessage());
             }
