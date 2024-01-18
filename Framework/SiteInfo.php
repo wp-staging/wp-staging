@@ -45,6 +45,9 @@ class SiteInfo
     const HOSTED_ON_FLYWHEEL = 'flywheel';
 
     /** @var string */
+    const HOSTED_ON_BITNAMI = 'bitnami';
+
+    /** @var string */
     const OTHER_HOST = 'other';
 
     /**
@@ -257,5 +260,25 @@ class SiteInfo
         }
 
         return true;
+    }
+
+    /**
+     * @return string
+     */
+    public function getHostingType(): string
+    {
+        if ($this->isFlywheel()) {
+            return self::HOSTED_ON_FLYWHEEL;
+        }
+
+        if ($this->isHostedOnWordPressCom()) {
+            return self::HOSTED_ON_WP;
+        }
+
+        if ($this->isBitnami()) {
+            return self::HOSTED_ON_BITNAMI;
+        }
+
+        return self::OTHER_HOST;
     }
 }

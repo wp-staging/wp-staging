@@ -226,6 +226,7 @@ class BackupMetadata implements JsonSerializable
         $this->setWpBakeryActive($siteInfo->isWpBakeryActive());
         $this->setIsJetpackActive($siteInfo->isJetpackActive());
         $this->setIsCreatedOnWordPressCom($siteInfo->isHostedOnWordPressCom());
+        $this->setHostingType($siteInfo->getHostingType());
 
         $uploadDir = wp_upload_dir(null, false, true);
 

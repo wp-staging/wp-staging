@@ -235,7 +235,7 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setScheduleId($this->jobDataDto->getScheduleId());
         $backupMetadata->setMultipartMetadata(null);
         $backupMetadata->setCreatedOnPro(WPStaging::isPro());
-        $backupMetadata->setHostingType($this->siteInfo->isHostedOnWordPressCom() ? SiteInfo::HOSTED_ON_WP : ($this->siteInfo->isFlywheel() ? SiteInfo::HOSTED_ON_FLYWHEEL : SiteInfo::OTHER_HOST));
+        $backupMetadata->setHostingType($this->siteInfo->getHostingType());
 
         $this->addSystemInfoToBackupMetadata($backupMetadata);
 
