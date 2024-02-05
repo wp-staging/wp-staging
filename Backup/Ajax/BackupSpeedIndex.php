@@ -158,7 +158,7 @@ class BackupSpeedIndex
             $this->setCurrentBackupSize($this->sanitize->sanitizeString($_POST['size']));
         }
 
-        if (isset($_POST['time'])) {
+        if (!empty($_POST['time'])) {
             $this->setCurrentBackupTime($this->sanitize->sanitizeInt($_POST['time']));
         }
 

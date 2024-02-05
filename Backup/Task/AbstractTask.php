@@ -172,6 +172,7 @@ abstract class AbstractTask
             $this->taskQueue->seek(0);
             $this->jobDataDto->setQueueOffset(0);
             $response->setPercentage(0);
+            $this->jobDataDto->setCurrentTaskData([]);
             $this->cache->delete();
             $this->jobDataDto->setCurrentTaskData([]);
         } else {

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.4
-Stable tag: 3.3.2
+Stable tag: 3.3.3
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,34 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.3.3 =
+* New: Support for WordPress 6.4.3
+* New: Add filter `wpstg.push_excluded_directories` to exclude specific folders during push. #3050
+* New: Add 'Do review link' to backup success modal after staging site and backup creation. #3085
+* Enh: Reduce number of API calls to wp-staging.com for version number checking. #3091
+* Enh: Add option to use APPEND Mode for uploading backup using FTP from settings UI. #3044
+* Enh: Add loading icon during activation of the free version. #3041
+* Enh: Improve the message when backup has been created with older version of WP Staging. #3033
+* Enh: Make sure the checkbox icon appears at centre on all system. #2920
+* Enh: Make sure that font size and view layout is consistent in staging and reset modal. #3104
+* Fix: Can not update email address for sending error reports. #3109
+* Fix: Deprecation message about dynamic properties thrown by Google Drive Api Model class. Show exact error message when unable to get resume URI for Google Drive backup upload. #3076
+* Fix: Make sure to not check external DB credentials in free version while creating staging site. #3054
+* Fix: Editing the backup schedule sometime re-creates the schedule cron at a wrong time. #3101
+* Fix: Add filter to hide primary key changes message and include primary key details in the system information. #2972
+* Fix: Not all files are sometimes pushed under certain situation. #3082
+* Fix: Scheduled Backups unable to run when a manually created backup exists. #3089
+* Fix: The backup retention number of Google Drive backups isn't honored. #3063
+* Fix: Handle issues when unable to fetch information for external database during cloning requirements. #3029
+* Fix: Show correct version of WP Staging in backup and staging log files. #3010
+* Fix: Type error when passing multiple parameters using hooks methods. #3064
+* Fix: Reduce height of the delete staging site modal. #3058
+* Tweak: Keep only wp-staging* plugins active during database renaming process on backup restore to avoid conflict. #3095
+* Tweak: Deprecate Filter 'wpstg.ftpclient.forceUseFtpExtension' as we already provide alternate option in FTP settings UI. #3053
+* Tweak: Improve success message after push about clearing site and theme cache, which may be required if the front page appears different than expected. #3003
+* Dev: Add initial level logic to support Backup Compression and Restore of Compressed Backups. #2555
+* Dev: Reduce number of manual e2e dispatch call by adding wp cli and cloud storages e2e in full PRO e2e suite and run them in parallel. #3073
 
 = 3.3.2 =
 * Fix: Catch type errors on properties hydration for Backup Metadata and other backup related tasks. #3072

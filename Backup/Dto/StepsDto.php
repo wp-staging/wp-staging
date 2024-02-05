@@ -86,6 +86,13 @@ class StepsDto extends AbstractDto
         }
     }
 
+    public function decreaseCurrentStep()
+    {
+        if ($this->current > 0) {
+            $this->current--;
+        }
+    }
+
     public function isFinished()
     {
         return $this->total <= $this->current;

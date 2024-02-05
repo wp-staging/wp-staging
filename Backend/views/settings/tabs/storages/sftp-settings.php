@@ -3,6 +3,7 @@
 namespace WPStaging\Storages\SftpSettings;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
 
 /**
@@ -14,13 +15,23 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
     /** @var Auth */
     $storage = WPStaging::make(Auth::class);
 
+    $ftpModeOptions = [
+        Auth::FTP_UPLOAD_MODE_PUT => 'PUT MODE',
+        Auth::FTP_UPLOAD_MODE_APPEND => 'APPEND MODE',
+    ];
+
+    $ftpTypeOptions = [
+        Auth::CONNECTION_TYPE_FTP => 'FTP',
+        Auth::CONNECTION_TYPE_SFTP => 'SFTP',
+    ];
+
     $providerName = esc_html__('FTP/SFTP', 'wp-staging');
     if ($storage->isEncrypted()) {
         require_once "{$this->path}views/settings/tabs/storages/encrypted-notice.php";
     }
 
     $options          = $storage->getOptions();
-    $ftpType          = !empty($options['ftpType']) ? $options['ftpType'] : 'ftp';
+    $ftpType          = !empty($options['ftpType']) ? $options['ftpType'] : Auth::CONNECTION_TYPE_FTP;
     $host             = !empty($options['host']) ? $options['host'] : '';
     $port             = !empty($options['port']) ? $options['port'] : '';
     $username         = !empty($options['username']) ? $options['username'] : '';
@@ -28,6 +39,7 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
     $ssl              = isset($options['ssl']) ? $options['ssl'] : false;
     $passive          = isset($options['passive']) ? $options['passive'] : false;
     $useFtpExtension  = isset($options['useFtpExtension']) ? $options['useFtpExtension'] : false;
+    $ftpMode          = isset($options['ftpMode']) ? $options['ftpMode'] : Auth::FTP_UPLOAD_MODE_PUT;
     $privateKey       = !empty($options['key']) ? $options['key'] : '';
     $passphrase       = !empty($options['passphrase']) ? $options['passphrase'] : '';
     $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
@@ -48,8 +60,9 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('FTP/SFTP', 'wp-staging') ?></label>
                     <select class="wpstg-form-control" name="ftp_type">
-                        <option value="ftp"<?php echo $ftpType === 'ftp' ? ' selected' : '' ?>><?php esc_html_e('FTP', 'wp-staging') ?></option>
-                        <option value="sftp"<?php echo $ftpType === 'sftp' ? ' selected' : '' ?>><?php esc_html_e('SFTP', 'wp-staging') ?></option>
+                        <?php foreach ($ftpTypeOptions as $optionValue => $optionText) : ?>
+                        <option value="<?php echo esc_attr($optionValue) ?>"<?php echo $ftpType === $optionValue ? ' selected' : '' ?>><?php echo esc_html($optionText) ?></option>
+                        <?php endforeach; ?>
                     </select>
                 </fieldset>
 
@@ -71,31 +84,40 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Password', 'wp-staging') ?></label>
                     <input class="wpstg-form-control" type="password" name="password" autocomplete="new-password" value="<?php echo esc_attr($password); ?>" />
-                    <p class="wpstg-only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>"><?php esc_html_e("Your login may be either password or key-based - you only need to enter one, not both.", 'wp-staging') ?></p>
+                    <p class="wpstg-only-sftp<?php echo $ftpType === Auth::CONNECTION_TYPE_SFTP ? '' : ' hidden' ?>"><?php esc_html_e("Your login may be either password or key-based - you only need to enter one, not both.", 'wp-staging') ?></p>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === Auth::CONNECTION_TYPE_FTP ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('SSL', 'wp-staging') ?></label>
-                    <input type="checkbox" class="wpstg-checkbox" name="ssl" value="true" <?php echo $ssl === true ? 'checked ' : '' ?>/>
+                    <?php Checkbox::render('', 'ssl', 'true', $ssl === true); ?>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === Auth::CONNECTION_TYPE_FTP ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Passive', 'wp-staging') ?></label>
-                    <input type="checkbox" class="wpstg-checkbox" name="passive" value="true" <?php echo $passive === true ? 'checked ' : '' ?>/>
+                    <?php Checkbox::render('', 'passive', 'true', $passive === true); ?>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === 'ftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === Auth::CONNECTION_TYPE_FTP ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Activate ftp extension instead of curl', 'wp-staging') ?></label>
-                    <input type="checkbox" class="wpstg-checkbox" name="use_ftp_extension" value="true" <?php echo $useFtpExtension === true ? 'checked ' : '' ?>/>
+                    <?php Checkbox::render('', 'use_ftp_extension', 'true', $useFtpExtension === true); ?>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset wpstg-only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === Auth::CONNECTION_TYPE_FTP ? '' : ' hidden' ?>">
+                    <label><?php esc_html_e('FTP Mode', 'wp-staging') ?></label>
+                    <select class="wpstg-form-control" name="ftp_mode">
+                        <?php foreach ($ftpModeOptions as $optionValue => $optionText) : ?>
+                        <option value="<?php echo esc_attr($optionValue) ?>"<?php echo $ftpMode === $optionValue ? ' selected' : '' ?>><?php echo esc_html($optionText) ?></option>
+                        <?php endforeach; ?>
+                    </select>
+                </fieldset>
+
+                <fieldset class="wpstg-fieldset wpstg-only-sftp<?php echo $ftpType === Auth::CONNECTION_TYPE_SFTP ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Key', 'wp-staging') ?></label>
                     <textarea class="wpstg-form-control wpstg-sftp-key-input" name="key"><?php echo esc_textarea($privateKey); ?></textarea>
                     <p><?php esc_html_e("PKCS1 (PEM header: BEGIN RSA PRIVATE KEY), XML and PuTTY format keys are accepted.", 'wp-staging') ?></p>
                 </fieldset>
 
-                <fieldset class="wpstg-fieldset wpstg-only-sftp<?php echo $ftpType === 'sftp' ? '' : ' hidden' ?>">
+                <fieldset class="wpstg-fieldset wpstg-only-sftp<?php echo $ftpType === Auth::CONNECTION_TYPE_SFTP ? '' : ' hidden' ?>">
                     <label><?php esc_html_e('Passphrase', 'wp-staging') ?></label>
                     <input class="wpstg-form-control" type="password" name="passphrase" value="<?php echo esc_attr($passphrase); ?>" />
                     <p><?php esc_html_e("Passphrase for the key.", 'wp-staging') ?></p>
@@ -109,14 +131,12 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
                 </fieldset>
             </div>
             <button type="button" id="wpstg-btn-provider-test-connection" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Test Connection", "wp-staging") ?></button>
-
             <hr/>
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
             <fieldset class="wpstg-fieldset">
                 <label><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
                 <input class="wpstg-form-control wpstg-sftp-port-input" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" />
             </fieldset>
-
             <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
         </form>
     </div>

@@ -324,6 +324,7 @@ abstract class AbstractJob implements ShutdownableInterface
             $this->cleanup();
             $this->init();
             $this->jobDataDto->setCurrentTaskIndex(0);
+            $this->jobDataDto->setCurrentTaskData([]);
             $this->addTasks($this->getJobTasks());
         } else {
             $this->checkLastTaskHealth();
@@ -343,6 +344,10 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->jobDataDto->setInit(false);
 
         $this->currentTaskName = $this->jobDataDto->getCurrentTask();
+
+        if (empty($this->currentTaskName)) {
+            throw new \RuntimeException('Internal error: Next task of queue job is null or invalid.');
+        }
 
         /** @var AbstractTask currentTask */
         $this->currentTask = WPStaging::getInstance()->get($this->currentTaskName);

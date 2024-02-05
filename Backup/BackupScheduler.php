@@ -2,15 +2,14 @@
 
 namespace WPStaging\Backup;
 
+use DateTime;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;
-use WPStaging\Framework\Utils\Times;
 use WPStaging\Backup\BackgroundProcessing\Backup\PrepareBackup;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\BackupsFinder;
-use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Utils\ServerVars;
 
@@ -18,16 +17,22 @@ use function WPStaging\functions\debug_log;
 
 class BackupScheduler
 {
-    const BACKUP_SCHEDULE_ERROR_REPORT_OPTION = 'wpstg_backup_schedules_send_error_report';
+    /** @var string */
+    const OPTION_BACKUP_SCHEDULE_ERROR_REPORT = 'wpstg_backup_schedules_send_error_report';
 
-    const BACKUP_SCHEDULE_REPORT_EMAIL_OPTION = 'wpstg_backup_schedules_report_email';
+    /** @var string */
+    const OPTION_BACKUP_SCHEDULE_REPORT_EMAIL = 'wpstg_backup_schedules_report_email';
 
-    const BACKUP_SCHEDULE_REPORT_SENT_TRANSIENT = 'wpstg.backup.schedules.report_sent';
+    /** @var string */
+    const TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT = 'wpstg.backup.schedules.report_sent';
 
+    /** @var string */
     const OPTION_BACKUP_SCHEDULES = 'wpstg_backup_schedules';
 
+    /** @var BackupsFinder */
     protected $backupsFinder;
 
+    /** @var BackupProcessLock */
     protected $processLock;
 
     /** @var BackupDeleter */
@@ -134,11 +139,11 @@ class BackupScheduler
 
     /**
      * @param JobBackupDataDto $jobBackupDataDto
-     * @param $scheduleId
+     * @param string $scheduleId
      * @return void
      * @throws \Exception
      */
-    public function scheduleBackup(JobBackupDataDto $jobBackupDataDto, $scheduleId)
+    public function scheduleBackup(JobBackupDataDto $jobBackupDataDto, string $scheduleId)
     {
         if (!isset(wp_get_schedules()[$jobBackupDataDto->getScheduleRecurrence()])) {
             debug_log("Tried to schedule a backup, but schedule '" . $jobBackupDataDto->getScheduleRecurrence() . "' is not registered as a WordPress cron schedule. Data DTO: " . wp_json_encode($jobBackupDataDto));
@@ -187,10 +192,10 @@ class BackupScheduler
 
     /**
      * Registers a schedule in the Db.
-     * @param $backupSchedule
+     * @param array $backupSchedule
      * @return bool false on error or if nothing would be updated
      */
-    protected function registerScheduleInDb($backupSchedule): bool
+    protected function registerScheduleInDb(array $backupSchedule): bool
     {
         $backupSchedules = get_option(static::OPTION_BACKUP_SCHEDULES, []);
         if (!is_array($backupSchedules)) {
@@ -210,9 +215,10 @@ class BackupScheduler
     /**
      * AJAX callback that processes the backup schedule.
      *
-     * @param $backupData
+     * @param array $backupData
+     * @return void
      */
-    public function createCronBackup($backupData)
+    public function createCronBackup(array $backupData)
     {
         // Cron is hell to debug, so let's log everything that happens.
         $logId = wp_generate_password(4, false);
@@ -234,6 +240,7 @@ class BackupScheduler
 
     /**
      * Ajax callback to dismiss a schedule.
+     * @return void
      */
     public function dismissSchedule()
     {
@@ -261,6 +268,7 @@ class BackupScheduler
      * Deletes a backup schedule.
      *
      * @param string $scheduleId The schedule ID to delete.
+     * @return void
      */
     public function deleteSchedule(string $scheduleId, $reCreateCron = true)
     {
@@ -283,6 +291,7 @@ class BackupScheduler
     }
 
     /**
+     * @param string|null $scheduleBeingEdit The schedule ID being edited. If this is set, it will be ignored when re-creating the Cron events.
      * @return bool
      * @throws \Exception
      * @see OPTION_BACKUP_SCHEDULES The Db option that is the source of truth for Cron events.
@@ -294,8 +303,7 @@ class BackupScheduler
      *                              the Cron events or removing leftover schedules.
      *
      */
-
-    public function reCreateCron(): bool
+    public function reCreateCron($scheduleBeingEdit = null): bool
     {
         $schedules = $this->getSchedules();
         static::removeBackupSchedulesFromCron();
@@ -308,7 +316,7 @@ class BackupScheduler
             /**
              * New mechanism for recroning old jobs
              */
-            if (isset(wp_get_schedules()[$schedule['schedule']]) && isset($schedule['firstSchedule'])) {
+            if (isset(wp_get_schedules()[$schedule['schedule']]) && isset($schedule['firstSchedule']) && ($schedule['scheduleId'] !== $scheduleBeingEdit)) {
                 $this->setNextSchedulingDate($timeToSchedule, $schedule);
             } else {
                 $this->setUpcomingDateTime($timeToSchedule, $schedule['time']);
@@ -565,10 +573,11 @@ class BackupScheduler
     /**
      * Set date today or tomorrow for given DateTime object according to time
      *
-     * @param \DateTime $datetime
+     * @param DateTime $datetime
      * @param string|array $time
+     * @return void
      */
-    protected function setUpcomingDateTime(&$datetime, $time)
+    protected function setUpcomingDateTime(DateTime &$datetime, $time)
     {
         if (is_array($time)) {
             $hourAndMinute = $time;
@@ -587,10 +596,11 @@ class BackupScheduler
     /**
      * Set the next scheduling date for the schedule
      *
-     * @param \DateTime $datetime
+     * @param DateTime $datetime
      * @param array $schedule
+     * @return void
      */
-    protected function setNextSchedulingDate(&$datetime, array $schedule)
+    protected function setNextSchedulingDate(DateTime &$datetime, array $schedule)
     {
         $next = $schedule['firstSchedule'];
         $now  = $datetime->getTimestamp();
@@ -624,20 +634,21 @@ class BackupScheduler
 
     /**
      * @param string $message
+     * @return void
      */
     public function sendErrorReport(string $message)
     {
-        if (get_option(self::BACKUP_SCHEDULE_ERROR_REPORT_OPTION) !== 'true') {
+        if (get_option(self::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) !== 'true') {
             return;
         }
 
-        $reportEmail = get_option(self::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION);
+        $reportEmail = get_option(self::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         if (!filter_var($reportEmail, FILTER_VALIDATE_EMAIL)) {
             return;
         }
 
         // Only send the error report mail once every 5 minutes
-        if (get_transient(self::BACKUP_SCHEDULE_REPORT_SENT_TRANSIENT) !== false) {
+        if (get_transient(self::TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT) !== false) {
             return;
         }
 
@@ -654,7 +665,7 @@ class BackupScheduler
         $message .= "\r\n" . __('Please do not reply to this email.', 'wp-staging');
 
         // Set the transient to prevent sending the error report mail again for 5 minutes
-        set_transient(self::BACKUP_SCHEDULE_REPORT_SENT_TRANSIENT, true, 5 * 60);
+        set_transient(self::TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT, true, 5 * 60);
         wp_mail($reportEmail, __('WP Staging - Backup Error Report', 'wp-staging'), $message, [], []);
     }
 

@@ -58,11 +58,6 @@ class PrepareRestore extends PrepareJob
             wp_send_json_error($e->getMessage(), $e->getCode());
         }
 
-        // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
-        $container        = WPStaging::getInstance()->getContainer();
-        $this->jobDataDto = $container->get(JobRestoreDataDto::class);
-        $this->jobRestore = $container->get(JobRestoreProvider::class)->getJob();
-
         $response = $this->prepare($data);
 
         if ($response instanceof \WP_Error) {
@@ -74,6 +69,11 @@ class PrepareRestore extends PrepareJob
 
     public function prepare($data = null)
     {
+        // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
+        $container        = WPStaging::getInstance()->getContainer();
+        $this->jobDataDto = $container->get(JobRestoreDataDto::class);
+        $this->jobRestore = $container->get(JobRestoreProvider::class)->getJob();
+
         if (empty($data) && array_key_exists('wpstgRestoreData', $_POST)) {
             $data = Sanitize::sanitizeArray($_POST['wpstgRestoreData'], [
                 'backupMetadata' => 'array',

@@ -80,6 +80,9 @@ class JobDataDto extends AbstractDto
     /** @var int how often a request is retried */
     protected $retries;
 
+    /** @var int How many chunks of compressed data this backup has. */
+    protected $totalChunks = 0;
+
     /** @var array Data for the current task. */
     protected $currentTaskData = [];
 
@@ -510,6 +513,16 @@ class JobDataDto extends AbstractDto
     public function setCurrentTaskData(array $currentTaskData)
     {
         $this->currentTaskData = $currentTaskData;
+    }
+
+    public function getTotalChunks(): int
+    {
+        return $this->totalChunks;
+    }
+
+    public function setTotalChunks(int $totalChunks)
+    {
+        $this->totalChunks = $totalChunks;
     }
 
     /**

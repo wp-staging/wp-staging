@@ -77,6 +77,7 @@ trait WithAnalyticsSiteInfo
             'check_directory_size' => !empty($wpstgSettings['checkDirectorySize']) ? $wpstgSettings['checkDirectorySize'] : false,
             'access_permission' => !empty($wpstgSettings['userRoles']) ? $wpstgSettings['userRoles'] : [],
             'users_with_staging_access' => !empty($wpstgSettings['usersWithStagingAccess']) ? $wpstgSettings['usersWithStagingAccess'] : '',
+            'enable_compression' => !empty($wpstgSettings['enableCompression']) ? $wpstgSettings['enableCompression'] : false,
 
             'php_version' => phpversion(),
             'blog_id' => get_current_blog_id(),

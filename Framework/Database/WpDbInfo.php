@@ -2,17 +2,25 @@
 
 namespace WPStaging\Framework\Database;
 
+use wpdb;
+
 class WpDbInfo implements iDbInfo
 {
     /**
-     * @var \wpdb
+     * Default version to use when the version cannot be determined.
+     * @var int
+     */
+    const DEFAULT_VERSION = -1;
+
+    /**
+     * @var wpdb
      */
     protected $wpdb;
 
     /**
-     * @param \wpdb $wpdb
+     * @param wpdb $wpdb
      */
-    public function __construct($wpdb)
+    public function __construct(wpdb $wpdb)
     {
         $this->wpdb = $wpdb;
     }
@@ -23,14 +31,7 @@ class WpDbInfo implements iDbInfo
      */
     public function getDbCollation(): string
     {
-        $result = $this->wpdb->dbh->query("SHOW VARIABLES LIKE 'collation_database'");
-
-        $output = '';
-        if ($obj = $result->fetch_object()) {
-            $output = $obj->Value;
-        }
-
-        return $output;
+        return $this->getVariableByName('collation_database');
     }
 
     /**
@@ -38,14 +39,7 @@ class WpDbInfo implements iDbInfo
      */
     public function getDbEngine(): string
     {
-        $result = $this->wpdb->dbh->query("SHOW VARIABLES LIKE 'default_storage_engine'");
-
-        $output = '';
-        if ($obj = $result->fetch_object()) {
-            $output = $obj->Value;
-        }
-
-        return $output;
+        return $this->getVariableByName('default_storage_engine');
     }
 
     /**
@@ -53,7 +47,13 @@ class WpDbInfo implements iDbInfo
      */
     public function getMySqlServerVersion(): int
     {
-        return $this->wpdb->dbh->server_version;
+        if (!is_null($this->wpdb->dbh)) {
+            return $this->wpdb->dbh->server_version;
+        }
+
+        $value = $this->wpdb->get_var("SELECT @@version");
+
+        return is_null($value) ? self::DEFAULT_VERSION : $this->versionToInt($value);
     }
 
     /**
@@ -61,7 +61,11 @@ class WpDbInfo implements iDbInfo
      */
     public function getMySqlClientVersion(): int
     {
-        return $this->wpdb->dbh->client_version;
+        if (!is_null($this->wpdb->dbh)) {
+            return $this->wpdb->dbh->client_version;
+        }
+
+        return self::DEFAULT_VERSION;
     }
 
     /**
@@ -69,8 +73,7 @@ class WpDbInfo implements iDbInfo
      */
     public function getServerIp(): string
     {
-        $queryToFindHost = "SHOW VARIABLES WHERE Variable_name = 'hostname';";
-        return $this->wpdb->get_var($queryToFindHost, 1);
+        return $this->getVariableByName('hostname');
     }
 
     /**
@@ -78,8 +81,7 @@ class WpDbInfo implements iDbInfo
      */
     public function getServerPort(): int
     {
-        $queryToFindPort = "SHOW VARIABLES WHERE Variable_name = 'port';";
-        return (int)$this->wpdb->get_var($queryToFindPort, 1);
+        return (int)$this->getVariableByName('port');
     }
 
     /**
@@ -102,5 +104,31 @@ class WpDbInfo implements iDbInfo
             'db_server_ver' => $this->getMySqlServerVersion(),
             'db_client_ver' => $this->getMySqlClientVersion()
         ];
+    }
+
+    /**
+     * Fetch the database variable value by name.
+     * @param string $varName
+     * @return string
+     */
+    protected function getVariableByName(string $varName): string
+    {
+        $query = "SHOW VARIABLES WHERE Variable_name = '" . $varName . "';";
+        $value = $this->wpdb->get_var($query, 1);
+
+        return is_null($value) ? '' : $value;
+    }
+
+    /**
+     * Convert version string to integer.
+     *
+     * @param string $version MySQL server version
+     * @return int
+     */
+    protected static function versionToInt(string $version): int
+    {
+        $match = explode('.', $version);
+
+        return (int)sprintf('%d%02d%02d', $match[0], $match[1], intval($match[2]));
     }
 }

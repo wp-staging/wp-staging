@@ -1,3 +1,8 @@
+<?php
+
+use WPStaging\Framework\Facades\UI\Checkbox;
+
+?>
 <div class="wpstg-report-issue-form">
     <div class="arrow-up"></div>
     <div class="wpstg-field">
@@ -11,7 +16,7 @@
     </div>
     <div class="wpstg-field wpstg-report-privacy-policy">
         <label for="wpstg-report-syslog">
-            <input type="checkbox" class="wpstg-report-syslog" id="wpstg-report-syslog">
+            <?php Checkbox::render('wpstg-report-syslog', '', '', false, ['classes' => 'wpstg-report-syslog']); ?>
             <?php echo wp_kses_post(sprintf(
                 __('Enable this option to automatically submit the %s. This speeds up the resolution of problems.', 'wp-staging'),
                 '<a href="' . esc_url(admin_url()) . 'admin.php?page=wpstg-tools&tab=system-info' . '" target="_blank">' . esc_html__('log files', 'wp-staging') . '</a>'
@@ -20,7 +25,7 @@
     </div>
     <div class="wpstg-field wpstg-report-privacy-policy">
         <label for="wpstg-report-terms">
-            <input type="checkbox" class="wpstg-report-terms" id="wpstg-report-terms">
+            <?php Checkbox::render('wpstg-report-terms', '', '', false, ['classes' => 'wpstg-report-terms']); ?>
             <?php echo sprintf(esc_html__('I allow WP STAGING to use my email to reply to my request. %s', 'wp-staging'), '<a href="https://wp-staging.com/privacy-policy/" target="_blank">' . esc_html__('Privacy Policy', 'wp-staging') . '</a>'); ?>
         </label>
     </div>

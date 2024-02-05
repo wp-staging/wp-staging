@@ -5,6 +5,7 @@ namespace WPStaging\Backup\Service;
 use Exception;
 use RuntimeException;
 use SplFileInfo;
+use Throwable;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DirectoryListing;
@@ -152,7 +153,7 @@ class BackupsFinder
                 $metadata = (new BackupMetadata())->hydrateByFilePath($backupFile);
 
                 return $metadata->getScheduleId() == $scheduleId;
-            } catch (Exception $ex) {
+            } catch (Throwable $ex) {
                 debug_log("WP STAGING: Could not find backup by schedule ID {$scheduleId} - File: {$backupFile} - " . $ex->getMessage());
 
                 return false;

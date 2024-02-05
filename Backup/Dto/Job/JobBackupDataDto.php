@@ -7,6 +7,7 @@ use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\IsExcludingTrait;
 use WPStaging\Backup\Dto\Traits\RemoteUploadTrait;
+use WPStaging\Framework\Facades\Hooks;
 
 class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 {
@@ -505,7 +506,7 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
      */
     public function getIsMultipartBackup()
     {
-        return apply_filters('wpstg.backup.isMultipartBackup', $this->isMultipartBackup);
+        return Hooks::applyFilters('wpstg.backup.isMultipartBackup', $this->isMultipartBackup);
     }
 
     /**
@@ -521,7 +522,7 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
      */
     public function getMaxMultipartBackupSize()
     {
-        return apply_filters('wpstg.backup.maxMultipartBackupSize', $this->maxMultipartBackupSize);
+        return Hooks::applyFilters('wpstg.backup.maxMultipartBackupSize', $this->maxMultipartBackupSize);
     }
 
     /**

@@ -71,6 +71,26 @@ abstract class AbstractCache
     }
 
     /**
+     * Renames the cache file to a new name
+     *
+     * @param string $newName The new name for the file (without extension)
+     * @throws IOException If renaming the file fails
+     */
+    public function rename($newName)
+    {
+        $newFilePath = $this->path . $newName . '.' . self::EXTENSION;
+
+        if (!rename($this->filePath, $newFilePath)) {
+            debug_log(sprintf('Renaming cache file (%s) to (%s) failed', $this->filePath, $newFilePath));
+            throw new IOException(sprintf('Renaming cache file (%s) to (%s) failed', $this->filePath, $newFilePath));
+        }
+
+        // Update the filename and file path properties
+        $this->filename = $newName;
+        $this->filePath = $newFilePath;
+    }
+
+    /**
      * @param int $lifetime
      */
     public function setLifetime($lifetime)

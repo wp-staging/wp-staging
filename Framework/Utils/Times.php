@@ -268,17 +268,7 @@ class Times
             $since = sprintf(_n('%s year', '%s years', $years, 'wp-staging'), $years);
         }
 
-        /**
-         * Filters the human readable difference between two timestamps.
-         *
-         * @param string $since The difference in human readable text.
-         * @param int $diff The difference in seconds.
-         * @param int $from Unix timestamp from which the difference begins.
-         * @param int $to Unix timestamp to end the time difference.
-         * @since 4.0.0
-         *
-         */
-        return apply_filters('human_time_diff', $since, $diff, $from, $to);
+        return $since;
     }
 
     /**

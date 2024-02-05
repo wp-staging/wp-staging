@@ -5,6 +5,7 @@
 
 namespace WPStaging\Backup\Entity;
 
+use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Traits\ResourceTrait;
 
@@ -41,13 +42,18 @@ class FileBeingExtracted
     /** @var PathIdentifier */
     protected $pathIdentifier;
 
-    public function __construct($identifiablePath, $extractFolder, $offsetStart, $totalBytes, PathIdentifier $pathIdentifier)
+    /** @var int 1 if yes, 0 if no. */
+    protected $isCompressed;
+
+    public function __construct($identifiablePath, $extractFolder, PathIdentifier $pathIdentifier, BackupFileIndex $backupFileIndex)
     {
         $this->identifiablePath = $identifiablePath;
         $this->extractFolder = trailingslashit($extractFolder);
-        $this->start = (int)$offsetStart;
-        $this->totalBytes = (int)$totalBytes;
+        $this->start = $backupFileIndex->bytesStart;
+        $this->totalBytes = $backupFileIndex->bytesEnd;
         $this->pathIdentifier = $pathIdentifier;
+        $this->isCompressed = $backupFileIndex->isCompressed;
+        $this->relativePath = $this->pathIdentifier->getPathWithoutIdentifier($this->identifiablePath);
     }
 
     public function getBackupPath()
@@ -58,6 +64,7 @@ class FileBeingExtracted
     public function findReadTo()
     {
         $maxLengthToWrite = 512 * KB_IN_BYTES;
+
         $remainingBytesToWrite = $this->totalBytes - $this->writtenBytes;
 
         return max(0, min($remainingBytesToWrite, $maxLengthToWrite));
@@ -119,5 +126,13 @@ class FileBeingExtracted
     public function isFinished()
     {
         return $this->writtenBytes >= $this->totalBytes;
+    }
+
+    /**
+     * @return bool|int
+     */
+    public function getIsCompressed()
+    {
+        return $this->isCompressed;
     }
 }

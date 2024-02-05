@@ -696,7 +696,9 @@
         wpstgHoverIntent(document, '.wpstg--tooltip', function (target, event) {
           target.querySelector('.wpstg--tooltiptext').style.visibility = 'visible';
         }, function (target, event) {
-          target.querySelector('.wpstg--tooltiptext').style.visibility = 'hidden';
+          if (!event.target.closest('.wpstg--tooltiptext a')) {
+            target.querySelector('.wpstg--tooltiptext').style.visibility = 'hidden';
+          }
         });
       },
       // Get the custom themed Swal Modal for WP Staging
@@ -2609,6 +2611,8 @@
         }).then(WPStagingCommon.handleFetchErrors).then(function (res) {
           return res.json();
         }).then(function (res) {
+          $('#wpstg--tab--backup').empty();
+          WPStagingBackup.modal.create.html = null;
           WPStagingCommon.cache.get('#wpstg--tab--backup').html(res);
           if (res.success !== undefined && res.success === false) {
             WPStagingCommon.showError('Error: ' + res.data);
@@ -2922,6 +2926,12 @@
           'showCancelButton': false,
           'showConfirmButton': true
         });
+        if (title === 'Backup Complete') {
+          var wpstgRateUsElement = WPStagingCommon.getSwalContainer().querySelector('.wpstg-rate-us');
+          if (wpstgRateUsElement) {
+            wpstgRateUsElement.classList.add('show');
+          }
+        }
       },
       checkMemoryExhaustion: function checkMemoryExhaustion(response, requestType) {
         return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
@@ -3357,6 +3367,10 @@
       warnBackupMediaWithoutDatabase: function warnBackupMediaWithoutDatabase(event) {
         var container = event.currentTarget.closest('.wpstg--swal2-container');
         event.preventDefault();
+        // this is for remote upload feature PR: 2611
+        if (container.querySelector('#includeDatabaseInBackup') === null && container.querySelector('#includeMediaLibraryInBackup') === null) {
+          return;
+        }
         var isExportingDatabase = container.querySelector('#includeDatabaseInBackup').checked;
         var isExportingMediaLibrary = container.querySelector('#includeMediaLibraryInBackup').checked;
         if (isExportingMediaLibrary && !isExportingDatabase) {
@@ -3368,14 +3382,19 @@
       disableBackupButtonIfNoSelection: function disableBackupButtonIfNoSelection(event) {
         var container = event.currentTarget.closest('.wpstg--swal2-container');
         event.preventDefault();
+        var checkboxesStorages = Array.from(container.querySelectorAll('[type="checkbox"][name="storages"]:checked'));
+        var isStorageSelected = checkboxesStorages.length > 0;
+        // this is for remote upload feature
+        if (container.querySelector('#includeDatabaseInBackup') === null && container.querySelector('#includeMediaLibraryInBackup') === null) {
+          container.querySelector('.wpstg--swal2-confirm').disabled = !isStorageSelected;
+          return;
+        }
         var checkboxesDirs = Array.from(container.querySelectorAll('[type="checkbox"][name="includedDirectories[]"]:checked'));
         var isExportingAnyDir = checkboxesDirs.length > 0;
         var checkboxesDatabase = Array.from(container.querySelectorAll('input#includeDatabaseInBackup:checked'));
         var isExportingDatabase = checkboxesDatabase.length === 1;
         var checkboxesOtherFiles = Array.from(container.querySelectorAll('input#includeOtherFilesInWpContent:checked'));
         var isExportingOtherFilesInWpContent = checkboxesOtherFiles.length === 1;
-        var checkboxesStorages = Array.from(container.querySelectorAll('[type="checkbox"][name="storages"]:checked'));
-        var isStorageSelected = checkboxesStorages.length > 0;
         var confirmButton = container.querySelector('.wpstg--swal2-confirm');
         confirmButton.disabled = !isExportingAnyDir && !isExportingDatabase && !isExportingOtherFilesInWpContent || !isStorageSelected;
       }

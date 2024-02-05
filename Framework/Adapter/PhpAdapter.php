@@ -18,9 +18,9 @@ class PhpAdapter
      * So we fixed that behaviour for PHP 8
      *
      * @param string|null $maybeCallable
-     * @return boolean
+     * @return bool
      */
-    public function isCallable($maybeCallable)
+    public function isCallable($maybeCallable): bool
     {
         // Early bail if null
         if ($maybeCallable === null) {
@@ -49,5 +49,20 @@ class PhpAdapter
         } catch (Exception $ex) {
             return false;
         }
+    }
+
+    /**
+     * @param string $maybeJsonString
+     * @return bool
+     */
+    public function jsonValidate(string $maybeJsonString): bool
+    {
+        // Only exists from PHP 8.3.0
+        if (function_exists('json_validate')) {
+            return json_validate($maybeJsonString); // phpcs:ignore
+        }
+
+        json_decode($maybeJsonString);
+        return json_last_error() === JSON_ERROR_NONE;
     }
 }

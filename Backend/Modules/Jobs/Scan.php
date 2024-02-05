@@ -575,9 +575,9 @@ class Scan extends Job
         }
 
         // Make wp-includes and wp-admin directory items not expandable
-        $isNavigateable = 'true';
+        $isNavigatable = 'true';
         if ($this->strUtils->startsWith($path, $basePath . "/wp-admin") !== false || $this->strUtils->startsWith($path, $basePath . "/wp-includes") !== false) {
-            $isNavigateable = 'false';
+            $isNavigatable = 'false';
         }
 
         // Decide if item checkbox is active or not
@@ -601,7 +601,7 @@ class Scan extends Job
             'class'   => $class,
             'dirType' => $dirType,
             'isScanned'         => $isScanned,
-            'isNavigateable'    => $isNavigateable,
+            'isNavigatable'     => $isNavigatable,
             'shouldBeChecked'   => $shouldBeChecked,
             'parentChecked'     => $parentChecked,
             'directoryDisabled' => $isNotWPCoreDir || $isDisabledDir,

@@ -3,6 +3,7 @@
 namespace WPStaging\Core\Forms\Elements;
 
 use WPStaging\Core\Forms\ElementsWithOptions;
+use WPStaging\Framework\Facades\UI\Checkbox;
 
 /**
  * Class Check
@@ -14,16 +15,13 @@ class Check extends ElementsWithOptions
     /**
      * @return string
      */
-    protected function prepareOutput()
+    protected function prepareOutput(): string
     {
         $output = '';
 
         foreach ($this->options as $id => $value) {
-            $checked = ($this->isChecked($id)) ? " checked=''" : '';
-
             $attributeId = $this->getId() . '_' . $this->getId($id);
-
-            $output .= "<input type='checkbox' class='wpstg-checkbox' name='{$this->getId()}' id='{$attributeId}' value='{$id}' {$checked}/>";
+            $output .= Checkbox::render($attributeId, $this->getId(), $id, $this->isChecked($id), [], [], true);
 
             if ($value) {
                 $output .= "<label for='{$attributeId}'>{$value}</label>";
@@ -37,7 +35,7 @@ class Check extends ElementsWithOptions
      * @param string $value
      * @return bool
      */
-    private function isChecked($value)
+    private function isChecked(string $value): bool
     {
         if (
             $this->default &&

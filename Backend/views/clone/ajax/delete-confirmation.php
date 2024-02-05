@@ -8,6 +8,9 @@
  * @var bool $isDatabaseConnected
  *
  */
+
+use WPStaging\Framework\Facades\UI\Checkbox;
+
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
 
 if ($isDatabaseConnected) { ?>
@@ -24,17 +27,14 @@ if ($isDatabaseConnected) { ?>
             </div>
                 <div class="wpstg-show-tables-inner-wrapper wpstg-delete-confirm-inner-content-checkboxes wpstg-mt-10px">
                     <label>
-                        <input id="wpstg-unselect-all-tables" type="checkbox" class="wpstg-checkbox wpstg-button-unselect wpstg-unselect-all-tables" value="1" checked>
+                        <?php Checkbox::render('wpstg-unselect-all-tables', 'wpstg-unselect-all-tables', '1', true, ['classes' => 'wpstg-button-unselect wpstg-unselect-all-tables']); ?>
                         <span id="wpstg-unselect-all-tables-id"><?php echo esc_html__("Unselect All", "wp-staging"); ?></span>
                     </label>
                     <div class="wpstg-delete-confirm-inner-content-checkboxes">
                         <?php foreach ($delete->getTables() as $table) : ?>
                             <div class="wpstg-db-table">
                                 <label>
-                                    <?php
-                                    $checkedProperty = (strpos($table->name, $clone->prefix) === 0) ? 'checked' : ''; ?>
-                                    <input class="wpstg-checkbox wpstg-db-table-checkboxes" type="checkbox" name="<?php
-                                    echo esc_attr($table->name); ?>" <?php echo esc_attr($checkedProperty) ?>>
+                                    <?php Checkbox::render('', $table->name, '', (strpos($table->name, $clone->prefix) === 0), ['classes' => 'wpstg-db-table-checkboxes']); ?>
                                     <?php echo esc_html($table->name) ?>
                                 </label>
                                 <span class="wpstg-size-info wpstg-ml-8px"><?php echo isset($table->size) ? esc_html($table->size) : ''; ?></span>
@@ -53,7 +53,7 @@ if ($isDatabaseConnected) { ?>
                 </div>
                 <div class="wpstg-delete-confirm-inner-content-checkboxes wpstg-pointer wpstg-mt-10px">
                     <label>
-                        <input id="deleteDirectory" type="checkbox" class="wpstg-checkbox" name="deleteDirectory" value="1" checked data-deletepath="<?php echo urlencode($clone->path); ?>">
+                        <?php Checkbox::render('deleteDirectory', 'deleteDirectory', '1', true, [], ['deletePath' => urlencode($clone->path)]); ?>
                         <?php echo esc_html($clone->path); ?>
                         <span class="wpstg-size-info"><?php echo isset($clone->size) ? esc_html($clone->size) : ''; ?></span>
                     </label>

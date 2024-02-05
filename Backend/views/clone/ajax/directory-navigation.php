@@ -1,6 +1,7 @@
 <?php
 
 use WPStaging\Backend\Modules\Jobs\Scan;
+use WPStaging\Framework\Facades\UI\Checkbox;
 
 /**
  * This file is currently being called for the both FREE and PRO version:
@@ -12,7 +13,7 @@ use WPStaging\Backend\Modules\Jobs\Scan;
  * @var string $class
  * @var string $dirType
  * @var string $isScanned
- * @var string $isNavigateable
+ * @var string $isNavigatable
  * @var bool   $shouldBeChecked
  * @var bool   $parentChecked
  * @var string $directoryDisabled
@@ -29,18 +30,21 @@ use WPStaging\Backend\Modules\Jobs\Scan;
 ?>
 
 <div class="wpstg-dir">
-    <input type="checkbox"
-        name='selectedDirectories[]'
-        value='<?php echo esc_attr($prefix) . esc_attr($relPath) ; ?>'
-        class="wpstg-checkbox wpstg-checkbox--small wpstg-check-dir <?php echo esc_attr($class); ?>"
-        wpstg-data-dir-type='<?php echo esc_attr($dirType); ?>'
-        wpstg-data-prefix='<?php echo esc_attr($prefix); ?>'
-        wpstg-data-path='<?php echo esc_attr($relPath); ?>'
-        wpstg-data-scanned='<?php echo esc_attr($isScanned); ?>'
-        wpstg-data-navigateable='<?php echo esc_attr($isNavigateable); ?>'
-        <?php echo ($shouldBeChecked && ($parentChecked !== false)) ? 'checked' : ''; ?> />
+    <?php
+        $dataAttributes = [
+            'dirType'       => $dirType,
+            'path'          => $relPath,
+            'prefix'        => $prefix,
+            'isScanned'     => $isScanned,
+            'isNavigatable' => $isNavigatable,
+        ];
+        $attributes = [
+            'classes' => 'wpstg-check-dir ' . $class,
+        ];
+        Checkbox::render('', 'selectedDirectories[]', $prefix . $relPath, ($shouldBeChecked && ($parentChecked !== false)), $attributes, $dataAttributes);
+        ?>
     <a href="#" class='wpstg-expand-dirs <?php echo esc_attr($directoryDisabled); ?>'><?php echo esc_html($dirName); ?></a>
-    <?php if ($isNavigateable === 'true' && !empty($gifLoaderPath)) : ?>
+    <?php if ($isNavigatable === 'true' && !empty($gifLoaderPath)) : ?>
     <img src='<?php echo esc_url($gifLoaderPath); ?>' class='wpstg-is-dir-loading' alt='loading' />
     <?php endif; ?>
     <span class='wpstg-size-info'><?php echo esc_html($formattedSize); ?></span>

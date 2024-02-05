@@ -1,5 +1,11 @@
+<?php
+
+use WPStaging\Framework\Facades\UI\Checkbox;
+
+?>
 <form class="wpstg-mail-settings-form" method="post">
-    <?php $emailsAllowed = !((bool)(new \WPStaging\Framework\Staging\CloneOptions())->get((\WPStaging\Framework\Staging\FirstRun::MAILS_DISABLED_KEY))); ?>        
+    <?php
+    $emailsAllowed = !((bool)(new \WPStaging\Framework\Staging\CloneOptions())->get((\WPStaging\Framework\Staging\FirstRun::MAILS_DISABLED_KEY))); ?>
     <p>
         <strong class="wpstg-fs-14"> <?php esc_html_e('Mail Delivery Setting', 'wp-staging'); ?></strong>
         <br/>
@@ -7,7 +13,8 @@
     </p>
     <div class="wpstg-form-group">
         <label class="wpstg-checkbox" for="wpstg_allow_emails">
-            <?php esc_html_e('Allow Mails Sending:', 'wp-staging'); ?> <input type="checkbox" name="wpstg_allow_emails" id="wpstg_allow_emails" <?php echo $emailsAllowed === true ? 'checked' : '' ?>>
+            <?php esc_html_e('Allow Mails Sending:', 'wp-staging'); ?>
+            <?php Checkbox::render('wpstg_allow_emails', 'wpstg_allow_emails', '', $emailsAllowed); ?>
         </label>
     </div>
     <p>

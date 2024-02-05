@@ -116,7 +116,7 @@ class Strings
      * @param string $haystack
      * @return string
      */
-    function replaceLastMatch($needle, $replace, $haystack)
+    public function replaceLastMatch($needle, $replace, $haystack)
     {
         $result = $haystack;
         $pos = strrpos($haystack, $needle);

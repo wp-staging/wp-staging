@@ -11,8 +11,26 @@ use WPStaging\Pro\Backup\Storage\Storages\Dropbox\Auth as DropboxAuth;
 use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth as SftpAuth;
 use WPStaging\Pro\Backup\Storage\Storages\Wasabi\Auth as WasabiAuth;
 
+use function WPStaging\functions\debug_log;
+
 class Providers
 {
+    /** @var array
+     *
+     * @example  [
+     * 'storageIdentifier' => 'storageId'
+     * ]
+    */
+    const STORAGE_IDS_BY_IDENTIFIERS = [
+        'googledrive'         => 'googleDrive',
+        'amazons3'            => 'amazonS3',
+        'dropbox'             => 'dropbox',
+        'sftp'                => 'sftp',
+        'digitalocean-spaces' => 'digitalocean-spaces',
+        'wasabi'              => 'wasabi-s3',
+        'generic-s3'          => 'generic-s3',
+    ];
+
     protected $storages = [];
 
     public function __construct()
@@ -155,6 +173,21 @@ class Providers
         /** @see WPStaging\Backup\Storage\AbstractStorage */
         $storage = WPStaging::make($class);
         return $storage->isAuthenticated();
+    }
+
+    /**
+     * @param  string $identifier
+     *
+     * @return string|false
+     */
+    public function getStorageByIdentifier(string $identifier)
+    {
+        if (!isset(self::STORAGE_IDS_BY_IDENTIFIERS[$identifier])) {
+            debug_log('Failed to find storage id by identifier.');
+            return false;
+        }
+
+        return self::STORAGE_IDS_BY_IDENTIFIERS[$identifier];
     }
 
     /**
