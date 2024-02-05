@@ -109,6 +109,9 @@ class ListableBackup
     /** @var array */
     public $indexPartSize = [];
 
+    /** @var bool */
+    public $isZlibCompressed = false;
+
     /**
      * @return string
      */

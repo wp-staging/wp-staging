@@ -6,6 +6,7 @@
 namespace WPStaging\Backup\Entity;
 
 use JsonSerializable;
+use WPStaging\Backup\Service\ZlibCompressor;
 use RuntimeException;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
@@ -195,6 +196,12 @@ class BackupMetadata implements JsonSerializable
     /** @var array */
     private $indexPartSize = [];
 
+    /** @var bool */
+    private $isZlibCompressed = false;
+
+    /** @var int If compressed, how many chunks does the backup has. */
+    private $totalChunks = 0;
+
     /**
      * Backup is created on which hosting type flywheel, wp.com or other
      * @var string
@@ -239,6 +246,8 @@ class BackupMetadata implements JsonSerializable
 
         $this->setSites(null);
         $this->setSubdomainInstall(is_multisite() && is_subdomain_install());
+
+        $this->isZlibCompressed = WPStaging::make(ZlibCompressor::class)->isCompressionEnabled();
     }
 
     #[\ReturnTypeWillChange]
@@ -327,6 +336,23 @@ class BackupMetadata implements JsonSerializable
     public function setId(string $id)
     {
         $this->id = $id;
+    }
+
+    /**
+     * Returns the header (index) of a given backup file.
+     *
+     * @param string $backupPath The path to the backup file.
+     * @return false|string
+     */
+    public function getHeader(string $backupPath)
+    {
+        if (!isset($this->headerStart)) {
+            return '';
+        }
+
+        $backupFile = new FileObject($backupPath);
+        $backupFile->fseek($this->headerStart);
+        return $backupFile->fread($this->headerEnd - $this->headerStart);
     }
 
     /**
@@ -963,9 +989,9 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @return string
+     * @return string|null
      */
-    public function getScheduleId(): string
+    public function getScheduleId()
     {
         return $this->scheduleId;
     }
@@ -1105,10 +1131,47 @@ class BackupMetadata implements JsonSerializable
         $this->indexPartSize = $indexPartSize;
     }
 
-    /** @return array */
+    /**
+     * Returns the size of each part of the backup.
+     *
+     * @return array{
+     *     sqlSize: int,
+     *     wpcontentSize: int,
+     *     pluginsSize: int,
+     *     mupluginsSize: int,
+     *     themesSize: int,
+     *     uploadsSize: int
+     * }
+     */
     public function getIndexPartSize(): array
     {
         return $this->indexPartSize;
+    }
+
+    /**
+     * @return bool|mixed|null
+     */
+    public function getIsZlibCompressed()
+    {
+        return $this->isZlibCompressed;
+    }
+
+    /**
+     * @param bool|mixed|null $isZlibCompressed
+     */
+    public function setIsZlibCompressed($isZlibCompressed)
+    {
+        $this->isZlibCompressed = $isZlibCompressed;
+    }
+
+    public function getTotalChunks(): int
+    {
+        return $this->totalChunks;
+    }
+
+    public function setTotalChunks(int $totalChunks)
+    {
+        $this->totalChunks = $totalChunks;
     }
 
     /**

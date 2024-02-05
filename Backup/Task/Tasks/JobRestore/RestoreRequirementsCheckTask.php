@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use RuntimeException;
+use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
 use WPStaging\Framework\Database\TableDto;
@@ -39,6 +40,9 @@ class RestoreRequirementsCheckTask extends RestoreTask
     /** @var AnalyticsBackupRestore */
     protected $analyticsBackupRestore;
 
+    /** @var ZlibCompressor */
+    protected $zlibCompressor;
+
     public function __construct(
         TableService $tableService,
         JobDataDto $jobDataDto,
@@ -47,7 +51,8 @@ class RestoreRequirementsCheckTask extends RestoreTask
         StepsDto $stepsDto,
         SeekableQueueInterface $taskQueue,
         DiskWriteCheck $diskWriteCheck,
-        AnalyticsBackupRestore $analyticsBackupRestore
+        AnalyticsBackupRestore $analyticsBackupRestore,
+        ZlibCompressor $zlibCompressor
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->tableService           = $tableService;
@@ -55,6 +60,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $this->jobDataDto             = $jobDataDto;
         $this->diskWriteCheck         = $diskWriteCheck;
         $this->analyticsBackupRestore = $analyticsBackupRestore;
+        $this->zlibCompressor         = $zlibCompressor;
     }
 
     public static function getTaskName()
@@ -95,6 +101,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             $this->cannotRestoreIfAnyTemporaryPrefixIsCurrentSitePrefix();
             $this->cannotRestoreBackupCreatedBeforeMVP();
             $this->cannotRestoreIfInvalidSiteOrHomeUrl();
+            $this->cannotRestoreCompressedBackup();
         } catch (ThresholdException $e) {
             $this->logger->info($e->getMessage());
 
@@ -288,7 +295,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $tmpFile = __DIR__ . '/diskCheck.wpstg';
 
         if (!file_exists($tmpFile) && !touch($tmpFile)) {
-            throw new RuntimeException(sprintf(__('The backup restore could not write to the temporary file %s.', 'wp-stating'), $tmpFile));
+            throw new RuntimeException(sprintf('The backup restore could not write to the temporary file %s.', esc_html($tmpFile)));
         }
 
         $fileObject = new FileObject($tmpFile, 'a');
@@ -302,7 +309,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
             if ($writtenNow === 0) {
                 unlink($fileObject->getPathname());
-                throw new RuntimeException(sprintf(__('It seems there is not enough free disk space to restore this backup. The backup restore needs %s of free disk space to proceed, therefore the restore will not continue.', 'wp-staging'), size_format($estimatedSizeNeeded)));
+                throw new RuntimeException(sprintf('It seems there is not enough free disk space to restore this backup. The backup restore needs %s of free disk space to proceed, therefore the restore will not continue.', esc_html(size_format($estimatedSizeNeeded))));
             } else {
                 $writtenBytes += $writtenNow;
             }
@@ -312,7 +319,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
                 if ($this->isThreshold()) {
                     $this->jobDataDto->setExtractorFileWrittenBytes($fileObject->getSize());
                     $percentage = (int)(($writtenBytes / $estimatedSizeNeeded) * 100);
-                    throw ThresholdException::thresholdHit(sprintf(__('Checking if there is enough free disk space to restore... (%d%%)', 'wp-staging'), $percentage));
+                    throw ThresholdException::thresholdHit(sprintf('Checking if there is enough free disk space to restore... (%d%%)', esc_html($percentage)));
                 }
 
                 $timesWritten = 0;
@@ -346,7 +353,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             return;
         }
 
-        throw new RuntimeException(sprintf("This backup was created with a newer WP STAGING version: %s. Please upgrade WP STAGING to restore this Backup.", esc_html($backupVersion)));
+        throw new RuntimeException(sprintf('This backup was created with a newer version of WP Staging! Please update the WP Staging plugin first! Then start the restoration of the backup again. - Backup Format Version: %s.', esc_html($backupVersion)));
     }
 
     /**
@@ -390,13 +397,13 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
         if (version_compare((int)$this->jobDataDto->getBackupMetadata()->getWpDbVersion(), (int)$GLOBALS['wp_db_version'], '>')) {
             $this->logger->debug(sprintf(
-                __('The backup is using an incompatible database schema version, generated in a newer version of WordPress. Schema version in the backup: %s. Current WordPress Schema version: %s', 'wp-staging'),
+                'The backup is using an incompatible database schema version, generated in a newer version of WordPress. Schema version in the backup: %s. Current WordPress Schema version: %s',
                 $this->jobDataDto->getBackupMetadata()->getWpDbVersion(),
                 $GLOBALS['wp_db_version']
             ));
 
             throw new RuntimeException(sprintf(
-                __('This backup contains a database generated on WordPress %s, you are running WordPress %s, which has an incompatible database schema version. To restore this Backup, please use a newer version of WordPress.', 'wp-staging'),
+                'Please update WordPress to continue restoring this backup! This backup contains a database generated on WordPress %s. You are running WordPress %s, which has an incompatible database schema version.',
                 $this->jobDataDto->getBackupMetadata()->getWpVersion(),
                 $GLOBALS['wp_version']
             ));
@@ -474,6 +481,18 @@ class RestoreRequirementsCheckTask extends RestoreTask
     {
         if ($this->jobDataDto->getBackupMetadata()->getIsMultipartBackup()) {
             throw new RuntimeException('Cannot restore! Free Version doesn\'t support restore of multipart backups. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this multipart backup on this website.');
+        }
+    }
+
+    protected function cannotRestoreCompressedBackup()
+    {
+        if ($this->jobDataDto->getBackupMetadata()->getIsZlibCompressed()) {
+            if (!$this->zlibCompressor->supportsCompression()) {
+                // todo: add link to compression support article.
+                throw new RuntimeException('Cannot restore! This backup is compressed, but your server does not support compression. Click <a href="https://wp-staging.com/how-to-install-and-activate-gzcompress-and-gzuncompress-functions-in-php/" target="_blank">here</a> to learn how to fix it.');
+            } elseif ($this->zlibCompressor->supportsCompression() && !$this->zlibCompressor->canUseCompression()) {
+                throw new RuntimeException('Cannot restore! This backup is compressed, you need WP Staging Pro to Restore it. Click <a href="https://wp-staging.com?utm_source=wpstg-license-ui&utm_medium=website&utm_campaign=compressed-backup-restore&utm_id=purchase-key&utm_content=wpstaging" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
+            }
         }
     }
 

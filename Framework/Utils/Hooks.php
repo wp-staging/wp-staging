@@ -8,44 +8,44 @@ namespace WPStaging\Framework\Utils;
 class Hooks
 {
     /**
-     * @param string $hook
-     * @param array ...$args
+     * @param string $hookName
+     * @param mixed ...$args
      * @return void
      */
-    public function doAction(string $hook, array ...$args)
+    public function doAction(string $hookName, ...$args)
     {
         // Early bail if it is not a wpstg hook
-        if (strpos($hook, 'wpstg.') !== 0) {
+        if (strpos($hookName, 'wpstg.') !== 0) {
             return;
         }
 
         // Early bail if it is a wpstg test hook but not a test
-        if (strpos($hook, 'wpstg.tests.') === 0  && !$this->isTest()) {
+        if (strpos($hookName, 'wpstg.tests.') === 0  && !$this->isTest()) {
             return;
         }
 
-        do_action($hook, $args);
+        do_action($hookName, ...$args);
     }
 
     /**
-     * @param string $hook
+     * @param string $hookName
      * @param mixed $value
-     * @param array ...$args
+     * @param mixed ...$args
      * @return mixed
      */
-    public function applyFilters(string $hook, $value, array ...$args)
+    public function applyFilters(string $hookName, $value, ...$args)
     {
         // Early bail if it is not a wpstg hook
-        if (strpos($hook, 'wpstg.') !== 0) {
+        if (strpos($hookName, 'wpstg.') !== 0) {
             return $value;
         }
 
         // Early bail if it is a wpstg test hook but not a test
-        if (strpos($hook, 'wpstg.tests.') === 0 && !$this->isTest()) {
+        if (strpos($hookName, 'wpstg.tests.') === 0 && !$this->isTest()) {
             return $value;
         }
 
-        return apply_filters($hook, $value, $args);
+        return apply_filters($hookName, $value, ...$args);
     }
 
     /**

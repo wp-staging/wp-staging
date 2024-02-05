@@ -280,7 +280,7 @@ class Assets
             'nonce'                  => wp_create_nonce(Nonce::WPSTG_NONCE),
             'assetsUrl'              => $this->getAssetsUrl(),
             'ajaxUrl'                => admin_url('admin-ajax.php'),
-            'wpstgIcon'              => $this->getAssetsUrl('img/wpstaging-icon.png'),
+            'wpstgIcon'              => $this->getAssetsUrl('img/wpstg-loader.gif'),
             'maxUploadChunkSize'     => $this->getMaxUploadChunkSize(),
             'backupDBExtension'      => DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
             'analyticsConsentAllow'  => esc_url($this->analyticsConsent->getConsentLink(true)),
@@ -313,7 +313,7 @@ class Assets
                 ],
                 'wpstg_push_processing' => [
                     'title'  => esc_html__('Staging Site Pushed Successfully!', 'wp-staging'),
-                    'body'  => esc_html__('Clear the site cache if changes are not visible.', 'wp-staging'),
+                    'body'  => esc_html__('Now delete the theme and the website cache if the website does not look as expected! ', 'wp-staging'),
                 ],
                 'wpstg_reset'          => [
                     'title'  => esc_html__('Staging Site Reset Successfully!', 'wp-staging'),

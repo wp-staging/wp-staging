@@ -10,6 +10,8 @@ use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Backup\Job\Jobs\JobRestore;
+use WPStaging\Backup\Service\Compression\CompressionInterface;
+use WPStaging\Backup\Service\Compression\NonCompressionService;
 use WPStaging\Backup\Service\Database\Exporter\AbstractExporter;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporterProvider;
@@ -22,6 +24,7 @@ use WPStaging\Backup\Service\Multipart\MultipartRestoreInterface;
 use WPStaging\Backup\Service\Multipart\MultipartRestorer;
 use WPStaging\Backup\Service\Multipart\MultipartSplitInterface;
 use WPStaging\Backup\Service\Multipart\MultipartSplitter;
+use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreDatabaseTask;
 use WPStaging\Framework\DI\ServiceProvider;
 
@@ -41,6 +44,10 @@ class BackupServiceProvider extends ServiceProvider
         $this->container->when(JobRestore::class)
                 ->needs(JobDataDto::class)
                 ->give(JobRestoreDataDto::class);
+
+        $this->container->when(ZlibCompressor::class)
+                ->needs(CompressionInterface::class)
+                ->give(NonCompressionService::class);
 
         $container = $this->container;
 

@@ -207,7 +207,6 @@ class Settings
             );
         }
 
-
        // Debug Mode
         $element = new Check(
             "wpstg_settings[debugMode]",
@@ -265,6 +264,29 @@ class Settings
             $element->setLabel(__("Admin Bar Background Color", "wp-staging"))
                       ->setDefault((isset($settings->adminBarColor)) ? $settings->adminBarColor : Assets::DEFAULT_ADMIN_BAR_BG)
         );
+
+        // Compress Backups
+        if (defined('WPSTGPRO_VERSION')) {
+            $element = new Check(
+                "wpstg_settings[enableCompression]",
+                ['1' => '']
+            );
+
+            $isMultiPartEnabled = apply_filters('wpstg.backup.isMultipartBackup', false);
+
+            if (!$isMultiPartEnabled) {
+                $this->form["general"]->add(
+                    $element->setLabel(__("Compress Backups", "wp-staging"))
+                        ->setDefault((isset($settings->enableCompression)) ? $settings->enableCompression : null)
+                );
+            } else {
+                $this->form["general"]->add(
+                    $element->setLabel(__("Compress Backups (Incompatible with Multipart Backups)", "wp-staging"))
+                        ->setAttribute('disabled', 'disabled')
+                        ->setDefault(false)
+                );
+            }
+        }
     }
 
    /**

@@ -13,6 +13,7 @@ use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Database\WpOptionsInfo;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -38,11 +39,17 @@ class SystemInfo
      */
     private $urlsHelper;
 
+    /**
+     * @var WpOptionsInfo
+     */
+    private $wpOptionsInfo;
+
     public function __construct()
     {
-        $this->isMultiSite = is_multisite();
-        $this->urlsHelper  = WPStaging::make(Urls::class);
-        $this->database = WPStaging::make(Database::class);
+        $this->isMultiSite   = is_multisite();
+        $this->urlsHelper    = WPStaging::make(Urls::class);
+        $this->database      = WPStaging::make(Database::class);
+        $this->wpOptionsInfo = WPStaging::make(WpOptionsInfo::class);
     }
 
     /**
@@ -109,8 +116,6 @@ class SystemInfo
      */
     public function wp(): string
     {
-        global $wpdb;
-
         $output  = $this->header("WordPress");
         $output .= $this->info("Site:", ($this->isMultiSite) ? 'Multi Site' : 'Single Site');
         $output .= $this->info("WP Version:", get_bloginfo("version"));
@@ -156,7 +161,8 @@ class SystemInfo
         $output  .= $this->info("uploads['url']:", $uploads['url']);
 
         $output .= $this->info("UPLOAD_PATH in wp-config.php:", (defined("UPLOAD_PATH")) ? UPLOAD_PATH : '[not set]');
-        $output .= $this->info("upload_path in " . $wpdb->prefix . 'options:', get_option("upload_path") ?: "[not set]");
+        $output .= $this->info("upload_path in " . $this->database->getPrefix() . 'options:', get_option("upload_path") ?: "[not set]");
+        $output .= $this->getPrimaryKeyInfo();
 
         $output .= $this->constantInfo('WP_TEMP_DIR');
 
@@ -274,6 +280,7 @@ class SystemInfo
         $output              .= $this->info("Send Usage Information:", !empty($analyticsHasConsent) ? 'true' : 'false');
         $output              .= $this->info("Send Backup Errors via E-Mail:", isset($settings->schedulesErrorReport) ? $settings->schedulesErrorReport : '[not set]');
         $output              .= $this->info("E-Mail Address:", isset($settings->schedulesReportEmail) ? $settings->schedulesReportEmail : '[not set]');
+        $output              .= $this->info("Backup Compression:", isset($settings->enableCompression) ? ($settings->enableCompression ? 'On' : 'Off') : '[not set]');
 
         $output .= PHP_EOL . "-- Google Drive Settings" . PHP_EOL;
 
@@ -367,12 +374,12 @@ class SystemInfo
      */
     public function getWpStagingVersion(): string
     {
-        if (defined('WPSTG_VERSION')) {
-            return WPSTG_VERSION;
-        }
-
         if (defined('WPSTGPRO_VERSION')) {
             return 'Pro ' . WPSTGPRO_VERSION;
+        }
+
+        if (defined('WPSTG_VERSION')) {
+            return WPSTG_VERSION;
         }
 
         return 'unknown';
@@ -516,14 +523,10 @@ class SystemInfo
     public function server(): string
     {
         $output = $this->header("Start System Info");
-
-        /** @var Database */
-        $database = WPStaging::make(Database::class);
-
         $output .= $this->info("Webserver:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
-        $output .= $this->info("MySQL Server Type:", $database->getServerType());
-        $output .= $this->info("MySQL Version:", $database->getSqlVersion($compact = true));
-        $output .= $this->info("MySQL Version Full Info:", $database->getSqlVersion());
+        $output .= $this->info("MySQL Server Type:", $this->database->getServerType());
+        $output .= $this->info("MySQL Version:", $this->database->getSqlVersion($compact = true));
+        $output .= $this->info("MySQL Version Full Info:", $this->database->getSqlVersion());
         $output .= $this->info("PHP Version:", PHP_VERSION);
 
         return $output;
@@ -819,10 +822,9 @@ class SystemInfo
      */
     private function getTablePrefix(): string
     {
-        global $wpdb;
-        $tablePrefix = "DB Prefix: " . $wpdb->prefix . ' ';
-        $tablePrefix .= "Length: " . strlen($wpdb->prefix) . "   Status: ";
-        $tablePrefix .= (strlen($wpdb->prefix) > 16) ? " ERROR: Too long" : " Acceptable";
+        $tablePrefix = "DB Prefix: " . $this->database->getPrefix() . ' ';
+        $tablePrefix .= "Length: " . strlen($this->database->getPrefix()) . "   Status: ";
+        $tablePrefix .= (strlen($this->database->getPrefix()) > 16) ? " ERROR: Too long" : " Acceptable";
 
         return $tablePrefix;
     }
@@ -862,5 +864,24 @@ class SystemInfo
         }
 
         return $this->info($constantName . ':', $constantValue);
+    }
+
+    /**
+     * @return string
+     */
+    private function getPrimaryKeyInfo(): string
+    {
+        $tableName = $this->database->getPrefix() . 'options';
+        $isPrimaryKeyMissing      = $this->wpOptionsInfo->isOptionTablePrimaryKeyMissing($tableName);
+        if ($isPrimaryKeyMissing) {
+            return $this->info("{$tableName} primary key:", '[not set]');
+        }
+
+        $isPrimaryKeyIsOptionName = $this->wpOptionsInfo->isPrimaryKeyIsOptionName($tableName);
+        if ($isPrimaryKeyIsOptionName) {
+            return $this->info("{$tableName} primary key:", 'option_name');
+        }
+
+        return $this->info("{$tableName} primary key:", 'option_id');
     }
 }

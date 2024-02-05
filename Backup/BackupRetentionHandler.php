@@ -24,7 +24,7 @@ class BackupRetentionHandler
     }
 
     /**
-     * @param string storage
+     * @param string|bool $storage
      *
      * @return array
      *
@@ -35,8 +35,12 @@ class BackupRetentionHandler
      *        - 'backupSize': An integer representing the size of the backup.
      *        - 'isMultipart': A boolean indicating whether the backup is multipart.
      */
-    public function getBackupsRetention(string $storage = ''): array
+    public function getBackupsRetention($storage = ''): array
     {
+        if ($storage === false) {
+            return [];
+        }
+
         $backups = (array) get_option(self::OPTION_BACKUPS_RETENTION, []);
 
         if ($storage) {

@@ -265,6 +265,7 @@ class FinalizeBackupTask extends BackupTask
             $this->addSplitMetadata($backupMetadata, $isUploadBackup);
         }
 
+        $backupMetadata->setTotalChunks($this->jobDataDto->getTotalChunks());
         $backupMetadata->setNetworkAdmins([]);
         if (is_multisite()) {
             $this->addMultisiteMetadata($backupMetadata);

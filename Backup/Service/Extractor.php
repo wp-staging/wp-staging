@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Service;
 
 use Exception;
+use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Entity\FileBeingExtracted;
@@ -16,6 +17,7 @@ use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Backup\BackupValidator;
+use WPStaging\Backup\Exceptions\EmptyChunkException;
 
 class Extractor
 {
@@ -57,19 +59,28 @@ class Extractor
     /** @var diskWriteCheck */
     protected $diskWriteCheck;
 
+    /** @var BackupFileIndex */
+    protected $backupFileIndex;
+
+    /** @var ZlibCompressor */
+    protected $zlibCompressor;
+
     /** @var BackupValidator */
     private $backupValidator;
 
-    /**
-     * @param PathIdentifier $pathIdentifier
-     * @param Directory $directory
-     * @param DiskWriteCheck $diskWriteCheck
-     */
-    public function __construct(PathIdentifier $pathIdentifier, Directory $directory, DiskWriteCheck $diskWriteCheck, BackupValidator $backupValidator)
-    {
-        $this->pathIdentifier = $pathIdentifier;
-        $this->directory      = $directory;
-        $this->diskWriteCheck = $diskWriteCheck;
+    public function __construct(
+        PathIdentifier $pathIdentifier,
+        Directory $directory,
+        DiskWriteCheck $diskWriteCheck,
+        BackupFileIndex $backupFileIndex,
+        ZlibCompressor $zlibCompressor,
+        BackupValidator $backupValidator
+    ) {
+        $this->pathIdentifier  = $pathIdentifier;
+        $this->directory       = $directory;
+        $this->diskWriteCheck  = $diskWriteCheck;
+        $this->backupFileIndex = $backupFileIndex;
+        $this->zlibCompressor  = $zlibCompressor;
         $this->backupValidator = $backupValidator;
     }
 
@@ -130,25 +141,18 @@ class Extractor
         // Store the index position when reading the current file
         $this->wpstgIndexOffsetForCurrentFile = $this->wpstgFile->ftell();
 
-        // e.g: wp-content/themes/twentytwentyone/readme.txt|9378469:4491
         $rawIndexFile = $this->wpstgFile->readAndMoveNext();
 
         // Store the index position of the next file to be processed
         $this->wpstgIndexOffsetForNextFile = $this->wpstgFile->ftell();
 
-        if (strpos($rawIndexFile, '|') === false || strpos($rawIndexFile, ':') === false) {
+        if (!$this->backupFileIndex->isIndexLine($rawIndexFile)) {
             throw new FinishedQueueException();
         }
 
-        // ['{T}twentytwentyone/readme.txt', '9378469:4491']
-        list($identifiablePath, $indexPosition) = explode('|', trim($rawIndexFile));
+        $backupFileIndex = $this->backupFileIndex->readIndex($rawIndexFile);
 
-        // ['9378469', '4491']
-        list($offsetStart, $length) = explode(':', trim($indexPosition));
-
-        /** Convert {WPSTG_PIPE}, {WPSTG_COLON} to | and : respectively */
-        $identifiablePath = $this->getRestorableIdentifiablePath($identifiablePath);
-        $identifier       = $this->pathIdentifier->getIdentifierFromPath($identifiablePath);
+        $identifier = $this->pathIdentifier->getIdentifierFromPath($backupFileIndex->identifiablePath);
 
         if ($identifier === PathIdentifier::IDENTIFIER_UPLOADS) {
             $extractFolder = $this->directory->getUploadsDirectory();
@@ -160,7 +164,7 @@ class Extractor
             throw new \RuntimeException("Could not create folder to extract backup file: $extractFolder");
         }
 
-        $this->extractingFile = new FileBeingExtracted($identifiablePath, $extractFolder, $offsetStart, $length, $this->pathIdentifier);
+        $this->extractingFile = new FileBeingExtracted($backupFileIndex->identifiablePath, $extractFolder, $this->pathIdentifier, $backupFileIndex);
         $this->extractingFile->setWrittenBytes($this->jobRestoreDataDto->getExtractorFileWrittenBytes());
 
         if ($identifier === PathIdentifier::IDENTIFIER_UPLOADS && $this->extractingFile->getWrittenBytes() === 0) {
@@ -194,6 +198,7 @@ class Extractor
             $metadata        = new BackupMetadata();
             $metadata        = $metadata->hydrateByFile($this->wpstgFile);
             $this->jobRestoreDataDto->setCurrentFileHeaderStart($metadata->getHeaderStart());
+            $this->jobRestoreDataDto->setTotalChunks($metadata->getTotalChunks());
         } catch (Exception $ex) {
             throw new MissingFileException(sprintf("Following backup part missing: %s", $filePath));
         }
@@ -298,7 +303,19 @@ class Extractor
         }
 
         while (!$this->extractingFile->isFinished() && !$this->isThreshold()) {
-            $writtenBytes = fwrite($destinationFileResource, $this->wpstgFile->fread($this->extractingFile->findReadTo()), (int)$this->getScriptMemoryLimit());
+            $readBytesBefore = $this->wpstgFile->ftell();
+
+            $chunk = null;
+            try {
+                $chunk = $this->zlibCompressor->getService()->readChunk($this->wpstgFile, $this->extractingFile, function ($currentChunkNumber) {
+                    $this->logger->debug(sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->jobRestoreDataDto->getTotalChunks()));
+                });
+            } catch (EmptyChunkException $ex) {
+                // If empty chunk, skip it
+                continue;
+            }
+
+            $writtenBytes = fwrite($destinationFileResource, $chunk, (int)$this->getScriptMemoryLimit());
 
             if ($writtenBytes === false || $writtenBytes <= 0) {
                 fclose($destinationFileResource);
@@ -306,7 +323,9 @@ class Extractor
                 throw DiskNotWritableException::diskNotWritable();
             }
 
-            $this->extractingFile->addWrittenBytes($writtenBytes);
+            $readBytesAfter = $this->wpstgFile->ftell() - $readBytesBefore;
+
+            $this->extractingFile->addWrittenBytes($readBytesAfter);
         }
 
         fclose($destinationFileResource);

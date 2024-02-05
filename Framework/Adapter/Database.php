@@ -11,8 +11,6 @@ namespace WPStaging\Framework\Adapter;
 use RuntimeException;
 use wpdb;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Adapter\Database\InterfaceDatabase;
-use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Adapter\Database\MysqlAdapter;
 use WPStaging\Framework\Adapter\Database\MysqliAdapter;
 use WPStaging\Framework\Adapter\Database\WpDbAdapter;

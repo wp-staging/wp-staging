@@ -12,6 +12,7 @@
 
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Framework\Utils\Times;
 
 $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
@@ -35,7 +36,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
 
     <label for="backupScheduleTime">
         <?php esc_html_e('Start Time?', 'wp-staging'); ?>
-        <div class="wpstg--tooltip" style="position: absolute;">
+        <div class="wpstg--tooltip">
             <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
             <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
                 <?php echo sprintf(
@@ -48,13 +49,13 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
                     <br>
                     <?php echo sprintf(esc_html__('Site Timezone: %s', 'wp-staging'), esc_html($time->getSiteTimezoneString())); ?>
 
-                    <?php if (!$isProVersion) {
-                        echo '<br><br><hr>';
-                        echo esc_html__('You can customize this start time in WP Staging Pro!', 'wp-staging'); ?>
-                        <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><?php echo esc_html__('Get Pro Version', 'wp-staging'); ?></a>
-                        <?php
-                    }
-                    ?>
+                <?php if (!$isProVersion) {
+                    echo '<br><br><hr>';
+                    echo esc_html__('You can customize this start time in WP Staging Pro!', 'wp-staging'); ?>
+                    <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><?php echo esc_html__('Get Pro Version', 'wp-staging'); ?></a>
+                    <?php
+                }
+                ?>
             </span>
         </div>
     </label>
@@ -69,7 +70,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
     <span id="backup-schedule-current-time"><?php echo sprintf(esc_html__('Current Time: %s', 'wp-staging'), esc_html($currentTime)); ?></span>
     <label for="backupScheduleRotation">
         <?php esc_html_e('Backup Retention', 'wp-staging'); ?>
-        <div class="wpstg--tooltip" style="position: absolute;">
+        <div class="wpstg--tooltip">
             <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
             <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
                 <?php esc_html_e('Number of backups to keep before deleting old ones to free up storage space.', 'wp-staging') ?>
@@ -92,7 +93,7 @@ $proFeature = $isProVersion ? ' ' : ' (Pro Feature)';
     </select>
 
     <label for="backupScheduleLaunch">
-        <input type="checkbox" class="wpstg-checkbox" name="backupScheduleLaunch" id="backupScheduleLaunch"/>
-        <?php esc_html_e('Run Backup Now?', 'wp-staging'); ?>
+        <?php Checkbox::render('backupScheduleLaunch', 'backupScheduleLaunch'); ?>
+       <?php esc_html_e('Run Backup Now?', 'wp-staging'); ?>
     </label>
 </div>

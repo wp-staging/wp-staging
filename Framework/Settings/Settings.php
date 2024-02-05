@@ -11,6 +11,9 @@ use WPStaging\Framework\Security\Auth;
 
 class Settings
 {
+    /** @var string */
+    const ACTION_WPSTG_PRO_SETTINGS = 'wpstg.views.pro.settings';
+
     /**
      * @var array
      * Sanitize the options to escape from XSS
@@ -49,6 +52,12 @@ class Settings
     /** @var Auth */
     private $auth;
 
+    /**
+     * @param SiteInfo $siteInfo
+     * @param Sanitize $sanitize
+     * @param Queue $queue
+     * @param Auth $auth
+     */
     public function __construct(SiteInfo $siteInfo, Sanitize $sanitize, Queue $queue, Auth $auth)
     {
         $this->siteInfo = $siteInfo;
@@ -57,6 +66,9 @@ class Settings
         $this->auth     = $auth;
     }
 
+    /**
+     * @return void
+     */
     public function registerSettings()
     {
         register_setting("wpstg_settings", "wpstg_settings", [$this, "sanitizeOptions"]);
@@ -67,7 +79,7 @@ class Settings
      * @param array $data
      * @return array
      */
-    public function sanitizeOptions($data = [])
+    public function sanitizeOptions(array $data = []): array
     {
         // is_array() is required otherwise new clone will fail.
         $showErrorToggleStagingSiteCloning = false;
@@ -78,11 +90,10 @@ class Settings
         }
 
         if (WPStaging::isPro() && is_array($data)) {
-            $sendBackupSchedulesErrorReport = isset($data['schedulesErrorReport']) ? $data['schedulesErrorReport'] : false;
-            $reportEmail                    = isset($data['schedulesReportEmail']) ? $data['schedulesReportEmail'] : '';
+            $isSendBackupErrorReport = isset($data['schedulesErrorReport']) ? 'true' : '';
+            $reportEmail             = !empty($data['schedulesReportEmail']) ? $this->sanitize->sanitizeEmail($data['schedulesReportEmail']) : '';
             unset($data['schedulesErrorReport']);
-            unset($data['wpstg-send-schedules-report-email']);
-            $this->setBackupScheduleOptions($sendBackupSchedulesErrorReport, $reportEmail);
+            $this->setEmailErrorReportOptions($isSendBackupErrorReport, $reportEmail);
         }
 
         $sanitized = $this->sanitizeData($data);
@@ -136,7 +147,7 @@ class Settings
      * @param array $data
      * @return array
      */
-    protected function sanitizeData($data = [])
+    protected function sanitizeData(array $data = []): array
     {
         $sanitized = [];
 
@@ -165,7 +176,7 @@ class Settings
      *
      * @return bool
      */
-    protected function toggleStagingSiteCloning($isCloneable)
+    protected function toggleStagingSiteCloning(bool $isCloneable): bool
     {
         if ($isCloneable && $this->siteInfo->enableStagingSiteCloning()) {
             return true;
@@ -181,25 +192,22 @@ class Settings
     /**
      * Set backup schedule error reporting options
      *
-     * @param bool $sendBackupSchedulesErrorReport
+     * @param string $isSendBackupSchedulesErrorReport 'true' if active
      * @param string $reportEmail
-     * @return bool
+     * @return void
      */
-    protected function setBackupScheduleOptions($sendBackupSchedulesErrorReport, $reportEmail)
+    protected function setEmailErrorReportOptions(string $isSendBackupSchedulesErrorReport, string $reportEmail)
     {
         if (!WPStaging::isPro()) {
-            return false;
+            return;
         }
 
         if (!class_exists('WPStaging\Backup\BackupScheduler')) {
-            return false;
+            return;
         }
 
-        $error = !update_option(BackupScheduler::BACKUP_SCHEDULE_ERROR_REPORT_OPTION, $sendBackupSchedulesErrorReport);
-        if ($error) {
-            return false;
-        }
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, $isSendBackupSchedulesErrorReport);
 
-        return update_option(BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION, $reportEmail);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $reportEmail);
     }
 }

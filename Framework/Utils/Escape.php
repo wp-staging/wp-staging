@@ -8,11 +8,9 @@ class Escape
      * Escape html with allowed html tags
      *
      * @param string $content
-     * @param string $domain
-     *
      * @return string
      */
-    public function escapeHtml($content)
+    public function escapeHtml(string $content): string
     {
         return wp_kses($content, $this->htmlAllowedDuringEscape([]));
     }
@@ -23,7 +21,7 @@ class Escape
      * @param string $text
      * @return string
      */
-    public function decodeKsesPost($text)
+    public function decodeKsesPost(string $text): string
     {
         return wp_kses_post(html_entity_decode($text));
     }
@@ -32,7 +30,7 @@ class Escape
      * @param array $array
      * @return array
      */
-    public function htmlAllowedDuringEscape($array)
+    public function htmlAllowedDuringEscape(array $array): array
     {
         return [
             'a'      => [
@@ -52,7 +50,7 @@ class Escape
             'code'   => [],
             'em'     => [],
             'strong' => [
-                'class'  => [],
+                'class' => [],
             ],
         ];
     }

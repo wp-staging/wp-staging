@@ -132,6 +132,7 @@ class ListableBackupsCollection
                 $listableBackup->existingBackupParts              = $listableBackup->isMultipartBackup ? $backupMetadata->getMultipartMetadata()->getBackupParts() : [];
                 $listableBackup->errorMessage                     = $this->backupValidator->getErrorMessage();
                 $listableBackup->indexPartSize                    = $backupMetadata->getIndexPartSize();
+                $listableBackup->isZlibCompressed                 = $backupMetadata->getIsZlibCompressed();
             } elseif ($file->getExtension() === 'sql') {
                 $listableBackup                      = new ListableBackup();
                 $listableBackup->isLegacy            = true;

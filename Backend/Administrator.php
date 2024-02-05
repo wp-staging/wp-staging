@@ -8,7 +8,6 @@ use WPStaging\Core\DTO\Settings;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Assets\Assets;
-use WPStaging\Framework\Database\DbInfo;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Mails\Report\Report;
@@ -16,7 +15,6 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
-use WPStaging\Framework\CloningProcess\Database\CompareExternalDatabase;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Notices\DismissNotice;
@@ -40,8 +38,6 @@ use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
 use WPStaging\Backend\Feedback\Feedback;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
-use WPStaging\Framework\Database\WpDbInfo;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
 
@@ -147,8 +143,6 @@ class Administrator
         add_action("wp_ajax_wpstg_reset", [$this, "ajaxResetProcess"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_cloning", [$this, "ajaxStartClone"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_processing", [$this, "ajaxCloneDatabase"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action("wp_ajax_wpstg_database_connect", [$this, "ajaxDatabaseConnect"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action("wp_ajax_wpstg_database_verification", [$this, "ajaxDatabaseVerification"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_clone_prepare_directories", [$this, "ajaxPrepareDirectories"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_clone_files", [$this, "ajaxCopyFiles"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_clone_replace_data", [$this, "ajaxReplaceData"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -1164,101 +1158,6 @@ class Administrator
     }
 
     /**
-     * Connect to external database for testing correct credentials
-     */
-    public function ajaxDatabaseConnect()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-
-        global $wpdb;
-
-        $args     = $_POST;
-        $user     = !empty($args['databaseUser']) ? $this->sanitize->sanitizeString($args['databaseUser']) : '';
-        $password = !empty($args['databasePassword']) ? $this->sanitize->sanitizePassword($args['databasePassword']) : '';
-        $database = !empty($args['databaseDatabase']) ? $this->sanitize->sanitizeString($args['databaseDatabase']) : '';
-        $server   = !empty($args['databaseServer']) ? $this->sanitize->sanitizeString($args['databaseServer']) : 'localhost';
-        $prefix   = !empty($args['databasePrefix']) ? $this->sanitize->sanitizeString($args['databasePrefix']) : $wpdb->prefix;
-        $useSsl   = !empty($args['databaseSsl']) && 'true' === $this->sanitize->sanitizeString($args['databaseSsl']) ? true : false;
-
-        // make sure prefix doesn't contains any invalid character
-        // same condition as in WordPress wpdb::set_prefix() method
-        if (preg_match('|[^a-z0-9_]|i', $prefix)) {
-            echo json_encode(['success' => 'false', 'errors' => __('Table prefix contains an invalid character.', 'wp-staging')]);
-            exit;
-        }
-
-        $tmpPrefixes = [
-            PrepareRestore::TMP_DATABASE_PREFIX,
-            PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP,
-        ];
-
-        if (in_array($prefix, $tmpPrefixes)) {
-            echo json_encode(['success' => 'false', 'errors' => 'Prefix wpstgtmp_ and wpstgbak_ are preserved by WP Staging and cannot be used for CLONING purpose! Please use another prefix.']);
-            exit;
-        }
-
-        // ensure tables with the given prefix exist, default false
-        $ensurePrefixTableExist = !empty($args['databaseEnsurePrefixTableExist']) ? $this->sanitize->sanitizeBool($args['databaseEnsurePrefixTableExist']) : false;
-
-        $dbInfo = new DbInfo($server, $user, stripslashes($password), $database, $useSsl);
-        $wpdb   = $dbInfo->connect();
-
-        // Can not connect to mysql database
-        $error = $dbInfo->getError();
-        if ($error !== null) {
-            echo json_encode(['success' => 'false', 'errors' => $error]);
-            exit;
-        }
-
-        // Check if any table with provided prefix already exist
-        $existingTables = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $wpdb->esc_like($prefix) . '%'));
-        // used in new clone
-        if ($existingTables !== null && !$ensurePrefixTableExist) {
-            echo json_encode(['success' => 'false', 'errors' => __('Tables with prefix ' . $prefix . ' already exist in database. Select another prefix.', 'wp-staging')]);
-            exit;
-        }
-
-        // no need to check further for new clone
-        if ($existingTables === null && !$ensurePrefixTableExist) {
-            echo json_encode(['success' => 'true']);
-            exit;
-        }
-
-        // used in edit and update of clone
-        if ($existingTables === null && $ensurePrefixTableExist) {
-            echo json_encode(['success' => 'true', 'errors' => __('Tables with prefix "' . $prefix . '" not exist in database. Make sure it exists.', 'wp-staging')]);
-            exit;
-        }
-
-        // get production db
-        $productionDb     = WPStaging::make('wpdb');
-        $productionDbInfo = new WpDbInfo($productionDb);
-        $stagingDbInfo    = new WpDbInfo($wpdb);
-
-        $stagingSiteAddress    = $stagingDbInfo->getServerIp();
-        $productionSiteAddress = $productionDbInfo->getServerIp();
-        if ($stagingSiteAddress === null || $productionSiteAddress === null) {
-            echo json_encode(['success' => 'false', 'errors' => __('Unable to find database server hostname of the staging or the production site.', 'wp-staging')]);
-            exit;
-        }
-
-        $isSameAddress = $productionSiteAddress === $stagingSiteAddress;
-        $isSamePort    = $productionDbInfo->getServerPort() === $stagingDbInfo->getServerPort();
-
-        $isSameServer = ($isSameAddress && $isSamePort) || $server === DB_HOST;
-
-        if ($database === DB_NAME && $prefix === $productionDb->prefix && $isSameServer) {
-            echo json_encode(['success' => 'false', 'errors' => __('Cannot use production site database. Use another database.', 'wp-staging')]);
-            exit;
-        }
-
-        echo json_encode(['success' => 'true']);
-        exit;
-    }
-
-    /**
      * Action to perform when error modal confirm button is clicked
      *
      * @todo use constants instead of hardcoded strings for error types
@@ -1311,32 +1210,6 @@ class Administrator
             ])
         ]);
 
-        exit();
-    }
-
-    /**
-     * Compare database and table properties of separate db with local db
-     */
-    public function ajaxDatabaseVerification()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-
-        if (!$this->isPro()) {
-            return;
-        }
-
-        $user     = !empty($_POST['databaseUser']) ? $this->sanitize->sanitizeString($_POST['databaseUser']) : '';
-        $password = !empty($_POST['databasePassword']) ? $this->sanitize->sanitizePassword($_POST['databasePassword']) : '';
-        $database = !empty($_POST['databaseDatabase']) ? $this->sanitize->sanitizeString($_POST['databaseDatabase']) : '';
-        $server   = !empty($_POST['databaseServer']) ? $this->sanitize->sanitizeString($_POST['databaseServer']) : 'localhost';
-        $useSsl   = !empty($_POST['databaseSsl']) && 'true' === $this->sanitize->sanitizeString($_POST['databaseSsl']) ? true : false;
-
-        $comparison = new CompareExternalDatabase($server, $user, stripslashes($password), $database, $useSsl);
-        $results    = $comparison->maybeGetComparison();
-
-        echo json_encode($results);
         exit();
     }
 

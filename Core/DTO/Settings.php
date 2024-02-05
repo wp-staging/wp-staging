@@ -100,6 +100,11 @@ class Settings
     protected $adminBarColor = "";
 
     /**
+     * @var bool Enable compression for backups.
+     */
+    protected $enableCompression;
+
+    /**
      * Settings constructor.
      */
     public function __construct()
@@ -340,6 +345,16 @@ class Settings
     public function getAdminBarColor()
     {
         return $this->adminBarColor;
+    }
+
+    public function getEnableCompression(): bool
+    {
+        return $this->enableCompression;
+    }
+
+    public function setEnableCompression(bool $enableCompression)
+    {
+        $this->enableCompression = $enableCompression;
     }
 
     /**

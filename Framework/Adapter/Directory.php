@@ -348,7 +348,7 @@ class Directory
         if (!isset($this->themesDirs)) {
             $this->themesDirs = array_map(function ($directory) {
                 return $this->filesystem->normalizePath($directory['theme_root'], true);
-            }, search_theme_directories(true));
+            }, search_theme_directories(true) ?: []);
 
             if (!is_array($this->themesDirs)) {
                 throw new \RuntimeException('Could not get the themes directories.');

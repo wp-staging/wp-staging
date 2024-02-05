@@ -1,7 +1,7 @@
 <?php
 
+use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Framework\Facades\Escape;
-use WPStaging\Backup\Task\Tasks\JobRestore\RestoreRequirementsCheckTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Utils\Urls;
@@ -38,6 +38,8 @@ if (empty($indexFileError)) {
 
 // Download URL of backup file
 $downloadUrl = $backup->downloadUrl;
+
+$compressor = WPStaging::make(ZlibCompressor::class);
 
 if (WPStaging::make(Directory::class)->isBackupPathOutsideAbspath() || ( defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PHP )) {
     $downloadUrl = add_query_arg([
@@ -173,6 +175,20 @@ $logUrl = add_query_arg([
                 <strong><?php esc_html_e('Size: ', 'wp-staging') ?></strong>
                 <?php echo esc_html($size); ?>
             </li>
+            <?php if ($backup->isZlibCompressed) : ?>
+                <?php if (!$compressor->supportsCompression()) : ?>
+                    <li class="wpstg-corrupted-backup wpstg--red">
+                        <div class="wpstg-exclamation">!</div>
+                        <!-- todo: add link to compression support article. -->
+                        <strong><?php esc_html_e('This backup is compressed, but your server does not support compression.', 'wp-staging') ?> Click <a href="https://wp-staging.com/how-to-install-and-activate-gzcompress-and-gzuncompress-functions-in-php/" target="_blank">here</a> to learn how to fix it.</strong><br/>
+                    </li>
+                <?php elseif ($compressor->supportsCompression() && !$compressor->canUseCompression()) : ?>
+                    <li class="wpstg-corrupted-backup wpstg--red">
+                        <div class="wpstg-exclamation">!</div>
+                        <strong><?php esc_html_e('This backup is compressed, you need WP STAGING Pro to Restore it.', 'wp-staging') ?> Click <a href="https://wp-staging.com?utm_source=wpstg-license-ui&utm_medium=website&utm_campaign=compressed-backup-restore&utm_id=purchase-key&utm_content=wpstaging" target="_blank">here</a> to buy WP STAGING Pro, or generate an uncompressed backup.</strong><br/>
+                    </li>
+                <?php endif; ?>
+            <?php endif ?>
             <?php if (!$isCorrupt) : ?>
                 <li class="single-backup-includes">
                     <strong><?php esc_html_e('Contains: ', 'wp-staging') ?></strong>

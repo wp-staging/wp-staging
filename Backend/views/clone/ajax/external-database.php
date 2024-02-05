@@ -13,6 +13,7 @@
  */
 
 use WPStaging\Framework\Facades\Sanitize;
+use WPStaging\Framework\Facades\UI\Checkbox;
 
 $database   = '';
 $username   = '';
@@ -35,48 +36,53 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
     $isDisabled = true;
     $password   = '*********';
 }
+
+/**
+ * Avoid renaming the 'wpstg-db-user' field to 'wpstg-db-username' or simply 'username',
+ * and 'wpstg-db-pass' to 'wpstg-db-password' or 'password'.
+ * Renaming may lead to unintended autofill behavior if the fields are disabled.
+ */
 ?>
-<p class="wpstg--advance-settings--checkbox">
 
-    <?php if (!$isPro) { // Show this on only FREE version ?>
-    <p class="wpstg-dark-alert"><?php esc_html_e('These are premium features ', 'wp-staging'); ?>
-        <a href="https://wp-staging.com/?utm_source=wp-admin&utm_medium=wp-admin&utm_campaign=db-external&utm_term=db-external" target="_blank" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet"><?php esc_html_e("Get Started", "wp-staging"); ?></a>
-    </p>
-    <?php } ?>
-
+<?php if (!$isPro) { // Show this on only FREE version ?>
+<p class="wpstg-dark-alert wpstg-basic-feature"><?php esc_html_e('These are premium features ', 'wp-staging'); ?>
+    <a href="https://wp-staging.com/?utm_source=wp-admin&utm_medium=wp-admin&utm_campaign=db-external&utm_term=db-external" target="_blank" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet"><?php esc_html_e("Get Started", "wp-staging"); ?></a>
+</p>
+<?php } ?>
+<div class="wpstg--advance-settings--checkbox wpstg-advanced-setting-container">
     <label for="wpstg-ext-db"><?php esc_html_e('Change Database', 'wp-staging'); ?></label>
-    <input type="checkbox" id="wpstg-ext-db" name="wpstg-ext-db" value="true" class="wpstg-toggle-advance-settings-section wpstg-checkbox" data-id="wpstg-external-db-section" <?php echo $isPro === true ? '' : 'disabled' ?>>
+    <?php Checkbox::render('wpstg-ext-db', 'wpstg-ext-db', 'true', false, ['classes' => 'wpstg-toggle-advance-settings-section', 'isDisabled' => !$isPro], ['id' => 'wpstg-external-db-section']); ?>
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
             <?php echo wp_kses_post(__('You can clone the staging site into a separate database. The Database must be created manually in advance before starting the cloning proccess.<br/><br/><strong>Note:</strong> If there are already tables with the same database prefix and name in this database, the cloning process will be aborted without any further asking!', 'wp-staging')); ?>
         </span>
     </span>
-</p>
+</div>
 <div id="wpstg-external-db-section" <?php echo $isPro === true ? 'style="display: none;"' : '' ?>>
     <div class="wpstg-form-group wpstg-text-field">
         <label><?php esc_html_e('Server: ', 'wp-staging'); ?> </label>
-        <input type="text" class="wpstg-textbox" name="wpstg_db_server" id="wpstg_db_server" value="<?php echo esc_attr($server); ?>" title="wpstg_db_server" placeholder="localhost" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly>
+        <input type="text" class="wpstg-textbox" name="wpstg-db-server" id="wpstg-db-server" value="<?php echo esc_attr($server); ?>" title="wpstg-db-server" placeholder="localhost" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly>
     </div>
     <div class="wpstg-form-group wpstg-text-field">
-        <label for="wpstg_db_username"><?php esc_html_e('User: ', 'wp-staging'); ?></label>
-        <input type="text" class="wpstg-textbox" name="wpstg_db_username" id="wpstg_db_username" value="<?php echo esc_attr($username); ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
+        <label for="wpstg-db-user"><?php esc_html_e('User: ', 'wp-staging'); ?></label>
+        <input type="text" class="wpstg-textbox" name="wpstg-db-user" id="wpstg-db-user" value="<?php echo esc_attr($username); ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
     </div>
     <div class="wpstg-form-group wpstg-text-field">
-        <label for="wpstg_db_password"><?php esc_html_e('Password: ', 'wp-staging'); ?></label>
-        <input type="password" class="wpstg-textbox" name="wpstg_db_password" id="wpstg_db_password" value="<?php echo esc_attr($password); ?>" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
+        <label for="wpstg-db-pass"><?php esc_html_e('Password: ', 'wp-staging'); ?></label>
+        <input type="password" class="wpstg-textbox" name="wpstg-db-pass" id="wpstg-db-pass" value="<?php echo esc_attr($password); ?>" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
     </div>
     <div class="wpstg-form-group wpstg-text-field">
-        <label for="wpstg_db_database"><?php esc_html_e('Database: ', 'wp-staging'); ?></label>
-        <input type="text" class="wpstg-textbox" name="wpstg_db_database" id="wpstg_db_database" value="<?php echo esc_attr($database); ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
+        <label for="wpstg-db-database"><?php esc_html_e('Database: ', 'wp-staging'); ?></label>
+        <input type="text" class="wpstg-textbox" name="wpstg-db-database" id="wpstg-db-database" value="<?php echo esc_attr($database); ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
     </div>
     <div class="wpstg-form-group wpstg-text-field">
-        <label for="wpstg_db_prefix"><?php esc_html_e('Database Prefix: ', 'wp-staging'); ?></label>
-        <input type="text" class="wpstg-textbox" name="wpstg_db_prefix" id="wpstg_db_prefix" value="<?php echo esc_attr($prefix); ?>" placeholder="<?php echo $db->prefix; ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
+        <label for="wpstg-db-prefix"><?php esc_html_e('Database Prefix: ', 'wp-staging'); ?></label>
+        <input type="text" class="wpstg-textbox" name="wpstg-db-prefix" id="wpstg-db-prefix" value="<?php echo esc_attr($prefix); ?>" placeholder="<?php echo $db->prefix; ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
     </div>
     <div class="wpstg--advance-settings--checkbox">
-            <label for="wpstg_db_ssl"><?php esc_html_e('Enable SSL: ', 'wp-staging'); ?></label>
-            <input type="checkbox" id="wpstg_db_ssl" name="wpstg_db_ssl" value="true" class="wpstg-checkbox" <?php echo $useSsl ? "checked" : '';?> readonly />
+        <label for="wpstg-db-ssl"><?php esc_html_e('Enable SSL: ', 'wp-staging'); ?></label>
+        <?php Checkbox::render('wpstg-db-ssl', 'wpstg-db-ssl', 'true', $useSsl); ?>
     </div>
     <div class="wpstg-form-group wpstg-text-field wpstg-mt-10px">
         <a href="#" id="wpstg-db-connect"><?php esc_html_e("Test Database Connection", "wp-staging"); ?></a>

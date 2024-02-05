@@ -690,7 +690,9 @@
         wpstgHoverIntent(document, '.wpstg--tooltip', function (target, event) {
           target.querySelector('.wpstg--tooltiptext').style.visibility = 'visible';
         }, function (target, event) {
-          target.querySelector('.wpstg--tooltiptext').style.visibility = 'hidden';
+          if (!event.target.closest('.wpstg--tooltiptext a')) {
+            target.querySelector('.wpstg--tooltiptext').style.visibility = 'hidden';
+          }
         });
       },
       // Get the custom themed Swal Modal for WP Staging

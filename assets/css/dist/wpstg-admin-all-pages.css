@@ -48,6 +48,7 @@
 }
 
 .wpstg-require-free {
+  position: relative;
   background-color: #e01e5a;
   color: #fff;
   border: 1px solid white;
@@ -61,5 +62,14 @@
   margin-left: 10px;
   color: #fff;
   background-color: #1a73e8;
+  display: inline-flex;
+  align-items: center;
+}
+
+#wpstg-plugin-activation-loader {
+  content: url("../../img/wpstg-loader.gif");
+  height: 25px;
+  display: none;
+  margin-left: 10px;
 }
 /*# sourceMappingURL=wpstg-admin-all-pages.css.map */

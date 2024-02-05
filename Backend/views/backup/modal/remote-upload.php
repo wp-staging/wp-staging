@@ -7,6 +7,7 @@
 
 use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\UI\Checkbox;
 
 /** @var Providers */
 $storages = WPStaging::make(Providers::class);
@@ -36,8 +37,8 @@ $disabledProAttribute = $isProVersion ? '' : ' disabled';
                             $isProStorage  = empty($storage['authClass']);
                             $isDisabled    = !$isActivated || (!$isProVersion && $isProStorage);
                             $disabledClass = $isDisabled ? 'wpstg-storage-settings-disabled' : '';
+                            Checkbox::render('storage-upload-' . $storage['id'], 'storages', $storage['id'], false, ['isDisabled' => $isDisabled]);
                             ?>
-                            <input type="checkbox" class="wpstg-checkbox" name="storages" id="storage-<?php echo esc_attr($storage['id']) ?>" value="<?php echo esc_attr($storage['id']) ?>" <?php echo $isDisabled ? 'disabled' : '' ?> />
                             <span class="<?php echo esc_attr($disabledClass) ?>"><?php echo esc_html($storage['name']); ?></span>
                             <?php if (!$isProVersion && $isProStorage) { ?>
                                 <a href="https://wp-staging.com/get-<?php echo esc_attr($storage['id']) ?>" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging') ?></span></a>

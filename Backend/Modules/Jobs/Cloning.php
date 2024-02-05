@@ -219,29 +219,29 @@ class Cloning extends Job
         }
 
         $this->options->databaseServer = 'localhost';
-        if (!empty($_POST["databaseServer"])) {
+        if ($this->isPro() && !empty($_POST["databaseServer"])) {
             $this->options->databaseServer = $this->sanitize->sanitizeString($_POST["databaseServer"]);
         }
 
         $this->options->databaseUser = '';
-        if (!empty($_POST["databaseUser"])) {
+        if ($this->isPro() && !empty($_POST["databaseUser"])) {
             $this->options->databaseUser = $this->sanitize->sanitizeString($_POST["databaseUser"]);
         }
 
         $this->options->databasePassword = '';
-        if (!empty($_POST["databasePassword"])) {
+        if ($this->isPro() && !empty($_POST["databasePassword"])) {
             $this->options->databasePassword = $this->sanitize->sanitizePassword($_POST["databasePassword"]);
         }
 
         $this->options->databaseDatabase = '';
-        if (!empty($_POST["databaseDatabase"])) {
+        if ($this->isPro() && !empty($_POST["databaseDatabase"])) {
             $this->options->databaseDatabase = $this->sanitize->sanitizeString($_POST["databaseDatabase"]);
         }
 
         // isExternalDatabase() depends upon databaseUser and databasePassword,
         // Make sure they are set before calling this.
         $this->options->databasePrefix = $this->isExternalDatabase() ? $this->db->prefix : '';
-        if (!empty($_POST["databasePrefix"])) {
+        if ($this->isPro() && !empty($_POST["databasePrefix"])) {
             $this->options->databasePrefix = $this->maybeAppendUnderscorePrefix($this->sanitize->sanitizeString($_POST["databasePrefix"]));
         }
 

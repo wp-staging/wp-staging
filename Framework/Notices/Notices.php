@@ -10,6 +10,8 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
+use WPStaging\Framework\Database\WpOptionsInfo;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
@@ -103,6 +105,12 @@ class Notices
     /** @var bool */
     private $isWpComSite;
 
+    /** @var WpOptionsInfo */
+    private $wpOptionsInfo;
+
+    /**
+     * @param Assets $assets
+     */
     public function __construct(Assets $assets)
     {
         $this->assets           = $assets;
@@ -117,6 +125,7 @@ class Notices
         $this->logger          = WPStaging::make("logger");
         $this->cache           = WPStaging::make("cache");
         $this->db              = WPStaging::make('wpdb');
+        $this->wpOptionsInfo   = WPStaging::make(WpOptionsInfo::class);
 
         // Notices
         $this->disabledItemsNotice     = WPStaging::make(DisabledItemsNotice::class);
@@ -239,71 +248,6 @@ class Notices
     }
 
     /**
-     * Check whether the wp_options table is missing primary key | auto increment
-     * @param wpdb $db
-     * @param string $optionTable
-     *
-     * @return bool
-     */
-    private function isOptionTablePrimaryKeyMissing(wpdb $db, string $optionTable): bool
-    {
-        $result = $db->dbh->query("SELECT option_id FROM {$optionTable} LIMIT 1");
-        if (!is_object($result)) {
-            return false;
-        }
-
-        $fInfo = $result->fetch_field();
-        $result->free_result();
-
-        // Check whether the flag have primary key and auto increment flag
-        if (isset($fInfo->flags) && ($fInfo->flags & MYSQLI_PRI_KEY_FLAG) && $fInfo->flags & MYSQLI_AUTO_INCREMENT_FLAG) {
-            return false;
-        }
-
-        if ($this->isOptionTablePrimaryKeyIsOptionName($db, $optionTable)) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /** @return bool */
-    private function isOptionTablePrimaryKeyIsOptionName($db, $optionTable): bool
-    {
-        $result = $db->dbh->query("SELECT option_name FROM {$optionTable} LIMIT 1");
-        if (!is_object($result)) {
-            return false;
-        }
-
-        $fInfo = $result->fetch_field();
-        $result->free_result();
-
-        // Abort if flag has no primary key
-        if (!($fInfo->flags & MYSQLI_PRI_KEY_FLAG)) {
-            return false;
-        }
-
-        // Check if the field has a composite key
-        $results = $db->get_results("SELECT `CONSTRAINT_NAME`,`COLUMN_NAME` FROM `information_schema`.`KEY_COLUMN_USAGE` WHERE `table_name`='{$optionTable}' AND `table_schema`=DATABASE()", ARRAY_A);
-        if (empty($results) || !is_array($results)) {
-            return true;
-        }
-
-        $found = 0;
-        while ($row = array_shift($results)) {
-            if ($row['CONSTRAINT_NAME'] === 'PRIMARY' && in_array($row['COLUMN_NAME'], ['option_name', 'option_id'])) {
-                $found++;
-            }
-
-            if ($found > 1) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    /**
      * Displays the notice that we could not prevent
      * directory listing on a sensitive folder for some reason.
      *
@@ -409,9 +353,13 @@ class Notices
      */
     private function noticeDbHasMissingOrUnexpectedPrimaryKeys()
     {
+        if (Hooks::applyFilters('wpstg.notices.hideMissingPrimaryKeyNotice', false)) {
+            return;
+        }
+
         $optionTable              = $this->db->prefix . 'options';
-        $isPrimaryKeyMissing      = $this->isOptionTablePrimaryKeyMissing($this->db, $optionTable);
-        $isPrimaryKeyIsOptionName = $this->isOptionTablePrimaryKeyIsOptionName($this->db, $optionTable);
+        $isPrimaryKeyMissing      = $this->wpOptionsInfo->isOptionTablePrimaryKeyMissing($optionTable);
+        $isPrimaryKeyIsOptionName = $this->wpOptionsInfo->isPrimaryKeyIsOptionName($optionTable);
         if (self::SHOW_ALL_NOTICES || (current_user_can("manage_options") && ($isPrimaryKeyMissing || $isPrimaryKeyIsOptionName) && $this->isWPStagingAdminPage())) {
             require $this->viewsNoticesPath . "wp-options-missing-pk.php";
         }

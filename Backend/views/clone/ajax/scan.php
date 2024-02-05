@@ -13,6 +13,7 @@
 use WPStaging\Backend\Modules\Jobs\Job;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Sanitize;
+use WPStaging\Framework\Facades\UI\Checkbox;
 
 $isPro = defined('WPSTGPRO_VERSION');
 ?>
@@ -70,9 +71,11 @@ $isPro = defined('WPSTGPRO_VERSION');
     </fieldset>
 
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
-        <span class="wpstg-tab-triangle wpstg-no-icon"><input type="checkbox" class="wpstg-checkbox" name="wpstg-advanced" value="true"></span>
+        <span class="wpstg-tab-triangle wpstg-no-icon">
+            <?php Checkbox::render('', 'wpstg-advanced', 'true'); ?>
+        </span>
         <?php
-            $advanceSettingsTitle = $isPro ? esc_html__("Advanced Settings  ", "wp-staging") : esc_html__('Advanced Settings  (Requires Pro Version)', "wp-staging");
+        $advanceSettingsTitle = $isPro ? esc_html__("Advanced Settings  ", "wp-staging") : esc_html__('Advanced Settings  (Requires Pro Version)', "wp-staging");
             echo esc_html($advanceSettingsTitle); ?>
     </a>
 
@@ -98,7 +101,7 @@ if ($options->current !== null && $options->mainJob === Job::UPDATE) {
 <fieldset class="wpstg-fieldset" style="margin-left: 16px;">
     <p class="wpstg--advance-settings--checkbox">
         <label for="wpstg-clean-plugins-themes"><?php esc_html_e('Clean Plugins/Themes', 'wp-staging'); ?></label>
-        <input type="checkbox" class="wpstg-checkbox" id="wpstg-clean-plugins-themes" name="wpstg-clean-plugins-themes" value="true">
+        <?php Checkbox::render('wpstg-clean-plugins-themes', 'wpstg-clean-plugins-themes', 'true'); ?>
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
             <span class="wpstg--tooltiptext">
@@ -108,7 +111,7 @@ if ($options->current !== null && $options->mainJob === Job::UPDATE) {
     </p>
     <p class="wpstg--advance-settings--checkbox">
         <label for="wpstg-clean-uploads"><?php esc_html_e('Clean Uploads', 'wp-staging'); ?></label>
-        <input type="checkbox" class="wpstg-checkbox" id="wpstg-clean-uploads" name="wpstg-clean-uploads" value="true">
+        <?php Checkbox::render('wpstg-clean-uploads', 'wpstg-clean-uploads', 'true'); ?>
         <span class="wpstg--tooltip">
             <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
             <span class="wpstg--tooltiptext">

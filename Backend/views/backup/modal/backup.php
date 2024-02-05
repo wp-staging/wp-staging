@@ -10,6 +10,7 @@
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Framework\Utils\Times;
 use WPStaging\Basic\Ajax\ProCronsCleaner;
 
@@ -46,25 +47,25 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
         <!-- BACKUP CHECKBOXES -->
         <div class="wpstg-advanced-options-site">
             <label>
-                <input type="checkbox" class="wpstg-checkbox" name="includedDirectories[]" id="includeMediaLibraryInBackup" value="<?php echo esc_attr($directories['uploads']); ?>" checked/>
+                <?php Checkbox::render('includeMediaLibraryInBackup', 'includedDirectories[]', $directories['uploads'], true); ?>
                 <?php esc_html_e('Backup Media Library', 'wp-staging') ?>
             </label>
             <label>
-                <input type="checkbox" class="wpstg-checkbox" name="includedDirectories[]" id="includeThemesInBackup" value="<?php echo esc_attr($directories['themes']); ?>" checked/>
+                <?php Checkbox::render('includeThemesInBackup', 'includedDirectories[]', $directories['themes'], true); ?>
                 <?php esc_html_e('Backup Themes', 'wp-staging') ?>
             </label>
             <label>
-                <input type="checkbox" class="wpstg-checkbox" name="includedDirectories[]" id="includeMuPluginsInBackup" value="<?php echo esc_attr($directories['muPlugins']); ?>" checked/>
+                <?php Checkbox::render('includeMuPluginsInBackup', 'includedDirectories[]', $directories['muPlugins'], true); ?>
                 <?php esc_html_e('Backup Must-Use Plugins', 'wp-staging') ?>
             </label>
             <label>
-                <input type="checkbox" class="wpstg-checkbox" name="includedDirectories[]" id="includePluginsInBackup" value="<?php echo esc_attr($directories['plugins']); ?>" checked/>
+                <?php Checkbox::render('includePluginsInBackup', 'includedDirectories[]', $directories['plugins'], true); ?>
                 <?php esc_html_e('Backup Plugins', 'wp-staging') ?>
             </label>
             <label>
-                <input type="checkbox" class="wpstg-checkbox" name="includeOtherFilesInWpContent" id="includeOtherFilesInWpContent" value="true" checked/>
+                <?php Checkbox::render('includeOtherFilesInWpContent', 'includeOtherFilesInWpContent', 'true', true); ?>
                 <?php esc_html_e('Backup Other Files In wp-content', 'wp-staging') ?>
-                <div class="wpstg--tooltip" style="position: absolute;">
+                <div class="wpstg--tooltip">
                     <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
                     <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
                             <?php esc_html_e('All files in folder wp-content that are not plugins, themes, mu-plugins and uploads. Recommended for full-site backups.', 'wp-staging') ?>
@@ -72,17 +73,17 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                 </div>
             </label>
             <label>
-                <input type="checkbox" class="wpstg-checkbox" name="backup_database" id="includeDatabaseInBackup" value="true" checked/>
+                <?php Checkbox::render('includeDatabaseInBackup', 'backup_database', 'true', true); ?>
                 <?php esc_html_e('Backup Database', 'wp-staging') ?>
-                <div class="wpstg--tooltip" style="position: absolute;">
+                <div class="wpstg--tooltip">
                     <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
                     <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
                             <?php
-                                printf(
-                                    esc_html__('This will backup all database tables starting with the prefix "%s". To backup a staging site, run the backup function again on the staging site', 'wp-staging'),
-                                    isset($GLOBALS['wpdb']->prefix) ? esc_html($GLOBALS['wpdb']->prefix) : 'wp_'
-                                );
-                                ?>
+                            printf(
+                                esc_html__('This will backup all database tables starting with the prefix "%s". To backup a staging site, run the backup function again on the staging site', 'wp-staging'),
+                                isset($GLOBALS['wpdb']->prefix) ? esc_html($GLOBALS['wpdb']->prefix) : 'wp_'
+                            );
+                            ?>
                     </span>
                 </div>
                 <div id="backupUploadsWithoutDatabaseWarning" style="display:none;">
@@ -107,8 +108,13 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
 
                 <div class="wpstg-container">
                     <label class="wpstg-storage-option">
-                        <input type="checkbox" class="wpstg-checkbox <?php echo $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic' ?>" name="smartExclusion" id="wpstgSmartExclusion"
-                               onchange="WPStaging.handleDisplayDependencies(this)">
+                        <?php
+                        $attributes = [
+                            'classes' => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
+                            'onChange' => 'WPStaging.handleDisplayDependencies(this)',
+                        ];
+                        Checkbox::render('wpstgSmartExclusion', 'smartExclusion', '', false, $attributes);
+                        ?>
                         <span class="<?php echo esc_attr($disabledClass) ?>">
                             <?php esc_html_e('Add Exclusions', 'wp-staging'); ?>
                         </span>
@@ -131,8 +137,15 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                 <div class="wpstg-backup-scheduling-options wpstg-container <?php echo esc_attr($classPropertyHasScheduleAndIsFree); ?>">
 
                     <label>
-                        <input type="checkbox" class="wpstg-checkbox <?php echo $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic' ?>" name="repeatBackupOnSchedule" id="repeatBackupOnSchedule" value="1" checked
-                               onchange="WPStaging.handleDisplayDependencies(this)" <?php echo ($hasSchedule && !$isProVersion) ? 'disabled' : '' ?>>
+                        <?php
+                        $attributes = [
+                            'classes' => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
+                            'onChange' => 'WPStaging.handleDisplayDependencies(this)',
+                            'isDisabled' => ($hasSchedule && !$isProVersion),
+                        ];
+                        Checkbox::render('repeatBackupOnSchedule', 'repeatBackupOnSchedule', '1', true, $attributes);
+                        ?>
+
                         <?php esc_html_e('One-Time Backup', 'wp-staging'); ?>
                     </label>
 
@@ -156,7 +169,7 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                 <div class="wpstg-backup-scheduling-options wpstg-container">
 
                     <label class="wpstg-storage-option">
-                        <input type="checkbox" class="wpstg-checkbox" name="storages" id="storage-localStorage" value="localStorage" checked/>
+                        <?php Checkbox::render("storage-localStorage", 'storages', 'localStorage', true); ?>
                         <span><?php esc_html_e('Local Storage', 'wp-staging'); ?></span>
                     </label>
 
@@ -167,8 +180,8 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                             $isProStorage  = empty($storage['authClass']);
                             $isDisabled    = !$isActivated || (!$isProVersion && $isProStorage);
                             $disabledClass = $isDisabled ? 'wpstg-storage-settings-disabled' : '';
+                            Checkbox::render('storage-' . $storage['id'], 'storages', $storage['id'], false, ['isDisabled' => $isDisabled]);
                             ?>
-                            <input type="checkbox" class="wpstg-checkbox" name="storages" id="storage-<?php echo esc_attr($storage['id']) ?>" value="<?php echo esc_attr($storage['id']) ?>" <?php echo $isDisabled ? 'disabled' : '' ?> />
                             <span class="<?php echo esc_attr($disabledClass) ?>"><?php echo esc_html($storage['name']); ?></span>
                             <?php if (!$isProVersion && $isProStorage) { ?>
                                 <a href="https://wp-staging.com/get-<?php echo esc_attr($storage['id']) ?>" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging') ?></span></a>

@@ -7,6 +7,7 @@
 namespace WPStaging\Framework\Utils\Cache;
 
 use LimitIterator;
+use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Framework\Exceptions\IOException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Filesystem\FileObject;
@@ -55,7 +56,7 @@ class BufferedCache extends AbstractCache
             return null;
         }
 
-        $first = '';
+        $first  = '';
         $offset = 0;
         clearstatcache();
         $len = filesize($this->filePath);
@@ -220,9 +221,9 @@ class BufferedCache extends AbstractCache
     /**
      * @param resource $source
      * @param int $offset
-     * @throws DiskNotWritableException
+     * @return int Bytes written
      * @throws \RuntimeException
-     * @return int
+     * @throws DiskNotWritableException
      */
     public function appendFile($source, $offset = 0)
     {
@@ -440,7 +441,7 @@ class BufferedCache extends AbstractCache
      * @param resource $source
      * @param resource $target
      * @param int $offset
-     * @return int
+     * @return int Bytes written
      * @throws DiskNotWritableException
      * @throws \RuntimeException If you can't read chunk from file
      */
@@ -449,6 +450,7 @@ class BufferedCache extends AbstractCache
         $stats             = fstat($source);
         $bytesWrittenTotal = $offset;
         fseek($source, $offset);
+
         while (!$this->isThreshold() && !feof($source)) {
             $chunk = fread($source, $this->chunkReadingSizeForAppendingFile);
 

@@ -1,6 +1,9 @@
 <?php
 
 use WPStaging\Framework\Facades\Escape;
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Settings\Settings;
+use WPStaging\Framework\Facades\UI\Checkbox;
 
 ?>
 
@@ -28,8 +31,7 @@ use WPStaging\Framework\Facades\Escape;
                     <tr class="wpstg-settings-row">
                         <th class="wpstg-settings-row th" colspan="2">
                             <div class="col-title">
-                                <strong><?php
-                                    echo esc_html($name) ?></strong>
+                                <strong><?php echo esc_html($name); ?></strong>
                                 <span class="description"></span>
                             </div>
                         </th>
@@ -40,9 +42,7 @@ use WPStaging\Framework\Facades\Escape;
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[queryLimit]")
-                                ?>
+                                <?php $form->renderLabel("wpstg_settings[queryLimit]"); ?>
                                 <span class="description">
                                         <?php
                                         esc_html_e(
@@ -58,16 +58,13 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[queryLimit]") ?>
+                            <?php $form->renderInput("wpstg_settings[queryLimit]"); ?>
                         </td>
                     </tr>
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[querySRLimit]")
-                                ?>
+                                <?php $form->renderLabel("wpstg_settings[querySRLimit]"); ?>
                                 <span class="description">
                                         <?php
                                         esc_html_e(
@@ -82,17 +79,14 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[querySRLimit]") ?>
+                            <?php $form->renderInput("wpstg_settings[querySRLimit]"); ?>
                         </td>
                     </tr>
 
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[fileLimit]")
-                                ?>
+                                <?php $form->renderLabel("wpstg_settings[fileLimit]"); ?>
                                 <span class="description">
                                         <?php
                                         esc_html_e(
@@ -114,16 +108,14 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[fileLimit]") ?>
+                            <?php $form->renderInput("wpstg_settings[fileLimit]"); ?>
                         </td>
                     </tr>
 
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[maxFileSize]") ?>
+                                <?php $form->renderLabel("wpstg_settings[maxFileSize]"); ?>
                                 <span class="description">
                                         <?php
                                         esc_html_e(
@@ -136,15 +128,13 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[maxFileSize]") ?>
+                            <?php $form->renderInput("wpstg_settings[maxFileSize]"); ?>
                         </td>
                     </tr>
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[batchSize]") ?>
+                                <?php $form->renderLabel("wpstg_settings[batchSize]"); ?>
                                 <span class="description">
                                         <?php
                                         esc_html_e(
@@ -162,16 +152,14 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[batchSize]") ?>
+                            <?php $form->renderInput("wpstg_settings[batchSize]"); ?>
                         </td>
                     </tr>
 
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[cpuLoad]") ?>
+                                <?php $form->renderLabel("wpstg_settings[cpuLoad]"); ?>
                                 <span class="description">
                                         <?php
                                         echo sprintf(esc_html__(
@@ -185,8 +173,7 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[cpuLoad]") ?>
+                            <?php $form->renderInput("wpstg_settings[cpuLoad]"); ?>
                         </td>
                     </tr>
                     <?php
@@ -195,8 +182,7 @@ use WPStaging\Framework\Facades\Escape;
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
-                                    <?php
-                                    $form->renderLabel("wpstg_settings[disableAdminLogin]") ?>
+                                    <?php $form->renderLabel("wpstg_settings[disableAdminLogin]"); ?>
                                     <span class="description">
                                         Remove the requirement to login to the staging site.
                                         <strong>Note:</strong> The staging site always discourages search engines from indexing the site by setting the 'noindex' tag into header of the staging site.
@@ -204,8 +190,7 @@ use WPStaging\Framework\Facades\Escape;
                                 </div>
                             </td>
                             <td>
-                                <?php
-                                $form->renderInput("wpstg_settings[disableAdminLogin]") ?>
+                                <?php $form->renderInput("wpstg_settings[disableAdminLogin]"); ?>
                             </td>
                         </tr>
                         <?php
@@ -217,8 +202,7 @@ use WPStaging\Framework\Facades\Escape;
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
-                                    <?php
-                                    $form->renderLabel("wpstg_settings[keepPermalinks]") ?>
+                                    <?php $form->renderLabel("wpstg_settings[keepPermalinks]"); ?>
                                     <span class="description">
                                         <?php
                                         echo wp_kses_post(sprintf(
@@ -232,8 +216,7 @@ use WPStaging\Framework\Facades\Escape;
                                 </div>
                             </td>
                             <td>
-                                <?php
-                                $form->renderInput("wpstg_settings[keepPermalinks]") ?>
+                                <?php $form->renderInput("wpstg_settings[keepPermalinks]"); ?>
                             </td>
                         </tr>
                         <?php
@@ -242,8 +225,7 @@ use WPStaging\Framework\Facades\Escape;
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[debugMode]") ?>
+                                <?php $form->renderLabel("wpstg_settings[debugMode]"); ?>
                                 <span class="description">
                                         <?php
                                         esc_html_e(
@@ -258,15 +240,13 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[debugMode]") ?>
+                            <?php $form->renderInput("wpstg_settings[debugMode]"); ?>
                         </td>
                     </tr>
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[optimizer]") ?>
+                                <?php $form->renderLabel("wpstg_settings[optimizer]"); ?>
                                 <span class="description">
                                         <?php
                                         esc_html_e(
@@ -278,15 +258,13 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[optimizer]") ?>
+                            <?php $form->renderInput("wpstg_settings[optimizer]"); ?>
                         </td>
                     </tr>
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[unInstallOnDelete]") ?>
+                                <?php $form->renderLabel("wpstg_settings[unInstallOnDelete]"); ?>
                                 <span class="description">
                                         <?php
                                         esc_html_e(
@@ -298,16 +276,14 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[unInstallOnDelete]") ?>
+                            <?php $form->renderInput("wpstg_settings[unInstallOnDelete]"); ?>
                         </td>
                     </tr>
 
                     <tr class="wpstg-settings-row">
                         <td class="wpstg-settings-row th">
                             <div class="col-title">
-                                <?php
-                                $form->renderLabel("wpstg_settings[checkDirectorySize]") ?>
+                                <?php $form->renderLabel("wpstg_settings[checkDirectorySize]"); ?>
                                 <span class="description">
                                         <?php
                                         echo sprintf(esc_html__(
@@ -320,8 +296,7 @@ use WPStaging\Framework\Facades\Escape;
                             </div>
                         </td>
                         <td>
-                            <?php
-                            $form->renderInput("wpstg_settings[checkDirectorySize]") ?>
+                            <?php $form->renderInput("wpstg_settings[checkDirectorySize]"); ?>
                         </td>
                     </tr>
                     <?php
@@ -330,8 +305,7 @@ use WPStaging\Framework\Facades\Escape;
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
-                                    <?php
-                                    $form->renderLabel("wpstg_settings[userRoles][]") ?>
+                                    <?php $form->renderLabel("wpstg_settings[userRoles][]"); ?>
                                     <span class="description">
                                         <?php
                                         echo Escape::escapeHtml(__(
@@ -342,15 +316,13 @@ use WPStaging\Framework\Facades\Escape;
                                 </div>
                             </td>
                             <td>
-                                <?php
-                                $form->renderInput("wpstg_settings[userRoles][]") ?>
+                                <?php $form->renderInput("wpstg_settings[userRoles][]"); ?>
                             </td>
                         </tr>
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
-                                    <?php
-                                    $form->renderLabel("wpstg_settings[usersWithStagingAccess]") ?>
+                                    <?php $form->renderLabel("wpstg_settings[usersWithStagingAccess]"); ?>
                                     <span class="description">
                                         <?php
                                         echo Escape::escapeHtml(__(
@@ -361,28 +333,25 @@ use WPStaging\Framework\Facades\Escape;
                                 </div>
                             </td>
                             <td>
-                                <?php
-                                $form->renderInput("wpstg_settings[usersWithStagingAccess]") ?>
+                                <?php $form->renderInput("wpstg_settings[usersWithStagingAccess]"); ?>
                             </td>
                         </tr>
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
-                                    <?php
-                                    $form->renderLabel("wpstg_settings[adminBarColor]") ?>
+                                    <?php $form->renderLabel("wpstg_settings[adminBarColor]"); ?>
                                     <span class="description">
                                     </span>
                                 </div>
                             </td>
                             <td>
-                                <?php
-                                $form->renderInput("wpstg_settings[adminBarColor]") ?>
+                                <?php $form->renderInput("wpstg_settings[adminBarColor]"); ?>
                             </td>
                         </tr>
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
-                                    <strong><?php esc_html_e('Send Usage Information', 'wp-staging') ?></strong>
+                                    <strong><?php esc_html_e('Send Usage Information', 'wp-staging'); ?></strong>
                                     <span class="description">
                                         <?php
                                         esc_html_e(
@@ -409,32 +378,7 @@ use WPStaging\Framework\Facades\Escape;
                             </td>
                         </tr>
                         <?php
-                        if (WPStaging\Core\WPStaging::isPro()) :
-                            ?>
-                            <tr class="wpstg-settings-row">
-                                <td class="wpstg-settings-row th">
-                                    <b class="wpstg-settings-title"><?php esc_html_e('Send Email Error Report', 'wp-staging') ?></b>
-                                    <p class="wpstg-settings-message">
-                                        <?php esc_html_e('If a scheduled backup fails, send an email.', 'wp-staging') ?>
-                                    </p>
-                                </td>
-                                <td>
-                                    <input type="checkbox" id="wpstg-send-schedules-error-report" name="wpstg_settings[schedulesErrorReport]" class="wpstg-checkbox wpstg-settings-field" value="true" <?php echo get_option(WPStaging\Backup\BackupScheduler::BACKUP_SCHEDULE_ERROR_REPORT_OPTION) === 'true' ? 'checked' : '' ?> />
-                                </td>
-                            </tr>
-                            <tr class="wpstg-settings-row">
-                                <td>
-                                    <b class="wpstg-settings-title"><?php esc_html_e('Email Address', 'wp-staging') ?></b>
-                                    <p class="wpstg-settings-message">
-                                        <?php esc_html_e('Send emails to this address', 'wp-staging') ?>
-                                    </p>
-                                </td>
-                                <td>
-                                    <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(WPStaging\Backup\BackupScheduler::BACKUP_SCHEDULE_REPORT_EMAIL_OPTION)) ?>"/>
-                                </td>
-                            </tr>
-                            <?php
-                        endif;
+                        Hooks::doAction(Settings::ACTION_WPSTG_PRO_SETTINGS, $form);
                         // show this option only on the staging site
                         if ($this->siteInfo->isStagingSite()) :
                             ?>
@@ -447,7 +391,7 @@ use WPStaging\Framework\Facades\Escape;
                                     </p>
                                 </td>
                                 <td>
-                                    <input type="checkbox" id="wpstg-is-staging-cloneable" name="wpstg_settings[isStagingSiteCloneable]" class="wpstg-checkbox wpstg-settings-field" value="true" <?php echo $this->siteInfo->isCloneable() ? 'checked' : '' ?> />
+                                    <?php Checkbox::render('wpstg-is-staging-cloneable', 'wpstg_settings[isStagingSiteCloneable]', 'true', $this->siteInfo->isCloneable(), ['classes' => 'wpstg-settings-field']); ?>
                                 </td>
                             </tr>
 
@@ -461,7 +405,7 @@ use WPStaging\Framework\Facades\Escape;
             <?php
         endforeach;
         ?>
-            <input type="submit" name="submit" id="submit" class="wpstg-button wpstg-blue-primary" value="<?php esc_html_e('Save Changes', 'wp-staging'); ?>">
+        <input type="submit" name="submit" id="submit" class="wpstg-button wpstg-blue-primary" value="<?php esc_html_e('Save Changes', 'wp-staging'); ?>">
         <?php
         unset($tabs);
         ?>
