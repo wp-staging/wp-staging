@@ -9,6 +9,7 @@ namespace WPStaging\Vendor\lucatume\DI52\Builders;
 
 use WPStaging\Vendor\lucatume\DI52\ContainerException;
 use WPStaging\Vendor\lucatume\DI52\NotFoundException;
+use ReflectionException;
 use ReflectionMethod;
 /**
  * Class ClassBuilder
@@ -36,7 +37,7 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
     /**
      * The fully-qualified class name the builder should build instances of.
      *
-     * @var string
+     * @var class-string
      */
     protected $className;
     /**
@@ -52,14 +53,21 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
      */
     protected $resolver;
     /**
+     * Whether the $className is an implementation of $id
+     * and $id is an interface.
+     *
+     * @var bool
+     */
+    protected $isInterface = \false;
+    /**
      * ClassBuilder constructor.
      *
-     * @param string             $id                The identifier associated with this builder.
-     * @param Resolver           $resolver          A reference to the resolver currently using the builder.
-     * @param string             $className         The fully-qualified class name to build instances for.
-     * @param array<string>|null $afterBuildMethods An optional set of methods to call on the built object.
-     * @param mixed              ...$buildArgs      An optional set of build arguments that should be provided to the
-     *                                              class constructor method.
+     * @param string|class-string $id                   The identifier associated with this builder.
+     * @param Resolver            $resolver             A reference to the resolver currently using the builder.
+     * @param string              $className            The fully-qualified class name to build instances for.
+     * @param array<string>|null  $afterBuildMethods    An optional set of methods to call on the built object.
+     * @param mixed               ...$buildArgs         An optional set of build arguments that should be provided to
+     *                                                  the class constructor method.
      *
      * @throws NotFoundException If the class does not exist.
      */
@@ -67,6 +75,10 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
     {
         if (!\class_exists($className)) {
             throw new \WPStaging\Vendor\lucatume\DI52\NotFoundException("nothing is bound to the '{$className}' id and it's not an existing or instantiable class.");
+        }
+        $interfaces = \class_implements($className);
+        if ($interfaces && isset($interfaces[$id])) {
+            $this->isInterface = \true;
         }
         $this->id = $id;
         $this->className = $className;
@@ -78,6 +90,8 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
      * Builds and returns an instance of the class.
      *
      * @return object An instance of the class.
+     *
+     * @throws ContainerException
      */
     public function build()
     {
@@ -118,7 +132,8 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
     /**
      * Returns a set of resolved constructor parameters.
      *
-     * @param string $className The fully-qualified class name to get the resolved constructor parameters yet.
+     * @param  class-string  $className  The fully-qualified class name to get the resolved constructor parameters yet.
+     *
      * @return array<Parameter> A set of resolved constructor parameters.
      *
      * @throws ContainerException If the resolution of any constructor parameters is problematic.
@@ -151,6 +166,8 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
      * @param mixed $arg The argument id or value to resolve.
      *
      * @return mixed The resolved build argument.
+     *
+     * @throws NotFoundException
      */
     protected function resolveBuildArg($arg)
     {
@@ -173,17 +190,19 @@ class ClassBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\BuilderIn
         $paramClass = $parameter->getClass();
         if ($paramClass) {
             $parameterImplementation = $this->resolver->whenNeedsGive($this->id, $paramClass);
-            $resolved = $parameterImplementation instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface ? $parameterImplementation->build() : $this->resolver->resolve($parameterImplementation);
+        } elseif ($this->isInterface) {
+            $name = $parameter->getName();
+            // If an interface was requested, resolve the underlying concrete class instead.
+            $parameterImplementation = $this->resolver->whenNeedsGive($this->className, "\${$name}");
         } else {
             $name = $parameter->getName();
             $parameterImplementation = $this->resolver->whenNeedsGive($this->id, "\${$name}");
-            try {
-                $resolved = $parameterImplementation instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface ? $parameterImplementation->build() : $this->resolver->resolve($parameterImplementation);
-            } catch (\WPStaging\Vendor\lucatume\DI52\NotFoundException $e) {
-                $resolved = $parameter->getDefaultValueOrFail();
-            }
         }
-        return $resolved;
+        try {
+            return $parameterImplementation instanceof \WPStaging\Vendor\lucatume\DI52\Builders\BuilderInterface ? $parameterImplementation->build() : $this->resolver->resolve($parameterImplementation);
+        } catch (\WPStaging\Vendor\lucatume\DI52\NotFoundException $e) {
+            return $parameter->getDefaultValueOrFail();
+        }
     }
     /**
      * {@inheritdoc}

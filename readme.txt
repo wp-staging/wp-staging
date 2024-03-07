@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup, move
 Requires at least: 3.6+
 Tested up to: 6.4
-Stable tag: 3.3.3
+Stable tag: 3.4.0
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -270,6 +270,47 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.4.0 =
+* New: Add option to create a new admin user account for your staging site during it's creation. #3087
+* New: Add option to use non-blocking process for uploading to FTP storage when using FTP extension to upload. #3103
+* New: Add advanced excludes option at WP CLI backup-create command. #3114
+* New: Add 'Delete Settings' button within the storage provider interface to facilitate the removal of the cloud provider configuration. #3108
+* New: Add support for Search Replace of urls in content of network subsites. #2960
+* New: Add option on edit staging site page for testing database connection. #3106
+* New: If uploads folder is symlinked exclude it from disk space calculation before creating a staging site. #3092
+* Enh: Update look and feel of backup scheduling modal. #3090
+* Enh: Add page loader for each page of the user interface. #3142
+* Enh: Add new upgrade buttons to header and license page. #3135
+* Enh: Add more information like database name to system information. #3125
+* Enh: Avoid scanning of excluded directories during the push process. #3049
+* Fix: Fatal error on old WordPress 4.4.32 due to using of get_current_network_id(). #3174
+* Fix: Base prefix wrongly replaced for users and usermeta tables in views when creating backup of views in multisite subsite. #3128
+* Fix: Prevent error while directory listing protection due to open_basedir restriction. #3180
+* Fix: Update free version plugin meta description to "Required by WP Staging Pro". #3171
+* Fix: Remove redundant admin notices for invalid license keys during activation. #3139
+* Security: Fix a potential security error and add better sanitizing for backup title. #3152
+* Fix: Make sure EDD license checks are triggered only once. #3179
+* Fix: Google drive authentication not working properly under all circumstances. #3156
+* Fix: Selected custom tables on a staging site that had a different prefix than the prefix in the wp-config.php could not be pushed anymore. #3170
+* Fix: Prefix for user capabilities was not replaced when creating a backup of network subsite. #3129
+* Fix: The "Prefix" field was empty for listed staging sites if they were created in an external database and the prefix was not specified. #3166
+* Fix: The optimizer setting was shown as disabled, even if it was still active. #3151
+* Fix: Add loading icon beside 'Refresh License Status' button and adjusted loading bars on licensing page. #3185
+* Fix: Super (network) admins were not able to login with when network subsite backup was restored on a single site. #3191
+* Fix: Reference Error `wpstgPro is not defined` during staging site creation on FREE version. #3136
+* Fix: Make sure that backup plugin notice doesn't overlap Create Staging Site button in UI. #3148
+* Fix: List of active plugins in system info is misleading. #2996
+* Fix: Make sure that mail setting page looks good on all screen resolutions. #3094
+* Fix: Incorrect process modal title for preserving data task. #3130
+* Fix: DRY properties in BackupMetadata and remove error message "trying to hydrate dto errors BackupMetadata::setCurrentNetworkId()" #3199
+* Dev: Update DI52 library to latest version for small performance gain. #3146
+* Dev: Fix missing adminer host on wpstg command. #3120
+* Dev: Load Basic or Pro service provider once other dependencies are loaded. #3160
+* Dev: Populate dev hosts from env variables to add to hosts file. #3122
+* Dev: Add adminer to dev tools for database management. #3112
+* Dev: Fast test fails on GitHub due to the missing of 'wpstgBackupHeader.txt' file, checksum needed to be updated each time. #3110
+* Dev: Update Github actions to latest version that uses Node 20 to avoid deprecation message Github CI. #3200
 
 = 3.3.3 =
 * New: Support for WordPress 6.4.3
@@ -1027,4 +1068,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-New support for WordPress.com hosts. Multiple security enhancements. Updating is recommended!
+Multiple enhancements in UI and performance. Fixing a potential security issue and small fixes. Updating is recommended!

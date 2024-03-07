@@ -805,6 +805,18 @@
       slugify: function slugify(url) {
         return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
       },
+      sanitizeEventAttribute: function sanitizeEventAttribute(string) {
+        if (string === null) {
+          return string;
+        }
+        return string.toString().replace(/("|')\s+on([a-z]+)\s?=\s?([a-z0-9\)\(\"\';]+)/i, '');
+      },
+      htmlEntityQuotesDecode: function htmlEntityQuotesDecode(string) {
+        if (string === null) {
+          return string;
+        }
+        return string.toString().replace(/\\"/g, '&quot;').replace(/\\'/g, '&#039');
+      },
       showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
         prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
         appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
@@ -957,6 +969,19 @@
     return document.querySelector(selector);
   }
 
+  /**
+   * Hides elements in the DOM that match the given selector by setting their display style to 'none'.
+   *
+   * @param {string} selector - CSS selector for the elements to be hidden.
+   * @return {void}
+   */
+  function hide(selector) {
+    var elements = document.querySelectorAll(selector);
+    elements.forEach(function (element) {
+      element.style.display = 'none';
+    });
+  }
+
   var BackupPluginsNotice = /*#__PURE__*/function () {
     function BackupPluginsNotice(wpstgObject) {
       if (wpstgObject === void 0) {
@@ -1010,9 +1035,15 @@
       }).then(function (data) {
         if (data.success) {
           qs('.wpstg-backup-plugin-notice-container').style.opacity = 0;
+          setTimeout(function () {
+            hide('.wpstg-backup-plugin-notice-container');
+          }, 500);
         }
       })["catch"](function (error) {
         qs('.wpstg-backup-plugin-notice-container').style.opacity = 0;
+        setTimeout(function () {
+          hide('.wpstg-backup-plugin-notice-container');
+        }, 500);
       });
     };
     return BackupPluginsNotice;

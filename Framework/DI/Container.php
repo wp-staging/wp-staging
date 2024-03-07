@@ -5,8 +5,10 @@ namespace WPStaging\Framework\DI;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Framework\DI\Resolver;
 use WPStaging\Vendor\lucatume\DI52\Builders\Factory;
+use WPStaging\Vendor\Psr\Container\ContainerInterface;
+use WPStaging\Vendor\lucatume\DI52\Container as BaseContainer;
 
-class Container extends \WPStaging\Vendor\lucatume\DI52\Container
+class Container extends BaseContainer
 {
     /**
      * @var string The PSR-4 namespace prefix we use to isolate third-party dependencies.
@@ -14,13 +16,21 @@ class Container extends \WPStaging\Vendor\lucatume\DI52\Container
     protected $prefix = 'WPStaging\\Vendor\\';
 
     /**
-     * @inheritDoc
+     * Somehow the singleton version of this child container is not working on unit tests with 3.3.5 version of DI52
+     * so we have to use the parent container to make it work for unit tests.
+     * @param bool $resolveUnboundAsSingletons
+     * @param bool $useBaseContainer
      */
-    public function __construct($resolveUnboundAsSingletons = false)
+    public function __construct($resolveUnboundAsSingletons = false, $useBaseContainer = false)
     {
-        parent::__construct($resolveUnboundAsSingletons);
+        if ($useBaseContainer) {
+            parent::__construct($resolveUnboundAsSingletons);
+            return;
+        }
+
         $this->resolver = new Resolver($resolveUnboundAsSingletons);
         $this->builders = new Factory($this, $this->resolver);
+        $this->bindThis();
     }
 
     /**
@@ -148,5 +158,17 @@ class Container extends \WPStaging\Vendor\lucatume\DI52\Container
         }
 
         parent::singleton($classOrInterface, $implementation, $afterBuildMethods);
+    }
+
+    /**
+     * Binds the container to the base class name, the current class name and the container interface.
+     * Re-adding again from the Parent Container class with some adjustments so it can be called in constructor to keep the container instance singleton
+     * @return void
+     */
+    private function bindThis()
+    {
+        $this->singleton(ContainerInterface::class, $this);
+        $this->singleton(BaseContainer::class, $this);
+        $this->singleton(Container::class, $this);
     }
 }

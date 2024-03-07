@@ -120,8 +120,10 @@ class DatabaseBackupTask extends BackupTask
         /** @var RowsExporter $rowsExporter */
         $rowsExporter = WPStaging::make(RowsExporterProvider::class)->getExporter();
         $rowsExporter->setSubsites($subsites);
-        $rowsExporter->setupPrefixedValuesForSubsites();
         $rowsExporter->setIsNetworkSiteBackup($this->jobDataDto->getIsNetworkSiteBackup());
+        $rowsExporter->setSubsiteBlogId($this->jobDataDto->getSubsiteBlogId());
+        $rowsExporter->prefixSpecialFields();
+        $rowsExporter->setupPrefixedValuesForSubsites();
         $rowsExporter->setFileName($this->jobDataDto->getDatabaseFile());
         $rowsExporter->setTables($this->jobDataDto->getTablesToBackup());
         $rowsExporter->setIsBackupSplit($this->jobDataDto->getIsMultipartBackup());

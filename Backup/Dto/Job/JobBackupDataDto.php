@@ -457,7 +457,7 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     }
 
     /**
-     * @return string
+     * @return string|null
      */
     public function getScheduleId()
     {

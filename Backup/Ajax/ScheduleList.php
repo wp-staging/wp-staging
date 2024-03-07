@@ -64,7 +64,7 @@ class ScheduleList
                 <tr>
                     <td>
 
-                        <div class="wpstg--tooltip wpstg--edit-backup-schedule" data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>">
+                        <div class="wpstg--edit-backup-schedule" data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>">
                             <span class="wpstg--edit-timer-highlight"  data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>">
                                 <?php echo esc_html(Cron::getCronDisplayName($schedule['schedule'])); ?>
                                 <?php esc_html_e(' at ', 'wp-staging') ?><?php echo $hourAndMinute->format(get_option('time_format')); ?>

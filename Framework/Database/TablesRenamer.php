@@ -21,32 +21,59 @@ class TablesRenamer
     /** @var TableService */
     private $tableService;
 
-    // eg: ['wp123456_options']
-    /** @var array */
+    /**
+     * eg: ['wpstgtmp_options']
+     * @var array [
+     *  'tables' => string[],
+     *  'views' => string[],
+     *  'custom' => string[]
+     * ]
+     */
     protected $tablesBeingRenamed = [];
 
-    // eg: ['options']
-    /** @var array */
+    /**
+     * eg: ['options']
+     * @var array [
+     *  'tables' => string[],
+     *  'views' => string[],
+     *  'custom' => string[]
+     * ]
+     */
     protected $tablesBeingRenamedUnprefixed = [];
 
-    // eg: ['wp_options']
-    /** @var array */
+    /**
+     * eg: ['wp_options']
+     * @var array [
+     *  'tables' => string[],
+     *  'views' => string[],
+     *  'custom' => string[]
+     * ]
+     */
     protected $existingTables = [];
 
-    // eg: ['options']
-    /** @var array */
+    /**
+     * eg: ['options']
+     * @var array [
+     *  'tables' => string[],
+     *  'views' => string[],
+     *  'custom' => string[]
+     * ]
+     */
     protected $existingTablesUnprefixed = [];
 
-    /** @var array */
+    /** @var string[] */
+    protected $customTablesBeingRenamed = [];
+
+    /** @var string[] */
     protected $shortNamedTablesToRename = [];
 
-    /** @var array */
+    /** @var string[] */
     protected $shortNamedTablesToDrop = [];
 
-    /** @var array */
+    /** @var string[] */
     protected $excludedTables = [];
 
-    /** @var array */
+    /** @var string[] */
     protected $tablesToBeDropped = [];
 
     /** @var int Total tables to be renamed */
@@ -68,10 +95,16 @@ class TablesRenamer
     protected $tmpPrefix;
 
     /** @var string */
+    protected $customTableTmpPrefix;
+
+    /** @var string */
     protected $dropPrefix;
 
     /** @var bool */
     protected $renameViews;
+
+    /** @var bool */
+    protected $renameCustomTables;
 
     /** @var bool */
     protected $logEachRename = false;
@@ -90,6 +123,9 @@ class TablesRenamer
 
     /** @var int */
     protected $nonConflictingTablesRenamed = 0;
+
+    /** @var int */
+    protected $customTablesRenamed = 0;
 
     /** @var bool */
     protected $isNonConflictingTablesRenamingTaskExecuted = false;
@@ -121,6 +157,16 @@ class TablesRenamer
     }
 
     /**
+     * @param string $cusomTableTmpPrefix
+     * @return TablesRenamer
+     */
+    public function setCustomTableTmpPrefix(string $customTableTmpPrefix): TablesRenamer
+    {
+        $this->customTableTmpPrefix = $customTableTmpPrefix;
+        return $this;
+    }
+
+    /**
      * @param string $dropPrefix
      * @return TablesRenamer
      */
@@ -137,6 +183,16 @@ class TablesRenamer
     public function setRenameViews(bool $renameViews): TablesRenamer
     {
         $this->renameViews = $renameViews;
+        return $this;
+    }
+
+    /**
+     * @param bool $renameCustomTables
+     * @return TablesRenamer
+     */
+    public function setRenameCustomTables(bool $renameCustomTables): TablesRenamer
+    {
+        $this->renameCustomTables = $renameCustomTables;
         return $this;
     }
 
@@ -241,6 +297,14 @@ class TablesRenamer
     }
 
     /**
+     * @return int
+     */
+    public function getCustomTablesRenamed(): int
+    {
+        return $this->customTablesRenamed;
+    }
+
+    /**
      * @return bool
      */
     public function getIsNonConflictingTablesRenamingTaskExecuted(): bool
@@ -260,6 +324,11 @@ class TablesRenamer
             $taskDto->viewsBeingRenamed = $this->tableService->findViewsNamesStartWith($this->tmpPrefix) ?: [];
         }
 
+        $taskDto->customTablesBeingRenamed = [];
+        if ($this->renameCustomTables) {
+            $taskDto->customTablesBeingRenamed = $this->tableService->findTableNamesStartWith($this->customTableTmpPrefix) ?: [];
+        }
+
         $taskDto->existingTables = $this->tableService->findTableNamesStartWith($this->productionTablePrefix) ?: [];
         $taskDto->existingViews  = [];
         if ($this->renameViews) {
@@ -268,6 +337,7 @@ class TablesRenamer
 
         $taskDto->conflictingTablesRenamed    = 0;
         $taskDto->nonConflictingTablesRenamed = 0;
+        $taskDto->customTablesRenamed         = 0;
         $this->setTaskDto($taskDto);
 
         return $taskDto;
@@ -282,6 +352,7 @@ class TablesRenamer
         $this->tablesBeingRenamed           = [];
         $this->tablesBeingRenamed['tables'] = $taskDto->tablesBeingRenamed ?: [];
         $this->tablesBeingRenamed['views']  = $taskDto->viewsBeingRenamed ?: [];
+        $this->tablesBeingRenamed['custom'] = $taskDto->customTablesBeingRenamed ?: [];
         $this->tablesBeingRenamed['all']    = array_merge($this->tablesBeingRenamed['tables'], $this->tablesBeingRenamed['views']);
 
         $this->existingTables           = [];
@@ -289,7 +360,7 @@ class TablesRenamer
         $this->existingTables['views']  = $taskDto->existingViews ?: [];
         $this->existingTables['all']    = array_merge($this->existingTables['tables'], $this->existingTables['views']);
 
-        $this->totalTables = count($this->tablesBeingRenamed['tables']);
+        $this->totalTables = count($this->tablesBeingRenamed['tables']) + count($this->tablesBeingRenamed['custom']);
         $tmpDatabasePrefix = $this->tmpPrefix;
 
         foreach ($this->tablesBeingRenamed as $viewsOrTables => $tableName) {
@@ -309,6 +380,7 @@ class TablesRenamer
 
         $this->conflictingTablesRenamed    = (int)$taskDto->conflictingTablesRenamed;
         $this->nonConflictingTablesRenamed = (int)$taskDto->nonConflictingTablesRenamed;
+        $this->customTablesRenamed         = (int)$taskDto->customTablesRenamed;
     }
 
     /**
@@ -504,6 +576,44 @@ class TablesRenamer
                 $tableToDrop
             ));
         }
+    }
+
+    /**
+     * @return bool
+     * @throws \RuntimeException
+     */
+    public function renameCustomTables(): bool
+    {
+        $customTablesToRename = $this->tablesBeingRenamed['custom'];
+        // Early bail: if no tables to rename
+        if (empty($customTablesToRename)) {
+            return true;
+        }
+
+        foreach ($customTablesToRename as $tmpCustomTable) {
+            $customTable = substr($tmpCustomTable, strlen($this->customTableTmpPrefix));
+
+            $result = true;
+            if ($this->tableExists($customTable)) {
+                $result = $this->renameQuery($customTable, $this->dropPrefix . $customTable);
+            }
+
+            if ($result === false) {
+                throw new \RuntimeException("Unable to rename custom table {$customTable} to {$this->dropPrefix}{$customTable}.");
+            }
+
+            $result = $this->renameQuery($tmpCustomTable, $customTable);
+            if ($result === false) {
+                throw new \RuntimeException("Unable to rename custom table {$tmpCustomTable} to {$customTable}.");
+            }
+
+            $this->customTablesRenamed++;
+            if ($this->isThresholdReached()) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     /**
@@ -797,5 +907,33 @@ class TablesRenamer
     private function customThreshold(bool $isThreshold): bool
     {
         return Hooks::applyFilters('wpstg.tests.tablesRenamingThreshold', $isThreshold);
+    }
+
+    /**
+     * @param string $tableToRename
+     * @param string $tableAfterRenamed
+     * @return bool
+     */
+    private function renameQuery(string $tableToRename, string $tableAfterRenamed): bool
+    {
+        $database = $this->tableService->getDatabase();
+        $result   = $database->exec(sprintf(
+            "RENAME TABLE `%s` TO `%s`;",
+            $tableToRename,
+            $tableAfterRenamed
+        ));
+
+        if ($result !== false) {
+            return true;
+        }
+
+        if ($this->logEachRename && $this->logger instanceof Logger) {
+            /** @var \wpdb */
+            $wpdb  = $database->getWpdba()->getClient();
+            $error = $wpdb->last_error;
+            $this->logger->warning("DB Rename: Unable to rename table {$tableToRename} to {$tableAfterRenamed}. Error: " . $error);
+        }
+
+        return false;
     }
 }

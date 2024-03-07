@@ -61,6 +61,9 @@ class Upgrade
         $this->stagingSitesHelper = WPStaging::make(Sites::class);
     }
 
+    /**
+     * @return void
+     */
     public function doUpgrade()
     {
         $this->upgrade2_0_3();
@@ -91,6 +94,7 @@ class Upgrade
 
     /**
      * Move existing staging sites to new option defined in Sites::STAGING_SITES_OPTION
+     * @return void
      */
     private function upgrade2_8_7()
     {
@@ -100,6 +104,7 @@ class Upgrade
 
     /**
      * Fix array keys of staging sites
+     * @return void
      */
     private function upgrade2_5_9()
     {
@@ -123,6 +128,9 @@ class Upgrade
         }
     }
 
+    /**
+     * @return void
+     */
     private function upgrade2_4_4()
     {
         // Previous version lower than 2.4.4
@@ -146,6 +154,7 @@ class Upgrade
 
     /**
      * Upgrade method 2.2.0
+     * @return void
      */
     public function upgrade2_2_0()
     {
@@ -157,6 +166,7 @@ class Upgrade
 
     /**
      * Add missing elements
+     * @return void
      */
     private function upgradeElements()
     {
@@ -217,6 +227,7 @@ class Upgrade
 
     /**
      * Upgrade method 2.0.3
+     * @return void
      */
     public function upgrade2_0_3()
     {
@@ -230,6 +241,7 @@ class Upgrade
     /**
      * Upgrade method 2.1.2
      * Sanitize the clone key value.
+     * @return void
      */
     private function upgrade2_1_2()
     {
@@ -250,19 +262,20 @@ class Upgrade
 
     /**
      * Upgrade routine for new install
+     * @return void
      */
     private function initialInstall()
     {
         // Write some default vars
         add_option('wpstg_installDate', date('Y-m-d h:i:s')); // Common install date for free or pro version - deprecated. Remove 2023
         add_option(self::OPTION_INSTALL_DATE, date('Y-m-d h:i:s'));
-        $this->settings->optimizer = 1;
+        $this->settings->optimizer = "1";
         update_option('wpstg_settings', $this->settings);
     }
 
     /**
      * Write new version number into db
-     * return bool
+     * @return bool
      */
     private function setVersion()
     {
@@ -284,6 +297,7 @@ class Upgrade
     /**
      * Upgrade Notices db options from wpstg 1.3 -> 2.0.1
      * Fix some logical db options
+     * @return void
      */
     private function upgradeNotices()
     {

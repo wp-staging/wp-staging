@@ -119,7 +119,7 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                             <?php esc_html_e('Add Exclusions', 'wp-staging'); ?>
                         </span>
                         <?php if (!$isProVersion) : ?>
-                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade to activate this feature!', 'wp-staging'); ?></span></a>
+                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Requires Pro Upgrade', 'wp-staging'); ?></span></a>
                         <?php endif; ?>
                     </label>
 

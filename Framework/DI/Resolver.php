@@ -3,8 +3,9 @@
 namespace WPStaging\Framework\DI;
 
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
+use WPStaging\Vendor\lucatume\DI52\Builders\Resolver as BaseResolver;
 
-class Resolver extends \WPStaging\Vendor\lucatume\DI52\Builders\Resolver
+class Resolver extends BaseResolver
 {
     /**
      * Allows to enqueue the ShutdownableInterface hook

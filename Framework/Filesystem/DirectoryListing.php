@@ -35,6 +35,27 @@ class DirectoryListing
     }
 
     /**
+     * @return bool
+     */
+    public function isPathNotInOpenBaseDir($path): bool
+    {
+        $openBaseDirPath = array_map(function ($input) {
+            return trim($input);
+        }, explode(":", ini_get('open_basedir')));
+
+        // @phpstan-ignore-next-line
+        if (empty($openBaseDirPath) || empty($openBaseDirPath[0])) {
+            return false;
+        }
+
+        if (in_array($path, $openBaseDirPath)) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
      * Protect the WPStaging upload folder from directory listing.
      */
     public function protectPluginUploadDirectory()
@@ -59,8 +80,13 @@ class DirectoryListing
 
             /** @var \SplFileInfo $item */
             foreach ($it as $item) {
+                $realPath = $item->getRealPath();
+                if ($this->isPathNotInOpenBaseDir($realPath)) {
+                    continue;
+                }
+
                 if ($item->isDir() && $item->getBasename() !== '..') {
-                    $dirsToProtect[] = $item->getRealPath();
+                    $dirsToProtect[] = $realPath;
                 }
             }
 

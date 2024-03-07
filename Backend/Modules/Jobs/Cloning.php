@@ -16,6 +16,7 @@ use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 
 use function WPStaging\functions\debug_log;
@@ -54,7 +55,7 @@ class Cloning extends Job
     /**
      * @var Sanitize
      */
-    private $sanitize;
+    protected $sanitize;
 
     /**
      * @var Urls
@@ -63,6 +64,9 @@ class Cloning extends Job
 
     /** @var Directory */
     private $dirAdapter;
+
+    /** @var Strings */
+    protected $strUtil;
 
     /**
      * Initialize is called in \Job
@@ -75,6 +79,7 @@ class Cloning extends Job
         $this->sanitize    = WPStaging::make(Sanitize::class);
         $this->urls        = WPStaging::make(Urls::class);
         $this->dirAdapter  = WPStaging::make(Directory::class);
+        $this->strUtil     = WPStaging::make(Strings::class);
     }
 
     public function getErrorMessage(): string
@@ -218,59 +223,30 @@ class Cloning extends Job
             $this->options->extraDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, $this->sanitize->sanitizeString($_POST["extraDirectories"]));
         }
 
-        $this->options->databaseServer = 'localhost';
-        if ($this->isPro() && !empty($_POST["databaseServer"])) {
-            $this->options->databaseServer = $this->sanitize->sanitizeString($_POST["databaseServer"]);
-        }
+        // New Admin Account
+        $this->options->useNewAdminAccount = false;
+        $this->options->adminEmail         = '';
+        $this->options->adminPassword      = '';
 
-        $this->options->databaseUser = '';
-        if ($this->isPro() && !empty($_POST["databaseUser"])) {
-            $this->options->databaseUser = $this->sanitize->sanitizeString($_POST["databaseUser"]);
-        }
-
+        // External Database
+        $this->options->databaseServer   = 'localhost';
+        $this->options->databaseUser     = '';
         $this->options->databasePassword = '';
-        if ($this->isPro() && !empty($_POST["databasePassword"])) {
-            $this->options->databasePassword = $this->sanitize->sanitizePassword($_POST["databasePassword"]);
-        }
-
         $this->options->databaseDatabase = '';
-        if ($this->isPro() && !empty($_POST["databaseDatabase"])) {
-            $this->options->databaseDatabase = $this->sanitize->sanitizeString($_POST["databaseDatabase"]);
-        }
-
         // isExternalDatabase() depends upon databaseUser and databasePassword,
         // Make sure they are set before calling this.
-        $this->options->databasePrefix = $this->isExternalDatabase() ? $this->db->prefix : '';
-        if ($this->isPro() && !empty($_POST["databasePrefix"])) {
-            $this->options->databasePrefix = $this->maybeAppendUnderscorePrefix($this->sanitize->sanitizeString($_POST["databasePrefix"]));
-        }
+        $this->options->databasePrefix   = $this->isExternalDatabase() ? $this->db->prefix : '';
+        $this->options->databaseSsl      = false;
 
-        $this->options->databaseSsl = false;
-        if (isset($_POST["databaseSsl"]) && 'true' === $this->sanitize->sanitizeString($_POST["databaseSsl"])) {
-            $this->options->databaseSsl = true;
-        }
-
-        $this->options->cloneDir = '';
-        if (!empty($_POST["cloneDir"])) {
-            $this->options->cloneDir = trailingslashit(wpstg_urldecode($this->sanitize->sanitizeString($_POST["cloneDir"])));
-        }
-
+        // Custom Hosts
+        $this->options->cloneDir      = '';
         $this->options->cloneHostname = '';
-        if (!empty($_POST["cloneHostname"])) {
-            $this->options->cloneHostname = trim($this->sanitize->sanitizeString($_POST["cloneHostname"]));
-        }
 
-        // Make sure it is always enabled for free version
+        // Default options for FREE version
         $this->options->emailsAllowed = true;
-        $this->options->cronDisabled = false;
+        $this->options->cronDisabled  = false;
 
-        if (defined('WPSTGPRO_VERSION')) {
-            $this->options->emailsAllowed = apply_filters(
-                'wpstg_cloning_email_allowed',
-                isset($_POST['emailsAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsAllowed'])
-            );
-            $this->options->cronDisabled = !empty($_POST['cronDisabled']) ? $this->sanitize->sanitizeBool($_POST['cronDisabled']) : false;
-        }
+        $this->setAdvancedCloningOptions();
 
         $this->options->destinationDir      = $this->getDestinationDir();
         $this->options->destinationHostname = $this->getDestinationHostname();
@@ -327,6 +303,9 @@ class Cloning extends Job
             "excludedDirectories" => $this->options->excludedDirectories,
             "extraDirectories"    => $this->options->extraDirectories,
             "networkClone"        => $this->isNetworkClone(),
+            'useNewAdminAccount'  => $this->options->useNewAdminAccount,
+            'adminEmail'          => $this->options->adminEmail,
+            'adminPassword'       => $this->options->adminPassword,
         ];
 
         if ($this->sitesHelper->updateStagingSites($this->options->existingClones) === false) {
@@ -404,22 +383,6 @@ class Cloning extends Job
 
         $this->options->cloneDir = trailingslashit($cloneDestinationPath);
         return $this->options->cloneDir;
-    }
-
-    /**
-     * Make sure prefix ends with underscore
-     *
-     * @param string $string
-     * @return string
-     */
-    private function maybeAppendUnderscorePrefix(string $string): string
-    {
-        $lastCharacter = substr($string, -1);
-        if ($lastCharacter === '_') {
-            return $string;
-        }
-
-        return $string . '_';
     }
 
     /**
@@ -580,7 +543,6 @@ class Cloning extends Job
         return $this->handleJobResponse($files->start(), "data");
     }
 
-
     /**
      * Replace Data
      * @return object
@@ -588,7 +550,8 @@ class Cloning extends Job
      */
     public function jobData()
     {
-        return $this->handleJobResponse((new Data())->start(), "finish");
+        $dataJob = $this->getDataJob();
+        return $this->handleJobResponse($dataJob->start(), "finish");
     }
 
     /**
@@ -606,6 +569,22 @@ class Cloning extends Job
 
         $finish = new Finish();
         return $this->handleJobResponse($finish->start(), '');
+    }
+
+    /**
+     * @return Data
+     */
+    public function getDataJob(): Data
+    {
+        return new Data();
+    }
+
+    /**
+     * @return void
+     */
+    protected function setAdvancedCloningOptions()
+    {
+        // no-op
     }
 
     /**

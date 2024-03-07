@@ -160,22 +160,6 @@ class JobRestore extends AbstractJob
     }
 
     /**
-     * @return void
-     */
-    protected function addMultisiteTasks()
-    {
-        // no-op
-    }
-
-    /**
-     * @return void
-     */
-    protected function addWordPressComTasks()
-    {
-        // no-op
-    }
-
-    /**
      * @param BackupMetadata $backupMetadata
      * @return bool
      */
@@ -223,32 +207,12 @@ class JobRestore extends AbstractJob
     /**
      * @return void
      */
-    private function addDatabaseTasks()
+    protected function addDatabaseTasks()
     {
-        $metadata = $this->jobDataDto->getBackupMetadata();
-        if ($metadata->getIsMultipartBackup()) {
-            foreach ($metadata->getMultipartMetadata()->getDatabaseParts() as $ignored) {
-                $this->tasks[] = RestoreDatabaseTask::class;
-            }
-        } else {
-            $this->tasks[] = RestoreDatabaseTask::class;
-        }
-
-        $this->addWordPressComTasks();
-        $this->addMultisiteTasks();
-        $this->addNetworkSiteTasks();
-
+        $this->tasks[] = RestoreDatabaseTask::class;
         $this->tasks[] = UpdateBackupsScheduleTask::class;
         $this->tasks[] = RenameDatabaseTask::class;
         $this->tasks[] = CleanupTmpTablesTask::class;
-    }
-
-    /**
-     * @return void
-     */
-    protected function addNetworkSiteTasks()
-    {
-        // no-op
     }
 
     /**

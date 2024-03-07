@@ -6,16 +6,19 @@ use WPStaging\Backup\Dto\AbstractTaskDto;
 
 class RenameDatabaseTaskDto extends AbstractTaskDto
 {
-    /** @var array<string> */
+    /** @var string[] */
     public $tablesBeingRenamed;
 
-    /** @var array<string> */
+    /** @var string[] */
+    public $customTablesBeingRenamed;
+
+    /** @var string[] */
     public $existingTables;
 
-    /** @var array<string> */
+    /** @var string[] */
     public $viewsBeingRenamed;
 
-    /** @var array<string> */
+    /** @var string[] */
     public $existingViews;
 
     /** @var int */
@@ -23,4 +26,7 @@ class RenameDatabaseTaskDto extends AbstractTaskDto
 
     /** @var int */
     public $nonConflictingTablesRenamed;
+
+    /** @var int */
+    public $customTablesRenamed;
 }

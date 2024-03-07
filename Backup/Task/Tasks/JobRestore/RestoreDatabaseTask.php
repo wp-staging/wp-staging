@@ -5,6 +5,7 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 use Exception;
 use RuntimeException;
 use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Service\Database\Importer\DatabaseSearchReplacerInterface;
 use WPStaging\Backup\Service\Multipart\MultipartRestoreInterface;
@@ -30,16 +31,16 @@ class RestoreDatabaseTask extends RestoreTask
     const MAX_EXECUTION_TIME_ALLOWED = 60;
 
     /** @var DatabaseImporter */
-    private $databaseImporter;
+    protected $databaseImporter;
 
     /** @var PathIdentifier */
-    private $pathIdentifier;
+    protected $pathIdentifier;
 
     /** @var DatabaseSearchReplacerInterface */
-    private $databaseSearchReplacer;
+    protected $databaseSearchReplacer;
 
     /** @var MultipartRestoreInterface */
-    private $multipartRestore;
+    protected $multipartRestore;
 
     public function __construct(DatabaseImporter $databaseImporter, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, PathIdentifier $pathIdentifier, DatabaseSearchReplacerInterface $databaseSearchReplacer, MultipartRestoreInterface $multipartRestore)
     {
@@ -53,17 +54,26 @@ class RestoreDatabaseTask extends RestoreTask
         $this->multipartRestore       = $multipartRestore;
     }
 
+    /**
+     * @return string
+     */
     public static function getTaskName(): string
     {
         return 'backup_restore_database';
     }
 
+    /**
+     * @return string
+     */
     public static function getTaskTitle(): string
     {
         return 'Restoring Database';
     }
 
-    public function execute()
+    /**
+     * @return TaskResponseDto
+     */
+    public function execute(): TaskResponseDto
     {
         if ($this->jobDataDto->getIsMissingDatabaseFile()) {
             $partIndex = $this->jobDataDto->getDatabasePartIndex();
@@ -125,6 +135,7 @@ class RestoreDatabaseTask extends RestoreTask
 
     /**
      * @see \WPStaging\Backup\Service\Database\Exporter\RowsExporter::setupBackupSearchReplace For Backup Search/Replace.
+     * @return void
      */
     public function prepare()
     {
@@ -152,9 +163,12 @@ class RestoreDatabaseTask extends RestoreTask
             $this->stepsDto->setTotal($this->databaseImporter->getTotalLines());
         }
 
-        $this->databaseImporter->setSearchReplace($this->databaseSearchReplacer->getSearchAndReplace($this->jobDataDto, get_site_url(), get_home_url()));
+        $this->setupSearchReplace();
     }
 
+    /**
+     * @return void
+     */
     protected function setupExecutionTime()
     {
         static::$backupRestoreMaxExecutionTimeInSeconds           = $this->jobDataDto->getCurrentExecutionTimeDatabaseRestore();
@@ -162,6 +176,15 @@ class RestoreDatabaseTask extends RestoreTask
     }
 
     /**
+     * @return void
+     */
+    protected function setupSearchReplace()
+    {
+        $this->databaseImporter->setSearchReplace($this->databaseSearchReplacer->getSearchAndReplace(get_site_url(), get_home_url()));
+    }
+
+    /**
+     * @return void
      * @throws RuntimeException
      */
     protected function maybeUpdateExecutionTime()

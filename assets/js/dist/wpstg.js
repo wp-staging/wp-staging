@@ -1,5 +1,5 @@
 /**
- * version: 3.3.3
+ * version: 3.4.0
  */ 
  (function () {
   'use strict';
@@ -782,6 +782,18 @@
        */
       slugify: function slugify(url) {
         return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
+      },
+      sanitizeEventAttribute: function sanitizeEventAttribute(string) {
+        if (string === null) {
+          return string;
+        }
+        return string.toString().replace(/("|')\s+on([a-z]+)\s?=\s?([a-z0-9\)\(\"\';]+)/i, '');
+      },
+      htmlEntityQuotesDecode: function htmlEntityQuotesDecode(string) {
+        if (string === null) {
+          return string;
+        }
+        return string.toString().replace(/\\"/g, '&quot;').replace(/\\'/g, '&#039');
       },
       showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
         prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';

@@ -39,7 +39,7 @@ if ($isPro && !empty($options->current)) {
 
     $emailsAllowed = isset($options->existingClones[$options->current]['emailsAllowed']) ? (bool) $options->existingClones[$options->current]['emailsAllowed'] : $defaultEmailsSending;
 } ?>
-<div class="wpstg--advance-settings--checkbox wpstg-advanced-setting-container">
+<div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg_allow_emails"><?php esc_html_e('Allow Emails Sending', 'wp-staging'); ?></label>
     <?php Checkbox::render('wpstg_allow_emails', 'wpstg_allow_emails', 'true', $emailsAllowed, ['isDisabled' => !$settingsEnabled]); ?>
     <span class="wpstg--tooltip">

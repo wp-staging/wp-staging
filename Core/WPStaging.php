@@ -43,6 +43,11 @@ final class WPStaging
     private static $instance;
 
     /**
+     * @var bool
+     */
+    private static $useBaseContainerSingleton = false;
+
+    /**
      * @var Container
      */
     private $container;
@@ -211,6 +216,15 @@ final class WPStaging
     }
 
     /**
+     * @param bool $useBaseContainerSingleton
+     * @return void
+     */
+    public static function setUseBaseContainerSingleton(bool $useBaseContainerSingleton)
+    {
+        static::$useBaseContainerSingleton = $useBaseContainerSingleton;
+    }
+
+    /**
      * Caching and logging folder
      *
      * @return string
@@ -232,8 +246,7 @@ final class WPStaging
     public static function getInstance()
     {
         if (static::$instance === null) {
-            static::$instance = new WPStaging(new Container());
-            static::getInstance();
+            static::$instance = new WPStaging(new Container(false, static::$useBaseContainerSingleton));
         }
 
         if (!static::$instance->isBootstrapped) {
@@ -251,7 +264,7 @@ final class WPStaging
     {
         if (php_sapi_name() == "cli") {
             $this->isBootstrapped = false;
-            $this->container      = new Container();
+            $this->container      = new Container(false, static::$useBaseContainerSingleton);
         }
     }
 
@@ -335,10 +348,22 @@ final class WPStaging
      * @param mixed $variable
      *
      * @return $this
-     * @deprecated Refactor implementations of this method to use the Container instead.
+     * @deprecated Use setVar instead.
      *
      */
     public function set($name, $variable)
+    {
+        return $this->setVar($name, $variable);
+    }
+
+    /**
+     * Store a variable in DI container with given name
+     *
+     * @param string $name
+     * @param mixed $variable
+     * @return self
+     */
+    public function setVar(string $name, $variable)
     {
         $this->container->setVar($name, $variable);
 
@@ -351,12 +376,24 @@ final class WPStaging
      * @param string $name
      *
      * @return mixed|null
-     * @deprecated Refactor implementations of this method to use the Container instead.
+     * @deprecated Use getVar instead if you want to retrieve value for a variable set using setVar or set.
      *
      */
     public function get($name)
     {
         return $this->container->_get($name);
+    }
+
+    /**
+     * Get a variable from DI container with given name
+     *
+     * @param string $name
+     * @param mixed $default
+     * @return mixed
+     */
+    public function getVar(string $name, $default = null)
+    {
+        return $this->container->getVar($name, $default);
     }
 
     /**
@@ -433,7 +470,7 @@ final class WPStaging
      */
     public static function isPro()
     {
-        return self::make('WPSTG_PRO');
+        return WPStaging::getInstance()->getVar('WPSTG_PRO', false);
     }
 
     /**
@@ -441,7 +478,7 @@ final class WPStaging
      */
     public static function silenceLogs($silence = true)
     {
-        WPStaging::getInstance()->set('SILENCE_LOGS', $silence);
+        WPStaging::getInstance()->setVar('SILENCE_LOGS', $silence);
     }
 
     /**
@@ -450,7 +487,7 @@ final class WPStaging
     public static function areLogsSilenced()
     {
         try {
-            return self::make('SILENCE_LOGS');
+            return WPStaging::getInstance()->getVar('SILENCE_LOGS', false);
         } catch (Exception $ex) {
             return false;
         }

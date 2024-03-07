@@ -32,6 +32,7 @@ class Check extends ElementsWithOptions
     }
 
     /**
+     * Tested against both types(int and string) due to string as parameter type https://github.com/wp-staging/wp-staging-pro/pull/3190
      * @param string $value
      * @return bool
      */
@@ -41,7 +42,7 @@ class Check extends ElementsWithOptions
             $this->default &&
             (
                 (is_string($this->default) && $this->default === $value) ||
-                (is_int($value) && $value == (int) $this->default) ||
+                (is_int($this->default) && $this->default === (int)$value) ||
                 (is_array($this->default) && in_array($value, $this->default))
             )
         ) {

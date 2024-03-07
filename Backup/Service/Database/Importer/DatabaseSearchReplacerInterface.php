@@ -2,9 +2,16 @@
 
 namespace WPStaging\Backup\Service\Database\Importer;
 
-use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
+use WPStaging\Framework\Database\SearchReplace;
 
 interface DatabaseSearchReplacerInterface
 {
-    public function getSearchAndReplace(JobRestoreDataDto $jobDataDto, $homeURL, $siteURL, $absPath = ABSPATH, $destinationSiteUploadURL = null);
+    /**
+     * @param string $homeURL
+     * @param string $siteURL
+     * @param string $absPath
+     * @param string|null $destinationSiteUploadURL
+     * @return SearchReplace
+     */
+    public function getSearchAndReplace(string $homeURL, string $siteURL, string $absPath = ABSPATH, $destinationSiteUploadURL = null): SearchReplace;
 }

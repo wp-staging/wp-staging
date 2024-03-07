@@ -83,7 +83,7 @@ try {
                     <div class="wpstg-backup-url-container" >
                         <label for="wpstg-backup-url"><?php esc_html_e('Or upload a backup file from a URL:', 'wp-staging') ?></label>
                         <input id="wpstg-backup-url" class="wpstg--swal2-input" name="wpstg-backup-url" type="text" placeholder="https://example.com/.../backups/your-backup.wpstg"/>
-                        <div class="wpstg-backup-url-container-desc"><?php esc_html_e("Get backup URL from Actions / Copy Backup URL", "wp-staging") ?></div>
+                        <div class="wpstg-backup-url-container-desc"><?php esc_html_e("Get the link from Backup &#10132; Actions &#10132; Copy Backup Url.", "wp-staging") ?></div>
                     </div>
                     <p class="wpstg-backup-direct-upload-notice">
                         <?php esc_html_e('Or upload a backup file via FTP to:', 'wp-staging') ?><br>

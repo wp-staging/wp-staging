@@ -811,6 +811,18 @@
       slugify: function slugify(url) {
         return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
       },
+      sanitizeEventAttribute: function sanitizeEventAttribute(string) {
+        if (string === null) {
+          return string;
+        }
+        return string.toString().replace(/("|')\s+on([a-z]+)\s?=\s?([a-z0-9\)\(\"\';]+)/i, '');
+      },
+      htmlEntityQuotesDecode: function htmlEntityQuotesDecode(string) {
+        if (string === null) {
+          return string;
+        }
+        return string.toString().replace(/\\"/g, '&quot;').replace(/\\'/g, '&#039');
+      },
       showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
         prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
         appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
@@ -1883,7 +1895,7 @@
       dismissible: true,
       types: [{
         type: 'warning',
-        background: 'green',
+        background: 'orange',
         icon: true
       }]
     });
@@ -1913,6 +1925,22 @@
   }
 
   /**
+   * @param visibility
+   * @return {void}
+   */
+  function loadingBar(visibility) {
+    if (visibility === void 0) {
+      visibility = 'visible';
+    }
+    var loader = document.querySelectorAll('.wpstg-loading-bar-container');
+    loader.forEach(function (element) {
+      if (element) {
+        element.style.visibility = visibility;
+      }
+    });
+  }
+
+  /**
    * Enable side bar menu and set url on tab click
    */
   var WpstgSidebarMenu = /*#__PURE__*/function () {
@@ -1936,6 +1964,7 @@
       }
       if (this.wpstdBackupTab !== null) {
         this.wpstdBackupTab.addEventListener('click', function () {
+          loadingBar();
           _this.setPageUrl('wpstg_backup');
           _this.setSidebarMenu('wpstg_backup');
         });
@@ -2614,6 +2643,7 @@
           $('#wpstg--tab--backup').empty();
           WPStagingBackup.modal.create.html = null;
           WPStagingCommon.cache.get('#wpstg--tab--backup').html(res);
+          loadingBar('hidden');
           if (res.success !== undefined && res.success === false) {
             WPStagingCommon.showError('Error: ' + res.data);
             return;
@@ -3114,7 +3144,7 @@
                       storages.push(storage.value);
                     }
                     return {
-                      name: container.querySelector('input[name="backup_name"]').value || null,
+                      name: WPStagingCommon.sanitizeEventAttribute(container.querySelector('input[name="backup_name"]').value) || null,
                       isExportingPlugins: container.querySelector('#includePluginsInBackup:checked') !== null,
                       isExportingMuPlugins: container.querySelector('#includeMuPluginsInBackup:checked') !== null,
                       isExportingThemes: container.querySelector('#includeThemesInBackup:checked') !== null,
@@ -3466,19 +3496,19 @@
               case 0:
                 e.preventDefault();
                 $this = $(_this);
-                name = $this.data('name');
-                notes = $this.data('notes');
+                name = WPStagingCommon.htmlEntityQuotesDecode(WPStagingCommon.sanitizeEventAttribute($this.data('name')));
+                notes = WPStagingCommon.htmlEntityQuotesDecode(WPStagingCommon.sanitizeEventAttribute($this.data('notes')));
                 _context.next = 6;
                 return WPStagingCommon.getSwalModal().fire({
                   title: '',
-                  html: "\n                    <label id=\"wpstg-backup-edit-name\">Backup Name</label>\n                    <input id=\"wpstg-backup-edit-name-input\" class=\"wpstg--swal2-input\" value=\"" + name + "\" maxlength=\"100\">\n                    <label>Additional Notes</label>\n                    <textarea id=\"wpstg-backup-edit-notes-textarea\" class=\"wpstg--swal2-textarea\" maxlength=\"1000\">" + notes + "</textarea>\n                  ",
+                  html: "\n                    <label id=\"wpstg-backup-edit-name\">Backup Name</label>\n                    <input id=\"wpstg-backup-edit-name-input\" class=\"wpstg--swal2-input\" maxlength=\"100\" value=\"" + name + "\">\n                    <label>Additional Notes</label>\n                    <textarea id=\"wpstg-backup-edit-notes-textarea\" class=\"wpstg--swal2-textarea\" maxlength=\"1000\">" + notes + "</textarea>\n                  ",
                   focusConfirm: false,
                   confirmButtonText: 'Save',
                   showCancelButton: true,
                   preConfirm: function preConfirm() {
                     return {
-                      name: document.getElementById('wpstg-backup-edit-name-input').value || null,
-                      notes: document.getElementById('wpstg-backup-edit-notes-textarea').value || null
+                      name: WPStagingCommon.sanitizeEventAttribute(document.getElementById('wpstg-backup-edit-name-input').value) || null,
+                      notes: WPStagingCommon.sanitizeEventAttribute(document.getElementById('wpstg-backup-edit-notes-textarea').value) || null
                     };
                   }
                 });
@@ -3496,8 +3526,8 @@
                   accessToken: wpstg.accessToken,
                   nonce: wpstg.nonce,
                   md5: $this.data('md5'),
-                  name: formValues.name,
-                  notes: formValues.notes
+                  name: WPStagingCommon.sanitizeEventAttribute(formValues.name),
+                  notes: WPStagingCommon.sanitizeEventAttribute(formValues.notes)
                 }, function (response) {
                   WPStagingCommon.showAjaxFatalError(response, '', 'Submit an error report.');
                   // noinspection JSIgnoredPromiseFromCall
@@ -4384,6 +4414,12 @@
       },
       manageSchedulesModal: function manageSchedulesModal() {
         WPStagingBackupManageSchedules.fetchSchedules();
+        var loaderElement = document.getElementById('wpstg-backup--manage--schedules-loader');
+        if (!loaderElement) {
+          document.getElementById('wpstg--modal--backup--manage--schedules').innerHTML += '<div id="wpstg-backup--manage--schedules-loader" class="wpstg-loader show-loader"></div>';
+        } else {
+          loaderElement.classList.add('show-loader');
+        }
         WPStagingCommon.getSwalModal(false).fire({
           html: document.getElementById('wpstg--modal--backup--manage--schedules').innerHTML,
           showConfirmButton: false,
@@ -4403,6 +4439,7 @@
           accessToken: wpstg.accessToken,
           nonce: wpstg.nonce
         }, function (response) {
+          qs('.wpstg--swal2-container #wpstg-backup--manage--schedules-loader').classList.remove('show-loader');
           qs('.wpstg--swal2-container #wpstg--modal--backup--manage--schedules--content').innerHTML = response.data;
           document.querySelectorAll('.wpstg--swal2-container #wpstg--modal--backup--manage--schedules--content .wpstg--dismiss-schedule').forEach(function (dismissButton) {
             dismissButton.addEventListener('click', function (event) {

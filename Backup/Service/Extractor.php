@@ -282,11 +282,6 @@ class Extractor
     {
         $destinationFilePath = $this->extractingFile->getBackupPath();
 
-        // Ignore the binary header when restoring
-        if (strpos($destinationFilePath, 'wpstgBackupHeader.txt') !== false) {
-            throw new \OutOfRangeException();
-        }
-
         if (strpos($destinationFilePath, '.sql') !== false) {
             $this->logger->debug(sprintf('DEBUG: Restoring SQL file %s', $destinationFilePath));
         }

@@ -91,7 +91,10 @@ class Pluginmeta
         if ($this->canShowFreeRequiredNotice()) {
             unset($links['deactivate']);
 
-            $freeRequireNotice = '<span style="color: #afb3b7;">' . esc_html__('Must be active for WP STAGING | PRO plugin', 'wp-staging') . '</span>';
+            $settingsLink = '<a href="' . admin_url('admin.php?page=wpstg-settings') . '">' . esc_html__('Settings', 'wp-staging') . '</a>';
+            array_unshift($links, $settingsLink);
+
+            $freeRequireNotice = '<span style="color: #32373c;">' . esc_html__('Required by WP Staging Pro', 'wp-staging') . '</span>';
             array_unshift($links, $freeRequireNotice);
         }
 

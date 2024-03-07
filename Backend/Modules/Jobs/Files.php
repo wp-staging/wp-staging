@@ -355,7 +355,7 @@ class Files extends JobExecutable
         }
 
         if (!$this->options->uploadsSymlinked) {
-            $this->log(__("Skipped symlinking Wp Uploads Folder", 'wp-staging'));
+            $this->log(__("Skipped symlinking WP Uploads Folder", 'wp-staging'));
             return true;
         }
 

@@ -126,22 +126,25 @@ class Updating extends Job
 
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
-            $this->options->cloneName           = $this->options->existingClones[$this->options->clone]['cloneName'];
-            $this->options->cloneDirectoryName  = $this->options->existingClones[$this->options->clone]['directoryName'];
-            $this->options->cloneNumber         = $this->options->existingClones[$this->options->clone]['number'];
-            $this->options->databaseUser        = $this->options->existingClones[$this->options->clone]['databaseUser'];
-            $this->options->databasePassword    = $this->options->existingClones[$this->options->clone]['databasePassword'];
-            $this->options->databaseDatabase    = $this->options->existingClones[$this->options->clone]['databaseDatabase'];
-            $this->options->databaseServer      = $this->options->existingClones[$this->options->clone]['databaseServer'];
-            $this->options->databasePrefix      = $this->options->existingClones[$this->options->clone]['databasePrefix'];
-            $this->options->databaseSsl         = isset($this->options->existingClones[$this->options->clone]['databaseSsl']) ? $this->options->existingClones[$this->options->clone]['databaseSsl'] : false;
-            $this->options->destinationHostname = $this->options->existingClones[$this->options->clone]['url'];
-            $this->options->uploadsSymlinked    = isset($this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked']) ? $this->options->existingClones[strtolower($this->options->clone)]['uploadsSymlinked'] : false;
-            $this->options->prefix              = $this->options->existingClones[$this->options->clone]['prefix'];
-            $this->options->emailsAllowed       = $this->options->existingClones[$this->options->clone]['emailsAllowed'];
-            $this->options->networkClone        = isset($this->options->existingClones[strtolower($this->options->clone)]['networkClone']) ? $this->options->existingClones[$this->options->clone]['networkClone'] : false;
-            $this->options->networkClone        = filter_var($this->options->networkClone, FILTER_VALIDATE_BOOLEAN);
+            $currentStagingSite                 = $this->options->existingClones[$this->options->clone];
+            $this->options->cloneName           = $currentStagingSite['cloneName'];
+            $this->options->cloneDirectoryName  = $currentStagingSite['directoryName'];
+            $this->options->cloneNumber         = $currentStagingSite['number'];
+            $this->options->databaseUser        = $currentStagingSite['databaseUser'];
+            $this->options->databasePassword    = $currentStagingSite['databasePassword'];
+            $this->options->databaseDatabase    = $currentStagingSite['databaseDatabase'];
+            $this->options->databaseServer      = $currentStagingSite['databaseServer'];
+            $this->options->databasePrefix      = $currentStagingSite['databasePrefix'];
+            $this->options->databaseSsl         = $currentStagingSite['databaseSsl'];
+            $this->options->destinationHostname = $currentStagingSite['url'];
+            $this->options->uploadsSymlinked    = $currentStagingSite['uploadsSymlinked'];
+            $this->options->prefix              = $currentStagingSite['prefix'];
+            $this->options->emailsAllowed       = $currentStagingSite['emailsAllowed'];
+            $this->options->networkClone        = filter_var($currentStagingSite['networkClone'], FILTER_VALIDATE_BOOLEAN);
             $this->options->homeHostname        = $this->urls->getHomeUrlWithoutScheme();
+            $this->options->useNewAdminAccount  = $currentStagingSite['useNewAdminAccount'];
+            $this->options->adminEmail          = $currentStagingSite['adminEmail'];
+            $this->options->adminPassword       = $currentStagingSite['adminPassword'];
         } else {
             $job = 'update';
             if ($this->mainJob === Job::RESET) {

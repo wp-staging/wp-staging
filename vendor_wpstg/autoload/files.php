@@ -21,5 +21,4 @@ return array(
     '8a9dc1de0ca7e01f3e08231539562f61' => $vendorDir . '/aws/aws-sdk-php/src/functions.php',
     '1f87db08236948d07391152dccb70f04' => $vendorDir . '/google/apiclient-services/autoload.php',
     'a8d3953fd9959404dd22d3dfcd0a79f0' => $vendorDir . '/google/apiclient/src/aliases.php',
-    '877aa62ef7bb84390b9ed4124d954939' => $vendorDir . '/lucatume/di52/aliases.php',
 );

@@ -90,8 +90,9 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                     <fieldset class="wpstg-fieldset">
                         <label><?php esc_html_e('Version', 'wp-staging') ?></label>
                         <input class="wpstg-form-control" type="text" name="version" value="<?php echo esc_attr($version); ?>" style="min-width:300px;" />
-                        <br><br>
-                        <?php echo Escape::escapeHtml(__("If your S3 provider does not specify a version in their guide, enter <code>latest</code> or <code>2006-03-01</code>.", 'wp-staging')); ?>
+                        <p>
+                            <?php echo Escape::escapeHtml(__("If your S3 provider does not specify a version in their guide, enter <code>latest</code> or <code>2006-03-01</code>.", 'wp-staging')); ?>
+                        </p>
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
@@ -123,11 +124,12 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                 <fieldset class="wpstg-fieldset">
                     <label><?php esc_html_e('Bucket Name', 'wp-staging') ?></label>
                     <input class="wpstg-form-control" type="text" style="min-width:300px;" name="location" value="<?php echo esc_attr($location); ?>" />
-                    <br><br>
+                    <p>
                     <?php echo sprintf(
                         Escape::escapeHtml(__('To add a directory you can write <code>s3:[%s]/[directory-name]</code>.<br>The directory will be created automatically during backup upload. ', 'wp-staging')),
                         esc_html($locationName)
                     ); ?>
+                    </p>
                 </fieldset>
             </div>
             <button type="button" id="wpstg-btn-provider-test-connection" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Connection Test", "wp-staging") ?></button>
@@ -138,7 +140,8 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                 <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
             </fieldset>
             <hr/>
-            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
+            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button>
+            <button type="button" id="wpstg-btn-delete-provider-settings" class="wpstg-button wpstg--error"><?php esc_html_e("Delete Storage Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
         </form>
     </div>
 </fieldset>

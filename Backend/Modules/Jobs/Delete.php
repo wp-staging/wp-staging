@@ -139,7 +139,7 @@ class Delete extends Job
      */
     public function getDbName(): string
     {
-        return $this->wpdb->dbname;
+        return (string)$this->wpdb->dbname;
     }
 
     /**

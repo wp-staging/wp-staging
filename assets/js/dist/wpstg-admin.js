@@ -850,6 +850,18 @@
       slugify: function slugify(url) {
         return url.toString().toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\s+/g, '-').replace(/&/g, '-and-').replace(/[^a-z0-9\-]/g, '').replace(/-+/g, '-').replace(/^-*/, '').replace(/-*$/, '');
       },
+      sanitizeEventAttribute: function sanitizeEventAttribute(string) {
+        if (string === null) {
+          return string;
+        }
+        return string.toString().replace(/("|')\s+on([a-z]+)\s?=\s?([a-z0-9\)\(\"\';]+)/i, '');
+      },
+      htmlEntityQuotesDecode: function htmlEntityQuotesDecode(string) {
+        if (string === null) {
+          return string;
+        }
+        return string.toString().replace(/\\"/g, '&quot;').replace(/\\'/g, '&#039');
+      },
       showAjaxFatalError: function showAjaxFatalError(response, prependMessage, appendMessage) {
         prependMessage = prependMessage ? prependMessage + '<br/><br/>' : 'Something went wrong! <br/><br/>';
         appendMessage = appendMessage ? appendMessage + '<br/><br/>' : '<br/><br/>Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report and contact us.';
@@ -1317,6 +1329,7 @@
       }
       if (this.wpstdBackupTab !== null) {
         this.wpstdBackupTab.addEventListener('click', function () {
+          loadingBar();
           _this.setPageUrl('wpstg_backup');
           _this.setSidebarMenu('wpstg_backup');
         });
@@ -3715,6 +3728,9 @@
       } else if (response.job === 'SearchReplace') {
         this.title = 'Processing Data';
         this.disableCancelButton = false;
+      } else if (response.job === 'PreserveDataSecondStep' || response.job === 'PreserveDataFirstStep') {
+        this.title = 'Preserve Data';
+        this.disableCancelButton = false;
       } else if (response.job === 'directories' || response.job === 'jobFileScanning') {
         this.title = 'Scanning Files';
         this.disableCancelButton = false;
@@ -4087,9 +4103,15 @@
       }).then(function (data) {
         if (data.success) {
           qs('.wpstg-backup-plugin-notice-container').style.opacity = 0;
+          setTimeout(function () {
+            hide('.wpstg-backup-plugin-notice-container');
+          }, 500);
         }
       })["catch"](function (error) {
         qs('.wpstg-backup-plugin-notice-container').style.opacity = 0;
+        setTimeout(function () {
+          hide('.wpstg-backup-plugin-notice-container');
+        }, 500);
       });
     };
     return BackupPluginsNotice;
@@ -4912,7 +4934,7 @@
       if ('wpstg_update' === that.data.action) {
         that.data.cloneID = $('#wpstg-new-clone-id').data('clone');
       }
-      that.data.cloneName = $('#wpstg-new-clone-id').val() || that.data.cloneID;
+      that.data.cloneName = WPStagingCommon.sanitizeEventAttribute($('#wpstg-new-clone-id').val()) || that.data.cloneID;
       if (that.directoryNavigator !== null) {
         that.data.excludedDirectories = encodeURIComponent(that.directoryNavigator.getExcludedDirectories());
         that.data.extraDirectories = encodeURIComponent(that.directoryNavigator.getExtraDirectoriesRootOnly());
@@ -4938,21 +4960,12 @@
         that.data.excludedTables = '';
         that.data.allTablesExcluded = that.data.includedTables === '';
       }
-      that.data.databaseServer = $('#wpstg-db-server').val();
-      that.data.databaseUser = $('#wpstg-db-user').val();
-      that.data.databasePassword = $('#wpstg-db-pass').val();
-      that.data.databaseDatabase = $('#wpstg-db-database').val();
-      that.data.databasePrefix = $('#wpstg-db-prefix').val();
-      that.data.databaseSsl = $('#wpstg-db-ssl').is(':checked');
-      var cloneDir = $('#wpstg_clone_dir').val();
-      that.data.cloneDir = encodeURIComponent($.trim(cloneDir));
-      that.data.cloneHostname = $('#wpstg_clone_hostname').val();
-      that.data.cronDisabled = $('#wpstg_disable_cron').is(':checked');
-      that.data.emailsAllowed = $('#wpstg_allow_emails').is(':checked');
-      that.data.networkClone = $('#wpstg_network_clone').is(':checked');
-      that.data.uploadsSymlinked = $('#wpstg_symlink_upload').is(':checked');
-      that.data.cleanPluginsThemes = $('#wpstg-clean-plugins-themes').is(':checked');
-      that.data.cleanUploadsDir = $('#wpstg-clean-uploads').is(':checked');
+      if (typeof wpstgPro === 'undefined') {
+        return;
+      }
+      if (typeof wpstgPro.getAdvancedCloningOptions === 'function') {
+        that.data = wpstgPro.getAdvancedCloningOptions(that.data);
+      }
     };
     var proceedCloning = function proceedCloning($this, workflow) {
       if ($this.data('action') === 'wpstg_cloning') {
@@ -5085,6 +5098,7 @@
         cache.get('.wpstg-current-step');
         animatedLoader.css('visibility', 'hidden');
         $workFlow.html(response);
+        loadingBar('hidden');
       }, 'HTML');
       that.switchStep(1);
       cache.get('.wpstg-step3-cloning').show();
@@ -5310,31 +5324,34 @@
     var checkDiskSpace = function checkDiskSpace() {
       cache.get('#wpstg-check-space').on('click', function (e) {
         cache.get('.wpstg-loader').show();
+        loadingBar();
         var excludedDirectories = encodeURIComponent(that.directoryNavigator.getExcludedDirectories());
         var extraDirectories = encodeURIComponent(that.directoryNavigator.getExtraDirectoriesRootOnly());
+        var isUploadsSymlinked = document.getElementById('wpstg_symlink_upload').checked;
         ajax({
           action: 'wpstg_check_disk_space',
           accessToken: wpstg.accessToken,
           nonce: wpstg.nonce,
           excludedDirectories: excludedDirectories,
-          extraDirectories: extraDirectories
+          extraDirectories: extraDirectories,
+          isUploadsSymlinked: isUploadsSymlinked
         }, function (response) {
+          cache.get('.wpstg-loader').hide();
+          loadingBar('hidden');
           if (false === response) {
             cache.get('#wpstg-clone-id-error').text('Can not detect required disk space').show();
-            cache.get('.wpstg-loader').hide();
             return;
           }
 
           // Show required disk space
-          cache.get('#wpstg-clone-id-error').html('<strong>Estimated necessary disk space: ' + response.requiredSpace + '</strong>' + (response.errorMessage !== null ? '<br>' + response.errorMessage : '') + '<br> <span style="color:#444;">Before you proceed ensure your account has enough free disk space to hold the entire instance of the production site. You can check the available space from your hosting account (e.g. cPanel).</span>').show();
-          cache.get('.wpstg-loader').hide();
+          cache.get('#wpstg-clone-id-error').html('<strong>Estimated necessary disk space: ' + response.requiredSpace + '</strong>' + (response.errorMessage !== null ? '<br>' + response.errorMessage : '') + '<br><span style="color:#444;">Before proceeding, make sure that your server has enough free disk space to clone the website. You can check the available disk space in your hosting customer account (e.g. cPanel).</span>').show();
         }, 'json', false);
       });
     };
 
     /**
      * Show or hide animated loading icon
-     * @param isLoading bool
+     * @param bool isLoading
      */
     var isLoading = function isLoading(_isLoading) {
       if (!_isLoading || _isLoading === false) {

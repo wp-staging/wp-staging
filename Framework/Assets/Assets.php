@@ -288,8 +288,8 @@ class Assets
             'isPro'                  => WPStaging::isPro(),
             // TODO: handle i18n translations through Class/Service Provider?
             'i18n'                   => [
-                'dbConnectionSuccess' => esc_html__('Database Connection - Success', 'wp-staging'),
-                'dbConnectionFailed'  => esc_html__('Database Connection - Failed', 'wp-staging'),
+                'dbConnectionSuccess' => esc_html__('Database connection successful', 'wp-staging'),
+                'dbConnectionFailed'  => esc_html__('Database connection failed', 'wp-staging'),
                 'somethingWentWrong'  => esc_html__('Something went wrong.', 'wp-staging'),
                 'noRestoreFileFound'  => esc_html__('No backup file found.', 'wp-staging'),
                 'selectFileToRestore' => esc_html__('Select backup file to restore.', 'wp-staging'),
