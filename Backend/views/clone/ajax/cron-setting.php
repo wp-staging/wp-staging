@@ -20,7 +20,7 @@ $cronDisabled   = false;
 if (!$isPro) {
     $settingsEnabled = false;
 }?>
-<div class="wpstg--advance-settings--checkbox wpstg-advanced-setting-container">
+<div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg_disable_cron"><?php esc_html_e('Disable WP_CRON', 'wp-staging'); ?></label>
     <?php Checkbox::render('wpstg_disable_cron', 'wpstg_disable_cron', 'true', $cronDisabled, ['isDisabled' => !$settingsEnabled]); ?>
     <span class="wpstg--tooltip">

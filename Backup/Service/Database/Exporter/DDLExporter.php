@@ -264,15 +264,14 @@ class DDLExporter extends AbstractExporter
     }
 
     /**
-     * Replace view identifiers in SQL query
+     * Replace view identifiers in SQL query i.e.
+     * Replace prefix of tables/views used to create this view with tmp prefix
      *
-     * @TODO The original method says "View" but actually replaces from base "Tables". Is this expected?
-     *
-     * @param string $sql table create query
+     * @param string $sql view create query
      *
      * @return string
      */
-    private function replaceViewIdentifiers($sql)
+    protected function replaceViewIdentifiers($sql)
     {
         foreach (array_merge($this->tables, $this->views) as $tableName) {
             $newTableName = $this->replacePrefix($tableName, '{WPSTG_TMP_PREFIX}');

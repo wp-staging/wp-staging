@@ -87,12 +87,13 @@ use WPStaging\Framework\Facades\Escape;
                     <?php if (!empty($settingLink1) && !empty($settingText1)) : ?>
                             <a href="<?php echo esc_attr($settingLink1); ?>" target="_blank"><?php echo esc_html($settingText1); ?></a>
                     <?php endif; ?>
-                        <br><br>
+                        <p>
                         <?php echo sprintf(
                             Escape::escapeHtml(__('To add a directory you can write <code>s3:[%s]/[directory-name]</code>.<br>The directory will be created automatically during backup upload. ', 'wp-staging')),
                             esc_html($locationName),
                             '<br>'
                         ); ?>
+                        </p>
                 </fieldset>
             </div>
             <button type="button" id="wpstg-btn-provider-test-connection" class="wpstg-link-btn wpstg-blue-primary"><?php esc_html_e("Connection Test", "wp-staging") ?></button>
@@ -106,7 +107,8 @@ use WPStaging\Framework\Facades\Escape;
 
             <hr/>
 
-            <div><button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?></div>
+            <div><button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button>
+                <button type="button" id="wpstg-btn-delete-provider-settings" class="wpstg-button wpstg--error"><?php esc_html_e("Delete Storage Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?></div>
 
         </form>
     </div>

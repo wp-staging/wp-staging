@@ -41,7 +41,9 @@ class Edit extends AbstractTemplateComponent
         $name = isset($_POST['name']) ? sanitize_text_field($_POST['name']) : 'Backup';
 
         $name = substr(sanitize_text_field(html_entity_decode($name)), 0, 100);
+        $name = htmlentities($name, ENT_QUOTES);
         $name = str_replace('\\\'', '\'', $name);
+        $name = str_replace('\\\"', '\"', $name);
 
         $notes = isset($_POST['notes']) ? sanitize_textarea_field($_POST['notes']) : '';
         $notes = substr($notes, 0, 1000);
@@ -72,7 +74,7 @@ class Edit extends AbstractTemplateComponent
         foreach ($backups as $backup) {
             if ($md5 === md5($backup->getBasename())) {
                 try {
-                    $file = new FileObject($backup->getPathname(), FileObject::MODE_APPEND_AND_READ);
+                    $file     = new FileObject($backup->getPathname(), FileObject::MODE_APPEND_AND_READ);
                     $metaData = (new BackupMetadata())->hydrateByFile($file);
 
                     $increment = strlen($name) + strlen($notes);
@@ -82,7 +84,7 @@ class Edit extends AbstractTemplateComponent
                         return;
                     }
 
-                    $oldNote = $metaData->getNote();
+                    $oldNote       = $metaData->getNote();
                     $oldNoteLength = 2; // null takes 2 bytes!?
                     if ($oldNote !== null) {
                         $oldNoteLength = strlen($oldNote);
@@ -117,16 +119,16 @@ class Edit extends AbstractTemplateComponent
      */
     protected function updateBackupParts($metaData, $name, $notes, $incrementSize)
     {
-        $backupSize = 0;
+        $backupSize       = 0;
         $backupsDirectory = WPStaging::make(BackupsFinder::class)->getBackupsDirectory();
-        $backupParts = [];
+        $backupParts      = [];
         foreach ($metaData->getMultipartMetadata()->getBackupParts() as $part) {
-            $backupPart = $backupsDirectory . $part;
-            $partFile = new FileObject($backupPart, FileObject::MODE_APPEND_AND_READ);
+            $backupPart   = $backupsDirectory . $part;
+            $partFile     = new FileObject($backupPart, FileObject::MODE_APPEND_AND_READ);
             $partMetadata = (new BackupMetadata())->hydrateByFile($partFile);
-            $partSize = filesize($backupPart);
+            $partSize     = filesize($backupPart);
 
-            $oldNote = $partMetadata->getNote();
+            $oldNote       = $partMetadata->getNote();
             $oldNoteLength = 2;
             if ($oldNote !== null) {
                 $oldNoteLength = strlen($oldNote);
@@ -136,8 +138,8 @@ class Edit extends AbstractTemplateComponent
             $backupSize += $partSize;
             $backupParts[] = [
                 'metadata' => $partMetadata,
-                'file' => $partFile,
-                'size' => $partSize
+                'file'     => $partFile,
+                'size'     => $partSize
             ];
         }
 

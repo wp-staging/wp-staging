@@ -115,6 +115,10 @@ $backupNotice = WPStaging::make(BackupPluginsNotice::class);
             <div class="wpstg-loading-bar"></div>
         </div>
         <div class="wpstg--tab--contents">
+            <?php
+                $numberOfLoadingBars = 8;
+                include(WPSTG_PLUGIN_DIR . 'Backend/views/_main/loading-placeholder.php');
+            ?>
             <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">
                 <?php
                 if (!$this->siteInfo->isCloneable()) {

@@ -745,6 +745,7 @@ return array(
     'WPStaging\\Vendor\\lucatume\\DI52\\Builders\\ValueBuilder' => $vendorDir . '/lucatume/di52/src/Builders/ValueBuilder.php',
     'WPStaging\\Vendor\\lucatume\\DI52\\Container' => $vendorDir . '/lucatume/di52/src/Container.php',
     'WPStaging\\Vendor\\lucatume\\DI52\\ContainerException' => $vendorDir . '/lucatume/di52/src/ContainerException.php',
+    'WPStaging\\Vendor\\lucatume\\DI52\\NestedParseError' => $vendorDir . '/lucatume/di52/src/NestedParseError.php',
     'WPStaging\\Vendor\\lucatume\\DI52\\NotFoundException' => $vendorDir . '/lucatume/di52/src/NotFoundException.php',
     'WPStaging\\Vendor\\lucatume\\DI52\\ServiceProvider' => $vendorDir . '/lucatume/di52/src/ServiceProvider.php',
     'WPStaging\\Vendor\\phpseclib3\\Common\\Functions\\Strings' => $vendorDir . '/phpseclib/phpseclib/phpseclib/Common/Functions/Strings.php',

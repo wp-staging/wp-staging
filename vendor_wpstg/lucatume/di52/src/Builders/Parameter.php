@@ -8,6 +8,9 @@
 namespace WPStaging\Vendor\lucatume\DI52\Builders;
 
 use WPStaging\Vendor\lucatume\DI52\ContainerException;
+use WPStaging\Vendor\lucatume\DI52\NestedParseError;
+use ParseError;
+use ReflectionException;
 use ReflectionParameter;
 /**
  * Class Parameter
@@ -45,7 +48,7 @@ class Parameter
      *
      * @var array<string>
      */
-    protected static $nonClassTypes = ['string', 'int', 'bool', 'float', 'double', 'array', 'resource', 'callable', 'iterable'];
+    protected static $nonClassTypes = ['string', 'int', 'bool', 'float', 'double', 'array', 'resource', 'callable', 'iterable', 'union'];
     /**
      * A map relating the string output type to the internal, type-hintable, type.
      *
@@ -61,8 +64,10 @@ class Parameter
     /**
      * Parameter constructor.
      *
-     * @param int                 $index               The parameter position in the list of parameters.
+     * @param int $index The parameter position in the list of parameters.
      * @param ReflectionParameter $reflectionParameter The parameter reflection to extract the information from.
+     *
+     * @throws ReflectionException
      */
     public function __construct($index, \ReflectionParameter $reflectionParameter)
     {
@@ -73,11 +78,15 @@ class Parameter
         $this->type = \strpos($frags[1], '$') === 0 ? null : $frags[1];
         // PHP 8.0 nullables.
         $this->type = \str_replace('?', '', (string) $this->type);
+        // PHP 8.0 Union types.
+        if (\strpos($this->type, '|') !== \false) {
+            $this->type = 'union';
+        }
         if (isset(static::$conversionMap[$this->type])) {
             $this->type = static::$conversionMap[$this->type];
             // @codeCoverageIgnore
         }
-        $this->isClass = $this->type && !\in_array($this->type, static::$nonClassTypes, \true);
+        $this->isClass = $this->type && $this->isClass();
         $this->isOptional = $frags[0] === '<optional>';
         $this->defaultValue = $this->isOptional ? $reflectionParameter->getDefaultValue() : null;
     }
@@ -134,9 +143,39 @@ class Parameter
      */
     public function getDefaultValueOrFail()
     {
-        if (!$this->isOptional) {
-            throw new \WPStaging\Vendor\lucatume\DI52\ContainerException(\sprintf('Parameter $%s is not optional and is not type-hinted: auto-wiring is not magic.', $this->name));
+        if ($this->isOptional) {
+            return $this->defaultValue;
         }
-        return $this->defaultValue;
+        if (!$this->isClass) {
+            $format = 'Parameter $%s is not optional and is not type-hinted: auto-wiring is not magic.';
+            $message = \sprintf($format, $this->name);
+        } else {
+            $format = 'Parameter $%s is not optional and its type (%s) cannot be resolved to a concrete class.';
+            $message = \sprintf($format, $this->name, $this->getClass());
+        }
+        throw new \WPStaging\Vendor\lucatume\DI52\ContainerException($message);
+    }
+    /**
+     * Check if the parameter type is a class.
+     *
+     * @suppress PhanUndeclaredFunction
+     *
+     * @return bool
+     *
+     * @throws NestedParseError If a parsing error occurs while assessing the parameter type.
+     */
+    private function isClass()
+    {
+        if (\in_array($this->type, static::$nonClassTypes, \true)) {
+            return \false;
+        }
+        try {
+            if (\function_exists('WPStaging\\Vendor\\enum_exists') && enum_exists((string) $this->type)) {
+                return \false;
+            }
+        } catch (\ParseError $e) {
+            throw new \WPStaging\Vendor\lucatume\DI52\NestedParseError($e->getMessage(), $e->getCode(), $e, (string) $this->type, $this->name);
+        }
+        return \true;
     }
 }

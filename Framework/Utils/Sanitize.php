@@ -82,9 +82,9 @@ class Sanitize
      * @param string $value
      * @return string
      */
-    public function sanitizeEmail($value)
+    public function sanitizeEmail($value): string
     {
-        return filter_var($value, FILTER_VALIDATE_EMAIL);
+        return filter_var($value, FILTER_VALIDATE_EMAIL) ? $value : '';
     }
 
     /**

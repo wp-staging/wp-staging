@@ -57,7 +57,7 @@ if ($isPro && !empty($options->current)) {
 }
 ?>
 
-<div class="wpstg--advance-settings--checkbox wpstg-advanced-setting-container">
+<div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg-change-dest"><?php esc_html_e('Change Destination', 'wp-staging'); ?></label>
     <?php Checkbox::render('wpstg-change-dest', 'wpstg-change-dest', 'true', false, ['classes' => 'wpstg-toggle-advance-settings-section', 'isDisabled' => !$isPro], ['id' => 'wpstg-clone-directory']); ?>
     <span class="wpstg--tooltip wpstg-tooltip-icon">
@@ -104,7 +104,7 @@ if ($isPro && !empty($options->current)) {
     <hr/>
 </div>
 
-<div class="wpstg--advance-settings--checkbox">
+<div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg_symlink_upload"><?php esc_html_e('Symlink Uploads Folder', 'wp-staging'); ?></label>
     <?php Checkbox::render('wpstg_symlink_upload', 'wpstg_symlink_upload', 'true', $uploadsSymlinked, ['isDisabled' => !$isPro]); ?>
     <span class="wpstg--tooltip wpstg-tooltip-icon">

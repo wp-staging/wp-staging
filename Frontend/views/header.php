@@ -140,7 +140,8 @@
                 margin-bottom: 8px;
             }
             .wpstg-alert > p {
-                margin: 0px;
+                margin: 0;
+                line-height: 1.3;
             }
             .wpstg-alert.wpstg-alert-info {
                 color: #fff;

@@ -87,7 +87,7 @@ class PrepareBackup extends PrepareJob
     public function prepare($data = null)
     {
         if (empty($data) && array_key_exists('wpstgBackupData', $_POST)) {
-            $data         = Sanitize::sanitizeArray($_POST['wpstgBackupData'], [
+            $data = Sanitize::sanitizeArray($_POST['wpstgBackupData'], [
                 'isExportingPlugins'             => 'bool',
                 'isExportingMuPlugins'           => 'bool',
                 'isExportingThemes'              => 'bool',
@@ -107,7 +107,7 @@ class PrepareBackup extends PrepareJob
                 'isExcludingCaches'              => 'bool',
                 'backupType'                     => 'string',
             ]);
-            $data['name'] = isset($_POST['wpstgBackupData']['name']) ? sanitize_text_field($_POST['wpstgBackupData']['name']) : '';
+            $data['name'] = isset($_POST['wpstgBackupData']['name']) ? htmlentities(sanitize_text_field($_POST['wpstgBackupData']['name']), ENT_QUOTES) : '';
         }
 
         try {
@@ -129,11 +129,11 @@ class PrepareBackup extends PrepareJob
         $this->clearCacheFolder();
 
         // Lazy-instantiation to avoid process-lock checks conflicting with running processes.
-        $services         = WPStaging::getInstance()->getContainer();
+        $services = WPStaging::getInstance()->getContainer();
         /** @var JobBackupDataDto */
         $this->jobDataDto = $services->get(JobBackupDataDto::class);
         /** @var JobBackup */
-        $this->jobBackup  = $services->get(JobBackupProvider::class)->getJob();
+        $this->jobBackup = $services->get(JobBackupProvider::class)->getJob();
 
         $this->jobDataDto->hydrate($sanitizedData);
         $this->jobDataDto->setInit(true);

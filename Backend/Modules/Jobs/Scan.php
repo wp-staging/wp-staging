@@ -30,7 +30,7 @@ class Scan extends Job
 {
     /**
      * CSS class name to use for WordPress core directories like wp-content, wp-admin, wp-includes
-     * This doesn't contains class selector prefix
+     * This doesn't contain class selector prefix
      *
      * @var string
      */
@@ -38,7 +38,7 @@ class Scan extends Job
 
     /**
      * CSS class name to use for WordPress non core directories
-     * This doesn't contains class selector prefix
+     * This doesn't contain class selector prefix
      *
      * @var string
      */
@@ -110,6 +110,13 @@ class Scan extends Job
     /** @var string */
     protected $wpContentPath = WP_CONTENT_DIR;
 
+    /** @var bool */
+    private $isUploadsSymlinked;
+
+    /**
+     * Job constructor.
+     * @throws Exception
+     */
     public function __construct($directoryToScanOnly = null)
     {
         // Accept both the absolute path or relative path with respect to wp root
@@ -133,7 +140,7 @@ class Scan extends Job
     /**
      * @param string $gifLoaderPath
      */
-    public function setGifLoaderPath($gifLoaderPath)
+    public function setGifLoaderPath(string $gifLoaderPath)
     {
         $this->gifLoaderPath = $gifLoaderPath;
     }
@@ -141,7 +148,7 @@ class Scan extends Job
     /**
      * @param string $infoIconPath
      */
-    public function setInfoIcon($infoIconPath)
+    public function setInfoIcon(string $infoIconPath)
     {
         $this->infoIconPath = $infoIconPath;
     }
@@ -151,7 +158,7 @@ class Scan extends Job
      *
      * @return string
      */
-    public function getInfoIcon()
+    public function getInfoIcon(): string
     {
         return $this->infoIconPath;
     }
@@ -159,31 +166,31 @@ class Scan extends Job
     /**
      * @param string $directoryToScanOnly
      */
-    public function setDirectoryToScanOnly($directoryToScanOnly)
+    public function setDirectoryToScanOnly(string $directoryToScanOnly)
     {
         $this->directoryToScanOnly = $directoryToScanOnly;
     }
 
     /** @param string $basePath */
-    public function setBasePath($basePath)
+    public function setBasePath(string $basePath)
     {
         $this->basePath = rtrim(wp_normalize_path($basePath), '/');
     }
 
     /** @return string */
-    public function getBasePath()
+    public function getBasePath(): string
     {
         return $this->basePath;
     }
 
     /** @param string $pathIdentifier */
-    public function setPathIdentifier($pathIdentifier)
+    public function setPathIdentifier(string $pathIdentifier)
     {
         $this->pathIdentifier = $pathIdentifier;
     }
 
     /** @return string */
-    public function getPathIdentifier()
+    public function getPathIdentifier(): string
     {
         return $this->pathIdentifier;
     }
@@ -233,10 +240,17 @@ class Scan extends Job
 
         if ($this->options->currentClone !== null) {
             // Make sure no warning is shown when updating/resetting an old clone having no exclude rules options
-            $this->options->currentClone['excludeSizeRules'] = isset($this->options->currentClone['excludeSizeRules']) ? $this->options->currentClone['excludeSizeRules'] : [];
-            $this->options->currentClone['excludeGlobRules'] = isset($this->options->currentClone['excludeGlobRules']) ? $this->options->currentClone['excludeGlobRules'] : [];
-            // Make sure no warning is shown when updating/resetting an old clone having emails allowed option
-            $this->options->currentClone['emailsAllowed'] = isset($this->options->currentClone['emailsAllowed']) ? $this->options->currentClone['emailsAllowed'] : true;
+            $this->options->currentClone['excludeSizeRules']   = $this->options->currentClone['excludeSizeRules'] ?? [];
+            $this->options->currentClone['excludeGlobRules']   = $this->options->currentClone['excludeGlobRules'] ?? [];
+            // Make sure no warning is shown when updating/resetting an old clone having no admin account data
+            $this->options->currentClone['useNewAdminAccount'] = $this->options->currentClone['useNewAdminAccount'] ?? false;
+            $this->options->currentClone['adminEmail']         = $this->options->currentClone['adminEmail'] ?? '';
+            $this->options->currentClone['adminPassword']      = $this->options->currentClone['adminPassword'] ?? '';
+            // Make sure no warning is shown when updating/resetting an old clone without databaseSsl, uploadsSymlinked, emailsAllowed and networkClone options
+            $this->options->currentClone['emailsAllowed']      = $this->options->currentClone['emailsAllowed'] ?? true;
+            $this->options->currentClone['databaseSsl']        = $this->options->currentClone['databaseSsl'] ?? false;
+            $this->options->currentClone['uploadsSymlinked']   = $this->options->currentClone['uploadsSymlinked'] ?? false;
+            $this->options->currentClone['networkClone']       = $this->options->currentClone['networkClone'] ?? false;
         }
 
         // Tables
@@ -292,7 +306,7 @@ class Scan extends Job
     }
 
     /**
-     * @param null|bool $parentChecked  Is parent folder selected
+     * @param bool|null $parentChecked  Is parent folder selected
      * @param bool $forceDefault        Default false. Set it to true,
      *                                  when default button on ui is clicked,
      *                                  to ignore previous selected option for UPDATE and RESET process.
@@ -300,7 +314,7 @@ class Scan extends Job
      *
      * @return string
      */
-    public function directoryListing($parentChecked = null, $forceDefault = false, $directories = null)
+    public function directoryListing($parentChecked = null, $forceDefault = false, $directories = null): string
     {
         if ($directories === null) {
             $directories = $this->directories;
@@ -344,16 +358,21 @@ class Scan extends Job
     /**
      * Checks if there is enough free disk space to create staging site according to selected directories
      * Returns null when can't run disk_free_space function one way or another
-     * @param string    $excludedDirectories
-     * @param string    $extraDirectories
+     * @param string $excludedDirectories
+     * @param string $extraDirectories
      *
      * @return bool|null
      */
-    public function hasFreeDiskSpace($excludedDirectories, $extraDirectories)
+    public function hasFreeDiskSpace(string $excludedDirectories, string $extraDirectories)
     {
         $dirUtils            = new WpDefaultDirectories();
         $selectedDirectories = $dirUtils->getWpCoreDirectories();
         $excludedDirectories = $dirUtils->getExcludedDirectories($excludedDirectories);
+
+        if ($this->isUploadsSymlinked) {
+            $uploadDirectory = rtrim(str_replace($this->absPath, PathIdentifier::IDENTIFIER_ABSPATH, $this->dirAdapter->getMainSiteUploadsDirectory()), '/');
+            $excludedDirectories[] = $uploadDirectory;
+        }
 
         $size = 0;
         // Scan WP Root path for size (only files)
@@ -436,11 +455,11 @@ class Scan extends Job
     /**
      * Get directories and main meta data about given directory path
      * @param string $dirPath      - Optional - Default ABSPATH
-     * @param bool   $shouldReturn - Optional - Default false
+     * @param bool $shouldReturn - Optional - Default false
      *
      * @return void|array            Depend upon value of $shouldReturn
      */
-    public function getDirectories($dirPath = ABSPATH, $shouldReturn = false)
+    public function getDirectories(string $dirPath = ABSPATH, bool $shouldReturn = false)
     {
         if (!is_dir($dirPath)) {
             return;
@@ -746,5 +765,14 @@ class Scan extends Job
         }
 
         return true;
+    }
+
+    /**
+     * @param bool $isUploadsSymlinked
+     * @return void
+     */
+    public function setIsUploadsSymlinked(bool $isUploadsSymlinked)
+    {
+        $this->isUploadsSymlinked = $isUploadsSymlinked;
     }
 }

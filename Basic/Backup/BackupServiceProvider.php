@@ -10,6 +10,7 @@ use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Backup\Job\Jobs\JobRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Service\Compression\CompressionInterface;
 use WPStaging\Backup\Service\Compression\NonCompressionService;
 use WPStaging\Backup\Service\Database\Exporter\AbstractExporter;
@@ -18,7 +19,9 @@ use WPStaging\Backup\Service\Database\Exporter\DDLExporterProvider;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporterProvider;
 use WPStaging\Backup\Service\Database\Importer\BasicDatabaseSearchReplacer;
+use WPStaging\Backup\Service\Database\Importer\BasicSubsiteManager;
 use WPStaging\Backup\Service\Database\Importer\DatabaseSearchReplacerInterface;
+use WPStaging\Backup\Service\Database\Importer\SubsiteManagerInterface;
 use WPStaging\Backup\Service\Multipart\MultipartInjection;
 use WPStaging\Backup\Service\Multipart\MultipartRestoreInterface;
 use WPStaging\Backup\Service\Multipart\MultipartRestorer;
@@ -81,6 +84,11 @@ class BackupServiceProvider extends ServiceProvider
                     ->give(MultipartSplitter::class);
         }
 
+        $this->container->when(RestoreDatabaseTask::class)
+                ->needs(MultipartRestoreInterface::class)
+                ->give(MultipartRestorer::class);
+
+
         foreach (MultipartInjection::RESTORE_CLASSES as $classId) {
             $this->container->when($classId)
                     ->needs(MultipartRestoreInterface::class)
@@ -90,5 +98,9 @@ class BackupServiceProvider extends ServiceProvider
         $this->container->when(RestoreDatabaseTask::class)
                 ->needs(DatabaseSearchReplacerInterface::class)
                 ->give(BasicDatabaseSearchReplacer::class);
+
+        $this->container->when(DatabaseImporter::class)
+                ->needs(SubsiteManagerInterface::class)
+                ->give(BasicSubsiteManager::class);
     }
 }

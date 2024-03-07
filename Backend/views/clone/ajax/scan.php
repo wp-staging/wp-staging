@@ -3,9 +3,11 @@
 /**
  * @see \WPStaging\Backend\Administrator::ajaxCloneScan Context where this is included.
  *
- * @var \WPStaging\Backend\Modules\Jobs\Scan $scan
- * @var stdClass $options
+ * @var \WPStaging\Backend\Modules\Jobs\Scan                  $scan
+ * @var stdClass                                              $options
  * @var \WPStaging\Framework\Filesystem\Filters\ExcludeFilter $excludeUtils
+ * @var bool                                                  $isSiteHostedOnWpCom
+ * @var bool                                                  $isPro
  *
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
@@ -15,7 +17,6 @@ use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Facades\UI\Checkbox;
 
-$isPro = defined('WPSTGPRO_VERSION');
 ?>
 <label id="wpstg-clone-label" for="wpstg-new-clone">
     <input type="text" id="wpstg-new-clone-id" class="wpstg-textbox"
@@ -27,6 +28,12 @@ $isPro = defined('WPSTGPRO_VERSION');
             echo " disabled='disabled'";
         } ?> />
 </label>
+
+<?php if ($isSiteHostedOnWpCom) : ?>
+<div class="wpstg-alert wpstg-alert-warning wpstg-mt-10px">
+    <p><?php esc_html_e('This website is hosted on WordPress.com. Your WordPress.com credentials may not work on a staging site. Enter a valid email address and password below to create a new account on the staging site.', 'wp-staging'); ?></p>
+</div>
+<?php endif; ?>
 
 <span class="wpstg-error-msg" id="wpstg-clone-id-error" style="display:none;">
     <?php
@@ -70,17 +77,23 @@ $isPro = defined('WPSTGPRO_VERSION');
         <?php require(WPSTG_PLUGIN_DIR . 'Backend/views/selections/files.php'); ?>
     </fieldset>
 
-    <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
-        <span class="wpstg-tab-triangle wpstg-no-icon">
-            <?php Checkbox::render('', 'wpstg-advanced', 'true'); ?>
+    <a href="#" class="wpstg-tab-header<?php echo ($isPro && $isSiteHostedOnWpCom) ? " expand" : ""; ?>" data-id="#wpstg-advanced-settings">
+        <span class="wpstg-tab-triangle <?php echo ($isPro && $isSiteHostedOnWpCom) ? "wpstg-rotate-90" : "wpstg-no-icon"; ?>">
+            <?php if (!($isPro && $isSiteHostedOnWpCom)) : ?>
+                <?php Checkbox::render('', 'wpstg-advanced', 'true'); ?>
+            <?php endif; ?>
         </span>
         <?php
         $advanceSettingsTitle = $isPro ? esc_html__("Advanced Settings  ", "wp-staging") : esc_html__('Advanced Settings  (Requires Pro Version)', "wp-staging");
             echo esc_html($advanceSettingsTitle); ?>
     </a>
 
-    <div class="wpstg-tab-section" id="wpstg-advanced-settings">
+    <div class="wpstg-tab-section" id="wpstg-advanced-settings" <?php echo ($isPro && $isSiteHostedOnWpCom) ? 'style="display: block;"' : '' ?>>
         <?php
+        if ($options->mainJob !== Job::UPDATE) {
+            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'login-data.php');
+        }
+
         require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
         require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
         if ($options->mainJob === Job::STAGING) {
@@ -99,7 +112,7 @@ if ($options->current !== null && $options->mainJob === Job::UPDATE) {
 
     ?>
 <fieldset class="wpstg-fieldset" style="margin-left: 16px;">
-    <p class="wpstg--advance-settings--checkbox">
+    <p class="wpstg--advanced-settings--checkbox">
         <label for="wpstg-clean-plugins-themes"><?php esc_html_e('Clean Plugins/Themes', 'wp-staging'); ?></label>
         <?php Checkbox::render('wpstg-clean-plugins-themes', 'wpstg-clean-plugins-themes', 'true'); ?>
         <span class="wpstg--tooltip">
@@ -109,7 +122,7 @@ if ($options->current !== null && $options->mainJob === Job::UPDATE) {
             </span>
         </span>
     </p>
-    <p class="wpstg--advance-settings--checkbox">
+    <p class="wpstg--advanced-settings--checkbox">
         <label for="wpstg-clean-uploads"><?php esc_html_e('Clean Uploads', 'wp-staging'); ?></label>
         <?php Checkbox::render('wpstg-clean-uploads', 'wpstg-clean-uploads', 'true'); ?>
         <span class="wpstg--tooltip">

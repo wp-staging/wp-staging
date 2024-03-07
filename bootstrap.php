@@ -99,6 +99,11 @@ if (!function_exists('\WPStaging\functions\debug_log') && file_exists(__DIR__ . 
     include_once __DIR__ . '/wp-staging-error-handler.php';
 }
 
+// This is needed otherwise unit tests doesn't work because of new DI52 library
+if (php_sapi_name() === "cli" && defined("WPSTG_UNIT_TESTS") && constant("WPSTG_UNIT_TESTS")) {
+    WPStaging::setUseBaseContainerSingleton(true);
+}
+
 $wpStaging = WPStaging::getInstance();
 $wpStaging->registerErrorHandler();
 

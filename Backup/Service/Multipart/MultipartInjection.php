@@ -10,7 +10,6 @@ use WPStaging\Backup\Task\Tasks\JobBackup\BackupPluginsTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupThemesTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupUploadsTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\ExtractFilesTask;
-use WPStaging\Backup\Task\Tasks\JobRestore\RestoreDatabaseTask;
 
 class MultipartInjection
 {
@@ -26,6 +25,5 @@ class MultipartInjection
 
     const RESTORE_CLASSES = [
         ExtractFilesTask::class,
-        RestoreDatabaseTask::class,
     ];
 }

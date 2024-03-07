@@ -38,6 +38,7 @@ use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
 use WPStaging\Backend\Feedback\Feedback;
+use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
 
@@ -554,6 +555,8 @@ class Administrator
             exit();
         }
 
+        $siteInfo = WPStaging::make(SiteInfo::class);
+
         $db = WPStaging::make('wpdb');
 
         // Scan
@@ -566,6 +569,8 @@ class Administrator
         $options              = $scan->getOptions();
         $excludeUtils         = WPStaging::make(ExcludeFilter::class);
         $wpDefaultDirectories = WPStaging::make(WpDefaultDirectories::class);
+        $isSiteHostedOnWpCom  = $siteInfo->isHostedOnWordPressCom();
+        $isPro                = WPStaging::isPro();
         require_once "{$this->path}views/clone/ajax/scan.php";
 
         wp_die();
@@ -689,7 +694,7 @@ class Administrator
         $processLock = WPStaging::make(ProcessLock::class);
         $processLock->isRunning();
 
-        $cloning = WPStaging::make(Cloning::class);
+        $cloning = $this->getCloningJob();
 
         if (!$cloning->save()) {
             $message = $cloning->getErrorMessage();
@@ -715,7 +720,8 @@ class Administrator
             return;
         }
 
-        wp_send_json(WPStaging::make(Cloning::class)->start());
+        $cloning = $this->getCloningJob();
+        wp_send_json($cloning->start());
     }
 
     /**
@@ -727,7 +733,8 @@ class Administrator
             return;
         }
 
-        wp_send_json(WPStaging::make(Cloning::class)->start());
+        $cloning = $this->getCloningJob();
+        wp_send_json($cloning->start());
     }
 
     /**
@@ -739,7 +746,8 @@ class Administrator
             return;
         }
 
-        wp_send_json(WPStaging::make(Cloning::class)->start());
+        $cloning = $this->getCloningJob();
+        wp_send_json($cloning->start());
     }
 
     /**
@@ -751,7 +759,8 @@ class Administrator
             return;
         }
 
-        wp_send_json(WPStaging::make(Cloning::class)->start());
+        $cloning = $this->getCloningJob();
+        wp_send_json($cloning->start());
     }
 
     /**
@@ -763,7 +772,8 @@ class Administrator
             return;
         }
 
-        wp_send_json(WPStaging::make(Cloning::class)->start());
+        $cloning = $this->getCloningJob();
+        wp_send_json($cloning->start());
     }
 
     /**
@@ -921,8 +931,11 @@ class Administrator
 
         $excludedDirectories = isset($_POST["excludedDirectories"]) ? $this->sanitize->sanitizeString($_POST["excludedDirectories"]) : '';
         $extraDirectories    = isset($_POST["extraDirectories"]) ? $this->sanitize->sanitizeString($_POST["extraDirectories"]) : '';
+        $isUploadsSymlinked  = isset($_POST["isUploadsSymlinked"]) && $this->sanitize->sanitizeBool($_POST["isUploadsSymlinked"]);
 
         $scan = WPStaging::make(Scan::class);
+        $scan->setIsUploadsSymlinked($isUploadsSymlinked);
+
         return $scan->hasFreeDiskSpace($excludedDirectories, $extraDirectories);
     }
 
@@ -1266,6 +1279,14 @@ class Administrator
         }
 
         return true;
+    }
+
+    /**
+     * @return Cloning
+     */
+    private function getCloningJob(): Cloning
+    {
+        return WPStaging::make(CloningJobProvider::class)->getCloningJob();
     }
 
     /**

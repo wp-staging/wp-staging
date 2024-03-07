@@ -138,7 +138,7 @@ class Directories extends JobExecutable
         // open file handle
         $files = $this->open($this->filename, 'a');
 
-        $this->log("Scanning / for its files");
+        $this->log("Scanning / and its files");
 
         try {
             $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
@@ -186,7 +186,7 @@ class Directories extends JobExecutable
             return true;
         }
 
-        $this->log("Scanning {$relPath} and its sub-directories and files");
+        $this->log("Scanning {$relPath}, its sub-directories and files");
 
         // open file handle
         $files = $this->open($this->filename, 'a');
@@ -339,7 +339,7 @@ class Directories extends JobExecutable
 
         // open file handle and attach data to end of file
         $files = $this->open($this->filename, 'a');
-        $this->log("Scanning {$relativeExtraPath} for its sub-directories and files");
+        $this->log("Scanning {$relativeExtraPath}, its sub-directories and files");
 
         try {
             $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);
@@ -608,7 +608,7 @@ class Directories extends JobExecutable
         // open file handle
         $files = $this->open($this->filename, 'a');
 
-        $this->log("Scanning " . $relPath . " for its sub-directories and files");
+        $this->log("Scanning " . $relPath . ", its sub-directories and files");
 
         try {
             $this->setPathIdentifier(PathIdentifier::IDENTIFIER_ABSPATH);

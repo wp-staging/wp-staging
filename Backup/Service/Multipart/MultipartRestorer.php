@@ -21,7 +21,7 @@ class MultipartRestorer implements MultipartRestoreInterface
         // no-op
     }
 
-    public function prepareDatabaseRestore(JobRestoreDataDto $jobDataDto, LoggerInterface $logger, DatabaseImporter $databaseRestore, StepsDto $stepsDto, DatabaseSearchReplacerInterface $databaseSearchReplacer, $backupsDirectory)
+    public function prepareDatabaseRestore(JobRestoreDataDto $jobDataDto, LoggerInterface $logger, DatabaseImporter $databaseRestore, StepsDto $stepsDto, DatabaseSearchReplacerInterface $databaseSearchReplacer, string $backupsDirectory)
     {
         // no-op
     }

@@ -50,7 +50,7 @@ if (WPStaging::make(Directory::class)->isBackupPathOutsideAbspath() || ( defined
 
 // Fix mixed http/https
 $downloadFileUrl = $downloadUrl;
-$downloadUrl = (new Urls())->maybeUseProtocolRelative($downloadUrl);
+$downloadUrl     = (new Urls())->maybeUseProtocolRelative($downloadUrl);
 
 $logUrl = add_query_arg([
     'action' => 'wpstg--backups--logs',
@@ -63,7 +63,7 @@ $logUrl = add_query_arg([
 
     <div class="wpstg-clone-header">
         <span class="wpstg-clone-title">
-            <?php echo esc_html($backupName); ?>
+            <?php echo esc_html(str_replace(['\\&quot;', '\\&#039;'], ['"', "'"], $backupName)); ?>
         </span>
         <?php if (!$isCorrupt) : ?>
             <div class="wpstg-clone-labels">
@@ -167,7 +167,10 @@ $logUrl = add_query_arg([
                 <li>
                     <strong><?php esc_html_e('Notes:', 'wp-staging') ?></strong><br/>
                     <div class="backup-notes">
-                        <?php echo Escape::escapeHtml(nl2br($notes)); ?>
+                        <?php
+                            $notes = str_replace(['\\"', "\\'"], ['"', "'"], $notes);
+                            echo Escape::escapeHtml(nl2br($notes));
+                        ?>
                     </div>
                 </li>
             <?php endif ?>

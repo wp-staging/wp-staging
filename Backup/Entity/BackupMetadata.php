@@ -16,6 +16,7 @@ use WPStaging\Framework\Utils\Times;
 use WPStaging\Backup\Dto\Traits\DateCreatedTrait;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\WithPluginsThemesMuPluginsTrait;
+use WPStaging\Framework\Adapter\WpAdapter;
 
 /**
  * Class BackupMetadata
@@ -215,8 +216,11 @@ class BackupMetadata implements JsonSerializable
      */
     public function __construct()
     {
-        $siteInfo = new SiteInfo();
-        $time     = new Times();
+        $time      = WPStaging::make(Times::class);
+        $siteInfo  = WPStaging::make(SiteInfo::class);
+        $wpAdapter = WPStaging::make(WpAdapter::class);
+
+        $this->networkId = $wpAdapter->getCurrentNetworkId();
 
         $this->setWpstgVersion(WPStaging::getVersion());
         $this->setBackupVersion(self::BACKUP_VERSION);
@@ -224,7 +228,7 @@ class BackupMetadata implements JsonSerializable
         $this->setHomeUrl(get_option('home'));
         $this->setAbsPath(ABSPATH);
         $this->setBlogId(get_current_blog_id());
-        $this->setNetworkId(get_current_network_id());
+        $this->setNetworkId($this->networkId);
         $this->setDateCreated(time());
         $this->setDateCreatedTimezone($time->getSiteTimezoneString());
         $this->setBackupType(is_multisite() ? self::BACKUP_TYPE_MULTISITE : self::BACKUP_TYPE_SINGLE);
@@ -235,6 +239,11 @@ class BackupMetadata implements JsonSerializable
         $this->setIsCreatedOnWordPressCom($siteInfo->isHostedOnWordPressCom());
         $this->setHostingType($siteInfo->getHostingType());
 
+        $this->setSites(null);
+        $this->setSubdomainInstall(is_multisite() && is_subdomain_install());
+
+        $this->isZlibCompressed = WPStaging::make(ZlibCompressor::class)->isCompressionEnabled();
+
         $uploadDir = wp_upload_dir(null, false, true);
 
         if (!is_array($uploadDir)) {
@@ -243,11 +252,6 @@ class BackupMetadata implements JsonSerializable
 
         $this->setUploadsPath(array_key_exists('basedir', $uploadDir) ? $uploadDir['basedir'] : '');
         $this->setUploadsUrl(array_key_exists('baseurl', $uploadDir) ? $uploadDir['baseurl'] : '');
-
-        $this->setSites(null);
-        $this->setSubdomainInstall(is_multisite() && is_subdomain_install());
-
-        $this->isZlibCompressed = WPStaging::make(ZlibCompressor::class)->isCompressionEnabled();
     }
 
     #[\ReturnTypeWillChange]
@@ -281,8 +285,8 @@ class BackupMetadata implements JsonSerializable
     public function hydrate(array $data = []): BackupMetadata
     {
         if (key($data) === 'networks') {
-            if (array_key_exists(get_current_network_id(), $data['networks'])) {
-                $data = $data['networks'][get_current_network_id()];
+            if (array_key_exists($this->networkId, $data['networks'])) {
+                $data = $data['networks'][$this->networkId];
             } else {
                 $data = array_shift($data['networks']);
             }
@@ -661,7 +665,7 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getMaxTableLength()
     {
@@ -678,7 +682,7 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @return int
+     * @return int|null
      */
     public function getDatabaseFileSize()
     {
@@ -997,7 +1001,7 @@ class BackupMetadata implements JsonSerializable
     }
 
     /**
-     * @param string $scheduleId
+     * @param string|null $scheduleId
      * @return void
      */
     public function setScheduleId($scheduleId)
@@ -1164,11 +1168,18 @@ class BackupMetadata implements JsonSerializable
         $this->isZlibCompressed = $isZlibCompressed;
     }
 
+    /**
+     * @return int
+     */
     public function getTotalChunks(): int
     {
         return $this->totalChunks;
     }
 
+    /**
+     * @param int $totalChunks
+     * @return void
+     */
     public function setTotalChunks(int $totalChunks)
     {
         $this->totalChunks = $totalChunks;

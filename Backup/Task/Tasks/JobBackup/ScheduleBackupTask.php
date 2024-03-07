@@ -34,6 +34,10 @@ class ScheduleBackupTask extends BackupTask
         return 'Creating Backup Plan';
     }
 
+    /**
+     * @return \WPStaging\Backup\Dto\TaskResponseDto
+     * @throws \Exception
+     */
     public function execute()
     {
         $scheduleId = wp_generate_password(12, false);

@@ -126,4 +126,19 @@ class Strings
 
         return $result;
     }
+
+    /**
+     * Make sure prefix ends with underscore
+     * @param string $string
+     * @return string
+     */
+    public function maybeAppendUnderscore(string $string): string
+    {
+        // Early bail, if underscore is already the last character
+        if (substr($string, -1) === '_') {
+            return $string;
+        }
+
+        return $string . '_';
+    }
 }

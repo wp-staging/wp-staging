@@ -13,11 +13,13 @@ use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Service\Database\Importer\QueryCompatibility;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use RuntimeException;
+use WPStaging\Backup\Service\Database\Importer\SubsiteManagerInterface;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Framework\Exceptions\RetryException;
 
 use function WPStaging\functions\debug_log;
 
@@ -79,18 +81,31 @@ class DatabaseImporter
     /** @var array */
     private $tablesExcludedFromSearchReplace = [];
 
-    public function __construct(Database $database, JobDataDto $jobRestoreDataDto, QueryInserter $queryInserter, QueryCompatibility $queryCompatibility)
-    {
+    /** @var SubsiteManagerInterface */
+    private $subsiteManager;
+
+    /**
+     * @param Database $database
+     * @param JobDataDto $jobRestoreDataDto
+     * @param QueryInserter $queryInserter
+     * @param QueryCompatibility $queryCompatibility
+     */
+    public function __construct(
+        Database $database,
+        JobDataDto $jobRestoreDataDto,
+        QueryInserter $queryInserter,
+        QueryCompatibility $queryCompatibility,
+        SubsiteManagerInterface $subsiteManager
+    ) {
         $this->client   = $database->getClient();
         $this->wpdb     = $database->getWpdba();
         $this->database = $database;
         // @phpstan-ignore-next-line
-        $this->jobRestoreDataDto = $jobRestoreDataDto;
-
+        $this->jobRestoreDataDto  = $jobRestoreDataDto;
         $this->queryInserter      = $queryInserter;
         $this->queryCompatibility = $queryCompatibility;
-
-        $this->binaryFlagLength = strlen(RowsExporter::BINARY_FLAG);
+        $this->subsiteManager     = $subsiteManager;
+        $this->binaryFlagLength   = strlen(RowsExporter::BINARY_FLAG);
     }
 
     /**
@@ -159,6 +174,13 @@ class DatabaseImporter
             $this->stepsDto->finish();
         } catch (ThresholdException $e) {
             // no-op
+        } catch (RetryException $e) {
+            // Let retry the query
+            $this->stepsDto->setCurrent($this->file->key() - 1);
+            // Make sure we commit when bailing
+            $this->queryInserter->commit();
+
+            return;
         } catch (\Exception $e) {
             $this->stepsDto->setCurrent($this->file->key());
             $this->logger->critical(substr($e->getMessage(), 0, 1000));
@@ -188,7 +210,7 @@ class DatabaseImporter
     /**
      * @param LoggerInterface $logger
      * @param StepsDto $stepsDto
-     * @return $this
+     * @return self
      */
     public function setup(LoggerInterface $logger, StepsDto $stepsDto, RestoreTask $task)
     {
@@ -202,6 +224,8 @@ class DatabaseImporter
         $this->restoreTask->setTmpPrefix($this->jobRestoreDataDto->getTmpDatabasePrefix());
 
         $this->tablesExcludedFromSearchReplace = $this->jobRestoreDataDto->getBackupMetadata()->getNonWpTables();
+
+        $this->subsiteManager->initialize($this->jobRestoreDataDto);
 
         return $this;
     }
@@ -261,6 +285,11 @@ class DatabaseImporter
                 debug_log('processQuery - This query has been skipped from inserting by using a custom filter: ' . $query);
                 $this->logger->warning(sprintf(__('The query has been skipped from inserting by using a custom filter: %s.', 'wp-staging'), $query));
                 return false;
+            }
+
+            if ($this->subsiteManager->isTableFromDifferentSubsite($query)) {
+                $this->subsiteManager->updateSubsiteId();
+                throw new RetryException();
             }
 
             // Even if same site we may still need to run search replace against each value for NULL or BINARY values

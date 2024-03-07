@@ -120,6 +120,7 @@ class SystemInfo
         $output .= $this->info("Site:", ($this->isMultiSite) ? 'Multi Site' : 'Single Site');
         $output .= $this->info("WP Version:", get_bloginfo("version"));
         $output .= $this->info("Installed in subdir:", ($this->isSubDir() ? 'Yes' : 'No'));
+        $output .= $this->info("Database Name:", $this->database->getWpdb()->dbname);
         $output .= $this->info("Table Prefix:", $this->getTablePrefix());
         $output .= $this->info("site_url():", site_url());
         $output .= $this->info("home_url():", $this->urlsHelper->getHomeUrl());
@@ -427,15 +428,19 @@ class SystemInfo
 
     /**
      * List of Active Plugins
-     * @param array $plugins
+     * @param array $allAvailablePlugins
      * @param array $activePlugins
      * @return string
      */
-    public function activePlugins(array $plugins, array $activePlugins): string
+    public function activePlugins(array $allAvailablePlugins, array $activePlugins): string
     {
-        $output = $this->header("WordPress Active Plugins");
+        if ($this->isMultiSite) {
+            $output = $this->header("Active Plugins on this Site");
+        } else {
+            $output = $this->header("Active Plugins");
+        }
 
-        foreach ($plugins as $path => $plugin) {
+        foreach ($allAvailablePlugins as $path => $plugin) {
             if (!in_array($path, $activePlugins)) {
                 continue;
             }
@@ -448,15 +453,19 @@ class SystemInfo
 
     /**
      * List of Inactive Plugins
-     * @param array $plugins
+     * @param array $allAvailablePlugins
      * @param array $activePlugins
      * @return string
      */
-    public function inactivePlugins(array $plugins, array $activePlugins): string
+    public function inactivePlugins(array $allAvailablePlugins, array $activePlugins): string
     {
-        $output = $this->header("WordPress Inactive Plugins");
+        if ($this->isMultiSite) {
+            $output = $this->header("Inactive Plugins (Includes this and other sites in the same network)");
+        } else {
+            $output = $this->header("Inactive Plugins");
+        }
 
-        foreach ($plugins as $path => $plugin) {
+        foreach ($allAvailablePlugins as $path => $plugin) {
             if (in_array($path, $activePlugins)) {
                 continue;
             }
@@ -474,12 +483,18 @@ class SystemInfo
     public function plugins(): string
     {
         // Get plugins and active plugins
-        $plugins       = get_plugins();
+        $allAvailablePlugins       = get_plugins();
         $activePlugins = get_option("active_plugins", []);
 
+        $activePluginsToGetInactive = $activePlugins;
+        if ($this->isMultiSite) {
+            $networkActivePlugins       = array_keys(get_site_option("active_sitewide_plugins", []));
+            $activePluginsToGetInactive = array_merge($activePluginsToGetInactive, $networkActivePlugins);
+        }
+
         // Active plugins
-        $output = $this->activePlugins($plugins, $activePlugins);
-        $output .= $this->inactivePlugins($plugins, $activePlugins);
+        $output = $this->activePlugins($allAvailablePlugins, $activePlugins);
+        $output .= $this->inactivePlugins($allAvailablePlugins, $activePluginsToGetInactive);
 
         return $output;
     }
@@ -494,7 +509,7 @@ class SystemInfo
             return '';
         }
 
-        $output = $this->header("Network Active Plugins");
+        $output = $this->header("Active Network Plugins (Includes this and other sites in the same network)");
 
         $plugins       = wp_get_active_network_plugins();
         $activePlugins = get_site_option("active_sitewide_plugins", []);

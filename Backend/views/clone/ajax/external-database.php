@@ -2,7 +2,7 @@
 
 /**
  * This file is currently being called for both FREE and PRO version:
- * src/Backend/views/clone/ajax/scan.php:62
+ * src/Backend/views/clone/ajax/scan.php
  *
  * @var \WPStaging\Backend\Modules\Jobs\Scan $scan
  * @var stdClass                             $options
@@ -44,12 +44,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
  */
 ?>
 
-<?php if (!$isPro) { // Show this on only FREE version ?>
-<p class="wpstg-dark-alert wpstg-basic-feature"><?php esc_html_e('These are premium features ', 'wp-staging'); ?>
-    <a href="https://wp-staging.com/?utm_source=wp-admin&utm_medium=wp-admin&utm_campaign=db-external&utm_term=db-external" target="_blank" class="wpstg-button--primary wpstg-button--cta-red wpstg-border--violet"><?php esc_html_e("Get Started", "wp-staging"); ?></a>
-</p>
-<?php } ?>
-<div class="wpstg--advance-settings--checkbox wpstg-advanced-setting-container">
+<div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg-ext-db"><?php esc_html_e('Change Database', 'wp-staging'); ?></label>
     <?php Checkbox::render('wpstg-ext-db', 'wpstg-ext-db', 'true', false, ['classes' => 'wpstg-toggle-advance-settings-section', 'isDisabled' => !$isPro], ['id' => 'wpstg-external-db-section']); ?>
     <span class="wpstg--tooltip">
@@ -80,7 +75,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
         <label for="wpstg-db-prefix"><?php esc_html_e('Database Prefix: ', 'wp-staging'); ?></label>
         <input type="text" class="wpstg-textbox" name="wpstg-db-prefix" id="wpstg-db-prefix" value="<?php echo esc_attr($prefix); ?>" placeholder="<?php echo $db->prefix; ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
     </div>
-    <div class="wpstg--advance-settings--checkbox">
+    <div class="wpstg--advanced-settings--checkbox">
         <label for="wpstg-db-ssl"><?php esc_html_e('Enable SSL: ', 'wp-staging'); ?></label>
         <?php Checkbox::render('wpstg-db-ssl', 'wpstg-db-ssl', 'true', $useSsl); ?>
     </div>

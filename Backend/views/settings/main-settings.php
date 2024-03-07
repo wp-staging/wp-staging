@@ -10,6 +10,9 @@ use WPStaging\Framework\Facades\Sanitize;
     $isActiveSettingsPage = true;
     require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/main-navigation.php');
     ?>
+    <div class="wpstg-loading-bar-container">
+        <div class="wpstg-loading-bar"></div>
+    </div>
     <div class="wpstg-tabs-container" id="wpstg-settings">
 
         <ul class="wpstg-nav-tab-wrapper">
@@ -47,7 +50,14 @@ use WPStaging\Framework\Facades\Sanitize;
         </ul>
 
         <div class="wpstg-metabox-holder">
-            <?php require_once $this->path . "views/settings/tabs/" . $activeTab . ".php"?>
+            <?php
+            if ($activeTab === 'general') {
+                $numberOfLoadingBars = 57;
+                include(WPSTG_PLUGIN_DIR . 'Backend/views/_main/loading-placeholder.php');
+            }
+
+            require_once $this->path . "views/settings/tabs/" . $activeTab . ".php";
+            ?>
         </div>
     </div>
 </div>

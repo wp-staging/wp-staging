@@ -120,8 +120,6 @@ class RowsExporter extends AbstractExporter
 
         $this->specialFields = ['user_roles', 'capabilities', 'user_level', 'dashboard_quick_press_last_post_id', 'user-settings', 'user-settings-time'];
 
-        $this->prefixSpecialFields();
-
         $this->databaseName = $this->database->getWpdba()->getClient()->__get('dbname');
     }
 
@@ -490,7 +488,7 @@ class RowsExporter extends AbstractExporter
     /**
      * @return void
      */
-    protected function prefixSpecialFields()
+    public function prefixSpecialFields()
     {
         $prefix = $this->getPrefix();
 

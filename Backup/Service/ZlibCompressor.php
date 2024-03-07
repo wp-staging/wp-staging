@@ -53,6 +53,12 @@ class ZlibCompressor
     public function isCompressionEnabled(): bool
     {
         static $isEnabled = null;
+
+        // Early bail: if compression feature not enabled.
+        if (!$this->isCompressionConstantEnabled()) {
+            return false;
+        }
+
         if (is_null($isEnabled)) {
             $settings = (object)get_option('wpstg_settings', []);
             $isEnabled = $settings->enableCompression ?? false;
@@ -70,6 +76,12 @@ class ZlibCompressor
         $isMultiPartEnabled = Hooks::applyFilters('wpstg.backup.isMultipartBackup', false);
 
         return $isEnabled && !$isMultiPartEnabled;
+    }
+
+    /** @return bool */
+    protected function isCompressionConstantEnabled(): bool
+    {
+        return defined('WPSTG_ENABLE_COMPRESSION') && WPSTG_ENABLE_COMPRESSION;
     }
 
     public function getService(): CompressionInterface
