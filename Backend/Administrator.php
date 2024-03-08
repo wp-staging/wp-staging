@@ -429,24 +429,30 @@ class Administrator
         nocache_headers();
         header("Content-Type: text/plain");
         header('Content-Disposition: attachment; filename="wpstg-bundled-logs.txt"');
-        echo esc_html(wp_strip_all_tags(WPStaging::make(SystemInfo::class)->get("systemInfo")));
-        echo esc_html("\n\n" . str_repeat("-", 25) . "\n\n");
-        $wpstgLogs = WPStaging::make(DebugLogReader::class)->getLastLogEntries(100 * KB_IN_BYTES, true, false);
-        echo esc_html(wp_strip_all_tags($wpstgLogs));
-        echo esc_html(PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL);
-        $wpCoreDebugLog =  WPStaging::make(DebugLogReader::class)->getLastLogEntries((256 * KB_IN_BYTES ), false, true);
-        echo esc_html(wp_strip_all_tags($wpCoreDebugLog));
+        $output  = WPStaging::make(SystemInfo::class)->get("systemInfo");
+        $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
+        $output .= WPStaging::make(DebugLogReader::class)->getLastLogEntries(100 * KB_IN_BYTES, true, false);
+        $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
+        $output .= WPStaging::make(DebugLogReader::class)->getLastLogEntries((256 * KB_IN_BYTES ), false, true);
 
         $latestLogFiles = WPStaging::make(DebugLogReader::class)->getLatestLogFiles();
         if (count($latestLogFiles) === 0) {
+            echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html(wp_strip_all_tags($output))); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
             return;
         }
 
         foreach ($latestLogFiles as $logFile) {
-            echo esc_html(PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL);
+            $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
             $logs = file_get_contents($logFile);
-            echo esc_html($logs);
+            if (empty($logs)) {
+                continue;
+            }
+
+            $output .= $logs;
         }
+
+        echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html(wp_strip_all_tags($output))); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
+
     }
 
     /**
