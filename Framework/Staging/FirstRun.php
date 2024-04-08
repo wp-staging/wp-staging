@@ -4,10 +4,10 @@ namespace WPStaging\Framework\Staging;
 
 use WPStaging\Frontend\LoginNotice;
 use WPStaging\Framework\Notices\DisabledItemsNotice;
-use WPStaging\Framework\Notices\WarningsNotice;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
-use WPStaging\Framework\Support\ThirdParty\WordFence;
+use WPStaging\Framework\ThirdParty\WordFence;
+use WPStaging\Framework\ThirdParty\ThirdPartyCacheHandler;
 
 /**
  * Class FirstRun
@@ -65,6 +65,10 @@ class FirstRun
         if (class_exists('\WPStaging\Pro\Staging\NetworkClone')) {
             (new \WPStaging\Pro\Staging\NetworkClone())->init();
         }
+
+        /** @var ThirdPartyCacheHandler $cacheHandler */
+        $cacheHandler = WPStaging::make(ThirdPartyCacheHandler::class);
+        $cacheHandler->purgeEnduranceCache();
 
         // Allow users to attach custom actions by using this hook
         do_action('wpstg.clone_first_run');

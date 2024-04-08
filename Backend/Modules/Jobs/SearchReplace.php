@@ -304,7 +304,7 @@ class SearchReplace extends CloningProcess
         // Get columns and primary keys
         $primaryKeyAndColumns = $this->getColumns($table);
 
-        if (false === $primaryKeyAndColumns) {
+        if ($primaryKeyAndColumns === false) {
             // Stop here: for some reason the table cannot be described or there was an error.
             ++$this->options->job->failedAttempts;
             return false;
@@ -352,9 +352,7 @@ class SearchReplace extends CloningProcess
             }
 
             // Skip transients (There can be thousands of them. Save memory and increase performance)
-            if (
-                isset($row['option_name']) && $args['skip_transients'] === 'on' && strpos($row['option_name'], '_transient')
-                !== false
+            if (isset($row['option_name']) && $args['skip_transients'] === 'on' && strpos($row['option_name'], '_transient') !== false
             ) {
                 continue;
             }
@@ -367,6 +365,11 @@ class SearchReplace extends CloningProcess
             // Go through the columns
             foreach ($columns as $column) {
                 $dataRow = $row[$column];
+
+                // Don't use empty() here, because it will also skip valid '0' values
+                if (is_null($dataRow)) {
+                    continue;
+                }
 
                 // Skip column larger than 5MB
                 $size = strlen($dataRow);
@@ -417,7 +420,7 @@ class SearchReplace extends CloningProcess
             }
         } // end row loop
 
-        unset($row,$updateSql,$whereSql,$sql,$currentRow);
+        unset($row, $updateSql, $whereSql, $sql, $currentRow);
 
         if (!$this->isSearchReplaceGeneratorDisabled()) {
             $this->updateJobStart($processed, $this->stagingDb, $table);
@@ -492,7 +495,6 @@ class SearchReplace extends CloningProcess
      */
     private function isExcludedTable($table)
     {
-
         $tables = $this->excludedTableService->getExcludedTablesForSearchReplace($this->isNetworkClone());
 
         $excludedAllTables = [];

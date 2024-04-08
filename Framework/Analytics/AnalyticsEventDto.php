@@ -83,7 +83,7 @@ abstract class AnalyticsEventDto implements \JsonSerializable
         try {
             $this->saveEvent($jobId, $this);
         } catch (\Exception $e) {
-            \WPStaging\functions\debug_log("WP STAGING: Could not register start event analytics data for job ID $jobId.", 'debug');
+            \WPStaging\functions\debug_log("WP STAGING: Could not register start event analytics data for job ID $jobId.", 'debug', false);
         }
     }
 
@@ -92,7 +92,7 @@ abstract class AnalyticsEventDto implements \JsonSerializable
         try {
             $event = $this->getEventByJobId($jobId);
         } catch (\Exception $e) {
-            \WPStaging\functions\debug_log("WP STAGING: Could not register finish event analytics data for job ID $jobId", 'debug');
+            \WPStaging\functions\debug_log("WP STAGING: Could not register finish event analytics data for job ID $jobId", 'debug', false);
 
             return;
         }
@@ -110,7 +110,7 @@ abstract class AnalyticsEventDto implements \JsonSerializable
         try {
             $this->saveEvent($jobId, $event);
         } catch (\Exception $e) {
-            \WPStaging\functions\debug_log("WP STAGING: Could not save finish event analytics data for job ID $jobId.", 'debug');
+            \WPStaging\functions\debug_log("WP STAGING: Could not save finish event analytics data for job ID $jobId.", 'debug', false);
         }
     }
 
@@ -122,7 +122,7 @@ abstract class AnalyticsEventDto implements \JsonSerializable
         try {
             $event = static::getEventByJobId($jobId);
         } catch (\Exception $e) {
-            \WPStaging\functions\debug_log("WP STAGING: Could not register cancel event analytics data for job ID $jobId", 'debug');
+            \WPStaging\functions\debug_log("WP STAGING: Could not register cancel event analytics data for job ID $jobId", 'debug', false);
 
             return;
         }
@@ -150,7 +150,7 @@ abstract class AnalyticsEventDto implements \JsonSerializable
         try {
             static::saveEvent($jobId, $event);
         } catch (\Exception $e) {
-            \WPStaging\functions\debug_log("WP STAGING: Could not save cancel event analytics data for job ID $jobId.", 'debug');
+            \WPStaging\functions\debug_log("WP STAGING: Could not save cancel event analytics data for job ID $jobId.", 'debug', false);
         }
     }
 
@@ -162,7 +162,7 @@ abstract class AnalyticsEventDto implements \JsonSerializable
         try {
             $event = static::getEventByJobId($jobId);
         } catch (\Exception $e) {
-            \WPStaging\functions\debug_log("WP STAGING: Could not register cancel event analytics data for job ID $jobId", 'debug');
+            \WPStaging\functions\debug_log("WP STAGING: Could not register cancel event analytics data for job ID $jobId", 'debug', false);
 
             return;
         }
@@ -180,7 +180,7 @@ abstract class AnalyticsEventDto implements \JsonSerializable
         try {
             static::saveEvent($jobId, $event);
         } catch (\Exception $e) {
-            \WPStaging\functions\debug_log("WP STAGING: Could not save cancel event analytics data for job ID $jobId.", 'debug');
+            \WPStaging\functions\debug_log("WP STAGING: Could not save cancel event analytics data for job ID $jobId.", 'debug', false);
         }
     }
 

@@ -658,7 +658,7 @@
       retry: {
         currentDelay: 0,
         count: 0,
-        max: 10,
+        max: wpstg.maxFailedRetries,
         retryOnErrors: [401, 403, 404, 429, 502, 503, 504],
         performingRequest: false,
         incrementRetry: function incrementRetry(incrementRatio) {
@@ -923,7 +923,7 @@
           showErrors = true;
         }
         tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
-        var retryLimit = 10;
+        var retryLimit = wpstg.maxFailedRetries;
         var retryTimeout = 10000 * tryCount;
         incrementRatio = parseInt(incrementRatio);
         if (!isNaN(incrementRatio)) {
@@ -1290,6 +1290,32 @@
   }
 
   /**
+   * Displays a notification message
+   *
+   * @param type
+   * @param message
+   */
+  function notify(type, message) {
+    var notyf = new Notyf({
+      duration: 6000,
+      position: {
+        x: 'center',
+        y: 'bottom'
+      },
+      dismissible: true,
+      types: [{
+        type: 'warning',
+        background: 'orange',
+        icon: true
+      }]
+    });
+    notyf.open({
+      type: type,
+      message: message
+    });
+  }
+
+  /**
    * @param visibility
    * @return {void}
    */
@@ -1306,53 +1332,119 @@
   }
 
   /**
-   * Enable side bar menu and set url on tab click
+   * @param visibility
+   * @return {void}
    */
-  var WpstgSidebarMenu = /*#__PURE__*/function () {
-    function WpstgSidebarMenu() {
-      this.init();
+  function loadingPlaceholder(visibility) {
+    if (visibility === void 0) {
+      visibility = 'visible';
     }
-    var _proto = WpstgSidebarMenu.prototype;
-    _proto.init = function init() {
-      this.wpstdStagingTab = document.querySelector('#wpstg--tab--toggle--staging');
-      this.wpstdBackupTab = document.querySelector('#wpstg--tab--toggle--backup');
-      this.wpstdSidebarMenu = document.querySelector('#toplevel_page_wpstg_clone');
-      this.addEvents();
-    };
-    _proto.addEvents = function addEvents() {
-      var _this = this;
-      if (this.wpstdStagingTab !== null) {
-        this.wpstdStagingTab.addEventListener('click', function () {
-          _this.setPageUrl('wpstg_clone');
-          _this.setSidebarMenu('wpstg_clone');
-        });
+    var loader = all('.wpstg-loading-placeholder-container');
+    loader.forEach(function (element) {
+      if (element) {
+        element.style.visibility = visibility;
       }
-      if (this.wpstdBackupTab !== null) {
-        this.wpstdBackupTab.addEventListener('click', function () {
-          loadingBar();
-          _this.setPageUrl('wpstg_backup');
-          _this.setSidebarMenu('wpstg_backup');
-        });
-      }
-    };
-    _proto.setPageUrl = function setPageUrl(page) {
-      window.history.pushState(null, null, window.location.pathname + '?page=' + page);
-    };
-    _proto.setSidebarMenu = function setSidebarMenu(page) {
-      var wpstgSidebarMenuElements = this.wpstdSidebarMenu.querySelector('ul').querySelectorAll('li');
-      if (wpstgSidebarMenuElements.length > 0) {
-        for (var i = 0; i < wpstgSidebarMenuElements.length; i++) {
-          wpstgSidebarMenuElements[i].classList.remove('current');
-          if (wpstgSidebarMenuElements[i].querySelector('a') !== null) {
-            if (wpstgSidebarMenuElements[i].querySelector('a').getAttribute('href') === 'admin.php?page=' + page) {
-              wpstgSidebarMenuElements[i].classList.add('current');
+    });
+    var container = qs('.wpstg--tab--contents');
+    if (visibility === 'visible') {
+      loadingBar();
+      container && (container.style.overflow = 'hidden');
+      return;
+    }
+    loadingBar('hidden');
+    container && (container.style.overflow = 'unset');
+  }
+
+  /**
+   * @return {string|null}
+   */
+  function getActivePage() {
+    return (window.location.search.match(/[\?&]page=([^&]*)/) || [])[1] || null;
+  }
+
+  /**
+   *
+   * @param container
+   * @return {Promise<void>}
+   */
+  function setLoadingPlaceholder(_x) {
+    return _setLoadingPlaceholder.apply(this, arguments);
+  }
+
+  /**
+   * Normalizes a URL path and appends a slug to it, ensuring there are no consecutive slashes.
+   * @param path {string}
+   * @param slug {string}
+   * @return {string}
+   */
+  function _setLoadingPlaceholder() {
+    _setLoadingPlaceholder = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(container) {
+      var loadingPlaceholderContainer, loadingWrapper, _loadingWrapper$query, _loadingWrapper$query2, _loadingWrapper$first, _loadingWrapper$lastE, loadingLines;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) switch (_context.prev = _context.next) {
+          case 0:
+            if (container === void 0) {
+              container = '';
             }
-          }
+            if (container === '') {
+              container = qs('.wpstg--tab--contents');
+            }
+            if (!(container === null)) {
+              _context.next = 4;
+              break;
+            }
+            return _context.abrupt("return");
+          case 4:
+            loadingPlaceholderContainer = container.querySelector('.wpstg-loading-placeholder-container');
+            loadingWrapper = loadingPlaceholderContainer.querySelector('.wpstg-dom-loading-wrapper');
+            if (loadingWrapper) {
+              _context.next = 8;
+              break;
+            }
+            return _context.abrupt("return");
+          case 8:
+            if (!(loadingWrapper.offsetHeight !== container.offsetHeight)) {
+              _context.next = 19;
+              break;
+            }
+            loadingLines = loadingWrapper.querySelectorAll('.wpstg-loading-lines-bar');
+            loadingLines.forEach(function (line) {
+              return line.remove();
+            });
+            (_loadingWrapper$query = loadingWrapper.querySelector('.wpstg-loading-line')) == null ? void 0 : _loadingWrapper$query.remove();
+            (_loadingWrapper$query2 = loadingWrapper.querySelector('.wpstg-loading-last-line-bar')) == null ? void 0 : _loadingWrapper$query2.remove();
+          case 13:
+            loadingWrapper.insertAdjacentHTML('beforeend', '<div class="wpstg-loading-lines-bar"></div>');
+            _context.next = 16;
+            return new Promise(function (resolve) {
+              return setTimeout(resolve, 0);
+            });
+          case 16:
+            if (loadingWrapper.offsetHeight <= container.offsetHeight - 40) {
+              _context.next = 13;
+              break;
+            }
+          case 17:
+            (_loadingWrapper$first = loadingWrapper.firstElementChild) == null ? void 0 : _loadingWrapper$first.classList.add('wpstg-loading-first-line-bar');
+            (_loadingWrapper$lastE = loadingWrapper.lastElementChild) == null ? void 0 : _loadingWrapper$lastE.classList.add('wpstg-loading-last-line-bar');
+          case 19:
+            _context.next = 21;
+            return new Promise(function (resolve) {
+              return setTimeout(resolve, 0);
+            });
+          case 21:
+          case "end":
+            return _context.stop();
         }
-      }
-    };
-    return WpstgSidebarMenu;
-  }();
+      }, _callee);
+    }));
+    return _setLoadingPlaceholder.apply(this, arguments);
+  }
+  function normalizeAndAppendSlug(path, slug) {
+    var normalizedPath = path.replace(/\/+$/g, '');
+    normalizedPath += '/' + slug + '/';
+    return normalizedPath.replace(/\/+/g, '/');
+  }
 
   /**
    * Handle toggle of contact us modal
@@ -1552,7 +1644,6 @@
       addEvent(this.pageWrapper, 'click', this.enableButtonId, function () {
         _this.sendRequest(_this.enableAction);
       });
-      new WpstgSidebarMenu();
     };
     _proto.init = function init() {
       this.addEvents();
@@ -1671,10 +1762,10 @@
       var checkboxWrapper = getPreviousSibling(element, 'span');
       this.currentCheckboxElement = checkboxWrapper.querySelector('input[type="checkbox"]');
       this.currentLoader = this.currentParentDiv.querySelector('.wpstg-is-dir-loading');
-      if (this.currentCheckboxElement.getAttribute('wpstg-data-navigatable', 'false') === 'false') {
+      if (this.currentCheckboxElement.getAttribute('data-navigatable', 'false') === 'false') {
         return false;
       }
-      if (this.currentCheckboxElement.getAttribute('wpstg-data-scanned', 'false') === 'false') {
+      if (this.currentCheckboxElement.getAttribute('data-scanned', 'false') === 'false') {
         return true;
       }
       return false;
@@ -1684,9 +1775,9 @@
       if (this.currentLoader !== null) {
         this.currentLoader.style.display = 'inline-block';
       }
-      var changed = this.currentCheckboxElement.getAttribute('wpstg-data-changed');
-      var path = this.currentCheckboxElement.getAttribute('wpstg-data-path');
-      var prefix = this.currentCheckboxElement.getAttribute('wpstg-data-prefix');
+      var changed = this.currentCheckboxElement.getAttribute('data-changed');
+      var path = this.currentCheckboxElement.getAttribute('data-path');
+      var prefix = this.currentCheckboxElement.getAttribute('data-prefix');
       fetch(this.wpstgObject.ajaxUrl, {
         method: 'POST',
         credentials: 'same-origin',
@@ -1709,7 +1800,7 @@
         return Promise.reject(response);
       }).then(function (data) {
         if ('undefined' !== typeof data.success && data.success) {
-          _this2.currentCheckboxElement.setAttribute('wpstg-data-scanned', true);
+          _this2.currentCheckboxElement.setAttribute('data-scanned', true);
           var dirContainer = document.createElement('div');
           dirContainer.classList.add('wpstg-dir');
           dirContainer.classList.add('wpstg-subdir');
@@ -1805,7 +1896,7 @@
       this.countSelectedFiles();
     };
     _proto.parseExcludes = function parseExcludes() {
-      this.existingExcludes = this.directoryListingContainer.getAttribute('wpstg-data-existing-excludes', []);
+      this.existingExcludes = this.directoryListingContainer.getAttribute('data-existing-excludes', []);
       if (typeof this.existingExcludes === 'undefined' || !this.existingExcludes) {
         this.existingExcludes = [];
         return;
@@ -1834,10 +1925,10 @@
     _proto.toggleDirectoryNavigation = function toggleDirectoryNavigation(element) {
       var checkboxWrapper = getPreviousSibling(element, 'span');
       var cbElement = checkboxWrapper.querySelector('input[type="checkbox"]');
-      if (cbElement.getAttribute('wpstg-data-navigatable', 'false') === 'false') {
+      if (cbElement.getAttribute('data-navigatable', 'false') === 'false') {
         return;
       }
-      if (cbElement.getAttribute('wpstg-data-scanned', 'false') === 'false') {
+      if (cbElement.getAttribute('data-scanned', 'false') === 'false') {
         return;
       }
       var subDirectories = getNextSibling(checkboxWrapper, '.wpstg-subdir');
@@ -1849,7 +1940,7 @@
     };
     _proto.updateDirectorySelection = function updateDirectorySelection(element) {
       var parent = element.parentElement.parentElement;
-      element.setAttribute('wpstg-data-changed', 'true');
+      element.setAttribute('data-changed', 'true');
       if (element.checked) {
         getParents(parent.parentElement, '.wpstg-dir').forEach(function (parElem) {
           for (var i = 0; i < parElem.children.length; i++) {
@@ -1878,8 +1969,8 @@
       this.countSelectedFiles();
     };
     _proto.countSelectedFiles = function countSelectedFiles() {
-      var themesCount = this.directoryListingContainer.querySelectorAll('[wpstg-data-dir-type="theme"]:checked').length;
-      var pluginsCount = this.directoryListingContainer.querySelectorAll('[wpstg-data-dir-type="plugin"]:checked').length;
+      var themesCount = this.directoryListingContainer.querySelectorAll('[data-dir-type="theme"]:checked').length;
+      var pluginsCount = this.directoryListingContainer.querySelectorAll('[data-dir-type="plugin"]:checked').length;
       var filesCountElement = qs('#wpstg-files-count');
       if (themesCount === 0 && pluginsCount === 0) {
         filesCountElement.classList.add('danger');
@@ -3626,6 +3717,7 @@
       this.successModal = '';
       this.showProcessLogs = true;
       this.stagingSiteUrl = '';
+      this.modalType = 'clone';
     }
 
     /**
@@ -3644,10 +3736,10 @@
         }
       }, 1000);
       if (this.action === 'wpstg_delete_clone') {
-        hide('.wpstg--modal--process--logs--tail');
+        hide('.wpstg-' + this.modalType + '-process-logs-button');
         this.showCancelButton = false;
         var container = WPStagingCommon.getSwalContainer();
-        var processPercentageElement = container.querySelector('.wpstg--modal--process--percent');
+        var processPercentageElement = container.querySelector('.wpstg-' + this.modalType + '-process-percent');
         processPercentageElement.textContent = 100;
       }
       if (this.action === 'wpstg_cloning' || this.action === 'wpstg_push_processing') {
@@ -3703,7 +3795,7 @@
         this.isProcessCancelled = true;
         if (this.action === 'wpstg_push_processing') {
           var container = WPStagingCommon.getSwalContainer();
-          var processTitleElement = container.querySelector('.wpstg--modal--process--title');
+          var processTitleElement = container.querySelector('.wpstg-' + this.modalType + '-process-title');
           processTitleElement.textContent = 'Canceling Please wait....';
           this.stop();
           show('#wpstg-workflow');
@@ -3771,7 +3863,7 @@
      */;
     _proto.initializeProcessModal = function initializeProcessModal() {
       var _this3 = this;
-      var modal = document.querySelector('#wpstg--modal--backup--process');
+      var modal = document.getElementById('wpstg-' + this.modalType + '-process-modal');
       var html = modal.innerHTML;
       modal.parentNode.removeChild(modal);
       this.modal = {
@@ -3796,6 +3888,12 @@
             btnCancel.addEventListener('click', function () {
               _this3.cancelProcess();
             });
+            var showLogsButton = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg-' + _this3.modalType + '-process-logs-button')[0];
+            var showLogs = showLogsButton.cloneNode(true);
+            showLogsButton.parentNode.replaceChild(showLogs, showLogsButton);
+            showLogs.addEventListener('click', function (e) {
+              _this3.renderProcessLogs('process', e);
+            });
           }
         })
       };
@@ -3810,8 +3908,8 @@
     _proto.setProcessModal = function setProcessModal() {
       var container = WPStagingCommon.getSwalContainer();
       var cancelButton = container.getElementsByClassName('wpstg--swal2-cancel wpstg--btn--cancel')[0];
-      var processTitleElement = container.querySelector('.wpstg--modal--process--title');
-      var processPercentageElement = container.querySelector('.wpstg--modal--process--percent');
+      var processTitleElement = container.querySelector('.wpstg-' + this.modalType + '-process-title');
+      var processPercentageElement = container.querySelector('.wpstg-' + this.modalType + '-process-percent');
       processTitleElement.textContent = this.title;
       processPercentageElement.textContent = this.percentage;
       cancelButton.disabled = this.disableCancelButton;
@@ -3841,6 +3939,7 @@
         this.showCancelButton = showCancelButton;
         this.showLogs = showLogs;
         if (!this.modal) {
+          WPStagingCommon.resetErrors();
           this.initializeProcessModal();
         } else {
           if (params.job) {
@@ -3875,7 +3974,7 @@
     _proto.updateElapsedTime = function updateElapsedTime() {
       if (this.processInterval !== null) {
         var container = WPStagingCommon.getSwalContainer();
-        var elapsedTimeElement = container.querySelector('.wpstg--modal--process--elapsed-time');
+        var elapsedTimeElement = container.querySelector('.wpstg-' + this.modalType + '-process-elapsed-time');
         elapsedTimeElement.textContent = this.formatTimeDuration();
       }
     };
@@ -3966,7 +4065,15 @@
         'confirmButtonText': 'Close',
         'showCancelButton': false,
         'showConfirmButton': true,
-        'allowOutsideClick': false
+        'allowOutsideClick': false,
+        'onRender': function onRender() {
+          var showLogsButton = WPStagingCommon.getSwalContainer().getElementsByClassName('wpstg-' + _this6.modalType + '-success-logs-button')[0];
+          var showLogs = showLogsButton.cloneNode(true);
+          showLogsButton.parentNode.replaceChild(showLogs, showLogsButton);
+          showLogs.addEventListener('click', function (e) {
+            _this6.renderProcessLogs('success', e);
+          });
+        }
       }).then(function (result) {
         if (result.value) {
           WPStagingCommon.closeSwalModal();
@@ -3979,7 +4086,7 @@
         }
       });
       if (this.showProcessLogs) {
-        show('.wpstg--modal--download--logs--wrapper');
+        show('.wpstg-' + this.modalType + '-success-logs-wrapper');
       }
       hide('.wpstg-loader');
       if (this.action !== 'wpstg_delete_clone') {
@@ -3996,7 +4103,7 @@
      * @returns {HTMLElement} The modified modal element.
      */;
     _proto.setSuccessModalContent = function setSuccessModalContent(params) {
-      var modal = document.getElementById('wpstg--modal--backup--download');
+      var modal = document.getElementById('wpstg-' + this.modalType + '-success-modal');
       if (params.title !== null) {
         modal.innerHTML = modal.innerHTML.replace('{title}', params.title);
       }
@@ -4010,7 +4117,7 @@
         }
         if (this.action === 'wpstg_push_processing') {
           messageBody += '<a href="https://wp-staging.com/refresh-and-clear-cache/" target="_blank">How to delete the cache.</a>';
-          var downloadModalTextElement = modal.querySelector('.wpstg-download-modal-text');
+          var downloadModalTextElement = modal.querySelector('.wpstg-clone-success-modal-text');
           if (downloadModalTextElement) {
             downloadModalTextElement.classList.add('wpstg--red');
           }
@@ -4046,6 +4153,49 @@
       this.stagingSiteUrl = siteUrl;
       this.showProcessLogs = showLogs;
       this.initializeSuccessModal(params);
+    }
+
+    /**
+     * @return {string}
+     */;
+    _proto.getModalType = function getModalType() {
+      return this.modalType;
+    }
+
+    /**
+     * Display logs in a modal.
+     * and avoid mixing of different processes logs
+     * @return {void}
+     */;
+    _proto.renderProcessLogs = function renderProcessLogs(processType, event) {
+      if (processType === void 0) {
+        processType = 'process';
+      }
+      var container = WPStagingCommon.getSwalContainer();
+      if (window.WPStaging.messages.length !== 0) {
+        var logsContainer = container.querySelector('.wpstg-' + this.modalType + '-' + processType + '-logs');
+        logsContainer.innerHTML = '';
+        window.WPStaging.messages.forEach(function (message) {
+          var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
+          var pElement = document.createElement('p');
+          pElement.className = msgClass;
+          pElement.textContent = "[" + message.type + "] - [" + message.date + "] - " + message.message;
+          logsContainer.appendChild(pElement);
+        });
+      }
+      var logs = container.querySelector('.wpstg-' + this.modalType + '-' + processType + '-logs');
+      var logBtn = event.target;
+      event.preventDefault();
+      if (logs.style.display === 'none' || logs.style.display === '') {
+        logs.style.display = 'block';
+        logBtn.textContent = wpstg.i18n.hideLogs;
+        container.childNodes[0].style.width = '97%';
+        container.style.zIndex = 9999;
+      } else {
+        logs.style.display = 'none';
+        logBtn.textContent = wpstg.i18n.showLogs;
+        container.childNodes[0].style.width = '600px';
+      }
     };
     return WpstgProcessModal;
   }();
@@ -4118,6 +4268,58 @@
   }();
   new BackupPluginsNotice();
 
+  /**
+   * Enable side bar menu and set url on tab click
+   */
+  var WpstgSidebarMenu = /*#__PURE__*/function () {
+    function WpstgSidebarMenu() {
+      this.init();
+    }
+    var _proto = WpstgSidebarMenu.prototype;
+    _proto.init = function init() {
+      this.wpstdStagingTab = document.querySelector('#wpstg--tab--toggle--staging');
+      this.wpstdBackupTab = document.querySelector('#wpstg--tab--toggle--backup');
+      this.wpstdSidebarMenu = document.querySelector('#toplevel_page_wpstg_clone');
+      this.addEvents();
+    };
+    _proto.addEvents = function addEvents() {
+      var _this = this;
+      if (this.wpstdStagingTab !== null) {
+        this.wpstdStagingTab.addEventListener('click', function () {
+          setLoadingPlaceholder();
+          _this.setPageUrl('wpstg_clone');
+          _this.setSidebarMenu('wpstg_clone');
+        });
+      }
+      if (this.wpstdBackupTab !== null) {
+        this.wpstdBackupTab.addEventListener('click', function () {
+          setLoadingPlaceholder().then(function () {
+            return loadingPlaceholder();
+          });
+          _this.setPageUrl('wpstg_backup');
+          _this.setSidebarMenu('wpstg_backup');
+        });
+      }
+    };
+    _proto.setPageUrl = function setPageUrl(page) {
+      window.history.pushState(null, null, window.location.pathname + '?page=' + page);
+    };
+    _proto.setSidebarMenu = function setSidebarMenu(page) {
+      var wpstgSidebarMenuElements = this.wpstdSidebarMenu.querySelector('ul').querySelectorAll('li');
+      if (wpstgSidebarMenuElements.length > 0) {
+        for (var i = 0; i < wpstgSidebarMenuElements.length; i++) {
+          wpstgSidebarMenuElements[i].classList.remove('current');
+          if (wpstgSidebarMenuElements[i].querySelector('a') !== null) {
+            if (wpstgSidebarMenuElements[i].querySelector('a').getAttribute('href') === 'admin.php?page=' + page) {
+              wpstgSidebarMenuElements[i].classList.add('current');
+            }
+          }
+        }
+      }
+    };
+    return WpstgSidebarMenu;
+  }();
+
   var WPStaging$1 = function ($) {
     var that = {
       isCancelled: false,
@@ -4142,7 +4344,8 @@
         processTime: 0,
         processInterval: '',
         currentJob: ''
-      }
+      },
+      processModalType: null
     };
     that.wpstgProcessModal = new WpstgProcessModal();
     var cache = {
@@ -4298,6 +4501,12 @@
             nonce: wpstg.nonce,
             directoryName: cloneDirectoryName
           }, function (response) {
+            if (!response) {
+              cache.get('#wpstg-new-clone-id').addClass('wpstg-error-input');
+              cache.get('#wpstg-start-cloning').prop('disabled', true);
+              notify('error', 'Error: Please choose correct name for the staging site.');
+              return;
+            }
             if (response.status === 'success') {
               cache.get('#wpstg-new-clone-id').removeClass('wpstg-error-input');
               cache.get('#wpstg-start-cloning').removeAttr('disabled');
@@ -4319,13 +4528,13 @@
         if ($('#wpstg-clone-directory').length < 1) {
           return;
         }
-        var slug = WPStagingCommon.slugify(this.value).substring(0, 16);
+        var slug = WPStagingCommon.slugify(this.value).substring(0, 16).trim();
         var $targetDir = $('#wpstg-use-target-dir');
         var $targetUri = $('#wpstg-use-target-hostname');
         var path = $targetDir.data('base-path');
         var uri = $targetUri.data('base-uri');
-        if (path) {
-          path = path.replace(/\/+$/g, '') + '/' + slug + '/';
+        if (path && slug) {
+          path = normalizeAndAppendSlug(path, slug);
         }
         if (uri) {
           uri = uri.replace(/\/+$/g, '') + '/' + slug;
@@ -4420,6 +4629,9 @@
       })
       // Delete clone - confirmation
       .on('click', '.wpstg-remove-clone[data-clone]', function (e) {
+        setLoadingPlaceholder().then(function () {
+          return loadingPlaceholder();
+        });
         resetErrors();
         e.preventDefault();
         $workFlow.removeClass('active');
@@ -4479,6 +4691,7 @@
                 that.modal.instance = null;
                 cache.get('.wpstg-loader').removeClass('wpstg-finished');
                 cache.get('.wpstg-loader').hide();
+                loadingPlaceholder('hidden');
               });
             }
           }).then(function (result) {
@@ -4969,11 +5182,18 @@
     };
     var proceedCloning = function proceedCloning($this, workflow) {
       if ($this.data('action') === 'wpstg_cloning') {
-        isWritableCloneDestinationDir().then(function (result) {
+        isCloneDestinationPathSameAsRoot().then(function (result) {
+          if (result && wpstg.isPro) {
+            return;
+          }
+          return isWritableCloneDestinationDir();
+        }).then(function (result) {
           if (!result) {
             return;
           }
           runCloningSteps($this, workflow);
+        })["catch"](function (error) {
+          notify('error', error);
         });
       } else {
         runCloningSteps($this, workflow);
@@ -5085,8 +5305,9 @@
      */
     var loadOverview = function loadOverview() {
       var $workFlow = cache.get('#wpstg-workflow');
-      var animatedLoader = cache.get('.wpstg-loading-bar-container');
-      animatedLoader.css('visibility', 'visible');
+      if (getActivePage() === 'wpstg_clone') {
+        loadingBar();
+      }
       ajax({
         action: 'wpstg_overview',
         accessToken: wpstg.accessToken,
@@ -5096,9 +5317,10 @@
           showError('Something went wrong! No response. Please try the <a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a> or submit an error report.');
         }
         cache.get('.wpstg-current-step');
-        animatedLoader.css('visibility', 'hidden');
         $workFlow.html(response);
-        loadingBar('hidden');
+        if (getActivePage() !== 'wpstg_backup') {
+          loadingPlaceholder('hidden');
+        }
       }, 'HTML');
       that.switchStep(1);
       cache.get('.wpstg-step3-cloning').show();
@@ -5157,6 +5379,7 @@
               cache.get('#wpstg-no-staging-site-results').show();
             }
             cache.get('.wpstg-loader').hide();
+            loadingPlaceholder('hidden');
             // finish modal popup
             if (wpstg.i18n.wpstg_delete_clone !== null && response["delete"] === 'finished') {
               var params = {
@@ -5177,7 +5400,7 @@
               }).then(function (result) {
                 if (result.value) {
                   WPStagingCommon.closeSwalModal();
-                  loadingBar('hidden');
+                  loadingPlaceholder('hidden');
                 }
               });
             }
@@ -5287,6 +5510,10 @@
      * @return void
      */
     var getLogs = function getLogs(log) {
+      if (that.processModalType === null) {
+        that.processModalType = that.wpstgProcessModal.getModalType();
+      }
+      var $container = $(WPStagingCommon.getSwalContainer());
       if (Array.isArray(log)) {
         log.forEach(function (logMessage) {
           if (logMessage !== null) {
@@ -5295,7 +5522,10 @@
               return message === logMessage.message;
             })) {
               that.messages.push(logMessage);
-              var $logsContainer = $('.wpstg--modal--process--logs');
+              if ($container === null) {
+                return;
+              }
+              var $logsContainer = $container.find('.wpstg-' + that.processModalType + '-process-logs');
               var msgClass = "wpstg--modal--process--msg--" + (logMessage.type.toLowerCase() || 'info');
               $logsContainer.append("<p class=\"" + msgClass + "\">[" + (logMessage.type || 'info') + "] - [" + logMessage.date + "] - " + logMessage.message + "</p>");
             }
@@ -5307,12 +5537,15 @@
           return message === log.message;
         })) {
           that.messages.push(log);
-          var $logsContainer = $('.wpstg--modal--process--logs');
+          if ($container === null) {
+            return;
+          }
+          var $logsContainer = $container.find('.wpstg-' + that.processModalType + '-process-logs');
           var msgClass = "wpstg--modal--process--msg--" + (log.type.toLowerCase() || 'info');
           $logsContainer.append("<p class=\"" + msgClass + "\">[" + (log.type || 'info') + "] - [" + log.date + "] - " + log.message + "</p>");
         }
       }
-      document.querySelectorAll('.wpstg--modal--process--logs').forEach(function (element) {
+      document.querySelectorAll('.wpstg-' + that.processModalType + '-process-logs').forEach(function (element) {
         element.scrollTop = element.scrollHeight;
       });
     };
@@ -5509,6 +5742,24 @@
         }
       };
     };
+
+    /**
+     * @return {Promise<boolean>}
+     */
+    var isCloneDestinationPathSameAsRoot = function isCloneDestinationPathSameAsRoot() {
+      return new Promise(function (resolve) {
+        var _dom$qs, _dom$qs2;
+        var rootPath = ((_dom$qs = qs('#wpstg-use-target-dir')) == null ? void 0 : _dom$qs.dataset.basePath) || '';
+        var destinationPath = ((_dom$qs2 = qs('#wpstg_clone_dir')) == null ? void 0 : _dom$qs2.value) || '';
+        if (rootPath !== destinationPath) {
+          resolve(false);
+        } else {
+          qs('#wpstg_clone_dir').style.borderColor = 'red';
+          notify('error', 'The target path must be different from the root path of the production website.');
+          resolve(true);
+        }
+      });
+    };
     that.switchStep = function (step) {
       cache.get('.wpstg-current-step').removeClass('wpstg-current-step');
       cache.get('.wpstg-step' + step).addClass('wpstg-current-step');
@@ -5561,6 +5812,7 @@
       new WpstgCloneStaging();
       new WpstgCloningAdvanceSettings();
       new WpstgProcessModal();
+      new WpstgSidebarMenu();
       that.notyf = new Notyf({
         duration: 10000,
         position: {
@@ -5617,22 +5869,7 @@
       sendIssueReport(self, 'false');
       e.preventDefault();
     });
-    $('body').on('click', '.wpstg--modal--process--logs--tail', function (e) {
-      showProcessLogs();
-      var logBtn = $(this);
-      e.preventDefault();
-      var container = WPStagingCommon.getSwalContainer();
-      var $logs = $(container).find('.wpstg--modal--process--logs');
-      $logs.toggle();
-      if ($logs.is(':visible')) {
-        logBtn.text(wpstg.i18n.hideLogs);
-        container.childNodes[0].style.width = '97%';
-        container.style['z-index'] = 9999;
-      } else {
-        logBtn.text(wpstg.i18n.showLogs);
-        container.childNodes[0].style.width = '600px';
-      }
-    });
+
     /*
      * Close Success Modal
      */
@@ -5755,26 +5992,6 @@
         }
       });
     });
-
-    /**
-     * Display logs in a modal.
-     * and avoid mixing of different processes logs
-     * @return {void}
-     */
-    function showProcessLogs() {
-      if (window.WPStaging.messages.length !== 0) {
-        var container = WPStagingCommon.getSwalContainer();
-        var logsContainer = container.querySelector('.wpstg--modal--process--logs');
-        logsContainer.innerHTML = '';
-        window.WPStaging.messages.forEach(function (message) {
-          var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
-          var pElement = document.createElement('p');
-          pElement.className = msgClass;
-          pElement.textContent = "[" + message.type + "] - [" + message.date + "] - " + message.message;
-          logsContainer.appendChild(pElement);
-        });
-      }
-    }
     document.addEventListener('click', function (event) {
       if (event.target.id !== 'wpstg-login-link') {
         return;

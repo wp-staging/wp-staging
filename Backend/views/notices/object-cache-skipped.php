@@ -2,7 +2,7 @@
 
 /**
  * @var $this
- * @see \WPStaging\Framework\Support\ThirdParty\WordFence::showNotice
+ * @see \WPStaging\Framework\ThirdParty\WordFence::showNotice
  */
 
 use WPStaging\Framework\Notices\Notices;

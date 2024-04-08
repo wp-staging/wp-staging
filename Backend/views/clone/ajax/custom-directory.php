@@ -81,12 +81,14 @@ if ($isPro && !empty($options->current)) {
         <label><?php esc_html_e('Destination Path: ', 'wp-staging') ?> </label>
         <input type="text" class="wpstg-textbox" name="wpstg_clone_dir" id="wpstg_clone_dir" value="<?php echo esc_attr($customDir); ?>" title="wpstg_clone_dir" placeholder="<?php echo esc_attr($directory); ?>" autocapitalize="off" <?php echo $isPro ? '' : 'disabled' ?> />
         <?php if ($isPro) { ?>
-            <span class="wpstg-code-segment">
-        <a id="wpstg-use-target-dir" data-base-path="<?php echo esc_attr($directory) ?>" data-path="<?php echo esc_attr($directory) ?>" class="wpstg-pointer">
-            <?php esc_html_e('Set Default: ', 'wp-staging') ?>
-        </a>
-        <label class="wpstg-use-target-dir--value"><?php echo esc_attr($directory); ?></label>
-    </span>
+        <span class="wpstg-code-segment">
+            <a id="wpstg-use-target-dir" data-base-path="<?php echo esc_attr($directory) ?>" data-path="<?php echo esc_attr($directory) ?>" class="wpstg-pointer">
+                <?php esc_html_e('Set Default: ', 'wp-staging') ?>
+            </a>
+            <label class="wpstg-use-target-dir--value"><?php echo esc_attr($directory); ?></label>
+        </span>
+        <?php } else { ?>
+            <span id="wpstg-use-target-dir" data-base-path="<?php echo esc_attr($directory) ?>"></span>
         <?php } ?>
     </div>
     <div class="wpstg-form-group wpstg-text-field">

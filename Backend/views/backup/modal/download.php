@@ -2,15 +2,16 @@
 
 $assetsUrl    = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
 $displayStyle = \WPStaging\Core\WPStaging::isPro() ? 'display:none;' : 'display:block;';
+$modalType    = $modalType ?? 'backup';
 ?>
 
-<div id="wpstg--modal--backup--download" style="display: none">
-    <div id="wpstg--modal--backup--download-inner">
+<div id="wpstg-<?php echo esc_attr($modalType); ?>-success-modal" class="wpstg-<?php echo esc_attr($modalType); ?>-success-modal">
+    <div id="wpstg-<?php echo esc_attr($modalType); ?>-success-modal-inner">
         <h2>{title}</h2>
-        <p class="wpstg-download-modal-text">{text}</p>
-        <div class="wpstg--modal--download--logs--wrapper" style="display:none">
-            <button class="wpstg--modal--process--logs--tail">{btnTxtLog}</button>
-            <div class="wpstg--modal--process--logs"></div>
+        <p class="wpstg-<?php echo esc_attr($modalType); ?>-success-modal-text">{text}</p>
+        <div class="wpstg-<?php echo esc_attr($modalType); ?>-success-logs-wrapper">
+            <button class="wpstg-<?php echo esc_attr($modalType); ?>-success-logs-button">{btnTxtLog}</button>
+            <div class="wpstg-<?php echo esc_attr($modalType); ?>-success-logs"></div>
         </div>
         <div class="wpstg-rate-us" style="<?php echo esc_attr($displayStyle); ?>">
             <div class="wpstg-rate-us-inner">

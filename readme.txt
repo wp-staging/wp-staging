@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
-Tested up to: 6.4
-Stable tag: 3.4.1
+Tested up to: 6.5
+Stable tag: 3.4.3
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -282,6 +282,35 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 4. Demo of a staging / backup site
 
 == Changelog ==
+
+= 3.4.3 =
+* New: Tested on WordPress 6.5.0
+* Fix: If endurance-page-cache mu-plugin is installed (on Bluehost and Hostgator) a staging site shows white page error then. #3216
+* Fix: Backup retention does not work for backups created on a staging site. #3138
+* Fix: Backup log entries could contain log entries from staging processing under certain circumstances. #3079
+* Fix: Moved tmp directory to wp-content/wp-staging/tmp to fix a cross-device link error on sites hosted on Azure. #3213
+* Fix: Make sure that there are no errors in console after uploading backup to remote storages. #3258
+* Fix: Handle complex table relation syntax on SQL dumper and restorer. #3259
+* Fix: Validate and handle null values before invoking strlen() to ensure compatibility and prevent runtime errors. #3127
+* Fix: Make network cloning more robust by supporting different combination of www prefix. #3230
+* Fix: On some server files were not properly extracted. Using a fallback function now. #3272
+* Fix: Fix condition to check custom destination path for staging site on basic version. #3282
+* Fix: Warning "Indirect modification of overloaded elements" of WP_Hook. #3155
+* UX: Make sure the loading placeholders are rendered properly over all pages. #3207
+* UX: Beautify "license invalid" messages. #3237
+* Enh: Don't prefix html attribute 'data' by 'wpstg'. #3048
+* Enh: Add pro clone features as inactive items to Actions button in wp staging free version. #3228
+* Enh: Show error message if custom selected destination path for staging site will be same as root of live sites folder. #3204
+* Enh: Show better backup logs and warnings if backup fails. #3263
+* Dev: Add support for retrying failed tests in codeceptione2e suites. This is done to counter test flakiness. #3118
+* Dev: Update outdated code of wpstg uncomment command. #3245
+* Dev: e2e_backup_test make command was not using basic plugin when running basic tests. #3225
+* Dev: Adding improved logging. #3252
+* Dev: Make sure the debug.log is kept clean from unwanted logs when running e2e tests. #3202
+* Dev: Refactor 'ThirdParty' namespace changing Framework/Support/ThirdParty to Framework/ThirdParty. #3224
+
+= 3.4.2 =
+* [skipped]
 
 = 3.4.1 =
 * Enh: Remove files that were false-positive detected as malicious. #3184

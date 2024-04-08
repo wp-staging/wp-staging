@@ -65,6 +65,9 @@ class Cloning extends Job
     /** @var Directory */
     private $dirAdapter;
 
+    /** @var PathIdentifier */
+    private $pathIdentifier;
+
     /** @var Strings */
     protected $strUtil;
 
@@ -73,13 +76,14 @@ class Cloning extends Job
      */
     public function initialize()
     {
-        $this->db          = WPStaging::getInstance()->get("wpdb");
-        $this->dirUtils    = new WpDefaultDirectories();
-        $this->sitesHelper = new Sites();
-        $this->sanitize    = WPStaging::make(Sanitize::class);
-        $this->urls        = WPStaging::make(Urls::class);
-        $this->dirAdapter  = WPStaging::make(Directory::class);
-        $this->strUtil     = WPStaging::make(Strings::class);
+        $this->db             = WPStaging::getInstance()->get("wpdb");
+        $this->dirUtils       = new WpDefaultDirectories();
+        $this->sitesHelper    = new Sites();
+        $this->sanitize       = WPStaging::make(Sanitize::class);
+        $this->urls           = WPStaging::make(Urls::class);
+        $this->dirAdapter     = WPStaging::make(Directory::class);
+        $this->strUtil        = WPStaging::make(Strings::class);
+        $this->pathIdentifier = WPStaging::make(PathIdentifier::class);
     }
 
     public function getErrorMessage(): string
@@ -192,14 +196,19 @@ class Cloning extends Job
 
         $this->options->uploadsSymlinked = isset($_POST['uploadsSymlinked']) && $this->sanitize->sanitizeBool($_POST['uploadsSymlinked']);
 
+        $pluginWpContentDir = rtrim($this->dirAdapter->getPluginWpContentDirectory(), '/\\');
+
         /**
          * @see /WPStaging/Framework/CloningProcess/ExcludedPlugins.php to exclude plugins
          * Only add other directories here
          */
         $excludedDirectories = [
             PathIdentifier::IDENTIFIER_WP_CONTENT . 'cache',
+            $this->pathIdentifier->transformPathToIdentifiable($pluginWpContentDir), // wp-content/wp-staging
+            PathIdentifier::IDENTIFIER_WP_CONTENT . WPSTG_PLUGIN_DOMAIN, // Extra caution if pluginWpContentDir changed later
         ];
 
+        // Go Daddy related exclusions
         if (is_dir(trailingslashit($this->dirAdapter->getMuPluginsDirectory()) . 'gd-system-plugin')) {
             $excludedDirectories[] = PathIdentifier::IDENTIFIER_MUPLUGINS . 'gd-system-plugin';
             $excludedDirectories[] = PathIdentifier::IDENTIFIER_MUPLUGINS . 'vendor';

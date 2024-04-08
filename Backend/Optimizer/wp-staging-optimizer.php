@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.5.5
+ * Version: 1.5.6
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.5');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.6');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
@@ -167,9 +167,9 @@ if (!function_exists('wpstgDisableTheme')) {
 
         if (wpstgIsOptimizerRequest() && $enableTheme === false) {
             $wpstgRootPro = wpstgGetPluginsDir() . 'wp-staging-pro';
-            $wpstgRoot = wpstgGetPluginsDir() . 'wp-staging';
+            $wpstgRoot    = wpstgGetPluginsDir() . 'wp-staging';
 
-            $file = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme' . DIRECTORY_SEPARATOR . 'functions.php';
+            $file  = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme' . DIRECTORY_SEPARATOR . 'functions.php';
             $theme = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme';
 
 
@@ -225,23 +225,32 @@ if (!function_exists('wpstgTgmpaCompatibility')) {
      */
     function wpstgTgmpaCompatibility()
     {
-        $remove_function = false;
+        $isFunctionRemoved = false;
 
         // run on wpstg page
         if (isset($_GET['page']) && $_GET['page'] == 'wpstg_clone') {
-            $remove_function = true;
+            $isFunctionRemoved = true;
         }
 
         // run on wpstg ajax requests
         if (defined('DOING_AJAX') && DOING_AJAX && isset($_POST['action']) && strpos(sanitize_text_field($_POST['action']), 'wpstg') !== false) {
-            $remove_function = true;
+            $isFunctionRemoved = true;
         }
 
-        if ($remove_function) {
+        if ($isFunctionRemoved) {
             global $wp_filter;
-            $admin_init_functions = $wp_filter['admin_init'];
-            foreach ($admin_init_functions as $priority => $functions) {
+
+            $adminInitFunctions = $wp_filter['admin_init'];
+            foreach ($adminInitFunctions as $priority => $functions) {
+                if (!isset($wp_filter['admin_init'][$priority])) {
+                    continue;
+                }
+
                 foreach ($functions as $key => $function) {
+                    if (!isset($wp_filter['admin_init'][$priority][$key])) {
+                        continue;
+                    }
+
                     // searching for function this way as can't rely on the calling class being named TGM_Plugin_Activation
                     if (strpos($key, 'force_activation') !== false) {
                         unset($wp_filter['admin_init'][$priority][$key]);
@@ -328,10 +337,10 @@ if (wpstgIsStaging() && (((bool)get_option("wpstg_emails_disabled") === true) ||
         {
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
                 // Safely cast everything to string
-                $to = is_string($to) ? $to : wp_json_encode($to);
-                $subject = is_string($subject) ? $subject : wp_json_encode($subject);
-                $message = is_string($message) ? $message : wp_json_encode($message);
-                $headers = is_string($headers) ? $headers : wp_json_encode($headers);
+                $to          = is_string($to) ? $to : wp_json_encode($to);
+                $subject     = is_string($subject) ? $subject : wp_json_encode($subject);
+                $message     = is_string($message) ? $message : wp_json_encode($message);
+                $headers     = is_string($headers) ? $headers : wp_json_encode($headers);
                 $attachments = is_string($attachments) ? $attachments : wp_json_encode($attachments);
 
                 $log_entry = <<<LOG_ENTRY

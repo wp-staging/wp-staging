@@ -13,6 +13,12 @@ class TaskResponseDto extends AbstractDto
         toArray as traitToArray;
     }
 
+    /**
+     * Used to keep old process working, we don't need to hydrate these properties
+     * @var string[]
+     */
+    protected $excludeHydrate = ['last_msg', 'isForceSave', 'job_done'];
+
     /** @var bool */
     protected $isRunning;
 

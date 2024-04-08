@@ -69,12 +69,12 @@ class QueueProcessor
      */
     public function process()
     {
-        debug_log('[Background Processing] QueueProcessor::process 1', 'debug');
+        debug_log('[Background Processing] QueueProcessor::process 1', 'debug', false);
         if (!$this->doProcess) {
             return 0;
         }
 
-        debug_log('[Background Processing] QueueProcessor::process 2', 'debug');
+        debug_log('[Background Processing] QueueProcessor::process 2', 'debug', false);
 
         $processed = 0;
 
@@ -84,11 +84,11 @@ class QueueProcessor
         while (!$this->isThreshold()) {
             $action = $this->queue->getNextAvailable();
 
-            debug_log('[Background Processing] QueueProcessor::process Action: ' . wp_json_encode($action), 'debug');
+            debug_log('[Background Processing] QueueProcessor::process Action: ' . wp_json_encode($action), 'debug', false);
 
             if (!$action instanceof Action) {
                 // No READY Actions, no lock or no table.
-                debug_log('[Background Processing] QueueProcessor::process No READY actions', 'debug');
+                debug_log('[Background Processing] QueueProcessor::process No READY actions', 'debug', false);
                 break;
             }
 
@@ -102,7 +102,7 @@ class QueueProcessor
 
             $this->dispatch($action);
 
-            debug_log('[Background Processing] QueueProcessor::process After dispatch', 'debug');
+            debug_log('[Background Processing] QueueProcessor::process After dispatch', 'debug', false);
 
             $previousAction = $action;
         }
@@ -115,10 +115,10 @@ class QueueProcessor
         if ($processed > 0 && $this->queue->count(Queue::STATUS_READY)) {
             // If there are more Actions to process, then keep processing.
             $this->fireAjaxAction();
-            debug_log('[Background Processing] QueueProcessor::process After fireAjaxAction', 'debug');
+            debug_log('[Background Processing] QueueProcessor::process After fireAjaxAction', 'debug', false);
         }
 
-        debug_log('[Background Processing] QueueProcessor::process Processed: ' . $processed, 'debug');
+        debug_log('[Background Processing] QueueProcessor::process Processed: ' . $processed, 'debug', false);
 
         return $processed;
     }

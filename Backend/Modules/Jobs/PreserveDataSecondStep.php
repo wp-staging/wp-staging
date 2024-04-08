@@ -61,6 +61,11 @@ class PreserveDataSecondStep extends JobExecutable
     /** @return true */
     public function copyToStaging()
     {
+        // Early bail if table doesn't exist
+        if (!$this->tableExists($this->stagingPrefix . "options")) {
+            return true;
+        }
+
         // Get wpstg_tmp_data from production database
         $result = $this->productionDb->get_var(
             $this->productionDb->prepare(
@@ -205,5 +210,15 @@ class PreserveDataSecondStep extends JobExecutable
         }
 
         return !empty($this->preservedData->{$property});
+    }
+
+    /**
+     * Check if table exists
+     * @param string $table
+     * @return bool
+     */
+    private function tableExists($table)
+    {
+        return !($table != $this->stagingDb->get_var("SHOW TABLES LIKE '{$table}'"));
     }
 }

@@ -223,12 +223,12 @@ class BackupScheduler
         // Cron is hell to debug, so let's log everything that happens.
         $logId = wp_generate_password(4, false);
 
-        debug_log("[Schedule Backup Cron - $logId] Received request to create a backup using Cron. Backup Data: " . wp_json_encode($backupData));
+        debug_log("[Schedule Backup Cron - $logId] Received request to create a backup using Cron. Backup Data: " . wp_json_encode($backupData), 'info', false);
 
         try {
-            debug_log("[Schedule Backup Cron - $logId] Preparing job");
+            debug_log("[Schedule Backup Cron - $logId] Preparing job", 'info', false);
             $jobId = WPStaging::make(PrepareBackup::class)->prepare($backupData);
-            debug_log("[Schedule Backup Cron - $logId] Successfully received a Job ID: $jobId");
+            debug_log("[Schedule Backup Cron - $logId] Successfully received a Job ID: $jobId", 'info', false);
 
             if ($jobId instanceof \WP_Error) {
                 debug_log("[Schedule Backup Cron - $logId] Failed to create backup: " . $jobId->get_error_message());
