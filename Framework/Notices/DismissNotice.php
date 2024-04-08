@@ -3,7 +3,7 @@
 namespace WPStaging\Framework\Notices;
 
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Support\ThirdParty\WordFence;
+use WPStaging\Framework\ThirdParty\WordFence;
 use WPStaging\Pro\Notices\DismissNotice as DismissProNotice;
 
 /**

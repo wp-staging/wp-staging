@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Framework\Support\ThirdParty;
+namespace WPStaging\Framework\ThirdParty;
 
 /**
  * Class All in One WP Security (AIOWPS)
@@ -18,7 +18,7 @@ namespace WPStaging\Framework\Support\ThirdParty;
  * - Remove AIOWPS from optimizer whitelist and disables it during wp staging processing once AIOS does not have salt prefix option enabled.
  * - Delivers the status if salt prefix option is enabled to allow showing an admin notice to recommend disabling the salt prefix option to increase reliability of wp staging requests.
  *
- * @package WPStaging\Framework\Support\ThirdParty
+ * @package WPStaging\Framework\ThirdParty
  */
 class Aios
 {

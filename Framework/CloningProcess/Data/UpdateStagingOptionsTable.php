@@ -9,8 +9,9 @@ use WPStaging\Framework\Staging\CloneOptions;
 use WPStaging\Framework\Staging\FirstRun;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Staging\Sites;
-use WPStaging\Framework\Support\ThirdParty\FreemiusScript;
+use WPStaging\Framework\ThirdParty\FreemiusScript;
 use WPStaging\Pro\Staging\NetworkClone;
+use WPStaging\Backup\BackupRetentionHandler;
 
 class UpdateStagingOptionsTable extends DBCloningService
 {
@@ -23,6 +24,10 @@ class UpdateStagingOptionsTable extends DBCloningService
     {
         if ($this->isNetworkClone()) {
             return $this->updateAllOptionsTables();
+        }
+
+        if ($this->skipOptionsTable()) {
+            return true;
         }
 
         return $this->updateOptionsTable();
@@ -142,6 +147,10 @@ class UpdateStagingOptionsTable extends DBCloningService
             $toDelete[] = 'wpstg_googledrive';
             // Should we delete other cloud storage options too?
             $toDelete[] = FinishBackupTask::OPTION_LAST_BACKUP;
+        }
+
+        if ($this->dto->getMainJob() === MainJob::STAGING) {
+            $toDelete[] = BackupRetentionHandler::OPTION_BACKUPS_RETENTION;
         }
 
         $this->deleteOptions($toDelete);

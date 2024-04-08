@@ -187,7 +187,11 @@ class DataCloningDto extends CloningDto
     public function getStagingSiteDomain()
     {
         if (!isset($this->stagingSiteDomain) || $this->stagingSiteDomain === '') {
-            $this->stagingSiteDomain = parse_url(str_ireplace('//www.', '//', $this->getStagingSiteUrl()), PHP_URL_HOST);
+            $this->stagingSiteDomain = parse_url($this->getStagingSiteUrl(), PHP_URL_HOST);
+        }
+
+        if (defined('DOMAIN_CURRENT_SITE') && strpos(DOMAIN_CURRENT_SITE, 'www.') !== 0) {
+            $this->stagingSiteDomain = str_ireplace('www.', '', $this->stagingSiteDomain);
         }
 
         return $this->stagingSiteDomain;
@@ -199,7 +203,7 @@ class DataCloningDto extends CloningDto
     public function getStagingSitePath()
     {
         if (!isset($this->stagingSitePath) || $this->stagingSitePath === '') {
-            $parsedUrl = parse_url(str_ireplace('//www.', '//', $this->getStagingSiteUrl()));
+            $parsedUrl = parse_url($this->getStagingSiteUrl());
 
             if (isset($parsedUrl['path'])) {
                 $this->stagingSitePath = $parsedUrl['path'];

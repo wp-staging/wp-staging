@@ -9,6 +9,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Facades\Escape;
 
+$modalType = 'clone';
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/download.php');
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
 ?>
@@ -88,5 +89,3 @@ require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
 <div id="wpstg-error-wrapper">
     <div id="wpstg-error-details"></div>
 </div>
-
-<div class="wpstg-log-details"></div>

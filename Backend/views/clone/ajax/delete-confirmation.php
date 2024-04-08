@@ -11,6 +11,7 @@
 
 use WPStaging\Framework\Facades\UI\Checkbox;
 
+$modalType = 'clone';
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
 
 if ($isDatabaseConnected) { ?>

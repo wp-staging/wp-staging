@@ -6,6 +6,7 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Backup\Job\Jobs\JobRestore;
 use WPStaging\Backup\Service\Compressor;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Utils\Urls;
 
 class Directory
@@ -34,7 +35,7 @@ class Directory
     /** @var string The directory that holds the WP STAGING cache directory, usually wp-content/uploads/wp-staging/cache */
     protected $cacheDirectory;
 
-    /** @var string The directory that holds the WP STAGING backup tmp directory, usually wp-content/uploads/wp-staging/tmp/import */
+    /** @var string The directory that holds the WP STAGING backup tmp directory, usually wp-content/wp-staging/tmp/import */
     protected $tmpDirectory;
 
     /** @var string The directory that holds the WP STAGING logs directory, usually wp-content/uploads/wp-staging/logs */
@@ -43,8 +44,11 @@ class Directory
     /** @var string The directory that holds the WP STAGING backup directory, usually wp-content/uploads/wp-staging/backups */
     protected $backupDirectory;
 
-    /** @var string The directory that holds the WP STAGING data directory, usually wp-content/uploads/wp-staging */
+    /** @var string The directory that holds the WP STAGING data directory inside uploads folder, usually wp-content/uploads/wp-staging */
     protected $pluginUploadsDirectory;
+
+    /** @var string The directory that holds the WP STAGING data directory directly inside wp-content, usually wp-content/wp-staging */
+    protected $pluginWpContentDirectory;
 
     /** @var string The directory that holds the plugins, usually wp-content/plugins */
     protected $pluginsDir;
@@ -153,7 +157,7 @@ class Directory
             return $this->cacheDirectory;
         }
 
-        $cachePath = apply_filters('wpstg.directory.cacheDirectory', wp_normalize_path($this->getPluginUploadsDirectory() . 'cache'));
+        $cachePath = Hooks::applyFilters('wpstg.directory.cacheDirectory', wp_normalize_path($this->getPluginUploadsDirectory() . 'cache'));
 
         $this->cacheDirectory = trailingslashit($cachePath);
 
@@ -169,7 +173,7 @@ class Directory
             return $this->tmpDirectory;
         }
 
-        $this->tmpDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . JobRestore::TMP_DIRECTORY));
+        $this->tmpDirectory = trailingslashit(wp_normalize_path($this->getPluginWpContentDirectory() . JobRestore::TMP_DIRECTORY));
 
         wp_mkdir_p($this->tmpDirectory);
 
@@ -215,12 +219,29 @@ class Directory
         }
 
         /** This is deprecated filter and its value should always be replaced by newer filter */
-        $pluginUploadsDir = apply_filters('wpstg_get_upload_dir', wp_normalize_path($this->getUploadsDirectory($refresh) . WPSTG_PLUGIN_DOMAIN));
-        $pluginUploadsDir = apply_filters('wpstg.directory.pluginUploadsDirectory', $pluginUploadsDir);
+        $pluginUploadsDir = Hooks::applyFilters('wpstg_get_upload_dir', wp_normalize_path($this->getUploadsDirectory($refresh) . WPSTG_PLUGIN_DOMAIN));
+        $pluginUploadsDir = Hooks::applyFilters('wpstg.directory.pluginUploadsDirectory', $pluginUploadsDir);
 
         $this->pluginUploadsDirectory = trailingslashit($pluginUploadsDir);
 
         return $this->pluginUploadsDirectory;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPluginWpContentDirectory(): string
+    {
+        if (isset($this->pluginWpContentDirectory)) {
+            return $this->pluginWpContentDirectory;
+        }
+
+        $pluginWpContentDir = $this->getWpContentDirectory() . WPSTG_PLUGIN_DOMAIN;
+        $pluginWpContentDir = Hooks::applyFilters('wpstg.directory.pluginWpContentDirectory', $pluginWpContentDir);
+
+        $this->pluginWpContentDirectory = trailingslashit($pluginWpContentDir);
+
+        return $this->pluginWpContentDirectory;
     }
 
     /**

@@ -69,7 +69,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
      */
     public function runQueueMaintenance()
     {
-        debug_log('Running Queue Maintenance.');
+        debug_log('Running Queue Maintenance.', 'info', false);
 
         /** @var Queue $queue */
         $queue = $this->container->make(Queue::class);

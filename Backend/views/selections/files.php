@@ -21,7 +21,7 @@ use WPStaging\Framework\Facades\Escape;
 <br/>
 <?php esc_html_e("and preselected the next time you update this staging site.", "wp-staging") ?>
 </p>
-<div id="wpstg-directories-listing" wpstg-data-existing-excludes="<?php echo (($options->mainJob === Job::UPDATE || $options->mainJob === Job::RESET) && isset($options->currentClone['excludedDirectories'])) ? esc_html(implode(',', $options->currentClone['excludedDirectories'])) : '' ?>">
+<div id="wpstg-directories-listing" data-existing-excludes="<?php echo (($options->mainJob === Job::UPDATE || $options->mainJob === Job::RESET) && isset($options->currentClone['excludedDirectories'])) ? esc_html(implode(',', $options->currentClone['excludedDirectories'])) : '' ?>">
     <div class="wpstg-mb-8px">
         <button type="button" class="wpstg-unselect-dirs button"><?php esc_html_e('Unselect All', 'wp-staging'); ?></button>
         <button type="button" class="wpstg-select-dirs-default button"> <?php esc_html_e('Select Default', 'wp-staging'); ?></button>

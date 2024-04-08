@@ -32,6 +32,12 @@ abstract class AbstractJob implements ShutdownableInterface
 {
     use BenchmarkTrait;
 
+    /**
+     * Filter name for storing the number of maximum request retries
+     * @var string
+     */
+    const TEST_FILTER_MAXIMUM_RETRIES = 'wpstg.tests.maximum_retries';
+
     /** @var JobDataDto */
     protected $jobDataDto;
 
@@ -59,6 +65,8 @@ abstract class AbstractJob implements ShutdownableInterface
     /** @var string|false */
     protected $memoryExhaustErrorTmpFile = false;
 
+    protected $maxRetries = 10;
+
     public function __construct(
         Cache $jobDataCache,
         JobDataDto $jobDataDto,
@@ -77,6 +85,7 @@ abstract class AbstractJob implements ShutdownableInterface
 
         $this->processLock = $processLock;
         $this->diskFullCheck = $diskFullCheck;
+        $this->maxRetries = apply_filters(self::TEST_FILTER_MAXIMUM_RETRIES, $this->maxRetries);
     }
 
     /**
@@ -293,11 +302,11 @@ abstract class AbstractJob implements ShutdownableInterface
             $this->jobDataDto->setTaskHealthSequentialFailedRetries($this->jobDataDto->getTaskHealthSequentialFailedRetries() + 1);
             $this->jobDataCache->save($this->jobDataDto);
 
-            if ($this->jobDataDto->getTaskHealthSequentialFailedRetries() >= 10) {
+            if ($this->jobDataDto->getTaskHealthSequentialFailedRetries() >= $this->maxRetries) {
                 throw TaskHealthException::taskFailedTooManyTimes();
             } else {
                 $this->jobDataDto->setTaskHealthIsRetrying(true);
-                throw TaskHealthException::retryingTask($this->jobDataDto->getTaskHealthSequentialFailedRetries(), 10);
+                throw TaskHealthException::retryingTask($this->jobDataDto->getTaskHealthSequentialFailedRetries(), $this->maxRetries);
             }
         }
     }

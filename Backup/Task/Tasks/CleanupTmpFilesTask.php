@@ -2,10 +2,14 @@
 
 namespace WPStaging\Backup\Task\Tasks;
 
+use Throwable;
+use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Backup\Task\AbstractTask;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -14,32 +18,54 @@ use WPStaging\Framework\Filesystem\Filesystem;
 
 class CleanupTmpFilesTask extends AbstractTask
 {
+    /** @var Filesystem */
     private $filesystem;
+
+    /** @var Directory */
     private $directory;
+
+    /** @var PathIdentifier */
     private $pathIdentifier;
 
+    /**
+     * @param LoggerInterface $logger
+     * @param Cache $cache
+     * @param StepsDto $stepsDto
+     * @param Filesystem $filesystem
+     * @param Directory $directory
+     * @param SeekableQueueInterface $taskQueue
+     * @param PathIdentifier $pathIdentifier
+     */
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, Filesystem $filesystem, Directory $directory, SeekableQueueInterface $taskQueue, PathIdentifier $pathIdentifier)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->filesystem = $filesystem;
-        $this->directory = $directory;
+        $this->filesystem     = $filesystem;
+        $this->directory      = $directory;
         $this->pathIdentifier = $pathIdentifier;
     }
 
-    public static function getTaskName()
+    /**
+     * @example 'backup_site_restore_themes'
+     * @return string
+     */
+    public static function getTaskName(): string
     {
         return 'backup_restore_cleanup_files';
     }
 
-    public static function getTaskTitle()
+    /**
+     * @example 'Restoring Themes From Backup'
+     * @return string
+     */
+    public static function getTaskTitle(): string
     {
         return 'Cleaning Up Restore Files';
     }
 
     /**
-     * @return \WPStaging\Backup\Dto\TaskResponseDto
+     * @return TaskResponseDto
      */
-    public function execute()
+    public function execute(): TaskResponseDto
     {
         $this->prepareCleanupRestoreTask();
 
@@ -61,7 +87,7 @@ class CleanupTmpFilesTask extends AbstractTask
                     return $this->isThreshold();
                 })
                 ->delete($tmpRestoreDir);
-        } catch (\Exception $e) {
+        } catch (Throwable $e) {
             $this->logger->warning(sprintf(
                 '%s: Could not cleanup path "%s". May be a permission issue?',
                 static::getTaskTitle(),
@@ -78,6 +104,11 @@ class CleanupTmpFilesTask extends AbstractTask
                 static::getTaskTitle(),
                 $relativePathForLogging
             ));
+
+            try {
+                $this->cleanPluginWpContentDir();
+            } catch (Throwable $ex) {
+            }
 
             return $this->generateResponse();
         } else {
@@ -103,6 +134,30 @@ class CleanupTmpFilesTask extends AbstractTask
         }
     }
 
+    /**
+     * @return void
+     * @throws FilesystemExceptions
+     */
+    protected function cleanPluginWpContentDir()
+    {
+        $pluginWpContentDir = $this->directory->getPluginWpContentDirectory();
+        if (!file_exists($pluginWpContentDir)) {
+            return;
+        }
+
+        $tmpDirectory = trailingslashit($pluginWpContentDir) . 'tmp';
+        if (file_exists($tmpDirectory) && $this->filesystem->isEmptyDir($tmpDirectory)) {
+            $this->filesystem->delete($tmpDirectory);
+        }
+
+        if ($this->filesystem->isEmptyDir($pluginWpContentDir)) {
+            $this->filesystem->delete($pluginWpContentDir);
+        }
+    }
+
+    /**
+     * @return void
+     */
     public function prepareCleanupRestoreTask()
     {
         // We only cleanup database file for RestoreTask
@@ -115,11 +170,14 @@ class CleanupTmpFilesTask extends AbstractTask
             return;
         }
 
+        /** @var JobRestoreDataDto */
+        $jobDataDto = $this->jobDataDto;
+
         // Clear the .sql file used during the restore, if this backup includes a database.
-        $databaseFile = $this->jobDataDto->getBackupMetadata()->getDatabaseFile();
+        $databaseFile = $jobDataDto->getBackupMetadata()->getDatabaseFile();
 
         if ($databaseFile) {
-            $databaseFile = $this->pathIdentifier->transformIdentifiableToPath($this->jobDataDto->getBackupMetadata()->getDatabaseFile());
+            $databaseFile = $this->pathIdentifier->transformIdentifiableToPath($jobDataDto->getBackupMetadata()->getDatabaseFile());
 
             if (file_exists($databaseFile)) {
                 unlink($databaseFile);

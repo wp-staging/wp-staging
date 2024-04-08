@@ -3,7 +3,7 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Support\ThirdParty\Jetpack;
+use WPStaging\Framework\ThirdParty\Jetpack;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use RuntimeException;
@@ -72,7 +72,7 @@ class UpdateWpConfigConstants extends FileCloningService
             $replaceOrSkip["MULTISITE"]          = 'false';
         }
 
-        /** @var  $jetpackHelper */
+        /** @var $jetpackHelper */
         $jetpackHelper = WPStaging::make(Jetpack::class);
         if ($jetpackHelper->isJetpackActive()) {
             $replaceOrAdd[Jetpack::STAGING_MODE_CONST] = 'true';

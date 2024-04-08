@@ -276,6 +276,7 @@ class DatabaseImporter
 
         $query = $this->maybeShorterTableNameForDropTableQuery($query);
         $query = $this->maybeShorterTableNameForCreateTableQuery($query);
+        $query = $this->maybeFixReplaceTableConstraints($query);
 
         $this->replaceTableCollations($query);
 
@@ -466,6 +467,23 @@ class DatabaseImporter
         if (strlen($tableName) > 64) {
             $shortName = $this->restoreTask->getShortNameTable($tableName, $this->tmpDatabasePrefix);
             return str_replace($tableName, $shortName, $query);
+        }
+
+        return $query;
+    }
+
+    protected function maybeFixReplaceTableConstraints(&$query)
+    {
+        if (strpos($query, "CREATE TABLE") !== 0) {
+            return $query;
+        }
+
+        // Possible syntax error on backups when replace Table Constraints:
+        //  KEY `key` (`field1`,`field2`), `field_leftover_after_removed`) ON DELETE CASCADE ON UPDATE NO ACTION )
+        if (preg_match('@KEY\s+\`.*\`\s+?\(.*\)(,(\s+)?\`.*`\)\s+ON\s+(DELETE|UPDATE).*?)\)@i', $query, $matches)) {
+            // String to remove:
+            //  $matches[1] = , `field_leftover_after_removed`) ON DELETE CASCADE ON UPDATE NO ACTION
+            $query = str_replace($matches[1], '', $query);
         }
 
         return $query;

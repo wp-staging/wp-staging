@@ -8,6 +8,7 @@
  * @var string $urlAssets
  * @var bool $isProVersion
  * @var bool $hasSchedule *
+ * @see /Backend/views/backup/modal/backup.php
  */
 
 use WPStaging\Core\Cron\Cron;

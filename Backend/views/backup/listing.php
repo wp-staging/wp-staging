@@ -78,9 +78,7 @@ if ($cronMessage !== '') { ?>
 <div id="wpstg-existing-backups">
         <div id="backup-messages"></div>
         <div class="wpstg-backup-list">
-            <ul>
-                <li><?php esc_html_e('Searching for existing backups...', 'wp-staging') ?></li>
-            </ul>
+            <ul></ul>
         </div>
 </div>
 

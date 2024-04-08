@@ -155,7 +155,7 @@ class PrepareBackup
         }
 
         if ($args['isInit']) {
-            debug_log('[Schedule] Configuring JOB DATA DTO');
+            debug_log('[Schedule] Configuring JOB DATA DTO', 'info', false);
             $prepareBackup = WPStaging::make(\WPStaging\Backup\Ajax\Backup\PrepareBackup::class);
             $prepareBackup->prepare($args);
             $this->jobBackup = $prepareBackup->getJobBackup();
@@ -167,7 +167,7 @@ class PrepareBackup
 
         $taskResponseDto = null;
 
-        debug_log('[Schedule Job Data DTO]: ' . json_encode($this->jobBackup->getJobDataDto()));
+        debug_log('[Schedule Job Data DTO]: ' . json_encode($this->jobBackup->getJobDataDto()), 'info', false);
 
         do {
             try {
@@ -196,7 +196,9 @@ class PrepareBackup
 
             if (!$taskResponseDto->isRunning()) {
                 // Cleanup the pending/ready actions for this scheduleId.
-                $this->queue->cleanupActionsByScheduleId($args['scheduleId'], [Queue::STATUS_READY]);
+                if (array_key_exists('scheduleId', $args)) {
+                    $this->queue->cleanupActionsByScheduleId($args['scheduleId'], [Queue::STATUS_READY]);
+                }
 
                 // We're finished, get out and bail.
                 return $taskResponseDto;

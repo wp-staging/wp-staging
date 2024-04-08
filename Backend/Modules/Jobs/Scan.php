@@ -171,8 +171,11 @@ class Scan extends Job
         $this->directoryToScanOnly = $directoryToScanOnly;
     }
 
-    /** @param string $basePath */
-    public function setBasePath(string $basePath)
+    /**
+     * @param string $basePath
+     * @todo add typed property `string` and ensure this value is never null
+     */
+    public function setBasePath($basePath)
     {
         $this->basePath = rtrim(wp_normalize_path($basePath), '/');
     }
@@ -601,7 +604,7 @@ class Scan extends Job
 
         // Decide if item checkbox is active or not
         $shouldBeChecked = $parentChecked !== null ? $parentChecked : !$isNotWPCoreDir;
-        if (!$forceDefault && $this->isUpdateOrResetJob() && (!$this->isPathInDirectories($path, $excludedDirectories))) {
+        if (!$forceDefault && $this->isUpdateOrResetJob() && (!$this->isPathInDirectories($path, $excludedDirectories, $basePath))) {
             $shouldBeChecked = true;
         } elseif (!$forceDefault && $this->isUpdateOrResetJob()) {
             $shouldBeChecked = false;
@@ -691,14 +694,15 @@ class Scan extends Job
 
     /**
      * Is the path present is given list of directories
-     * @param string $path
-     * @param array $directories List of directories relative to ABSPATH with leading slash
+     * @param string  $path
+     * @param array   $directories List of directories relative to ABSPATH with leading slash
+     * @param ?string $basePath
      *
      * @return bool
      */
-    protected function isPathInDirectories($path, $directories)
+    protected function isPathInDirectories(string $path, array $directories, $basePath = null): bool
     {
-        return $this->pathChecker->isPathInPathsList($path, $directories, true);
+        return $this->pathChecker->isPathInPathsList($path, $directories, true, $basePath);
     }
 
     /**

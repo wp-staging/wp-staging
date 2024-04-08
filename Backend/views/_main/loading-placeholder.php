@@ -1,6 +1,6 @@
 <?php $numberOfLoadingBars = $numberOfLoadingBars ?? 10;?>
 
-<div class="wpstg-loading-bar-container">
+<div class="wpstg-loading-placeholder-container">
     <div class="wpstg-dom-loading-wrapper">
         <?php
         for ($i = 0; $i < $numberOfLoadingBars; $i++) {

@@ -34,22 +34,22 @@
             data-id='<?php echo esc_attr($dataId); ?>'
         <?php endif; ?>
         <?php if (!empty($dataDirType)) : ?>
-            wpstg-data-dir-type='<?php echo esc_attr($dataDirType); ?>'
+            data-dir-type='<?php echo esc_attr($dataDirType); ?>'
         <?php endif; ?>
         <?php if (!empty($dataPrefix)) : ?>
-            wpstg-data-prefix='<?php echo esc_attr($dataPrefix); ?>'
+            data-prefix='<?php echo esc_attr($dataPrefix); ?>'
         <?php endif; ?>
         <?php if (!empty($dataPath)) : ?>
-            wpstg-data-path='<?php echo esc_attr($dataPath); ?>'
+            data-path='<?php echo esc_attr($dataPath); ?>'
         <?php endif; ?>
         <?php if (!empty($dataDeletePath)) : ?>
             data-deletepath='<?php echo esc_attr($dataDeletePath); ?>'
         <?php endif; ?>
         <?php if (!empty($isDataScanned)) : ?>
-            wpstg-data-scanned='<?php echo esc_attr($isDataScanned); ?>'
+            data-scanned='<?php echo esc_attr($isDataScanned); ?>'
         <?php endif; ?>
         <?php if (!empty($isDataNavigatable)) : ?>
-            wpstg-data-navigatable='<?php echo esc_attr($isDataNavigatable); ?>'
+            data-navigatable='<?php echo esc_attr($isDataNavigatable); ?>'
         <?php endif; ?>
         <?php if (!empty($onChange)) : ?>
             onchange='<?php echo esc_attr($onChange); ?>'

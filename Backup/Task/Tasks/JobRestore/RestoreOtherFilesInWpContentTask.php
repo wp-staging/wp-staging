@@ -67,6 +67,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 
                 if ($fileName === 'object-cache.php') {
                     $this->jobDataDto->addFileChecksum('object-cache.php', sha1_file($absoluteFilePath));
+                    continue;
                 }
 
                 $this->enqueueDelete($absoluteFilePath);
@@ -74,7 +75,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 
             if ($files->isDir()) {
                 $normalizedPath = $this->filesystem->normalizePath($files->getPathname(), true);
-                $defaultWordPressFoldersWithLang = array_merge($this->directory->getDefaultWordPressFolders(), [$this->directory->getLangsDirectory(), trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false))]);
+                $defaultWordPressFoldersWithLang = array_merge($this->directory->getDefaultWordPressFolders(), [$this->directory->getLangsDirectory(), $this->directory->getPluginWpContentDirectory(), trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false))]);
                 if (!in_array($normalizedPath, $defaultWordPressFoldersWithLang)) {
                     $this->enqueueDelete($normalizedPath);
                 }
@@ -112,8 +113,9 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             }
 
             if ($relativePath === 'object-cache.php' && sha1_file($absSourcePath) !== $this->jobDataDto->getFileChecksum('object-cache.php')) {
-                $this->logger->warning('object-cache.php checksum does not match. Skipped restoring object-cache to avoid issues.');
+                $this->logger->warning('object-cache.php checksum does not match. Restoring object-cache as wpstg_bak.object-cache.php to avoid issues.');
                 $this->jobDataDto->setObjectCacheSkipped(true);
+                $this->enqueueMove($absSourcePath, $destinationWpContentDir . 'wpstg_bak.' . $relativePath);
                 continue;
             }
 

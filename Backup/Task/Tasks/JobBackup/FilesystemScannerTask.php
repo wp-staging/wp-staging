@@ -850,6 +850,7 @@ class FilesystemScannerTask extends BackupTask
 
         $excludedDirs[] = WPSTG_PLUGIN_DIR;
         $excludedDirs[] = $this->directory->getPluginUploadsDirectory();
+        $excludedDirs[] = $this->directory->getPluginWpContentDirectory();
         $excludedDirs[] = trailingslashit(WP_CONTENT_DIR) . 'cache';
 
         // @see BackupUploadsDir::BACKUP_UPLOADS_DIR_POSTFIX

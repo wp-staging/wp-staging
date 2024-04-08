@@ -164,7 +164,7 @@ class JobRestoreDataDto extends JobDataDto
      */
     public function setTmpDirectory($tmpPath)
     {
-        $this->tmpDirectory = trailingslashit(wp_normalize_path($tmpPath));
+        $this->tmpDirectory = is_null($tmpPath) ? null : trailingslashit(wp_normalize_path($tmpPath));
     }
 
     /**
