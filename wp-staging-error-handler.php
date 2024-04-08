@@ -9,10 +9,11 @@ namespace WPStaging\functions;
 /**
  * @param string $message The debug message.
  * @param string $logType A PSR-3 compatible-log type. If "debug", it only logs if WPSTG_DEBUG is true.
+ * @param bool   $logInDebugLog Whether to log the message in the WP_DEBUG_LOG file.
  *
  * @see \Psr\Log\LogLevel
  */
-function debug_log($message, $logType = 'info')
+function debug_log($message, $logType = 'info', $logInDebugLog = true)
 {
     // Keep the file handler open for the duration of the request for performance.
     static $fileHandler;
@@ -21,7 +22,7 @@ function debug_log($message, $logType = 'info')
         return;
     }
 
-    if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+    if ($logInDebugLog && defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
         error_log('[' . $logType . '] WP Staging - ' . $message, 0);
     }
 

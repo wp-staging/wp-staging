@@ -613,7 +613,7 @@
       retry: {
         currentDelay: 0,
         count: 0,
-        max: 10,
+        max: wpstg.maxFailedRetries,
         retryOnErrors: [401, 403, 404, 429, 502, 503, 504],
         performingRequest: false,
         incrementRetry: function incrementRetry(incrementRatio) {
@@ -878,7 +878,7 @@
           showErrors = true;
         }
         tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
-        var retryLimit = 10;
+        var retryLimit = wpstg.maxFailedRetries;
         var retryTimeout = 10000 * tryCount;
         incrementRatio = parseInt(incrementRatio);
         if (!isNaN(incrementRatio)) {

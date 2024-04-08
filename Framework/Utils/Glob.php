@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Framework\Utils\ThirdParty;
+namespace WPStaging\Framework\Utils;
 
 /**
  * This is a port of Symfony\Component\Finder\Glob.

@@ -120,6 +120,8 @@ trait WithAnalyticsSiteInfo
             return [];
         };
 
+        $undefinedString = 'UNDEFINED';
+
         $wpPluginDir = wp_normalize_path(WP_PLUGIN_DIR);
         $wpmuPluginDir = wp_normalize_path(WPMU_PLUGIN_DIR);
 
@@ -128,11 +130,17 @@ trait WithAnalyticsSiteInfo
 
         $plugins = $this->getPlugins();
         foreach ($plugins as $activePlugin) {
-            $pluginData = get_plugin_data(WP_PLUGIN_DIR . "/" . $activePlugin);
-            $version = array_key_exists('Version', $pluginData) ? $pluginData['Version'] : 'UNDEFINED';
+            $pluginFile = WP_PLUGIN_DIR . "/" . $activePlugin;
             $name = str_replace($wpPluginDir, '', wp_normalize_path($activePlugin));
             $name = trim($name, '/\\');
 
+            if (!file_exists($pluginFile)) {
+                $plugins['siteActive'][$name] = $undefinedString;
+                continue;
+            }
+
+            $pluginData = get_plugin_data($pluginFile);
+            $version = array_key_exists('Version', $pluginData) ? $pluginData['Version'] : $undefinedString;
             $plugins['siteActive'][$name] = $version;
         }
 
@@ -140,7 +148,7 @@ trait WithAnalyticsSiteInfo
 
         // mu-plugins
         foreach (get_mu_plugins() ?: [] as $activeMuPlugin => $pluginData) {
-            $version = array_key_exists('Version', $pluginData) ? $pluginData['Version'] : 'UNDEFINED';
+            $version = array_key_exists('Version', $pluginData) ? $pluginData['Version'] : $undefinedString;
             $name = str_replace($wpmuPluginDir, '', wp_normalize_path($activeMuPlugin));
             $name = trim($name, '/\\');
 
@@ -150,10 +158,17 @@ trait WithAnalyticsSiteInfo
         // networkwide plugins
         if (function_exists('wp_get_active_network_plugins')) {
             foreach (wp_get_active_network_plugins() ?: [] as $activePlugin) {
-                $pluginData = get_plugin_data($activePlugin);
-                $version = array_key_exists('Version', $pluginData) ? $pluginData['Version'] : 'UNDEFINED';
                 $name = str_replace($wpPluginDir, '', wp_normalize_path($activePlugin));
                 $name = trim($name, '/\\');
+
+                $pluginFile = WP_PLUGIN_DIR . "/" . $activePlugin;
+                if (!file_exists($pluginFile)) {
+                    $plugins['networkActive'][$name] = $undefinedString;
+                    continue;
+                }
+
+                $pluginData = get_plugin_data($activePlugin);
+                $version = array_key_exists('Version', $pluginData) ? $pluginData['Version'] : $undefinedString;
 
                 $plugins['networkActive'][$name] = $version;
             }
@@ -187,6 +202,12 @@ trait WithAnalyticsSiteInfo
     protected function getPlugins()
     {
         global $wpdb;
+
+        $optionTable = esc_sql($wpdb->prefix) . "options";
+        $result      = $wpdb->get_var("SHOW TABLES LIKE '$optionTable'");
+        if ($result != $optionTable) {
+            return [];
+        }
 
         $sql = "SELECT option_value FROM " . esc_sql($wpdb->prefix) . "options WHERE option_name = 'active_plugins'";
         $result = $wpdb->get_results($sql, ARRAY_A);

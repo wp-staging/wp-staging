@@ -2,11 +2,11 @@
 
 /**
  * @var $viewsNoticesPath
- * @see \WPStaging\Framework\Support\ThirdParty\WordFence::showNotice
+ * @see \WPStaging\Framework\ThirdParty\WordFence::showNotice
  */
 
 use WPStaging\Framework\Notices\Notices;
-use WPStaging\Framework\Support\ThirdParty\WordFence;
+use WPStaging\Framework\ThirdParty\WordFence;
 
 ?>
 <div class="notice notice-warning wpstg-wordfence-userini-renamed-notice">

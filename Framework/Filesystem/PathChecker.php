@@ -7,7 +7,7 @@ use WPStaging\Framework\Adapter\Directory;
 
 /**
  * Class PathChecker
- *
+ * This class is created to avoid circular dependency between Filesystem, PathIdentifier and Directory classes
  * @package WPStaging\Framework\Filesystem
  */
 class PathChecker
@@ -40,17 +40,17 @@ class PathChecker
      * If the isRelative flag is checked it will ignore ABSPATH (root path of WP Installation),
      * from both the paths during checking
      *
-     * @param string   $path        The path to check
-     * @param array    $list        List of path to check against
-     * @param bool     $isRelative  Should the ABSPATH be ignored when checking. Default false
-     * @param string   $basePath    Use ABSPATH if null or empty otherwise use the provided path as base path
+     * @param string  $path        The path to check
+     * @param array   $list        List of path to check against
+     * @param bool    $isRelative  Should the ABSPATH be ignored when checking. Default false
+     * @param ?string $basePath    Use ABSPATH if null or empty otherwise use the provided path as base path
      *
      * @return bool
      */
-    public function isPathInPathsList($path, $list, $isRelative = false, $basePath = null)
+    public function isPathInPathsList(string $path, array $list, bool $isRelative = false, $basePath = null): bool
     {
         if (empty($basePath)) {
-            $basePath  = $this->directory->getAbsPath();
+            $basePath = $this->directory->getAbsPath();
         }
 
         $basePath = $this->filesystem->normalizePath($basePath);

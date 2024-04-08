@@ -4,8 +4,8 @@ namespace WPStaging\Framework\Filesystem\Filters;
 
 use SplFileInfo;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Utils\Glob;
 use WPStaging\Framework\Utils\Strings;
-use WPStaging\Framework\Utils\ThirdParty\Glob;
 
 /**
  * This helper is used in both RecursivePathExcludeFilter and PathExcludeFilter

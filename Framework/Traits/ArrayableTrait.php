@@ -25,6 +25,11 @@ trait ArrayableTrait
         $data = [];
         /** @var ReflectionProperty $prop */
         foreach ($props as $prop) {
+            $propName = $prop->getName();
+            if ($propName === 'excludeHydrate') {
+                continue;
+            }
+
             $prop->setAccessible(true);
             $value = $prop->getValue($this);
 
@@ -36,7 +41,7 @@ trait ArrayableTrait
                 $value = $value->toArray();
             }
 
-            $data[$prop->getName()] = $value;
+            $data[$propName] = $value;
         }
 
         return $data;
