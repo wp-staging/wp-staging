@@ -10,6 +10,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Notices\Notices;
 use WPStaging\Framework\Notices\OutdatedWpStagingNotice;
+use WPStaging\Framework\Facades\Escape;
 
 $backupNotice = WPStaging::make(BackupPluginsNotice::class);
 
@@ -141,6 +142,12 @@ $backupNotice = WPStaging::make(BackupPluginsNotice::class);
                     require_once($this->path . "views/backup/free-version.php");
                 }
                 ?>
+            </div>
+            <div class="wpstg-did-you-know-footer">
+                <?php echo sprintf(
+                    Escape::escapeHtml(__('Note: You can upload backup files to another site to transfer a website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
+                    'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'
+                ); ?>
             </div>
         </div>
         <?php

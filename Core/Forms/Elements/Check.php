@@ -20,7 +20,7 @@ class Check extends ElementsWithOptions
         $output = '';
 
         foreach ($this->options as $id => $value) {
-            $attributeId = $this->getId() . '_' . $this->getId($id);
+            $attributeId = $this->getId();
             $output .= Checkbox::render($attributeId, $this->getId(), $id, $this->isChecked($id), [], [], true);
 
             if ($value) {

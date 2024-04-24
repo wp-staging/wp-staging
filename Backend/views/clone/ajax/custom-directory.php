@@ -78,28 +78,28 @@ if ($isPro && !empty($options->current)) {
 </div>
 <div id="wpstg-clone-directory" <?php echo $isPro === true ? 'style="display: none;"' : '' ?> >
     <div class="wpstg-form-group wpstg-text-field">
-        <label><?php esc_html_e('Destination Path: ', 'wp-staging') ?> </label>
+        <label for="wpstg_clone_dir"><?php esc_html_e('Destination Path: ', 'wp-staging') ?> </label>
         <input type="text" class="wpstg-textbox" name="wpstg_clone_dir" id="wpstg_clone_dir" value="<?php echo esc_attr($customDir); ?>" title="wpstg_clone_dir" placeholder="<?php echo esc_attr($directory); ?>" autocapitalize="off" <?php echo $isPro ? '' : 'disabled' ?> />
         <?php if ($isPro) { ?>
         <span class="wpstg-code-segment">
             <a id="wpstg-use-target-dir" data-base-path="<?php echo esc_attr($directory) ?>" data-path="<?php echo esc_attr($directory) ?>" class="wpstg-pointer">
                 <?php esc_html_e('Set Default: ', 'wp-staging') ?>
             </a>
-            <label class="wpstg-use-target-dir--value"><?php echo esc_attr($directory); ?></label>
+            <span class="wpstg-use-target-dir--value"><?php echo esc_attr($directory); ?></span>
         </span>
         <?php } else { ?>
             <span id="wpstg-use-target-dir" data-base-path="<?php echo esc_attr($directory) ?>"></span>
         <?php } ?>
     </div>
     <div class="wpstg-form-group wpstg-text-field">
-        <label><?php esc_html_e('Target Hostname: ', 'wp-staging') ?> </label>
+        <label for="wpstg_clone_hostname"><?php esc_html_e('Target Hostname: ', 'wp-staging') ?> </label>
         <input type="text" class="wpstg-textbox" name="wpstg_clone_hostname" id="wpstg_clone_hostname" value="<?php echo esc_attr($customHostname); ?>" title="wpstg_clone_hostname" placeholder="<?php echo esc_attr($hostname); ?>" autocapitalize="off" <?php echo $isPro ? '' : 'disabled' ?> />
         <?php if ($isPro) { ?>
             <span class="wpstg-code-segment">
         <a id="wpstg-use-target-hostname" data-base-uri="<?php echo esc_attr($hostname) ?>" data-uri="<?php echo esc_attr($hostname) ?>" class="wpstg-pointer">
             <?php esc_html_e('Set Default: ', 'wp-staging') ?>
         </a>
-        <label class="wpstg-use-target-hostname--value"><?php echo esc_url(get_site_url()); ?></label>
+        <span class="wpstg-use-target-hostname--value"><?php echo esc_url(get_site_url()); ?></span>
     </span>
         <?php } ?>
     </div>

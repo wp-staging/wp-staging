@@ -103,6 +103,9 @@ class ListableBackup
     /** @var bool */
     public $isUnsupported = false;
 
+    /** @var string The storage provider name of this backup */
+    public $storageProviderName;
+
     /** @var string */
     public $error;
 

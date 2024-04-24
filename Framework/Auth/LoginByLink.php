@@ -5,7 +5,6 @@ namespace WPStaging\Framework\Auth;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
-use WPStaging\Framework\Adapter\SourceDatabase;
 
 /**
  * @package WPStaging\Framework\Auth
@@ -34,14 +33,20 @@ class LoginByLink
      */
     private function defineHooks()
     {
+        static $isRegistered = false;
+        if ($isRegistered) {
+            return;
+        }
+
         $siteInfo = WPStaging::make(SiteInfo::class);
         if ($siteInfo->isStagingSite()) {
             add_action("init", [$this, "loginUserByLink"]);
-            add_action("init", [$this, "disconnectUnexistUser"]);
+            add_action("init", [$this, "disconnectNonExistingUser"]);
         }
 
         add_action('rest_api_init', [$this, 'registerRestRoutes']);
-        add_action('wpstg_clean_login_link_data', [$this, 'cleanLoginInfo'], 10, 1);
+
+        $isRegistered = true;
     }
 
     /**
@@ -77,7 +82,17 @@ class LoginByLink
 
         $loginID = sanitize_text_field($_GET['wpstg_login']);
         if (!in_array($loginID, $this->loginLinkData, true)) {
-            wp_die();
+            wp_die('This link is invalid, please contact the administrator. Error code: 101');
+        }
+
+        if (empty($this->loginLinkData['expiration'])) {
+            delete_option(Sites::STAGING_LOGIN_LINK_SETTINGS);
+            wp_die('This link is invalid, please contact the administrator. Error code: 102');
+        }
+
+        if (time() > $this->loginLinkData['expiration']) {
+            delete_option(Sites::STAGING_LOGIN_LINK_SETTINGS);
+            wp_die('This link is invalid, please contact the administrator. Error code: 103');
         }
 
         $login = self::LOGIN_LINK_PREFIX . $loginID;
@@ -105,7 +120,7 @@ class LoginByLink
     /**
      * @return void
      */
-    public function disconnectUnexistUser()
+    public function disconnectNonExistingUser()
     {
         if (!is_user_logged_in()) {
             return;
@@ -125,42 +140,5 @@ class LoginByLink
         }
 
         wp_logout();
-    }
-
-    /**
-     * Clean login information from staging sites
-     *
-     * @param  mixed $cloneID
-     * @return void
-     */
-    public function cleanLoginInfo($cloneID)
-    {
-        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
-        if (!isset($existingClones[$cloneID])) {
-            return;
-        }
-
-        $currentClone = $existingClones[$cloneID];
-
-        $cloneDB           = (new SourceDatabase((object)$currentClone))->getDatabase();
-        $cloneOptionsTable = $currentClone['prefix'] . 'options';
-        $results           = $cloneDB->get_results("SELECT * FROM {$cloneOptionsTable}  WHERE option_name = '" . Sites::STAGING_LOGIN_LINK_SETTINGS . "'");
-        if (!empty($results)) {
-            $cloneDB->delete(
-                $currentClone['prefix'] . 'options',
-                [
-                    'option_name' => Sites::STAGING_LOGIN_LINK_SETTINGS
-                ]
-            );
-            $optionData = maybe_unserialize(current($results)->option_value);
-            $cloneDB->delete(
-                $currentClone['prefix'] . 'users',
-                [
-                    'user_login' => 'wpstg_' . $optionData['loginID'],
-                ]
-            );
-        }
-
-        wp_clear_scheduled_hook('wpstg_clean_login_link_data', [$cloneID]);
     }
 }

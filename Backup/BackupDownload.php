@@ -6,9 +6,14 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Framework\Adapter\Directory;
 
 class BackupDownload
 {
+    /**
+     * @todo seems to be unused. Can we delete it?
+     * @return void
+     */
     public function listenDownload()
     {
         // Early bail: Not a download request.
@@ -53,5 +58,27 @@ class BackupDownload
         header('Content-Length: ' . $backup->getSize());
         readfile($backup->getPathname());
         exit;
+    }
+
+    /**
+     * @return void
+     */
+    public function deleteUnfinishedDownloads()
+    {
+        $dir       = WPStaging::make(Directory::class)->getDownloadsDirectory();
+        if (!is_dir($dir)) {
+            return;
+        }
+
+        $extension = ".wpstg";  // Extension of the file created when download starts.
+        if ($dh = opendir($dir)) {
+            while (($file = readdir($dh)) !== false) {
+                if (strpos($file, $extension) !== false) {
+                    unlink($dir . '/' . $file);
+                }
+            }
+
+            closedir($dh);
+        }
     }
 }

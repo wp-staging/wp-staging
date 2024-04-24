@@ -1345,6 +1345,13 @@
         element.style.visibility = visibility;
       }
     });
+    setTimeout(function () {
+      loader.forEach(function (element) {
+        if (element && element.style.visibility === 'visible') {
+          element.style.visibility = 'hidden';
+        }
+      });
+    }, 5000);
     var container = qs('.wpstg--tab--contents');
     if (visibility === 'visible') {
       loadingBar();
@@ -4281,6 +4288,9 @@
       this.wpstdBackupTab = document.querySelector('#wpstg--tab--toggle--backup');
       this.wpstdSidebarMenu = document.querySelector('#toplevel_page_wpstg_clone');
       this.addEvents();
+      setTimeout(function () {
+        loadingPlaceholder('hidden');
+      }, 5000);
     };
     _proto.addEvents = function addEvents() {
       var _this = this;

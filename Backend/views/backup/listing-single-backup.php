@@ -60,7 +60,6 @@ $logUrl = add_query_arg([
 
 ?>
 <li id="<?php echo esc_attr($id) ?>" class="wpstg-clone wpstg-backup" data-md5="<?php echo esc_attr($backup->md5BaseName); ?>" data-name="<?php echo esc_attr($backup->backupName); ?>">
-
     <div class="wpstg-clone-header">
         <span class="wpstg-clone-title">
             <?php echo esc_html(str_replace(['\\&quot;', '\\&#039;'], ['"', "'"], $backupName)); ?>

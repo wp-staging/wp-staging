@@ -85,17 +85,17 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
                 </p>
 
                 <fieldset class="wpstg-fieldset">
-                    <label><?php esc_html_e('Google Client Id', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_client_id" value="<?php echo esc_attr($googleClientId); ?>" />
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-client-id"><?php esc_html_e('Google Client Id', 'wp-staging') ?></label>
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-client-id" class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_client_id" value="<?php echo esc_attr($googleClientId); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
-                    <label><?php esc_html_e('Google Client Secret', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_client_secret" value="<?php echo esc_attr($googleClientSecret); ?>" />
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-client-secret"><?php esc_html_e('Google Client Secret', 'wp-staging') ?></label>
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-client-secret" class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_client_secret" value="<?php echo esc_attr($googleClientSecret); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
-                    <label><?php esc_html_e('Google Redirect URI', 'wp-staging') ?></label>
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-redirect-uri"><?php esc_html_e('Google Redirect URI', 'wp-staging') ?></label>
                     <div class="wpstg-with-icon">
                         <input class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_redirect_uri" id="google-redirect-uri" value="<?php echo esc_url($googleDriveStorage->getRedirectURI()); ?>" disabled/>
                         <a href="javascript:void(0);" class="wpstg-fieldset-icon" onclick="WPStaging.handleCopyToClipboard(this)" data-wpstg-source="#google-redirect-uri">
@@ -107,13 +107,13 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
             <hr/>
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
             <fieldset class="wpstg-fieldset">
-                <label><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
-                <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
+                <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep"><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
+                <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep" class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
             </fieldset>
 
             <fieldset class="wpstg-fieldset">
-                <label><?php esc_html_e('Backup Location', 'wp-staging') ?></label>
-                <span>//Google Drive/</span><input class="wpstg-form-control" type="text" style="min-width:300px;" placeholder="backups/example.com/" name="folder_name" value="<?php echo esc_attr($folderName); ?>" />
+                <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name"><?php esc_html_e('Backup Location', 'wp-staging') ?></label>
+                <span>//Google Drive/</span><input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name" class="wpstg-form-control" type="text" style="min-width:300px;" placeholder="backups/example.com/" name="folder_name" value="<?php echo esc_attr($folderName); ?>" />
             </fieldset>
 
             <hr/>

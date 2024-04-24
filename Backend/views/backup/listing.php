@@ -8,6 +8,7 @@ use WPStaging\Backup\Ajax\ScheduleList;
 use WPStaging\Backup\BackupProcessLock;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Exceptions\ProcessLockedException;
+use WPStaging\Backup\BackupDownload;
 
 /**
  * @see \WPStaging\Backup\Ajax\Listing::render
@@ -24,21 +25,32 @@ use WPStaging\Backup\Exceptions\ProcessLockedException;
 $disabledProperty = !$isProVersion || $isValidLicense ? '' : 'disabled';
 
 $backupProcessLock = WPStaging::make(BackupProcessLock::class);
+WPStaging::make(BackupDownload::class)->deleteUnfinishedDownloads();
 try {
     $backupProcessLock->checkProcessLocked();
-    $isLocked = false;
+    $isLocked                     = false;
     $disabledPropertyCreateBackup = '';
 } catch (ProcessLockedException $e) {
-    $isLocked = true;
+    $isLocked                     = true;
     $disabledPropertyCreateBackup = 'disabled';
+}
+
+$storages              = WPStaging::make(\WPStaging\Backup\Storage\Providers::class);
+$isEnabledCloudStorage = false;
+foreach ($storages->getStorages(true) as $storage) {
+    $isActivated = $storages->isActivated($storage['authClass']);
+    if ($isActivated) {
+        $isEnabledCloudStorage = true;
+        break;
+    }
 }
 ?>
 
 <?php
 /** @var BackupScheduler */
 $backupScheduler = WPStaging::make(BackupScheduler::class);
-$cronStatus  = $backupScheduler->checkCronStatus();
-$cronMessage = $backupScheduler->getCronMessage();
+$cronStatus      = $backupScheduler->checkCronStatus();
+$cronMessage     = $backupScheduler->getCronMessage();
 if ($cronMessage !== '') { ?>
     <div class="notice <?php echo $cronStatus === true ? 'notice-warning' : 'notice-error'; ?>" style="margin-bottom: 10px;">
         <p><strong><?php esc_html_e('WP STAGING Notice:', 'wp-staging') ?></strong></p>
@@ -52,11 +64,33 @@ if ($cronMessage !== '') { ?>
         <div class="text"><?php esc_html_e('There is a backup work in progress...', 'wp-staging'); ?></div>
     </div>
 <?php endif; ?>
-<div id="wpstg-did-you-know" style="margin-bottom:12px">
-        <strong><?php echo sprintf(
-            Escape::escapeHtml(__('Did you know? You can upload backup files to another site to transfer a website. <a href="%s" target="_blank">Read more</a>', 'wp-staging')),
-            'https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/'
-        ); ?></strong>
+
+<div class="wpstg-did-you-know">
+    <?php
+    echo Escape::escapeHtml(
+        __('<strong>New:</strong> One-click backup restore and migration even if WordPress is down?', 'wp-staging')
+    );
+    ?>
+    </br>
+    <?php
+
+    $downloadText = __('Read More or Upgrade to Pro', 'wp-staging');
+    $downloadLink = 'https://wp-staging.com/docs/wp-staging-restore/';
+
+    if (defined('WPSTGPRO_VERSION')) {
+        $downloadText = __('Download Now', 'wp-staging');
+        $downloadLink = get_admin_url() . 'admin.php?page=wpstg-restorer';
+    }
+
+    printf(
+        Escape::escapeHtml(
+            __('Get the new standalone tool %s <a href="%s" target="_blank">%s</a>', 'wp-staging')
+        ),
+        '<span style="font-weight: bold">WP Staging | Restore:</span>',
+        esc_url($downloadLink),
+        esc_html($downloadText)
+    );
+    ?>
 </div>
 
 <div id="wpstg-step-1">
@@ -69,17 +103,46 @@ if ($cronMessage !== '') { ?>
     <button id="wpstg-manage-backup-schedules" class="wpstg-button wpstg-border-thin-button" <?php echo esc_attr($disabledProperty) ?>>
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
+    <?php if ($isEnabledCloudStorage && $isValidLicense) : ?>
+    <button id="wpstg-show-cloud-backup" class="wpstg-next-step-link wpstg-button wpstg-border-thin-button wpstg-ml-4">
+        <?php esc_html_e('Load Remote Backups', 'wp-staging') ?>
+    </button>
+    <?php endif; ?>
 </div>
 
 <div id="wpstg-backup-runs-info">
     <?php WPStaging::make(ScheduleList::class)->renderNextBackupSnippet(); ?>
 </div>
-
-<div id="wpstg-existing-backups">
+<div class="wpstg-backup-listing-container">
+    <div id="wpstg-existing-backups">
         <div id="backup-messages"></div>
         <div class="wpstg-backup-list">
-            <ul></ul>
+            <span id="local-backup-title"><?php echo esc_html__('Local Backups:', 'wp-staging'); ?></span>
+            <ul id="wpstg-backup-list-ul">
+                <li><?php esc_html_e('Searching for existing backups...', 'wp-staging') ?></li>
+            </ul>
         </div>
+    </div>
+    <div id="wpstg-existing-cloud-backups">
+        <span id="remote-backup-title"><?php echo esc_html__('Remote Backups:', 'wp-staging'); ?></span>
+        <span class="wpstg--tooltip">
+            <img class="wpstg--dashicons wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
+            <div class='wpstg--tooltiptext'><?php echo esc_html__('Remote backups fetching supports S3, Google Drive and sFTP hosted backups. Dropbox support is coming soon.', 'wp-staging'); ?></div>
+        </span>
+        <div class="wpstg-cloud-backup-list">
+            <ul id="wpstg-cloud-backup-list-ul">
+                <li><?php esc_html_e('Searching for remote backups...', 'wp-staging') ?></li>
+            </ul>
+            <ul class="wpstg-cloud-backup-empty-message">
+                <li id="wpstg-cloud-backup-no-results" class="wpstg-clone wpstg-backup-no-results-cloud-backup wpstg-backup-list-ul">
+                    <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/cloud.svg" alt="cloud">
+                    <div class="no-backups-found-text">
+                        <?php esc_html_e('No remote Backups found. Create your first Backup above!', 'wp-staging'); ?>
+                    </div>
+                </li>
+            </ul>
+        </div>
+    </div>
 </div>
 
 <?php include(__DIR__ . '/modal/backup.php'); ?>

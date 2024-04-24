@@ -156,28 +156,30 @@ class BackupScheduler
         $this->setUpcomingDateTime($firstSchedule, $time);
 
         $backupSchedule = [
-            'scheduleId' => $scheduleId,
-            'schedule' => $jobBackupDataDto->getScheduleRecurrence(),
-            'time' => $time,
-            'name' => $jobBackupDataDto->getName(),
-            'rotation' => $jobBackupDataDto->getScheduleRotation(),
-            'isExportingPlugins' => $jobBackupDataDto->getIsExportingPlugins(),
-            'isExportingMuPlugins' => $jobBackupDataDto->getIsExportingMuPlugins(),
-            'isExportingThemes' => $jobBackupDataDto->getIsExportingThemes(),
-            'isExportingUploads' => $jobBackupDataDto->getIsExportingUploads(),
+            'scheduleId'                     => $scheduleId,
+            'schedule'                       => $jobBackupDataDto->getScheduleRecurrence(),
+            'backupType'                     => $jobBackupDataDto->getBackupType(),
+            'subsiteBlogId'                  => $jobBackupDataDto->getSubsiteBlogId(), // required for network subsite backup type
+            'time'                           => $time,
+            'name'                           => $jobBackupDataDto->getName(),
+            'rotation'                       => $jobBackupDataDto->getScheduleRotation(),
+            'isExportingPlugins'             => $jobBackupDataDto->getIsExportingPlugins(),
+            'isExportingMuPlugins'           => $jobBackupDataDto->getIsExportingMuPlugins(),
+            'isExportingThemes'              => $jobBackupDataDto->getIsExportingThemes(),
+            'isExportingUploads'             => $jobBackupDataDto->getIsExportingUploads(),
             'isExportingOtherWpContentFiles' => $jobBackupDataDto->getIsExportingOtherWpContentFiles(),
-            'isExportingDatabase' => $jobBackupDataDto->getIsExportingDatabase(),
-            'sitesToBackup' => $jobBackupDataDto->getSitesToBackup(),
-            'storages' => $jobBackupDataDto->getStorages(),
-            'firstSchedule' => $firstSchedule->getTimestamp(),
-            'isSmartExclusion' => $jobBackupDataDto->getIsSmartExclusion(),
-            'isExcludingSpamComments' => $jobBackupDataDto->getIsExcludingSpamComments(),
-            'isExcludingPostRevision' => $jobBackupDataDto->getIsExcludingPostRevision(),
-            'isExcludingDeactivatedPlugins' => $jobBackupDataDto->getIsExcludingDeactivatedPlugins(),
-            'isExcludingUnusedThemes' => $jobBackupDataDto->getIsExcludingUnusedThemes(),
-            'isExcludingLogs' => $jobBackupDataDto->getIsExcludingLogs(),
-            'isExcludingCaches' => $jobBackupDataDto->getIsExcludingCaches(),
-            'isWpCliRequest' => true, // should be true otherwise multisite backup will not work
+            'isExportingDatabase'            => $jobBackupDataDto->getIsExportingDatabase(),
+            'sitesToBackup'                  => $jobBackupDataDto->getSitesToBackup(),
+            'storages'                       => $jobBackupDataDto->getStorages(),
+            'firstSchedule'                  => $firstSchedule->getTimestamp(),
+            'isSmartExclusion'               => $jobBackupDataDto->getIsSmartExclusion(),
+            'isExcludingSpamComments'        => $jobBackupDataDto->getIsExcludingSpamComments(),
+            'isExcludingPostRevision'        => $jobBackupDataDto->getIsExcludingPostRevision(),
+            'isExcludingDeactivatedPlugins'  => $jobBackupDataDto->getIsExcludingDeactivatedPlugins(),
+            'isExcludingUnusedThemes'        => $jobBackupDataDto->getIsExcludingUnusedThemes(),
+            'isExcludingLogs'                => $jobBackupDataDto->getIsExcludingLogs(),
+            'isExcludingCaches'              => $jobBackupDataDto->getIsExcludingCaches(),
+            'isWpCliRequest'                 => true, // should be true otherwise multisite backup will not work
         ];
 
         if (wp_next_scheduled('wpstg_create_cron_backup', [$backupSchedule])) {

@@ -269,26 +269,26 @@ class Assets
         );
 
         $wpstgConfig = [
-            "delayReq"                => 0,
+            "delayReq"               => 0,
             // TODO: move directorySeparator to consts?
-            "settings"                => (object)[
+            "settings"               => (object)[
                 "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR
             ],
-            "tblprefix"               => WPStaging::getTablePrefix(),
-            "isMultisite"             => is_multisite(),
-            AccessToken::REQUEST_KEY  => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
-            'nonce'                   => wp_create_nonce(Nonce::WPSTG_NONCE),
-            'assetsUrl'               => $this->getAssetsUrl(),
-            'ajaxUrl'                 => admin_url('admin-ajax.php'),
-            'wpstgIcon'               => $this->getAssetsUrl('img/wpstg-loader.gif'),
-            'maxUploadChunkSize'      => $this->getMaxUploadChunkSize(),
-            'backupDBExtension'       => DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
-            'analyticsConsentAllow'   => esc_url($this->analyticsConsent->getConsentLink(true)),
-            'analyticsConsentDeny'    => esc_url($this->analyticsConsent->getConsentLink(false)),
-            'isPro'                   => WPStaging::isPro(),
-            'maxFailedRetries'        => Hooks::applyFilters(AbstractJob::TEST_FILTER_MAXIMUM_RETRIES, 10),
+            "tblprefix"              => WPStaging::getTablePrefix(),
+            "isMultisite"            => is_multisite(),
+            AccessToken::REQUEST_KEY => (string)$this->accessToken->getToken() ?: (string)$this->accessToken->generateNewToken(),
+            'nonce'                  => wp_create_nonce(Nonce::WPSTG_NONCE),
+            'assetsUrl'              => $this->getAssetsUrl(),
+            'ajaxUrl'                => admin_url('admin-ajax.php'),
+            'wpstgIcon'              => $this->getAssetsUrl('img/wpstg-loader.gif'),
+            'maxUploadChunkSize'     => $this->getMaxUploadChunkSize(),
+            'backupDBExtension'      => DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
+            'analyticsConsentAllow'  => esc_url($this->analyticsConsent->getConsentLink(true)),
+            'analyticsConsentDeny'   => esc_url($this->analyticsConsent->getConsentLink(false)),
+            'isPro'                  => WPStaging::isPro(),
+            'maxFailedRetries'       => Hooks::applyFilters(AbstractJob::TEST_FILTER_MAXIMUM_RETRIES, 10),
             // TODO: handle i18n translations through Class/Service Provider?
-            'i18n'                    => [
+            'i18n'                   => [
                 'dbConnectionSuccess'   => esc_html__('Database connection successful', 'wp-staging'),
                 'dbConnectionFailed'    => esc_html__('Database connection failed', 'wp-staging'),
                 'somethingWentWrong'    => esc_html__('Something went wrong.', 'wp-staging'),
@@ -390,6 +390,7 @@ class Assets
                 "wp-staging-pro_page_wpstg-settings",
                 "wp-staging-pro_page_wpstg-tools",
                 "wp-staging-pro_page_wpstg-license",
+                "wp-staging-pro_page_wpstg-restorer",
             ];
         } else {
             $availablePages = [

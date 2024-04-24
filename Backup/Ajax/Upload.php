@@ -6,6 +6,7 @@ use Exception;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backup\BackupRepairer;
@@ -28,12 +29,18 @@ class Upload extends AbstractTemplateComponent
     /** @var Sanitize */
     private $sanitize;
 
+    /**
+     * @var Filesystem
+     */
+    private $filesystem;
+
     public function __construct(BackupsFinder $backupsFinder, TemplateEngine $templateEngine, BackupRepairer $backupRepairer, Sanitize $sanitize)
     {
         parent::__construct($templateEngine);
-        $this->backupsFinder = $backupsFinder;
+        $this->backupsFinder  = $backupsFinder;
         $this->backupRepairer = $backupRepairer;
-        $this->sanitize = $sanitize;
+        $this->sanitize       = $sanitize;
+        $this->filesystem     = WPStaging::make(Filesystem::class);
     }
 
     public function render()
@@ -56,19 +63,20 @@ class Upload extends AbstractTemplateComponent
         try {
             $this->validateRequestData($file);
         } catch (\Exception $e) {
-            wp_send_json_error('Invalid request data', 400);
+            wp_send_json_error([
+                'message' => !empty($e->getMessage()) ? $e->getMessage() : 'Invalid request data',
+            ], 400);
         }
 
-        $resumableChunkNumber = isset($_GET['resumableChunkNumber']) ? $this->sanitize->sanitizeInt($_GET['resumableChunkNumber'], $abs = true) : 0;
-        $resumableChunkSize = isset($_GET['resumableChunkSize']) ? $this->sanitize->sanitizeInt($_GET['resumableChunkSize'], $abs = true) : 0;
-        $resumableCurrentChunkSize = isset($_GET['resumableCurrentChunkSize']) ? $this->sanitize->sanitizeInt($_GET['resumableCurrentChunkSize'], $abs = true) : 0;
-        $resumableTotalSize = isset($_GET['resumableTotalSize']) ? $this->sanitize->sanitizeInt($_GET['resumableTotalSize'], $abs = true) : 0;
-        $resumableTotalChunks = isset($_GET['resumableTotalChunks']) ? $this->sanitize->sanitizeInt($_GET['resumableTotalChunks'], $abs = true) : 0;
-        $uniqueIdentifierSuffix = isset($_GET['uniqueIdentifierSuffix']) ? $this->sanitize->sanitizeString($_GET['uniqueIdentifierSuffix']) : '';
-
-        $resumableIdentifier = isset($_GET['resumableIdentifier']) ? sanitize_file_name($_GET['resumableIdentifier']) : '';
-        $resumableFilename = isset($_GET['resumableFilename']) ? sanitize_file_name($_GET['resumableFilename']) : '';
-        $resumableRelativePath = isset($_GET['resumableRelativePath']) ? sanitize_file_name($_GET['resumableRelativePath']) : '';
+        $resumableChunkNumber      = isset($_GET['resumableChunkNumber']) ? $this->sanitize->sanitizeInt($_GET['resumableChunkNumber'], true) : 0;
+        $resumableChunkSize        = isset($_GET['resumableChunkSize']) ? $this->sanitize->sanitizeInt($_GET['resumableChunkSize'], true) : 0;
+        $resumableCurrentChunkSize = isset($_GET['resumableCurrentChunkSize']) ? $this->sanitize->sanitizeInt($_GET['resumableCurrentChunkSize'], true) : 0;
+        $resumableTotalSize        = isset($_GET['resumableTotalSize']) ? $this->sanitize->sanitizeInt($_GET['resumableTotalSize'], true) : 0;
+        $resumableTotalChunks      = isset($_GET['resumableTotalChunks']) ? $this->sanitize->sanitizeInt($_GET['resumableTotalChunks'], true) : 0;
+        $uniqueIdentifierSuffix    = isset($_GET['uniqueIdentifierSuffix']) ? $this->sanitize->sanitizeString($_GET['uniqueIdentifierSuffix']) : '';
+        $resumableIdentifier       = isset($_GET['resumableIdentifier']) ? sanitize_file_name($_GET['resumableIdentifier']) : '';
+        $resumableFilename         = isset($_GET['resumableFilename']) ? sanitize_file_name($_GET['resumableFilename']) : '';
+        $resumableRelativePath     = isset($_GET['resumableRelativePath']) ? sanitize_file_name($_GET['resumableRelativePath']) : '';
 
         $originalPath = $this->backupsFinder->getBackupsDirectory() . $resumableFilename;
         if ($this->isBackupPart($originalPath) && file_exists($originalPath)) {
@@ -87,7 +95,7 @@ class Upload extends AbstractTemplateComponent
                 WPStaging::make(DiskWriteCheck::class)->checkPathCanStoreEnoughBytes($this->backupsFinder->getBackupsDirectory(), $resumableTotalSize);
             } catch (DiskNotWritableException $e) {
                 wp_send_json_error([
-                    'message' => $e->getMessage(),
+                    'message'    => $e->getMessage(),
                     'isDiskFull' => true,
                 ], 507);
             } catch (\RuntimeException $e) {
@@ -125,7 +133,7 @@ class Upload extends AbstractTemplateComponent
             delete_option('wpstg.backups.doing_upload');
 
             wp_send_json_error([
-                'message' => $e->getMessage(),
+                'message'    => $e->getMessage(),
                 'isDiskFull' => true,
             ], 507);
         } catch (\Exception $e) {
@@ -153,7 +161,7 @@ class Upload extends AbstractTemplateComponent
                 }
 
                 wp_send_json_error([
-                    'message' => $e->getMessage(),
+                    'message'                => $e->getMessage(),
                     'backupFailedValidation' => true,
                 ], 500);
             }
@@ -195,10 +203,10 @@ class Upload extends AbstractTemplateComponent
     {
         clearstatcache();
         $backupMetadata = new BackupMetadata();
-        $metadata = $backupMetadata->hydrateByFilePath($fullPath);
+        $metadata       = $backupMetadata->hydrateByFilePath($fullPath);
 
         $isCreatedOnPro = $metadata->getCreatedOnPro();
-        $version = $metadata->getWpstgVersion();
+        $version        = $metadata->getWpstgVersion();
 
         if ($isCreatedOnPro && version_compare($version, RestoreRequirementsCheckTask::BETA_VERSION_LIMIT_PRO, '<')) {
             throw new Exception(__('This backup was generated on a beta version of WP STAGING and can not be used with this version. Please create a new Backup or get in touch with our support if you need assistance.', 'wp-staging'));
@@ -213,11 +221,11 @@ class Upload extends AbstractTemplateComponent
             return;
         }
 
-        $realSize = filesize($fullPath);
+        $realSize         = filesize($fullPath);
         $allowedDifferece = 1 * KB_IN_BYTES;
 
         $smallerThanExpected = $realSize + $allowedDifferece - $estimatedSize < 0;
-        $biggerThanExpected = $realSize - $allowedDifferece > $estimatedSize;
+        $biggerThanExpected  = $realSize - $allowedDifferece > $estimatedSize;
 
         if ($smallerThanExpected || $biggerThanExpected) {
             throw new Exception(sprintf(__('The backup size (%s) is different than expected (%s). If this issue persists, upload the file directly to this folder using FTP: <strong>wp-content/uploads/wp-staging/backups</strong>', 'wp-staging'), size_format($realSize, 2), size_format($estimatedSize)));
@@ -246,6 +254,10 @@ class Upload extends AbstractTemplateComponent
 
         if (empty($file['tmp_name']) || !file_exists($file['tmp_name'])) {
             throw new Exception();
+        }
+
+        if (!empty($file['name']) && !$this->filesystem->isWpstgBackupFile($file['name'])) {
+            throw new Exception(sprintf(__('Invalid backup file extension: %s', 'wp-staging'), $file['name']));
         }
 
         /**
