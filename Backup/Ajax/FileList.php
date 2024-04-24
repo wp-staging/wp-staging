@@ -89,7 +89,6 @@ class FileList extends AbstractTemplateComponent
                     'isValidLicenseKey' => $isValidLicenseKey,
                 ]);
             } else {
-                $output .= sprintf('<h3>%s</h3>', __('Your Backups:', 'wp-staging'));
 
                 /** @var ListableBackup $listable */
                 foreach ($listableBackups as $listable) {

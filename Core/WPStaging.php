@@ -58,7 +58,7 @@ final class WPStaging
     private $isBootstrapped = false;
 
     /**
-     * @var int|float The microtime where the Container was bootstraped. Used to identify the time where the application started running.
+     * @var int|float The microtime where the Container was bootstrapped. Used to identify the time where the application started running.
      */
     public static $startTime;
 

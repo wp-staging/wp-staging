@@ -56,7 +56,7 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
 </div>
 <div id="wpstg-external-db-section" <?php echo $isPro === true ? 'style="display: none;"' : '' ?>>
     <div class="wpstg-form-group wpstg-text-field">
-        <label><?php esc_html_e('Server: ', 'wp-staging'); ?> </label>
+        <label for="wpstg-db-server"><?php esc_html_e('Server: ', 'wp-staging'); ?> </label>
         <input type="text" class="wpstg-textbox" name="wpstg-db-server" id="wpstg-db-server" value="<?php echo esc_attr($server); ?>" title="wpstg-db-server" placeholder="localhost" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly>
     </div>
     <div class="wpstg-form-group wpstg-text-field">

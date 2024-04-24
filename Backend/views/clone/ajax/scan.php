@@ -18,7 +18,7 @@ use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Facades\UI\Checkbox;
 
 ?>
-<label id="wpstg-clone-label" for="wpstg-new-clone">
+<label id="wpstg-clone-label" for="wpstg-new-clone-id">
     <input type="text" id="wpstg-new-clone-id" class="wpstg-textbox"
         placeholder="<?php esc_html_e('Enter Site Name (Optional)', 'wp-staging') ?>"
         data-clone="<?php echo esc_attr($options->current); ?>"

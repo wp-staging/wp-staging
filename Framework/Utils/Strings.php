@@ -14,7 +14,7 @@ class Strings
      * @param string $replace
      * @param string $subject
      * @return string
-     * 
+     *
      * @deprecated use strReplaceFirst instead
      * @todo replace all usage of str_replace_first with strReplaceFirst
      */

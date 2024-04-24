@@ -14,6 +14,7 @@ use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\PathIdentifier;
+use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
@@ -41,6 +42,7 @@ use WPStaging\Backend\Feedback\Feedback;
 use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
+use WPStaging\Backend\Pro\WpstgRestore;
 
 /**
  * Class Administrator
@@ -130,6 +132,10 @@ class Administrator
 
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "downloadSystemInfoAndLogFiles"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+
+        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backend\Pro\WpstgRestore')) {
+            add_action("admin_post_wpstg_download_restorer", [$this, "downloadWpstgRestoreFile"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        }
 
         if (!defined('WPSTGPRO_VERSION') && $this->isPluginsPage()) {
             add_filter('admin_footer', [$this, 'loadFeedbackForm']);
@@ -322,6 +328,24 @@ class Administrator
         }
 
         if (defined('WPSTGPRO_VERSION')) {
+
+            if (defined('WPSTG_ACTIVATE_RESTORER') && (bool)WPSTG_ACTIVATE_RESTORER) {
+                // Page: wpstg-restorer
+                add_submenu_page(
+                    $defaultPageSlug,
+                    __("WP Staging | Restore", "wp-staging"),
+                    '',
+                    "manage_options",
+                    "wpstg-restorer",
+                    [$this, "getRestorerPage"]
+                );
+
+                // Remove wpstg-restorer side menu
+                add_filter('submenu_file', function($submenu_file) use($defaultPageSlug) {
+                    remove_submenu_page( $defaultPageSlug, 'wpstg-restorer' );
+                });
+            }
+
             // Page: License
             add_submenu_page(
                 $defaultPageSlug,
@@ -417,6 +441,36 @@ class Administrator
     }
 
     /**
+     * WP Staging Restore Page
+     */
+    public function getRestorerPage()
+    {
+        if (!defined('WPSTG_ACTIVATE_RESTORER') || !(bool)WPSTG_ACTIVATE_RESTORER) {
+            return;
+        }
+
+        // Get license data
+        $license = get_option('wpstg_license_status');
+
+        require_once "{$this->path}Pro/views/wpstg-restorer-ui.php";
+    }
+
+    /**
+     * Download wpstg-restore.php file.
+     * @see dev/docs/wpstg-restore/README.md
+     * @return void
+     */
+    public function downloadWpstgRestoreFile()
+    {
+        if (!defined('WPSTGPRO_VERSION') || !class_exists('WPStaging\Backend\Pro\WpstgRestore', false)) {
+            wp_die('Invalid access', 'WP Staging Restore', ['response' => 403, 'back_link' => true]);
+        }
+
+        $WpstgRestore = WPStaging::make('WPStaging\Backend\Pro\WpstgRestore');
+        $WpstgRestore->downloadFile();
+    }
+
+    /**
      * Download System Information and latest log files.
      * @return void
      */
@@ -429,7 +483,7 @@ class Administrator
         nocache_headers();
         header("Content-Type: text/plain");
         header('Content-Disposition: attachment; filename="wpstg-bundled-logs.txt"');
-        $output  = WPStaging::make(SystemInfo::class)->get("systemInfo");
+        $output = WPStaging::make(SystemInfo::class)->get("systemInfo");
         $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
         $output .= WPStaging::make(DebugLogReader::class)->getLastLogEntries(100 * KB_IN_BYTES, true, false);
         $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
@@ -601,8 +655,8 @@ class Administrator
             $basePath = WP_CONTENT_DIR;
         }
 
-        $path         = trailingslashit($basePath) . $path;
-        $scan         = new Scan($path);
+        $path = trailingslashit($basePath) . $path;
+        $scan = new Scan($path);
         $scan->setBasePath($basePath);
         $scan->setPathIdentifier($prefix);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));

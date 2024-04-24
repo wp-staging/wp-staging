@@ -9,6 +9,7 @@ $classBackupPageActive  = '';
 $classSystemInfoActive  = isset($isActiveSystemInfoPage) ? 'wpstg--tab--active' : '';
 $classSettingsActive    = isset($isActiveSettingsPage) ? 'wpstg--tab--active' : '';
 $classLicenseActive     = isset($isActiveLicensePage) ? 'wpstg--tab--active' : '';
+$classRestorerActive    = isset($isActiveRestorerPage) ? 'wpstg--tab--active' : '';
 
 $backupNotice = WPStaging::make(BackupPluginsNotice::class);
 ?>

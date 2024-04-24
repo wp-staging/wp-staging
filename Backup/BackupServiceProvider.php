@@ -29,6 +29,7 @@ use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Service\Database\Importer\Insert\ExtendedInserterWithoutTransaction;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Task\AbstractTask;
+use WPStaging\Pro\Backup\Ajax\CloudFileList;
 use WPStaging\Backup\Ajax\BackupSpeedIndex;
 
 class BackupServiceProvider extends FeatureServiceProvider
@@ -98,6 +99,7 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--backups-fetch-schedules', $this->container->callback(ScheduleList::class, 'renderScheduleList'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         add_action("admin_post_wpstg--backups--logs", $this->container->callback(Logs::class, 'download')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--storage--list', $this->container->callback(CloudFileList::class, 'getStorageList')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         // Event that we can run on daily basis to repair any corrupted backup create cron jobs
         add_action('wpstg_daily_event', $this->container->callback(BackupScheduler::class, 'reCreateCron'), 10, 0);

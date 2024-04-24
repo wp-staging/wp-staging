@@ -83,6 +83,9 @@ class Directory
     /** @var Strings */
     protected $strUtils;
 
+    /** @var string The directory that points to the temp directory for downloads */
+    protected $downloadsDirectory;
+
     /**
      * @var string
      */
@@ -464,6 +467,21 @@ class Directory
     public function getFileSystem(): Filesystem
     {
         return $this->filesystem;
+    }
+
+    /**
+     * @return string
+     */
+    public function getDownloadsDirectory(): string
+    {
+        if (isset($this->downloadsDirectory)) {
+            return $this->downloadsDirectory;
+        }
+
+        $this->downloadsDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . 'tmp/downloads'));
+        wp_mkdir_p($this->downloadsDirectory);
+
+        return $this->downloadsDirectory;
     }
 
     /**

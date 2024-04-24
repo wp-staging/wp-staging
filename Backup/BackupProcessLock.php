@@ -5,6 +5,7 @@ namespace WPStaging\Backup;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Backup\Exceptions\ProcessLockedException;
+use WPStaging\Framework\Adapter\Directory;
 
 class BackupProcessLock
 {

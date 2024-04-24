@@ -1962,6 +1962,13 @@
         element.style.visibility = visibility;
       }
     });
+    setTimeout(function () {
+      loader.forEach(function (element) {
+        if (element && element.style.visibility === 'visible') {
+          element.style.visibility = 'hidden';
+        }
+      });
+    }, 5000);
     var container = qs('.wpstg--tab--contents');
     if (visibility === 'visible') {
       loadingBar();
@@ -2625,6 +2632,9 @@
             });
             return;
           }
+          if (!message.type) {
+            return;
+          }
           var type = message.type.toLowerCase() || 'info';
           if (!WPStagingBackup.messages.data[type]) {
             WPStagingBackup.messages.data[type] = [];
@@ -2720,6 +2730,8 @@
           WPStagingCommon.showAjaxFatalError(res, '', 'Submit an error report.');
           WPStagingCommon.isLoading(false);
           window.dispatchEvent(new Event('backupListingFinished'));
+          $('#local-backup-title').show();
+          $('#cloud-backup-title').hide();
           return res;
         })["catch"](function (e) {
           return WPStagingCommon.showAjaxFatalError(e, '', 'Submit an error report.');
@@ -2890,60 +2902,9 @@
             $container.find('.wpstg-backup-process-percent').text(response.percentage);
           }
         };
-        var logs = function logs() {
-          if (!response.messages) {
-            return;
-          }
-          var $logsContainer = $container.find('.wpstg-backup-process-logs');
-          var stoppingTypes = [WPStagingBackup.messages.ERROR, WPStagingBackup.messages.CRITICAL];
-          var appendMessage = function appendMessage(message) {
-            if (Array.isArray(message)) {
-              for (var _iterator = _createForOfIteratorHelperLoose(message), _step; !(_step = _iterator()).done;) {
-                var item = _step.value;
-                appendMessage(item);
-              }
-              return;
-            }
-            var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
-            $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
-            if (stoppingTypes.includes(message.type.toLowerCase())) {
-              window.dispatchEvent(new CustomEvent('finishedProcessWithError', {
-                detail: {
-                  error: message.message
-                }
-              }));
-              // Callback approach is used to make sure the logs modal is always shown,
-              // after the completion of cancel/cleanup process.
-              // Makes sure cancel/cleanup process doesn't close the logs modal.
-              // Any other approach would have required a lot of refactoring.
-              WPStagingBackup.cancel({}, function () {
-                setTimeout(WPStagingBackup.logsModal, 500);
-              });
-            }
-          };
-          for (var _iterator2 = _createForOfIteratorHelperLoose(response.messages), _step2; !(_step2 = _iterator2()).done;) {
-            var message = _step2.value;
-            if (!message) {
-              continue;
-            }
-            WPStagingBackup.messages.addMessage(message);
-            appendMessage(message);
-          }
-          if ($logsContainer.is(':visible')) {
-            $logsContainer.scrollTop($logsContainer[0].scrollHeight);
-          }
-          if (!WPStagingBackup.messages.shouldWarn()) {
-            return;
-          }
-          var $btnShowLogs = $container.find('.wpstg-backup-process-logs-button');
-          $btnShowLogs.html($btnShowLogs.attr('data-txt-bad'));
-          $btnShowLogs.find('.wpstg--modal--logs--critical-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.CRITICAL));
-          $btnShowLogs.find('.wpstg--modal--logs--error-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.ERROR));
-          $btnShowLogs.find('.wpstg--modal--logs--warning-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.WARNING));
-        };
         title();
         percentage();
-        logs();
+        WPStagingBackup.addResponseMessagesToLog(response);
         if (response.jobId) {
           WPStagingCommon.setJobId(response.jobId);
         }
@@ -2979,8 +2940,8 @@
             if (!WPStagingBackup.messages.shouldWarn()) {
               $errorContainer.hide();
             }
-            for (var _iterator3 = _createForOfIteratorHelperLoose(messages.data.all), _step3; !(_step3 = _iterator3()).done;) {
-              var message = _step3.value;
+            for (var _iterator = _createForOfIteratorHelperLoose(messages.data.all), _step; !(_step = _iterator()).done;) {
+              var message = _step.value;
               var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
               if (warnings.includes(message.type)) {
                 $errorContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
@@ -2994,6 +2955,61 @@
           }
         });
       },
+      addResponseMessagesToLog: function addResponseMessagesToLog(response) {
+        if (!response.messages) {
+          return;
+        }
+        var $logsContainer = $('.wpstg-backup-process-logs');
+        var stoppingTypes = [WPStagingBackup.messages.ERROR, WPStagingBackup.messages.CRITICAL];
+        var appendMessage = function appendMessage(message) {
+          if (Array.isArray(message)) {
+            for (var _iterator2 = _createForOfIteratorHelperLoose(message), _step2; !(_step2 = _iterator2()).done;) {
+              var item = _step2.value;
+              appendMessage(item);
+            }
+            return;
+          }
+          if (!message.type) {
+            return;
+          }
+          var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
+          $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
+          if (stoppingTypes.includes(message.type.toLowerCase())) {
+            window.dispatchEvent(new CustomEvent('finishedProcessWithError', {
+              detail: {
+                error: message.message
+              }
+            }));
+            // Callback approach is used to make sure the logs modal is always shown,
+            // after the completion of cancel/cleanup process.
+            // Makes sure cancel/cleanup process doesn't close the logs modal.
+            // Any other approach would have required a lot of refactoring.
+            WPStagingBackup.cancel({}, function () {
+              setTimeout(WPStagingBackup.logsModal, 500);
+            });
+          }
+        };
+        for (var _iterator3 = _createForOfIteratorHelperLoose(response.messages), _step3; !(_step3 = _iterator3()).done;) {
+          var message = _step3.value;
+          if (!message) {
+            continue;
+          }
+          WPStagingBackup.messages.addMessage(message);
+          appendMessage(message);
+        }
+        if ($logsContainer.is(':visible')) {
+          $logsContainer.scrollTop($logsContainer[0].scrollHeight);
+        }
+        if (!WPStagingBackup.messages.shouldWarn()) {
+          return;
+        }
+        var $container = $(WPStagingCommon.getSwalContainer());
+        var $btnShowLogs = $container.find('.wpstg-backup-process-logs-button');
+        $btnShowLogs.html($btnShowLogs.attr('data-txt-bad'));
+        $btnShowLogs.find('.wpstg--modal--logs--critical-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.CRITICAL));
+        $btnShowLogs.find('.wpstg--modal--logs--error-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.ERROR));
+        $btnShowLogs.find('.wpstg--modal--logs--warning-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.WARNING));
+      },
       downloadModal: function downloadModal(_ref) {
         var _ref$title = _ref.title,
           title = _ref$title === void 0 ? null : _ref$title,
@@ -3005,7 +3021,6 @@
         if (WPStagingBackup.modal.download.html === null) {
           var $el = $('#wpstg-backup-success-modal');
           WPStagingBackup.modal.download.html = $el.html();
-          $el.remove();
         }
         WPStagingCommon.getSwalModal(true).fire({
           'icon': 'success',
@@ -3217,6 +3232,7 @@
                       var storage = _step.value;
                       storages.push(storage.value);
                     }
+                    WPStagingCommon.selectedStorages = storages;
                     return {
                       name: WPStagingCommon.sanitizeEventAttribute(container.querySelector('input[name="backup_name"]').value) || null,
                       isExportingPlugins: container.querySelector('#includePluginsInBackup:checked') !== null,
@@ -3392,6 +3408,11 @@
                       return;
                     }
 
+                    // load remote backups list only when remote storage is selected.
+                    if (Array.isArray(WPStagingCommon.selectedStorages) && (WPStagingCommon.selectedStorages.includes('localStorage') && WPStagingCommon.selectedStorages.length >= 2 || !WPStagingCommon.selectedStorages.includes('localStorage') && WPStagingCommon.selectedStorages.length >= 1)) {
+                      $('#wpstg-show-cloud-backup').click();
+                    }
+
                     // Wait for fetchListing to populate the DOM with the backup data that we want to read
                     var $el = '';
                     var timesWaited = 0;
@@ -3422,7 +3443,6 @@
 
                         // Found it. No more need for the interval.
                         clearInterval(intervalWaitForBackupInDom);
-                        response.hasOwnProperty('backupSize') ? ' (' + response.backupSize + ')' : '';
                       } else {
                         // Just clear the interval
                         clearInterval(intervalWaitForBackupInDom);
@@ -3522,7 +3542,7 @@
         e.preventDefault();
         WPStagingCommon.resetErrors();
         var name = this.getAttribute('data-name');
-        var htmlContent = 'Are you sure you want to delete this backup: ' + name + '?';
+        var htmlContent = 'Do you want to delete the backup <br>' + name + '?';
         WPStagingCommon.getSwalModal(false, {
           confirmButton: 'wpstg--btn--confirm wpstg-btn-danger wpstg-link-btn'
         }).fire({
@@ -3531,7 +3551,7 @@
           cancelButtonText: 'Cancel',
           confirmButtonText: 'Delete',
           icon: 'warning',
-          title: 'Delete Backup!',
+          title: 'Delete Backup?',
           html: '<div class="wpstg--modal--delete">' + htmlContent + '</div>'
         }).then(function (result) {
           if (!result.value) {
@@ -3549,7 +3569,7 @@
             accessToken: wpstg.accessToken,
             nonce: wpstg.nonce
           }, function (response) {
-            WPStagingCommon.showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
+            WPStagingCommon.showAjaxFatalError(response, '', ' Please submit an error report by using the CONTACT US button.');
             WPStagingCommon.isLoading(false);
             WPStagingBackup$1.fetchListing();
           });
@@ -3634,6 +3654,29 @@
     WPStagingBackupRestore = {
       listen: function listen() {
         $('body').off('click', '.wpstg--backup--restore', WPStagingBackupRestore.clickedRestore).on('click', '.wpstg--backup--restore', WPStagingBackupRestore.clickedRestore);
+      },
+      timer: {
+        totalSeconds: 0,
+        interval: null,
+        start: function start() {
+          if (null !== WPStagingBackupRestore.timer.interval) {
+            return;
+          }
+          var prettify = function prettify(seconds) {
+            return "" + new Date(seconds * 1000).toISOString().substr(11, 8);
+          };
+          WPStagingBackupRestore.timer.interval = setInterval(function () {
+            $('.wpstg--modal--process--elapsed-time').text(prettify(WPStagingBackupRestore.timer.totalSeconds));
+            WPStagingBackupRestore.timer.totalSeconds++;
+          }, 1000);
+        },
+        stop: function stop() {
+          WPStagingBackupRestore.timer.totalSeconds = 0;
+          if (WPStagingBackupRestore.timer.interval) {
+            clearInterval(WPStagingBackupRestore.timer.interval);
+            WPStagingBackupRestore.timer.interval = null;
+          }
+        }
       },
       clickedRestore: function clickedRestore(e) {
         var currentObj = this;
@@ -4032,12 +4075,13 @@
      * @return {void}
      */;
     _proto.handleSuccessResponse = function handleSuccessResponse(response) {
-      if (response.success) {
-        notify('success', response.message);
-      } else {
-        notify('error', response.message);
-      }
       WPStagingCommon.closeSwalModal();
+      var message = response.message ? response.message : '';
+      if (response.success) {
+        notify('success', message ? message : 'Success');
+      } else {
+        WPStagingCommon.showErrorModal(message ? message : 'Invalid request data');
+      }
       WPStagingCommon.showSuccessModal(qs('#wpstg--modal--backup--upload').getAttribute('data-uploadSuccessMessage', 'Upload finished'));
       setLoadingPlaceholder().then(function () {
         return loadingPlaceholder();
@@ -4171,18 +4215,19 @@
               this.isWpstgBackupFile = _context.sent;
             case 15:
               if (!(this.currentBackupName === '')) {
-                _context.next = 17;
+                _context.next = 18;
                 break;
               }
+              notify('error', 'Please enter a valid backup file url.');
               return _context.abrupt("return", false);
-            case 17:
+            case 18:
               if (this.isWpstgBackupFile) {
-                _context.next = 20;
+                _context.next = 21;
                 break;
               }
               notify('error', 'Please enter correct backup file url');
               return _context.abrupt("return", false);
-            case 20:
+            case 21:
               if (this.isProcessStarted === false) {
                 this.isProcessStarted = true;
                 this.startUploadProcess();
@@ -4219,7 +4264,7 @@
                   _this3.handleErrorResponse(fileSize, startByte);
                 }
               });
-            case 22:
+            case 23:
             case "end":
               return _context.stop();
           }
@@ -4243,6 +4288,10 @@
       resumable: null,
       resumableFile: null,
       wpstgBackupUploadUrl: null,
+      upload: {
+        html: null,
+        successMessage: null
+      },
       listen: function listen() {
         document.body.addEventListener('click', function (event) {
           if (event.target.id === 'wpstg-upload-backup') {
@@ -4292,14 +4341,25 @@
       },
       uploadModal: function uploadModal() {
         return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+          var uploadModal, html, successMessage;
           return _regeneratorRuntime().wrap(function _callee$(_context) {
             while (1) switch (_context.prev = _context.next) {
               case 0:
-                _context.next = 2;
+                if (!WPStagingBackupUpload.upload.html || !WPStagingBackupUpload.upload.successMessage || document.getElementById('wpstg--modal--backup--upload')) {
+                  uploadModal = document.getElementById('wpstg--modal--backup--upload');
+                  if (uploadModal) {
+                    html = uploadModal.innerHTML;
+                    successMessage = uploadModal.getAttribute('data-uploadSuccessMessage');
+                    WPStagingBackupUpload.upload.html = html || null;
+                    WPStagingBackupUpload.upload.successMessage = successMessage || null;
+                    uploadModal.parentNode.removeChild(uploadModal);
+                  }
+                }
+                _context.next = 3;
                 return WPStagingCommon.getSwalModal(true, {
                   confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-backup-download-button'
                 }).fire({
-                  html: document.getElementById('wpstg--modal--backup--upload').innerHTML,
+                  html: WPStagingBackupUpload.upload.html,
                   showConfirmButton: true,
                   showCloseButton: false,
                   showLoaderOnConfirm: false,
@@ -4319,7 +4379,6 @@
                     uploadButton.parentNode.replaceChild(btnUpload, uploadButton);
                     btnUpload.addEventListener('click', function () {
                       WPStagingBackupUpload.wpstgBackupUploadUrl.uploadBackupFromUrl();
-                      btnUpload.style.display = 'none';
                     });
                     WPStagingBackupUpload.deleteUnfinishedUploads();
                     WPStagingBackupUpload.setModalStateStart();
@@ -4353,7 +4412,7 @@
                     WPStagingBackupUpload.resumable.on('progress', WPStagingBackupUpload.handleProgress);
                   }
                 });
-              case 2:
+              case 3:
               case "end":
                 return _context.stop();
             }
@@ -4371,7 +4430,7 @@
       },
       handleFileSuccess: function handleFileSuccess(file, message) {
         WPStagingCommon.closeSwalModal();
-        WPStagingCommon.showSuccessModal(qs('#wpstg--modal--backup--upload').getAttribute('data-uploadSuccessMessage', 'Upload finished'));
+        WPStagingCommon.showSuccessModal(WPStagingBackupUpload.upload.successMessage);
         setLoadingPlaceholder().then(function () {
           return loadingPlaceholder();
         });
@@ -4398,6 +4457,12 @@
               WPStagingCommon.showErrorModal(json.data.message);
               return;
             }
+            if (!json.success) {
+              WPStagingBackupUpload.resumable.cancel();
+              WPStagingCommon.closeSwalModal();
+              WPStagingCommon.showErrorModal(json.data.message);
+              return;
+            }
           }
         } catch (e) {
           // not a JSON message, no-op
@@ -4411,7 +4476,8 @@
           WPStagingCommon.showErrorModal('We could not upload the backup file, please try uploading it directly using FTP to the folder wp-content/uploads/wp-staging/backups. Please also make sure you have enough free disk space on the server.');
         }
         WPStagingBackupUpload.deleteUnfinishedUploads();
-        console.log(WPStagingBackupUpload.resumable.opts.chunkSize);
+
+        // console.log(WPStagingBackupUpload.resumable.opts.chunkSize);
         WPStagingBackupUpload.resumable.files[0].retry();
       }
     };

@@ -59,19 +59,19 @@ use WPStaging\Framework\Facades\Escape;
                 <?php endif; ?>
 
                 <fieldset class="wpstg-fieldset">
-                    <label><?php esc_html_e('Access Key', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" style="min-width:300px;" type="text" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key"><?php esc_html_e('Access Key', 'wp-staging') ?></label>
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key" class="wpstg-form-control" style="min-width:300px;" type="text" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
-                    <label><?php esc_html_e('Secret Key', 'wp-staging') ?></label>
-                    <input class="wpstg-form-control" type="text" name="secret_key" value="<?php echo esc_attr($secretKey); ?>" style="min-width:300px;" />
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key"><?php esc_html_e('Secret Key', 'wp-staging') ?></label>
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key" class="wpstg-form-control" type="text" name="secret_key" value="<?php echo esc_attr($secretKey); ?>" style="min-width:300px;" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
-                    <label><?php esc_html_e('Region', 'wp-staging') ?></label>
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-region"><?php esc_html_e('Region', 'wp-staging') ?></label>
                     <?php if (!empty($regions)) { ?>
-                        <select class="wpstg-form-select" name="region" style="min-width:300px;">
+                        <select id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-region" class="wpstg-form-select" name="region" autocomplete="off" style="min-width:300px;">
                             <?php foreach ($regions as $regionKey => $regionName) : ?>
                                 <option value="<?php echo esc_attr($regionKey); ?>" <?php echo ($regionKey === $region) ? 'selected' : '' ; ?>><?php echo esc_html($regionName) . ' ' . esc_html($regionKey); ?></option>
                             <?php endforeach; ?>
@@ -82,8 +82,8 @@ use WPStaging\Framework\Facades\Escape;
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
-                    <label><?php esc_html_e($locationName, 'wp-staging') ?></label>
-                    <span>s3:</span><input class="wpstg-form-control" style="min-width:284px;" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-backup-folder-name"><?php esc_html_e($locationName, 'wp-staging') ?></label>
+                    <span>s3:</span><input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-backup-folder-name" class="wpstg-form-control" style="min-width:284px;" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
                     <?php if (!empty($settingLink1) && !empty($settingText1)) : ?>
                             <a href="<?php echo esc_attr($settingLink1); ?>" target="_blank"><?php echo esc_html($settingText1); ?></a>
                     <?php endif; ?>
@@ -100,8 +100,8 @@ use WPStaging\Framework\Facades\Escape;
             <hr/>
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
             <fieldset class="wpstg-fieldset">
-                <label><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
-                <input class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
+                <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep"><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
+                <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep" class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
             </fieldset>
 
 
