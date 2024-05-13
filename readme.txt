@@ -271,15 +271,15 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 
 == Screenshots ==
 
-1. Create new WordPress staging / backup site
-2. Select name for staging / backup site
-3. Select folders to include in staging / backup site
-4. Cloning / backup processing
-5. Listed staging / backup sites
-5. Listed staging / backup sites
-6. Open, edit & delete staging / backup sites
-7. Login to staging / backup site
-4. Demo of a staging / backup site
+1. Create new WordPress staging / backup site (Dark Mode)
+2. Create new WordPress staging / backup site (Lite Mode)
+3. Select name for staging / backup site (Lite Mode)
+4. Create Full Site Backup (Dark Mode)
+5. Create Full Site Backup (Lite Mode)
+6. Cloning / backup processing (Dark Mode)
+7. Backup Complete (Dark Mode)
+8. Login to staging site
+9. Staging demo site
 
 == Changelog ==
 
