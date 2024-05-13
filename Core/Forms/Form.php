@@ -48,7 +48,7 @@ class Form
     /** @param string $name */
     public function renderLabel($name)
     {
-        echo wp_kses($this->label($name), ['label' => []]);
+        echo wp_kses($this->label($name), ['label' => ['for' => []]]);
     }
 
     /** @param string $name */

@@ -84,7 +84,7 @@ class Logs
         $logPath = $this->logsDir . $logFile;
 
         $this->downloadHeader($metaData->getName() . '_' . $id);
-        echo esc_html(wp_strip_all_tags(WPStaging::make(SystemInfo::class)->get("systemInfo")));
+        $this->downloadSystemInfo();
         echo esc_html("\n\n" . str_repeat("-", 25) . "\n\n");
         print('WP STAGING Backup Log: ' . esc_html($id) . PHP_EOL . PHP_EOL);
         if (!empty($logFile) && file_exists($logPath)) {
@@ -117,7 +117,7 @@ class Logs
 
         $errors = $debugLog->getLastLogEntries($size, true, false);
 
-        echo esc_html($errors);
+        echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html($errors)); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
     }
 
     /**
@@ -160,5 +160,14 @@ class Logs
         }
 
         return '';
+    }
+
+    /**
+     * @return void
+     */
+    private function downloadSystemInfo()
+    {
+        $systemInfo = WPStaging::make(SystemInfo::class)->get("systemInfo");
+        echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html(wp_strip_all_tags($systemInfo))); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
     }
 }

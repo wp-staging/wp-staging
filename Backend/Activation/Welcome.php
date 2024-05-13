@@ -25,6 +25,7 @@ class Welcome
 
     /**
      * @return void
+     * @todo make this message permanently hideable when dismissed.
      */
     public function wpstgproActivationNotice()
     {

@@ -17,6 +17,8 @@ use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\TransientCache;
 
+use function WPStaging\functions\debug_log;
+
 class FinishBackupTask extends BackupTask
 {
     /** @var AnalyticsBackupCreate */
@@ -88,6 +90,8 @@ class FinishBackupTask extends BackupTask
                 $response->setBackupSize($backup ? size_format($backup->size) : null);
                 $response->setIsLocalBackup($this->jobDataDto->isLocalBackup());
                 $response->setIsMultipartBackup($this->jobDataDto->getIsMultipartBackup());
+            } else {
+                debug_log('Fail to finalize response for backup process! Response content: ' . print_r($response, true));
             }
 
             return $response;

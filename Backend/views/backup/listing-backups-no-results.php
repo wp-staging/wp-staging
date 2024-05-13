@@ -15,7 +15,7 @@ use WPStaging\Framework\Facades\Escape;
     <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/cloud.svg" alt="cloud">
     <div class="no-backups-found-text">
         <?php if ($isValidLicenseKey || !$isProVersion) : ?>
-            <?php esc_html_e('No Backups found. Create your first Backup above!', 'wp-staging'); ?>
+            <?php esc_html_e('No local Backups found. Create your first Backup above!', 'wp-staging'); ?>
         <?php else :?>
             <strong id="wpstg-invalid-license-message" class="wpstg--red">
                 <?php echo sprintf(

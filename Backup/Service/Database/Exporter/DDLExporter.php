@@ -15,16 +15,16 @@ class DDLExporter extends AbstractExporter
     protected $viewDDLOrder;
 
     /** @var array */
-    protected $tables         = [];
+    protected $tables = [];
 
     /** @var array */
-    protected $views          = [];
+    protected $views = [];
 
     /** @var array */
     protected $excludedTables = [];
 
     /** @var array */
-    protected $nonWpTables    = [];
+    protected $nonWpTables = [];
 
     public function __construct(Database $database, TableService $tableService, ViewDDLOrder $viewDDLOrder)
     {
@@ -176,14 +176,38 @@ class DDLExporter extends AbstractExporter
      *
      * @return string
      */
-    private function replaceTableConstraints($input)
+    protected function replaceTableConstraints($input)
     {
         $pattern = [
+            /**
+             * This regex pattern makes it possible to match Table Constraints in SQL with close brackets ")" as the end marker.
+             * If it matches, the string will be replaced with close brackets ")" to close "CREATE TABLE" open brackets "(" to avoid syntax errors.
+             *
+             * Example:
+             *  KEY `key1` (`field1`,`field2`), CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+             *
+             * Pattern match:
+             *  , CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION )
+             *
+             * String before:
+             *  KEY `key1` (`field1`,`field2`), CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+             *
+             * String after:
+             * KEY `key1` (`field1`,`field2`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+             *
+             * @see https://github.com/wp-staging/wp-staging-pro/issues/3259
+             * @see https://github.com/wp-staging/wp-staging-pro/pull/3265
+             * @see https://github.com/wp-staging/wp-staging-pro/issues/3303
+             * @see https://github.com/wp-staging/wp-staging-pro/pull/3304
+             */
+            '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?(CASCADE|RESTRICT|NO\sACTION|SET\sNULL|SET\sDEFAULT)(,)/i',
+            '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?\)/i',
             '/\s+CONSTRAINT(.+)REFERENCES(.+),/i',
             '/,\s+CONSTRAINT(.+)REFERENCES(.+)/i',
         ];
 
-        return preg_replace($pattern, '', $input);
+        $replace = ['', ')', '', ''];
+        return preg_replace($pattern, $replace, $input);
     }
 
     /**

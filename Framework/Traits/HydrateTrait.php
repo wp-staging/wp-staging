@@ -18,6 +18,9 @@ use function WPStaging\functions\debug_log;
 
 trait HydrateTrait
 {
+    /** @var string[] */
+    protected $excludeHydrate = [];
+
     /**
      * @param array $data
      * @return $this
@@ -26,6 +29,12 @@ trait HydrateTrait
     public function hydrate(array $data = [])
     {
         foreach ($data as $key => $value) {
+            // Let the child class decide which properties to exclude including the excludeHydrate property itself.
+            $propertiesToExclude = array_merge($this->excludeHydrate, ['excludeHydrate']);
+            if (in_array($key, $propertiesToExclude, true)) {
+                continue;
+            }
+
             /** @noinspection PhpUnhandledExceptionInspection */
             try {
                 $this->hydrateByMethod('set' . ucfirst($key), $value);

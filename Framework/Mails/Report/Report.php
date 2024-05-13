@@ -10,7 +10,6 @@ use WPStaging\Framework\Utils\Sanitize;
 
 class Report
 {
-
     /** @var string  */
     const WPSTG_SUPPORT_EMAIL = "support@wp-staging.com";
 
@@ -109,7 +108,7 @@ class Report
         }
 
         if (!empty($sendLogFiles)) {
-            $attachments = $this->getAttachments($attachments);
+            $attachments = $this->getAttachments();
         }
 
         if ($this->sendMail($email, $message, $attachments) === false) {
@@ -117,33 +116,30 @@ class Report
             return $errors;
         }
 
-        foreach ($attachments as $filePath) {
-            unlink($filePath);
-        }
-
         $this->transient->setTransient();
         return $errors;
     }
 
     /**
-     * @param array $attachments
      * @return array
      */
-    protected function getAttachments(array $attachments): array
+    protected function getAttachments(): array
     {
-        $systemInformationFile = trailingslashit($this->getTempDirectoryForLogsAttachments()) . 'wpstg-bundled-logs.txt';
+        $postfix = sanitize_file_name(strtolower(wp_hash(uniqid())));
+
+        $systemInformationFile = trailingslashit($this->getTempDirectoryForLogsAttachments()) . sprintf('wpstg-bundled-logs-%s.txt', $postfix);
         $this->copyDataToFile($systemInformationFile, $this->systemInfo->get());
         $attachments[] = $systemInformationFile;
 
         if (file_exists(WPSTG_DEBUG_LOG_FILE)) {
-            $destinationWpstgDebugFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . 'wpstg_debug.log';
+            $destinationWpstgDebugFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . sprintf('wpstg_debug_%s.log', $postfix);
             $this->copyDataToFile($destinationWpstgDebugFilePath, $this->debugLogReader->getLastLogEntries(512 * KB_IN_BYTES, true, false));
             $attachments[] = $destinationWpstgDebugFilePath;
         }
 
         $debugLogFile = WP_CONTENT_DIR . '/debug.log';
         if (file_exists($debugLogFile)) {
-            $destinationDebugLogFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . 'debug.log';
+            $destinationDebugLogFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . sprintf('debug-%s.log', $postfix);
             $this->copyDataToFile($destinationDebugLogFilePath, $this->debugLogReader->getLastLogEntries(512 * KB_IN_BYTES, false));
             $attachments[] = $destinationDebugLogFilePath;
         }
@@ -155,7 +151,7 @@ class Report
 
         foreach ($latestLogFiles as $logFilePrefix => $logFile) {
             if (file_exists($logFile)) {
-                $destinationLogFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . $logFilePrefix . '.log';
+                $destinationLogFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . $logFilePrefix . "-$postfix.log";
                 $this->copyDataToFile($destinationLogFilePath, @file_get_contents($logFile));
                 $attachments[] = $destinationLogFilePath;
             }
@@ -181,12 +177,12 @@ class Report
     /**
      * send feedback via email
      *
-     * @param $from
-     * @param $text
-     * @param $attachments
+     * @param string $from
+     * @param string $text
+     * @param array  $attachments
      * @return bool
      */
-    private function sendMail($from, $text, $attachments): bool
+    private function sendMail(string $from, string $text, array $attachments): bool
     {
         $headers = [];
 
@@ -194,6 +190,7 @@ class Report
         $headers[] = "Reply-To: $from";
 
         $success = wp_mail(self::WPSTG_SUPPORT_EMAIL, self::EMAIL_SUBJECT, $text, $headers, $attachments);
+        $this->deleteAttachments($attachments);
 
         if ($success) {
             return true;
@@ -210,31 +207,23 @@ class Report
      */
     public function sendDebugLog($fromEmail, $debugCode): array
     {
-
-        $message = esc_html__("Create a new ticket in the ", 'wp-staging') .
-            '<a href="https://wp-staging.com/support-on-wordpress" target="_blank">' . esc_html__('Support Forum.', 'wp-staging') . '</a>' .
-            sprintf(esc_html__(' Post there the debug code: %s with additional information about your issue.', 'wp-staging'), esc_html__($debugCode, 'wp-staging')) .
-            '<a href="https://wp-staging.com/support-on-wordpress " target="_blank" class="wpstg-button wpstg-button--blue">
-<?php esc_html_e("Open Support Forum", "wp-staging") ?></a>';
-
-
         if ($this->transient->getTransient()) {
             return [
                 "sent"    => false,
                 "status"  => 'already_submitted',
-                "message" => $message
+                "message" => 'Already submitted' //@todo: remove "message" key seems not used anymore.
             ];
         }
 
-        $attachments  = [];
-        $headers      = [];
-        $mailSubject  =  sprintf(__('WP Staging - Debug Code: %s', 'wp-staging'), $debugCode);
-        $response     = __("Sending debug info failed!", 'wp-staging');
-        $message      = $mailSubject . PHP_EOL . sprintf(__("License Key: %s", 'wp-staging'), get_option('wpstg_license_key'));
-        $headers[] = "From: $fromEmail";
-        $headers[] = "Reply-To: $fromEmail";
-        $attachments = $this->getAttachments($attachments);
-        $isSent = wp_mail(self::WPSTG_SUPPORT_EMAIL, $mailSubject, $message, $headers, $attachments);
+        $attachments = [];
+        $headers     = [];
+        $mailSubject = sprintf(__('WP Staging - Debug Code: %s', 'wp-staging'), $debugCode);
+        $response    = __("Sending debug info failed!", 'wp-staging');
+        $message     = $mailSubject . PHP_EOL . sprintf(__("License Key: %s", 'wp-staging'), get_option('wpstg_license_key'));
+        $headers[]   = "From: $fromEmail";
+        $headers[]   = "Reply-To: $fromEmail";
+        $attachments = $this->getAttachments();
+        $isSent      = wp_mail(self::WPSTG_SUPPORT_EMAIL, $mailSubject, $message, $headers, $attachments);
 
         if ($isSent) {
             $this->transient->setTransient();
@@ -290,5 +279,16 @@ class Report
         wp_mkdir_p($tempDirectory);
 
         return $tempDirectory;
+    }
+
+    /**
+     * @param array $attachments
+     * @return void
+     */
+    private function deleteAttachments(array $attachments)
+    {
+        foreach ($attachments as $filePath) {
+            unlink($filePath);
+        }
     }
 }

@@ -520,7 +520,7 @@ class Queue
     {
         if ($this->checkTable() !== self::TABLE_EXISTS) {
             // No actions if the table either does nto exist or has just been created.
-            debug_log('Queue getNextAvailable: Table does not exist for getting the next available.', 'debug');
+            debug_log('Queue getNextAvailable: Table does not exist for getting the next available.', 'debug', false);
             return null;
         }
 
@@ -534,7 +534,7 @@ class Queue
         $this->database->query("LOCK TABLE `$tableName` WRITE");
 
         if ($this->count($processing) > 0) {
-            debug_log('Queue getNextAvailable: There is an action already in process. Stop!', 'debug');
+            debug_log('Queue getNextAvailable: There is an action already in process. Stop!', 'debug', false);
             $this->database->query("UNLOCK TABLES");
             return null;
         }
@@ -546,7 +546,7 @@ class Queue
 
         if (!$claimedId) {
             // This is NOT a failure: it just means the process could not lock the row.
-            debug_log('Queue getNextAvailable returns null because claimed Id was empty. This query failed: ' . $claimIdQuery, 'debug');
+            debug_log('Queue getNextAvailable returns null because claimed Id was empty. This query failed: ' . $claimIdQuery, 'debug', false);
             $this->database->query("UNLOCK TABLES");
             return null;
         }
@@ -554,7 +554,7 @@ class Queue
         $claimedId = $this->database->fetchAssoc($claimedId);
 
         if (!is_array($claimedId) || !array_key_exists('id', $claimedId)) {
-            debug_log('Queue getNextAvailable returns null because claimedID query does not return an array or "id" does not exist. This query failed: ' . $claimIdQuery, 'debug');
+            debug_log('Queue getNextAvailable returns null because claimedID query does not return an array or "id" does not exist. This query failed: ' . $claimIdQuery, 'debug', false);
             $this->database->query("UNLOCK TABLES");
             return null;
         }
@@ -574,7 +574,7 @@ class Queue
 
         if (!$claimed) {
             // This is NOT a failure: it just means the process could not lock the row.
-            debug_log('Queue getNextAvailable returns null the process could not lock the row. This query failed: ' . $claimQuery, 'debug');
+            debug_log('Queue getNextAvailable returns null the process could not lock the row. This query failed: ' . $claimQuery, 'debug', false);
             return null;
         }
 
@@ -811,11 +811,11 @@ class Queue
      */
     public function getAction($actionId, $force = false)
     {
-        debug_log('Queue getAction is trying to get action ID ' . $actionId, 'debug');
+        debug_log('Queue getAction is trying to get action ID ' . $actionId, 'debug', false);
         if ($force || empty($this->actionCaches[$actionId])) {
             $row = $this->fetchActionRow($actionId);
 
-            debug_log(wp_json_encode($row), 'debug');
+            debug_log(wp_json_encode($row), 'debug', false);
 
             if ($row !== null) {
                 $this->actionCaches[$actionId] = $row;
@@ -877,7 +877,7 @@ class Queue
     public function markDanglingAs($newStatus)
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
-            debug_log('Queue markDanglingAs: The table does not exist so there is nothing to update.', 'debug');
+            debug_log('Queue markDanglingAs: The table does not exist so there is nothing to update.', 'debug', false);
             return 0;
         }
 
@@ -909,7 +909,7 @@ class Queue
             $marked = 0;
         }
 
-        debug_log("Marked $marked actions as dangling.", 'debug');
+        debug_log("Marked $marked actions as dangling.", 'debug', false);
 
         return (int)$marked;
     }
@@ -961,7 +961,7 @@ class Queue
     public function cancelJob($jobId)
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
-            debug_log('Queue cancelJob: The table does not exist so there is nothing to cancel.');
+            debug_log('Queue cancelJob: The table does not exist so there is nothing to cancel.', 'info', false);
             return 0;
         }
 
@@ -1159,7 +1159,7 @@ class Queue
     public function cleanup()
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
-            debug_log('Queue Cleanup: The table does not exist so there is nothing to update.');
+            debug_log('Queue Cleanup: The table does not exist so there is nothing to update.', 'info', false);
             return 0;
         }
 
@@ -1193,7 +1193,7 @@ class Queue
             $removed = 0;
         }
 
-        debug_log("Removed $removed actions that were last updated before $cleanupBreakpoint.");
+        debug_log("Removed $removed actions that were last updated before $cleanupBreakpoint.", 'info', false);
 
         return $removed;
     }
@@ -1209,7 +1209,7 @@ class Queue
     public function countActionsByScheduleId($scheduleId, $statuses = [])
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
-            debug_log('Count actions by ScheduleId: The table does not exist so there is nothing to do.');
+            debug_log('Count actions by ScheduleId: The table does not exist so there is nothing to do.', 'info', false);
             return 0;
         }
 
@@ -1248,7 +1248,7 @@ class Queue
     public function cleanupActionsByScheduleId($scheduleId, $statuses = [])
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
-            debug_log('Actions Cleanup by ScheduleId: The table does not exist so there is nothing to update.');
+            debug_log('Actions Cleanup by ScheduleId: The table does not exist so there is nothing to update.', 'info', false);
             return 0;
         }
 
@@ -1276,7 +1276,7 @@ class Queue
             $removed = 0;
         }
 
-        debug_log("Removed $removed actions for the scheduleId: '$scheduleId'.");
+        debug_log("Removed $removed actions for the scheduleId: '$scheduleId'.", 'info', false);
 
         return $removed;
     }
@@ -1288,7 +1288,7 @@ class Queue
     public function purgeQueueTable()
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
-            debug_log('Queue Cleanup: The table does not exist so there is nothing to update.');
+            debug_log('Queue Cleanup: The table does not exist so there is nothing to update.', 'info', false);
             return false;
         }
 
@@ -1314,7 +1314,7 @@ class Queue
             $removed = 0;
         }
 
-        debug_log("Removed $removed actions from the queue during cleanup.");
+        debug_log("Removed $removed actions from the queue during cleanup.", 'info', false);
 
         return $removed;
     }

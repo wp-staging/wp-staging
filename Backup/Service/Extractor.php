@@ -288,7 +288,17 @@ class Extractor
 
         wp_mkdir_p(dirname($destinationFilePath));
 
-        $this->createEmptyFile($destinationFilePath);
+        /**
+         * On some servers, it is required to create empty file first, so we will create empty files.
+         * On some servers, touch doesn't work consistently, so we will use fwrite, see the reason below.
+         * On sites hosted on SiteGround, creating files using file_puts_contents uses a lot of memory,
+         * so by default we will use fwrite to create the empty file.
+         * If creating the empty file using fwrite fails, let try creating it using file_put_contents
+         * @see https://github.com/wp-staging/wp-staging-pro/issues/3272 why it was needed.
+         */
+        if (!$this->createEmptyFile($destinationFilePath)) {
+            file_put_contents($destinationFilePath, '');
+        }
 
         $destinationFileResource = @fopen($destinationFilePath, FileObject::MODE_APPEND);
 

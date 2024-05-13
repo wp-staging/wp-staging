@@ -100,6 +100,36 @@ class RemoteDownloader
     }
 
     /**
+     * @see self::handleResponse()
+     * @param bool $isSuccess
+     * @return void
+     */
+    public function setIsSuccess(bool $isSuccess)
+    {
+        $this->isSuccess = $isSuccess;
+    }
+
+    /**
+     * @see self::handleResponse()
+     * @param bool $isProcessCompleted
+     * @return void
+     */
+    public function setIsProcessCompleted(bool $isProcessCompleted)
+    {
+        $this->isProcessCompleted = $isProcessCompleted;
+    }
+
+    /**
+     * @see self::handleResponse() {'message'}
+     * @param string $response
+     * @return void
+     */
+    public function setResponse(string $response)
+    {
+        $this->response = $response;
+    }
+
+    /**
      * @return string
      */
     public function getFileName(): string
@@ -123,7 +153,7 @@ class RemoteDownloader
      */
     protected function makeWpRemotePost(array $arguments)
     {
-        $response = wp_remote_post($this->remoteFileUrl, $arguments);
+        $response       = wp_remote_post($this->remoteFileUrl, $arguments);
         $this->response = wp_remote_retrieve_response_message($response);
         return $response;
     }
@@ -136,14 +166,16 @@ class RemoteDownloader
     public function downloadFileChunk()
     {
         $this->endByte = $this->startByte + self::CHUNK_SIZE - 1;
+
         $arguments = [
-            'method' => 'GET',
-            'timeout' => self::TIMEOUT,
+            'method'    => 'GET',
+            'timeout'   => self::TIMEOUT,
             'sslverify' => false,
-            'headers' => [
+            'headers'   => [
                 'Range' => "bytes={$this->startByte}-{$this->endByte}",
             ],
         ];
+
         $response = $this->makeWpRemotePost($arguments);
         if (is_wp_error($response)) {
             $this->response = $response->get_error_message();
@@ -199,7 +231,7 @@ class RemoteDownloader
             'message'   => esc_html($this->response),
             'complete'  => $this->isProcessCompleted,
             'startByte' => $this->startByte,
-            'fileSize'  => $this->fileSize,
+            'fileSize'  => $this->fileSize
         ]);
     }
 
@@ -209,10 +241,11 @@ class RemoteDownloader
     public function getRemoteFileSize(): int
     {
         $arguments = [
-            'method' => 'HEAD',
-            'timeout' => self::TIMEOUT,
+            'method'    => 'HEAD',
+            'timeout'   => self::TIMEOUT,
             'sslverify' => false,
         ];
+
         $response = $this->makeWpRemotePost($arguments);
         if (is_wp_error($response)) {
             $this->response = $response->get_error_message();
@@ -238,17 +271,17 @@ class RemoteDownloader
         }
 
         $originalFilePath = $this->localFilePath;
-        $counter = 1;
+        $counter          = 1;
 
         while (file_exists($this->localFilePath)) {
-            $info = pathinfo($originalFilePath);
-            $extension = isset($info['extension']) ? '.' . $info['extension'] : '.wpstg';
+            $info                = pathinfo($originalFilePath);
+            $extension           = isset($info['extension']) ? '.' . $info['extension'] : '.wpstg';
             $this->localFilePath = $info['dirname'] . '/' . $info['filename'] . '-' . $counter . $extension;
             $counter++;
         }
 
         rename($originalFilePath . '.uploading', $this->localFilePath);
-        $this->response = __('File uploaded successfully', 'wp-staging');
+        $this->response           = __('File uploaded successfully', 'wp-staging');
         $this->isProcessCompleted = true;
     }
 
@@ -266,16 +299,49 @@ class RemoteDownloader
     public function remoteFileExists(): bool
     {
         $arguments = [
-            'method' => 'HEAD',
-            'timeout' => self::TIMEOUT,
+            'method'    => 'HEAD',
+            'timeout'   => self::TIMEOUT,
             'sslverify' => false,
+            'headers'   => [
+                'Cache-Control' => 'no-cache',
+            ]
         ];
+
         $response     = $this->makeWpRemotePost($arguments);
         $responseCode = wp_remote_retrieve_response_code($response);
-        if (is_array($response) && !is_wp_error($response) && $responseCode == 200) {
+
+        if (is_array($response) && !is_wp_error($response) && (int)$responseCode === 200) {
             return true;
         }
 
+        $this->response           = __('File not available on remote server', 'wp-staging');
+        $this->isSuccess          = false;
+        $this->isProcessCompleted = true;
         return false;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRemoteFileContent(int $startByte, int $endByte): string
+    {
+        $arguments = [
+            'method'    => 'GET',
+            'timeout'   => self::TIMEOUT,
+            'sslverify' => false,
+            'headers'   => [
+                'Cache-Control' => 'no-cache',
+                'Range'         => "bytes=" . $startByte . "-" . $endByte,
+            ]
+        ];
+
+        $response     = $this->makeWpRemotePost($arguments);
+        $responseCode = wp_remote_retrieve_response_code($response);
+
+        if (is_array($response) && !is_wp_error($response) && in_array((int)$responseCode, [200, 206])) {
+            return wp_remote_retrieve_body($response);
+        }
+
+        return '';
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Framework\Support\ThirdParty;
+namespace WPStaging\Framework\ThirdParty;
 
 use WPStaging\Framework\Adapter\WpAdapter;
 
@@ -9,7 +9,7 @@ use WPStaging\Framework\Adapter\WpAdapter;
  *
  * Provide special treatments for cloning and pushing when a site is using jetpack
  *
- * @package WPStaging\Framework\Support\ThirdParty
+ * @package WPStaging\Framework\ThirdParty
  */
 class Jetpack
 {

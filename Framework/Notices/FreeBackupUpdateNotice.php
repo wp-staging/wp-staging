@@ -7,7 +7,8 @@ namespace WPStaging\Framework\Notices;
  *
  * This class is used to show a notice in free version that we added backup feature in free version
  *
- * @see Notices;
+ * @see Notices
+ * @todo move this to Basic/Notices
  */
 class FreeBackupUpdateNotice
 {

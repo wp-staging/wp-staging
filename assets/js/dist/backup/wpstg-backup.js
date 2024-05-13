@@ -619,7 +619,7 @@
       retry: {
         currentDelay: 0,
         count: 0,
-        max: 10,
+        max: wpstg.maxFailedRetries,
         retryOnErrors: [401, 403, 404, 429, 502, 503, 504],
         performingRequest: false,
         incrementRetry: function incrementRetry(incrementRatio) {
@@ -884,7 +884,7 @@
           showErrors = true;
         }
         tryCount = 'undefined' === typeof tryCount ? 0 : tryCount;
-        var retryLimit = 10;
+        var retryLimit = wpstg.maxFailedRetries;
         var retryTimeout = 10000 * tryCount;
         incrementRatio = parseInt(incrementRatio);
         if (!isNaN(incrementRatio)) {
@@ -1767,6 +1767,14 @@
   }
 
   /**
+   * Shortcut for document.querySelector() or jQuery's $()
+   * Return collection of elements
+   */
+  function all(selector) {
+    return document.querySelectorAll(selector);
+  }
+
+  /**
    * alternative of jQuery - $(parent).on(event, selector, handler)
    */
   function addEvent(parent, evt, selector, handler) {
@@ -1941,53 +1949,114 @@
   }
 
   /**
-   * Enable side bar menu and set url on tab click
+   * @param visibility
+   * @return {void}
    */
-  var WpstgSidebarMenu = /*#__PURE__*/function () {
-    function WpstgSidebarMenu() {
-      this.init();
+  function loadingPlaceholder(visibility) {
+    if (visibility === void 0) {
+      visibility = 'visible';
     }
-    var _proto = WpstgSidebarMenu.prototype;
-    _proto.init = function init() {
-      this.wpstdStagingTab = document.querySelector('#wpstg--tab--toggle--staging');
-      this.wpstdBackupTab = document.querySelector('#wpstg--tab--toggle--backup');
-      this.wpstdSidebarMenu = document.querySelector('#toplevel_page_wpstg_clone');
-      this.addEvents();
-    };
-    _proto.addEvents = function addEvents() {
-      var _this = this;
-      if (this.wpstdStagingTab !== null) {
-        this.wpstdStagingTab.addEventListener('click', function () {
-          _this.setPageUrl('wpstg_clone');
-          _this.setSidebarMenu('wpstg_clone');
-        });
+    var loader = all('.wpstg-loading-placeholder-container');
+    loader.forEach(function (element) {
+      if (element) {
+        element.style.visibility = visibility;
       }
-      if (this.wpstdBackupTab !== null) {
-        this.wpstdBackupTab.addEventListener('click', function () {
-          loadingBar();
-          _this.setPageUrl('wpstg_backup');
-          _this.setSidebarMenu('wpstg_backup');
-        });
-      }
-    };
-    _proto.setPageUrl = function setPageUrl(page) {
-      window.history.pushState(null, null, window.location.pathname + '?page=' + page);
-    };
-    _proto.setSidebarMenu = function setSidebarMenu(page) {
-      var wpstgSidebarMenuElements = this.wpstdSidebarMenu.querySelector('ul').querySelectorAll('li');
-      if (wpstgSidebarMenuElements.length > 0) {
-        for (var i = 0; i < wpstgSidebarMenuElements.length; i++) {
-          wpstgSidebarMenuElements[i].classList.remove('current');
-          if (wpstgSidebarMenuElements[i].querySelector('a') !== null) {
-            if (wpstgSidebarMenuElements[i].querySelector('a').getAttribute('href') === 'admin.php?page=' + page) {
-              wpstgSidebarMenuElements[i].classList.add('current');
-            }
-          }
+    });
+    setTimeout(function () {
+      loader.forEach(function (element) {
+        if (element && element.style.visibility === 'visible') {
+          element.style.visibility = 'hidden';
         }
-      }
-    };
-    return WpstgSidebarMenu;
-  }();
+      });
+    }, 5000);
+    var container = qs('.wpstg--tab--contents');
+    if (visibility === 'visible') {
+      loadingBar();
+      container && (container.style.overflow = 'hidden');
+      return;
+    }
+    loadingBar('hidden');
+    container && (container.style.overflow = 'unset');
+  }
+
+  /**
+   *
+   * @param container
+   * @return {Promise<void>}
+   */
+  function setLoadingPlaceholder(_x) {
+    return _setLoadingPlaceholder.apply(this, arguments);
+  }
+
+  /**
+   * Normalizes a URL path and appends a slug to it, ensuring there are no consecutive slashes.
+   * @param path {string}
+   * @param slug {string}
+   * @return {string}
+   */
+  function _setLoadingPlaceholder() {
+    _setLoadingPlaceholder = _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee(container) {
+      var loadingPlaceholderContainer, loadingWrapper, _loadingWrapper$query, _loadingWrapper$query2, _loadingWrapper$first, _loadingWrapper$lastE, loadingLines;
+      return _regeneratorRuntime().wrap(function _callee$(_context) {
+        while (1) switch (_context.prev = _context.next) {
+          case 0:
+            if (container === void 0) {
+              container = '';
+            }
+            if (container === '') {
+              container = qs('.wpstg--tab--contents');
+            }
+            if (!(container === null)) {
+              _context.next = 4;
+              break;
+            }
+            return _context.abrupt("return");
+          case 4:
+            loadingPlaceholderContainer = container.querySelector('.wpstg-loading-placeholder-container');
+            loadingWrapper = loadingPlaceholderContainer.querySelector('.wpstg-dom-loading-wrapper');
+            if (loadingWrapper) {
+              _context.next = 8;
+              break;
+            }
+            return _context.abrupt("return");
+          case 8:
+            if (!(loadingWrapper.offsetHeight !== container.offsetHeight)) {
+              _context.next = 19;
+              break;
+            }
+            loadingLines = loadingWrapper.querySelectorAll('.wpstg-loading-lines-bar');
+            loadingLines.forEach(function (line) {
+              return line.remove();
+            });
+            (_loadingWrapper$query = loadingWrapper.querySelector('.wpstg-loading-line')) == null ? void 0 : _loadingWrapper$query.remove();
+            (_loadingWrapper$query2 = loadingWrapper.querySelector('.wpstg-loading-last-line-bar')) == null ? void 0 : _loadingWrapper$query2.remove();
+          case 13:
+            loadingWrapper.insertAdjacentHTML('beforeend', '<div class="wpstg-loading-lines-bar"></div>');
+            _context.next = 16;
+            return new Promise(function (resolve) {
+              return setTimeout(resolve, 0);
+            });
+          case 16:
+            if (loadingWrapper.offsetHeight <= container.offsetHeight - 40) {
+              _context.next = 13;
+              break;
+            }
+          case 17:
+            (_loadingWrapper$first = loadingWrapper.firstElementChild) == null ? void 0 : _loadingWrapper$first.classList.add('wpstg-loading-first-line-bar');
+            (_loadingWrapper$lastE = loadingWrapper.lastElementChild) == null ? void 0 : _loadingWrapper$lastE.classList.add('wpstg-loading-last-line-bar');
+          case 19:
+            _context.next = 21;
+            return new Promise(function (resolve) {
+              return setTimeout(resolve, 0);
+            });
+          case 21:
+          case "end":
+            return _context.stop();
+        }
+      }, _callee);
+    }));
+    return _setLoadingPlaceholder.apply(this, arguments);
+  }
 
   /**
    * Handle toggle of contact us modal
@@ -2425,8 +2494,9 @@
   var WPStagingBackup;
   (function ($) {
     window.addEventListener('backups-tab', function () {
+      var backupTab = qs('#wpstg--tab--backup');
+      backupTab.style.minHeight = backupTab.offsetHeight;
       WPStagingBackup.fetchListing();
-      new WpstgSidebarMenu();
     });
     window.addEventListener('backupListingFinished', function () {
       fetch(ajaxurl + "?action=wpstg--backups--restore--file-list&_=" + Math.random() + "&withTemplate=true", {
@@ -2446,9 +2516,13 @@
         if (res.success !== undefined && res.success === false) {
           WPStagingCommon.showError('Error: ' + res.data);
         }
-        var $ul = $('.wpstg-backup-list ul');
-        $ul.empty();
-        $ul.html(res);
+        var ul = document.querySelector('.wpstg-backup-list ul');
+        if (ul) {
+          ul.innerHTML = res;
+        }
+        loadingPlaceholder('hidden');
+        var tabBackup = document.getElementById('wpstg--tab--backup');
+        tabBackup.style.minHeight = 'max-content';
         addEvent(qs('#wpstg-existing-backups'), 'click', '.wpstg-tab-header', function (el, event) {
           var target = qs(el.getAttribute('data-id'));
           el.classList.toggle('expand');
@@ -2558,6 +2632,9 @@
             });
             return;
           }
+          if (!message.type) {
+            return;
+          }
           var type = message.type.toLowerCase() || 'info';
           if (!WPStagingBackup.messages.data[type]) {
             WPStagingBackup.messages.data[type] = [];
@@ -2599,7 +2676,7 @@
             return "" + new Date(seconds * 1000).toISOString().substr(11, 8);
           };
           WPStagingBackup.timer.interval = setInterval(function () {
-            $('.wpstg--modal--process--elapsed-time').text(prettify(WPStagingBackup.timer.totalSeconds));
+            $('.wpstg-backup-process-elapsed-time').text(prettify(WPStagingBackup.timer.totalSeconds));
             if (wpstgAuthCheck.isAuthenticated) {
               WPStagingBackup.timer.totalSeconds++;
             }
@@ -2640,17 +2717,21 @@
         }).then(WPStagingCommon.handleFetchErrors).then(function (res) {
           return res.json();
         }).then(function (res) {
+          var backupTab = qs('#wpstg--tab--backup');
+          backupTab.style.minHeight = backupTab.offsetHeight + 'px';
           $('#wpstg--tab--backup').empty();
           WPStagingBackup.modal.create.html = null;
           WPStagingCommon.cache.get('#wpstg--tab--backup').html(res);
-          loadingBar('hidden');
           if (res.success !== undefined && res.success === false) {
             WPStagingCommon.showError('Error: ' + res.data);
+            loadingPlaceholder('hidden');
             return;
           }
           WPStagingCommon.showAjaxFatalError(res, '', 'Submit an error report.');
           WPStagingCommon.isLoading(false);
           window.dispatchEvent(new Event('backupListingFinished'));
+          $('#local-backup-title').show();
+          $('#cloud-backup-title').hide();
           return res;
         })["catch"](function (e) {
           return WPStagingCommon.showAjaxFatalError(e, '', 'Submit an error report.');
@@ -2720,7 +2801,7 @@
             extraParams.isInit = 'no';
             WPStagingBackup.sendCancelRequest(extraParams, callback);
           }
-        }, 'json', false, 10,
+        }, 'json', false, 1,
         // Don't retry upon failure
         1.25, function (xhr, textStatus, errorThrown) {
           WPStagingBackup.performingCancelRequest = false;
@@ -2756,28 +2837,17 @@
 
         // TODO move to backend and get the contents as xhr response?
         if (!WPStagingBackup.modal.process.html || !WPStagingBackup.modal.process.cancelBtnTxt) {
-          var $modal = $('#wpstg--modal--backup--process');
+          var $modal = $('#wpstg-backup-process-modal');
           var html = $modal.html();
           var btnTxt = $modal.attr('data-cancelButtonText');
           WPStagingBackup.modal.process.html = html || null;
           WPStagingBackup.modal.process.cancelBtnTxt = btnTxt || null;
           $modal.remove();
         }
-        $('body').off('click', '.wpstg--modal--process--logs--tail').on('click', '.wpstg--modal--process--logs--tail', function (e) {
-          WPStagingBackup.showLogsInModal();
-          var logBtn = $(this);
-          e.preventDefault();
-          var container = WPStagingCommon.getSwalContainer();
-          var $logs = $(container).find('.wpstg--modal--process--logs');
-          $logs.toggle();
-          if ($logs.is(':visible')) {
-            logBtn.text(wpstg.i18n.hideLogs);
-            container.childNodes[0].style.width = '97%';
-            container.style['z-index'] = 9999;
-          } else {
-            logBtn.text(wpstg.i18n.showLogs);
-            container.childNodes[0].style.width = '600px';
-          }
+        $('body').off('click', '.wpstg-backup-process-logs-button').on('click', '.wpstg-backup-process-logs-button', function (e) {
+          WPStagingBackup.showLogsInModal(e);
+        }).off('click', '.wpstg-backup-success-logs-button').on('click', '.wpstg-backup-success-logs-button', function (e) {
+          WPStagingBackup.showLogsInModal(e, 'success');
         });
         _process.isShowCancelButton = false !== _process.isShowCancelButton;
         WPStagingBackup.modal.process.modal = WPStagingCommon.getSwalModal(true, {
@@ -2824,68 +2894,17 @@
         var $container = $(WPStagingCommon.getSwalContainer());
         var title = function title() {
           if (response.title || response.statusTitle) {
-            $container.find('.wpstg--modal--process--title').text(response.title || response.statusTitle);
+            $container.find('.wpstg-backup-process-title').text(response.title || response.statusTitle);
           }
         };
         var percentage = function percentage() {
           if (response.percentage) {
-            $container.find('.wpstg--modal--process--percent').text(response.percentage);
+            $container.find('.wpstg-backup-process-percent').text(response.percentage);
           }
-        };
-        var logs = function logs() {
-          if (!response.messages) {
-            return;
-          }
-          var $logsContainer = $container.find('.wpstg--modal--process--logs');
-          var stoppingTypes = [WPStagingBackup.messages.ERROR, WPStagingBackup.messages.CRITICAL];
-          var appendMessage = function appendMessage(message) {
-            if (Array.isArray(message)) {
-              for (var _iterator = _createForOfIteratorHelperLoose(message), _step; !(_step = _iterator()).done;) {
-                var item = _step.value;
-                appendMessage(item);
-              }
-              return;
-            }
-            var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
-            $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
-            if (stoppingTypes.includes(message.type.toLowerCase())) {
-              window.dispatchEvent(new CustomEvent('finishedProcessWithError', {
-                detail: {
-                  error: message.message
-                }
-              }));
-              // Callback approach is used to make sure the logs modal is always shown,
-              // after the completion of cancel/cleanup process.
-              // Makes sure cancel/cleanup process doesn't close the logs modal.
-              // Any other approach would have required a lot of refactoring.
-              WPStagingBackup.cancel({}, function () {
-                setTimeout(WPStagingBackup.logsModal, 500);
-              });
-            }
-          };
-          for (var _iterator2 = _createForOfIteratorHelperLoose(response.messages), _step2; !(_step2 = _iterator2()).done;) {
-            var message = _step2.value;
-            if (!message) {
-              continue;
-            }
-            WPStagingBackup.messages.addMessage(message);
-            appendMessage(message);
-          }
-          if ($logsContainer.is(':visible')) {
-            $logsContainer.scrollTop($logsContainer[0].scrollHeight);
-          }
-          if (!WPStagingBackup.messages.shouldWarn()) {
-            return;
-          }
-          var $btnShowLogs = $container.find('.wpstg--modal--process--logs--tail');
-          $btnShowLogs.html($btnShowLogs.attr('data-txt-bad'));
-          $btnShowLogs.find('.wpstg--modal--logs--critical-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.CRITICAL));
-          $btnShowLogs.find('.wpstg--modal--logs--error-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.ERROR));
-          $btnShowLogs.find('.wpstg--modal--logs--warning-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.WARNING));
         };
         title();
         percentage();
-        logs();
+        WPStagingBackup.addResponseMessagesToLog(response);
         if (response.jobId) {
           WPStagingCommon.setJobId(response.jobId);
         }
@@ -2906,12 +2925,12 @@
         WPStagingCommon.getSwalModal(true, {
           popup: 'wpstg-swal-popup wpstg-centered-modal'
         }).fire({
-          html: "<div class=\"wpstg--modal--error--logs\" style=\"display:block\"></div><div class=\"wpstg--modal--process--logs\" style=\"display:block\"></div>",
+          html: "<div class=\"wpstg--modal--error--logs\" style=\"display:block\"></div><div class=\"wpstg-backup-process-logs\" style=\"display:block\"></div>",
           width: '97%',
           onRender: function onRender() {
             var $container = $(WPStagingCommon.getSwalContainer());
             $container[0].style['z-index'] = 9999;
-            var $logsContainer = $container.find('.wpstg--modal--process--logs');
+            var $logsContainer = $container.find('.wpstg-backup-process-logs');
             var $errorContainer = $container.find('.wpstg--modal--error--logs');
             var $translations = $('#wpstg--js--translations');
             var messages = WPStagingBackup.messages;
@@ -2921,8 +2940,8 @@
             if (!WPStagingBackup.messages.shouldWarn()) {
               $errorContainer.hide();
             }
-            for (var _iterator3 = _createForOfIteratorHelperLoose(messages.data.all), _step3; !(_step3 = _iterator3()).done;) {
-              var message = _step3.value;
+            for (var _iterator = _createForOfIteratorHelperLoose(messages.data.all), _step; !(_step = _iterator()).done;) {
+              var message = _step.value;
               var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
               if (warnings.includes(message.type)) {
                 $errorContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
@@ -2931,10 +2950,65 @@
             }
           },
           onOpen: function onOpen(container) {
-            var $logsContainer = $(container).find('.wpstg--modal--process--logs');
+            var $logsContainer = $(container).find('.wpstg-backup-process-logs');
             $logsContainer.scrollTop($logsContainer[0].scrollHeight);
           }
         });
+      },
+      addResponseMessagesToLog: function addResponseMessagesToLog(response) {
+        if (!response.messages) {
+          return;
+        }
+        var $logsContainer = $('.wpstg-backup-process-logs');
+        var stoppingTypes = [WPStagingBackup.messages.ERROR, WPStagingBackup.messages.CRITICAL];
+        var appendMessage = function appendMessage(message) {
+          if (Array.isArray(message)) {
+            for (var _iterator2 = _createForOfIteratorHelperLoose(message), _step2; !(_step2 = _iterator2()).done;) {
+              var item = _step2.value;
+              appendMessage(item);
+            }
+            return;
+          }
+          if (!message.type) {
+            return;
+          }
+          var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
+          $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
+          if (stoppingTypes.includes(message.type.toLowerCase())) {
+            window.dispatchEvent(new CustomEvent('finishedProcessWithError', {
+              detail: {
+                error: message.message
+              }
+            }));
+            // Callback approach is used to make sure the logs modal is always shown,
+            // after the completion of cancel/cleanup process.
+            // Makes sure cancel/cleanup process doesn't close the logs modal.
+            // Any other approach would have required a lot of refactoring.
+            WPStagingBackup.cancel({}, function () {
+              setTimeout(WPStagingBackup.logsModal, 500);
+            });
+          }
+        };
+        for (var _iterator3 = _createForOfIteratorHelperLoose(response.messages), _step3; !(_step3 = _iterator3()).done;) {
+          var message = _step3.value;
+          if (!message) {
+            continue;
+          }
+          WPStagingBackup.messages.addMessage(message);
+          appendMessage(message);
+        }
+        if ($logsContainer.is(':visible')) {
+          $logsContainer.scrollTop($logsContainer[0].scrollHeight);
+        }
+        if (!WPStagingBackup.messages.shouldWarn()) {
+          return;
+        }
+        var $container = $(WPStagingCommon.getSwalContainer());
+        var $btnShowLogs = $container.find('.wpstg-backup-process-logs-button');
+        $btnShowLogs.html($btnShowLogs.attr('data-txt-bad'));
+        $btnShowLogs.find('.wpstg--modal--logs--critical-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.CRITICAL));
+        $btnShowLogs.find('.wpstg--modal--logs--error-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.ERROR));
+        $btnShowLogs.find('.wpstg--modal--logs--warning-count').text(WPStagingBackup.messages.countByType(WPStagingBackup.messages.WARNING));
       },
       downloadModal: function downloadModal(_ref) {
         var _ref$title = _ref.title,
@@ -2945,13 +3019,12 @@
           return;
         }
         if (WPStagingBackup.modal.download.html === null) {
-          var $el = $('#wpstg--modal--backup--download');
+          var $el = $('#wpstg-backup-success-modal');
           WPStagingBackup.modal.download.html = $el.html();
-          $el.remove();
         }
         WPStagingCommon.getSwalModal(true).fire({
           'icon': 'success',
-          'html': WPStagingBackup.modal.download.html.replace('{title}', title).replace('{btnTxtLog}', '<span style="text-decoration: underline">Show Logs</span>').replace('{text}', bodyText !== null ? bodyText : 'You can restore this backup anytime or upload it to another website and restore it there.'),
+          'html': WPStagingBackup.modal.download.html.replace('{title}', title).replace('{btnTxtLog}', 'Show Logs').replace('{text}', bodyText !== null ? bodyText : 'You can restore this backup anytime or upload it to another website and restore it there.'),
           'confirmButtonText': 'Close',
           'showCancelButton': false,
           'showConfirmButton': true
@@ -3037,18 +3110,21 @@
             }
             WPStagingBackup.processInfo.title = res.currentStatusTitle;
             var $container = $(WPStagingCommon.getSwalContainer());
-            $container.find('.wpstg--modal--process--title').text(res.currentStatusTitle);
-            $container.find('.wpstg--modal--process--percent').text('0');
+            $container.find('.wpstg-backup-process-title').text(res.currentStatusTitle);
+            $container.find('.wpstg-backup-process-percent').text('0');
           })["catch"](function (e) {
             WPStagingBackup.status.hasResponse = true;
             WPStagingCommon.showAjaxFatalError(e, '', 'Submit an error report.');
           });
         }, 5000);
       },
-      showLogsInModal: function showLogsInModal() {
+      showLogsInModal: function showLogsInModal(e, modal) {
+        if (modal === void 0) {
+          modal = 'process';
+        }
         if (WPStagingBackup.messages.data.all) {
-          var container = WPStagingCommon.getSwalContainer();
-          var logsContainer = container.querySelector('.wpstg--modal--process--logs');
+          var _container = WPStagingCommon.getSwalContainer();
+          var logsContainer = _container.querySelector('.wpstg-backup-' + modal + '-logs');
           logsContainer.innerHTML = '';
           WPStagingBackup.messages.data.all.forEach(function (message) {
             var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
@@ -3057,6 +3133,19 @@
             pElement.textContent = "[" + message.type + "] - [" + message.date + "] - " + message.message;
             logsContainer.appendChild(pElement);
           });
+        }
+        var container = WPStagingCommon.getSwalContainer();
+        var $logs = $(container).find('.wpstg-backup-' + modal + '-logs');
+        $logs.toggle();
+        var logBtn = $(container).find('.wpstg-backup-' + modal + '-logs-button');
+        e.preventDefault();
+        if ($logs.is(':visible')) {
+          logBtn.text(wpstg.i18n.hideLogs);
+          container.childNodes[0].style.width = '97%';
+          container.style['z-index'] = 9999;
+        } else {
+          logBtn.text(wpstg.i18n.showLogs);
+          container.childNodes[0].style.width = '600px';
         }
       },
       calculateBackupSpeedIndex: function calculateBackupSpeedIndex(size, totalTime) {
@@ -3143,6 +3232,7 @@
                       var storage = _step.value;
                       storages.push(storage.value);
                     }
+                    WPStagingCommon.selectedStorages = storages;
                     return {
                       name: WPStagingCommon.sanitizeEventAttribute(container.querySelector('input[name="backup_name"]').value) || null,
                       isExportingPlugins: container.querySelector('#includePluginsInBackup:checked') !== null,
@@ -3239,7 +3329,7 @@
         });
       },
       createBackup: function createBackup() {
-        var maxBackupSequentialReturnError = 10;
+        var maxBackupSequentialReturnError = wpstg.maxFailedRetries;
         var backupReturnedError = 0;
         WPStagingCommon.resetErrors();
         if (WPStagingBackup$1.isCancelled) {
@@ -3280,7 +3370,7 @@
                     break;
                   }
                   WPStagingBackupCreate.createBackup();
-                  _context2.next = 27;
+                  _context2.next = 28;
                   break;
                 case 12:
                   if (!(response.jobStatus === 'JOB_FAIL')) {
@@ -3293,26 +3383,34 @@
                   setTimeout(function () {
                     WPStagingBackupCreate.createBackup();
                   }, wpstg.delayReq);
-                  _context2.next = 27;
+                  _context2.next = 28;
                   break;
                 case 18:
                   $('#wpstg--progress--status').text('Backup successfully created!');
                   wpstgAuthCheck.stop();
+                  setLoadingPlaceholder().then(function () {
+                    return loadingPlaceholder();
+                  });
                   if (!WPStagingBackup$1.messages.shouldWarn()) {
-                    _context2.next = 24;
+                    _context2.next = 25;
                     break;
                   }
                   // noinspection JSIgnoredPromiseFromCall
                   WPStagingBackup$1.fetchListing();
                   WPStagingBackup$1.logsModal();
                   return _context2.abrupt("return");
-                case 24:
+                case 25:
                   WPStagingBackup$1.statusStop();
                   WPStagingCommon.closeSwalModal();
                   WPStagingBackup$1.fetchListing().then(function () {
                     if (!response.backupMd5 && !WPStagingBackup$1.processInfo.isOnlySchedule) {
-                      WPStagingCommon.showError('Failed to get backup md5 from response');
+                      WPStagingCommon.showError('<strong>Warning</strong>: Failed to get backup md5 from response!<br/>Response content: ' + JSON.stringify(response) + '<br/><br/>Please report this warning <a href="https://wp-staging.com/support/" target="_blank">to our support</a> and keep using WP Staging!');
                       return;
+                    }
+
+                    // load remote backups list only when remote storage is selected.
+                    if (Array.isArray(WPStagingCommon.selectedStorages) && (WPStagingCommon.selectedStorages.includes('localStorage') && WPStagingCommon.selectedStorages.length >= 2 || !WPStagingCommon.selectedStorages.includes('localStorage') && WPStagingCommon.selectedStorages.length >= 1)) {
+                      $('#wpstg-show-cloud-backup').click();
                     }
 
                     // Wait for fetchListing to populate the DOM with the backup data that we want to read
@@ -3345,7 +3443,6 @@
 
                         // Found it. No more need for the interval.
                         clearInterval(intervalWaitForBackupInDom);
-                        response.hasOwnProperty('backupSize') ? ' (' + response.backupSize + ')' : '';
                       } else {
                         // Just clear the interval
                         clearInterval(intervalWaitForBackupInDom);
@@ -3354,15 +3451,15 @@
                         title: WPStagingBackup$1.processInfo.isOnlySchedule ? 'Backup Schedule Created' : 'Backup Complete',
                         bodyText: WPStagingBackup$1.processInfo.isOnlySchedule ? 'Backup is scheduled according to the provided settings.' : null
                       });
-                      $('.wpstg--modal--download--logs--wrapper').show();
-                      var $logsContainer = $('.wpstg--modal--process--logs');
+                      $('.wpstg-backup-success-logs-wrapper').show();
+                      var $logsContainer = $('.wpstg-backup-success-logs');
                       WPStagingBackup$1.messages.data.all.forEach(function (message) {
                         var msgClass = "wpstg--modal--process--msg--" + message.type.toLowerCase();
                         $logsContainer.append("<p class=\"" + msgClass + "\">[" + message.type + "] - [" + message.date + "] - " + message.message + "</p>");
                       });
                     }, 500);
                   });
-                case 27:
+                case 28:
                 case "end":
                   return _context2.stop();
               }
@@ -3386,7 +3483,7 @@
           } else {
             response.messages.push({
               'type': 'critical',
-              'message': 'There was a PHP fatal error while processing the backup. You might need to check your PHP error log to find out the reason. Please contact WPSTAGING support if you need help.'
+              'message': 'There was a PHP fatal error while processing the backup. You might need to check your PHP error log to find out the reason. Please contact WP STAGING support if you need help.'
             });
             WPStagingBackup$1.processResponse(response);
             WPStagingBackup$1.cancel();
@@ -3445,7 +3542,7 @@
         e.preventDefault();
         WPStagingCommon.resetErrors();
         var name = this.getAttribute('data-name');
-        var htmlContent = 'Are you sure you want to delete this backup: ' + name + '?';
+        var htmlContent = 'Do you want to delete the backup <br>' + name + '?';
         WPStagingCommon.getSwalModal(false, {
           confirmButton: 'wpstg--btn--confirm wpstg-btn-danger wpstg-link-btn'
         }).fire({
@@ -3454,12 +3551,15 @@
           cancelButtonText: 'Cancel',
           confirmButtonText: 'Delete',
           icon: 'warning',
-          title: 'Delete Backup!',
+          title: 'Delete Backup?',
           html: '<div class="wpstg--modal--delete">' + htmlContent + '</div>'
         }).then(function (result) {
           if (!result.value) {
             return;
           }
+          setLoadingPlaceholder().then(function () {
+            return loadingPlaceholder();
+          });
           WPStagingCommon.isLoading(true);
           WPStagingCommon.cache.get('#wpstg-existing-backups').hide();
           var md5 = _this.getAttribute('data-md5');
@@ -3469,7 +3569,7 @@
             accessToken: wpstg.accessToken,
             nonce: wpstg.nonce
           }, function (response) {
-            WPStagingCommon.showAjaxFatalError(response, '', ' Please submit an error report by using the REPORT ISSUE button.');
+            WPStagingCommon.showAjaxFatalError(response, '', ' Please submit an error report by using the CONTACT US button.');
             WPStagingCommon.isLoading(false);
             WPStagingBackup$1.fetchListing();
           });
@@ -3531,6 +3631,9 @@
                 }, function (response) {
                   WPStagingCommon.showAjaxFatalError(response, '', 'Submit an error report.');
                   // noinspection JSIgnoredPromiseFromCall
+                  setLoadingPlaceholder().then(function () {
+                    return loadingPlaceholder();
+                  });
                   WPStagingBackup$1.fetchListing();
                 });
               case 11:
@@ -3551,6 +3654,29 @@
     WPStagingBackupRestore = {
       listen: function listen() {
         $('body').off('click', '.wpstg--backup--restore', WPStagingBackupRestore.clickedRestore).on('click', '.wpstg--backup--restore', WPStagingBackupRestore.clickedRestore);
+      },
+      timer: {
+        totalSeconds: 0,
+        interval: null,
+        start: function start() {
+          if (null !== WPStagingBackupRestore.timer.interval) {
+            return;
+          }
+          var prettify = function prettify(seconds) {
+            return "" + new Date(seconds * 1000).toISOString().substr(11, 8);
+          };
+          WPStagingBackupRestore.timer.interval = setInterval(function () {
+            $('.wpstg--modal--process--elapsed-time').text(prettify(WPStagingBackupRestore.timer.totalSeconds));
+            WPStagingBackupRestore.timer.totalSeconds++;
+          }, 1000);
+        },
+        stop: function stop() {
+          WPStagingBackupRestore.timer.totalSeconds = 0;
+          if (WPStagingBackupRestore.timer.interval) {
+            clearInterval(WPStagingBackupRestore.timer.interval);
+            WPStagingBackupRestore.timer.interval = null;
+          }
+        }
       },
       clickedRestore: function clickedRestore(e) {
         var currentObj = this;
@@ -3682,8 +3808,8 @@
                     return _context.abrupt("return");
                   case 23:
                     WPStagingBackup$1.statusStop();
-                    logEntries = $('.wpstg--modal--process--logs').get(1).innerHTML;
-                    html = '<div class="wpstg--modal--process--logs">' + logEntries + '</div>';
+                    logEntries = $('.wpstg-backup-success-logs').innerHTML;
+                    html = '<div class="wpstg-backup-success-logs">' + logEntries + '</div>';
                     issueFound = html.includes('wpstg--modal--process--msg--warning') || html.includes('wpstg--modal--process--msg--error') ? 'Issues(s) found!<br> ' : '';
                     loginText = WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase ? 'You will be redirected to the login page after closing this modal.' : ''; // TODO: remove default classes.
                     WPStagingCommon.getSwalModal(true, {
@@ -3691,7 +3817,7 @@
                     }).fire({
                       icon: 'success',
                       title: 'Finished Successfully',
-                      html: '<div id="wpstg-restore-success" class="wpstg--grey">Site has been restored from backup. ' + loginText + '  <br/><br/><span class="wpstg--modal--process--msg-found">' + issueFound + '</span><button class="wpstg--modal--process--logs--tail" data-txt-bad="">Show Logs</button></div><br/>' + html,
+                      html: '<div id="wpstg-restore-success" class="wpstg--grey">Site has been restored from backup. ' + loginText + '  <br/><br/><span class="wpstg--modal--process--msg-found">' + issueFound + '</span><button class="wpstg-backup-success-logs-button" data-txt-bad="">Show Logs</button></div><br/>' + html,
                       onClose: function onClose() {
                         if (WPStagingBackup$1.modal.restore.data.backupMetadata.isExportingDatabase) {
                           document.getElementById('wpstg-restore-wait').style.display = 'flex';
@@ -3949,13 +4075,17 @@
      * @return {void}
      */;
     _proto.handleSuccessResponse = function handleSuccessResponse(response) {
-      if (response.success) {
-        notify('success', response.message);
-      } else {
-        notify('error', response.message);
-      }
       WPStagingCommon.closeSwalModal();
+      var message = response.message ? response.message : '';
+      if (response.success) {
+        notify('success', message ? message : 'Success');
+      } else {
+        WPStagingCommon.showErrorModal(message ? message : 'Invalid request data');
+      }
       WPStagingCommon.showSuccessModal(qs('#wpstg--modal--backup--upload').getAttribute('data-uploadSuccessMessage', 'Upload finished'));
+      setLoadingPlaceholder().then(function () {
+        return loadingPlaceholder();
+      });
       WPStagingBackup$1.fetchListing();
       this.stopUploadProcess();
     }
@@ -3992,6 +4122,9 @@
         return;
       }
       WPStagingCommon.closeSwalModal();
+      setLoadingPlaceholder().then(function () {
+        return loadingPlaceholder();
+      });
       WPStagingBackup$1.fetchListing();
       this.stopUploadProcess();
     }
@@ -4022,6 +4155,9 @@
       if (resumeDownload) {
         WPStagingCommon.closeSwalModal();
         WPStagingBackupUpload$1.deleteUnfinishedUploads();
+        setLoadingPlaceholder().then(function () {
+          return loadingPlaceholder();
+        });
         WPStagingBackup$1.fetchListing();
         this.stopUploadProcess();
         return;
@@ -4079,18 +4215,19 @@
               this.isWpstgBackupFile = _context.sent;
             case 15:
               if (!(this.currentBackupName === '')) {
-                _context.next = 17;
+                _context.next = 18;
                 break;
               }
+              notify('error', 'Please enter a valid backup file url.');
               return _context.abrupt("return", false);
-            case 17:
+            case 18:
               if (this.isWpstgBackupFile) {
-                _context.next = 20;
+                _context.next = 21;
                 break;
               }
               notify('error', 'Please enter correct backup file url');
               return _context.abrupt("return", false);
-            case 20:
+            case 21:
               if (this.isProcessStarted === false) {
                 this.isProcessStarted = true;
                 this.startUploadProcess();
@@ -4127,7 +4264,7 @@
                   _this3.handleErrorResponse(fileSize, startByte);
                 }
               });
-            case 22:
+            case 23:
             case "end":
               return _context.stop();
           }
@@ -4151,6 +4288,10 @@
       resumable: null,
       resumableFile: null,
       wpstgBackupUploadUrl: null,
+      upload: {
+        html: null,
+        successMessage: null
+      },
       listen: function listen() {
         document.body.addEventListener('click', function (event) {
           if (event.target.id === 'wpstg-upload-backup') {
@@ -4200,14 +4341,25 @@
       },
       uploadModal: function uploadModal() {
         return _asyncToGenerator( /*#__PURE__*/_regeneratorRuntime().mark(function _callee() {
+          var uploadModal, html, successMessage;
           return _regeneratorRuntime().wrap(function _callee$(_context) {
             while (1) switch (_context.prev = _context.next) {
               case 0:
-                _context.next = 2;
+                if (!WPStagingBackupUpload.upload.html || !WPStagingBackupUpload.upload.successMessage || document.getElementById('wpstg--modal--backup--upload')) {
+                  uploadModal = document.getElementById('wpstg--modal--backup--upload');
+                  if (uploadModal) {
+                    html = uploadModal.innerHTML;
+                    successMessage = uploadModal.getAttribute('data-uploadSuccessMessage');
+                    WPStagingBackupUpload.upload.html = html || null;
+                    WPStagingBackupUpload.upload.successMessage = successMessage || null;
+                    uploadModal.parentNode.removeChild(uploadModal);
+                  }
+                }
+                _context.next = 3;
                 return WPStagingCommon.getSwalModal(true, {
                   confirmButton: 'wpstg--btn--confirm wpstg-blue-primary wpstg-button wpstg-link-btn wpstg-backup-download-button'
                 }).fire({
-                  html: document.getElementById('wpstg--modal--backup--upload').innerHTML,
+                  html: WPStagingBackupUpload.upload.html,
                   showConfirmButton: true,
                   showCloseButton: false,
                   showLoaderOnConfirm: false,
@@ -4227,7 +4379,6 @@
                     uploadButton.parentNode.replaceChild(btnUpload, uploadButton);
                     btnUpload.addEventListener('click', function () {
                       WPStagingBackupUpload.wpstgBackupUploadUrl.uploadBackupFromUrl();
-                      btnUpload.style.display = 'none';
                     });
                     WPStagingBackupUpload.deleteUnfinishedUploads();
                     WPStagingBackupUpload.setModalStateStart();
@@ -4261,7 +4412,7 @@
                     WPStagingBackupUpload.resumable.on('progress', WPStagingBackupUpload.handleProgress);
                   }
                 });
-              case 2:
+              case 3:
               case "end":
                 return _context.stop();
             }
@@ -4279,7 +4430,10 @@
       },
       handleFileSuccess: function handleFileSuccess(file, message) {
         WPStagingCommon.closeSwalModal();
-        WPStagingCommon.showSuccessModal(qs('#wpstg--modal--backup--upload').getAttribute('data-uploadSuccessMessage', 'Upload finished'));
+        WPStagingCommon.showSuccessModal(WPStagingBackupUpload.upload.successMessage);
+        setLoadingPlaceholder().then(function () {
+          return loadingPlaceholder();
+        });
         WPStagingBackup$1.fetchListing();
       },
       handleProgress: function handleProgress() {
@@ -4303,6 +4457,12 @@
               WPStagingCommon.showErrorModal(json.data.message);
               return;
             }
+            if (!json.success) {
+              WPStagingBackupUpload.resumable.cancel();
+              WPStagingCommon.closeSwalModal();
+              WPStagingCommon.showErrorModal(json.data.message);
+              return;
+            }
           }
         } catch (e) {
           // not a JSON message, no-op
@@ -4316,7 +4476,8 @@
           WPStagingCommon.showErrorModal('We could not upload the backup file, please try uploading it directly using FTP to the folder wp-content/uploads/wp-staging/backups. Please also make sure you have enough free disk space on the server.');
         }
         WPStagingBackupUpload.deleteUnfinishedUploads();
-        console.log(WPStagingBackupUpload.resumable.opts.chunkSize);
+
+        // console.log(WPStagingBackupUpload.resumable.opts.chunkSize);
         WPStagingBackupUpload.resumable.files[0].retry();
       }
     };
@@ -4459,6 +4620,9 @@
           scheduleId: scheduleId
         }, function (response) {
           if (response.success) {
+            setLoadingPlaceholder().then(function () {
+              return loadingPlaceholder();
+            });
             WPStagingBackupManageSchedules.fetchSchedules();
             WPStagingBackup$1.fetchListing();
             WPStagingBackup$1.modal.create.hasBackupSchedule = false;
@@ -4466,7 +4630,6 @@
             WPStagingCommon.showErrorModal(response.data);
             return;
           }
-          console.log(response);
         });
       }
     };

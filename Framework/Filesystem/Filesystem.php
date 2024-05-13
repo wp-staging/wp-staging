@@ -15,6 +15,9 @@ use function WPStaging\functions\debug_log;
 
 class Filesystem extends FilterableDirectoryIterator
 {
+    /** @var array */
+    const BACKUP_FILE_EXTENSION = ['.wpstg', '.wpstg.sql'];
+
     /** @var string|null */
     private $path;
 
@@ -559,14 +562,14 @@ class Filesystem extends FilterableDirectoryIterator
 
         $replacements = [
             '\\\\\\\\' => '\\\\',
-            '\\\\\\*' => '[*]',
-            '\\\\\\?' => '[?]',
-            '\*' => '.*',
-            '\?' => '.',
-            '\[\!' => '[^',
-            '\[' => '[',
-            '\]' => ']',
-            '\-' => '-',
+            '\\\\\\*'  => '[*]',
+            '\\\\\\?'  => '[?]',
+            '\*'       => '.*',
+            '\?'       => '.',
+            '\[\!'     => '[^',
+            '\['       => '[',
+            '\]'       => ']',
+            '\-'       => '-',
         ];
 
         if (isset($options['escape']) && !$options['escape']) {
@@ -829,7 +832,7 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         $written = false;
-        if (( $handle     = @fopen($path, 'w') ) !== false) {
+        if (( $handle = @fopen($path, 'wb') ) !== false) {
             if (@fwrite($handle, $content) !== false) {
                 $written = true;
             }
@@ -1076,5 +1079,29 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         return mkdir($directory, 0775, true);
+    }
+
+    /**
+     * Check if file has *.wpstg or *.wpstg.sql extension
+     * This does not check if it's a valid backup file; does not check the content.
+     * @param string $backupFile
+     * @return bool
+     */
+    public function isWpstgBackupFile(string $backupFile): bool
+    {
+        if (empty($backupFile)) {
+            return false;
+        }
+
+        $backupFile = basename($backupFile);
+        $backupFile = strtolower($backupFile);
+
+        foreach (self::BACKUP_FILE_EXTENSION as $extension) {
+            if ($extension === substr($backupFile, -strlen($extension))) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Framework\Support\ThirdParty;
+namespace WPStaging\Framework\ThirdParty;
 
 use WPStaging\Framework\Notices\BooleanNotice;
 use WPStaging\Framework\Notices\Notices;
@@ -10,7 +10,7 @@ use WPStaging\Framework\Notices\Notices;
  *
  * Rename .user.ini to .user.ini.bak and show notice regarding this on staging site
  *
- * @package WPStaging\Framework\Support\ThirdParty
+ * @package WPStaging\Framework\ThirdParty
  */
 class WordFence extends BooleanNotice
 {

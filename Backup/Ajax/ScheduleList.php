@@ -109,6 +109,7 @@ class ScheduleList
     }
 
     /**
+     * @return string|void
      * @throws \Exception
      */
     public function renderNextBackupSnippet()
@@ -116,6 +117,7 @@ class ScheduleList
         if (!current_user_can((new Capabilities())->manageWPSTG())) {
             return '';
         }
+
         ?>
         <ul>
             <li>
@@ -168,7 +170,7 @@ class ScheduleList
                 ); ?>
             </li>
         </ul>
-                <?php
+                    <?php
             endif;
     }
 }

@@ -1,13 +1,13 @@
 <?php
 
-namespace WPStaging\Framework\Support\ThirdParty;
+namespace WPStaging\Framework\ThirdParty;
 
 /**
  * Class FreemiusScript
  *
  * Provide special treatments for cloning and pushing when a site is using freemius library
  *
- * @package WPStaging\Framework\Support\ThirdParty
+ * @package WPStaging\Framework\ThirdParty
  */
 class FreemiusScript
 {

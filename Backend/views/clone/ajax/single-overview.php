@@ -11,10 +11,10 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
 
+$isPro     = WPStaging::isPro();
+$modalType = 'clone';
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/download.php');
 require_once(WPSTG_PLUGIN_DIR . 'Backend/views/backup/modal/progress.php');
-
-$isPro = WPStaging::isPro();
 ?>
 <div id="wpstg-step-1">
     <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning">
@@ -64,7 +64,25 @@ $isPro = WPStaging::isPro();
                                 </a>
                                 <?php
                                 do_action('wpstg.views.single_overview.after_existing_clones_actions', $cloneID, $data, $license);
-                                ?>
+
+                                if (!$isPro) :?>
+                                <a href="https://wp-staging.com/pro-features/#edit-data" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Edit Data", "wp-staging") ?>">
+                                    <?php esc_html_e("Edit Data", "wp-staging"); ?>
+                                    <span>(Pro)</span>
+                                </a>
+                                <a href="https://wp-staging.com/pro-features/#push-changes" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Push Changes", "wp-staging") ?>">
+                                    <?php esc_html_e("Push Changes", "wp-staging"); ?>
+                                    <span>(Pro)</span>
+                                </a>
+                                <a href="https://wp-staging.com/pro-features/#share-login-link" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Share Login Link", "wp-staging") ?>">
+                                    <?php esc_html_e("Share Login Link", "wp-staging"); ?>
+                                    <span>(Pro)</span>
+                                </a>
+                                <a href="https://wp-staging.com/pro-features/#sync-user-account" target="_blank" class="wpstg-pro-clone-feature wpstg-clone-action" title="<?php echo esc_html__("Sync User Account", "wp-staging") ?>">
+                                    <?php esc_html_e("Sync User Account", "wp-staging"); ?>
+                                    <span>(Pro)</span>
+                                </a>
+                                <?php endif; ?>
                             </div>
                         </div>
                     </div>

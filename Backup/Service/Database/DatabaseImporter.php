@@ -20,6 +20,7 @@ use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Exceptions\RetryException;
+use WPStaging\Framework\Utils\Strings;
 
 use function WPStaging\functions\debug_log;
 
@@ -84,6 +85,9 @@ class DatabaseImporter
     /** @var SubsiteManagerInterface */
     private $subsiteManager;
 
+    /** @var Strings */
+    protected $stringsUtil;
+
     /**
      * @param Database $database
      * @param JobDataDto $jobRestoreDataDto
@@ -95,7 +99,8 @@ class DatabaseImporter
         JobDataDto $jobRestoreDataDto,
         QueryInserter $queryInserter,
         QueryCompatibility $queryCompatibility,
-        SubsiteManagerInterface $subsiteManager
+        SubsiteManagerInterface $subsiteManager,
+        Strings $stringsUtil
     ) {
         $this->client   = $database->getClient();
         $this->wpdb     = $database->getWpdba();
@@ -106,6 +111,7 @@ class DatabaseImporter
         $this->queryCompatibility = $queryCompatibility;
         $this->subsiteManager     = $subsiteManager;
         $this->binaryFlagLength   = strlen(RowsExporter::BINARY_FLAG);
+        $this->stringsUtil        = $stringsUtil;
     }
 
     /**
@@ -276,6 +282,7 @@ class DatabaseImporter
 
         $query = $this->maybeShorterTableNameForDropTableQuery($query);
         $query = $this->maybeShorterTableNameForCreateTableQuery($query);
+        $query = $this->maybeFixReplaceTableConstraints($query);
 
         $this->replaceTableCollations($query);
 
@@ -466,6 +473,50 @@ class DatabaseImporter
         if (strlen($tableName) > 64) {
             $shortName = $this->restoreTask->getShortNameTable($tableName, $this->tmpDatabasePrefix);
             return str_replace($tableName, $shortName, $query);
+        }
+
+        return $query;
+    }
+
+    protected function maybeFixReplaceTableConstraints(&$query)
+    {
+        if (strpos($query, "CREATE TABLE") !== 0) {
+            return $query;
+        }
+
+        /**
+         * Possible syntax error on backups when replace Table Constraints:
+         *
+         * String before:
+         * KEY `key` (`field1`,`field2`), `field_leftover_after_removed`) ON DELETE CASCADE ON UPDATE NO ACTION )
+         *
+         * String after:
+         * KEY `key` (`field1`,`field2`))
+         *
+         * @see WPStaging\Backup\Service\Database\Exporter\DDLExporter::replaceTableConstraints()
+         * @see https://github.com/wp-staging/wp-staging-pro/issues/3259
+         * @see https://github.com/wp-staging/wp-staging-pro/pull/3265
+         */
+        if (preg_match('@KEY\s+\`.*\`\s+?\(.*\)(,(\s+)?\`.*`\)\s+ON\s+(DELETE|UPDATE).*?)\)@i', $query, $matches)) {
+            // String to remove:
+            //  $matches[1] = , `field_leftover_after_removed`) ON DELETE CASCADE ON UPDATE NO ACTION
+            $query = str_replace($matches[1], '', $query);
+        }
+
+        /**
+         * Missing "CREATE TABLE" closing bracket ');'
+         *
+         * String before:
+         *  CREATE TABLE `table` ( KEY `field` (`post_id`);
+         *
+         * String after:
+         *  CREATE TABLE `table` ( KEY `field` (`post_id`) );
+         *
+         * @see https://github.com/wp-staging/wp-staging-pro/issues/3303
+         * @see https://github.com/wp-staging/wp-staging-pro/pull/3304
+         */
+        if ($this->isCorruptedCreateTableQuery($query)) {
+            $query = $this->stringsUtil->replaceLastMatch("`);", "`) );", $query);
         }
 
         return $query;
@@ -793,5 +844,31 @@ class DatabaseImporter
         }
 
         return false;
+    }
+
+    /**
+     * Check if the query syntax is wrongly cut.
+     *
+     * @param string $query
+     *
+     * @see https://github.com/wp-staging/wp-staging-pro/pull/3304
+     *
+     * @return bool
+     */
+    protected function isCorruptedCreateTableQuery(string $query): bool
+    {
+        if (strpos($query, "ENGINE") !== false) {
+            return false;
+        }
+
+        if (strpos($query, "CHARSET") !== false) {
+            return false;
+        }
+
+        if (strpos($query, "COLLATE") !== false) {
+            return false;
+        }
+
+        return true;
     }
 }

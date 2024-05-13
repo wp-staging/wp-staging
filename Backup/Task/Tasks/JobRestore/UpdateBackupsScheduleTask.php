@@ -34,7 +34,13 @@ class UpdateBackupsScheduleTask extends RestoreTask
         $this->stepsDto->setTotal(1);
 
         if ($this->jobDataDto->getIsMissingDatabaseFile()) {
-            $this->logger->warning(__('Skipped preserved backup schedules in the database.', 'wp-staging'));
+            $this->logger->warning(__('Skipped preserved backup schedules in the database. Database file missing!', 'wp-staging'));
+            return $this->generateResponse();
+        }
+
+        $tmpOptionsTable  = PrepareRestore::TMP_DATABASE_PREFIX . 'options';
+        if (!$this->wpdb->get_var("SHOW TABLES LIKE '{$tmpOptionsTable}'")) {
+            $this->logger->warning(__('Skipped preserved backup schedules in the database. No option table in the backup!', 'wp-staging'));
             return $this->generateResponse();
         }
 
