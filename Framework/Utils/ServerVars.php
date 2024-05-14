@@ -53,4 +53,15 @@ class ServerVars
     {
         return stripos($this->getServerSoftware(), 'LiteSpeed') === 0;
     }
+
+    /**
+     * @return bool
+     */
+    public function isFunctionDisabled(string $functionName): bool {
+        $disableFunctions = array_map(function ($input) {
+            return trim($input);
+        }, explode(',', ini_get('disable_functions')));
+
+        return in_array($functionName, $disableFunctions);
+    }
 }

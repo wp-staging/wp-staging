@@ -45,7 +45,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
     ?>
     <p>
-        <strong class="wpstg-fs-14"><?php echo esc_html($providerName); ?></strong>
+        <strong class="wpstg-fs-18"><?php echo esc_html($providerName); ?></strong>
         <br/>
         <br/>
         <?php echo esc_html__('Upload backup files to your personal Generic S3 account.', 'wp-staging'); ?>

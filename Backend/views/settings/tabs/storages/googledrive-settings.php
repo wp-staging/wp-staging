@@ -30,7 +30,8 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
     $googleClientSecret = isset($options['googleClientSecret']) ? $options['googleClientSecret'] : '';
     ?>
     <p>
-        <strong class="wpstg-fs-14"> <?php echo esc_html($providerName); ?></strong>
+        <strong class="wpstg-fs-18"> <?php echo esc_html($providerName); ?></strong>
+        <br/>
         <br/>
         <?php echo esc_html__('Upload backup files to your personal Google Drive account.', 'wp-staging'); ?>
         <br>

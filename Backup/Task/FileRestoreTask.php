@@ -10,6 +10,7 @@ use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Task\RestoreFileHandlers\RestoreFileProcessor;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -246,6 +247,18 @@ abstract class FileRestoreTask extends RestoreTask
     public function retryLastActionInNextRequest()
     {
         $this->taskQueue->retry($dequeue = false);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isRestoreOnSubsite(): bool
+    {
+        if (!is_multisite()) {
+            return false;
+        }
+
+        return $this->jobDataDto->getBackupMetadata()->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE;
     }
 
     /**

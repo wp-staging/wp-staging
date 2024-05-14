@@ -6,15 +6,33 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 
 class CleanExistingMediaTask extends RestoreTask
 {
+    /**
+     * Old filter, cannot me renamed to new pattern
+     * @var string
+     */
+    const FILTER_KEEP_EXISTING_MEDIA = 'wpstg.backup.restore.keepExistingMedia';
+
+    /**
+     * Paths given should be absolute
+     * @var string
+     */
+    const FILTER_EXCLUDE_MEDIA_DURING_CLEANUP = 'wpstg.backup.restore.exclude_media_during_cleanup';
+
+    /** @var Filesystem */
     protected $filesystem;
+
+    /** @var Directory */
     protected $directory;
 
+    /** @var int */
     protected $processedNow;
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, Filesystem $filesystem, Directory $directory)
@@ -46,7 +64,7 @@ class CleanExistingMediaTask extends RestoreTask
 
     public function execute()
     {
-        if (apply_filters('wpstg.backup.restore.keepExistingMedia', false)) {
+        if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_MEDIA, false)) {
             $this->stepsDto->finish();
             $this->logger->info(sprintf(esc_html__('%s (skipped)', 'wp-staging'), static::getTaskTitle()));
             return $this->generateResponse(false);
@@ -57,6 +75,12 @@ class CleanExistingMediaTask extends RestoreTask
         $excludedPaths = [
             rtrim($this->directory->getPluginUploadsDirectory(), '/')
         ];
+
+        if ($this->isMainSite() &&  $this->jobDataDto->getBackupMetadata()->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE) {
+            $excludedPaths[] = rtrim($this->directory->getMainSiteUploadsDirectory(), '/') . '/sites';
+        }
+
+        $excludedPaths = array_merge($excludedPaths, Hooks::applyFilters(self::FILTER_EXCLUDE_MEDIA_DURING_CLEANUP, []));
 
         $this->filesystem->setShouldStop([$this, 'isThreshold'])
             ->setExcludePaths($excludedPaths)
@@ -81,5 +105,19 @@ class CleanExistingMediaTask extends RestoreTask
         $this->logger->info(sprintf(esc_html__('%s (cleaned %d items)', 'wp-staging'), static::getTaskTitle(), $this->processedNow));
 
         return $this->generateResponse(false);
+    }
+
+    /**
+     * Should only be true when multisite and blog id of subsite is 1
+     *
+     * @return bool
+     */
+    protected function isMainSite(): bool
+    {
+        if (!is_multisite()) {
+            return false;
+        }
+
+        return get_current_blog_id() === 1;
     }
 }

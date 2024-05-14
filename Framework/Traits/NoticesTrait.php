@@ -39,13 +39,20 @@ trait NoticesTrait
             return false;
         }
 
-        $currentPage = (isset($_GET["page"])) ? Sanitize::sanitizeString($_GET["page"]) : null;
+        $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
+        if (empty($currentPage)) {
+            return false;
+        }
 
-        $availablePages = [
-            "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone", "wpstg_backup"
-        ];
+        $allowedPrefixes = ["wpstg-", "wpstg_"];
 
-        return in_array($currentPage, $availablePages, true);
+        foreach ($allowedPrefixes as $prefix) {
+            if (strpos($currentPage, $prefix) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return string */

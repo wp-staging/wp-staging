@@ -4,9 +4,19 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
+use WPStaging\Framework\Facades\Hooks;
 
 class RestoreThemesTask extends FileRestoreTask
 {
+    /** @var string */
+    const FILTER_REPLACE_EXISTING_THEMES = 'wpstg.backup.restore.replace_existing_themes';
+
+    /**
+     * Old filter, cannot me renamed to new pattern
+     * @var string
+     */
+    const FILTER_KEEP_EXISTING_THEMES = 'wpstg.backup.restore.keepExistingThemes';
+
     public static function getTaskName()
     {
         return 'backup_restore_themes';
@@ -52,27 +62,38 @@ class RestoreThemesTask extends FileRestoreTask
                 continue;
             }
 
-            /*
+            /**
              * Scenario: Restoring a theme that already exists
+             * If subsite restore and no filter is used to override the behaviour then preserve existing theme
+             * Otherwise:
              * 1. Backup old theme
              * 2. Restore new theme
              * 3. Delete backup
              */
             if (array_key_exists($themeName, $existingThemes)) {
+                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_THEMES, false)) {
+                    continue;
+                }
+
                 $this->enqueueMove($existingThemes[$themeName], "{$destDir}{$themeName}{$this->getOriginalSuffix()}");
                 $this->enqueueMove($themesToRestore[$themeName], "{$destDir}{$themeName}");
                 $this->enqueueDelete("{$destDir}{$themeName}{$this->getOriginalSuffix()}");
                 continue;
             }
 
-            /*
+            /**
              * Scenario 2: Restoring a theme that does not yet exist
              */
             $this->enqueueMove($themesToRestore[$themeName], "$destDir$themeName");
         }
 
+        // Don't delete existing files if restore on subsite
+        if ($this->isRestoreOnSubsite()) {
+            return;
+        }
+
         // Don't delete existing files if filter is set to true
-        if (apply_filters('wpstg.backup.restore.keepExistingThemes', false)) {
+        if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_THEMES, false)) {
             return;
         }
 

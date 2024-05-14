@@ -91,7 +91,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
             $this->cannotMigrate();
             $this->cannotRestoreMultipartBackup();
             $this->cannotRestoreIfCantWriteToDisk();
-            $this->cannotRestoreSingleSiteBackupIntoMultisiteAndViceVersa();
+            $this->cannotRestoreMultisiteBackupOnSingleSite();
             $this->cannotHaveConflictingPrefix();
             $this->cannotHaveTableThatWillExceedLength();
             $this->cannotRestoreIfThereIsNotEnoughFreeDiskSpaceForTheDatabase();
@@ -175,24 +175,11 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
     /**
      * @throws RuntimeException When trying to restore a .wpstg file generated from a multi-site
-     *                          installation into a single-site and vice-versa.
+     *                          installation into a single-site.
      */
-    protected function cannotRestoreSingleSiteBackupIntoMultisiteAndViceVersa()
+    protected function cannotRestoreMultisiteBackupOnSingleSite()
     {
         $backupType = $this->jobDataDto->getBackupMetadata()->getBackupType();
-        if ($backupType !== BackupMetadata::BACKUP_TYPE_MULTISITE && !is_multisite()) {
-            // Early bail: only multisite backup type cannot be restored on single site.
-            return;
-        }
-
-        if ($backupType === BackupMetadata::BACKUP_TYPE_MULTISITE && is_multisite()) {
-            // Early bail: For the moment only multisite backup type can be restore on multisite.
-            return;
-        }
-
-        if ($backupType !== BackupMetadata::BACKUP_TYPE_MULTISITE && is_multisite()) {
-            throw new \RuntimeException('This website is a WordPress installation with multiple sites. Currently, only the recovery of a full multisite backup is supported, so the recovery program cannot proceed.');
-        }
 
         if ($backupType === BackupMetadata::BACKUP_TYPE_MULTISITE && !is_multisite()) {
             throw new \RuntimeException('This is a full multisite backup, but this site is a single-site WordPress installation, so the recovery program cannot proceed.');

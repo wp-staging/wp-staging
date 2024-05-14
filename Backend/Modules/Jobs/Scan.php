@@ -616,25 +616,32 @@ class Scan extends Job
 
         $isDisabledDir = $dirName === 'wp-admin' || $dirName === 'wp-includes';
 
+        $isDisabled = false;
+        if (strpos($dataPath, 'wp-content/' . Directory::STAGING_SITE_DIRECTORY) !== false) {
+            $isDisabled      = true;
+            $shouldBeChecked = false;
+        }
+
         return $this->templateEngine->render('Backend/views/clone/ajax/directory-navigation.php', [
-            'scan'    => $this,
-            'prefix'  => $prefix,
-            'relPath' => $relPath,
-            'class'   => $class,
-            'dirType' => $dirType,
+            'scan'              => $this,
+            'prefix'            => $prefix,
+            'relPath'           => $relPath,
+            'class'             => $class,
+            'dirType'           => $dirType,
             'isScanned'         => $isScanned,
             'isNavigatable'     => $isNavigatable,
             'shouldBeChecked'   => $shouldBeChecked,
             'parentChecked'     => $parentChecked,
             'directoryDisabled' => $isNotWPCoreDir || $isDisabledDir,
-            'dirName'       => $dirName,
-            'gifLoaderPath' => $this->gifLoaderPath,
-            'formattedSize' => $this->utilsMath->formatSize($dataSize),
-            'isDebugMode'   => $this->utilsMath->formatSize($dataSize),
-            'dataPath'      => $dataPath,
-            'basePath'      => $basePath,
-            'forceDefault'  => $forceDefault,
-            'dirPath'       => $path,
+            'isDisabled'        => $isDisabled,
+            'dirName'           => $dirName,
+            'gifLoaderPath'     => $this->gifLoaderPath,
+            'formattedSize'     => $this->utilsMath->formatSize($dataSize),
+            'isDebugMode'       => $this->utilsMath->formatSize($dataSize),
+            'dataPath'          => $dataPath,
+            'basePath'          => $basePath,
+            'forceDefault'      => $forceDefault,
+            'dirPath'           => $path,
         ]);
     }
 

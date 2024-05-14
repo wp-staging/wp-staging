@@ -5,6 +5,7 @@ namespace WPStaging\Frontend;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Rest\Rest;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Auth\LoginByLink;
 
 /**
  * Class Frontend
@@ -12,7 +13,6 @@ use WPStaging\Framework\SiteInfo;
  */
 class Frontend
 {
-
     /**
      * @var object
      */
@@ -85,8 +85,15 @@ class Frontend
      */
     private function defineHooks()
     {
+        static $isRegistered = false;
+        if ($isRegistered) {
+            return;
+        }
+
         add_action("init", [$this, "checkPermissions"]);
         add_filter("wp_before_admin_bar_render", [$this, "changeSiteName"]);
+
+        $isRegistered = true;
     }
 
     /**
@@ -119,7 +126,7 @@ class Frontend
             return false;
         }
 
-        if (! $this->isStagingSite()) {
+        if (!$this->isStagingSite()) {
             return false;
         }
 
@@ -142,13 +149,17 @@ class Frontend
             return true;
         }
 
+        $currentUser = wp_get_current_user();
+
+        if ($currentUser->has_cap(LoginByLink::WPSTG_VISITOR_ROLE)) {
+            return false;
+        }
+
         // Allow access for administrators if no user roles are defined
         if (!isset($this->settings->userRoles) || !is_array($this->settings->userRoles)) {
             $this->accessDenied = true;
             return true;
         }
-
-        $currentUser = wp_get_current_user();
 
         if (defined('WPSTGPRO_VERSION') && !empty($this->settings->usersWithStagingAccess)) {
             $usersWithStagingAccess = explode(',', $this->settings->usersWithStagingAccess);
@@ -215,7 +226,9 @@ class Frontend
 
         // $wp_rewrite is not available before the init hook. So we need to use the global variable
         global $wp_rewrite;
-        $wp_rewrite->set_permalink_structure(null);
+
+        // @see https://developer.wordpress.org/reference/classes/wp_rewrite/set_permalink_structure/
+        $wp_rewrite->set_permalink_structure('');
 
         flush_rewrite_rules();
 

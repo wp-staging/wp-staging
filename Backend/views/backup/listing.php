@@ -124,11 +124,13 @@ if ($cronMessage !== '') { ?>
         </div>
     </div>
     <div id="wpstg-existing-cloud-backups">
-        <span id="remote-backup-title"><?php echo esc_html__('Remote Backups:', 'wp-staging'); ?></span>
-        <span class="wpstg--tooltip">
-            <img class="wpstg--dashicons wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
-            <div class='wpstg--tooltiptext'><?php echo esc_html__('Remote backups fetching supports S3, Google Drive and sFTP hosted backups. Dropbox support is coming soon.', 'wp-staging'); ?></div>
-        </span>
+        <div class="wpstg-existing-cloud-backups-header">
+            <span id="remote-backup-title"><?php echo esc_html__('Remote Backups:', 'wp-staging'); ?></span>
+            <span class="wpstg--tooltip">
+                <img class="wpstg--dashicons wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
+                <div class='wpstg--tooltiptext'><?php echo esc_html__('Remote backups fetching supports S3, Google Drive and sFTP hosted backups. Dropbox support is coming soon.', 'wp-staging'); ?></div>
+            </span>
+        </div>
         <div class="wpstg-cloud-backup-list">
             <ul id="wpstg-cloud-backup-list-ul">
                 <li><?php esc_html_e('Searching for remote backups...', 'wp-staging') ?></li>

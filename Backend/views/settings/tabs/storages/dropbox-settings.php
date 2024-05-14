@@ -19,7 +19,8 @@ use WPStaging\Pro\Backup\Storage\Storages\Dropbox\Auth;
     $lastUpdated            = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
     ?>
     <p>
-        <strong class="wpstg-fs-14"> <?php esc_html_e('Dropbox', 'wp-staging'); ?></strong>
+        <strong class="wpstg-fs-18"> <?php esc_html_e('Dropbox', 'wp-staging'); ?></strong>
+        <br/>
         <br/>
         <?php echo esc_html__('Upload backup files to your Dropbox account.', 'wp-staging'); ?>
         <br>

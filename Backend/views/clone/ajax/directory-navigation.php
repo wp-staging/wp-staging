@@ -39,11 +39,12 @@ use WPStaging\Framework\Facades\UI\Checkbox;
             'isNavigatable' => $isNavigatable,
         ];
         $attributes = [
-            'classes' => 'wpstg-check-dir ' . $class,
+            'classes'    => 'wpstg-check-dir ' . $class,
+            'isDisabled' => $isDisabled,
         ];
         Checkbox::render('', 'selectedDirectories[]', $prefix . $relPath, ($shouldBeChecked && ($parentChecked !== false)), $attributes, $dataAttributes);
         ?>
-    <a href="#" class='wpstg-expand-dirs <?php echo esc_attr($directoryDisabled); ?>'><?php echo esc_html($dirName); ?></a>
+    <a href="#" class='wpstg-expand-dirs <?php echo ($isDisabled) ? 'wpstg-storage-settings-disabled' : ''; ?> <?php echo esc_attr($directoryDisabled); ?>'><?php echo esc_html($dirName); ?></a>
     <?php if ($isNavigatable === 'true' && !empty($gifLoaderPath)) : ?>
     <img src='<?php echo esc_url($gifLoaderPath); ?>' class='wpstg-is-dir-loading' alt='loading' />
     <?php endif; ?>

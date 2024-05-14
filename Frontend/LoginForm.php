@@ -80,6 +80,8 @@ class LoginForm
                 $redirectUrl = $this->sanitize->sanitizeUrl($_POST['redirect_to']);
             }
 
+            set_transient('wpstg_user_logged_in_status', true, 5);
+
             header('Location:' . $redirectUrl);
         } else {
             $msg = sprintf(__('Login not possible! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
@@ -163,12 +165,10 @@ class LoginForm
         $showNotice = (new LoginNotice())->isLoginNoticeActive();
 
         // Detect if wordfence is active and 2fa enabled
-        $isCustomLogin2faEnabled = class_exists('wordfence') && get_option('wordfenceActivated');
+        // Should only work for pro version
+        $isCustomLogin2faEnabled = class_exists('wordfence') && get_option('wordfenceActivated') && defined('WPSTGPRO_VERSION');
 
-        $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/pro/loginForm.php';
-        if (!file_exists($loginFileView)) {
-            $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/loginForm.php';
-        }
+        $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/loginForm.php';
 
         if ($args['echo']) {
             require($loginFileView);

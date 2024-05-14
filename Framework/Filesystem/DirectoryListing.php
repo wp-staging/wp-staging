@@ -37,22 +37,28 @@ class DirectoryListing
     /**
      * @return bool
      */
-    public function isPathNotInOpenBaseDir($path): bool
+    public function isPathInOpenBaseDir($path): bool
     {
-        $openBaseDirPath = array_map(function ($input) {
+        $openBaseDirPaths = array_map(function ($input) {
             return trim($input);
         }, explode(":", ini_get('open_basedir')));
 
         // @phpstan-ignore-next-line
-        if (empty($openBaseDirPath) || empty($openBaseDirPath[0])) {
-            return false;
+        if (empty($openBaseDirPaths) || empty($openBaseDirPaths[0])) {
+            return true;
         }
 
-        if (in_array($path, $openBaseDirPath)) {
-            return false;
+        if (in_array($path, $openBaseDirPaths)) {
+            return true;
         }
 
-        return true;
+        foreach ($openBaseDirPaths as $openBaseDirPath) {
+            if (strpos($path, trailingslashit($openBaseDirPath)) === 0 && !empty($openBaseDirPath)) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /**
@@ -81,7 +87,7 @@ class DirectoryListing
             /** @var \SplFileInfo $item */
             foreach ($it as $item) {
                 $realPath = $item->getRealPath();
-                if ($this->isPathNotInOpenBaseDir($realPath)) {
+                if (!$this->isPathInOpenBaseDir($realPath)) {
                     continue;
                 }
 

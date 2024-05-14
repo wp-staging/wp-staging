@@ -28,10 +28,14 @@ use WPStaging\Backup\Task\Tasks\JobRestore\RestoreFinishTask;
 
 class JobRestore extends AbstractJob
 {
+    /** @var string */
     const TMP_DIRECTORY = 'tmp/restore/';
 
     /** @var JobRestoreDataDto $jobDataDto */
     protected $jobDataDto;
+
+    /** @var BackupMetadata */
+    protected $backupMetadata;
 
     /** @var array The array of tasks to execute for this job. Populated at init(). */
     protected $tasks = [];
@@ -93,57 +97,57 @@ class JobRestore extends AbstractJob
             return;
         }
 
-        $backupMetadata = (new BackupMetadata())->hydrateByFilePath($this->jobDataDto->getFile());
+        $this->backupMetadata = (new BackupMetadata())->hydrateByFilePath($this->jobDataDto->getFile());
 
-        if (!$this->isValidMetadata($backupMetadata)) {
+        if (!$this->isValidMetadata($this->backupMetadata)) {
             throw new RuntimeException('Failed to get backup metadata.');
         }
 
-        $this->jobDataDto->setBackupMetadata($backupMetadata);
+        $this->jobDataDto->setBackupMetadata($this->backupMetadata);
         $this->jobDataDto->setTmpDirectory($this->getJobTmpDirectory());
-        $this->jobDataDto->setIsSameSiteBackupRestore($this->isSameSiteBackupRestore($backupMetadata));
+        $this->jobDataDto->setIsSameSiteBackupRestore($this->isSameSiteBackupRestore());
 
         $this->tasks[] = StartRestoreTask::class;
         $this->tasks[] = CleanupTmpFilesTask::class;
         $this->tasks[] = CleanupTmpTablesTask::class;
-        if ($backupMetadata->getIsExportingDatabase()) {
+        if ($this->backupMetadata->getIsExportingDatabase()) {
             $this->tasks[] = CleanupBakTablesTask::class;
         }
 
         $this->setRequirementTask();
 
-        if ($backupMetadata->getIsExportingUploads()) {
+        if ($this->backupMetadata->getIsExportingUploads()) {
             $this->tasks[] = CleanExistingMediaTask::class;
         }
 
         $this->addExtractFilesTasks();
 
-        if ($backupMetadata->getIsExportingThemes()) {
+        if ($this->backupMetadata->getIsExportingThemes()) {
             $this->tasks[] = RestoreThemesTask::class;
         }
 
-        if ($backupMetadata->getIsExportingPlugins()) {
+        if ($this->backupMetadata->getIsExportingPlugins()) {
             $this->tasks[] = RestorePluginsTask::class;
         }
 
         if (
-            $backupMetadata->getIsExportingThemes()
-            || $backupMetadata->getIsExportingPlugins()
-            || $backupMetadata->getIsExportingMuPlugins()
-            || $backupMetadata->getIsExportingOtherWpContentFiles()
+            $this->backupMetadata->getIsExportingThemes()
+            || $this->backupMetadata->getIsExportingPlugins()
+            || $this->backupMetadata->getIsExportingMuPlugins()
+            || $this->backupMetadata->getIsExportingOtherWpContentFiles()
         ) {
             $this->tasks[] = RestoreLanguageFilesTask::class;
         }
 
-        if ($backupMetadata->getIsExportingOtherWpContentFiles()) {
+        if ($this->backupMetadata->getIsExportingOtherWpContentFiles()) {
             $this->tasks[] = RestoreOtherFilesInWpContentTask::class;
         }
 
-        if ($backupMetadata->getIsExportingDatabase()) {
+        if ($this->backupMetadata->getIsExportingDatabase()) {
             $this->addDatabaseTasks();
         }
 
-        if ($backupMetadata->getIsExportingMuPlugins()) {
+        if ($this->backupMetadata->getIsExportingMuPlugins()) {
             $this->tasks[] = RestoreMuPluginsTask::class;
         }
 
@@ -160,25 +164,24 @@ class JobRestore extends AbstractJob
     }
 
     /**
-     * @param BackupMetadata $backupMetadata
      * @return bool
      */
-    protected function isSameSiteBackupRestore(BackupMetadata $backupMetadata): bool
+    protected function isSameSiteBackupRestore(): bool
     {
         $this->jobDataDto->setIsUrlSchemeMatched(true);
 
         // Exclusive check for multisite subdomain installs
-        if (is_multisite() && is_subdomain_install() !== $backupMetadata->getSubdomainInstall()) {
+        if (is_multisite() && is_subdomain_install() !== $this->backupMetadata->getSubdomainInstall()) {
             return false;
         }
 
         // If ABSPATH is different
-        if (ABSPATH !== $backupMetadata->getAbsPath()) {
+        if (ABSPATH !== $this->backupMetadata->getAbsPath()) {
             return false;
         }
 
         $currentSiteURL = site_url();
-        $backupSiteURL  = $backupMetadata->getSiteUrl();
+        $backupSiteURL  = $this->backupMetadata->getSiteUrl();
         if ($currentSiteURL === $backupSiteURL) {
             return true;
         }

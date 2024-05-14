@@ -1936,7 +1936,7 @@
    * @param visibility
    * @return {void}
    */
-  function loadingBar(visibility) {
+  function showLoadingBar(visibility) {
     if (visibility === void 0) {
       visibility = 'visible';
     }
@@ -1968,14 +1968,15 @@
           element.style.visibility = 'hidden';
         }
       });
+      hideLoadingBar();
     }, 5000);
     var container = qs('.wpstg--tab--contents');
     if (visibility === 'visible') {
-      loadingBar();
+      showLoadingBar();
       container && (container.style.overflow = 'hidden');
       return;
     }
-    loadingBar('hidden');
+    hideLoadingBar();
     container && (container.style.overflow = 'unset');
   }
 
@@ -2056,6 +2057,45 @@
       }, _callee);
     }));
     return _setLoadingPlaceholder.apply(this, arguments);
+  }
+
+  /**
+   * @param selector
+   */
+  function beautifyBackupCards(selector) {
+    if (selector === void 0) {
+      selector = '';
+    }
+    if (selector === null || !selector) {
+      selector = document;
+    }
+    var corruptedBackups = selector.querySelector('.wpstg-corrupted-backup');
+    if (corruptedBackups) {
+      var backupCards = document.querySelectorAll('.wpstg-clone.wpstg-backup');
+      backupCards.forEach(function (container) {
+        container.classList.add('wpstg-corrupted-backups-min-height');
+      });
+    }
+    var multiPartBackups = selector.querySelector('.invalid-backup-tabs');
+    var automatedBackups = selector.querySelector('.wpstg-automated-backup');
+    if ((automatedBackups || multiPartBackups) && !corruptedBackups) {
+      var _backupCards = document.querySelectorAll('.wpstg-clone.wpstg-backup');
+      _backupCards.forEach(function (container) {
+        container.classList.add('wpstg-multiparts-backups-min-height');
+      });
+    }
+  }
+
+  /**
+   * @return {void}
+   */
+  function hideLoadingBar() {
+    var loader = document.querySelectorAll('.wpstg-loading-bar-container');
+    loader.forEach(function (element) {
+      if (element) {
+        element.style.visibility = 'hidden';
+      }
+    });
   }
 
   /**
@@ -2481,7 +2521,14 @@
       wpAuthCheckExpired.innerHTML = '<b class="wpstg-auth-fallback-expired" tabindex="0">Session expired</b>';
       var wpAuthCheckLoginLink = document.createElement('p');
       wpAuthCheckLoginLink.innerHTML = "<a href=\"" + redirectUrl + "\" target=\"_blank\">Please log in again.</a> The login page will open in a new tab. After logging in you can close it and return to this page.";
-      wpAuthCheckDialog.append(wpAuthCheckForm, wpAuthCheckFallback);
+      var wpAuthCheckCloseButton = document.createElement('button');
+      wpAuthCheckCloseButton.type = 'button';
+      wpAuthCheckCloseButton.classList.add('wpstg-auth-check-close', 'button-link');
+      wpAuthCheckCloseButton.innerHTML = '<span class="screen-reader-text">Close dialog</span>';
+      wpAuthCheckCloseButton.addEventListener('click', function () {
+        wpAuthCheckWrap.classList.add('hidden');
+      });
+      wpAuthCheckDialog.append(wpAuthCheckCloseButton, wpAuthCheckForm, wpAuthCheckFallback);
       wpAuthCheckFallback.append(wpAuthCheckExpired, wpAuthCheckLoginLink);
       wpAuthCheckWrap.append(wpAuthCheckBg, wpAuthCheckDialog);
       document.body.appendChild(wpAuthCheckWrap);
@@ -2519,6 +2566,7 @@
         var ul = document.querySelector('.wpstg-backup-list ul');
         if (ul) {
           ul.innerHTML = res;
+          beautifyBackupCards(ul);
         }
         loadingPlaceholder('hidden');
         var tabBackup = document.getElementById('wpstg--tab--backup');
@@ -4613,6 +4661,9 @@
       },
       dismissSchedule: function dismissSchedule(dismissTarget) {
         var scheduleId = dismissTarget.dataset.scheduleId;
+        setLoadingPlaceholder().then(function () {
+          return qs('.wpstg--swal2-container #wpstg-backup--manage--schedules-loader').classList.add('show-loader');
+        });
         WPStagingCommon.ajax({
           action: 'wpstg--backups-dismiss-schedule',
           accessToken: wpstg.accessToken,
@@ -4620,9 +4671,6 @@
           scheduleId: scheduleId
         }, function (response) {
           if (response.success) {
-            setLoadingPlaceholder().then(function () {
-              return loadingPlaceholder();
-            });
             WPStagingBackupManageSchedules.fetchSchedules();
             WPStagingBackup$1.fetchListing();
             WPStagingBackup$1.modal.create.hasBackupSchedule = false;

@@ -97,6 +97,23 @@ class Strings
     }
 
     /**
+     * Check if a string start with a specific string from a list of strings
+     * @param string[] $needlesList
+     * @param string $haystack
+     * @return bool
+     */
+    public function startsWithAnyFromList(array $needlesList, string $haystack): bool
+    {
+        foreach ($needlesList as $needle) {
+            if ($this->startsWith($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Check if a string ends with a specific string
      * @param string $haystack
      * @param string $needle

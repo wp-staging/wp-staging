@@ -193,7 +193,7 @@ class Queue
         $tableName = self::getTableName();
         $query     = "INSERT INTO {$tableName} SET {$assignmentsList}";
 
-        $result = $this->database->query($query, true);
+        $result = $this->database->query($query);
 
         if ($result === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -569,7 +569,7 @@ class Queue
         $claimQuery = "UPDATE {$tableName}
             SET status='{$processing}', claimed_at='{$now}'
             WHERE id=$claimedActionId;";
-        $claimed = $this->database->query($claimQuery, true);
+        $claimed = $this->database->query($claimQuery);
         $this->database->query("UNLOCK TABLES");
 
         if (!$claimed) {
@@ -687,7 +687,11 @@ class Queue
             $statusUpdateQuery = "UPDATE {$tableName} SET status='{$status}', claimed_at='{$now}', updated_at='{$now}' WHERE id={$actionId} ";
         }
 
-        $updated = $this->database->query($statusUpdateQuery, true);
+        $updated = $this->database->query($statusUpdateQuery);
+
+        if (!$updated && $this->reconnectDatabase()) {
+            $updated = $this->database->query($statusUpdateQuery);
+        }
 
         if (!$updated) {
             \WPStaging\functions\debug_log(json_encode([
@@ -727,7 +731,12 @@ class Queue
             claimed_at DATETIME DEFAULT NULL,
             updated_at DATETIME DEFAULT NULL,
             PRIMARY KEY  (id)
-            ) COLLATE {$collate}";
+            )";
+
+        if (!empty($collate)) {
+            $tableSql .= " COLLATE {$collate}";
+        }
+
         return $tableSql;
     }
 
@@ -743,7 +752,7 @@ class Queue
     {
         $tableName = self::getTableName();
         $query     = "DROP TABLE IF EXISTS {$tableName}";
-        $this->database->query($query, true);
+        $this->database->query($query);
         $this->tableState = self::TABLE_NOT_EXIST;
 
         return !$this->tableExists();
@@ -890,7 +899,7 @@ class Queue
             SET status='{$newStatus}', claimed_at=NULL
             WHERE claimed_at IS NOT NULL
             AND claimed_at < '{$danglingBreakpoint}'";
-        $markResult = $this->database->query($markQuery, true);
+        $markResult = $this->database->query($markQuery);
 
         if ($markResult === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -975,7 +984,7 @@ class Queue
         $cancelQuery    = "UPDATE {$tableName} 
             SET status='{$newStatus}', claimed_at=NULL, updated_at='{$now}'
             WHERE jobId in ({$jobIdsInterval})";
-        $cancelResult = $this->database->query($cancelQuery, true);
+        $cancelResult = $this->database->query($cancelQuery);
 
         if ($cancelResult === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -1059,7 +1068,11 @@ class Queue
 
         $this->unlockQueueTable();
 
-        $updated = $this->database->query($statusUpdateQuery, true);
+        $updated = $this->database->query($statusUpdateQuery);
+
+        if (!$updated && $this->reconnectDatabase()) {
+            $updated = $this->database->query($statusUpdateQuery);
+        }
 
         if ($updated === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -1174,7 +1187,7 @@ class Queue
         $cleanupQuery = "DELETE FROM {$tableName} 
             WHERE updated_at < '{$cleanupBreakpoint}'
             AND status in ({$cleanableStati})";
-        $cleanupResult = $this->database->query($cleanupQuery, true);
+        $cleanupResult = $this->database->query($cleanupQuery);
 
         if ($cleanupResult === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -1218,7 +1231,7 @@ class Queue
         $countQuery = "SELECT COUNT(*) as actions_count FROM {$tableName} 
             WHERE {$this->getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses)};";
 
-        $countResult = $this->database->query($countQuery, true);
+        $countResult = $this->database->query($countQuery);
 
         if ($countResult === false) {
             debug_log(json_encode([
@@ -1256,7 +1269,7 @@ class Queue
 
         $this->startBenchmark();
         $cleanupQuery  = "DELETE FROM {$tableName} WHERE {$this->getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses)};";
-        $cleanupResult = $this->database->query($cleanupQuery, true);
+        $cleanupResult = $this->database->query($cleanupQuery);
         $this->finishBenchmark('cleanupActionsByScheduleId clean up query . ' . $cleanupQuery);
 
         if ($cleanupResult === false) {
@@ -1295,7 +1308,7 @@ class Queue
         $tableName = self::getTableName();
 
         $cleanupQuery  = "TRUNCATE {$tableName}";
-        $cleanupResult = $this->database->query($cleanupQuery, true);
+        $cleanupResult = $this->database->query($cleanupQuery);
 
         if ($cleanupResult === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -1474,5 +1487,18 @@ class Queue
         $whereCondition .= " AND status IN (" . implode(',', $statuses) . ")";
 
         return $whereCondition;
+    }
+
+    /**
+     * @return bool
+     */
+    private function reconnectDatabase(): bool
+    {
+        if (stripos($this->database->error(), 'MySQL server has gone away') !== false) {
+            $this->database = WPStaging::make(DatabaseAdapter::class)->getClient();
+            return true;
+        }
+
+        return false;
     }
 }

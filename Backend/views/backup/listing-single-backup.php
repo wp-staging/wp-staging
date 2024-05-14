@@ -206,24 +206,24 @@ $logUrl = add_query_arg([
                     ?>
                 </li>
                 <?php if ($automatedBackup) : ?>
-                    <li style="font-style: italic">
+                    <li class="wpstg-automated-backup">
                         <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/update.svg"/> <?php esc_html_e('Backup created automatically.', 'wp-staging') ?>
                     </li>
                 <?php endif ?>
                 <?php if ($isLegacy) : ?>
-                    <li style="font-style: italic">
+                    <li class="wpstg-legacy-backup">
                         <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/cloud-saved.svg"/> <?php esc_html_e('This database backup was generated from an existing legacy WP STAGING Database backup in the .SQL format.', 'wp-staging') ?>
                     </li>
                 <?php endif ?>
             <?php endif ?>
             <?php if ($isMultipartBackup) : ?>
-                <div class="wpstg-tabs-wrapper invalid-backup-tabs" style="margin-left: -8px; text-align: left;">
+                <div class="wpstg-tabs-wrapper invalid-backup-tabs">
                     <?php include(__DIR__ . '/partials/invalid-backup.php'); ?>
                 </div>
             <?php endif ?>
             <?php if (!$isMultipartBackup && !$isValidFileIndex) : ?>
                 <li class="wpstg-corrupted-backup wpstg--red">
-                    <div class="wpstg-exclamation">!</div>
+                    <div class="wpstg-corrupted-backup-icon"></div>
                     <strong><?php echo esc_html($indexFileError); ?></strong><br/>
                 </li>
             <?php endif ?>

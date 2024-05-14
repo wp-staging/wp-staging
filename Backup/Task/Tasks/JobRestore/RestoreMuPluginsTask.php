@@ -4,9 +4,19 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
+use WPStaging\Framework\Facades\Hooks;
 
 class RestoreMuPluginsTask extends FileRestoreTask
 {
+    /** @var string */
+    const FILTER_REPLACE_EXISTING_MUPLUGINS = 'wpstg.backup.restore.replace_existing_mu_plugins';
+
+    /**
+     * Old filter, cannot me renamed to new pattern
+     * @var string
+     */
+    const FILTER_KEEP_EXISTING_MUPLUGINS = 'wpstg.backup.restore.keepExistingMuPlugins';
+
     public static function getTaskName()
     {
         return 'backup_restore_muplugins';
@@ -57,27 +67,38 @@ class RestoreMuPluginsTask extends FileRestoreTask
                 continue;
             }
 
-            /*
+            /**
              * Scenario: Restoring a mu-plugin that already exists
+             * If subsite restore and no filter is used to override the behaviour then preserve existing mu-plugin
+             * Otherwise:
              * 1. Backup old mu-plugin
              * 2. Restore new mu-plugin
              * 3. Delete backup
              */
             if (array_key_exists($muPluginSlug, $existingMuPlugins)) {
+                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_MUPLUGINS, false)) {
+                    continue;
+                }
+
                 $this->enqueueMove($existingMuPlugins[$muPluginSlug], "{$destDir}{$muPluginSlug}{$this->getOriginalSuffix()}");
                 $this->enqueueMove($muPluginsToRestore[$muPluginSlug], "{$destDir}{$muPluginSlug}");
                 $this->enqueueDelete("{$destDir}{$muPluginSlug}{$this->getOriginalSuffix()}");
                 continue;
             }
 
-            /*
+            /**
              * Scenario 2: Restoring a plugin that does not yet exist
              */
             $this->enqueueMove($muPluginsToRestore[$muPluginSlug], "$destDir$muPluginSlug");
         }
 
+        // Don't delete existing files if restore on subsite
+        if ($this->isRestoreOnSubsite()) {
+            return;
+        }
+
         // Don't delete existing files if filter is set to true
-        if (apply_filters('wpstg.backup.restore.keepExistingMuPlugins', false)) {
+        if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_MUPLUGINS, false)) {
             return;
         }
 

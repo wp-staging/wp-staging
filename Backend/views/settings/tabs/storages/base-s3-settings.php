@@ -34,7 +34,7 @@ use WPStaging\Framework\Facades\Escape;
     $locationName           = empty($locationName) ? 'Bucket' : $locationName;
     ?>
     <p>
-        <strong class="wpstg-fs-14"><?php echo esc_html($providerName); ?></strong>
+        <strong class="wpstg-fs-18"><?php echo esc_html($providerName); ?></strong>
         <br/>
         <br/>
         <?php echo sprintf(esc_html__('Upload backup files to your  %s account.', 'wp-staging'), esc_html($providerName)); ?>

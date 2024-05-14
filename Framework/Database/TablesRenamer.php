@@ -76,6 +76,9 @@ class TablesRenamer
     /** @var string[] */
     protected $tablesToBeDropped = [];
 
+    /** @var string[] */
+    protected $tablesToPreserve = [];
+
     /** @var int Total tables to be renamed */
     protected $totalTables = 0;
 
@@ -89,22 +92,25 @@ class TablesRenamer
     protected $tablesRemainingToBeDropped = 0;
 
     /** @var string */
-    protected $productionTablePrefix;
+    protected $productionTablePrefix = '';
 
     /** @var string */
-    protected $tmpPrefix;
+    protected $productionTableBasePrefix = '';
 
     /** @var string */
-    protected $customTableTmpPrefix;
+    protected $tmpPrefix = '';
 
     /** @var string */
-    protected $dropPrefix;
+    protected $customTableTmpPrefix = '';
+
+    /** @var string */
+    protected $dropPrefix = '';
 
     /** @var bool */
-    protected $renameViews;
+    protected $renameViews = false;
 
     /** @var bool */
-    protected $renameCustomTables;
+    protected $renameCustomTables = false;
 
     /** @var bool */
     protected $logEachRename = false;
@@ -130,6 +136,9 @@ class TablesRenamer
     /** @var bool */
     protected $isNonConflictingTablesRenamingTaskExecuted = false;
 
+    /** @var bool */
+    protected $isRenamingForSubsite = false;
+
     public function __construct(TableService $tableService, PhpAdapter $phpAdapter)
     {
         $this->tableService = $tableService;
@@ -143,6 +152,18 @@ class TablesRenamer
     public function setProductionTablePrefix(string $productionTablePrefix): TablesRenamer
     {
         $this->productionTablePrefix = $productionTablePrefix;
+        return $this;
+    }
+
+    /**
+     * @param string $productionTableBasePrefix
+     * @param bool $isRenamingForSubsite
+     * @return TablesRenamer
+     */
+    public function setProductionTableBasePrefix(string $productionTableBasePrefix, bool $isRenamingForSubsite = true): TablesRenamer
+    {
+        $this->productionTableBasePrefix = $productionTableBasePrefix;
+        $this->isRenamingForSubsite      = $isRenamingForSubsite;
         return $this;
     }
 
@@ -256,6 +277,16 @@ class TablesRenamer
         return $this;
     }
 
+    /**
+     * @param string[] $tablesToPreserve
+     * @return TablesRenamer
+     */
+    public function setTablesToPreserve(array $tablesToPreserve): TablesRenamer
+    {
+        $this->tablesToPreserve = $tablesToPreserve;
+        return $this;
+    }
+
     /** @return int */
     public function getRenamedTables(): int
     {
@@ -330,6 +361,11 @@ class TablesRenamer
         }
 
         $taskDto->existingTables = $this->tableService->findTableNamesStartWith($this->productionTablePrefix) ?: [];
+        if ($this->isRenamingForSubsite && !in_array($this->productionTableBasePrefix . 'users', $taskDto->existingTables)) {
+            $taskDto->existingTables[] = $this->productionTableBasePrefix . 'users';
+            $taskDto->existingTables[] = $this->productionTableBasePrefix . 'usermeta';
+        }
+
         $taskDto->existingViews  = [];
         if ($this->renameViews) {
             $taskDto->existingViews  = $this->tableService->findViewsNamesStartWith($this->productionTablePrefix) ?: [];
@@ -371,9 +407,15 @@ class TablesRenamer
         }
 
         $productionTablePrefix = $this->productionTablePrefix;
+        $isSubsiteRestore      = $this->isRenamingForSubsite;
+        $baseProdTablePrefix   = $this->productionTableBasePrefix;
 
         foreach ($this->existingTables as $viewsOrTables => $tableName) {
-            $this->existingTablesUnprefixed[$viewsOrTables] = array_map(function ($tableName) use ($productionTablePrefix) {
+            $this->existingTablesUnprefixed[$viewsOrTables] = array_map(function ($tableName) use ($productionTablePrefix, $baseProdTablePrefix, $isSubsiteRestore) {
+                if ($isSubsiteRestore && in_array($tableName, [ $baseProdTablePrefix . 'users', $baseProdTablePrefix . 'usermeta' ])) {
+                    return substr($tableName, strlen($baseProdTablePrefix));
+                }
+
                 return substr($tableName, strlen($productionTablePrefix));
             }, $this->existingTables[$viewsOrTables]);
         }
@@ -448,8 +490,14 @@ class TablesRenamer
                 continue;
             }
 
-            $currentTable = $this->productionTablePrefix . $conflictingTableWithoutPrefix;
-            $tableToDrop =  $this->getTableShortName($currentTable, $this->dropPrefix);
+            if ($this->isTableToPreserve($conflictingTableWithoutPrefix)) {
+                $this->tablesRenamed++;
+                $this->nonConflictingTablesRenamed++;
+                continue;
+            }
+
+            $currentTable = $this->getCurrentSiteTable($conflictingTableWithoutPrefix);
+            $tableToDrop  =  $this->getTableShortName($currentTable, $this->dropPrefix);
             if ($tableToDrop === false) {
                 $tableToDrop = $this->dropPrefix . $conflictingTableWithoutPrefix;
             }
@@ -502,6 +550,12 @@ class TablesRenamer
         for ($i = $this->nonConflictingTablesRenamed; $i < count($nonConflictingTables); $i++) {
             $nonConflictingTable = $nonConflictingTables[$i];
             if ($this->isExcludedTable($nonConflictingTable)) {
+                $this->tablesRenamed++;
+                $this->nonConflictingTablesRenamed++;
+                continue;
+            }
+
+            if ($this->isTableToPreserve($nonConflictingTable)) {
                 $this->tablesRenamed++;
                 $this->nonConflictingTablesRenamed++;
                 continue;
@@ -564,6 +618,10 @@ class TablesRenamer
     public function renameTablesToDrop()
     {
         foreach ($this->getTablesThatExistInSiteButNotInTemp() as $table) {
+            if ($this->isTableToPreserve($table)) {
+                continue;
+            }
+
             $fullTableName = $this->productionTablePrefix . $table;
             $tableToDrop = $this->getTableShortName($fullTableName, $this->dropPrefix);
             if ($tableToDrop === false) {
@@ -743,6 +801,15 @@ class TablesRenamer
     }
 
     /**
+     * @param string $tableName
+     * @return bool
+     */
+    protected function isTableToPreserve(string $tableName): bool
+    {
+        return in_array($tableName, $this->tablesToPreserve);
+    }
+
+    /**
      * @return array
      */
     protected function getTablesThatExistInBothExistingAndTempUnprefixed(): array
@@ -776,7 +843,8 @@ class TablesRenamer
         $tmpDatabasePrefix = $this->tmpPrefix;
         $tableToRename     = $tmpDatabasePrefix . $tableWithoutPrefix;
         $tmpName           = $this->getTableShortName($tableToRename, $tmpDatabasePrefix);
-        $tableAfterRenamed = $this->productionTablePrefix . $tableWithoutPrefix;
+        $tableAfterRenamed = $this->getCurrentSiteTable($tableWithoutPrefix);
+
         if ($tmpName !== false) {
             $tableToRename = $tmpName;
         }
@@ -916,24 +984,30 @@ class TablesRenamer
      */
     private function renameQuery(string $tableToRename, string $tableAfterRenamed): bool
     {
-        $database = $this->tableService->getDatabase();
-        $result   = $database->exec(sprintf(
-            "RENAME TABLE `%s` TO `%s`;",
-            $tableToRename,
-            $tableAfterRenamed
-        ));
-
+        $result = $this->tableService->renameTable($tableToRename, $tableAfterRenamed);
         if ($result !== false) {
             return true;
         }
 
         if ($this->logEachRename && $this->logger instanceof Logger) {
             /** @var \wpdb */
-            $wpdb  = $database->getWpdba()->getClient();
-            $error = $wpdb->last_error;
-            $this->logger->warning("DB Rename: Unable to rename table {$tableToRename} to {$tableAfterRenamed}. Error: " . $error);
+            $error = $this->tableService->getLastWpdbError();
+            $this->logger->warning(sprintf("DB Rename: Unable to rename table %s to %s. Error: %s", $tableToRename, $tableAfterRenamed, $error));
         }
 
         return false;
+    }
+
+    private function getCurrentSiteTable(string $tableWithoutPrefix): string
+    {
+        if ($tableWithoutPrefix !== 'users' && $tableWithoutPrefix !== 'usermeta') {
+            return $this->productionTablePrefix . $tableWithoutPrefix;
+        }
+
+        if (!$this->isRenamingForSubsite) {
+            return $this->productionTablePrefix . $tableWithoutPrefix;
+        }
+
+        return $this->productionTableBasePrefix . $tableWithoutPrefix;
     }
 }

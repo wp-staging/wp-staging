@@ -8,6 +8,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\ThirdParty\WordFence;
 use WPStaging\Framework\ThirdParty\ThirdPartyCacheHandler;
+use WPStaging\Framework\Filesystem\OPcache;
 
 /**
  * Class FirstRun
@@ -18,6 +19,7 @@ use WPStaging\Framework\ThirdParty\ThirdPartyCacheHandler;
  */
 class FirstRun
 {
+
     /**
      * The option_name that is stored in the database to check first run is executed or not
      */
@@ -72,6 +74,9 @@ class FirstRun
 
         // Allow users to attach custom actions by using this hook
         do_action('wpstg.clone_first_run');
+
+        // Flush OPcache
+        WPStaging::make(OPcache::class)->maybeInvalidate();
     }
 
     /**

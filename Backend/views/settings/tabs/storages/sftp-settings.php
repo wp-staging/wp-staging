@@ -49,7 +49,7 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
 
     ?>
     <p>
-        <strong class="wpstg-fs-14"> <?php echo esc_html($providerName); ?></strong>
+        <strong class="wpstg-fs-18"> <?php echo esc_html($providerName); ?></strong>
     </p>
     <div class="wpstg-form-group">
         <form class="wpstg-provider-settings-form" id="wpstg-provider-settings-form" method="post">

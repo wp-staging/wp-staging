@@ -7,36 +7,68 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\Sanitize;
+use WPStaging\Framework\Facades\Hooks;
 
 class Report
 {
-    /** @var string  */
+    /**
+     * @var string
+     */
+    const FILTER_MAILS_REPORT_BUNDLED_LOGS_USE_ZIPARCHIVE = 'wpstg.mails.report.bundled_logs_use_ziparchive';
+
+    /**
+     * @var string
+     */
     const WPSTG_SUPPORT_EMAIL = "support@wp-staging.com";
 
-    /** @var string  */
+    /**
+     * @var string
+     */
     const EMAIL_SUBJECT = "Report Issue!";
 
-    /** @var SystemInfo */
+    /**
+     * @var SystemInfo
+     */
     private $systemInfo;
 
-
-    /** @var Directory */
+    /**
+     * @var Directory
+     */
     private $directory;
 
-    /** @var DebugLogReader */
+    /**
+     * @var DebugLogReader
+     */
     private $debugLogReader;
 
-    /** @var ReportSubmitTransient */
+    /**
+     * @var ReportSubmitTransient
+     */
     private $transient;
 
+    /**
+     * @var string
+     */
     const TEMP_DIRECTORY = 'tmp';
+
+    /**
+     * @var int
+     */
+    const MAX_SIZE_DEBUG_LOG = 512;
+
+    /**
+     * @var int
+     */
+    const RETENTATION_LOG_DAYS = 14;
 
     /**
      * @var Auth
      */
     private $auth;
 
-    /** @var Sanitize */
+    /**
+     * @var Sanitize
+     */
     private $sanitize;
 
     /**
@@ -94,7 +126,7 @@ class Report
         if (!$forceSend && $this->transient->getTransient()) {
             // to show alert using js
             $errors[] = [
-                "status" => 'already_submitted',
+                "status"  => 'already_submitted',
                 "message" => __("You've already submitted a ticket!<br/>" .
                     "Do you want to send another one?", 'wp-staging')
             ];
@@ -102,13 +134,14 @@ class Report
         }
 
         $attachments = [];
-        $message .= "\n\nLicense Key: " . get_option('wpstg_license_key');
+
+        $message .= "\n\nLicense Key: " . $this->getLicenseKey();
         if ($provider) {
-            $message .= "\n\n'Hosting provider: " . $provider;
+            $message .= "\n\nHosting provider: " . $provider;
         }
 
         if (!empty($sendLogFiles)) {
-            $attachments = $this->getAttachments();
+            $attachments = $this->getBundledLogs();
         }
 
         if ($this->sendMail($email, $message, $attachments) === false) {
@@ -121,46 +154,6 @@ class Report
     }
 
     /**
-     * @return array
-     */
-    protected function getAttachments(): array
-    {
-        $postfix = sanitize_file_name(strtolower(wp_hash(uniqid())));
-
-        $systemInformationFile = trailingslashit($this->getTempDirectoryForLogsAttachments()) . sprintf('wpstg-bundled-logs-%s.txt', $postfix);
-        $this->copyDataToFile($systemInformationFile, $this->systemInfo->get());
-        $attachments[] = $systemInformationFile;
-
-        if (file_exists(WPSTG_DEBUG_LOG_FILE)) {
-            $destinationWpstgDebugFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . sprintf('wpstg_debug_%s.log', $postfix);
-            $this->copyDataToFile($destinationWpstgDebugFilePath, $this->debugLogReader->getLastLogEntries(512 * KB_IN_BYTES, true, false));
-            $attachments[] = $destinationWpstgDebugFilePath;
-        }
-
-        $debugLogFile = WP_CONTENT_DIR . '/debug.log';
-        if (file_exists($debugLogFile)) {
-            $destinationDebugLogFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . sprintf('debug-%s.log', $postfix);
-            $this->copyDataToFile($destinationDebugLogFilePath, $this->debugLogReader->getLastLogEntries(512 * KB_IN_BYTES, false));
-            $attachments[] = $destinationDebugLogFilePath;
-        }
-
-        $latestLogFiles = $this->debugLogReader->getLatestLogFiles();
-        if (count($latestLogFiles) === 0) {
-            return $attachments;
-        }
-
-        foreach ($latestLogFiles as $logFilePrefix => $logFile) {
-            if (file_exists($logFile)) {
-                $destinationLogFilePath = trailingslashit($this->getTempDirectoryForLogsAttachments()) . $logFilePrefix . "-$postfix.log";
-                $this->copyDataToFile($destinationLogFilePath, @file_get_contents($logFile));
-                $attachments[] = $destinationLogFilePath;
-            }
-        }
-
-        return $attachments;
-    }
-
-    /**
      * Copy data into file
      *
      * @param string $destinationFile  where to copy to.
@@ -169,7 +162,7 @@ class Report
      */
     protected function copyDataToFile(string $destinationFile, string $data)
     {
-        $ft = fopen($destinationFile, "w");
+        $ft = fopen($destinationFile, "wb");
         fputs($ft, $data);
         fclose($ft);
     }
@@ -190,7 +183,7 @@ class Report
         $headers[] = "Reply-To: $from";
 
         $success = wp_mail(self::WPSTG_SUPPORT_EMAIL, self::EMAIL_SUBJECT, $text, $headers, $attachments);
-        $this->deleteAttachments($attachments);
+        $this->deleteBundledLogs();
 
         if ($success) {
             return true;
@@ -219,16 +212,16 @@ class Report
         $headers     = [];
         $mailSubject = sprintf(__('WP Staging - Debug Code: %s', 'wp-staging'), $debugCode);
         $response    = __("Sending debug info failed!", 'wp-staging');
-        $message     = $mailSubject . PHP_EOL . sprintf(__("License Key: %s", 'wp-staging'), get_option('wpstg_license_key'));
+        $message     = $mailSubject . "\n" . sprintf(__("License Key: %s", 'wp-staging'), $this->getLicenseKey());
         $headers[]   = "From: $fromEmail";
         $headers[]   = "Reply-To: $fromEmail";
-        $attachments = $this->getAttachments();
+        $attachments = $this->getBundledLogs();
         $isSent      = wp_mail(self::WPSTG_SUPPORT_EMAIL, $mailSubject, $message, $headers, $attachments);
 
         if ($isSent) {
             $this->transient->setTransient();
-            $response =  __("Successfully submitted debug info!", 'wp-staging');
-        }
+            $response = __("Successfully submitted debug info!", 'wp-staging');
+        };
 
         $errors = [
             "sent"    => $isSent,
@@ -236,9 +229,7 @@ class Report
             "message" => $response
         ];
 
-        foreach ($attachments as $filePath) {
-            unlink($filePath);
-        }
+        $this->deleteBundledLogs();
 
         return  $errors;
     }
@@ -259,7 +250,7 @@ class Report
             $debugCode = trim($this->sanitize->sanitizeString($postData['debugCode']));
         }
 
-        $loggedInUser = wp_get_current_user();
+        $loggedInUser      = wp_get_current_user();
         $loggedInUserEmail = '';
         if (!empty($loggedInUser->user_email)) {
             $loggedInUserEmail = trim($this->sanitize->sanitizeString($loggedInUser->user_email));
@@ -282,12 +273,126 @@ class Report
     }
 
     /**
-     * @param array $attachments
+     * @return string
+     */
+    private function getLicenseKey(): string
+    {
+        $licenseKey = get_option('wpstg_license_key');
+        return !empty($licenseKey) ? $licenseKey : 'Unregistered';
+    }
+
+    /**
+     * @return array
+     */
+    public function getBundledLogs(): array
+    {
+        $postfix         = sanitize_file_name(strtolower(wp_hash(uniqid())));
+        $tempDirectory   = trailingslashit($this->getTempDirectoryForLogsAttachments());
+        $maxSizeDebugLog = self::MAX_SIZE_DEBUG_LOG * KB_IN_BYTES;
+        $zipFilePath     = $tempDirectory . sprintf('wpstg-bundled-logs-%s.zip', $postfix);
+        $logFiles        = [];
+
+        $systemInformationFile = $tempDirectory . sprintf('system_information-%s.txt', $postfix);
+        $systemInformationData = $this->debugLogReader->maybeFixHtmlEntityDecode($this->systemInfo->get());
+
+        if (!empty($systemInformationData)) {
+            $this->copyDataToFile($systemInformationFile, $systemInformationData);
+            $logFiles[] = $systemInformationFile;
+        }
+
+        if (defined('WPSTG_DEBUG_LOG_FILE') && file_exists(WPSTG_DEBUG_LOG_FILE) && is_readable(WPSTG_DEBUG_LOG_FILE)) {
+            $destinationWpstgDebugFilePath = $tempDirectory . sprintf('wpstg_debug-%s.log', $postfix);
+            $this->copyDataToFile($destinationWpstgDebugFilePath, $this->debugLogReader->getLastLogEntries($maxSizeDebugLog, true, false));
+            $logFiles[] = $destinationWpstgDebugFilePath;
+        }
+
+        // @see DebugLogReader::getLastLogEntries()
+        $debugLogFile = ini_get('error_log');
+
+        if (file_exists($debugLogFile) && is_readable($debugLogFile)) {
+            $destinationDebugLogFilePath = $tempDirectory . sprintf('debug-%s.log', $postfix);
+
+            $this->copyDataToFile($destinationDebugLogFilePath, $this->debugLogReader->getLastLogEntries($maxSizeDebugLog, false));
+            $logFiles[] = $destinationDebugLogFilePath;
+        }
+
+        $retentionLogFiles = $this->debugLogReader->getRetentionLogFiles(self::RETENTATION_LOG_DAYS);
+
+        if (!empty($retentionLogFiles)) {
+            foreach ($retentionLogFiles as $logFileType => $logFileArray) {
+                if (empty($logFileArray)) {
+                    continue;
+                }
+
+                foreach ($logFileArray as $logFileNum => $logFilePath) {
+                    if (!file_exists($logFilePath) || !is_readable($logFilePath)) {
+                        continue;
+                    }
+
+                    $fileCount              = $logFileNum + 1;
+                    $destinationLogFilePath = $tempDirectory . $logFileType . '-' . $postfix . '-' . $fileCount . '.log';
+                    $this->copyDataToFile($destinationLogFilePath, file_get_contents($logFilePath));
+                    $logFiles[] = $destinationLogFilePath;
+                }
+            }
+        }
+
+        if (empty($logFiles)) {
+            return [];
+        }
+
+        if (file_exists($zipFilePath)) {
+            unlink($zipFilePath);
+        }
+
+        if (!class_exists('ZipArchive', false) || !Hooks::applyFilters(self::FILTER_MAILS_REPORT_BUNDLED_LOGS_USE_ZIPARCHIVE, true)) {
+            return $logFiles;
+        }
+
+        $zip = new \ZipArchive();
+        if (!$zip->open($zipFilePath, \ZipArchive::CREATE)) {
+            return $logFiles;
+        }
+
+        foreach ($logFiles as $filePath) {
+            $zip->addFile($filePath, 'wpstg-bundled-logs/' . basename($filePath));
+        }
+
+        // Close the descriptor, otherwise, ZipArchive will not release the lock
+        // and other operations with files like file_exists will fail
+        $zip->close();
+
+        if (file_exists($zipFilePath)) {
+            return [$zipFilePath];
+        }
+
+        return [];
+    }
+
+    /**
      * @return void
      */
-    private function deleteAttachments(array $attachments)
+    public function deleteBundledLogs()
     {
-        foreach ($attachments as $filePath) {
+        $dirPath     = trailingslashit($this->getTempDirectoryForLogsAttachments());
+        $dirIterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($dirPath));
+
+        $logFileType    = $this->debugLogReader->getAvailableLogFileTypes();
+        $logFilePrefix  = array_merge($logFileType, ['wpstg-bundled-logs', 'system_information', 'wpstg_debug', 'debug']);
+        $logPrefixMatch = implode('|', $logFilePrefix);
+
+        foreach ($dirIterator as $fileInfo) {
+            if (!$fileInfo->isFile() || $fileInfo->isLink() || !in_array($fileInfo->getExtension(), ['log', 'txt', 'zip'])) {
+                continue;
+            }
+
+            $filePath = $fileInfo->getRealPath();
+            $fileName = $fileInfo->getFilename();
+
+            if (!preg_match('@^(' . $logPrefixMatch . ')@', $fileName)) {
+                continue;
+            }
+
             unlink($filePath);
         }
     }

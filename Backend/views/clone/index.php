@@ -70,7 +70,7 @@ $backupNotice = WPStaging::make(BackupPluginsNotice::class);
                     ?>
                     <li>
                         <a href="https://wp-staging.com" target="_blank" class="wpstg-button" data-target="" id="wpstg--tab--toggle--license">
-                            <span class="wpstg--red-warning" style=""><?php echo esc_html(__('Upgrade to Pro', 'wp-staging')); ?> </span>
+                            <span class="wpstg--red-warning"><?php echo esc_html(__('Upgrade to Pro', 'wp-staging')); ?> </span>
                         </a>
                     </li>
                     <?php
@@ -83,6 +83,9 @@ $backupNotice = WPStaging::make(BackupPluginsNotice::class);
                 </li>
                 <li class="wpstg-tab-item--vert-center">
                     <span class="wpstg-loader"></span>
+                </li>
+                <li class="wpstg-tab-item--vert-center">
+                    <?php require_once(WPSTG_PLUGIN_DIR . 'Backend/views/_main/darkmode-toggle-button.php'); ?>
                 </li>
             </ul>
         </div>

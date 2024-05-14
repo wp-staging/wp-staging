@@ -4,9 +4,13 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
+use WPStaging\Framework\Facades\Hooks;
 
 class RestoreLanguageFilesTask extends FileRestoreTask
 {
+    /** @var string */
+    const FILTER_REPLACE_EXISTING_LANGUAGES = 'wpstg.backup.restore.replace_existing_languages';
+
     public static function getTaskName()
     {
         return 'backup_restore_language_files';
@@ -28,7 +32,7 @@ class RestoreLanguageFilesTask extends FileRestoreTask
     protected function buildQueue()
     {
         try {
-            $languageFiles = $this->getLanguageFiles();
+            $languageFiles = $this->getLanguageFilesToRestore();
         } catch (\Exception $e) {
             // Folder does not exist. Likely there are no language files in wp-content to restore.
             $languageFiles = [];
@@ -36,10 +40,30 @@ class RestoreLanguageFilesTask extends FileRestoreTask
 
         $destinationDir = $this->directory->getLangsDirectory();
 
+        try {
+            $existingLanguages = $this->getExistingLanguages($destinationDir);
+        } catch (\Exception $e) {
+            $existingLanguages = [];
+        }
+
         foreach ($languageFiles as $relativeLangPath => $absoluteLangPath) {
-            /*
-             * Scenario: Restoring another file that exists or do not exist
-             * 1. Overwrite conflicting files with what's in the backup
+            /**
+             * Scenario: Restoring a language file that already exists
+             * If subsite restore and no filter is used to override the behaviour then preserve existing language file
+             * Otherwise:
+             * Replace the file
+             */
+            if (array_key_exists($relativeLangPath, $existingLanguages)) {
+                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_LANGUAGES, false)) {
+                    continue;
+                }
+
+                $this->enqueueMove($absoluteLangPath, $destinationDir . $relativeLangPath);
+                continue;
+            }
+
+            /**
+             * Scenario 2: Restoring a language file that does not yet exist
              */
             $this->enqueueMove($absoluteLangPath, $destinationDir . $relativeLangPath);
         }
@@ -53,9 +77,20 @@ class RestoreLanguageFilesTask extends FileRestoreTask
      *          ]
      *
      */
-    private function getLanguageFiles()
+    private function getLanguageFilesToRestore()
     {
         $path = $this->jobDataDto->getTmpDirectory() . PathIdentifier::IDENTIFIER_LANG;
+        $path = trailingslashit($path);
+
+        return $this->filesystem->findFilesInDir($path);
+    }
+
+    /**
+     * @param string $path
+     * @return array An array of paths of existing languages.
+     */
+    private function getExistingLanguages($path)
+    {
         $path = trailingslashit($path);
 
         return $this->filesystem->findFilesInDir($path);

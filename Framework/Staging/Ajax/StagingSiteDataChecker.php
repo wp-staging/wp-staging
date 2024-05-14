@@ -2,8 +2,10 @@
 
 namespace WPStaging\Framework\Staging\Ajax;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Filesystem\DirectoryListing;
 
 /**
  * Class that checks staging site data
@@ -37,9 +39,25 @@ class StagingSiteDataChecker
         if (!empty($cloneDir)) {
             wp_mkdir_p($cloneDir);
             if (!is_writable($cloneDir)) {
-                wp_send_json_error([
-                    'message' => sprintf(__('The provided clone destination dir <code>%s</code> is not writable. Please fix this to proceed!', 'wp-staging'), esc_html($cloneDir))
-                ]);
+                $directoryListing = WPStaging::getInstance()->getContainer()->get(DirectoryListing::class);
+
+                if (!$directoryListing->isPathInOpenBaseDir($cloneDir)) {
+                    wp_send_json_error([
+                        'message' => sprintf(
+                            __('The directory is not writable due to open_basedir restriction. Follow our documentation %s to resolve this issue or %s', 'wp-staging'),
+                            '<a href="https://wp-staging.com/docs/how-to-fix-open_basedir-restriction-error/" target="_blank">' . esc_html__('how to fix open_basedir restriction error', 'wp-staging') . '</a>',
+                            '<a href="https://wp-staging.com/support/" target="_blank">' . esc_html__('open a ticket.', 'wp-staging') . '</a>'
+                        )
+                    ]);
+                } else {
+                    wp_send_json_error([
+                        'message' => sprintf(
+                            __('The directory is not writable due to restricted permissions. Follow our documentation %s to resolve this issue or %s', 'wp-staging'),
+                            '<a href="https://wp-staging.com/docs/folder-permission-error-folder-xy-is-not-write-and-or-readable/" target="_blank">' . esc_html__('how to fix folder permission error', 'wp-staging') . '</a>',
+                            '<a href="https://wp-staging.com/support/" target="_blank">' . esc_html__('open a ticket.', 'wp-staging') . '</a>'
+                        )
+                    ]);
+                }
             }
 
             wp_send_json_success();

@@ -41,6 +41,13 @@
                 background: #fff;
                 padding: 1rem;
                 overflow: hidden;
+                p.error-msg {
+                    line-height: 1.5em;
+                    a{
+                        color: #ff4c4c;
+                        font-weight: bold;
+                    }
+                }
             }
 
             .form-control {

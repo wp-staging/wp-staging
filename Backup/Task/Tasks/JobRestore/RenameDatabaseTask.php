@@ -13,6 +13,7 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Restore\RenameDatabaseTaskDto;
 use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
 use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
@@ -121,9 +122,23 @@ class RenameDatabaseTask extends RestoreTask
         $this->tablesRenamer->setShortNamedTablesToDrop($this->jobDataDto->getShortNamesTablesToDrop());
         $this->tablesRenamer->setRenameViews(true);
         $this->tablesRenamer->setThresholdCallable([$this, 'isMaxExecutionThreshold']);
+        // Tables to not restore in the site
         $this->tablesRenamer->setExcludedTables([
             'wpstg_queue'
         ]);
+
+        if ($this->isSubsiteRestore()) {
+            $this->tablesRenamer->setProductionTableBasePrefix($this->tableService->getDatabase()->getBasePrefix());
+            $this->tablesRenamer->setTablesToPreserve([
+                'blogs',
+                'blogmeta',
+                'blog_versions', // old multisite table
+                'registration_log',
+                'signups',
+                'site',
+                'sitemeta',
+            ]);
+        }
     }
 
     /**
@@ -267,7 +282,7 @@ class RenameDatabaseTask extends RestoreTask
             'activePlugins'            => $this->tablesRenamer->getActivePluginsToPreserve()
         ];
 
-        if (is_multisite()) {
+        if (is_multisite() && !$this->isSubsiteRestore()) {
             $dataToPreserve['activeSitewidePlugins'] = $this->tablesRenamer->getActiveSitewidePluginsToPreserve();
         }
 
@@ -389,9 +404,9 @@ class RenameDatabaseTask extends RestoreTask
         $activeWpstgPlugin = plugin_basename(trim(WPSTG_PLUGIN_FILE));
 
         $this->tablesRenamer->restorePreservedActivePlugins($databaseData['activePlugins'], $activeWpstgPlugin, $isNetworkActivatedPlugin);
-        if ($isNetworkActivatedPlugin) {
+        if ($isNetworkActivatedPlugin && !$this->isSubsiteRestore()) {
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $activeWpstgPlugin);
-        } elseif (is_multisite()) {
+        } elseif (is_multisite() && !$this->isSubsiteRestore()) {
             // Don't activate any wp staging plugin if it is not network activated on current site
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $wpstgPluginToActivate = '');
         }
@@ -452,5 +467,17 @@ class RenameDatabaseTask extends RestoreTask
         }
 
         $this->stepsDto->setTotal(3);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isSubsiteRestore(): bool
+    {
+        if (!is_multisite()) {
+            return false;
+        }
+
+        return $this->jobDataDto->getBackupMetadata()->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE;
     }
 }

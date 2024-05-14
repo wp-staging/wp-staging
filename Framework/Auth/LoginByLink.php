@@ -6,6 +6,9 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 
+require_once ABSPATH . 'wp-admin/includes/user.php';
+require_once ABSPATH . 'wp-admin/includes/ms.php';
+
 /**
  * @package WPStaging\Framework\Auth
  */
@@ -16,6 +19,9 @@ class LoginByLink
 
     /** @var string */
     const WPSTG_ROUTE_NAMESPACE_V1 = 'wpstg-routes/v1';
+
+    /** @var string */
+    const WPSTG_VISITOR_ROLE = 'wpstg_visitor';
 
     /**
      * @var array
@@ -85,21 +91,25 @@ class LoginByLink
             wp_die('This link is invalid, please contact the administrator. Error code: 101');
         }
 
+        $login = self::LOGIN_LINK_PREFIX . $loginID;
+        $user  = get_user_by('login', $login);
+
         if (empty($this->loginLinkData['expiration'])) {
             delete_option(Sites::STAGING_LOGIN_LINK_SETTINGS);
             wp_die('This link is invalid, please contact the administrator. Error code: 102');
         }
 
         if (time() > $this->loginLinkData['expiration']) {
+            if ($user) {
+                $userId = $user->ID;
+                $this->deleteUser($userId);
+            }
+
             delete_option(Sites::STAGING_LOGIN_LINK_SETTINGS);
             wp_die('This link is invalid, please contact the administrator. Error code: 103');
         }
 
-        $login = self::LOGIN_LINK_PREFIX . $loginID;
-        $user  = get_user_by('login', $login);
-        if ($user) {
-            $userId = $user->ID;
-        } else {
+        if (empty($userId)) {
             $userId = wp_insert_user([
                 'user_login' => $login,
                 'user_pass'  => uniqid('wpstg'),
@@ -114,6 +124,12 @@ class LoginByLink
         wp_clear_auth_cookie();
         wp_set_current_user($userId);
         wp_set_auth_cookie($userId);
+
+        if ($this->loginLinkData['role'] === self::WPSTG_VISITOR_ROLE) {
+            wp_redirect(home_url());
+            return;
+        }
+
         wp_redirect(admin_url());
     }
 
@@ -131,14 +147,37 @@ class LoginByLink
         $loginID     = strpos($userData->user_login, self::LOGIN_LINK_PREFIX) === 0
             ? substr($userData->user_login, strlen(self::LOGIN_LINK_PREFIX))
             : false;
-        if (empty($loginID) || ($this->loginLinkData && in_array($loginID, $this->loginLinkData, true))) {
+
+        if (empty($loginID)) {
             return;
         }
 
-        if (function_exists('wp_delete_user')) {
-            wp_delete_user($userData->ID);
+        if (!is_array($this->loginLinkData)) {
+            return;
         }
 
+        if (!in_array($loginID, $this->loginLinkData, true)) {
+            return;
+        }
+
+        if (time() <= $this->loginLinkData['expiration']) {
+            return;
+        }
+
+        $this->deleteUser($userData->ID);
         wp_logout();
+    }
+
+    /**
+     * @param  int $userID
+     * @return void
+     */
+    private function deleteUser(int $userID)
+    {
+        if (is_multisite()) {
+            wpmu_delete_user($userID);
+        } else {
+            wp_delete_user($userID);
+        }
     }
 }

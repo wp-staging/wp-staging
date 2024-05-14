@@ -91,7 +91,7 @@ interface InterfaceDatabaseClient
     public function freeResult($result);
 
     /**
-     * Returns the AUTO-INCREMENT value of the last insterted row.
+     * Returns the AUTO-INCREMENT value of the last inserted row.
      *
      * @return int The value of the auto-increment column of the last
      *             inserted row.
