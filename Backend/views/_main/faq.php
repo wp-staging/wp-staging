@@ -3,7 +3,7 @@
 use WPStaging\Core\WPStaging;
 
 ?>
-<div id='wpstg-footer' class="" style="">
+<div id='wpstg-footer'>
     <strong class="wpstg-footer--title"><?php esc_html_e("Knowledgebase", "wp-staging") ?></strong>
     <ul>
         <li><a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank" rel="external"><?php esc_html_e("Migrate Website to Another Server or Domain", "wp-staging") ?></a></li>

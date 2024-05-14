@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backup\Ajax;
 
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Storage\Providers;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Backup\BackupScheduler;
@@ -19,11 +21,17 @@ class ScheduleList
 
     private $backupScheduler;
 
+    private $isPro;
+
+    /** @var Providers */
+    protected $providers;
+
     public function __construct(BackupScheduler $backupScheduler)
     {
         $this->backupScheduler = $backupScheduler;
-
+        $this->providers = WPStaging::make(Providers::class);
         $this->times = new Times();
+        $this->isPro = WPStaging::isPro();
     }
 
     /**
@@ -44,66 +52,120 @@ class ScheduleList
         }
 
         $scheduleHtml = ob_start();
-        ?>
-        <table>
-            <thead>
-            <tr>
-                <td><?php esc_html_e('Time', 'wp-staging'); ?></td>
-                <td><?php esc_html_e('Backups', 'wp-staging'); ?></td>
-                <td><?php esc_html_e('Backup Content', 'wp-staging'); ?></td>
-                <td></td>
-                <td></td>
-            </tr>
-            </thead>
-            <tbody>
-            <?php
-            foreach ($schedules as $schedule) :
-                $hourAndMinute = new \DateTime('now', wp_timezone());
-                $hourAndMinute->setTime($schedule['time'][0], $schedule['time'][1]);
-                ?>
-                <tr>
-                    <td>
 
-                        <div class="wpstg--edit-backup-schedule" data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>">
+        foreach ($schedules as $schedule) :
+            $hourAndMinute = new \DateTime('now', wp_timezone());
+            $hourAndMinute->setTime($schedule['time'][0], $schedule['time'][1]);
+            $editMessage = $this->isPro ? __('Edit this backup plan.', 'wp-staging') : __('Please upgrade to WP Staging Pro to edit existing backup plans. You can delete this plan and create a new one if you want to change it.', 'wp-staging');
+            ?>
+            <li class="wpstg-backup-schedules">
+                <div class="wpstg-backup-schedules-header">
+                    <span class="wpstg-backup-schedules-title">
+                        <?php echo esc_html($schedule['name']); ?>
+                    </span>
+                    <?php if (!empty($schedule['backupType'])) :?>
+                    <div class="wpstg-clone-labels">
+                        <span class="wpstg-clone-label"><?php echo esc_html($this->getBackupType($schedule['backupType'])) ?></span>
+                    </div>
+                    <?php endif;?>
+                    <div class="wpstg-clone-actions">
+                        <div class="wpstg-dropdown wpstg-action-dropdown">
+                            <a href="#" class="wpstg-dropdown-toggler">
+                                <?php esc_html_e("Actions", "wp-staging"); ?>
+                                <span class="wpstg-caret"></span>
+                            </a>
+                            <div class="wpstg-dropdown-menu">
+                                <a href="#" class="wpstg-clone-action  <?php echo $this->isPro ? "wpstg--edit-schedule" : "wpstg--edit-schedule-basic" ?>"
+                                   data-schedule-id="<?php echo $this->isPro ? esc_attr($schedule['scheduleId']) : "" ?>"
+                                   title="<?php echo esc_attr($editMessage) ?>">
+                                    <?php esc_html_e('Edit', 'wp-staging') ?>
+                                </a>
+                                <a href="#" class="wpstg-clone-action wpstg--dismiss-schedule"
+                                   data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>"
+                                   title="<?php esc_attr_e('Delete this schedule and stop creating new backups. This does not delete any backup files.', 'wp-staging'); ?>">
+                                    <?php esc_html_e('Delete', 'wp-staging') ?>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="wpstg-backup-schedules-info">
+                    <ul>
+                        <li>
+                            <strong><?php esc_html_e('Schedule:', 'wp-staging') ?></strong>
                             <span class="wpstg--edit-timer-highlight"  data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>">
                                 <?php echo esc_html(Cron::getCronDisplayName($schedule['schedule'])); ?>
                                 <?php esc_html_e(' at ', 'wp-staging') ?><?php echo $hourAndMinute->format(get_option('time_format')); ?>
                             </span>
-                        </div>
-                    </td>
-                     <td><?php echo sprintf(esc_html__('Keep last %d backup%s', 'wp-staging'), (int)$schedule['rotation'], (int)$schedule['rotation'] > 1 ? 's' : ''); ?></td>
-                    <td>
-                        <?php
-                        $isExportingDatabase = $schedule['isExportingDatabase'];
-                        $isExportingPlugins = $schedule['isExportingPlugins'];
-                        $isExportingMuPlugins = $schedule['isExportingMuPlugins'];
-                        $isExportingThemes = $schedule['isExportingThemes'];
-                        $isExportingUploads = $schedule['isExportingUploads'];
-                        $isExportingOtherWpContentFiles = $schedule['isExportingOtherWpContentFiles'];
-                        include(trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/views/backup/modal/partials/backup-contains.php');
-                        ?>
-                    </td>
-                    <td>
-                        <div class="wpstg--tooltip wpstg--dismiss-schedule" data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>">
-                            <img class="wpstg--dashicons wpstg--delete--schedule--icon" src="<?php echo esc_url(trailingslashit(WPSTG_PLUGIN_URL)) . 'assets/'; ?>img/trash.svg" alt="" data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>">
-                            <div class='wpstg--tooltiptext'><?php esc_html_e('Delete this schedule and stop creating new backups. This does not delete any backup files.', 'wp-staging'); ?></div>
-                        </div>
-                    </td>
-                    <?php
-                        $isProVersion = WPStaging::isPro();
-                        $editMessage  = $isProVersion ? __('Edit this backup plan.', 'wp-staging') : __('Please upgrade to WP Staging Pro to edit existing backup plans. You can delete this plan and create a new one if you want to change it.', 'wp-staging') ;
-                    ?>
-                    <td>
-                        <div class="wpstg--tooltip <?php echo $isProVersion ? "wpstg--edit-schedule" : "wpstg--edit-schedule-basic" ?>" data-schedule-id="<?php echo $isProVersion ? esc_attr($schedule['scheduleId']) : "" ?>">
-                            <img class="wpstg--dashicons <?php echo $isProVersion ? "wpstg--edit--schedule--icon" : "wpstg--edit--schedule-basic--icon" ?>" src="<?php echo esc_url(trailingslashit(WPSTG_PLUGIN_URL)) . 'assets/'; ?>img/pencil.svg" alt="" data-schedule-id="<?php echo $isProVersion ? esc_attr($schedule['scheduleId']) : "" ?>">
-                            <div class='wpstg--tooltiptext'><?php echo esc_html($editMessage); ?></div>
-                        </div>
-                    </td>
-                </tr>
-            <?php endforeach; ?>
-            </tbody>
-        </table>
-        <?php
+                        </li>
+                        <li>
+                            <strong><?php esc_html_e('Storages:', 'wp-staging')?></strong>
+                            <?php foreach ($schedule['storages'] as $storage) :?>
+                                <ul class="wpstg-restore-backup-contains wpstg-listing-single-backup">
+                                    <?php
+                                    $providerName     = '';
+                                    $maxBackupsToKeep = '';
+                                    $authClass        = '';
+                                    $isActivated      = false;
+
+                                    if ($storage === 'localStorage') {
+                                        $providerName     = __('Local Storage', 'wp-staging');
+                                        $isActivated      = true;
+                                        $maxBackupsToKeep = (int)$schedule['rotation'];
+                                    } else {
+                                        $authClass        = $this->providers->getStorageProperty($storage, 'authClass', true);
+                                    }
+
+                                    if ($authClass && class_exists($authClass)) {
+                                        $providerName     = $this->providers->getStorageProperty($storage, 'name', true);
+                                        $provider         = WPStaging::make($authClass);
+                                        $providerOptions  = $provider->getOptions();
+                                        $isActivated      = $provider->isAuthenticated();
+                                        $maxBackupsToKeep = empty($providerOptions['maxBackupsToKeep']) ? '' : $providerOptions['maxBackupsToKeep'];
+                                    }
+
+                                    ?>
+                                    <?php if (!empty($providerName) && $isActivated) :?>
+                                    <li class="wpstg-clone-labels">
+                                        <span class="wpstg-clone-label">
+                                            <?php
+                                            echo esc_html($providerName);
+                                            if (!empty($maxBackupsToKeep)) :?>
+                                                <span class="wpstg-backup-retentions wpstg--tooltip">
+                                                    <?php echo esc_html($maxBackupsToKeep);?>
+                                                     <span class="wpstg--tooltiptext">
+                                                        <?php
+                                                        echo sprintf(
+                                                            esc_html__('%s A maximum of %s backup%s will be kept for this storage.', 'wp-staging'),
+                                                            '<strong>' .  esc_html__('Retention:', 'wp-staging') . '</strong>',
+                                                            esc_html($maxBackupsToKeep),
+                                                            (int)$maxBackupsToKeep > 1 ? 's' : ''
+                                                        ); ?>
+                                                    </span>
+                                                </span>
+                                            <?php endif;?>
+                                        </span>
+                                    </li>
+                                    <?php endif;?>
+                                </ul>
+                            <?php endforeach; ?>
+                        </li>
+                        <li class="single-backup-includes">
+                            <strong><?php esc_html_e('Contains: ', 'wp-staging') ?></strong>
+                            <?php
+                            $isExportingDatabase = $schedule['isExportingDatabase'];
+                            $isExportingPlugins = $schedule['isExportingPlugins'];
+                            $isExportingMuPlugins = $schedule['isExportingMuPlugins'];
+                            $isExportingThemes = $schedule['isExportingThemes'];
+                            $isExportingUploads = $schedule['isExportingUploads'];
+                            $isExportingOtherWpContentFiles = $schedule['isExportingOtherWpContentFiles'];
+                            include(trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/views/backup/modal/partials/backup-contains.php');
+                            ?>
+                        </li>
+                    </ul>
+                </div>
+            </li>
+        <?php endforeach;
 
         wp_send_json_success(ob_get_clean());
     }
@@ -172,5 +234,30 @@ class ScheduleList
         </ul>
                     <?php
             endif;
+    }
+
+    /**
+     * @param string $backupType
+     * @return string
+     */
+    public function getBackupType(string $backupType = ''): string
+    {
+        if ($backupType === BackupMetadata::BACKUP_TYPE_SINGLE) {
+            return esc_html__('Single Site', 'wp-staging');
+        }
+
+        if ($backupType === BackupMetadata::BACKUP_TYPE_MULTISITE) {
+            return esc_html__('Entire Network', 'wp-staging');
+        }
+
+        if ($backupType === BackupMetadata::BACKUP_TYPE_NETWORK_SUBSITE) {
+            return esc_html__('Network Subsite', 'wp-staging');
+        }
+
+        if ($backupType === BackupMetadata::BACKUP_TYPE_MAIN_SITE) {
+            return esc_html__('Main Network Site', 'wp-staging');
+        }
+
+        return esc_html__('Unknown Backup Type', 'wp-staging');
     }
 }

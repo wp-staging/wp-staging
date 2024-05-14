@@ -19,7 +19,7 @@ class Welcome
         add_action('admin_init', [$this, 'welcome']);
 
         if (wpstgGetProVersionNumberIfInstalled() && $this->isWPStagingAdminPage()) {
-            add_action('admin_notices', [$this, 'wpstgproActivationNotice']);
+            add_action('wpstg.admin_notices', [$this, 'wpstgproActivationNotice']);
         }
     }
 

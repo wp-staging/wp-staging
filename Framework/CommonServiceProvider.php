@@ -8,6 +8,7 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\LogCleanup;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
+use WPStaging\Framework\Settings\DarkMode;
 use WPStaging\Framework\Utils\DBPermissions;
 use WPStaging\Framework\Staging\Ajax\StagingSiteDataChecker;
 
@@ -33,6 +34,9 @@ class CommonServiceProvider extends ServiceProvider
         add_action("wp_ajax_nopriv_wpstg_check_user_is_authenticated", [$this, "ajaxIsUserAuthenticated"]);// phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_backup_plugin_notice_close', $this->container->callback(BackupPluginsNotice::class, 'ajaxBackupPluginNoticeClose')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_backup_plugin_notice_remind_me', $this->container->callback(BackupPluginsNotice::class, 'ajaxBackupPluginNoticeRemindMe')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('admin_init', $this->container->callback(DarkMode::class, 'mayBeShowDarkMode'), 10, 1);
+        add_action('wp_ajax_wpstg_set_dark_mode', $this->container->callback(DarkMode::class, 'ajaxEnableDefaultColorMode')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg_set_default_os_color_mode', $this->container->callback(DarkMode::class, 'ajaxSetDefaultOsMode')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     /**

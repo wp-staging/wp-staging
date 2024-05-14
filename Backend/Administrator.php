@@ -328,8 +328,6 @@ class Administrator
         }
 
         if (defined('WPSTGPRO_VERSION')) {
-
-            if (defined('WPSTG_ACTIVATE_RESTORER') && (bool)WPSTG_ACTIVATE_RESTORER) {
                 // Page: wpstg-restorer
                 add_submenu_page(
                     $defaultPageSlug,
@@ -341,10 +339,9 @@ class Administrator
                 );
 
                 // Remove wpstg-restorer side menu
-                add_filter('submenu_file', function($submenu_file) use($defaultPageSlug) {
-                    remove_submenu_page( $defaultPageSlug, 'wpstg-restorer' );
+                add_filter('submenu_file', function ($submenu_file) use ($defaultPageSlug) {
+                    remove_submenu_page($defaultPageSlug, 'wpstg-restorer');
                 });
-            }
 
             // Page: License
             add_submenu_page(
@@ -445,10 +442,6 @@ class Administrator
      */
     public function getRestorerPage()
     {
-        if (!defined('WPSTG_ACTIVATE_RESTORER') || !(bool)WPSTG_ACTIVATE_RESTORER) {
-            return;
-        }
-
         // Get license data
         $license = get_option('wpstg_license_status');
 
@@ -480,33 +473,37 @@ class Administrator
             return;
         }
 
+        $reportHandle = WPStaging::make(Report::class);
+        $downloadFile = $reportHandle->getBundledLogs();
+        if (empty($downloadFile)) {
+            wp_die('Failed to get All Log Files', 'WP Staging', ['response' => 200, 'back_link' => true]);
+        }
+
+        $isZipFile = count($downloadFile) === 1 && substr($downloadFile[0], -4) === '.zip';
+
         nocache_headers();
-        header("Content-Type: text/plain");
+
+        if ($isZipFile) {
+            header('Content-Type: application/zip');
+            header('Content-Disposition: attachment; filename="wpstg-bundled-logs.zip"');
+            readfile($downloadFile[0]); // phpcs:ignore
+            $reportHandle->deleteBundledLogs();
+            exit();
+        }
+
+        header('Content-Type: text/plain');
         header('Content-Disposition: attachment; filename="wpstg-bundled-logs.txt"');
-        $output = WPStaging::make(SystemInfo::class)->get("systemInfo");
-        $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
-        $output .= WPStaging::make(DebugLogReader::class)->getLastLogEntries(100 * KB_IN_BYTES, true, false);
-        $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
-        $output .= WPStaging::make(DebugLogReader::class)->getLastLogEntries((256 * KB_IN_BYTES ), false, true);
 
-        $latestLogFiles = WPStaging::make(DebugLogReader::class)->getLatestLogFiles();
-        if (count($latestLogFiles) === 0) {
-            echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html(wp_strip_all_tags($output))); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
-            return;
+        $separator = "\n\n" . str_repeat('-', 100) . "\n\n";
+
+        foreach ($downloadFile as $logFile) {
+            $header = $separator . 'Log File: ' . basename($logFile) . $separator;
+            echo esc_html($header);
+            readfile($logFile); // phpcs:ignore
         }
 
-        foreach ($latestLogFiles as $logFile) {
-            $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
-            $logs = file_get_contents($logFile);
-            if (empty($logs)) {
-                continue;
-            }
-
-            $output .= $logs;
-        }
-
-        echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html(wp_strip_all_tags($output))); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
-
+        $reportHandle->deleteBundledLogs();
+        exit();
     }
 
     /**
@@ -1305,7 +1302,7 @@ class Administrator
     }
 
     /**
-     * Restore Settings, can be used when settings are corrupted 
+     * Restore Settings, can be used when settings are corrupted
      */
     public function ajaxRestoreSettings()
     {

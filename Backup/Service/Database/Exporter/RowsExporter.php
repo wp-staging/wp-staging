@@ -315,9 +315,10 @@ class RowsExporter extends AbstractExporter
 
         $this->logger = $logger;
 
+        $isMultisiteBackup = is_multisite() && !$this->isNetworkSiteBackup;
         $prefixedTableName = $this->tableName;
         if (!in_array($this->tableName, $this->nonWpTables)) {
-            $prefixedTableName = $this->getPrefixedTableName($this->tableName);
+            $prefixedTableName = $isMultisiteBackup ? $this->getPrefixedBaseTableName($this->tableName) : $this->getPrefixedTableName($this->tableName);
         }
 
         $tableColumns = $this->getColumnTypes($this->tableName);

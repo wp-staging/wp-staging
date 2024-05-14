@@ -226,15 +226,17 @@ class BackupScheduler
         $logId = wp_generate_password(4, false);
 
         debug_log("[Schedule Backup Cron - $logId] Received request to create a backup using Cron. Backup Data: " . wp_json_encode($backupData), 'info', false);
+        debug_log(sprintf("[Schedule Backup Cron - %s] Received request to create a backup using Cron. Backup Data: %s", $logId, wp_json_encode($backupData)), 'info', false);
 
         try {
-            debug_log("[Schedule Backup Cron - $logId] Preparing job", 'info', false);
+            debug_log(sprintf("[Schedule Backup Cron - %s] Preparing job", $logId), 'info', false);
             $jobId = WPStaging::make(PrepareBackup::class)->prepare($backupData);
-            debug_log("[Schedule Backup Cron - $logId] Successfully received a Job ID: $jobId", 'info', false);
-
             if ($jobId instanceof \WP_Error) {
-                debug_log("[Schedule Backup Cron - $logId] Failed to create backup: " . $jobId->get_error_message());
+                debug_log(sprintf("[Schedule Backup Cron - %s] Failed to create backup: %s", $logId, $jobId->get_error_message()));
+                return;
             }
+
+            debug_log(sprintf("[Schedule Backup Cron - %s] Successfully received a Job ID: %s", $logId, $jobId), 'info', false);
         } catch (\Exception $e) {
             debug_log("[Schedule Backup Cron - $logId] Exception thrown while preparing the Backup: " . $e->getMessage());
         }

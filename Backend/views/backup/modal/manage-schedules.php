@@ -12,7 +12,7 @@ $schedules = WPStaging\Core\WPStaging::make(\WPStaging\Backup\BackupScheduler::c
     style="display: none"
 >
     <h2 class="wpstg--modal--backup--manage--schedules--title wpstg--grey">
-        <?php esc_html_e('Backup Plans', 'wp-staging') ?>
+        <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </h2>
     <div id="wpstg--modal--backup--manage--schedules--content" class=""></div>
 </div>

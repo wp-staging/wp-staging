@@ -67,10 +67,6 @@ if (!function_exists('wpstgIsExcludedPlugin')) {
     {
         $excludedPlugins = get_option('wpstg_optimizer_excluded', []);
 
-        // As a workaround for now we exclude all-in-one-wp-security-and-firewall AIOWPS plugin due
-        // to their salt postfix function which breaks WP STAGING completely.
-        //$excludedPlugins[] = 'all-in-one-wp-security-and-firewall';
-
         // Check for custom excluded plugins
         foreach ($excludedPlugins as $excludedPlugin) {
             if (strpos($plugin, $excludedPlugin) !== false) {

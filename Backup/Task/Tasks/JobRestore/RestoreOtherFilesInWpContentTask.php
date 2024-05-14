@@ -4,9 +4,25 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
+use WPStaging\Framework\Facades\Hooks;
 
 class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 {
+    /**
+     * Old filter, cannot me renamed to new pattern
+     * @var string
+     */
+    const FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE = 'wpstg.backup.restore.exclude.other.files';
+
+    /** @var string */
+    const FILTER_REPLACE_EXISTING_OTHER_FILES = 'wpstg.backup.restore.replace_existing_other_files';
+
+    /**
+     * Old filter, cannot me renamed to new pattern
+     * @var string
+     */
+    const FILTER_KEEP_EXISTING_OTHER_FILES = 'wpstg.backup.restore.keepExistingOtherFiles';
+
     public static function getTaskName()
     {
         return 'backup_restore_wp_content';
@@ -44,8 +60,13 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
      */
     protected function cleanUpExistingFiles()
     {
+        // Early bail if subsite restore
+        if ($this->isRestoreOnSubsite()) {
+            return;
+        }
+
         // Don't delete existing files if filter is set to true
-        if (apply_filters('wpstg.backup.restore.keepExistingOtherFiles', false)) {
+        if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_OTHER_FILES, false)) {
             return;
         }
 
@@ -75,7 +96,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 
             if ($files->isDir()) {
                 $normalizedPath = $this->filesystem->normalizePath($files->getPathname(), true);
-                $defaultWordPressFoldersWithLang = array_merge($this->directory->getDefaultWordPressFolders(), [$this->directory->getLangsDirectory(), $this->directory->getPluginWpContentDirectory(), trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false))]);
+                $defaultWordPressFoldersWithLang = $this->getDefaultWordPressDirectoriesWithLang();
                 if (!in_array($normalizedPath, $defaultWordPressFoldersWithLang)) {
                     $this->enqueueDelete($normalizedPath);
                 }
@@ -96,10 +117,16 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             $otherFilesToRestore = [];
         }
 
-        $destinationWpContentDir = $this->directory->getWpContentDirectory();
+        $destinationDir = $this->directory->getWpContentDirectory();
+
+        try {
+            $existingOtherFiles = $this->getExistingOtherFiles($destinationDir);
+        } catch (\Exception $e) {
+            $existingOtherFiles = [];
+        }
 
         foreach ($otherFilesToRestore as $relativePath => $absSourcePath) {
-            $absDestPath = $destinationWpContentDir . $relativePath;
+            $absDestPath = $destinationDir . $relativePath;
 
             if ($this->isExcludedOtherFile($absDestPath)) {
                 continue;
@@ -115,13 +142,27 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
             if ($relativePath === 'object-cache.php' && sha1_file($absSourcePath) !== $this->jobDataDto->getFileChecksum('object-cache.php')) {
                 $this->logger->warning('object-cache.php checksum does not match. Restoring object-cache as wpstg_bak.object-cache.php to avoid issues.');
                 $this->jobDataDto->setObjectCacheSkipped(true);
-                $this->enqueueMove($absSourcePath, $destinationWpContentDir . 'wpstg_bak.' . $relativePath);
+                $this->enqueueMove($absSourcePath, $destinationDir . 'wpstg_bak.' . $relativePath);
                 continue;
             }
 
-            /*
-             * Scenario: Restoring another file that exists or do not exist
-             * 1. Overwrite conflicting files with what's in the backup
+            /**
+             * Scenario: Restoring a file that already exists
+             * If subsite restore and no filter is used to override the behaviour then preserve existing file
+             * Otherwise:
+             * 1. Replace the file
+             */
+            if (array_key_exists($relativePath, $existingOtherFiles)) {
+                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_OTHER_FILES, false)) {
+                    continue;
+                }
+
+                $this->enqueueMove($absSourcePath, $absDestPath);
+                continue;
+            }
+
+            /**
+             * Scenario 2: Restoring a other file that does not yet exist
              */
             $this->enqueueMove($absSourcePath, $absDestPath);
         }
@@ -135,7 +176,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
      */
     protected function isExcludedOtherFile($excludedFilePath)
     {
-        $excludedFiles = apply_filters('wpstg.backup.restore.exclude.other.files', []);
+        $excludedFiles = Hooks::applyFilters(self::FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE, []);
 
         foreach ($excludedFiles as $excludedFile) {
             if (strpos(wp_normalize_path($excludedFilePath), wp_normalize_path($excludedFile)) > 0) {
@@ -144,6 +185,26 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         }
 
         return false;
+    }
+
+    protected function isDot(\SplFileInfo $fileInfo): bool
+    {
+        return $fileInfo->getBasename() === '.' || $fileInfo->getBasename() === '..';
+    }
+
+    /**
+     * @return string[]
+     */
+    protected function getDefaultWordPressDirectoriesWithLang(): array
+    {
+        return array_merge(
+            $this->directory->getDefaultWordPressFolders(),
+            [
+                $this->directory->getLangsDirectory(),
+                $this->directory->getPluginWpContentDirectory(),
+                trailingslashit($this->directory->getStagingSiteDirectoryInsideWpcontent($createDir = false))
+            ]
+        );
     }
 
     /**
@@ -163,8 +224,43 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         return $this->filesystem->findFilesInDir($path);
     }
 
-    protected function isDot(\SplFileInfo $fileInfo)
+    /**
+     * @param string $path
+     * @return array An array of paths of existing other files.
+     */
+    private function getExistingOtherFiles($path)
     {
-        return $fileInfo->getBasename() === '.' || $fileInfo->getBasename() === '..';
+        // If not a restore on subsite then return empty array
+        if (!$this->isRestoreOnSubsite()) {
+            return [];
+        }
+
+        $path = trailingslashit($path);
+        $path = $this->filesystem->normalizePath($path);
+
+        $files = [];
+
+        $this->filesystem->setDirectory($path)
+            ->setDotSkip()
+            ->setExcludePaths($this->getDefaultWordPressDirectoriesWithLang())
+            ->setRecursive(true);
+
+        $iterator = $this->filesystem->get();
+
+        /** @var \SplFileInfo $item */
+        foreach ($iterator as $item) {
+            // Early bail: We don't want dots, links or anything that is not a file.
+            if (!$item->isFile() || $item->isLink()) {
+                continue;
+            }
+
+            $pathName = $this->filesystem->normalizePath($item->getPathname());
+
+            $relativePath = str_replace($path, '', $pathName);
+
+            $files[$relativePath] = $pathName;
+        }
+
+        return $files;
     }
 }

@@ -72,7 +72,7 @@ class FeatureDetection
         }
 
         if (!$this->isAjaxAvailableCache && $showAdminNotice) {
-            add_action('admin_notices', [$this, 'ajaxSupportMissingAdminNotice']);
+            add_action('wpstg.admin_notices', [$this, 'ajaxSupportMissingAdminNotice']);
         }
 
         //debug_log('isAjaxAvailable end. Result: ' . $this->isAjaxAvailableCache);

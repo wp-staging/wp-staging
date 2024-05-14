@@ -4,10 +4,24 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
+use WPStaging\Framework\Facades\Hooks;
 
 class RestorePluginsTask extends FileRestoreTask
 {
+    /** @var string */
     const FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS = 'wpstg.backup.restore.exclude_plugins';
+
+    /**
+     * Old filter, cannot me renamed to new pattern
+     * @var string
+     */
+    const FILTER_REPLACE_EXISTING_PLUGINS = 'wpstg.backup.restore.replace_existing_plugins';
+
+    /**
+     * Old filter, cannot me renamed to new pattern
+     * @var string
+     */
+    const FILTER_KEEP_EXISTING_PLUGINS = 'wpstg.backup.restore.keepExistingPlugins';
 
     public static function getTaskName()
     {
@@ -54,27 +68,38 @@ class RestorePluginsTask extends FileRestoreTask
                 continue;
             }
 
-            /*
+            /**
              * Scenario: Restoring a plugin that already exists
+             * If subsite restore and no filter is used to override the behaviour then preserve existing plugin
+             * Otherwise:
              * 1. Backup old plugin
              * 2. Restore new plugin
              * 3. Delete backup
              */
             if (array_key_exists($pluginSlug, $existingPlugins)) {
+                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_PLUGINS, false)) {
+                    continue;
+                }
+
                 $this->enqueueMove($existingPlugins[$pluginSlug], "{$destDir}{$pluginSlug}{$this->getOriginalSuffix()}");
                 $this->enqueueMove($pluginsToRestore[$pluginSlug], "{$destDir}{$pluginSlug}");
                 $this->enqueueDelete("{$destDir}{$pluginSlug}{$this->getOriginalSuffix()}");
                 continue;
             }
 
-            /*
+            /**
              * Scenario 2: Restoring a plugin that does not yet exist
              */
             $this->enqueueMove($pluginsToRestore[$pluginSlug], "{$destDir}{$pluginSlug}");
         }
 
+        // Don't delete existing files if restore on subsite
+        if ($this->isRestoreOnSubsite()) {
+            return;
+        }
+
         // Don't delete existing files if filter is set to true
-        if (apply_filters('wpstg.backup.restore.keepExistingPlugins', false)) {
+        if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_PLUGINS, false)) {
             return;
         }
 

@@ -29,8 +29,8 @@ class AnalyticsServiceProvider extends FeatureServiceProvider
 
     protected function addHooks()
     {
-        add_action('admin_notices', $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentNotice'));
-        add_action('admin_notices', $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentFailureNotice'));
+        add_action('wpstg.admin_notices', $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentNotice'));
+        add_action('wpstg.admin_notices', $this->container->callback(AnalyticsConsent::class, 'maybeShowConsentFailureNotice'));
         add_action('admin_init', $this->container->callback(AnalyticsConsent::class, 'listenForConsent'));
 
         $this->sanitize = WPStaging::make(Sanitize::class);

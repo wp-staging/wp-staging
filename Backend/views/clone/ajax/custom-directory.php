@@ -115,7 +115,7 @@ if ($isPro && !empty($options->current)) {
           <?php echo sprintf(esc_html__('Activate to symlink the folder %s%s%s to the production site. %s All files including images on the production site\'s uploads folder will be linked to the staging site uploads folder. This will speed up the cloning and pushing process tremendously as no files from the uploads folder are copied between both sites. %s Warning: this can lead to mixed and shared content issues if both site loads (custom) stylesheet files from the same uploads folder. %s Using this option means changing images on the staging site will change images on the production site as well. Use this with care! %s', 'wp-staging'), '<code>', esc_html($wpDefaultDirectories->getRelativeUploadPath()), '</code>', '<br><br>', '<br><br><strong class="wpstg--red">', '<br><br>', '</strong>'); ?>
           <br/>
           <br/>
-          <strong class="wpstg--red"><?php esc_html_e('This feature only works if the staging site is on the same same as the production site.', 'wp-staging'); ?></strong>
+          <strong class="wpstg--red"><?php esc_html_e('This feature only works if the staging site is on the same domain as the production site.', 'wp-staging'); ?></strong>
         </span>
     </span>
 </div>

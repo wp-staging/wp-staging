@@ -339,6 +339,97 @@ class TableService
     }
 
     /**
+     * @param string $tablename
+     * @return bool
+     */
+    public function dropTable(string $tableName): bool
+    {
+        $wpdb = $this->database->getWpdb();
+        $tables = $wpdb->get_results(
+            $wpdb->prepare('SHOW TABLES LIKE %s;', $wpdb->esc_like($tableName)),
+            ARRAY_A
+        );
+
+        if (!$tables) {
+            return true;
+        }
+
+        foreach ($tables as $tableObj) {
+            $tableName = current($tableObj);
+            $wpdb->query("DROP TABLE IF EXISTS `$tableName`");
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string $sourceTable
+     * @param string $destinationTable
+     * @return bool
+     */
+    public function renameTable(string $sourceTable, string $destinationTable): bool
+    {
+        // Rename table return int on success and false on failure, so we alter the condition to check for false
+        $result = $this->database->getClient()->query(sprintf(
+            "RENAME TABLE `%s` TO `%s`;",
+            $sourceTable,
+            $destinationTable
+        ));
+
+        return $result !== false;
+    }
+
+    /**
+     * @param string $sourceTable
+     * @param string $destinationTable
+     * @return bool
+     */
+    public function cloneTableWithoutData(string $sourceTable, string $destinationTable): bool
+    {
+        return $this->database->getClient()->query("CREATE TABLE $destinationTable LIKE $sourceTable");
+    }
+
+    /**
+     * @param string $sourceTable
+     * @param string $destinationTable
+     * @param int $offset
+     * @param int $limit
+     * @return bool
+     */
+    public function copyTableData(string $sourceTable, string $destinationTable, int $offset = 0, int $limit = 0): bool
+    {
+        $query = sprintf(
+            "INSERT INTO %s SELECT * FROM %s LIMIT %d OFFSET %d",
+            $destinationTable,
+            $sourceTable,
+            $limit,
+            $offset
+        );
+
+        return $this->database->getClient()->query($query);
+    }
+
+    /**
+     * @param string $tableName
+     * @return int
+     */
+    public function getRowsCount(string $tableName): int
+    {
+        return (int)$this->database->getWpdb()->get_var("SELECT COUNT(1) FROM `$tableName`");
+    }
+
+    /**
+     * @return string
+     */
+    public function getLastWpdbError(): string
+    {
+        /** @var \wpdb */
+        $wpdb = $this->database->getWpdba()->getClient();
+
+        return $wpdb->last_error;
+    }
+
+    /**
      * @param string $tableOrView
      * @return bool
      */
