@@ -48,9 +48,8 @@ use WPStaging\Pro\Backup\Storage\Storages\Dropbox\Auth;
         } else {
             $authURL = $dropboxStorage->getAuthenticationURL();
             ?>
-            <a href="<?php echo esc_url($authURL); ?>" id="wpstg_dropbox_connect" class="wpstg-btn-dropbox">
-                <img src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/img/dropbox-icon.svg'); ?>">
-                <?php esc_html_e("Sign in with Dropbox", "wp-staging") ?>
+            <a href="<?php echo esc_url($authURL); ?>" class="wpstg-btn-dropbox">
+                <img class="wpstg--dashicons" src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/svg/vendor/dashicons/dropbox-sign-in.svg'); ?>" alt="<?php esc_attr_e("Sign in with Dropbox", "wp-staging") ?>"/>
             </a>
             <?php
         }

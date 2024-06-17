@@ -8,7 +8,6 @@ use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Service\Database\Importer\DatabaseSearchReplacerInterface;
-use WPStaging\Backup\Service\Multipart\MultipartRestoreInterface;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Filesystem\MissingFileException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
@@ -39,10 +38,7 @@ class RestoreDatabaseTask extends RestoreTask
     /** @var DatabaseSearchReplacerInterface */
     protected $databaseSearchReplacer;
 
-    /** @var MultipartRestoreInterface */
-    protected $multipartRestore;
-
-    public function __construct(DatabaseImporter $databaseImporter, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, PathIdentifier $pathIdentifier, DatabaseSearchReplacerInterface $databaseSearchReplacer, MultipartRestoreInterface $multipartRestore)
+    public function __construct(DatabaseImporter $databaseImporter, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, PathIdentifier $pathIdentifier, DatabaseSearchReplacerInterface $databaseSearchReplacer)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
@@ -51,7 +47,6 @@ class RestoreDatabaseTask extends RestoreTask
 
         $this->pathIdentifier         = $pathIdentifier;
         $this->databaseSearchReplacer = $databaseSearchReplacer;
-        $this->multipartRestore       = $multipartRestore;
     }
 
     /**
@@ -141,7 +136,7 @@ class RestoreDatabaseTask extends RestoreTask
     {
         $metadata = $this->jobDataDto->getBackupMetadata();
         if ($metadata->getIsMultipartBackup()) {
-            $this->multipartRestore->prepareDatabaseRestore($this->jobDataDto, $this->logger, $this->databaseImporter, $this->stepsDto, $this->databaseSearchReplacer, $this->pathIdentifier->getBackupDirectory());
+            $this->setupMultipartDatabaseRestore();
             return;
         }
 
@@ -203,5 +198,13 @@ class RestoreDatabaseTask extends RestoreTask
         }
 
         $this->logger->warning(sprintf(esc_html__('Repeat database restore after increasing execution time to %s seconds', 'wp-staging'), $currentExecutionTimeDatabaseRestore));
+    }
+
+    /**
+     * @return void
+     */
+    protected function setupMultipartDatabaseRestore()
+    {
+        // no-op
     }
 }

@@ -38,6 +38,10 @@ try {
 $storages              = WPStaging::make(\WPStaging\Backup\Storage\Providers::class);
 $isEnabledCloudStorage = false;
 foreach ($storages->getStorages(true) as $storage) {
+    if ($storage['id'] === 'dropbox') {
+        continue;
+    }
+
     $isActivated = $storages->isActivated($storage['authClass']);
     if ($isActivated) {
         $isEnabledCloudStorage = true;

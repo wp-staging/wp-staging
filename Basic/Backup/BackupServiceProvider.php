@@ -23,8 +23,6 @@ use WPStaging\Backup\Service\Database\Importer\BasicSubsiteManager;
 use WPStaging\Backup\Service\Database\Importer\DatabaseSearchReplacerInterface;
 use WPStaging\Backup\Service\Database\Importer\SubsiteManagerInterface;
 use WPStaging\Backup\Service\Multipart\MultipartInjection;
-use WPStaging\Backup\Service\Multipart\MultipartRestoreInterface;
-use WPStaging\Backup\Service\Multipart\MultipartRestorer;
 use WPStaging\Backup\Service\Multipart\MultipartSplitInterface;
 use WPStaging\Backup\Service\Multipart\MultipartSplitter;
 use WPStaging\Backup\Service\ZlibCompressor;
@@ -82,17 +80,6 @@ class BackupServiceProvider extends ServiceProvider
             $this->container->when($classId)
                     ->needs(MultipartSplitInterface::class)
                     ->give(MultipartSplitter::class);
-        }
-
-        $this->container->when(RestoreDatabaseTask::class)
-                ->needs(MultipartRestoreInterface::class)
-                ->give(MultipartRestorer::class);
-
-
-        foreach (MultipartInjection::RESTORE_CLASSES as $classId) {
-            $this->container->when($classId)
-                    ->needs(MultipartRestoreInterface::class)
-                    ->give(MultipartRestorer::class);
         }
 
         $this->container->when(RestoreDatabaseTask::class)

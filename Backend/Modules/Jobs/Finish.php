@@ -166,7 +166,6 @@ class Finish extends Job
      */
     private function getDestinationUrl()
     {
-
         if (!empty($this->options->cloneHostname)) {
             return $this->options->cloneHostname;
         }

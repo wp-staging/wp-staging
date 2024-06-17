@@ -44,6 +44,9 @@ class Notices
     /** @var string */
     const BASIC_NOTICES_ACTION = 'wpstg.notices.show_basic_notices';
 
+    /** @var string */
+    const INJECT_ANALYTICS_CONSENT_ASSETS_ACTION = 'wpstg.assets.inject_analytics_consent_assets';
+
     /** @var Assets */
     private $assets;
 
@@ -561,14 +564,7 @@ class Notices
             return;
         }
 
-        wp_enqueue_script(
-            "wpstg-show-analytics-modal",
-            WPSTG_PLUGIN_URL . './assets/js/dist/analytics-consent-modal.js'
-        );
-        wp_enqueue_style(
-            'wpstg-plugin-activation',
-            WPSTG_PLUGIN_URL . './assets/css/dist/analytics-consent-modal.css'
-        );
+        Hooks::doAction(self::INJECT_ANALYTICS_CONSENT_ASSETS_ACTION);
 
         require_once "{$this->getPluginPath()}/Backend/views/notices/analytics-modal.php";
     }

@@ -108,12 +108,12 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key"><?php esc_html_e('Access Key', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key" class="wpstg-form-control" type="text" style="min-width:300px;" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key" class="wpstg-form-control" type="password" style="min-width:300px;" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key"><?php esc_html_e('Secret Key', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key" class="wpstg-form-control" type="text" name="secret_key" value="<?php echo esc_attr($secretKey); ?>" style="min-width:300px;" />
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key" class="wpstg-form-control" type="password" name="secret_key" value="<?php echo esc_attr($secretKey); ?>" style="min-width:300px;" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">

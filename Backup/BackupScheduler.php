@@ -511,7 +511,7 @@ class BackupScheduler
             $this->cronMessage .= "Can not create scheduled backups because cron jobs do not work on this site. Error: " . $result->get_error_message() . ". Can not reach endpoint: " . esc_url($urlEndpoint);
             // Only send the error report mail if error is caused by WP STAGING
             if ($this->isWpstgError()) {
-                $this->sendErrorReport($this->cronMessage);
+                $this->sendErrorEmailReport($this->cronMessage);
             }
 
             return false;
@@ -637,40 +637,70 @@ class BackupScheduler
     }
 
     /**
+     * Send an error report email
+     * A Generic title will be used if no title is provided
+     * Internally use of sendEmailReport()
+     *
      * @param string $message
-     * @return void
+     * @param string $title
+     * @return bool
      */
-    public function sendErrorReport(string $message)
+    public function sendErrorEmailReport(string $message, string $title = ''): bool
+    {
+        if (empty($message)) {
+            return false;
+        }
+
+        if (strpos($message, 'index resource') !== false) {
+            $message .= "\r\n \r\n" . esc_html__("This can happen if another process deleted the backup while it was created. Please report this to support@wp-staging.com if it happens often. Otherwise you can ignore it.", 'wp-staging');
+        }
+
+        if (empty($title)) {
+            $title = esc_html__('WP Staging - Backup Error Report', 'wp-staging');
+        }
+
+        return $this->sendEmailReport($message, $title);
+    }
+
+    /**
+     * Send a report email
+     * A Generic title will be used if no title is provided
+     *
+     * @param string $message
+     * @param string $title
+     * @return bool
+     */
+    public function sendEmailReport(string $message, string $title = ''): bool
     {
         if (get_option(self::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) !== 'true') {
-            return;
+            return false;
         }
 
         $reportEmail = get_option(self::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         if (!filter_var($reportEmail, FILTER_VALIDATE_EMAIL)) {
-            return;
+            return false;
         }
 
         // Only send the error report mail once every 5 minutes
         if (get_transient(self::TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT) !== false) {
-            return;
+            return false;
         }
 
         if (empty($message)) {
-            return;
+            return false;
         }
 
-        if (strpos($message, 'index resource') !== false) {
-            $message .= "\r\n \r\n" . __("This can happen if another process deleted the backup while it was created. Please report this to support@wp-staging.com if it happens often. Otherwise you can ignore it.", 'wp-staging');
-        }
+        $message .= "\r\n" . "--" . "\r\n" . esc_html__('This message was sent by the WP Staging plugin from the website', 'wp-staging') . ' ' . get_site_url();
+        $message .= "\r\n" . esc_html__('It was sent to the email address', 'wp-staging') . ' ' . $reportEmail . ' ' . esc_html__('which can be set up on ', 'wp-staging') . get_site_url() . '/wp-admin/admin.php?page=wpstg-settings';
+        $message .= "\r\n" . esc_html__('Please do not reply to this email.', 'wp-staging');
 
-        $message .= "\r\n" . "--" . "\r\n" . __('This message was sent by the WP Staging plugin from the website', 'wp-staging') . ' ' . get_site_url();
-        $message .= "\r\n" . __('It was sent to the email address', 'wp-staging') . ' ' . $reportEmail . ' ' . __('which can be set up on ', 'wp-staging') . get_site_url() . '/wp-admin/admin.php?page=wpstg-settings';
-        $message .= "\r\n" . __('Please do not reply to this email.', 'wp-staging');
+        if (empty($title)) {
+            $title = esc_html__('WP Staging - Backup Report', 'wp-staging');
+        }
 
         // Set the transient to prevent sending the error report mail again for 5 minutes
         set_transient(self::TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT, true, 5 * 60);
-        wp_mail($reportEmail, __('WP Staging - Backup Error Report', 'wp-staging'), $message, [], []);
+        return wp_mail($reportEmail, $title, $message, [], []);
     }
 
     /**

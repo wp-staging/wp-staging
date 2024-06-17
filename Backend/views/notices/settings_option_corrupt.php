@@ -14,4 +14,4 @@ use WPStaging\Framework\Facades\Escape;
         </a>
     </p>
 </div>
-<script type="text/javascript" src="<?php echo esc_url($this->assets->getAssetsUrlWithVersion("js/dist/wpstg-admin-corrupt-settings.js")) ?>"></script>
+<script type="text/javascript" src="<?php echo esc_url($this->assets->getAssetsUrlWithVersion("js/dist/wpstg-admin-corrupt-settings.min.js")) ?>"></script>

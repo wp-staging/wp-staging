@@ -12,7 +12,7 @@ $storages = WPStaging::make(\WPStaging\Backup\Storage\Providers::class);
 $provider = 'googledrive';
 $providerId = '';
 if (isset($_REQUEST['sub'])) {
-    $provider = strtolower(sanitize_text_field($_REQUEST['sub']));
+    $provider = strtolower(sanitize_file_name($_REQUEST['sub']));
 }
 
 $loadingBarsOption = ['googledrive' => 9, 'amazons3' => 15, 'dropbox' => 9, 'sftp' => 20, 'digitalocean-spaces' => 15, 'wasabi-s3' => 15, 'generic-s3' => 23];
@@ -33,6 +33,15 @@ $loadingBarsOption = ['googledrive' => 9, 'amazons3' => 15, 'dropbox' => 9, 'sft
 
 <?php
 $providerPath = $this->path . "views/settings/tabs/storages/" . $provider . "-settings.php";
+$providerPath = wp_normalize_path($providerPath);
+// Additional check to make sure no file is accessed outside the plugin storage setting directory
+if (strpos($providerPath, wp_normalize_path($this->path) . "views/settings/tabs/storages/") !== 0) {
+    ?>
+    <div class="notice notice-error"><p><?php esc_html_e('Error: Wrong URL for remote settings provided!', 'wp-staging'); ?></p></div>
+    <?php
+    return;
+}
+
 if (file_exists($providerPath)) {
     ?> 
     <div class="wpstg-storage-postbox">
@@ -43,5 +52,8 @@ if (file_exists($providerPath)) {
     ?>
     </div>
     <?php
+    return;
 }
 ?>
+
+<div class="notice notice-error"><p><?php esc_html_e('Error: Wrong URL for remote settings provided!', 'wp-staging'); ?></p></div>

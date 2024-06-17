@@ -165,8 +165,7 @@ class LoginForm
         $showNotice = (new LoginNotice())->isLoginNoticeActive();
 
         // Detect if wordfence is active and 2fa enabled
-        // Should only work for pro version
-        $isCustomLogin2faEnabled = class_exists('wordfence') && get_option('wordfenceActivated') && defined('WPSTGPRO_VERSION');
+        $isCustomLogin2faEnabled = class_exists('wordfence', false) && get_option('wordfenceActivated');
 
         $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/loginForm.php';
 

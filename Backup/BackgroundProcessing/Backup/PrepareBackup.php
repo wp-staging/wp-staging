@@ -91,15 +91,18 @@ class PrepareBackup
         $data = empty($data) ? [] : (array)$data;
 
         try {
-            $data = (array)wp_parse_args((array)$data, $this->getDefaultDataConfiguration());
+            $data     = (array)wp_parse_args((array)$data, $this->getDefaultDataConfiguration());
             $prepared = $this->ajaxPrepareBackup->validateAndSanitizeData($data);
-            $name = isset($prepared['name']) ? $prepared['name'] : 'Background Processing Backup';
-            $jobId = uniqid($name . '_', true);
+            $name     = isset($prepared['name']) ? $prepared['name'] : 'Background Processing Backup';
+            $jobId    = uniqid($name . '_', true);
 
             $data['jobId'] = $jobId;
-            $data['name'] = $name;
+            $data['name']  = $name;
 
             $this->queueAction($data);
+
+            // Let convert stalled actions to canceled
+            $this->queue->markDanglingAs(Queue::STATUS_CANCELED, $this->queue->getStalledBreakpointDate(), Queue::SET_UPDATED_AT_TO_NOW);
 
             return $jobId;
         } catch (Exception $e) {
@@ -184,12 +187,12 @@ class PrepareBackup
                 return new WP_Error(400, $e->getMessage());
             }
 
-            $errorMessage = $this->getLastErrorMessage();
+            /** @var BackupScheduler */
+            $backupScheduler = WPStaging::make(BackupScheduler::class);
+            $errorMessage    = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
                 $this->processLock->unlockProcess();
-                /** @var BackupScheduler */
-                $backupScheduler = WPStaging::make(BackupScheduler::class);
-                $backupScheduler->sendErrorReport("[Errors in scheduled backups]: " . $errorMessage);
+                $backupScheduler->sendErrorEmailReport("[Errors in scheduled backups]: " . $errorMessage);
 
                 return new WP_Error(400, $errorMessage);
             }
@@ -199,6 +202,8 @@ class PrepareBackup
                 if (array_key_exists('scheduleId', $args)) {
                     $this->queue->cleanupActionsByScheduleId($args['scheduleId'], [Queue::STATUS_READY]);
                 }
+
+                $backupScheduler->sendEmailReport("[Backup Created]: " . sprintf(esc_html__('Backup created with Job ID: %s', 'wp-staging'), $args['jobId']));
 
                 // We're finished, get out and bail.
                 return $taskResponseDto;
@@ -261,27 +266,28 @@ class PrepareBackup
     public function getDefaultDataConfiguration()
     {
         return [
-            'isExportingPlugins' => true,
-            'isExportingMuPlugins' => true,
-            'isExportingThemes' => true,
-            'isExportingUploads' => true,
+            'isExportingPlugins'             => true,
+            'isExportingMuPlugins'           => true,
+            'isExportingThemes'              => true,
+            'isExportingUploads'             => true,
             'isExportingOtherWpContentFiles' => true,
-            'isExportingDatabase' => true,
-            'isAutomatedBackup' => true,
+            'isExportingDatabase'            => true,
+            'isAutomatedBackup'              => true,
             // Prevent this scheduled backup from generating another schedule.
-            'repeatBackupOnSchedule' => false,
-            'sitesToBackup' => [],
-            'storages' => ['localStorage'],
-            'isInit' => true,
-            'isSmartExclusion' => false,
-            'isExcludingSpamComments' => false,
-            'isExcludingPostRevision' => false,
+            'repeatBackupOnSchedule'        => false,
+            'sitesToBackup'                 => [],
+            'storages'                      => ['localStorage'],
+            'isInit'                        => true,
+            'isSmartExclusion'              => false,
+            'isExcludingSpamComments'       => false,
+            'isExcludingPostRevision'       => false,
             'isExcludingDeactivatedPlugins' => false,
-            'isExcludingUnusedThemes' => false,
-            'isExcludingLogs' => false,
-            'isExcludingCaches' => false,
-            'backupType' => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
-            'subsiteBlogId' => null,
+            'isExcludingUnusedThemes'       => false,
+            'isExcludingLogs'               => false,
+            'isExcludingCaches'             => false,
+            'backupType'            => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
+            'subsiteBlogId'         => null,
+            "isValidateBackupFiles" => false,
         ];
     }
 

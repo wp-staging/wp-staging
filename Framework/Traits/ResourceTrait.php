@@ -32,7 +32,7 @@ trait ResourceTrait
      */
     public function isThreshold()
     {
-        if ($this->isUnitTest() && !$this->allowResourceCheckOnUnitTests) {
+        if ($this->isUnitTest() && !Hooks::applyFilters('wpstg.tests.resources.allow_check', $this->allowResourceCheckOnUnitTests)) {
             return false;
         }
 
@@ -123,7 +123,7 @@ trait ResourceTrait
      */
     public function isDatabaseRestoreTimeLimit()
     {
-        $timeLimit = (int)apply_filters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', static::$backupRestoreMaxExecutionTimeInSeconds);
+        $timeLimit = (int)Hooks::applyFilters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', static::$backupRestoreMaxExecutionTimeInSeconds);
         return $this->getRunningTime() > $timeLimit;
     }
 
@@ -179,10 +179,10 @@ trait ResourceTrait
 
         // Allow overwriting of the max execution time limit.
         // Important: Use a value lower than the actual PHP limit. (reduce it by 10seconds or more). Also adjust the nginx/php timeout limit
-        $this->executionTimeLimit = (int)apply_filters('wpstg.resources.executionTimeLimit', $this->executionTimeLimit);
+        $this->executionTimeLimit = (int)Hooks::applyFilters('wpstg.resources.executionTimeLimit', $this->executionTimeLimit);
 
         // Allow disabling of the execution time limit
-        if ((bool)apply_filters('wpstg.resources.ignoreTimeLimit', false)) {
+        if ((bool)Hooks::applyFilters('wpstg.resources.ignoreTimeLimit', false)) {
             $this->executionTimeLimit = PHP_INT_MAX;
         }
 
@@ -257,7 +257,7 @@ trait ResourceTrait
         }
 
         // Allow custom overwriting
-        $this->memoryLimit = apply_filters('wpstg.resources.memoryLimit', $memoryLimit);
+        $this->memoryLimit = Hooks::applyFilters('wpstg.resources.memoryLimit', $memoryLimit);
 
         // Unexpected memory limit after filter and also make sure it is never below 64MB
         if (!is_int($this->memoryLimit) || $this->memoryLimit < (64 * MB_IN_BYTES)) {
@@ -268,7 +268,7 @@ trait ResourceTrait
         $this->memoryLimit = (min($this->memoryLimit, 256 * MB_IN_BYTES));
 
         // Allow disabling the memory limit
-        if ((bool)apply_filters('wpstg.resources.ignoreMemoryLimit', false)) {
+        if ((bool)Hooks::applyFilters('wpstg.resources.ignoreMemoryLimit', false)) {
             $this->memoryLimit = PHP_INT_MAX;
         }
 
@@ -282,6 +282,9 @@ trait ResourceTrait
      */
     protected function getScriptMemoryLimit()
     {
+        // For testing purpose only
+        $this->scriptMemoryLimit = Hooks::applyFilters('wpstg.tests.resources.script_memory_limit', $this->scriptMemoryLimit);
+
         // Early bail: Cache
         if (isset($this->scriptMemoryLimit)) {
             return $this->scriptMemoryLimit;

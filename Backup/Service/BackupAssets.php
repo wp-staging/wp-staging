@@ -21,7 +21,10 @@ class BackupAssets
         $this->assets = $assets;
     }
 
-    public function register($isDebugOrDevMode = false)
+    /**
+     * @return void
+     */
+    public function register()
     {
         $asset = defined('SCRIPT_DEBUG') && SCRIPT_DEBUG ? 'js/vendor/resumable.js' : 'js/vendor/resumable.min.js';
         wp_enqueue_script(
@@ -32,11 +35,7 @@ class BackupAssets
             false
         );
 
-        $asset = 'js/dist/backup/wpstg-backup.min.js';
-        if ($isDebugOrDevMode) {
-            $asset = 'js/dist/backup/wpstg-backup.js';
-        }
-
+        $asset = $this->assets->getJsAssetsFileName('backup/wpstg-backup');
         wp_enqueue_script(
             "wpstg-backup",
             $this->assets->getAssetsUrl($asset),

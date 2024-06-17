@@ -31,7 +31,7 @@ $disabledProAttribute = $isProVersion ? '' : ' disabled';
                 <div class="wpstg-backup-scheduling-options wpstg-container">
 
                     <?php foreach ($storages->getStorages($enabled = true) as $storage) : ?>
-                        <label class="wpstg-storage-option">
+                        <label class="wpstg-storage-option wpstg-advanced-storage-options">
                             <?php
                             $isActivated   = $storages->isActivated($storage['authClass']);
                             $isProStorage  = empty($storage['authClass']);
@@ -39,9 +39,9 @@ $disabledProAttribute = $isProVersion ? '' : ' disabled';
                             $disabledClass = $isDisabled ? 'wpstg-storage-settings-disabled' : '';
                             Checkbox::render('storage-upload-' . $storage['id'], 'storages', $storage['id'], false, ['isDisabled' => $isDisabled]);
                             ?>
-                            <span class="<?php echo esc_attr($disabledClass) ?>"><?php echo esc_html($storage['name']); ?></span>
+                            <span class="wpstg-storage-name <?php echo esc_attr($disabledClass) ?>"><?php echo esc_html($storage['name']); ?></span>
                             <?php if (!$isProVersion && $isProStorage) { ?>
-                                <a href="https://wp-staging.com/get-<?php echo esc_attr($storage['id']) ?>" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging') ?></span></a>
+                                <span class="wpstg-pro-feature"><a href="https://wp-staging.com/get-<?php echo esc_attr($storage['id']) ?>" target="_blank" class="wpstg-pro-feature-link"><?php esc_html_e('Upgrade', 'wp-staging') ?></a></span>
                             <?php } else { ?>
                                 <span class="wpstg-storage-settings"><a class="" href="<?php echo esc_url($storage['settingsPath']); ?>" target="_blank"><?php echo $isActivated ? esc_html('Settings', 'wp-staging') : esc_html('Activate', 'wp-staging'); ?></a></span>
                             <?php } ?>

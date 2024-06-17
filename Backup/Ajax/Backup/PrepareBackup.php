@@ -98,6 +98,7 @@ class PrepareBackup extends PrepareJob
                 'repeatBackupOnSchedule'         => 'bool',
                 'scheduleRotation'               => 'int',
                 'isCreateScheduleBackupNow'      => 'bool',
+                'isCreateBackupInBackground'     => 'bool',
                 'isSmartExclusion'               => 'bool',
                 'isExcludingSpamComments'        => 'bool',
                 'isExcludingPostRevision'        => 'bool',
@@ -106,6 +107,7 @@ class PrepareBackup extends PrepareJob
                 'isExcludingLogs'                => 'bool',
                 'isExcludingCaches'              => 'bool',
                 'backupType'                     => 'string',
+                'isValidateBackupFiles'          => 'bool',
             ]);
             $data['name'] = isset($_POST['wpstgBackupData']['name']) ? htmlentities(sanitize_text_field($_POST['wpstgBackupData']['name']), ENT_QUOTES) : '';
         }
@@ -192,6 +194,7 @@ class PrepareBackup extends PrepareJob
             'scheduleId'                     => null,
             'storages'                       => [],
             'isCreateScheduleBackupNow'      => false,
+            'isCreateBackupInBackground'     => false,
             'sitesToBackup'                  => $sites,
             'backupType'                     => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
             'subsiteBlogId'                  => get_current_blog_id(),
@@ -202,6 +205,7 @@ class PrepareBackup extends PrepareJob
             'isExcludingUnusedThemes'        => false,
             'isExcludingLogs'                => false,
             'isExcludingCaches'              => false,
+            'isValidateBackupFiles'          => false,
             'isWpCliRequest'                 => false,
         ];
 
@@ -223,6 +227,7 @@ class PrepareBackup extends PrepareJob
         // Foo\'s Backup => Foo's Backup
         $data['name'] = str_replace('\\\'', '\'', $data['name']);
 
+        // What backup includes
         $data['isExportingPlugins']             = $this->jsBoolean($data['isExportingPlugins']);
         $data['isExportingMuPlugins']           = $this->jsBoolean($data['isExportingMuPlugins']);
         $data['isExportingThemes']              = $this->jsBoolean($data['isExportingThemes']);
@@ -230,17 +235,25 @@ class PrepareBackup extends PrepareJob
         $data['isExportingOtherWpContentFiles'] = $this->jsBoolean($data['isExportingOtherWpContentFiles']);
         $data['isExportingDatabase']            = $this->jsBoolean($data['isExportingDatabase']);
 
+        // Backup creation scheduling properties
         $data['repeatBackupOnSchedule']    = $this->jsBoolean($data['repeatBackupOnSchedule']);
         $data['scheduleRecurrence']        = sanitize_text_field(html_entity_decode($data['scheduleRecurrence']));
         $data['scheduleRotation']          = absint($data['scheduleRotation']);
         $data['scheduleTime']              = $this->createScheduleTimeArray($data['scheduleTime']);
         $data['isCreateScheduleBackupNow'] = $this->jsBoolean($data['isCreateScheduleBackupNow']);
 
+        // Validate Backup?
+        $data['isValidateBackupFiles'] = $this->jsBoolean($data['isValidateBackupFiles']);
+
+        // Single Site or Multisite related properties
         $data['backupType']          = $this->validateAndSanitizeBackupType($data['backupType']);
         $data['isNetworkSiteBackup'] = (is_multisite() && $data['backupType'] !== BackupMetadata::BACKUP_TYPE_MULTISITE) ? true : false;
         if ($data['isNetworkSiteBackup']) {
             $data['subsiteBlogId'] = $this->validateAndSanitizeSubsiteBlogId($data['subsiteBlogId']);
         }
+
+        // Run Backup Creation in Background?
+        $data['isCreateBackupInBackground'] = $this->jsBoolean($data['isCreateBackupInBackground']);
 
         return $data;
     }

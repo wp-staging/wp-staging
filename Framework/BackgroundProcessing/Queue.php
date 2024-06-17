@@ -73,6 +73,12 @@ class Queue
      */
     const QUEUE_TABLE_STRUCTURE_VERSION = '1.0.0';
 
+    /** @var int */
+    const STALLED_ACTIONS_BREAKPOINT_IN_MINS = 15;
+
+    /** @var bool */
+    const SET_UPDATED_AT_TO_NOW = true;
+
     /**
      * A reference to te current Background Processing Feature detection service.
      *
@@ -880,10 +886,12 @@ class Queue
      *                          The method will NOT check the status to make sure it's
      *                          one of the supported ones, this is by design to allow
      *                          the queue to be used in a more flexible way.
+     * @param DateTimeImmutable|null $breakpointDate An optional breakpoint date and time
+     * @param bool $updateUpdatedAt
      *
      * @return int The number of updated Actions.
      */
-    public function markDanglingAs($newStatus)
+    public function markDanglingAs(string $newStatus, $breakpointDate = null, bool $updateUpdatedAt = false): int
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             debug_log('Queue markDanglingAs: The table does not exist so there is nothing to update.', 'debug', false);
@@ -894,9 +902,11 @@ class Queue
 
         $tableName          = self::getTableName();
         $newStatus          = $this->database->escape($newStatus);
-        $danglingBreakpoint = $this->getDanglingBreakpointDate()->format('Y-m-d H:i:s');
+        $danglingBreakpoint = empty($breakpointDate) ? $this->getDanglingBreakpointDate()->format('Y-m-d H:i:s') : $breakpointDate->format('Y-m-d H:i:s');
+        $now                = current_time('mysql');
+        $updatedAtQuery     = $updateUpdatedAt ? ", updated_at='{$now}'" : '';
         $markQuery          = "UPDATE {$tableName} 
-            SET status='{$newStatus}', claimed_at=NULL
+            SET status='{$newStatus}', claimed_at=NULL{$updatedAtQuery}
             WHERE claimed_at IS NOT NULL
             AND claimed_at < '{$danglingBreakpoint}'";
         $markResult = $this->database->query($markQuery);
@@ -1134,33 +1144,21 @@ class Queue
      * @return DateTimeImmutable A reference to an immutable date time object representing
      *                            the dangling breakpoint.
      */
-    public function getCleanupBreakpointDate()
+    public function getCleanupBreakpointDate(): DateTimeImmutable
     {
         return $this->getBreakpointDate(WEEK_IN_SECONDS);
     }
 
     /**
-     * Builds and returns a breakpoint date.
+     * Returns an immutable Date Object representing the breakpoint date and time
+     * that should be used to canceling the stalled Actions i.e. Actions in processing state for too long
      *
-     * @param int $interval  The amount, in seconds, to apply to the current date
-     *                       and time to build the breakpoint date.
-     *
-     * @return DateTimeImmutable A reference to the breakpoint date immutable instance.
+     * @return DateTimeImmutable A reference to an immutable date time object representing
+     *                            the dangling breakpoint.
      */
-    private function getBreakpointDate($interval)
+    public function getStalledBreakpointDate(): DateTimeImmutable
     {
-        try {
-            $breakpointDate = new DateTimeImmutable(date('Y-m-d H:i:s'));
-            $breakpointDate = $breakpointDate->setTimestamp($breakpointDate->getTimestamp() - $interval);
-        } catch (Exception $e) {
-            /*
-             * On failure, return a date very far in the past, before this is written, to make sure no
-             * Action will be modified.
-             */
-            $breakpointDate = new DateTimeImmutable('2020-01-01 00:00:00');
-        }
-
-        return $breakpointDate;
+        return $this->getBreakpointDate(self::STALLED_ACTIONS_BREAKPOINT_IN_MINS * MINUTE_IN_SECONDS);
     }
 
     /**
@@ -1500,5 +1498,29 @@ class Queue
         }
 
         return false;
+    }
+
+    /**
+     * Builds and returns a breakpoint date.
+     *
+     * @param int $interval  The amount, in seconds, to apply to the current date
+     *                       and time to build the breakpoint date.
+     *
+     * @return DateTimeImmutable A reference to the breakpoint date immutable instance.
+     */
+    private function getBreakpointDate($interval): DateTimeImmutable
+    {
+        try {
+            $breakpointDate = new DateTimeImmutable(date('Y-m-d H:i:s'));
+            $breakpointDate = $breakpointDate->setTimestamp($breakpointDate->getTimestamp() - $interval);
+        } catch (Exception $e) {
+            /*
+             * On failure, return a date very far in the past, before this is written, to make sure no
+             * Action will be modified.
+             */
+            $breakpointDate = new DateTimeImmutable('2020-01-01 00:00:00');
+        }
+
+        return $breakpointDate;
     }
 }

@@ -2,9 +2,10 @@
 
 namespace WPStaging\Backup;
 
-use WPStaging\Framework\Filesystem\PathIdentifier;
+use WPStaging\Backup\Exceptions\FileValidationException;
+use WPStaging\Backup\Interfaces\IndexLineInterface;
 
-class BackupFileIndex
+class BackupFileIndex implements IndexLineInterface
 {
     /** @var int */
     public $bytesStart;
@@ -17,6 +18,14 @@ class BackupFileIndex
 
     /** @var int */
     public $isCompressed;
+
+    public function __construct()
+    {
+        $this->bytesStart       = 0;
+        $this->bytesEnd         = 0;
+        $this->identifiablePath = '';
+        $this->isCompressed     = 0;
+    }
 
     /**
      * @param string $index
@@ -66,6 +75,16 @@ class BackupFileIndex
     }
 
     /**
+     * For compatibility with IndexLineInterface
+     * @param string $indexLine
+     * @return IndexLineInterface
+     */
+    public function readIndexLine(string $indexLine): IndexLineInterface
+    {
+        return $this->readIndex($indexLine);
+    }
+
+    /**
      * Creates an index entry for a file to be added to the backup's file index.
      *
      * @param string $identifiablePath The identifiable path to the file.
@@ -98,5 +117,87 @@ class BackupFileIndex
     public function isIndexLine($item): bool
     {
         return !empty($item) && strpos($item, ':') !== false && strpos($item, '|') !== false;
+    }
+
+    /**
+     * Compatibility for new extractor on old file format
+     * Points to start of file content
+     *
+     * @return int
+     */
+    public function getContentStartOffset(): int
+    {
+        return $this->bytesStart;
+    }
+
+    /**
+     * Compatibility for new extractor on old file format
+     * Points to start of file content (in new format, it points to File Header)
+     *
+     * @return int
+     */
+    public function getStartOffset(): int
+    {
+        return $this->bytesStart;
+    }
+
+    public function getIdentifiablePath(): string
+    {
+        return $this->identifiablePath;
+    }
+
+    /**
+     * Compatibility for new extractor on old file format
+     * Old format can either support compressed or uncompressed size
+     *
+     * @return int
+     */
+    public function getUncompressedSize(): int
+    {
+        return $this->bytesEnd;
+    }
+
+    /**
+     * Compatibility for new extractor on old file format
+     * Old format can either support compressed or uncompressed size
+     *
+     * @return int
+     */
+    public function getCompressedSize(): int
+    {
+        return $this->bytesEnd;
+    }
+
+    public function getIsCompressed(): bool
+    {
+        return $this->isCompressed === 1;
+    }
+
+    /**
+     * @param string $filePath
+     * @param string $pathForErrorLogging
+     * @return void
+     * @throws FileValidationException
+     * Doesn't support crc32 validation
+     */
+    public function validateFile(string $filePath, string $pathForErrorLogging = '')
+    {
+        if (empty($pathForErrorLogging)) {
+            $pathForErrorLogging = $filePath;
+        }
+
+        if (!file_exists($filePath)) {
+            throw new FileValidationException(sprintf('File doesn\'t exist: %s.', $pathForErrorLogging));
+        }
+
+        // Doesn't support file size validation for compressed files
+        if ($this->getIsCompressed()) {
+            return;
+        }
+
+        $fileSize = filesize($filePath);
+        if ($this->getUncompressedSize() !== $fileSize) {
+            throw new FileValidationException(sprintf('Filesize validation failed for file %s. Expected: %s. Actual: %s', $pathForErrorLogging, size_format($this->getUncompressedSize(), 2), size_format($fileSize, 2)));
+        }
     }
 }

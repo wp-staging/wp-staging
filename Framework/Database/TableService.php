@@ -98,13 +98,14 @@ class TableService
     /**
      * Get all base tables starting with a certain prefix
      * This does not include table views
-     * @param string|null $prefix
+     * @param string $prefix
      *
      * @return array
      */
-    public function findTableNamesStartWith($prefix = null)
+    public function findTableNamesStartWith(string $prefix = ''): array
     {
-        $result = $this->client->query("SHOW FULL TABLES FROM `{$this->database->getWpdba()->getClient()->dbname}` WHERE `Table_type` = 'BASE TABLE'");
+        $query  = $this->getTablesFindQueryByTableType('BASE TABLE', $prefix);
+        $result = $this->client->query($query);
         if (!$result) {
             return [];
         }
@@ -118,24 +119,20 @@ class TableService
 
         $this->client->freeResult($result);
 
-        if ($prefix === null) {
-            return $tables;
-        }
-
-        return $this->filterByPrefix($tables, $prefix);
+        return $tables;
     }
-
 
     /**
      * Get all table views starting with a certain prefix
      *
-     * @param string|null $prefix
+     * @param string $prefix
      *
-     * @return array|null
+     * @return array
      */
-    public function findViewsNamesStartWith($prefix = null)
+    public function findViewsNamesStartWith(string $prefix = ''): array
     {
-        $result = $this->client->query("SHOW FULL TABLES FROM `{$this->database->getWpdba()->getClient()->dbname}` WHERE `Table_type` = 'VIEW'");
+        $query  = $this->getTablesFindQueryByTableType('VIEW', $prefix);
+        $result = $this->client->query($query);
         if (!$result) {
             return [];
         }
@@ -149,11 +146,7 @@ class TableService
 
         $this->client->freeResult($result);
 
-        if ($prefix === null) {
-            return $views;
-        }
-
-        return $this->filterByPrefix($views, $prefix);
+        return $views;
     }
 
     /**
@@ -285,26 +278,6 @@ class TableService
         }
 
         return true;
-    }
-
-    /**
-     * Get all elements starting with a specific string from an array
-     *
-     * @param array  $data
-     * @param string $startsWith
-     *
-     * @return array
-     */
-    private function filterByPrefix($tablesOrViews, $prefix)
-    {
-        $filteredArray = array_filter($tablesOrViews, function ($tableOrView) use ($prefix) {
-            return strpos($tableOrView, $prefix) === 0;
-        });
-
-        // Re-orders the array eliminating the "key" gaps for filtered out values.
-        $reorderedArray = array_values($filteredArray);
-
-        return $reorderedArray;
     }
 
     /**
@@ -464,5 +437,21 @@ class TableService
         }
 
         return true;
+    }
+
+    /**
+     * @param string $tableType
+     * @param string $prefix
+     * @return string
+     */
+    private function getTablesFindQueryByTableType(string $tableType, string $prefix = ''): string
+    {
+        $dbname = $this->database->getWpdba()->getClient()->dbname;
+        $query  = "SHOW FULL TABLES FROM `{$dbname}` WHERE `Table_type` = '{$tableType}'";
+        if (!empty($prefix)) {
+            $query .= " AND `Tables_in_{$dbname}` LIKE '{$this->database->escapeSqlPrefixForLIKE($prefix)}%'";
+        }
+
+        return $query;
     }
 }

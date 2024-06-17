@@ -6,13 +6,13 @@ use WPStaging\Framework\Filesystem\MissingFileException;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Backup\Dto\Task\Restore\ExtractFilesTaskDto;
 use WPStaging\Backup\Exceptions\DiskNotWritableException;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Extractor;
-use WPStaging\Backup\Service\Multipart\MultipartRestoreInterface;
 
 class ExtractFilesTask extends RestoreTask
 {
@@ -28,14 +28,13 @@ class ExtractFilesTask extends RestoreTask
     /** @var BackupMetadata */
     protected $metadata;
 
-    /** @var MultipartRestoreInterface */
-    protected $multipartRestore;
+    /** @var ExtractFilesTaskDto */
+    protected $currentTaskDto;
 
-    public function __construct(Extractor $extractor, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, MultipartRestoreInterface $multipartRestore)
+    public function __construct(Extractor $extractor, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->extractorService = $extractor;
-        $this->multipartRestore = $multipartRestore;
     }
 
     public static function getTaskName()
@@ -51,35 +50,40 @@ class ExtractFilesTask extends RestoreTask
     public function execute()
     {
         try {
-            $this->prepareExtraction();
+            $this->prepareTask();
         } catch (MissingFileException $ex) {
             $this->jobDataDto->setFilePartIndex($this->jobDataDto->getFilePartIndex() + 1);
-            $this->jobDataDto->setExtractorFilesExtracted(0);
-            $this->jobDataDto->setExtractorMetadataIndexPosition(0);
+            $this->currentTaskDto->totalFilesExtracted = 0;
+            $this->currentTaskDto->currentIndexOffset  = 0;
             return $this->generateResponse(false);
         }
 
         $this->start = microtime(true);
 
         try {
-            $this->extractorService->extract();
+            $this->extractorService->execute();
+            $this->currentTaskDto->fromExtractorDto($this->extractorService->getExtractorDto());
         } catch (DiskNotWritableException $e) {
             $this->logger->warning($e->getMessage());
+            $this->currentTaskDto->fromExtractorDto($this->extractorService->getExtractorDto());
+            $this->setCurrentTaskDto($this->currentTaskDto);
             // No-op, just stop execution
             throw $e;
         } catch (FinishedQueueException $e) {
-            if ($this->jobDataDto->getExtractorFilesExtracted() !== $this->stepsDto->getTotal()) {
+            $this->currentTaskDto->fromExtractorDto($this->extractorService->getExtractorDto());
+            if ($this->currentTaskDto->totalFilesExtracted !== $this->stepsDto->getTotal()) {
                 // Unexpected finish. Log the difference and continue.
-                $this->logger->warning(sprintf('Expected to find %d files in Backup, but found %d files instead.', $this->stepsDto->getTotal(), $this->jobDataDto->getExtractorFilesExtracted()));
+                $this->logger->warning(sprintf('Expected to find %d files in Backup, but found %d files instead.', $this->stepsDto->getTotal(), $this->currentTaskDto->totalFilesExtracted));
                 // Force the completion to avoid a loop.
-                $this->jobDataDto->setExtractorFilesExtracted($this->stepsDto->getTotal());
+                $this->currentTaskDto->totalFilesExtracted = $this->stepsDto->getTotal();
             }
         }
 
-        $this->stepsDto->setCurrent($this->jobDataDto->getExtractorFilesExtracted());
+        $this->stepsDto->setCurrent($this->currentTaskDto->totalFilesExtracted);
 
         $this->logger->info(sprintf('Extracted %d/%d files (%s)', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->getExtractSpeed()));
 
+        $this->setCurrentTaskDto($this->currentTaskDto);
         if (!$this->stepsDto->isFinished()) {
             return $this->generateResponse(false);
         }
@@ -93,7 +97,7 @@ class ExtractFilesTask extends RestoreTask
             return $this->generateResponse(false);
         }
 
-        $this->multipartRestore->setNextExtractedFile($this->jobDataDto, $this->logger);
+        $this->setNextBackupToExtract();
 
         return $this->generateResponse(false);
     }
@@ -110,17 +114,38 @@ class ExtractFilesTask extends RestoreTask
         return size_format($bytesPerSecond) . '/s';
     }
 
-    protected function prepareExtraction()
+    /**
+     * @return void
+     */
+    protected function prepareTask()
     {
-        $this->metadata = $this->jobDataDto->getBackupMetadata();
+        $this->metadata   = $this->jobDataDto->getBackupMetadata();
         $this->totalFiles = $this->metadata->getTotalFiles();
-        if (!$this->metadata->getIsMultipartBackup()) {
-            $this->stepsDto->setTotal($this->totalFiles);
-            $this->extractorService->inject($this->jobDataDto, $this->logger);
-            $this->extractorService->setFileToExtract($this->jobDataDto->getFile());
-            return;
-        }
+        $this->extractorService->setIsBackupFormatV1($this->metadata->getIsBackupFormatV1());
+        $this->extractorService->setLogger($this->logger);
+        $this->setupExtractor();
+    }
 
-        $this->multipartRestore->prepareExtraction($this->jobDataDto, $this->logger, $this->stepsDto, $this->extractorService);
+    /**
+     * @return void
+     */
+    protected function setupExtractor()
+    {
+        $this->stepsDto->setTotal($this->totalFiles);
+        $this->extractorService->setup($this->currentTaskDto->toExtractorDto(), $this->jobDataDto->getFile(), $this->jobDataDto->getTmpDirectory());
+    }
+
+    /**
+     * @return void
+     */
+    protected function setNextBackupToExtract()
+    {
+        // no-op
+    }
+
+    /** @return string */
+    protected function getCurrentTaskType(): string
+    {
+        return ExtractFilesTaskDto::class;
     }
 }

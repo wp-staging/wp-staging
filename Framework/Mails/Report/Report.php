@@ -27,6 +27,26 @@ class Report
     const EMAIL_SUBJECT = "Report Issue!";
 
     /**
+     * @var bool
+     */
+    const FORCE_SEND_DEBUG_LOG = true;
+
+    /**
+     * @var string
+     */
+    const TEMP_DIRECTORY = 'tmp';
+
+    /**
+     * @var int
+     */
+    const MAX_SIZE_DEBUG_LOG = 512;
+
+    /**
+     * @var int
+     */
+    const RETENTATION_LOG_DAYS = 14;
+
+    /**
      * @var SystemInfo
      */
     private $systemInfo;
@@ -45,21 +65,6 @@ class Report
      * @var ReportSubmitTransient
      */
     private $transient;
-
-    /**
-     * @var string
-     */
-    const TEMP_DIRECTORY = 'tmp';
-
-    /**
-     * @var int
-     */
-    const MAX_SIZE_DEBUG_LOG = 512;
-
-    /**
-     * @var int
-     */
-    const RETENTATION_LOG_DAYS = 14;
 
     /**
      * @var Auth
@@ -123,7 +128,7 @@ class Report
             return $errors;
         }
 
-        if (!$forceSend && $this->transient->getTransient()) {
+        if ($forceSend !== self::FORCE_SEND_DEBUG_LOG && $this->transient->getTransient()) {
             // to show alert using js
             $errors[] = [
                 "status"  => 'already_submitted',
@@ -154,57 +159,19 @@ class Report
     }
 
     /**
-     * Copy data into file
-     *
-     * @param string $destinationFile  where to copy to.
-     * @param string $data data to put into file.
-     * @return void
-     */
-    protected function copyDataToFile(string $destinationFile, string $data)
-    {
-        $ft = fopen($destinationFile, "wb");
-        fputs($ft, $data);
-        fclose($ft);
-    }
-
-    /**
-     * send feedback via email
-     *
-     * @param string $from
-     * @param string $text
-     * @param array  $attachments
-     * @return bool
-     */
-    private function sendMail(string $from, string $text, array $attachments): bool
-    {
-        $headers = [];
-
-        $headers[] = "From: $from";
-        $headers[] = "Reply-To: $from";
-
-        $success = wp_mail(self::WPSTG_SUPPORT_EMAIL, self::EMAIL_SUBJECT, $text, $headers, $attachments);
-        $this->deleteBundledLogs();
-
-        if ($success) {
-            return true;
-        }
-
-        return false;
-    }
-
-    /**
      * Send customers debug log
-     * @param $fromEmail
-     * @param $debugCode
+     * @param string $fromEmail
+     * @param string $debugCode
+     * @param bool $forceSend
      * @return array
      */
-    public function sendDebugLog($fromEmail, $debugCode): array
+    public function sendDebugLog(string $fromEmail, string $debugCode, bool $forceSend = false): array
     {
-        if ($this->transient->getTransient()) {
+        if ($forceSend !== self::FORCE_SEND_DEBUG_LOG && $this->transient->getTransient()) {
             return [
                 "sent"    => false,
                 "status"  => 'already_submitted',
-                "message" => 'Already submitted' //@todo: remove "message" key seems not used anymore.
+                "message" => __("Email already submitted!  Please select force send option to send it again.", "wp-staging")
             ];
         }
 
@@ -243,11 +210,15 @@ class Report
             return;
         }
 
-        $postData = stripslashes_deep($_POST);
-
+        $postData  = stripslashes_deep($_POST);
+        $forceSend = false;
         $debugCode = '';
         if (!empty($postData['debugCode'])) {
             $debugCode = trim($this->sanitize->sanitizeString($postData['debugCode']));
+        }
+
+        if (!empty($postData['forceSend'])) {
+            $forceSend = trim($this->sanitize->sanitizeBool($postData['forceSend']));
         }
 
         $loggedInUser      = wp_get_current_user();
@@ -256,29 +227,8 @@ class Report
             $loggedInUserEmail = trim($this->sanitize->sanitizeString($loggedInUser->user_email));
         }
 
-        $response = $this->sendDebugLog($loggedInUserEmail, $debugCode);
+        $response = $this->sendDebugLog($loggedInUserEmail, $debugCode, $forceSend);
         wp_send_json(['response' => $response]);
-    }
-
-     /**
-     * create temp location for storing logs
-     * @return string temporary path to hold logs attachments
-     */
-    private function getTempDirectoryForLogsAttachments(): string
-    {
-        $tempDirectory = trailingslashit(wp_normalize_path($this->directory->getPluginUploadsDirectory() . self::TEMP_DIRECTORY));
-        wp_mkdir_p($tempDirectory);
-
-        return $tempDirectory;
-    }
-
-    /**
-     * @return string
-     */
-    private function getLicenseKey(): string
-    {
-        $licenseKey = get_option('wpstg_license_key');
-        return !empty($licenseKey) ? $licenseKey : 'Unregistered';
     }
 
     /**
@@ -395,5 +345,65 @@ class Report
 
             unlink($filePath);
         }
+    }
+
+    /**
+     * Copy data into file
+     *
+     * @param string $destinationFile  where to copy to.
+     * @param string $data data to put into file.
+     * @return void
+     */
+    protected function copyDataToFile(string $destinationFile, string $data)
+    {
+        $ft = fopen($destinationFile, "wb");
+        fputs($ft, $data);
+        fclose($ft);
+    }
+
+    /**
+     * send feedback via email
+     *
+     * @param string $from
+     * @param string $text
+     * @param array  $attachments
+     * @return bool
+     */
+    private function sendMail(string $from, string $text, array $attachments): bool
+    {
+        $headers = [];
+
+        $headers[] = "From: $from";
+        $headers[] = "Reply-To: $from";
+
+        $success = wp_mail(self::WPSTG_SUPPORT_EMAIL, self::EMAIL_SUBJECT, $text, $headers, $attachments);
+        $this->deleteBundledLogs();
+
+        if ($success) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * create temp location for storing logs
+     * @return string temporary path to hold logs attachments
+     */
+    private function getTempDirectoryForLogsAttachments(): string
+    {
+        $tempDirectory = trailingslashit(wp_normalize_path($this->directory->getPluginUploadsDirectory() . self::TEMP_DIRECTORY));
+        wp_mkdir_p($tempDirectory);
+
+        return $tempDirectory;
+    }
+
+    /**
+     * @return string
+     */
+    private function getLicenseKey(): string
+    {
+        $licenseKey = get_option('wpstg_license_key');
+        return !empty($licenseKey) ? $licenseKey : 'Unregistered';
     }
 }

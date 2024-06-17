@@ -7,6 +7,9 @@ namespace WPStaging\Backup\Dto\Service;
 
 use WPStaging\Backup\Entity\BackupMetadata;
 
+/**
+ * @todo Add strict type in a separate PR
+ */
 class CompressorDto
 {
     /** @var string */
@@ -14,6 +17,9 @@ class CompressorDto
 
     /** @var string */
     private $indexPath;
+
+    /** @var int */
+    private $fileHeaderBytes = 0;
 
     /** @var int */
     private $writtenBytesTotal = 0;
@@ -122,8 +128,25 @@ class CompressorDto
     }
 
     /**
-     * @param $category
-     * @param $categoryIndex
+     * @return int
+     */
+    public function getFileHeaderBytes(): int
+    {
+        return $this->fileHeaderBytes;
+    }
+
+    /**
+     * @param int $fileHeaderBytes
+     * @return void
+     */
+    public function setFileHeaderBytes(int $fileHeaderBytes)
+    {
+        $this->fileHeaderBytes = $fileHeaderBytes;
+    }
+
+    /**
+     * @param string $category
+     * @param int $categoryIndex
      * @return bool
      */
     public function isIndexPositionCreated($category = '', $categoryIndex = 0)

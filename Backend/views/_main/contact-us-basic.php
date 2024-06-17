@@ -1,7 +1,10 @@
 <?php
 
-$modalClassID = 'contact-us';
+use WPStaging\Framework\Facades\UI\Checkbox;
+
+$modalClassID     = 'contact-us';
 $isContactUsModal = true;
+$urlAssets        = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
 
 ?>
 <div id="wpstg-<?php echo esc_attr($modalClassID); ?>-modal" class="wpstg-contact-us-modal">
@@ -29,6 +32,18 @@ $isContactUsModal = true;
             <div class="wpstg-contact-us-troubleshot-container">
                 <h2><?php esc_html_e('Send troubleshooting data', "wp-staging"); ?></h2>
                 <p><?php esc_html_e('Send us system information and debug logs before opening a ticket so we can help investigate.', "wp-staging"); ?></p>
+                <div class="wpstg-contact-us-force-send-email-container">
+                    <label for="wpstg-force-send-debug-log">
+                        <?php Checkbox::render('wpstg-force-send-debug-log', 'wpstg-force-send-debug-log'); ?>
+                        <?php esc_html_e('Force Send Debug Log', 'wp-staging') ?>
+                        <div class="wpstg--tooltip">
+                            <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
+                            <span class="wpstg--tooltiptext">
+                                <?php esc_html_e('Use this option if you have already sent a debug log email and want to send it again within five minutes.', 'wp-staging');?>
+                            </span>
+                        </div>
+                    </label>
+                </div>
                 <div class="wpstg-contact-us-debug-info">
                     <button type="button" class="wpstg-blue-primary wpstg-button--blue" id="wpstg-<?php echo esc_attr($modalClassID); ?>-report-issue-btn">
                         <?php esc_html_e("Share Debug Logs with WP STAGING & Open Support Forum", "wp-staging") ?>
