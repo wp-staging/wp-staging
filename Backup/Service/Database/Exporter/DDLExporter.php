@@ -8,6 +8,9 @@ use WPStaging\Framework\Database\TableService;
 
 class DDLExporter extends AbstractExporter
 {
+    /** @var string */
+    const WPSTG_SQL_BACKUP_DUMP_HEADER = "-- WP Staging SQL Backup Dump\n";
+
     /** @var TableService */
     protected $tableService;
 
@@ -328,7 +331,7 @@ class DDLExporter extends AbstractExporter
     protected function getHeader()
     {
         return sprintf(
-            "-- WP Staging SQL Backup Dump\n" .
+            self::WPSTG_SQL_BACKUP_DUMP_HEADER .
             "-- https://wp-staging.com/\n" .
             "--\n" .
             "-- Host: %s\n" .

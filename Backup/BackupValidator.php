@@ -141,6 +141,11 @@ class BackupValidator
      */
     public function validateFileIndexFirstLine(FileObject $file, BackupMetadata $metadata): bool
     {
+        $version = $metadata->getBackupVersion();
+        if (version_compare($version, BackupHeader::MIN_BACKUP_VERSION, '>=')) {
+            return true;
+        }
+
         $start = $metadata->getHeaderStart();
         $file->fseek($start - 1);
 
@@ -164,10 +169,11 @@ class BackupValidator
         return true;
     }
 
-    /** @return bool
+    /**
+     * @return bool
      * @throws BackupRuntimeException
      */
-    public function checkIfSplitBackupIsValid(BackupMetadata $metadata)
+    public function checkIfSplitBackupIsValid(BackupMetadata $metadata): bool
     {
         $this->partSizeIssues = [];
         $this->missingPartIssues = [];
@@ -212,7 +218,7 @@ class BackupValidator
      * @param BackupMetadata $metadata
      * @return bool
      */
-    public function isUnsupportedBackupVersion(BackupMetadata $metadata)
+    public function isUnsupportedBackupVersion(BackupMetadata $metadata): bool
     {
         $isCreatedOnPro = $metadata->getCreatedOnPro();
         $version = $metadata->getWpstgVersion();
@@ -229,7 +235,7 @@ class BackupValidator
      *
      * @return void
      */
-    private function validatePart($part, $type)
+    private function validatePart(string $part, string $type)
     {
         $path = $this->backupDir . str_replace($this->backupDir, '', wp_normalize_path(untrailingslashit($part)));
         if (!file_exists($path)) {

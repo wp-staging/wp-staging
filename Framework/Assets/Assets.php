@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Assets;
 
+use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Backup\Job\AbstractJob;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
@@ -13,6 +14,7 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Notices\Notices;
 
 class Assets
 {
@@ -46,6 +48,38 @@ class Assets
     public function getAssetsUrl($assetsFile = '')
     {
         return WPSTG_PLUGIN_URL . "assets/$assetsFile";
+    }
+
+    /**
+     * Get minified or non minified css file name based on debug mode
+     * @param string $cssFileNameWithoutExtension path without extension relative to wpstgPluginDir/assets/css/dist/
+     * @return string
+     */
+    public function getCssAssetsFileName(string $cssFileNameWithoutExtension): string
+    {
+        // If in debug mode, get non-minified css file name if it exists
+        $nonMinCssFile = $this->getAssetsPath("css/dist/$cssFileNameWithoutExtension.css");
+        if ($this->isDebugOrDevMode() && file_exists($nonMinCssFile)) {
+            return "css/dist/$cssFileNameWithoutExtension.css";
+        }
+
+        return "css/dist/$cssFileNameWithoutExtension.min.css";
+    }
+
+    /**
+     * Get minified or non minified js file name based on debug mode
+     * @param string $jsFileNameWithoutExtension path without extension relative to wpstgPluginDir/assets/js/dist/
+     * @return string
+     */
+    public function getJsAssetsFileName(string $jsFileNameWithoutExtension): string
+    {
+        // If in debug mode, get non-minified js file name if it exists
+        $nonMinJsFile = $this->getAssetsPath("js/dist/$jsFileNameWithoutExtension.js");
+        if ($this->isDebugOrDevMode() && file_exists($nonMinJsFile)) {
+            return "js/dist/$jsFileNameWithoutExtension.js";
+        }
+
+        return "js/dist/$jsFileNameWithoutExtension.min.js";
     }
 
     /**
@@ -100,6 +134,8 @@ class Assets
     {
         $this->loadGlobalAssets($hook);
 
+        add_action(Notices::INJECT_ANALYTICS_CONSENT_ASSETS_ACTION, [$this, 'enqueueAnalyticsConsentAssets'], 10, 0);
+
         // Load this css file on frontend and backend on all pages if current site is a staging site
         if ((new SiteInfo())->isStagingSite()) {
             wp_register_style('wpstg-admin-bar', false);
@@ -109,11 +145,7 @@ class Assets
 
         // Load feedback form js file on page plugins.php in free version or in free dev version
         if (!WPStaging::isPro() && $this->isPluginsPage()) {
-            $asset = 'js/dist/wpstg-admin-plugins.min.js';
-            if ($this->isDebugOrDevMode()) {
-                $asset = 'js/dist/wpstg-admin-plugins.js';
-            }
-
+            $asset = $this->getJsAssetsFileName('wpstg-admin-plugins');
             wp_enqueue_script(
                 "wpstg-admin-script",
                 $this->getAssetsUrl($asset),
@@ -122,11 +154,7 @@ class Assets
                 false
             );
 
-            $asset = 'css/dist/wpstg-admin-feedback.min.css';
-            if ($this->isDebugOrDevMode()) {
-                $asset = 'css/dist/wpstg-admin-feedback.css';
-            }
-
+            $asset = $this->getCssAssetsFileName('wpstg-admin-feedback');
             wp_enqueue_style(
                 "wpstg-admin-feedback",
                 $this->getAssetsUrl($asset),
@@ -137,11 +165,7 @@ class Assets
 
         // Load js file on page plugins.php for pro version
         if (WPStaging::isPro() && is_admin()) {
-            $asset = 'js/dist/pro/wpstg-admin-all-pages.min.js';
-            if ($this->isDebugOrDevMode()) {
-                $asset = 'js/dist/pro/wpstg-admin-all-pages.js';
-            }
-
+            $asset = $this->getJsAssetsFileName('pro/wpstg-admin-all-pages');
             wp_enqueue_script(
                 "wpstg-admin-all-pages-script",
                 $this->getAssetsUrl($asset),
@@ -150,11 +174,7 @@ class Assets
                 false
             );
 
-            $asset = 'css/dist/wpstg-admin-all-pages.min.css';
-            if ($this->isDebugOrDevMode()) {
-                $asset = 'css/dist/wpstg-admin-all-pages.css';
-            }
-
+            $asset = $this->getCssAssetsFileName('wpstg-admin-all-pages');
             wp_enqueue_style(
                 "wpstg-admin-all-pages-style",
                 $this->getAssetsUrl($asset),
@@ -168,8 +188,8 @@ class Assets
             return;
         }
 
-        // Load admin js files
-        $asset = 'js/dist/wpstg.js';
+        // Load wpstg js files
+        $asset = $this->getJsAssetsFileName('wpstg');
         wp_enqueue_script(
             "wpstg-common",
             $this->getAssetsUrl($asset),
@@ -179,11 +199,7 @@ class Assets
         );
 
         // Load admin js files
-        $asset = 'js/dist/wpstg-admin.min.js';
-        if ($this->isDebugOrDevMode()) {
-            $asset = 'js/dist/wpstg-admin.js';
-        }
-
+        $asset = $this->getJsAssetsFileName('wpstg-admin');
         wp_enqueue_script(
             "wpstg-admin-script",
             $this->getAssetsUrl($asset),
@@ -193,11 +209,7 @@ class Assets
         );
 
         // Sweet Alert
-        $asset = 'js/dist/wpstg-sweetalert2.min.js';
-        if ($this->isDebugOrDevMode()) {
-            $asset = 'js/dist/wpstg-sweetalert2.js';
-        }
-
+        $asset = $this->getJsAssetsFileName('wpstg-sweetalert2');
         wp_enqueue_script(
             'wpstg-admin-sweetalerts',
             $this->getAssetsUrl($asset),
@@ -206,11 +218,7 @@ class Assets
             true
         );
 
-        $asset = 'css/dist/wpstg-sweetalert2.min.css';
-        if ($this->isDebugOrDevMode()) {
-            $asset = 'css/dist/wpstg-sweetalert2.css';
-        }
-
+        $asset = $this->getCssAssetsFileName('wpstg-sweetalert2');
         wp_enqueue_style(
             'wpstg-admin-sweetalerts',
             $this->getAssetsUrl($asset),
@@ -237,15 +245,11 @@ class Assets
         );
 
         // Internal hook to enqueue backup scripts, used by the backup addon
-        do_action('wpstg_enqueue_backup_scripts', $this->isDebugOrDevMode());
+        Hooks::doAction(BackupServiceProvider::BACKUP_SCRIPTS_ENQUEUE_ACTION);
 
         // Load admin js pro files
         if (defined('WPSTGPRO_VERSION')) {
-            $asset = 'js/dist/pro/wpstg-admin-pro.min.js';
-            if ($this->isDebugOrDevMode()) {
-                $asset = 'js/dist/pro/wpstg-admin-pro.js';
-            }
-
+            $asset = $this->getJsAssetsFileName('pro/wpstg-admin-pro');
             wp_enqueue_script(
                 "wpstg-admin-pro-script",
                 $this->getAssetsUrl($asset),
@@ -256,11 +260,7 @@ class Assets
         }
 
         // Load admin css files
-        $asset = 'css/dist/wpstg-admin.min.css';
-        if ($this->isDebugOrDevMode()) {
-            $asset = 'css/dist/wpstg-admin.css';
-        }
-
+        $asset = $this->getCssAssetsFileName('wpstg-admin');
         wp_enqueue_style(
             "wpstg-admin",
             $this->getAssetsUrl($asset),
@@ -323,11 +323,39 @@ class Assets
                 'wpstg_delete_clone'    => [
                     'title' => esc_html__('Staging Site Deleted Successfully!', 'wp-staging'),
                 ],
+                'backupCreatedModalTitle' => esc_html__('Backup Complete', 'wp-staging'),
+                'backupSchedule' => [
+                    'title' => esc_html__('Backup Schedule Created', 'wp-staging'),
+                    'body'  => esc_html__('Backup is scheduled according to the provided settings.', 'wp-staging'),
+                ],
+                'backupCreationBG' => [
+                    'title' => esc_html__('Backup Creation Triggered', 'wp-staging'),
+                    'body'  => esc_html__('Backup creation is triggered to run in background. You will be notified by email (if set in settings) once the backup is created!', 'wp-staging'),
+                ],
             ],
         ];
 
         // We need some wpstgConfig vars in the wpstg.js file (loaded with wpstg-common scripts) as well
         wp_localize_script("wpstg-common", "wpstg", $wpstgConfig);
+    }
+
+    public function enqueueAnalyticsConsentAssets()
+    {
+        $asset = $this->getJsAssetsFileName('analytics-consent-modal');
+        wp_enqueue_script(
+            "wpstg-show-analytics-modal",
+            $this->getAssetsUrl($asset),
+            [],
+            $this->getAssetsVersion($asset)
+        );
+
+        $asset = $this->getCssAssetsFileName('analytics-consent-modal');
+        wp_enqueue_style(
+            'wpstg-plugin-activation',
+            $this->getAssetsUrl($asset),
+            [],
+            $this->getAssetsVersion($asset)
+        );
     }
 
     /**
@@ -340,7 +368,8 @@ class Assets
             return;
         }
 
-        wp_enqueue_script('wpstg-global', $this->getAssetsUrl('js/dist/wpstg-blank-loader.js'), [], [], false);
+        $asset = $this->getJsAssetsFileName('wpstg-blank-loader');
+        wp_enqueue_script('wpstg-global', $this->getAssetsUrl($asset), [], [], false);
 
         $vars = [
             'nonce' => wp_create_nonce(Nonce::WPSTG_NONCE),

@@ -109,7 +109,7 @@ class DarkMode
         }
 
         add_filter('admin_body_class', function ($classes) {
-            return $classes . ' wpstg-admin-dark-mode';
+            return $classes . ' wpstg-dark';
         });
     }
 

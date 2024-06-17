@@ -67,7 +67,7 @@ $isLoginCredentialsVerified = get_transient('wpstg_user_logged_in_status');
         </p>
         <?php
         if ($isCustomLogin2faEnabled) {
-            include_once(trailingslashit(WPSTG_PLUGIN_DIR) . 'Frontend/views/pro/wordfence-2fa.php');
+            include_once(trailingslashit(WPSTG_PLUGIN_DIR) . 'Frontend/views/wordfence-2fa.php');
         }
         ?>
     </form>

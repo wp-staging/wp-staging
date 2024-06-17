@@ -8,6 +8,7 @@ namespace WPStaging\Backup\Entity;
 use JsonSerializable;
 use WPStaging\Backup\Service\ZlibCompressor;
 use RuntimeException;
+use WPStaging\Backup\BackupHeader;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\HydrateTrait;
@@ -17,6 +18,7 @@ use WPStaging\Backup\Dto\Traits\DateCreatedTrait;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\WithPluginsThemesMuPluginsTrait;
 use WPStaging\Framework\Adapter\WpAdapter;
+use WPStaging\Framework\Facades\Hooks;
 
 /**
  * Class BackupMetadata
@@ -36,6 +38,12 @@ class BackupMetadata implements JsonSerializable
     use IsExportingTrait;
     use DateCreatedTrait;
     use WithPluginsThemesMuPluginsTrait;
+
+    /**
+     * Filter to detect the file format of the backup
+     * @var string
+     */
+    const FILTER_BACKUP_FORMAT_V1 = 'wpstg.backup.format_v1';
 
     /**
      * Backup created on single site
@@ -223,7 +231,7 @@ class BackupMetadata implements JsonSerializable
         $this->networkId = $wpAdapter->getCurrentNetworkId();
 
         $this->setWpstgVersion(WPStaging::getVersion());
-        $this->setBackupVersion(self::BACKUP_VERSION);
+        $this->setBackupVersion($this->getDefaultVersion());
         $this->setSiteUrl(get_option('siteurl'));
         $this->setHomeUrl(get_option('home'));
         $this->setAbsPath(ABSPATH);
@@ -1204,5 +1212,24 @@ class BackupMetadata implements JsonSerializable
     public function setHostingType(string $hostingType)
     {
         $this->hostingType = $hostingType;
+    }
+
+    public function getIsBackupFormatV1(): bool
+    {
+        $result = version_compare($this->getBackupVersion(), BackupHeader::MIN_BACKUP_VERSION, '<');
+
+        return Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, $result);
+    }
+
+    /**
+     * @todo Remove once v2 format is set as default
+     *
+     * @return string
+     */
+    private function getDefaultVersion(): string
+    {
+        $isBackupFormatV1 = Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, true);
+
+        return $isBackupFormatV1 ? self::BACKUP_VERSION : BackupHeader::MIN_BACKUP_VERSION;
     }
 }

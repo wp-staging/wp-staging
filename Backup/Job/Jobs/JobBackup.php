@@ -4,19 +4,20 @@ namespace WPStaging\Backup\Job\Jobs;
 
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Job\AbstractJob;
-use WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupMuPluginsTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupOtherFilesTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupPluginsTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupRequirementsCheckTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupThemesTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupUploadsTask;
+use WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FilesystemScannerTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinalizeBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
-use WPStaging\Backup\Task\Tasks\JobBackup\ValidateBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\IncludeDatabaseTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\ScheduleBackupTask;
+use WPStaging\Backup\Task\Tasks\JobBackup\SignBackupTask;
+use WPStaging\Backup\Task\Tasks\JobBackup\ValidateBackupTask;
 
 class JobBackup extends AbstractJob
 {
@@ -65,6 +66,15 @@ class JobBackup extends AbstractJob
             return;
         }
 
+        if ($this->jobDataDto->getIsCreateBackupInBackground()) {
+            if ($this->jobDataDto->getRepeatBackupOnSchedule()) {
+                $this->addSchedulerTask();
+            }
+
+            $this->addFinishBackupTask();
+            return;
+        }
+
         $this->setScannerTask();
         if ($this->jobDataDto->getIsExportingOtherWpContentFiles()) {
             $this->tasks[] = BackupOtherFilesTask::class;
@@ -95,16 +105,23 @@ class JobBackup extends AbstractJob
         }
 
         $this->addCompressionTask();
-
         $this->addFinalizeTask();
         if ($this->jobDataDto->getRepeatBackupOnSchedule()) {
             $this->addSchedulerTask();
         }
 
-        $this->tasks[] = ValidateBackupTask::class;
+        /**
+         * Validation is a must to ensure the backup is valid.
+         * But it cannot be done during backup listing otherwise it will consume a lot of memory and may result in timeout.
+         * So validation should be done before signing of backup. So we can stop the process and keep backup invalid state in case if validation fails.
+         */
+        if ($this->jobDataDto->getIsValidateBackupFiles()) {
+            $this->addValidationTasks();
+        }
+
+        $this->tasks[] = SignBackupTask::class;
 
         $this->addStoragesTasks();
-
         $this->addFinishBackupTask();
     }
 
@@ -127,6 +144,11 @@ class JobBackup extends AbstractJob
     protected function addFinalizeTask()
     {
         $this->tasks[] = FinalizeBackupTask::class;
+    }
+
+    protected function addValidationTasks()
+    {
+        $this->tasks[] = ValidateBackupTask::class;
     }
 
     /**

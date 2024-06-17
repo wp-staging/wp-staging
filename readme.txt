@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.5
-Stable tag: 3.6.0
+Stable tag: 3.7.1
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -282,6 +282,39 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.7.1 =
+* New: Compatible up to WordPress 6.5.4
+* New: Automatic login to staging site after initial creation by creating a temporary login. #3198
+* New: Add option to run backup in background without keeping browser open. #3286
+* Security: Sanitize parameters in remote storage settings to prevent possible path traversal and executing of potential malicious code. #3461
+* Enh: Add support for Wordfence 2FA authentication in the WP Staging login form. #3358
+* Enh: Refactor dropbox and google drive sign in buttons. (Pro) #3405
+* Enh: Reducing plugin size by minifying js and css files and removing map files. #3279
+* Enh: Redesign plugin deactivation feedback form. #3000
+* Enh: Hide sensitive values in system info. #3447
+* Fix: Unable to restore backup when it contains huge number of files which requires extracting in multiple requests. #3477
+* Fix: Improve reliability and robustness of the background processor: Stalled actions will automatically be cancelled if they are in processing state for more than 15 mins. #3454
+* Fix: Backup by URl throws error "Invalid backup file content". #3404
+* Fix: Standalone restorer randomly terminated while restoring large files. #3348
+* Fix: The backup version of WP Staging Restore is not up to date. #3425
+* Fix: Refactor the contact form. New default options for sending backup log files and accepting privacy policy. #3370
+* Fix: Ensure listing of remote backups and uploading of local backups to cloud storage works correctly. #3434
+* Fix: Hide sensitive fields (secret key, access key...) in backup storages settings. #3389
+* Fix: Don't optimize the .htaccess as default any longer if server is litespeed. Revert to old behavior by using the filter `wpstg.create_litespeed_server_config`. #3409
+* Fix: Table Renaming Task fails during Restore and Push if database prefix contains capital letter(s) and database is hosted on Windows based OS system i.e. `Microsoft Azure`. #3372
+* Fix: Disconnect google drive account if it fails to refresh access token. #3388
+* Fix: Cloud storage options are overlapped by other elements. #3343
+* Fix: Don't load and list remote backup for dropbox as it is not supported yet. (Pro) #3407
+* Dev: Refactor BackupValidateTask to BackupSignerTask to match the action it does. Also move the signer related logic to separate service. #3367
+* Dev: Add pre-requisite code for a new faster and more secure backup format. #2915
+* Dev: Add option in UI to validate backup files during backup creation. #3368
+* Dev: Auto eslint js files and format scss files during `make watch`. #3398
+* Dev: Add phpcs rule to make each file ends with only one empty line. #3390
+* Dev: Replace rollup-plugin-postcss with rollup-plugin-styles to have better control over source maps. #3429
+* Fix: Unable to restore backup when it contains huge number of files which requires extracting in multiple requests. #3477
+
+= 3.7.0 (Skipped) =
 
 = 3.6.0 =
 * New: Compatible up to WordPress 6.5.3
@@ -1125,4 +1158,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-Multiple enhancements in UI and performance. Fixing a potential security issue and small fixes. Updating is recommended!
+Compatible up to WordPress 6.5.4. Multiple enhancements in UI and performance. Updating is recommended!

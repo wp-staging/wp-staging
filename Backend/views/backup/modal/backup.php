@@ -100,10 +100,10 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                 <?php require_once trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/Pro/views/backup/modal/network-options.php'; ?>
             <?php } ?>
 
-            <!-- Advanced Exclude Options -->
+            <!-- Advanced Options -->
             <div class="wpstg-backup-options-section">
                 <h4 class="swal2-title wpstg-w-100">
-                    <?php esc_html_e('Advanced Exclude Options', 'wp-staging'); ?>
+                    <?php esc_html_e('Advanced Options', 'wp-staging'); ?>
                 </h4>
 
                 <div class="wpstg-container">
@@ -126,8 +126,31 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                     <?php require_once trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/views/backup/modal/advanced-exclude-options.php'; ?>
 
                 </div>
+
+                <div class="wpstg-container wpstg-mt-5px">
+                    <label class="wpstg-backup-option wpstg-with-tooltip">
+                        <?php Checkbox::render('wpstg-run-in-background', 'runInBackground', '', false, []); ?>
+                        <span><?php esc_html_e('Run In Background', 'wp-staging'); ?></span>
+                        <div class="wpstg--tooltip">
+                            <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
+                            <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                                <?php esc_html_e('This runs the backup in the background. You will be notified by e-mail (if activated in the settings) as soon as the backup has been successfully created.', 'wp-staging') ?>
+                                <br/><b><?php esc_html_e('Note:', 'wp-staging') ?></b> <?php esc_html_e('This option has no effect if the backup is only to be scheduled (the "Backup Times > Run Now" option is not selected).', 'wp-staging') ?>
+                            </span>
+                        </div>
+                    </label>
+                </div>
+
+                <?php if (defined('WPSTG_DEBUG') && constant('WPSTG_DEBUG')) : ?>
+                <div class="wpstg-container wpstg-mt-5px">
+                    <label class="wpstg-storage-option">
+                        <?php Checkbox::render('wpstg-validate-backup-files', 'validateBackupFiles', '', false, []); ?>
+                        <span> <?php esc_html_e('Validate Backup', 'wp-staging'); ?> </span>
+                    </label>
+                </div>
+                <?php endif; ?>
             </div>
-            <!-- End Advanced Exclude Options -->
+            <!-- End Advanced Options -->
 
             <div class="wpstg-backup-options-section">
                 <h4 class="swal2-title wpstg-w-100">
@@ -168,13 +191,13 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
 
                 <div class="wpstg-backup-scheduling-options wpstg-container">
 
-                    <label class="wpstg-storage-option">
+                    <label class="wpstg-storage-option wpstg-advanced-storage-options">
                         <?php Checkbox::render("storage-localStorage", 'storages', 'localStorage', true); ?>
-                        <span><?php esc_html_e('Local Storage', 'wp-staging'); ?></span>
+                        <span class="wpstg-storage-name"><?php esc_html_e('Local Storage', 'wp-staging'); ?></span>
                     </label>
 
                     <?php foreach ($storages->getStorages($enabled = true) as $storage) : ?>
-                        <label class="wpstg-storage-option">
+                        <label class="wpstg-storage-option wpstg-advanced-storage-options">
                             <?php
                             $isActivated   = $storages->isActivated($storage['authClass']);
                             $isProStorage  = empty($storage['authClass']);
@@ -182,9 +205,9 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                             $disabledClass = $isDisabled ? 'wpstg-storage-settings-disabled' : '';
                             Checkbox::render('storage-' . $storage['id'], 'storages', $storage['id'], false, ['isDisabled' => $isDisabled]);
                             ?>
-                            <span class="<?php echo esc_attr($disabledClass) ?>"><?php echo esc_html($storage['name']); ?></span>
+                            <span class="wpstg-storage-name <?php echo esc_attr($disabledClass) ?>"><?php echo esc_html($storage['name']); ?></span>
                             <?php if (!$isProVersion && $isProStorage) { ?>
-                                <a href="https://wp-staging.com/get-<?php echo esc_attr($storage['id']) ?>" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging') ?></span></a>
+                                <span class="wpstg-pro-feature"><a href="https://wp-staging.com/get-<?php echo esc_attr($storage['id']) ?>" target="_blank" class="wpstg-pro-feature-link"><?php esc_html_e('Upgrade', 'wp-staging') ?></a></span>
                             <?php } else { ?>
                                 <span class="wpstg-storage-settings"><a class="" href="<?php echo esc_url($storage['settingsPath']); ?>" target="_blank"><?php echo $isActivated ? esc_html('Settings', 'wp-staging') : esc_html('Activate', 'wp-staging'); ?></a></span>
                             <?php } ?>

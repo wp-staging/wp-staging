@@ -221,17 +221,9 @@ class JobRestore extends AbstractJob
     /**
      * @return void
      */
-    private function addExtractFilesTasks()
+    protected function addExtractFilesTasks()
     {
-        $metadata = $this->jobDataDto->getBackupMetadata();
-        if (!$metadata->getIsMultipartBackup()) {
-            $this->tasks[] = ExtractFilesTask::class;
-            return;
-        }
-
-        foreach ($metadata->getMultipartMetadata()->getFileParts() as $ignored) {
-            $this->tasks[] = ExtractFilesTask::class;
-        }
+        $this->tasks[] = ExtractFilesTask::class;
     }
 
     /**

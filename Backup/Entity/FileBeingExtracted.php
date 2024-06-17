@@ -1,11 +1,8 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
-
 namespace WPStaging\Backup\Entity;
 
-use WPStaging\Backup\BackupFileIndex;
+use WPStaging\Backup\Interfaces\IndexLineInterface;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Traits\ResourceTrait;
 
@@ -13,6 +10,7 @@ use WPStaging\Framework\Traits\ResourceTrait;
  * Class ExtractingFileEntity
  *
  * This is a OOP representation of a file being extracted.
+ * @todo Add strict types in separate PR
  *
  * @see     \WPStaging\Backup\Service\Extractor
  *
@@ -37,6 +35,7 @@ class FileBeingExtracted
     /** @var int */
     private $writtenBytes = 0;
 
+    /** @var string */
     protected $extractFolder;
 
     /** @var PathIdentifier */
@@ -45,20 +44,20 @@ class FileBeingExtracted
     /** @var int 1 if yes, 0 if no. */
     protected $isCompressed;
 
-    public function __construct($identifiablePath, $extractFolder, PathIdentifier $pathIdentifier, BackupFileIndex $backupFileIndex)
+    public function __construct(string $identifiablePath, string $extractFolder, PathIdentifier $pathIdentifier, IndexLineInterface $backupFileIndex)
     {
         $this->identifiablePath = $identifiablePath;
-        $this->extractFolder = trailingslashit($extractFolder);
-        $this->start = $backupFileIndex->bytesStart;
-        $this->totalBytes = $backupFileIndex->bytesEnd;
-        $this->pathIdentifier = $pathIdentifier;
-        $this->isCompressed = $backupFileIndex->isCompressed;
-        $this->relativePath = $this->pathIdentifier->getPathWithoutIdentifier($this->identifiablePath);
+        $this->extractFolder    = trailingslashit($extractFolder);
+        $this->start            = $backupFileIndex->getContentStartOffset();
+        $this->totalBytes       = $backupFileIndex->getCompressedSize();
+        $this->pathIdentifier   = $pathIdentifier;
+        $this->isCompressed     = (int)$backupFileIndex->getIsCompressed();
+        $this->relativePath     = $this->pathIdentifier->getPathWithoutIdentifier($this->identifiablePath);
     }
 
     public function getBackupPath()
     {
-        return $this->extractFolder . $this->pathIdentifier->getPathWithoutIdentifier($this->identifiablePath);
+        return $this->extractFolder . $this->relativePath;
     }
 
     public function findReadTo()
@@ -134,5 +133,10 @@ class FileBeingExtracted
     public function getIsCompressed()
     {
         return $this->isCompressed;
+    }
+
+    public function getCurrentOffset(): int
+    {
+        return $this->start + $this->writtenBytes;
     }
 }

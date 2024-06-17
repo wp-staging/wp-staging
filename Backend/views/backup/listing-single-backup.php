@@ -217,7 +217,7 @@ $logUrl = add_query_arg([
                 <?php endif ?>
             <?php endif ?>
             <?php if ($isMultipartBackup) : ?>
-                <div class="wpstg-tabs-wrapper invalid-backup-tabs">
+                <div class="wpstg-tabs-wrapper wpstg-invalid-backup-tabs">
                     <?php include(__DIR__ . '/partials/invalid-backup.php'); ?>
                 </div>
             <?php endif ?>

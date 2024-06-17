@@ -3,8 +3,10 @@
 namespace WPStaging\Backup\Service;
 
 use Exception;
+use OutOfRangeException;
+use RuntimeException;
 use WPStaging\Backup\BackupFileIndex;
-use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
+use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Entity\FileBeingExtracted;
 use WPStaging\Backup\Exceptions\DiskNotWritableException;
@@ -17,38 +19,49 @@ use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Backup\BackupValidator;
+use WPStaging\Backup\Dto\File\ExtractorDto;
 use WPStaging\Backup\Exceptions\EmptyChunkException;
+use WPStaging\Backup\Exceptions\FileValidationException;
+use WPStaging\Backup\FileHeader;
+use WPStaging\Backup\Interfaces\IndexLineInterface;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Facades\Hooks;
 
 class Extractor
 {
     use ResourceTrait;
 
-    /** @var JobRestoreDataDto */
-    private $jobRestoreDataDto;
+    const VALIDATE_DIRECTORY = 'validate';
 
     /**
      * File currently being extracted
      * @var FileBeingExtracted|null
      */
-    private $extractingFile;
+    protected $extractingFile;
 
     /** @var FileObject */
-    private $wpstgFile;
+    protected $wpstgFile;
 
     /** @var string */
-    private $dirRestore;
+    protected $dirRestore;
 
     /** @var int */
-    private $wpstgIndexOffsetForCurrentFile;
+    protected $wpstgIndexOffsetForCurrentFile;
 
     /** @var int */
-    private $wpstgIndexOffsetForNextFile;
+    protected $wpstgIndexOffsetForNextFile;
 
     /** @var LoggerInterface */
-    private $logger;
+    protected $logger;
+
+    /** @var ExtractorDto */
+    protected $extractorDto;
 
     /** @var int How many bytes were written in this request. */
     protected $bytesWrittenThisRequest = 0;
+
+    /** @var bool */
+    protected $isBackupFormatV1 = false;
 
     /** @var PathIdentifier */
     protected $pathIdentifier;
@@ -56,7 +69,7 @@ class Extractor
     /** @var Directory */
     protected $directory;
 
-    /** @var diskWriteCheck */
+    /** @var DiskWriteCheck */
     protected $diskWriteCheck;
 
     /** @var BackupFileIndex */
@@ -66,7 +79,16 @@ class Extractor
     protected $zlibCompressor;
 
     /** @var BackupValidator */
-    private $backupValidator;
+    protected $backupValidator;
+
+    /** @var BackupHeader */
+    protected $backupHeader;
+
+    /** @var IndexLineInterface */
+    protected $indexLineDto;
+
+    /** @var BackupMetadata */
+    protected $backupMetadata;
 
     public function __construct(
         PathIdentifier $pathIdentifier,
@@ -74,7 +96,8 @@ class Extractor
         DiskWriteCheck $diskWriteCheck,
         BackupFileIndex $backupFileIndex,
         ZlibCompressor $zlibCompressor,
-        BackupValidator $backupValidator
+        BackupValidator $backupValidator,
+        BackupHeader $backupHeader
     ) {
         $this->pathIdentifier  = $pathIdentifier;
         $this->directory       = $directory;
@@ -82,38 +105,69 @@ class Extractor
         $this->backupFileIndex = $backupFileIndex;
         $this->zlibCompressor  = $zlibCompressor;
         $this->backupValidator = $backupValidator;
+        $this->backupHeader    = $backupHeader;
     }
 
     /**
-     * @param JobRestoreDataDto $jobRestoreDataDto
+     * @param bool $isBackupFormatV1
+     * @return void
+     */
+    public function setIsBackupFormatV1(bool $isBackupFormatV1)
+    {
+        $this->isBackupFormatV1 = $isBackupFormatV1;
+        if ($isBackupFormatV1) {
+            $this->indexLineDto = new BackupFileIndex();
+        } else {
+            $this->indexLineDto = WPStaging::make(FileHeader::class);
+        }
+    }
+
+    /**
      * @param LoggerInterface $logger
      * @return void
      */
-    public function inject(JobRestoreDataDto $jobRestoreDataDto, LoggerInterface $logger)
+    public function setLogger(LoggerInterface $logger)
     {
-        $this->jobRestoreDataDto = $jobRestoreDataDto;
-        $this->wpstgFile         = new FileObject($this->jobRestoreDataDto->getFile());
-        $this->dirRestore        = $this->jobRestoreDataDto->getTmpDirectory();
-        $this->logger            = $logger;
+        $this->logger = $logger;
     }
 
     /**
-     * @return JobRestoreDataDto
+     * @param ExtractorDto $extractorDto
+     * @param string $backupFilePath
+     * @param string $tmpPath
+     * @return void
+     */
+    public function setup(ExtractorDto $extractorDto, string $backupFilePath, string $tmpPath = '')
+    {
+        $this->dirRestore   = $tmpPath;
+        $this->extractorDto = $extractorDto;
+        $this->setFileToExtract($backupFilePath);
+
+        if (empty($this->dirRestore)) {
+            $this->dirRestore = $this->directory->getTmpDirectory();
+        }
+
+        $this->dirRestore = trailingslashit($this->dirRestore);
+    }
+
+    /**
+     * @param bool $validateOnly
+     * @return void
      * @throws DiskNotWritableException
      */
-    public function extract(): JobRestoreDataDto
+    public function execute(bool $validateOnly = false)
     {
         while (!$this->isThreshold()) {
             try {
-                $this->findFileToExtract();
+                $this->findFileToExtract($validateOnly);
             } catch (FinishedQueueException $e) {
                 // Explicit re-throw for readability
                 throw $e;
-            } catch (\OutOfRangeException $e) {
+            } catch (OutOfRangeException $e) {
                 // Done processing, or failed
                 $this->logger->warning('OutOfRangeException. Error: ' .  $e->getMessage());
-                return $this->jobRestoreDataDto;
-            } catch (\RuntimeException $e) {
+                return;
+            } catch (RuntimeException $e) {
                 $this->logger->warning($e->getMessage());
                 continue;
             } catch (MissingFileException $e) {
@@ -121,22 +175,30 @@ class Extractor
                 continue;
             }
 
-            $this->extractCurrentFile();
+            try {
+                $this->processCurrentFile($validateOnly);
+            } catch (FileValidationException $e) {
+                if ($validateOnly) {
+                    throw $e;
+                } else {
+                    $this->logger->warning('Unable to validate file. Error: ' .  $e->getMessage());
+                    continue;
+                }
+            }
         }
-
-        return $this->jobRestoreDataDto;
     }
 
     /**
+     * @param bool $validateOnly
      * @return void
      */
-    private function findFileToExtract()
+    private function findFileToExtract(bool $validateOnly = false)
     {
-        if ($this->jobRestoreDataDto->getExtractorMetadataIndexPosition() === 0) {
-            $this->jobRestoreDataDto->setExtractorMetadataIndexPosition($this->jobRestoreDataDto->getCurrentFileHeaderStart());
+        if ($this->extractorDto->getCurrentIndexOffset() === 0) {
+            $this->extractorDto->setCurrentIndexOffset($this->extractorDto->getIndexStartOffset());
         }
 
-        $this->wpstgFile->fseek($this->jobRestoreDataDto->getExtractorMetadataIndexPosition());
+        $this->wpstgFile->fseek($this->extractorDto->getCurrentIndexOffset());
 
         // Store the index position when reading the current file
         $this->wpstgIndexOffsetForCurrentFile = $this->wpstgFile->ftell();
@@ -146,37 +208,41 @@ class Extractor
         // Store the index position of the next file to be processed
         $this->wpstgIndexOffsetForNextFile = $this->wpstgFile->ftell();
 
-        if (!$this->backupFileIndex->isIndexLine($rawIndexFile)) {
+        if (!$this->indexLineDto->isIndexLine($rawIndexFile)) {
             throw new FinishedQueueException();
         }
 
-        $backupFileIndex = $this->backupFileIndex->readIndex($rawIndexFile);
+        /** @var IndexLineInterface $backupFileIndex */
+        $backupFileIndex = $this->indexLineDto->readIndexLine($rawIndexFile);
 
-        $identifier = $this->pathIdentifier->getIdentifierFromPath($backupFileIndex->identifiablePath);
+        $identifier = $this->pathIdentifier->getIdentifierFromPath($backupFileIndex->getIdentifiablePath());
 
-        if ($identifier === PathIdentifier::IDENTIFIER_UPLOADS) {
+        if ($validateOnly) {
+            $extractFolder = trailingslashit($this->dirRestore . self::VALIDATE_DIRECTORY);
+        } elseif ($identifier === PathIdentifier::IDENTIFIER_UPLOADS) {
             $extractFolder = $this->directory->getUploadsDirectory();
         } else {
             $extractFolder = $this->dirRestore . $identifier;
         }
 
-        if (!wp_mkdir_p($extractFolder)) {
-            throw new \RuntimeException("Could not create folder to extract backup file: $extractFolder");
+        if (!$validateOnly && !wp_mkdir_p($extractFolder)) {
+            throw new RuntimeException("Could not create folder to extract backup file: $extractFolder");
         }
 
-        $this->extractingFile = new FileBeingExtracted($backupFileIndex->identifiablePath, $extractFolder, $this->pathIdentifier, $backupFileIndex);
-        $this->extractingFile->setWrittenBytes($this->jobRestoreDataDto->getExtractorFileWrittenBytes());
+        $this->extractingFile = new FileBeingExtracted($backupFileIndex->getIdentifiablePath(), $extractFolder, $this->pathIdentifier, $backupFileIndex);
+        $this->extractingFile->setWrittenBytes($this->extractorDto->getExtractorFileWrittenBytes());
 
-        if ($identifier === PathIdentifier::IDENTIFIER_UPLOADS && $this->extractingFile->getWrittenBytes() === 0) {
+        if (!$validateOnly && $identifier === PathIdentifier::IDENTIFIER_UPLOADS && $this->extractingFile->getWrittenBytes() === 0) {
             if (file_exists($this->extractingFile->getBackupPath())) {
                 // Delete the original upload file
                 if (!unlink($this->extractingFile->getBackupPath())) {
-                    throw new \RuntimeException(sprintf(__('Could not delete original media library file %s. Skipping backup of it...', 'wp-staging'), $this->extractingFile->getRelativePath()));
+                    throw new RuntimeException(sprintf(__('Could not delete original media library file %s. Skipping backup of it...', 'wp-staging'), $this->extractingFile->getRelativePath()));
                 }
             }
         }
 
-        $this->wpstgFile->fseek($this->extractingFile->getStart() + $this->jobRestoreDataDto->getExtractorFileWrittenBytes());
+        $this->wpstgFile->fseek($this->extractingFile->getCurrentOffset());
+        $this->indexLineDto = $backupFileIndex; // Required for BackupFileIndex
     }
 
     /**
@@ -187,6 +253,11 @@ class Extractor
         return $this->bytesWrittenThisRequest;
     }
 
+    public function getExtractorDto(): ExtractorDto
+    {
+        return $this->extractorDto;
+    }
+
     /**
      * @param string $filePath
      * @return void
@@ -194,11 +265,11 @@ class Extractor
     public function setFileToExtract(string $filePath)
     {
         try {
-            $this->wpstgFile = new FileObject($filePath);
-            $metadata        = new BackupMetadata();
-            $metadata        = $metadata->hydrateByFile($this->wpstgFile);
-            $this->jobRestoreDataDto->setCurrentFileHeaderStart($metadata->getHeaderStart());
-            $this->jobRestoreDataDto->setTotalChunks($metadata->getTotalChunks());
+            $this->wpstgFile      = new FileObject($filePath);
+            $this->backupMetadata = new BackupMetadata();
+            $this->backupMetadata = $this->backupMetadata->hydrateByFile($this->wpstgFile);
+            $this->extractorDto->setIndexStartOffset($this->backupMetadata->getHeaderStart());
+            $this->extractorDto->setTotalChunks($this->backupMetadata->getTotalChunks());
         } catch (Exception $ex) {
             throw new MissingFileException(sprintf("Following backup part missing: %s", $filePath));
         }
@@ -216,10 +287,11 @@ class Extractor
     }
 
     /**
+     * @param bool $validateOnly
      * @return void
      * @throws DiskNotWritableException
      */
-    private function extractCurrentFile()
+    private function processCurrentFile(bool $validateOnly = false)
     {
         try {
             if ($this->isThreshold()) {
@@ -232,20 +304,20 @@ class Extractor
             $this->bytesWrittenThisRequest += $this->extractingFile->getWrittenBytes();
 
             if (!$this->extractingFile->isFinished()) {
-                if ($this->extractingFile->getWrittenBytes() > 0 && $this->extractingFile->getTotalBytes() > 10 * MB_IN_BYTES) {
+                if ($this->extractingFile->getWrittenBytes() > 0 && $this->isBigFile()) {
                     $percentProcessed = ceil(($this->extractingFile->getWrittenBytes() / $this->extractingFile->getTotalBytes()) * 100);
                     $this->logger->info(sprintf('Extracting big file: %s - %s/%s (%s%%)', $this->extractingFile->getRelativePath(), size_format($this->extractingFile->getWrittenBytes(), 2), size_format($this->extractingFile->getTotalBytes(), 2), $percentProcessed));
                 }
 
-                $this->jobRestoreDataDto->setExtractorMetadataIndexPosition($this->wpstgIndexOffsetForCurrentFile);
-                $this->jobRestoreDataDto->setExtractorFileWrittenBytes($this->extractingFile->getWrittenBytes());
+                $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForCurrentFile);
+                $this->extractorDto->setExtractorFileWrittenBytes($this->extractingFile->getWrittenBytes());
 
                 return;
             }
         } catch (DiskNotWritableException $e) {
             // Re-throw
             throw $e;
-        } catch (\OutOfRangeException $e) {
+        } catch (OutOfRangeException $e) {
             // Backup header, should be ignored silently
             $this->extractingFile->setWrittenBytes($this->extractingFile->getTotalBytes());
         } catch (Exception $e) {
@@ -258,19 +330,37 @@ class Extractor
         }
 
         $destinationFilePath = $this->extractingFile->getBackupPath();
+        $pathForErrorLogging = $this->pathIdentifier->transformIdentifiableToPath($this->indexLineDto->getIdentifiablePath());
         if (file_exists($destinationFilePath) && filesize($destinationFilePath) === 0 && $this->extractingFile->getTotalBytes() !== 0) {
-            throw new \RuntimeException(sprintf('File %s is empty', $destinationFilePath));
+            throw new RuntimeException(sprintf('File %s is empty', $pathForErrorLogging));
+        }
+
+        if (!$validateOnly && $this->isBackupFormatV1) {
+            $this->maybeRemoveLastAccidentalCharFromLastExtractedFile();
+        }
+
+        clearstatcache();
+        try {
+            $this->indexLineDto->validateFile($destinationFilePath, $pathForErrorLogging);
+        } catch (FileValidationException $e) {
+            if ($validateOnly && file_exists($destinationFilePath)) {
+                @unlink($destinationFilePath);
+            }
+
+            throw $e;
         }
 
         // Jump to the next file of the index
-        $this->jobRestoreDataDto->setExtractorMetadataIndexPosition($this->wpstgIndexOffsetForNextFile);
+        $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
 
-        $this->jobRestoreDataDto->incrementExtractorFilesExtracted();
-
-        $this->maybeApplyPatch2861();
+        $this->extractorDto->incrementTotalFilesExtracted();
 
         // Reset offset pointer
-        $this->jobRestoreDataDto->setExtractorFileWrittenBytes(0);
+        $this->extractorDto->setExtractorFileWrittenBytes(0);
+
+        if ($validateOnly && file_exists($destinationFilePath)) {
+            @unlink($destinationFilePath);
+        }
     }
 
     /**
@@ -313,10 +403,10 @@ class Extractor
             $chunk = null;
             try {
                 $chunk = $this->zlibCompressor->getService()->readChunk($this->wpstgFile, $this->extractingFile, function ($currentChunkNumber) {
-                    $this->logger->debug(sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->jobRestoreDataDto->getTotalChunks()));
+                    $this->logger->debug(sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->extractorDto->getTotalChunks()));
                 });
             } catch (EmptyChunkException $ex) {
-                // If empty chunk, skip it
+                // If empty chunk, it is an empty file, so we can skip it
                 continue;
             }
 
@@ -344,7 +434,7 @@ class Extractor
      * @param string $filePath
      * @return bool
      */
-    protected function createEmptyFile(string $filePath): bool
+    private function createEmptyFile(string $filePath): bool
     {
         // Early bail: file already exists
         if (file_exists($filePath)) {
@@ -364,7 +454,7 @@ class Extractor
      * @param string $content
      * @return bool
      */
-    protected function filePutContents(string $filePath, string $content): bool
+    private function filePutContents(string $filePath, string $content): bool
     {
         if ($fp = fopen($filePath, 'wb')) {
             $bytes = fwrite($fp, $content);
@@ -377,16 +467,16 @@ class Extractor
     }
 
     /**
+     * Fixes issue https://github.com/wp-staging/wp-staging-pro/issues/2861
      * @return void
      */
-    private function maybeApplyPatch2861()
+    private function maybeRemoveLastAccidentalCharFromLastExtractedFile()
     {
-        $backupMetadata = $this->jobRestoreDataDto->getBackupMetadata();
-        if ($backupMetadata->getTotalFiles() !== $this->jobRestoreDataDto->getExtractorFilesExtracted()) {
+        if ($this->backupMetadata->getTotalFiles() !== $this->extractorDto->getTotalFilesExtracted()) {
             return;
         }
 
-        if ($this->backupValidator->validateFileIndexFirstLine($this->wpstgFile, $backupMetadata)) {
+        if ($this->backupValidator->validateFileIndexFirstLine($this->wpstgFile, $this->backupMetadata)) {
             return;
         }
 
@@ -414,5 +504,12 @@ class Extractor
 
         $fileContent = substr($fileContent, 0, -1); // Remove the last character
         file_put_contents($destinationFilePath, $fileContent);
+    }
+
+    private function isBigFile(): bool
+    {
+        $sizeToConsiderAsBigFile = Hooks::applyFilters('wpstg.tests.restore.bigFileSize', 10 * MB_IN_BYTES);
+
+        return $this->extractingFile->getTotalBytes() > $sizeToConsiderAsBigFile;
     }
 }
