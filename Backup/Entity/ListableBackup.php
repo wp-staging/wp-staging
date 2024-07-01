@@ -41,6 +41,9 @@ class ListableBackup
     public $isExportingOtherWpContentFiles = false;
 
     /** @var bool */
+    public $isExportingOtherWpRootFiles = false;
+
+    /** @var bool */
     public $isExportingPlugins = false;
 
     /** @var bool */
@@ -76,7 +79,7 @@ class ListableBackup
     /** @var bool Whether this listable refers to a legacy .SQL file backup */
     public $isLegacy = false;
 
-    /** @var bool Whether this backup is corrupt i.e. metadata not hydrateable */
+    /** @var bool Whether this backup is corrupt i.e. metadata not hydratable */
     public $isCorrupt = false;
 
     /** @var bool Whether this backup is a multipart */

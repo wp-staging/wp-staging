@@ -12,6 +12,7 @@ use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Utils\ServerVars;
+use WPStaging\Notifications\Notifications;
 
 use function WPStaging\functions\debug_log;
 
@@ -27,6 +28,15 @@ class BackupScheduler
     const TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT = 'wpstg.backup.schedules.report_sent';
 
     /** @var string */
+    const OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT = 'wpstg_backup_schedules_send_slack_error_report';
+
+    /** @var string */
+    const OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK = 'wpstg_backup_schedules_report_slack_webhook';
+
+    /** @var string */
+    const TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT = 'wpstg.backup.schedules.slack_report_sent';
+
+    /** @var string */
     const OPTION_BACKUP_SCHEDULES = 'wpstg_backup_schedules';
 
     /** @var BackupsFinder */
@@ -37,6 +47,11 @@ class BackupScheduler
 
     /** @var BackupDeleter */
     protected $backupDeleter;
+
+    /**
+     * @var Notifications
+     */
+    protected $notifications;
 
     /**
      * Store cron related message
@@ -51,12 +66,15 @@ class BackupScheduler
      * @param BackupsFinder $backupsFinder
      * @param BackupProcessLock $processLock
      * @param BackupDeleter $backupDeleter
+     * @param Notifications $notifications
      */
-    public function __construct(BackupsFinder $backupsFinder, BackupProcessLock $processLock, BackupDeleter $backupDeleter)
+    public function __construct(BackupsFinder $backupsFinder, BackupProcessLock $processLock, BackupDeleter $backupDeleter, Notifications $notifications)
     {
         $this->backupsFinder = $backupsFinder;
         $this->processLock   = $processLock;
         $this->backupDeleter = $backupDeleter;
+        $this->notifications = $notifications;
+
         $this->countOverdueCronjobs();
     }
 
@@ -168,6 +186,7 @@ class BackupScheduler
             'isExportingThemes'              => $jobBackupDataDto->getIsExportingThemes(),
             'isExportingUploads'             => $jobBackupDataDto->getIsExportingUploads(),
             'isExportingOtherWpContentFiles' => $jobBackupDataDto->getIsExportingOtherWpContentFiles(),
+            'isExportingOtherWpRootFiles'    => $jobBackupDataDto->getIsExportingOtherWpRootFiles(),
             'isExportingDatabase'            => $jobBackupDataDto->getIsExportingDatabase(),
             'sitesToBackup'                  => $jobBackupDataDto->getSitesToBackup(),
             'storages'                       => $jobBackupDataDto->getStorages(),
@@ -180,6 +199,7 @@ class BackupScheduler
             'isExcludingLogs'                => $jobBackupDataDto->getIsExcludingLogs(),
             'isExcludingCaches'              => $jobBackupDataDto->getIsExcludingCaches(),
             'isWpCliRequest'                 => true, // should be true otherwise multisite backup will not work
+            'backupExcludedDirectories'      => $jobBackupDataDto->getBackupExcludedDirectories(),
         ];
 
         if (wp_next_scheduled('wpstg_create_cron_backup', [$backupSchedule])) {
@@ -438,9 +458,9 @@ class BackupScheduler
 
         // Third party plugins that handle crons
         $thirdPartyCronPlugins = [
-            '\HM\Cavalcade\Plugin\Job' => 'Cavalcade',
+            '\HM\Cavalcade\Plugin\Job'         => 'Cavalcade',
             '\Automattic\WP\Cron_Control\Main' => 'Cron Control',
-            '\KMM\KRoN\Core' => 'KMM KRoN',
+            '\KMM\KRoN\Core'                   => 'KMM KRoN',
         ];
 
         foreach ($thirdPartyCronPlugins as $class => $plugin) {
@@ -494,11 +514,11 @@ class BackupScheduler
         $urlEndpoint = add_query_arg('doing_wp_cron', $doingWpCron, site_url('wp-cron.php'));
 
         $cronRequest = apply_filters('cron_request', [
-            'url' => $urlEndpoint,
-            'key' => $doingWpCron,
+            'url'  => $urlEndpoint,
+            'key'  => $doingWpCron,
             'args' => [
-                'timeout' => 10,
-                'blocking' => true,
+                'timeout'   => 10,
+                'blocking'  => true,
                 'sslverify' => apply_filters('https_local_ssl_verify', $sslverify),
             ],
         ]);
@@ -511,7 +531,7 @@ class BackupScheduler
             $this->cronMessage .= "Can not create scheduled backups because cron jobs do not work on this site. Error: " . $result->get_error_message() . ". Can not reach endpoint: " . esc_url($urlEndpoint);
             // Only send the error report mail if error is caused by WP STAGING
             if ($this->isWpstgError()) {
-                $this->sendErrorEmailReport($this->cronMessage);
+                $this->sendErrorReport($this->cronMessage);
             }
 
             return false;
@@ -645,7 +665,7 @@ class BackupScheduler
      * @param string $title
      * @return bool
      */
-    public function sendErrorEmailReport(string $message, string $title = ''): bool
+    public function sendErrorReport(string $message, string $title = ''): bool
     {
         if (empty($message)) {
             return false;
@@ -659,7 +679,10 @@ class BackupScheduler
             $title = esc_html__('WP Staging - Backup Error Report', 'wp-staging');
         }
 
-        return $this->sendEmailReport($message, $title);
+        $this->sendEmailReport($message, $title);
+        $this->sendSlackReport($message, $title);
+
+        return true;
     }
 
     /**
@@ -690,17 +713,54 @@ class BackupScheduler
             return false;
         }
 
-        $message .= "\r\n" . "--" . "\r\n" . esc_html__('This message was sent by the WP Staging plugin from the website', 'wp-staging') . ' ' . get_site_url();
-        $message .= "\r\n" . esc_html__('It was sent to the email address', 'wp-staging') . ' ' . $reportEmail . ' ' . esc_html__('which can be set up on ', 'wp-staging') . get_site_url() . '/wp-admin/admin.php?page=wpstg-settings';
-        $message .= "\r\n" . esc_html__('Please do not reply to this email.', 'wp-staging');
-
         if (empty($title)) {
             $title = esc_html__('WP Staging - Backup Report', 'wp-staging');
         }
 
         // Set the transient to prevent sending the error report mail again for 5 minutes
         set_transient(self::TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT, true, 5 * 60);
-        return wp_mail($reportEmail, $title, $message, [], []);
+        return $this->notifications->sendEmail($reportEmail, $title, $message);
+    }
+
+    /**
+     * Send a report slack
+     * A Generic title will be used if no title is provided
+     *
+     * @param string $message
+     * @param string $title
+     * @return bool
+     */
+    public function sendSlackReport(string $message, string $title = ''): bool
+    {
+        if (!WPStaging::isPro()) {
+            return false;
+        }
+
+        if (get_option(self::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT) !== 'true') {
+            return false;
+        }
+
+        $webhook = get_option(self::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK);
+        if (!filter_var($webhook, FILTER_VALIDATE_URL)) {
+            return false;
+        }
+
+        // Only send the error report mail once every 5 minutes
+        if (get_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT) !== false) {
+            return false;
+        }
+
+        if (empty($message)) {
+            return false;
+        }
+
+        if (empty($title)) {
+            $title = esc_html__('WP Staging - Backup Report', 'wp-staging');
+        }
+
+        // Set the transient to prevent sending the error report mail again for 5 minutes
+        set_transient(self::TRANSIENT_BACKUP_SCHEDULE_SLACK_REPORT_SENT, true, 5 * 60);
+        return $this->notifications->sendSlack($webhook, $title, $message);
     }
 
     /**

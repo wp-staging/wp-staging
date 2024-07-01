@@ -2,6 +2,10 @@
 
 namespace WPStaging\Backup\Dto\Traits;
 
+use WPStaging\Backup\Dto\JobDataDto;
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Pro\Backup\Dto\Job\JobRemoteUploadDataDto;
+
 /**
  * Used for Remote Upload
  */
@@ -35,6 +39,15 @@ trait RemoteUploadTrait
      * @var bool
      */
     private $isOnlyUpload = false;
+
+    /** @var bool */
+    private $isMultipartBackup = false;
+
+    /** @var int */
+    private $maxMultipartBackupSize = 2147483647; // 2GB - 1 Byte
+
+    /** @var bool True if this backup should be repeated on a schedule, false if it should run only once. */
+    private $repeatBackupOnSchedule;
 
     /**
      * @return bool
@@ -220,5 +233,53 @@ trait RemoteUploadTrait
     public function isUploadToDropbox(): bool
     {
         return in_array('dropbox', $this->getStorages());
+    }
+
+    /**
+     * @param bool $isMultipartBackup
+     */
+    public function setIsMultipartBackup($isMultipartBackup)
+    {
+        $this->isMultipartBackup = $isMultipartBackup;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsMultipartBackup(): bool
+    {
+        return Hooks::applyFilters(JobDataDto::FILTER_IS_MULTIPART_BACKUP, $this->isMultipartBackup);
+    }
+
+    /**
+     * @return int
+     */
+    public function getMaxMultipartBackupSize()
+    {
+        return Hooks::applyFilters(JobDataDto::FILTER_MAX_MULTIPART_BACKUP_SIZE, $this->maxMultipartBackupSize);
+    }
+
+    /**
+     * @param int $maxMultipartBackupSize
+     */
+    public function setMaxMultipartBackupSize($maxMultipartBackupSize)
+    {
+        $this->maxMultipartBackupSize = $maxMultipartBackupSize;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getRepeatBackupOnSchedule()
+    {
+        return $this->repeatBackupOnSchedule;
+    }
+
+    /**
+     * @param bool $repeatBackupOnSchedule
+     */
+    public function setRepeatBackupOnSchedule($repeatBackupOnSchedule)
+    {
+        $this->repeatBackupOnSchedule = $repeatBackupOnSchedule;
     }
 }

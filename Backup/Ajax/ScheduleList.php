@@ -153,12 +153,13 @@ class ScheduleList
                         <li class="single-backup-includes">
                             <strong><?php esc_html_e('Contains: ', 'wp-staging') ?></strong>
                             <?php
-                            $isExportingDatabase = $schedule['isExportingDatabase'];
-                            $isExportingPlugins = $schedule['isExportingPlugins'];
-                            $isExportingMuPlugins = $schedule['isExportingMuPlugins'];
-                            $isExportingThemes = $schedule['isExportingThemes'];
-                            $isExportingUploads = $schedule['isExportingUploads'];
+                            $isExportingDatabase            = $schedule['isExportingDatabase'];
+                            $isExportingPlugins             = $schedule['isExportingPlugins'];
+                            $isExportingMuPlugins           = $schedule['isExportingMuPlugins'];
+                            $isExportingThemes              = $schedule['isExportingThemes'];
+                            $isExportingUploads             = $schedule['isExportingUploads'];
                             $isExportingOtherWpContentFiles = $schedule['isExportingOtherWpContentFiles'];
+                            $isExportingOtherWpRootFiles    = $schedule['isExportingOtherWpRootFiles'];
                             include(trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/views/backup/modal/partials/backup-contains.php');
                             ?>
                         </li>

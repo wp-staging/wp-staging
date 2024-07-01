@@ -5,9 +5,11 @@ namespace WPStaging\Framework\Adapter;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Backup\Job\Jobs\JobRestore;
-use WPStaging\Backup\Service\Compressor;
+use WPStaging\Backup\Service\Archiver;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Utils\Urls;
+use WPStaging\Framework\Utils\SlashMode;
+use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 
 class Directory
 {
@@ -67,6 +69,12 @@ class Directory
 
     /** @var string The directory that points to the wp-content folder, usually wp-content/ */
     protected $wpContentDirectory;
+
+    /** @var string The directory that points to the wp-includes folder, usually wp-includes/ */
+    protected $wpIncludesDirectory;
+
+    /** @var string The directory that points to the wp-admin folder, usually wp-admin/ */
+    protected $wpAdminDirectory;
 
     /** @var string The directory that points to the languages folder, usually wp-content/languages/ */
     protected $langDir;
@@ -206,7 +214,7 @@ class Directory
             return $this->backupDirectory;
         }
 
-        $this->backupDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . Compressor::BACKUP_DIR_NAME));
+        $this->backupDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . Archiver::BACKUP_DIR_NAME));
 
         return $this->backupDirectory;
     }
@@ -448,6 +456,42 @@ class Directory
     }
 
     /**
+     * @return string
+     */
+    public function getWpIncludesDirectory(): string
+    {
+        if (!isset($this->wpIncludesDirectory)) {
+            $this->wpIncludesDirectory = trailingslashit($this->getAbsPath()) . 'wp-includes/';
+        }
+
+        return $this->wpIncludesDirectory;
+    }
+
+    /**
+     * @return string
+     */
+    public function getWpAdminDirectory(): string
+    {
+        if (!isset($this->wpAdminDirectory)) {
+            $this->wpAdminDirectory = trailingslashit($this->getAbsPath()) . 'wp-admin/';
+        }
+
+        return $this->wpAdminDirectory;
+    }
+
+    /**
+     * @return array
+     */
+    public function getWpDefaultRootDirectories(): array
+    {
+        return [
+            $this->getWpAdminDirectory(),
+            $this->getWpContentDirectory(),
+            $this->getWpIncludesDirectory(),
+        ];
+    }
+
+    /**
      * Check whether the given path exists in WordPress Root,
      * Method will return true if exists in WordPress Root or is relative to WordPress root.
      *
@@ -490,9 +534,61 @@ class Directory
     */
     public function isBackupPathOutsideAbspath(): bool
     {
-        $defaultBackupDirAbsPath = $this->getPluginUploadsDirectory() . Compressor::BACKUP_DIR_NAME;
+        $defaultBackupDirAbsPath = $this->getPluginUploadsDirectory() . Archiver::BACKUP_DIR_NAME;
         $absPath                 = $this->getAbsPath();
 
         return $absPath !== substr($defaultBackupDirAbsPath, 0, strlen($absPath));
+    }
+
+
+    /**
+     * Get excluded directories and map it to array
+     *
+     * @param string $directoriesRequest
+     * @param int $slashMode
+     *
+     * @return array
+     */
+    public function getExcludedDirectories(string $directoriesRequest, int $slashMode = SlashMode::NO_SLASH): array
+    {
+        if ((empty($directoriesRequest))) {
+            return [];
+        }
+
+        $excludedDirectories = explode(ScanConst::DIRECTORIES_SEPARATOR, wpstg_urldecode($directoriesRequest));
+        $excludedDirectories = array_map(function ($directory) use ($slashMode) {
+            return $this->slashit($directory, $slashMode);
+        }, $excludedDirectories);
+
+        return $excludedDirectories;
+    }
+
+
+    /**
+     * Different slash mode for path
+     * @param string $path
+     * @param int $mode Optional. Slash Mode. Default SlashMode::NO_SLASH.
+     *                      Use SlashMode::NO_SLASH, if you don't want trailing and leading slash.
+     *                      Use SlashMode::TRAILING_SLASH, if you want trailing forward slash.
+     *                      Use SlashMode::LEADING_SLASH, if you want leading forward slash.
+     *                      Use SlashMode::BOTH_SLASHES, if you want both trailing and leading forward slash.
+     * @return string
+     */
+    private function slashit(string $path, int $mode = SlashMode::NO_SLASH): string
+    {
+        $path = trim(trim($path, '\\'), '/');
+        if ($mode === SlashMode::BOTH_SLASHES) {
+            return '/' . $path . '/';
+        }
+
+        if ($mode === SlashMode::TRAILING_SLASH) {
+            return $path . '/';
+        }
+
+        if ($mode === SlashMode::LEADING_SLASH) {
+            return '/' . $path;
+        }
+
+        return $path;
     }
 }

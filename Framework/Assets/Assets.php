@@ -268,6 +268,12 @@ class Assets
             $this->getAssetsVersion($asset)
         );
 
+        $backupCompleteMessage = __('You can restore this backup anytime or upload it to another website and restore it there.', 'wp-staging');
+
+        if (WPStaging::isPro() === false) {
+            $backupCompleteMessage = __('You can restore this backup anytime on this website.', 'wp-staging');
+        }
+
         $wpstgConfig = [
             "delayReq"               => 0,
             // TODO: move directorySeparator to consts?
@@ -302,8 +308,7 @@ class Assets
                 'hideLogs'              => esc_html__('Hide Logs', 'wp-staging'),
                 'noTableSelected'       => esc_html__('No table selected', 'wp-staging'),
                 'tablesSelected'        => esc_html__('{d} tables(s) selected', 'wp-staging'),
-                'noFileSelected'        => esc_html__('No file selected', 'wp-staging'),
-                'filesSelected'         => esc_html__('{t} theme(s), {p} plugin(s) selected', 'wp-staging'),
+                'filesSelected'         => esc_html__('{t} theme{ts}, {p} plugin{ps}, {o} other folder{os} selected', 'wp-staging'),
                 'wpstg_cloning'         => [
                     'title' => esc_html__('Staging Site Created Successfully!', 'wp-staging'),
                     'body'  => esc_html__('You can access it from here:', 'wp-staging'),
@@ -323,7 +328,6 @@ class Assets
                 'wpstg_delete_clone'    => [
                     'title' => esc_html__('Staging Site Deleted Successfully!', 'wp-staging'),
                 ],
-                'backupCreatedModalTitle' => esc_html__('Backup Complete', 'wp-staging'),
                 'backupSchedule' => [
                     'title' => esc_html__('Backup Schedule Created', 'wp-staging'),
                     'body'  => esc_html__('Backup is scheduled according to the provided settings.', 'wp-staging'),
@@ -331,6 +335,10 @@ class Assets
                 'backupCreationBG' => [
                     'title' => esc_html__('Backup Creation Triggered', 'wp-staging'),
                     'body'  => esc_html__('Backup creation is triggered to run in background. You will be notified by email (if set in settings) once the backup is created!', 'wp-staging'),
+                ],
+                'backupCreated' => [
+                    'title' => esc_html__('Backup Complete', 'wp-staging'),
+                    'body'  => esc_html($backupCompleteMessage),
                 ],
             ],
         ];

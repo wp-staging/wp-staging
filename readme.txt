@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.5
-Stable tag: 3.7.1
+Stable tag: 3.8.0
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -282,6 +282,33 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.8.0 =
+* New: Compatible to WordPress 6.5.5
+* New: Enable remote backup loading for dropbox storage provider. (Pro) #3475
+* New: Add 'Upload to Cloud' button to upload existing local backups to cloud storage. (Pro) #3331
+* New: Add option to backup custom directories in WordPress root path. #2903
+* New: Add backup notifications via Slack. (Pro) #3297
+* New: Add backup email notifications to WP Staging free version. #3297
+* Enh: Show a message when ajax requests get blocked by a firewall rule. #3449
+* Fix: Magic login link does not work when it is used more than one time. Requires updating existing staging sites to fix this. (Pro) #3512
+* Fix: Handle staging and backup creation when file name contains new line character. #3417
+* Fix: Make "copy to clipboard" button works properly in all browsers, regardless of protocol (HTTP, HTTPS). #3443
+* Fix: Show correct folder count if the staging site file structure contains multiple plugin and theme folders. #3419
+* Fix: Prevent backup retention from being modified when scheduling backup. #3422
+* Fix: Show 'Settings form' after authenticating with storage providers Google Drive and Dropbox. #3356
+* Fix: The site URL is not replaced correctly in the blog table on PUSH for network subsites that have a different domain than the main site. (Pro) #3501
+* Fix: Several PHP warnings when using RESET on an existing staging site. #3438
+* Fix: Optimize and clean up CSS. Fix X and Github icons. Remove of '!important' declarations in dark theme. #3448
+* Fix: Validate new admin account email address before cloning. #3467
+* Fix: Make sure appropriate message is displayed after successful backup. #3474
+* Fix: Some files may not be scanned and/or copied during staging site creation if their relative path to ABSPATH contains the value of ABSPATH. #3476
+* Fix: Use wp_kses instead of esc_html when logging backup message in logger, to keep json formatting for messages. #3536
+* Dev: Add unit test to make sure file extraction task works for multiple requests. #3481
+* Dev: Improve basic performance cest e2e and reduce flakiness. #3522
+* Dev: Rename `Compressor` service to `Archiver` service to match what this service does. #3496
+* Dev: DRY multipart code, so that compression feature can be used with it. #3498
+* Dev: Add developer docs for the standalone installer script. #3235
 
 = 3.7.1 =
 * New: Compatible up to WordPress 6.5.4

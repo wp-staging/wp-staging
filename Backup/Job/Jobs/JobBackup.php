@@ -96,13 +96,9 @@ class JobBackup extends AbstractJob
             $this->tasks[] = BackupUploadsTask::class;
         }
 
-        if ($this->jobDataDto->getIsExportingDatabase()) {
-            $this->tasks[] = DatabaseBackupTask::class;
-        }
+        $this->addBackupOtherWpRootFilesTasks();
 
-        if ($this->jobDataDto->getIsExportingDatabase() && !$this->jobDataDto->getIsMultipartBackup()) {
-            $this->tasks[] = IncludeDatabaseTask::class;
-        }
+        $this->addDatabaseTasks();
 
         $this->addCompressionTask();
         $this->addFinalizeTask();
@@ -125,6 +121,16 @@ class JobBackup extends AbstractJob
         $this->addFinishBackupTask();
     }
 
+    protected function addDatabaseTasks()
+    {
+        if (!$this->jobDataDto->getIsExportingDatabase()) {
+            return;
+        }
+
+        $this->tasks[] = DatabaseBackupTask::class;
+        $this->tasks[] = IncludeDatabaseTask::class;
+    }
+
     protected function addCompressionTask()
     {
         // Used in PRO version
@@ -134,6 +140,14 @@ class JobBackup extends AbstractJob
      * @return void
      */
     protected function addStoragesTasks()
+    {
+        // Used in PRO version
+    }
+
+    /**
+     * @return void
+     */
+    protected function addBackupOtherWpRootFilesTasks()
     {
         // Used in PRO version
     }

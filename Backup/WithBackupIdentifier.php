@@ -8,6 +8,7 @@ use WPStaging\Backup\Task\Tasks\JobBackup\BackupOtherFilesTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupPluginsTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupThemesTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupUploadsTask;
+use WPStaging\Backup\Task\FileBackupTask;
 
 trait WithBackupIdentifier
 {
@@ -38,12 +39,16 @@ trait WithBackupIdentifier
             return true;
         }
 
-        $pluginIdentifier = BackupPluginsTask::IDENTIFIER;
-        $mupluginIdentifier = BackupMuPluginsTask::IDENTIFIER;
-        $themeIdentifier = BackupThemesTask::IDENTIFIER;
-        $uploadIdentifier = BackupUploadsTask::IDENTIFIER;
-        $otherIdentifier = BackupOtherFilesTask::IDENTIFIER;
-        if ($this->checkPartByIdentifier("({$pluginIdentifier}|{$mupluginIdentifier}|{$themeIdentifier}|{$uploadIdentifier}|{$otherIdentifier})", $name)) {
+        $pluginIdentifier      = BackupPluginsTask::IDENTIFIER;
+        $mupluginIdentifier    = BackupMuPluginsTask::IDENTIFIER;
+        $themeIdentifier       = BackupThemesTask::IDENTIFIER;
+        $uploadIdentifier      = BackupUploadsTask::IDENTIFIER;
+        $otherIdentifier       = BackupOtherFilesTask::IDENTIFIER;
+        $otherWpRootIdentifier = FileBackupTask::OTHER_WP_ROOT_IDENTIFIER;
+
+        $identifiers = "({$pluginIdentifier}|{$mupluginIdentifier}|{$themeIdentifier}|{$uploadIdentifier}|{$otherIdentifier}|{$otherWpRootIdentifier})";
+
+        if ($this->checkPartByIdentifier($identifiers, $name)) {
             return true;
         }
 

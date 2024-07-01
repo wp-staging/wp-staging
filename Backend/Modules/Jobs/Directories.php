@@ -12,7 +12,6 @@ use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Traits\FileScanToCacheTrait;
-use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\Strings;
 
 /**
@@ -43,11 +42,6 @@ class Directories extends JobExecutable
      * @var string
      */
     private $filename;
-
-    /**
-     * @var Strings
-     */
-    private $strUtils;
 
     /**
      * @var Filesystem

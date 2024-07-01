@@ -2,13 +2,14 @@
 
 namespace WPStaging\Backup\Dto\Job;
 
-use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface;
 use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\IsExcludingTrait;
 use WPStaging\Backup\Dto\Traits\RemoteUploadTrait;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\ZlibCompressor;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
 
 class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
@@ -75,9 +76,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /** @var int The number of requests that the Discovering Files task has executed so far */
     private $discoveringFilesRequests = 0;
 
-    /** @var bool True if this backup should be repeated on a schedule, false if it should run only once. */
-    private $repeatBackupOnSchedule;
-
     /** @var string The cron to repeat this backup, if scheduled. */
     private $scheduleRecurrence;
 
@@ -109,12 +107,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     * is network subsite or network main site backup
     * @var bool */
     private $isNetworkSiteBackup = false;
-
-    /** @var bool */
-    private $isMultipartBackup = false;
-
-    /** @var int */
-    private $maxMultipartBackupSize = 2147483647; // 2GB - 1 Byte
 
     /**
      * @var array
@@ -386,22 +378,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     }
 
     /**
-     * @return bool
-     */
-    public function getRepeatBackupOnSchedule()
-    {
-        return $this->repeatBackupOnSchedule;
-    }
-
-    /**
-     * @param bool $repeatBackupOnSchedule
-     */
-    public function setRepeatBackupOnSchedule($repeatBackupOnSchedule)
-    {
-        $this->repeatBackupOnSchedule = $repeatBackupOnSchedule;
-    }
-
-    /**
      * @see Cron For WP STAGING cron recurrences.
      *
      * @return string A WP STAGING cron schedule
@@ -527,38 +503,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setSitesToBackup(array $sitesToBackup = [])
     {
         $this->sitesToBackup = $sitesToBackup;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getIsMultipartBackup()
-    {
-        return Hooks::applyFilters('wpstg.backup.isMultipartBackup', $this->isMultipartBackup);
-    }
-
-    /**
-     * @param bool $isMultipartBackup
-     */
-    public function setIsMultipartBackup($isMultipartBackup)
-    {
-        $this->isMultipartBackup = $isMultipartBackup;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMaxMultipartBackupSize()
-    {
-        return Hooks::applyFilters('wpstg.backup.maxMultipartBackupSize', $this->maxMultipartBackupSize);
-    }
-
-    /**
-     * @param int $maxMultipartBackupSize
-     */
-    public function setMaxMultipartBackupSize($maxMultipartBackupSize)
-    {
-        $this->maxMultipartBackupSize = $maxMultipartBackupSize;
     }
 
     /**
@@ -855,5 +799,13 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function getIsBackupFormatV1(): bool
     {
         return Hooks::applyFilters(BackupMetadata::FILTER_BACKUP_FORMAT_V1, true);
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsCompressedBackup(): bool
+    {
+        return WPStaging::make(ZlibCompressor::class)->isCompressionEnabled();
     }
 }

@@ -38,13 +38,13 @@ use WPStaging\Core\WPStaging;
             <div class="wpstg-social-col">
                 <div class="wpstg-share-button">
                     <a href="https://twitter.com/intent/follow?ref_src=twsrc%5Etfw&region=follow_link&screen_name=wpstg&tw_p=followbutton" target="_blank">
-                        <img src="<?php echo esc_url($this->assets->getAssetsUrl("img/twitter-logo.svg")) ?>" id="twitter-logo-svg" style="width:23px;" alt="WP STAGING on Twitter" title="Follow us on Twitter">
+                        <img class="wpstg--dashicons" src="<?php echo esc_url($this->assets->getAssetsUrl("svg/vendor/dashicons/twitter-logo.svg")) ?>" id="twitter-logo-svg" alt="WP STAGING on Twitter" title="Follow us on Twitter">
                     </a>
                 </div>
             </div>
             <div class="wpstg-social-col">
                 <a href="https://github.com/wp-staging/wp-staging" target="_blank" class="wpstg-share-button">
-                    <img src="<?php echo esc_url($this->assets->getAssetsUrl("img/github-logo.svg")) ?>" id="github-logo-svg" style="width:23px;" alt="WP STAGING on GitHub" title="Follow us on GitHub">
+                    <img class="wpstg--dashicons" src="<?php echo esc_url($this->assets->getAssetsUrl("svg/vendor/dashicons/github-logo.svg")) ?>" id="github-logo-svg" alt="WP STAGING on GitHub" title="Follow us on GitHub">
                 </a>
             </div>
         </div>

@@ -15,7 +15,7 @@ if (isset($_REQUEST['sub'])) {
     $provider = strtolower(sanitize_file_name($_REQUEST['sub']));
 }
 
-$loadingBarsOption = ['googledrive' => 9, 'amazons3' => 15, 'dropbox' => 9, 'sftp' => 20, 'digitalocean-spaces' => 15, 'wasabi-s3' => 15, 'generic-s3' => 23];
+$loadingBarsOption = ['googledrive' => 12, 'amazons3' => 17, 'dropbox' => 12, 'sftp' => 22, 'digitalocean-spaces' => 17, 'wasabi-s3' => 17, 'generic-s3' => 25];
 ?>
 <div class="wpstg-storages-postbox">
     <?php foreach ($storages->getStorages(true) as $storage) : ?>

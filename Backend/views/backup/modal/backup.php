@@ -73,6 +73,40 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                 </div>
             </label>
             <label>
+                <?php
+                    Checkbox::render(
+                        'wpstgIncludeOtherFilesInWpRoot',
+                        'includeOtherFilesInWpRoot',
+                        '',
+                        false,
+                        [
+                            'classes'    => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
+                            'isDisabled' => !$isProVersion
+                        ],
+                        [
+                            'id' => '#wpstg-wproot-scanning-files',
+                        ]
+                    );
+                    ?>
+                <span class="<?php echo esc_attr($disabledClass) ?>">
+                    <?php esc_html_e('Backup Other Files In WP Root', 'wp-staging'); ?>
+                </span>
+                <div class="wpstg--tooltip wpstg-wproot-tooltip">
+                    <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
+                    <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                            <?php esc_html_e('The WP core folders wp-admin and wp-includes are not backed up. This is not necessary! All folders containing WP Staging sites are also not backed up. If you want to back up a staging site, open WP Staging on the staging site and perform a backup from there.', 'wp-staging'); ?>
+                    </span>
+                </div>
+
+                <?php if (!$isProVersion) : ?>
+                    <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
+                <?php else : ?>
+                    <fieldset class="wpstg-wproot-files-selection-section wpstg-wproot-files-selection" id="wpstg-wproot-scanning-files">
+                        <?php require(WPSTG_PLUGIN_DIR . 'Backend/Pro/views/backup/backup-files.php'); ?>
+                    </fieldset>
+                <?php endif; ?>
+            </label>
+            <label>
                 <?php Checkbox::render('includeDatabaseInBackup', 'backup_database', 'true', true); ?>
                 <?php esc_html_e('Backup Database', 'wp-staging') ?>
                 <div class="wpstg--tooltip">

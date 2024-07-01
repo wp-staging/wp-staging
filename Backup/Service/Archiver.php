@@ -1,7 +1,5 @@
 <?php
 
-// TODO PHP7.x; declare(strict_types=1);
-// TODO PHP7.x; return types && type-hints
 // TODO PHP7.1; constant visibility
 
 namespace WPStaging\Backup\Service;
@@ -13,128 +11,99 @@ use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Dto\JobDataDto;
-use WPStaging\Backup\Dto\Service\CompressorDto;
+use WPStaging\Backup\Dto\Service\ArchiverDto;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Exceptions\BackupSkipItemException;
 use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Backup\Exceptions\NotFinishedException;
 use WPStaging\Backup\FileHeader;
-use WPStaging\Backup\Service\Multipart\MultipartSplitInterface;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Adapter\PhpAdapter;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
+use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 use WPStaging\Vendor\lucatume\DI52\NotFoundException;
 
 use function WPStaging\functions\debug_log;
 
 /**
- * @todo Add strict types in separate PR
+ * This class is responsible for archiving files and creating backups.
  */
-class Compressor
+class Archiver
 {
+    use EndOfLinePlaceholderTrait;
+
+    /** @var string */
     const BACKUP_DIR_NAME = 'backups';
 
-    /** @var BufferedCache */
-    private $tempBackupIndex;
+    /** @var bool */
+    const CREATE_BINARY_HEADER = true;
 
     /** @var BufferedCache */
-    private $tempBackup;
+    protected $tempBackupIndex;
 
-    /** @var CompressorDto */
-    private $compressorDto;
+    /** @var BufferedCache */
+    protected $tempBackup;
+
+    /** @var ArchiverDto */
+    protected $archiverDto;
 
     /** @var PathIdentifier */
-    private $pathIdentifier;
+    protected $pathIdentifier;
 
     /** @var int */
-    private $compressedFileSize = 0;
+    protected $archivedFileSize = 0;
 
     /** @var JobDataDto */
-    private $jobDataDto;
+    protected $jobDataDto;
 
     /** @var PhpAdapter */
-    private $phpAdapter;
-
-    /** @var MultipartSplitInterface */
-    private $multipartSplit;
-
-    /**
-     * Category can be: empty string|null|false, plugins, mu-plugins, themes, uploads, other, database
-     * Where empty string|null|false is used for single file backup,
-     * And other is for files from wp-content not including plugins, mu-plugins, themes, uploads
-     * @var string
-     */
-    private $category = '';
-
-    /**
-     * The current index of category in which appending files
-     * Not used in single file backup
-     * @var int
-     */
-    private $categoryIndex = 0;
+    protected $phpAdapter;
 
     /** @var bool */
-    private $isLocalBackup = false;
+    protected $isLocalBackup = false;
 
     /** @var int */
     protected $bytesWrittenInThisRequest = 0;
 
     /** @var FileHeader */
-    private $fileHeader;
+    protected $fileHeader;
 
     /** @var BackupHeader */
-    private $backupHeader;
+    protected $backupHeader;
 
     /** @var BackupFileIndex */
-    private $backupFileIndex;
+    protected $backupFileIndex;
 
-    // TODO telescoped
     public function __construct(
         BufferedCache $cacheIndex,
         BufferedCache $tempBackup,
         PathIdentifier $pathIdentifier,
         JobDataDto $jobDataDto,
-        CompressorDto $compressorDto,
+        ArchiverDto $archiverDto,
         PhpAdapter $phpAdapter,
-        MultipartSplitInterface $multipartSplit,
         BackupFileIndex $backupFileIndex,
         FileHeader $fileHeader,
         BackupHeader $backupHeader
     ) {
         $this->jobDataDto      = $jobDataDto;
-        $this->compressorDto   = $compressorDto;
+        $this->archiverDto     = $archiverDto;
         $this->tempBackupIndex = $cacheIndex;
         $this->tempBackup      = $tempBackup;
         $this->pathIdentifier  = $pathIdentifier;
         $this->phpAdapter      = $phpAdapter;
-        $this->multipartSplit  = $multipartSplit;
         $this->backupFileIndex = $backupFileIndex;
         $this->fileHeader      = $fileHeader;
         $this->backupHeader    = $backupHeader;
-
-        $this->setCategory('');
     }
 
     /**
-     * @param int $index
      * @param bool $isCreateBinaryHeader
+     * @return void
      */
-    public function setCategoryIndex($index, $isCreateBinaryHeader = true)
+    public function createArchiveFile(bool $isCreateBinaryHeader = false)
     {
-        if (empty($index)) {
-            $index = 0;
-        }
-
-        $this->categoryIndex = $index;
-        $this->setCategory($this->category, $isCreateBinaryHeader);
-    }
-
-    /**
-     * @param string $category
-     * @param bool $isCreateBinaryHeader
-     */
-    public function setCategory($category = '', $isCreateBinaryHeader = false)
-    {
-        $this->category = $category;
         $this->setupTmpBackupFile();
 
         if ($isCreateBinaryHeader && !$this->tempBackup->isValid()) {
@@ -145,58 +114,56 @@ class Compressor
 
     /**
      * Setup temp backup file and temp files index file for the given job id,
-     * If multipart backup category and category index are given, then they are used to create unique file names
+     * @return void
      */
     public function setupTmpBackupFile()
     {
-        $additionalInfo = empty($this->category) ? '' : $this->category . '_' . $this->categoryIndex . '_';
-
-        $postFix = $additionalInfo . $this->jobDataDto->getId();
-
-        //debug_log("[Set Tmp Backup Files] File name postfix: " . $postFix);
-
-        $this->tempBackup->setFilename('temp_wpstg_backup_' . $postFix);
+        $this->tempBackup->setFilename('temp_wpstg_backup_' . $this->jobDataDto->getId());
         $this->tempBackup->setLifetime(DAY_IN_SECONDS);
 
         $tempBackupIndexFilePrefix = 'temp_backup_index_';
-        $this->tempBackupIndex->setFilename($tempBackupIndexFilePrefix . $postFix);
+        $this->tempBackupIndex->setFilename($tempBackupIndexFilePrefix . $this->jobDataDto->getId());
         $this->tempBackupIndex->setLifetime(DAY_IN_SECONDS);
-    }
-
-    /**
-     * @param int $fileSize
-     * @param int $maxPartSize
-     * @return bool
-     */
-    public function doExceedMaxPartSize($fileSize, $maxPartSize)
-    {
-        $allowedSize     = $fileSize - $this->compressorDto->getWrittenBytesTotal();
-        $sizeAfterAdding = $allowedSize + filesize($this->tempBackup->getFilePath());
-        return $sizeAfterAdding >= $maxPartSize;
     }
 
     /**
      * @var bool $isLocalBackup
      */
-    public function setIsLocalBackup($isLocalBackup)
+    public function setIsLocalBackup(bool $isLocalBackup)
     {
         $this->isLocalBackup = $isLocalBackup;
     }
 
     /**
-     * @return CompressorDto
+     * @return ArchiverDto
      */
-    public function getDto()
+    public function getDto(): ArchiverDto
     {
-        return $this->compressorDto;
+        return $this->archiverDto;
     }
 
     /**
      * @return int
      */
-    public function getBytesWrittenInThisRequest()
+    public function getBytesWrittenInThisRequest(): int
     {
         return $this->bytesWrittenInThisRequest;
+    }
+
+    /**
+     * @return BufferedCache
+     */
+    public function getTempBackupIndex(): BufferedCache
+    {
+        return $this->tempBackupIndex;
+    }
+
+    /**
+     * @return BufferedCache
+     */
+    public function getTempBackup(): BufferedCache
+    {
+        return $this->tempBackup;
     }
 
     /**
@@ -205,14 +172,14 @@ class Compressor
      *
      * `true` -> finished
      * `false` -> not finished
-     * `null` -> skip / didn't do anything
      *
      * @throws DiskNotWritableException
      * @throws RuntimeException
+     * @throws BackupSkipItemException Skip this file don't do anything
      *
-     * @return bool|null
+     * @return bool
      */
-    public function appendFileToBackup(string $fullFilePath, string $indexPath = '')
+    public function appendFileToBackup(string $fullFilePath, string $indexPath = ''): bool
     {
         // We can use evil '@' as we don't check is_file || file_exists to speed things up.
         // Since in this case speed > anything else
@@ -220,26 +187,27 @@ class Compressor
         $resource = @fopen($fullFilePath, 'rb');
         if (!$resource) {
             debug_log("appendFileToBackup(): Can't open file {$fullFilePath} for reading");
-            return null;
+            throw new BackupSkipItemException();
         }
 
         if (empty($indexPath)) {
             $indexPath = $fullFilePath;
         }
 
-        $fileStats = fstat($resource);
+        $indexPath   = $this->replaceEOLsWithPlaceholders($indexPath);
+        $fileStats   = fstat($resource);
         $isInitiated = $this->initiateDtoByFilePath($fullFilePath, $fileStats);
-        $this->compressorDto->setIndexPath($indexPath);
+        $this->archiverDto->setIndexPath($indexPath);
         $fileHeaderBytes = 0;
         if ($isInitiated && !$this->isBackupFormatV1()) {
             $fileHeaderBytes = $this->writeFileHeader($fullFilePath, $indexPath);
-            $this->compressorDto->setFileHeaderBytes($fileHeaderBytes);
+            $this->archiverDto->setFileHeaderBytes($fileHeaderBytes);
         }
 
-        $writtenBytesBefore = $this->compressorDto->getWrittenBytesTotal();
-        $writtenBytesTotal  = $this->appendToCompressedFile($resource, $fullFilePath);
+        $writtenBytesBefore = $this->archiverDto->getWrittenBytesTotal();
+        $writtenBytesTotal  = $this->appendToArchiveFile($resource, $fullFilePath);
         $newBytesWritten    = $writtenBytesTotal + $fileHeaderBytes - $writtenBytesBefore;
-        $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->compressorDto->getFileHeaderBytes();
+        $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->archiverDto->getFileHeaderBytes();
 
         $retries = 0;
 
@@ -252,13 +220,13 @@ class Compressor
             $retries++;
         } while ($bytesAddedForIndex === 0 && $retries < 3);
 
-        $this->compressorDto->setWrittenBytesTotal($writtenBytesTotal);
+        $this->archiverDto->setWrittenBytesTotal($writtenBytesTotal);
 
         $this->bytesWrittenInThisRequest += $newBytesWritten;
 
-        $isFinished = $this->compressorDto->isFinished();
+        $isFinished = $this->archiverDto->isFinished();
 
-        $this->compressorDto->resetIfFinished();
+        $this->archiverDto->resetIfFinished();
 
         return $isFinished;
     }
@@ -268,33 +236,19 @@ class Compressor
      * @param array $fileStats
      * @param bool
      */
-    public function initiateDtoByFilePath($filePath, array $fileStats = []): bool
+    public function initiateDtoByFilePath(string $filePath, array $fileStats = []): bool
     {
-        if ($filePath === null || ($filePath === $this->compressorDto->getFilePath() && $fileStats['size'] === $this->compressorDto->getFileSize())) {
+        if (empty($filePath) || ($filePath === $this->archiverDto->getFilePath() && $fileStats['size'] === $this->archiverDto->getFileSize())) {
             return false;
         }
 
-        $this->compressorDto->setFilePath($filePath);
-        $this->compressorDto->setFileSize($fileStats['size']);
+        $this->archiverDto->setFilePath($filePath);
+        $this->archiverDto->setFileSize($fileStats['size']);
         return true;
     }
 
     /**
-     * @param int    $sizeBeforeAddingIndex
-     * @param string $category
-     * @param string $partName
-     * @param int    $categoryIndex
-     */
-    public function generateBackupMetadataForBackupPart($sizeBeforeAddingIndex, $category, $partName, $categoryIndex)
-    {
-        $this->category      = $category;
-        $this->categoryIndex = $categoryIndex;
-        $this->setupTmpBackupFile();
-        $this->generateBackupMetadata($sizeBeforeAddingIndex, $partName, $isBackupPart = true);
-    }
-
-    /**
-     * Combines index and compressed file, renames / moves it to destination
+     * Combines index and archive file, renames / moves it to destination
      *
      * This function is called only once, so performance improvements has no impact here.
      *
@@ -302,19 +256,19 @@ class Compressor
      * @param string $finalFileNameOnRename
      * @param bool $isBackupPart
      *
-     * @return string|null
+     * @return string
      */
-    public function generateBackupMetadata($backupSizeBeforeAddingIndex = 0, $finalFileNameOnRename = '', $isBackupPart = false)
+    public function generateBackupMetadata(int $backupSizeBeforeAddingIndex = 0, string $finalFileNameOnRename = '', bool $isBackupPart = false): string
     {
         clearstatcache();
         $backupSizeAfterAddingIndex = filesize($this->tempBackup->getFilePath());
 
-        $backupMetadata = $this->compressorDto->getBackupMetadata();
+        $backupMetadata = $this->archiverDto->getBackupMetadata();
         $backupMetadata->setHeaderStart($backupSizeBeforeAddingIndex);
         $backupMetadata->setHeaderEnd($backupSizeAfterAddingIndex);
 
         if ($isBackupPart) {
-            $this->multipartSplit->updateMultipartMetadata($this->jobDataDto, $backupMetadata, $this->category, $this->categoryIndex);
+            $this->updateMultipartData($backupMetadata);
         }
 
         if ($this->jobDataDto instanceof JobBackupDataDto) {
@@ -334,23 +288,8 @@ class Compressor
         return $this->renameBackup($finalFileNameOnRename);
     }
 
-    /**
-     * @return array
-     */
-    public function getFinalizeBackupInfo()
-    {
-        return [
-            'category'              => $this->category,
-            'index'                 => $this->categoryIndex,
-            'filePath'              => $this->tempBackup->getFilePath(),
-            'destination'           => $this->getDestinationPath(),
-            'status'                => 'Pending',
-            'sizeBeforeAddingIndex' => 0
-        ];
-    }
-
-    /** @return int|null */
-    public function addFileIndex()
+    /** @return int */
+    public function addFileIndex(): int
     {
         clearstatcache();
         $indexResource = fopen($this->tempBackupIndex->getFilePath(), 'rb');
@@ -376,7 +315,7 @@ class Compressor
         $this->initiateDtoByFilePath($this->tempBackupIndex->getFilePath(), $indexStats);
 
         $lastLine     = $this->tempBackup->readLastLine();
-        $writtenBytes = $this->compressorDto->getWrittenBytesTotal();
+        $writtenBytes = $this->archiverDto->getWrittenBytesTotal();
         if ($lastLine !== PHP_EOL && $writtenBytes === 0) {
             $this->tempBackup->append(''); // ensure that file index start from new line. See https://github.com/wp-staging/wp-staging-pro/issues/2861
         }
@@ -386,8 +325,8 @@ class Compressor
 
         // Write the index to the backup file, regardless of resource limits threshold
         // @throws Exception
-        $writtenBytes = $this->appendToCompressedFile($indexResource, $this->tempBackupIndex->getFilePath());
-        $this->compressorDto->setWrittenBytesTotal($writtenBytes);
+        $writtenBytes = $this->appendToArchiveFile($indexResource, $this->tempBackupIndex->getFilePath());
+        $this->archiverDto->setWrittenBytesTotal($writtenBytes);
 
         if ($writtenBytes === 0) {
             $this->jobDataDto->setRetries($this->jobDataDto->getRetries() + 1);
@@ -405,12 +344,12 @@ class Compressor
             debug_log('[Add File Index] Failed to write any byte to files-index! Retrying...');
         }
 
-        if (!$this->compressorDto->isFinished()) {
-            return null;
+        if (!$this->archiverDto->isFinished()) {
+            throw new NotFinishedException('File backup is not finished yet!');
         }
 
         $this->tempBackupIndex->delete();
-        $this->compressorDto->reset();
+        $this->archiverDto->reset();
 
         $backupSizeAfterAddingIndex = filesize($this->tempBackup->getFilePath());
         if (!$this->isBackupFormatV1()) {
@@ -427,14 +366,9 @@ class Compressor
     /**
      * @return string
      */
-    private function getDestinationPath()
+    public function getDestinationPath(): string
     {
         $extension = "wpstg";
-
-        if ($this->category !== '') {
-            $index     = $this->categoryIndex === 0 ? '' : ($this->categoryIndex . '.');
-            $extension = $this->category . '.' . $index . $extension;
-        }
 
         return sprintf(
             '%s_%s_%s.%s',
@@ -450,7 +384,7 @@ class Compressor
      * @param bool $isLocalBackup
      * @return string
      */
-    public function getFinalPath($renameFileTo = '', $isLocalBackup = true)
+    public function getFinalPath(string $renameFileTo = '', bool $isLocalBackup = true): string
     {
         $backupsDirectory = $this->getFinalBackupParentDirectory($isLocalBackup);
         if ($renameFileTo === '') {
@@ -460,10 +394,7 @@ class Compressor
         return $backupsDirectory . $renameFileTo;
     }
 
-    /**
-     * @return string
-     */
-    public function getFinalBackupParentDirectory($isLocalBackup = true)
+    public function getFinalBackupParentDirectory(bool $isLocalBackup = true): string
     {
         if ($isLocalBackup) {
             return WPStaging::make(BackupsFinder::class)->getBackupsDirectory();
@@ -491,7 +422,7 @@ class Compressor
      * @param int $retry
      * @return float
      */
-    protected function getDelayForRetry($retry)
+    protected function getDelayForRetry(int $retry): float
     {
         $delay = 0.1;
         for ($i = 0; $i < $retry; $i++) {
@@ -501,8 +432,47 @@ class Compressor
         return $delay * 1000;
     }
 
-    /** @var string $renameFileTo */
-    private function renameBackup($renameFileTo = '')
+    /**
+     * @param BackupMetadata $backupMetadata
+     * @return void
+     */
+    protected function updateMultipartData(BackupMetadata $backupMetadata)
+    {
+        // Used in Pro
+    }
+
+    /**
+     * @param JobBackupDataDto $jobBackupDataDto
+     * @return void
+     */
+    protected function incrementFileCountForMultipart(JobBackupDataDto $jobBackupDataDto)
+    {
+        // Used in Pro
+    }
+
+    /**
+     * @return void
+     */
+    protected function setIndexPositionCreated()
+    {
+        $this->archiverDto->setIndexPositionCreated(true);
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isIndexPositionCreated(): bool
+    {
+        return $this->archiverDto->isIndexPositionCreated();
+    }
+
+    /**
+     * @throws RuntimeException
+     *
+     * @param string $renameFileTo
+     * @return string
+     */
+    private function renameBackup(string $renameFileTo = ''): string
     {
         if ($renameFileTo === '') {
             $renameFileTo = $this->getDestinationPath();
@@ -532,25 +502,25 @@ class Compressor
     {
         clearstatcache();
         if (file_exists($this->tempBackup->getFilePath())) {
-            $this->compressedFileSize = filesize($this->tempBackup->getFilePath());
+            $this->archivedFileSize = filesize($this->tempBackup->getFilePath());
         }
 
-        $start = max($this->compressedFileSize - $writtenBytesTotal, 0);
+        $start = max($this->archivedFileSize - $writtenBytesTotal, 0);
 
-        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getIndexPath());
+        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->archiverDto->getIndexPath());
         // New Backup format
-        if ($this->compressorDto->isIndexPositionCreated($this->category, $this->categoryIndex) && !$this->isBackupFormatV1()) {
+        if ($this->isIndexPositionCreated() && !$this->isBackupFormatV1()) {
             $this->addIndexPartSize($identifiablePath, $newBytesAdded);
             return $newBytesAdded;
         }
 
         // Old backup format
-        if ($this->compressorDto->isIndexPositionCreated($this->category, $this->categoryIndex)) {
+        if ($this->isIndexPositionCreated()) {
             return $this->updateIndexInformationForAlreadyAddedIndex($writtenBytesTotal);
         }
 
         if ($this->isBackupFormatV1()) {
-            $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getIndexPath());
+            $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->archiverDto->getIndexPath());
             $backupFileIndex  = $this->backupFileIndex->createIndex($identifiablePath, $start, $writtenBytesTotal, false);
             $bytesWritten     = $this->tempBackupIndex->append($backupFileIndex->getIndex());
         } else {
@@ -558,7 +528,7 @@ class Compressor
             $bytesWritten = $this->fileHeader->writeIndexHeader($this->tempBackupIndex);
         }
 
-        $this->compressorDto->setIndexPositionCreated(true);
+        $this->archiverDto->setIndexPositionCreated(true);
 
         $this->addIndexPartSize($identifiablePath, $writtenBytesTotal);
 
@@ -576,25 +546,25 @@ class Compressor
         $jobBackupDataDto = $this->jobDataDto;
         $jobBackupDataDto->setTotalFiles($jobBackupDataDto->getTotalFiles() + 1);
 
-        $this->multipartSplit->incrementFileCountInPart($jobBackupDataDto, $this->category, $this->categoryIndex);
+        $this->incrementFileCountForMultipart($jobBackupDataDto);
 
         return $bytesWritten;
     }
 
     /**
-     * @param $resource
-     * @param $filePath
+     * @param resource $resource
+     * @param string $filePath
      *
      * @return int Bytes written
      * @throws DiskNotWritableException
      * @throws RuntimeException
      */
-    private function appendToCompressedFile($resource, $filePath)
+    private function appendToArchiveFile($resource, string $filePath): int
     {
         try {
             return $this->tempBackup->appendFile(
                 $resource,
-                $this->compressorDto->getWrittenBytesTotal()
+                $this->archiverDto->getWrittenBytesTotal()
             );
         } catch (DiskNotWritableException $e) {
             debug_log('Failed to write to file: ' . $filePath);
@@ -606,8 +576,10 @@ class Compressor
     /**
      * @param string $identifiablePath
      * @param int    $newBytesWritten
+     *
+     * @return void
      */
-    private function addIndexPartSize($identifiablePath, $newBytesWritten)
+    private function addIndexPartSize(string $identifiablePath, int $newBytesWritten)
     {
         // Early bail if jobDataDto is not instance of jobBackupDataDto
         if (!$this->jobDataDto instanceof JobBackupDataDto) {
@@ -643,6 +615,9 @@ class Compressor
             case ($this->pathIdentifier::IDENTIFIER_LANG === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_LANG))):
                 $partName = 'langSize';
                 break;
+            case ($this->pathIdentifier::IDENTIFIER_ABSPATH === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_ABSPATH))):
+                $partName = 'wpRootSize';
+                break;
         }
 
         // TODO: This should never happen. Log this when we have our own Logger, see https://github.com/wp-staging/wp-staging-pro/pull/2440#discussion_r1247951548
@@ -652,22 +627,6 @@ class Compressor
 
         $collectPartsize[$partName] += $newBytesWritten;
         $jobDataDto->setCategorySizes($collectPartsize);
-    }
-
-    /**
-     * @return BufferedCache
-     */
-    public function getTempBackupIndex(): BufferedCache
-    {
-        return $this->tempBackupIndex;
-    }
-
-    /**
-     * @return BufferedCache
-     */
-    public function getTempBackup(): BufferedCache
-    {
-        return $this->tempBackup;
     }
 
     /**
@@ -699,11 +658,11 @@ class Compressor
 
         $this->tempBackupIndex->deleteBottomBytes(strlen($lastLine));
 
-        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->compressorDto->getIndexPath());
+        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->archiverDto->getIndexPath());
         $backupFileIndex  = $this->backupFileIndex->createIndex($identifiablePath, $backupFileIndex->bytesStart, $writtenBytesTotal, false);
         $bytesWritten     = $this->tempBackupIndex->append($backupFileIndex->getIndex());
 
-        $this->compressorDto->setIndexPositionCreated(true, $this->category, $this->categoryIndex);
+        $this->setIndexPositionCreated();
 
         // We only need to increment newly added bytes
         $this->addIndexPartSize($identifiablePath, $writtenBytesTotal - (int)$writtenPreviously);

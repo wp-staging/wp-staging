@@ -9,6 +9,7 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Task\RestoreFileHandlers\RestoreFileProcessor;
@@ -28,6 +29,8 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
  */
 abstract class FileRestoreTask extends RestoreTask
 {
+    use EndOfLinePlaceholderTrait;
+
     /**
      * @var Filesystem
      */
@@ -209,6 +212,7 @@ abstract class FileRestoreTask extends RestoreTask
         // Make sure destination is within WordPress
         // @todo Test backup in Windows and restoring in Linux and vice-versa
         $destination = $nextInQueue['destination'];
+        $destination = $this->replacePlaceholdersWithEOLs($destination);
         $destination = wp_normalize_path($destination);
 
         // Executes the action

@@ -60,7 +60,7 @@ class FinishBackupTask extends BackupTask
 
         $this->logger->info("################## FINISH ##################");
 
-        $this->saveBackupsInDB();
+        $this->saveCloudStorageOptions();
 
         $this->maybeTriggerBackupCreationInBackground();
 
@@ -110,11 +110,11 @@ class FinishBackupTask extends BackupTask
     }
 
     /**
-     * Retains backups that if at least one remote storage is set.
+     * Retains backups, if at least one remote storage is set.
      *
      * @return void
      */
-    protected function saveBackupsInDB()
+    protected function saveCloudStorageOptions()
     {
         // Used in PRO version
     }

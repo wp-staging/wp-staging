@@ -17,6 +17,7 @@ use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\ProcessLockedException;
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
+use WPStaging\Framework\Utils\SlashMode;
 
 class PrepareBackup extends PrepareJob
 {
@@ -93,6 +94,7 @@ class PrepareBackup extends PrepareJob
                 'isExportingThemes'              => 'bool',
                 'isExportingUploads'             => 'bool',
                 'isExportingOtherWpContentFiles' => 'bool',
+                'isExportingOtherWpRootFiles'    => 'bool',
                 'isExportingDatabase'            => 'bool',
                 'isAutomatedBackup'              => 'bool',
                 'repeatBackupOnSchedule'         => 'bool',
@@ -106,8 +108,9 @@ class PrepareBackup extends PrepareJob
                 'isExcludingUnusedThemes'        => 'bool',
                 'isExcludingLogs'                => 'bool',
                 'isExcludingCaches'              => 'bool',
-                'backupType'                     => 'string',
                 'isValidateBackupFiles'          => 'bool',
+                'backupType'                     => 'string',
+                'backupExcludedDirectories'      => 'string',
             ]);
             $data['name'] = isset($_POST['wpstgBackupData']['name']) ? htmlentities(sanitize_text_field($_POST['wpstgBackupData']['name']), ENT_QUOTES) : '';
         }
@@ -184,6 +187,7 @@ class PrepareBackup extends PrepareJob
             'isExportingThemes'              => false,
             'isExportingUploads'             => false,
             'isExportingOtherWpContentFiles' => false,
+            'isExportingOtherWpRootFiles'    => false,
             'isExportingDatabase'            => false,
             'isAutomatedBackup'              => false,
             'repeatBackupOnSchedule'         => false,
@@ -207,6 +211,7 @@ class PrepareBackup extends PrepareJob
             'isExcludingCaches'              => false,
             'isValidateBackupFiles'          => false,
             'isWpCliRequest'                 => false,
+            'backupExcludedDirectories'      => '',
         ];
 
         $data = wp_parse_args($data, $defaults);
@@ -233,6 +238,7 @@ class PrepareBackup extends PrepareJob
         $data['isExportingThemes']              = $this->jsBoolean($data['isExportingThemes']);
         $data['isExportingUploads']             = $this->jsBoolean($data['isExportingUploads']);
         $data['isExportingOtherWpContentFiles'] = $this->jsBoolean($data['isExportingOtherWpContentFiles']);
+        $data['isExportingOtherWpRootFiles']    = $this->jsBoolean($data['isExportingOtherWpRootFiles']);
         $data['isExportingDatabase']            = $this->jsBoolean($data['isExportingDatabase']);
 
         // Backup creation scheduling properties
@@ -250,6 +256,10 @@ class PrepareBackup extends PrepareJob
         $data['isNetworkSiteBackup'] = (is_multisite() && $data['backupType'] !== BackupMetadata::BACKUP_TYPE_MULTISITE) ? true : false;
         if ($data['isNetworkSiteBackup']) {
             $data['subsiteBlogId'] = $this->validateAndSanitizeSubsiteBlogId($data['subsiteBlogId']);
+        }
+
+        if (is_string($data['backupExcludedDirectories'])) {
+            $data['backupExcludedDirectories'] = $this->directory->getExcludedDirectories($data['backupExcludedDirectories'], SlashMode::BOTH_SLASHES);
         }
 
         // Run Backup Creation in Background?

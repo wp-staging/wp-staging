@@ -8,6 +8,16 @@ use function WPStaging\functions\debug_log;
 
 class JobDataDto extends AbstractDto
 {
+    /**
+     * @var string
+     */
+    const FILTER_IS_MULTIPART_BACKUP = 'wpstg.backup.isMultipartBackup';
+
+    /**
+     * @var string
+     */
+    const FILTER_MAX_MULTIPART_BACKUP_SIZE = 'wpstg.backup.maxMultipartBackupSize';
+
     /** @var string|int|null */
     protected $id;
 

@@ -7,9 +7,14 @@ use WPStaging\Backup\Exceptions\FileValidationException;
 use WPStaging\Backup\Interfaces\IndexLineInterface;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Framework\Utils\DataEncoder;
+use WPStaging\Framework\Filesystem\PathIdentifier;
+use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
+use WPStaging\Core\WPStaging;
 
 class FileHeader implements IndexLineInterface
 {
+    use EndOfLinePlaceholderTrait;
+
     /**
      * ASCII INT of `WPSTG`
      * @var int
@@ -91,7 +96,12 @@ class FileHeader implements IndexLineInterface
     {
         $fileInfo = new SplFileInfo($filePath);
         $this->setFileName($fileInfo->getFilename());
-        $path = substr($identifiablePath, 0, -strlen($this->getFileName()));
+
+        $pathIdentifier    = WPStaging::make(PathIdentifier::class);
+        $convertedPath     = $pathIdentifier->transformIdentifiableToPath($identifiablePath);
+        $convertedPathName = basename($convertedPath);
+
+        $path = substr($identifiablePath, 0, -strlen($convertedPathName));
         $this->setFilePath($path);
         $this->setExtraField("");
         $this->setUncompressedSize($fileInfo->getSize());
@@ -135,6 +145,7 @@ class FileHeader implements IndexLineInterface
         $fixedHeader   = substr($index, 0, self::INDEX_HEADER_FIXED_SIZE);
         $dynamicHeader = substr($index, self::INDEX_HEADER_FIXED_SIZE);
         $header        = $this->encoder->hexToIntArray(self::INDEX_HEADER_FORMAT, $fixedHeader);
+
         $this->setStartOffset($header[0]);
         $this->setModifiedTime($header[1]);
         $this->setCrc32($header[2]);
@@ -198,8 +209,10 @@ class FileHeader implements IndexLineInterface
             $this->fileNameLength,
             $this->extraFieldLength
         ]);
+        $fileHeader = $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        $fileHeader = $this->replaceEOLsWithPlaceholders($fileHeader);
 
-        return $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        return $fileHeader;
     }
 
     public function getIndexHeader(): string
@@ -216,7 +229,10 @@ class FileHeader implements IndexLineInterface
             $this->extraFieldLength
         ]);
 
-        return $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        $fixedHeader = $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        $fixedHeader = $this->replaceEOLsWithPlaceholders($fixedHeader);
+
+        return $fixedHeader;
     }
 
     /**
@@ -413,8 +429,9 @@ class FileHeader implements IndexLineInterface
      */
     public function setFilePath(string $filePath)
     {
-        $this->filePath = $filePath;
-        $this->filePathLength = strlen($filePath);
+        $this->filePath       = $filePath;
+        $filePathRenamed      = $this->replaceEOLsWithPlaceholders($filePath);
+        $this->filePathLength = strlen($filePathRenamed);
     }
 
     public function getFileName(): string
@@ -427,8 +444,9 @@ class FileHeader implements IndexLineInterface
      */
     public function setFileName(string $fileName)
     {
-        $this->fileName = $fileName;
-        $this->fileNameLength = strlen($fileName);
+        $this->fileName       = $fileName;
+        $renamedFile          = $this->replaceEOLsWithPlaceholders($fileName);
+        $this->fileNameLength = strlen($renamedFile);
     }
 
     public function getExtraField(): string

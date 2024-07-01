@@ -755,10 +755,8 @@ class Scan extends Job
             'wp-includes'
         ];
 
-        foreach ($coreDirectories as $coreDirectory) {
-            if ($dirname === $coreDirectory) {
-                return false;
-            }
+        if (in_array($dirname, $coreDirectories)) {
+            return false;
         }
 
         $wpDirectories = [

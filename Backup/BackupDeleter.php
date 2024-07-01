@@ -60,7 +60,8 @@ class BackupDeleter
                 !$metadata->getIsExportingPlugins() &&
                 !$metadata->getIsExportingThemes() &&
                 !$metadata->getIsExportingUploads() &&
-                !$metadata->getIsExportingOtherWpContentFiles()
+                !$metadata->getIsExportingOtherWpContentFiles() &&
+                !$metadata->getIsExportingOtherWpRootFiles()
             ) {
                 $this->deleteBackup($backup, $metadata);
             }

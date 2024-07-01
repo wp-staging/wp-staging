@@ -2,12 +2,14 @@
 
 namespace WPStaging\Framework\Mails\Report;
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Backend\Modules\SystemInfo;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Notifications\Notifications;
 
 class Report
 {
@@ -77,14 +79,20 @@ class Report
     private $sanitize;
 
     /**
+     * @var Notifications
+     */
+    private $notifications;
+
+    /**
      * @param SystemInfo $systemInfo
      * @param Directory $directory
      * @param DebugLogReader $debugLogReader
      * @param ReportSubmitTransient $reportSubmitTransient
      * @param Auth $auth
      * @param Sanitize $sanitize
+     * @param Notifications $notifications
      */
-    public function __construct(SystemInfo $systemInfo, Directory $directory, DebugLogReader $debugLogReader, ReportSubmitTransient $reportSubmitTransient, Auth $auth, Sanitize $sanitize)
+    public function __construct(SystemInfo $systemInfo, Directory $directory, DebugLogReader $debugLogReader, ReportSubmitTransient $reportSubmitTransient, Auth $auth, Sanitize $sanitize, Notifications $notifications)
     {
         $this->systemInfo     = $systemInfo;
         $this->directory      = $directory;
@@ -92,6 +100,7 @@ class Report
         $this->transient      = $reportSubmitTransient;
         $this->auth           = $auth;
         $this->sanitize       = $sanitize;
+        $this->notifications  = $notifications;
     }
 
     /**
@@ -149,7 +158,7 @@ class Report
             $attachments = $this->getBundledLogs();
         }
 
-        if ($this->sendMail($email, $message, $attachments) === false) {
+        if ($this->sendFeedback($email, $message, $attachments) === false) {
             $errors[] = __('Can not send mail. <br>Please write us a mail to<br>support@wp-staging.com', 'wp-staging');
             return $errors;
         }
@@ -180,10 +189,9 @@ class Report
         $mailSubject = sprintf(__('WP Staging - Debug Code: %s', 'wp-staging'), $debugCode);
         $response    = __("Sending debug info failed!", 'wp-staging');
         $message     = $mailSubject . "\n" . sprintf(__("License Key: %s", 'wp-staging'), $this->getLicenseKey());
-        $headers[]   = "From: $fromEmail";
-        $headers[]   = "Reply-To: $fromEmail";
         $attachments = $this->getBundledLogs();
-        $isSent      = wp_mail(self::WPSTG_SUPPORT_EMAIL, $mailSubject, $message, $headers, $attachments);
+
+        $isSent = $this->notifications->sendEmail(self::WPSTG_SUPPORT_EMAIL, $mailSubject, $message, $fromEmail, $attachments, Notifications::DISABLE_FOOTER_MESSAGE);
 
         if ($isSent) {
             $this->transient->setTransient();
@@ -369,21 +377,12 @@ class Report
      * @param array  $attachments
      * @return bool
      */
-    private function sendMail(string $from, string $text, array $attachments): bool
+    private function sendFeedback(string $from, string $text, array $attachments): bool
     {
-        $headers = [];
-
-        $headers[] = "From: $from";
-        $headers[] = "Reply-To: $from";
-
-        $success = wp_mail(self::WPSTG_SUPPORT_EMAIL, self::EMAIL_SUBJECT, $text, $headers, $attachments);
+        $success = $this->notifications->sendEmail(self::WPSTG_SUPPORT_EMAIL, self::EMAIL_SUBJECT, $text, $from, $attachments, Notifications::DISABLE_FOOTER_MESSAGE);
         $this->deleteBundledLogs();
 
-        if ($success) {
-            return true;
-        }
-
-        return false;
+        return (bool)$success;
     }
 
     /**

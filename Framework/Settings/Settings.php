@@ -19,21 +19,19 @@ class Settings
      * Sanitize the options to escape from XSS
      */
     private $optionsToSanitize = [
-        'queryLimit' => 'sanitizeInt',
-        'querySRLimit' => 'sanitizeInt',
-        'fileLimit' => 'sanitizeInt',
-        'maxFileSize' => 'sanitizeInt',
-        'batchSize' => 'sanitizeInt',
-        'delayRequest' => 'sanitizeInt',
-        'cpuLoad' => 'sanitizeString',
-        'unInstallOnDelete' => 'sanitizeBool',
-        'optimizer' => 'sanitizeBool',
-        'disableAdminLogin' => 'sanitizeBool',
-        'keepPermalinks' => 'sanitizeBool',
+        'queryLimit'         => 'sanitizeInt',
+        'querySRLimit'       => 'sanitizeInt',
+        'fileLimit'          => 'sanitizeInt',
+        'maxFileSize'        => 'sanitizeInt',
+        'batchSize'          => 'sanitizeInt',
+        'delayRequest'       => 'sanitizeInt',
+        'cpuLoad'            => 'sanitizeString',
+        'unInstallOnDelete'  => 'sanitizeBool',
+        'optimizer'          => 'sanitizeBool',
+        'disableAdminLogin'  => 'sanitizeBool',
+        'keepPermalinks'     => 'sanitizeBool',
         'checkDirectorySize' => 'sanitizeBool',
-        'debugMode' => 'sanitizeBool',
-        'schedulesErrorReport' => 'sanitizeBool',
-        'schedulesReportEmail' => 'sanitizeEmail',
+        'debugMode'          => 'sanitizeBool',
     ];
 
     /**
@@ -89,11 +87,26 @@ class Settings
             $showErrorToggleStagingSiteCloning = !$this->toggleStagingSiteCloning($isStagingCloneable === 'true');
         }
 
-        if (WPStaging::isPro() && is_array($data)) {
-            $isSendBackupErrorReport = isset($data['schedulesErrorReport']) ? 'true' : '';
-            $reportEmail             = !empty($data['schedulesReportEmail']) ? $this->sanitize->sanitizeEmail($data['schedulesReportEmail']) : '';
-            unset($data['schedulesErrorReport']);
-            $this->setEmailErrorReportOptions($isSendBackupErrorReport, $reportEmail);
+        if (is_array($data)) {
+            $optionBackupScheduleErrorReport = isset($data['schedulesErrorReport']) ? 'true' : '';
+            $optionBackupScheduleReportEmail = !empty($data['schedulesReportEmail']) ? $this->sanitize->sanitizeEmail($data['schedulesReportEmail']) : '';
+
+            if (empty($optionBackupScheduleReportEmail)) {
+                $optionBackupScheduleErrorReport = '';
+            }
+
+            unset($data['schedulesErrorReport'], $data['schedulesReportEmail']);
+
+            $optionBackupScheduleSlackErrorReport   = isset($data['schedulesSlackErrorReport']) ? 'true' : '';
+            $optionBackupScheduleReportSlackWebhook = !empty($data['schedulesReportSlackWebhook']) ? $this->sanitize->sanitizeUrl($data['schedulesReportSlackWebhook']) : '';
+
+            if (empty($optionBackupScheduleReportSlackWebhook)) {
+                $optionBackupScheduleSlackErrorReport = '';
+            }
+
+            unset($data['schedulesErrorSlackReport'], $data['schedulesReportSlackWebhook']);
+
+            $this->setErrorReportOptions($optionBackupScheduleErrorReport, $optionBackupScheduleReportEmail, $optionBackupScheduleSlackErrorReport, $optionBackupScheduleReportSlackWebhook);
         }
 
         $sanitized = $this->sanitizeData($data);
@@ -104,7 +117,7 @@ class Settings
             add_settings_error("wpstg-notices", '', __("Settings updated.", "wp-staging"), "updated");
         }
 
-        return apply_filters("wpstg-settings", $sanitized, $data);
+        return $sanitized;
     }
 
     /**
@@ -192,22 +205,25 @@ class Settings
     /**
      * Set backup schedule error reporting options
      *
-     * @param string $isSendBackupSchedulesErrorReport 'true' if active
-     * @param string $reportEmail
+     * @param string $optionBackupScheduleErrorReport 'true' if active
+     * @param string $optionBackupScheduleReportEmail
+     * @param string $optionBackupScheduleSlackErrorReport 'true' if active
+     * @param string $optionBackupScheduleReportSlackWebhook
      * @return void
      */
-    protected function setEmailErrorReportOptions(string $isSendBackupSchedulesErrorReport, string $reportEmail)
-    {
-        if (!WPStaging::isPro()) {
-            return;
-        }
-
+    protected function setErrorReportOptions(
+        string $optionBackupScheduleErrorReport,
+        string $optionBackupScheduleReportEmail,
+        string $optionBackupScheduleSlackErrorReport,
+        string $optionBackupScheduleReportSlackWebhook
+    ) {
         if (!class_exists('WPStaging\Backup\BackupScheduler')) {
             return;
         }
 
-        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, $isSendBackupSchedulesErrorReport);
-
-        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $reportEmail);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, $optionBackupScheduleErrorReport);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT, $optionBackupScheduleSlackErrorReport);
+        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK, $optionBackupScheduleReportSlackWebhook);
     }
 }

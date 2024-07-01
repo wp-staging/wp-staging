@@ -6,7 +6,6 @@ use Exception;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
-use WPStaging\Backup\Service\Multipart\MultipartSplitInterface;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Backup\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporterProvider;
@@ -17,6 +16,7 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
+use wpdb;
 
 class DatabaseBackupTask extends BackupTask
 {
@@ -31,19 +31,15 @@ class DatabaseBackupTask extends BackupTask
     const PART_IDENTIFIER = 'wpstgdb';
 
     /** @var Directory */
-    private $directory;
+    protected $directory;
 
     /** @var int */
     private $currentPartIndex = 0;
 
-    /** @var MultipartSplitInterface */
-    private $multipartSplit;
-
-    public function __construct(Directory $directory, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, MultipartSplitInterface $multipartSplit)
+    public function __construct(Directory $directory, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
         $this->directory = $directory;
-        $this->multipartSplit = $multipartSplit;
     }
 
     public static function getTaskName(): string
@@ -248,31 +244,31 @@ class DatabaseBackupTask extends BackupTask
     /**
      * @return void
      */
-    private function setupDatabaseFilePathName()
+    protected function setupDatabaseFilePathName()
     {
         global $wpdb;
-        if (!$this->jobDataDto->getIsMultipartBackup()) {
-            if ($this->jobDataDto->getDatabaseFile()) {
-                return;
-            }
-
-            $basename = $this->getDatabaseFilename($wpdb);
-            $this->jobDataDto->setDatabaseFile($this->directory->getCacheDirectory() . $basename);
+        if ($this->jobDataDto->getIsMultipartBackup()) {
+            $this->setupMultipartDatabaseFilePathName($wpdb);
             return;
         }
 
-        $this->multipartSplit->setupDatabaseFilename($this->jobDataDto, $wpdb, $this->directory->getCacheDirectory(), $this->getDatabaseFilename($wpdb, $this->jobDataDto->getMaxDbPartIndex(), $useCache = true));
+        if ($this->jobDataDto->getDatabaseFile()) {
+            return;
+        }
+
+        $basename = $this->getDatabaseFilename($wpdb);
+        $this->jobDataDto->setDatabaseFile($this->directory->getCacheDirectory() . $basename);
     }
 
     /**
-     * @param object $wpdb
+     * @param wpdb $wpdb
      * @param int $partIndex
      * @param bool $useCache If true, the filename will be retrieved from the job data dto if it exist,
      *                       otherwise a new name will be generated.
      *                       Use false to always generate a new name.
      * @return string
      */
-    private function getDatabaseFilename($wpdb, int $partIndex = 0, bool $useCache = false): string
+    protected function getDatabaseFilename(wpdb $wpdb, int $partIndex = 0, bool $useCache = false): string
     {
         if ($useCache) {
             $databaseFilename = $this->getCachedDatabaseFilenameForPart($partIndex);
@@ -301,22 +297,20 @@ class DatabaseBackupTask extends BackupTask
      * @param int $partIndex
      * @return string
      */
-    private function getCachedDatabaseFilenameForPart(int $partIndex): string
+    protected function getCachedDatabaseFilenameForPart(int $partIndex): string
     {
-        $multipartFilesInfo = $this->jobDataDto->getMultipartFilesInfo();
-        foreach ($multipartFilesInfo as $multipartFileInfo) {
-            if ($multipartFileInfo['index'] === $partIndex && $multipartFileInfo['category'] === self::PART_IDENTIFIER) {
-                return $multipartFileInfo['destination'];
-            }
-        }
-
         return '';
+    }
+
+    protected function setupMultipartDatabaseFilePathName(wpdb $wpdb)
+    {
+        // no-op
     }
 
     /**
      * @return bool
      */
-    private function isMemoryExhaustFixEnabled()
+    private function isMemoryExhaustFixEnabled(): bool
     {
         return defined('WPSTG_MEMORY_EXHAUST_FIX') && (constant('WPSTG_MEMORY_EXHAUST_FIX') === true);
     }
