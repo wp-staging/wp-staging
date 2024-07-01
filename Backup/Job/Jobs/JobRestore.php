@@ -143,6 +143,8 @@ class JobRestore extends AbstractJob
             $this->tasks[] = RestoreOtherFilesInWpContentTask::class;
         }
 
+        $this->addRestoreOtherFilesInWpRootTasks();
+
         if ($this->backupMetadata->getIsExportingDatabase()) {
             $this->addDatabaseTasks();
         }
@@ -161,6 +163,14 @@ class JobRestore extends AbstractJob
     protected function setRequirementTask()
     {
         $this->tasks[] = RestoreRequirementsCheckTask::class;
+    }
+
+    /**
+     * @return void
+     */
+    protected function addRestoreOtherFilesInWpRootTasks()
+    {
+        // no-op
     }
 
     /**

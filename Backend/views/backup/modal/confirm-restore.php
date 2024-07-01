@@ -15,7 +15,8 @@ $isDatabaseOnlyBackup = $info->getIsExportingDatabase()
                         && !$info->getIsExportingThemes()
                         && !$info->getIsExportingMuPlugins()
                         && !$info->getIsExportingUploads()
-                        && !$info->getIsExportingOtherWpContentFiles();
+                        && !$info->getIsExportingOtherWpContentFiles()
+                        && !$info->getIsExportingOtherWpRootFiles();
 
 ?>
 <div id="wpstg-confirm-backup-restore-wrapper">
@@ -25,22 +26,25 @@ $isDatabaseOnlyBackup = $info->getIsExportingDatabase()
     <div id="wpstg-confirm-backup-restore-data">
         <ul>
             <?php if ($info->getIsExportingDatabase()) : ?>
-                <li style="list-style-type: square;"><?php esc_html_e('Database will be replaced.', 'wp-staging'); ?></li>
+                <li><?php esc_html_e('Database will be replaced.', 'wp-staging'); ?></li>
             <?php endif; ?>
             <?php if ($info->getIsExportingPlugins()) : ?>
-                <li style="list-style-type: square;"><?php esc_html_e('Plugins will be added.', 'wp-staging') ?></li>
+                <li><?php esc_html_e('Plugins will be added.', 'wp-staging') ?></li>
             <?php endif; ?>
             <?php if ($info->getIsExportingThemes()) : ?>
-                <li style="list-style-type: square;"><?php esc_html_e('Themes will be added.', 'wp-staging') ?></li>
+                <li><?php esc_html_e('Themes will be added.', 'wp-staging') ?></li>
             <?php endif; ?>
             <?php if ($info->getIsExportingMuPlugins()) : ?>
-                <li style="list-style-type: square;"><?php esc_html_e('Mu-plugins will be added.', 'wp-staging') ?></li>
+                <li><?php esc_html_e('Mu-plugins will be added.', 'wp-staging') ?></li>
             <?php endif; ?>
             <?php if ($info->getIsExportingUploads()) : ?>
-                <li style="list-style-type: square;"><?php esc_html_e('Media files and images will be added. ', 'wp-staging') ?></li>
+                <li><?php esc_html_e('Media files and images will be added. ', 'wp-staging') ?></li>
             <?php endif; ?>
             <?php if ($info->getIsExportingOtherWpContentFiles()) : ?>
-                <li style="list-style-type: square;"><?php esc_html_e('Other files in wp-content folder will be added. ', 'wp-staging') ?></li>
+                <li><?php esc_html_e('Other files in wp-content folder will be added.', 'wp-staging') ?></li>
+            <?php endif; ?>
+            <?php if ($info->getIsExportingOtherWpRootFiles()) : ?>
+                <li><?php esc_html_e('Other files in WP root folder will be added.', 'wp-staging') ?></li>
             <?php endif; ?>
         </ul>
         <?php if (!$isDatabaseOnlyBackup && !empty($info->getTotalFiles())) : ?>

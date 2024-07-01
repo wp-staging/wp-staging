@@ -207,6 +207,10 @@ class BackupValidator
             $this->validatePart($part, 'others');
         }
 
+        foreach ($splitMetadata->getOthersParts() as $part) {
+            $this->validatePart($part, 'otherWpRoot');
+        }
+
         foreach ($splitMetadata->getDatabaseParts() as $part) {
             $this->validatePart($part, 'database');
         }

@@ -240,4 +240,13 @@ class Sites
 
         return false;
     }
+
+    /**
+     * @return array
+     */
+    public function getStagingDirectories(): array
+    {
+        $stagingSites = $this->tryGettingStagingSites();
+        return wp_list_pluck($stagingSites, 'path');
+    }
 }

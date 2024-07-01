@@ -76,27 +76,28 @@ class PrepareRestore extends PrepareJob
 
         if (empty($data) && array_key_exists('wpstgRestoreData', $_POST)) {
             $data = Sanitize::sanitizeArray($_POST['wpstgRestoreData'], [
-                'backupMetadata' => 'array',
-                'headerStart' => 'int',
-                'headerEnd' => 'int',
-                'totalFiles' => 'int',
-                'totalDirectories' => 'int',
-                'maxTableLength' => 'int',
-                'databaseFileSize' => 'int',
-                'backupSize' => 'int',
-                'blogId' => 'int',
-                'networkId' => 'int',
-                'dateCreated' => 'int',
-                'isAutomatedBackup' => 'bool',
-                'phpShortOpenTags' => 'bool',
-                'wpBakeryActive' => 'bool',
-                'subdomainInstall' => 'bool',
-                'isExportingPlugins' => 'bool',
-                'isExportingMuPlugins' => 'bool',
-                'isExportingThemes' => 'bool',
-                'isExportingUploads' => 'bool',
+                'backupMetadata'                 => 'array',
+                'headerStart'                    => 'int',
+                'headerEnd'                      => 'int',
+                'totalFiles'                     => 'int',
+                'totalDirectories'               => 'int',
+                'maxTableLength'                 => 'int',
+                'databaseFileSize'               => 'int',
+                'backupSize'                     => 'int',
+                'blogId'                         => 'int',
+                'networkId'                      => 'int',
+                'dateCreated'                    => 'int',
+                'isAutomatedBackup'              => 'bool',
+                'phpShortOpenTags'               => 'bool',
+                'wpBakeryActive'                 => 'bool',
+                'subdomainInstall'               => 'bool',
+                'isExportingPlugins'             => 'bool',
+                'isExportingMuPlugins'           => 'bool',
+                'isExportingThemes'              => 'bool',
+                'isExportingUploads'             => 'bool',
                 'isExportingOtherWpContentFiles' => 'bool',
-                'isExportingDatabase' => 'bool'
+                'isExportingOtherWpRootFiles'    => 'bool',
+                'isExportingDatabase'            => 'bool'
             ]);
         }
 

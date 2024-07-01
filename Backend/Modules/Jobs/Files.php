@@ -18,6 +18,8 @@ use WPStaging\Framework\Filesystem\Permissions;
 use WPStaging\Framework\Filesystem\WpUploadsFolderSymlinker;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 
 /**
  * Class Files
@@ -30,6 +32,16 @@ use WPStaging\Framework\Utils\Cache\Cache;
  */
 class Files extends JobExecutable
 {
+    use EndOfLinePlaceholderTrait;
+
+    /** @var Strings */
+    protected $strUtil;
+
+    /**
+     * @var string
+     */
+    protected $destination;
+
     /**
      * @var FileObject
      */
@@ -39,11 +51,6 @@ class Files extends JobExecutable
      * @var int
      */
     private $maxFilesPerRun;
-
-    /**
-     * @var string
-     */
-    protected $destination;
 
     /**
      * @var Permissions
@@ -94,6 +101,7 @@ class Files extends JobExecutable
         $this->pathAdapter = WPStaging::make(PathIdentifier::class);
         $this->pathChecker = WPStaging::make(PathChecker::class);
         $this->siteInfo    = WPStaging::make(SiteInfo::class);
+        $this->strUtil     = WPStaging::make(Strings::class);
         $this->rootPath    = rtrim($this->directory->getAbsPath(), '/');
         $this->contentPath = rtrim($this->directory->getWpContentDirectory(), '/');
         $this->destination = $this->filesystem->normalizePath($this->options->destinationDir);
@@ -327,6 +335,8 @@ class Files extends JobExecutable
                 continue;
             }
 
+            $file = $this->replacePlaceholdersWithEOLs($file);
+
             if (empty($file)) {
                 continue;
             }
@@ -490,14 +500,14 @@ class Files extends JobExecutable
     protected function getDestination($file, $basePath, $isContent = false)
     {
         $file            = $this->filesystem->normalizePath($file);
-        $relativePath    = str_replace($basePath, '', $file);
+        $relativePath    = $this->strUtil->replaceStartWith($basePath, '', $file);
         $destinationPath = $this->destination . $relativePath;
 
         if ($isContent && $this->isFlywheelHost()) {
             $destinationPath = $this->destination . 'wp-content/' . $relativePath;
         } elseif ($isContent) {
-            $relativePath    = str_replace($this->filesystem->normalizePath(ABSPATH), '', $file);
-            $destinationPath = $this->destination . $relativePath;
+            $absPath         = $this->filesystem->normalizePath(ABSPATH);
+            $destinationPath = $this->strUtil->replaceStartWith($absPath, $this->destination, $file);
         }
 
         $destinationDirectory = dirname($destinationPath);

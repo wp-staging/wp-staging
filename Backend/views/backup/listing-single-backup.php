@@ -29,7 +29,7 @@ $existingBackupParts    = $backup->existingBackupParts;
 $isValidFileIndex       = $backup->isValidFileIndex;
 $indexFileError         = $backup->errorMessage;
 $isUnsupported          = $backup->isUnsupported;
-$canUploadBackup        = defined('WPSTG_ALLOW_REMOTE_UPLOAD') && WPSTG_ALLOW_REMOTE_UPLOAD;
+$isProVersion           = WPStaging::isPro();
 
 // Default error message
 if (empty($indexFileError)) {
@@ -112,19 +112,25 @@ $logUrl = add_query_arg([
                             <?php esc_html_e('Edit', 'wp-staging') ?>
                         </a>
                     <?php endif ?>
-                    <?php if (!$isLegacy && !$isCorrupt && $canUploadBackup) : ?>
-                        <a href="#" class="wpstg--backup--remote-upload wpstg-clone-action"
-                           data-filePath="<?php echo esc_attr($backup->relativePath) ?>"
-                           title="<?php esc_attr_e('Upload to remote storage', 'wp-staging') ?>">
-                            <?php esc_html_e('Upload', 'wp-staging') ?>
-                        </a>
-                    <?php endif ?>
                     <a href="#" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-backup"
                        data-name="<?php echo esc_attr($backupName); ?>"
                        data-md5="<?php echo esc_attr($backup->md5BaseName) ?>"
                        title="<?php esc_attr_e('Delete this backup. This action can not be undone!', 'wp-staging') ?>">
                         <?php esc_html_e('Delete', 'wp-staging') ?>
                     </a>
+                    <?php if (!$isProVersion) :?>
+                    <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Upload to Cloud", "wp-staging") ?>">
+                        <?php esc_html_e("Upload to Cloud", "wp-staging"); ?>
+                        <span>(Pro)</span>
+                    </a>
+                    <?php endif;?>
+                    <?php if (!$isLegacy && !$isCorrupt && $isProVersion) : ?>
+                        <a href="#" class="wpstg--backup--remote-upload wpstg-clone-action"
+                           data-filePath="<?php echo esc_attr($backup->relativePath) ?>"
+                           title="<?php esc_attr_e('Upload to remote storage', 'wp-staging') ?>">
+                            <?php esc_html_e('Upload to Cloud', 'wp-staging') ?>
+                        </a>
+                    <?php endif ?>
                     <a href="#" id="wpstg-copy-backup-url" class="wpstg-clone-action"
                        data-copy-content="<?php echo esc_attr($downloadFileUrl); ?>"
                        title="<?php esc_attr_e('Copy url to backup file to restore it quickly on another website.', 'wp-staging') ?>">
@@ -201,6 +207,7 @@ $logUrl = add_query_arg([
                     $isExportingThemes              = $backup->isExportingThemes;
                     $isExportingUploads             = $backup->isExportingUploads;
                     $isExportingOtherWpContentFiles = $backup->isExportingOtherWpContentFiles;
+                    $isExportingOtherWpRootFiles    = $backup->isExportingOtherWpRootFiles;
                     $indexPartSize                  = $backup->indexPartSize;
                     include(__DIR__ . '/modal/partials/backup-contains.php');
                     ?>

@@ -109,7 +109,6 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
      */
     protected function moveBackupFilesToDestination()
     {
-
         try {
             $otherFilesToRestore = $this->getOtherFilesToRestore();
         } catch (\Exception $e) {

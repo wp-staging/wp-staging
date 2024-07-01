@@ -3,7 +3,7 @@
 namespace WPStaging\Framework\Utils;
 
 use WPStaging\Core\WPStaging;
-use WPStaging\Backup\Service\Compressor;
+use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Framework\Adapter\Directory;
 
@@ -135,7 +135,7 @@ class Urls
     public function getBackupUrl()
     {
         if (!WPStaging::make(Directory::class)->isBackupPathOutsideAbspath()) {
-            return $this->getUploadsUrl() . WPSTG_PLUGIN_DOMAIN . '/' . Compressor::BACKUP_DIR_NAME . '/';
+            return $this->getUploadsUrl() . WPSTG_PLUGIN_DOMAIN . '/' . Archiver::BACKUP_DIR_NAME . '/';
         }
 
         $backupDirAbsPath        = WPStaging::make(BackupsFinder::class)->getBackupsDirectory();

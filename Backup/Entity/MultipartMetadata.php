@@ -41,6 +41,9 @@ class MultipartMetadata implements JsonSerializable
     /** @var array List of other backup parts with their info */
     private $othersParts = [];
 
+    /** @var array List of others files in wp root backup parts with their info */
+    private $otherWpRootParts = [];
+
     /** @var array List of database backup parts with their info */
     private $databaseParts = [];
 
@@ -179,6 +182,24 @@ class MultipartMetadata implements JsonSerializable
     /**
      * @return array
      */
+    public function getOtherWpRootParts(): array
+    {
+        return $this->otherWpRootParts;
+    }
+
+    /**
+     * @param array $parts
+     *
+     * @return void
+     */
+    public function setOtherWpRootParts(array $parts)
+    {
+        $this->otherWpRootParts = $parts;
+    }
+
+    /**
+     * @return array
+     */
     public function getDatabaseParts()
     {
         return $this->databaseParts;
@@ -207,7 +228,7 @@ class MultipartMetadata implements JsonSerializable
      */
     public function getBackupParts()
     {
-        return array_merge($this->databaseParts, $this->othersParts, $this->themesParts, $this->uploadsParts, $this->pluginsParts, $this->mupluginsParts);
+        return array_merge($this->databaseParts, $this->othersParts, $this->themesParts, $this->uploadsParts, $this->pluginsParts, $this->mupluginsParts, $this->otherWpRootParts);
     }
 
     /**
@@ -215,6 +236,6 @@ class MultipartMetadata implements JsonSerializable
      */
     public function getFileParts()
     {
-        return array_merge($this->othersParts, $this->themesParts, $this->pluginsParts, $this->mupluginsParts, $this->uploadsParts);
+        return array_merge($this->othersParts, $this->themesParts, $this->pluginsParts, $this->mupluginsParts, $this->uploadsParts, $this->otherWpRootParts);
     }
 }

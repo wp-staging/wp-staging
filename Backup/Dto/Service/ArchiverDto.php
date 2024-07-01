@@ -1,16 +1,10 @@
 <?php
 
-// TODO PHP7.x; declare(strict_types=1);
-// TODO PHP7.x; return types && type-hints
-
 namespace WPStaging\Backup\Dto\Service;
 
 use WPStaging\Backup\Entity\BackupMetadata;
 
-/**
- * @todo Add strict type in a separate PR
- */
-class CompressorDto
+class ArchiverDto
 {
     /** @var string */
     private $filePath;
@@ -33,7 +27,11 @@ class CompressorDto
     /** @var BackupMetadata */
     private $backupMetadata;
 
-    public function appendWrittenBytes($bytes)
+    /**
+     * @param int $bytes
+     * @return void
+     */
+    public function appendWrittenBytes(int $bytes)
     {
         $this->writtenBytesTotal += (int) $bytes;
     }
@@ -41,11 +39,14 @@ class CompressorDto
     /**
      * @return bool
      */
-    public function isFinished()
+    public function isFinished(): bool
     {
         return $this->fileSize <= $this->writtenBytesTotal;
     }
 
+    /**
+     * @return void
+     */
     public function resetIfFinished()
     {
         if ($this->isFinished()) {
@@ -53,10 +54,13 @@ class CompressorDto
         }
     }
 
+    /**
+     * @return void
+     */
     public function reset()
     {
-        $this->setFileSize(null);
-        $this->setFilePath(null);
+        $this->setFileSize(-1);
+        $this->setFilePath('');
         $this->setWrittenBytesTotal(0);
         $this->setIndexPositionCreated(false);
     }
@@ -64,15 +68,16 @@ class CompressorDto
     /**
      * @return string
      */
-    public function getFilePath()
+    public function getFilePath(): string
     {
-        return $this->filePath;
+        return (string)$this->filePath;
     }
 
     /**
      * @param string $filePath
+     * @return void
      */
-    public function setFilePath($filePath)
+    public function setFilePath(string $filePath)
     {
         $this->filePath = wp_normalize_path((string)$filePath);
     }
@@ -97,7 +102,7 @@ class CompressorDto
     /**
      * @return int
      */
-    public function getWrittenBytesTotal()
+    public function getWrittenBytesTotal(): int
     {
         /** @noinspection UnnecessaryCastingInspection */
         return (int) $this->writtenBytesTotal;
@@ -105,8 +110,9 @@ class CompressorDto
 
     /**
      * @param int $writtenBytesTotal
+     * @return void
      */
-    public function setWrittenBytesTotal($writtenBytesTotal)
+    public function setWrittenBytesTotal(int $writtenBytesTotal)
     {
         $this->writtenBytesTotal = $writtenBytesTotal;
     }
@@ -114,15 +120,16 @@ class CompressorDto
     /**
      * @return int
      */
-    public function getFileSize()
+    public function getFileSize(): int
     {
-        return $this->fileSize;
+        return (int)$this->fileSize;
     }
 
     /**
      * @param int $fileSize
+     * @return void
      */
-    public function setFileSize($fileSize)
+    public function setFileSize(int $fileSize)
     {
         $this->fileSize = $fileSize;
     }
@@ -149,7 +156,7 @@ class CompressorDto
      * @param int $categoryIndex
      * @return bool
      */
-    public function isIndexPositionCreated($category = '', $categoryIndex = 0)
+    public function isIndexPositionCreated(string $category = '', int $categoryIndex = 0): bool
     {
         if (!isset($this->indexPositionCreated[$category])) {
             return false;
@@ -162,8 +169,9 @@ class CompressorDto
      * @param bool $indexPositionCreated
      * @param string $category
      * @param int $categoryIndex
+     * @return void
      */
-    public function setIndexPositionCreated($indexPositionCreated, $category = '', $categoryIndex = 0)
+    public function setIndexPositionCreated(bool $indexPositionCreated, string $category = '', int $categoryIndex = 0)
     {
         if (!isset($this->indexPositionCreated[$category])) {
             $this->indexPositionCreated[$category] = [];
@@ -175,7 +183,7 @@ class CompressorDto
     /**
      * @return BackupMetadata
      */
-    public function getBackupMetadata()
+    public function getBackupMetadata(): BackupMetadata
     {
         if (!$this->backupMetadata) {
             $this->backupMetadata = new BackupMetadata();
@@ -186,6 +194,7 @@ class CompressorDto
 
     /**
      * @param BackupMetadata $backupMetadata
+     * @return void
      */
     public function setBackupMetadata(BackupMetadata $backupMetadata)
     {

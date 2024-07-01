@@ -18,6 +18,7 @@ use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Exceptions\DiskNotWritableException;
 use WPStaging\Backup\Task\BackupTask;
@@ -30,10 +31,36 @@ use WPStaging\Framework\Utils\PluginInfo;
 
 class FilesystemScannerTask extends BackupTask
 {
+    use EndOfLinePlaceholderTrait;
+
     /**
      * @var string
      */
     const PATH_SEPARATOR = '::';
+
+    /** @var int */
+    const STEP_BACKUP_OTHER_WP_CONTENT_FILES = 0;
+
+    /** @var int */
+    const STEP_BACKUP_PLUGINS_FILES = 1;
+
+    /** @var int */
+    const STEP_BACKUP_MU_PLUGINS_FILES = 2;
+
+    /** @var int */
+    const STEP_BACKUP_THEMES_FILES = 3;
+
+    /** @var int */
+    const STEP_BACKUP_UPLOADS_FILES = 4;
+
+    /** @var int */
+    const STEP_BACKUP_OTHER_WP_ROOT_FILES = 5;
+
+    /**
+     * 6 steps for scanning each identifier and the last step to deep scan non-scanned directories
+     * @var int
+     */
+    const TOTAL_STEPS = 7;
 
     /** @var Directory */
     protected $directory;
@@ -42,7 +69,7 @@ class FilesystemScannerTask extends BackupTask
     protected $filesystem;
 
     /** @var SeekableQueueInterface */
-    protected $compressorQueue;
+    protected $fileBackupQueue;
 
     /** @var PathIdentifier */
     protected $pathIdentifier;
@@ -78,7 +105,7 @@ class FilesystemScannerTask extends BackupTask
      * @param Cache $cache
      * @param StepsDto $stepsDto
      * @param SeekableQueueInterface $taskQueue
-     * @param SeekableQueueInterface $compressorQueue
+     * @param SeekableQueueInterface $fileBackupQueue
      * @param Filesystem $filesystem
      * @param SiteInfo $siteInfo
      */
@@ -89,7 +116,7 @@ class FilesystemScannerTask extends BackupTask
         Cache $cache,
         StepsDto $stepsDto,
         SeekableQueueInterface $taskQueue,
-        SeekableQueueInterface $compressorQueue,
+        SeekableQueueInterface $fileBackupQueue,
         Filesystem $filesystem,
         SiteInfo $siteInfo,
         PluginInfo $pluginInfo
@@ -99,7 +126,7 @@ class FilesystemScannerTask extends BackupTask
         $this->directory                  = $directory;
         $this->filesystem                 = $filesystem;
         $this->pathIdentifier             = $pathIdentifier;
-        $this->compressorQueue            = $compressorQueue;
+        $this->fileBackupQueue            = $fileBackupQueue;
         $this->isSiteHostedOnWordPressCom = $siteInfo->isHostedOnWordPressCom();
         $this->pluginInfo                 = $pluginInfo;
     }
@@ -131,44 +158,48 @@ class FilesystemScannerTask extends BackupTask
         $this->setupFilters();
         $this->setupFilesystemScanner();
 
-        if ($this->stepsDto->getCurrent() === 0) {
+        if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_OTHER_WP_CONTENT_FILES) {
             $this->currentPathScanning = BackupOtherFilesTask::IDENTIFIER;
-            $this->setupCompressorQueue();
+            $this->setupFileBackupQueue();
             $this->scanWpContentDirectory();
             $this->unlockQueue();
             return $this->generateResponse();
         }
 
-        if ($this->stepsDto->getCurrent() === 1) {
+        if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_PLUGINS_FILES) {
             $this->currentPathScanning = BackupPluginsTask::IDENTIFIER;
-            $this->setupCompressorQueue();
+            $this->setupFileBackupQueue();
             $this->scanPluginsDirectories();
             $this->unlockQueue();
             return $this->generateResponse();
         }
 
-        if ($this->stepsDto->getCurrent() === 2) {
+        if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_MU_PLUGINS_FILES) {
             $this->currentPathScanning = BackupMuPluginsTask::IDENTIFIER;
-            $this->setupCompressorQueue();
+            $this->setupFileBackupQueue();
             $this->scanMuPluginsDirectory();
             $this->unlockQueue();
             return $this->generateResponse();
         }
 
-        if ($this->stepsDto->getCurrent() === 3) {
+        if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_THEMES_FILES) {
             $this->currentPathScanning = BackupThemesTask::IDENTIFIER;
-            $this->setupCompressorQueue();
+            $this->setupFileBackupQueue();
             $this->scanThemesDirectory();
             $this->unlockQueue();
             return $this->generateResponse();
         }
 
-        if ($this->stepsDto->getCurrent() === 4) {
+        if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_UPLOADS_FILES) {
             $this->currentPathScanning = BackupUploadsTask::IDENTIFIER;
-            $this->setupCompressorQueue();
+            $this->setupFileBackupQueue();
             $this->scanUploadsDirectory();
             $this->unlockQueue();
             return $this->generateResponse();
+        }
+
+        if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_OTHER_WP_ROOT_FILES) {
+            return $this->scanWpRootDirectory();
         }
 
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
@@ -204,10 +235,10 @@ class FilesystemScannerTask extends BackupTask
     /**
      * @return void
      */
-    protected function setupCompressorQueue()
+    protected function setupFileBackupQueue()
     {
-        $compressorTaskName = FileBackupTask::getTaskName() . '_' . $this->currentPathScanning;
-        $this->compressorQueue->setup($compressorTaskName, SeekableQueueInterface::MODE_WRITE);
+        $fileBackupTaskName = FileBackupTask::getTaskName() . '_' . $this->currentPathScanning;
+        $this->fileBackupQueue->setup($fileBackupTaskName, SeekableQueueInterface::MODE_WRITE);
     }
 
     /**
@@ -247,6 +278,7 @@ class FilesystemScannerTask extends BackupTask
     {
         try {
             $path = $this->taskQueue->dequeue();
+            $path = $this->replacePlaceholdersWithEOLs($path);
 
             if (is_null($path)) {
                 throw new FinishedQueueException('Directory Scanner Queue is Finished');
@@ -264,7 +296,7 @@ class FilesystemScannerTask extends BackupTask
                 throw new Exception("$path is not a directory. Skipping...");
             }
 
-            $this->setupCompressorQueue();
+            $this->setupFileBackupQueue();
             $this->recursivePathScanning($path, $linkPath);
         } catch (FinishedQueueException $e) {
             try {
@@ -335,7 +367,7 @@ class FilesystemScannerTask extends BackupTask
         //    $this->enqueueFileInBackup(new \SplFileInfo(WPSTG_PLUGIN_DIR . 'Backup/wpstgBackupHeader.txt'));
         //}
 
-        $this->stepsDto->setTotal(6);
+        $this->stepsDto->setTotal(self::TOTAL_STEPS);
         $this->taskQueue->seek(0);
     }
 
@@ -352,6 +384,7 @@ class FilesystemScannerTask extends BackupTask
 
         // wp-content root
         $wpContentIt = new DirectoryIterator($this->directory->getWpContentDirectory());
+        $dirToSkip   = $this->directory->getDefaultWordPressFolders();
 
         foreach ($wpContentIt as $otherFiles) {
             // Early bail: We don't dots
@@ -372,11 +405,21 @@ class FilesystemScannerTask extends BackupTask
             }
 
             if ($otherFiles->isDir()) {
-                if (!in_array($this->filesystem->normalizePath($otherFiles->getPathname(), true), $this->directory->getDefaultWordPressFolders())) {
+                if (!in_array($this->filesystem->normalizePath($otherFiles->getPathname(), true), $dirToSkip)) {
                     $this->enqueueDirToBeScanned($otherFiles);
                 }
             }
         }
+    }
+
+    /**
+     * Scan WP root directory(ABSPATH) but doesn't scan sub folders. (Used in pro)
+     *
+     * @return TaskResponseDto
+     */
+    protected function scanWpRootDirectory(): TaskResponseDto
+    {
+        return $this->generateResponse();
     }
 
     /**
@@ -614,12 +657,14 @@ class FilesystemScannerTask extends BackupTask
 
         if ($link !== null) {
             $linkPath = $this->filesystem->normalizePath($link, true);
+            $relativePath = $this->replaceEOLsWithPlaceholders($relativePath);
             $path = rtrim($relativePath, '/') . self::PATH_SEPARATOR . rtrim($linkPath, '/');
-            $this->compressorQueue->enqueue($path);
+            $this->fileBackupQueue->enqueue($path);
             return;
         }
 
-        $this->compressorQueue->enqueue(rtrim($relativePath, '/'));
+        $relativePath = $this->replaceEOLsWithPlaceholders($relativePath);
+        $this->fileBackupQueue->enqueue(rtrim($relativePath, '/'));
     }
 
     /**
@@ -815,7 +860,7 @@ class FilesystemScannerTask extends BackupTask
      */
     protected function unlockQueue()
     {
-        $this->compressorQueue->shutdown();
+        $this->fileBackupQueue->shutdown();
     }
 
     /**

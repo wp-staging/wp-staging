@@ -11,6 +11,7 @@ use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
+use WPStaging\Framework\Traits\ValueGetterTrait;
 
 /**
  * Class Cloning
@@ -18,6 +19,8 @@ use WPStaging\Framework\Utils\WpDefaultDirectories;
  */
 class Updating extends Job
 {
+    use ValueGetterTrait;
+
     /**
      * External Database Used
      * @var bool
@@ -127,24 +130,24 @@ class Updating extends Job
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
             $currentStagingSite                 = $this->options->existingClones[$this->options->clone];
-            $this->options->cloneName           = $currentStagingSite['cloneName'];
-            $this->options->cloneDirectoryName  = $currentStagingSite['directoryName'];
-            $this->options->cloneNumber         = $currentStagingSite['number'];
-            $this->options->databaseUser        = $currentStagingSite['databaseUser'];
-            $this->options->databasePassword    = $currentStagingSite['databasePassword'];
-            $this->options->databaseDatabase    = $currentStagingSite['databaseDatabase'];
-            $this->options->databaseServer      = $currentStagingSite['databaseServer'];
-            $this->options->databasePrefix      = $currentStagingSite['databasePrefix'];
-            $this->options->databaseSsl         = $currentStagingSite['databaseSsl'];
-            $this->options->destinationHostname = $currentStagingSite['url'];
-            $this->options->uploadsSymlinked    = $currentStagingSite['uploadsSymlinked'];
-            $this->options->prefix              = $currentStagingSite['prefix'];
-            $this->options->emailsAllowed       = $currentStagingSite['emailsAllowed'];
-            $this->options->networkClone        = filter_var($currentStagingSite['networkClone'], FILTER_VALIDATE_BOOLEAN);
+            $this->options->cloneName           = $this->getValueFromArray('cloneName', $currentStagingSite);
+            $this->options->cloneDirectoryName  = $this->getValueFromArray('directoryName', $currentStagingSite);
+            $this->options->cloneNumber         = $this->getValueFromArray('number', $currentStagingSite);
+            $this->options->databaseUser        = $this->getValueFromArray('databaseUser', $currentStagingSite);
+            $this->options->databasePassword    = $this->getValueFromArray('databasePassword', $currentStagingSite);
+            $this->options->databaseDatabase    = $this->getValueFromArray('databaseDatabase', $currentStagingSite);
+            $this->options->databaseServer      = $this->getValueFromArray('databaseServer', $currentStagingSite);
+            $this->options->databasePrefix      = $this->getValueFromArray('databasePrefix', $currentStagingSite);
+            $this->options->databaseSsl         = $this->getValueFromArray('databaseSsl', $currentStagingSite);
+            $this->options->destinationHostname = $this->getValueFromArray('url', $currentStagingSite);
+            $this->options->uploadsSymlinked    = $this->getValueFromArray('uploadsSymlinked', $currentStagingSite);
+            $this->options->prefix              = $this->getValueFromArray('prefix', $currentStagingSite);
+            $this->options->emailsAllowed       = $this->getValueFromArray('emailsAllowed', $currentStagingSite);
+            $this->options->networkClone        = filter_var($this->getValueFromArray('networkClone', $currentStagingSite), FILTER_VALIDATE_BOOLEAN);
             $this->options->homeHostname        = $this->urls->getHomeUrlWithoutScheme();
-            $this->options->useNewAdminAccount  = $currentStagingSite['useNewAdminAccount'];
-            $this->options->adminEmail          = $currentStagingSite['adminEmail'];
-            $this->options->adminPassword       = $currentStagingSite['adminPassword'];
+            $this->options->useNewAdminAccount  = $this->getValueFromArray('useNewAdminAccount', $currentStagingSite);
+            $this->options->adminEmail          = $this->getValueFromArray('adminEmail', $currentStagingSite);
+            $this->options->adminPassword       = $this->getValueFromArray('adminPassword', $currentStagingSite);
         } else {
             $job = 'update';
             if ($this->mainJob === Job::RESET) {

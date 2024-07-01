@@ -75,8 +75,8 @@ class PrepareBackup
     public function __construct(AjaxPrepareBackup $ajaxPrepareBackup, Queue $queue, BackupProcessLock $processLock)
     {
         $this->ajaxPrepareBackup = $ajaxPrepareBackup;
-        $this->queue = $queue;
-        $this->processLock = $processLock;
+        $this->queue             = $queue;
+        $this->processLock       = $processLock;
     }
 
     /**
@@ -93,7 +93,7 @@ class PrepareBackup
         try {
             $data     = (array)wp_parse_args((array)$data, $this->getDefaultDataConfiguration());
             $prepared = $this->ajaxPrepareBackup->validateAndSanitizeData($data);
-            $name     = isset($prepared['name']) ? $prepared['name'] : 'Background Processing Backup';
+            $name     = empty($prepared['name']) ? 'Background Processing Backup' : $prepared['name'];
             $jobId    = uniqid($name . '_', true);
 
             $data['jobId'] = $jobId;
@@ -124,7 +124,7 @@ class PrepareBackup
             throw new \BadMethodCallException();
         }
 
-        $action = $this->getCurrentAction();
+        $action   = $this->getCurrentAction();
         $priority = $action === null ? 0 : $action->priority - 1;
         $actionId = $this->queue->enqueueAction(self::class . '::' . 'act', $args, $args['jobId'], $priority);
 
@@ -192,7 +192,7 @@ class PrepareBackup
             $errorMessage    = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
                 $this->processLock->unlockProcess();
-                $backupScheduler->sendErrorEmailReport("[Errors in scheduled backups]: " . $errorMessage);
+                $backupScheduler->sendErrorReport("[Errors in scheduled backups]: " . $errorMessage);
 
                 return new WP_Error(400, $errorMessage);
             }
@@ -271,23 +271,25 @@ class PrepareBackup
             'isExportingThemes'              => true,
             'isExportingUploads'             => true,
             'isExportingOtherWpContentFiles' => true,
+            'isExportingOtherWpRootFiles'    => false, //do not backup wp root files by default.
             'isExportingDatabase'            => true,
             'isAutomatedBackup'              => true,
             // Prevent this scheduled backup from generating another schedule.
-            'repeatBackupOnSchedule'        => false,
-            'sitesToBackup'                 => [],
-            'storages'                      => ['localStorage'],
-            'isInit'                        => true,
-            'isSmartExclusion'              => false,
-            'isExcludingSpamComments'       => false,
-            'isExcludingPostRevision'       => false,
-            'isExcludingDeactivatedPlugins' => false,
-            'isExcludingUnusedThemes'       => false,
-            'isExcludingLogs'               => false,
-            'isExcludingCaches'             => false,
-            'backupType'            => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
-            'subsiteBlogId'         => null,
-            "isValidateBackupFiles" => false,
+            'repeatBackupOnSchedule'         => false,
+            'sitesToBackup'                  => [],
+            'storages'                       => ['localStorage'],
+            'isInit'                         => true,
+            'isSmartExclusion'               => false,
+            'isExcludingSpamComments'        => false,
+            'isExcludingPostRevision'        => false,
+            'isExcludingDeactivatedPlugins'  => false,
+            'isExcludingUnusedThemes'        => false,
+            'isExcludingLogs'                => false,
+            'isExcludingCaches'              => false,
+            'backupType'                     => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
+            'subsiteBlogId'                  => null,
+            'backupExcludedDirectories'      => '',
+            "isValidateBackupFiles"          => false,
         ];
     }
 

@@ -66,16 +66,7 @@ class ZlibCompressor
 
         $canUseCompression = $this->canUseCompression();
 
-        $isEnabled = Hooks::applyFilters(self::FILTER_ZLIB_COMPRESSION_ENABLED, $isEnabled && $canUseCompression);
-
-        /**
-         * If the user has enabled multipart backups, we disable compression, as these two features are incompatible for now.
-         *
-         * @see \WPStaging\Backup\Dto\Job\JobBackupDataDto::getIsMultipartBackup
-         */
-        $isMultiPartEnabled = Hooks::applyFilters('wpstg.backup.isMultipartBackup', false);
-
-        return $isEnabled && !$isMultiPartEnabled;
+        return Hooks::applyFilters(self::FILTER_ZLIB_COMPRESSION_ENABLED, $isEnabled && $canUseCompression);
     }
 
     public function getService(): CompressionInterface

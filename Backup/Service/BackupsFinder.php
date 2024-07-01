@@ -49,7 +49,7 @@ class BackupsFinder
     public function getBackupsDirectory(bool $refresh = false): string
     {
         if ($refresh || $this->filteredBackupsDirectory === null) {
-            $defaultBackupUploadsDirectory = $this->directory->getPluginUploadsDirectory($refresh = true) . Compressor::BACKUP_DIR_NAME;
+            $defaultBackupUploadsDirectory = $this->directory->getPluginUploadsDirectory($refresh = true) . Archiver::BACKUP_DIR_NAME;
 
             /**
              * Allows filtering the path to the directory Backups will be written to and read from.

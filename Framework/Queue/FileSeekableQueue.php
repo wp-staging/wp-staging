@@ -183,9 +183,10 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
      */
     public function enqueue($data)
     {
+        $trimmedData = trim($data);
         // Early bail: Write-only optimization
         if ($this->isWriteOnly) {
-            $this->handle->fwrite(trim($data) . PHP_EOL);
+            $this->handle->fwrite($trimmedData . PHP_EOL);
 
             return $this->handle->ftell();
         }
@@ -194,7 +195,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
 
         $this->handle->fseek(0, SEEK_END);
         $this->handle->flock(LOCK_EX);
-        $this->handle->fwrite(trim($data) . PHP_EOL);
+        $this->handle->fwrite($trimmedData . PHP_EOL);
         $this->handle->flock(LOCK_UN);
 
         $offsetEndOfQueue = $this->handle->ftell();

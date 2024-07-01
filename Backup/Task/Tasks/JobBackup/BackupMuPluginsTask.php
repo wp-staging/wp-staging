@@ -8,17 +8,17 @@ class BackupMuPluginsTask extends FileBackupTask
 {
     const IDENTIFIER = 'muplugins';
 
-    public static function getTaskName()
+    public static function getTaskName(): string
     {
         return parent::getTaskName() . '_' . self::IDENTIFIER;
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Adding Mu-Plugins to Backup';
     }
 
-    protected function getFileIdentifier()
+    protected function getFileIdentifier(): string
     {
         return self::IDENTIFIER;
     }

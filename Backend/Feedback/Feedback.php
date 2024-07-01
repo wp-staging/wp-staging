@@ -3,6 +3,8 @@
 namespace WPStaging\Backend\Feedback;
 
 use WP_User;
+use WPStaging\Core\WPStaging;
+use WPStaging\Notifications\Notifications;
 
 /**
  * @todo Move to src/Basic/Feedback/Feedback.php
@@ -46,7 +48,7 @@ class Feedback
     /**
      * @return void
      */
-    public function sendMail()
+    public function sendDeactivateFeedback()
     {
 
         if (!empty($_POST['data'])) {
@@ -68,19 +70,10 @@ class Feedback
             }
         }
 
-        $body = empty($body) ? 'No reason given' : $body;
-
-        $headers = [];
-
-        $from = isset($form['wpstg_disable_from']) ? sanitize_email($form['wpstg_disable_from']) : '';
-        if ($from) {
-            $headers[] = "From: $from";
-            $headers[] = "Reply-To: $from";
-        }
-
+        $message = empty($body) ? 'No reason given' : $body;
+        $from    = isset($form['wpstg_disable_from']) ? sanitize_email($form['wpstg_disable_from']) : '';
         $subject = empty($subject) ? '(no reason given)' : (count($subject) > 1 ? '(multiple reasons given)' : $subject[0]);
-        $subject = 'WP Staging Free: ' . $subject;
-        $success = wp_mail('feedback@wp-staging.com', $subject, $body, $headers);
+        $success = WPStaging::make(Notifications::class)->sendEmail('feedback@wp-staging.com', $subject, $message, $from);
 
         if ($success) {
             wp_die(1);

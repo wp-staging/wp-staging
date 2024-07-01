@@ -349,7 +349,7 @@ abstract class Job implements ShutdownableInterface
                 [
                     'job'     => isset($this->options->currentJob) ? $this->options->currentJob : '',
                     'status'  => false,
-                    'message' => $message,
+                    'message' => esc_html($message),
                     'error'   => true
                 ]
             )

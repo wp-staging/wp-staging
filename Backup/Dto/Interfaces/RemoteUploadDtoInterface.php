@@ -69,4 +69,23 @@ interface RemoteUploadDtoInterface
      * @return void
      */
     public function setEndTime($endTime);
+
+    /**
+     * @param bool $isMultipartBackup
+     */
+    public function setIsMultipartBackup($isMultipartBackup);
+
+    /**
+     * @return bool
+     */
+    public function getIsMultipartBackup();
+
+    /**
+     * @return int
+     */
+    public function getMaxMultipartBackupSize();
+
+    public function setMaxMultipartBackupSize($maxMultipartBackupSize);
+
+    public function getRepeatBackupOnSchedule();
 }

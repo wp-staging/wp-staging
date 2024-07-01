@@ -12,18 +12,18 @@ use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\Service\Compressor;
+use WPStaging\Backup\Service\Archiver;
 use WPStaging\Framework\Filesystem\Filesystem;
 
 class IncludeDatabaseTask extends BackupTask
 {
-    /** @var Compressor */
-    private $compressor;
+    /** @var Archiver */
+    private $archiver;
 
-    public function __construct(Compressor $compressor, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
+    public function __construct(Archiver $archiver, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->compressor = $compressor;
+        $this->archiver = $archiver;
     }
 
     public static function getTaskName()
@@ -44,25 +44,25 @@ class IncludeDatabaseTask extends BackupTask
             return $this->generateResponse();
         }
 
-        $this->compressor->getDto()->setWrittenBytesTotal($this->stepsDto->getCurrent());
+        $this->archiver->getDto()->setWrittenBytesTotal($this->stepsDto->getCurrent());
 
-        if ($this->compressor->getDto()->getWrittenBytesTotal() !== 0) {
-            $this->compressor->getDto()->setIndexPositionCreated(true);
+        if ($this->archiver->getDto()->getWrittenBytesTotal() !== 0) {
+            $this->archiver->getDto()->setIndexPositionCreated(true);
         }
 
         try {
-            $this->compressor->appendFileToBackup($this->jobDataDto->getDatabaseFile());
+            $this->archiver->appendFileToBackup($this->jobDataDto->getDatabaseFile());
         } catch (Exception $e) {
             $this->logger->critical(sprintf(
                 'Failed to include database backup to backup: %s (%s)',
-                $this->compressor->getDto()->getFilePath(),
+                $this->archiver->getDto()->getFilePath(),
                 $e->getMessage()
             ));
         }
 
-        $this->stepsDto->setCurrent($this->compressor->getDto()->getWrittenBytesTotal());
+        $this->stepsDto->setCurrent($this->archiver->getDto()->getWrittenBytesTotal());
 
-        if ($this->compressor->getDto()->isFinished()) {
+        if ($this->archiver->getDto()->isFinished()) {
             clearstatcache();
             $this->jobDataDto->setDatabaseFileSize(filesize($this->jobDataDto->getDatabaseFile()));
 
@@ -82,12 +82,13 @@ class IncludeDatabaseTask extends BackupTask
             $this->stepsDto->finish();
         }
 
+        $this->archiver->setupTmpBackupFile();
         if ($this->stepsDto->getTotal() > 0) {
             return;
         }
 
-        $this->compressor->getDto()->reset();
-        $this->compressor->getDto()->setFilePath($this->jobDataDto->getDatabaseFile());
-        $this->stepsDto->setTotal(filesize($this->compressor->getDto()->getFilePath()));
+        $this->archiver->getDto()->reset();
+        $this->archiver->getDto()->setFilePath($this->jobDataDto->getDatabaseFile());
+        $this->stepsDto->setTotal(filesize($this->archiver->getDto()->getFilePath()));
     }
 }

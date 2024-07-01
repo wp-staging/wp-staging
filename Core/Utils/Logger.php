@@ -15,6 +15,7 @@ use WPStaging\Framework\Interfaces\ShutdownableInterface;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Vendor\Psr\Log\LogLevel;
 use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\SiteInfo;
 
 /**
@@ -156,7 +157,7 @@ class Logger implements LoggerInterface, ShutdownableInterface
         $this->messages[] = [
             "type"      => $type,
             "date"      => current_time(self::LOG_DATETIME_FORMAT),
-            "message"   => $message
+            "message"   => wp_kses($message, [])
         ];
     }
 

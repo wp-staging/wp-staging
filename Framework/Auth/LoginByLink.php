@@ -82,30 +82,30 @@ class LoginByLink
      */
     public function loginUserByLink()
     {
-        if (!isset($_GET['wpstg_login']) || !$this->loginLinkData) {
+        if (!isset($_GET['wpstg_login'])) {
             return;
         }
 
         $loginID = sanitize_text_field($_GET['wpstg_login']);
+        $login   = self::LOGIN_LINK_PREFIX . $loginID;
+        $user    = get_user_by('login', $login);
+        $userId  = null;
+        if (is_object($user)) {
+            $userId = $user->ID;
+        }
+
         if (!in_array($loginID, $this->loginLinkData, true)) {
+            $this->cleanExistingLoginData($userId);
             wp_die('This link is invalid, please contact the administrator. Error code: 101');
         }
 
-        $login = self::LOGIN_LINK_PREFIX . $loginID;
-        $user  = get_user_by('login', $login);
-
         if (empty($this->loginLinkData['expiration'])) {
-            delete_option(Sites::STAGING_LOGIN_LINK_SETTINGS);
+            $this->cleanExistingLoginData($userId);
             wp_die('This link is invalid, please contact the administrator. Error code: 102');
         }
 
         if (time() > $this->loginLinkData['expiration']) {
-            if ($user) {
-                $userId = $user->ID;
-                $this->deleteUser($userId);
-            }
-
-            delete_option(Sites::STAGING_LOGIN_LINK_SETTINGS);
+            $this->cleanExistingLoginData($userId);
             wp_die('This link is invalid, please contact the administrator. Error code: 103');
         }
 
@@ -116,9 +116,14 @@ class LoginByLink
                 'role'       => $this->loginLinkData['role'],
 
             ]);
+
             if (is_wp_error($userId)) {
-                wp_die();
+                wp_die('Error creating user. Error: ' . $userId->get_error_message());
             }
+        }
+
+        if (!is_int($userId)) {
+            wp_die('Something went wrong, please contact the administrator.');
         }
 
         wp_clear_auth_cookie();
@@ -179,5 +184,18 @@ class LoginByLink
         } else {
             wp_delete_user($userID);
         }
+    }
+
+    /**
+     * @param  int|null $userId
+     * @return void
+     */
+    private function cleanExistingLoginData($userId)
+    {
+        if (is_int($userId)) {
+            $this->deleteUser($userId);
+        }
+
+        delete_option(Sites::STAGING_LOGIN_LINK_SETTINGS);
     }
 }

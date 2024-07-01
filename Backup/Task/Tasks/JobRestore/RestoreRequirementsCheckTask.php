@@ -4,7 +4,6 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use RuntimeException;
 use WPStaging\Backup\Service\ZlibCompressor;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
 use WPStaging\Framework\Database\TableDto;
 use WPStaging\Framework\Database\TableService;
@@ -40,6 +39,11 @@ class RestoreRequirementsCheckTask extends RestoreTask
     /** @var AnalyticsBackupRestore */
     protected $analyticsBackupRestore;
 
+    /**
+     * @var SiteInfo
+     */
+    protected $siteInfo;
+
     /** @var ZlibCompressor */
     protected $zlibCompressor;
 
@@ -52,6 +56,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         SeekableQueueInterface $taskQueue,
         DiskWriteCheck $diskWriteCheck,
         AnalyticsBackupRestore $analyticsBackupRestore,
+        SiteInfo $siteInfo,
         ZlibCompressor $zlibCompressor
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
@@ -60,6 +65,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $this->jobDataDto             = $jobDataDto;
         $this->diskWriteCheck         = $diskWriteCheck;
         $this->analyticsBackupRestore = $analyticsBackupRestore;
+        $this->siteInfo               = $siteInfo;
         $this->zlibCompressor         = $zlibCompressor;
     }
 
@@ -127,7 +133,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $shortTagsEnabledInBackupBeingRestored = $this->jobDataDto->getBackupMetadata()->getPhpShortOpenTags();
 
         if ($shortTagsEnabledInBackupBeingRestored) {
-            $shortTagsEnabledInThisSite = (new SiteInfo())->isPhpShortTagsEnabled();
+            $shortTagsEnabledInThisSite = $this->siteInfo->isPhpShortTagsEnabled();
 
             if (!$shortTagsEnabledInThisSite) {
                 $this->logger->warning(__('This backup was generated on a server with PHP ini directive "short_open_tags" enabled, which is disabled in this server. This might cause errors after Restore.', 'wp-staging'));

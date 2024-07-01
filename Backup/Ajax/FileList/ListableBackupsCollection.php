@@ -113,6 +113,7 @@ class ListableBackupsCollection
                 $listableBackup->isExportingDatabase              = $backupMetadata->getIsExportingDatabase();
                 $listableBackup->isExportingMuPlugins             = $backupMetadata->getIsExportingMuPlugins();
                 $listableBackup->isExportingOtherWpContentFiles   = $backupMetadata->getIsExportingOtherWpContentFiles();
+                $listableBackup->isExportingOtherWpRootFiles      = $backupMetadata->getIsExportingOtherWpRootFiles();
                 $listableBackup->isExportingPlugins               = $backupMetadata->getIsExportingPlugins();
                 $listableBackup->isExportingThemes                = $backupMetadata->getIsExportingThemes();
                 $listableBackup->isExportingUploads               = $backupMetadata->getIsExportingUploads();

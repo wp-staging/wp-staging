@@ -114,7 +114,7 @@ class BackupFileIndex implements IndexLineInterface
         return "$this->identifiablePath|$this->bytesStart:$this->bytesEnd:$this->isCompressed";
     }
 
-    public function isIndexLine($item): bool
+    public function isIndexLine(string $item): bool
     {
         return !empty($item) && strpos($item, ':') !== false && strpos($item, '|') !== false;
     }

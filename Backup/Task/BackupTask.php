@@ -20,6 +20,7 @@ abstract class BackupTask extends AbstractTask
             && !$jobDataDto->getIsExportingPlugins()
             && !$jobDataDto->getIsExportingThemes()
             && !$jobDataDto->getIsExportingUploads()
+            && !$jobDataDto->getIsExportingOtherWpRootFiles()
         ) {
             $jobDataDto->setDatabaseOnlyBackup(true);
         }

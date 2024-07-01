@@ -4,6 +4,7 @@ use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Settings\Settings;
 use WPStaging\Framework\Facades\UI\Checkbox;
+use WPStaging\Backup\BackupScheduler;
 
 ?>
 
@@ -299,9 +300,7 @@ use WPStaging\Framework\Facades\UI\Checkbox;
                             <?php $form->renderInput("wpstg_settings[checkDirectorySize]"); ?>
                         </td>
                     </tr>
-                    <?php
-                    if (defined('WPSTGPRO_VERSION')) {
-                        ?>
+                    <?php if (defined('WPSTGPRO_VERSION')) : ?>
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <div class="col-title">
@@ -366,10 +365,10 @@ use WPStaging\Framework\Facades\UI\Checkbox;
                             </td>
                             <td>
                                 <?php
-                                $analytics = WPStaging\Core\WPStaging::make(\WPStaging\Framework\Analytics\AnalyticsConsent::class);
+                                $analytics        = \WPStaging\Core\WPStaging::make(\WPStaging\Framework\Analytics\AnalyticsConsent::class);
                                 $analyticsAllowed = $analytics->hasUserConsent();
-                                $isAllowed = $analyticsAllowed;
-                                $isDisallowed = !$analyticsAllowed && !is_null($analyticsAllowed); // "null" means didn't answer, "false" means declined
+                                $isAllowed        = $analyticsAllowed;
+                                $isDisallowed     = !$analyticsAllowed && !is_null($analyticsAllowed); // "null" means didn't answer, "false" means declined
                                 ?>
                                 <div style="font-weight:<?php echo $isAllowed ? 'bold' : ''; ?>"><a href="<?php echo esc_url($analytics->getConsentLink(true)) ?>"><?php echo esc_html__('Yes, send usage information. I\'d like to help improving this plugin.', 'wp-staging') ?></a></div>
                                 <div style="margin-top:10px;font-weight:<?php echo $isDisallowed ? 'bold' : ''; ?>"><a href="<?php echo esc_url($analytics->getConsentLink(false)) ?>"><?php echo esc_html__('No, Don\'t send any usage information.', 'wp-staging') ?></a></div>
@@ -397,8 +396,76 @@ use WPStaging\Framework\Facades\UI\Checkbox;
 
                             <?php
                         endif;
-                    }
+                    endif;
                     ?>
+
+                        <tr class="wpstg-settings-row">
+                            <td class="wpstg-settings-row th">
+                                <b class="wpstg-settings-title"><?php esc_html_e('Email Notifications', 'wp-staging') ?></b>
+                                <p class="wpstg-settings-message">
+                                    <?php esc_html_e('If a scheduled backup fails, send an email.', 'wp-staging') ?>
+                                </p>
+                            </td>
+                            <td>
+                                <?php
+                                $isCheckboxChecked = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) === 'true';
+                                Checkbox::render('wpstg-send-schedules-error-report', 'wpstg_settings[schedulesErrorReport]', 'true', $isCheckboxChecked, ['classes' => 'wpstg-settings-field']);
+                                ?>
+                            </td>
+                        </tr>
+                        <tr class="wpstg-settings-row">
+                            <td>
+                                <b class="wpstg-settings-title"><?php esc_html_e('Email Address', 'wp-staging') ?></b>
+                                <p class="wpstg-settings-message">
+                                    <?php esc_html_e('Send emails to this address', 'wp-staging') ?>
+                                </p>
+                            </td>
+                            <td>
+                                <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL)) ?>"/>
+                            </td>
+                        </tr>
+
+                        <?php
+                            $attrDisabled = defined('WPSTGPRO_VERSION') ? '' : ' disabled';
+                        ?>
+                        <tr class="wpstg-settings-row">
+                            <td class="wpstg-settings-row th">
+                                <b class="wpstg-settings-title"><?php esc_html_e('Slack Notifications', 'wp-staging') ?></b>
+                                <p class="wpstg-settings-message">
+                                    <?php esc_html_e('If a scheduled backup fails, send a report to the Slack channel.', 'wp-staging') ?>
+                                </p>
+                            </td>
+                            <td>
+                                <?php
+                                $isCheckboxChecked = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT) === 'true';
+                                Checkbox::render('wpstg-send-schedules-slack-error-report', 'wpstg_settings[schedulesSlackErrorReport]', 'true', $isCheckboxChecked, ['classes' => 'wpstg-settings-field', 'isDisabled' => !empty($attrDisabled)]);
+                                ?>
+                                <?php if (!empty($attrDisabled)) : ?>
+                                <a href="https://wp-staging.com" target="_blank" rel="noopener" class="wpstg-pro-feature-link wpstg-ml-8px">
+                                    <span class="wpstg-pro-feature"><?php esc_html_e('Pro Feature', 'wp-staging');?></span>
+                                </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr class="wpstg-settings-row">
+                            <td>
+                                <b class="wpstg-settings-title"><?php esc_html_e('Slack Webhook URL', 'wp-staging') ?></b>
+                                <p class="wpstg-settings-message">
+                                    <?php
+                                    echo Escape::escapeHtml(__('Send Slack notifications by using a Webhook URL. Read <a href="https://api.slack.com/messaging/webhooks" target=_blank rel="noopener">this article</a> to learn how to create one.', 'wp-staging'));
+                                    ?>
+                                </p>
+                            </td>
+                            <td>
+                                <input type="text" id="wpstg-send-schedules-report-slack-webhook" name="wpstg_settings[schedulesReportSlackWebhook]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK)) ?>"<?php echo esc_attr($attrDisabled);?>/>
+                                <?php if (!empty($attrDisabled)) : ?>
+                                <a href="https://wp-staging.com" target="_blank" rel="noopener" class="wpstg-pro-feature-link wpstg-ml-8px">
+                                    <span class="wpstg-pro-feature"><?php esc_html_e('Pro Feature', 'wp-staging');?></span>
+                                </a>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+
                     </tbody>
                 </table>
             </div>

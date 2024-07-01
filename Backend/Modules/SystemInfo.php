@@ -14,6 +14,7 @@ use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Database\WpOptionsInfo;
+use WPStaging\Backup\BackupScheduler;
 
 // No Direct Access
 if (!defined("WPINC")) {
@@ -78,23 +79,14 @@ class SystemInfo
     public function get(): string
     {
         $output = $this->server();
-
         $output .= $this->php();
-
         $output .= $this->wp();
-
         $output .= $this->getMultisiteInfo();
-
         $output .= $this->wpstaging();
-
         $output .= $this->plugins();
-
         $output .= $this->multiSitePlugins();
-
         $output .= $this->phpExtensions();
-
         $output .= $this->browser();
-
         $output .= PHP_EOL . "### End System Info ###";
 
         return $output;
@@ -126,7 +118,7 @@ class SystemInfo
      */
     public function wp(): string
     {
-        $output  = $this->header("WordPress");
+        $output = $this->header("WordPress");
         $output .= $this->info("Site:", ($this->isMultiSite) ? 'Multi Site' : 'Single Site');
         $output .= $this->info("WP Version:", get_bloginfo("version"));
         $output .= $this->info("Installed in subdir:", ($this->isSubDir() ? 'Yes' : 'No'));
@@ -165,11 +157,11 @@ class SystemInfo
         $output .= $this->constantInfo('UPLOADS');
 
         $uploads = wp_upload_dir();
-        $output  .= $this->info("uploads['path']:", $uploads['path']);
-        $output  .= $this->info("uploads['subdir']:", $uploads['subdir']);
-        $output  .= $this->info("uploads['basedir']:", $uploads['basedir']);
-        $output  .= $this->info("uploads['baseurl']:", $uploads['baseurl']);
-        $output  .= $this->info("uploads['url']:", $uploads['url']);
+        $output .= $this->info("uploads['path']:", $uploads['path']);
+        $output .= $this->info("uploads['subdir']:", $uploads['subdir']);
+        $output .= $this->info("uploads['basedir']:", $uploads['basedir']);
+        $output .= $this->info("uploads['baseurl']:", $uploads['baseurl']);
+        $output .= $this->info("uploads['url']:", $uploads['url']);
 
         $output .= $this->info("UPLOAD_PATH in wp-config.php:", (defined("UPLOAD_PATH")) ? UPLOAD_PATH : self::NOT_SET_LABEL);
         $output .= $this->info("upload_path in " . $this->database->getPrefix() . 'options:', get_option("upload_path") ?: self::NOT_SET_LABEL);
@@ -254,7 +246,11 @@ class SystemInfo
      */
     public function wpstaging(): string
     {
-        $settings = (object)get_option('wpstg_settings', []);
+        $settings                               = (object)get_option('wpstg_settings', []);
+        $optionBackupScheduleErrorReport        = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT);
+        $optionBackupScheduleReportEmail        = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        $optionBackupScheduleSlackErrorReport   = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT);
+        $optionBackupScheduleReportSlackWebhook = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK);
 
         $output = PHP_EOL . "## WP Staging ##" . PHP_EOL . PHP_EOL;
 
@@ -263,35 +259,37 @@ class SystemInfo
         // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_INSTALL_DATE
         $output .= $this->info("Pro Install Date:", get_option('wpstgpro_install_date', self::NOT_SET_LABEL));
         // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_UPGRADE_DATE
-        $output              .= $this->info("Pro Update Date:", get_option('wpstgpro_upgrade_date', self::NOT_SET_LABEL));
-        $output              .= $this->info("Free or Pro Install Date (legacy):", get_option('wpstg_installDate', self::NOT_SET_LABEL));
-        $output              .= $this->info("Free Version:", get_option('wpstg_version', self::NOT_SET_LABEL));
-        $output              .= $this->info("Free Install Date:", get_option(Upgrade::OPTION_INSTALL_DATE, self::NOT_SET_LABEL));
-        $output              .= $this->info("Free Update Date:", get_option(Upgrade::OPTION_UPGRADE_DATE, self::NOT_SET_LABEL));
-        $output              .= $this->info("Updated from Pro Version:", get_option('wpstgpro_version_upgraded_from') ?: self::NOT_SET_LABEL);
-        $output              .= $this->info("Updated from Free Version:", get_option('wpstg_version_upgraded_from') ?: self::NOT_SET_LABEL);
-        $output              .= $this->info("Is Staging Site:", (new SiteInfo())->isStagingSite() ? 'true' : 'false');
-        $output              .= $this->getBackupDetails();
-        $output              .= $this->getScheduleInfo();
-        $output              .= $this->info("DB Query Limit:", isset($settings->queryLimit) ? $settings->queryLimit : self::NOT_SET_LABEL);
-        $output              .= $this->info("DB Search & Replace Limit:", isset($settings->querySRLimit) ? $settings->querySRLimit : self::NOT_SET_LABEL);
-        $output              .= $this->info("File Copy Limit:", isset($settings->fileLimit) ? $settings->fileLimit : self::NOT_SET_LABEL);
-        $output              .= $this->info("Maximum File Size:", isset($settings->maxFileSize) ? $settings->maxFileSize : self::NOT_SET_LABEL);
-        $output              .= $this->info("File Copy Batch Size:", isset($settings->batchSize) ? $settings->batchSize : self::NOT_SET_LABEL);
-        $output              .= $this->info("CPU Load Priority:", isset($settings->cpuLoad) ? $settings->cpuLoad : self::NOT_SET_LABEL);
-        $output              .= $this->info("Keep Permalinks:", isset($settings->keepPermalinks) ? $settings->keepPermalinks : self::NOT_SET_LABEL);
-        $output              .= $this->info("Debug Mode:", isset($settings->debugMode) ? $settings->debugMode : self::NOT_SET_LABEL);
-        $output              .= $this->info("Optimize Active:", isset($settings->optimizer) ? $settings->optimizer : self::NOT_SET_LABEL);
-        $output              .= $this->info("Delete on Uninstall:", isset($settings->unInstallOnDelete) ? $settings->unInstallOnDelete : self::NOT_SET_LABEL);
-        $output              .= $this->info("Check Directory Size:", isset($settings->checkDirectorySize) ? $settings->checkDirectorySize : self::NOT_SET_LABEL);
-        $output              .= $this->info("Access Permissions:", isset($settings->userRoles) ? $settings->userRoles : self::NOT_SET_LABEL);
-        $output              .= $this->info("Users With Staging Access:", isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : self::NOT_SET_LABEL);
-        $output              .= $this->info("Admin Bar Color:", isset($settings->adminBarColor) ? $settings->adminBarColor : self::NOT_SET_LABEL);
+        $output .= $this->info("Pro Update Date:", get_option('wpstgpro_upgrade_date', self::NOT_SET_LABEL));
+        $output .= $this->info("Free or Pro Install Date (legacy):", get_option('wpstg_installDate', self::NOT_SET_LABEL));
+        $output .= $this->info("Free Version:", get_option('wpstg_version', self::NOT_SET_LABEL));
+        $output .= $this->info("Free Install Date:", get_option(Upgrade::OPTION_INSTALL_DATE, self::NOT_SET_LABEL));
+        $output .= $this->info("Free Update Date:", get_option(Upgrade::OPTION_UPGRADE_DATE, self::NOT_SET_LABEL));
+        $output .= $this->info("Updated from Pro Version:", get_option('wpstgpro_version_upgraded_from') ?: self::NOT_SET_LABEL);
+        $output .= $this->info("Updated from Free Version:", get_option('wpstg_version_upgraded_from') ?: self::NOT_SET_LABEL);
+        $output .= $this->info("Is Staging Site:", (new SiteInfo())->isStagingSite() ? 'true' : 'false');
+        $output .= $this->getBackupDetails();
+        $output .= $this->getScheduleInfo();
+        $output .= $this->info("DB Query Limit:", isset($settings->queryLimit) ? $settings->queryLimit : self::NOT_SET_LABEL);
+        $output .= $this->info("DB Search & Replace Limit:", isset($settings->querySRLimit) ? $settings->querySRLimit : self::NOT_SET_LABEL);
+        $output .= $this->info("File Copy Limit:", isset($settings->fileLimit) ? $settings->fileLimit : self::NOT_SET_LABEL);
+        $output .= $this->info("Maximum File Size:", isset($settings->maxFileSize) ? $settings->maxFileSize : self::NOT_SET_LABEL);
+        $output .= $this->info("File Copy Batch Size:", isset($settings->batchSize) ? $settings->batchSize : self::NOT_SET_LABEL);
+        $output .= $this->info("CPU Load Priority:", isset($settings->cpuLoad) ? $settings->cpuLoad : self::NOT_SET_LABEL);
+        $output .= $this->info("Keep Permalinks:", isset($settings->keepPermalinks) ? $settings->keepPermalinks : self::NOT_SET_LABEL);
+        $output .= $this->info("Debug Mode:", isset($settings->debugMode) ? $settings->debugMode : self::NOT_SET_LABEL);
+        $output .= $this->info("Optimize Active:", isset($settings->optimizer) ? $settings->optimizer : self::NOT_SET_LABEL);
+        $output .= $this->info("Delete on Uninstall:", isset($settings->unInstallOnDelete) ? $settings->unInstallOnDelete : self::NOT_SET_LABEL);
+        $output .= $this->info("Check Directory Size:", isset($settings->checkDirectorySize) ? $settings->checkDirectorySize : self::NOT_SET_LABEL);
+        $output .= $this->info("Access Permissions:", isset($settings->userRoles) ? $settings->userRoles : self::NOT_SET_LABEL);
+        $output .= $this->info("Users With Staging Access:", isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : self::NOT_SET_LABEL);
+        $output .= $this->info("Admin Bar Color:", isset($settings->adminBarColor) ? $settings->adminBarColor : self::NOT_SET_LABEL);
         $analyticsHasConsent = get_option('wpstg_analytics_has_consent');
-        $output              .= $this->info("Send Usage Information:", !empty($analyticsHasConsent) ? 'true' : 'false');
-        $output              .= $this->info("Send Backup Errors via E-Mail:", isset($settings->schedulesErrorReport) ? $settings->schedulesErrorReport : self::NOT_SET_LABEL);
-        $output              .= $this->info("E-Mail Address:", isset($settings->schedulesReportEmail) ? $settings->schedulesReportEmail : self::NOT_SET_LABEL);
-        $output              .= $this->info("Backup Compression:", isset($settings->enableCompression) ? ($settings->enableCompression ? 'On' : 'Off') : self::NOT_SET_LABEL);
+        $output .= $this->info("Send Usage Information:", !empty($analyticsHasConsent) ? 'true' : 'false');
+        $output .= $this->info("Send Backup Errors via E-Mail:", !empty($optionBackupScheduleErrorReport) && $optionBackupScheduleErrorReport === 'true' ? 'true' : 'false');
+        $output .= $this->info("E-Mail Address:", !empty($optionBackupScheduleReportEmail) && is_email($optionBackupScheduleReportEmail) ? $optionBackupScheduleReportEmail : self::NOT_SET_LABEL);
+        $output .= $this->info("Send Backup Errors via Slack Webhook:", !empty($optionBackupScheduleSlackErrorReport) && $optionBackupScheduleSlackErrorReport === 'true' ? 'true' : ( WPStaging::isPro() ? 'false' : self::NOT_SET_LABEL ));
+        $output .= $this->info("Slack Webhook URL:", WPStaging::isPro() && !empty($optionBackupScheduleReportSlackWebhook) ? self::REMOVED_LABEL : self::NOT_SET_LABEL);
+        $output .= $this->info("Backup Compression:", isset($settings->enableCompression) ? ($settings->enableCompression ? 'On' : 'Off') : self::NOT_SET_LABEL);
 
         $output .= PHP_EOL . "-- Google Drive Settings" . PHP_EOL;
 
@@ -516,8 +514,8 @@ class SystemInfo
     public function plugins(): string
     {
         // Get plugins and active plugins
-        $allAvailablePlugins       = get_plugins();
-        $activePlugins = get_option("active_plugins", []);
+        $allAvailablePlugins = get_plugins();
+        $activePlugins       = get_option("active_plugins", []);
 
         $activePluginsToGetInactive = $activePlugins;
         if ($this->isMultiSite) {
@@ -626,17 +624,17 @@ class SystemInfo
      */
     public function php(): string
     {
-        $output        = $this->info("PHP memory_limit:", ini_get("memory_limit"));
-        $output        .= $this->info("PHP memory_limit in Bytes:", wp_convert_hr_to_bytes(ini_get("memory_limit")));
-        $output        .= $this->info("PHP max_execution_time:", ini_get("max_execution_time"));
-        $output        .= $this->info("PHP Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
-        $output        .= $this->info("PHP Upload Max File Size:", ini_get("upload_max_filesize"));
-        $output        .= $this->info("PHP Post Max Size:", ini_get("post_max_size"));
-        $output        .= $this->info("PHP Upload Max Filesize:", ini_get("upload_max_filesize"));
-        $output        .= $this->info("PHP Max Input Vars:", ini_get("max_input_vars"));
+        $output = $this->info("PHP memory_limit:", ini_get("memory_limit"));
+        $output .= $this->info("PHP memory_limit in Bytes:", wp_convert_hr_to_bytes(ini_get("memory_limit")));
+        $output .= $this->info("PHP max_execution_time:", ini_get("max_execution_time"));
+        $output .= $this->info("PHP Safe Mode:", ($this->isSafeModeEnabled() ? "Enabled" : "Disabled"));
+        $output .= $this->info("PHP Upload Max File Size:", ini_get("upload_max_filesize"));
+        $output .= $this->info("PHP Post Max Size:", ini_get("post_max_size"));
+        $output .= $this->info("PHP Upload Max Filesize:", ini_get("upload_max_filesize"));
+        $output .= $this->info("PHP Max Input Vars:", ini_get("max_input_vars"));
         $displayErrors = ini_get("display_errors");
-        $output        .= $this->info("PHP display_errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A");
-        $output        .= $this->info("PHP User:", $this->getPHPUser());
+        $output .= $this->info("PHP display_errors:", ($displayErrors) ? "On ({$displayErrors})" : "N/A");
+        $output .= $this->info("PHP User:", $this->getPHPUser());
 
         return $output;
     }
@@ -919,8 +917,8 @@ class SystemInfo
      */
     private function getPrimaryKeyInfo(): string
     {
-        $tableName = $this->database->getPrefix() . 'options';
-        $isPrimaryKeyMissing      = $this->wpOptionsInfo->isOptionTablePrimaryKeyMissing($tableName);
+        $tableName           = $this->database->getPrefix() . 'options';
+        $isPrimaryKeyMissing = $this->wpOptionsInfo->isOptionTablePrimaryKeyMissing($tableName);
         if ($isPrimaryKeyMissing) {
             return $this->info("{$tableName} primary key:", self::NOT_SET_LABEL);
         }

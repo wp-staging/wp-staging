@@ -208,7 +208,7 @@ class Administrator
         }
 
         $form = WPStaging::make(Feedback::class);
-        $form->sendMail();
+        $form->sendDeactivateFeedback();
     }
 
     /**

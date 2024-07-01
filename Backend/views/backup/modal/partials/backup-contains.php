@@ -10,6 +10,7 @@ $isExportingMuPlugins           = isset($isExportingMuPlugins) && $isExportingMu
 $isExportingThemes              = isset($isExportingThemes) && $isExportingThemes;
 $isExportingUploads             = isset($isExportingUploads) && $isExportingUploads;
 $isExportingOtherWpContentFiles = isset($isExportingOtherWpContentFiles) && $isExportingOtherWpContentFiles;
+$isExportingOtherWpRootFiles    = isset($isExportingOtherWpRootFiles) && $isExportingOtherWpRootFiles;
 
 if (!isset($urlAssets)) {
     $urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
@@ -22,6 +23,7 @@ $partSize = [
     'mupluginsSize' => null,
     'themesSize'    => null,
     'uploadsSize'   => null,
+    'wpRootSize'    => null,
 ];
 
 if (!empty($indexPartSize) && is_array($indexPartSize)) {
@@ -80,6 +82,14 @@ $partSize = (object)$partSize;
             <span class="wpstg--tooltip wpstg-backups-contains">
                 <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/admin-generic.svg"/>
                 <div class='wpstg--tooltiptext'><?php esc_html_e('Other files in wp-content', 'wp-staging');?><br><?php echo esc_html($partSize->wpcontentSize);?></div>
+            </span>
+        </li>
+    <?php endif; ?>
+    <?php if ($isExportingOtherWpRootFiles) : ?>
+        <li>
+            <span class="wpstg--tooltip wpstg-backups-contains">
+                <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/root-folder.svg"/>
+                <div class='wpstg--tooltiptext'><?php esc_html_e('Other files in WP root folder', 'wp-staging');?><br><?php echo esc_html($partSize->wpRootSize);?></div>
             </span>
         </li>
     <?php endif; ?>

@@ -65,7 +65,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-s3"><?php esc_html_e('S3 Compatible Provider', 'wp-staging') ?></label>
-                    <select id="wpstg-storage-provider-s3" class="wpstg-form-select" name="s3_provider" style="min-width:300px;">
+                    <select id="wpstg-storage-provider-s3" class="wpstg-form-select wpstg-storage-provider-input-field" name="s3_provider">
                     <option value="" <?php echo ($s3provider === '') ? 'selected' : '' ; ?>><?php esc_html_e('Custom Provider', 'wp-staging'); ?></option>
                         <?php foreach ($providers as $providerArr) : ?>
                             <option value="<?php echo esc_attr($providerArr['key']); ?>" <?php echo ($providerArr['key'] === $s3provider) ? 'selected' : '' ; ?>><?php echo esc_html($providerArr['name']); ?></option>
@@ -79,17 +79,17 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
                     <fieldset class="wpstg-fieldset">
                         <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-name"><?php esc_html_e('Name', 'wp-staging') ?></label>
-                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-name" class="wpstg-form-control" type="text" style="min-width:300px;" name="provider_name" value="<?php echo esc_attr($customProviderName); ?>" />
+                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-name" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="provider_name" value="<?php echo esc_attr($customProviderName); ?>" />
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
                         <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-endpoint"><?php esc_html_e('Endpoint', 'wp-staging') ?></label>
-                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-endpoint" class="wpstg-form-control" type="text" name="endpoint" value="<?php echo esc_attr($endpoint); ?>" style="min-width:300px;" />
+                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-endpoint" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="endpoint" value="<?php echo esc_attr($endpoint); ?>" />
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
                         <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-version"><?php esc_html_e('Version', 'wp-staging') ?></label>
-                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-version" class="wpstg-form-control" type="text" name="version" value="<?php echo esc_attr($version); ?>" style="min-width:300px;" />
+                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-version" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="version" value="<?php echo esc_attr($version); ?>" />
                         <p>
                             <?php echo Escape::escapeHtml(__("If your S3 provider does not specify a version in their guide, enter <code>latest</code> or <code>2006-03-01</code>.", 'wp-staging')); ?>
                         </p>
@@ -108,22 +108,22 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key"><?php esc_html_e('Access Key', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key" class="wpstg-form-control" type="password" style="min-width:300px;" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key" class="wpstg-form-control wpstg-storage-provider-input-field" type="password" name="access_key" value="<?php echo esc_attr($accessKey); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key"><?php esc_html_e('Secret Key', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key" class="wpstg-form-control" type="password" name="secret_key" value="<?php echo esc_attr($secretKey); ?>" style="min-width:300px;" />
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key" class="wpstg-form-control wpstg-storage-provider-input-field" type="password" name="secret_key" value="<?php echo esc_attr($secretKey); ?>" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-region"><?php esc_html_e('Region', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-region" class="wpstg-form-control" type="text" style="min-width:300px;" name="region" value="<?php echo esc_attr($region); ?>" autocomplete="off"/>
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-region" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="region" value="<?php echo esc_attr($region); ?>" autocomplete="off"/>
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name"><?php esc_html_e('Bucket Name', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name" class="wpstg-form-control" type="text" style="min-width:300px;" name="location" value="<?php echo esc_attr($location); ?>" />
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="location" value="<?php echo esc_attr($location); ?>" />
                     <p>
                     <?php echo sprintf(
                         Escape::escapeHtml(__('To add a directory you can write <code>s3:[%s]/[directory-name]</code>.<br>The directory will be created automatically during backup upload. ', 'wp-staging')),
@@ -137,11 +137,14 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
             <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
             <fieldset class="wpstg-fieldset">
                 <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep"><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
-                <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep" class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
+                <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep" class="wpstg-form-control wpstg-storage-backup-retention-field" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" />
             </fieldset>
+            <?php require_once "{$this->path}views/settings/tabs/storages/storage-notice.php";?>
             <hr/>
-            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button>
-            <button type="button" id="wpstg-btn-delete-provider-settings" class="wpstg-button wpstg--error"><?php esc_html_e("Delete Storage Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
+            <div class="wpstg-storage-provider-action-container">
+                <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button>
+                <button type="button" id="wpstg-btn-delete-provider-settings" class="wpstg-button wpstg--error"><?php esc_html_e("Delete Storage Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
+            </div>
         </form>
     </div>
 </fieldset>

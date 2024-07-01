@@ -12,7 +12,7 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Exceptions\DiskNotWritableException;
-use WPStaging\Backup\Service\Compressor;
+use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -30,8 +30,8 @@ class BackupRequirementsCheckTask extends BackupTask
     /** @var BackupScheduler */
     protected $backupScheduler;
 
-    /** @var Compressor */
-    private $compressor;
+    /** @var Archiver */
+    private $archiver;
 
     /** @var SystemInfo */
     protected $systemInfo;
@@ -45,16 +45,16 @@ class BackupRequirementsCheckTask extends BackupTask
         DiskWriteCheck $diskWriteCheck,
         AnalyticsBackupCreate $analyticsBackupCreate,
         BackupScheduler $backupScheduler,
-        Compressor $compressor,
+        Archiver $archiver,
         SystemInfo $systemInfo
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->directory = $directory;
-        $this->diskWriteCheck = $diskWriteCheck;
+        $this->directory             = $directory;
+        $this->diskWriteCheck        = $diskWriteCheck;
         $this->analyticsBackupCreate = $analyticsBackupCreate;
-        $this->backupScheduler = $backupScheduler;
-        $this->compressor = $compressor;
-        $this->systemInfo = $systemInfo;
+        $this->backupScheduler       = $backupScheduler;
+        $this->archiver              = $archiver;
+        $this->systemInfo            = $systemInfo;
     }
 
     public static function getTaskName()
@@ -135,6 +135,7 @@ class BackupRequirementsCheckTask extends BackupTask
             && !$this->jobDataDto->getIsExportingMuPlugins()
             && !$this->jobDataDto->getIsExportingThemes()
             && !$this->jobDataDto->getIsExportingOtherWpContentFiles()
+            && !$this->jobDataDto->getIsExportingOtherWpRootFiles()
         ) {
             throw new RuntimeException(__('You must select at least one item to backup.', 'wp-staging'));
         }
@@ -191,6 +192,12 @@ class BackupRequirementsCheckTask extends BackupTask
                 throw new RuntimeException(sprintf(__('PHP does not have enough permission to read the wp-content directory: %s', 'wp-staging'), $this->directory->getWpContentDirectory()));
             }
         }
+
+        if ($this->jobDataDto->getIsExportingOtherWpRootFiles()) {
+            if (!is_readable($this->directory->getAbsPath())) {
+                throw new RuntimeException(sprintf(__('PHP does not have enough permission to read the WordPress root directory: %s', 'wp-staging'), $this->directory->getAbsPath()));
+            }
+        }
     }
 
     protected function maybeCreateMainIndexFile()
@@ -205,7 +212,7 @@ class BackupRequirementsCheckTask extends BackupTask
             return;
         }
 
-        $this->compressor->setCategory('', $create = true);
+        $this->archiver->createArchiveFile(Archiver::CREATE_BINARY_HEADER);
     }
 
     /**
@@ -233,6 +240,7 @@ class BackupRequirementsCheckTask extends BackupTask
             'Must-Use Plugins'          => $this->jobDataDto->getIsExportingMuPlugins(),
             'Plugins'                   => $this->jobDataDto->getIsExportingPlugins(),
             'Other Files In wp-content' => $this->jobDataDto->getIsExportingOtherWpContentFiles(),
+            'Other Files In wp root'    => $this->jobDataDto->getIsExportingOtherWpRootFiles(),
             'Database'                  => $this->jobDataDto->getIsExportingDatabase(),
         ];
     }

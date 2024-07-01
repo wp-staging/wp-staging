@@ -8,7 +8,7 @@ $defaultColorMode = get_option(DarkMode::OPTION_DEFAULT_COLOR_MODE, '');
 <div class="wpstg-color-mode-container">
     <input id="wpstg-system-mode-button" type="radio" name="colorModeOptions" class="wpstg-dark-mode-input" value="system" <?php echo ($defaultColorMode === 'system') ? 'checked' : '';?> >
     <div class="wpstg-system-mode-container <?php echo ($defaultColorMode === 'system') ? 'active' : '';?>">
-        <label for="wpstg-system-mode-button" class="wpstg-system-mode-title" title="OS Default Mode">
+        <label for="wpstg-system-mode-button" class="wpstg-system-mode-title" data-title="OS Default Mode">
             <svg version="1.1" class="wpstg-system-mode" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30px" height="20px" viewBox="0 0 512 512" xml:space="preserve">
                 <g stroke-width="0"></g>
                 <g stroke-linecap="round" stroke-linejoin="round"></g>
@@ -22,7 +22,7 @@ $defaultColorMode = get_option(DarkMode::OPTION_DEFAULT_COLOR_MODE, '');
 
     <input id="wpstg-light-mode-button" type="radio" name="colorModeOptions" class="wpstg-dark-mode-input" value="light" <?php echo ($defaultColorMode === 'light') ? 'checked' : '';?>>
     <div class="wpstg-light-mode-container <?php echo ($defaultColorMode === 'light') ? 'active' : '';?>">
-        <label for="wpstg-light-mode-button" class="wpstg-light-mode-title" title="Light Mode">
+        <label for="wpstg-light-mode-button" class="wpstg-light-mode-title" data-title="Light Mode">
             <svg class="wpstg-light-mode" width="30px" height="20px" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <g stroke-width="0"></g>
                 <g stroke-linecap="round" stroke-linejoin="round"></g>
@@ -36,7 +36,7 @@ $defaultColorMode = get_option(DarkMode::OPTION_DEFAULT_COLOR_MODE, '');
 
     <input id="wpstg-dark-mode-button" type="radio" name="colorModeOptions" class="wpstg-dark-mode-input" value="dark" <?php echo ($defaultColorMode === 'dark') ? 'checked' : '';?>>
     <div class="wpstg-dark-mode-container <?php echo ($defaultColorMode === 'dark') ? 'active' : '';?>">
-        <label for="wpstg-dark-mode-button" class="wpstg-dark-mode-title" title="Dark Mode">
+        <label for="wpstg-dark-mode-button" class="wpstg-dark-mode-title" data-title="Dark Mode">
             <svg class="wpstg-dark-mode" width="30px" height="20px" viewBox="0 0 24 24"  xmlns="http://www.w3.org/2000/svg">
                 <g stroke-width="0"></g>
                 <g stroke-linecap="round" stroke-linejoin="round"></g>

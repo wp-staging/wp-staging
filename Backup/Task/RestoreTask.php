@@ -24,6 +24,7 @@ abstract class RestoreTask extends AbstractTask
             && !$jobDataDto->getBackupMetadata()->getIsExportingPlugins()
             && !$jobDataDto->getBackupMetadata()->getIsExportingThemes()
             && !$jobDataDto->getBackupMetadata()->getIsExportingUploads()
+            && !$jobDataDto->getBackupMetadata()->getIsExportingOtherWpRootFiles()
         ) {
             $jobDataDto->setDatabaseOnlyBackup(true);
         }

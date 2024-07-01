@@ -28,6 +28,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
     $lastUpdated        = empty($options['lastUpdated']) ? 0 : $options['lastUpdated'];
     $googleClientId     = isset($options['googleClientId']) ? $options['googleClientId'] : '';
     $googleClientSecret = isset($options['googleClientSecret']) ? $options['googleClientSecret'] : '';
+    $displayStyle       = $isGoogleDriveAuthenticated ? 'display:block' : 'display:none';
     ?>
     <p>
         <strong class="wpstg-fs-18"> <?php echo esc_html($providerName); ?></strong>
@@ -66,13 +67,13 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
             }
             ?>
             <a href="<?php echo esc_url($authURL); ?>" class="wpstg-btn-google"> <img class="wpstg--dashicons" src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/svg/vendor/dashicons/google-sign-in.svg'); ?>" alt="<?php esc_attr_e("Sign in with Google", "wp-staging") ?>"/></a>
-            <span><?php esc_html_e("OR", "wp-staging") ?></span> &nbsp; <a class="wpstg-ml-12px" onclick="WPStaging.handleToggleElement(this)" data-wpstg-target="#wpstg-custom-google-credentials" href="javascript:void(0);"><?php esc_html_e("Connect with API Credentials", "wp-staging") ?></a>
+            <span><?php esc_html_e("OR", "wp-staging") ?></span> &nbsp; <a id="wpstg-google-api-credentials" class="wpstg-ml-12px" onclick="WPStaging.handleToggleElement(this)" data-wpstg-target="#wpstg-custom-google-credentials" href="javascript:void(0);"><?php esc_html_e("Connect with API Credentials", "wp-staging") ?></a>
             <?php
         }
         ?>
     </div>
     <div class="wpstg-form-group">
-        <form class="wpstg-provider-settings-form" id="wpstg-provider-settings-form" method="post">
+        <form class="wpstg-provider-settings-form" id="wpstg-provider-settings-form" method="post" style="<?php echo esc_attr($displayStyle); ?>">
             <input type="hidden" name="provider" value="<?php echo esc_attr($providerId); ?>" />
 
             <div class="hidden" id="wpstg-custom-google-credentials">
@@ -96,30 +97,33 @@ use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth;
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
-                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-redirect-uri"><?php esc_html_e('Google Redirect URI', 'wp-staging') ?></label>
+                    <label for="wpstg-google-redirect-uri"><?php esc_html_e('Google Redirect URI', 'wp-staging') ?></label>
                     <div class="wpstg-with-icon">
-                        <input class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_redirect_uri" id="google-redirect-uri" value="<?php echo esc_url($googleDriveStorage->getRedirectURI()); ?>" disabled/>
-                        <a href="javascript:void(0);" class="wpstg-fieldset-icon" onclick="WPStaging.handleCopyToClipboard(this)" data-wpstg-source="#google-redirect-uri">
+                        <input class="wpstg-form-control wpstg-google-api-credential-input" type="text" name="google_redirect_uri" id="wpstg-google-redirect-uri" value="<?php echo esc_url($googleDriveStorage->getRedirectURI()); ?>" disabled/>
+                        <a href="javascript:void(0);" class="wpstg-fieldset-icon" onclick="WPStaging.copyTextToClipboard(this)" data-wpstg-source="#wpstg-google-redirect-uri">
                             <img src="<?php echo esc_url(WPSTG_PLUGIN_URL . 'assets/svg/copy.svg'); ?>" alt="<?php esc_html_e("Copy to Clipboard", 'wp-staging') ?>" title="<?php esc_html_e("Copy to Clipboard", 'wp-staging') ?>" />
                         </a>
                     </div>
                 </fieldset>
             </div>
             <hr/>
-            <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
-            <fieldset class="wpstg-fieldset">
-                <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep"><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
-                <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep" class="wpstg-form-control" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" style="max-width: 60px" />
-            </fieldset>
+            <div id="wpstg-save-settings-form">
+                <strong><?php esc_html_e('Upload Settings', 'wp-staging') ?></strong>
+                <fieldset class="wpstg-fieldset">
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep"><?php esc_html_e('Max Backups to Keep', 'wp-staging') ?></label>
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-max-backups-to-keep" class="wpstg-form-control wpstg-storage-backup-retention-field" type="number" name="max_backups_to_keep" value="<?php echo esc_attr($maxBackupsToKeep); ?>" min="1" />
+                </fieldset>
 
-            <fieldset class="wpstg-fieldset">
-                <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name"><?php esc_html_e('Backup Location', 'wp-staging') ?></label>
-                <span>//Google Drive/</span><input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name" class="wpstg-form-control" type="text" style="min-width:300px;" placeholder="backups/example.com/" name="folder_name" value="<?php echo esc_attr($folderName); ?>" />
-            </fieldset>
-
-            <hr/>
-
-            <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
+                <fieldset class="wpstg-fieldset">
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name"><?php esc_html_e('Backup Location', 'wp-staging') ?></label>
+                    <span>//Google Drive/</span><input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-folder-name" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" placeholder="backups/example.com/" name="folder_name" value="<?php echo esc_attr($folderName); ?>" />
+                </fieldset>
+                <?php require_once "{$this->path}views/settings/tabs/storages/storage-notice.php";?>
+                <hr/>
+                <div class="wpstg-storage-provider-action-container">
+                    <button type="button" id="wpstg-btn-save-provider-settings" class="wpstg-button wpstg-blue-primary"><?php esc_html_e("Save Settings", "wp-staging") ?></button><?php require_once "{$this->path}views/settings/tabs/storages/last-saved-notice.php"; ?>
+                </div>
+            </div>
         </form>
     </div>
 </fieldset>

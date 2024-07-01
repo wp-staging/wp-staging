@@ -118,9 +118,14 @@ $backupNotice = WPStaging::make(BackupPluginsNotice::class);
         <div class="wpstg-loading-bar-container">
             <div class="wpstg-loading-bar"></div>
         </div>
+
+        <div id="wpstg-error-wrapper">
+            <div id="wpstg-error-details"></div>
+        </div>
+
         <div class="wpstg--tab--contents">
             <?php
-                $numberOfLoadingBars = 8;
+                $numberOfLoadingBars = 9;
                 include(WPSTG_PLUGIN_DIR . 'Backend/views/_main/loading-placeholder.php');
             ?>
             <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">
@@ -137,11 +142,7 @@ $backupNotice = WPStaging::make(BackupPluginsNotice::class);
             </div>
             <div id="wpstg--tab--backup" class="wpstg--tab--content <?php echo esc_attr($classBackupPageActive); ?>">
                 <?php
-                if (!WPStaging::isPro()) {
-                    esc_html_e('Loading...', 'wp-staging');
-                } elseif (is_multisite() && is_main_site()) {
-                    esc_html_e('Loading...', 'wp-staging');
-                } else {
+                if (WPStaging::isPro()) {
                     require_once($this->path . "views/backup/free-version.php");
                 }
                 ?>
@@ -161,9 +162,6 @@ $backupNotice = WPStaging::make(BackupPluginsNotice::class);
             echo '</div>';
         }
         ?>
-    </div>
-    <div id="wpstg-error-wrapper">
-        <div id="wpstg-error-details"></div>
     </div>
     <?php require_once($this->path . 'views/_main/faq.php') ?>
     <?php require_once($this->path . 'views/_main/footer.php') ?>

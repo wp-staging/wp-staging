@@ -122,7 +122,7 @@ class CleanupTmpFilesTask extends AbstractTask
             $response->setIsRunning(true);
 
             $this->logger->info(sprintf(
-                '%s: Re-enqueing path %s for deletion, as it couldn\'t be deleted in a single request without
+                '%s: Re-enqueuing path %s for deletion, as it couldn\'t be deleted in a single request without
                     hitting execution limits. If you see this message in a loop, PHP might not be able to delete
                     this directory, so you might want to try to delete it manually.',
                 static::getTaskTitle(),
