@@ -59,8 +59,12 @@ $storageProviderName = $backup->storageProviderName;
                 <li>
                     <strong><?php $corrupt ? esc_html_e('Last modified:', 'wp-staging') : esc_html_e('Created on:', 'wp-staging') ?></strong>
                     <?php
-                    $date = new DateTime($createdAt);
-                    echo esc_html($this->transformToWpFormat($date));
+                    if (strpos($createdAt, "00:00:00") === false) {
+                        $date = new DateTime($createdAt);
+                        echo esc_html($this->transformToWpFormat($date));
+                    } else {
+                        esc_html_e("Unknown", "wp-staging");
+                    }
                     ?>
                 </li>
             <?php endif ?>
