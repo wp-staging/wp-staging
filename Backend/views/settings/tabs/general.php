@@ -413,7 +413,7 @@ use WPStaging\Backup\BackupScheduler;
                                 ?>
                             </td>
                         </tr>
-                        <tr class="wpstg-settings-row">
+                        <tr class="wpstg-settings-row <?php echo $isCheckboxChecked ? '' : 'hidden';?>" id="wpstg-send-schedules-error-report-input">
                             <td>
                                 <b class="wpstg-settings-title"><?php esc_html_e('Email Address', 'wp-staging') ?></b>
                                 <p class="wpstg-settings-message">
@@ -447,7 +447,7 @@ use WPStaging\Backup\BackupScheduler;
                                 <?php endif; ?>
                             </td>
                         </tr>
-                        <tr class="wpstg-settings-row">
+                        <tr class="wpstg-settings-row <?php echo $isCheckboxChecked && defined('WPSTGPRO_VERSION') ? '' : 'hidden';?>"  id="wpstg-send-schedules-slack-error-report-input">
                             <td>
                                 <b class="wpstg-settings-title"><?php esc_html_e('Slack Webhook URL', 'wp-staging') ?></b>
                                 <p class="wpstg-settings-message">
@@ -458,11 +458,6 @@ use WPStaging\Backup\BackupScheduler;
                             </td>
                             <td>
                                 <input type="text" id="wpstg-send-schedules-report-slack-webhook" name="wpstg_settings[schedulesReportSlackWebhook]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK)) ?>"<?php echo esc_attr($attrDisabled);?>/>
-                                <?php if (!empty($attrDisabled)) : ?>
-                                <a href="https://wp-staging.com" target="_blank" rel="noopener" class="wpstg-pro-feature-link wpstg-ml-8px">
-                                    <span class="wpstg-pro-feature"><?php esc_html_e('Pro Feature', 'wp-staging');?></span>
-                                </a>
-                                <?php endif; ?>
                             </td>
                         </tr>
 

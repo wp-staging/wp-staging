@@ -8,6 +8,7 @@ use RuntimeException;
 use WPStaging\Backup\BackgroundProcessing\Backup\PrepareBackup;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Dto\StepsDto;
 use WPStaging\Backup\Dto\TaskResponseDto;
@@ -22,6 +23,8 @@ use function WPStaging\functions\debug_log;
 
 class FinishBackupTask extends BackupTask
 {
+    use EventLoggerTrait;
+
     /** @var string */
     const OPTION_LAST_BACKUP = 'wpstg_last_backup_info';
 
@@ -59,7 +62,7 @@ class FinishBackupTask extends BackupTask
         $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
 
         $this->logger->info("################## FINISH ##################");
-
+        $this->backupProcessCompleted();
         $this->saveCloudStorageOptions();
 
         $this->maybeTriggerBackupCreationInBackground();
@@ -201,6 +204,7 @@ class FinishBackupTask extends BackupTask
             'isExcludingUnusedThemes'        => $jobBackupDataDto->getIsExcludingUnusedThemes(),
             'isExcludingLogs'                => $jobBackupDataDto->getIsExcludingLogs(),
             'isExcludingCaches'              => $jobBackupDataDto->getIsExcludingCaches(),
+            'isExportingOtherWpRootFiles'    => $jobBackupDataDto->getIsExportingOtherWpRootFiles(),
             'isWpCliRequest'                 => true, // should be true otherwise multisite backup will not work
             'repeatBackupOnSchedule'         => false,
             'isCreateBackupInBackground'     => false,
