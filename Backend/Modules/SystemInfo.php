@@ -14,6 +14,7 @@ use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Database\WpOptionsInfo;
+use WPStaging\Framework\Security\DataEncryption;
 use WPStaging\Backup\BackupScheduler;
 
 // No Direct Access
@@ -42,7 +43,9 @@ class SystemInfo
      */
     private $isMultiSite;
 
-    /** @var mixed|Database */
+    /**
+     * @var mixed|Database
+     */
     private $database;
 
     /**
@@ -54,6 +57,11 @@ class SystemInfo
      * @var WpOptionsInfo
      */
     private $wpOptionsInfo;
+
+    /**
+     * @var bool
+     */
+    private $isEncodeProLicense = false;
 
     public function __construct()
     {
@@ -255,7 +263,7 @@ class SystemInfo
         $output = PHP_EOL . "## WP Staging ##" . PHP_EOL . PHP_EOL;
 
         $output .= $this->info("Pro Version:", get_option('wpstgpro_version', self::NOT_SET_LABEL));
-        $output .= $this->info("Pro License Key:", get_option('wpstg_license_key') ?: self::NOT_SET_LABEL);
+        $output .= $this->info("Pro License Key:", $this->getLicenseKey() ?: self::NOT_SET_LABEL);
         // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_INSTALL_DATE
         $output .= $this->info("Pro Install Date:", get_option('wpstgpro_install_date', self::NOT_SET_LABEL));
         // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_UPGRADE_DATE
@@ -929,5 +937,37 @@ class SystemInfo
         }
 
         return $this->info("{$tableName} primary key:", 'option_id');
+    }
+
+    /**
+     * @return void
+     */
+    public function setEncodeProLicense(bool $isEncodeProLicense = false)
+    {
+        $this->isEncodeProLicense = $isEncodeProLicense;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getEncodeProLicense(): bool
+    {
+        return $this->isEncodeProLicense;
+    }
+
+    private function getLicenseKey()
+    {
+        $licenseKey = get_option('wpstg_license_key');
+        if (empty($licenseKey) || !$this->getEncodeProLicense()) {
+            return $licenseKey;
+        }
+
+        $dataEncryption = WPStaging::make(DataEncryption::class);
+        $publicKey      = $dataEncryption->getPublicKey();
+        if (empty($publicKey)) {
+            return $licenseKey;
+        }
+
+        return $dataEncryption->rsaEncrypt($licenseKey, $publicKey);
     }
 }

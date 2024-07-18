@@ -811,13 +811,14 @@ class Filesystem extends FilterableDirectoryIterator
     }
 
     /**
-     * Create a file with content
+     * Create or update a file with content
      *
-     * @param  string $path    Path to the file
-     * @param  string $content Content of the file
+     * @param string $path Path to the file
+     * @param string $content Content of the file
+     * @param string $mode
      * @return bool
      */
-    public function create(string $path, string $content): bool
+    public function create(string $path, string $content, string $mode = 'wb'): bool
     {
         if (!@file_exists($path)) {
             if (!@is_writable(dirname($path))) {
@@ -832,7 +833,7 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         $written = false;
-        if (( $handle = @fopen($path, 'wb') ) !== false) {
+        if (( $handle = @fopen($path, $mode) ) !== false) {
             if (@fwrite($handle, $content) !== false) {
                 $written = true;
             }
