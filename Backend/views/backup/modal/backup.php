@@ -163,7 +163,7 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
 
                 <div class="wpstg-container wpstg-mt-5px">
                     <label class="wpstg-backup-option wpstg-with-tooltip">
-                        <?php Checkbox::render('wpstg-run-in-background', 'runInBackground', '', false, []); ?>
+                        <?php Checkbox::render('wpstg-run-in-background', 'runInBackground'); ?>
                         <span><?php esc_html_e('Run In Background', 'wp-staging'); ?></span>
                         <div class="wpstg--tooltip">
                             <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
@@ -177,9 +177,15 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
 
                 <?php if (defined('WPSTG_DEBUG') && constant('WPSTG_DEBUG')) : ?>
                 <div class="wpstg-container wpstg-mt-5px">
-                    <label class="wpstg-storage-option">
-                        <?php Checkbox::render('wpstg-validate-backup-files', 'validateBackupFiles', '', false, []); ?>
-                        <span> <?php esc_html_e('Validate Backup', 'wp-staging'); ?> </span>
+                    <label class="wpstg-backup-option wpstg-with-tooltip">
+                        <?php Checkbox::render('wpstg-validate-backup-files', 'validateBackupFiles'); ?>
+                        <span><?php esc_html_e('Validate Backup', 'wp-staging'); ?></span>
+                        <div class="wpstg--tooltip">
+                            <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
+                            <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                                <?php esc_html_e('Validate each file in the backup to make sure backup is correctly created.', 'wp-staging') ?>
+                            </span>
+                        </div>
                     </label>
                 </div>
                 <?php endif; ?>

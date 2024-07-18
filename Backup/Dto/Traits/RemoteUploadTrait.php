@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Dto\Traits;
 
 use WPStaging\Backup\Dto\JobDataDto;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Pro\Backup\Dto\Job\JobRemoteUploadDataDto;
 
@@ -248,6 +249,11 @@ trait RemoteUploadTrait
      */
     public function getIsMultipartBackup(): bool
     {
+        // Do not remove this check, otherwise the backup process will fail with an error if multipart backup is enabled in the free version.
+        if (!WPStaging::isPro()) {
+            return false;
+        }
+
         return Hooks::applyFilters(JobDataDto::FILTER_IS_MULTIPART_BACKUP, $this->isMultipartBackup);
     }
 

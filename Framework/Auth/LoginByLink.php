@@ -23,6 +23,9 @@ class LoginByLink
     /** @var string */
     const WPSTG_VISITOR_ROLE = 'wpstg_visitor';
 
+    /** @var string */
+    const WPSTG_SUPER_ADMIN_ROLE = 'wpstg_super_admin';
+
     /**
      * @var array
      */
@@ -110,15 +113,24 @@ class LoginByLink
         }
 
         if (empty($userId)) {
+            $role = $this->loginLinkData['role'];
+            if ($this->loginLinkData['role'] === self::WPSTG_SUPER_ADMIN_ROLE) {
+                $role = 'administrator'; // super admin is a privilege, let's give administrator role and then give privilege to the user.
+            }
+
             $userId = wp_insert_user([
                 'user_login' => $login,
                 'user_pass'  => uniqid('wpstg'),
-                'role'       => $this->loginLinkData['role'],
+                'role'       => $role,
 
             ]);
 
             if (is_wp_error($userId)) {
                 wp_die('Error creating user. Error: ' . $userId->get_error_message());
+            }
+
+            if ($this->loginLinkData['role'] === self::WPSTG_SUPER_ADMIN_ROLE && is_multisite()) {
+                grant_super_admin($userId);
             }
         }
 
