@@ -19,5 +19,7 @@
         <span style="text-decoration: underline"><?php esc_html_e('Show Logs', 'wp-staging') ?></span>
     </button>
     <div class="wpstg--modal--process--generic-problem"></div>
-    <div class="wpstg-<?php echo esc_attr($modalType); ?>-process-logs"></div>
+    <div class="wpstg-<?php echo esc_attr($modalType); ?>-process-logs">
+        <?php require(WPSTG_PLUGIN_DIR . 'Backend/views/templates/logs/logs-template.php') ?>
+    </div>
 </div>

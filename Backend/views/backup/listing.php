@@ -159,19 +159,4 @@ if ($cronMessage !== '') { ?>
 
 <?php include(__DIR__ . '/restore-wait.php'); ?>
 
-<div
-    id="wpstg--js--translations"
-    style="display:none;"
-    data-modal-txt-critical="<?php esc_attr_e('Critical', 'wp-staging') ?>"
-    data-modal-txt-errors="<?php esc_attr_e('Error(s)', 'wp-staging') ?>"
-    data-modal-txt-warnings="<?php esc_attr_e('Warning(s)', 'wp-staging') ?>"
-    data-modal-txt-and="<?php esc_attr_e('and', 'wp-staging') ?>"
-    data-modal-txt-found="<?php esc_attr_e('Found', 'wp-staging') ?>"
-    data-modal-txt-show-logs="<?php esc_attr_e('Show Logs', 'wp-staging') ?>"
-    data-modal-logs-title="<?php esc_attr_e(
-        '{critical} Critical, {errors} Error(s) and {warnings} Warning(s) Found',
-        'wp-staging'
-    ) ?>"
-></div>
-
 <div id="wpstg-delete-confirmation"></div>

@@ -1,22 +1,13 @@
 <?php
-
 namespace WPStaging\Backup\Service\Database\Importer\Insert;
-
-/**
- * @deprecated
- */
-
 abstract class TransactionInserter extends QueryInserter
 {
-    /** @var int */
     protected $currentTransactionSize = 0;
-
     protected function maybeStartTransaction()
     {
         if ($this->jobRestoreDataDto->getTransactionStarted()) {
             return;
         }
-
         $query = 'START TRANSACTION;';
         if ($this->exec($query)) {
             $this->jobRestoreDataDto->setTransactionStarted(true);
@@ -28,36 +19,22 @@ abstract class TransactionInserter extends QueryInserter
             ));
         }
     }
-
-    /**
-     * @return bool Whether a commit happened.
-     *
-     * @throws \Exception
-     */
     public function maybeCommit()
     {
         if (!$this->jobRestoreDataDto->getTransactionStarted()) {
             return false;
         }
-
         if ($this->currentTransactionSize >= $this->maxInnoDbLogSize || $this->isThreshold()) {
             $this->commit();
-
             return true;
         }
-
         return false;
     }
-
-    /**
-     * @throws \Exception
-     */
     public function commit()
     {
         if (!$this->jobRestoreDataDto->getTransactionStarted()) {
             return;
         }
-
         $query = 'COMMIT;';
         if ($this->exec($query)) {
             $this->jobRestoreDataDto->setTransactionStarted(false);
