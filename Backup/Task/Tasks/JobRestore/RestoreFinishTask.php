@@ -8,6 +8,7 @@ use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Notices\ObjectCacheNotice;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -16,6 +17,8 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
  */
 class RestoreFinishTask extends RestoreTask
 {
+    use EventLoggerTrait;
+
     /** @var ObjectCacheNotice */
     protected $objectCacheNotice;
 
@@ -52,6 +55,7 @@ class RestoreFinishTask extends RestoreTask
 
             $this->logger->info("################## FINISH ##################");
 
+            $this->restoreProcessCompleted();
             $this->clearCacheAndLogoutOnWpCom();
         } catch (RuntimeException $e) {
             $this->logger->critical($e->getMessage());

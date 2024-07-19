@@ -7,6 +7,7 @@ use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Staging\Sites;
+use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Urls;
 
 /**
@@ -15,6 +16,8 @@ use WPStaging\Framework\Utils\Urls;
  */
 class Finish extends Job
 {
+    use EventLoggerTrait;
+
     /**
      * Clone Key
      * @var string
@@ -73,7 +76,7 @@ class Finish extends Job
         do_action('wpstg_cloning_complete', $this->options);
 
         $this->logger->info("################## FINISH ##################");
-
+        $this->cloneProcessCompleted();
         return (object) $return;
     }
 

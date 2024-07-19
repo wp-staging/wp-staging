@@ -11,7 +11,9 @@ $modalType    = $modalType ?? 'backup';
         <p class="wpstg-<?php echo esc_attr($modalType); ?>-success-modal-text">{text}</p>
         <div class="wpstg-<?php echo esc_attr($modalType); ?>-success-logs-wrapper">
             <button class="wpstg-<?php echo esc_attr($modalType); ?>-success-logs-button">{btnTxtLog}</button>
-            <div class="wpstg-<?php echo esc_attr($modalType); ?>-success-logs"></div>
+            <div class="wpstg-<?php echo esc_attr($modalType); ?>-success-logs">
+                <?php require(WPSTG_PLUGIN_DIR . 'Backend/views/templates/logs/logs-template.php') ?>
+            </div>
         </div>
         <div class="wpstg-rate-us" style="<?php echo esc_attr($displayStyle); ?>">
             <div class="wpstg-rate-us-inner">

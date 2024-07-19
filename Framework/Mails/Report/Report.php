@@ -250,8 +250,13 @@ class Report
         $zipFilePath     = $tempDirectory . sprintf('wpstg-bundled-logs-%s.zip', $postfix);
         $logFiles        = [];
 
+        $isEncodeProLicenseBefore = $this->systemInfo->getEncodeProLicense();
+        $this->systemInfo->setEncodeProLicense(true);
+        $systemInfoData = $this->systemInfo->get();
+        $this->systemInfo->setEncodeProLicense($isEncodeProLicenseBefore);
+
         $systemInformationFile = $tempDirectory . sprintf('system_information-%s.txt', $postfix);
-        $systemInformationData = $this->debugLogReader->maybeFixHtmlEntityDecode($this->systemInfo->get());
+        $systemInformationData = $this->debugLogReader->maybeFixHtmlEntityDecode($systemInfoData);
 
         if (!empty($systemInformationData)) {
             $this->copyDataToFile($systemInformationFile, $systemInformationData);

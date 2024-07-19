@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
-Tested up to: 6.5
-Stable tag: 3.8.1
+Tested up to: 6.6
+Stable tag: 3.8.2
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -283,8 +283,25 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 
 == Changelog ==
 
-= 3.8.1 =
-* Fix: Error 500 when listing backup due to open_basedir restriction on ABSPATH. (Pro) #3548
+= 3.8.2 =
+* New: Compatible up to WordPress 6.6
+* New: Add super admin role when creating login link. Existing staging sites need to be updated. (Pro) #3520
+* New: Redesign process logs to make them more appealing and robust, ensuring they look good. #3281
+* Security: Encrypt sensitive information when downloading the system info files. #3305
+* Enh: Implement a mechanism that can be used to better log failure of jobs. #3436
+* Enh: Add upgrade routine to enable email notifications for free version by default. #3491
+* Enh: Add a tooltip to the backup modal explaining the function of "Validate Backup". #3513
+* Fix: Backup Restore failed to read the cache file of old object data when using PHP 7.2. #3539
+* Fix: Make sure to backup all other files in the WP root directory when running background backup. #3564
+* Fix: Ensure that backup process works properly when attempting to create multipart backup with free version. #3444
+* Fix: Show correct timestamp when retrieving remote backup from an FTP storage provider. (Pro) #3499
+* Fix: Google authentication throws exception when user cancels backup auth process. (Pro) #3510
+* Fix: Fatal error on activation of WP Staging Pro on PHP 7.0. (Pro) #3580
+* Fix: Sometimes warnings were generated during PUSH when trying to cleanup tmp directory for plugins and themes. #3588
+* UX: Ensure smooth transition of HTML attributes in advanced options. #3535
+* UX: Toggle `Email Address` and `Slack Webhook URL` fields when email and slack notifications enabled. #3532
+* Dev: Don't rerun CI workflows when one of the changelogs is adjusted. #3493
+* Dev: Failing unit tests at \NoticesTest::shouldShowDisabledOptimizerNotice(). #3601
 
 = 3.8.1 =
 * New: Compatible to WordPress 6.5.5
@@ -307,6 +324,7 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 * Fix: Make sure appropriate message is displayed after successful backup. #3474
 * Fix: Some files may not be scanned and/or copied during staging site creation if their relative path to ABSPATH contains the value of ABSPATH. #3476
 * Fix: Use wp_kses instead of esc_html when logging backup message in logger, to keep json formatting for messages. #3536
+* Fix: Error 500 when listing backup due to open_basedir restriction on ABSPATH. (Pro) #3548
 * Dev: Add unit test to make sure file extraction task works for multiple requests. #3481
 * Dev: Improve basic performance cest e2e and reduce flakiness. #3522
 * Dev: Rename `Compressor` service to `Archiver` service to match what this service does. #3496
@@ -735,4 +753,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-Compatible up to WordPress 6.5.5. Multiple enhancements in UI and performance. Updating is recommended!
+Compatible up to WordPress 6.6.0. Multiple enhancements in UI and performance. Updating is recommended!
