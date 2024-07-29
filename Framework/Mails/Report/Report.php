@@ -11,6 +11,8 @@ use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Notifications\Notifications;
 
+use function WPStaging\functions\debug_log;
+
 class Report
 {
     /**
@@ -369,9 +371,19 @@ class Report
      */
     protected function copyDataToFile(string $destinationFile, string $data)
     {
-        $ft = fopen($destinationFile, "wb");
-        fputs($ft, $data);
-        fclose($ft);
+        try {
+            $ft = fopen($destinationFile, "wb");
+            if (!$ft) {
+                debug_log('Fail to copy data to file, because cannot open destination file.');
+                return;
+            }
+
+            fputs($ft, $data);
+            fclose($ft);
+        } catch (\Throwable $th) {
+            debug_log('Fail to copy data to file. Error message: ' . $th->getMessage());
+            return;
+        }
     }
 
     /**

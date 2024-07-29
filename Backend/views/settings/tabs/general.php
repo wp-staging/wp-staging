@@ -403,7 +403,7 @@ use WPStaging\Backup\BackupScheduler;
                             <td class="wpstg-settings-row th">
                                 <b class="wpstg-settings-title"><?php esc_html_e('Email Notifications', 'wp-staging') ?></b>
                                 <p class="wpstg-settings-message">
-                                    <?php esc_html_e('If a scheduled backup fails, send an email.', 'wp-staging') ?>
+                                    <?php esc_html_e('If a backup fails, send an email notification.', 'wp-staging') ?>
                                 </p>
                             </td>
                             <td>

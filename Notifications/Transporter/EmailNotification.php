@@ -164,7 +164,7 @@ class EmailNotification implements NotificationsInterface
             $message .= "\r\n\r\n" . sprintf(esc_html__('Get more control over your notifications by using WP Staging Pro %s.', 'wp-staging'), 'https://wp-staging.com/');
         }
 
-        $message .= "\r\n\r\n" . esc_html__('Please do not reply to this email. Thanks.', 'wp-staging');
+        $message .= "\r\n\r\n" . esc_html__('Please do not reply to this email.', 'wp-staging');
         return $message;
     }
 

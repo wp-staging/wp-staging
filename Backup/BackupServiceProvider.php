@@ -52,8 +52,6 @@ class BackupServiceProvider extends FeatureServiceProvider
                         ->needs(SeekableQueueInterface::class)
                         ->give(FileSeekableQueue::class);
 
-        $this->container->make(BackupDownload::class)->listenDownload();
-
         $this->hookDatabaseImporterQueryInserter();
     }
 

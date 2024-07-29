@@ -31,7 +31,10 @@ if (!$isPro) {
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
-            <?php echo wp_kses_post(__('Create a separate new admin login for this staging site!', 'wp-staging')); ?>
+            <?php echo esc_html__('Create a new admin user account for this staging site!', 'wp-staging'); ?>
+            <div class="wpstg--red wpstg-mt-10px">
+                <?php echo esc_html__('If the account already exists, the password will be updated.', 'wp-staging'); ?>
+            </div>
         </span>
     </span>
     <?php if ($isSiteHostedOnWpCom) : ?>

@@ -24,6 +24,7 @@ use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\ProcessLockedException;
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;
+use WPStaging\Framework\Utils\Times;
 
 use function WPStaging\functions\debug_log;
 
@@ -66,17 +67,21 @@ class PrepareBackup
      */
     private $lastQueuedActionId;
 
+    /** @var Times */
+    private $times;
+
     /**
      * PrepareBackup constructor.
      *
      * @param AjaxPrepareBackup $ajaxPrepareBackup A reference to the object currently handling
      *                                             AJAX Backup preparation requests.
      */
-    public function __construct(AjaxPrepareBackup $ajaxPrepareBackup, Queue $queue, BackupProcessLock $processLock)
+    public function __construct(AjaxPrepareBackup $ajaxPrepareBackup, Queue $queue, BackupProcessLock $processLock, Times $times)
     {
         $this->ajaxPrepareBackup = $ajaxPrepareBackup;
         $this->queue             = $queue;
         $this->processLock       = $processLock;
+        $this->times             = $times;
     }
 
     /**
@@ -192,7 +197,24 @@ class PrepareBackup
             $errorMessage    = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
                 $this->processLock->unlockProcess();
-                $backupScheduler->sendErrorReport("[Errors in scheduled backups]: " . $errorMessage);
+                $body = '';
+                if (array_key_exists('scheduleId', $args)) {
+                    $body .= 'Error in scheduled backup' . PHP_EOL . PHP_EOL;
+                } else {
+                    $body .= 'Error in background backup' . PHP_EOL . PHP_EOL;
+                }
+
+                $jobDataDto = $this->jobBackup->getJobDataDto();
+                $date = new \DateTime();
+                $date->setTimestamp($jobDataDto->getStartTime());
+                $backupDuration = str_replace(['minutes', 'seconds'], ['min', 'sec'], $this->times->getHumanReadableDuration(gmdate('i:s', $jobDataDto->getDuration())));
+
+                $body .= 'Started at: ' .  $date->format('H:i:s') . PHP_EOL ;
+                $body .= 'Duration: ' . $backupDuration . PHP_EOL;
+                $body .= 'Job ID: ' . $args['jobId'] . PHP_EOL . PHP_EOL;
+                $body .= 'Error Message: ' . $errorMessage;
+
+                $backupScheduler->sendErrorReport($body);
 
                 return new WP_Error(400, $errorMessage);
             }
@@ -202,8 +224,6 @@ class PrepareBackup
                 if (array_key_exists('scheduleId', $args)) {
                     $this->queue->cleanupActionsByScheduleId($args['scheduleId'], [Queue::STATUS_READY]);
                 }
-
-                $backupScheduler->sendEmailReport("[Backup Created]: " . sprintf(esc_html__('Backup created with Job ID: %s', 'wp-staging'), $args['jobId']));
 
                 // We're finished, get out and bail.
                 return $taskResponseDto;

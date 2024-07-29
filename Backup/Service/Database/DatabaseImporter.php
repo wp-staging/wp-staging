@@ -300,6 +300,12 @@ class DatabaseImporter
         if (preg_match('@KEY\s+\`.*\`\s+?\(.*\)(,(\s+)?\`.*`\)\s+ON\s+(DELETE|UPDATE).*?)\)@i', $query, $matches)) {
             $query = str_replace($matches[1], '', $query);
         }
+        $patterns = [
+            '/\s+CONSTRAINT(.+)REFERENCES(.+)(\s+)?,/i',
+            '/,(\s+)?CONSTRAINT(.+)REFERENCES(.+)\`\)(\s+)?\)/i',
+        ];
+        $replace = ['', ')'];
+        $query = preg_replace($patterns, $replace, $query);
         if ($this->isCorruptedCreateTableQuery($query)) {
             $query = $this->stringsUtil->replaceLastMatch("`);", "`) );", $query);
         }

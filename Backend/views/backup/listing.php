@@ -104,7 +104,7 @@ if ($cronMessage !== '') { ?>
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
     <?php if ($isEnabledCloudStorage && $isValidLicense) : ?>
-    <button id="wpstg-show-cloud-backup" class="wpstg-next-step-link wpstg-button wpstg-border-thin-button wpstg-ml-4">
+    <button id="wpstg-show-cloud-backup" class="wpstg-next-step-link wpstg-button wpstg-border-thin-button wpstg-ml-4" <?php echo esc_attr($disabledProperty); ?> <?php echo esc_attr($disabledPropertyCreateBackup) ?>>
         <?php esc_html_e('Load Remote Backups', 'wp-staging') ?>
     </button>
     <?php endif; ?>
@@ -126,10 +126,6 @@ if ($cronMessage !== '') { ?>
     <div id="wpstg-existing-cloud-backups">
         <div class="wpstg-existing-cloud-backups-header">
             <span id="remote-backup-title"><?php echo esc_html__('Remote Backups:', 'wp-staging'); ?></span>
-            <span class="wpstg--tooltip">
-                <img class="wpstg--dashicons wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
-                <div class='wpstg--tooltiptext'><?php echo esc_html__('Remote backups fetching supports S3, Google Drive and sFTP hosted backups. Dropbox support is coming soon.', 'wp-staging'); ?></div>
-            </span>
         </div>
         <div class="wpstg-cloud-backup-list">
             <ul id="wpstg-cloud-backup-list-ul">
