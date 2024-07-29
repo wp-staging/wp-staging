@@ -41,13 +41,6 @@ $downloadUrl = $backup->downloadUrl;
 
 $compressor = WPStaging::make(ZlibCompressor::class);
 
-if (WPStaging::make(Directory::class)->isBackupPathOutsideAbspath() || ( defined('WPSTG_DOWNLOAD_BACKUP_USING_PHP') && WPSTG_DOWNLOAD_BACKUP_USING_PHP )) {
-    $downloadUrl = add_query_arg([
-        'wpstgBackupDownloadNonce' => wp_create_nonce('wpstg_download_nonce'),
-        'wpstgBackupDownloadMd5'   => $backup->md5BaseName,
-    ], admin_url());
-}
-
 // Fix mixed http/https
 $downloadFileUrl = $downloadUrl;
 $downloadUrl     = (new Urls())->maybeUseProtocolRelative($downloadUrl);

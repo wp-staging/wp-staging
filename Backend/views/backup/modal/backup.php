@@ -168,8 +168,8 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                         <div class="wpstg--tooltip">
                             <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/vendor/dashicons/info-outline.svg" alt="info"/>
                             <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                                <?php esc_html_e('This runs the backup in the background. You will be notified by e-mail (if activated in the settings) as soon as the backup has been successfully created.', 'wp-staging') ?>
-                                <br/><b><?php esc_html_e('Note:', 'wp-staging') ?></b> <?php esc_html_e('This option has no effect if the backup is only to be scheduled (the "Backup Times > Run Now" option is not selected).', 'wp-staging') ?>
+                                <?php esc_html_e('This runs the backup in the background and means you can close the window or open another WordPress page and the backup process will not stop.', 'wp-staging') ?>
+                                <br/><?php esc_html_e('You will be notified by e-mail or slack if the backup fails. (If activated in WP Staging settings)', 'wp-staging') ?>
                             </span>
                         </div>
                     </label>

@@ -334,7 +334,7 @@ class Assets
                 ],
                 'backupCreationBG' => [
                     'title' => esc_html__('Backup Creation Triggered', 'wp-staging'),
-                    'body'  => esc_html__('Backup creation is triggered to run in background. You will be notified by email (if set in settings) once the backup is created!', 'wp-staging'),
+                    'body'  => esc_html__('Backup will run in background. You can close the window.', 'wp-staging'),
                 ],
                 'backupCreated' => [
                     'title' => esc_html__('Backup Complete', 'wp-staging'),
