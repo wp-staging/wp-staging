@@ -17,12 +17,16 @@ Backup Restore Migrate Staging Duplicator - 100% unit tested.
 == Description ==
 
 <h3>Backup, Staging, Cloning & Migration of WordPress Sites</h3>
-WP STAGING is a professional all in one <strong>backup, staging, and duplicator plugin</strong>. Create an exact copy and backup of your website in seconds! Perfect for staging, backup, or development purposes.
-(Cloning and backup time depends on the size of your website)
+WP STAGING is a professional all in one <strong>backup, staging, and duplicator plugin</strong>. 
 
-This backup and staging tool creates a clone of your website into a subfolder or subdomain (Pro) of your main WordPress installation. The cloned site includes an entire copy of your database.
+Instantly* create an exact backup and clone of your website, perfect for staging, development, or simply keeping your data safe. *Cloning and backup time depends on the size of your website.
+Perfect for staging, backup, or development purposes.
 
-For pushing & migrating plugins and themes to the live site, creating a backup and upload a backup to cloud providers, check out [WP STAGING | PRO](https://wp-staging.com/backup-wordpress "WP STAGING - Backup & Cloning")
+With WP STAGING, you can easily clone your site to a subfolder or subdomain (Pro version), complete with a full database copy, ensuring a seamless transition and a reliable backup. All data stays on your server and will not be transferred to any third party!
+
+Our powerful backup tool is designed for speed and efficiency, making it one of the fastest backup and restore plugins available for WordPress. Even this free version allows you to restore a backup of your website in minutes if anything goes wrong. Experience peace of mind with WP STAGING.
+
+For pushing & migrating a staging site to the production site and uploading a backup to cloud providers and for more premium features, check out [WP STAGING | PRO](https://wp-staging.com/backup-wordpress "WP STAGING - Backup & Cloning")
 
 WP STAGING runs all the time-consumptive operations for database and file cloning and backup operations in the background. This tool does <strong>automatically a search & replacement</strong> of all links and paths.
 
@@ -30,7 +34,7 @@ WP STAGING runs all the time-consumptive operations for database and file clonin
 
 WP STAGING can prevent your website from breaking or going offline due to installing untested plugins!
 
-[youtube https://www.youtube.com/watch?v=vkv52s36Yvg]
+[vimeo https://vimeo.com/999447985]
 
 == Frequently Asked Questions ==
 
