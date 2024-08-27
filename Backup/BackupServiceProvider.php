@@ -2,34 +2,34 @@
 
 namespace WPStaging\Backup;
 
-use WPStaging\Framework\DI\FeatureServiceProvider;
-use WPStaging\Framework\Filesystem\Filesystem;
-use WPStaging\Framework\Network\AjaxBackupDownloader;
-use WPStaging\Framework\Queue\FileSeekableQueue;
-use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Backup\Ajax\Backup;
+use WPStaging\Backup\Ajax\Cancel;
+use WPStaging\Backup\Ajax\Delete;
+use WPStaging\Backup\Ajax\Edit;
+use WPStaging\Backup\Ajax\FileInfo;
+use WPStaging\Backup\Ajax\FileList;
+use WPStaging\Backup\Ajax\Listing;
+use WPStaging\Backup\Ajax\Parts;
+use WPStaging\Backup\Ajax\Restore;
+use WPStaging\Backup\Ajax\ScheduleList;
+use WPStaging\Backup\Ajax\Status;
+use WPStaging\Backup\Ajax\Upload;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup;
 use WPStaging\Backup\Ajax\Restore\LoginUrl;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\Ajax\Restore\ReadBackupMetadata;
-use WPStaging\Backup\Ajax\ScheduleList;
-use WPStaging\Backup\Ajax\Cancel;
-use WPStaging\Backup\Ajax\Backup;
-use WPStaging\Backup\Ajax\Delete;
-use WPStaging\Backup\Ajax\Edit;
-use WPStaging\Backup\Ajax\Listing;
-use WPStaging\Backup\Ajax\Restore;
-use WPStaging\Backup\Ajax\FileInfo;
-use WPStaging\Backup\Ajax\FileList;
-use WPStaging\Backup\Ajax\Parts;
-use WPStaging\Backup\Ajax\Status;
-use WPStaging\Backup\Ajax\Upload;
 use WPStaging\Backup\Request\Logs;
 use WPStaging\Backup\Service\BackupAssets;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Service\Database\Importer\Insert\ExtendedInserterWithoutTransaction;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
-use WPStaging\Backup\Task\AbstractTask;
 use WPStaging\Backup\Ajax\BackupSpeedIndex;
+use WPStaging\Framework\DI\FeatureServiceProvider;
+use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\Task\AbstractTask;
+use WPStaging\Framework\Network\AjaxBackupDownloader;
+use WPStaging\Framework\Queue\FileSeekableQueue;
+use WPStaging\Framework\Queue\SeekableQueueInterface;
 
 class BackupServiceProvider extends FeatureServiceProvider
 {

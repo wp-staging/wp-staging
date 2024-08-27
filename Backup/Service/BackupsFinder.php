@@ -169,7 +169,7 @@ class BackupsFinder
 
     /**
      * @return bool
-     * @throws \WPStaging\Backup\Exceptions\DiskNotWritableException
+     * @throws \WPStaging\Framework\Job\Exception\DiskNotWritableException
      */
     public function hasInvalidFileIndex(): bool
     {

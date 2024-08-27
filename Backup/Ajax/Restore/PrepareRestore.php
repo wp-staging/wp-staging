@@ -2,18 +2,18 @@
 
 namespace WPStaging\Backup\Ajax\Restore;
 
+use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
+use WPStaging\Backup\Job\JobRestoreProvider;
+use WPStaging\Backup\Job\Jobs\JobRestore;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\Ajax\PrepareJob;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Auth;
-use WPStaging\Backup\Ajax\PrepareJob;
-use WPStaging\Backup\BackupProcessLock;
-use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
-use WPStaging\Backup\Exceptions\ProcessLockedException;
-use WPStaging\Backup\Job\JobRestoreProvider;
-use WPStaging\Backup\Job\Jobs\JobRestore;
 
 class PrepareRestore extends PrepareJob
 {
@@ -40,7 +40,7 @@ class PrepareRestore extends PrepareJob
      */
     const TMP_DATABASE_PREFIX_TO_DROP = 'wpstgbak_';
 
-    public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, BackupProcessLock $processLock, TableService $tableService)
+    public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock, TableService $tableService)
     {
         parent::__construct($filesystem, $directory, $auth, $processLock);
         $this->tableService = $tableService;

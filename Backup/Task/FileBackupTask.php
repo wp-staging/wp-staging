@@ -4,8 +4,8 @@
 
 namespace WPStaging\Backup\Task;
 
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\FileBackupService;
 use WPStaging\Backup\Service\FileBackupServiceProvider;
 use WPStaging\Backup\Task\BackupTask;
@@ -15,9 +15,6 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 abstract class FileBackupTask extends BackupTask
 {
-    /** @var string */
-    const OTHER_WP_ROOT_IDENTIFIER = 'rootfiles';
-
     /** @var FileBackupService */
     protected $fileBackupService;
 

@@ -76,7 +76,7 @@ class BackupPluginsNotice
             return;
         }
 
-        $notice = WPSTG_PLUGIN_DIR . 'Backend/views/notices/backup-plugins-notice.php';
+        $notice = WPSTG_VIEWS_DIR . 'notices/backup-plugins-notice.php';
 
         if (!file_exists($notice)) {
             return;

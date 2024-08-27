@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.5.6
+ * Version: 1.5.7
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.6');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.7');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
@@ -165,9 +165,8 @@ if (!function_exists('wpstgDisableTheme')) {
             $wpstgRootPro = wpstgGetPluginsDir() . 'wp-staging-pro';
             $wpstgRoot    = wpstgGetPluginsDir() . 'wp-staging';
 
-            $file  = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme' . DIRECTORY_SEPARATOR . 'functions.php';
-            $theme = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme';
-
+            $theme = '/resources/blank-theme';
+            $file  = $theme . '/functions.php';
 
             if (file_exists($wpstgRoot . $file)) {
                 return $wpstgRoot . $theme;
@@ -267,7 +266,7 @@ if (!function_exists('wpstgIsStaging')) {
      */
     function wpstgIsStaging(): bool
     {
-        if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
+        if (defined('WPSTAGING_DEV_SITE') && constant('WPSTAGING_DEV_SITE') === true) {
             return true;
         }
 

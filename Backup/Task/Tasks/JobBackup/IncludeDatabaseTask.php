@@ -8,7 +8,7 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;

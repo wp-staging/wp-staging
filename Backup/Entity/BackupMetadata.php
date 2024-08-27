@@ -14,7 +14,7 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\HydrateTrait;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\Times;
-use WPStaging\Backup\Dto\Traits\DateCreatedTrait;
+use WPStaging\Framework\Job\Dto\Traits\DateCreatedTrait;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\WithPluginsThemesMuPluginsTrait;
 use WPStaging\Framework\Adapter\WpAdapter;

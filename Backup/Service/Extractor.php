@@ -9,7 +9,7 @@ use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Entity\FileBeingExtracted;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
@@ -21,17 +21,22 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Dto\File\ExtractorDto;
 use WPStaging\Backup\Exceptions\EmptyChunkException;
-use WPStaging\Backup\Exceptions\FileValidationException;
+use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Backup\FileHeader;
 use WPStaging\Backup\Interfaces\IndexLineInterface;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 
 class Extractor
 {
     use ResourceTrait;
 
+    /** @var string */
     const VALIDATE_DIRECTORY = 'validate';
+
+    /** @var int */
+    const ITEM_SKIP_EXCEPTION_CODE = 4001;
 
     /**
      * File currently being extracted
@@ -90,6 +95,12 @@ class Extractor
     /** @var BackupMetadata */
     protected $backupMetadata;
 
+    /** @var string[] */
+    protected $excludedIdentifier;
+
+    /** @var string */
+    protected $databaseBackupFile;
+
     public function __construct(
         PathIdentifier $pathIdentifier,
         Directory $directory,
@@ -106,6 +117,8 @@ class Extractor
         $this->zlibCompressor  = $zlibCompressor;
         $this->backupValidator = $backupValidator;
         $this->backupHeader    = $backupHeader;
+
+        $this->excludedIdentifier = [];
     }
 
     /**
@@ -129,6 +142,15 @@ class Extractor
     public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    /**
+     * @param string[] $excludedIdentifier
+     * @return void
+     */
+    public function setExcludedIdentifiers(array $excludedIdentifier)
+    {
+        $this->excludedIdentifier = $excludedIdentifier;
     }
 
     /**
@@ -173,6 +195,12 @@ class Extractor
             } catch (MissingFileException $e) {
                 $this->logger->warning('MissingFileException. Error: ' .  $e->getMessage());
                 continue;
+            } catch (Exception $e) {
+                if ($e->getCode() === self::ITEM_SKIP_EXCEPTION_CODE) {
+                    continue;
+                }
+
+                throw $e;
             }
 
             try {
@@ -213,9 +241,14 @@ class Extractor
         }
 
         /** @var IndexLineInterface $backupFileIndex */
-        $backupFileIndex = $this->indexLineDto->readIndexLine($rawIndexFile);
-
-        $identifier = $this->pathIdentifier->getIdentifierFromPath($backupFileIndex->getIdentifiablePath());
+        $backupFileIndex  = $this->indexLineDto->readIndexLine($rawIndexFile);
+        $identifiablePath = $backupFileIndex->getIdentifiablePath();
+        $identifier       = $this->pathIdentifier->getIdentifierFromPath($identifiablePath);
+        if ($this->isFileSkipped($identifiablePath, $identifier)) {
+            $this->extractorDto->incrementTotalFilesSkipped();
+            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            throw new Exception('Skipping file: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
+        }
 
         if ($validateOnly) {
             $extractFolder = trailingslashit($this->dirRestore . self::VALIDATE_DIRECTORY);
@@ -265,9 +298,10 @@ class Extractor
     public function setFileToExtract(string $filePath)
     {
         try {
-            $this->wpstgFile      = new FileObject($filePath);
-            $this->backupMetadata = new BackupMetadata();
-            $this->backupMetadata = $this->backupMetadata->hydrateByFile($this->wpstgFile);
+            $this->wpstgFile          = new FileObject($filePath);
+            $this->backupMetadata     = new BackupMetadata();
+            $this->backupMetadata     = $this->backupMetadata->hydrateByFile($this->wpstgFile);
+            $this->databaseBackupFile = $this->backupMetadata->getDatabaseFile();
             $this->extractorDto->setIndexStartOffset($this->backupMetadata->getHeaderStart());
             $this->extractorDto->setTotalChunks($this->backupMetadata->getTotalChunks());
         } catch (Exception $ex) {
@@ -511,5 +545,20 @@ class Extractor
         $sizeToConsiderAsBigFile = Hooks::applyFilters('wpstg.tests.restore.bigFileSize', 10 * MB_IN_BYTES);
 
         return $this->extractingFile->getTotalBytes() > $sizeToConsiderAsBigFile;
+    }
+
+    private function isFileSkipped(string $identifiablePath, string $identifier): bool
+    {
+        if ($identifiablePath === $this->databaseBackupFile) {
+            if (in_array(PartIdentifier::DATABASE_PART_IDENTIFIER, $this->excludedIdentifier)) {
+                return true;
+            }
+
+            return false;
+        }
+
+
+
+        return in_array($identifier, $this->excludedIdentifier);
     }
 }

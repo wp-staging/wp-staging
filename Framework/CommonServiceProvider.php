@@ -8,6 +8,7 @@ use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\LogCleanup;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
+use WPStaging\Framework\Performance\MemoryExhaust;
 use WPStaging\Framework\Settings\DarkMode;
 use WPStaging\Framework\Settings\EventLogger;
 use WPStaging\Framework\Utils\DBPermissions;
@@ -40,6 +41,7 @@ class CommonServiceProvider extends ServiceProvider
         add_action('wp_ajax_wpstg_set_default_os_color_mode', $this->container->callback(DarkMode::class, 'ajaxSetDefaultOsMode')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_log_event_failure", $this->container->callback(EventLogger::class, "ajaxLogEventFailure")); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_nopriv_wpstg_log_event_failure", $this->container->callback(EventLogger::class, "ajaxLogEventFailure")); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--detect-memory-exhaust', $this->container->callback(MemoryExhaust::class, 'ajaxResponse')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     /**

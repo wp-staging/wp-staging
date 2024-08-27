@@ -3,8 +3,6 @@
 namespace WPStaging\Framework\Security;
 
 use WPStaging\Vendor\phpseclib3\Crypt\RSA;
-use WPStaging\Vendor\phpseclib3\Crypt\RSA\PublicKey;
-use WPStaging\Vendor\phpseclib3\Crypt\RSA\PrivateKey;
 use WPStaging\Vendor\phpseclib3\Crypt\PublicKeyLoader;
 
 use function WPStaging\functions\debug_log;
@@ -41,6 +39,11 @@ class DataEncryption
         $this->prefix = '!wpstg!';
         $this->key    = $this->getDefaultKey();
         $this->salt   = $this->getDefaultSalt();
+    }
+
+    public function isPhpSecLibAvailable(): bool
+    {
+        return class_exists(\WPStaging\Vendor\phpseclib3\Crypt\PublicKeyLoader::class);
     }
 
     /**

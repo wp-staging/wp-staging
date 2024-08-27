@@ -38,7 +38,7 @@ class AnalyticsConsent
             return;
         }
 
-        $notice = WPSTG_PLUGIN_DIR . '/Backend/views/notices/analytics-consent.php';
+        $notice = WPSTG_VIEWS_DIR . 'notices/analytics-consent.php';
 
         if (!file_exists($notice)) {
             return;
@@ -63,7 +63,7 @@ class AnalyticsConsent
             return;
         }
 
-        $notice = WPSTG_PLUGIN_DIR . '/Backend/views/notices/analytics-consent-failed.php';
+        $notice = WPSTG_VIEWS_DIR . 'notices/analytics-consent-failed.php';
 
         if (!file_exists($notice)) {
             return;
@@ -129,7 +129,7 @@ class AnalyticsConsent
 
     public function showNoticeConsentRefused()
     {
-        $notice = WPSTG_PLUGIN_DIR . '/Backend/views/notices/analytics-consent-refused.php';
+        $notice = WPSTG_VIEWS_DIR . 'notices/analytics-consent-refused.php';
 
         if (!file_exists($notice)) {
             return;

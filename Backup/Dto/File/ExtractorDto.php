@@ -14,6 +14,9 @@ class ExtractorDto
     protected $totalFilesExtracted;
 
     /** @var int */
+    protected $totalFilesSkipped;
+
+    /** @var int */
     protected $totalChunks;
 
     /** @var int */
@@ -24,6 +27,7 @@ class ExtractorDto
         $this->indexStartOffset          = 0;
         $this->currentIndexOffset        = 0;
         $this->totalFilesExtracted       = 0;
+        $this->totalFilesSkipped         = 0;
         $this->totalChunks               = 0;
         $this->extractorFileWrittenBytes = 0;
     }
@@ -70,6 +74,20 @@ class ExtractorDto
         $this->totalFilesExtracted = $filesExtracted;
     }
 
+    public function getTotalFilesSkipped(): int
+    {
+        return $this->totalFilesSkipped;
+    }
+
+    /**
+     * @param int $filesSkipped
+     * @return void
+     */
+    public function setTotalFilesSkipped(int $filesSkipped)
+    {
+        $this->totalFilesSkipped = $filesSkipped;
+    }
+
     public function getTotalChunks(): int
     {
         return $this->totalChunks;
@@ -98,8 +116,19 @@ class ExtractorDto
         $this->extractorFileWrittenBytes = $extractorFileWrittenBytes;
     }
 
+    /**
+     * @return void
+     */
     public function incrementTotalFilesExtracted()
     {
         $this->totalFilesExtracted++;
+    }
+
+    /**
+     * @return void
+     */
+    public function incrementTotalFilesSkipped()
+    {
+        $this->totalFilesSkipped++;
     }
 }

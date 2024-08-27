@@ -118,7 +118,7 @@ class Notices
     public function __construct(Assets $assets)
     {
         $this->assets           = $assets;
-        $this->viewsNoticesPath = trailingslashit($this->getPluginPath()) . "Backend/views/notices/";
+        $this->viewsNoticesPath = WPSTG_VIEWS_DIR . "notices/";
 
         // To avoid dependency hell and smooth transition we will be using service locator for below dependencies
         $this->dirUtil         = WPStaging::make(Directory::class);
@@ -566,7 +566,7 @@ class Notices
 
         Hooks::doAction(self::INJECT_ANALYTICS_CONSENT_ASSETS_ACTION);
 
-        require_once "{$this->getPluginPath()}/Backend/views/notices/analytics-modal.php";
+        require_once WPSTG_VIEWS_DIR . "notices/analytics-modal.php";
     }
 
     /**

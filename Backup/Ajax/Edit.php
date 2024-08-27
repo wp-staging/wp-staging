@@ -5,14 +5,14 @@
 
 namespace WPStaging\Backup\Ajax;
 
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\BackupMetadataEditor;
+use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Sanitize;
-use WPStaging\Backup\Service\BackupMetadataEditor;
-use WPStaging\Backup\Service\BackupsFinder;
-use WPStaging\Backup\Entity\BackupMetadata;
 
 class Edit extends AbstractTemplateComponent
 {

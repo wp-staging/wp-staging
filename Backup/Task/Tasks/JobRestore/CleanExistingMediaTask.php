@@ -5,10 +5,11 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 
@@ -64,6 +65,12 @@ class CleanExistingMediaTask extends RestoreTask
 
     public function execute()
     {
+        if ($this->isBackupPartSkipped(PartIdentifier::UPLOAD_PART_IDENTIFIER)) {
+            $this->stepsDto->finish();
+            $this->logger->warning(sprintf(esc_html__('%s skipped because upload excluded by filter', 'wp-staging'), static::getTaskTitle()));
+            return $this->generateResponse(false);
+        }
+
         if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_MEDIA, false)) {
             $this->stepsDto->finish();
             $this->logger->info(sprintf(esc_html__('%s (skipped)', 'wp-staging'), static::getTaskTitle()));

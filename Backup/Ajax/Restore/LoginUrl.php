@@ -2,7 +2,6 @@
 
 namespace WPStaging\Backup\Ajax\Restore;
 
-use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Security\Nonce;

@@ -10,12 +10,12 @@ use RuntimeException;
 use WPStaging\Backup\BackupFileIndex;
 use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
-use WPStaging\Backup\Dto\JobDataDto;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Backup\Dto\Service\ArchiverDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupSkipItemException;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
-use WPStaging\Backup\Exceptions\NotFinishedException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\NotFinishedException;
 use WPStaging\Backup\FileHeader;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
@@ -322,6 +322,7 @@ class Archiver
 
         clearstatcache();
         $backupSizeBeforeAddingIndex = filesize($this->tempBackup->getFilePath());
+        $backupIndexFileSize         = filesize($this->tempBackupIndex->getFilePath());
 
         // Write the index to the backup file, regardless of resource limits threshold
         // @throws Exception
@@ -338,8 +339,9 @@ class Archiver
         fclose($indexResource);
 
         if ($this->jobDataDto->getRetries() > 3) {
-            debug_log('[Add File Index] Failed to write files-index to backup file!');
-            throw new Exception('Failed to write files-index to backup file!');
+            $indexSize = $backupIndexFileSize === false ? 0 : size_format($backupIndexFileSize, 3);
+            debug_log(sprintf('[Add File Index] Failed to write files-index to backup file! Tmp Size: %s. Index Size: %s', size_format($backupSizeBeforeAddingIndex, 3), $indexSize));
+            throw new Exception(sprintf('Failed to write files-index to backup file! Tmp Size: %s. Index Size: %s', size_format($backupSizeBeforeAddingIndex, 3), $indexSize));
         } elseif ($writtenBytes === 0) {
             debug_log('[Add File Index] Failed to write any byte to files-index! Retrying...');
         }

@@ -40,7 +40,7 @@ class LoginAfterRestore
         $isRestoredFromWpCom      = $this->getIsRestoredFromWpCom();
         $resetPasswordArticleLink = 'https://wp-staging.com/reset-your-wordpress-admin-password-manually/';
 
-        include __DIR__ . '/views/loginAfterRestore.php';
+        include WPSTG_VIEWS_DIR . 'frontend/loginAfterRestore.php';
     }
 
     /**

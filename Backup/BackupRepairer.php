@@ -5,10 +5,10 @@ namespace WPStaging\Backup;
 use Exception;
 use RuntimeException;
 use UnexpectedValueException;
-use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Backup\Service\BackupMetadataEditor;
+use WPStaging\Framework\Filesystem\FileObject;
 
 class BackupRepairer
 {

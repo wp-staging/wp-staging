@@ -4,12 +4,13 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
 use RuntimeException;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Service\Database\Importer\DatabaseSearchReplacerInterface;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Filesystem\MissingFileException;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
@@ -70,6 +71,13 @@ class RestoreDatabaseTask extends RestoreTask
      */
     public function execute(): TaskResponseDto
     {
+        if ($this->isBackupPartSkipped(PartIdentifier::DATABASE_PART_IDENTIFIER)) {
+            $this->jobDataDto->setIsDatabaseRestoreSkipped(true);
+            $this->logger->warning('Database restore skipped due to filter');
+            return $this->generateResponse(false);
+        }
+
+        $this->jobDataDto->setIsDatabaseRestoreSkipped(false);
         if ($this->jobDataDto->getIsMissingDatabaseFile()) {
             $partIndex = $this->jobDataDto->getDatabasePartIndex();
             $this->jobDataDto->setDatabasePartIndex($partIndex + 1);

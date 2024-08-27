@@ -9,25 +9,6 @@ trait NoticesTrait
     /** @var string */
     protected $noticesViewPath;
 
-    /** @var string|null */
-    protected $pluginPath = '';
-
-    /** @return string */
-    public function getPluginPath()
-    {
-        if ($this->pluginPath === '') {
-            $this->pluginPath = WPSTG_PLUGIN_DIR;
-        }
-
-        return $this->pluginPath;
-    }
-
-    /** @param string $pluginPath */
-    public function setPluginPath($pluginPath)
-    {
-        $this->pluginPath = $pluginPath;
-    }
-
     /**
      * Check whether the page is WP Staging admin page or not
      * @return bool

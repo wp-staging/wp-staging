@@ -5,7 +5,7 @@ namespace WPStaging\Backend\Modules\Jobs;
 use Exception;
 use RuntimeException;
 use WPStaging\Backend\Modules\Jobs\Cleaners\WpContentCleaner;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;

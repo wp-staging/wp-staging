@@ -12,9 +12,7 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
-use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\PathIdentifier;
-use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
@@ -42,7 +40,7 @@ use WPStaging\Backend\Feedback\Feedback;
 use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
-use WPStaging\Backend\Pro\WpstgRestore;
+use WPStaging\Backend\Pro\WpstgRestoreDownloader;
 
 /**
  * Class Administrator
@@ -65,6 +63,9 @@ class Administrator
      * @var string
      */
     private $path;
+
+    /** @var string */
+    private $viewsPath;
 
     /**
      * @var Assets
@@ -97,6 +98,7 @@ class Administrator
         $this->siteInfo   = WPStaging::make(SiteInfo::class);
         $this->report     = WPStaging::make(Report::class);
         $this->pluginInfo = WPStaging::make(PluginInfo::class);
+        $this->viewsPath  = WPSTG_VIEWS_DIR;
 
         $this->defineHooks();
 
@@ -133,7 +135,7 @@ class Administrator
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "downloadSystemInfoAndLogFiles"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backend\Pro\WpstgRestore')) {
+        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backend\Pro\WpstgRestoreDownloader')) {
             add_action("admin_post_wpstg_download_restorer", [$this, "downloadWpstgRestoreFile"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         }
 
@@ -374,7 +376,7 @@ class Administrator
             // Forms
             ->set("forms", new FormSettings($tabs));
 
-        require_once "{$this->path}views/settings/main-settings.php";
+        require_once "{$this->viewsPath}settings/main-settings.php";
     }
 
     /**
@@ -387,7 +389,9 @@ class Administrator
 
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
-        require_once "{$this->path}views/clone/index.php";
+        $isStagingPage = true;
+        $isBackupPage  = false;
+        require_once "{$this->viewsPath}clone/index.php";
     }
 
     /**
@@ -400,9 +404,9 @@ class Administrator
         // Existing clones
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
-        $isBackupPage = true;
-
-        require_once "{$this->path}views/clone/index.php";
+        $isBackupPage  = true;
+        $isStagingPage = false;
+        require_once "{$this->viewsPath}clone/index.php";
     }
 
     /**
@@ -414,7 +418,7 @@ class Administrator
             return;
         }
 
-        require_once "{$this->path}views/welcome/welcome.php";
+        require_once "{$this->viewsPath}welcome/welcome.php";
     }
 
     /**
@@ -434,32 +438,34 @@ class Administrator
         // Get license data
         $license = get_option('wpstg_license_status');
 
-        require_once "{$this->path}views/tools/index.php";
+        require_once "{$this->viewsPath}tools/index.php";
     }
 
     /**
      * WP Staging Restore Page
+     * @todo Move this to Pro namespace
      */
     public function getRestorerPage()
     {
         // Get license data
         $license = get_option('wpstg_license_status');
 
-        require_once "{$this->path}Pro/views/wpstg-restorer-ui.php";
+        require_once "{$this->viewsPath}pro/wpstg-restorer-ui.php";
     }
 
     /**
      * Download wpstg-restore.php file.
      * @see dev/docs/wpstg-restore/README.md
      * @return void
+     * @todo Move this to Pro namespace
      */
     public function downloadWpstgRestoreFile()
     {
-        if (!defined('WPSTGPRO_VERSION') || !class_exists('WPStaging\Backend\Pro\WpstgRestore', false)) {
+        if (!defined('WPSTGPRO_VERSION') || !class_exists('WPStaging\Backend\Pro\WpstgRestoreDownloader', false)) {
             wp_die('Invalid access', 'WP Staging Restore', ['response' => 403, 'back_link' => true]);
         }
 
-        $WpstgRestore = WPStaging::make('WPStaging\Backend\Pro\WpstgRestore');
+        $WpstgRestore = WPStaging::make('WPStaging\Backend\Pro\WpstgRestoreDownloader');
         $WpstgRestore->downloadFile();
     }
 
@@ -514,7 +520,7 @@ class Administrator
      */
     public function render($file, $vars = [])
     {
-        $fullPath = $this->path . "views/" . $file . ".php";
+        $fullPath = $this->viewsPath . $file . ".php";
         $fullPath = wp_normalize_path($fullPath);
 
         if (!file_exists($fullPath) || !is_readable($fullPath)) {
@@ -571,7 +577,7 @@ class Administrator
         /** @var SiteInfo */
         $siteInfo = WPStaging::make(SiteInfo::class);
         if ($siteInfo->isHostedOnWordPressCom()) {
-            require_once "{$this->path}views/clone/wordpress-com/index.php";
+            require_once "{$this->viewsPath}clone/wordpress-com/index.php";
             wp_die(); // Using wp_die instead of return here to make sure no 0 is appended to the response
         }
 
@@ -585,9 +591,9 @@ class Administrator
         // Get db
         $db = WPStaging::make('wpdb');
 
-        $iconPath = $this->assets->getAssetsUrl('svg/vendor/dashicons/cloud.svg');
+        $iconPath = $this->assets->getAssetsUrl('svg/cloud.svg');
 
-        require_once "{$this->path}views/clone/ajax/single-overview.php";
+        require_once "{$this->viewsPath}clone/ajax/single-overview.php";
 
         wp_die();
     }
@@ -619,7 +625,7 @@ class Administrator
         // Scan
         $scan = WPStaging::make(Scan::class);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
-        $scan->setInfoIcon($this->assets->getAssetsUrl('svg/vendor/dashicons/info-outline.svg'));
+        $scan->setInfoIcon($this->assets->getAssetsUrl('svg/info-outline.svg'));
         $scan->start();
 
         // Get Options
@@ -628,7 +634,7 @@ class Administrator
         $wpDefaultDirectories = WPStaging::make(WpDefaultDirectories::class);
         $isSiteHostedOnWpCom  = $siteInfo->isHostedOnWordPressCom();
         $isPro                = WPStaging::isPro();
-        require_once "{$this->path}views/clone/ajax/scan.php";
+        require_once "{$this->viewsPath}clone/ajax/scan.php";
 
         wp_die();
     }
@@ -711,7 +717,7 @@ class Administrator
         $options = $cloning->getOptions();
         WPStaging::make(AnalyticsStagingUpdate::class)->enqueueStartEvent($options->jobIdentifier, $options);
 
-        require_once "{$this->path}views/clone/ajax/update.php";
+        require_once "{$this->viewsPath}clone/ajax/update.php";
 
         wp_die();
     }
@@ -734,7 +740,7 @@ class Administrator
         $options = $cloning->getOptions();
         WPStaging::make(AnalyticsStagingReset::class)->enqueueStartEvent($options->jobIdentifier, $options);
 
-        require_once "{$this->path}views/clone/ajax/update.php";
+        require_once "{$this->viewsPath}clone/ajax/update.php";
         wp_die();
     }
 
@@ -763,7 +769,7 @@ class Administrator
             wp_die();
         }
 
-        require_once "{$this->path}views/clone/ajax/start.php";
+        require_once "{$this->viewsPath}clone/ajax/start.php";
 
         wp_die();
     }
@@ -850,7 +856,7 @@ class Administrator
 
         $dbname = $delete->getDbName();
 
-        require_once "{$this->path}views/clone/ajax/delete-confirmation.php";
+        require_once "{$this->viewsPath}clone/ajax/delete-confirmation.php";
 
         wp_die();
     }
@@ -1008,7 +1014,7 @@ class Administrator
         $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
             $clone = $existingClones[$this->sanitize->sanitizeString($_POST["clone"])];
-            require_once "{$this->path}Pro/views/edit-clone-data.php";
+            require_once "{$this->viewsPath}pro/edit-clone-data.php";
         } else {
             echo esc_html__("Unknown error. Please reload the page and try again", "wp-staging");
         }
@@ -1096,7 +1102,7 @@ class Administrator
         // Get Framework\Utils\Math
         $utilsMath = WPStaging::make(Math::class);
 
-        require_once "{$this->path}Pro/views/scan.php";
+        require_once "{$this->viewsPath}pro/scan.php";
 
         wp_die();
     }
@@ -1131,7 +1137,7 @@ class Administrator
 
         echo json_encode([
             'success' => true,
-            "content" => $templateEngine->render("/Backend/Pro/views/selections/tables.php", [
+            "content" => $templateEngine->render("pro/selections/tables.php", [
                 'isNetworkClone' => $scan->isNetworkClone(),
                 'options'        => $options,
                 'showAll'        => true,
@@ -1169,7 +1175,7 @@ class Administrator
         // Get license data
         $license = get_option('wpstg_license_status');
 
-        require_once "{$this->path}Pro/views/licensing.php";
+        require_once "{$this->viewsPath}pro/licensing.php";
     }
 
     /**
@@ -1273,7 +1279,7 @@ class Administrator
 
         echo json_encode([
             'success' => true,
-            "html"    => $templateEngine->render("/Backend/views/clone/ajax/exclude-settings.php", [
+            "html"    => $templateEngine->render("clone/ajax/exclude-settings.php", [
                 'scan'         => $scan,
                 'options'      => $scan->getOptions(),
                 'excludeUtils' => WPStaging::make(ExcludeFilter::class),

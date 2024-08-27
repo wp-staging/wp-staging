@@ -42,7 +42,7 @@ class Feedback
             $email = trim($current_user->user_email);
         }
 
-        include WPSTG_PLUGIN_DIR . 'Backend/views/feedback/deactivate-feedback.php';
+        include WPSTG_VIEWS_DIR . 'feedback/deactivate-feedback.php';
     }
 
     /**

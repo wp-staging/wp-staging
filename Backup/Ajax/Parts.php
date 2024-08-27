@@ -5,11 +5,11 @@
 
 namespace WPStaging\Backup\Ajax;
 
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
-use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Framework\Utils\Urls;
 
 class Parts extends AbstractTemplateComponent

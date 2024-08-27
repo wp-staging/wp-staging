@@ -4,8 +4,8 @@ namespace WPStaging\Basic\Backup;
 
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
-use WPStaging\Backup\Dto\JobDataDto;
-use WPStaging\Backup\Job\AbstractJob;
+use WPStaging\Framework\Job\Dto\JobDataDto;
+use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Backup\Job\Jobs\JobBackup;

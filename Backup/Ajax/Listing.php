@@ -33,7 +33,7 @@ class Listing extends AbstractTemplateComponent
         }
 
         if (!WPStaging::isPro() && is_multisite()) {
-            $result = $this->templateEngine->render('Backend/views/backup/free-version.php');
+            $result = $this->templateEngine->render('backup/free-version.php');
         } else {
             $directories = [
                 'uploads' => $this->directory->getUploadsDirectory(),
@@ -45,7 +45,7 @@ class Listing extends AbstractTemplateComponent
             ];
 
             $result = $this->templateEngine->render(
-                'Backend/views/backup/listing.php',
+                'backup/listing.php',
                 [
                     'directory' => $this->directory,
                     'urlAssets' => trailingslashit(WPSTG_PLUGIN_URL) . 'assets/',

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.6
-Stable tag: 3.8.3
+Stable tag: 3.8.4
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -283,7 +283,7 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 
 == Changelog ==
 
-= 3.8.3 =
+= 3.8.4 =
 * New: Compatible up to WordPress 6.6.1
 * UX: Make backup log window more appealing and consistent. #3604
 * UX: Refresh error message when clicking the backup menu tab. #3587

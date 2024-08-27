@@ -109,8 +109,17 @@ class Cloning extends Job
         // Generate Options
         // Clone ID -> timestamp (time at which this clone creation initiated)
         $this->options->clone = preg_replace("#\W+#", '-', strtolower($this->sanitize->sanitizeString($_POST["cloneID"])));
-        // Clone Name -> Site name that user input, if user left it empty it will be Clone ID
-        $this->options->cloneName = isset($_POST["cloneName"]) ? sanitize_text_field($_POST["cloneName"]) : '';
+
+        // Clone Name -> Site name that user input
+        if (isset($_POST["cloneName"])) {
+            $this->options->cloneName = sanitize_text_field($_POST["cloneName"]);
+        }
+
+        // If it's empty or it's a clone Id, try setting it to a random human-friendly name
+        if (empty($this->options->cloneName) || $this->options->cloneName === $this->options->clone) {
+            $this->options->cloneName = $this->maybeGenerateFriendlyName();
+        }
+
         // The slugified version of Clone Name (to use in directory creation)
         $this->options->cloneDirectoryName = $this->sitesHelper->sanitizeDirectoryName($this->options->cloneName);
         $result                            = $this->sitesHelper->isCloneExists($this->options->cloneDirectoryName);
@@ -161,7 +170,7 @@ class Cloning extends Job
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
             $this->options->cloneNumber = $this->options->existingClones[$this->options->clone]->number;
-            $this->options->prefix = isset($this->options->existingClones[$this->options->clone]->prefix) ? $this->options->existingClones[$this->options->clone]->prefix : $this->setStagingPrefix();
+            $this->options->prefix      = isset($this->options->existingClones[$this->options->clone]->prefix) ? $this->options->existingClones[$this->options->clone]->prefix : $this->setStagingPrefix();
 
         // Clone does not exist but there are other clones in db
         // Get data and increment it
@@ -244,8 +253,8 @@ class Cloning extends Job
         $this->options->databaseDatabase = '';
         // isExternalDatabase() depends upon databaseUser and databasePassword,
         // Make sure they are set before calling this.
-        $this->options->databasePrefix   = $this->isExternalDatabase() ? $this->db->prefix : '';
-        $this->options->databaseSsl      = false;
+        $this->options->databasePrefix = $this->isExternalDatabase() ? $this->db->prefix : '';
+        $this->options->databaseSsl    = false;
 
         // Custom Hosts
         $this->options->cloneDir      = '';
@@ -626,5 +635,56 @@ class Cloning extends Job
         }
 
         $this->logger->writeLogHeader();
+        $this->logger->writeInstalledPluginsAndThemes();
+    }
+
+    /**
+     * @return string The generated friendly name or clone Id by default
+     */
+    private function maybeGenerateFriendlyName(): string
+    {
+        // List of predefined names to choose from
+        $nameList = [
+            "enterprise",
+            "voyager",
+            "defiant",
+            "discovery",
+            "excelsior",
+            "intrepid",
+            "constitution",
+            "reliant",
+            "grissom",
+            "yamato",
+            "excelsior",
+            "venture",
+            "cerritos",
+            "prometheus",
+            "bellerophon",
+            "sanpablo",
+            "sutherland",
+            "shenzhou",
+            "titan",
+            "reliant",
+            "stargazer",
+            "franklin",
+            "protostar",
+        ];
+
+        // Randomly shuffle the list of names
+        shuffle($nameList);
+
+        foreach ($nameList as $name) {
+            // Sanitize the name to ensure it is safe for use
+            $name    = sanitize_text_field($name);
+            $dirPath = ABSPATH . $name;
+
+            // If it doesn't exist, return this name as the friendly name
+            if (!file_exists($dirPath)) {
+                return $name;
+            }
+        }
+
+        // If all predefined names are taken, return a clone Id
+        return (string)$this->options->clone;
     }
 }

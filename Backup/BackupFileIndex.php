@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backup;
 
-use WPStaging\Backup\Exceptions\FileValidationException;
+use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Backup\Interfaces\IndexLineInterface;
 
 class BackupFileIndex implements IndexLineInterface

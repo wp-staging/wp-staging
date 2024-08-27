@@ -3,11 +3,11 @@
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
 use WPStaging\Backup\Task\BackupTask;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\Exporter\DDLExporterProvider;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporterProvider;
 use WPStaging\Core\WPStaging;
@@ -17,6 +17,7 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use wpdb;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 
 class DatabaseBackupTask extends BackupTask
 {
@@ -24,11 +25,6 @@ class DatabaseBackupTask extends BackupTask
      * @var string
      */
     const FILE_FORMAT = 'sql';
-
-    /**
-     * @var string
-     */
-    const PART_IDENTIFIER = 'wpstgdb';
 
     /** @var Directory */
     protected $directory;
@@ -277,7 +273,7 @@ class DatabaseBackupTask extends BackupTask
             }
         }
 
-        $identifier = self::PART_IDENTIFIER;
+        $identifier = PartIdentifier::DATABASE_PART_IDENTIFIER;
         if ($partIndex > 0) {
             $identifier .= '.' . $partIndex;
         }

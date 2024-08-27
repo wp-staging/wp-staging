@@ -3,7 +3,6 @@
 namespace WPStaging\Backup\Dto\Job;
 
 use WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface;
-use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\IsExcludingTrait;
 use WPStaging\Backup\Dto\Traits\RemoteUploadTrait;
@@ -11,6 +10,7 @@ use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 
 class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 {

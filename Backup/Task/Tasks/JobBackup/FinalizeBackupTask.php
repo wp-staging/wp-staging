@@ -8,7 +8,7 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
 use RuntimeException;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
@@ -16,7 +16,7 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupMetadataEditor;
@@ -26,7 +26,8 @@ use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Vendor\lucatume\DI52\NotFoundException;
 use WPStaging\Backup\Dto\Service\ArchiverDto;
-use WPStaging\Backup\Exceptions\NotFinishedException;
+use WPStaging\Framework\Job\Exception\NotFinishedException;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\SiteInfo;
 
 class FinalizeBackupTask extends BackupTask
@@ -150,7 +151,7 @@ class FinalizeBackupTask extends BackupTask
         $incrementStep = true;
         if (!$metadataAdded) {
             $incrementStep = false;
-            $this->logger->info(sprintf('Written %d bytes to compressed backup', $archiverDto->getWrittenBytesTotal()));
+            $this->logger->info(sprintf('Adding backup metadata. Written %d bytes for finalizing backup', $archiverDto->getWrittenBytesTotal()));
         }
 
         return $this->generateResponse($incrementStep);
@@ -341,7 +342,7 @@ class FinalizeBackupTask extends BackupTask
             return;
         }
 
-        if ($this->currentFileInfo['category'] === DatabaseBackupTask::PART_IDENTIFIER) {
+        if ($this->currentFileInfo['category'] === PartIdentifier::DATABASE_PART_IDENTIFIER) {
             $this->currentFileInfo['status'] = 'IndexAdded';
             $this->jobDataDto->updateMultipartFileInfo($this->currentFileInfo, $this->currentFileIndex);
             return;

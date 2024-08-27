@@ -1,19 +1,23 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
-
 namespace WPStaging\Backup\Ajax;
 
-use WPStaging\Framework\Component\AbstractTemplateComponent;
-use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use Exception;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Framework\Component\AbstractTemplateComponent;
+use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 
 class FileInfo extends AbstractTemplateComponent
 {
     /** @var BackupsFinder */
     private $backupsFinder;
+
+    /** @var string[] */
+    private $excludedBackupParts;
 
     public function __construct(TemplateEngine $templateEngine, BackupsFinder $backupsFinder)
     {
@@ -21,6 +25,9 @@ class FileInfo extends AbstractTemplateComponent
         $this->backupsFinder = $backupsFinder;
     }
 
+    /**
+     * @return void
+     */
     public function render()
     {
         if (!$this->canRenderAjax()) {
@@ -34,22 +41,44 @@ class FileInfo extends AbstractTemplateComponent
 
         try {
             $info = (new BackupMetadata())->hydrateByFilePath($file);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             wp_send_json([
                 'error'   => true,
                 'message' => $e->getMessage(),
             ]);
         }
 
+        $this->excludedBackupParts = Hooks::applyFilters(RestoreTask::FILTER_EXCLUDE_BACKUP_PARTS, []);
+
+        $filters = [
+            'database'  => $this->isBackupPartSkipped(PartIdentifier::DATABASE_PART_IDENTIFIER),
+            'plugins'   => $this->isBackupPartSkipped(PartIdentifier::PLUGIN_PART_IDENTIFIER),
+            'themes'    => $this->isBackupPartSkipped(PartIdentifier::THEME_PART_IDENTIFIER),
+            'muPlugins' => $this->isBackupPartSkipped(PartIdentifier::MU_PLUGIN_PART_IDENTIFIER),
+            'uploads'   => $this->isBackupPartSkipped(PartIdentifier::UPLOAD_PART_IDENTIFIER),
+            'wpContent' => $this->isBackupPartSkipped(PartIdentifier::WP_CONTENT_PART_IDENTIFIER),
+            'wpRoot'    => $this->isBackupPartSkipped(PartIdentifier::WP_ROOT_PART_IDENTIFIER)
+        ];
+
         $viewData = [
-            'info' => $info
+            'info'    => $info,
+            'filters' => $filters
         ];
 
         $result = $this->templateEngine->render(
-            'Backend/views/backup/modal/confirm-restore.php',
+            'backup/modal/confirm-restore.php',
             $viewData
         );
 
         wp_send_json($result);
+    }
+
+    protected function isBackupPartSkipped(string $partName): bool
+    {
+        if (empty($this->excludedBackupParts)) {
+            return false;
+        }
+
+        return in_array($partName, $this->excludedBackupParts);
     }
 }

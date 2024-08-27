@@ -3,13 +3,13 @@
 namespace WPStaging\Backup;
 
 use SplFileInfo;
-use WPStaging\Backup\Exceptions\FileValidationException;
+use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Backup\Interfaces\IndexLineInterface;
-use WPStaging\Framework\Utils\Cache\BufferedCache;
-use WPStaging\Framework\Utils\DataEncoder;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
-use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Utils\Cache\BufferedCache;
+use WPStaging\Framework\Utils\DataEncoder;
 
 class FileHeader implements IndexLineInterface
 {

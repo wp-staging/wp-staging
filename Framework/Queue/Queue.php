@@ -7,7 +7,7 @@ namespace WPStaging\Framework\Queue;
 
 use WPStaging\Framework\Queue\Storage\CacheStorage;
 use WPStaging\Framework\Queue\Storage\StorageInterface;
-use WPStaging\Backup\Task\AbstractTask;
+use WPStaging\Framework\Job\Task\AbstractTask;
 
 /**
  * @todo this class in not used anymore. 14.12.2022 We will delete this class in version 4.4.2
