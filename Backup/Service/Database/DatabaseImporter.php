@@ -1,24 +1,24 @@
 <?php
 namespace WPStaging\Backup\Service\Database;
-use WPStaging\Framework\Queue\FinishedQueueException;
-use WPStaging\Framework\Traits\ResourceTrait;
+use RuntimeException;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
-use WPStaging\Backup\Dto\JobDataDto;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Exceptions\ThresholdException;
 use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Service\Database\Importer\QueryCompatibility;
-use WPStaging\Vendor\Psr\Log\LoggerInterface;
-use RuntimeException;
-use WPStaging\Backup\Service\Database\Importer\SubsiteManagerInterface;
-use WPStaging\Framework\Adapter\Database;
-use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
-use WPStaging\Framework\Filesystem\FileObject;
-use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Backup\Service\Database\Importer\SubsiteManagerInterface;
+use WPStaging\Framework\Adapter\DatabaseInterface;
+use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
+use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Exceptions\RetryException;
+use WPStaging\Framework\Filesystem\FileObject;
+use WPStaging\Framework\Job\Dto\JobDataDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Exception\ThresholdException;
+use WPStaging\Framework\Queue\FinishedQueueException;
+use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Strings;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use function WPStaging\functions\debug_log;
 class DatabaseImporter
 {
@@ -31,7 +31,6 @@ class DatabaseImporter
     private $stepsDto;
     private $searchReplace;
     private $searchReplaceForPrefix;
-    private $wpdb;
     private $tmpDatabasePrefix;
     private $jobRestoreDataDto;
     private $queryInserter;
@@ -44,7 +43,7 @@ class DatabaseImporter
     private $subsiteManager;
     protected $stringsUtil;
     public function __construct(
-        Database $database,
+        DatabaseInterface $database,
         JobDataDto $jobRestoreDataDto,
         QueryInserter $queryInserter,
         QueryCompatibility $queryCompatibility,
@@ -52,7 +51,6 @@ class DatabaseImporter
         Strings $stringsUtil
     ) {
         $this->client   = $database->getClient();
-        $this->wpdb     = $database->getWpdba();
         $this->database = $database;
         $this->jobRestoreDataDto  = $jobRestoreDataDto;
         $this->queryInserter      = $queryInserter;
@@ -110,7 +108,7 @@ class DatabaseImporter
     }
     protected function setupSearchReplaceForPrefix()
     {
-        $this->searchReplaceForPrefix = new SearchReplace(['{WPSTG_TMP_PREFIX}', '{WPSTG_FINAL_PREFIX}'], [$this->tmpDatabasePrefix, $this->wpdb->getClient()->prefix], true, []);
+        $this->searchReplaceForPrefix = new SearchReplace(['{WPSTG_TMP_PREFIX}', '{WPSTG_FINAL_PREFIX}'], [$this->tmpDatabasePrefix, $this->database->getPrefix()], true, []);
     }
     public function setup(LoggerInterface $logger, StepsDto $stepsDto, RestoreTask $task)
     {
@@ -464,23 +462,26 @@ class DatabaseImporter
         $result = $this->client->query($query, true);
         return $result !== false;
     }
-    private function replaceTableCollations(&$input)
+    private function replaceTableCollations(string &$input)
     {
         static $search  = [];
         static $replace = [];
-        if (empty($search) || empty($replace)) {
-            if (!$this->wpdb->getClient()->has_cap('utf8mb4_520')) {
-                if (!$this->wpdb->getClient()->has_cap('utf8mb4')) {
-                    $search  = ['utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci', 'utf8mb4'];
-                    $replace = ['utf8_unicode_ci', 'utf8_unicode_ci', 'utf8'];
-                } else {
-                    $search  = ['utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci'];
-                    $replace = ['utf8mb4_unicode_ci', 'utf8mb4_unicode_ci'];
-                }
-            } else {
-                $search  = ['utf8mb4_0900_ai_ci'];
-                $replace = ['utf8mb4_unicode_520_ci'];
-            }
+        if (!empty($search) && !empty($replace)) {
+            $input = str_replace($search, $replace, $input);
+            return;
+        }
+        if ($this->hasCapabilities('utf8mb4_520')) {
+            $search  = ['utf8mb4_0900_ai_ci'];
+            $replace = ['utf8mb4_unicode_520_ci'];
+            $input   = str_replace($search, $replace, $input);
+            return;
+        }
+        if (!$this->hasCapabilities('utf8mb4')) {
+            $search  = ['utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci', 'utf8mb4'];
+            $replace = ['utf8_unicode_ci', 'utf8_unicode_ci', 'utf8'];
+        } else {
+            $search  = ['utf8mb4_0900_ai_ci', 'utf8mb4_unicode_520_ci'];
+            $replace = ['utf8mb4_unicode_ci', 'utf8mb4_unicode_ci'];
         }
         $input = str_replace($search, $replace, $input);
     }
@@ -509,5 +510,50 @@ class DatabaseImporter
             return false;
         }
         return true;
+    }
+    private function hasCapabilities(string $capabilities): bool
+    {
+        $serverVersion = $this->serverVersion();
+        $serverInfo    = $this->serverInfo();
+        if ($serverVersion === '5.5.5' && strpos($serverInfo, 'MariaDB') !== false && PHP_VERSION_ID < 80016) {
+            $serverInfo    = preg_replace('@^5\.5\.5-(.*)@', '$1', $serverInfo);
+            $serverVersion = preg_replace('@[^0-9.].*@', '', $serverInfo);
+        }
+        switch (strtolower($capabilities)) {
+            case 'collation':
+                return version_compare($serverVersion, '4.1', '>=');
+            case 'set_charset':
+                return version_compare($serverVersion, '5.0.7', '>=');
+            case 'utf8mb4':
+                if (version_compare($serverVersion, '5.5.3', '<')) {
+                    return false;
+                }
+                $clienVersion = $this->clientInfo();
+                if (false !== strpos($clienVersion, 'mysqlnd')) {
+                    $clienVersion = preg_replace('@^\D+([\d.]+).*@', '$1', $clienVersion);
+                    return version_compare($clienVersion, '5.0.9', '>=');
+                } else {
+                    return version_compare($clienVersion, '5.5.3', '>=');
+                }
+            case 'utf8mb4_520':
+                return version_compare($serverVersion, '5.6', '>=');
+        }
+        return false;
+    }
+    private function clientInfo(): string
+    {
+        return !empty($this->client->getLink()->host_info) ? $this->client->getLink()->host_info : '';
+    }
+    private function serverInfo(): string
+    {
+        return !empty($this->client->getLink()->server_info) ? $this->client->getLink()->server_info : '';
+    }
+    private function serverVersion(): string
+    {
+        $serverInfo = $this->serverInfo();
+        if (stripos($serverInfo, 'MariaDB') !== false && preg_match('@^([0-9\.]+)\-([0-9\.]+)\-MariaDB@i', $serverInfo, $match)) {
+            return $match[2];
+        }
+        return preg_replace('@[^0-9\.].*@', '', $serverInfo);
     }
 }

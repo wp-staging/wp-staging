@@ -33,13 +33,6 @@ class Upgrade
     const OPTION_INSTALL_DATE = 'wpstg_free_install_date';
 
     /**
-     * This is not an actual existing email to use and should be removed from our dev env and replaced with dev@wp-staging.local.
-     * Once changed, remove this constant and related code.
-     * @var string
-     */
-    const WPSTG_DEV_EMAIL = 'dev@wp-staging.com';
-
-    /**
      * Previous Version number
      * @var string
      */
@@ -119,12 +112,6 @@ class Upgrade
                 if (is_object($userObject) && !empty($userObject->user_email)) {
                     $optionBackupScheduleReportEmail = $userObject->user_email;
                 }
-            }
-
-            // If from wpstg_settings or current user email
-            if ($optionBackupScheduleReportEmail === self::WPSTG_DEV_EMAIL) {
-                $optionBackupScheduleReportEmail = '';
-                update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, '');
             }
 
             update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);

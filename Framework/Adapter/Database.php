@@ -11,12 +11,12 @@ namespace WPStaging\Framework\Adapter;
 use RuntimeException;
 use wpdb;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Adapter\Database\MysqlAdapter;
 use WPStaging\Framework\Adapter\Database\MysqliAdapter;
 use WPStaging\Framework\Adapter\Database\WpDbAdapter;
+use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use SplObjectStorage;
 
-class Database
+class Database implements DatabaseInterface
 {
     /** @var MysqliAdapter */
     private $client;
@@ -50,10 +50,7 @@ class Database
         $this->client           = $this->findClient();
     }
 
-    /**
-     * @return MysqliAdapter|null
-     */
-    public function getClient()
+    public function getClient(): InterfaceDatabaseClient
     {
         return $this->client;
     }
@@ -73,7 +70,7 @@ class Database
      *
      * @return string
      */
-    public function getPrefix()
+    public function getPrefix(): string
     {
         if (WPStaging::isWindowsOs()) {
             return strtolower($this->wpdb->prefix);
@@ -85,7 +82,7 @@ class Database
     /**
      * @return string
      */
-    public function getBasePrefix()
+    public function getBasePrefix(): string
     {
         return $this->wpdb->base_prefix;
     }
@@ -158,7 +155,7 @@ class Database
      * @param bool $refresh if true fetch info again from server
      * @return string
      */
-    public function getSqlVersion($compact = false, $refresh = false)
+    public function getSqlVersion(bool $compact = false, bool $refresh = false): string
     {
         if ($refresh || empty($this->mysqlVersion)) {
             $this->mysqlVersion = $this->wpdb->get_var('SELECT VERSION()');
@@ -193,7 +190,7 @@ class Database
     }
 
     /**
-     * @return MysqliAdapter|MysqlAdapter
+     * @return MysqliAdapter
      */
     private function findClient()
     {
@@ -203,7 +200,7 @@ class Database
         }
 
         if (isset($this->wpdb->use_mysqli) && (bool)$this->wpdb->use_mysqli !== true) {
-            return new MysqlAdapter($link);
+            throw new RuntimeException('Use of mysql_* functions is not allowed');
         }
 
         return new MysqliAdapter($link);

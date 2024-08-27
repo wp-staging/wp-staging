@@ -12,7 +12,7 @@ class MysqliAdapter implements InterfaceDatabaseClient
     public $link;
 
     /**
-     * MysqlAdapter constructor.
+     * MysqliAdapter constructor.
      *
      * @param mysqli|null $link
      */
@@ -156,5 +156,13 @@ class MysqliAdapter implements InterfaceDatabaseClient
     public function foundRows()
     {
         return mysqli_affected_rows($this->link);
+    }
+
+    /**
+     * {@inheritdoc}
+     */
+    public function getLink()
+    {
+        return $this->link;
     }
 }

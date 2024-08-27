@@ -2,19 +2,38 @@
 
 namespace WPStaging\Backup;
 
+use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Security\AccessToken;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Framework\ThirdParty\NinjaForms;
 
 class AfterRestore
 {
+    /**
+     * @var TableService
+     */
     protected $tableService;
+
+    /**
+     * @var AccessToken
+     */
     protected $accessToken;
 
-    public function __construct(TableService $tableService, AccessToken $accessToken)
+    /**
+     * @var NinjaForms
+     */
+    protected $ninjaForms;
+
+    /**
+     * @param TableService $tableService
+     * @param AccessToken $accessToken
+     * @param NinjaForms $ninjaForms
+     */
+    public function __construct(TableService $tableService, AccessToken $accessToken, NinjaForms $ninjaForms)
     {
         $this->tableService = $tableService;
-        $this->accessToken = $accessToken;
+        $this->accessToken  = $accessToken;
+        $this->ninjaForms   = $ninjaForms;
     }
 
     /**
@@ -35,6 +54,7 @@ class AfterRestore
             $this->tableService->deleteTablesStartWith(PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP, [], true);
         }
 
+        $this->ninjaForms->mayBeDisableMaintenanceMode();
         $this->accessToken->generateNewToken();
         delete_option('wpstg.restore.justRestored');
         delete_option('wpstg.restore.justRestored.metadata');

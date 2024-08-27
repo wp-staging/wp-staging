@@ -7,7 +7,7 @@ use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\MySQLRowsGeneratorTrait;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
-use WPStaging\Backup\Dto\JobDataDto;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use function WPStaging\functions\debug_log;
 class RowsExporter extends AbstractExporter

@@ -2,8 +2,8 @@
 
 namespace WPStaging\Backup\Dto\Job;
 
-use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 
 class JobRestoreDataDto extends JobDataDto
 {
@@ -94,6 +94,9 @@ class JobRestoreDataDto extends JobDataDto
 
     /** @var bool */
     private $objectCacheSkipped = false;
+
+    /** @var bool */
+    private $isDatabaseRestoreSkipped = false;
 
     /**
      * @return string The .wpstg backup file being restored.
@@ -633,5 +636,22 @@ class JobRestoreDataDto extends JobDataDto
     public function setObjectCacheSkipped(bool $objectCacheSkipped)
     {
         $this->objectCacheSkipped = $objectCacheSkipped;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsDatabaseRestoreSkipped(): bool
+    {
+        return $this->isDatabaseRestoreSkipped;
+    }
+
+    /**
+     * @param bool $isDatabaseRestoreSkipped
+     * @return void
+     */
+    public function setIsDatabaseRestoreSkipped(bool $isDatabaseRestoreSkipped)
+    {
+        $this->isDatabaseRestoreSkipped = $isDatabaseRestoreSkipped;
     }
 }

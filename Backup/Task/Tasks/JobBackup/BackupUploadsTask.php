@@ -2,15 +2,14 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Backup\Task\FileBackupTask;
 
 class BackupUploadsTask extends FileBackupTask
 {
-    const IDENTIFIER = 'uploads';
-
     public static function getTaskName(): string
     {
-        return parent::getTaskName() . '_' . self::IDENTIFIER;
+        return parent::getTaskName() . '_' . PartIdentifier::UPLOAD_PART_IDENTIFIER;
     }
 
     public static function getTaskTitle(): string
@@ -20,6 +19,6 @@ class BackupUploadsTask extends FileBackupTask
 
     protected function getFileIdentifier(): string
     {
-        return self::IDENTIFIER;
+        return PartIdentifier::UPLOAD_PART_IDENTIFIER;
     }
 }

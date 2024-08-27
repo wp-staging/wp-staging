@@ -2,19 +2,14 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Backup\Task\FileBackupTask;
 
 class BackupOtherFilesTask extends FileBackupTask
 {
-    /**
-     * Changed to otherfiles from other because sanitize_file_name rename other.wpstg to other_.wpstg,
-     * Which causes issues for Backup Upload where sanitize_file_name is used.
-     */
-    const IDENTIFIER = 'otherfiles';
-
     public static function getTaskName(): string
     {
-        return parent::getTaskName() . '_' . self::IDENTIFIER;
+        return parent::getTaskName() . '_' . PartIdentifier::OTHER_WP_CONTENT_PART_IDENTIFIER;
     }
 
     public static function getTaskTitle(): string
@@ -24,6 +19,6 @@ class BackupOtherFilesTask extends FileBackupTask
 
     protected function getFileIdentifier(): string
     {
-        return self::IDENTIFIER;
+        return PartIdentifier::OTHER_WP_CONTENT_PART_IDENTIFIER;
     }
 }

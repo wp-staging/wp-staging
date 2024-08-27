@@ -2,9 +2,9 @@
 
 namespace WPStaging\Backup;
 
-use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Framework\Filesystem\FileObject;
 
 class BackupDeleter
 {

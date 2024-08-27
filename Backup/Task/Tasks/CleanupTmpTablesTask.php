@@ -2,12 +2,12 @@
 
 namespace WPStaging\Backup\Task\Tasks;
 
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Task\AbstractTask;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 

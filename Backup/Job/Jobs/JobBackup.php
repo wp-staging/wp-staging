@@ -3,7 +3,6 @@
 namespace WPStaging\Backup\Job\Jobs;
 
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
-use WPStaging\Backup\Job\AbstractJob;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupMuPluginsTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupOtherFilesTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\BackupPluginsTask;
@@ -18,6 +17,7 @@ use WPStaging\Backup\Task\Tasks\JobBackup\IncludeDatabaseTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\ScheduleBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\SignBackupTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\ValidateBackupTask;
+use WPStaging\Framework\Job\AbstractJob;
 
 class JobBackup extends AbstractJob
 {

@@ -3,7 +3,8 @@
 namespace WPStaging\Framework\Assets;
 
 use WPStaging\Backup\BackupServiceProvider;
-use WPStaging\Backup\Job\AbstractJob;
+use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
@@ -25,6 +26,9 @@ class Assets
      * @var string
      */
     const DEFAULT_ADMIN_BAR_BG = "#ff8d00";
+
+    /** @var string */
+    const FILTER_BACKUP_STATUS_REQUEST_INTERVAL = 'wpstg.backup.interval.status_request';
 
     private $accessToken;
 
@@ -276,6 +280,8 @@ class Assets
 
         $wpstgConfig = [
             "delayReq"               => 0,
+            // The interval in milliseconds between each request of backup status
+            'backupStatusInterval'   => Hooks::applyFilters(self::FILTER_BACKUP_STATUS_REQUEST_INTERVAL, 8000),
             // TODO: move directorySeparator to consts?
             "settings"               => (object)[
                 "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR
@@ -288,7 +294,7 @@ class Assets
             'ajaxUrl'                => admin_url('admin-ajax.php'),
             'wpstgIcon'              => $this->getAssetsUrl('img/wpstg-loader.gif'),
             'maxUploadChunkSize'     => $this->getMaxUploadChunkSize(),
-            'backupDBExtension'      => DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
+            'backupDBExtension'      => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
             'analyticsConsentAllow'  => esc_url($this->analyticsConsent->getConsentLink(true)),
             'analyticsConsentDeny'   => esc_url($this->analyticsConsent->getConsentLink(false)),
             'isPro'                  => WPStaging::isPro(),
@@ -307,7 +313,7 @@ class Assets
                 'showLogs'              => esc_html__('Show Logs', 'wp-staging'),
                 'hideLogs'              => esc_html__('Hide Logs', 'wp-staging'),
                 'noTableSelected'       => esc_html__('No table selected', 'wp-staging'),
-                'tablesSelected'        => esc_html__('{d} tables(s) selected', 'wp-staging'),
+                'tablesSelected'        => esc_html__('{d} of {t} tables(s) selected', 'wp-staging'),
                 'filesSelected'         => esc_html__('{t} theme{ts}, {p} plugin{ps}, {o} other folder{os} selected', 'wp-staging'),
                 'wpstg_cloning'         => [
                     'title' => esc_html__('Staging Site Created Successfully!', 'wp-staging'),

@@ -4,14 +4,12 @@
 
 namespace WPStaging\Framework\Adapter\Database;
 
-use mysqli_result;
-
 interface InterfaceDatabaseClient
 {
     /**
      * Runs given MySQL query
      * @param string $query
-     * @return resource|bool|mysqli_result
+     * @return resource|bool|\mysqli_result
      */
     public function query($query);
 
@@ -19,7 +17,7 @@ interface InterfaceDatabaseClient
      * Runs given MySQL query
      * @param string $query
      * @param bool $isExecOnly
-     * @return resource|bool|false|mysqli_result
+     * @return resource|bool|false|\mysqli_result
      */
     public function realQuery($query, $isExecOnly = false);
 
@@ -50,42 +48,42 @@ interface InterfaceDatabaseClient
 
     /**
      * Returns all the rows from MySQL query resource as array of associative arrays
-     * @param resource|mysqli_result $result
+     * @param resource|\mysqli_result $result
      * @return array
      */
     public function fetchAll($result);
 
     /**
      * Returns the results from MySQL query resource as associative array
-     * @param resource|mysqli_result $result
+     * @param resource|\mysqli_result $result
      * @return array
      */
     public function fetchAssoc($result);
 
     /**
      * Returns the result from MySQL query resource as row
-     * @param resource|mysqli_result $result
+     * @param resource|\mysqli_result $result
      * @return array
      */
     public function fetchRow($result);
 
     /**
      * Returns the result from MySQL query resource as an object
-     * @param resource|mysqli_result $result
+     * @param resource|\mysqli_result $result
      * @return array|object|false|null
      */
     public function fetchObject($result);
 
     /**
      * Returns the number for rows from MySQL results
-     * @param resource|mysqli_result $result
+     * @param resource|\mysqli_result $result
      * @return integer
      */
     public function numRows($result);
 
     /**
      * Free MySQL result memory
-     * @param resource|mysqli_result $result
+     * @param resource|\mysqli_result $result
      * @return null
      */
     public function freeResult($result);
@@ -110,4 +108,9 @@ interface InterfaceDatabaseClient
      *             is applied to it.
      */
     public function foundRows();
+
+    /**
+     * @return \mysqli|resource
+     */
+    public function getLink();
 }

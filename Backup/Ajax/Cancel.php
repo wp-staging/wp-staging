@@ -2,20 +2,21 @@
 
 namespace WPStaging\Backup\Ajax;
 
+use WPStaging\Backup\Job\Jobs\JobCancel;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\AnalyticsEventDto;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
-use WPStaging\Backup\BackupProcessLock;
-use WPStaging\Backup\Dto\JobDataDto;
-use WPStaging\Backup\Exceptions\ProcessLockedException;
-use WPStaging\Backup\Job\Jobs\JobCancel;
+use WPStaging\Framework\Job\ProcessLock;
+use WPStaging\Framework\Job\Dto\JobDataDto;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
 
 class Cancel extends AbstractTemplateComponent
 {
+    /** @var ProcessLock */
     protected $processLock;
 
-    public function __construct(TemplateEngine $templateEngine, BackupProcessLock $processLock)
+    public function __construct(TemplateEngine $templateEngine, ProcessLock $processLock)
     {
         $this->processLock = $processLock;
 

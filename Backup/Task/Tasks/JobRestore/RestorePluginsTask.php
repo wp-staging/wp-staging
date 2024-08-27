@@ -2,6 +2,7 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
 use WPStaging\Framework\Facades\Hooks;
@@ -33,10 +34,15 @@ class RestorePluginsTask extends FileRestoreTask
         return 'Restoring Plugins';
     }
 
+    protected function isSkipped(): bool
+    {
+        return $this->isBackupPartSkipped(PartIdentifier::PLUGIN_PART_IDENTIFIER);
+    }
+
     /**
-     * @inheritDoc
+     * @return array
      */
-    protected function getParts()
+    protected function getParts(): array
     {
         return $this->jobDataDto->getBackupMetadata()->getMultipartMetadata()->getPluginsParts();
     }

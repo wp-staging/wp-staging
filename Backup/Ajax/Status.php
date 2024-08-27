@@ -4,10 +4,10 @@ namespace WPStaging\Backup\Ajax;
 
 use WPStaging\Backup\Job\JobBackupProvider;
 use WPStaging\Backup\Job\JobRestoreProvider;
-use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Backup\Job\Jobs\JobRestore;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Component\AbstractTemplateComponent;
 
 class Status extends AbstractTemplateComponent
 {

@@ -5,12 +5,11 @@ namespace WPStaging\Core;
 use Exception;
 use RuntimeException;
 use WPStaging\Backend\Administrator;
-use WPStaging\Backend\Pro\Licensing\Licensing;
+use WPStaging\Pro\License\Licensing;
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Basic\BasicServiceProvider;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Logger;
-use WPStaging\Duplicator\DuplicatorServiceProvider;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\AnalyticsServiceProvider;
 use WPStaging\Framework\AssetServiceProvider;
@@ -115,7 +114,6 @@ final class WPStaging
 
         $this->container->register(AnalyticsServiceProvider::class);
 
-        $this->container->register(DuplicatorServiceProvider::class);
         $this->container->register(BackupServiceProvider::class);
 
         // Register Pro or Basic Provider, Always prefer registering Pro if both classes found. If both not present throw error

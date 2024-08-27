@@ -5,30 +5,39 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 
 class RestoreLanguageFilesTask extends FileRestoreTask
 {
     /** @var string */
     const FILTER_REPLACE_EXISTING_LANGUAGES = 'wpstg.backup.restore.replace_existing_languages';
 
-    public static function getTaskName()
+    public static function getTaskName(): string
     {
         return 'backup_restore_language_files';
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Restoring Language Files';
     }
 
+    protected function isSkipped(): bool
+    {
+        return $this->isBackupPartSkipped(PartIdentifier::LANGUAGE_PART_IDENTIFIER);
+    }
+
     /**
-     * @inheritDoc
+     * @return array
      */
-    protected function getParts()
+    protected function getParts(): array
     {
         return [];
     }
 
+    /**
+     * @return void
+     */
     protected function buildQueue()
     {
         try {
@@ -77,7 +86,7 @@ class RestoreLanguageFilesTask extends FileRestoreTask
      *          ]
      *
      */
-    private function getLanguageFilesToRestore()
+    private function getLanguageFilesToRestore(): array
     {
         $path = $this->jobDataDto->getTmpDirectory() . PathIdentifier::IDENTIFIER_LANG;
         $path = trailingslashit($path);
@@ -89,7 +98,7 @@ class RestoreLanguageFilesTask extends FileRestoreTask
      * @param string $path
      * @return array An array of paths of existing languages.
      */
-    private function getExistingLanguages($path)
+    private function getExistingLanguages(string $path): array
     {
         $path = trailingslashit($path);
 

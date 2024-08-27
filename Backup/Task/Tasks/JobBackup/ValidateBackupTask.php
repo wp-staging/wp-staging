@@ -4,11 +4,11 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use RuntimeException;
 use WPStaging\Backup\BackupValidator;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Restore\ExtractFilesTaskDto;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Backup\Service\Extractor;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Framework\Filesystem\FileObject;

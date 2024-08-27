@@ -8,22 +8,22 @@
 
 namespace WPStaging\Backup\BackgroundProcessing\Backup;
 
+use Exception;
+use WP_Error;
+use WPStaging\Backup\Ajax\Backup\PrepareBackup as AjaxPrepareBackup;
+use WPStaging\Backup\BackupScheduler;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Job\JobBackupProvider;
+use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Action;
 use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\BackgroundProcessing\QueueActionAware;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Traits\ResourceTrait;
-use WPStaging\Backup\Ajax\Backup\PrepareBackup as AjaxPrepareBackup;
-use Exception;
-use WP_Error;
-use WPStaging\Backup\BackupProcessLock;
-use WPStaging\Backup\BackupScheduler;
-use WPStaging\Backup\Dto\TaskResponseDto;
-use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Exceptions\ProcessLockedException;
-use WPStaging\Backup\Job\JobBackupProvider;
-use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Framework\Utils\Times;
 
 use function WPStaging\functions\debug_log;
@@ -75,8 +75,13 @@ class PrepareBackup
      *
      * @param AjaxPrepareBackup $ajaxPrepareBackup A reference to the object currently handling
      *                                             AJAX Backup preparation requests.
+     * @param Queue             $queue             A reference to the instance of the Queue manager the class
+     *                                             should use for processing.
+     * @param ProcessLock       $processLock       A reference to the Process Lock manager the class should use
+     *                                             to prevent concurrent processing of the job requests.
+     * @param Times             $times             A reference to the Times utility class.
      */
-    public function __construct(AjaxPrepareBackup $ajaxPrepareBackup, Queue $queue, BackupProcessLock $processLock, Times $times)
+    public function __construct(AjaxPrepareBackup $ajaxPrepareBackup, Queue $queue, ProcessLock $processLock, Times $times)
     {
         $this->ajaxPrepareBackup = $ajaxPrepareBackup;
         $this->queue             = $queue;
@@ -179,7 +184,7 @@ class PrepareBackup
 
         do {
             try {
-                /** @see WPStaging\Backup\Job\AbstractJob::prepareAndExecute() */
+                /** @see WPStaging\Framework\Job\AbstractJob::prepareAndExecute() */
                 $taskResponseDto = $this->jobBackup->prepareAndExecute();
                 $this->jobBackup->persist();
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);

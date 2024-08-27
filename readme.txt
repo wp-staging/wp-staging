@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.6
-Stable tag: 3.8.3
+Stable tag: 3.8.4
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -17,12 +17,16 @@ Backup Restore Migrate Staging Duplicator - 100% unit tested.
 == Description ==
 
 <h3>Backup, Staging, Cloning & Migration of WordPress Sites</h3>
-WP STAGING is a professional all in one <strong>backup, staging, and duplicator plugin</strong>. Create an exact copy and backup of your website in seconds! Perfect for staging, backup, or development purposes.
-(Cloning and backup time depends on the size of your website)
+WP STAGING is a professional all in one <strong>backup, staging, and duplicator plugin</strong>. Unit and e2e tested on an enterprise level for all version of php 7.0 - 8.3.
 
-This backup and staging tool creates a clone of your website into a subfolder or subdomain (Pro) of your main WordPress installation. The cloned site includes an entire copy of your database.
+Instantly* create an exact backup and clone of your website, perfect for staging, development, or simply keeping your data safe. *Cloning and backup time depends on the size of your website.
+Perfect for staging, backup, or development purposes.
 
-For pushing & migrating plugins and themes to the live site, creating a backup and upload a backup to cloud providers, check out [WP STAGING | PRO](https://wp-staging.com/backup-wordpress "WP STAGING - Backup & Cloning")
+With WP STAGING, you can easily clone your site to a subfolder or subdomain (Pro version), complete with a full database copy, ensuring a seamless transition and a reliable backup. All data stays on your server and will not be transferred to any third party!
+
+Our powerful backup tool is designed for speed and efficiency, making it one of the fastest backup and restore plugins available for WordPress. Even this free version allows you to restore a backup of your website in minutes if anything goes wrong. Experience peace of mind with WP STAGING.
+
+For pushing & migrating a staging site to the production site and uploading a backup to cloud providers and for more premium features, check out [WP STAGING | PRO](https://wp-staging.com/backup-wordpress "WP STAGING - Backup & Cloning")
 
 WP STAGING runs all the time-consumptive operations for database and file cloning and backup operations in the background. This tool does <strong>automatically a search & replacement</strong> of all links and paths.
 
@@ -30,7 +34,7 @@ WP STAGING runs all the time-consumptive operations for database and file clonin
 
 WP STAGING can prevent your website from breaking or going offline due to installing untested plugins!
 
-[youtube https://www.youtube.com/watch?v=vkv52s36Yvg]
+[vimeo https://vimeo.com/999447985]
 
 == Frequently Asked Questions ==
 
@@ -282,6 +286,41 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.8.4 =
+* New: Compatible up to WordPress 6.6.1
+* New: Add filter `wpstg.backup.restore.exclude_backup_parts` to skip plugins, mu-plugins, themes, uploads, database, other content and extra root folder if included during backup restore. #3625
+* New: Add option to download the WP Staging Restore script from wp-staging.com. #3376
+* New: New navigation bar that ensures a visually appealing user interface across all screen resolutions. #3473
+* New: Show count of total and selected database tables while doing cloning job. #3634
+* Enh: Log installed plugins and themes before performing a push job.(Pro) #3613
+* Enh: Disable "Load Remote Backups" button while loading backups. (pro) #3570
+* Enh: Improve error message when unable to add backup metadata or files-index in the backup in final step. #3396
+* Enh: Show triangle icon instead of checkbox in front of Advanced Settings link. #3593
+* Enh: Show OS and PHP architecture in system log. #3621
+* Enh: Create human-friendly default names for staging sites if no optional staging name is provided. "Star Trek - Live long and prosper!" #3614
+* Fix: Make clear what login credentials to use when WP Staging | Restore standalone installer is used on a new site after backup restore. #3680
+* Fix: Validate database prefix when creating a staging site to confirm it does not begin with the production site database prefix. #3553
+* Fix: Increase delay interval between backup status requests from 5 seconds to 8 seconds to reduce chances of 503 errors. Add filter `wpstg.backup.interval.status_request` to customize this value. #3611
+* Fix: Show actual installed free version in system information. #3594
+* Fix: Make sure that the `Reset` process works correctly even when the staging site database has FOREIGN_KEY_CHECKS enabled. #3686
+* Fix: Remove duplicate ajax requests for backup related operations. #3664
+* Fix: Make the validate icon displayed correctly. #3688
+* Fix: Search and replace does not work when url contains 'www.'. #3631
+* Fix: Make `Ninja Forms` work properly after performing backup restore. #3608
+* Dev: Fix e2e cloning tests. #3649
+* Dev: Move all views/templates/* to views/* folder. Also fix `Undefined array key page` warning. #3690
+* Dev: Move MemoryExhaust logic to src/Framework namespace. #3666
+* Dev: Replace internal email address #3541
+* Dev: Move classes/services out of Backup namespace that could be used with Cloning feature. #3668
+* Dev: Remove the wpdb dependency from DatabaseImporter class by decoupling the database logic through DatabaseInterface. #3642
+* Dev: Move all views to src/views/* folder. Move blank-theme and default wp-config.php to src/resources folder. #2825
+* Dev: Add v1 and v2 backup specification. #3518
+* Dev: Set up playwright env. #3578
+* Dev: Replace `docker-compose` with `docker compose` in fast tests, as `docker-compose` went missing in Github Actions. #3660
+* Dev: Move all classes from legacy folder Backend/Pro/Licensing to Pro/License. #2866
+* Dev: Improve npm commands to build and run Windows docker setup. #3012
+* Dev: Replace shorthand '-P' by its option name '--service-ports' in docker command that runs playwright. #3697
 
 = 3.8.3 =
 * New: Compatible up to WordPress 6.6.1
