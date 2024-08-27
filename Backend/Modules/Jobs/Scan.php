@@ -16,7 +16,7 @@ use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
@@ -622,7 +622,7 @@ class Scan extends Job
             $shouldBeChecked = false;
         }
 
-        return $this->templateEngine->render('Backend/views/clone/ajax/directory-navigation.php', [
+        return $this->templateEngine->render('clone/ajax/directory-navigation.php', [
             'scan'              => $this,
             'prefix'            => $prefix,
             'relPath'           => $relPath,

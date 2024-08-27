@@ -15,7 +15,7 @@ class TableService
     /** @var Database */
     private $database;
 
-    /** @var Database\InterfaceDatabase|Database\InterfaceDatabaseClient|Database\MysqlAdapter|Database\MysqliAdapter|null */
+    /** @var Database\DatabaseAdapterInterface|Database\InterfaceDatabaseClient|Database\MysqliAdapter|null */
     private $client;
 
     /** @var callable|null */
@@ -27,6 +27,9 @@ class TableService
     /** @var Strings */
     private $strHelper;
 
+    /**
+     * @param Database|null $database
+     */
     public function __construct(Database $database = null)
     {
         $this->database  = $database ?: new Database();
@@ -88,7 +91,7 @@ class TableService
      *
      * @return array
      */
-    public function getTablesName($tables)
+    public function getTablesName($tables): array
     {
         return (!is_array($tables)) ? [] : array_map(function ($table) {
             return ($table->getName());
@@ -154,7 +157,7 @@ class TableService
      *
      * @return string
      */
-    public function getCreateViewQuery($viewName)
+    public function getCreateViewQuery(string $viewName): string
     {
         $result = $this->client->query("SHOW CREATE VIEW `{$viewName}`");
         $row = $this->client->fetchAssoc($result);
@@ -175,7 +178,7 @@ class TableService
      *
      * @return string
      */
-    public function getCreateTableQuery($table_name)
+    public function getCreateTableQuery(string $table_name): string
     {
         $result = $this->client->query("SHOW CREATE TABLE `{$table_name}`");
         if ($result === false) {
@@ -197,11 +200,11 @@ class TableService
      * Delete all the tables or views that starts with $startsWith
      *
      * @param string $prefix
-     * @param array  $excludedTables
-     *
+     * @param array $excludedTables
+     * @param bool $deleteViews
      * @return bool
      */
-    public function deleteTablesStartWith($prefix, $excludedTables = [], $deleteViews = false)
+    public function deleteTablesStartWith(string $prefix, array $excludedTables = [], bool $deleteViews = false): bool
     {
         if ($deleteViews) {
             // Delete VIEWS first
@@ -236,12 +239,17 @@ class TableService
     /**
      * Delete Tables
      * @param array $tables
-     * @param string $prefix
      *
      * @return bool
      */
-    public function deleteTables($tables)
+    public function deleteTables($tables): bool
     {
+        $isForeignKeyCheckEnabled = false;
+        $isForeignKeyCheckEnabled = $this->database->getClient()->query("SELECT @@FOREIGN_KEY_CHECKS AS fk_check;")->fetch_assoc()['fk_check'];
+        if ($isForeignKeyCheckEnabled === "1") {
+            $this->database->getClient()->query("SET FOREIGN_KEY_CHECKS = 0;");
+        }
+
         foreach ($tables as $table) {
             // PROTECTION: Never delete any table that begins with wp prefix of live site
             if ($this->isProductionSiteTableOrView($table)) {
@@ -253,18 +261,20 @@ class TableService
             $this->database->getClient()->query("DROP TABLE `{$table}`;");
         }
 
+        if ($isForeignKeyCheckEnabled === "1") {
+            $this->database->getClient()->query("SET FOREIGN_KEY_CHECKS = 1;");
+        }
+
         return true;
     }
 
     /**
      * Delete Views
      *
-     * @param array  $views
-     * @param string $prefix
-     *
+     * @param array $views
      * @return bool
      */
-    public function deleteViews($views)
+    public function deleteViews($views): bool
     {
         foreach ($views as $view) {
             // PROTECTION: Never delete any table that begins with wp prefix of live site
@@ -289,10 +299,10 @@ class TableService
     }
 
     /**
-     * @param  string $likeCondition
+     * @param string $likeCondition
      * @return bool
      */
-    public function dropTablesLike($likeCondition)
+    public function dropTablesLike(string $likeCondition): bool
     {
         $wpdb = $this->database->getWpdb();
         $tables = $wpdb->get_results(
@@ -312,7 +322,7 @@ class TableService
     }
 
     /**
-     * @param string $tablename
+     * @param string $tableName
      * @return bool
      */
     public function dropTable(string $tableName): bool

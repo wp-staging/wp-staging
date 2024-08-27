@@ -3,11 +3,7 @@
 namespace WPStaging\Backup\Job\Jobs;
 
 use RuntimeException;
-use WPStaging\Backup\Dto\TaskResponseDto;
-use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
-use WPStaging\Backup\Job\AbstractJob;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Task\Tasks\CleanupBakTablesTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\StartRestoreTask;
@@ -25,6 +21,10 @@ use WPStaging\Backup\Task\Tasks\JobRestore\RestorePluginsTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreThemesTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\UpdateBackupsScheduleTask;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreFinishTask;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
+use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 
 class JobRestore extends AbstractJob
 {

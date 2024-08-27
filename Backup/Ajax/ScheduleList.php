@@ -2,13 +2,13 @@
 
 namespace WPStaging\Backup\Ajax;
 
+use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Storage\Providers;
-use WPStaging\Core\Cron\Cron;
-use WPStaging\Framework\Security\Capabilities;
-use WPStaging\Backup\BackupScheduler;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
+use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Utils\Times;
 
 /**
@@ -160,7 +160,7 @@ class ScheduleList
                             $isExportingUploads             = $schedule['isExportingUploads'];
                             $isExportingOtherWpContentFiles = $schedule['isExportingOtherWpContentFiles'];
                             $isExportingOtherWpRootFiles    = $schedule['isExportingOtherWpRootFiles'];
-                            include(trailingslashit(WPSTG_PLUGIN_DIR) . 'Backend/views/backup/modal/partials/backup-contains.php');
+                            include(WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-contains.php');
                             ?>
                         </li>
                     </ul>

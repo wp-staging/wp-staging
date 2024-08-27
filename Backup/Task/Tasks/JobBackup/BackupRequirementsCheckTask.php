@@ -10,8 +10,8 @@ use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\BackupScheduler;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -76,7 +76,7 @@ class BackupRequirementsCheckTask extends BackupTask
         try {
             $this->logger->info('#################### Start Backup Job ####################');
             $this->logger->writeLogHeader();
-
+            $this->logger->writeInstalledPluginsAndThemes();
             $this->cannotBackupMultisite();
             $this->shouldWarnIfRunning32Bits();
             $this->cannotBackupWithNoStorage();

@@ -11,7 +11,7 @@ use RuntimeException;
 use SplFileObject;
 use WPStaging\Core\WPStaging;
 use WPStaging\functions;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 
 use function tad\WPBrowser\debug;
 use function WPStaging\functions\debug_log;

@@ -14,12 +14,14 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
-use WPStaging\Backup\Dto\JobDataDto;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\JobDataDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
-use WPStaging\Backup\Exceptions\ThresholdException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\ThresholdException;
 use WPStaging\Backup\Task\RestoreTask;
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class RestoreRequirementsCheckTask extends RestoreTask
@@ -512,5 +514,45 @@ class RestoreRequirementsCheckTask extends RestoreTask
     protected function getUrlScheme(string $url): string
     {
         return parse_url($url, PHP_URL_SCHEME);
+    }
+
+    /**
+     * This method make sure that there should be something to restore from the backup
+     * Otherwise stop the restore process
+     * @throws RuntimeException
+     */
+    protected function checkNothingToRestore()
+    {
+        /** @var BackupMetadata */
+        $backupMetadata = $this->jobDataDto->getBackupMetadata();
+        if ($backupMetadata->getIsExportingDatabase() && !$this->isBackupPartSkipped(PartIdentifier::DATABASE_PART_IDENTIFIER)) {
+            return;
+        }
+
+        if ($backupMetadata->getIsExportingMuPlugins() && !$this->isBackupPartSkipped(PartIdentifier::MU_PLUGIN_PART_IDENTIFIER)) {
+            return;
+        }
+
+        if ($backupMetadata->getIsExportingPlugins() && !$this->isBackupPartSkipped(PartIdentifier::PLUGIN_PART_IDENTIFIER)) {
+            return;
+        }
+
+        if ($backupMetadata->getIsExportingThemes() && !$this->isBackupPartSkipped(PartIdentifier::THEME_PART_IDENTIFIER)) {
+            return;
+        }
+
+        if ($backupMetadata->getIsExportingUploads() && !$this->isBackupPartSkipped(PartIdentifier::UPLOAD_PART_IDENTIFIER)) {
+            return;
+        }
+
+        if ($backupMetadata->getIsExportingOtherWpContentFiles() && !$this->isBackupPartSkipped(PartIdentifier::WP_CONTENT_PART_IDENTIFIER)) {
+            return;
+        }
+
+        if ($backupMetadata->getIsExportingOtherWpRootFiles() && !$this->isBackupPartSkipped(PartIdentifier::WP_ROOT_PART_IDENTIFIER)) {
+            return;
+        }
+
+        throw new RuntimeException(esc_html(sprintf('Nothing to restore from the backup. The following backup parts are excluded from restore by the filter `%s`: %s.', RestoreTask::FILTER_EXCLUDE_BACKUP_PARTS, implode(', ', Hooks::applyFilters(RestoreTask::FILTER_EXCLUDE_BACKUP_PARTS, [])))));
     }
 }

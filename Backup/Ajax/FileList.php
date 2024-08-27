@@ -83,7 +83,7 @@ class FileList extends AbstractTemplateComponent
             $isValidLicenseKey = WPStaging::isValidLicense();
 
             if (empty($listableBackups) || ($isProVersion && !$isValidLicenseKey)) {
-                $output .= $this->renderTemplate('Backend/views/backup/listing-backups-no-results.php', [
+                $output .= $this->renderTemplate('backup/listing-backups-no-results.php', [
                     'urlAssets'         => $urlAssets,
                     'isProVersion'      => $isProVersion,
                     'isValidLicenseKey' => $isValidLicenseKey,
@@ -98,7 +98,7 @@ class FileList extends AbstractTemplateComponent
                     ];
 
                     $output .= $this->renderTemplate(
-                        'Backend/views/backup/listing-single-backup.php',
+                        'backup/listing-single-backup.php',
                         $viewData
                     );
                 }

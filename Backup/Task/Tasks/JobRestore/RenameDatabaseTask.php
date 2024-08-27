@@ -10,15 +10,16 @@ use WPStaging\Framework\Staging\Sites;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\BackupScheduler;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Restore\RenameDatabaseTaskDto;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
 use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\Database\TablesRenamer;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -77,6 +78,11 @@ class RenameDatabaseTask extends RestoreTask
      */
     public function execute(): TaskResponseDto
     {
+        if ($this->jobDataDto->getIsDatabaseRestoreSkipped()) {
+            $this->stepsDto->finish();
+            return $this->generateResponse();
+        }
+
         $this->setupTask();
 
         if ($this->jobDataDto->getIsMissingDatabaseFile()) {

@@ -2,8 +2,8 @@
 
 namespace WPStaging\Backup\Dto\Task\Restore;
 
-use WPStaging\Backup\Dto\AbstractTaskDto;
 use WPStaging\Backup\Dto\File\ExtractorDto;
+use WPStaging\Framework\Job\Dto\AbstractTaskDto;
 
 class ExtractFilesTaskDto extends AbstractTaskDto
 {
@@ -14,6 +14,9 @@ class ExtractFilesTaskDto extends AbstractTaskDto
     public $totalFilesExtracted;
 
     /** @var int */
+    public $totalFilesSkipped;
+
+    /** @var int */
     public $extractorFileWrittenBytes;
 
     public function toExtractorDto(): ExtractorDto
@@ -21,6 +24,7 @@ class ExtractFilesTaskDto extends AbstractTaskDto
         $extractorDto = new ExtractorDto();
         $extractorDto->setCurrentIndexOffset($this->currentIndexOffset ?? 0);
         $extractorDto->setTotalFilesExtracted($this->totalFilesExtracted ?? 0);
+        $extractorDto->setTotalFilesSkipped($this->totalFilesSkipped ?? 0);
         $extractorDto->setExtractorFileWrittenBytes($this->extractorFileWrittenBytes ?? 0);
 
         return $extractorDto;
@@ -34,6 +38,7 @@ class ExtractFilesTaskDto extends AbstractTaskDto
     {
         $this->currentIndexOffset        = $extractorDto->getCurrentIndexOffset();
         $this->totalFilesExtracted       = $extractorDto->getTotalFilesExtracted();
+        $this->totalFilesSkipped         = $extractorDto->getTotalFilesSkipped();
         $this->extractorFileWrittenBytes = $extractorDto->getExtractorFileWrittenBytes();
     }
 }

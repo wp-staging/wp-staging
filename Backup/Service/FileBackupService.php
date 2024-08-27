@@ -4,9 +4,9 @@ namespace WPStaging\Backup\Service;
 
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Dto\Service\ArchiverDto;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Exceptions\BackupSkipItemException;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Backup\Task\Tasks\JobBackup\FilesystemScannerTask;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Queue\FinishedQueueException;

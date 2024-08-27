@@ -259,7 +259,7 @@ class SystemInfo
         $optionBackupScheduleReportEmail        = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         $optionBackupScheduleSlackErrorReport   = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT);
         $optionBackupScheduleReportSlackWebhook = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK);
-
+        $wpStagingFreeVersion                   = wpstgGetPluginData('wp-staging.php');
         $output = PHP_EOL . "## WP Staging ##" . PHP_EOL . PHP_EOL;
 
         $output .= $this->info("Pro Version:", get_option('wpstgpro_version', self::NOT_SET_LABEL));
@@ -269,7 +269,7 @@ class SystemInfo
         // @see \WPStaging\Backend\Pro\Upgrade\Upgrade::OPTION_UPGRADE_DATE
         $output .= $this->info("Pro Update Date:", get_option('wpstgpro_upgrade_date', self::NOT_SET_LABEL));
         $output .= $this->info("Free or Pro Install Date (legacy):", get_option('wpstg_installDate', self::NOT_SET_LABEL));
-        $output .= $this->info("Free Version:", get_option('wpstg_version', self::NOT_SET_LABEL));
+        $output .= $this->info("Free Version:", empty($wpStagingFreeVersion['Version']) ? self::NOT_SET_LABEL : $wpStagingFreeVersion['Version']);
         $output .= $this->info("Free Install Date:", get_option(Upgrade::OPTION_INSTALL_DATE, self::NOT_SET_LABEL));
         $output .= $this->info("Free Update Date:", get_option(Upgrade::OPTION_UPGRADE_DATE, self::NOT_SET_LABEL));
         $output .= $this->info("Updated from Pro Version:", get_option('wpstgpro_version_upgraded_from') ?: self::NOT_SET_LABEL);
@@ -578,6 +578,8 @@ class SystemInfo
     {
         $output = $this->header("Start System Info");
         $output .= $this->info("Webserver:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
+        $output .= $this->info("OS architecture:", $this->getOSArchitecture());
+        $output .= $this->info("PHP compiled architecture:", $this->getPHPCompiledArchitecture());
         $output .= $this->info("MySQL Server Type:", $this->database->getServerType());
         $output .= $this->info("MySQL Version:", $this->database->getSqlVersion($compact = true));
         $output .= $this->info("MySQL Version Full Info:", $this->database->getSqlVersion());
@@ -962,12 +964,37 @@ class SystemInfo
             return $licenseKey;
         }
 
+        /** @var DataEncryption @dataEncryption */
         $dataEncryption = WPStaging::make(DataEncryption::class);
-        $publicKey      = $dataEncryption->getPublicKey();
+        // If phpseclib does not exist, return license key as it is
+        if (!$dataEncryption->isPhpSecLibAvailable()) {
+            return $licenseKey;
+        }
+
+        $publicKey = $dataEncryption->getPublicKey();
         if (empty($publicKey)) {
             return $licenseKey;
         }
 
         return $dataEncryption->rsaEncrypt($licenseKey, $publicKey);
+    }
+
+    protected function getPHPCompiledArchitecture(): string
+    {
+        if (PHP_INT_SIZE === 8) {
+            return "64-bit OS";
+        }
+
+        return "32-bit OS";
+    }
+
+    protected function getOSArchitecture(): string
+    {
+        $architecture = php_uname('m');
+        if (strpos($architecture, '64') !== false) {
+            return "64-bit OS";
+        }
+
+        return "32-bit OS";
     }
 }

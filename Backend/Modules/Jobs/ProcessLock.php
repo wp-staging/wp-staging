@@ -21,7 +21,7 @@ class ProcessLock extends JobExecutable
 
             $message = __('Hold on, another WP STAGING process is already running...', 'wp-staging');
 
-            require_once WPSTG_PLUGIN_DIR . "Backend/views/clone/ajax/process-lock.php";
+            require_once WPSTG_VIEWS_DIR . "clone/ajax/process-lock.php";
 
             wp_die();
         }

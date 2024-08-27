@@ -2,10 +2,9 @@
 
 namespace WPStaging\Backup\Dto\Traits;
 
-use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
-use WPStaging\Pro\Backup\Dto\Job\JobRemoteUploadDataDto;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 
 /**
  * Used for Remote Upload
@@ -15,7 +14,7 @@ trait RemoteUploadTrait
     /** @var bool */
     private $isAutomatedBackup = false;
 
-    /** @var int The size of all backup multipart files or single full backup file */
+    /** @var float The size of all backup multipart files or single full backup file */
     private $totalBackupSize = 0;
 
     /** @var array */
@@ -70,18 +69,18 @@ trait RemoteUploadTrait
     }
 
     /**
-     * @return int
+     * @return float
      */
-    public function getTotalBackupSize(): int
+    public function getTotalBackupSize(): float
     {
         return $this->totalBackupSize;
     }
 
     /**
-     * @param int $totalBackupSize
+     * @param float $totalBackupSize
      * @return void
      */
-    public function setTotalBackupSize(int $totalBackupSize)
+    public function setTotalBackupSize(float $totalBackupSize)
     {
         $this->totalBackupSize = $totalBackupSize;
     }
@@ -122,11 +121,11 @@ trait RemoteUploadTrait
 
     /**
      * @param string $uploadedFile
-     * @param int    $fileSize
+     * @param float    $fileSize
      * @param string $fileHash
      * @return void
      */
-    public function setUploadedFile(string $uploadedFile, int $fileSize, string $fileHash = '')
+    public function setUploadedFile(string $uploadedFile, float $fileSize, string $fileHash = '')
     {
         $this->uploadedFiles[$uploadedFile] = [
             'size' => $fileSize,

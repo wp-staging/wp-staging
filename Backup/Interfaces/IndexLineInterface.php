@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backup\Interfaces;
 
-use WPStaging\Backup\Exceptions\FileValidationException;
+use WPStaging\Framework\Job\Exception\FileValidationException;
 
 /**
  * Use in Backup Index Line

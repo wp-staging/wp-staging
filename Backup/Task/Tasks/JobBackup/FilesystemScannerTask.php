@@ -9,7 +9,7 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 use DirectoryIterator;
 use Exception;
 use SplFileInfo;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
@@ -19,8 +19,9 @@ use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Queue\FinishedQueueException;
@@ -159,7 +160,7 @@ class FilesystemScannerTask extends BackupTask
         $this->setupFilesystemScanner();
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_OTHER_WP_CONTENT_FILES) {
-            $this->currentPathScanning = BackupOtherFilesTask::IDENTIFIER;
+            $this->currentPathScanning = PartIdentifier::OTHER_WP_CONTENT_PART_IDENTIFIER;
             $this->setupFileBackupQueue();
             $this->scanWpContentDirectory();
             $this->unlockQueue();
@@ -167,7 +168,7 @@ class FilesystemScannerTask extends BackupTask
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_PLUGINS_FILES) {
-            $this->currentPathScanning = BackupPluginsTask::IDENTIFIER;
+            $this->currentPathScanning = PartIdentifier::PLUGIN_PART_IDENTIFIER;
             $this->setupFileBackupQueue();
             $this->scanPluginsDirectories();
             $this->unlockQueue();
@@ -175,7 +176,7 @@ class FilesystemScannerTask extends BackupTask
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_MU_PLUGINS_FILES) {
-            $this->currentPathScanning = BackupMuPluginsTask::IDENTIFIER;
+            $this->currentPathScanning = PartIdentifier::MU_PLUGIN_PART_IDENTIFIER;
             $this->setupFileBackupQueue();
             $this->scanMuPluginsDirectory();
             $this->unlockQueue();
@@ -183,7 +184,7 @@ class FilesystemScannerTask extends BackupTask
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_THEMES_FILES) {
-            $this->currentPathScanning = BackupThemesTask::IDENTIFIER;
+            $this->currentPathScanning = PartIdentifier::THEME_PART_IDENTIFIER;
             $this->setupFileBackupQueue();
             $this->scanThemesDirectory();
             $this->unlockQueue();
@@ -191,7 +192,7 @@ class FilesystemScannerTask extends BackupTask
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_UPLOADS_FILES) {
-            $this->currentPathScanning = BackupUploadsTask::IDENTIFIER;
+            $this->currentPathScanning = PartIdentifier::UPLOAD_PART_IDENTIFIER;
             $this->setupFileBackupQueue();
             $this->scanUploadsDirectory();
             $this->unlockQueue();
@@ -361,11 +362,6 @@ class FilesystemScannerTask extends BackupTask
         }, $this->getExcludedDirectories());
 
         $this->jobDataDto->setExcludedDirectories($excludedDirs);
-
-        // Browsers will do mime type sniffing on download. Adding binary to header avoids parsing as text/plain and forces download.
-        //if (!$this->jobDataDto->getIsMultipartBackup()) {
-        //    $this->enqueueFileInBackup(new \SplFileInfo(WPSTG_PLUGIN_DIR . 'Backup/wpstgBackupHeader.txt'));
-        //}
 
         $this->stepsDto->setTotal(self::TOTAL_STEPS);
         $this->taskQueue->seek(0);

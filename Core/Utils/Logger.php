@@ -36,6 +36,8 @@ class Logger implements LoggerInterface, ShutdownableInterface
 
     const TYPE_DEBUG    = "DEBUG";
 
+    const TYPE_INFO_SUB = "INFO_SUB";
+
     /**
      * @var string 
      */
@@ -370,6 +372,31 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
     }
 
+    /**
+     * @return void
+     */
+    public function writeInstalledPluginsAndThemes()
+    {
+        $allPlugins = get_plugins();
+        $activePlugins = get_option("active_plugins", []);
+        $allThemes = wp_get_themes();
+        $activeTheme = wp_get_theme();
+
+        $networkActivePlugins = [];
+        if (is_multisite()) {
+            $networkActivePlugins = array_keys(get_site_option("active_sitewide_plugins", []));
+        }
+
+        $this->info('Installed Plugins And Themes');
+
+        $this->listActivePlugins($allPlugins, $activePlugins, $networkActivePlugins);
+        $allActivePlugins = array_merge($activePlugins, $networkActivePlugins);
+        $this->listInactivePlugins($allPlugins, $allActivePlugins);
+        $this->listActiveTheme($activeTheme);
+        $this->listInactiveThemes($allThemes, $activeTheme);
+    }
+
+
     /** @return bool */
     protected function isDebugMode()
     {
@@ -378,5 +405,82 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
 
         return $this->settingsDto->isDebugMode();
+    }
+
+
+    /**
+     * @param array $allPlugins
+     * @param array $activePlugins
+     * @param array $networkActivePlugins
+     * @return void
+     */
+    protected function listActivePlugins(array $allPlugins, array $activePlugins, array $networkActivePlugins = [])
+    {
+        $isMultisite = is_multisite();
+
+        if ($isMultisite) {
+            $this->info("Activated Plugins on this Site");
+        } else {
+            $this->info("Activated Plugins");
+        }
+
+        foreach ($allPlugins as $path => $plugin) {
+            if (in_array($path, $activePlugins)) {
+                $this->add("- {$plugin['Name']} : {$plugin['Version']}", self::TYPE_INFO_SUB);
+            }
+        }
+
+        if ($isMultisite) {
+            $this->info("Activated Network Plugins");
+
+            foreach ($networkActivePlugins as $pluginPath) {
+                if (isset($allPlugins[$pluginPath])) {
+                    $plugin = $allPlugins[$pluginPath];
+                    $this->add("- {$plugin['Name']} : {$plugin['Version']}", self::TYPE_INFO_SUB);
+                }
+            }
+        }
+    }
+
+    /**
+     * @param array $allPlugins
+     * @param array $allActivePlugins
+     * @return void
+     */
+    protected function listInactivePlugins(array $allPlugins, array $allActivePlugins)
+    {
+        $this->info("Inactive Plugins");
+
+        foreach ($allPlugins as $path => $plugin) {
+            if (!in_array($path, $allActivePlugins)) {
+                $this->add("- {$plugin['Name']} : {$plugin['Version']}", self::TYPE_INFO_SUB);
+            }
+        }
+    }
+
+    /**
+     * @param \WP_Theme $activeTheme
+     * @return void
+     */
+    protected function listActiveTheme(\WP_Theme $activeTheme)
+    {
+        $this->info("Activated Theme");
+        $this->add("- {$activeTheme->get('Name')} : {$activeTheme->get('Version')}", self::TYPE_INFO_SUB);
+    }
+
+    /**
+     * @param array $allThemes
+     * @param \WP_Theme $activeTheme
+     * @return void
+     */
+    protected function listInactiveThemes(array $allThemes, \WP_Theme $activeTheme)
+    {
+        $this->info("Inactive Themes");
+
+        foreach ($allThemes as $theme) {
+            if ($theme->get_stylesheet() !== $activeTheme->get_stylesheet()) {
+                $this->add("- {$theme->get('Name')} : {$theme->get('Version')}", self::TYPE_INFO_SUB);
+            }
+        }
     }
 }

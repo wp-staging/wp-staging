@@ -2,10 +2,10 @@
 
 namespace WPStaging\Backup\Ajax\Restore;
 
-use WPStaging\Framework\Facades\Sanitize;
-use WPStaging\Framework\Security\Auth;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Framework\Facades\Sanitize;
+use WPStaging\Framework\Security\Auth;
 
 class ReadBackupMetadata
 {

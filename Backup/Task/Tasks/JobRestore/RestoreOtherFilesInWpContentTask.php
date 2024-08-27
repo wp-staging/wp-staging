@@ -2,6 +2,8 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
+use SplFileInfo;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
 use WPStaging\Framework\Facades\Hooks;
@@ -23,26 +25,32 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
      */
     const FILTER_KEEP_EXISTING_OTHER_FILES = 'wpstg.backup.restore.keepExistingOtherFiles';
 
-    public static function getTaskName()
+    public static function getTaskName(): string
     {
         return 'backup_restore_wp_content';
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Restoring Other Files in wp-content';
     }
 
+    protected function isSkipped(): bool
+    {
+        return $this->isBackupPartSkipped(PartIdentifier::WP_CONTENT_PART_IDENTIFIER);
+    }
+
     /**
-     * @inheritDoc
+     * @return array
      */
-    protected function getParts()
+    protected function getParts(): array
     {
         return $this->jobDataDto->getBackupMetadata()->getMultipartMetadata()->getOthersParts();
     }
 
     /**
      * The most critical step because it has to run in one request
+     * @return void
      */
     protected function buildQueue()
     {
@@ -170,7 +178,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
     /**
      * Skip these files from restoring.
      * Note: These files will still be cleaned up from the root of wp-content if they already exist while restoring.
-     * @param $excludedFilePath
+     * @param string $excludedFilePath
      * @return bool
      */
     protected function isExcludedOtherFile($excludedFilePath)
@@ -186,7 +194,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         return false;
     }
 
-    protected function isDot(\SplFileInfo $fileInfo): bool
+    protected function isDot(SplFileInfo $fileInfo): bool
     {
         return $fileInfo->getBasename() === '.' || $fileInfo->getBasename() === '..';
     }
@@ -215,7 +223,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
      *          ]
      *
      */
-    private function getOtherFilesToRestore()
+    private function getOtherFilesToRestore(): array
     {
         $path = $this->jobDataDto->getTmpDirectory() . PathIdentifier::IDENTIFIER_WP_CONTENT;
         $path = trailingslashit($path);
@@ -227,7 +235,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
      * @param string $path
      * @return array An array of paths of existing other files.
      */
-    private function getExistingOtherFiles($path)
+    private function getExistingOtherFiles(string $path): array
     {
         // If not a restore on subsite then return empty array
         if (!$this->isRestoreOnSubsite()) {

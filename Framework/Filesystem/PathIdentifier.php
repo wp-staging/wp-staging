@@ -175,6 +175,36 @@ class PathIdentifier
     }
 
     /**
+     * @return string
+     */
+    public function getIdentifierByPartName(string $key): string
+    {
+        static $cache = [];
+
+        if (!empty($cache) && !empty($key) && !empty($cache[$key])) {
+            return $cache[$key];
+        }
+
+        $list = [
+            PartIdentifier::WP_CONTENT_PART_IDENTIFIER => PathIdentifier::IDENTIFIER_WP_CONTENT,
+            PartIdentifier::PLUGIN_PART_IDENTIFIER     => PathIdentifier::IDENTIFIER_PLUGINS,
+            PartIdentifier::THEME_PART_IDENTIFIER      => PathIdentifier::IDENTIFIER_THEMES,
+            PartIdentifier::MU_PLUGIN_PART_IDENTIFIER  => PathIdentifier::IDENTIFIER_MUPLUGINS,
+            PartIdentifier::UPLOAD_PART_IDENTIFIER     => PathIdentifier::IDENTIFIER_UPLOADS,
+            PartIdentifier::LANGUAGE_PART_IDENTIFIER   => PathIdentifier::IDENTIFIER_LANG,
+            PartIdentifier::DATABASE_PART_IDENTIFIER   => PathIdentifier::IDENTIFIER_UPLOADS,
+            PartIdentifier::WP_ROOT_PART_IDENTIFIER    => PathIdentifier::IDENTIFIER_ABSPATH,
+        ];
+
+        if (!empty($key) && !empty($list[$key])) {
+            $cache[$key] = $list[$key];
+            return $cache[$key];
+        }
+
+        return '';
+    }
+
+    /**
      * @param string $identifier wpstg_p_
      *
      * @return string /var/www/single/wp-content/plugins/

@@ -2,9 +2,9 @@
 
 namespace WPStaging\Backup\Job\Jobs;
 
-use WPStaging\Backup\Job\AbstractJob;
 use WPStaging\Backup\Task\Tasks\CleanupTmpFilesTask;
 use WPStaging\Backup\Task\Tasks\CleanupTmpTablesTask;
+use WPStaging\Framework\Job\AbstractJob;
 
 class JobCancel extends AbstractJob
 {

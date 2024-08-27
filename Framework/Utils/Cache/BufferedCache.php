@@ -11,8 +11,8 @@ use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Framework\Exceptions\IOException;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Filesystem\FileObject;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
-use WPStaging\Backup\Exceptions\ThresholdException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\ThresholdException;
 
 use function WPStaging\functions\debug_log;
 

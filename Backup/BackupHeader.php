@@ -3,10 +3,10 @@
 namespace WPStaging\Backup;
 
 use RuntimeException;
+use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\DataEncoder;
 use WPStaging\Framework\Utils\Version;
-use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
 
 /**
  * Backup Header class
@@ -319,7 +319,7 @@ class BackupHeader
             return true;
         }
 
-        $wpstgBackupHeaderFile = WPSTG_PLUGIN_DIR . 'Backup/wpstgBackupHeader.txt';
+        $wpstgBackupHeaderFile = WPSTG_RESOURCES_DIR . 'wpstgBackupHeader.txt';
         if (!file_exists($wpstgBackupHeaderFile)) {
             return true;
         }
@@ -335,7 +335,7 @@ class BackupHeader
 
     public function getV1FormatHeader(): string
     {
-        $wpstgBackupHeaderFile = WPSTG_PLUGIN_DIR . 'Backup/wpstgBackupHeader.txt';
+        $wpstgBackupHeaderFile = WPSTG_RESOURCES_DIR . 'wpstgBackupHeader.txt';
         // Should not happen
         if (!file_exists($wpstgBackupHeaderFile)) {
             return "";

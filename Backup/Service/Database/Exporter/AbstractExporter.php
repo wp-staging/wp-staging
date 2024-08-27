@@ -3,7 +3,7 @@ namespace WPStaging\Backup\Service\Database\Exporter;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Filesystem\FileObject;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 abstract class AbstractExporter
 {
     protected $client;

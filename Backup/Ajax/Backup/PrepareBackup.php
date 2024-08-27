@@ -4,20 +4,20 @@ namespace WPStaging\Backup\Ajax\Backup;
 
 use wpdb;
 use WPStaging\Core\WPStaging;
+use WPStaging\Backup\Dto\Job\JobBackupDataDto;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Job\JobBackupProvider;
+use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\Ajax\PrepareJob;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Auth;
-use WPStaging\Framework\Utils\Urls;
-use WPStaging\Backup\Ajax\PrepareJob;
-use WPStaging\Backup\BackupProcessLock;
-use WPStaging\Backup\Dto\Job\JobBackupDataDto;
-use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Exceptions\ProcessLockedException;
-use WPStaging\Backup\Job\JobBackupProvider;
-use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Framework\Utils\SlashMode;
+use WPStaging\Framework\Utils\Urls;
 
 class PrepareBackup extends PrepareJob
 {
@@ -40,11 +40,11 @@ class PrepareBackup extends PrepareJob
      * @param Filesystem $filesystem
      * @param Directory $directory
      * @param Auth $auth
-     * @param BackupProcessLock $processLock
+     * @param ProcessLock $processLock
      * @param Urls $urls
      * @param AnalyticsBackupCreate $analyticsBackupCreate
      */
-    public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, BackupProcessLock $processLock, Urls $urls, AnalyticsBackupCreate $analyticsBackupCreate)
+    public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock, Urls $urls, AnalyticsBackupCreate $analyticsBackupCreate)
     {
         parent::__construct($filesystem, $directory, $auth, $processLock);
 
