@@ -8,7 +8,7 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Backup\BackupScheduler;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -35,7 +35,7 @@ class ScheduleBackupTask extends BackupTask
     }
 
     /**
-     * @return \WPStaging\Backup\Dto\TaskResponseDto
+     * @return \WPStaging\Framework\Job\Dto\TaskResponseDto
      * @throws \Exception
      */
     public function execute()

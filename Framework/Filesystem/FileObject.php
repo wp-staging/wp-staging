@@ -11,7 +11,7 @@ use RuntimeException;
 use SplFileObject;
 use WPStaging\Core\WPStaging;
 use WPStaging\functions;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 
 use function tad\WPBrowser\debug;
 use function WPStaging\functions\debug_log;
@@ -345,7 +345,7 @@ class FileObject extends SplFileObject
             return parent::fseek($offset, $whence);
         }
 
-        // After calling parent::fseek() and $this->>fgets() two or three times it starts to act different on PHP >= 8.0.19, PHP >= 8.1.6 and PHP >= 8.2.
+        // After calling parent::fseek() and $this->fgets() two or three times it starts to act different on PHP >= 8.0.19, PHP >= 8.1.6 and PHP >= 8.2.
         // Calling it three times helps to write a consistent fseek() for the above mentioned PHP versions.
         for ($i = 0; $i < 3; $i++) {
             parent::fseek(0);
@@ -353,7 +353,7 @@ class FileObject extends SplFileObject
         }
 
         $this->fseekUsed = true;
-        return parent::fseek($offset, $whence);
+        return parent::fseek((int)$offset, $whence);
     }
 
 

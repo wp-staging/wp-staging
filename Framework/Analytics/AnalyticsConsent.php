@@ -38,7 +38,7 @@ class AnalyticsConsent
             return;
         }
 
-        $notice = WPSTG_PLUGIN_DIR . '/Backend/views/notices/analytics-consent.php';
+        $notice = WPSTG_VIEWS_DIR . 'notices/analytics-consent.php';
 
         if (!file_exists($notice)) {
             return;
@@ -63,7 +63,7 @@ class AnalyticsConsent
             return;
         }
 
-        $notice = WPSTG_PLUGIN_DIR . '/Backend/views/notices/analytics-consent-failed.php';
+        $notice = WPSTG_VIEWS_DIR . 'notices/analytics-consent-failed.php';
 
         if (!file_exists($notice)) {
             return;
@@ -104,7 +104,7 @@ class AnalyticsConsent
             update_option(self::OPTION_NAME_ANALYTICS_HAS_CONSENT, '0', false);
             delete_option(self::OPTION_NAME_ANALYTICS_REMIND_ME);
 
-            add_action('admin_notices', [$this, 'showNoticeConsentRefused']);
+            add_action('wpstg.admin_notices', [$this, 'showNoticeConsentRefused']);
 
             return;
         }
@@ -129,7 +129,7 @@ class AnalyticsConsent
 
     public function showNoticeConsentRefused()
     {
-        $notice = WPSTG_PLUGIN_DIR . '/Backend/views/notices/analytics-consent-refused.php';
+        $notice = WPSTG_VIEWS_DIR . 'notices/analytics-consent-refused.php';
 
         if (!file_exists($notice)) {
             return;

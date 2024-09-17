@@ -1,8 +1,5 @@
 <?php
 
-// TODO PHP7.x; declare(strict_types=1);
-// TODO PHP7.x; type-hints & return types;
-
 namespace WPStaging\Framework\TemplateEngine;
 
 use DateTime;
@@ -19,13 +16,13 @@ class TemplateEngine implements TemplateEngineInterface
      *
      * @return string
      */
-    public function render($path, array $params = [])
+    public function render(string $path, array $params = []): string
     {
         if (!isset($this->views)) {
-            $this->views = WPSTG_PLUGIN_DIR . 'Backend/views/';
+            $this->views = WPSTG_VIEWS_DIR;
         }
 
-        $fullPath = WPSTG_PLUGIN_DIR . $path;
+        $fullPath = WPSTG_VIEWS_DIR . $path;
         if (!file_exists($fullPath)) {
             throw new TemplateEngineException('Template not found: ' . $fullPath);
         }
@@ -44,7 +41,7 @@ class TemplateEngine implements TemplateEngineInterface
      * @return string
      * @noinspection PhpUnused
      */
-    protected function getDateTimeFormat()
+    protected function getDateTimeFormat(): string
     {
         return (new DateTimeAdapter())->getDateTimeFormat();
     }
@@ -54,7 +51,7 @@ class TemplateEngine implements TemplateEngineInterface
      *
      * @return string
      */
-    protected function transformToWpFormat(DateTime $dateTime = null)
+    protected function transformToWpFormat($dateTime = null): string
     {
         if (!$dateTime) {
             return '';

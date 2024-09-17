@@ -2,12 +2,12 @@
 
 namespace WPStaging\Backup\Task\Tasks;
 
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Task\AbstractTask;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 
@@ -65,10 +65,10 @@ class CleanupTmpTablesTask extends AbstractTask
             // Double-check we are deleting a temporary table just to be extra-careful.
             if (strpos($tableOrViewName, $tmpTableType) !== 0) {
                 $this->logger->warning(sprintf(
-                    __('%s: Temporary table "%s" did not start with temporary prefix "%s" and was skipped.', 'wp-staging'),
+                    '%s: Temporary table "%s" did not start with temporary prefix "%s" and was skipped.',
                     static::getTaskTitle(),
-                    $tableOrViewName,
-                    $tmpTableType
+                    esc_html($tableOrViewName),
+                    esc_html($tmpTableType)
                 ));
 
                 continue;
@@ -89,17 +89,17 @@ class CleanupTmpTablesTask extends AbstractTask
 
             if ($deleted) {
                 $this->logger->debug(sprintf(
-                    __('%s: Deleted temporary %s "%s".', 'wp-staging'),
+                    '%s: Deleted temporary %s "%s".',
                     static::getTaskTitle(),
-                    $label,
-                    $tableOrViewName
+                    esc_html($label),
+                    esc_html($tableOrViewName)
                 ));
             } else {
                 $this->logger->warning(sprintf(
-                    __('%s: Temporary %s "%s" was not successfully cleaned up.', 'wp-staging'),
+                    '%s: Temporary %s "%s" was not successfully cleaned up.',
                     static::getTaskTitle(),
-                    $label,
-                    $tableOrViewName
+                    esc_html($label),
+                    esc_html($tableOrViewName)
                 ));
             }
         }
@@ -109,9 +109,9 @@ class CleanupTmpTablesTask extends AbstractTask
 
             // Successfully deleted
             $this->logger->info(sprintf(
-                __('%s: Tables with temporary prefix "%s" successfully cleaned up.', 'wp-staging'),
+                '%s: Tables with temporary prefix "%s" successfully cleaned up.',
                 static::getTaskTitle(),
-                $tmpTableType
+                esc_html($tmpTableType)
             ));
         }
 
@@ -133,9 +133,9 @@ class CleanupTmpTablesTask extends AbstractTask
 
         if ($wpdb->prefix === $tmpTableType) {
             $this->logger->warning(sprintf(
-                __('%s: Temporary table prefix "%s" is the same as the WordPress table prefix. This is not allowed.', 'wp-staging'),
+                '%s: Temporary table prefix "%s" is the same as the WordPress table prefix. This is not allowed.',
                 static::getTaskTitle(),
-                $tmpTableType
+                esc_html($tmpTableType)
             ));
 
             return;

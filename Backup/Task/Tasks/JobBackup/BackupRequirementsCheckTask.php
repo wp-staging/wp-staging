@@ -4,15 +4,17 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use RuntimeException;
 use WPStaging\Backend\Modules\SystemInfo;
+use WPStaging\Backup\Storage\Providers;
+use WPStaging\Core\Utils\Logger;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\BackupScheduler;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
-use WPStaging\Backup\Service\Compressor;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -30,11 +32,14 @@ class BackupRequirementsCheckTask extends BackupTask
     /** @var BackupScheduler */
     protected $backupScheduler;
 
-    /** @var Compressor */
-    private $compressor;
+    /** @var Archiver */
+    private $archiver;
 
     /** @var SystemInfo */
     protected $systemInfo;
+
+    /** @var Providers */
+    protected $providers;
 
     public function __construct(
         Directory $directory,
@@ -45,16 +50,18 @@ class BackupRequirementsCheckTask extends BackupTask
         DiskWriteCheck $diskWriteCheck,
         AnalyticsBackupCreate $analyticsBackupCreate,
         BackupScheduler $backupScheduler,
-        Compressor $compressor,
-        SystemInfo $systemInfo
+        Archiver $archiver,
+        SystemInfo $systemInfo,
+        Providers $providers
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
-        $this->directory = $directory;
-        $this->diskWriteCheck = $diskWriteCheck;
+        $this->directory             = $directory;
+        $this->diskWriteCheck        = $diskWriteCheck;
         $this->analyticsBackupCreate = $analyticsBackupCreate;
-        $this->backupScheduler = $backupScheduler;
-        $this->compressor = $compressor;
-        $this->systemInfo = $systemInfo;
+        $this->backupScheduler       = $backupScheduler;
+        $this->archiver              = $archiver;
+        $this->systemInfo            = $systemInfo;
+        $this->providers             = $providers;
     }
 
     public static function getTaskName()
@@ -76,7 +83,7 @@ class BackupRequirementsCheckTask extends BackupTask
         try {
             $this->logger->info('#################### Start Backup Job ####################');
             $this->logger->writeLogHeader();
-
+            $this->logger->writeInstalledPluginsAndThemes();
             $this->cannotBackupMultisite();
             $this->shouldWarnIfRunning32Bits();
             $this->cannotBackupWithNoStorage();
@@ -91,12 +98,9 @@ class BackupRequirementsCheckTask extends BackupTask
             return $this->generateResponse(false);
         }
 
-        $isMultipartBackup = $this->jobDataDto->getIsMultipartBackup() ? 'Yes' : 'No';
-        $this->logger->info(sprintf(__('Is Multipart Backup: %s ', 'wp-staging'), esc_html($isMultipartBackup)));
-
         $this->addBackupSettingsToLogs();
 
-        $this->logger->info(__('Backup requirements passed...', 'wp-staging'));
+        $this->logger->info('Backup requirements passed...');
 
         $this->backupScheduler->maybeDeleteOldBackups($this->jobDataDto);
 
@@ -108,7 +112,7 @@ class BackupRequirementsCheckTask extends BackupTask
     protected function shouldWarnIfRunning32Bits()
     {
         if (PHP_INT_SIZE === 4) {
-            $this->logger->warning(__('You are running a 32-bit version of PHP. 32-bits PHP can\'t handle backups larger than 2GB. You might face a critical error. Consider upgrading to 64-bit.', 'wp-staging'));
+            $this->logger->warning('You are running a 32-bit version of PHP. 32-bits PHP can\'t handle backups larger than 2GB. You might face a critical error. Consider upgrading to 64-bit.');
         }
     }
 
@@ -135,6 +139,7 @@ class BackupRequirementsCheckTask extends BackupTask
             && !$this->jobDataDto->getIsExportingMuPlugins()
             && !$this->jobDataDto->getIsExportingThemes()
             && !$this->jobDataDto->getIsExportingOtherWpContentFiles()
+            && !$this->jobDataDto->getIsExportingOtherWpRootFiles()
         ) {
             throw new RuntimeException(__('You must select at least one item to backup.', 'wp-staging'));
         }
@@ -191,6 +196,12 @@ class BackupRequirementsCheckTask extends BackupTask
                 throw new RuntimeException(sprintf(__('PHP does not have enough permission to read the wp-content directory: %s', 'wp-staging'), $this->directory->getWpContentDirectory()));
             }
         }
+
+        if ($this->jobDataDto->getIsExportingOtherWpRootFiles()) {
+            if (!is_readable($this->directory->getAbsPath())) {
+                throw new RuntimeException(sprintf(__('PHP does not have enough permission to read the WordPress root directory: %s', 'wp-staging'), $this->directory->getAbsPath()));
+            }
+        }
     }
 
     protected function maybeCreateMainIndexFile()
@@ -205,7 +216,7 @@ class BackupRequirementsCheckTask extends BackupTask
             return;
         }
 
-        $this->compressor->setCategory('', $create = true);
+        $this->archiver->createArchiveFile(Archiver::CREATE_BINARY_HEADER);
     }
 
     /**
@@ -213,13 +224,15 @@ class BackupRequirementsCheckTask extends BackupTask
      */
     protected function addBackupSettingsToLogs()
     {
-        $this->logInformation('Backup Contents', $this->getBackupContents());
-
-        $this->logInformation('Advanced Exclude Options', $this->getSmartExclusion());
-
-        $this->logInformation('Schedule Options', $this->getBackupScheduleOptions());
-
-        $this->logInformation('Storages', $this->jobDataDto->getStorages());
+        $this->logger->info('Backup Settings');
+        $this->logInformation($this->getBackupContents());
+        $this->logInformation($this->getSmartExclusion());
+        $this->logger->add('- Backup Run in Background : ' . ($this->jobDataDto->getIsCreateBackupInBackground() ?  'True' : 'False'), Logger::TYPE_INFO_SUB);
+        $this->logger->add('- Backup Validate : ' . ($this->jobDataDto->getIsValidateBackupFiles() ? 'True' : 'False'), Logger::TYPE_INFO_SUB);
+        $this->logInformation($this->getBackupScheduleOptions());
+        $this->logger->add('- Is Multipart Backup: ' . ($this->jobDataDto->getIsMultipartBackup() ? 'Yes' : 'No'), Logger::TYPE_INFO_SUB);
+        $this->logger->add('- Storages : ' . implode(', ', $this->jobDataDto->getStorages()), Logger::TYPE_INFO_SUB);
+        $this->writeCloudServiceSettingsToLogs();
     }
 
     /**
@@ -228,12 +241,13 @@ class BackupRequirementsCheckTask extends BackupTask
     private function getBackupContents(): array
     {
         return [
-            'Media Library'             => $this->jobDataDto->getIsExportingUploads(),
-            'Themes'                    => $this->jobDataDto->getIsExportingThemes(),
-            'Must-Use Plugins'          => $this->jobDataDto->getIsExportingMuPlugins(),
-            'Plugins'                   => $this->jobDataDto->getIsExportingPlugins(),
-            'Other Files In wp-content' => $this->jobDataDto->getIsExportingOtherWpContentFiles(),
-            'Database'                  => $this->jobDataDto->getIsExportingDatabase(),
+            'Backup Media Library'             => $this->jobDataDto->getIsExportingUploads(),
+            'Backup Themes'                    => $this->jobDataDto->getIsExportingThemes(),
+            'Backup Must-Use Plugins'          => $this->jobDataDto->getIsExportingMuPlugins(),
+            'Backup Plugins'                   => $this->jobDataDto->getIsExportingPlugins(),
+            'Backup Other Files In wp-content' => $this->jobDataDto->getIsExportingOtherWpContentFiles(),
+            'Backup Other Files In wp root'    => $this->jobDataDto->getIsExportingOtherWpRootFiles(),
+            'Backup Database'                  => $this->jobDataDto->getIsExportingDatabase(),
         ];
     }
 
@@ -242,7 +256,10 @@ class BackupRequirementsCheckTask extends BackupTask
      */
     private function getSmartExclusion(): array
     {
-        $smartExclusion = ['No'];
+        $smartExclusion = [
+            'Add Exclusions' => $this->jobDataDto->getIsSmartExclusion() ? 'True' : 'False',
+            ];
+
         if ($this->jobDataDto->getIsSmartExclusion()) {
             $smartExclusion = [
                 'Exclude log files'           => $this->jobDataDto->getIsExcludingLogs(),
@@ -262,12 +279,15 @@ class BackupRequirementsCheckTask extends BackupTask
      */
     private function getBackupScheduleOptions(): array
     {
-        $scheduleOptions = ['No'];
+        $scheduleOptions = [
+            'Backup One Time' => $this->jobDataDto->getRepeatBackupOnSchedule() === false ? 'True' : 'False',
+        ];
+
         if ($this->jobDataDto->getRepeatBackupOnSchedule()) {
             $scheduleOptions = [
                 'Recurrence' => $this->jobDataDto->getScheduleRecurrence(),
-                'Time'       => $this->jobDataDto->getScheduleTime(),
-                'Retention'  => $this->jobDataDto->getScheduleRotation(),
+                'Time'       => implode(':', $this->jobDataDto->getScheduleTime()),
+                'Retention'  => $this->jobDataDto->getScheduleRotation() ? 'True' : 'False',
                 'Launch Now' => $this->jobDataDto->getIsCreateScheduleBackupNow(),
             ];
         }
@@ -276,13 +296,38 @@ class BackupRequirementsCheckTask extends BackupTask
     }
 
     /**
-     * @param string message
-     * @param array data
-     *
+     * @param array $data
      * @return void
      */
-    private function logInformation(string $message, array $data)
+    private function logInformation(array $data)
     {
-        $this->logger->info(sprintf(esc_html('%s: %s'), $message, wp_json_encode($data)));
+        foreach ($data as $key => $value) {
+            if (is_bool($value)) {
+                $value = $value ? 'True' : 'False';
+            }
+
+            $this->logger->add(sprintf('- %s : %s', esc_html($key), esc_html($value)), Logger::TYPE_INFO_SUB);
+        }
+    }
+
+    /**
+     * @return void
+     */
+    private function writeCloudServiceSettingsToLogs()
+    {
+        foreach ($this->jobDataDto->getStorages() as $storage) {
+            if ($storage === 'localStorage') {
+                continue;
+            }
+
+            $authClass    = $this->providers->getStorageProperty($storage, 'authClass', true);
+            $providerName = $this->providers->getStorageProperty($storage, 'name', true);
+
+            if (!$authClass || !class_exists($authClass) || empty($providerName)) {
+                continue;
+            }
+
+            $this->logger->logProviderSettings($providerName, $authClass);
+        }
     }
 }

@@ -4,19 +4,20 @@ namespace WPStaging\Backup\Ajax\Backup;
 
 use wpdb;
 use WPStaging\Core\WPStaging;
+use WPStaging\Backup\Dto\Job\JobBackupDataDto;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Job\JobBackupProvider;
+use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\Ajax\PrepareJob;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Auth;
+use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Utils\Urls;
-use WPStaging\Backup\Ajax\PrepareJob;
-use WPStaging\Backup\BackupProcessLock;
-use WPStaging\Backup\Dto\Job\JobBackupDataDto;
-use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Exceptions\ProcessLockedException;
-use WPStaging\Backup\Job\JobBackupProvider;
-use WPStaging\Backup\Job\Jobs\JobBackup;
 
 class PrepareBackup extends PrepareJob
 {
@@ -39,11 +40,11 @@ class PrepareBackup extends PrepareJob
      * @param Filesystem $filesystem
      * @param Directory $directory
      * @param Auth $auth
-     * @param BackupProcessLock $processLock
+     * @param ProcessLock $processLock
      * @param Urls $urls
      * @param AnalyticsBackupCreate $analyticsBackupCreate
      */
-    public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, BackupProcessLock $processLock, Urls $urls, AnalyticsBackupCreate $analyticsBackupCreate)
+    public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock, Urls $urls, AnalyticsBackupCreate $analyticsBackupCreate)
     {
         parent::__construct($filesystem, $directory, $auth, $processLock);
 
@@ -93,11 +94,13 @@ class PrepareBackup extends PrepareJob
                 'isExportingThemes'              => 'bool',
                 'isExportingUploads'             => 'bool',
                 'isExportingOtherWpContentFiles' => 'bool',
+                'isExportingOtherWpRootFiles'    => 'bool',
                 'isExportingDatabase'            => 'bool',
                 'isAutomatedBackup'              => 'bool',
                 'repeatBackupOnSchedule'         => 'bool',
                 'scheduleRotation'               => 'int',
                 'isCreateScheduleBackupNow'      => 'bool',
+                'isCreateBackupInBackground'     => 'bool',
                 'isSmartExclusion'               => 'bool',
                 'isExcludingSpamComments'        => 'bool',
                 'isExcludingPostRevision'        => 'bool',
@@ -105,7 +108,9 @@ class PrepareBackup extends PrepareJob
                 'isExcludingUnusedThemes'        => 'bool',
                 'isExcludingLogs'                => 'bool',
                 'isExcludingCaches'              => 'bool',
+                'isValidateBackupFiles'          => 'bool',
                 'backupType'                     => 'string',
+                'backupExcludedDirectories'      => 'string',
             ]);
             $data['name'] = isset($_POST['wpstgBackupData']['name']) ? htmlentities(sanitize_text_field($_POST['wpstgBackupData']['name']), ENT_QUOTES) : '';
         }
@@ -182,6 +187,7 @@ class PrepareBackup extends PrepareJob
             'isExportingThemes'              => false,
             'isExportingUploads'             => false,
             'isExportingOtherWpContentFiles' => false,
+            'isExportingOtherWpRootFiles'    => false,
             'isExportingDatabase'            => false,
             'isAutomatedBackup'              => false,
             'repeatBackupOnSchedule'         => false,
@@ -192,6 +198,7 @@ class PrepareBackup extends PrepareJob
             'scheduleId'                     => null,
             'storages'                       => [],
             'isCreateScheduleBackupNow'      => false,
+            'isCreateBackupInBackground'     => false,
             'sitesToBackup'                  => $sites,
             'backupType'                     => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
             'subsiteBlogId'                  => get_current_blog_id(),
@@ -202,7 +209,9 @@ class PrepareBackup extends PrepareJob
             'isExcludingUnusedThemes'        => false,
             'isExcludingLogs'                => false,
             'isExcludingCaches'              => false,
+            'isValidateBackupFiles'          => false,
             'isWpCliRequest'                 => false,
+            'backupExcludedDirectories'      => '',
         ];
 
         $data = wp_parse_args($data, $defaults);
@@ -223,24 +232,38 @@ class PrepareBackup extends PrepareJob
         // Foo\'s Backup => Foo's Backup
         $data['name'] = str_replace('\\\'', '\'', $data['name']);
 
+        // What backup includes
         $data['isExportingPlugins']             = $this->jsBoolean($data['isExportingPlugins']);
         $data['isExportingMuPlugins']           = $this->jsBoolean($data['isExportingMuPlugins']);
         $data['isExportingThemes']              = $this->jsBoolean($data['isExportingThemes']);
         $data['isExportingUploads']             = $this->jsBoolean($data['isExportingUploads']);
         $data['isExportingOtherWpContentFiles'] = $this->jsBoolean($data['isExportingOtherWpContentFiles']);
+        $data['isExportingOtherWpRootFiles']    = $this->jsBoolean($data['isExportingOtherWpRootFiles']);
         $data['isExportingDatabase']            = $this->jsBoolean($data['isExportingDatabase']);
 
+        // Backup creation scheduling properties
         $data['repeatBackupOnSchedule']    = $this->jsBoolean($data['repeatBackupOnSchedule']);
         $data['scheduleRecurrence']        = sanitize_text_field(html_entity_decode($data['scheduleRecurrence']));
         $data['scheduleRotation']          = absint($data['scheduleRotation']);
         $data['scheduleTime']              = $this->createScheduleTimeArray($data['scheduleTime']);
         $data['isCreateScheduleBackupNow'] = $this->jsBoolean($data['isCreateScheduleBackupNow']);
 
+        // Validate Backup?
+        $data['isValidateBackupFiles'] = $this->jsBoolean($data['isValidateBackupFiles']);
+
+        // Single Site or Multisite related properties
         $data['backupType']          = $this->validateAndSanitizeBackupType($data['backupType']);
         $data['isNetworkSiteBackup'] = (is_multisite() && $data['backupType'] !== BackupMetadata::BACKUP_TYPE_MULTISITE) ? true : false;
         if ($data['isNetworkSiteBackup']) {
             $data['subsiteBlogId'] = $this->validateAndSanitizeSubsiteBlogId($data['subsiteBlogId']);
         }
+
+        if (is_string($data['backupExcludedDirectories'])) {
+            $data['backupExcludedDirectories'] = $this->directory->getExcludedDirectories($data['backupExcludedDirectories'], SlashMode::BOTH_SLASHES);
+        }
+
+        // Run Backup Creation in Background?
+        $data['isCreateBackupInBackground'] = $this->jsBoolean($data['isCreateBackupInBackground']);
 
         return $data;
     }

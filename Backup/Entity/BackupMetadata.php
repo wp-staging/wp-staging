@@ -8,15 +8,17 @@ namespace WPStaging\Backup\Entity;
 use JsonSerializable;
 use WPStaging\Backup\Service\ZlibCompressor;
 use RuntimeException;
+use WPStaging\Backup\BackupHeader;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Traits\HydrateTrait;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\Times;
-use WPStaging\Backup\Dto\Traits\DateCreatedTrait;
+use WPStaging\Framework\Job\Dto\Traits\DateCreatedTrait;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\WithPluginsThemesMuPluginsTrait;
 use WPStaging\Framework\Adapter\WpAdapter;
+use WPStaging\Framework\Facades\Hooks;
 
 /**
  * Class BackupMetadata
@@ -36,6 +38,12 @@ class BackupMetadata implements JsonSerializable
     use IsExportingTrait;
     use DateCreatedTrait;
     use WithPluginsThemesMuPluginsTrait;
+
+    /**
+     * Filter to detect the file format of the backup
+     * @var string
+     */
+    const FILTER_BACKUP_FORMAT_V1 = 'wpstg.backup.format_v1';
 
     /**
      * Backup created on single site
@@ -66,7 +74,7 @@ class BackupMetadata implements JsonSerializable
      * This need to be bump whenever we make changes in backup structure
      * @var string
      */
-    const BACKUP_VERSION = '1.0.2';
+    const BACKUP_VERSION = '1.0.3';
 
     /** @var string */
     private $id;
@@ -209,6 +217,15 @@ class BackupMetadata implements JsonSerializable
      */
     private $hostingType;
 
+    /** @var bool */
+    private $isContaining2GBFile = false;
+
+    /** @var string */
+    private $phpArchitecture;
+
+    /** @var string */
+    private $osArchitecture;
+
     /**
      * BackupMetadata constructor.
      *
@@ -217,13 +234,14 @@ class BackupMetadata implements JsonSerializable
     public function __construct()
     {
         $time      = WPStaging::make(Times::class);
+        /** @var SiteInfo */
         $siteInfo  = WPStaging::make(SiteInfo::class);
         $wpAdapter = WPStaging::make(WpAdapter::class);
 
         $this->networkId = $wpAdapter->getCurrentNetworkId();
 
         $this->setWpstgVersion(WPStaging::getVersion());
-        $this->setBackupVersion(self::BACKUP_VERSION);
+        $this->setBackupVersion($this->getDefaultVersion());
         $this->setSiteUrl(get_option('siteurl'));
         $this->setHomeUrl(get_option('home'));
         $this->setAbsPath(ABSPATH);
@@ -233,6 +251,8 @@ class BackupMetadata implements JsonSerializable
         $this->setDateCreatedTimezone($time->getSiteTimezoneString());
         $this->setBackupType(is_multisite() ? self::BACKUP_TYPE_MULTISITE : self::BACKUP_TYPE_SINGLE);
         $this->setPhpShortOpenTags($siteInfo->isPhpShortTagsEnabled());
+        $this->setPhpArchitecture($siteInfo->getPhpArchitecture());
+        $this->setOsArchitecture($siteInfo->getOsArchitecture());
 
         $this->setWpBakeryActive($siteInfo->isWpBakeryActive());
         $this->setIsJetpackActive($siteInfo->isJetpackActive());
@@ -1204,5 +1224,75 @@ class BackupMetadata implements JsonSerializable
     public function setHostingType(string $hostingType)
     {
         $this->hostingType = $hostingType;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsContaining2GBFile(): bool
+    {
+        return $this->isContaining2GBFile;
+    }
+
+    /**
+     * @param bool|null $isContaining2GBFile
+     * @return void
+     */
+    public function setIsContaining2GBFile($isContaining2GBFile)
+    {
+        $this->isContaining2GBFile = (bool)$isContaining2GBFile;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPhpArchitecture(): string
+    {
+        return $this->phpArchitecture;
+    }
+
+    /**
+     * @param string $phpArchitecture
+     * @return void
+     */
+    public function setPhpArchitecture(string $phpArchitecture)
+    {
+        $this->phpArchitecture = $phpArchitecture;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOsArchitecture(): string
+    {
+        return $this->osArchitecture;
+    }
+
+    /**
+     * @param string $osArchitecture
+     * @return void
+     */
+    public function setOsArchitecture(string $osArchitecture)
+    {
+        $this->osArchitecture = $osArchitecture;
+    }
+
+    public function getIsBackupFormatV1(): bool
+    {
+        $result = version_compare($this->getBackupVersion(), BackupHeader::MIN_BACKUP_VERSION, '<');
+
+        return Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, $result);
+    }
+
+    /**
+     * @todo Remove once v2 format is set as default
+     *
+     * @return string
+     */
+    private function getDefaultVersion(): string
+    {
+        $isBackupFormatV1 = Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, true);
+
+        return $isBackupFormatV1 ? self::BACKUP_VERSION : BackupHeader::MIN_BACKUP_VERSION;
     }
 }

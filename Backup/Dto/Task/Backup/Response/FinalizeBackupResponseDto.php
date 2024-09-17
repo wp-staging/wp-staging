@@ -7,7 +7,7 @@
 
 namespace WPStaging\Backup\Dto\Task\Backup\Response;
 
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 
 class FinalizeBackupResponseDto extends TaskResponseDto
 {

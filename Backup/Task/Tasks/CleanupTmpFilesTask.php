@@ -8,9 +8,9 @@ use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Dto\TaskResponseDto;
-use WPStaging\Backup\Task\AbstractTask;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
@@ -122,7 +122,7 @@ class CleanupTmpFilesTask extends AbstractTask
             $response->setIsRunning(true);
 
             $this->logger->info(sprintf(
-                '%s: Re-enqueing path %s for deletion, as it couldn\'t be deleted in a single request without
+                '%s: Re-enqueuing path %s for deletion, as it couldn\'t be deleted in a single request without
                     hitting execution limits. If you see this message in a loop, PHP might not be able to delete
                     this directory, so you might want to try to delete it manually.',
                 static::getTaskTitle(),

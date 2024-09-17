@@ -2,6 +2,7 @@
 
 namespace WPStaging\Core\Utils;
 
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
 
 // No Direct Access
@@ -16,6 +17,10 @@ if (!defined("WPINC")) {
  */
 class Htaccess
 {
+    /**
+     * @var string
+     */
+    const FILTER_CREATE_LITE_SPEED_SERVER_CONFIG = 'wpstg.create_litespeed_server_config';
 
     /**
      *
@@ -60,6 +65,10 @@ class Htaccess
      */
     public function createLitespeed($path)
     {
+        if (!Hooks::applyFilters(self::FILTER_CREATE_LITE_SPEED_SERVER_CONFIG, false)) {
+            return false;
+        }
+
         return $this->filesystem->createWithMarkers($path, 'LiteSpeed', [
                     '<IfModule Litespeed>',
                     'SetEnv noabort 1',

@@ -2,17 +2,17 @@
 
 namespace WPStaging\Backup\Ajax\FileList;
 
+use SplFileInfo;
+use WPStaging\Backup\BackupValidator;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Entity\ListableBackup;
+use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Framework\Adapter\DateTimeAdapter;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\Filesystem;
-use WPStaging\Backup\Service\BackupsFinder;
-use WPStaging\Backup\Entity\ListableBackup;
-use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Framework\Utils\Urls;
-use SplFileInfo;
 use WPStaging\Framework\Filesystem\FileObject;
-use WPStaging\Backup\BackupValidator;
-use WPStaging\Backup\WithBackupIdentifier;
+use WPStaging\Framework\Utils\Urls;
 
 class ListableBackupsCollection
 {
@@ -113,6 +113,7 @@ class ListableBackupsCollection
                 $listableBackup->isExportingDatabase              = $backupMetadata->getIsExportingDatabase();
                 $listableBackup->isExportingMuPlugins             = $backupMetadata->getIsExportingMuPlugins();
                 $listableBackup->isExportingOtherWpContentFiles   = $backupMetadata->getIsExportingOtherWpContentFiles();
+                $listableBackup->isExportingOtherWpRootFiles      = $backupMetadata->getIsExportingOtherWpRootFiles();
                 $listableBackup->isExportingPlugins               = $backupMetadata->getIsExportingPlugins();
                 $listableBackup->isExportingThemes                = $backupMetadata->getIsExportingThemes();
                 $listableBackup->isExportingUploads               = $backupMetadata->getIsExportingUploads();
@@ -133,6 +134,7 @@ class ListableBackupsCollection
                 $listableBackup->errorMessage                     = $this->backupValidator->getErrorMessage();
                 $listableBackup->indexPartSize                    = $backupMetadata->getIndexPartSize();
                 $listableBackup->isZlibCompressed                 = $backupMetadata->getIsZlibCompressed();
+                $listableBackup->isContaining2GBFile              = $backupMetadata->getIsContaining2GBFile();
             } elseif ($file->getExtension() === 'sql') {
                 $listableBackup                      = new ListableBackup();
                 $listableBackup->isLegacy            = true;

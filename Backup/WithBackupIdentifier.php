@@ -3,16 +3,12 @@
 namespace WPStaging\Backup;
 
 use WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask;
-use WPStaging\Backup\Task\Tasks\JobBackup\BackupMuPluginsTask;
-use WPStaging\Backup\Task\Tasks\JobBackup\BackupOtherFilesTask;
-use WPStaging\Backup\Task\Tasks\JobBackup\BackupPluginsTask;
-use WPStaging\Backup\Task\Tasks\JobBackup\BackupThemesTask;
-use WPStaging\Backup\Task\Tasks\JobBackup\BackupUploadsTask;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 
 trait WithBackupIdentifier
 {
     /**
-     * @var array<string>
+     * @var string[]
      */
     protected $listedMultipartBackups = [];
 
@@ -33,17 +29,21 @@ trait WithBackupIdentifier
     public function isBackupPart(string $name)
     {
         $dbExtension = DatabaseBackupTask::FILE_FORMAT;
-        $dbIdentifier = DatabaseBackupTask::PART_IDENTIFIER;
+        $dbIdentifier = PartIdentifier::DATABASE_PART_IDENTIFIER;
         if (preg_match("#{$dbIdentifier}(.[0-9]+)?.{$dbExtension}$#", $name)) {
             return true;
         }
 
-        $pluginIdentifier = BackupPluginsTask::IDENTIFIER;
-        $mupluginIdentifier = BackupMuPluginsTask::IDENTIFIER;
-        $themeIdentifier = BackupThemesTask::IDENTIFIER;
-        $uploadIdentifier = BackupUploadsTask::IDENTIFIER;
-        $otherIdentifier = BackupOtherFilesTask::IDENTIFIER;
-        if ($this->checkPartByIdentifier("({$pluginIdentifier}|{$mupluginIdentifier}|{$themeIdentifier}|{$uploadIdentifier}|{$otherIdentifier})", $name)) {
+        $pluginIdentifier      = PartIdentifier::PLUGIN_PART_IDENTIFIER;
+        $mupluginIdentifier    = PartIdentifier::MU_PLUGIN_PART_IDENTIFIER;
+        $themeIdentifier       = PartIdentifier::THEME_PART_IDENTIFIER;
+        $uploadIdentifier      = PartIdentifier::UPLOAD_PART_IDENTIFIER;
+        $otherIdentifier       = PartIdentifier::OTHER_WP_CONTENT_PART_IDENTIFIER;
+        $otherWpRootIdentifier = PartIdentifier::OTHER_WP_ROOT_PART_IDENTIFIER;
+
+        $identifiers = "({$pluginIdentifier}|{$mupluginIdentifier}|{$themeIdentifier}|{$uploadIdentifier}|{$otherIdentifier}|{$otherWpRootIdentifier})";
+
+        if ($this->checkPartByIdentifier($identifiers, $name)) {
             return true;
         }
 
@@ -78,7 +78,7 @@ trait WithBackupIdentifier
      */
     public function extractBackupIdFromFilename(string $filename)
     {
-        if (strpos($filename, '.' . DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT) !== false) {
+        if (strpos($filename, '.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT) !== false) {
             return $this->extractBackupIdFromDatabaseBackupFilename($filename);
         }
 
@@ -94,7 +94,7 @@ trait WithBackupIdentifier
     protected function extractBackupIdFromDatabaseBackupFilename(string $filename)
     {
         // This is required if the table prefix contains underscore like wp_some
-        $filename = str_replace('.' . DatabaseBackupTask::PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT, '', $filename);
+        $filename = str_replace('.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT, '', $filename);
         // Get position of last dot . in filename
         $lastDotPosition = strrpos($filename, '.');
         // Get filename until last dot to remove the table prefix

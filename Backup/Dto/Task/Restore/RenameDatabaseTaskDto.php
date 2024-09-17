@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backup\Dto\Task\Restore;
 
-use WPStaging\Backup\Dto\AbstractTaskDto;
+use WPStaging\Framework\Job\Dto\AbstractTaskDto;
 
 class RenameDatabaseTaskDto extends AbstractTaskDto
 {

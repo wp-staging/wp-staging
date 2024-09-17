@@ -2,38 +2,40 @@
 
 namespace WPStaging\Backup;
 
-use WPStaging\Framework\DI\FeatureServiceProvider;
-use WPStaging\Framework\Filesystem\Filesystem;
-use WPStaging\Framework\Network\AjaxBackupDownloader;
-use WPStaging\Framework\Queue\FileSeekableQueue;
-use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Backup\Ajax\Backup;
+use WPStaging\Backup\Ajax\Cancel;
+use WPStaging\Backup\Ajax\Delete;
+use WPStaging\Backup\Ajax\Edit;
+use WPStaging\Backup\Ajax\FileInfo;
+use WPStaging\Backup\Ajax\FileList;
+use WPStaging\Backup\Ajax\Listing;
+use WPStaging\Backup\Ajax\Parts;
+use WPStaging\Backup\Ajax\Restore;
+use WPStaging\Backup\Ajax\ScheduleList;
+use WPStaging\Backup\Ajax\Status;
+use WPStaging\Backup\Ajax\Upload;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup;
 use WPStaging\Backup\Ajax\Restore\LoginUrl;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\Ajax\Restore\ReadBackupMetadata;
-use WPStaging\Backup\Ajax\ScheduleList;
-use WPStaging\Backup\Ajax\Cancel;
-use WPStaging\Backup\Ajax\Backup;
-use WPStaging\Backup\Ajax\Delete;
-use WPStaging\Backup\Ajax\Edit;
-use WPStaging\Backup\Ajax\Listing;
-use WPStaging\Backup\Ajax\Restore;
-use WPStaging\Backup\Ajax\FileInfo;
-use WPStaging\Backup\Ajax\FileList;
-use WPStaging\Backup\Ajax\Parts;
-use WPStaging\Backup\Ajax\Status;
-use WPStaging\Backup\Ajax\Upload;
 use WPStaging\Backup\Request\Logs;
 use WPStaging\Backup\Service\BackupAssets;
 use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Service\Database\Importer\Insert\ExtendedInserterWithoutTransaction;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
-use WPStaging\Backup\Task\AbstractTask;
-use WPStaging\Pro\Backup\Ajax\CloudFileList;
 use WPStaging\Backup\Ajax\BackupSpeedIndex;
+use WPStaging\Framework\DI\FeatureServiceProvider;
+use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\Task\AbstractTask;
+use WPStaging\Framework\Network\AjaxBackupDownloader;
+use WPStaging\Framework\Queue\FileSeekableQueue;
+use WPStaging\Framework\Queue\SeekableQueueInterface;
 
 class BackupServiceProvider extends FeatureServiceProvider
 {
+    /** @var string */
+    const BACKUP_SCRIPTS_ENQUEUE_ACTION = 'wpstg.backup.enqueue_scripts';
+
     public function createBackupsDirectory()
     {
         $backupsDirectory = $this->container->make(BackupsFinder::class)->getBackupsDirectory();
@@ -49,8 +51,6 @@ class BackupServiceProvider extends FeatureServiceProvider
         $this->container->when(AbstractTask::class)
                         ->needs(SeekableQueueInterface::class)
                         ->give(FileSeekableQueue::class);
-
-        $this->container->make(BackupDownload::class)->listenDownload();
 
         $this->hookDatabaseImporterQueryInserter();
     }
@@ -99,7 +99,6 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--backups-fetch-schedules', $this->container->callback(ScheduleList::class, 'renderScheduleList'), 10, 1); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         add_action("admin_post_wpstg--backups--logs", $this->container->callback(Logs::class, 'download')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg--storage--list', $this->container->callback(CloudFileList::class, 'getStorageList')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         // Event that we can run on daily basis to repair any corrupted backup create cron jobs
         add_action('wpstg_daily_event', $this->container->callback(BackupScheduler::class, 'reCreateCron'), 10, 0);
@@ -113,6 +112,6 @@ class BackupServiceProvider extends FeatureServiceProvider
 
     protected function enqueueBackupScripts()
     {
-        add_action('wpstg_enqueue_backup_scripts', $this->container->callback(BackupAssets::class, 'register'));
+        add_action(self::BACKUP_SCRIPTS_ENQUEUE_ACTION, $this->container->callback(BackupAssets::class, 'register')); // phpcs:ignore
     }
 }

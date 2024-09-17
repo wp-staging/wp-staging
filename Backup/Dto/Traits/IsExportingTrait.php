@@ -5,7 +5,7 @@ namespace WPStaging\Backup\Dto\Traits;
 /**
  * Not changing `Export` term to `Backup` here for backward compatibility
  * Otherwise old backup may not work properly because these terms are used in backup metadata
- * @todo Change this later to term `backup*` but add a compatiblity layer on it to make it compatible with old backups
+ * @todo Change this later to term `backup*` but add a compatibility layer on it to make it compatible with old backups
  */
 trait IsExportingTrait
 {
@@ -23,6 +23,12 @@ trait IsExportingTrait
 
     /** @var bool */
     private $isExportingOtherWpContentFiles = false;
+
+    /** @var bool */
+    private $isExportingOtherWpRootFiles = false;
+
+    /** @var array */
+    private $backupExcludedDirectories = [];
 
     /** @var bool */
     private $isExportingDatabase = false;
@@ -105,6 +111,42 @@ trait IsExportingTrait
     public function setIsExportingOtherWpContentFiles($isExportingOtherWpContentFiles)
     {
         $this->isExportingOtherWpContentFiles = $isExportingOtherWpContentFiles === true || $isExportingOtherWpContentFiles === 'true';
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsExportingOtherWpRootFiles(): bool
+    {
+        return (bool)$this->isExportingOtherWpRootFiles;
+    }
+
+    /**
+     * @param bool $isExportingOtherWpRootFiles
+     *
+     * @return void
+     */
+    public function setIsExportingOtherWpRootFiles(bool $isExportingOtherWpRootFiles)
+    {
+        $this->isExportingOtherWpRootFiles = $isExportingOtherWpRootFiles === true || $isExportingOtherWpRootFiles === 'true';
+    }
+
+    /**
+     * @return array
+     */
+    public function getBackupExcludedDirectories(): array
+    {
+        return $this->backupExcludedDirectories;
+    }
+
+    /**
+     * @param array $backupExcludedDirectories
+     *
+     * @return void
+     */
+    public function setBackupExcludedDirectories(array $backupExcludedDirectories)
+    {
+        $this->backupExcludedDirectories = $backupExcludedDirectories;
     }
 
     /**

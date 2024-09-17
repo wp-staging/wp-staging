@@ -2,24 +2,23 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Backup\Task\FileBackupTask;
 
 class BackupMuPluginsTask extends FileBackupTask
 {
-    const IDENTIFIER = 'muplugins';
-
-    public static function getTaskName()
+    public static function getTaskName(): string
     {
-        return parent::getTaskName() . '_' . self::IDENTIFIER;
+        return parent::getTaskName() . '_' . PartIdentifier::MU_PLUGIN_PART_IDENTIFIER;
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Adding Mu-Plugins to Backup';
     }
 
-    protected function getFileIdentifier()
+    protected function getFileIdentifier(): string
     {
-        return self::IDENTIFIER;
+        return PartIdentifier::MU_PLUGIN_PART_IDENTIFIER;
     }
 }

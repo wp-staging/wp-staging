@@ -8,7 +8,7 @@ namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
 use Exception;
 use RuntimeException;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
@@ -16,24 +16,26 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupMetadataEditor;
 use WPStaging\Backup\Task\BackupTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
-use WPStaging\Backup\Service\Compressor;
+use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\WithBackupIdentifier;
 use WPStaging\Vendor\lucatume\DI52\NotFoundException;
-use WPStaging\Backup\Dto\Service\CompressorDto;
+use WPStaging\Backup\Dto\Service\ArchiverDto;
+use WPStaging\Framework\Job\Exception\NotFinishedException;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\SiteInfo;
 
 class FinalizeBackupTask extends BackupTask
 {
     use WithBackupIdentifier;
 
-    /** @var Compressor */
-    protected $compressor;
+    /** @var Archiver */
+    protected $archiver;
 
     /** @var \wpdb */
     protected $wpdb;
@@ -63,7 +65,7 @@ class FinalizeBackupTask extends BackupTask
     protected $currentFileInfo = [];
 
     /**
-     * @param Compressor $compressor
+     * @param Archiver $archiver
      * @param BufferedCache $sqlCache
      * @param LoggerInterface $logger
      * @param Cache $cache
@@ -75,7 +77,7 @@ class FinalizeBackupTask extends BackupTask
      * @param SiteInfo $siteInfo
      */
     public function __construct(
-        Compressor $compressor,
+        Archiver $archiver,
         BufferedCache $sqlCache,
         LoggerInterface $logger,
         Cache $cache,
@@ -89,7 +91,7 @@ class FinalizeBackupTask extends BackupTask
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
         global $wpdb;
-        $this->compressor            = $compressor;
+        $this->archiver              = $archiver;
         $this->sqlCache              = $sqlCache;
         $this->wpdb                  = $wpdb;
         $this->pathIdentifier        = $pathIdentifier;
@@ -122,26 +124,26 @@ class FinalizeBackupTask extends BackupTask
     public function execute(): TaskResponseDto
     {
         $this->prepareSetup();
-        $this->prepareCompressor();
-        $compressorDto  = $this->compressor->getDto();
+        $this->prepareArchiver();
+        $archiverDto  = $this->archiver->getDto();
         $isUploadBackup = count($this->jobDataDto->getStorages()) > 0;
 
         try {
             $this->addFilesIndex();
-            $this->addBackupMetadata($compressorDto, $isUploadBackup);
+            $this->addBackupMetadata($archiverDto, $isUploadBackup);
         } catch (Exception $e) {
-            $this->logger->critical(esc_html__('Failed to create backup file: ', 'wp-staging') . $e->getMessage());
+            $this->logger->critical(sprintf('Failed to create backup file: %s', $e->getMessage()));
             return $this->generateResponse(false);
         }
 
         $steps = $this->stepsDto;
 
-        $metadataAdded = $compressorDto->getWrittenBytesTotal() >= $compressorDto->getFileSize();
+        $metadataAdded = $archiverDto->getWrittenBytesTotal() >= $archiverDto->getFileSize();
         $isLastStep = ($steps->getCurrent() + 1) >= $steps->getTotal();
 
         if ($metadataAdded && $isLastStep) {
             $steps->finish();
-            $this->logger->info(esc_html__('Successfully created backup file', 'wp-staging'));
+            $this->logger->info('Successfully created backup file');
 
             return $this->generateResponse(false);
         }
@@ -149,7 +151,7 @@ class FinalizeBackupTask extends BackupTask
         $incrementStep = true;
         if (!$metadataAdded) {
             $incrementStep = false;
-            $this->logger->info(sprintf('Written %d bytes to compressed backup', $compressorDto->getWrittenBytesTotal()));
+            $this->logger->info(sprintf('Adding backup metadata. Written %d bytes for finalizing backup', $archiverDto->getWrittenBytesTotal()));
         }
 
         return $this->generateResponse($incrementStep);
@@ -188,14 +190,13 @@ class FinalizeBackupTask extends BackupTask
     /**
      * @return void
      */
-    protected function prepareCompressor()
+    protected function prepareArchiver()
     {
         $multipartFilesInfo     = $this->jobDataDto->getMultipartFilesInfo();
         $this->currentFileIndex = $this->jobDataDto->getCurrentMultipartFileInfoIndex();
         $this->currentFileInfo  = $multipartFilesInfo[$this->currentFileIndex];
-        $this->compressor->setCategoryIndex($this->currentFileInfo['index'], false);
-        $this->compressor->setCategory($this->currentFileInfo['category']);
-        $this->compressor->setIsLocalBackup($this->jobDataDto->isLocalBackup());
+        $this->archiver->createArchiveFile(Archiver::CREATE_BINARY_HEADER);
+        $this->archiver->setIsLocalBackup($this->jobDataDto->isLocalBackup());
     }
 
     /**
@@ -211,13 +212,13 @@ class FinalizeBackupTask extends BackupTask
     }
 
     /**
-     * @param CompressorDto $compressorDto
+     * @param ArchiverDto $archiverDto
      * @param bool $isUploadBackup
      * @return BackupMetadata
      */
-    protected function prepareBackupMetadata(CompressorDto $compressorDto, bool $isUploadBackup): BackupMetadata
+    protected function prepareBackupMetadata(ArchiverDto $archiverDto, bool $isUploadBackup): BackupMetadata
     {
-        $backupMetadata = $compressorDto->getBackupMetadata();
+        $backupMetadata = $archiverDto->getBackupMetadata();
         $backupMetadata->setId($this->jobDataDto->getId());
         $backupMetadata->setTotalDirectories($this->jobDataDto->getTotalDirectories());
         $backupMetadata->setTotalFiles($this->jobDataDto->getTotalFiles());
@@ -231,11 +232,13 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setIsExportingThemes($this->jobDataDto->getIsExportingThemes());
         $backupMetadata->setIsExportingUploads($this->jobDataDto->getIsExportingUploads());
         $backupMetadata->setIsExportingOtherWpContentFiles($this->jobDataDto->getIsExportingOtherWpContentFiles());
+        $backupMetadata->setIsExportingOtherWpRootFiles($this->jobDataDto->getIsExportingOtherWpRootFiles());
         $backupMetadata->setIsExportingDatabase($this->jobDataDto->getIsExportingDatabase());
         $backupMetadata->setScheduleId($this->jobDataDto->getScheduleId());
         $backupMetadata->setMultipartMetadata(null);
         $backupMetadata->setCreatedOnPro(WPStaging::isPro());
         $backupMetadata->setHostingType($this->siteInfo->getHostingType());
+        $backupMetadata->setIsContaining2GBFile($this->jobDataDto->getIsContaining2GBFile());
 
         $this->addSystemInfoToBackupMetadata($backupMetadata);
 
@@ -340,20 +343,22 @@ class FinalizeBackupTask extends BackupTask
             return;
         }
 
-        if ($this->currentFileInfo['category'] === DatabaseBackupTask::PART_IDENTIFIER) {
+        if ($this->currentFileInfo['category'] === PartIdentifier::DATABASE_PART_IDENTIFIER) {
             $this->currentFileInfo['status'] = 'IndexAdded';
             $this->jobDataDto->updateMultipartFileInfo($this->currentFileInfo, $this->currentFileIndex);
             return;
         }
 
         try {
-            $backupSizeBeforeAddingIndex = $this->compressor->addFileIndex();
+            $backupSizeBeforeAddingIndex = $this->archiver->addFileIndex();
+        } catch (NotFinishedException $ex) {
+            $backupSizeBeforeAddingIndex = null;
         } catch (NotFoundException $ex) {
             throw new NotFoundException($ex->getMessage());
         }
 
-        $compressorDto = $this->compressor->getDto();
-        $isFilesIndexAdded = $compressorDto->getWrittenBytesTotal() >= $compressorDto->getFileSize();
+        $archiverDto = $this->archiver->getDto();
+        $isFilesIndexAdded = $archiverDto->getWrittenBytesTotal() >= $archiverDto->getFileSize();
 
         if (!$isFilesIndexAdded) {
             return;
@@ -365,21 +370,21 @@ class FinalizeBackupTask extends BackupTask
     }
 
     /**
-     * @param CompressorDto $compressorDto
+     * @param ArchiverDto $archiverDto
      * @param bool $isUploadBackup
      * @return void
      * @throws RuntimeException
      */
-    protected function addBackupMetadata(CompressorDto $compressorDto, bool $isUploadBackup)
+    protected function addBackupMetadata(ArchiverDto $archiverDto, bool $isUploadBackup)
     {
         if ($this->currentFileInfo['status'] !== 'IndexAdded') {
             return;
         }
 
-        $backupMetadata = $this->prepareBackupMetadata($compressorDto, $isUploadBackup);
+        $backupMetadata = $this->prepareBackupMetadata($archiverDto, $isUploadBackup);
         if (!$this->jobDataDto->getIsMultipartBackup()) {
             // Write the Backup metadata
-            $backupFilePath = $this->compressor->generateBackupMetadata($this->currentFileInfo['sizeBeforeAddingIndex']);
+            $backupFilePath = $this->archiver->generateBackupMetadata($this->currentFileInfo['sizeBeforeAddingIndex']);
             $this->jobDataDto->setBackupFilePath($backupFilePath);
 
             if ($isUploadBackup) {
@@ -410,6 +415,6 @@ class FinalizeBackupTask extends BackupTask
      */
     protected function getFinalBackupParentDirectory(): string
     {
-        return $this->compressor->getFinalBackupParentDirectory($this->jobDataDto->isLocalBackup());
+        return $this->archiver->getFinalBackupParentDirectory($this->jobDataDto->isLocalBackup());
     }
 }

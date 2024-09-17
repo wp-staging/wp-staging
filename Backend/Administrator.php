@@ -12,14 +12,12 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
-use WPStaging\Framework\Filesystem\DebugLogReader;
 use WPStaging\Framework\Filesystem\PathIdentifier;
-use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Notices\DismissNotice;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Backend\Modules\Jobs\Cancel;
 use WPStaging\Backend\Modules\Jobs\CancelUpdate;
 use WPStaging\Backend\Modules\Jobs\Cloning;
@@ -42,7 +40,7 @@ use WPStaging\Backend\Feedback\Feedback;
 use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
-use WPStaging\Backend\Pro\WpstgRestore;
+use WPStaging\Backend\Pro\WpstgRestoreDownloader;
 
 /**
  * Class Administrator
@@ -60,11 +58,8 @@ class Administrator
      */
     const MENU_POSITION_ORDER_MULTISITE = 20;
 
-    /**
-     * Path to plugin's Backend Dir
-     * @var string
-     */
-    private $path;
+    /** @var string */
+    private $viewsPath;
 
     /**
      * @var Assets
@@ -97,11 +92,9 @@ class Administrator
         $this->siteInfo   = WPStaging::make(SiteInfo::class);
         $this->report     = WPStaging::make(Report::class);
         $this->pluginInfo = WPStaging::make(PluginInfo::class);
+        $this->viewsPath  = WPSTG_VIEWS_DIR;
 
         $this->defineHooks();
-
-        // Path to backend
-        $this->path = plugin_dir_path(__FILE__);
 
         $this->sanitize = WPStaging::make(Sanitize::class);
 
@@ -133,7 +126,7 @@ class Administrator
         add_action("admin_init", [$this, "upgrade"]);
         add_action("admin_post_wpstg_download_sysinfo", [$this, "downloadSystemInfoAndLogFiles"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
-        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backend\Pro\WpstgRestore')) {
+        if (defined('WPSTGPRO_VERSION') && class_exists('WPStaging\Backend\Pro\WpstgRestoreDownloader')) {
             add_action("admin_post_wpstg_download_restorer", [$this, "downloadWpstgRestoreFile"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         }
 
@@ -208,7 +201,7 @@ class Administrator
         }
 
         $form = WPStaging::make(Feedback::class);
-        $form->sendMail();
+        $form->sendDeactivateFeedback();
     }
 
     /**
@@ -328,8 +321,6 @@ class Administrator
         }
 
         if (defined('WPSTGPRO_VERSION')) {
-
-            if (defined('WPSTG_ACTIVATE_RESTORER') && (bool)WPSTG_ACTIVATE_RESTORER) {
                 // Page: wpstg-restorer
                 add_submenu_page(
                     $defaultPageSlug,
@@ -341,10 +332,9 @@ class Administrator
                 );
 
                 // Remove wpstg-restorer side menu
-                add_filter('submenu_file', function($submenu_file) use($defaultPageSlug) {
-                    remove_submenu_page( $defaultPageSlug, 'wpstg-restorer' );
+                add_filter('submenu_file', function ($submenu_file) use ($defaultPageSlug) {
+                    remove_submenu_page($defaultPageSlug, 'wpstg-restorer');
                 });
-            }
 
             // Page: License
             add_submenu_page(
@@ -377,7 +367,7 @@ class Administrator
             // Forms
             ->set("forms", new FormSettings($tabs));
 
-        require_once "{$this->path}views/settings/main-settings.php";
+        require_once "{$this->viewsPath}settings/main-settings.php";
     }
 
     /**
@@ -390,7 +380,9 @@ class Administrator
 
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
-        require_once "{$this->path}views/clone/index.php";
+        $isStagingPage = true;
+        $isBackupPage  = false;
+        require_once "{$this->viewsPath}clone/index.php";
     }
 
     /**
@@ -403,9 +395,9 @@ class Administrator
         // Existing clones
         $availableClones = get_option(Sites::STAGING_SITES_OPTION, []);
 
-        $isBackupPage = true;
-
-        require_once "{$this->path}views/clone/index.php";
+        $isBackupPage  = true;
+        $isStagingPage = false;
+        require_once "{$this->viewsPath}clone/index.php";
     }
 
     /**
@@ -417,7 +409,7 @@ class Administrator
             return;
         }
 
-        require_once "{$this->path}views/welcome/welcome.php";
+        require_once "{$this->viewsPath}welcome/welcome.php";
     }
 
     /**
@@ -437,36 +429,34 @@ class Administrator
         // Get license data
         $license = get_option('wpstg_license_status');
 
-        require_once "{$this->path}views/tools/index.php";
+        require_once "{$this->viewsPath}tools/index.php";
     }
 
     /**
      * WP Staging Restore Page
+     * @todo Move this to Pro namespace
      */
     public function getRestorerPage()
     {
-        if (!defined('WPSTG_ACTIVATE_RESTORER') || !(bool)WPSTG_ACTIVATE_RESTORER) {
-            return;
-        }
-
         // Get license data
         $license = get_option('wpstg_license_status');
 
-        require_once "{$this->path}Pro/views/wpstg-restorer-ui.php";
+        require_once "{$this->viewsPath}pro/wpstg-restorer-ui.php";
     }
 
     /**
      * Download wpstg-restore.php file.
      * @see dev/docs/wpstg-restore/README.md
      * @return void
+     * @todo Move this to Pro namespace
      */
     public function downloadWpstgRestoreFile()
     {
-        if (!defined('WPSTGPRO_VERSION') || !class_exists('WPStaging\Backend\Pro\WpstgRestore', false)) {
+        if (!defined('WPSTGPRO_VERSION') || !class_exists('WPStaging\Backend\Pro\WpstgRestoreDownloader', false)) {
             wp_die('Invalid access', 'WP Staging Restore', ['response' => 403, 'back_link' => true]);
         }
 
-        $WpstgRestore = WPStaging::make('WPStaging\Backend\Pro\WpstgRestore');
+        $WpstgRestore = WPStaging::make('WPStaging\Backend\Pro\WpstgRestoreDownloader');
         $WpstgRestore->downloadFile();
     }
 
@@ -480,33 +470,37 @@ class Administrator
             return;
         }
 
+        $reportHandle = WPStaging::make(Report::class);
+        $downloadFile = $reportHandle->getBundledLogs();
+        if (empty($downloadFile)) {
+            wp_die('Failed to get All Log Files', 'WP Staging', ['response' => 200, 'back_link' => true]);
+        }
+
+        $isZipFile = count($downloadFile) === 1 && substr($downloadFile[0], -4) === '.zip';
+
         nocache_headers();
-        header("Content-Type: text/plain");
+
+        if ($isZipFile) {
+            header('Content-Type: application/zip');
+            header('Content-Disposition: attachment; filename="wpstg-bundled-logs.zip"');
+            readfile($downloadFile[0]); // phpcs:ignore
+            $reportHandle->deleteBundledLogs();
+            exit();
+        }
+
+        header('Content-Type: text/plain');
         header('Content-Disposition: attachment; filename="wpstg-bundled-logs.txt"');
-        $output = WPStaging::make(SystemInfo::class)->get("systemInfo");
-        $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
-        $output .= WPStaging::make(DebugLogReader::class)->getLastLogEntries(100 * KB_IN_BYTES, true, false);
-        $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
-        $output .= WPStaging::make(DebugLogReader::class)->getLastLogEntries((256 * KB_IN_BYTES ), false, true);
 
-        $latestLogFiles = WPStaging::make(DebugLogReader::class)->getLatestLogFiles();
-        if (count($latestLogFiles) === 0) {
-            echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html(wp_strip_all_tags($output))); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
-            return;
+        $separator = "\n\n" . str_repeat('-', 100) . "\n\n";
+
+        foreach ($downloadFile as $logFile) {
+            $header = $separator . 'Log File: ' . basename($logFile) . $separator;
+            echo esc_html($header);
+            readfile($logFile); // phpcs:ignore
         }
 
-        foreach ($latestLogFiles as $logFile) {
-            $output .= PHP_EOL . PHP_EOL . str_repeat("-", 25) . PHP_EOL . PHP_EOL;
-            $logs = file_get_contents($logFile);
-            if (empty($logs)) {
-                continue;
-            }
-
-            $output .= $logs;
-        }
-
-        echo str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], esc_html(wp_strip_all_tags($output))); // phpcs:ignore WPStagingCS.Security.EscapeOutput.OutputNotEscaped
-
+        $reportHandle->deleteBundledLogs();
+        exit();
     }
 
     /**
@@ -517,7 +511,7 @@ class Administrator
      */
     public function render($file, $vars = [])
     {
-        $fullPath = $this->path . "views/" . $file . ".php";
+        $fullPath = $this->viewsPath . $file . ".php";
         $fullPath = wp_normalize_path($fullPath);
 
         if (!file_exists($fullPath) || !is_readable($fullPath)) {
@@ -574,7 +568,7 @@ class Administrator
         /** @var SiteInfo */
         $siteInfo = WPStaging::make(SiteInfo::class);
         if ($siteInfo->isHostedOnWordPressCom()) {
-            require_once "{$this->path}views/clone/wordpress-com/index.php";
+            require_once "{$this->viewsPath}clone/wordpress-com/index.php";
             wp_die(); // Using wp_die instead of return here to make sure no 0 is appended to the response
         }
 
@@ -588,9 +582,9 @@ class Administrator
         // Get db
         $db = WPStaging::make('wpdb');
 
-        $iconPath = $this->assets->getAssetsUrl('svg/vendor/dashicons/cloud.svg');
+        $iconPath = $this->assets->getAssetsUrl('svg/cloud.svg');
 
-        require_once "{$this->path}views/clone/ajax/single-overview.php";
+        require_once "{$this->viewsPath}clone/ajax/single-overview.php";
 
         wp_die();
     }
@@ -622,7 +616,7 @@ class Administrator
         // Scan
         $scan = WPStaging::make(Scan::class);
         $scan->setGifLoaderPath($this->assets->getAssetsUrl('img/spinner.gif'));
-        $scan->setInfoIcon($this->assets->getAssetsUrl('svg/vendor/dashicons/info-outline.svg'));
+        $scan->setInfoIcon($this->assets->getAssetsUrl('svg/info-outline.svg'));
         $scan->start();
 
         // Get Options
@@ -631,7 +625,12 @@ class Administrator
         $wpDefaultDirectories = WPStaging::make(WpDefaultDirectories::class);
         $isSiteHostedOnWpCom  = $siteInfo->isHostedOnWordPressCom();
         $isPro                = WPStaging::isPro();
-        require_once "{$this->path}views/clone/ajax/scan.php";
+
+        if ($isPro) {
+            require_once "{$this->viewsPath}pro/clone/ajax/scan.php";
+        } else {
+            require_once "{$this->viewsPath}clone/ajax/scan.php";
+        }
 
         wp_die();
     }
@@ -714,7 +713,7 @@ class Administrator
         $options = $cloning->getOptions();
         WPStaging::make(AnalyticsStagingUpdate::class)->enqueueStartEvent($options->jobIdentifier, $options);
 
-        require_once "{$this->path}views/clone/ajax/update.php";
+        require_once "{$this->viewsPath}clone/ajax/update.php";
 
         wp_die();
     }
@@ -737,7 +736,7 @@ class Administrator
         $options = $cloning->getOptions();
         WPStaging::make(AnalyticsStagingReset::class)->enqueueStartEvent($options->jobIdentifier, $options);
 
-        require_once "{$this->path}views/clone/ajax/update.php";
+        require_once "{$this->viewsPath}clone/ajax/update.php";
         wp_die();
     }
 
@@ -766,7 +765,7 @@ class Administrator
             wp_die();
         }
 
-        require_once "{$this->path}views/clone/ajax/start.php";
+        require_once "{$this->viewsPath}clone/ajax/start.php";
 
         wp_die();
     }
@@ -853,7 +852,7 @@ class Administrator
 
         $dbname = $delete->getDbName();
 
-        require_once "{$this->path}views/clone/ajax/delete-confirmation.php";
+        require_once "{$this->viewsPath}clone/ajax/delete-confirmation.php";
 
         wp_die();
     }
@@ -1011,7 +1010,7 @@ class Administrator
         $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
         if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
             $clone = $existingClones[$this->sanitize->sanitizeString($_POST["clone"])];
-            require_once "{$this->path}Pro/views/edit-clone-data.php";
+            require_once "{$this->viewsPath}pro/edit-clone-data.php";
         } else {
             echo esc_html__("Unknown error. Please reload the page and try again", "wp-staging");
         }
@@ -1099,7 +1098,7 @@ class Administrator
         // Get Framework\Utils\Math
         $utilsMath = WPStaging::make(Math::class);
 
-        require_once "{$this->path}Pro/views/scan.php";
+        require_once "{$this->viewsPath}pro/scan.php";
 
         wp_die();
     }
@@ -1134,7 +1133,7 @@ class Administrator
 
         echo json_encode([
             'success' => true,
-            "content" => $templateEngine->render("/Backend/Pro/views/selections/tables.php", [
+            "content" => $templateEngine->render("pro/selections/tables.php", [
                 'isNetworkClone' => $scan->isNetworkClone(),
                 'options'        => $options,
                 'showAll'        => true,
@@ -1172,7 +1171,7 @@ class Administrator
         // Get license data
         $license = get_option('wpstg_license_status');
 
-        require_once "{$this->path}Pro/views/licensing.php";
+        require_once "{$this->viewsPath}pro/licensing.php";
     }
 
     /**
@@ -1276,7 +1275,7 @@ class Administrator
 
         echo json_encode([
             'success' => true,
-            "html"    => $templateEngine->render("/Backend/views/clone/ajax/exclude-settings.php", [
+            "html"    => $templateEngine->render("clone/ajax/exclude-settings.php", [
                 'scan'         => $scan,
                 'options'      => $scan->getOptions(),
                 'excludeUtils' => WPStaging::make(ExcludeFilter::class),
@@ -1305,7 +1304,7 @@ class Administrator
     }
 
     /**
-     * Restore Settings, can be used when settings are corrupted 
+     * Restore Settings, can be used when settings are corrupted
      */
     public function ajaxRestoreSettings()
     {

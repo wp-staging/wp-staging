@@ -43,7 +43,7 @@ class CopyWpConfig extends FileCloningService
         }
 
         // No valid wp-config.php found so let's copy wp stagings default wp-config.php to staging site
-        $source = WPSTG_PLUGIN_DIR . "Backend/helpers/wp-config.php";
+        $source = WPSTG_RESOURCES_DIR . "helpers/wp-config.php";
 
         $this->log("Copy default wp-config.php file from source {$source} to {$destination}");
 

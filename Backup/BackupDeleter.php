@@ -2,9 +2,9 @@
 
 namespace WPStaging\Backup;
 
-use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Service\BackupsFinder;
+use WPStaging\Framework\Filesystem\FileObject;
 
 class BackupDeleter
 {
@@ -60,7 +60,8 @@ class BackupDeleter
                 !$metadata->getIsExportingPlugins() &&
                 !$metadata->getIsExportingThemes() &&
                 !$metadata->getIsExportingUploads() &&
-                !$metadata->getIsExportingOtherWpContentFiles()
+                !$metadata->getIsExportingOtherWpContentFiles() &&
+                !$metadata->getIsExportingOtherWpRootFiles()
             ) {
                 $this->deleteBackup($backup, $metadata);
             }

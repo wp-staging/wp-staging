@@ -1,32 +1,40 @@
 <?php
 
+/**
+ * Upgrade Class
+ * This must be loaded on every page init to ensure all settings are
+ * adjusted correctly and to run any upgrade process if necessary.
+ */
+
 namespace WPStaging\Backend\Upgrade;
 
 use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Queue;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
+use WPStaging\Backup\BackupScheduler;
 
-/**
- * Upgrade Class
- * This must be loaded on every page init to ensure all settings are 
- * adjusted correctly and to run any upgrade process if necessary.
- */
 // No Direct Access
-if( !defined( "WPINC" ) ) {
+if (!defined("WPINC")) {
     die;
 }
 
 class Upgrade
 {
+    /**
+     * @var string
+     */
     const OPTION_UPGRADE_DATE = 'wpstg_free_upgrade_date';
 
+    /**
+     * @var string
+     */
     const OPTION_INSTALL_DATE = 'wpstg_free_install_date';
 
     /**
      * Previous Version number
-     * @var string 
+     * @var string
      */
     private $previousVersion;
 
@@ -73,15 +81,53 @@ class Upgrade
         $this->upgrade2_5_9();
         $this->upgrade2_8_7();
         $this->upgrade3_0_7();
+        $this->upgrade3_8_1();
 
         $this->setVersion();
+    }
+
+    /**
+     * Enable backup notification by default
+     * @return void
+     */
+    private function upgrade3_8_1() // phpcs:ignore
+    {
+        // Early bail: Previous version is greater than 3.8.1
+        if (version_compare($this->previousVersion, '3.8.1', '>')) {
+            return;
+        }
+
+        if (!class_exists('WPStaging\Backup\BackupScheduler')) {
+            return;
+        }
+
+        $optionBackupScheduleReportEmail = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        if (empty($optionBackupScheduleReportEmail) || !filter_var($optionBackupScheduleReportEmail, FILTER_VALIDATE_EMAIL)) {
+            $wpstgSettings = (array)get_option('wpstg_settings');
+
+            if (!empty($wpstgSettings['schedulesReportEmail'])) {
+                $optionBackupScheduleReportEmail = $wpstgSettings['schedulesReportEmail'];
+            } else {
+                $userObject = wp_get_current_user();
+                if (is_object($userObject) && !empty($userObject->user_email)) {
+                    $optionBackupScheduleReportEmail = $userObject->user_email;
+                }
+            }
+
+            update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);
+        }
+
+        // boolean false: Default value if the option does not exist/created yet
+        if (get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT) === false && !empty($optionBackupScheduleReportEmail)) {
+            update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, 'true');
+        }
     }
 
     /**
      * Add response field to queue table if not exist
      * @return void
      */
-    private function upgrade3_0_7()
+    private function upgrade3_0_7() // phpcs:ignore
     {
         // Early bail: Previous version is greater than 3.0.6
         if (version_compare($this->previousVersion, '3.0.6', '>')) {
@@ -96,7 +142,7 @@ class Upgrade
      * Move existing staging sites to new option defined in Sites::STAGING_SITES_OPTION
      * @return void
      */
-    private function upgrade2_8_7()
+    private function upgrade2_8_7() // phpcs:ignore
     {
         $this->stagingSitesHelper->addMissingCloneNameUpgradeStructure();
         $this->stagingSitesHelper->upgradeStagingSitesOption();
@@ -106,11 +152,10 @@ class Upgrade
      * Fix array keys of staging sites
      * @return void
      */
-    private function upgrade2_5_9()
+    private function upgrade2_5_9() // phpcs:ignore
     {
         // Previous version lower than 2.5.9
         if (version_compare($this->previousVersion, '2.5.9', '<')) {
-
             // Current options
             $sites = $this->stagingSitesHelper->tryGettingStagingSites();
 
@@ -131,7 +176,7 @@ class Upgrade
     /**
      * @return void
      */
-    private function upgrade2_4_4()
+    private function upgrade2_4_4() // phpcs:ignore
     {
         // Previous version lower than 2.4.4
         if (version_compare($this->previousVersion, '2.4.4', '<')) {
@@ -156,7 +201,7 @@ class Upgrade
      * Upgrade method 2.2.0
      * @return void
      */
-    public function upgrade2_2_0()
+    public function upgrade2_2_0() // phpcs:ignore
     {
         // Previous version lower than 2.2.0
         if (version_compare($this->previousVersion, '2.2.0', '<')) {
@@ -183,7 +228,6 @@ class Upgrade
                 continue;
             }
 
-            //!empty( $sites[$key]['prefix'] ) ? $sites[$key]['prefix'] = $value['prefix'] : $sites[$key]['prefix'] = $key . '_';        
             !empty($sites[$key]['prefix']) ?
                             $sites[$key]['prefix'] = $value['prefix'] :
                             $sites[$key]['prefix'] = $this->getStagingPrefix($sites[$key]['directoryName']);
@@ -229,7 +273,7 @@ class Upgrade
      * Upgrade method 2.0.3
      * @return void
      */
-    public function upgrade2_0_3()
+    public function upgrade2_0_3() // phpcs:ignore
     {
         // Previous version lower than 2.0.2
         if (version_compare($this->previousVersion, '2.0.2', '<')) {
@@ -243,12 +287,12 @@ class Upgrade
      * Sanitize the clone key value.
      * @return void
      */
-    private function upgrade2_1_2()
+    private function upgrade2_1_2() // phpcs:ignore
     {
         if ($this->previousVersion === false || version_compare($this->previousVersion, '2.1.2', '<')) {
             // Current options
             $clones = $this->stagingSitesHelper->tryGettingStagingSites();
-        
+
             foreach ($clones as $key => $value) {
                 unset($clones[$key]);
                 $clones[preg_replace("#\W+#", '-', strtolower($key))] = $value;
@@ -313,5 +357,4 @@ class Upgrade
             update_option('wpstg_rating', 'no');
         }
     }
-
 }

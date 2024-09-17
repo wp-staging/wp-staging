@@ -13,17 +13,18 @@ use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Database\WpOptionsInfo;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Security\Capabilities;
-use WPStaging\Framework\Staging\CloneOptions;
-use WPStaging\Framework\Staging\FirstRun;
+use WPStaging\Staging\CloneOptions;
+use WPStaging\Staging\FirstRun;
 use WPStaging\Framework\ThirdParty\FreemiusScript;
 use WPStaging\Framework\ThirdParty\Jetpack;
 use WPStaging\Framework\ThirdParty\WordFence;
 use WPStaging\Framework\Traits\NoticesTrait;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\ServerVars;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Framework\ThirdParty\Aios;
 
 /**
  * Show Admin Notices | Warnings | Messages
@@ -42,6 +43,9 @@ class Notices
 
     /** @var string */
     const BASIC_NOTICES_ACTION = 'wpstg.notices.show_basic_notices';
+
+    /** @var string */
+    const INJECT_ANALYTICS_CONSENT_ASSETS_ACTION = 'wpstg.assets.inject_analytics_consent_assets';
 
     /** @var Assets */
     private $assets;
@@ -114,7 +118,7 @@ class Notices
     public function __construct(Assets $assets)
     {
         $this->assets           = $assets;
-        $this->viewsNoticesPath = trailingslashit($this->getPluginPath()) . "Backend/views/notices/";
+        $this->viewsNoticesPath = WPSTG_VIEWS_DIR . "notices/";
 
         // To avoid dependency hell and smooth transition we will be using service locator for below dependencies
         $this->dirUtil         = WPStaging::make(Directory::class);
@@ -223,6 +227,7 @@ class Notices
         $this->noticeShowDirectoryListingWarning($this->viewsNoticesPath);
         $this->noticeDbPrefixDoesNotExist();
         $this->noticeWPEnginePermalinkWarning();
+        $this->noticeAiosSaltPostfixEnabled();
     }
 
     /**
@@ -559,15 +564,23 @@ class Notices
             return;
         }
 
-        wp_enqueue_script(
-            "wpstg-show-analytics-modal",
-            WPSTG_PLUGIN_URL . './assets/js/dist/analytics-consent-modal.js'
-        );
-        wp_enqueue_style(
-            'wpstg-plugin-activation',
-            WPSTG_PLUGIN_URL . './assets/css/dist/analytics-consent-modal.css'
-        );
+        Hooks::doAction(self::INJECT_ANALYTICS_CONSENT_ASSETS_ACTION);
 
-        require_once "{$this->getPluginPath()}/Backend/views/notices/analytics-modal.php";
+        require_once WPSTG_VIEWS_DIR . "notices/analytics-modal.php";
+    }
+
+    /**
+     * @return void
+     */
+    private function noticeAiosSaltPostfixEnabled()
+    {
+        $aios = WPStaging::make(Aios::class);
+
+        // Execute it here to prevent this from being executed on each page request and to save db calls.
+        $aios->optimizerWhitelistUpdater();
+
+        if (self::SHOW_ALL_NOTICES || $aios->isSaltPostfixOptionEnabled()) {
+            require $this->viewsNoticesPath . "aios-salt-postfix-enabled.php";
+        }
     }
 }

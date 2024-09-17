@@ -4,8 +4,12 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
-use WPStaging\Framework\Staging\CloneOptions;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\CloneOptions;
+use WPStaging\Staging\Sites;
+use WPStaging\Staging\FirstRun;
+use WPStaging\Backend\Modules\Jobs\Job as MainJob;
+
+use function WPStaging\functions\debug_log;
 
 /**
  * Copy wpstg_tmp_data back to wpstg_staging_sites after cloning with class::PreserveDataSecondStep
@@ -100,7 +104,11 @@ class PreserveDataSecondStep extends JobExecutable
         // Preserve wpstg_settings in staging database
         $this->preserveStagingOption("wpstg_settings", $this->preservedData->settings, 'settings');
 
+        // Preserve wpstg_login_link_settings in staging database
+        $this->preserveStagingOption("wpstg_login_link_settings", $this->preservedData->loginLinkSettings, 'login settings');
+
         // Preserve wpstg_clone_options in staging database
+        $this->updateCloneOptions();
         $this->preserveStagingOption(CloneOptions::WPSTG_CLONE_SETTINGS_KEY, $this->preservedData->cloneOptions, 'clone options');
 
         // Preserve backup schedules
@@ -140,6 +148,12 @@ class PreserveDataSecondStep extends JobExecutable
             $this->preserveStagingOption('wpstg_generic-s3', $this->preservedData->genericS3, 'S3 Compat settings');
         } else {
             $this->deleteStagingSiteOption('wpstg_generic-s3');
+        }
+
+        if ($this->propertyExists('dropbox')) {
+            $this->preserveStagingOption('wpstg_dropbox', $this->preservedData->dropbox, 'Dropbox settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_dropbox');
         }
 
         return true;
@@ -220,5 +234,34 @@ class PreserveDataSecondStep extends JobExecutable
     private function tableExists($table)
     {
         return !($table != $this->stagingDb->get_var("SHOW TABLES LIKE '{$table}'"));
+    }
+
+    /**
+     * Update wpstg_clone_options before restoring it.
+     *
+     * @return void
+     */
+    private function updateCloneOptions()
+    {
+        if ($this->getOptions()->mainJob !== MainJob::UPDATE) {
+            return;
+        }
+
+        $cloneOptions = $this->preservedData->cloneOptions;
+
+        $data = maybe_unserialize($cloneOptions);
+        if (empty($cloneOptions)) {
+            $data = new \stdClass();
+        }
+
+        // Should not happen, but if it happens just return earlier without changing anything.
+        if (!is_object($data)) {
+            debug_log('Fail to update clone options before restore.');
+            return;
+        }
+
+        $schedulerKey                      = FirstRun::WOO_SCHEDULER_DISABLED_KEY;
+        $data->{$schedulerKey}             = empty($this->getOptions()->wooSchedulerDisabled) ? false : true;
+        $this->preservedData->cloneOptions = maybe_serialize($data);
     }
 }

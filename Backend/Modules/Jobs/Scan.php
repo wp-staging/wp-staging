@@ -12,11 +12,11 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
-use WPStaging\Backup\Exceptions\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Filesystem\PathChecker;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
@@ -250,10 +250,11 @@ class Scan extends Job
             $this->options->currentClone['adminEmail']         = $this->options->currentClone['adminEmail'] ?? '';
             $this->options->currentClone['adminPassword']      = $this->options->currentClone['adminPassword'] ?? '';
             // Make sure no warning is shown when updating/resetting an old clone without databaseSsl, uploadsSymlinked, emailsAllowed and networkClone options
-            $this->options->currentClone['emailsAllowed']      = $this->options->currentClone['emailsAllowed'] ?? true;
-            $this->options->currentClone['databaseSsl']        = $this->options->currentClone['databaseSsl'] ?? false;
-            $this->options->currentClone['uploadsSymlinked']   = $this->options->currentClone['uploadsSymlinked'] ?? false;
-            $this->options->currentClone['networkClone']       = $this->options->currentClone['networkClone'] ?? false;
+            $this->options->currentClone['emailsAllowed']        = $this->options->currentClone['emailsAllowed'] ?? true;
+            $this->options->currentClone['databaseSsl']          = $this->options->currentClone['databaseSsl'] ?? false;
+            $this->options->currentClone['uploadsSymlinked']     = $this->options->currentClone['uploadsSymlinked'] ?? false;
+            $this->options->currentClone['networkClone']         = $this->options->currentClone['networkClone'] ?? false;
+            $this->options->currentClone['wooSchedulerDisabled'] = $this->options->currentClone['wooSchedulerDisabled'] ?? false;
         }
 
         // Tables
@@ -616,25 +617,32 @@ class Scan extends Job
 
         $isDisabledDir = $dirName === 'wp-admin' || $dirName === 'wp-includes';
 
-        return $this->templateEngine->render('Backend/views/clone/ajax/directory-navigation.php', [
-            'scan'    => $this,
-            'prefix'  => $prefix,
-            'relPath' => $relPath,
-            'class'   => $class,
-            'dirType' => $dirType,
+        $isDisabled = false;
+        if (strpos($dataPath, 'wp-content/' . Directory::STAGING_SITE_DIRECTORY) !== false) {
+            $isDisabled      = true;
+            $shouldBeChecked = false;
+        }
+
+        return $this->templateEngine->render('clone/ajax/directory-navigation.php', [
+            'scan'              => $this,
+            'prefix'            => $prefix,
+            'relPath'           => $relPath,
+            'class'             => $class,
+            'dirType'           => $dirType,
             'isScanned'         => $isScanned,
             'isNavigatable'     => $isNavigatable,
             'shouldBeChecked'   => $shouldBeChecked,
             'parentChecked'     => $parentChecked,
             'directoryDisabled' => $isNotWPCoreDir || $isDisabledDir,
-            'dirName'       => $dirName,
-            'gifLoaderPath' => $this->gifLoaderPath,
-            'formattedSize' => $this->utilsMath->formatSize($dataSize),
-            'isDebugMode'   => $this->utilsMath->formatSize($dataSize),
-            'dataPath'      => $dataPath,
-            'basePath'      => $basePath,
-            'forceDefault'  => $forceDefault,
-            'dirPath'       => $path,
+            'isDisabled'        => $isDisabled,
+            'dirName'           => $dirName,
+            'gifLoaderPath'     => $this->gifLoaderPath,
+            'formattedSize'     => $this->utilsMath->formatSize($dataSize),
+            'isDebugMode'       => $this->utilsMath->formatSize($dataSize),
+            'dataPath'          => $dataPath,
+            'basePath'          => $basePath,
+            'forceDefault'      => $forceDefault,
+            'dirPath'           => $path,
         ]);
     }
 
@@ -748,10 +756,8 @@ class Scan extends Job
             'wp-includes'
         ];
 
-        foreach ($coreDirectories as $coreDirectory) {
-            if ($dirname === $coreDirectory) {
-                return false;
-            }
+        if (in_array($dirname, $coreDirectories)) {
+            return false;
         }
 
         $wpDirectories = [

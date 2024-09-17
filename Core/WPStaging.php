@@ -5,12 +5,11 @@ namespace WPStaging\Core;
 use Exception;
 use RuntimeException;
 use WPStaging\Backend\Administrator;
-use WPStaging\Backend\Pro\Licensing\Licensing;
+use WPStaging\Pro\License\Licensing;
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Basic\BasicServiceProvider;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Logger;
-use WPStaging\Duplicator\DuplicatorServiceProvider;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\AnalyticsServiceProvider;
 use WPStaging\Framework\AssetServiceProvider;
@@ -19,11 +18,12 @@ use WPStaging\Framework\DI\Container;
 use WPStaging\Framework\ErrorHandler;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\NoticeServiceProvider;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
 use WPStaging\Framework\SettingsServiceProvider;
 use WPStaging\Framework\SiteInfo;
-use WPStaging\Framework\Staging\FirstRun;
+use WPStaging\Staging\FirstRun;
 use WPStaging\Framework\Url;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Frontend\Frontend;
@@ -115,7 +115,6 @@ final class WPStaging
 
         $this->container->register(AnalyticsServiceProvider::class);
 
-        $this->container->register(DuplicatorServiceProvider::class);
         $this->container->register(BackupServiceProvider::class);
 
         // Register Pro or Basic Provider, Always prefer registering Pro if both classes found. If both not present throw error
@@ -315,30 +314,7 @@ final class WPStaging
 
     private function loadLanguages()
     {
-        /** @noinspection NullPointerExceptionInspection */
-        $languagesDirectory = WPSTG_PLUGIN_DIR . 'languages/';
-
-        if (function_exists('get_user_locale')) {
-            $locale = get_user_locale();
-        } else {
-            $locale = get_locale();
-        }
-
-        // Traditional WP plugin locale filter
-        $locale = apply_filters('plugin_locale', $locale, 'wp-staging');
-        $moFile = sprintf('%1$s-%2$s.mo', 'wp-staging', $locale);
-
-        // Setup paths to current locale file
-        $moFileLocal  = $languagesDirectory . $moFile;
-        $moFileGlobal = sprintf('%s/wp-staging/%s', WP_LANG_DIR, $moFile);
-
-        if (file_exists($moFileGlobal)) {
-            load_textdomain('wp-staging', $moFileGlobal);
-        } elseif (file_exists($moFileLocal)) {
-            load_textdomain('wp-staging', $moFileLocal);
-        } else {
-            load_plugin_textdomain('wp-staging', false, $languagesDirectory);
-        }
+        (new Language())->load();
     }
 
     /**

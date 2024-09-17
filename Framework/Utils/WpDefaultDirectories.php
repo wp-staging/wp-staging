@@ -5,7 +5,6 @@
 namespace WPStaging\Framework\Utils;
 
 use DirectoryIterator;
-use Hoa\Console\Readline\Autocompleter\Path;
 use UnexpectedValueException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
@@ -200,9 +199,12 @@ class WpDefaultDirectories
      * Get excluded directories and map it to array
      *
      * @param string $directoriesRequest
-     * @return array
      *
-     * @todo find a better place
+     * @deprecated use WPStaging\Framework\Adapter\Directory::getExcludedDirectories instead
+     *
+     * @todo replace all use of this method by WPStaging\Framework\Adapter\Directory::getExcludedDirectories
+     *
+     * @return array
      */
     public function getExcludedDirectories($directoriesRequest)
     {

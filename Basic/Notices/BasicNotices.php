@@ -34,7 +34,7 @@ class BasicNotices
     public function __construct(Assets $assets, RatingNotice $ratingNotice, ProCronsCleaner $proCronsCleaner, FreeBackupUpdateNotice $freeBackupUpdateNotice)
     {
         $this->showAllNotices  = Notices::SHOW_ALL_NOTICES;
-        $this->noticesViewPath = trailingslashit($this->getPluginPath()) . "Backend/views/notices/";
+        $this->noticesViewPath = WPSTG_VIEWS_DIR . "notices/";
         $this->assets          = $assets;
         $this->ratingNotice    = $ratingNotice;
         $this->proCronsCleaner = $proCronsCleaner;

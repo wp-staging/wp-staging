@@ -71,4 +71,46 @@ class LogFiles
     {
         return trailingslashit($this->logsDirectory);
     }
+
+    public function getAvailableLogFileTypes(): array
+    {
+        return $this->availableLogFileTypes;
+    }
+
+    /**
+     * @param int $days
+     * @return array
+     */
+    public function getRetentionLogFiles(int $days = 14): array
+    {
+        $logPrefix = implode('|', $this->availableLogFileTypes);
+        $logFiles  = [];
+        $dayStart  = strtotime('-' . $days);
+
+        $dirIterator = new \RecursiveIteratorIterator(new \RecursiveDirectoryIterator($this->logsDirectory));
+        foreach ($dirIterator as $fileInfo) {
+            if (!$fileInfo->isFile() || $fileInfo->isLink() || $fileInfo->getExtension() !== 'log') {
+                continue;
+            }
+
+            $filePath = $fileInfo->getRealPath();
+            $fileName = $fileInfo->getFilename();
+
+            if (!preg_match('@^(' . $logPrefix . ')@', $fileName, $matches)) {
+                continue;
+            }
+
+            $fileType  = $matches[1];
+            $fileMTime = $fileInfo->getMTime();
+            if (!$fileMTime) {
+                continue;
+            }
+
+            if ($dayStart >= $fileMTime) {
+                $logFiles[$fileType][] = $filePath;
+            }
+        }
+
+        return $logFiles;
+    }
 }

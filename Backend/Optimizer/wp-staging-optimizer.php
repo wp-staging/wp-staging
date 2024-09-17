@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.5.6
+ * Version: 1.5.8
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.6');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.8');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
@@ -66,10 +66,6 @@ if (!function_exists('wpstgIsExcludedPlugin')) {
     function wpstgIsExcludedPlugin(string $plugin): bool
     {
         $excludedPlugins = get_option('wpstg_optimizer_excluded', []);
-
-        // As a workaround for now we exclude all-in-one-wp-security-and-firewall AIOWPS plugin due
-        // to their salt postfix function which breaks WP STAGING completely.
-        //$excludedPlugins[] = 'all-in-one-wp-security-and-firewall';
 
         // Check for custom excluded plugins
         foreach ($excludedPlugins as $excludedPlugin) {
@@ -169,9 +165,8 @@ if (!function_exists('wpstgDisableTheme')) {
             $wpstgRootPro = wpstgGetPluginsDir() . 'wp-staging-pro';
             $wpstgRoot    = wpstgGetPluginsDir() . 'wp-staging';
 
-            $file  = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme' . DIRECTORY_SEPARATOR . 'functions.php';
-            $theme = DIRECTORY_SEPARATOR . 'Backend' . DIRECTORY_SEPARATOR . 'Optimizer' . DIRECTORY_SEPARATOR . 'blank-theme';
-
+            $theme = '/resources/blank-theme';
+            $file  = $theme . '/functions.php';
 
             if (file_exists($wpstgRoot . $file)) {
                 return $wpstgRoot . $theme;
@@ -271,7 +266,7 @@ if (!function_exists('wpstgIsStaging')) {
      */
     function wpstgIsStaging(): bool
     {
-        if (defined('WPSTAGING_DEV_SITE') && WPSTAGING_DEV_SITE === true) {
+        if (defined('WPSTAGING_DEV_SITE') && constant('WPSTAGING_DEV_SITE') === true) {
             return true;
         }
 
@@ -295,7 +290,7 @@ if (!function_exists('wpstgGetCloneSettings')) {
      * @param string|null $option
      * @return mixed
      */
-    function wpstgGetCloneSettings(string $option = null)
+    function wpstgGetCloneSettings($option = null)
     {
         $settings = get_option('wpstg_clone_settings', null);
 

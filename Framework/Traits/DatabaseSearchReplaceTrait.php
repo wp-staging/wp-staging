@@ -5,7 +5,7 @@ namespace WPStaging\Framework\Traits;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Urls;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 
 /**
  * Trait DatabaseSearchReplaceTrait

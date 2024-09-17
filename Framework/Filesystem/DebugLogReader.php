@@ -84,24 +84,33 @@ class DebugLogReader extends LogFiles
      */
     public function getLastLogEntries(int $maxSizeEach, bool $withWpstgDebugLog = true, bool $withPhpDebugLog = true): string
     {
-        $errors = '';
+        $content = '';
 
         if ($withWpstgDebugLog) {
             if (defined('WPSTG_DEBUG_LOG_FILE')) {
-                if ($this->filesystem->isReadableFile(WPSTG_DEBUG_LOG_FILE)) {
-                    $errors .= sprintf(
+                $wpstgDebugLogFile = WPSTG_DEBUG_LOG_FILE;
+
+                if ($this->filesystem->isReadableFile($wpstgDebugLogFile)) {
+                    $wpstgDebugLogFileSize = filesize($wpstgDebugLogFile);
+
+                    $content .= sprintf(
                         "--- WP STAGING Debug Logs\nFile: %s\nTotal file size: %s\nShowing last: %s\n\n=== START ===\n\n",
-                        WPSTG_DEBUG_LOG_FILE,
-                        size_format(filesize(WPSTG_DEBUG_LOG_FILE)),
+                        $wpstgDebugLogFile,
+                        size_format($wpstgDebugLogFileSize),
                         size_format($maxSizeEach)
                     );
-                    $errors .= $this->getDebugLogLines(WPSTG_DEBUG_LOG_FILE, $maxSizeEach);
-                    $errors .= "=== END ===\n\n";
+
+                    if ($wpstgDebugLogFileSize > $maxSizeEach) {
+                        $content .= $this->getDebugLogLines($wpstgDebugLogFile, $maxSizeEach);
+                    } else {
+                        $content .= file_get_contents($wpstgDebugLogFile);
+                    }
+                    $content .= "=== END ===\n\n";
                 } else {
-                    $errors .= "\n=== File WPSTG_DEBUG_LOG_FILE is not readable or does not exist ===\n";
+                    $content .= "\n=== File WPSTG_DEBUG_LOG_FILE is not readable or does not exist ===\n";
                 }
             } else {
-                $errors .= "\n=== WPSTG_DEBUG_LOG_FILE NOT DEFINED ===\n";
+                $content .= "\n=== WPSTG_DEBUG_LOG_FILE NOT DEFINED ===\n";
             }
         }
 
@@ -110,20 +119,28 @@ class DebugLogReader extends LogFiles
             $phpDebugLogFile = ini_get('error_log');
 
             if ($this->filesystem->isReadableFile($phpDebugLogFile)) {
-                $errors .= sprintf(
+                $phpDebugLogFileSize = filesize($phpDebugLogFile);
+
+                $content .= sprintf(
                     "--- PHP debug.log \nFile: %s\nTotal file size: %s\nShowing last: %s\n\n=== START ===\n\n",
                     $phpDebugLogFile,
-                    size_format(filesize($phpDebugLogFile)),
+                    size_format($phpDebugLogFileSize),
                     size_format($maxSizeEach)
                 );
-                $errors .= $this->getDebugLogLines($phpDebugLogFile, $maxSizeEach);
-                $errors .= "=== END ===\n\n";
+
+                if ($phpDebugLogFileSize > $maxSizeEach) {
+                    $content .= $this->getDebugLogLines($phpDebugLogFile, $maxSizeEach);
+                } else {
+                    $content .= file_get_contents($phpDebugLogFile);
+                }
+
+                $content .= "=== END ===\n\n";
             } else {
-                $errors .= "\n=== PHP DEBUG LOG FILE IS NOT A FILE OR IS NOT READABLE ===\n";
+                $content .= "\n=== PHP DEBUG LOG FILE IS NOT A FILE OR IS NOT READABLE ===\n";
             }
         }
 
-        return $errors;
+        return $content;
     }
 
     /**
@@ -158,5 +175,18 @@ class DebugLogReader extends LogFiles
         } catch (\Exception $e) {
             return '';
         }
+    }
+
+   /**
+    * @return string
+    */
+    public function maybeFixHtmlEntityDecode(string $content): string
+    {
+        if (empty($content)) {
+            return $content;
+        }
+
+        $content = esc_html(wp_strip_all_tags($content));
+        return str_replace(['&quot;', '&#039;', '&amp;'], ['"', "'", "&"], $content);
     }
 }

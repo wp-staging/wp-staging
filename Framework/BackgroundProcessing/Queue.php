@@ -73,6 +73,12 @@ class Queue
      */
     const QUEUE_TABLE_STRUCTURE_VERSION = '1.0.0';
 
+    /** @var int */
+    const STALLED_ACTIONS_BREAKPOINT_IN_MINS = 15;
+
+    /** @var bool */
+    const SET_UPDATED_AT_TO_NOW = true;
+
     /**
      * A reference to te current Background Processing Feature detection service.
      *
@@ -134,7 +140,7 @@ class Queue
      *                                         should use to interact wit the database, or `null`  to use
      *                                         the one globally provided by the Service Locator.
      */
-    public function __construct(Database $database = null)
+    public function __construct($database = null)
     {
         $services               = WPStaging::getInstance()->getContainer();
         $this->database         = $database ?: $services->make(DatabaseAdapter::class)->getClient();
@@ -193,7 +199,7 @@ class Queue
         $tableName = self::getTableName();
         $query     = "INSERT INTO {$tableName} SET {$assignmentsList}";
 
-        $result = $this->database->query($query, true);
+        $result = $this->database->query($query);
 
         if ($result === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -569,7 +575,7 @@ class Queue
         $claimQuery = "UPDATE {$tableName}
             SET status='{$processing}', claimed_at='{$now}'
             WHERE id=$claimedActionId;";
-        $claimed = $this->database->query($claimQuery, true);
+        $claimed = $this->database->query($claimQuery);
         $this->database->query("UNLOCK TABLES");
 
         if (!$claimed) {
@@ -687,7 +693,11 @@ class Queue
             $statusUpdateQuery = "UPDATE {$tableName} SET status='{$status}', claimed_at='{$now}', updated_at='{$now}' WHERE id={$actionId} ";
         }
 
-        $updated = $this->database->query($statusUpdateQuery, true);
+        $updated = $this->database->query($statusUpdateQuery);
+
+        if (!$updated && $this->reconnectDatabase()) {
+            $updated = $this->database->query($statusUpdateQuery);
+        }
 
         if (!$updated) {
             \WPStaging\functions\debug_log(json_encode([
@@ -727,7 +737,12 @@ class Queue
             claimed_at DATETIME DEFAULT NULL,
             updated_at DATETIME DEFAULT NULL,
             PRIMARY KEY  (id)
-            ) COLLATE {$collate}";
+            )";
+
+        if (!empty($collate)) {
+            $tableSql .= " COLLATE {$collate}";
+        }
+
         return $tableSql;
     }
 
@@ -743,7 +758,7 @@ class Queue
     {
         $tableName = self::getTableName();
         $query     = "DROP TABLE IF EXISTS {$tableName}";
-        $this->database->query($query, true);
+        $this->database->query($query);
         $this->tableState = self::TABLE_NOT_EXIST;
 
         return !$this->tableExists();
@@ -871,10 +886,12 @@ class Queue
      *                          The method will NOT check the status to make sure it's
      *                          one of the supported ones, this is by design to allow
      *                          the queue to be used in a more flexible way.
+     * @param DateTimeImmutable|null $breakpointDate An optional breakpoint date and time
+     * @param bool $updateUpdatedAt
      *
      * @return int The number of updated Actions.
      */
-    public function markDanglingAs($newStatus)
+    public function markDanglingAs(string $newStatus, $breakpointDate = null, bool $updateUpdatedAt = false): int
     {
         if (static::TABLE_NOT_EXIST === $this->checkTable()) {
             debug_log('Queue markDanglingAs: The table does not exist so there is nothing to update.', 'debug', false);
@@ -885,12 +902,14 @@ class Queue
 
         $tableName          = self::getTableName();
         $newStatus          = $this->database->escape($newStatus);
-        $danglingBreakpoint = $this->getDanglingBreakpointDate()->format('Y-m-d H:i:s');
+        $danglingBreakpoint = empty($breakpointDate) ? $this->getDanglingBreakpointDate()->format('Y-m-d H:i:s') : $breakpointDate->format('Y-m-d H:i:s');
+        $now                = current_time('mysql');
+        $updatedAtQuery     = $updateUpdatedAt ? ", updated_at='{$now}'" : '';
         $markQuery          = "UPDATE {$tableName} 
-            SET status='{$newStatus}', claimed_at=NULL
+            SET status='{$newStatus}', claimed_at=NULL{$updatedAtQuery}
             WHERE claimed_at IS NOT NULL
             AND claimed_at < '{$danglingBreakpoint}'";
-        $markResult = $this->database->query($markQuery, true);
+        $markResult = $this->database->query($markQuery);
 
         if ($markResult === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -975,7 +994,7 @@ class Queue
         $cancelQuery    = "UPDATE {$tableName} 
             SET status='{$newStatus}', claimed_at=NULL, updated_at='{$now}'
             WHERE jobId in ({$jobIdsInterval})";
-        $cancelResult = $this->database->query($cancelQuery, true);
+        $cancelResult = $this->database->query($cancelQuery);
 
         if ($cancelResult === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -1059,7 +1078,11 @@ class Queue
 
         $this->unlockQueueTable();
 
-        $updated = $this->database->query($statusUpdateQuery, true);
+        $updated = $this->database->query($statusUpdateQuery);
+
+        if (!$updated && $this->reconnectDatabase()) {
+            $updated = $this->database->query($statusUpdateQuery);
+        }
 
         if ($updated === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -1121,33 +1144,21 @@ class Queue
      * @return DateTimeImmutable A reference to an immutable date time object representing
      *                            the dangling breakpoint.
      */
-    public function getCleanupBreakpointDate()
+    public function getCleanupBreakpointDate(): DateTimeImmutable
     {
         return $this->getBreakpointDate(WEEK_IN_SECONDS);
     }
 
     /**
-     * Builds and returns a breakpoint date.
+     * Returns an immutable Date Object representing the breakpoint date and time
+     * that should be used to canceling the stalled Actions i.e. Actions in processing state for too long
      *
-     * @param int $interval  The amount, in seconds, to apply to the current date
-     *                       and time to build the breakpoint date.
-     *
-     * @return DateTimeImmutable A reference to the breakpoint date immutable instance.
+     * @return DateTimeImmutable A reference to an immutable date time object representing
+     *                            the dangling breakpoint.
      */
-    private function getBreakpointDate($interval)
+    public function getStalledBreakpointDate(): DateTimeImmutable
     {
-        try {
-            $breakpointDate = new DateTimeImmutable(date('Y-m-d H:i:s'));
-            $breakpointDate = $breakpointDate->setTimestamp($breakpointDate->getTimestamp() - $interval);
-        } catch (Exception $e) {
-            /*
-             * On failure, return a date very far in the past, before this is written, to make sure no
-             * Action will be modified.
-             */
-            $breakpointDate = new DateTimeImmutable('2020-01-01 00:00:00');
-        }
-
-        return $breakpointDate;
+        return $this->getBreakpointDate(self::STALLED_ACTIONS_BREAKPOINT_IN_MINS * MINUTE_IN_SECONDS);
     }
 
     /**
@@ -1174,7 +1185,7 @@ class Queue
         $cleanupQuery = "DELETE FROM {$tableName} 
             WHERE updated_at < '{$cleanupBreakpoint}'
             AND status in ({$cleanableStati})";
-        $cleanupResult = $this->database->query($cleanupQuery, true);
+        $cleanupResult = $this->database->query($cleanupQuery);
 
         if ($cleanupResult === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -1218,7 +1229,7 @@ class Queue
         $countQuery = "SELECT COUNT(*) as actions_count FROM {$tableName} 
             WHERE {$this->getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses)};";
 
-        $countResult = $this->database->query($countQuery, true);
+        $countResult = $this->database->query($countQuery);
 
         if ($countResult === false) {
             debug_log(json_encode([
@@ -1256,7 +1267,7 @@ class Queue
 
         $this->startBenchmark();
         $cleanupQuery  = "DELETE FROM {$tableName} WHERE {$this->getWhereConditionByScheduleIdAndStatus($scheduleId, $statuses)};";
-        $cleanupResult = $this->database->query($cleanupQuery, true);
+        $cleanupResult = $this->database->query($cleanupQuery);
         $this->finishBenchmark('cleanupActionsByScheduleId clean up query . ' . $cleanupQuery);
 
         if ($cleanupResult === false) {
@@ -1295,7 +1306,7 @@ class Queue
         $tableName = self::getTableName();
 
         $cleanupQuery  = "TRUNCATE {$tableName}";
-        $cleanupResult = $this->database->query($cleanupQuery, true);
+        $cleanupResult = $this->database->query($cleanupQuery);
 
         if ($cleanupResult === false) {
             \WPStaging\functions\debug_log(json_encode([
@@ -1474,5 +1485,42 @@ class Queue
         $whereCondition .= " AND status IN (" . implode(',', $statuses) . ")";
 
         return $whereCondition;
+    }
+
+    /**
+     * @return bool
+     */
+    private function reconnectDatabase(): bool
+    {
+        if (stripos($this->database->error(), 'MySQL server has gone away') !== false) {
+            $this->database = WPStaging::make(DatabaseAdapter::class)->getClient();
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Builds and returns a breakpoint date.
+     *
+     * @param int $interval  The amount, in seconds, to apply to the current date
+     *                       and time to build the breakpoint date.
+     *
+     * @return DateTimeImmutable A reference to the breakpoint date immutable instance.
+     */
+    private function getBreakpointDate($interval): DateTimeImmutable
+    {
+        try {
+            $breakpointDate = new DateTimeImmutable(date('Y-m-d H:i:s'));
+            $breakpointDate = $breakpointDate->setTimestamp($breakpointDate->getTimestamp() - $interval);
+        } catch (Exception $e) {
+            /*
+             * On failure, return a date very far in the past, before this is written, to make sure no
+             * Action will be modified.
+             */
+            $breakpointDate = new DateTimeImmutable('2020-01-01 00:00:00');
+        }
+
+        return $breakpointDate;
     }
 }

@@ -97,6 +97,23 @@ class Strings
     }
 
     /**
+     * Check if a string start with a specific string from a list of strings
+     * @param string[] $needlesList
+     * @param string $haystack
+     * @return bool
+     */
+    public function startsWithAnyFromList(array $needlesList, string $haystack): bool
+    {
+        foreach ($needlesList as $needle) {
+            if ($this->startsWith($haystack, $needle)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Check if a string ends with a specific string
      * @param string $haystack
      * @param string $needle
@@ -140,5 +157,24 @@ class Strings
         }
 
         return $string . '_';
+    }
+
+    /**
+     * If $haystack starts with $needle, replace it with $replace
+     * Example: replaceStartWith('www.', '', 'www.example.com') returns 'example.com'
+     * But replaceStartWith('www.', '', 'https://wwww.example.com') returns 'https://www.example.com and remains unchanged'
+     *
+     * @param string $needle
+     * @param string $replace
+     * @param string $haystack
+     * @return string
+     */
+    public function replaceStartWith(string $needle, string $replace, string $haystack): string
+    {
+        if (strpos($haystack, $needle) === 0) {
+            return $replace . substr($haystack, strlen($needle));
+        }
+
+        return $haystack;
     }
 }

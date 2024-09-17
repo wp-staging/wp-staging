@@ -12,7 +12,7 @@ class LoginForm
 
     /**
      * @var string
-     * Read in src/Frontend/views/loginForm.php
+     * Read in src/views/frontend/loginForm.php
      * Important! Keep the empty string assignment to prevent login issues.
      * See https://github.com/wp-staging/wp-staging-pro/issues/2804
      */
@@ -80,6 +80,8 @@ class LoginForm
                 $redirectUrl = $this->sanitize->sanitizeUrl($_POST['redirect_to']);
             }
 
+            set_transient('wpstg_user_logged_in_status', true, 5);
+
             header('Location:' . $redirectUrl);
         } else {
             $msg = sprintf(__('Login not possible! Only administrators can access this page. Please try the default <a target="_blank" href="%s">login</a> form or read this <a target="_blank" href="%s">guide</a>.', 'wp-staging'), wp_login_url(), $guideLink);
@@ -111,16 +113,16 @@ class LoginForm
      */
     private function getHeader()
     {
-        require_once __DIR__ . '/views/header.php';
+        require_once WPSTG_VIEWS_DIR . 'frontend/header.php';
     }
 
     /**
      * Add footer
-     *
+     * @return void
      */
     private function getFooter()
     {
-        require_once __DIR__ . '/views/footer.php';
+        require_once WPSTG_VIEWS_DIR . 'frontend/footer.php';
     }
 
     /**
@@ -163,12 +165,9 @@ class LoginForm
         $showNotice = (new LoginNotice())->isLoginNoticeActive();
 
         // Detect if wordfence is active and 2fa enabled
-        $isCustomLogin2faEnabled = class_exists('wordfence') && get_option('wordfenceActivated');
+        $isCustomLogin2faEnabled = class_exists('wordfence', false) && get_option('wordfenceActivated');
 
-        $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/pro/loginForm.php';
-        if (!file_exists($loginFileView)) {
-            $loginFileView = WPSTG_PLUGIN_DIR . 'Frontend/views/loginForm.php';
-        }
+        $loginFileView = WPSTG_VIEWS_DIR . 'frontend/loginForm.php';
 
         if ($args['echo']) {
             require($loginFileView);

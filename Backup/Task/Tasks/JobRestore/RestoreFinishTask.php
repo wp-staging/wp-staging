@@ -3,11 +3,13 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use RuntimeException;
-use WPStaging\Backup\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Backup\Dto\Task\Restore\Response\RestoreFinishResponseDto;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Notices\ObjectCacheNotice;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -16,6 +18,8 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
  */
 class RestoreFinishTask extends RestoreTask
 {
+    use EventLoggerTrait;
+
     /** @var ObjectCacheNotice */
     protected $objectCacheNotice;
 
@@ -52,6 +56,7 @@ class RestoreFinishTask extends RestoreTask
 
             $this->logger->info("################## FINISH ##################");
 
+            $this->restoreProcessCompleted();
             $this->clearCacheAndLogoutOnWpCom();
         } catch (RuntimeException $e) {
             $this->logger->critical($e->getMessage());
@@ -59,7 +64,11 @@ class RestoreFinishTask extends RestoreTask
             return $this->generateResponse(false);
         }
 
-        return $this->generateResponse();
+        /** @var RestoreFinishResponseDto */
+        $response = $this->generateResponse();
+        $response->setIsDatabaseRestoreSkipped($this->jobDataDto->getIsDatabaseRestoreSkipped());
+
+        return $response;
     }
 
     /**
@@ -69,7 +78,7 @@ class RestoreFinishTask extends RestoreTask
     protected function clearCacheAndLogoutOnWpCom()
     {
         // Early bail: if not wp.com site or database was not restored
-        if (!$this->siteInfo->isHostedOnWordPressCom() || !$this->jobDataDto->getBackupMetadata()->getIsExportingDatabase()) {
+        if (!$this->siteInfo->isHostedOnWordPressCom() || !$this->jobDataDto->getBackupMetadata()->getIsExportingDatabase() || $this->jobDataDto->getIsDatabaseRestoreSkipped()) {
             return;
         }
 
@@ -88,5 +97,13 @@ class RestoreFinishTask extends RestoreTask
         wp_suspend_cache_addition(true);
 
         wp_logout();
+    }
+
+    /**
+     * @return RestoreFinishResponseDto
+     */
+    protected function getResponseDto(): RestoreFinishResponseDto
+    {
+        return new RestoreFinishResponseDto();
     }
 }

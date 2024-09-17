@@ -15,7 +15,7 @@ class TableService
     /** @var Database */
     private $database;
 
-    /** @var Database\InterfaceDatabase|Database\InterfaceDatabaseClient|Database\MysqlAdapter|Database\MysqliAdapter|null */
+    /** @var Database\DatabaseAdapterInterface|Database\InterfaceDatabaseClient|Database\MysqliAdapter|null */
     private $client;
 
     /** @var callable|null */
@@ -27,7 +27,10 @@ class TableService
     /** @var Strings */
     private $strHelper;
 
-    public function __construct(Database $database = null)
+    /**
+     * @param Database|null $database
+     */
+    public function __construct($database = null)
     {
         $this->database  = $database ?: new Database();
         $this->client    = $this->database->getClient();
@@ -54,7 +57,7 @@ class TableService
      * @param callable|null $shouldStop
      * @return self
      */
-    public function setShouldStop(callable $shouldStop = null)
+    public function setShouldStop($shouldStop = null)
     {
         $this->shouldStop = $shouldStop;
         return $this;
@@ -88,7 +91,7 @@ class TableService
      *
      * @return array
      */
-    public function getTablesName($tables)
+    public function getTablesName($tables): array
     {
         return (!is_array($tables)) ? [] : array_map(function ($table) {
             return ($table->getName());
@@ -98,13 +101,14 @@ class TableService
     /**
      * Get all base tables starting with a certain prefix
      * This does not include table views
-     * @param string|null $prefix
+     * @param string $prefix
      *
      * @return array
      */
-    public function findTableNamesStartWith($prefix = null)
+    public function findTableNamesStartWith(string $prefix = ''): array
     {
-        $result = $this->client->query("SHOW FULL TABLES FROM `{$this->database->getWpdba()->getClient()->dbname}` WHERE `Table_type` = 'BASE TABLE'");
+        $query  = $this->getTablesFindQueryByTableType('BASE TABLE', $prefix);
+        $result = $this->client->query($query);
         if (!$result) {
             return [];
         }
@@ -118,24 +122,20 @@ class TableService
 
         $this->client->freeResult($result);
 
-        if ($prefix === null) {
-            return $tables;
-        }
-
-        return $this->filterByPrefix($tables, $prefix);
+        return $tables;
     }
-
 
     /**
      * Get all table views starting with a certain prefix
      *
-     * @param string|null $prefix
+     * @param string $prefix
      *
-     * @return array|null
+     * @return array
      */
-    public function findViewsNamesStartWith($prefix = null)
+    public function findViewsNamesStartWith(string $prefix = ''): array
     {
-        $result = $this->client->query("SHOW FULL TABLES FROM `{$this->database->getWpdba()->getClient()->dbname}` WHERE `Table_type` = 'VIEW'");
+        $query  = $this->getTablesFindQueryByTableType('VIEW', $prefix);
+        $result = $this->client->query($query);
         if (!$result) {
             return [];
         }
@@ -149,11 +149,7 @@ class TableService
 
         $this->client->freeResult($result);
 
-        if ($prefix === null) {
-            return $views;
-        }
-
-        return $this->filterByPrefix($views, $prefix);
+        return $views;
     }
 
     /**
@@ -161,7 +157,7 @@ class TableService
      *
      * @return string
      */
-    public function getCreateViewQuery($viewName)
+    public function getCreateViewQuery(string $viewName): string
     {
         $result = $this->client->query("SHOW CREATE VIEW `{$viewName}`");
         $row = $this->client->fetchAssoc($result);
@@ -182,7 +178,7 @@ class TableService
      *
      * @return string
      */
-    public function getCreateTableQuery($table_name)
+    public function getCreateTableQuery(string $table_name): string
     {
         $result = $this->client->query("SHOW CREATE TABLE `{$table_name}`");
         if ($result === false) {
@@ -204,11 +200,11 @@ class TableService
      * Delete all the tables or views that starts with $startsWith
      *
      * @param string $prefix
-     * @param array  $excludedTables
-     *
+     * @param array $excludedTables
+     * @param bool $deleteViews
      * @return bool
      */
-    public function deleteTablesStartWith($prefix, $excludedTables = [], $deleteViews = false)
+    public function deleteTablesStartWith(string $prefix, array $excludedTables = [], bool $deleteViews = false): bool
     {
         if ($deleteViews) {
             // Delete VIEWS first
@@ -243,12 +239,17 @@ class TableService
     /**
      * Delete Tables
      * @param array $tables
-     * @param string $prefix
      *
      * @return bool
      */
-    public function deleteTables($tables)
+    public function deleteTables($tables): bool
     {
+        $isForeignKeyCheckEnabled = false;
+        $isForeignKeyCheckEnabled = $this->database->getClient()->query("SELECT @@FOREIGN_KEY_CHECKS AS fk_check;")->fetch_assoc()['fk_check'];
+        if ($isForeignKeyCheckEnabled === "1") {
+            $this->database->getClient()->query("SET FOREIGN_KEY_CHECKS = 0;");
+        }
+
         foreach ($tables as $table) {
             // PROTECTION: Never delete any table that begins with wp prefix of live site
             if ($this->isProductionSiteTableOrView($table)) {
@@ -260,18 +261,20 @@ class TableService
             $this->database->getClient()->query("DROP TABLE `{$table}`;");
         }
 
+        if ($isForeignKeyCheckEnabled === "1") {
+            $this->database->getClient()->query("SET FOREIGN_KEY_CHECKS = 1;");
+        }
+
         return true;
     }
 
     /**
      * Delete Views
      *
-     * @param array  $views
-     * @param string $prefix
-     *
+     * @param array $views
      * @return bool
      */
-    public function deleteViews($views)
+    public function deleteViews($views): bool
     {
         foreach ($views as $view) {
             // PROTECTION: Never delete any table that begins with wp prefix of live site
@@ -288,26 +291,6 @@ class TableService
     }
 
     /**
-     * Get all elements starting with a specific string from an array
-     *
-     * @param array  $data
-     * @param string $startsWith
-     *
-     * @return array
-     */
-    private function filterByPrefix($tablesOrViews, $prefix)
-    {
-        $filteredArray = array_filter($tablesOrViews, function ($tableOrView) use ($prefix) {
-            return strpos($tableOrView, $prefix) === 0;
-        });
-
-        // Re-orders the array eliminating the "key" gaps for filtered out values.
-        $reorderedArray = array_values($filteredArray);
-
-        return $reorderedArray;
-    }
-
-    /**
      * @return Database
      */
     public function getDatabase()
@@ -316,10 +299,10 @@ class TableService
     }
 
     /**
-     * @param  string $likeCondition
+     * @param string $likeCondition
      * @return bool
      */
-    public function dropTablesLike($likeCondition)
+    public function dropTablesLike(string $likeCondition): bool
     {
         $wpdb = $this->database->getWpdb();
         $tables = $wpdb->get_results(
@@ -336,6 +319,97 @@ class TableService
         }
 
         return true;
+    }
+
+    /**
+     * @param string $tableName
+     * @return bool
+     */
+    public function dropTable(string $tableName): bool
+    {
+        $wpdb = $this->database->getWpdb();
+        $tables = $wpdb->get_results(
+            $wpdb->prepare('SHOW TABLES LIKE %s;', $wpdb->esc_like($tableName)),
+            ARRAY_A
+        );
+
+        if (!$tables) {
+            return true;
+        }
+
+        foreach ($tables as $tableObj) {
+            $tableName = current($tableObj);
+            $wpdb->query("DROP TABLE IF EXISTS `$tableName`");
+        }
+
+        return true;
+    }
+
+    /**
+     * @param string $sourceTable
+     * @param string $destinationTable
+     * @return bool
+     */
+    public function renameTable(string $sourceTable, string $destinationTable): bool
+    {
+        // Rename table return int on success and false on failure, so we alter the condition to check for false
+        $result = $this->database->getClient()->query(sprintf(
+            "RENAME TABLE `%s` TO `%s`;",
+            $sourceTable,
+            $destinationTable
+        ));
+
+        return $result !== false;
+    }
+
+    /**
+     * @param string $sourceTable
+     * @param string $destinationTable
+     * @return bool
+     */
+    public function cloneTableWithoutData(string $sourceTable, string $destinationTable): bool
+    {
+        return $this->database->getClient()->query("CREATE TABLE $destinationTable LIKE $sourceTable");
+    }
+
+    /**
+     * @param string $sourceTable
+     * @param string $destinationTable
+     * @param int $offset
+     * @param int $limit
+     * @return bool
+     */
+    public function copyTableData(string $sourceTable, string $destinationTable, int $offset = 0, int $limit = 0): bool
+    {
+        $query = sprintf(
+            "INSERT INTO %s SELECT * FROM %s LIMIT %d OFFSET %d",
+            $destinationTable,
+            $sourceTable,
+            $limit,
+            $offset
+        );
+
+        return $this->database->getClient()->query($query);
+    }
+
+    /**
+     * @param string $tableName
+     * @return int
+     */
+    public function getRowsCount(string $tableName): int
+    {
+        return (int)$this->database->getWpdb()->get_var("SELECT COUNT(1) FROM `$tableName`");
+    }
+
+    /**
+     * @return string
+     */
+    public function getLastWpdbError(): string
+    {
+        /** @var \wpdb */
+        $wpdb = $this->database->getWpdba()->getClient();
+
+        return $wpdb->last_error;
     }
 
     /**
@@ -373,5 +447,21 @@ class TableService
         }
 
         return true;
+    }
+
+    /**
+     * @param string $tableType
+     * @param string $prefix
+     * @return string
+     */
+    private function getTablesFindQueryByTableType(string $tableType, string $prefix = ''): string
+    {
+        $dbname = $this->database->getWpdba()->getClient()->dbname;
+        $query  = "SHOW FULL TABLES FROM `{$dbname}` WHERE `Table_type` = '{$tableType}'";
+        if (!empty($prefix)) {
+            $query .= " AND `Tables_in_{$dbname}` LIKE '{$this->database->escapeSqlPrefixForLIKE($prefix)}%'";
+        }
+
+        return $query;
     }
 }

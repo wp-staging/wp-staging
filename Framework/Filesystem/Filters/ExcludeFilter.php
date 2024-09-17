@@ -79,7 +79,7 @@ class ExcludeFilter
     {
         list($comparison, $size) = explode(' ', $rule);
         $bytes = (int)$size;
-        return $this->templateEngine->render("Backend/views/templates/exclude-filters/file-size-exclude-filter.php", [
+        return $this->templateEngine->render("exclude-filters/file-size-exclude-filter.php", [
             "comparison" => trim($comparison),
             "bytes" => trim($bytes),
             "size" => trim($size)
@@ -96,14 +96,14 @@ class ExcludeFilter
     public function renderGlobExclude($rule)
     {
         if ($this->strUtils->startsWith($rule, 'ext:')) {
-            return $this->templateEngine->render("Backend/views/templates/exclude-filters/file-ext-exclude-filter.php", [
+            return $this->templateEngine->render("exclude-filters/file-ext-exclude-filter.php", [
                 "extension" => trim(substr($rule, 4)),
             ]);
         }
 
         if ($this->strUtils->startsWith($rule, 'file:')) {
             list($rule, $name) = explode(' ', trim(substr($rule, 5)));
-            return $this->templateEngine->render("Backend/views/templates/exclude-filters/file-name-exclude-filter.php", [
+            return $this->templateEngine->render("exclude-filters/file-name-exclude-filter.php", [
                 "rule" => trim($rule),
                 "name" => trim($name),
             ]);
@@ -111,7 +111,7 @@ class ExcludeFilter
 
         if ($this->strUtils->startsWith($rule, 'dir:')) {
             list($rule, $name) = explode(' ', trim(substr($rule, 4)));
-            return $this->templateEngine->render("Backend/views/templates/exclude-filters/dir-name-exclude-filter.php", [
+            return $this->templateEngine->render("exclude-filters/dir-name-exclude-filter.php", [
                 "rule" => trim($rule),
                 "name" => trim($name),
             ]);

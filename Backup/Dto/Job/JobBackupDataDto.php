@@ -3,11 +3,14 @@
 namespace WPStaging\Backup\Dto\Job;
 
 use WPStaging\Backup\Dto\Interfaces\RemoteUploadDtoInterface;
-use WPStaging\Backup\Dto\JobDataDto;
 use WPStaging\Backup\Dto\Traits\IsExportingTrait;
 use WPStaging\Backup\Dto\Traits\IsExcludingTrait;
 use WPStaging\Backup\Dto\Traits\RemoteUploadTrait;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\ZlibCompressor;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Job\Dto\JobDataDto;
 
 class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 {
@@ -73,9 +76,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /** @var int The number of requests that the Discovering Files task has executed so far */
     private $discoveringFilesRequests = 0;
 
-    /** @var bool True if this backup should be repeated on a schedule, false if it should run only once. */
-    private $repeatBackupOnSchedule;
-
     /** @var string The cron to repeat this backup, if scheduled. */
     private $scheduleRecurrence;
 
@@ -91,8 +91,14 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /** @var string If set, this backup was created as part of this schedule ID. */
     private $scheduleId;
 
+    /** @var bool Should the backup be validated for each file once the backup is created. */
+    private $isValidateBackupFiles = false;
+
     /** @var bool Should this scheduled backup be created right now. Matters only if this backup is repeated on schedule */
     private $isCreateScheduleBackupNow;
+
+    /** @var bool Should the backup be created in background? */
+    private $isCreateBackupInBackground;
 
     /** @var array Site selected to backup */
     private $sitesToBackup = [];
@@ -101,12 +107,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     * is network subsite or network main site backup
     * @var bool */
     private $isNetworkSiteBackup = false;
-
-    /** @var bool */
-    private $isMultipartBackup = false;
-
-    /** @var int */
-    private $maxMultipartBackupSize = 2147483647; // 2GB - 1 Byte
 
     /**
      * @var array
@@ -134,6 +134,12 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
 
     /** @var int */
     private $subsiteBlogId;
+
+    /** @var int */
+    private $filePartIndex = 0;
+
+    /** @var bool */
+    private $isContaining2GBFile = false;
 
     /**
      * @return string|null
@@ -375,22 +381,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     }
 
     /**
-     * @return bool
-     */
-    public function getRepeatBackupOnSchedule()
-    {
-        return $this->repeatBackupOnSchedule;
-    }
-
-    /**
-     * @param bool $repeatBackupOnSchedule
-     */
-    public function setRepeatBackupOnSchedule($repeatBackupOnSchedule)
-    {
-        $this->repeatBackupOnSchedule = $repeatBackupOnSchedule;
-    }
-
-    /**
      * @see Cron For WP STAGING cron recurrences.
      *
      * @return string A WP STAGING cron schedule
@@ -489,6 +479,23 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     }
 
     /**
+     * @return bool
+     */
+    public function getIsCreateBackupInBackground(): bool
+    {
+        return (bool)$this->isCreateBackupInBackground;
+    }
+
+    /**
+     * Cannot strict type it yet, otherwise it might throw error for older scheduled backup
+     * @param bool $isCreateBackupInBackground
+     */
+    public function setIsCreateBackupInBackground($isCreateBackupInBackground)
+    {
+        $this->isCreateBackupInBackground = (bool)$isCreateBackupInBackground;
+    }
+
+    /**
      * @return array|null
      */
     public function getSitesToBackup()
@@ -499,38 +506,6 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setSitesToBackup(array $sitesToBackup = [])
     {
         $this->sitesToBackup = $sitesToBackup;
-    }
-
-    /**
-     * @return bool
-     */
-    public function getIsMultipartBackup()
-    {
-        return Hooks::applyFilters('wpstg.backup.isMultipartBackup', $this->isMultipartBackup);
-    }
-
-    /**
-     * @param bool $isMultipartBackup
-     */
-    public function setIsMultipartBackup($isMultipartBackup)
-    {
-        $this->isMultipartBackup = $isMultipartBackup;
-    }
-
-    /**
-     * @return int
-     */
-    public function getMaxMultipartBackupSize()
-    {
-        return Hooks::applyFilters('wpstg.backup.maxMultipartBackupSize', $this->maxMultipartBackupSize);
-    }
-
-    /**
-     * @param int $maxMultipartBackupSize
-     */
-    public function setMaxMultipartBackupSize($maxMultipartBackupSize)
-    {
-        $this->maxMultipartBackupSize = $maxMultipartBackupSize;
     }
 
     /**
@@ -733,6 +708,23 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     }
 
     /**
+     * @return int
+     */
+    public function getFilePartIndex(): int
+    {
+        return $this->filePartIndex;
+    }
+
+    /**
+     * @param int $index
+     * @return void
+     */
+    public function setFilePartIndex(int $index = 0)
+    {
+        $this->filePartIndex = $index;
+    }
+
+    /**
      * @param bool $isNetworkSiteBackup
      * @return void
      */
@@ -785,5 +777,55 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
         }
 
         return (int)$this->subsiteBlogId;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsValidateBackupFiles(): bool
+    {
+        return (bool)$this->isValidateBackupFiles;
+    }
+
+    /**
+     * Cannot strict type it yet, otherwise it might throw error for older scheduled backup
+     * @param bool $isValidateBackupFiles
+     */
+    public function setIsValidateBackupFiles($isValidateBackupFiles)
+    {
+        $this->isValidateBackupFiles = (bool)$isValidateBackupFiles;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsBackupFormatV1(): bool
+    {
+        return Hooks::applyFilters(BackupMetadata::FILTER_BACKUP_FORMAT_V1, true);
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsCompressedBackup(): bool
+    {
+        return WPStaging::make(ZlibCompressor::class)->isCompressionEnabled();
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsContaining2GBFile(): bool
+    {
+        return $this->isContaining2GBFile;
+    }
+
+    /**
+     * @param bool $isContaining2GBFile
+     * @return void
+     */
+    public function setIsContaining2GBFile(bool $isContaining2GBFile)
+    {
+        $this->isContaining2GBFile = $isContaining2GBFile;
     }
 }

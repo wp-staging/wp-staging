@@ -8,22 +8,23 @@
 
 namespace WPStaging\Backup\BackgroundProcessing\Backup;
 
+use Exception;
+use WP_Error;
+use WPStaging\Backup\Ajax\Backup\PrepareBackup as AjaxPrepareBackup;
+use WPStaging\Backup\BackupScheduler;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Job\JobBackupProvider;
+use WPStaging\Backup\Job\Jobs\JobBackup;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Action;
 use WPStaging\Framework\BackgroundProcessing\Exceptions\QueueException;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\BackgroundProcessing\QueueActionAware;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Traits\ResourceTrait;
-use WPStaging\Backup\Ajax\Backup\PrepareBackup as AjaxPrepareBackup;
-use Exception;
-use WP_Error;
-use WPStaging\Backup\BackupProcessLock;
-use WPStaging\Backup\BackupScheduler;
-use WPStaging\Backup\Dto\TaskResponseDto;
-use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Exceptions\ProcessLockedException;
-use WPStaging\Backup\Job\JobBackupProvider;
-use WPStaging\Backup\Job\Jobs\JobBackup;
+use WPStaging\Framework\Utils\Times;
 
 use function WPStaging\functions\debug_log;
 
@@ -66,17 +67,26 @@ class PrepareBackup
      */
     private $lastQueuedActionId;
 
+    /** @var Times */
+    private $times;
+
     /**
      * PrepareBackup constructor.
      *
      * @param AjaxPrepareBackup $ajaxPrepareBackup A reference to the object currently handling
      *                                             AJAX Backup preparation requests.
+     * @param Queue             $queue             A reference to the instance of the Queue manager the class
+     *                                             should use for processing.
+     * @param ProcessLock       $processLock       A reference to the Process Lock manager the class should use
+     *                                             to prevent concurrent processing of the job requests.
+     * @param Times             $times             A reference to the Times utility class.
      */
-    public function __construct(AjaxPrepareBackup $ajaxPrepareBackup, Queue $queue, BackupProcessLock $processLock)
+    public function __construct(AjaxPrepareBackup $ajaxPrepareBackup, Queue $queue, ProcessLock $processLock, Times $times)
     {
         $this->ajaxPrepareBackup = $ajaxPrepareBackup;
-        $this->queue = $queue;
-        $this->processLock = $processLock;
+        $this->queue             = $queue;
+        $this->processLock       = $processLock;
+        $this->times             = $times;
     }
 
     /**
@@ -91,15 +101,18 @@ class PrepareBackup
         $data = empty($data) ? [] : (array)$data;
 
         try {
-            $data = (array)wp_parse_args((array)$data, $this->getDefaultDataConfiguration());
+            $data     = (array)wp_parse_args((array)$data, $this->getDefaultDataConfiguration());
             $prepared = $this->ajaxPrepareBackup->validateAndSanitizeData($data);
-            $name = isset($prepared['name']) ? $prepared['name'] : 'Background Processing Backup';
-            $jobId = uniqid($name . '_', true);
+            $name     = empty($prepared['name']) ? 'Background Processing Backup' : $prepared['name'];
+            $jobId    = uniqid($name . '_', true);
 
             $data['jobId'] = $jobId;
-            $data['name'] = $name;
+            $data['name']  = $name;
 
             $this->queueAction($data);
+
+            // Let convert stalled actions to canceled
+            $this->queue->markDanglingAs(Queue::STATUS_CANCELED, $this->queue->getStalledBreakpointDate(), Queue::SET_UPDATED_AT_TO_NOW);
 
             return $jobId;
         } catch (Exception $e) {
@@ -121,7 +134,7 @@ class PrepareBackup
             throw new \BadMethodCallException();
         }
 
-        $action = $this->getCurrentAction();
+        $action   = $this->getCurrentAction();
         $priority = $action === null ? 0 : $action->priority - 1;
         $actionId = $this->queue->enqueueAction(self::class . '::' . 'act', $args, $args['jobId'], $priority);
 
@@ -171,7 +184,7 @@ class PrepareBackup
 
         do {
             try {
-                /** @see WPStaging\Backup\Job\AbstractJob::prepareAndExecute() */
+                /** @see WPStaging\Framework\Job\AbstractJob::prepareAndExecute() */
                 $taskResponseDto = $this->jobBackup->prepareAndExecute();
                 $this->jobBackup->persist();
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
@@ -184,12 +197,29 @@ class PrepareBackup
                 return new WP_Error(400, $e->getMessage());
             }
 
-            $errorMessage = $this->getLastErrorMessage();
+            /** @var BackupScheduler */
+            $backupScheduler = WPStaging::make(BackupScheduler::class);
+            $errorMessage    = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
                 $this->processLock->unlockProcess();
-                /** @var BackupScheduler */
-                $backupScheduler = WPStaging::make(BackupScheduler::class);
-                $backupScheduler->sendErrorReport("[Errors in scheduled backups]: " . $errorMessage);
+                $body = '';
+                if (array_key_exists('scheduleId', $args)) {
+                    $body .= 'Error in scheduled backup' . PHP_EOL . PHP_EOL;
+                } else {
+                    $body .= 'Error in background backup' . PHP_EOL . PHP_EOL;
+                }
+
+                $jobDataDto = $this->jobBackup->getJobDataDto();
+                $date = new \DateTime();
+                $date->setTimestamp($jobDataDto->getStartTime());
+                $backupDuration = str_replace(['minutes', 'seconds'], ['min', 'sec'], $this->times->getHumanReadableDuration(gmdate('i:s', $jobDataDto->getDuration())));
+
+                $body .= 'Started at: ' .  $date->format('H:i:s') . PHP_EOL ;
+                $body .= 'Duration: ' . $backupDuration . PHP_EOL;
+                $body .= 'Job ID: ' . $args['jobId'] . PHP_EOL . PHP_EOL;
+                $body .= 'Error Message: ' . $errorMessage;
+
+                $backupScheduler->sendErrorReport($body);
 
                 return new WP_Error(400, $errorMessage);
             }
@@ -261,27 +291,30 @@ class PrepareBackup
     public function getDefaultDataConfiguration()
     {
         return [
-            'isExportingPlugins' => true,
-            'isExportingMuPlugins' => true,
-            'isExportingThemes' => true,
-            'isExportingUploads' => true,
+            'isExportingPlugins'             => true,
+            'isExportingMuPlugins'           => true,
+            'isExportingThemes'              => true,
+            'isExportingUploads'             => true,
             'isExportingOtherWpContentFiles' => true,
-            'isExportingDatabase' => true,
-            'isAutomatedBackup' => true,
+            'isExportingOtherWpRootFiles'    => false, //do not backup wp root files by default.
+            'isExportingDatabase'            => true,
+            'isAutomatedBackup'              => true,
             // Prevent this scheduled backup from generating another schedule.
-            'repeatBackupOnSchedule' => false,
-            'sitesToBackup' => [],
-            'storages' => ['localStorage'],
-            'isInit' => true,
-            'isSmartExclusion' => false,
-            'isExcludingSpamComments' => false,
-            'isExcludingPostRevision' => false,
-            'isExcludingDeactivatedPlugins' => false,
-            'isExcludingUnusedThemes' => false,
-            'isExcludingLogs' => false,
-            'isExcludingCaches' => false,
-            'backupType' => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
-            'subsiteBlogId' => null,
+            'repeatBackupOnSchedule'         => false,
+            'sitesToBackup'                  => [],
+            'storages'                       => ['localStorage'],
+            'isInit'                         => true,
+            'isSmartExclusion'               => false,
+            'isExcludingSpamComments'        => false,
+            'isExcludingPostRevision'        => false,
+            'isExcludingDeactivatedPlugins'  => false,
+            'isExcludingUnusedThemes'        => false,
+            'isExcludingLogs'                => false,
+            'isExcludingCaches'              => false,
+            'backupType'                     => is_multisite() ? BackupMetadata::BACKUP_TYPE_MULTISITE : BackupMetadata::BACKUP_TYPE_SINGLE,
+            'subsiteBlogId'                  => null,
+            'backupExcludedDirectories'      => '',
+            "isValidateBackupFiles"          => false,
         ];
     }
 

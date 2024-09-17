@@ -9,8 +9,12 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Task\RestoreFileHandlers\RestoreFileProcessor;
+use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Framework\Job\Interfaces\FileTaskInterface;
+use WPStaging\Framework\Job\Task\FileHandler\FileProcessor;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -25,8 +29,10 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
  *
  * @package WPStaging\Backup\Abstracts\Task
  */
-abstract class FileRestoreTask extends RestoreTask
+abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
 {
+    use EndOfLinePlaceholderTrait;
+
     /**
      * @var Filesystem
      */
@@ -38,7 +44,7 @@ abstract class FileRestoreTask extends RestoreTask
     protected $directory;
 
     /**
-     * @var RestoreFileProcessor
+     * @var FileProcessor
      */
     private $restoreFileProcessor;
 
@@ -64,7 +70,7 @@ abstract class FileRestoreTask extends RestoreTask
         SeekableQueueInterface $taskQueue,
         Filesystem $filesystem,
         Directory $directory,
-        RestoreFileProcessor $restoreFileProcessor,
+        FileProcessor $restoreFileProcessor,
         PathIdentifier $pathIdentifier,
         SiteInfo $siteInfo
     ) {
@@ -76,6 +82,9 @@ abstract class FileRestoreTask extends RestoreTask
         $this->isSiteHostedOnWordPressCom = $siteInfo->isHostedOnWordPressCom();
     }
 
+    /**
+     * @return void
+     */
     public function prepareFileRestore()
     {
         if ($this->stepsDto->getTotal() === 0) {
@@ -88,15 +97,21 @@ abstract class FileRestoreTask extends RestoreTask
     }
 
     /**
-     * @return \WPStaging\Backup\Dto\TaskResponseDto
+     * @return TaskResponseDto
      */
-    public function execute()
+    public function execute(): TaskResponseDto
     {
+        if ($this->isSkipped()) {
+            $this->stepsDto->finish();
+            $this->logger->warning(sprintf(esc_html__('%s skipped by filter!', 'wp-staging'), static::getTaskTitle()));
+            return $this->generateResponse(false);
+        }
+
         try {
             $this->checkMissingParts();
         } catch (MissingFileException $ex) {
             $this->stepsDto->finish();
-            $this->logger->warning(sprintf(esc_html__('%s Skipped!', 'wp-staging'), static::getTaskTitle()));
+            $this->logger->warning(sprintf(esc_html__('%s skipped due to missing part!', 'wp-staging'), static::getTaskTitle()));
             return $this->generateResponse(false);
         }
 
@@ -116,7 +131,7 @@ abstract class FileRestoreTask extends RestoreTask
         return $this->generateResponse(false);
     }
 
-    protected function getOriginalSuffix()
+    protected function getOriginalSuffix(): string
     {
         return '_wpstg_tmp';
     }
@@ -136,12 +151,20 @@ abstract class FileRestoreTask extends RestoreTask
      *
      * @return array
      */
-    abstract protected function getParts();
+    abstract protected function getParts(): array;
+
+    /**
+     * Skip the task if set by filter
+     *
+     * @return bool
+     */
+    abstract protected function isSkipped(): bool;
 
     /**
      * Skip the task if part is missing for this task
      *
      * @throws MissingFileException
+     * @return void
      */
     protected function checkMissingParts()
     {
@@ -163,6 +186,7 @@ abstract class FileRestoreTask extends RestoreTask
 
     /**
      * Executes the next item in the queue.
+     * @return void
      */
     protected function processNextItemInQueue()
     {
@@ -208,6 +232,7 @@ abstract class FileRestoreTask extends RestoreTask
         // Make sure destination is within WordPress
         // @todo Test backup in Windows and restoring in Linux and vice-versa
         $destination = $nextInQueue['destination'];
+        $destination = $this->replacePlaceholdersWithEOLs($destination);
         $destination = wp_normalize_path($destination);
 
         // Executes the action
@@ -217,8 +242,9 @@ abstract class FileRestoreTask extends RestoreTask
     /**
      * @param string $source Source path to move.
      * @param string $destination Where to move source to.
+     * @return void
      */
-    public function enqueueMove($source, $destination)
+    public function enqueueMove(string $source, string $destination)
     {
         $this->enqueue([
             'action' => 'move',
@@ -229,8 +255,9 @@ abstract class FileRestoreTask extends RestoreTask
 
     /**
      * @param string $path The path to delete. Can be a folder, which will be deleted recursively.
+     * @return void
      */
-    public function enqueueDelete($path)
+    public function enqueueDelete(string $path)
     {
         $this->enqueue([
             'action' => 'delete',
@@ -242,6 +269,7 @@ abstract class FileRestoreTask extends RestoreTask
     /**
      * Use to retry last action in next request,
      * if it wasn't completed in current request.
+     * @return void
      */
     public function retryLastActionInNextRequest()
     {
@@ -249,9 +277,22 @@ abstract class FileRestoreTask extends RestoreTask
     }
 
     /**
-     * @param array $action An array of actions to perform.
+     * @return bool
      */
-    private function enqueue($action)
+    protected function isRestoreOnSubsite(): bool
+    {
+        if (!is_multisite()) {
+            return false;
+        }
+
+        return $this->jobDataDto->getBackupMetadata()->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE;
+    }
+
+    /**
+     * @param array $action An array of actions to perform.
+     * @return void
+     */
+    private function enqueue(array $action)
     {
         $this->taskQueue->enqueue(json_encode($action));
     }

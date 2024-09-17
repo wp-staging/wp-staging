@@ -11,9 +11,9 @@ interface RemoteUploadDtoInterface
 
     public function setIsAutomatedBackup(bool $isAutomatedBackup);
 
-    public function getTotalBackupSize(): int;
+    public function getTotalBackupSize(): float;
 
-    public function setTotalBackupSize(int $totalBackupSize);
+    public function setTotalBackupSize(float $totalBackupSize);
 
     public function getFilesToUpload(): array;
 
@@ -23,7 +23,7 @@ interface RemoteUploadDtoInterface
 
     public function setUploadedFiles(array $uploadedFiles = []);
 
-    public function setUploadedFile(string $uploadedFile, int $fileSize);
+    public function setUploadedFile(string $uploadedFile, float $fileSize);
 
     public function getIsOnlyUpload(): bool;
 
@@ -69,4 +69,23 @@ interface RemoteUploadDtoInterface
      * @return void
      */
     public function setEndTime($endTime);
+
+    /**
+     * @param bool $isMultipartBackup
+     */
+    public function setIsMultipartBackup($isMultipartBackup);
+
+    /**
+     * @return bool
+     */
+    public function getIsMultipartBackup();
+
+    /**
+     * @return int
+     */
+    public function getMaxMultipartBackupSize();
+
+    public function setMaxMultipartBackupSize($maxMultipartBackupSize);
+
+    public function getRepeatBackupOnSchedule();
 }

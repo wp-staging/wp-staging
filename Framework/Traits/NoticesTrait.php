@@ -9,25 +9,6 @@ trait NoticesTrait
     /** @var string */
     protected $noticesViewPath;
 
-    /** @var string|null */
-    protected $pluginPath = '';
-
-    /** @return string */
-    public function getPluginPath()
-    {
-        if ($this->pluginPath === '') {
-            $this->pluginPath = WPSTG_PLUGIN_DIR;
-        }
-
-        return $this->pluginPath;
-    }
-
-    /** @param string $pluginPath */
-    public function setPluginPath($pluginPath)
-    {
-        $this->pluginPath = $pluginPath;
-    }
-
     /**
      * Check whether the page is WP Staging admin page or not
      * @return bool
@@ -39,13 +20,20 @@ trait NoticesTrait
             return false;
         }
 
-        $currentPage = (isset($_GET["page"])) ? Sanitize::sanitizeString($_GET["page"]) : null;
+        $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
+        if (empty($currentPage)) {
+            return false;
+        }
 
-        $availablePages = [
-            "wpstg-settings", "wpstg-addons", "wpstg-tools", "wpstg-clone", "wpstg_clone", "wpstg_backup"
-        ];
+        $allowedPrefixes = ["wpstg-", "wpstg_"];
 
-        return in_array($currentPage, $availablePages, true);
+        foreach ($allowedPrefixes as $prefix) {
+            if (strpos($currentPage, $prefix) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     /** @return string */

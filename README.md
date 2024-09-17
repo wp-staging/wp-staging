@@ -19,7 +19,7 @@ If you find an issue, let us know [here](https://github.com/WP-Staging/wp-stagin
 This is a public mirror of WP STAGING BASIC version. No official support is given here but we check this repository regularely for feedback and PR's
 
 ## Contributions ##
-Anyone is welcome to contribute to WP STAGING. Please read the [guidelines for contributing](https://github.com/rene-hermenau/wp-staging/blob/master/CONTRIBUTING.md) to this repository.
+Anyone is welcome to contribute to WP STAGING. Please read the [guidelines for contributing](https://github.com/wp-staging/wp-staging/blob/master/CONTRIBUTING.md) to this repository.
 
 There are various ways you can contribute:
 

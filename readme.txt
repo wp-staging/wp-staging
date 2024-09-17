@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
-Tested up to: 6.5
-Stable tag: 3.5.0
+Tested up to: 6.6
+Stable tag: 3.8.5
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -17,12 +17,16 @@ Backup Restore Migrate Staging Duplicator - 100% unit tested.
 == Description ==
 
 <h3>Backup, Staging, Cloning & Migration of WordPress Sites</h3>
-WP STAGING is a professional all in one <strong>backup, staging, and duplicator plugin</strong>. Create an exact copy and backup of your website in seconds! Perfect for staging, backup, or development purposes.
-(Cloning and backup time depends on the size of your website)
+WP STAGING is a professional all in one <strong>backup, staging, and duplicator plugin</strong>. Unit and e2e tested on an enterprise level for all version of php 7.0 - 8.3.
 
-This backup and staging tool creates a clone of your website into a subfolder or subdomain (Pro) of your main WordPress installation. The cloned site includes an entire copy of your database.
+Instantly* create an exact backup and clone of your website, perfect for staging, development, or simply keeping your data safe. *Cloning and backup time depends on the size of your website.
+Perfect for staging, backup, or development purposes.
 
-For pushing & migrating plugins and themes to the live site, creating a backup and upload a backup to cloud providers, check out [WP STAGING | PRO](https://wp-staging.com/backup-wordpress "WP STAGING - Backup & Cloning")
+With WP STAGING, you can easily clone your site to a subfolder or subdomain (Pro version), complete with a full database copy, ensuring a seamless transition and a reliable backup. All data stays on your server and will not be transferred to any third party!
+
+Our powerful backup tool is designed for speed and efficiency, making it one of the fastest backup and restore plugins available for WordPress. Even this free version allows you to restore a backup of your website in minutes if anything goes wrong. Experience peace of mind with WP STAGING.
+
+For pushing & migrating a staging site to the production site and uploading a backup to cloud providers and for more premium features, check out [WP STAGING | PRO](https://wp-staging.com/backup-wordpress "WP STAGING - Backup & Cloning")
 
 WP STAGING runs all the time-consumptive operations for database and file cloning and backup operations in the background. This tool does <strong>automatically a search & replacement</strong> of all links and paths.
 
@@ -30,7 +34,7 @@ WP STAGING runs all the time-consumptive operations for database and file clonin
 
 WP STAGING can prevent your website from breaking or going offline due to installing untested plugins!
 
-[youtube https://www.youtube.com/watch?v=vkv52s36Yvg]
+[vimeo https://vimeo.com/999447985]
 
 == Frequently Asked Questions ==
 
@@ -282,6 +286,189 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.8.5 =
+* New: Compatible up to WordPress 6.6.2
+* New: Compatible up to PHP 8.4.0 beta5
+* New: Add feature to "Disable WooCommerce Action Scheduler for Subscriptions" on staging sites. (Pro) #3470
+* New: Make backup v.2 compatible on 32 bit PHP versions. #3714
+* New: Purge LiteSpeedCache after performing push.(Pro) #3693
+* New: Show count of total and selected database tables before performing push. #3724
+* New: Log all WP Staging global and specific tasks settings. #3633
+* New: Show memory exhausted error in process modal. #3710
+* Fix: Preserve login by link data on staging site after update process. (Pro) #3731
+* Fix: Adjust php 5.6 compatible message and disable email footer in feedback emails. #3696
+* Fix: Delete `W3 Total Cache` drop-in files during push job when the `Push Changes > Uninstall all plugins/themes on production site` option is selected. #3620
+* Fix: Stop backup creation earlier when the server disk is full. #3606
+* Fix: Global translation po & mo files are not recognized. Load translations files from wp-content/languages/plugins folder. #3757
+* Fix: Automatically send request using GET method to fire queue ajax if POST method doesn't work. Add filter `wpstg.queue.request.force_get_method` to force use GET method. Useful in case if somehow the `POST` method for ajax request is blocked by hosting provider or other plugins. #3705
+* Fix: Resolve console errors caused by duplicate and missing HTML element IDs. #3702
+* Fix: Don't use the same dropbox data for live and staging site. (Pro) #3739
+* Fix: Unable to write file header for v2 backups on Windows OS. #3694
+* UX: Make the hamburger icon and responsive menu look more appealing in light and dark mode. #3703
+* UX: Show license information on Settings, System Info and WP Staging | Restore page. (Pro) #3726
+* UX: Make the locked backup loader for ongoing background backups look good in dark and light mode. #3721
+* UX: Improve restore modal description to avoid confusion about what is being restored. List all the backup restore related filters in the restore logs. #3671
+* UX: Improve pro banner in free version. (free) #3679
+* UX: Improve Upload modal, add notice to reload page after uploading backup via FTP. #3672
+* Dev: Refactor namespace and files. #3749
+* Dev: Add wpdb DB helper class with crud operations for `options` table in playwright testing. #3712
+* Dev: Add PHP 8.4 in test suite. Make unit and e2e tests pass with the beta version of PHP 8.4. #3662
+
+= 3.8.4 =
+* New: Compatible up to WordPress 6.6.1
+* New: Add filter `wpstg.backup.restore.exclude_backup_parts` to skip plugins, mu-plugins, themes, uploads, database, other content and extra root folder if included during backup restore. #3625
+* New: Add option to download the WP Staging Restore script from wp-staging.com. #3376
+* New: New navigation bar that ensures a visually appealing user interface across all screen resolutions. #3473
+* New: Show count of total and selected database tables while doing cloning job. #3634
+* Enh: Log installed plugins and themes before performing a push job.(Pro) #3613
+* Enh: Disable "Load Remote Backups" button while loading backups. (pro) #3570
+* Enh: Improve error message when unable to add backup metadata or files-index in the backup in final step. #3396
+* Enh: Show triangle icon instead of checkbox in front of Advanced Settings link. #3593
+* Enh: Show OS and PHP architecture in system log. #3621
+* Enh: Create human-friendly default names for staging sites if no optional staging name is provided. "Star Trek - Live long and prosper!" #3614
+* Fix: Make clear what login credentials to use when WP Staging | Restore standalone installer is used on a new site after backup restore. #3680
+* Fix: Validate database prefix when creating a staging site to confirm it does not begin with the production site database prefix. #3553
+* Fix: Increase delay interval between backup status requests from 5 seconds to 8 seconds to reduce chances of 503 errors. Add filter `wpstg.backup.interval.status_request` to customize this value. #3611
+* Fix: Show actual installed free version in system information. #3594
+* Fix: Make sure that the `Reset` process works correctly even when the staging site database has FOREIGN_KEY_CHECKS enabled. #3686
+* Fix: Remove duplicate ajax requests for backup related operations. #3664
+* Fix: Make the validate icon displayed correctly. #3688
+* Fix: Search and replace does not work when url contains 'www.'. #3631
+* Fix: Make `Ninja Forms` work properly after performing backup restore. #3608
+* Dev: Fix e2e cloning tests. #3649
+* Dev: Move all views/templates/* to views/* folder. Also fix `Undefined array key page` warning. #3690
+* Dev: Move MemoryExhaust logic to src/Framework namespace. #3666
+* Dev: Replace internal email address #3541
+* Dev: Move classes/services out of Backup namespace that could be used with Cloning feature. #3668
+* Dev: Remove the wpdb dependency from DatabaseImporter class by decoupling the database logic through DatabaseInterface. #3642
+* Dev: Move all views to src/views/* folder. Move blank-theme and default wp-config.php to src/resources folder. #2825
+* Dev: Add v1 and v2 backup specification. #3518
+* Dev: Set up playwright env. #3578
+* Dev: Replace `docker-compose` with `docker compose` in fast tests, as `docker-compose` went missing in Github Actions. #3660
+* Dev: Move all classes from legacy folder Backend/Pro/Licensing to Pro/License. #2866
+* Dev: Improve npm commands to build and run Windows docker setup. #3012
+* Dev: Replace shorthand '-P' by its option name '--service-ports' in docker command that runs playwright. #3697
+
+= 3.8.3 =
+* New: Compatible up to WordPress 6.6.1
+* UX: Make backup log window more appealing and consistent. #3604
+* UX: Refresh error message when clicking the backup menu tab. #3587
+* Fix: Disable email notifications when a backup successfully runs. #3517
+* Fix: Properly catch fatal errors when merging logs into single file when sending backup error report. #3573
+* Fix: Make the backup restoreable even when it has not correctly replaced table constraint(s). #3595
+* Fix: Update new admin login password if user account already exists while creating staging site. (Pro) #3598
+* Dev: Refactor backup remote storage downloading code. (Pro) #2751
+
+= 3.8.2 =
+* New: Compatible up to WordPress 6.6
+* New: Add super admin role when creating login link. Existing staging sites need to be updated. (Pro) #3520
+* New: Redesign process logs to make them more appealing and robust, ensuring they look good. #3281
+* Security: Encrypt sensitive information when downloading the system info files. #3305
+* Enh: Implement a mechanism that can be used to better log failure of jobs. #3436
+* Enh: Add upgrade routine to enable email notifications for free version by default. #3491
+* Enh: Add a tooltip to the backup modal explaining the function of "Validate Backup". #3513
+* Fix: Backup Restore failed to read the cache file of old object data when using PHP 7.2. #3539
+* Fix: Make sure to backup all other files in the WP root directory when running background backup. #3564
+* Fix: Ensure that backup process works properly when attempting to create multipart backup with free version. #3444
+* Fix: Show correct timestamp when retrieving remote backup from an FTP storage provider. (Pro) #3499
+* Fix: Google authentication throws exception when user cancels backup auth process. (Pro) #3510
+* Fix: Fatal error on activation of WP Staging Pro on PHP 7.0. (Pro) #3580
+* Fix: Sometimes warnings were generated during PUSH when trying to cleanup tmp directory for plugins and themes. #3588
+* UX: Ensure smooth transition of HTML attributes in advanced options. #3535
+* UX: Toggle `Email Address` and `Slack Webhook URL` fields when email and slack notifications enabled. #3532
+* Dev: Don't rerun CI workflows when one of the changelogs is adjusted. #3493
+* Dev: Failing unit tests at \NoticesTest::shouldShowDisabledOptimizerNotice(). #3601
+
+= 3.8.1 =
+* New: Compatible to WordPress 6.5.5
+* New: Enable remote backup loading for dropbox storage provider. (Pro) #3475
+* New: Add 'Upload to Cloud' button to upload existing local backups to cloud storage. (Pro) #3331
+* New: Add option to backup custom directories in WordPress root path. #2903
+* New: Add backup notifications via Slack. (Pro) #3297
+* New: Add backup email notifications to WP Staging free version. #3297
+* Enh: Show a message when ajax requests get blocked by a firewall rule. #3449
+* Fix: Magic login link does not work when it is used more than one time. Requires updating existing staging sites to fix this. (Pro) #3512
+* Fix: Handle staging and backup creation when file name contains new line character. #3417
+* Fix: Make "copy to clipboard" button works properly in all browsers, regardless of protocol (HTTP, HTTPS). #3443
+* Fix: Show correct folder count if the staging site file structure contains multiple plugin and theme folders. #3419
+* Fix: Prevent backup retention from being modified when scheduling backup. #3422
+* Fix: Show 'Settings form' after authenticating with storage providers Google Drive and Dropbox. #3356
+* Fix: The site URL is not replaced correctly in the blog table on PUSH for network subsites that have a different domain than the main site. (Pro) #3501
+* Fix: Several PHP warnings when using RESET on an existing staging site. #3438
+* Fix: Optimize and clean up CSS. Fix X and Github icons. Remove of '!important' declarations in dark theme. #3448
+* Fix: Validate new admin account email address before cloning. #3467
+* Fix: Make sure appropriate message is displayed after successful backup. #3474
+* Fix: Some files may not be scanned and/or copied during staging site creation if their relative path to ABSPATH contains the value of ABSPATH. #3476
+* Fix: Use wp_kses instead of esc_html when logging backup message in logger, to keep json formatting for messages. #3536
+* Fix: Error 500 when listing backup due to open_basedir restriction on ABSPATH. (Pro) #3548
+* Dev: Add unit test to make sure file extraction task works for multiple requests. #3481
+* Dev: Improve basic performance cest e2e and reduce flakiness. #3522
+* Dev: Rename `Compressor` service to `Archiver` service to match what this service does. #3496
+* Dev: DRY multipart code, so that compression feature can be used with it. #3498
+* Dev: Add developer docs for the standalone installer script. #3235
+
+= 3.7.1 =
+* New: Compatible up to WordPress 6.5.4
+* New: Automatic login to staging site after initial creation by creating a temporary login. #3198
+* New: Add option to run backup in background without keeping browser open. #3286
+* Security: Sanitize parameters in remote storage settings to prevent possible path traversal and executing of potential malicious code. #3461
+* Enh: Add support for Wordfence 2FA authentication in the WP Staging login form. #3358
+* Enh: Refactor dropbox and google drive sign in buttons. (Pro) #3405
+* Enh: Reducing plugin size by minifying js and css files and removing map files. #3279
+* Enh: Redesign plugin deactivation feedback form. #3000
+* Enh: Hide sensitive values in system info. #3447
+* Fix: Unable to restore backup when it contains huge number of files which requires extracting in multiple requests. #3477
+* Fix: Improve reliability and robustness of the background processor: Stalled actions will automatically be cancelled if they are in processing state for more than 15 mins. #3454
+* Fix: Backup by URl throws error "Invalid backup file content". #3404
+* Fix: Standalone restorer randomly terminated while restoring large files. #3348
+* Fix: The backup version of WP Staging Restore is not up to date. #3425
+* Fix: Refactor the contact form. New default options for sending backup log files and accepting privacy policy. #3370
+* Fix: Ensure listing of remote backups and uploading of local backups to cloud storage works correctly. #3434
+* Fix: Hide sensitive fields (secret key, access key...) in backup storages settings. #3389
+* Fix: Don't optimize the .htaccess as default any longer if server is litespeed. Revert to old behavior by using the filter `wpstg.create_litespeed_server_config`. #3409
+* Fix: Table Renaming Task fails during Restore and Push if database prefix contains capital letter(s) and database is hosted on Windows based OS system i.e. `Microsoft Azure`. #3372
+* Fix: Disconnect google drive account if it fails to refresh access token. #3388
+* Fix: Cloud storage options are overlapped by other elements. #3343
+* Fix: Don't load and list remote backup for dropbox as it is not supported yet. (Pro) #3407
+* Dev: Refactor BackupValidateTask to BackupSignerTask to match the action it does. Also move the signer related logic to separate service. #3367
+* Dev: Add pre-requisite code for a new faster and more secure backup format. #2915
+* Dev: Add option in UI to validate backup files during backup creation. #3368
+* Dev: Auto eslint js files and format scss files during `make watch`. #3398
+* Dev: Add phpcs rule to make each file ends with only one empty line. #3390
+* Dev: Replace rollup-plugin-postcss with rollup-plugin-styles to have better control over source maps. #3429
+* Fix: Unable to restore backup when it contains huge number of files which requires extracting in multiple requests. #3477
+
+= 3.7.0 (Skipped) =
+
+= 3.6.0 =
+* New: Compatible up to WordPress 6.5.3
+* New: Implemented dark mode UX with options to switch between 'Default OS Mode', 'Lite Mode' and 'Dark Mode' #3261
+* New: Now you can restore backup of single site and/or multisite subsite to self or another multisite subsite. (Pro) #3240
+* New: Allow user to push all folders under (/wp-content/). #2760
+* New: Add the a new user role 'visitor' to share login link option. (Pro) #3332
+* Enh: Add type hinting for ProTemplateIncluder. #3337
+* Enh: Make sure to prevent other plugins from injecting their messages into WP Staging UI. #3364 #3036
+* Fix: Keep cloud storage connected to Google Drive even if files listing from remote storage fails. (Pro) #3347
+* Enh: Revamped system-info page, 'Purge Backup Queue' modal and moved JavaScript code to a separate file. #3262
+* Enh: Automatically exclude uploads folder during push if it is a symlink. #2989
+* Fix: Sync User Account feature duplicates existing user as administrator role. #3311
+* Fix: Backup restore stuck on `importing users for subsite` when restoring an old backup on single site. #3373
+* Fix: Make sure to handle fatal error due to missing COLLATE while creating 'wp_wpstg_queue' table for scheduled backup. #3359
+* Fix: Hide the 'wp-content/wp-staging-sites' folder from staging site directory selection, as it is always excluded during cloning. #3267
+* Fix: Show exact error message for open_basedir restriction error if destination directory does not have write permissions. #3116
+* Fix: Memory usage of the staging site is higher than of the live site. #3307
+* Fix: Make sure to only sync production site's users fields that exist in cloned site's users table. #3362
+* Fix: Send log files from last 14 days and compress them before sending. Add Contact Us button to error messages. #3323
+* Fix: Make sure to display default login link on custom login form if login is blocked by a security plugin with OTP or 2FA enabled. #3293
+* Fix: Ensure that the All in One Security Plugin (AIOS) isn't disabled by the wp staging optimizer when AIOS's salt option is enabled. #3351
+* Fix: Reconnect DB if `mysql has gone away` during update of queue table. #3354
+* Fix: Create backup folder in google drive, if it does not exist, before uploading to backup cloud provider. #3381
+* Fix: Make sure loading bar is removed once a WP Staging page is refreshed successfully #3365
+* Dev: Add end-to-end tests for the standalone installer script. #3025
+* UX: Make sure that backup cards always look good. #3345
+* UX: Make sure that automatic backup icon looks good. #3338
+* UX: Display backup name and cloud storage settings in 'Edit Backup Plans' Modal. #3299
 
 = 3.5.0 =
 * New: Tested on WordPress 6.5.2
@@ -602,8 +789,45 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 * Dev: Undefined method interfaceDatabaseClient::fetchAll() in phpstan #2622
 * Dev: e2e tests fail on multi sites #2631
 
+= 3.0.1 =
+* New: Make UI more consistent and use same success and processing modals for staging site creation as for backup creation #2221
+* Fix: Rating banner can not be dismissed #2632
+* Fix: Multipart backup scheduled to be sent to google drive does not send all parts #2516
+* Fix: Could not backup tables that contain multiple primary keys (composite keys) #2616
+* Fix: Stop backup restore and add better logging if sql file is not readable during backup restore #2560
+* Fix: New delete modal does not show all tables on sites with many db tables due to CSS issue #2221
+* Fix: Resolved conflict with plugin "Admin and Site Enhancements" #2513
+* Fix: Prevent UI issue and word wrapping on line that says: "No staging site found" on MacOS on Chrome #2552
+* Dev: Undefined method interfaceDatabaseClient::fetchAll() in phpstan #2622
+* Dev: e2e tests fail on multi sites #2631
+
+= 3.0.0 =
+* New: Drop support for php 5.6. Minimum php version is 7.0 #2579
+* New: Flywheel hosting compatibility. Create staging sites and create backups on hosting providers where the WordPress core is located outside the public dir. #2372
+* New: Add system info to backup log file #2309
+* Enh: Check if sftp backup directory path is writeable while testing remote connection #2506
+* Enh: Add a tooltip to inform that backups will be created only for the current site and do not contain other sites, like staging websites #2483
+* Enh: Allow the user to click on "Copy" to copy the generated login link #2443
+* Enh: Improved code to be compatible with PHPstan level 3 rules #2461
+* Enh: Changed the order of login link expiry to day, min, sec #2380
+* Enh: Update back button color to make clear it is an active button #2512
+* Enh: Display the size of backup index parts in the list of backups #1678
+* Enh: Show the "Push Changes" button always in WP STAGING PRO and disable it until the license is activated #2466
+* Fix: WP CLI command `wp wpstg backup-status` did not work as expected #2467
+* Fix: Unselect folders starting with wp-admin* and wp-includes* when creating a new staging site #2340
+* Fix: Show the "primary key" warning only on WP STAGING admin page #2477
+* Fix: Multisite related constants missing during network clone when the original wp-config.php is not valid defaul multisite configuration file #2504
+* Fix: Restoring a backup fails because redis/memcache not configured on the destination site. This disables object cache if object-cache.php is not identical on backup and restoring site #2517
+* Fix: Php error 'Undefined constant DOMAIN_CURRENT_SITE' #2512
+* Fix: Microsoft IIS 7.5 with php 8.1.9 produces unexpected time format when using microtime() resulting in fatal error "division by zero" while creating a backup #2571
+* Fix: `www` prefix is set in `domain` property of subsite would result into repeating `www` prefix during network clone #2544
+* Fix: Don't escape MySQL binary and blob data during cloning as this results into invalid data #2565
+* Tweak: Small visual glitches on tooltip in upload backup modal #2496
+* Dev: Improved usage of $status variable in backup and cloning #2332
+* Dev: This PR does a comprehensive pass on the codebase to verify that authorization checks are being done on callbacks that takes user input. #2531
+
 WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-Compatible with latest WordPress 6.5.2, Three security fixes and two new major features. Updating is highly recommended!
+Compatible up to WordPress 6.6.0. Multiple enhancements in UI and performance. Updating is recommended!

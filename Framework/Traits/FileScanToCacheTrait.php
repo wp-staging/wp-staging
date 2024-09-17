@@ -6,14 +6,23 @@ use Exception;
 use RuntimeException;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
+use WPStaging\Framework\Utils\Strings;
+use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 
 trait FileScanToCacheTrait
 {
+    use EndOfLinePlaceholderTrait;
+
     /** @var bool */
     protected $isExcludedWpConfig = false;
 
     /** @var string */
     protected $pathIdentifier = '';
+
+    /**
+     * @var Strings
+     */
+    protected $strUtils;
 
     /**
      * Write contents to a file
@@ -43,7 +52,8 @@ trait FileScanToCacheTrait
         $filesystem = new Filesystem();
         $normalizedWpRoot = $filesystem->normalizePath($wpRootPath);
         if (is_file($path)) {
-            $file = str_replace($normalizedWpRoot, '', $filesystem->normalizePath($path, true)) . PHP_EOL;
+            $file = str_replace($normalizedWpRoot, '', $filesystem->normalizePath($path, true));
+            $file = $this->replaceEOLsWithPlaceholders($file) . PHP_EOL;
             if ($this->write($filesHandle, $file)) {
                 return 1;
             }
@@ -86,15 +96,16 @@ trait FileScanToCacheTrait
 
                 if ($item->isFile()) {
                     $file = $filesystem->maybeNormalizePath($itemPath);
-                    $file = str_replace($normalizedWpRoot, '', $file);
+                    $file = $this->strUtils->replaceStartWith($normalizedWpRoot, '', $file);
                     // One more time with not normalized $wpRootPath in case the file path was not normalized
-                    $file = str_replace($wpRootPath, '', $file) . PHP_EOL;
+                    $file = $this->strUtils->replaceStartWith($wpRootPath, '', $file);
 
                     // At the moment will only handle case where wp-config.php is present at root folder of WP
                     if ($file === '/wp-config.php') {
                         $this->setIsExcludedWpConfig(false);
                     }
 
+                    $file = $this->replaceEOLsWithPlaceholders($file) . PHP_EOL;
                     if ($this->write($filesHandle, $this->pathIdentifier . ltrim($file, '/'))) {
                         $filesWrittenToCache++;
                     }

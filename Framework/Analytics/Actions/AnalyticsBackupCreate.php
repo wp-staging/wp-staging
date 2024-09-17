@@ -25,6 +25,9 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
     /** @var bool */
     public $is_backup_wp_content;
 
+    /** @var bool */
+    public $is_backup_wp_root;
+
     /** @var int */
     public $automated_backup;
 
@@ -39,13 +42,14 @@ class AnalyticsBackupCreate extends AnalyticsEventDto
             return;
         }
 
-        $this->is_backup_database = $eventData->getIsExportingDatabase();
-        $this->is_backup_plugins = $eventData->getIsExportingPlugins();
-        $this->is_backup_themes = $eventData->getIsExportingThemes();
-        $this->is_backup_uploads = $eventData->getIsExportingUploads();
-        $this->is_backup_muplugins = $eventData->getIsExportingMuPlugins();
+        $this->is_backup_database   = $eventData->getIsExportingDatabase();
+        $this->is_backup_plugins    = $eventData->getIsExportingPlugins();
+        $this->is_backup_themes     = $eventData->getIsExportingThemes();
+        $this->is_backup_uploads    = $eventData->getIsExportingUploads();
+        $this->is_backup_muplugins  = $eventData->getIsExportingMuPlugins();
         $this->is_backup_wp_content = $eventData->getIsExportingOtherWpContentFiles();
-        $this->automated_backup = (int)$eventData->getIsAutomatedBackup(); // int to convert null to zero
+        $this->is_backup_wp_root    = $eventData->getIsExportingOtherWpRootFiles();
+        $this->automated_backup     = (int)$eventData->getIsAutomatedBackup(); // int to convert null to zero
 
         parent::enqueueStartEvent($jobId, $eventData);
     }

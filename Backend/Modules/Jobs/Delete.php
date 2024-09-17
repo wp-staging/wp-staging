@@ -12,7 +12,7 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 
@@ -125,7 +125,7 @@ class Delete extends Job
      */
     private function getExternalStagingDb(): wpdb
     {
-        if ($this->clone->databaseSsl && !defined('MYSQL_CLIENT_FLAGS')) {
+        if (!empty($this->clone->databaseSsl) && !defined('MYSQL_CLIENT_FLAGS')) {
             // phpcs:disable PHPCompatibility.Constants.NewConstants.mysqli_client_ssl_dont_verify_server_certFound
             define('MYSQL_CLIENT_FLAGS', MYSQLI_CLIENT_SSL | MYSQLI_CLIENT_SSL_DONT_VERIFY_SERVER_CERT);
         }

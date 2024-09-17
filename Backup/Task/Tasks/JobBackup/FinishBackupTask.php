@@ -1,19 +1,21 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
 // TODO PHP7.1; constant visibility
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
+use RuntimeException;
+use WPStaging\Backup\BackgroundProcessing\Backup\PrepareBackup;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupCreate;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\Dto\StepsDto;
-use WPStaging\Backup\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Dto\Task\Backup\Response\FinalizeBackupResponseDto;
 use WPStaging\Backup\Entity\ListableBackup;
 use WPStaging\Backup\Task\BackupTask;
+use WPStaging\Core\WPStaging;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\TransientCache;
 
@@ -21,13 +23,16 @@ use function WPStaging\functions\debug_log;
 
 class FinishBackupTask extends BackupTask
 {
+    use EventLoggerTrait;
+
+    /** @var string */
+    const OPTION_LAST_BACKUP = 'wpstg_last_backup_info';
+
     /** @var AnalyticsBackupCreate */
     protected $analyticsBackupCreate;
 
     /** @var TransientCache */
     protected $transientCache;
-
-    const OPTION_LAST_BACKUP = 'wpstg_last_backup_info';
 
     public function __construct(LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, AnalyticsBackupCreate $analyticsBackupCreate, TransientCache $transientCache)
     {
@@ -37,23 +42,30 @@ class FinishBackupTask extends BackupTask
         $this->transientCache        = $transientCache;
     }
 
-    public static function getTaskName()
+    public static function getTaskName(): string
     {
         return 'backup_finish';
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Finalizing Backup';
     }
 
+    /**
+     * @return FinalizeBackupResponseDto|TaskResponseDto
+     */
     public function execute()
     {
         $backupFilePath = $this->jobDataDto->getBackupFilePath();
 
         $this->analyticsBackupCreate->enqueueFinishEvent($this->jobDataDto->getId(), $this->jobDataDto);
 
-        $this->saveBackupsInDB();
+        $this->logger->info("################## FINISH ##################");
+        $this->backupProcessCompleted();
+        $this->saveCloudStorageOptions();
+
+        $this->maybeTriggerBackupCreationInBackground();
 
         $this->stepsDto->finish();
 
@@ -76,7 +88,7 @@ class FinishBackupTask extends BackupTask
      *
      * @return FinalizeBackupResponseDto|TaskResponseDto
      */
-    private function overrideGenerateResponse(ListableBackup $backup = null)
+    private function overrideGenerateResponse($backup = null)
     {
         add_filter('wpstg.task.response', function ($response) use ($backup) {
 
@@ -101,16 +113,16 @@ class FinishBackupTask extends BackupTask
     }
 
     /**
-     * Retains backups that if at least one remote storage is set.
+     * Retains backups, if at least one remote storage is set.
      *
      * @return void
      */
-    protected function saveBackupsInDB()
+    protected function saveCloudStorageOptions()
     {
         // Used in PRO version
     }
 
-    protected function getResponseDto()
+    protected function getResponseDto(): FinalizeBackupResponseDto
     {
         return new FinalizeBackupResponseDto();
     }
@@ -118,13 +130,13 @@ class FinishBackupTask extends BackupTask
     /**
      * This is used to display the "Download Modal" after the backup completes.
      *
-     * @param string $backupFilePath
+     * @param string|null $backupFilePath
      *
      * @return ListableBackup
      * @see string src/Backend/public/js/wpstg-admin.js, search for "wpstg--backups--backup"
      *
      */
-    protected function makeListableBackup($backupFilePath)
+    protected function makeListableBackup($backupFilePath): ListableBackup
     {
         clearstatcache();
         $backupFilePath      = (string)$backupFilePath;
@@ -135,7 +147,10 @@ class FinishBackupTask extends BackupTask
         return $backup;
     }
 
-    protected function getPartsMd5()
+    /**
+     * @return string[]
+     */
+    protected function getPartsMd5(): array
     {
         $md5 = [];
         foreach ($this->jobDataDto->getMultipartFilesInfo() as $multipartInfo) {
@@ -143,5 +158,57 @@ class FinishBackupTask extends BackupTask
         }
 
         return $md5;
+    }
+
+    /**
+     * @return void
+     * @throws RuntimeException
+     */
+    protected function maybeTriggerBackupCreationInBackground()
+    {
+        if (!$this->jobDataDto->getIsCreateBackupInBackground()) {
+            return;
+        }
+
+        $data  = $this->getBackupCreationPrepareData();
+        $jobId = WPStaging::make(PrepareBackup::class)->prepare($data);
+
+        if ($jobId instanceof \WP_Error) {
+            throw new RuntimeException('Failed to trigger Backup creation in background: ' . $jobId->get_error_message());
+        } else {
+            $this->logger->info('Backup creation triggered in background with job ID: ' . $jobId);
+        }
+    }
+
+    /**
+     * @return array
+     */
+    protected function getBackupCreationPrepareData(): array
+    {
+        $jobBackupDataDto = $this->jobDataDto;
+
+        return [
+            'name'                           => $jobBackupDataDto->getName(),
+            'isExportingPlugins'             => $jobBackupDataDto->getIsExportingPlugins(),
+            'isExportingMuPlugins'           => $jobBackupDataDto->getIsExportingMuPlugins(),
+            'isExportingThemes'              => $jobBackupDataDto->getIsExportingThemes(),
+            'isExportingUploads'             => $jobBackupDataDto->getIsExportingUploads(),
+            'isExportingOtherWpContentFiles' => $jobBackupDataDto->getIsExportingOtherWpContentFiles(),
+            'isExportingDatabase'            => $jobBackupDataDto->getIsExportingDatabase(),
+            'sitesToBackup'                  => $jobBackupDataDto->getSitesToBackup(),
+            'storages'                       => $jobBackupDataDto->getStorages(),
+            'isSmartExclusion'               => $jobBackupDataDto->getIsSmartExclusion(),
+            'isExcludingSpamComments'        => $jobBackupDataDto->getIsExcludingSpamComments(),
+            'isExcludingPostRevision'        => $jobBackupDataDto->getIsExcludingPostRevision(),
+            'isExcludingDeactivatedPlugins'  => $jobBackupDataDto->getIsExcludingDeactivatedPlugins(),
+            'isExcludingUnusedThemes'        => $jobBackupDataDto->getIsExcludingUnusedThemes(),
+            'isExcludingLogs'                => $jobBackupDataDto->getIsExcludingLogs(),
+            'isExcludingCaches'              => $jobBackupDataDto->getIsExcludingCaches(),
+            'isExportingOtherWpRootFiles'    => $jobBackupDataDto->getIsExportingOtherWpRootFiles(),
+            'isWpCliRequest'                 => true, // should be true otherwise multisite backup will not work
+            'repeatBackupOnSchedule'         => false,
+            'isCreateBackupInBackground'     => false,
+            'isAutomatedBackup'              => false,
+        ];
     }
 }

@@ -2,25 +2,41 @@
 
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Backup\Task\FileRestoreTask;
+use WPStaging\Framework\Facades\Hooks;
 
 class RestoreThemesTask extends FileRestoreTask
 {
-    public static function getTaskName()
+    /** @var string */
+    const FILTER_REPLACE_EXISTING_THEMES = 'wpstg.backup.restore.replace_existing_themes';
+
+    /**
+     * Old filter, cannot be renamed to new pattern
+     * @var string
+     */
+    const FILTER_KEEP_EXISTING_THEMES = 'wpstg.backup.restore.keepExistingThemes';
+
+    public static function getTaskName(): string
     {
         return 'backup_restore_themes';
     }
 
-    public static function getTaskTitle()
+    public static function getTaskTitle(): string
     {
         return 'Restoring Themes';
     }
 
+    protected function isSkipped(): bool
+    {
+        return $this->isBackupPartSkipped(PartIdentifier::THEME_PART_IDENTIFIER);
+    }
+
     /**
-     * @inheritDoc
+     * @return array
      */
-    protected function getParts()
+    protected function getParts(): array
     {
         return $this->jobDataDto->getBackupMetadata()->getMultipartMetadata()->getThemesParts();
     }
@@ -39,7 +55,7 @@ class RestoreThemesTask extends FileRestoreTask
         try {
             $existingThemes = $this->getExistingThemes();
         } catch (\Exception $e) {
-            $this->logger->critical(sprintf(__('Destination themes folder could not be found or created at "%s"', 'wp-staging'), (string)apply_filters('wpstg.import.themes.destDir', $destDir)));
+            $this->logger->critical(sprintf('Destination themes folder could not be found or created at "%s"', (string)apply_filters('wpstg.import.themes.destDir', $destDir)));
 
             return;
         }
@@ -52,27 +68,38 @@ class RestoreThemesTask extends FileRestoreTask
                 continue;
             }
 
-            /*
+            /**
              * Scenario: Restoring a theme that already exists
+             * If subsite restore and no filter is used to override the behaviour then preserve existing theme
+             * Otherwise:
              * 1. Backup old theme
              * 2. Restore new theme
              * 3. Delete backup
              */
             if (array_key_exists($themeName, $existingThemes)) {
+                if ($this->isRestoreOnSubsite() && Hooks::applyFilters(self::FILTER_REPLACE_EXISTING_THEMES, false)) {
+                    continue;
+                }
+
                 $this->enqueueMove($existingThemes[$themeName], "{$destDir}{$themeName}{$this->getOriginalSuffix()}");
                 $this->enqueueMove($themesToRestore[$themeName], "{$destDir}{$themeName}");
                 $this->enqueueDelete("{$destDir}{$themeName}{$this->getOriginalSuffix()}");
                 continue;
             }
 
-            /*
+            /**
              * Scenario 2: Restoring a theme that does not yet exist
              */
             $this->enqueueMove($themesToRestore[$themeName], "$destDir$themeName");
         }
 
+        // Don't delete existing files if restore on subsite
+        if ($this->isRestoreOnSubsite()) {
+            return;
+        }
+
         // Don't delete existing files if filter is set to true
-        if (apply_filters('wpstg.backup.restore.keepExistingThemes', false)) {
+        if (Hooks::applyFilters(self::FILTER_KEEP_EXISTING_THEMES, false)) {
             return;
         }
 

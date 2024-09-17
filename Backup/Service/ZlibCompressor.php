@@ -55,7 +55,7 @@ class ZlibCompressor
         static $isEnabled = null;
 
         // Early bail: if compression feature not enabled.
-        if (!$this->isCompressionConstantEnabled()) {
+        if (!$this->isCompressionFeatureEnabled()) {
             return false;
         }
 
@@ -66,26 +66,18 @@ class ZlibCompressor
 
         $canUseCompression = $this->canUseCompression();
 
-        $isEnabled = Hooks::applyFilters(self::FILTER_ZLIB_COMPRESSION_ENABLED, $isEnabled && $canUseCompression);
-
-        /**
-         * If the user has enabled multipart backups, we disable compression, as these two features are incompatible for now.
-         *
-         * @see \WPStaging\Backup\Dto\Job\JobBackupDataDto::getIsMultipartBackup
-         */
-        $isMultiPartEnabled = Hooks::applyFilters('wpstg.backup.isMultipartBackup', false);
-
-        return $isEnabled && !$isMultiPartEnabled;
-    }
-
-    /** @return bool */
-    protected function isCompressionConstantEnabled(): bool
-    {
-        return defined('WPSTG_ENABLE_COMPRESSION') && WPSTG_ENABLE_COMPRESSION;
+        return Hooks::applyFilters(self::FILTER_ZLIB_COMPRESSION_ENABLED, $isEnabled && $canUseCompression);
     }
 
     public function getService(): CompressionInterface
     {
         return $this->service;
+    }
+
+    /** @return bool */
+    protected function isCompressionFeatureEnabled(): bool
+    {
+        $enabled = (bool)Hooks::applyFilters('wpstg.tests.backup.enable_compression', defined('WPSTG_ENABLE_COMPRESSION') && WPSTG_ENABLE_COMPRESSION);
+        return $enabled;
     }
 }
