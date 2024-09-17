@@ -42,7 +42,7 @@ class SignBackupTask extends BackupTask
         try {
             $this->backupSigner->signBackup($backupFilePath ?: '');
         } catch (Exception $e) {
-            $this->logger->critical(esc_html__('The backup file could not be signed for consistency. Error: ' . $e->getMessage(), 'wp-staging'));
+            $this->logger->critical(sprintf('The backup file could not be signed for consistency. Error: %s', $e->getMessage()));
 
             return $this->generateResponse();
         }
@@ -51,7 +51,7 @@ class SignBackupTask extends BackupTask
         try {
             $this->backupSigner->validateSignedBackup($backupFilePath ?: '');
         } catch (Exception $e) {
-            $this->logger->critical(esc_html__('The backup seems to be invalid: ' . $e->getMessage(), 'wp-staging'));
+            $this->logger->critical(sprintf('The backup seems to be invalid: %s', $e->getMessage()));
 
             return $this->generateResponse();
         }

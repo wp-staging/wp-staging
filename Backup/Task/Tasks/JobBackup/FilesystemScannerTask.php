@@ -209,7 +209,7 @@ class FilesystemScannerTask extends BackupTask
 
         if ($this->stepsDto->isFinished()) {
             $this->stepsDto->setManualPercentage(100);
-            $this->logger->info(sprintf(__('Finished discovering Files. (%d files)', 'wp-staging'), $this->jobDataDto->getDiscoveredFiles()));
+            $this->logger->info(sprintf('Finished discovering Files. (%d files)', $this->jobDataDto->getDiscoveredFiles()));
         } else {
             $this->jobDataDto->setDiscoveringFilesRequests($this->jobDataDto->getDiscoveringFilesRequests() + 1);
 
@@ -227,7 +227,7 @@ class FilesystemScannerTask extends BackupTask
             }
 
             $this->stepsDto->setManualPercentage(min($manualPercentage, 100));
-            $this->logger->info(sprintf(__('Discovering Files (%d files)', 'wp-staging'), $this->jobDataDto->getDiscoveredFiles()));
+            $this->logger->info(sprintf('Discovering Files (%d files)', $this->jobDataDto->getDiscoveredFiles()));
         }
 
         return $this->generateResponse(false);
@@ -608,10 +608,10 @@ class FilesystemScannerTask extends BackupTask
         if ($this->canExcludeLogFile($fileExtension) || $this->canExcludeCacheFile($fileExtension) || isset($this->ignoreFileExtensions[$fileExtension])) {
             // Early bail: File has an ignored extension
             $this->logger->info(sprintf(
-                __('%s: Skipped file "%s." Extension "%s" is excluded by rule.', 'wp-staging'),
+                '%s: Skipped file "%s." Extension "%s" is excluded by rule.',
                 static::getTaskTitle(),
-                $relativePath,
-                $fileExtension
+                esc_html($relativePath),
+                esc_html($fileExtension)
             ));
 
             return;
@@ -621,11 +621,11 @@ class FilesystemScannerTask extends BackupTask
             if ($fileSize > $this->ignoreFileExtensionFilesBiggerThan[$fileExtension]) {
                 // Early bail: File bigger than expected for given extension
                 $this->logger->info(sprintf(
-                    __('%s: Skipped file "%s" (%s). It exceeds the maximum allowed file size for files with the extension "%s" (%s).', 'wp-staging'),
+                    '%s: Skipped file "%s" (%s). It exceeds the maximum allowed file size for files with the extension "%s" (%s).',
                     static::getTaskTitle(),
-                    $relativePath,
+                    esc_html($relativePath),
                     size_format($fileSize),
-                    $fileExtension,
+                    esc_html($fileExtension),
                     size_format($this->ignoreFileExtensionFilesBiggerThan[$fileExtension])
                 ));
 
@@ -634,9 +634,9 @@ class FilesystemScannerTask extends BackupTask
         } elseif ($fileSize > $this->ignoreFileBiggerThan) {
             // Early bail: File is larger than max allowed size.
             $this->logger->info(sprintf(
-                __('%s: Skipped file "%s" (%s). It exceeds the maximum file size for backup (%s).', 'wp-staging'),
+                '%s: Skipped file "%s" (%s). It exceeds the maximum file size for backup (%s).',
                 static::getTaskTitle(),
-                $relativePath,
+                esc_html($relativePath),
                 size_format($fileSize),
                 size_format($this->ignoreFileBiggerThan)
             ));
@@ -716,7 +716,7 @@ class FilesystemScannerTask extends BackupTask
         }
 
         $this->logger->info(sprintf(
-            __('%s: Skipped directory "%s". Excluded by smart exclusion rule: Excluding cache folder.', 'wp-staging'),
+            '%s: Skipped directory "%s". Excluded by smart exclusion rule: Excluding cache folder.',
             static::getTaskTitle(),
             $dir->getRealPath()
         ));
@@ -871,9 +871,9 @@ class FilesystemScannerTask extends BackupTask
             $relativePathForLogging = str_replace($this->filesystem->normalizePath(WP_CONTENT_DIR, true), '', $normalizedPath);
 
             $this->logger->info(sprintf(
-                __('%s: Skipped directory "%s". Excluded by rule', 'wp-staging'),
+                '%s: Skipped directory "%s". Excluded by rule',
                 static::getTaskTitle(),
-                $relativePathForLogging
+                esc_html($relativePathForLogging)
             ));
 
             return true;

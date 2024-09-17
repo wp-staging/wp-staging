@@ -12,7 +12,7 @@ use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemExceptions;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 

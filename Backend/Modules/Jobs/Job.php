@@ -457,4 +457,84 @@ abstract class Job implements ShutdownableInterface
     {
         return isset($this->options->mainJob) && ($this->options->mainJob === self::RESET || $this->options->mainJob === self::UPDATE);
     }
+
+    /**
+     * @param string $jobName
+     * @return void
+     */
+    protected function addJobSettingsToLogs(string $jobName = 'WP Staging Job')
+    {
+        $this->logger->add(sprintf('%s Settings', esc_html($jobName)), Logger::TYPE_INFO);
+        $this->logger->writeSelectedTablesToLogs($this->options->tables);
+        $this->logger->add('Excluded Directories', Logger::TYPE_INFO);
+        foreach ($this->options->excludedDirectories as $directory) {
+            $this->logger->add(sprintf('- %s', esc_html($directory)), Logger::TYPE_INFO_SUB);
+        }
+
+        if (!empty($this->options->excludeGlobRules)) {
+            $this->logger->add('Exclude Global Rule', Logger::TYPE_INFO);
+
+            foreach ($this->options->excludeGlobRules as $rule) {
+                $excludeRule = explode(':', $rule);
+                $ruleName = ucwords($excludeRule[0] ?? '');
+                $ruleDescription = ucwords(str_replace('_', ' ', !empty($excludeRule[1]) ? $excludeRule[1] : ''));
+                $this->logger->add(sprintf('- Exclude %s : %s', esc_html($ruleName), esc_html($ruleDescription)), Logger::TYPE_INFO_SUB);
+            }
+        }
+
+        if (!empty($this->options->excludeSizeRules)) {
+            $this->logger->add('Exclude Size Rule', Logger::TYPE_INFO);
+            foreach ($this->options->excludeSizeRules as $rule) {
+                $ruleDescription = ucwords(str_replace('_', ' ', !empty($rule) ? $rule : ''));
+                $this->logger->add(sprintf('- Exclude Size : %s', esc_html($ruleDescription)), Logger::TYPE_INFO_SUB);
+            }
+        }
+
+
+        $this->writeAdvancedSettingsToLogs();
+        $this->logger->writeGlobalSettingsToLogs();
+    }
+
+    /**
+     * @return void
+     */
+    private function writeAdvancedSettingsToLogs()
+    {
+        $this->logger->add('Advanced Settings', Logger::TYPE_INFO);
+
+        if (isset($this->options->useNewAdminAccount)) {
+            $this->logger->add(sprintf('- New Admin Account : %s', ($this->options->useNewAdminAccount ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+            $this->logger->add(sprintf('- Email : %s', (!empty($this->options->adminEmail) ? $this->options->adminEmail : 'Not Set')), Logger::TYPE_INFO_SUB);
+            $this->logger->add(sprintf('- Password : %s', (!empty($this->options->adminPassword) ? '**************' : 'Not Set')), Logger::TYPE_INFO_SUB);
+        }
+
+        $this->logger->add(sprintf('- Database Server : %s', (!empty($this->options->databaseServer) ? $this->options->databaseServer : 'Not Set')), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Database User : %s', (!empty($this->options->databaseUser) ? $this->options->databaseUser : 'Not Set')), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Database Password : %s', (!empty($this->options->databasePassword) ? '*****************' : 'Not Set')), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Database : %s', (!empty($this->options->databasePassword) ? $this->options->databaseDatabase : 'Not Set')), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Database Prefix: %s', (!empty($this->options->databasePrefix) ? $this->options->databasePrefix : 'Not Set')), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Database SSL: %s', ($this->options->databasePrefix ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Clone Directory : %s', (!empty($this->options->cloneDir) ? $this->options->cloneDir : 'Not Set')), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Clone Host : %s', (!empty($this->options->cloneHostname) ? $this->options->cloneHostname : 'Not Set')), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Symlink Uploads Folder : %s', ($this->options->uploadsSymlinked ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        if (isset($this->options->cronDisabled)) {
+            $this->logger->add(sprintf('- Disable WP_CRON : %s', ($this->options->cronDisabled ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        }
+
+        if (isset($this->options->emailsAllowed)) {
+            $this->logger->add(sprintf('- Allow Emails Sending : %s', ($this->options->emailsAllowed ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        }
+
+        if (isset($this->options->deletePluginsAndThemes)) {
+            $this->logger->add(sprintf('- Clean Plugins/Themes : %s', ($this->options->deletePluginsAndThemes ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        }
+
+        if (isset($this->options->deleteUploadsFolder)) {
+            $this->logger->add(sprintf('- Clean Uploads : %s', ($this->options->deleteUploadsFolder ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        }
+
+        if (isset($this->options->createBackupBeforePushing)) {
+            $this->logger->add(sprintf('- Create database backup : %s', ($this->options->createBackupBeforePushing ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        }
+    }
 }

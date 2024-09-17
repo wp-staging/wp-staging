@@ -246,7 +246,6 @@ class BackupScheduler
         // Cron is hell to debug, so let's log everything that happens.
         $logId = wp_generate_password(4, false);
 
-        debug_log("[Schedule Backup Cron - $logId] Received request to create a backup using Cron. Backup Data: " . wp_json_encode($backupData), 'info', false);
         debug_log(sprintf("[Schedule Backup Cron - %s] Received request to create a backup using Cron. Backup Data: %s", $logId, wp_json_encode($backupData)), 'info', false);
 
         try {

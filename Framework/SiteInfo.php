@@ -2,7 +2,7 @@
 
 namespace WPStaging\Framework;
 
-use WPStaging\Framework\Staging\CloneOptions;
+use WPStaging\Staging\CloneOptions;
 
 /**
  * Class SiteInfo
@@ -280,5 +280,15 @@ class SiteInfo
         }
 
         return self::OTHER_HOST;
+    }
+
+    public function getPhpArchitecture(): string
+    {
+        return PHP_INT_SIZE === 8 ? '64-bit' : '32-bit';
+    }
+
+    public function getOsArchitecture(): string
+    {
+        return strpos(php_uname('m'), '64') !== false ? '64-bit' : '32-bit';
     }
 }

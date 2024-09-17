@@ -1,6 +1,7 @@
 <?php
 
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Framework\Facades\Escape;
 
 if (!defined("WPINC")) {
     die();
@@ -8,67 +9,76 @@ if (!defined("WPINC")) {
 
 /**
  * @var BackupMetadata $info
+ * @var bool[] $excluded
+ * @var bool[] $replaced
  */
 
 $backupParts = [
     [
         'backupContains'       => $info->getIsExportingDatabase(),
-        'isSkipped'            => $filters['database'],
-        'messageWhenRestoring' => __('Database will be replaced.', 'wp-staging'),
-        'messageWhenSkipped'   => __('Database restore skipped by filter.', 'wp-staging')
+        'excluded'             => $excluded['database'],
+        'messageWhenRestoring' => $info->getBackupType() === BackupMetadata::BACKUP_TYPE_MULTISITE ? __('Database tables of whole network will be replaced.', 'wp-staging') : __('Database tables of current site will be replaced.', 'wp-staging'),
+        'messageWhenExcluded'  => __('Database restore excluded by filter.', 'wp-staging')
+    ],
+    [
+        // Importing Users in Database for restoring single/subsite backups on subsite
+        'backupContains'       => $info->getIsExportingDatabase() && is_multisite() && $info->getBackupType() !== BackupMetadata::BACKUP_TYPE_MULTISITE,
+        'excluded'             => $excluded['database'],
+        'messageWhenRestoring' => __('Users from the backup will be imported.', 'wp-staging'),
+        'messageWhenExcluded'  => __('Importing user excluded by filter.', 'wp-staging')
     ],
     [
         'backupContains'       => $info->getIsExportingPlugins(),
-        'isSkipped'            => $filters['plugins'],
-        'messageWhenRestoring' => __('Plugins will be added.', 'wp-staging'),
-        'messageWhenSkipped'   => __('Plugins restore skipped by filter.', 'wp-staging')
+        'excluded'             => $excluded['plugins'],
+        'messageWhenRestoring' => $replaced['plugins'] ? __('Plugins will be replaced.', 'wp-staging') : __('Plugins will be added.', 'wp-staging'),
+        'messageWhenExcluded'  => __('Plugins restore excluded by filter.', 'wp-staging')
     ],
     [
         'backupContains'       => $info->getIsExportingThemes(),
-        'isSkipped'            => $filters['themes'],
-        'messageWhenRestoring' => __('Themes will be added.', 'wp-staging'),
-        'messageWhenSkipped'   => __('Themes restore skipped by filter.', 'wp-staging')
+        'excluded'             => $excluded['themes'],
+        'messageWhenRestoring' => $replaced['themes'] ? __('Themes will be replaced.', 'wp-staging') : __('Themes will be added.', 'wp-staging'),
+        'messageWhenExcluded'  => __('Themes restore excluded by filter.', 'wp-staging')
     ],
     [
         'backupContains'       => $info->getIsExportingMuPlugins(),
-        'isSkipped'            => $filters['muPlugins'],
-        'messageWhenRestoring' => __('Mu-plugins will be added.', 'wp-staging'),
-        'messageWhenSkipped'   => __('Mu-plugins restore skipped by filter.', 'wp-staging')
+        'excluded'             => $excluded['muPlugins'],
+        'messageWhenRestoring' => $replaced['muPlugins'] ? __('Mu-plugins will be replaced.', 'wp-staging') : __('Mu-plugins will be added.', 'wp-staging'),
+        'messageWhenExcluded'  => __('Mu-plugins restore excluded by filter.', 'wp-staging')
     ],
     [
         'backupContains'       => $info->getIsExportingUploads(),
-        'isSkipped'            => $filters['uploads'],
-        'messageWhenRestoring' => __('Media files and images will be added.', 'wp-staging'),
-        'messageWhenSkipped'   => __('Media files and images restore skipped by filter.', 'wp-staging')
+        'excluded'             => $excluded['uploads'],
+        'messageWhenRestoring' => $replaced['uploads'] ? __('Media files and images will be replaced.', 'wp-staging') : __('Media files and images will be added.', 'wp-staging'),
+        'messageWhenExcluded'  => __('Media files and images restore excluded by filter.', 'wp-staging')
     ],
     [
         'backupContains'       => $info->getIsExportingOtherWpContentFiles(),
-        'isSkipped'            => $filters['wpContent'],
-        'messageWhenRestoring' => __('Other files in wp-content folder will be added.', 'wp-staging'),
-        'messageWhenSkipped'   => __('Other files in wp-content folder restore skipped by filter.', 'wp-staging')
+        'excluded'             => $excluded['wpContent'],
+        'messageWhenRestoring' => $replaced['wpContent'] ? __('Other files in wp-content folder will be replaced.', 'wp-staging') : __('Other files in wp-content folder will be added.', 'wp-staging'),
+        'messageWhenExcluded'  => __('Other files in wp-content folder restore excluded by filter.', 'wp-staging')
     ],
     [
         'backupContains'       => $info->getIsExportingOtherWpRootFiles(),
-        'isSkipped'            => $filters['wpRoot'],
+        'excluded'             => $excluded['wpRoot'],
         'messageWhenRestoring' => __('Other files in WP root folder will be added.', 'wp-staging'),
-        'messageWhenSkipped'   => __('Other files in WP root folder restore skipped by filter.', 'wp-staging')
+        'messageWhenExcluded'  => __('Other files in WP root folder restore excluded by filter.', 'wp-staging')
     ]
 ];
 
-$isDatabaseOnlyBackup = $info->getIsExportingDatabase() && !$filters['database']
-    && (!$info->getIsExportingPlugins() || $filters['plugins'])
-    && (!$info->getIsExportingThemes() || $filters['themes'])
-    && (!$info->getIsExportingMuPlugins() || $filters['muPlugins'])
-    && (!$info->getIsExportingUploads() || $filters['uploads'])
-    && (!$info->getIsExportingOtherWpContentFiles() || $filters['wpContent'])
-    && (!$info->getIsExportingOtherWpRootFiles() || $filters['wpRoot']);
+$isDatabaseOnlyBackup = $info->getIsExportingDatabase() && !$excluded['database']
+    && (!$info->getIsExportingPlugins() || $excluded['plugins'])
+    && (!$info->getIsExportingThemes() || $excluded['themes'])
+    && (!$info->getIsExportingMuPlugins() || $excluded['muPlugins'])
+    && (!$info->getIsExportingUploads() || $excluded['uploads'])
+    && (!$info->getIsExportingOtherWpContentFiles() || $excluded['wpContent'])
+    && (!$info->getIsExportingOtherWpRootFiles() || $excluded['wpRoot']);
 
-$hasFilesFiltered = $filters['plugins']
-    || $filters['themes']
-    || $filters['muPlugins']
-    || $filters['uploads']
-    || $filters['wpContent']
-    || $filters['wpRoot'];
+$areFilesExcluded = $excluded['plugins']
+    || $excluded['themes']
+    || $excluded['muPlugins']
+    || $excluded['uploads']
+    || $excluded['wpContent']
+    || $excluded['wpRoot'];
 
 ?>
 <div id="wpstg-confirm-backup-restore-wrapper">
@@ -79,7 +89,7 @@ $hasFilesFiltered = $filters['plugins']
         <ul>
             <?php foreach ($backupParts as $part) : ?>
                 <?php if ($part['backupContains']) : ?>
-                    <li class="<?php echo $part['isSkipped'] ? 'wpstg--red-warning' : '' ?>"> <?php echo $part['isSkipped'] ? esc_html($part['messageWhenSkipped']) : esc_html($part['messageWhenRestoring']) ?> </li>
+                    <li class="<?php echo $part['excluded'] ? 'wpstg--red-warning' : '' ?>"> <?php echo $part['excluded'] ? esc_html($part['messageWhenExcluded']) : esc_html($part['messageWhenRestoring']) ?> </li>
                 <?php endif; ?>
             <?php endforeach; ?>
         </ul>
@@ -87,11 +97,17 @@ $hasFilesFiltered = $filters['plugins']
             <div class="wpstg-db-table" style="margin-top:5px;">
                 <strong><?php esc_html_e('Total Files:', 'wp-staging') ?></strong>
                 <span><?php echo esc_html($info->getTotalFiles()) ?></span>
-                <?php if ($hasFilesFiltered) : ?>
-                    <span class="wpstg--red-warning">(<?php esc_html_e('Some files will be skipped due to filter', 'wp-staging') ?>)</span>
+                <?php if ($areFilesExcluded) : ?>
+                    <span class="wpstg--red-warning">(<?php esc_html_e('Some files restore will be excluded by filter', 'wp-staging') ?>)</span>
                 <?php endif; ?>
             </div>
         <?php endif; ?>
+        <div class="wpstg-mt-10px">
+            <?php echo sprintf(
+                Escape::escapeHtml(__('Note: If you want to keep specific files and don\'t want them to be replaced, you can use this <a href="%s" target="_blank">filter</a>', 'wp-staging')),
+                'https://wp-staging.com/docs/actions-and-filters/#Restore_Backup_and_Keep_Existing_Media_Files_Plugins_or_Themes'
+            ); ?>
+        </div>
         <div class="wpstg-db-table" style="margin-top:5px;display:none;">
             <?php
             $backupGeneratedInVersion = $info->getBackupVersion();

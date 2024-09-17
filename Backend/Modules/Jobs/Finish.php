@@ -6,7 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\Urls;
 
@@ -95,9 +95,7 @@ class Finish extends Job
     }
 
     /**
-     * Prepare clone records
-     *
-     * @todo check if this is being used, remove otherwise.
+     * Prepare clone records. Without this clone data will not get updated in Sites::STAGING_SITES_OPTION during updating process.
      *
      * @return bool
      */
@@ -112,17 +110,18 @@ class Finish extends Job
                 $this->options->existingClones[$this->options->clone]['url'] = $this->getDestinationUrl();
             }
 
-            $this->options->existingClones[$this->options->clone]['datetime']            = time();
-            $this->options->existingClones[$this->options->clone]['status']              = 'finished';
-            $this->options->existingClones[$this->options->clone]['prefix']              = $this->options->prefix;
-            $this->options->existingClones[$this->options->clone]['cronDisabled']        = isset($this->options->cronDisabled) ? (bool) $this->options->cronDisabled : false;
-            $this->options->existingClones[$this->options->clone]['emailsAllowed']       = (bool) $this->options->emailsAllowed;
-            $this->options->existingClones[$this->options->clone]['uploadsSymlinked']    = (bool) $this->options->uploadsSymlinked;
-            $this->options->existingClones[$this->options->clone]['includedTables']      = $this->options->tables;
-            $this->options->existingClones[$this->options->clone]['excludeSizeRules']    = $this->options->excludeSizeRules;
-            $this->options->existingClones[$this->options->clone]['excludeGlobRules']    = $this->options->excludeGlobRules;
-            $this->options->existingClones[$this->options->clone]['excludedDirectories'] = $this->options->excludedDirectories;
-            $this->options->existingClones[$this->options->clone]['extraDirectories']    = $this->options->extraDirectories;
+            $this->options->existingClones[$this->options->clone]['datetime']             = time();
+            $this->options->existingClones[$this->options->clone]['status']               = 'finished';
+            $this->options->existingClones[$this->options->clone]['prefix']               = $this->options->prefix;
+            $this->options->existingClones[$this->options->clone]['cronDisabled']         = isset($this->options->cronDisabled) ? (bool) $this->options->cronDisabled : false;
+            $this->options->existingClones[$this->options->clone]['emailsAllowed']        = (bool) $this->options->emailsAllowed;
+            $this->options->existingClones[$this->options->clone]['uploadsSymlinked']     = (bool) $this->options->uploadsSymlinked;
+            $this->options->existingClones[$this->options->clone]['includedTables']       = $this->options->tables;
+            $this->options->existingClones[$this->options->clone]['excludeSizeRules']     = $this->options->excludeSizeRules;
+            $this->options->existingClones[$this->options->clone]['excludeGlobRules']     = $this->options->excludeGlobRules;
+            $this->options->existingClones[$this->options->clone]['excludedDirectories']  = $this->options->excludedDirectories;
+            $this->options->existingClones[$this->options->clone]['extraDirectories']     = $this->options->extraDirectories;
+            $this->options->existingClones[$this->options->clone]['wooSchedulerDisabled'] = (bool) $this->options->wooSchedulerDisabled;
             update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones);
             $this->log("Finish: The job finished!");
             return true;

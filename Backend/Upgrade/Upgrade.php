@@ -12,7 +12,7 @@ use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Queue;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Backup\BackupScheduler;
 
 // No Direct Access

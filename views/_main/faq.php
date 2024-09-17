@@ -33,7 +33,7 @@ use WPStaging\Core\WPStaging;
     <div class="wpstg-social-footer">
         <div class="wpstg-social-row">
             <div class="wpstg-social-col">
-                Find us on:
+                <?php esc_html_e("Find us on:", "wp-staging");?>
             </div>
             <div class="wpstg-social-col">
                 <div class="wpstg-share-button">

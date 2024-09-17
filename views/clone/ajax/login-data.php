@@ -46,9 +46,11 @@ if (!$isPro) {
         <label for="wpstg-new-admin-email"><?php esc_html_e('Email: ', 'wp-staging'); ?> </label>
         <input type="email" class="wpstg-textbox" name="wpstg-new-admin-email" id="wpstg-new-admin-email" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> />
     </div>
-    <div class="wpstg-form-group wpstg-text-field">
-        <label for="wpstg-new-admin-password"><?php esc_html_e('Password: ', 'wp-staging'); ?></label>
-        <input type="password" class="wpstg-textbox" name="wpstg-new-admin-password" id="wpstg-new-admin-password" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> />
-    </div>
+    <form>
+        <div class="wpstg-form-group wpstg-text-field">
+            <label for="wpstg-new-admin-password"><?php esc_html_e('Password: ', 'wp-staging'); ?></label>
+            <input type="password" class="wpstg-textbox" name="wpstg-new-admin-password" id="wpstg-new-admin-password" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> autocomplete="off" />
+        </div>
+    </form>
     <hr />
 </div>

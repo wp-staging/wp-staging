@@ -51,7 +51,7 @@ class TemplateEngine implements TemplateEngineInterface
      *
      * @return string
      */
-    protected function transformToWpFormat(DateTime $dateTime = null): string
+    protected function transformToWpFormat($dateTime = null): string
     {
         if (!$dateTime) {
             return '';

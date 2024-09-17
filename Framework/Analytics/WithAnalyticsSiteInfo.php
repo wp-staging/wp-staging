@@ -54,10 +54,12 @@ trait WithAnalyticsSiteInfo
             $wpstgSettings = [];
         }
 
-        $plugins = $this->getActivePlugins();
+        $plugins  = $this->getActivePlugins();
+        /** @var SiteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
 
         $systemInfo = [
-            'is_staging_site' => (int)WPStaging::make(SiteInfo::class)->isStagingSite(),
+            'is_staging_site' => (int)$siteInfo->isStagingSite(),
 
             'db_copy_query_limit' => !empty($wpstgSettings['queryLimit']) ? $wpstgSettings['queryLimit'] : null,
             'db_sr_limit' => !empty($wpstgSettings['querySRLimit']) ? $wpstgSettings['querySRLimit'] : null,
@@ -80,6 +82,7 @@ trait WithAnalyticsSiteInfo
             'enable_compression' => !empty($wpstgSettings['enableCompression']) ? $wpstgSettings['enableCompression'] : false,
 
             'php_version' => phpversion(),
+            'php_architecture' => $siteInfo->getPhpArchitecture(),
             'blog_id' => get_current_blog_id(),
             'network_id' => WPStaging::make(WpAdapter::class)->getCurrentNetworkId(),
             'single_or_multi' => is_multisite() ? 'multi' : 'single',
@@ -87,6 +90,7 @@ trait WithAnalyticsSiteInfo
             'wpstaging_version' => WPStaging::getVersion(),
             'operating_system_family' => stripos(PHP_OS, 'WIN') === 0 ? 'WINDOWS' : 'UNIX',
             'operating_system_family_raw' => PHP_OS,
+            'operating_system_architecture' => $siteInfo->getOsArchitecture(),
             'active_theme' => get_option('stylesheet') ?: 'UNDEFINED',
             'wordpress_version' => $wp_version,
             'wpdb_version' => $wp_db_version,

@@ -30,7 +30,7 @@ class TableService
     /**
      * @param Database|null $database
      */
-    public function __construct(Database $database = null)
+    public function __construct($database = null)
     {
         $this->database  = $database ?: new Database();
         $this->client    = $this->database->getClient();
@@ -57,7 +57,7 @@ class TableService
      * @param callable|null $shouldStop
      * @return self
      */
-    public function setShouldStop(callable $shouldStop = null)
+    public function setShouldStop($shouldStop = null)
     {
         $this->shouldStop = $shouldStop;
         return $this;

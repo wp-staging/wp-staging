@@ -60,7 +60,7 @@ if ($cronMessage !== '') { ?>
 
 <?php if ($isLocked) : ?>
     <div id="wpstg-backup-locked">
-        <div class="icon"><img width="20" src="<?php echo esc_url(WPSTG_PLUGIN_URL . "assets/img/wpstaging-icon.png"); ?>"></div>
+        <div class="wpstg-locked-backup-loader"></div>
         <div class="text"><?php esc_html_e('There is a backup work in progress...', 'wp-staging'); ?></div>
     </div>
 <?php endif; ?>

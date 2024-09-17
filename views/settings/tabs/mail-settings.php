@@ -4,7 +4,7 @@ use WPStaging\Framework\Facades\UI\Checkbox;
 
 ?>
 <form class="wpstg-mail-settings-form" method="post">
-    <?php $emailsAllowed = !((bool)(new \WPStaging\Framework\Staging\CloneOptions())->get((\WPStaging\Framework\Staging\FirstRun::MAILS_DISABLED_KEY))); ?>
+    <?php $emailsAllowed = !((bool)(new \WPStaging\Staging\CloneOptions())->get((\WPStaging\Staging\FirstRun::MAILS_DISABLED_KEY))); ?>
     <p>
         <strong class="wpstg-fs-14"> <?php esc_html_e('Mail Delivery Setting', 'wp-staging'); ?></strong>
         <br/>

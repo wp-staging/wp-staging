@@ -13,7 +13,7 @@ class RestoreThemesTask extends FileRestoreTask
     const FILTER_REPLACE_EXISTING_THEMES = 'wpstg.backup.restore.replace_existing_themes';
 
     /**
-     * Old filter, cannot me renamed to new pattern
+     * Old filter, cannot be renamed to new pattern
      * @var string
      */
     const FILTER_KEEP_EXISTING_THEMES = 'wpstg.backup.restore.keepExistingThemes';
@@ -55,7 +55,7 @@ class RestoreThemesTask extends FileRestoreTask
         try {
             $existingThemes = $this->getExistingThemes();
         } catch (\Exception $e) {
-            $this->logger->critical(sprintf(__('Destination themes folder could not be found or created at "%s"', 'wp-staging'), (string)apply_filters('wpstg.import.themes.destDir', $destDir)));
+            $this->logger->critical(sprintf('Destination themes folder could not be found or created at "%s"', (string)apply_filters('wpstg.import.themes.destDir', $destDir)));
 
             return;
         }

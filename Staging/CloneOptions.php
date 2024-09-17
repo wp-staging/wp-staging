@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Framework\Staging;
+namespace WPStaging\Staging;
 
 use stdClass;
 use WPStaging\Core\WPStaging;
@@ -11,7 +11,7 @@ use WPStaging\Framework\SiteInfo;
  *
  * This is used to manage settings on the staging site
  *
- * @package WPStaging\Framework\Staging
+ * @package WPStaging\Staging
  */
 class CloneOptions
 {

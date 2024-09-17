@@ -20,7 +20,11 @@ $isCalledFromIndex = true;
 
 <div id="wpstg-clonepage-wrapper">
     <?php
-    require_once($this->viewsPath . '_main/header.php');
+    if (WPStaging::isPro()) {
+        require_once($this->viewsPath . 'pro/_main/header.php');
+    } else {
+        require_once($this->viewsPath . '_main/header.php');
+    }
 
     do_action('wpstg_notifications');
 

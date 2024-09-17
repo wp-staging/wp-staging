@@ -5,10 +5,10 @@ namespace WPStaging\Framework\CloningProcess\Data;
 use WPStaging\Backend\Modules\Jobs\Job as MainJob;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
-use WPStaging\Framework\Staging\CloneOptions;
-use WPStaging\Framework\Staging\FirstRun;
+use WPStaging\Staging\CloneOptions;
+use WPStaging\Staging\FirstRun;
 use WPStaging\Core\Utils\Logger;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\ThirdParty\FreemiusScript;
 use WPStaging\Pro\Staging\NetworkClone;
 use WPStaging\Backup\BackupRetentionHandler;
@@ -68,8 +68,9 @@ class UpdateStagingOptionsTable extends DBCloningService
         ];
 
         $cloneOptions = [
-            FirstRun::MAILS_DISABLED_KEY => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
+            FirstRun::MAILS_DISABLED_KEY          => !((bool) $this->dto->getJob()->getOptions()->emailsAllowed),
             ExcludedPlugins::EXCLUDED_PLUGINS_KEY => (new ExcludedPlugins())->getFilteredPluginsToExclude(),
+            FirstRun::WOO_SCHEDULER_DISABLED_KEY  => (bool) $this->dto->getJob()->getOptions()->wooSchedulerDisabled,
         ];
 
         // Add the base directory path and is network clone when cloning into network
@@ -145,6 +146,9 @@ class UpdateStagingOptionsTable extends DBCloningService
         if ($this->dto->getMainJob() !== MainJob::UPDATE) {
             // @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
             $toDelete[] = 'wpstg_googledrive';
+
+            // @see WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth::getOptionName for option name
+            $toDelete[] = 'wpstg_dropbox';
             // Should we delete other cloud storage options too?
             $toDelete[] = FinishBackupTask::OPTION_LAST_BACKUP;
         }

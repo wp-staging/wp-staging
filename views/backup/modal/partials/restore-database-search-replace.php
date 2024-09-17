@@ -1,8 +1,3 @@
-<?php
-/**
- * @var string $urlPublic
- */
-?>
 <div class="wpstg--modal--backup--restore--database-search-replace" style="padding-left: .75em;">
     <p><strong><?php esc_html_e('Database Search and Replace', 'wp-staging') ?></strong></p>
     <div class="wpstg--modal--backup--restore--search-replace--info">

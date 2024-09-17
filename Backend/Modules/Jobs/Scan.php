@@ -12,7 +12,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
@@ -250,10 +250,11 @@ class Scan extends Job
             $this->options->currentClone['adminEmail']         = $this->options->currentClone['adminEmail'] ?? '';
             $this->options->currentClone['adminPassword']      = $this->options->currentClone['adminPassword'] ?? '';
             // Make sure no warning is shown when updating/resetting an old clone without databaseSsl, uploadsSymlinked, emailsAllowed and networkClone options
-            $this->options->currentClone['emailsAllowed']      = $this->options->currentClone['emailsAllowed'] ?? true;
-            $this->options->currentClone['databaseSsl']        = $this->options->currentClone['databaseSsl'] ?? false;
-            $this->options->currentClone['uploadsSymlinked']   = $this->options->currentClone['uploadsSymlinked'] ?? false;
-            $this->options->currentClone['networkClone']       = $this->options->currentClone['networkClone'] ?? false;
+            $this->options->currentClone['emailsAllowed']        = $this->options->currentClone['emailsAllowed'] ?? true;
+            $this->options->currentClone['databaseSsl']          = $this->options->currentClone['databaseSsl'] ?? false;
+            $this->options->currentClone['uploadsSymlinked']     = $this->options->currentClone['uploadsSymlinked'] ?? false;
+            $this->options->currentClone['networkClone']         = $this->options->currentClone['networkClone'] ?? false;
+            $this->options->currentClone['wooSchedulerDisabled'] = $this->options->currentClone['wooSchedulerDisabled'] ?? false;
         }
 
         // Tables

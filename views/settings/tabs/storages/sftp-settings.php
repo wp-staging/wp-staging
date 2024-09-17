@@ -123,7 +123,7 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
 
                 <fieldset class="wpstg-fieldset wpstg-only-sftp<?php echo $ftpType === Auth::CONNECTION_TYPE_SFTP ? '' : ' hidden' ?>">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-passphrase"><?php esc_html_e('Passphrase', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-passphrase" class="wpstg-form-control" type="password" name="passphrase" value="<?php echo esc_attr($passphrase); ?>" />
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-passphrase" class="wpstg-form-control" type="password" name="passphrase" value="<?php echo esc_attr($passphrase); ?>" autocomplete="off"/>
                     <p><?php esc_html_e("Passphrase for the key.", 'wp-staging') ?></p>
                 </fieldset>
 

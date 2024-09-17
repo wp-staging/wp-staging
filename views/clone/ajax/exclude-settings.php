@@ -9,7 +9,6 @@
  */
 ?>
 
-
 <div>
     <h1 class="wpstg-m-0 wpstg-mt-10px wpstg--swal2-title"><?php esc_html_e('Reset Staging Site', 'wp-staging'); ?></h1>
     <p style="text-align: justify;"><?php esc_html_e('Do you really want to reset this staging site with the current state of the production site?', 'wp-staging'); ?></p>

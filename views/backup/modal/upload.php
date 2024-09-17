@@ -89,6 +89,12 @@ try {
                         <?php esc_html_e('Or upload a backup file via FTP to:', 'wp-staging') ?><br>
                         <code><?php echo esc_html($uploadDirectory) ?></code>
                     </p>
+                    <span class="wpstg-backup-direct-upload-reload-notice">
+                        <?php echo sprintf(
+                            esc_html__('%s this page after uploading via FTP!', 'wp-staging'),
+                            '<a href="' . esc_url(get_admin_url() . 'admin.php?page=wpstg_backup') . '" target="_self">' . esc_html__('Reload', 'wp-staging') . '</a>'
+                        ); ?>
+                    </span>
                 </div>
 
                 <div id="wpstg-upload-progress">

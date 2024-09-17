@@ -16,10 +16,25 @@ class FileHeader implements IndexLineInterface
     use EndOfLinePlaceholderTrait;
 
     /**
-     * ASCII INT of `WPSTG`
-     * @var int
+     * Packed Hex Code of `WPSTG`
+     * This constant represents an 48bit unsigned integer packed as a hex string.
+     * It is appended as it is to the start of the file header.
+     *
+     * Example:
+     * $hex = '47f6600b0200';
+     * to make it 8 bytes
+     * $hex = $hex . '0000';
+     * $bin = hex2bin($hex);
+     * $int = unpack('P', $bin)[1];
+     * echo $int; //8780838471 the original string
+     * 87 -> W
+     * 80 -> P
+     * 83 -> S
+     * 84 -> T
+     * 71 -> G
+     * @var string
      */
-    const START_SIGNATURE = 8780838471;
+    const START_SIGNATURE = '47f6600b0200';
 
     /** @var int */
     const FILE_HEADER_FIXED_SIZE = 72;
@@ -27,8 +42,11 @@ class FileHeader implements IndexLineInterface
     /** @var int */
     const INDEX_HEADER_FIXED_SIZE = 72;
 
-    /** @var string */
-    const FILE_HEADER_FORMAT = '644552424';
+    /**
+     * @var string
+     * The File Header format without the start signature to make it compatible with 32bit PHP
+     */
+    const FILE_HEADER_FORMAT = '44552424';
 
     /** @var string */
     const INDEX_HEADER_FORMAT = '644552424';
@@ -114,22 +132,26 @@ class FileHeader implements IndexLineInterface
     /**
      * @param string $index
      * @return void
+     * @throws \UnexpectedValueException
      */
     public function decodeFileHeader(string $index)
     {
         $index         = rtrim($index);
         $fixedHeader   = substr($index, 0, self::FILE_HEADER_FIXED_SIZE);
         $dynamicHeader = substr($index, self::FILE_HEADER_FIXED_SIZE);
-        $header        = $this->encoder->hexToIntArray(self::FILE_HEADER_FORMAT, $fixedHeader);
-        $this->setStartSignature($header[0]);
-        $this->setModifiedTime($header[1]);
-        $this->setCrc32($header[2]);
-        $this->setCompressedSize($header[3]);
-        $this->setUncompressedSize($header[4]);
-        $this->setAttributes($header[5]);
-        $this->filePathLength = $header[6];
-        $this->fileNameLength = $header[7];
-        $this->extraFieldLength = $header[8];
+        if (strpos($fixedHeader, self::START_SIGNATURE) !== 0) {
+            throw new \UnexpectedValueException('Invalid file header');
+        }
+
+        $header = $this->encoder->hexToIntArray(self::FILE_HEADER_FORMAT, substr($fixedHeader, 12, self::FILE_HEADER_FIXED_SIZE - 12));
+        $this->setModifiedTime($header[0]);
+        $this->setCrc32($header[1]);
+        $this->setCompressedSize($header[2]);
+        $this->setUncompressedSize($header[3]);
+        $this->setAttributes($header[4]);
+        $this->filePathLength = $header[5];
+        $this->fileNameLength = $header[6];
+        $this->extraFieldLength = $header[7];
         $this->setFilePath(substr($dynamicHeader, 0, $this->filePathLength));
         $this->setFileName(substr($dynamicHeader, $this->filePathLength, $this->fileNameLength));
         $this->setExtraField(substr($dynamicHeader, $this->filePathLength + $this->fileNameLength, $this->extraFieldLength));
@@ -199,7 +221,6 @@ class FileHeader implements IndexLineInterface
     public function getFileHeader(): string
     {
         $fixedHeader = $this->encoder->intArrayToHex(self::FILE_HEADER_FORMAT, [
-            self::START_SIGNATURE,
             $this->modifiedTime,
             $this->crc32,
             $this->compressedSize,
@@ -209,7 +230,7 @@ class FileHeader implements IndexLineInterface
             $this->fileNameLength,
             $this->extraFieldLength
         ]);
-        $fileHeader = $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
         $fileHeader = $this->replaceEOLsWithPlaceholders($fileHeader);
 
         return $fileHeader;

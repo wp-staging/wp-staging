@@ -73,7 +73,7 @@ class Feedback
         $message = empty($body) ? 'No reason given' : $body;
         $from    = isset($form['wpstg_disable_from']) ? sanitize_email($form['wpstg_disable_from']) : '';
         $subject = empty($subject) ? '(no reason given)' : (count($subject) > 1 ? '(multiple reasons given)' : $subject[0]);
-        $success = WPStaging::make(Notifications::class)->sendEmail('feedback@wp-staging.com', $subject, $message, $from);
+        $success = WPStaging::make(Notifications::class)->sendEmail('feedback@wp-staging.com', $subject, $message, $from, [], false);
 
         if ($success) {
             wp_die(1);

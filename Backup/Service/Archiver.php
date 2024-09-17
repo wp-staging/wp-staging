@@ -20,6 +20,7 @@ use WPStaging\Backup\FileHeader;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Adapter\PhpAdapter;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
@@ -76,6 +77,9 @@ class Archiver
     /** @var BackupFileIndex */
     protected $backupFileIndex;
 
+    /** @var Filesystem */
+    protected $filesystem;
+
     public function __construct(
         BufferedCache $cacheIndex,
         BufferedCache $tempBackup,
@@ -85,7 +89,8 @@ class Archiver
         PhpAdapter $phpAdapter,
         BackupFileIndex $backupFileIndex,
         FileHeader $fileHeader,
-        BackupHeader $backupHeader
+        BackupHeader $backupHeader,
+        Filesystem $filesystem
     ) {
         $this->jobDataDto      = $jobDataDto;
         $this->archiverDto     = $archiverDto;
@@ -96,6 +101,7 @@ class Archiver
         $this->backupFileIndex = $backupFileIndex;
         $this->fileHeader      = $fileHeader;
         $this->backupHeader    = $backupHeader;
+        $this->filesystem      = $filesystem;
     }
 
     /**
@@ -412,7 +418,7 @@ class Archiver
      */
     protected function writeFileHeader(string $filePath, string $indexPath): int
     {
-        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($indexPath);
+        $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->filesystem->maybeNormalizePath($indexPath));
         $this->fileHeader->readFile($filePath, $identifiablePath);
 
         return $this->fileHeader->writeFileHeader($this->tempBackup);
@@ -547,6 +553,10 @@ class Archiver
         /** @var JobBackupDataDto $jobBackupDataDto */
         $jobBackupDataDto = $this->jobDataDto;
         $jobBackupDataDto->setTotalFiles($jobBackupDataDto->getTotalFiles() + 1);
+
+        if ($this->archiverDto->getFileSize() >= 2 * GB_IN_BYTES) {
+            $jobBackupDataDto->setIsContaining2GBFile(true);
+        }
 
         $this->incrementFileCountForMultipart($jobBackupDataDto);
 

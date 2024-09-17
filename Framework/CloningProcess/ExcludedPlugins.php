@@ -5,7 +5,7 @@ namespace WPStaging\Framework\CloningProcess;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Filesystem\PathIdentifier;
-use WPStaging\Framework\Staging\CloneOptions;
+use WPStaging\Staging\CloneOptions;
 
 /**
  * Add here the list of excluded plugins to make sure code remain DRY
@@ -32,8 +32,9 @@ class ExcludedPlugins
      * Place below the list of plugins to exclude
      * If any of these below plugins are installed in user site they will be skipped during cloning
      * And a message will be shown to them about their exclusion
+     * @param Directory|null $dirAdapter
      */
-    public function __construct(Directory $dirAdapter = null)
+    public function __construct($dirAdapter = null)
     {
         if ($dirAdapter === null) {
             $dirAdapter        = WPStaging::make(Directory::class);

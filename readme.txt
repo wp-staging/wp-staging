@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.6
-Stable tag: 3.8.4
+Stable tag: 3.8.5
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -286,6 +286,34 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.8.5 =
+* New: Compatible up to WordPress 6.6.2
+* New: Compatible up to PHP 8.4.0 beta5
+* New: Add feature to "Disable WooCommerce Action Scheduler for Subscriptions" on staging sites. (Pro) #3470
+* New: Make backup v.2 compatible on 32 bit PHP versions. #3714
+* New: Purge LiteSpeedCache after performing push.(Pro) #3693
+* New: Show count of total and selected database tables before performing push. #3724
+* New: Log all WP Staging global and specific tasks settings. #3633
+* New: Show memory exhausted error in process modal. #3710
+* Fix: Preserve login by link data on staging site after update process. (Pro) #3731
+* Fix: Adjust php 5.6 compatible message and disable email footer in feedback emails. #3696
+* Fix: Delete `W3 Total Cache` drop-in files during push job when the `Push Changes > Uninstall all plugins/themes on production site` option is selected. #3620
+* Fix: Stop backup creation earlier when the server disk is full. #3606
+* Fix: Global translation po & mo files are not recognized. Load translations files from wp-content/languages/plugins folder. #3757
+* Fix: Automatically send request using GET method to fire queue ajax if POST method doesn't work. Add filter `wpstg.queue.request.force_get_method` to force use GET method. Useful in case if somehow the `POST` method for ajax request is blocked by hosting provider or other plugins. #3705
+* Fix: Resolve console errors caused by duplicate and missing HTML element IDs. #3702
+* Fix: Don't use the same dropbox data for live and staging site. (Pro) #3739
+* Fix: Unable to write file header for v2 backups on Windows OS. #3694
+* UX: Make the hamburger icon and responsive menu look more appealing in light and dark mode. #3703
+* UX: Show license information on Settings, System Info and WP Staging | Restore page. (Pro) #3726
+* UX: Make the locked backup loader for ongoing background backups look good in dark and light mode. #3721
+* UX: Improve restore modal description to avoid confusion about what is being restored. List all the backup restore related filters in the restore logs. #3671
+* UX: Improve pro banner in free version. (free) #3679
+* UX: Improve Upload modal, add notice to reload page after uploading backup via FTP. #3672
+* Dev: Refactor namespace and files. #3749
+* Dev: Add wpdb DB helper class with crud operations for `options` table in playwright testing. #3712
+* Dev: Add PHP 8.4 in test suite. Make unit and e2e tests pass with the beta version of PHP 8.4. #3662
 
 = 3.8.4 =
 * New: Compatible up to WordPress 6.6.1

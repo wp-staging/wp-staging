@@ -21,7 +21,7 @@ if (!$isPro) {
     $settingsEnabled = false;
 }?>
 <div class="wpstg--advanced-settings--checkbox">
-    <label for="wpstg_disable_cron"><?php esc_html_e('Disable WP_CRON', 'wp-staging'); ?></label>
+    <label for="wpstg_disable_cron"><?php esc_html_e('Disable Cron Jobs', 'wp-staging'); ?></label>
     <?php Checkbox::render('wpstg_disable_cron', 'wpstg_disable_cron', 'true', $cronDisabled, ['isDisabled' => !$settingsEnabled]); ?>
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />

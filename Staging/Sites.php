@@ -1,13 +1,13 @@
 <?php
 
-namespace WPStaging\Framework\Staging;
+namespace WPStaging\Staging;
 
 /**
  * Class Sites
  *
  * This is used to manage settings on the staging site
  *
- * @package WPStaging\Framework\Staging
+ * @package WPStaging\Staging
  *
  * @todo Manage staging sites option CRUD here?
  */
@@ -96,11 +96,6 @@ class Sites
     public function upgradeStagingSitesOption()
     {
         $newSitesOption = get_option(self::STAGING_SITES_OPTION, []);
-
-        // Early bail: If it's already populated and not empty do nothing. It has been migrated already.
-        if (!empty($newSiteOption)) {
-            return;
-        }
 
         // If its no valid array, it is broken
         if (!is_array($newSitesOption)) {

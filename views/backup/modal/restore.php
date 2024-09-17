@@ -1,16 +1,7 @@
 <?php
-/**
- * @var \WPStaging\Framework\Adapter\Directory $directory
- */
-
 try {
     $baseDirectory = \WPStaging\Core\WPStaging::make(\WPStaging\Backup\Service\BackupsFinder::class)->getBackupsDirectory();
-} catch (\Exception $e) { // TODO: remove the double catch and switch with Throwable when the support of php 5.6 is dropped!
-    ob_end_clean();
-    if (wp_doing_ajax()) {
-        wp_send_json_error($e->getMessage());
-    }
-} catch (\Error $e) {
+} catch (\Throwable $e) {
     ob_end_clean();
     if (wp_doing_ajax()) {
         wp_send_json_error($e->getMessage());

@@ -82,6 +82,7 @@ class uninstall
             delete_option('wpstg_sftp');
             delete_option('wpstg_digitalocean');
             delete_option('wpstg_wasabi');
+            delete_option('wpstg_dropbox');
             delete_option('wpstg_free_backup_notice_dismissed');
             delete_option('wpstg_first_backup_speed_index');
             delete_option('wpstg_backup_speed_index');
@@ -116,7 +117,7 @@ class uninstall
             delete_option("wpstg_rating");
             delete_option("wpstg_beta");
 
-            /* @see \WPStaging\Framework\Staging\FirstRun::FIRST_RUN_KEY */
+            /* @see \WPStaging\Staging\FirstRun::FIRST_RUN_KEY */
             delete_option('wpstg_execute');
 
             /* @see \WPStaging\Framework\BackgroundProcessing\Queue::QUEUE_TABLE_VERSION_KEY */

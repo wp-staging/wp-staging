@@ -32,10 +32,10 @@ class NonCompressionService implements CompressionInterface
      * No Compression
      * @param FileObject         $wpstgFile
      * @param FileBeingExtracted $extractingFile
-     * @param callable           $callable
+     * @param callable|null      $callable
      * @return string
      */
-    public function readChunk(FileObject $wpstgFile, FileBeingExtracted $fileBeingExtracted, callable $callable = null): string
+    public function readChunk(FileObject $wpstgFile, FileBeingExtracted $fileBeingExtracted, $callable = null): string
     {
         return $wpstgFile->fread($fileBeingExtracted->findReadTo());
     }

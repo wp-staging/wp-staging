@@ -4,8 +4,8 @@ namespace WPStaging\Backend\Modules\Jobs;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\SourceDatabase;
-use WPStaging\Framework\Staging\CloneOptions;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\CloneOptions;
+use WPStaging\Staging\Sites;
 
 /**
  * Preserve staging sites in wpstg_staging_sites in staging database while updating a site
@@ -86,6 +86,8 @@ class PreserveDataFirstStep extends JobExecutable
         // Get wpstg_settings from staging database
         $settings = $this->getStagingSiteOption("wpstg_settings");
 
+        $loginLinkSettings = $this->getStagingSiteOption("wpstg_login_link_settings");
+
         // Get wpstg_clone_options from staging database
         $cloneOptions = $this->getStagingSiteOption(CloneOptions::WPSTG_CLONE_SETTINGS_KEY);
 
@@ -96,15 +98,16 @@ class PreserveDataFirstStep extends JobExecutable
         $remoteStorages = $this->preserveRemoteStorages();
 
         // Nothing to do
-        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules && empty($remoteStorages)) {
+        if (!$stagingSites && !$settings && !$cloneOptions && !$backupSchedules && !$loginLinkSettings && empty($remoteStorages)) {
             return true;
         }
 
         $options = [
-            'stagingSites'    => $stagingSites,
-            'settings'        => $settings,
-            'cloneOptions'    => $cloneOptions,
-            'backupSchedules' => $backupSchedules,
+            'stagingSites'      => $stagingSites,
+            'settings'          => $settings,
+            'cloneOptions'      => $cloneOptions,
+            'backupSchedules'   => $backupSchedules,
+            'loginLinkSettings' => $loginLinkSettings,
         ];
 
         $options = array_merge($options, $remoteStorages);
@@ -134,6 +137,10 @@ class PreserveDataFirstStep extends JobExecutable
 
         if ($cloneOptions === false) {
             $this->log("Preserve Data: Failed to get wpstg_clone_options");
+        }
+
+        if ($loginLinkSettings === false) {
+            $this->log("Preserve Data: Failed to get wpstg_login_link_settings");
         }
 
         if ($backupSchedules === false) {
@@ -188,6 +195,12 @@ class PreserveDataFirstStep extends JobExecutable
          */
         $genericS3 = $this->getStagingSiteOption('wpstg_generic-s3');
 
+        /**
+         * Dropbox Options.
+         * @see WPStaging\Pro\Backup\Storage\Storages\Dropbox\Auth::getOptionName for option name
+         */
+        $dropbox = $this->getStagingSiteOption('wpstg_dropbox');
+
         if ($googleDrive === false) {
             $this->log("Preserve Data: Failed to get Google Drive Settings");
         } else {
@@ -222,6 +235,12 @@ class PreserveDataFirstStep extends JobExecutable
             $this->log("Preserve Data: Failed to get Generic S3 Settings");
         } else {
             $storages['genericS3'] = $genericS3;
+        }
+
+        if ($dropbox === false) {
+            $this->log("Preserve Data: Failed to get Dropbox Settings");
+        } else {
+            $storages['dropbox'] = $dropbox;
         }
 
         return $storages;
