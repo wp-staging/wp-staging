@@ -28,6 +28,12 @@ class QueueProcessor
 
     const QUEUE_PROCESS_ACTION = 'wpstg_queue_process';
 
+    /** @var string */
+    const FILTER_REQUEST_FORCE_GET_METHOD = 'wpstg.queue.request.force_get_method';
+
+    /** @var string */
+    const TRANSIENT_REQUEST_GET_METHOD = 'wpstg.queue.request.get_method';
+
     /**
      * A flag property indicating whether the Queue Processor
      * should actually process Actions or not.

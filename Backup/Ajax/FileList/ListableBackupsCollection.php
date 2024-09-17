@@ -134,6 +134,7 @@ class ListableBackupsCollection
                 $listableBackup->errorMessage                     = $this->backupValidator->getErrorMessage();
                 $listableBackup->indexPartSize                    = $backupMetadata->getIndexPartSize();
                 $listableBackup->isZlibCompressed                 = $backupMetadata->getIsZlibCompressed();
+                $listableBackup->isContaining2GBFile              = $backupMetadata->getIsContaining2GBFile();
             } elseif ($file->getExtension() === 'sql') {
                 $listableBackup                      = new ListableBackup();
                 $listableBackup->isLegacy            = true;

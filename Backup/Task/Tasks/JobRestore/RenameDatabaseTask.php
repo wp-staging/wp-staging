@@ -6,7 +6,7 @@ use Exception;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Security\AccessToken;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\BackupScheduler;

@@ -132,7 +132,7 @@ class FinalizeBackupTask extends BackupTask
             $this->addFilesIndex();
             $this->addBackupMetadata($archiverDto, $isUploadBackup);
         } catch (Exception $e) {
-            $this->logger->critical(esc_html__('Failed to create backup file: ', 'wp-staging') . $e->getMessage());
+            $this->logger->critical(sprintf('Failed to create backup file: %s', $e->getMessage()));
             return $this->generateResponse(false);
         }
 
@@ -143,7 +143,7 @@ class FinalizeBackupTask extends BackupTask
 
         if ($metadataAdded && $isLastStep) {
             $steps->finish();
-            $this->logger->info(esc_html__('Successfully created backup file', 'wp-staging'));
+            $this->logger->info('Successfully created backup file');
 
             return $this->generateResponse(false);
         }
@@ -238,6 +238,7 @@ class FinalizeBackupTask extends BackupTask
         $backupMetadata->setMultipartMetadata(null);
         $backupMetadata->setCreatedOnPro(WPStaging::isPro());
         $backupMetadata->setHostingType($this->siteInfo->getHostingType());
+        $backupMetadata->setIsContaining2GBFile($this->jobDataDto->getIsContaining2GBFile());
 
         $this->addSystemInfoToBackupMetadata($backupMetadata);
 

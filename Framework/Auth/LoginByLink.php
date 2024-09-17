@@ -3,7 +3,7 @@
 namespace WPStaging\Framework\Auth;
 
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 
 require_once ABSPATH . 'wp-admin/includes/user.php';

@@ -17,7 +17,7 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Notices\DismissNotice;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Backend\Modules\Jobs\Cancel;
 use WPStaging\Backend\Modules\Jobs\CancelUpdate;
 use WPStaging\Backend\Modules\Jobs\Cloning;
@@ -58,12 +58,6 @@ class Administrator
      */
     const MENU_POSITION_ORDER_MULTISITE = 20;
 
-    /**
-     * Path to plugin's Backend Dir
-     * @var string
-     */
-    private $path;
-
     /** @var string */
     private $viewsPath;
 
@@ -101,9 +95,6 @@ class Administrator
         $this->viewsPath  = WPSTG_VIEWS_DIR;
 
         $this->defineHooks();
-
-        // Path to backend
-        $this->path = plugin_dir_path(__FILE__);
 
         $this->sanitize = WPStaging::make(Sanitize::class);
 
@@ -634,7 +625,12 @@ class Administrator
         $wpDefaultDirectories = WPStaging::make(WpDefaultDirectories::class);
         $isSiteHostedOnWpCom  = $siteInfo->isHostedOnWordPressCom();
         $isPro                = WPStaging::isPro();
-        require_once "{$this->viewsPath}clone/ajax/scan.php";
+
+        if ($isPro) {
+            require_once "{$this->viewsPath}pro/clone/ajax/scan.php";
+        } else {
+            require_once "{$this->viewsPath}clone/ajax/scan.php";
+        }
 
         wp_die();
     }

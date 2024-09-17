@@ -13,13 +13,13 @@ class RestorePluginsTask extends FileRestoreTask
     const FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS = 'wpstg.backup.restore.exclude_plugins';
 
     /**
-     * Old filter, cannot me renamed to new pattern
+     * Old filter, cannot be renamed to new pattern
      * @var string
      */
     const FILTER_REPLACE_EXISTING_PLUGINS = 'wpstg.backup.restore.replace_existing_plugins';
 
     /**
-     * Old filter, cannot me renamed to new pattern
+     * Old filter, cannot be renamed to new pattern
      * @var string
      */
     const FILTER_KEEP_EXISTING_PLUGINS = 'wpstg.backup.restore.keepExistingPlugins';
@@ -61,7 +61,7 @@ class RestorePluginsTask extends FileRestoreTask
         try {
             $existingPlugins  = $this->getExistingPlugins();
         } catch (\Exception $e) {
-            $this->logger->critical(sprintf(__('Destination plugins folder could not be found not created at "%s"', 'wp-staging'), (string)apply_filters('wpstg.import.plugins.destDir', $destDir)));
+            $this->logger->critical(sprintf('Destination plugins folder could not be found not created at "%s"', (string)apply_filters('wpstg.import.plugins.destDir', $destDir)));
 
             return;
         }

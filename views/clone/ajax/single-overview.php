@@ -22,7 +22,7 @@ require_once(WPSTG_VIEWS_DIR . 'backup/modal/progress.php');
     </button>
 </div>
 
-<?php if (isset($availableClones) && !empty($availableClones)) : ?>
+<?php if (!empty($availableClones)) : ?>
     <!-- Existing Clones -->
     <div id="wpstg-existing-clones">
         <h3>

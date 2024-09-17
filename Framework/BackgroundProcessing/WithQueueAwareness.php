@@ -9,6 +9,7 @@
 namespace WPStaging\Framework\BackgroundProcessing;
 
 use WP_Error;
+use WPStaging\Framework\Facades\Hooks;
 
 use function WPStaging\functions\debug_log;
 
@@ -19,7 +20,6 @@ use function WPStaging\functions\debug_log;
  */
 trait WithQueueAwareness
 {
-
     /**
      * Whether this Queue instance did fire the AJAX action request or not.
      *
@@ -37,7 +37,6 @@ trait WithQueueAwareness
     {
         return 0;
     }
-
 
     /**
      * Fires a non-blocking request to the WordPress admin AJAX endpoint that will,
@@ -62,10 +61,39 @@ trait WithQueueAwareness
             '_ajax_nonce' => wp_create_nonce(QueueProcessor::QUEUE_PROCESS_ACTION)
         ], admin_url('admin-ajax.php'));
 
-        $response = wp_remote_post(esc_url_raw($ajaxUrl), [
+        $useGetMethod = false;
+        $requestSent  = false;
+        // If we are in a cron job, check if GET/POST method works and set it in a transient for caching
+        $useGetMethod = get_site_transient(QueueProcessor::TRANSIENT_REQUEST_GET_METHOD);
+        // Transient return false for non existing or expired values, for type safety we will use string 'Yes' or 'No' for GET method usage
+        if ($useGetMethod === false) {
+            // By default we use POST method, so if that doesn't work we will use GET method
+            $useGetMethod = $this->checkGetRequestNeededForQueue($ajaxUrl, $bodyData);
+            // We already sent the POST method request. Let not double sent request if we continue use POST method
+            $requestSent  = !$useGetMethod;
+            // Let set the transient for 24 hours
+            set_site_transient(QueueProcessor::TRANSIENT_REQUEST_GET_METHOD, $useGetMethod ? 'Yes' : 'No', 60 * 60 * 24);
+        } else {
+            $useGetMethod = $useGetMethod === 'Yes';
+        }
+
+        // If request already sent let early bail
+        if ($requestSent) {
+            $this->didFireAjaxAction = true;
+
+            Hooks::doAction('wpstg_queue_fire_ajax_request', $this);
+
+            return true;
+        }
+
+        // If filter is present lets override it!
+        $useGetMethod = Hooks::applyFilters(QueueProcessor::FILTER_REQUEST_FORCE_GET_METHOD, $useGetMethod);
+
+        $response = wp_remote_request(esc_url_raw($ajaxUrl), [
             'headers'   => [
                 'X-WPSTG-Request' => QueueProcessor::QUEUE_PROCESS_ACTION,
             ],
+            'method'    => $useGetMethod ? 'GET' : 'POST',
             'blocking'  => false,
             'timeout'   => 0.01,
             'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],
@@ -123,5 +151,47 @@ trait WithQueueAwareness
         $normalized['_referer'] = __CLASS__;
 
         return $normalized;
+    }
+
+    /**
+     * @param string $ajaxUrl
+     * @param mixed|null $bodyData
+     * @return bool
+     */
+    private function checkGetRequestNeededForQueue(string $ajaxUrl, $bodyData = null): bool
+    {
+        // Let send a blocking request to check if POST method works
+        $response = wp_remote_post(esc_url_raw($ajaxUrl), [
+            'headers'   => [
+                'X-WPSTG-Request' => QueueProcessor::QUEUE_PROCESS_ACTION,
+            ],
+            'blocking'  => true,
+            'timeout'   => 10,
+            'cookies'   => !empty($_COOKIE) ? $_COOKIE : [],
+            'sslverify' => apply_filters('https_local_ssl_verify', false),
+            'body'      => $this->normalizeAjaxRequestBody($bodyData),
+        ]);
+
+        debug_log('checkGetRequestNeededForQueue: ' . wp_json_encode($response, JSON_PRETTY_PRINT), 'info', false);
+
+        // If we get WP_Error, then we can assume that POST method doesn't work
+        if ($response instanceof WP_Error) {
+            return true;
+        }
+
+        if (!is_array($response)) {
+            return false;
+        }
+
+        // If we get 404 response code, then we can assume that POST method doesn't work
+        if (
+            array_key_exists('response', $response) &&
+            array_key_exists('code', $response['response']) &&
+            $response['response']['code'] === 404
+        ) {
+            return true;
+        }
+
+        return false;
     }
 }

@@ -63,10 +63,12 @@ if ($isPro && !empty($options->current) && $options->current !== null) {
         <label for="wpstg-db-user"><?php esc_html_e('User: ', 'wp-staging'); ?></label>
         <input type="text" class="wpstg-textbox" name="wpstg-db-user" id="wpstg-db-user" value="<?php echo esc_attr($username); ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
     </div>
-    <div class="wpstg-form-group wpstg-text-field">
-        <label for="wpstg-db-pass"><?php esc_html_e('Password: ', 'wp-staging'); ?></label>
-        <input type="password" class="wpstg-textbox" name="wpstg-db-pass" id="wpstg-db-pass" value="<?php echo esc_attr($password); ?>" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />
-    </div>
+    <form>
+        <div class="wpstg-form-group wpstg-text-field">
+            <label for="wpstg-db-pass"><?php esc_html_e('Password: ', 'wp-staging'); ?></label>
+            <input type="password" class="wpstg-textbox" name="wpstg-db-pass" id="wpstg-db-pass" value="<?php echo esc_attr($password); ?>" <?php echo $isDisabled ? 'disabled' : '' ?> readonly autocomplete="off" />
+        </div>
+    </form>
     <div class="wpstg-form-group wpstg-text-field">
         <label for="wpstg-db-database"><?php esc_html_e('Database: ', 'wp-staging'); ?></label>
         <input type="text" class="wpstg-textbox" name="wpstg-db-database" id="wpstg-db-database" value="<?php echo esc_attr($database); ?>" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> readonly />

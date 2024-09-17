@@ -30,6 +30,8 @@ $isValidFileIndex       = $backup->isValidFileIndex;
 $indexFileError         = $backup->errorMessage;
 $isUnsupported          = $backup->isUnsupported;
 $isProVersion           = WPStaging::isPro();
+$requires64Bit          = empty($size) && (PHP_INT_SIZE !== 8);
+$isContaining2GbFile    = $backup->isContaining2GBFile;
 
 // Default error message
 if (empty($indexFileError)) {
@@ -70,7 +72,7 @@ $logUrl = add_query_arg([
                     <span class="wpstg-caret"></span>
                 </a>
                 <div class="wpstg-dropdown-menu">
-                    <?php if (!$isLegacy && !$isCorrupt) : ?>
+                    <?php if (!$isLegacy && !$isCorrupt && !$requires64Bit) : ?>
                         <a href="#" class="wpstg-clone-action wpstg--backup--restore"
                            data-filePath="<?php echo esc_attr($backup->relativePath) ?>"
                            data-title="<?php esc_attr_e('Restore and overwrite current website according to the contents of this backup.', 'wp-staging') ?>"
@@ -96,7 +98,7 @@ $logUrl = add_query_arg([
                        title="<?php esc_attr_e('Download backup log file', 'wp-staging') ?>">
                         <?php esc_html_e('Log File', 'wp-staging') ?>
                     </a>
-                    <?php if (!$isLegacy && !$isCorrupt) : ?>
+                    <?php if (!$isLegacy && !$isCorrupt && !$requires64Bit) : ?>
                         <a href="#" class="wpstg--backup--edit wpstg-clone-action"
                            data-md5="<?php echo esc_attr($backup->md5BaseName); ?>"
                            data-name="<?php echo esc_attr($backupName); ?>"
@@ -174,7 +176,7 @@ $logUrl = add_query_arg([
             <?php endif ?>
             <li>
                 <strong><?php esc_html_e('Size: ', 'wp-staging') ?></strong>
-                <?php echo esc_html($size); ?>
+                <?php echo $requires64Bit ? '<b class="wpstg--red"> 2GB+ </b>' : esc_html($size); ?>
             </li>
             <?php if ($backup->isZlibCompressed) : ?>
                 <?php if (!$compressor->supportsCompression()) : ?>
@@ -221,7 +223,14 @@ $logUrl = add_query_arg([
                     <?php include(__DIR__ . '/partials/invalid-backup.php'); ?>
                 </div>
             <?php endif ?>
-            <?php if (!$isMultipartBackup && !$isValidFileIndex) : ?>
+            <?php if ($requires64Bit) : ?>
+                <li class="wpstg-corrupted-backup wpstg--red">
+                    <div class="wpstg-corrupted-backup-icon"></div>
+                    <?php $extraMessage = $isContaining2GbFile ? esc_html__('This backup contains a file that exceeds 2GB', 'wp-staging') : esc_html__('This backup exceeds 2GB', 'wp-staging') ?>
+                    <strong><?php echo sprintf(esc_html__('This server uses a 32-bit version of PHP, which cannot read files larger than 2GB. %s and therefore the backup file cannot be extracted. To restore this backup, use a 64-bit version of PHP. Contact WP Staging support for assistance in extracting this backup on this server.', 'wp-staging'), esc_html($extraMessage)) ?></strong><br/>
+                </li>
+            <?php endif ?>
+            <?php if (!$isMultipartBackup && !$isValidFileIndex && !$requires64Bit) : ?>
                 <li class="wpstg-corrupted-backup wpstg--red">
                     <div class="wpstg-corrupted-backup-icon"></div>
                     <strong><?php echo esc_html($indexFileError); ?></strong><br/>

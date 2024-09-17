@@ -1,7 +1,16 @@
+<?php
+/**
+ * @see src/views/backup/modal/download.php
+ * @see src/views/backup/modal/progress.php
+ * @var string $modalType
+ * @var string $logType
+ */
+
+?>
 <div class="wpstg-logs-header-container">
     <div>
-        <label for="wpstg-logs-selector"></label>
-        <select id="wpstg-logs-selector">
+        <label for="wpstg-<?php echo esc_attr($modalType); ?>-<?php echo esc_attr($logType); ?>-logs-selector"></label>
+        <select class="wpstg-logs-selector" id="wpstg-<?php echo esc_attr($modalType); ?>-<?php echo esc_attr($logType); ?>-logs-selector">
             <option value="all"><?php esc_html_e('All', 'wp-staging') ?></option>
             <option value="info"><?php esc_html_e('Info', 'wp-staging') ?></option>
             <option value="debug"><?php esc_html_e('Debug', 'wp-staging') ?></option>

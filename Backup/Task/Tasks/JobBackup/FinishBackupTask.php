@@ -88,7 +88,7 @@ class FinishBackupTask extends BackupTask
      *
      * @return FinalizeBackupResponseDto|TaskResponseDto
      */
-    private function overrideGenerateResponse(ListableBackup $backup = null)
+    private function overrideGenerateResponse($backup = null)
     {
         add_filter('wpstg.task.response', function ($response) use ($backup) {
 

@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Framework\Staging\Ajax;
+namespace WPStaging\Staging\Ajax;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Security\Auth;
@@ -9,7 +9,7 @@ use WPStaging\Framework\Filesystem\DirectoryListing;
 
 /**
  * Class that checks staging site data
- * @package WPStaging\Framework\Staging\Ajax
+ * @package WPStaging\Staging\Ajax
  */
 class StagingSiteDataChecker
 {

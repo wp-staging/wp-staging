@@ -1,4 +1,8 @@
-<?php $modalType = $modalType ?? 'backup';?>
+<?php
+
+$modalType = $modalType ?? 'backup';
+$logType   = 'process';
+?>
 
 <div id="wpstg-<?php echo esc_attr($modalType); ?>-process-modal" data-cancelButtonText="<?php esc_attr_e('Cancel', 'wp-staging') ?>" class="wpstg-<?php echo esc_attr($modalType); ?>-process-modal">
     <span class="wpstg-loader"></span>

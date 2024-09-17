@@ -16,7 +16,7 @@ use WPStaging\Framework\Utils\Cache\Cache;
 class CleanExistingMediaTask extends RestoreTask
 {
     /**
-     * Old filter, cannot me renamed to new pattern
+     * Old filter, cannot be renamed to new pattern
      * @var string
      */
     const FILTER_KEEP_EXISTING_MEDIA = 'wpstg.backup.restore.keepExistingMedia';

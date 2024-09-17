@@ -118,6 +118,9 @@ class ListableBackup
     /** @var bool */
     public $isZlibCompressed = false;
 
+    /** @var bool */
+    public $isContaining2GBFile = false;
+
     /**
      * @return string
      */

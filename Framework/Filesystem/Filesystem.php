@@ -674,7 +674,7 @@ class Filesystem extends FilterableDirectoryIterator
      * @param callable|null $shouldStop
      * @return self
      */
-    public function setShouldStop(callable $shouldStop = null)
+    public function setShouldStop($shouldStop = null)
     {
         $this->shouldStop = $shouldStop;
         return $this;

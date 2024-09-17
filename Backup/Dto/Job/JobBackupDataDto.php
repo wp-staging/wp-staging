@@ -138,6 +138,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /** @var int */
     private $filePartIndex = 0;
 
+    /** @var bool */
+    private $isContaining2GBFile = false;
+
     /**
      * @return string|null
      */
@@ -807,5 +810,22 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function getIsCompressedBackup(): bool
     {
         return WPStaging::make(ZlibCompressor::class)->isCompressionEnabled();
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsContaining2GBFile(): bool
+    {
+        return $this->isContaining2GBFile;
+    }
+
+    /**
+     * @param bool $isContaining2GBFile
+     * @return void
+     */
+    public function setIsContaining2GBFile(bool $isContaining2GBFile)
+    {
+        $this->isContaining2GBFile = $isContaining2GBFile;
     }
 }

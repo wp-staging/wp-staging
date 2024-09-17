@@ -3,6 +3,7 @@
 $assetsUrl    = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
 $displayStyle = \WPStaging\Core\WPStaging::isPro() ? 'display:none;' : 'display:block;';
 $modalType    = $modalType ?? 'backup';
+$logType      = 'success';
 ?>
 
 <div id="wpstg-<?php echo esc_attr($modalType); ?>-success-modal" class="wpstg-<?php echo esc_attr($modalType); ?>-success-modal">
@@ -31,8 +32,8 @@ $modalType    = $modalType ?? 'backup';
                                 <?php
                                 echo sprintf(
                                     esc_html__('You need a wordpress.org account for rating WP Staging. That is a different account than you have on this site. If you haven\'t made a wordpress.org account, just %s and then click %s. It\'s quick - just a minute. Thanks a lot!', 'wp-staging'),
-                                    '<a href="https://login.wordpress.org/register?locale=en_US" target="_blank">' . esc_html('register first') . '</a>',
-                                    '<a href="https://wordpress.org/support/plugin/wp-staging/reviews/?filter=5" target="_blank">' . esc_html('Sure, let me rate it') . '</a>'
+                                    '<a href="https://login.wordpress.org/register?locale=en_US" target="_blank">' . esc_html__('register first', 'wp-staging') . '</a>',
+                                    '<a href="https://wordpress.org/support/plugin/wp-staging/reviews/?filter=5" target="_blank">' . esc_html__('Sure, let me rate it', 'wp-staging') . '</a>'
                                 );
                                 ?>
                             </div>

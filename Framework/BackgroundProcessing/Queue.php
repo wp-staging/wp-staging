@@ -140,7 +140,7 @@ class Queue
      *                                         should use to interact wit the database, or `null`  to use
      *                                         the one globally provided by the Service Locator.
      */
-    public function __construct(Database $database = null)
+    public function __construct($database = null)
     {
         $services               = WPStaging::getInstance()->getContainer();
         $this->database         = $database ?: $services->make(DatabaseAdapter::class)->getClient();

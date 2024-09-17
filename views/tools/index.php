@@ -6,7 +6,7 @@ use WPStaging\Framework\Facades\Sanitize;
 <div class="wpstg_admin" id="wpstg-clonepage-wrapper">
     <?php
 
-    require_once(WPSTG_VIEWS_DIR . '_main/header.php');
+    require_once(WPSTG_VIEWS_DIR . (defined('WPSTGPRO_VERSION') ? 'pro/_main/header.php' : '_main/header.php'));
 
     $isActiveSystemInfoPage = true;
     require_once(WPSTG_VIEWS_DIR . '_main/main-navigation.php');

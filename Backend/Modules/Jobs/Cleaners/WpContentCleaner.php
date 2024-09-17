@@ -65,6 +65,16 @@ class WpContentCleaner
         $wpDirectories = new WpDefaultDirectories();
         $directory = trailingslashit($directory);
         $paths = [];
+        $dropinsFile = [
+            'object-cache.php',
+            'advanced-cache.php',
+            'db.php',
+            'db-error.php',
+            'install.php',
+            'maintenance.php',
+            'php-error.php',
+            'fatal-error-handler.php'
+        ];
         if ($options->deleteUploadsFolder && !$options->backupUploadsFolder && $options->statusContentCleaner = 'pending') {
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativeUploadPath());
         }
@@ -72,6 +82,11 @@ class WpContentCleaner
         if ($options->deletePluginsAndThemes) {
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativeThemePath());
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativePluginPath());
+            foreach ($dropinsFile as $file) {
+                if (file_exists($directory . $file)) {
+                    $paths[] = $directory . $file;
+                }
+            }
         }
 
         if (count($paths) === 0) {

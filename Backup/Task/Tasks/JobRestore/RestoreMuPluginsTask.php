@@ -13,7 +13,7 @@ class RestoreMuPluginsTask extends FileRestoreTask
     const FILTER_REPLACE_EXISTING_MUPLUGINS = 'wpstg.backup.restore.replace_existing_mu_plugins';
 
     /**
-     * Old filter, cannot me renamed to new pattern
+     * Old filter, cannot be renamed to new pattern
      * @var string
      */
     const FILTER_KEEP_EXISTING_MUPLUGINS = 'wpstg.backup.restore.keepExistingMuPlugins';
@@ -60,7 +60,7 @@ class RestoreMuPluginsTask extends FileRestoreTask
         } catch (\Exception $e) {
             $this->logger->critical(
                 sprintf(
-                    esc_html__('Destination mu-plugins folder could not be found nor created at "%s"', 'wp-stating'),
+                    esc_html('Destination mu-plugins folder could not be found nor created at "%s"'),
                     esc_html((string)apply_filters('wpstg.import.muPlugins.destDir', $destDir))
                 )
             );

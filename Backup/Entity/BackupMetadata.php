@@ -74,7 +74,7 @@ class BackupMetadata implements JsonSerializable
      * This need to be bump whenever we make changes in backup structure
      * @var string
      */
-    const BACKUP_VERSION = '1.0.2';
+    const BACKUP_VERSION = '1.0.3';
 
     /** @var string */
     private $id;
@@ -217,6 +217,15 @@ class BackupMetadata implements JsonSerializable
      */
     private $hostingType;
 
+    /** @var bool */
+    private $isContaining2GBFile = false;
+
+    /** @var string */
+    private $phpArchitecture;
+
+    /** @var string */
+    private $osArchitecture;
+
     /**
      * BackupMetadata constructor.
      *
@@ -225,6 +234,7 @@ class BackupMetadata implements JsonSerializable
     public function __construct()
     {
         $time      = WPStaging::make(Times::class);
+        /** @var SiteInfo */
         $siteInfo  = WPStaging::make(SiteInfo::class);
         $wpAdapter = WPStaging::make(WpAdapter::class);
 
@@ -241,6 +251,8 @@ class BackupMetadata implements JsonSerializable
         $this->setDateCreatedTimezone($time->getSiteTimezoneString());
         $this->setBackupType(is_multisite() ? self::BACKUP_TYPE_MULTISITE : self::BACKUP_TYPE_SINGLE);
         $this->setPhpShortOpenTags($siteInfo->isPhpShortTagsEnabled());
+        $this->setPhpArchitecture($siteInfo->getPhpArchitecture());
+        $this->setOsArchitecture($siteInfo->getOsArchitecture());
 
         $this->setWpBakeryActive($siteInfo->isWpBakeryActive());
         $this->setIsJetpackActive($siteInfo->isJetpackActive());
@@ -1212,6 +1224,57 @@ class BackupMetadata implements JsonSerializable
     public function setHostingType(string $hostingType)
     {
         $this->hostingType = $hostingType;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsContaining2GBFile(): bool
+    {
+        return $this->isContaining2GBFile;
+    }
+
+    /**
+     * @param bool|null $isContaining2GBFile
+     * @return void
+     */
+    public function setIsContaining2GBFile($isContaining2GBFile)
+    {
+        $this->isContaining2GBFile = (bool)$isContaining2GBFile;
+    }
+
+    /**
+     * @return string
+     */
+    public function getPhpArchitecture(): string
+    {
+        return $this->phpArchitecture;
+    }
+
+    /**
+     * @param string $phpArchitecture
+     * @return void
+     */
+    public function setPhpArchitecture(string $phpArchitecture)
+    {
+        $this->phpArchitecture = $phpArchitecture;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOsArchitecture(): string
+    {
+        return $this->osArchitecture;
+    }
+
+    /**
+     * @param string $osArchitecture
+     * @return void
+     */
+    public function setOsArchitecture(string $osArchitecture)
+    {
+        $this->osArchitecture = $osArchitecture;
     }
 
     public function getIsBackupFormatV1(): bool

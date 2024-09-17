@@ -11,7 +11,7 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Sanitize;
-use WPStaging\Framework\Staging\Sites;
+use WPStaging\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Database\WpOptionsInfo;
 use WPStaging\Framework\Security\DataEncryption;
@@ -63,12 +63,16 @@ class SystemInfo
      */
     private $isEncodeProLicense = false;
 
+    /** @var SiteInfo */
+    private $siteInfo;
+
     public function __construct()
     {
         $this->isMultiSite   = is_multisite();
         $this->urlsHelper    = WPStaging::make(Urls::class);
         $this->database      = WPStaging::make(Database::class);
         $this->wpOptionsInfo = WPStaging::make(WpOptionsInfo::class);
+        $this->siteInfo      = WPStaging::make(SiteInfo::class);
     }
 
     /**
@@ -274,7 +278,7 @@ class SystemInfo
         $output .= $this->info("Free Update Date:", get_option(Upgrade::OPTION_UPGRADE_DATE, self::NOT_SET_LABEL));
         $output .= $this->info("Updated from Pro Version:", get_option('wpstgpro_version_upgraded_from') ?: self::NOT_SET_LABEL);
         $output .= $this->info("Updated from Free Version:", get_option('wpstg_version_upgraded_from') ?: self::NOT_SET_LABEL);
-        $output .= $this->info("Is Staging Site:", (new SiteInfo())->isStagingSite() ? 'true' : 'false');
+        $output .= $this->info("Is Staging Site:", $this->siteInfo->isStagingSite() ? 'true' : 'false');
         $output .= $this->getBackupDetails();
         $output .= $this->getScheduleInfo();
         $output .= $this->info("DB Query Limit:", isset($settings->queryLimit) ? $settings->queryLimit : self::NOT_SET_LABEL);
@@ -299,59 +303,13 @@ class SystemInfo
         $output .= $this->info("Slack Webhook URL:", WPStaging::isPro() && !empty($optionBackupScheduleReportSlackWebhook) ? self::REMOVED_LABEL : self::NOT_SET_LABEL);
         $output .= $this->info("Backup Compression:", isset($settings->enableCompression) ? ($settings->enableCompression ? 'On' : 'Off') : self::NOT_SET_LABEL);
 
-        $output .= PHP_EOL . "-- Google Drive Settings" . PHP_EOL;
-
-        $googleDriveSettings = (array)get_option('wpstg_googledrive', []);
-        if (!empty($googleDriveSettings)) {
-            foreach ($googleDriveSettings as $key => $value) {
-                $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
-            }
-        }
-
-        $output .= PHP_EOL . "-- Amazon S3 Settings" . PHP_EOL;
-
-        $amazonS3Settings = (array)get_option('wpstg_amazons3', []);
-        if (!empty($amazonS3Settings)) {
-            foreach ($amazonS3Settings as $key => $value) {
-                $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
-            }
-        }
-
-        $output .= PHP_EOL . "-- DigitalOcean Spaces Settings" . PHP_EOL;
-
-        $digitalOceanSpacesSettings = (array)get_option('wpstg_digitalocean-spaces', []);
-        if (!empty($digitalOceanSpacesSettings)) {
-            foreach ($digitalOceanSpacesSettings as $key => $value) {
-                $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
-            }
-        }
-
-        $output .= PHP_EOL . "-- Wasabi Settings" . PHP_EOL;
-
-        $wasabiSettings = (array)get_option('wpstg_wasabi-s3', []);
-        if (!empty($wasabiSettings)) {
-            foreach ($wasabiSettings as $key => $value) {
-                $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
-            }
-        }
-
-        $output .= PHP_EOL . "-- Generic S3 Settings" . PHP_EOL;
-
-        $genericS3Settings = (array)get_option('wpstg_generic-s3', []);
-        if (!empty($genericS3Settings)) {
-            foreach ($genericS3Settings as $key => $value) {
-                $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
-            }
-        }
-
-        $output .= PHP_EOL . "-- SFTP Settings" . PHP_EOL;
-
-        $sftpSettings = (array)get_option('wpstg_sftp', []);
-        if (!empty($sftpSettings)) {
-            foreach ($sftpSettings as $key => $value) {
-                $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
-            }
-        }
+        $output .= $this->formatStorageSettings('wpstg_googledrive', 'Google Drive Settings');
+        $output .= $this->formatStorageSettings('wpstg_dropbox', 'Dropbox Settings');
+        $output .= $this->formatStorageSettings('wpstg_amazons3', 'Amazon S3 Settings');
+        $output .= $this->formatStorageSettings('wpstg_digitalocean-spaces', 'DigitalOcean Spaces Settings');
+        $output .= $this->formatStorageSettings('wpstg_wasabi-s3', 'Wasabi Settings');
+        $output .= $this->formatStorageSettings('wpstg_generic-s3', 'Generic S3 Settings');
+        $output .= $this->formatStorageSettings('wpstg_sftp', 'SFTP Settings');
 
         $output .= PHP_EOL . "-- Existing Staging Sites" . PHP_EOL . PHP_EOL;
 
@@ -578,8 +536,8 @@ class SystemInfo
     {
         $output = $this->header("Start System Info");
         $output .= $this->info("Webserver:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
-        $output .= $this->info("OS architecture:", $this->getOSArchitecture());
-        $output .= $this->info("PHP compiled architecture:", $this->getPHPCompiledArchitecture());
+        $output .= $this->info("OS architecture:", $this->siteInfo->getOSArchitecture());
+        $output .= $this->info("PHP architecture:", $this->siteInfo->getPhpArchitecture());
         $output .= $this->info("MySQL Server Type:", $this->database->getServerType());
         $output .= $this->info("MySQL Version:", $this->database->getSqlVersion($compact = true));
         $output .= $this->info("MySQL Version Full Info:", $this->database->getSqlVersion());
@@ -979,22 +937,22 @@ class SystemInfo
         return $dataEncryption->rsaEncrypt($licenseKey, $publicKey);
     }
 
-    protected function getPHPCompiledArchitecture(): string
+    /**
+     * @param string $optionName The name of the WP option to retrieve.
+     * @param string $title The title to display before the settings.
+     * @return string The formatted output for the settings.
+     */
+    protected function formatStorageSettings(string $optionName, string $title): string
     {
-        if (PHP_INT_SIZE === 8) {
-            return "64-bit OS";
+        $output = PHP_EOL . "-- " . $title . PHP_EOL;
+
+        $settings = (array) get_option($optionName, []);
+        if (!empty($settings)) {
+            foreach ($settings as $key => $value) {
+                $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
+            }
         }
 
-        return "32-bit OS";
-    }
-
-    protected function getOSArchitecture(): string
-    {
-        $architecture = php_uname('m');
-        if (strpos($architecture, '64') !== false) {
-            return "64-bit OS";
-        }
-
-        return "32-bit OS";
+        return $output;
     }
 }

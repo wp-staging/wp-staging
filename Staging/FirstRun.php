@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Framework\Staging;
+namespace WPStaging\Staging;
 
 use WPStaging\Frontend\LoginNotice;
 use WPStaging\Framework\Notices\DisabledItemsNotice;
@@ -15,11 +15,10 @@ use WPStaging\Framework\Filesystem\OPcache;
  *
  * This class is executed only on first run when the cloned site is loaded initially
  *
- * @package WPStaging\Framework\Staging
+ * @package WPStaging\Staging
  */
 class FirstRun
 {
-
     /**
      * The option_name that is stored in the database to check first run is executed or not
      */
@@ -29,6 +28,9 @@ class FirstRun
      * The option_name that is stored in the database to check whether mails are disabled or not
      */
     const MAILS_DISABLED_KEY = 'wpstg_emails_disabled';
+
+    /** @var string */
+    const WOO_SCHEDULER_DISABLED_KEY = 'wpstg_woo_scheduler_disabled';
 
     public function init()
     {

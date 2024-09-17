@@ -149,7 +149,7 @@ class DatabaseImporter
         if (strpos($query, 'INSERT INTO') === 0) {
             if ($this->isExcludedInsertQuery($query)) {
                 debug_log('processQuery - This query has been skipped from inserting by using a custom filter: ' . $query);
-                $this->logger->warning(sprintf(__('The query has been skipped from inserting by using a custom filter: %s.', 'wp-staging'), $query));
+                $this->logger->warning(sprintf('The query has been skipped from inserting by using a custom filter: %s.', esc_html($query)));
                 return false;
             }
             if ($this->subsiteManager->isTableFromDifferentSubsite($query)) {

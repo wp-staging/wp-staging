@@ -11,7 +11,7 @@ use WPStaging\Framework\Facades\Hooks;
 class RestoreOtherFilesInWpContentTask extends FileRestoreTask
 {
     /**
-     * Old filter, cannot me renamed to new pattern
+     * Old filter, cannot be renamed to new pattern
      * @var string
      */
     const FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE = 'wpstg.backup.restore.exclude.other.files';
@@ -20,7 +20,7 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
     const FILTER_REPLACE_EXISTING_OTHER_FILES = 'wpstg.backup.restore.replace_existing_other_files';
 
     /**
-     * Old filter, cannot me renamed to new pattern
+     * Old filter, cannot be renamed to new pattern
      * @var string
      */
     const FILTER_KEEP_EXISTING_OTHER_FILES = 'wpstg.backup.restore.keepExistingOtherFiles';

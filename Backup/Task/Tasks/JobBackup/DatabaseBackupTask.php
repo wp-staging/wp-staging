@@ -129,7 +129,7 @@ class DatabaseBackupTask extends BackupTask
 
             if ($rowsExporter->isTableExcluded()) {
                 $this->logger->info(sprintf(
-                    __('Backup database: Skipped Table %s by exclusion rule', 'wp-staging'),
+                    'Backup database: Skipped Table %s by exclusion rule',
                     $rowsExporter->getTableBeingBackup()
                 ));
 
@@ -198,14 +198,14 @@ class DatabaseBackupTask extends BackupTask
             }
 
             $this->logger->info(sprintf(
-                __('Backup database: Table %s. Rows: %s/%s', 'wp-staging'),
+                'Backup database: Table %s. Rows: %s/%s',
                 $rowsExporter->getTableBeingBackup(),
                 number_format_i18n($rowsExporter->getTotalRowsExported()),
                 number_format_i18n($this->jobDataDto->getTotalRowsOfTableBeingBackup())
             ));
 
             $this->logger->debug(sprintf(
-                __('Backup database: Table %s. Query time: %s Batch Size: %s last query json: %s', 'wp-staging'),
+                'Backup database: Table %s. Query time: %s Batch Size: %s last query json: %s',
                 $rowsExporter->getTableBeingBackup(),
                 $this->jobDataDto->getDbRequestTime(),
                 $this->jobDataDto->getBatchSize(),

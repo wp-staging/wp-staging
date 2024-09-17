@@ -12,7 +12,7 @@ use WPStaging\Framework\Performance\MemoryExhaust;
 use WPStaging\Framework\Settings\DarkMode;
 use WPStaging\Framework\Settings\EventLogger;
 use WPStaging\Framework\Utils\DBPermissions;
-use WPStaging\Framework\Staging\Ajax\StagingSiteDataChecker;
+use WPStaging\Staging\Ajax\StagingSiteDataChecker;
 
 /**
  * Class CommonServiceProvider

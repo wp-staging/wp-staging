@@ -46,16 +46,6 @@ use WPStaging\Framework\Facades\UI\Checkbox;
 </span>
 
 <div class="wpstg-tabs-wrapper">
-    <?php if ($isPro && is_multisite() && is_main_site()) : ?>
-    <a href="#" class="wpstg-tab-header active expand" data-id="#wpstg-network-options">
-        <span class="wpstg-tab-triangle wpstg-rotate-90"></span>
-        <?php echo esc_html__("Network Options", "wp-staging") ?>
-    </a>
-
-    <fieldset class="wpstg-tab-section" id="wpstg-network-options" style="display: block;">
-        <?php require(WPSTG_VIEWS_DIR . 'pro/clone/ajax/network-options.php'); ?>
-    </fieldset>
-    <?php endif; ?>
     <p class="wpstg-tables-selection-note">
         <b class="wpstg--red"><?php esc_html_e("Note: ", "wp-staging") ?></b>
         <?php esc_html_e("The tables and folder selection will be saved and preselected for the next update or reset on this staging site.", "wp-staging") ?>
@@ -83,12 +73,12 @@ use WPStaging\Framework\Facades\UI\Checkbox;
     <a href="#" class="wpstg-tab-header" data-id="#wpstg-advanced-settings">
         <span class="wpstg-tab-triangle"></span>
         <?php
-            $advanceSettingsTitle = $isPro ? esc_html__("Advanced Settings", "wp-staging") : esc_html__("Advanced Settings (Requires Pro Version)", "wp-staging");
+            $advanceSettingsTitle = esc_html__("Advanced Settings (Requires Pro Version)", "wp-staging");
             echo esc_html($advanceSettingsTitle);
         ?>
     </a>
 
-    <div class="wpstg-tab-section" id="wpstg-advanced-settings" <?php echo ($isPro && $isSiteHostedOnWpCom) ? 'style="display: block;"' : '' ?>>
+    <div class="wpstg-tab-section" id="wpstg-advanced-settings">
         <?php
         if ($options->mainJob !== Job::UPDATE) {
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'login-data.php');

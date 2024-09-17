@@ -2,7 +2,6 @@
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
-use WPStaging\Pro\License\License;
 
 $licenseMessage = '';
 if (defined('WPSTGPRO_VERSION')) {
