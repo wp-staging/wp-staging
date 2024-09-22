@@ -62,7 +62,7 @@ class ValidateBackupTask extends BackupTask
         }
 
         try {
-            $this->backupExtractor->execute($validateOnly = true);
+            $this->backupExtractor->execute();
             $this->currentTaskDto->fromExtractorDto($this->backupExtractor->getExtractorDto());
         } catch (DiskNotWritableException $e) {
             $this->logger->warning($e->getMessage());
@@ -105,6 +105,7 @@ class ValidateBackupTask extends BackupTask
     {
         $this->backupExtractor->setIsBackupFormatV1($this->jobDataDto->getIsBackupFormatV1());
         $this->backupExtractor->setLogger($this->logger);
+        $this->backupExtractor->setIsValidateOnly(true);
 
         $this->metadata = new BackupMetadata();
         $this->metadata = $this->metadata->hydrateByFilePath($this->jobDataDto->getBackupFilePath());
@@ -144,7 +145,7 @@ class ValidateBackupTask extends BackupTask
     {
         $file     = new FileObject($this->currentBackupFile, FileObject::MODE_APPEND_AND_READ);
         $metadata = new BackupMetadata();
-        $metadata->hydrate($file->readBackupMetadata());
+        $metadata = $metadata->hydrateByFile($file);
 
         clearstatcache();
 

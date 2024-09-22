@@ -2,18 +2,17 @@
 
 namespace WPStaging\Backup;
 
-use SplFileInfo;
-use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Backup\Interfaces\IndexLineInterface;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\PathIdentifier;
+use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
-use WPStaging\Framework\Utils\Cache\BufferedCache;
+use WPStaging\Framework\Traits\FormatTrait;
 use WPStaging\Framework\Utils\DataEncoder;
 
 class FileHeader implements IndexLineInterface
 {
     use EndOfLinePlaceholderTrait;
+    use FormatTrait;
 
     /**
      * Packed Hex Code of `WPSTG`
@@ -99,9 +98,12 @@ class FileHeader implements IndexLineInterface
     /** @var DataEncoder */
     private $encoder;
 
-    public function __construct(DataEncoder $encoder)
+    private $pathIdentifier;
+
+    public function __construct(DataEncoder $encoder, PathIdentifier $pathIdentifier)
     {
-        $this->encoder = $encoder;
+        $this->encoder        = $encoder;
+        $this->pathIdentifier = $pathIdentifier;
         $this->resetHeader();
     }
 
@@ -112,11 +114,10 @@ class FileHeader implements IndexLineInterface
      */
     public function readFile(string $filePath, string $identifiablePath)
     {
-        $fileInfo = new SplFileInfo($filePath);
+        $fileInfo = new \SplFileInfo($filePath);
         $this->setFileName($fileInfo->getFilename());
 
-        $pathIdentifier    = WPStaging::make(PathIdentifier::class);
-        $convertedPath     = $pathIdentifier->transformIdentifiableToPath($identifiablePath);
+        $convertedPath     = $this->pathIdentifier->transformIdentifiableToPath($identifiablePath);
         $convertedPathName = basename($convertedPath);
 
         $path = substr($identifiablePath, 0, -strlen($convertedPathName));
@@ -206,16 +207,6 @@ class FileHeader implements IndexLineInterface
         }
 
         return true;
-    }
-
-    public function writeFileHeader(BufferedCache $backupCache): int
-    {
-        return $backupCache->append($this->getFileHeader());
-    }
-
-    public function writeIndexHeader(BufferedCache $filesIndexCache): int
-    {
-        return $filesIndexCache->append($this->getIndexHeader());
     }
 
     public function getFileHeader(): string
@@ -517,7 +508,7 @@ class FileHeader implements IndexLineInterface
 
         $fileSize = filesize($filePath);
         if ($this->getUncompressedSize() !== $fileSize) {
-            throw new FileValidationException(sprintf('Filesize validation failed for file %s. Expected: %s. Actual: %s', $pathForErrorLogging, size_format($this->getUncompressedSize(), 2), size_format($fileSize, 2)));
+            throw new FileValidationException(sprintf('Filesize validation failed for file %s. Expected: %s. Actual: %s', $pathForErrorLogging, $this->formatSize($this->getUncompressedSize(), 2), $this->formatSize($fileSize, 2)));
         }
 
         $crc32Checksum = hash_file(self::CRC32_CHECKSUM_ALGO, $filePath);

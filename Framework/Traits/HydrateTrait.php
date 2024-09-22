@@ -1,20 +1,8 @@
 <?php
 
-// TODO PHP7.x; declare(strict_types=1);
-// TODO PHP7.x type-hints & return types
-
 namespace WPStaging\Framework\Traits;
 
-use DateTime;
-use Exception;
-use ReflectionClass;
-use ReflectionException;
-use ReflectionMethod;
-use TypeError;
-use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\DateTimeAdapter;
-
-use function WPStaging\functions\debug_log;
 
 trait HydrateTrait
 {
@@ -38,9 +26,9 @@ trait HydrateTrait
             /** @noinspection PhpUnhandledExceptionInspection */
             try {
                 $this->hydrateByMethod('set' . ucfirst($key), $value);
-            } catch (TypeError $e) {
+            } catch (\TypeError $e) {
                 $this->debugLog($e->getMessage());
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 $this->debugLog($e->getMessage());
             }
         }
@@ -68,38 +56,47 @@ trait HydrateTrait
         return $this;
     }
 
-    protected function debugLog($message)
+    /**
+     * @param string $message
+     * @return void
+     */
+    protected function debugLog(string $message)
     {
-        if (WPStaging::areLogsSilenced()) {
+        if (!function_exists('\WPStaging\functions\debug_log')) {
             return;
         }
 
-        debug_log($message);
+        if (class_exists('\WPStaging\Core\WPStaging') && \WPStaging\Core\WPStaging::areLogsSilenced()) {
+            return;
+        }
+
+        \WPStaging\functions\debug_log($message);
     }
 
     /**
      * @param string $method
      * @param mixed $value
+     * @return void
      *
-     * @throws ReflectionException
+     * @throws \ReflectionException
      */
-    private function hydrateByMethod($method, $value)
+    private function hydrateByMethod(string $method, $value)
     {
         if (!method_exists($this, $method)) {
             if (!is_string($value)) {
                 $value = wp_json_encode($value, JSON_UNESCAPED_SLASHES);
             }
 
-            throw new Exception(sprintf("Trying to hydrate DTO with value that does not exist. %s::%s(%s)", get_class($this), $method, $value));
+            throw new \Exception(sprintf("Trying to hydrate DTO with value that does not exist. %s::%s(%s)", get_class($this), $method, $value));
         }
 
         /** @noinspection CallableParameterUseCaseInTypeContextInspection */
-        $method = new ReflectionMethod($this, $method);
+        $method = new \ReflectionMethod($this, $method);
 
         $params = $method->getParameters();
 
         if (!isset($params[0]) || count($params) > 1) {
-            throw new Exception(sprintf(
+            throw new \Exception(sprintf(
                 'Class %s setter method %s does not have a first parameter or has more than one parameter',
                 static::class,
                 $method
@@ -109,7 +106,7 @@ trait HydrateTrait
         $param = $params[0];
 
         if (defined('PHP_VERSION_ID') && PHP_VERSION_ID >= 80000) {
-            $class = $param->getType() && !$param->getType()->isBuiltin() ? new ReflectionClass($param->getType()->getName()) : null;
+            $class = $param->getType() && !$param->getType()->isBuiltin() ? new \ReflectionClass($param->getType()->getName()) : null;
         } else {
             $class = $param->getClass();
         }
@@ -124,15 +121,15 @@ trait HydrateTrait
     }
 
     /**
-     * @param ReflectionClass $class
+     * @param \ReflectionClass $class
      * @param mixed $value
      * @return object
-     * @throws Exception
+     * @throws \Exception
      */
-    private function getClassAsValue(ReflectionClass $class, $value)
+    private function getClassAsValue(\ReflectionClass $class, $value)
     {
         $className = $class->getName();
-        if (!$value instanceof DateTime && $className === 'DateTime') {
+        if (!$value instanceof \DateTime && $className === 'DateTime') {
             return (new DateTimeAdapter())->getDateTime($value);
         }
 

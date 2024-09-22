@@ -22,6 +22,9 @@ class PartIdentifier
     /** @var string */
     const LANGUAGE_PART_IDENTIFIER = 'lang';
 
+    /** @var string */
+    const DROPIN_PART_IDENTIFIER = 'dropins';
+
     /**
      * @var string
      * @deprecated use WP_CONTENT_PART_IDENTIFIER instead

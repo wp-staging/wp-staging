@@ -4,10 +4,9 @@ namespace WPStaging\Backup\Entity;
 
 use WPStaging\Backup\Interfaces\IndexLineInterface;
 use WPStaging\Framework\Filesystem\PathIdentifier;
-use WPStaging\Framework\Traits\ResourceTrait;
 
 /**
- * Class ExtractingFileEntity
+ * Class FileBeingExtracted
  *
  * This is a OOP representation of a file being extracted.
  * @todo Add strict types in separate PR
@@ -18,8 +17,6 @@ use WPStaging\Framework\Traits\ResourceTrait;
  */
 class FileBeingExtracted
 {
-    use ResourceTrait;
-
     /** @var string */
     private $identifiablePath;
 
@@ -47,7 +44,7 @@ class FileBeingExtracted
     public function __construct(string $identifiablePath, string $extractFolder, PathIdentifier $pathIdentifier, IndexLineInterface $backupFileIndex)
     {
         $this->identifiablePath = $identifiablePath;
-        $this->extractFolder    = trailingslashit($extractFolder);
+        $this->extractFolder    = rtrim($extractFolder, '/') . '/';
         $this->start            = $backupFileIndex->getContentStartOffset();
         $this->totalBytes       = $backupFileIndex->getCompressedSize();
         $this->pathIdentifier   = $pathIdentifier;

@@ -24,8 +24,11 @@ use WPStaging\Backup\Service\BackupsFinder;
 use WPStaging\Backup\Service\Database\Importer\Insert\ExtendedInserterWithoutTransaction;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Ajax\BackupSpeedIndex;
+use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Adapter\DirectoryInterface;
 use WPStaging\Framework\DI\FeatureServiceProvider;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Job\Task\AbstractTask;
 use WPStaging\Framework\Network\AjaxBackupDownloader;
 use WPStaging\Framework\Queue\FileSeekableQueue;
@@ -51,6 +54,10 @@ class BackupServiceProvider extends FeatureServiceProvider
         $this->container->when(AbstractTask::class)
                         ->needs(SeekableQueueInterface::class)
                         ->give(FileSeekableQueue::class);
+
+        $this->container->when(PathIdentifier::class)
+                        ->needs(DirectoryInterface::class)
+                        ->give(Directory::class);
 
         $this->hookDatabaseImporterQueryInserter();
     }

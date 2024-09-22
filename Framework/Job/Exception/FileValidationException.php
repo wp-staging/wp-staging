@@ -8,11 +8,9 @@
 
 namespace WPStaging\Framework\Job\Exception;
 
-use WPStaging\Framework\Exceptions\WPStagingException;
-
 /**
  * @package WPStaging\Framework\Job\Exception
  */
-class FileValidationException extends WPStagingException
+class FileValidationException extends \Exception
 {
 }

@@ -9,9 +9,8 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Facades\Escape;
 
-$modalType = 'clone';
-require_once(WPSTG_VIEWS_DIR . 'backup/modal/download.php');
-require_once(WPSTG_VIEWS_DIR . 'backup/modal/progress.php');
+include(WPSTG_VIEWS_DIR . 'job/modal/process.php');
+include(WPSTG_VIEWS_DIR . 'job/modal/success.php');
 ?>
 
 <button type="button" id="wpstg-resume-cloning" class="wpstg-link-btn wpstg-button--primary wpstg-button--blue">

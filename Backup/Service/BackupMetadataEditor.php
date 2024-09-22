@@ -13,14 +13,15 @@ class BackupMetadataEditor
      */
     public function setBackupMetadata(FileObject $backupFile, BackupMetadata $newMetadata)
     {
-        $existingMetadataPosition = $backupFile->getExistingMetadataPosition();
+        $backupMetadataReader     = new BackupMetadataReader($backupFile);
+        $existingMetadataPosition = $backupMetadataReader->getExistingMetadataPosition();
 
         $backupFile->fseek($existingMetadataPosition);
 
         $maybeMetadataLine = $backupFile->readAndMoveNext();
 
         // Validate metadata position
-        if (!is_array($backupFile->extractMetadata($maybeMetadataLine))) {
+        if (!is_array($backupMetadataReader->extractMetadata($maybeMetadataLine))) {
             throw new \UnexpectedValueException('Could not find the existing metadata from the backup.');
         }
 

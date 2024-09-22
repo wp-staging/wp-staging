@@ -421,7 +421,7 @@ class Archiver
         $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->filesystem->maybeNormalizePath($indexPath));
         $this->fileHeader->readFile($filePath, $identifiablePath);
 
-        return $this->fileHeader->writeFileHeader($this->tempBackup);
+        return $this->tempBackup->append($this->fileHeader->getFileHeader());
     }
 
     /**
@@ -533,7 +533,7 @@ class Archiver
             $bytesWritten     = $this->tempBackupIndex->append($backupFileIndex->getIndex());
         } else {
             $this->fileHeader->setStartOffset($start);
-            $bytesWritten = $this->fileHeader->writeIndexHeader($this->tempBackupIndex);
+            $bytesWritten = $this->tempBackupIndex->append($this->fileHeader->getIndexHeader());
         }
 
         $this->archiverDto->setIndexPositionCreated(true);

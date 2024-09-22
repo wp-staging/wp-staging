@@ -70,7 +70,7 @@ class BackupSigner
 
         $file           = new FileObject($backupFilePath, FileObject::MODE_APPEND_AND_READ);
         $backupMetadata = new BackupMetadata();
-        $backupMetadata->hydrate($file->readBackupMetadata());
+        $backupMetadata = $backupMetadata->hydrateByFile($file);
 
         if ($backupSize === 0) {
             $backupSize = $file->getSize();
@@ -100,7 +100,7 @@ class BackupSigner
         $file = new FileObject($backupFilePath);
 
         $backupMetadata = new BackupMetadata();
-        $backupMetadata->hydrate($file->readBackupMetadata());
+        $backupMetadata = $backupMetadata->hydrateByFile($file);
 
         if ($backupMetadata->getName() !== $this->jobDataDto->getName()) {
             throw new RuntimeException('Unexpected Name in Metadata.');

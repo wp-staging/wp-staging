@@ -53,16 +53,13 @@ class BackupRepairer
             return true;
         }
 
-        $metadata = null;
+        $backupMetadata = new BackupMetadata();
         try {
-            $metadata = $file->readBackupMetadata();
+            $backupMetadata->hydrateByFile($file);
         } catch (RuntimeException $ex) {
             $this->error = $ex->getMessage();
             return false;
         }
-
-        $backupMetadata = new BackupMetadata();
-        $backupMetadata->hydrate($metadata);
 
         // Early bail if size is not zero
         if ($backupMetadata->getBackupSize() !== 0) {

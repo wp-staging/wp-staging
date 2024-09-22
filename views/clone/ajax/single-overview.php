@@ -12,9 +12,8 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Escape;
 
 $isPro     = WPStaging::isPro();
-$modalType = 'clone';
-require_once(WPSTG_VIEWS_DIR . 'backup/modal/download.php');
-require_once(WPSTG_VIEWS_DIR . 'backup/modal/progress.php');
+include(WPSTG_VIEWS_DIR . 'job/modal/process.php');
+include(WPSTG_VIEWS_DIR . 'job/modal/success.php');
 ?>
 <div id="wpstg-step-1">
     <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning">

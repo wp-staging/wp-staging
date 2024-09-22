@@ -2,30 +2,59 @@
 
 namespace WPStaging\Framework\Filesystem;
 
+use WPStaging\Framework\Traits\ApplyFiltersTrait;
+
 class Permissions
 {
+    use ApplyFiltersTrait;
+
+    /** @var string */
+    const FILTER_FOLDER_PERMISSION = 'wpstg_folder_permission';
+
+    /** @var int */
+    const DEFAULT_FILE_PERMISSION = 0644;
+
+    /** @var int */
+    const DEFAULT_DIR_PERMISSION = 0755;
+
     /**
      * @return int
      */
-    public function getDirectoryOctal()
+    public function getDirectoryOctal(): int
     {
-        $octal = 0755;
-        if (defined('FS_CHMOD_DIR')) {
-            $octal = FS_CHMOD_DIR;
+        if (!defined('FS_CHMOD_DIR')) {
+            return $this->applyFilters(self::FILTER_FOLDER_PERMISSION, self::DEFAULT_DIR_PERMISSION);
         }
 
-        return apply_filters('wpstg_folder_permission', $octal);
+        if ($this->isValidPermission(FS_CHMOD_DIR)) {
+            return $this->applyFilters(self::FILTER_FOLDER_PERMISSION, FS_CHMOD_DIR);
+        }
+
+        return $this->applyFilters(self::FILTER_FOLDER_PERMISSION, self::DEFAULT_DIR_PERMISSION);
     }
 
     /**
      * @return int
      */
-    public function getFilesOctal()
+    public function getFilesOctal(): int
     {
-        if (defined('FS_CHMOD_FILE')) {
+        if (!defined('FS_CHMOD_FILE')) {
+            return self::DEFAULT_FILE_PERMISSION;
+        }
+
+        if ($this->isValidPermission(FS_CHMOD_FILE)) {
             return FS_CHMOD_FILE;
         }
 
-        return 0644;
+        return self::DEFAULT_FILE_PERMISSION;
+    }
+
+    private function isValidPermission(int $permission): bool
+    {
+        if (decoct(octdec($permission)) !== $permission) {
+            return false;
+        }
+
+        return $permission >= 0 && $permission <= 0777;
     }
 }

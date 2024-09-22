@@ -11,7 +11,7 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 
-class Directory
+class Directory implements DirectoryInterface
 {
     /**
      * Staging site directory name, used when ABSPATH is not writeable

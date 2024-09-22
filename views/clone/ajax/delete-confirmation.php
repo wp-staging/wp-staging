@@ -11,8 +11,7 @@
 
 use WPStaging\Framework\Facades\UI\Checkbox;
 
-$modalType = 'clone';
-require_once(WPSTG_VIEWS_DIR . 'backup/modal/progress.php');
+require_once(WPSTG_VIEWS_DIR . 'job/modal/process.php');
 
 if ($isDatabaseConnected) { ?>
     <div class="wpstg-delete-confirm-modal">

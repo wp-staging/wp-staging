@@ -2,12 +2,13 @@
 
 namespace WPStaging\Backup;
 
-use WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 
 trait WithBackupIdentifier
 {
     /**
+     * List of ids of multipart backups
      * @var string[]
      */
     protected $listedMultipartBackups = [];
@@ -28,7 +29,7 @@ trait WithBackupIdentifier
      */
     public function isBackupPart(string $name)
     {
-        $dbExtension = DatabaseBackupTask::FILE_FORMAT;
+        $dbExtension  = DatabaseImporter::FILE_FORMAT;
         $dbIdentifier = PartIdentifier::DATABASE_PART_IDENTIFIER;
         if (preg_match("#{$dbIdentifier}(.[0-9]+)?.{$dbExtension}$#", $name)) {
             return true;
@@ -78,7 +79,7 @@ trait WithBackupIdentifier
      */
     public function extractBackupIdFromFilename(string $filename)
     {
-        if (strpos($filename, '.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT) !== false) {
+        if (strpos($filename, '.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT) !== false) {
             return $this->extractBackupIdFromDatabaseBackupFilename($filename);
         }
 
@@ -94,7 +95,7 @@ trait WithBackupIdentifier
     protected function extractBackupIdFromDatabaseBackupFilename(string $filename)
     {
         // This is required if the table prefix contains underscore like wp_some
-        $filename = str_replace('.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT, '', $filename);
+        $filename = str_replace('.' . PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT, '', $filename);
         // Get position of last dot . in filename
         $lastDotPosition = strrpos($filename, '.');
         // Get filename until last dot to remove the table prefix
