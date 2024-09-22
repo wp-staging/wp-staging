@@ -95,15 +95,11 @@ class StartRestoreTask extends RestoreTask
         }
 
         foreach (self::STRING_FILTERS as $filterName => $filterText) {
-            $filterValue = $this->getFilterValue($filterName, '');
-            $filterValue = is_array($filterValue) ? implode(', ', $filterValue) : $filterValue;
-            $this->logger->add('- ' . $filterText . ': ' . $filterValue, Logger::TYPE_INFO_SUB);
+            $this->normalizeAndAppendLogs($filterName, $filterText);
         }
 
         foreach (self::ARRAY_FILTERS as $filterName => $filterText) {
-            $filterValue = $this->getFilterValue($filterName, []);
-            $filterValue = is_array($filterValue) ? implode(', ', $filterValue) : $filterValue;
-            $this->logger->add('- ' . $filterText . ': ' . $filterValue, Logger::TYPE_INFO_SUB);
+            $this->normalizeAndAppendLogs($filterName, $filterText, []);
         }
     }
 
@@ -119,5 +115,25 @@ class StartRestoreTask extends RestoreTask
         }
 
         return Hooks::applyFilters($filterName, $defaultValue);
+    }
+
+    /**
+     * @param $filterName
+     * @param $filterText
+     * @param $defaultValue
+     * @return void
+     */
+    private function normalizeAndAppendLogs($filterName, $filterText, $defaultValue = '')
+    {
+        $filterValue = $this->getFilterValue($filterName, $defaultValue);
+        if (!is_array($filterValue)) {
+            $this->logger->add('- ' . $filterText . ': ' . $filterValue, Logger::TYPE_INFO_SUB);
+            return;
+        }
+
+        $this->logger->add('- ' . $filterText, Logger::TYPE_INFO_SUB);
+        foreach ($filterValue as $value) {
+            $this->logger->add('- ' . $value, Logger::TYPE_INFO_SUB);
+        }
     }
 }

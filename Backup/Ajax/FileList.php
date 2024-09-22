@@ -36,17 +36,7 @@ class FileList extends AbstractTemplateComponent
         // Discover the .wpstg backups in the filesystem
         try {
             $listableBackups = $this->listableBackupsCollection->getListableBackups();
-        } catch (\Exception $e) {// TODO: remove the double catch and switch with Throwable when the support of php 5.6 is dropped!
-            ob_end_clean();
-            if (wp_doing_ajax()) {
-                wp_send_json_error(
-                    __(
-                        "Failed to get the list of backups!",
-                        'wp-staging'
-                    )
-                );
-            }
-        } catch (\Error $e) {
+        } catch (\Throwable $e) {
             ob_end_clean();
             if (wp_doing_ajax()) {
                 wp_send_json_error(

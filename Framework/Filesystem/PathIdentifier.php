@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Filesystem;
 
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Adapter\DirectoryInterface;
 
 /**
  * This class is used to shorten the full file path
@@ -44,10 +45,10 @@ class PathIdentifier
      */
     protected $lastIdentifier;
 
-    /** @var Directory */
+    /** @var DirectoryInterface */
     protected $directory;
 
-    public function __construct(Directory $directory)
+    public function __construct(DirectoryInterface $directory)
     {
         $this->directory = $directory;
     }
@@ -177,6 +178,55 @@ class PathIdentifier
     /**
      * @return string
      */
+    public function transformIdentifiableToRelativePath(string $string): string
+    {
+        $key  = substr($string, 0, 8);
+        $path = $this->getRelativePath($key);
+        if (!empty($path) && is_string($path)) {
+            return substr_replace($string, $path, 0, 8);
+        }
+
+        return $string;
+    }
+
+    /**
+     * @return string
+     */
+    public function getRelativePath(string $identifier): string
+    {
+        static $cache = [];
+
+        if (!empty($cache) && !empty($identifier) && !empty($cache[$identifier])) {
+            return $cache[$identifier];
+        }
+
+        $path = [
+            self::IDENTIFIER_ABSPATH    => '',
+            self::IDENTIFIER_WP_CONTENT => 'wp-content/',
+            self::IDENTIFIER_PLUGINS    => 'wp-content/plugins/',
+            self::IDENTIFIER_THEMES     => 'wp-content/themes/',
+            self::IDENTIFIER_MUPLUGINS  => 'wp-content/mu-plugins/',
+            self::IDENTIFIER_UPLOADS    => 'wp-content/uploads/',
+            self::IDENTIFIER_LANG       => 'wp-content/languages/',
+        ];
+
+        if (!empty($identifier) && !empty($path[$identifier])) {
+            $cache[$identifier] = $path[$identifier];
+            return $cache[$identifier];
+        }
+
+        trigger_error(sprintf('Could not find a path for the placeholder: %s', filter_var($identifier, FILTER_SANITIZE_SPECIAL_CHARS)));
+        return $identifier;
+    }
+
+    public function getAbsolutePath(string $identifier): string
+    {
+        return $this->getIdentifierPath($identifier);
+    }
+
+    /**
+     * @return string
+     */
     public function getIdentifierByPartName(string $key): string
     {
         static $cache = [];
@@ -228,7 +278,7 @@ class PathIdentifier
             case self::IDENTIFIER_WP_CONTENT:
                 return $this->directory->getWpContentDirectory();
             default:
-                throw new \UnexpectedValueException("Could not find a path for the placeholder: $identifier");
+                throw new \UnexpectedValueException(sprintf("Could not find a path for the placeholder: %s", filter_var($identifier, FILTER_SANITIZE_SPECIAL_CHARS)));
         endswitch;
     }
 }

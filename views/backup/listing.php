@@ -143,9 +143,11 @@ if ($cronMessage !== '') { ?>
     </div>
 </div>
 
+<?php include(WPSTG_VIEWS_DIR . 'job/modal/process.php'); ?>
+<?php include(WPSTG_VIEWS_DIR . 'job/modal/success.php'); ?>
+<?php include(WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-success.php'); ?>
+
 <?php include(__DIR__ . '/modal/backup.php'); ?>
-<?php include(__DIR__ . '/modal/progress.php'); ?>
-<?php include(__DIR__ . '/modal/download.php'); ?>
 <?php include(__DIR__ . '/modal/download-modal.php'); ?>
 <?php include(__DIR__ . '/modal/upload.php'); ?>
 <?php include(__DIR__ . '/modal/manage-schedules.php'); ?>

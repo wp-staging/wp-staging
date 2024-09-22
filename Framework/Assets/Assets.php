@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Assets;
 
 use WPStaging\Backup\BackupServiceProvider;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Core\DTO\Settings;
@@ -13,7 +14,6 @@ use WPStaging\Framework\Security\Nonce;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
-use WPStaging\Backup\Task\Tasks\JobBackup\DatabaseBackupTask;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Notices\Notices;
 
@@ -36,11 +36,15 @@ class Assets
 
     private $analyticsConsent;
 
-    public function __construct(AccessToken $accessToken, Settings $settings, AnalyticsConsent $analyticsConsent)
+    /** @var I18n */
+    private $i18n;
+
+    public function __construct(AccessToken $accessToken, Settings $settings, AnalyticsConsent $analyticsConsent, I18n $i18n)
     {
         $this->accessToken      = $accessToken;
         $this->settings         = $settings;
         $this->analyticsConsent = $analyticsConsent;
+        $this->i18n             = $i18n;
     }
 
     /**
@@ -272,17 +276,10 @@ class Assets
             $this->getAssetsVersion($asset)
         );
 
-        $backupCompleteMessage = __('You can restore this backup anytime or upload it to another website and restore it there.', 'wp-staging');
-
-        if (WPStaging::isPro() === false) {
-            $backupCompleteMessage = __('You can restore this backup anytime on this website.', 'wp-staging');
-        }
-
         $wpstgConfig = [
             "delayReq"               => 0,
             // The interval in milliseconds between each request of backup status
             'backupStatusInterval'   => Hooks::applyFilters(self::FILTER_BACKUP_STATUS_REQUEST_INTERVAL, 8000),
-            // TODO: move directorySeparator to consts?
             "settings"               => (object)[
                 "directorySeparator" => ScanConst::DIRECTORIES_SEPARATOR
             ],
@@ -294,59 +291,12 @@ class Assets
             'ajaxUrl'                => admin_url('admin-ajax.php'),
             'wpstgIcon'              => $this->getAssetsUrl('img/wpstg-loader.gif'),
             'maxUploadChunkSize'     => $this->getMaxUploadChunkSize(),
-            'backupDBExtension'      => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseBackupTask::FILE_FORMAT,
+            'backupDBExtension'      => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT,
             'analyticsConsentAllow'  => esc_url($this->analyticsConsent->getConsentLink(true)),
             'analyticsConsentDeny'   => esc_url($this->analyticsConsent->getConsentLink(false)),
             'isPro'                  => WPStaging::isPro(),
             'maxFailedRetries'       => Hooks::applyFilters(AbstractJob::TEST_FILTER_MAXIMUM_RETRIES, 10),
-            // TODO: handle i18n translations through Class/Service Provider?
-            'i18n'                   => [
-                'dbConnectionSuccess'   => esc_html__('Database connection successful', 'wp-staging'),
-                'dbConnectionFailed'    => esc_html__('Database connection failed', 'wp-staging'),
-                'somethingWentWrong'    => esc_html__('Something went wrong.', 'wp-staging'),
-                'noRestoreFileFound'    => esc_html__('No backup file found.', 'wp-staging'),
-                'selectFileToRestore'   => esc_html__('Select backup file to restore.', 'wp-staging'),
-                'cloneResetComplete'    => esc_html__('Reset Complete!', 'wp-staging'),
-                'cloneUpdateComplete'   => esc_html__('Update Complete!', 'wp-staging'),
-                'success'               => esc_html__('Success', 'wp-staging'),
-                'resetClone'            => esc_html__('Reset Staging Site', 'wp-staging'),
-                'showLogs'              => esc_html__('Show Logs', 'wp-staging'),
-                'hideLogs'              => esc_html__('Hide Logs', 'wp-staging'),
-                'noTableSelected'       => esc_html__('No table selected', 'wp-staging'),
-                'tablesSelected'        => esc_html__('{d} of {t} tables(s) selected', 'wp-staging'),
-                'filesSelected'         => esc_html__('{t} theme{ts}, {p} plugin{ps}, {o} other folder{os} selected', 'wp-staging'),
-                'wpstg_cloning'         => [
-                    'title' => esc_html__('Staging Site Created Successfully!', 'wp-staging'),
-                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
-                ],
-                'wpstg_update'          => [
-                    'title' => esc_html__('Staging Site Updated Successfully!', 'wp-staging'),
-                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
-                ],
-                'wpstg_push_processing' => [
-                    'title' => esc_html__('Staging Site Pushed Successfully!', 'wp-staging'),
-                    'body'  => esc_html__('Now delete the theme and the website cache if the website does not look as expected! ', 'wp-staging'),
-                ],
-                'wpstg_reset'           => [
-                    'title' => esc_html__('Staging Site Reset Successfully!', 'wp-staging'),
-                    'body'  => esc_html__('You can access it from here:', 'wp-staging'),
-                ],
-                'wpstg_delete_clone'    => [
-                    'title' => esc_html__('Staging Site Deleted Successfully!', 'wp-staging'),
-                ],
-                'backupSchedule' => [
-                    'title' => esc_html__('Backup Schedule Created', 'wp-staging'),
-                    'body'  => esc_html__('Backup is scheduled according to the provided settings.', 'wp-staging'),
-                ],
-                'backupCreationBG' => [
-                    'title' => esc_html__('Backup Creation Triggered', 'wp-staging'),
-                    'body'  => esc_html__('Backup will run in background. You can close the window.', 'wp-staging'),
-                ],
-                'backupCreated' => [
-                    'title' => esc_html__('Backup Complete', 'wp-staging'),
-                    'body'  => esc_html($backupCompleteMessage),
-                ],
-            ],
+            'i18n'                   => $this->i18n->getTranslations(),
         ];
 
         // We need some wpstgConfig vars in the wpstg.js file (loaded with wpstg-common scripts) as well

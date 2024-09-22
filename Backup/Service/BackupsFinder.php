@@ -2,7 +2,6 @@
 
 namespace WPStaging\Backup\Service;
 
-use Exception;
 use RuntimeException;
 use SplFileInfo;
 use Throwable;
@@ -14,7 +13,6 @@ use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Exceptions\BackupRuntimeException;
-use WPStaging\Backup\WithBackupIdentifier;
 
 use function WPStaging\functions\debug_log;
 
@@ -25,13 +23,15 @@ use function WPStaging\functions\debug_log;
  *
  * @package WPStaging\Backup
  */
-class BackupsFinder
+class BackupsFinder extends AbstractBackupsFinder
 {
-    use WithBackupIdentifier;
-
+    /** @var Directory */
     private $directory;
+
+    /** @var Filesystem */
     private $filesystem;
-    private $filteredBackupsDirectory;
+
+    /** @var DirectoryListing */
     private $directoryListing;
 
     public function __construct(Directory $directory, Filesystem $filesystem, DirectoryListing $directoryListing)
@@ -48,7 +48,7 @@ class BackupsFinder
      */
     public function getBackupsDirectory(bool $refresh = false): string
     {
-        if ($refresh || $this->filteredBackupsDirectory === null) {
+        if ($refresh || $this->backupsDirectory === null) {
             $defaultBackupUploadsDirectory = $this->directory->getPluginUploadsDirectory($refresh = true) . Archiver::BACKUP_DIR_NAME;
 
             /**
@@ -85,59 +85,10 @@ class BackupsFinder
 
             $this->directoryListing->maybeUpdateOldHtaccessWebConfig($directory);
 
-            $this->filteredBackupsDirectory = $directory;
+            $this->backupsDirectory = $directory;
         }
 
-        return $this->filteredBackupsDirectory;
-    }
-
-    /**
-     * @return array An array of SplFileInfo objects of .wpstg backup files.
-     */
-    public function findBackups(): array
-    {
-        try {
-            $it = new \DirectoryIterator($this->getBackupsDirectory(true));
-        } catch (\Exception $e) {
-            \WPStaging\functions\debug_log('WP STAGING: Could not find backup directory ' . $e->getMessage());
-
-            return [];
-        }
-
-        $backups = [];
-
-        $this->clearListedMultipartBackups();
-
-        /** @var SplFileInfo $file */
-        foreach ($it as $file) {
-            if (($file->getExtension() === 'wpstg' || $file->getExtension() === 'sql') && !$file->isLink()) {
-                if ($this->isBackupPart($file->getFilename()) && $this->isListedMultipartBackup($file->getFilename())) {
-                    continue;
-                }
-
-                $backups[] = clone $file;
-            }
-        }
-
-        return $backups;
-    }
-
-    /**
-     * @param string $md5
-     *
-     * @return SplFileInfo
-     */
-    public function findBackupByMd5Hash(string $md5): SplFileInfo
-    {
-        $backup = array_filter($this->findBackups(), function ($splFileInfo) use ($md5) {
-            return md5($splFileInfo->getBasename()) === $md5;
-        });
-
-        if (empty($backup)) {
-            throw new \UnexpectedValueException('WP STAGING: Could not find backup by hash ' . $md5);
-        }
-
-        return array_shift($backup);
+        return $this->backupsDirectory;
     }
 
     /**

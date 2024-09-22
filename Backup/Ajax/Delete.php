@@ -104,7 +104,7 @@ class Delete extends AbstractTemplateComponent
         try {
             $file = new FileObject($backup->getRealPath(), FileObject::MODE_APPEND_AND_READ);
             $backupMetadata = new BackupMetadata();
-            $backupMetadata->hydrate($file->readBackupMetadata());
+            $backupMetadata = $backupMetadata->hydrateByFile($file);
         } catch (Exception $e) {
             // Couldn't read backup metadata, continue deleting the main file but log error
             debug_log('WP STAGING: User tried to delete backup but "unlink" returned false on deleting backup parts. Backup that couldn\'t be deleted: ' . $backup->getRealPath());

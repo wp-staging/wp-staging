@@ -289,6 +289,18 @@ class SiteInfo
 
     public function getOsArchitecture(): string
     {
-        return strpos(php_uname('m'), '64') !== false ? '64-bit' : '32-bit';
+        try {
+            if (!function_exists('php_uname')) {
+                return 'N/A';
+            }
+
+            if (in_array('php_uname', explode(',', ini_get('disable_functions')))) {
+                return 'N/A';
+            }
+
+            return strpos(php_uname('m'), '64') !== false ? '64-bit' : '32-bit';
+        } catch (\Throwable $ex) {
+            return 'N/A';
+        }
     }
 }

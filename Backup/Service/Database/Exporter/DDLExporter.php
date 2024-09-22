@@ -1,11 +1,11 @@
 <?php
 namespace WPStaging\Backup\Service\Database\Exporter;
 use Exception;
+use WPStaging\Backup\BackupHeader;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\TableService;
 class DDLExporter extends AbstractExporter
 {
-    const WPSTG_SQL_BACKUP_DUMP_HEADER = "-- WP Staging SQL Backup Dump\n";
     protected $tableService;
     protected $viewDDLOrder;
     protected $tables = [];
@@ -185,7 +185,7 @@ class DDLExporter extends AbstractExporter
     protected function getHeader()
     {
         return sprintf(
-            self::WPSTG_SQL_BACKUP_DUMP_HEADER .
+            BackupHeader::WPSTG_SQL_BACKUP_DUMP_HEADER .
             "-- https://wp-staging.com/\n" .
             "--\n" .
             "-- Host: %s\n" .

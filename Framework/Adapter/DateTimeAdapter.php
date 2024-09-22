@@ -5,8 +5,6 @@
 
 namespace WPStaging\Framework\Adapter;
 
-use DateTime;
-
 class DateTimeAdapter
 {
     const DEFAULT_TIME_FORMAT = 'H:i:s';
@@ -57,23 +55,23 @@ class DateTimeAdapter
     }
 
     /**
-     * @param DateTime $dateTime
+     * @param \DateTime $dateTime
      * @return string
      */
-    public function transformToWpFormat(DateTime $dateTime)
+    public function transformToWpFormat(\DateTime $dateTime)
     {
         return get_date_from_gmt($dateTime->format('Y-m-d H:i:s'), $this->getDateTimeFormat());
     }
 
     /**
      * @param string $value
-     * @return DateTime|null
+     * @return \DateTime|null
      */
     public function getDateTime($value)
     {
         $date = null;
         foreach ($this->generateDefaultDateFormats() as $format) {
-            $date = DateTime::createFromFormat($format, $value);
+            $date = \DateTime::createFromFormat($format, $value);
             if ($date) {
                 break;
             }

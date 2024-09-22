@@ -2,7 +2,6 @@
 
 namespace WPStaging\Backup\Entity;
 
-use JsonSerializable;
 use WPStaging\Framework\Traits\HydrateTrait;
 
 /**
@@ -14,7 +13,7 @@ use WPStaging\Framework\Traits\HydrateTrait;
  *
  * @package WPStaging\Backup\Entity
  */
-class MultipartMetadata implements JsonSerializable
+class MultipartMetadata implements \JsonSerializable
 {
     use HydrateTrait {
         hydrate as traitHydrate;

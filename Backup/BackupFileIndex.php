@@ -4,9 +4,12 @@ namespace WPStaging\Backup;
 
 use WPStaging\Framework\Job\Exception\FileValidationException;
 use WPStaging\Backup\Interfaces\IndexLineInterface;
+use WPStaging\Framework\Traits\FormatTrait;
 
 class BackupFileIndex implements IndexLineInterface
 {
+    use FormatTrait;
+
     /** @var int */
     public $bytesStart;
 
@@ -197,7 +200,7 @@ class BackupFileIndex implements IndexLineInterface
 
         $fileSize = filesize($filePath);
         if ($this->getUncompressedSize() !== $fileSize) {
-            throw new FileValidationException(sprintf('Filesize validation failed for file %s. Expected: %s. Actual: %s', $pathForErrorLogging, size_format($this->getUncompressedSize(), 2), size_format($fileSize, 2)));
+            throw new FileValidationException(sprintf('Filesize validation failed for file %s. Expected: %s. Actual: %s', $pathForErrorLogging, $this->formatSize($this->getUncompressedSize(), 2), $this->formatSize($fileSize, 2)));
         }
     }
 }

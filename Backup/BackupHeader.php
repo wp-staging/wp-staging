@@ -2,8 +2,6 @@
 
 namespace WPStaging\Backup;
 
-use RuntimeException;
-use WPStaging\Backup\Service\Database\Exporter\DDLExporter;
 use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Utils\DataEncoder;
 use WPStaging\Framework\Utils\Version;
@@ -16,6 +14,9 @@ use WPStaging\Framework\Utils\Version;
  */
 class BackupHeader
 {
+    /** @var string */
+    const WPSTG_SQL_BACKUP_DUMP_HEADER = "-- WP Staging SQL Backup Dump\n";
+
     /**
      * In Length
      * @var int
@@ -202,12 +203,12 @@ class BackupHeader
      * @param string $backupFilePath
      * @return BackupHeader
      *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
     public function readFromPath(string $backupFilePath): BackupHeader
     {
         if (!file_exists($backupFilePath)) {
-            throw new RuntimeException('Backup file not found');
+            throw new \RuntimeException('Backup file not found');
         }
 
         $file = new FileObject($backupFilePath, FileObject::MODE_READ);
@@ -218,12 +219,12 @@ class BackupHeader
      * @param FileObject $file
      * @return BackupHeader
      *
-     * @throws RuntimeException
+     * @throws \RuntimeException
      */
     public function readFromFileObject(FileObject $file): BackupHeader
     {
         if ($file->getSize() < self::HEADER_SIZE) {
-            throw new RuntimeException('Invalid v2 format backup file');
+            throw new \RuntimeException('Invalid v2 format backup file');
         }
 
         $file->seek(0);
@@ -313,7 +314,7 @@ class BackupHeader
             return false;
         }
 
-        $wpstgBackupHeaderFileContent = DDLExporter::WPSTG_SQL_BACKUP_DUMP_HEADER;
+        $wpstgBackupHeaderFileContent = self::WPSTG_SQL_BACKUP_DUMP_HEADER;
         $headerToVerifyLength         = strlen($wpstgBackupHeaderFileContent);
         if (substr($wpstgBackupHeaderFileContent, 0, $headerToVerifyLength) === substr($content, 0, $headerToVerifyLength)) {
             return true;

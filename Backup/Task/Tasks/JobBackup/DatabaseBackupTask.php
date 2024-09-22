@@ -17,15 +17,11 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use wpdb;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 
 class DatabaseBackupTask extends BackupTask
 {
-    /**
-     * @var string
-     */
-    const FILE_FORMAT = 'sql';
-
     /** @var Directory */
     protected $directory;
 
@@ -285,7 +281,7 @@ class DatabaseBackupTask extends BackupTask
             $this->getJobId(),
             rtrim($wpdb->base_prefix, '_-'),
             $identifier,
-            self::FILE_FORMAT
+            DatabaseImporter::FILE_FORMAT
         );
     }
 

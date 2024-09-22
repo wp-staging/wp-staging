@@ -23,6 +23,7 @@ use function WPStaging\functions\debug_log;
 class DatabaseImporter
 {
     use ResourceTrait;
+    const FILE_FORMAT = 'sql';
     private $file;
     private $totalLines;
     private $client;
