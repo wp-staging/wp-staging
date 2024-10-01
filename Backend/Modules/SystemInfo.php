@@ -264,7 +264,7 @@ class SystemInfo
         $optionBackupScheduleSlackErrorReport   = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT);
         $optionBackupScheduleReportSlackWebhook = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK);
         $wpStagingFreeVersion                   = wpstgGetPluginData('wp-staging.php');
-        $output = PHP_EOL . "## WP Staging ##" . PHP_EOL . PHP_EOL;
+        $output                                 = PHP_EOL . "## WP Staging ##" . PHP_EOL . PHP_EOL;
 
         $output .= $this->info("Pro Version:", get_option('wpstgpro_version', self::NOT_SET_LABEL));
         $output .= $this->info("Pro License Key:", $this->getLicenseKey() ?: self::NOT_SET_LABEL);
@@ -694,7 +694,7 @@ class SystemInfo
         }
 
         foreach ($bitfields as $feature) {
-            $output .= $this->info($feature . ":", ($version['features'] & constant($feature) ? 'yes' : 'no'));
+            $output .= $this->info($feature . ":", (defined($feature) && $version['features'] & constant($feature) ? 'yes' : 'no'));
         }
 
 

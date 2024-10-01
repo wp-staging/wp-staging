@@ -3,8 +3,8 @@
 use WPStaging\Core\WPStaging;
 
 ?>
-<div id='wpstg-footer'>
-    <strong class="wpstg-footer--title"><?php esc_html_e("Knowledgebase", "wp-staging") ?></strong>
+<div id="wpstg-faq" class="wpstg-block">
+    <strong class="wpstg-block--title"><?php esc_html_e("Knowledgebase", "wp-staging") ?></strong>
     <ul>
         <li><a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank" rel="external"><?php esc_html_e("Migrate Website to Another Server or Domain", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/staging-site-redirects-live-site/" target="_blank" rel="external"><?php esc_html_e("Can not login to staging site", "wp-staging") ?></a></li>
@@ -25,7 +25,7 @@ use WPStaging\Core\WPStaging;
         <li><a href="https://wp-staging.com/docs/wp-staging-and-wpml-configuration/#WPML_Troubleshooting_Options" target="_blank" rel="external"><?php esc_html_e("WPML, Weglot or Polyglot: Using Language Codes in URLs.", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/troubleshooting-try-this-first/" target="_blank" rel="external"><?php esc_html_e("All articles", "wp-staging") ?></a></li>
     </ul>
-    <div id="footer-link-support-ticket ">
+    <div>
         <?php esc_html_e('Still questions?', 'wp-staging'); ?>
         <?php echo wp_kses_post(sprintf(__('Please <a href="%s" target="_blank" rel="external nofollow" class="wpstg--blue">contact us.</a>', 'wp-staging'), 'https://wp-staging.com/support')); ?>
     </div>

@@ -2,21 +2,30 @@
 
 namespace WPStaging\Basic;
 
-use WPStaging\Basic\Ajax\ProCronsCleaner;
-use WPStaging\Basic\Backup\BackupServiceProvider;
-use WPStaging\Basic\Notices\BasicNotices;
+use WPStaging\Basic\Language\Language;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\DI\ServiceProvider;
-use WPStaging\Framework\Notices\Notices;
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Language\Language as FrameworkLanguage;
 
 /**
  * Class BasicServiceProvider
  *
- * A Service Provider for binds code to just in Free version.
+ * A Service Provider to tell which services to register/bootstrap for the Basic feature.
+ * Called at the start of bootstrapping process to make some feature available to the plugin.
  *
  * @package WPStaging\Basic
  */
 class BasicServiceProvider extends ServiceProvider
 {
+    /**
+     * @return void
+     */
+    public function registerServiceProvider()
+    {
+        $this->container->register(BootstrapServiceProvider::class);
+    }
+
     /**
      * Enqueue hooks.
      *
@@ -24,15 +33,16 @@ class BasicServiceProvider extends ServiceProvider
      */
     protected function addHooks()
     {
-        add_action("wp_ajax_wpstg_clean_pro_crons", $this->container->callback(ProCronsCleaner::class, 'ajaxCleanProCrons')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action(Notices::BASIC_NOTICES_ACTION, $this->container->callback(BasicNotices::class, 'renderNotices')); // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
+        Hooks::registerInternalHook(WPStaging::HOOK_BOOTSTRAP_SERVICES, [$this, 'registerServiceProvider']);
+        Hooks::registerInternalHook(FrameworkLanguage::HOOK_LOAD_MO_FILES, $this->container->callback(Language::class, 'loadLanguage'));
     }
 
+    /**
+     * @return void
+     */
     protected function registerClasses()
     {
         // This is to tell the container to use the BASIC feature
         $this->container->setVar('WPSTG_PRO', false);
-
-        $this->container->register(BackupServiceProvider::class);
     }
 }

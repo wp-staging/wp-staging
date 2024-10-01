@@ -144,12 +144,8 @@ class I18n
             'admin_is_clone_destination_path_same_as_root_error' => esc_html__('The target path must be different from the root path of the production website.', 'wp-staging'),
             'admin_check_user_db_permissions_confirm_button_text' => esc_html__('Proceed', 'wp-staging'),
             'admin_send_issue_report_success_message' => sprintf(esc_html__('Thanks for submitting your request! You should receive an auto reply mail with your ticket ID immediately for confirmation!%sIf you do not get that mail please contact us directly at %s', 'wp-staging'), '<br/><br/>', '<strong>support@wp-staging.com</strong>'),
-            'pro_admin_all_pages' => [
-                'activating' => esc_html__('Activating, please wait...', 'wp-staging'),
-                'error_html' => sprintf(esc_html__('Error: Failed to install the WP STAGING core plugin for unknown reason. Please try again or contact %s!', 'wp-staging'), 'support@wp-staging.com'),
-            ],
             'common' => [
-                'firewall_error_text' => sprintf(esc_html__('WP Staging is blocked by a security plugin or firewall setting. Please whitelist all ajax requests coming from %s. If possible put your firewall into learning mode and try again.%sPlease ask your hosting provider or security plugin to permanetely whitelist WP Staging requests. If it still fails, please contact us.', 'wp-staging'), '<code>action=</code>', '<br><br>'),
+                'firewall_error_text' => sprintf(esc_html__('WP Staging is blocked by a security plugin or firewall setting. Please whitelist all ajax requests coming from %s. If possible put your firewall into learning mode and try again.%sPlease ask your hosting provider or security plugin to permanently whitelist WP Staging requests. If it still fails, please contact us.', 'wp-staging'), '<code>action=wpstg_</code>', '<br><br>'),
                 'fetch_errors_error_text' => esc_html__('Please try again or contact support.', 'wp-staging'),
                 'ajax_error_fatal_error' => esc_html__('Fatal Error: ', 'wp-staging'),
                 'ajax_error_error_text' => sprintf(esc_html__(' Please try the %s or submit an error report and contact us.', 'wp-staging'), '<a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a>'),

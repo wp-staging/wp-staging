@@ -16,6 +16,7 @@ use WPStaging\Framework\AssetServiceProvider;
 use WPStaging\Framework\CommonServiceProvider;
 use WPStaging\Framework\DI\Container;
 use WPStaging\Framework\ErrorHandler;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\DirectoryListing;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Language\Language;
@@ -36,6 +37,12 @@ use WPStaging\Pro\ProServiceProvider;
  */
 final class WPStaging
 {
+    /**
+     * Internal Use Only: Hook to register Basic or Pro specific services.
+     * @var string
+     */
+    const HOOK_BOOTSTRAP_SERVICES = 'wpstg.bootstrap.services';
+
     /**
      * Singleton instance
      * @var WPStaging
@@ -84,6 +91,15 @@ final class WPStaging
 
         WPStaging::$startTime = microtime(true);
 
+        // Register Pro or Basic Provider, Always prefer registering Pro if both classes found unless if dev basic constant enabled. If both not present throw error
+        if (class_exists('\WPStaging\Pro\ProServiceProvider') && !$this->isWPStagingDevBasic()) {
+            $this->container->register(ProServiceProvider::class);
+        } elseif (class_exists('\WPStaging\Basic\BasicServiceProvider')) {
+            $this->container->register(BasicServiceProvider::class);
+        } else {
+            throw new RuntimeException('Basic and Pro Providers both not found! At least one of them should be present.');
+        }
+
         $this->setupDebugLog();
 
         $this->container->register(CoreServiceProvider::class);
@@ -117,14 +133,8 @@ final class WPStaging
 
         $this->container->register(BackupServiceProvider::class);
 
-        // Register Pro or Basic Provider, Always prefer registering Pro if both classes found. If both not present throw error
-        if (class_exists('\WPStaging\Pro\ProServiceProvider') && !$this->isWPStagingDevBasic()) {
-            $this->container->register(ProServiceProvider::class);
-        } elseif (class_exists('\WPStaging\Basic\BasicServiceProvider')) {
-            $this->container->register(BasicServiceProvider::class);
-        } else {
-            throw new RuntimeException('Basic and Pro Providers both not found! At least one of them should be present.');
-        }
+        // Internal Use Only: Register Basic or Pro specific services.
+        Hooks::callInternalHook(self::HOOK_BOOTSTRAP_SERVICES);
 
         $this->container->register(FrontendServiceProvider::class);
 
@@ -292,6 +302,10 @@ final class WPStaging
      */
     private function loadDependencies()
     {
+        if (!WPStaging::isWordPressLoaded()) {
+            return;
+        }
+
         // Load globally available functions
         require_once(__DIR__ . "/Utils/functions.php");
 
@@ -439,6 +453,14 @@ final class WPStaging
         }
 
         return WPSTG_VERSION;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isWordPressLoaded()
+    {
+        return defined('ABSPATH') && function_exists('wp');
     }
 
     /**

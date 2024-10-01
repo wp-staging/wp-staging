@@ -5,7 +5,7 @@
     </h3>
     <div class="wpstg--process-modal--subtitle">
         <?php esc_html_e('Progress', 'wp-staging') ?>
-        <span class="wpstg--process-modal--percent">0</span>% - Elapsed time
+        <span class="wpstg--process-modal--percent">0</span>% - <?php esc_html_e('Elapsed time', 'wp-staging');?>
         <span class="wpstg--process-modal--elapsed-time">0:00</span>
     </div>
     <button class="wpstg--process-modal--logs-button" data-txt-bad="<?php echo sprintf(

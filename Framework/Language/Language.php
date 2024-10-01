@@ -2,8 +2,13 @@
 
 namespace WPStaging\Framework\Language;
 
+use WPStaging\Framework\Facades\Hooks;
+
 class Language
 {
+    /** @var string */
+    const HOOK_LOAD_MO_FILES = 'wpstg.language.load_mo_files';
+
     /** @var string */
     const TEXT_DOMAIN = 'wp-staging';
 
@@ -13,7 +18,8 @@ class Language
     public function load()
     {
         /** @noinspection NullPointerExceptionInspection */
-        $languagesDirectory = WPSTG_PLUGIN_DIR . 'languages/';
+        $pluginLangDirectory = WPSTG_PLUGIN_DIR . 'languages/';
+        $wpLangDirectory     = $this->getLangDirectory();
 
         if (function_exists('get_user_locale')) {
             $locale = get_user_locale();
@@ -23,37 +29,39 @@ class Language
 
         // Traditional WP plugin locale filter
         $locale = apply_filters('plugin_locale', $locale, self::TEXT_DOMAIN);
-        $moFile = $this->getMoFile($locale);
+        $localMoFile  = $this->getLocalMoFile($locale);
+        $globalMoFile = $this->getGlobalMoFile($locale);
+        // Unfiltered mo file name
+        $actualMoFile = sprintf('%1$s-%2$s.mo', self::TEXT_DOMAIN, $locale);
 
         // Setup paths to current locale file
-        $moFileLocal          = $languagesDirectory . $moFile;
-        $moFileGlobalAtPlugin = sprintf('%s/%s/%s/%s', WP_LANG_DIR, 'plugins', self::TEXT_DOMAIN, $moFile);
-        $moFileGlobalAtRoot   = sprintf('%s/%s/%s', WP_LANG_DIR, 'plugins', $moFile);
-
-        // Let load the local mo file first if it exists for PRO version
-        // Note: Pro and Basic Service are loaded after this method call, so no access to WPStaging::isPro()
-        $loaded = false;
-        if (defined('WPSTGPRO_VERSION') && file_exists($moFileLocal)) {
-            $loaded = load_textdomain(self::TEXT_DOMAIN, $moFileLocal);
+        $moFileLocal   = $pluginLangDirectory . $localMoFile;
+        $moFilesGlobal = [];
+        if ($globalMoFile !== $actualMoFile) {
+            $moFilesGlobal[] = sprintf('%s/%s/%s', $wpLangDirectory, 'plugins', $actualMoFile);
         }
 
-        // If languages loaded let return early
-        if ($loaded) {
-            return;
-        }
+        $moFilesGlobal[] = sprintf('%s/%s/%s', $wpLangDirectory, 'plugins', $globalMoFile);
 
-        if (file_exists($moFileGlobalAtPlugin)) {
-            load_textdomain(self::TEXT_DOMAIN, $moFileGlobalAtPlugin);
-        } elseif (file_exists($moFileGlobalAtRoot)) {
-            load_textdomain(self::TEXT_DOMAIN, $moFileGlobalAtRoot);
-        } elseif (file_exists($moFileLocal)) {
-            load_textdomain(self::TEXT_DOMAIN, $moFileLocal);
-        } else {
-            load_plugin_textdomain(self::TEXT_DOMAIN, false, WPSTG_PLUGIN_SLUG . '/languages');
-        }
+        // Internal Use Only. Use for loading languages files
+        Hooks::callInternalHook(self::HOOK_LOAD_MO_FILES, [$locale, $moFileLocal, $moFilesGlobal]);
     }
 
-    protected function getMoFile(string $locale): string
+    /**
+     * Get the language code of the current locale, e.g. de, en, it, etc.
+     * @return string
+     */
+    public function getLocaleLanguageCode(): string
+    {
+        if (function_exists('get_user_locale')) {
+            $locale = get_user_locale();
+        } else {
+            $locale = get_locale();
+        }
+        return substr($locale, 0, 2);
+    }
+
+    protected function getLocalMoFile(string $locale): string
     {
         // Let us assume that the locale is `de` for all `de_` dilects
         if (strpos($locale, 'de_') === 0) {
@@ -61,5 +69,23 @@ class Language
         }
 
         return sprintf('%1$s-%2$s.mo', self::TEXT_DOMAIN, $locale);
+    }
+
+    protected function getGlobalMoFile(string $locale): string
+    {
+        // Let us assume that the locale is `de` for all `de_` dilects
+        if (strpos($locale, 'de_') === 0) {
+            $locale = 'de_DE';
+        }
+
+        return sprintf('%1$s-%2$s.mo', self::TEXT_DOMAIN, $locale);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getLangDirectory(): string
+    {
+        return WP_LANG_DIR;
     }
 }
