@@ -8,7 +8,7 @@ require_once(trailingslashit(ABSPATH) . 'wp-admin/includes/plugin.php');
 
 if (!defined('WPSTGPRO_MINIMUM_FREE_VERSION')) {
     /** Expected version number of the free plugin in order to activate it at the same time with pro */
-    define('WPSTGPRO_MINIMUM_FREE_VERSION', '3.1.0');
+    define('WPSTGPRO_MINIMUM_FREE_VERSION', '3.8.7');
 }
 
 if (!defined('WPSTG_FREE_VERSION_PLUGIN_FILE')) {

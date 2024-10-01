@@ -171,7 +171,7 @@ class Assets
             );
         }
 
-        // Load js file on page plugins.php for pro version
+        // Load js file on admin pages for pro version
         if (WPStaging::isPro() && is_admin()) {
             $asset = $this->getJsAssetsFileName('pro/wpstg-admin-all-pages');
             wp_enqueue_script(
@@ -256,7 +256,7 @@ class Assets
         Hooks::doAction(BackupServiceProvider::BACKUP_SCRIPTS_ENQUEUE_ACTION);
 
         // Load admin js pro files
-        if (defined('WPSTGPRO_VERSION')) {
+        if (WPStaging::isPro()) {
             $asset = $this->getJsAssetsFileName('pro/wpstg-admin-pro');
             wp_enqueue_script(
                 "wpstg-admin-pro-script",
@@ -374,7 +374,7 @@ class Assets
      */
     private function isNotWPStagingAdminPage($page)
     {
-        if (defined('WPSTGPRO_VERSION')) {
+        if (WPStaging::isPro()) {
             $availablePages = [
                 "toplevel_page_wpstg_clone",
                 "toplevel_page_wpstg_backup",

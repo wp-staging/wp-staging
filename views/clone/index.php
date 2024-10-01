@@ -39,7 +39,13 @@ $isCalledFromIndex = true;
 
     ?>
     <div class="wpstg--tab--wrapper">
-        <?php require_once(WPSTG_VIEWS_DIR . 'navigation/web-template.php'); ?>
+        <?php
+        require_once(WPSTG_VIEWS_DIR . 'navigation/web-template.php');
+        // Show ad for pro version
+        if (!WPStaging::isPro()) {
+            require $this->viewsPath . 'ads/advert-pro-version.php';
+        }
+        ?>
         <div class="wpstg-header">
             <?php if (isset($_GET['page']) && $_GET['page'] === 'wpstg_clone' || $_GET['page'] === 'wpstg_backup') { ?>
                 <?php
@@ -105,15 +111,6 @@ $isCalledFromIndex = true;
                 ); ?>
             </div>
         </div>
-        <?php
-        // Show ad for pro version
-        if (!defined('WPSTGPRO_VERSION')) {
-            echo '        <div class="wpstg--tab-contents">';
-            require $this->viewsPath . 'ads/advert-pro-version.php';
-            echo '</div>';
-        }
-        ?>
     </div>
-    <?php require_once($this->viewsPath . '_main/faq.php') ?>
     <?php require_once($this->viewsPath . '_main/footer.php') ?>
 </div>
