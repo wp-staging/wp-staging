@@ -10,7 +10,7 @@ class NewsfeedProvider
     /** @var Language */
     private $language;
 
-    private $isDebug = true;
+    private $isDebug = false;
 
     public function __construct(Language $language)
     {
