@@ -301,7 +301,7 @@ class DatabaseImporter
         }
         $patterns = [
             '/\s+CONSTRAINT(.+)REFERENCES(.+)(\s+)?,/i',
-            '/,(\s+)?CONSTRAINT(.+)REFERENCES(.+)\`\)(\s+)?\)/i',
+            '/,(\s+)?(KEY(.+))?CONSTRAINT(.+)REFERENCES(.+)\`\)(\s+)?\)/i',
         ];
         $replace = ['', ')'];
         $query = preg_replace($patterns, $replace, $query);

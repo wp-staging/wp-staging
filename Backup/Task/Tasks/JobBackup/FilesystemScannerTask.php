@@ -593,9 +593,10 @@ class FilesystemScannerTask extends BackupTask
 
     /**
      * @param SplFileInfo $file
+     * @param string $linkSourcePath - Default empty string, used when the file to be enqueue is a link, this is the source path of the link
      * @return void
      */
-    protected function enqueueFileInBackup(SplFileInfo $file, string $link = null)
+    protected function enqueueFileInBackup(SplFileInfo $file, string $linkSourcePath = '')
     {
         $normalizedPath = $this->filesystem->normalizePath($file->getPathname(), true);
         $fileSize       = $file->getSize();
@@ -651,10 +652,10 @@ class FilesystemScannerTask extends BackupTask
 
         // $this->logger->debug('Enqueueing file: ' . rtrim($normalizedPath, '/'));
 
-        if ($link !== null) {
-            $linkPath = $this->filesystem->normalizePath($link, true);
-            $relativePath = $this->replaceEOLsWithPlaceholders($relativePath);
-            $path = rtrim($relativePath, '/') . self::PATH_SEPARATOR . rtrim($linkPath, '/');
+        if (!empty($linkSourcePath)) {
+            $linkSourcePath = $this->filesystem->normalizePath($linkSourcePath, true);
+            $relativePath   = $this->replaceEOLsWithPlaceholders($relativePath);
+            $path = rtrim($relativePath, '/') . self::PATH_SEPARATOR . rtrim($linkSourcePath, '/');
             $this->fileBackupQueue->enqueue($path);
             return;
         }

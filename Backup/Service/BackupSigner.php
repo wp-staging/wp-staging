@@ -111,7 +111,7 @@ class BackupSigner
         }
 
         if ($backupMetadata->getBackupSize() !== $backupSize) {
-            throw new RuntimeException('Unexpected Backup Size in Metadata.');
+            throw new RuntimeException(sprintf('Unexpected Backup Size in Metadata. Size in Metadata %s, Size in File %s', $backupMetadata->getBackupSize(), $backupSize));
         }
 
         $this->validateMultipartMetadata($backupMetadata, $partSize);

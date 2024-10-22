@@ -5,6 +5,12 @@ namespace WPStaging\Framework\Filesystem;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 
+/**
+ * Class FileObject
+ *
+ * For making codebase memory efficient and making sure on Windows OS, we don't run into permission issue due to file lock,
+ * after working on the instance of this class, assign null to it.
+ */
 class FileObject extends AbstractFileObject
 {
     const AVERAGE_LINE_LENGTH = 4096;
@@ -34,11 +40,6 @@ class FileObject extends AbstractFileObject
             // If it didn't fail due to disk write check, re-throw
             throw $e;
         }
-    }
-
-    public function __destruct()
-    {
-        $this->releaseLock();
     }
 
     /**

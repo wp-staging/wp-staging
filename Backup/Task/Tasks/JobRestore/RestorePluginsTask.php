@@ -24,6 +24,11 @@ class RestorePluginsTask extends FileRestoreTask
      */
     const FILTER_KEEP_EXISTING_PLUGINS = 'wpstg.backup.restore.keepExistingPlugins';
 
+    /**
+     * @var string
+     */
+    const SLUG_W3_TOTAL_CACHE = 'w3-total-cache';
+
     public static function getTaskName()
     {
         return 'backup_restore_plugins';
@@ -111,6 +116,10 @@ class RestorePluginsTask extends FileRestoreTask
 
         // Remove plugins which are not in the backup
         foreach ($existingPlugins as $pluginSlug => $pluginPath) {
+            if ($pluginSlug === self::SLUG_W3_TOTAL_CACHE && !array_key_exists(self::SLUG_W3_TOTAL_CACHE, $pluginsToRestore)) {
+                $this->mayBeDeleteDropInFiles();
+            }
+
             if (!array_key_exists($pluginSlug, $pluginsToRestore)) {
                 $this->enqueueDelete($pluginPath);
             }
@@ -156,6 +165,12 @@ class RestorePluginsTask extends FileRestoreTask
 
         $plugins = [];
 
+        $pluginsToExclude = apply_filters(self::FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS, [
+            WPSTG_PLUGIN_SLUG, // Skip the current active wp staging plugin slug e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1, etc.
+            'wp-staging',
+            'wp-staging-pro',
+        ]);
+
         /** @var \DirectoryIterator $fileInfo */
         foreach ($it as $fileInfo) {
             if ($fileInfo->isDot()) {
@@ -166,9 +181,6 @@ class RestorePluginsTask extends FileRestoreTask
                 continue;
             }
 
-            $pluginsToExclude = apply_filters(self::FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS, [
-                WPSTG_PLUGIN_SLUG, // Skip the current active wp staging plugin slug e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1, etc.
-            ]);
             if ($fileInfo->isDir() && !in_array($fileInfo->getFilename(), $pluginsToExclude)) {
                 $plugins[$fileInfo->getBasename()] = $fileInfo->getPathname();
 
@@ -184,5 +196,22 @@ class RestorePluginsTask extends FileRestoreTask
         }
 
         return $plugins;
+    }
+
+    /**
+     * @param array $dropInFiles
+     * @return void
+     */
+    private function mayBeDeleteDropInFiles(array $dropInFiles = RestoreOtherFilesInWpContentTask::DROP_IN_FILES)
+    {
+        $destinationDir = $this->directory->getWpContentDirectory();
+
+        foreach ($dropInFiles as $file) {
+            if (!file_exists($destinationDir . $file)) {
+                continue;
+            }
+
+            $this->enqueueDelete($destinationDir . $file);
+        }
     }
 }

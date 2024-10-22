@@ -78,24 +78,24 @@ class BufferedCache extends AbstractCache
         flock($handle, LOCK_UN);
         fclose($handle);
 
-        return trim(rtrim($first, PHP_EOL));
+        return trim(rtrim($first, "\n"));
     }
 
     /**
-     * @param string $value
+     * @param string|array $value
      * @return int
      * @throws DiskNotWritableException
      */
     public function append($value)
     {
         if (is_array($value)) {
-            $value = implode(PHP_EOL, $value);
+            $value = implode("\n", $value);
         }
 
         /** @noinspection UnnecessaryCastingInspection */
         $file = new FileObject($this->filePath, FileObject::MODE_APPEND);
 
-        $writtenData = $file->fwriteSafe($value . PHP_EOL);
+        $writtenData = $file->fwriteSafe($value . "\n");
 
         if ($writtenData === false) {
             debug_log("Could not write to file {$this->filePath} Data: {$value}");
@@ -184,10 +184,10 @@ class BufferedCache extends AbstractCache
     public function prepend($data)
     {
         if (is_array($data)) {
-            $data = implode(PHP_EOL, $data);
+            $data = implode("\n", $data);
         }
 
-        $data = trim($data) . PHP_EOL;
+        $data = trim($data) . "\n";
 
         // Early bail: First addition
         if (!file_exists($this->filePath)) {
@@ -214,6 +214,8 @@ class BufferedCache extends AbstractCache
             $tempFile->fwrite($nextLine);
         }
 
+        $existingFile = null;
+        $tempFile = null;
         unlink($this->filePath);
         copy($this->filePath . 'tmp', $this->filePath);
     }
@@ -229,7 +231,11 @@ class BufferedCache extends AbstractCache
     {
         $target = fopen($this->filePath, 'ab');
 
-        return $this->stoppableAppendFile($source, $target, $offset);
+        $bytesWritten = $this->stoppableAppendFile($source, $target, $offset);
+        fclose($target);
+        $target = null;
+
+        return $bytesWritten;
     }
 
     /**
@@ -345,6 +351,8 @@ class BufferedCache extends AbstractCache
 
         $writtenData = $file->fwriteSafe($value);
 
+        $file = null;
+
         if ($writtenData === false) {
             debug_log("Could not save() and write to file {$this->filePath} Data: {$value}");
             throw DiskNotWritableException::fileNotWritable($this->filePath);
@@ -364,7 +372,7 @@ class BufferedCache extends AbstractCache
         $total  = 0;
 
         while (!feof($handle)) {
-            $total += substr_count(fread($handle, self::AVERAGE_LINE_LENGTH), PHP_EOL);
+            $total += substr_count(fread($handle, self::AVERAGE_LINE_LENGTH), "\n");
         }
 
         fclose($handle);
@@ -387,6 +395,7 @@ class BufferedCache extends AbstractCache
         $offset   = max($lastLine - $lines, 0);
 
         $allLines = new LimitIterator($file, $offset, $lastLine);
+        $file     = null;
         return array_reverse(array_values(iterator_to_array($allLines)));
     }
 
@@ -404,6 +413,8 @@ class BufferedCache extends AbstractCache
         do {
             $lastLine = $file->readAndMoveNext();
         } while (!$file->eof());
+
+        $file = null;
 
         return $lastLine;
     }

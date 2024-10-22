@@ -3,6 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs\Cleaners;
 
 use WPStaging\Backend\Modules\Jobs\Files;
+use WPStaging\Backup\Task\Tasks\JobRestore\RestoreOtherFilesInWpContentTask;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Filesystem\Filesystem;
@@ -21,7 +22,7 @@ class WpContentCleaner
     private $logs = [];
 
     /**
-     * @var Object
+     * @var object
      */
     private $job;
 
@@ -65,16 +66,6 @@ class WpContentCleaner
         $wpDirectories = new WpDefaultDirectories();
         $directory = trailingslashit($directory);
         $paths = [];
-        $dropinsFile = [
-            'object-cache.php',
-            'advanced-cache.php',
-            'db.php',
-            'db-error.php',
-            'install.php',
-            'maintenance.php',
-            'php-error.php',
-            'fatal-error-handler.php'
-        ];
         if ($options->deleteUploadsFolder && !$options->backupUploadsFolder && $options->statusContentCleaner = 'pending') {
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativeUploadPath());
         }
@@ -82,7 +73,7 @@ class WpContentCleaner
         if ($options->deletePluginsAndThemes) {
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativeThemePath());
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativePluginPath());
-            foreach ($dropinsFile as $file) {
+            foreach (RestoreOtherFilesInWpContentTask::DROP_IN_FILES as $file) {
                 if (file_exists($directory . $file)) {
                     $paths[] = $directory . $file;
                 }

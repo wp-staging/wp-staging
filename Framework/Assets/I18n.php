@@ -57,7 +57,7 @@ class I18n
             'report_this_warning' => sprintf(esc_html__('Please report this warning %s and keep using WP Staging!', 'wp-staging'), '<a href="https://wp-staging.com/support/" target="_blank">to our support</a>'),
             'please_wait' => esc_html__('Please wait...this can take up a while.', 'wp-staging'),
             'database_connection'   => [
-                'succes' => esc_html__('Database connection successful', 'wp-staging'),
+                'success' => esc_html__('Database connection successful', 'wp-staging'),
                 'failed' => esc_html__('Database connection failed', 'wp-staging'),
             ],
             'cloning'         => [
@@ -189,7 +189,7 @@ class I18n
                 'delete_cloud_file_ajax_response_success_modal_title' => esc_html__('Backup Deleted!', 'wp-staging'),
                 'delete_cloud_file_ajax_response_success_modal_text' => esc_html__('Backup has been deleted from remote storage.', 'wp-staging'),
                 'delete_cloud_file_ajax_response_error_modal_text' => esc_html__('Failed to delete the backup', 'wp-staging'),
-                'clicked_cloud_restore_download_body_text' => esc_html__('You can optionally download the backup to your local device:%sDownload to my computer', 'wp-staging'),
+                'clicked_cloud_restore_download_body_text' => sprintf(esc_html__('You can optionally download the backup to your local device:%s', 'wp-staging'), '<div class="download-action-buttons"><a href="{downloadUrl}" class="wpstg-button wpstg-blue-primary wpstg-download-to-computer">' . esc_html__('Download to my computer', 'wp-staging') . '</a></div>'),
                 'clicked_cloud_restore_download_modal_title' => esc_html__('Backup Successfully Downloaded to this Website', 'wp-staging'),
                 'setup_download_modal_title' => esc_html__('Downloading backup from remote', 'wp-staging'),
             ],
@@ -231,6 +231,15 @@ class I18n
                 'upload_not_supported_error' => sprintf(esc_html__('Your browser do not support the File API, needed for the uploads. Please try a different/updated browser, or upload the Backup using FTP to the folder %s', 'wp-staging'), '<strong>wp-content/uploads/wp-staging/backups</strong>'),
                 'event_listener_confirm_cancel_upload_confirm' => esc_html__('Do you want to abort the upload?', 'wp-staging'),
                 'handle_error_modal' => sprintf(esc_html__('We could not upload the backup file, please try uploading it directly using FTP to the folder %s. Please also make sure you have enough free disk space on the server.', 'wp-staging'), '<strong>wp-content/uploads/wp-staging/backups</strong>'),
+            ],
+            'create_text'                => esc_html__('Create', 'wp-staging'),
+            'update_text'                => esc_html__('Update', 'wp-staging'),
+            'temporary_logins'      => [
+                'not_allowed'       => esc_html__('You are not allowed to create a temporary login link.', 'wp-staging'),
+                'invalid_email'     => esc_html__('Please enter the email address of the person you wish to grant access to.', 'wp-staging'),
+                'invalid_expiry'    => esc_html__('Please select an expiry date to create a temporary login.', 'wp-staging'),
+                'delete_success'    => esc_html__('Login link removed successfully!', 'wp-staging'),
+                'confirm_delete'    => esc_html__('Do you really want to delete this temporary login link?', 'wp-staging'),
             ],
         ];
     }

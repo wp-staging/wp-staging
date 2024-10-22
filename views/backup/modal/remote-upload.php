@@ -43,7 +43,7 @@ $disabledProAttribute = $isProVersion ? '' : ' disabled';
                             <?php if (!$isProVersion && $isProStorage) { ?>
                                 <span class="wpstg-pro-feature"><a href="https://wp-staging.com/get-<?php echo esc_attr($storage['id']) ?>" target="_blank" class="wpstg-pro-feature-link"><?php esc_html_e('Upgrade', 'wp-staging') ?></a></span>
                             <?php } else { ?>
-                                <span class="wpstg-storage-settings"><a class="" href="<?php echo esc_url($storage['settingsPath']); ?>" target="_blank"><?php echo $isActivated ? esc_html('Settings', 'wp-staging') : esc_html('Activate', 'wp-staging'); ?></a></span>
+                                <span class="wpstg-storage-settings"><a class="" href="<?php echo esc_url($storage['settingsPath']); ?>" target="_blank"><?php echo $isActivated ? esc_html__('Settings', 'wp-staging') : esc_html__('Activate', 'wp-staging'); ?></a></span>
                             <?php } ?>
                         </label>
                     <?php endforeach; ?>

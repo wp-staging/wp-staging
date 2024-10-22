@@ -39,11 +39,17 @@ class Cache extends AbstractCache
      */
     public function save($value, $pretty = false)
     {
+        $file    = new FileObject($this->filePath, FileObject::MODE_WRITE);
+        $written = false;
         if ($pretty) {
-            return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe(self::PHP_HEADER . json_encode($value, JSON_PRETTY_PRINT));
+            $written = $file->fwriteSafe(self::PHP_HEADER . json_encode($value, JSON_PRETTY_PRINT));
+        } else {
+            $written = $file->fwriteSafe(self::PHP_HEADER . json_encode($value));
         }
 
-        return (new FileObject($this->filePath, FileObject::MODE_WRITE))->fwriteSafe(self::PHP_HEADER . json_encode($value));
+        $file = null;
+
+        return $written;
     }
 
     /**

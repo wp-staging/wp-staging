@@ -3,9 +3,8 @@
 msgid ""
 msgstr ""
 "Project-Id-Version: WP Staging\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/wp-staging-pro\n"
-"POT-Creation-Date: 2024-10-01T11:05:27+00:00\n"
-"PO-Revision-Date: 2024-10-01 13:30+0200\n"
+"POT-Creation-Date: 2024-09-13 11:36+0200\n"
+"PO-Revision-Date: 2024-10-03 18:09+0200\n"
 "Last-Translator: \n"
 "Language-Team: \n"
 "Language: de\n"
@@ -15,40 +14,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=n != 1;\n"
 "X-Generator: Poedit 3.5\n"
 
-#. Plugin Name of the plugin
-#: wp-staging-pro.php
-msgid "WP STAGING PRO - Backup Duplicator & Migration"
-msgstr ""
-"Backup & Duplicator Plugin - Klonen, Sichern, Verschieben, Duplizieren und "
-"Migrieren von Websites zu Staging-, Backup- und Entwicklungsseiten nur für "
-"autorisierte Benutzer."
-
-#. Plugin URI of the plugin
-#: wp-staging-pro.php
-msgid "https://wp-staging.com"
-msgstr "https://wp-staging.com"
-
-#. Description of the plugin
-#: wp-staging-pro.php
-msgid ""
-"Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate "
-"websites to staging, backup, and development sites for authorized users only."
-msgstr ""
-"Backup & Duplicator Plugin - Klonen, Sichern, Verschieben, Duplizieren und "
-"Migrieren von Websites zu Staging-, Backup- und Entwicklungsseiten nur für "
-"autorisierte Benutzer."
-
-#. Author of the plugin
-#: wp-staging-pro.php
-msgid "WP-STAGING"
-msgstr "WP-STAGING"
-
-#. Author URI of the plugin
-#: wp-staging-pro.php
-msgid "https://wordpress.org/plugins/wp-staging"
-msgstr "https://wordpress.org/plugins/wp-staging"
-
 #: Backend/Activation/Welcome.php:37
+#, php-format
 msgid ""
 "WP Staging Pro is installed but not activated. Some features may not work "
 "until you activate the Pro version. Go to <a href=%s>Installed Plugins</a> "
@@ -124,7 +91,7 @@ msgstr "Unbekannter Fehler. Bitte lade die Seite neu und versuche es erneut"
 msgid "Site name is required!"
 msgstr "Website-Name ist erforderlich!"
 
-#: Backend/Administrator.php:1066 Framework/Assets/I18n.php:29
+#: Backend/Administrator.php:1066 Framework/Assets/Assets.php:311
 msgid "Success"
 msgstr "Erfolgreich"
 
@@ -137,6 +104,7 @@ msgid "Files: Cleaning up directories: Plugins, Themes, Uploads!"
 msgstr "Dateien: Verzeichnisse aufräumen: Plugins, Themes, Uploads!"
 
 #: Backend/Modules/Jobs/Cleaners/WpContentCleaner.php:123
+#, php-format
 msgid "Files: Error - %s. Content cleaning."
 msgstr "Dateien: Fehler - %s. Reinigung des Inhalts."
 
@@ -162,6 +130,7 @@ msgstr ""
 "werden."
 
 #: Backend/Modules/Jobs/Database.php:281
+#, php-format
 msgid ""
 "Can not proceed. Tables beginning with the prefix '%s' already exist in the "
 "database i.e. %s. Choose another table prefix and try again."
@@ -183,6 +152,7 @@ msgstr ""
 "Präfix mit gültigen Zeichen."
 
 #: Backend/Modules/Jobs/Delete.php:438
+#, php-format
 msgid ""
 "We could not delete the staging site completely. There are still files in "
 "the folder %s that could not be deleted. This could be a write permission "
@@ -199,11 +169,13 @@ msgstr ""
 
 #: Backend/Modules/Jobs/Directories.php:373
 #: Backend/Pro/Modules/Jobs/ScanDirectories.php:472
+#, php-format
 msgid "Unable to open %s with mode %s"
 msgstr "Kann nicht öffnen %s mit Modus %s"
 
 #: Backend/Modules/Jobs/Directories.php:392
 #: Backend/Pro/Modules/Jobs/ScanDirectories.php:493
+#, php-format
 msgid "Unable to write to: %s"
 msgstr "Nicht möglich in %s zu schreiben"
 
@@ -213,10 +185,12 @@ msgid "Out of disk space."
 msgstr "Kein freier Speicherplatz verfügbar"
 
 #: Backend/Modules/Jobs/Files.php:215
+#, php-format
 msgid "Fail! Destination is not a directory! %s"
 msgstr "Fehlschlag! Das Ziel ist kein Verzeichnis! %s"
 
 #: Backend/Modules/Jobs/Files.php:229
+#, php-format
 msgid "Files: Resetting staging site: %s."
 msgstr "Dateien: Zurücksetzen der Staging-Seite: %s."
 
@@ -357,6 +331,7 @@ msgstr "Jetzt Starten"
 #: Backend/Pro/Modules/Jobs/Backups/BackupUploadsDir.php:95
 #: Backend/Pro/Modules/Jobs/Backups/BackupUploadsDir.php:111
 #: Backend/Pro/Modules/Jobs/Backups/BackupUploadsDir.php:129
+#, php-format
 msgid "Files: Error - No such directory exists: %s. Backup Uploads Dir"
 msgstr ""
 "Dateien: Fehler - Ein solches Verzeichnis existiert nicht: %s. Backup "
@@ -381,6 +356,7 @@ msgstr "Dateien: Sicherung und Bereinigung der Uploads abgeschlossen Dir"
 #: Backend/Pro/Modules/Jobs/Backups/BackupUploadsDir.php:218
 #: Backend/Pro/Modules/Jobs/Backups/BackupUploadsDir.php:250
 #: Backend/Pro/Modules/Jobs/Backups/BackupUploadsDir.php:276
+#, php-format
 msgid "Files: Error - %s. Backing Uploads Dir"
 msgstr "Dateien: Fehler - %s. Backup Uploads Dir"
 
@@ -411,6 +387,7 @@ msgstr ""
 "versehen wurde."
 
 #: Backend/Pro/Modules/Jobs/Scan.php:452
+#, php-format
 msgid ""
 "<strong>Fatal error:</strong> Path <code>%s</code> does not exist!  <br><br> "
 "Did you move from one server to another recently or changed the location of "
@@ -455,6 +432,7 @@ msgstr ""
 "werden. Öffnen Sie ein Support-Ticket unter support@wp-staging.com"
 
 #: Backend/Pro/Modules/Jobs/Scan.php:676
+#, php-format
 msgid ""
 "Can not proceed!<br>WordPress version on production and staging site must be "
 "identical!<br>Please update WordPress and try again pushing the staging site "
@@ -472,7 +450,7 @@ msgstr ""
 "\"_blank\">So aktualisieren Sie WordPress automatisch auf der Staging-Seite</"
 "a>"
 
-#: Backend/Pro/WpstgRestoreDownloader.php:91
+#: Backend/Pro/WpstgRestoreDownloader.php:75
 msgid ""
 "The wpstg-restore.php file not found. Please contact support@wp-staging for "
 "help."
@@ -505,7 +483,7 @@ msgstr "Keine Backups gefunden, nichts zu bearbeiten."
 msgid "Backup"
 msgstr "Backup"
 
-#: Backup/Ajax/FileList.php:43
+#: Backup/Ajax/FileList.php:44 Backup/Ajax/FileList.php:54
 msgid "Failed to get the list of backups!"
 msgstr "Die Liste der Backups konnte nicht abgerufen werden!"
 
@@ -521,7 +499,7 @@ msgstr ""
 msgid "Edit this backup plan."
 msgstr "Bearbeiten Sie diesen Sicherungsplan."
 
-#: Backup/Ajax/ScheduleList.php:59 Framework/Assets/I18n.php:213
+#: Backup/Ajax/ScheduleList.php:59
 msgid ""
 "Please upgrade to WP Staging Pro to edit existing backup plans. You can "
 "delete this plan and create a new one if you want to change it."
@@ -532,7 +510,7 @@ msgstr ""
 
 #: Backup/Ajax/ScheduleList.php:74 views/backup/listing-single-backup.php:71
 #: views/backup/listing-single-cloud-backup.php:33
-#: views/clone/ajax/single-overview.php:45
+#: views/clone/ajax/single-overview.php:46
 msgid "Actions"
 msgstr "Aktionen"
 
@@ -548,10 +526,9 @@ msgstr ""
 "Löschen Sie diesen Zeitplan und erstellen Sie keine neuen Sicherungen mehr. "
 "Dabei werden keine Sicherungsdateien gelöscht."
 
-#: Backup/Ajax/ScheduleList.php:86 Framework/Assets/I18n.php:34
-#: views/backup/listing-single-backup.php:114
+#: Backup/Ajax/ScheduleList.php:86 views/backup/listing-single-backup.php:114
 #: views/backup/listing-single-cloud-backup.php:46
-#: views/clone/ajax/single-overview.php:62 views/tools/tabs/system-info.php:17
+#: views/clone/ajax/single-overview.php:63 views/tools/tabs/system-info.php:17
 #: views/tools/tabs/system-info.php:20
 msgid "Delete"
 msgstr "Löschen"
@@ -573,6 +550,7 @@ msgid "Local Storage"
 msgstr "Lokaler Speicher"
 
 #: Backup/Ajax/ScheduleList.php:139
+#, php-format
 msgid "%s A maximum of %s backup%s will be kept for this storage."
 msgstr "%s Es werden maximal %s Backups%s für diesen Speicher aufbewahrt."
 
@@ -611,7 +589,7 @@ msgid "start in"
 msgstr "beginnt in"
 
 #: Backup/Ajax/ScheduleList.php:247 Backup/Entity/ListableBackup.php:130
-#: views/clone/ajax/single-overview.php:39
+#: views/clone/ajax/single-overview.php:40
 msgid "Single Site"
 msgstr "Einzelner Standort"
 
@@ -652,6 +630,7 @@ msgstr ""
 "Hilfe benötigen."
 
 #: Backup/Ajax/Upload.php:231
+#, php-format
 msgid ""
 "The backup size (%s) is different than expected (%s). If this issue "
 "persists, upload the file directly to this folder using FTP: <strong>wp-"
@@ -662,22 +641,26 @@ msgstr ""
 "Ordner hoch: <strong>wp-content/uploads/wp-staging/backups</strong>"
 
 #: Backup/Ajax/Upload.php:260 Framework/Network/AjaxBackupDownloader.php:85
+#, php-format
 msgid "Invalid backup file extension: %s"
 msgstr "Ungültige Erweiterung der Backup-Datei: %s"
 
 #: Backup/BackupDeleter.php:89
+#, php-format
 msgid "Unable to delete %s backup: %s"
 msgstr "Sicherung %s kann nicht gelöscht werden: %s"
 
 #: Backup/BackupDeleter.php:105
+#, php-format
 msgid "Unable to delete %s split backup part: %s"
 msgstr "Aufgeteilter Sicherungsteil %s kann nicht gelöscht werden: %s"
 
-#: Backup/BackupRepairer.php:77
+#: Backup/BackupRepairer.php:80
 msgid "Backup size cannot be zero or less"
 msgstr "Die Größe der Sicherung kann nicht null oder weniger sein"
 
 #: Backup/BackupScheduler.php:432
+#, php-format
 msgid ""
 "There are %s scheduled WordPress tasks overdue. This means the WordPress "
 "cron jobs are not working properly, unless this a development site or no "
@@ -691,6 +674,7 @@ msgstr ""
 "finden.<br><br>"
 
 #: Backup/BackupScheduler.php:439
+#, php-format
 msgid ""
 "This site is using LiteSpeed server, this could prevent the scheduled "
 "backups from working properly. Please read <a href=\"%s\" target=\"_blank"
@@ -702,6 +686,7 @@ msgstr ""
 "nicht richtig funktioniert."
 
 #: Backup/BackupScheduler.php:445
+#, php-format
 msgid ""
 "There are %s scheduled WordPress tasks overdue. This means the WordPress "
 "cron jobs are not working properly, unless this a development site or no "
@@ -716,6 +701,7 @@ msgstr ""
 "für dieses Problem vom WP STAGING-Supportteam zu erhalten.<br><br>"
 
 #: Backup/BackupScheduler.php:452
+#, php-format
 msgid ""
 "This site is using LiteSpeed server, this could prevent the scheduled "
 "backups from working properly. <a href=\"%s\">Write to us in the forum</a> "
@@ -726,11 +712,13 @@ msgstr ""
 "uns im Forum</a>, um eine Lösung für dieses Problem zu erhalten."
 
 #: Backup/BackupScheduler.php:469
+#, php-format
 msgid "WP Cron is being managed by a third party plugin: %s plugin."
 msgstr ""
 "WP Cron wird von einem Plugin eines Drittanbieters verwaltet: %s-Plugin."
 
 #: Backup/BackupScheduler.php:480
+#, php-format
 msgid ""
 "The background backup creation depends on WP-Cron but %s is set to %s in wp-"
 "config.php. Background processing might not work. Remove this constant or "
@@ -743,6 +731,7 @@ msgstr ""
 "verwenden."
 
 #: Backup/BackupScheduler.php:487
+#, php-format
 msgid ""
 "The background backup creation depends on WP-Cron but %s is set to %s in wp-"
 "config.php. Background processing might not work. Remove this constant or "
@@ -758,10 +747,12 @@ msgstr ""
 "wenn Sie weitere Informationen benötigen."
 
 #: Backup/BackupScheduler.php:500
+#, php-format
 msgid "The constant %s is set to true."
 msgstr "Die Konstante %s wird auf true gesetzt."
 
 #: Backup/BackupScheduler.php:542
+#, php-format
 msgid ""
 "Unexpected HTTP response code: %s. Cron jobs and backup schedule might still "
 "work, but we recommend checking the HTTP response of %s"
@@ -788,7 +779,7 @@ msgstr "WP Staging - Fehlerbericht zur Sicherung"
 msgid "WP Staging - Backup Report"
 msgstr "WP Staging - Sicherungsbericht"
 
-#: Backup/Exceptions/BackupRuntimeException.php:34
+#: Backup/Exceptions/BackupRuntimeException.php:35
 msgid ""
 "We cannot proceed, as we could not create the Backups directory folder. It "
 "is likely that the server "
@@ -796,7 +787,7 @@ msgstr ""
 "Wir können nicht fortfahren, da wir den Ordner Backups nicht erstellen "
 "konnten. Es ist wahrscheinlich, dass der Server "
 
-#: Backup/Exceptions/BackupRuntimeException.php:55
+#: Backup/Exceptions/BackupRuntimeException.php:56
 msgid ""
 "We cannot proceed, as the backup directory is not readable. It is likely "
 "that there is no read permission "
@@ -804,19 +795,13 @@ msgstr ""
 "Wir können nicht fortfahren, da das Sicherungsverzeichnis nicht lesbar ist. "
 "Es ist wahrscheinlich, dass keine Leseberechtigung besteht "
 
-#: Backup/Exceptions/BackupRuntimeException.php:76
+#: Backup/Exceptions/BackupRuntimeException.php:77
 msgid ""
 "We cannot proceed, as the backup directory is not writeable. It is likely "
 "that there is no write permission "
 msgstr ""
 "Wir können nicht fortfahren, da das Sicherungsverzeichnis nicht beschreibbar "
 "ist. Es ist wahrscheinlich, dass keine Schreibberechtigung besteht "
-
-#: Backup/Service/AbstractExtractor.php:436 wpstg-restore.php:1173
-msgid "Could not delete original file %s. Skipping restore of it..."
-msgstr ""
-"Konnte die Originaldatei %s nicht löschen. Überspringen der "
-"Wiederherstellung..."
 
 #: Backup/Service/Database/Importer/Insert/ExtendedInserterWithoutTransaction.php:45
 msgid ""
@@ -913,10 +898,12 @@ msgstr ""
 
 #: Backup/Service/Database/Importer/Insert/ExtendedInserterWithoutTransaction.php:72
 #: Backup/Service/Database/Importer/Insert/ExtendedInserterWithoutTransaction.php:73
+#, php-format
 msgid "ExtendedInserterWithoutTransaction Failed Query: %s"
 msgstr "ExtendedInserterWithoutTransaction Abfrage fehlgeschlagen: %s"
 
 #: Backup/Service/Database/Importer/Insert/ExtendedInserterWithoutTransaction.php:79
+#, php-format
 msgid ""
 " Your current MySQL version is %s. If this issue persists, try using the "
 "same MySQL version used to create this Backup (%s)."
@@ -926,6 +913,7 @@ msgstr ""
 "Sicherung erstellt wurde (%s)."
 
 #: Backup/Service/Database/Importer/Insert/ExtendedInserterWithoutTransaction.php:81
+#, php-format
 msgid ""
 "Could not restore the query. MySQL has returned the error code %d, with "
 "message \"%s\"."
@@ -933,12 +921,13 @@ msgstr ""
 "Die Abfrage konnte nicht wiederhergestellt werden. MySQL hat den Fehlercode "
 "%d mit der Meldung \"%s\" zurückgegeben."
 
-#: Backup/Service/Extractor.php:167
+#: Backup/Service/Extractor.php:272
+#, php-format
 msgid ""
-"Could not delete original media library file %s. Skipping restore of it..."
+"Could not delete original media library file %s. Skipping backup of it..."
 msgstr ""
-"Die ursprüngliche Medienbibliothek-Datei %s konnte nicht gelöscht werden. "
-"Überspringen der Wiederherstellung..."
+"Original-Medienbibliothek-Datei %s konnte nicht gelöscht werden. Überspringt "
+"die Sicherung der Datei..."
 
 #: Backup/Storage/Providers.php:42
 #: views/settings/tabs/storages/googledrive-settings.php:17
@@ -979,18 +968,22 @@ msgid "Generic S3"
 msgstr "Generic S3"
 
 #: Backup/Task/FileRestoreTask.php:106
+#, php-format
 msgid "%s skipped by filter!"
 msgstr "%s von Filter übersprungen!"
 
 #: Backup/Task/FileRestoreTask.php:114
+#, php-format
 msgid "%s skipped due to missing part!"
 msgstr "%s wurde aufgrund eines fehlenden Teils übersprungen!"
 
 #: Backup/Task/FileRestoreTask.php:129
+#, php-format
 msgid "%s (processed %d items)"
 msgstr "%s (verarbeitete %d Elemente)"
 
 #: Backup/Task/FileRestoreTask.php:209 Backup/Task/FileRestoreTask.php:221
+#, php-format
 msgid ""
 "%s: An internal error occurred that prevented this item from being restored. "
 "Skipping it... (Error Code: INVALID_QUEUE_ITEM)"
@@ -1012,6 +1005,7 @@ msgid "You must select at least one item to backup."
 msgstr "Du musst mindestens ein Element zum Sichern auswählen."
 
 #: Backup/Task/Tasks/JobBackup/BackupRequirementsCheckTask.php:165
+#, php-format
 msgid ""
 "PHP does not have enough permission to write to the WP STAGING data "
 "directory: %s"
@@ -1020,43 +1014,52 @@ msgstr ""
 "schreiben: %s"
 
 #: Backup/Task/Tasks/JobBackup/BackupRequirementsCheckTask.php:170
+#, php-format
 msgid "PHP does not have enough permission to read the plugins directory: %s"
 msgstr "PHP hat nicht genügend Rechte, um das Plugins-Verzeichnis zu lesen: %s"
 
 #: Backup/Task/Tasks/JobBackup/BackupRequirementsCheckTask.php:177
+#, php-format
 msgid "PHP does not have enough permission to read a themes directory: %s"
 msgstr "PHP hat nicht genügend Rechte, um ein Themes-Verzeichnis zu lesen: %s"
 
 #: Backup/Task/Tasks/JobBackup/BackupRequirementsCheckTask.php:184
+#, php-format
 msgid ""
 "PHP does not have enough permission to read the mu-plugins directory: %s"
 msgstr ""
 "PHP hat nicht genügend Rechte, um das mu-plugins-Verzeichnis zu lesen: %s"
 
 #: Backup/Task/Tasks/JobBackup/BackupRequirementsCheckTask.php:190
+#, php-format
 msgid "PHP does not have enough permission to read the uploads directory: %s"
 msgstr "PHP hat nicht genügend Rechte, um das Uploads-Verzeichnis zu lesen: %s"
 
 #: Backup/Task/Tasks/JobBackup/BackupRequirementsCheckTask.php:196
+#, php-format
 msgid ""
 "PHP does not have enough permission to read the wp-content directory: %s"
 msgstr "PHP hat nicht genug Rechte, um das wp-content-Verzeichnis zu lesen: %s"
 
 #: Backup/Task/Tasks/JobBackup/BackupRequirementsCheckTask.php:202
+#, php-format
 msgid ""
 "PHP does not have enough permission to read the WordPress root directory: %s"
 msgstr ""
 "PHP hat nicht genügend Rechte, um das WordPress-Stammverzeichnis zu lesen: %s"
 
 #: Backup/Task/Tasks/JobRestore/CleanExistingMediaTask.php:70
+#, php-format
 msgid "%s skipped because upload excluded by filter"
 msgstr "%s übersprungen, da Upload durch Filter ausgeschlossen"
 
 #: Backup/Task/Tasks/JobRestore/CleanExistingMediaTask.php:76
+#, php-format
 msgid "%s (skipped)"
 msgstr "%s (übersprungen)"
 
 #: Backup/Task/Tasks/JobRestore/CleanExistingMediaTask.php:112
+#, php-format
 msgid "%s (cleaned %d items)"
 msgstr "%s (bereinigte %d Einträge)"
 
@@ -1070,6 +1073,7 @@ msgid "Restoring Media Skipped by filter!"
 msgstr "Vom Filter übersprungene Medien wiederherstellen!"
 
 #: Backup/Task/Tasks/JobRestore/RestoreDatabaseTask.php:205
+#, php-format
 msgid ""
 "Cannot increase execution time. Max allowed execution time of %s seconds "
 "exceeded."
@@ -1078,6 +1082,7 @@ msgstr ""
 "von %s Sekunden überschritten."
 
 #: Backup/Task/Tasks/JobRestore/RestoreDatabaseTask.php:208
+#, php-format
 msgid "Repeat database restore after increasing execution time to %s seconds"
 msgstr ""
 "Wiederholung der Datenbankwiederherstellung nach Erhöhung der "
@@ -1189,7 +1194,7 @@ msgstr "Alle 2 Wochen"
 msgid "Monthly"
 msgstr "Monatlich"
 
-#: Framework/Assets/I18n.php:14
+#: Framework/Assets/Assets.php:275
 msgid ""
 "You can restore this backup anytime or upload it to another website and "
 "restore it there."
@@ -1197,220 +1202,81 @@ msgstr ""
 "Sie können diese Sicherungskopie jederzeit wiederherstellen oder sie auf "
 "eine andere Website hochladen und dort wiederherstellen."
 
-#: Framework/Assets/I18n.php:16
+#: Framework/Assets/Assets.php:278
 msgid "You can restore this backup anytime on this website."
 msgstr ""
 "Sie können diese Sicherung jederzeit auf dieser Website wiederherstellen."
 
-#: Framework/Assets/I18n.php:20 views/job/modal/process.php:17
-msgid "Show Logs"
-msgstr "Protokolle anzeigen"
-
-#: Framework/Assets/I18n.php:21
-msgid "Hide Logs"
-msgstr "Protokolle ausblenden"
-
-#: Framework/Assets/I18n.php:22
-msgid "No table selected"
-msgstr "Keine Tabelle ausgewählt"
-
-#: Framework/Assets/I18n.php:23
-msgid "{d} of {t} tables(s) selected"
-msgstr "{d} von {t} ausgewählten Tabellen(n)"
-
-#: Framework/Assets/I18n.php:24
-msgid "{t} theme{ts}, {p} plugin{ps}, {o} other folder{os} selected"
-msgstr "{t} theme{ts}, {p} plugin{ps}, {o} other folder{os} ausgewählt"
-
-#: Framework/Assets/I18n.php:25
-msgid "Read Less"
-msgstr "Schliessen"
-
-#: Framework/Assets/I18n.php:26 views/clone/wordpress-com/index.php:17
-#: views/notices/analytics-modal.php:28
-#: views/notices/free-backup-update-notice.php:15
-msgid "Read More"
-msgstr "Mehr erfahren"
-
-#: Framework/Assets/I18n.php:27
-msgid "OK"
-msgstr "OK"
-
-#: Framework/Assets/I18n.php:28 views/job/modal/process.php:1
-msgid "Cancel"
-msgstr "Abbruch"
-
-#: Framework/Assets/I18n.php:30
-msgid "Failed"
-msgstr "Fehlgeschlagen"
-
-#: Framework/Assets/I18n.php:31 views/logs/logs-template.php:19
-msgid "Error"
-msgstr "Fehler"
-
-#: Framework/Assets/I18n.php:32
-msgid "Save"
-msgstr "Speichern"
-
-#: Framework/Assets/I18n.php:33 views/notices/backup-plugins-notice.php:26
-#: views/_main/contact-us-pro.php:41
-msgid "Close"
-msgstr "Schließen"
-
-#: Framework/Assets/I18n.php:35 views/backup/listing-single-backup.php:80
-#: views/backup/listing-single-cloud-backup.php:39
-msgid "Restore"
-msgstr "Wiederherstellen"
-
-#: Framework/Assets/I18n.php:36
-msgid "Upload"
-msgstr "Hochladen"
-
-#: Framework/Assets/I18n.php:37 views/clone/ajax/delete-confirmation.php:31
-#: views/pro/scan.php:50 views/pro/scan.php:76
-#: views/selections/database-tables.php:25
-#: views/selections/database-tables.php:45 views/selections/files.php:22
-msgid "Unselect All"
-msgstr "Alle abwählen"
-
-#: Framework/Assets/I18n.php:38
-msgid "Select All"
-msgstr "Alle abwählen"
-
-#: Framework/Assets/I18n.php:39
-msgid "Something went wrong"
-msgstr "Etwas ist schief gelaufen."
-
-#: Framework/Assets/I18n.php:40
-msgid "Please submit an error report by using the CONTACT US button."
-msgstr "Bitte sende eine Fehlermeldung über die Schaltfläche KONTAKTIERE UNS."
-
-#: Framework/Assets/I18n.php:41
-msgid "Cancelling & Cleaning up"
-msgstr "Abbrechen & Aufräumen"
-
-#: Framework/Assets/I18n.php:42
-msgid "This modal will close automatically when done..."
-msgstr "Dieses Fenster wird am Ende automatisch geschlossen."
-
-#: Framework/Assets/I18n.php:43
-msgid ""
-"Cancel process did not finish gracefully. Some temporary files might not "
-"have been cleaned up."
-msgstr ""
-"Der Abbruchvorgang wurde nicht ordnungsgemäß beendet. Einige temporäre "
-"Dateien sind möglicherweise nicht bereinigt worden."
-
-#: Framework/Assets/I18n.php:44
-#| msgid "Do you want to create a new login link?"
-msgid "Do you want to cancel the process?"
-msgstr "Möchten Sie den Vorgang abbrechen?"
-
-#: Framework/Assets/I18n.php:45 views/job/modal/process.php:7
-msgid "Progress"
-msgstr "Fortschritt"
-
-#: Framework/Assets/I18n.php:46 views/job/modal/process.php:8
-msgid "Elapsed time"
-msgstr "Verstrichene Zeit"
-
-#: Framework/Assets/I18n.php:47
-msgid "Failed response"
-msgstr "Fehlgeschlagene Antwort"
-
-#: Framework/Assets/I18n.php:48
-msgid "Unknown error"
-msgstr "Unbekannter Fehler"
-
-#: Framework/Assets/I18n.php:49
-msgid ""
-"Something went wrong! No response. Go to WP Staging > Settings and lower "
-"'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low ' "
-"and try again. If that does not help, %s"
-msgstr ""
-"Etwas ist schief gelaufen! Keine Antwort. Gehen Sie zu WP Staging > "
-"Einstellungen und senken Sie 'File Copy Limit' und 'DB Query Limit'. Setzen "
-"Sie außerdem 'CPU Load Priority' auf niedrig und versuchen Sie es erneut. "
-"Wenn das nicht hilft, %s"
-
-#: Framework/Assets/I18n.php:50
-msgid ""
-"Something went wrong! No response. Please try again. If that does not help, "
-"%s"
-msgstr ""
-"Etwas ist schief gelaufen! Keine Antwort. Bitte versuchen Sie es erneut. "
-"Wenn das nicht hilft, %s"
-
-#: Framework/Assets/I18n.php:51
-msgid "Please get in contact with us to solve it %s"
-msgstr ""
-"Bitte setzen Sie sich mit uns in Verbindung, um das Problem zu lösen %s"
-
-#: Framework/Assets/I18n.php:52
-msgid "Clone data saved successfully."
-msgstr "Datei erfolgreich hochgeladen"
-
-#: Framework/Assets/I18n.php:53
-msgid "Could not save clone data %s Error: "
-msgstr "Kann die Daten %s nicht speichern. Fehler: "
-
-#: Framework/Assets/I18n.php:54
-msgid ""
-"Something went wrong; can't find ajax request URL! Please try the %s. If "
-"that does not help, %s"
-msgstr ""
-"Etwas ist schief gelaufen; die URL der Ajax-Anfrage kann nicht gefunden "
-"werden! Bitte versuchen Sie die %s. Wenn das nicht hilft, %s"
-
-#: Framework/Assets/I18n.php:55
-msgid ""
-"Something went wrong; internal server error while processing the request! "
-"Please try the %s. If that does not help, %s"
-msgstr ""
-"Etwas ist schief gelaufen; interner Serverfehler bei der Verarbeitung der "
-"Anfrage! Bitte versuchen Sie die %s. Wenn das nicht hilft, %s"
-
-#: Framework/Assets/I18n.php:56
-msgid "Please try the %s or submit an error report and contact us."
-msgstr ""
-"Bitte versuchen Sie die %s oder senden Sie einen Fehlerbericht und "
-"kontaktieren Sie uns."
-
-#: Framework/Assets/I18n.php:57
-msgid "Please report this warning %s and keep using WP Staging!"
-msgstr ""
-"Bitte melden Sie diese Warnung %s und verwenden Sie WP Staging weiterhin!"
-
-#: Framework/Assets/I18n.php:58
-msgid "Please wait...this can take up a while."
-msgstr "Bitte warten Sie...dies kann eine Weile dauern."
-
-#: Framework/Assets/I18n.php:60 Framework/Assets/I18n.php:159
+#: Framework/Assets/Assets.php:304
 msgid "Database connection successful"
 msgstr "Datenbankverbindung erfolgreich"
 
-#: Framework/Assets/I18n.php:61
+#: Framework/Assets/Assets.php:305
 msgid "Database connection failed"
 msgstr "Datenbankverbindung fehlgeschlagen"
 
-#: Framework/Assets/I18n.php:64
+#: Framework/Assets/Assets.php:306
+msgid "Something went wrong."
+msgstr "Etwas ist schief gelaufen."
+
+#: Framework/Assets/Assets.php:307
+msgid "No backup file found."
+msgstr "Keine Backup-Datei gefunden."
+
+#: Framework/Assets/Assets.php:308
+msgid "Select backup file to restore."
+msgstr "Wählen Sie die Sicherungsdatei für die Wiederherstellung aus."
+
+#: Framework/Assets/Assets.php:309
+msgid "Reset Complete!"
+msgstr "Zurücksetzung abgeschlossen!"
+
+#: Framework/Assets/Assets.php:310
+msgid "Update Complete!"
+msgstr "Aktualisierung abgeschlossen!"
+
+#: Framework/Assets/Assets.php:312 views/clone/ajax/exclude-settings.php:13
+msgid "Reset Staging Site"
+msgstr "Staging Site zurücksetzen"
+
+#: Framework/Assets/Assets.php:313 views/backup/modal/progress.php:23
+msgid "Show Logs"
+msgstr "Protokolle anzeigen"
+
+#: Framework/Assets/Assets.php:314
+msgid "Hide Logs"
+msgstr "Protokolle ausblenden"
+
+#: Framework/Assets/Assets.php:315
+msgid "No table selected"
+msgstr "Keine Tabelle ausgewählt"
+
+#: Framework/Assets/Assets.php:316
+msgid "{d} of {t} tables(s) selected"
+msgstr "{d} von {t} ausgewählten Tabellen(n)"
+
+#: Framework/Assets/Assets.php:317
+msgid "{t} theme{ts}, {p} plugin{ps}, {o} other folder{os} selected"
+msgstr "{t} theme{ts}, {p} plugin{ps}, {o} other folder{os} ausgewählt"
+
+#: Framework/Assets/Assets.php:319
 msgid "Staging Site Created Successfully!"
 msgstr "Staging-Website erfolgreich erstellt!"
 
-#: Framework/Assets/I18n.php:65 Framework/Assets/I18n.php:69
-#: Framework/Assets/I18n.php:77
+#: Framework/Assets/Assets.php:320 Framework/Assets/Assets.php:324
+#: Framework/Assets/Assets.php:332
 msgid "You can access it from here:"
 msgstr "Du kannst sie von hier aus aufrufen:"
 
-#: Framework/Assets/I18n.php:68
+#: Framework/Assets/Assets.php:323
 msgid "Staging Site Updated Successfully!"
 msgstr "Staging-Website erfolgreich aktualisiert!"
 
-#: Framework/Assets/I18n.php:72
+#: Framework/Assets/Assets.php:327
 msgid "Staging Site Pushed Successfully!"
 msgstr "Staging Seite erfolgreich veröffentlicht!"
 
-#: Framework/Assets/I18n.php:73
+#: Framework/Assets/Assets.php:328
 msgid ""
 "Now delete the theme and the website cache if the website does not look as "
 "expected! "
@@ -1418,532 +1284,37 @@ msgstr ""
 "Löschen Sie das Theme- und den Website-Cache, wenn die Website nicht wie "
 "erwartet aussieht! "
 
-#: Framework/Assets/I18n.php:76
+#: Framework/Assets/Assets.php:331
 msgid "Staging Site Reset Successfully!"
 msgstr "Staging-Website erfolgreich zurückgesetzt!"
 
-#: Framework/Assets/I18n.php:78 views/clone/ajax/exclude-settings.php:13
-msgid "Reset Staging Site"
-msgstr "Staging Site zurücksetzen"
-
-#: Framework/Assets/I18n.php:81
+#: Framework/Assets/Assets.php:335
 msgid "Staging Site Deleted Successfully!"
 msgstr "Staging-Website erfolgreich gelöscht!"
 
-#: Framework/Assets/I18n.php:85
+#: Framework/Assets/Assets.php:338
 msgid "Backup Schedule Created"
 msgstr "Backup-Zeitplan erstellt"
 
-#: Framework/Assets/I18n.php:86
+#: Framework/Assets/Assets.php:339
 msgid "Backup is scheduled according to the provided settings."
 msgstr "Die Sicherung wird gemäß den vorgegebenen Einstellungen geplant."
 
-#: Framework/Assets/I18n.php:89
+#: Framework/Assets/Assets.php:342
 msgid "Backup Creation Triggered"
 msgstr "Erstellung einer Sicherung ausgelöst"
 
-#: Framework/Assets/I18n.php:90
+#: Framework/Assets/Assets.php:343
 msgid "Backup will run in background. You can close the window."
 msgstr ""
 "Die Sicherung wird im Hintergrund ausgeführt. Sie können das Fenster "
 "schließen."
 
-#: Framework/Assets/I18n.php:93
+#: Framework/Assets/Assets.php:346
 msgid "Backup Complete"
 msgstr "Backup abgeschlossen"
 
-#: Framework/Assets/I18n.php:97
-msgid "You MUST leave this window open while cloning/pushing. Please wait..."
-msgstr ""
-"Sie MÜSSEN dieses Fenster beim Klonen/Drücken geöffnet lassen. Bitte "
-"warten..."
-
-#: Framework/Assets/I18n.php:98 Framework/Assets/I18n.php:149
-msgid "Please try again or contact support."
-msgstr "Bitte versuchen Sie es erneut oder kontaktieren Sie den Support."
-
-#: Framework/Assets/I18n.php:100
-msgid "Error: Please choose correct name for the staging site."
-msgstr "Fehler: Bitte wählen Sie einen anderen Namen für die Staging-Seite."
-
-#: Framework/Assets/I18n.php:101
-msgid ""
-"Invalid host name. Please provide it in a format like http://example.com"
-msgstr ""
-"Ungültiger Hostname. Bitte verwende das Format wie z.B. http://example.com"
-
-#: Framework/Assets/I18n.php:104 Framework/Assets/I18n.php:162
-msgid "Are you sure you want to cancel cloning process?"
-msgstr "Sind Sie sicher, dass Sie den Klonvorgang abbrechen wollen?"
-
-#: Framework/Assets/I18n.php:105
-msgid "Try to resume cloning process..."
-msgstr "Versuchen Sie, den Klonvorgang fortzusetzen..."
-
-#: Framework/Assets/I18n.php:106
-msgid "Delete staging site"
-msgstr "Staging-Site löschen"
-
-#: Framework/Assets/I18n.php:107
-msgid ""
-"Something went wrong! Error: No response. Please try the %s or submit an "
-"error report and contact us."
-msgstr ""
-"Etwas ist schief gelaufen! Fehler: Keine Antwort. Bitte versuchen Sie die %s "
-"oder senden Sie einen Fehlerbericht und kontaktieren Sie uns."
-
-#: Framework/Assets/I18n.php:110
-msgid "Please use the %s and try again."
-msgstr "Bitte verwenden Sie die %s und versuchen Sie es erneut."
-
-#: Framework/Assets/I18n.php:111
-msgid ""
-"If this issue persists, you can use the <strong>Backup & Migration</strong> "
-"feature to move your staging site to live. %s"
-msgstr ""
-"Wenn dieses Problem weiterhin besteht, können Sie die Funktion \" "
-"<strong>Backup &amp; Migration</strong> \" verwenden, um Ihre Staging-Site "
-"in die Live-Site zu verschieben. %s"
-
-#: Framework/Assets/I18n.php:112
-msgid "to analyze this issue further."
-msgstr "um diese Frage weiter zu analysieren."
-
-#: Framework/Assets/I18n.php:113
-msgid "Please contact WP Staging support if you need further assistance."
-msgstr ""
-"Bitte wenden Sie sich an den WP Staging-Support, wenn Sie weitere Hilfe "
-"benötigen."
-
-#: Framework/Assets/I18n.php:116
-msgid "Do you want to update the staging site?"
-msgstr "Möchten Sie die Staging-Site aktualisieren?"
-
-#: Framework/Assets/I18n.php:117
-msgid ""
-"This will overwrite the staging site with all the selected data from the "
-"live site.%sUse this only if you want to clone the live site again."
-"%sUnselect all tables and folders that you do not want to overwrite.%sDo not "
-"cancel the update process! This could destroy the staging site.%sIf you are "
-"unsure, create a backup of the staging site before proceeding.%sThere is no "
-"automatic merging of database data!"
-msgstr ""
-"Dadurch wird die Staging-Site mit allen ausgewählten Daten der Live-Site "
-"überschrieben.%sVerwenden Sie dies nur, wenn Sie die Live-Site erneut klonen "
-"möchten.%sDeaktivieren Sie alle Tabellen und Ordner, die Sie nicht "
-"überschreiben möchten.%sBrechen Sie den Aktualisierungsvorgang nicht ab! "
-"Dies könnte die Staging-Site zerstören.%sWenn Sie unsicher sind, erstellen "
-"Sie eine Sicherungskopie der Staging-Site, bevor Sie fortfahren.%sEs gibt "
-"keine automatische Zusammenführung von Datenbankdaten!"
-
-#: Framework/Assets/I18n.php:118 views/clone/ajax/single-overview.php:56
-msgid "Update"
-msgstr "Aktualisieren"
-
-#: Framework/Assets/I18n.php:121
-msgid ""
-"Something went wrong! Error: No response. Please try again. If that does not "
-"help,"
-msgstr ""
-"Etwas ist schief gelaufen! Fehler: Keine Antwort. Bitte versuchen Sie es "
-"erneut. Wenn das nicht hilft,"
-
-#: Framework/Assets/I18n.php:122
-msgid ""
-"Something went wrong! Error: Invalid response. Please try again. If that "
-"does not help,"
-msgstr ""
-"Etwas ist schief gelaufen! Fehler: Ungültige Antwort. Bitte versuchen Sie es "
-"erneut. Wenn das nicht hilft,"
-
-#: Framework/Assets/I18n.php:123
-msgid ""
-"Note: Some MySQL/MariaDB properties do not match. You may proceed but the "
-"staging site may not work as expected."
-msgstr ""
-"Hinweis: Einige MySQL/MariaDB-Eigenschaften stimmen nicht überein. Sie "
-"können fortfahren, aber die Staging-Site funktioniert möglicherweise nicht "
-"wie erwartet."
-
-#: Framework/Assets/I18n.php:124 Framework/Assets/I18n.php:126
-msgid "Different Database Properties"
-msgstr "Datenbankverbindung testen"
-
-#: Framework/Assets/I18n.php:125 Framework/Assets/I18n.php:127
-#: Framework/Assets/I18n.php:145 views/pro/clone/ajax/sync-button.php:21
-#: views/pro/generate-login-ui.php:137
-msgid "Proceed"
-msgstr "Weiter"
-
-#: Framework/Assets/I18n.php:130
-msgid ""
-"Something went wrong!%sGo to WP Staging > Settings and lower 'File Copy "
-"Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low ' and try "
-"again. If that does not help, %s"
-msgstr ""
-"Irgendetwas ist schief gelaufen!%sGehen Sie zu WP Staging > Einstellungen "
-"und senken Sie 'File Copy Limit' und 'DB Query Limit'. Setzen Sie außerdem "
-"'CPU Load Priority' auf niedrig und versuchen Sie es erneut. Wenn das nicht "
-"hilft, %s"
-
-#: Framework/Assets/I18n.php:131
-msgid ""
-"Something went wrong! No response.%sGo to WP Staging > Settings and lower "
-"'File Copy Limit' and 'DB Query Limit'. Also set 'CPU Load Priority to low ' "
-"and try again. If that does not help, %s"
-msgstr ""
-"Etwas ist schief gelaufen! Keine Antwort.%sGehen Sie zu WP Staging > "
-"Einstellungen und senken Sie 'File Copy Limit' und 'DB Query Limit'. Setzen "
-"Sie außerdem 'CPU Load Priority' auf niedrig und versuchen Sie es erneut. "
-"Wenn das nicht hilft, %s"
-
-#: Framework/Assets/I18n.php:134
-msgid ""
-"Something went wrong! No response. Please try the %s or submit an error "
-"report."
-msgstr ""
-"Etwas ist schief gelaufen! Keine Antwort. Bitte versuchen Sie die %s oder "
-"senden Sie einen Fehlerbericht."
-
-#: Framework/Assets/I18n.php:137
-msgid "Can not detect required disk space"
-msgstr "Kann den benötigten Speicherplatz nicht bestimmen"
-
-#: Framework/Assets/I18n.php:138
-msgid "Estimated necessary disk space: "
-msgstr "Geschätzter erforderlicher Speicherplatz: "
-
-#: Framework/Assets/I18n.php:139
-msgid ""
-"Before proceeding, make sure that your server has enough free disk space to "
-"clone the website. You can check the available disk space in your hosting "
-"customer account (e.g. cPanel)."
-msgstr ""
-"Bevor Sie fortfahren, vergewissern Sie sich, dass Ihr Server über genügend "
-"freien Speicherplatz zum Klonen der Website verfügt. Sie können den "
-"verfügbaren Speicherplatz in Ihrem Hosting-Kundenkonto (z. B. im cPanel) "
-"überprüfen."
-
-#: Framework/Assets/I18n.php:142
-msgid "Elapsed Time: "
-msgstr "Verstrichene Zeit: "
-
-#: Framework/Assets/I18n.php:144
-msgid ""
-"The target path must be different from the root path of the production "
-"website."
-msgstr ""
-"Der Zielpfad muss sich vom Stammpfad der Produktionswebsite unterscheiden."
-
-#: Framework/Assets/I18n.php:146
-msgid ""
-"Thanks for submitting your request! You should receive an auto reply mail "
-"with your ticket ID immediately for confirmation!%sIf you do not get that "
-"mail please contact us directly at %s"
-msgstr ""
-"Vielen Dank für das Einreichen Ihrer Anfrage! Sie sollten sofort eine "
-"automatische Antwortmail mit Ihrer Ticket-ID zur Bestätigung erhalten!%sWenn "
-"Sie diese Mail nicht erhalten, kontaktieren Sie uns bitte direkt unter %s"
-
-#: Framework/Assets/I18n.php:148
-msgid ""
-"WP Staging is blocked by a security plugin or firewall setting. Please "
-"whitelist all ajax requests coming from %s. If possible put your firewall "
-"into learning mode and try again.%sPlease ask your hosting provider or "
-"security plugin to permanently whitelist WP Staging requests. If it still "
-"fails, please contact us."
-msgstr ""
-"WP Staging wird durch ein Sicherheits-Plugin oder eine Firewall-Einstellung "
-"blockiert. Bitte whitelisten Sie alle Ajax-Anfragen, die von %s kommen. Wenn "
-"möglich, schalten Sie Ihre Firewall in den Lernmodus und versuchen Sie es "
-"erneut.%sBitten Sie Ihren Hosting-Provider oder Ihr Sicherheits-Plugin, WP "
-"Staging-Anfragen dauerhaft in die Whitelist aufzunehmen. Wenn es immer noch "
-"nicht klappt, kontaktieren Sie uns bitte."
-
-#: Framework/Assets/I18n.php:150
-msgid "Fatal Error: "
-msgstr "Fataler Fehler:"
-
-#: Framework/Assets/I18n.php:151
-msgid " Please try the %s or submit an error report and contact us."
-msgstr ""
-" Bitte versuchen Sie die %s oder senden Sie einen Fehlerbericht und "
-"kontaktieren Sie uns."
-
-#: Framework/Assets/I18n.php:152
-msgid ""
-"Error 504 - It looks like your server is rate limiting ajax requests. Please "
-"try to resume after a minute. If this still not works try the %s or submit "
-"an error report and contact us."
-msgstr ""
-"Fehler 504 - Es sieht so aus, als ob Ihr Server die Rate der Ajax-Anfragen "
-"begrenzt. Bitte versuchen Sie, nach einer Minute fortzufahren. Wenn dies "
-"immer noch nicht funktioniert, versuchen Sie die %s oder senden Sie einen "
-"Fehlerbericht und kontaktieren Sie uns."
-
-#: Framework/Assets/I18n.php:153
-msgid ""
-"Error 502 - It looks like your server is rate limiting ajax requests. Please "
-"try to resume after a minute. If this still not works try the %s or submit "
-"an error report and contact us."
-msgstr ""
-"Fehler 502 - Es sieht so aus, als ob Ihr Server die Rate der Ajax-Anfragen "
-"begrenzt. Bitte versuchen Sie, nach einer Minute fortzufahren. Wenn dies "
-"immer noch nicht funktioniert, versuchen Sie die %s oder senden Sie einen "
-"Fehlerbericht und kontaktieren Sie uns."
-
-#: Framework/Assets/I18n.php:154
-msgid ""
-"Error 503 - It looks like your server is rate limiting ajax requests. Please "
-"try to resume after a minute. If this still not works try the %s or submit "
-"an error report and contact us."
-msgstr ""
-"Fehler 503 - Es sieht so aus, als ob Ihr Server die Rate der Ajax-Anfragen "
-"begrenzt. Bitte versuchen Sie, nach einer Minute fortzufahren. Wenn dies "
-"immer noch nicht funktioniert, versuchen Sie die %s oder senden Sie einen "
-"Fehlerbericht und kontaktieren Sie uns."
-
-#: Framework/Assets/I18n.php:155
-msgid ""
-"Error 429 - It looks like your server is rate limiting ajax requests. Please "
-"try to resume after a minute. If this still not works try the %s or submit "
-"an error report and contact us."
-msgstr ""
-"Fehler 429 - Es sieht so aus, als ob Ihr Server die Rate der Ajax-Anfragen "
-"begrenzt. Bitte versuchen Sie, nach einer Minute fortzufahren. Wenn dies "
-"immer noch nicht funktioniert, versuchen Sie die %s oder senden Sie einen "
-"Fehlerbericht und kontaktieren Sie uns."
-
-#: Framework/Assets/I18n.php:158
-msgid ""
-"This will overwrite the production/live site and its plugins, themes and "
-"media assets with data from the staging site: %s. Database data will be "
-"overwritten for each selected table. Take care if you use a shop system like "
-"WooCommerce and read the %s. %s<b>Important:</b> Before you proceed make "
-"sure that you have a full site backup. If the pushing process is not "
-"successful contact us at %s or use the Contact Us button."
-msgstr ""
-"Dadurch werden die Produktions-/Live-Site und ihre Plugins, Themes und Media "
-"Assets mit den Daten der Staging-Site überschrieben: %s. Die Datenbankdaten "
-"werden für jede ausgewählte Tabelle überschrieben. Sei vorsichtig, wenn du "
-"ein Shopsystem wie WooCommerce verwendest und lies %s. %s<b>Wichtig:</b> "
-"Bevor du fortfährst, stelle sicher, dass du ein vollständiges Backup deiner "
-"Website hast. Wenn der Push-Vorgang nicht erfolgreich ist, kontaktiere uns "
-"unter %s oder benutze den Kontaktiere Uns Button."
-
-#: Framework/Assets/I18n.php:163
-msgid "Canceling Please wait..."
-msgstr "Abbrechen Bitte warten..."
-
-#: Framework/Assets/I18n.php:164
-msgid "Copying Database"
-msgstr "Kopiere Datenbank"
-
-#: Framework/Assets/I18n.php:165
-msgid "Processing Data"
-msgstr "In Bearbeitung …"
-
-#: Framework/Assets/I18n.php:166
-msgid "Preserve Data"
-msgstr "Daten aufbewahren"
-
-#: Framework/Assets/I18n.php:167
-msgid "Scanning Files"
-msgstr "Scannen von Dateien"
-
-#: Framework/Assets/I18n.php:168
-msgid "Copying Files"
-msgstr "Kopieren von Dateien"
-
-#: Framework/Assets/I18n.php:169
-msgid "Backup Files Scanning"
-msgstr "Scannen von Sicherungsdateien"
-
-#: Framework/Assets/I18n.php:170
-msgid "Process Finished"
-msgstr "In Bearbeitung …"
-
-#: Framework/Assets/I18n.php:171
-msgid "Renaming Database"
-msgstr "Benenne Datenbank um"
-
-#: Framework/Assets/I18n.php:172
-msgid "Updating Database Data"
-msgstr "Aktualisiere Datenbank"
-
-#: Framework/Assets/I18n.php:175
-msgid ""
-"This cleans up the database table %s. Only use this function for debugging "
-"purposes, or if the scheduled backups do not work as expected."
-msgstr ""
-"Dies bereinigt die Datenbanktabelle %s. Verwenden Sie diese Funktion nur zu "
-"Debugging-Zwecken oder wenn die geplanten Backups nicht wie erwartet "
-"funktionieren."
-
-#: Framework/Assets/I18n.php:176
-msgid "Clean Backup Queue"
-msgstr "Lösche Backup Warteschlange"
-
-#: Framework/Assets/I18n.php:177
-msgid "Are You Sure?"
-msgstr "Bist Du Sicher?"
-
-#: Framework/Assets/I18n.php:180
-msgid "Warning: Database table prefix can not be empty!"
-msgstr "Warnung: Das Präfix der Datenbanktabelle darf nicht leer sein!"
-
-#: Framework/Assets/I18n.php:183
-msgid "Backup successfully uploaded!"
-msgstr "Backup erfolgreich hochgeladen!"
-
-#: Framework/Assets/I18n.php:184
-msgid "Backup Upload Complete"
-msgstr "Backup abgeschlossen"
-
-#: Framework/Assets/I18n.php:187
-msgid "Do you want to delete this backup file from the remote storage server?"
-msgstr "Möchtest du diese Sicherungsdatei vom Remote Speicher Server löschen?"
-
-#: Framework/Assets/I18n.php:188
-msgid "Delete Remote Backup?"
-msgstr "Remote Backup löschen?"
-
-#: Framework/Assets/I18n.php:189
-msgid "Backup Deleted!"
-msgstr "Backup gelöscht"
-
-#: Framework/Assets/I18n.php:190
-msgid "Backup has been deleted from remote storage."
-msgstr "Die Sicherung wurde vom entfernten Speicher gelöscht."
-
-#: Framework/Assets/I18n.php:191
-msgid "Failed to delete the backup"
-msgstr "Backup konnte nicht gelöscht werden"
-
-#: Framework/Assets/I18n.php:192
-msgid ""
-"You can optionally download the backup to your local device:%sDownload to my "
-"computer"
-msgstr ""
-"Du kannst das Backup optional auf dein lokales Gerät herunterladen:%sAuf "
-"meinen Computer herunterladen"
-
-#: Framework/Assets/I18n.php:193
-msgid "Backup Successfully Downloaded to this Website"
-msgstr "Backup erfolgreich auf diesen Server heruntergeladen"
-
-#: Framework/Assets/I18n.php:194
-msgid "Downloading backup from remote"
-msgstr "Backup-Protokolldatei herunterladen"
-
-#: Framework/Assets/I18n.php:197
-msgid "Failed to get backup md5 from response!%sResponse content:"
-msgstr ""
-"Erhalt der Backup md5 von der Server Antwort ist fehlgeschlagen!%sAntwort "
-"Inhalt:"
-
-#: Framework/Assets/I18n.php:200
-#| msgid "Do you want to create a new login link?"
-msgid "Do you want to delete the backup"
-msgstr "Möchten Sie die Sicherung löschen?"
-
-#: Framework/Assets/I18n.php:201
-msgid "Delete Backup?"
-msgstr "Backup löschen?"
-
-#: Framework/Assets/I18n.php:204
-#: views/exclude-filters/file-size-exclude-filter.php:15
-#: views/selections/files.php:52
-msgid "File Size"
-msgstr "Dateigröße"
-
-#: Framework/Assets/I18n.php:205 views/backup/listing-single-backup.php:87
-#: views/backup/listing-single-backup.php:93
-#: views/backup/listing-single-cloud-backup.php:43
-msgid "Download"
-msgstr "Herunterladen"
-
-#: Framework/Assets/I18n.php:206
-msgid "Download Backup"
-msgstr "Backup Herunterladen"
-
-#: Framework/Assets/I18n.php:209
-msgid "Backup Name"
-msgstr "Backup-Zeiten"
-
-#: Framework/Assets/I18n.php:210
-msgid "Additional Notes"
-msgstr "Zusätzliche Anmerkungen"
-
-#: Framework/Assets/I18n.php:216
-msgid "Backup successfully imported!"
-msgstr "Backup erfolgreich importiert!"
-
-#: Framework/Assets/I18n.php:217
-msgid "You will be redirected to the login page after closing this modal."
-msgstr ""
-"Nach dem Schließen dieses Fensters wirst du zur Anmeldeseite weitergeleitet."
-
-#: Framework/Assets/I18n.php:218
-msgid "Finished Successfully"
-msgstr "Erfolgreich beendet"
-
-#: Framework/Assets/I18n.php:219
-msgid "Site has been restored from backup. "
-msgstr "Die Website wurde aus dem Backup wiederhergestellt. "
-
-#: Framework/Assets/I18n.php:222
-msgid "Upload finished"
-msgstr "Hochladen beendet"
-
-#: Framework/Assets/I18n.php:223
-msgid "Invalid request data"
-msgstr "Ungültige Anfragedaten"
-
-#: Framework/Assets/I18n.php:224
-msgid ""
-"An error occurred during the download. Do you want to resume the download?"
-msgstr ""
-"Während des Downloads ist ein Fehler aufgetreten. Möchten Sie den Download "
-"fortsetzen?"
-
-#: Framework/Assets/I18n.php:225 Framework/Assets/I18n.php:232
-#| msgid "Do you want to create a new login link?"
-msgid "Do you want to abort the upload?"
-msgstr "Möchten Sie den Upload abbrechen?"
-
-#: Framework/Assets/I18n.php:226 Framework/Network/AjaxBackupDownloader.php:78
-msgid "Backup file URL is empty"
-msgstr "URL der Backup-Datei ist leer"
-
-#: Framework/Assets/I18n.php:227
-msgid "Please enter a valid backup file url."
-msgstr "Bitte geben Sie eine gültige Sicherungsdatei-Url ein."
-
-#: Framework/Assets/I18n.php:228
-msgid "Please enter correct backup file url"
-msgstr "Bitte gib die Backup URL ein"
-
-#: Framework/Assets/I18n.php:231
-msgid ""
-"Your browser do not support the File API, needed for the uploads. Please try "
-"a different/updated browser, or upload the Backup using FTP to the folder %s"
-msgstr ""
-"Dein Browser unterstützt die Upload API nicht, die für den Upload benötigt "
-"wird. Bitte versuche einen anderen/aktualisierten Browser oder lade das "
-"Backup per FTP in den Ordner %s hoch"
-
-#: Framework/Assets/I18n.php:233
-msgid ""
-"We could not upload the backup file, please try uploading it directly using "
-"FTP to the folder %s. Please also make sure you have enough free disk space "
-"on the server."
-msgstr ""
-"Wir konnten die Sicherungsdatei nicht hochladen. Bitte versuchen Sie, das "
-"Backup direkt per FTP in den Ordner %s hochzuladen. Bitte stellen Sie auch "
-"sicher, dass Sie genügend freien Speicherplatz auf dem Server haben."
-
-#: Framework/BackgroundProcessing/FeatureDetection.php:203
+#: Framework/BackgroundProcessing/FeatureDetection.php:204
 msgid ""
 "WP STAGING Background Processing system cannot use AJAX: this will prevent "
 "it from performing at its best."
@@ -1956,16 +1327,19 @@ msgid "Click here to check again now."
 msgstr "Klicken Sie hier, um jetzt erneut zu prüfen."
 
 #: Framework/Database/TableService.php:256
+#, php-format
 msgid "Fatal Error: Trying to delete table %s of main WP installation!"
 msgstr ""
 "Fataler Fehler: Versucht, Tabelle %s der WP-Hauptinstallation zu löschen!"
 
 #: Framework/Database/TableService.php:282
+#, php-format
 msgid "Fatal Error: Trying to delete view %s of main WP installation!"
 msgstr ""
 "Fataler Fehler: Versuch, die Ansicht %s der WP-Hauptinstallation zu löschen!"
 
 #: Framework/Filesystem/DirectoryListing.php:159
+#, php-format
 msgid ""
 "Could not prevent directory listing on %s (Reason: Directory is not writable "
 "and does not contain an index file)"
@@ -1974,6 +1348,7 @@ msgstr ""
 "Verzeichnis ist nicht beschreibbar und enthält keine Indexdatei)"
 
 #: Framework/Filesystem/DirectoryListing.php:185
+#, php-format
 msgid ""
 "Could not prevent directory listing on %s (Reason: Failed to create index."
 "php)"
@@ -1982,6 +1357,7 @@ msgstr ""
 "php konnte nicht erstellt werden)"
 
 #: Framework/Filesystem/FilterableDirectoryIterator.php:226
+#, php-format
 msgid "Directory not found on the given path: %s."
 msgstr "Verzeichnis unter dem angegebenen Pfad nicht gefunden: %s."
 
@@ -1995,10 +1371,12 @@ msgstr "Pfad existiert bei Linkpfad"
 
 #: Framework/Filesystem/WpUploadsFolderSymlinker.php:94
 #: Framework/Filesystem/WpUploadsFolderSymlinker.php:112
+#, php-format
 msgid "Can not symlink %s. Error: "
 msgstr "Kann keinen Symlink %s erstellen. Fehler: "
 
 #: Framework/Job/Exception/DiskNotWritableException.php:11
+#, php-format
 msgid ""
 "We cannot proceed, as we could not write files to disk. Please check if the "
 "file %s is writeable, and if there's enough free disk space on the server."
@@ -2034,6 +1412,7 @@ msgstr ""
 "Ordnerberechtigung auf 755."
 
 #: Framework/Job/Exception/DiskNotWritableException.php:34
+#, php-format
 msgid ""
 "Not enough disk space. Please free up at least %s in the server and try "
 "again."
@@ -2042,6 +1421,7 @@ msgstr ""
 "versuche es erneut."
 
 #: Framework/Job/Exception/ProcessLockedException.php:11
+#, php-format
 msgid ""
 "Another backup/restore is already running. Please wait %d seconds and try "
 "again. If you continue to see this error, please contact the WP STAGING "
@@ -2052,6 +1432,7 @@ msgstr ""
 "weiterhin auftritt, wenden Sie sich bitte an den WP STAGING-Support."
 
 #: Framework/Job/Exception/TaskHealthException.php:13
+#, php-format
 msgid ""
 "PHP failed to process this task. We will lower the memory usage and try "
 "again... (%d/%d)"
@@ -2067,6 +1448,7 @@ msgstr ""
 
 #: Framework/Job/Task/FileHandler/DeleteHandler.php:20
 #: Framework/Job/Task/FileHandler/DeleteHandler.php:33
+#, php-format
 msgid ""
 "%s: PHP does not have permission to delete %s! This folder might still be in "
 "your filesystem, please clear it manually."
@@ -2075,6 +1457,7 @@ msgstr ""
 "möglicherweise noch in Ihrem Dateisystem, bitte löschen Sie ihn manuell."
 
 #: Framework/Job/Task/FileHandler/DeleteHandler.php:44
+#, php-format
 msgid ""
 "%s: %s could not be entirely deleted in this request. Retrying it again..."
 msgstr ""
@@ -2082,14 +1465,17 @@ msgstr ""
 "Versuchen Sie es noch einmal..."
 
 #: Framework/Job/Task/FileHandler/FileHandler.php:49
+#, php-format
 msgid "%s: Could not open handle for locking file %s"
 msgstr "%s: Handle für Sperrdatei %s konnte nicht geöffnet werden"
 
 #: Framework/Job/Task/FileHandler/FileHandler.php:61
+#, php-format
 msgid "%s: Could not open lock file %s"
 msgstr "%s: Sperrdatei %s konnte nicht geöffnet werden"
 
 #: Framework/Job/Task/FileHandler/MoveHandler.php:21
+#, php-format
 msgid ""
 "%s: Parent directory of destination did not exist and could not be created, "
 "skipping! Parent directory: %s File that was skipped: %s"
@@ -2099,6 +1485,7 @@ msgstr ""
 "übersprungen wurde: %s"
 
 #: Framework/Job/Task/FileHandler/MoveHandler.php:50
+#, php-format
 msgid "%s: Could not move \"%s\" to \"%s\". %s."
 msgstr "%s: „%s” konnte nicht nach „%s” verschoben werden. %s."
 
@@ -2139,6 +1526,7 @@ msgstr ""
 "\", um sie erneut zu senden."
 
 #: Framework/Mails/Report/Report.php:191
+#, php-format
 msgid "WP Staging - Debug Code: %s"
 msgstr "WP Staging - Debug-Code: %s"
 
@@ -2147,12 +1535,17 @@ msgid "Sending debug info failed!"
 msgstr "Senden von Debug-Informationen fehlgeschlagen!"
 
 #: Framework/Mails/Report/Report.php:193
+#, php-format
 msgid "License Key: %s"
 msgstr "Lizenzschlüssel: %s"
 
 #: Framework/Mails/Report/Report.php:200
 msgid "Successfully submitted debug info!"
 msgstr "Debug-Informationen erfolgreich übermittelt!"
+
+#: Framework/Network/AjaxBackupDownloader.php:78
+msgid "Backup file URL is empty"
+msgstr "URL der Backup-Datei ist leer"
 
 #: Framework/Network/AjaxBackupDownloader.php:102
 msgid "Invalid backup file content"
@@ -2167,6 +1560,7 @@ msgid "File not available on remote server"
 msgstr "Datei auf dem Remote-Server nicht verfügbar"
 
 #: Framework/Performance/MemoryExhaust.php:81
+#, php-format
 msgid ""
 "Memory exhaust issue is detected during the process. Error occurred when "
 "allocating more %s on top of current usage of %s. Peak memory usage: %s, "
@@ -2178,12 +1572,14 @@ msgstr ""
 "Speichergrenze: %s, PHP-Speichergrenze: %s, WP-Speichergrenze: %s"
 
 #: Framework/Queue/FileSeekableQueue.php:98
+#, php-format
 msgid "Could not acquire exclusive lock for writing to Queue file: %s.task"
 msgstr ""
 "Konnte keine exklusive Sperre für das Schreiben in die Warteschlangendatei "
 "erhalten: %s.task"
 
 #: Framework/Queue/FileSeekableQueue.php:310
+#, php-format
 msgid ""
 "Check if there is enough free space and the file permissions are 644 or 755. "
 "Could not create file: %s"
@@ -2212,10 +1608,12 @@ msgid "Unable to purge queue table"
 msgstr "Warteschlangentabelle kann nicht bereinigt werden"
 
 #: Framework/Settings/Settings.php:147
+#, php-format
 msgid "Table %s is already empty."
 msgstr "Die Tabelle %s ist bereits leer."
 
 #: Framework/Settings/Settings.php:153
+#, php-format
 msgid "Purged queue table! Removed %s action(s)"
 msgstr "Warteschlangentabelle geleert! Entfernte %s-Aktion(en)"
 
@@ -2278,6 +1676,7 @@ msgstr "Zuschüsse für Benutzer: "
 #. translators: %s: Time duration in hour or hours.
 #. translators: Time difference between two dates, in hours. %s: Number of hours.
 #: Framework/Utils/Times.php:172 Framework/Utils/Times.php:236
+#, php-format
 msgid "%s hour"
 msgid_plural "%s hours"
 msgstr[0] "%s Stunde"
@@ -2285,6 +1684,7 @@ msgstr[1] "%s Stunden"
 
 #. translators: %s: Time duration in minute or minutes.
 #: Framework/Utils/Times.php:178
+#, php-format
 msgid "%s minute"
 msgid_plural "%s minutes"
 msgstr[0] "%s Minute"
@@ -2293,6 +1693,7 @@ msgstr[1] "%s Minuten"
 #. translators: %s: Time duration in second or seconds.
 #. translators: Time difference between two dates, in seconds. %s: Number of seconds.
 #: Framework/Utils/Times.php:184 Framework/Utils/Times.php:220
+#, php-format
 msgid "%s second"
 msgid_plural "%s seconds"
 msgstr[0] "%s Sekunde"
@@ -2300,6 +1701,7 @@ msgstr[1] "%s Sekunden"
 
 #. translators: Time difference between two dates, in minutes (min=minute). %s: Number of minutes.
 #: Framework/Utils/Times.php:228
+#, php-format
 msgid "%s min"
 msgid_plural "%s mins"
 msgstr[0] "%s Minute"
@@ -2307,6 +1709,7 @@ msgstr[1] "%s Minuten"
 
 #. translators: Time difference between two dates, in days. %s: Number of days.
 #: Framework/Utils/Times.php:244
+#, php-format
 msgid "%s day"
 msgid_plural "%s days"
 msgstr[0] "%s Tag"
@@ -2314,6 +1717,7 @@ msgstr[1] "%s Tage"
 
 #. translators: Time difference between two dates, in weeks. %s: Number of weeks.
 #: Framework/Utils/Times.php:252
+#, php-format
 msgid "%s week"
 msgid_plural "%s weeks"
 msgstr[0] "%s Woche"
@@ -2321,6 +1725,7 @@ msgstr[1] "%s Wochen"
 
 #. translators: Time difference between two dates, in months. %s: Number of months.
 #: Framework/Utils/Times.php:260
+#, php-format
 msgid "%s month"
 msgid_plural "%s months"
 msgstr[0] "%s Monat"
@@ -2328,6 +1733,7 @@ msgstr[1] "%s Monate"
 
 #. translators: Time difference between two dates, in years. %s: Number of years.
 #: Framework/Utils/Times.php:268
+#, php-format
 msgid "%s year"
 msgid_plural "%s years"
 msgstr[0] "%s Jahr"
@@ -2342,6 +1748,7 @@ msgid "Username or Email Address"
 msgstr "Benutzername oder E-Mail-Adresse"
 
 #: Frontend/LoginForm.php:60
+#, php-format
 msgid ""
 "Incorrect credentials! Only administrators can access this page. Please try "
 "the default <a target=\"_blank\" href=\"%s\">login</a> form or read this <a "
@@ -2353,6 +1760,7 @@ msgstr ""
 "\">Leitfaden</a>."
 
 #: Frontend/LoginForm.php:63
+#, php-format
 msgid ""
 "Incorrect credentials! Only administrators or explicitly authorized users "
 "can access this page. Please try the default <a target=\"_blank\" href=\"%s"
@@ -2364,6 +1772,7 @@ msgstr ""
 "diesen <a target=\"_blank\" href=\"%s\">Leitfaden</a>."
 
 #: Frontend/LoginForm.php:87
+#, php-format
 msgid ""
 "Login not possible! Only administrators can access this page. Please try the "
 "default <a target=\"_blank\" href=\"%s\">login</a> form or read this <a "
@@ -2375,6 +1784,7 @@ msgstr ""
 "\">Anleitung</a>."
 
 #: Frontend/LoginForm.php:90
+#, php-format
 msgid ""
 "Login not possible! Only administrators or explicitly authorized users can "
 "access this page. Please try the default <a target=\"_blank\" href=\"%s"
@@ -2410,11 +1820,13 @@ msgid "Log In"
 msgstr "Anmelden"
 
 #: Notifications/Transporter/EmailNotification.php:156
+#, php-format
 msgid "This message was sent by the WP Staging plugin from the website %s"
 msgstr ""
 "Diese Nachricht wurde vom WP Staging-Plugin von der Website %s gesendet"
 
 #: Notifications/Transporter/EmailNotification.php:158
+#, php-format
 msgid ""
 "This message was sent by the WP Staging free backup and staging plugin from "
 "the website %s"
@@ -2423,12 +1835,14 @@ msgstr ""
 "Plugin, von der Website %s gesendet"
 
 #: Notifications/Transporter/EmailNotification.php:161
+#, php-format
 msgid "It was sent to the email address %s which can be set up on %s"
 msgstr ""
 "Es wurde an die E-Mail-Adresse %s gesendet, die auf %s eingerichtet werden "
 "kann."
 
 #: Notifications/Transporter/EmailNotification.php:164
+#, php-format
 msgid "Get more control over your notifications by using WP Staging Pro %s."
 msgstr ""
 "Erhalte mehr Kontrolle über deine Benachrichtigungen mit WP Staging Pro %s."
@@ -2436,20 +1850,6 @@ msgstr ""
 #: Notifications/Transporter/EmailNotification.php:167
 msgid "Please do not reply to this email."
 msgstr "Bitte antworte nicht auf diese E-Mail."
-
-#: opcacheBootstrap.php:96
-msgid "WP STAGING OPCache"
-msgstr "WP STAGING OPCache"
-
-#: opcacheBootstrap.php:99
-msgid ""
-"WP STAGING detected that the OPCache was outdated and automatically cleared "
-"the OPCache for the <strong>%s</strong> folder to prevent issues. This "
-"operation took %s seconds."
-msgstr ""
-"WP STAGING hat festgestellt, dass der OPCache veraltet war und hat den "
-"OPCache für den Ordner <strong>%s</strong> automatisch gelöscht, um Probleme "
-"zu vermeiden. Dieser Vorgang dauerte %s Sekunden."
 
 #: Pro/Activate/PluginActivationServiceProvider.php:76
 msgid ""
@@ -2471,6 +1871,7 @@ msgstr ""
 "die Berechtigung, Netzwerk-Plugins zu aktivieren (manage_network_plugins)!"
 
 #: Pro/Activate/PluginActivationServiceProvider.php:141
+#, php-format
 msgid "Please activate the free %s. This is required to activate %s %s"
 msgstr ""
 "Bitte aktivieren Sie das kostenlose %s. Dies ist erforderlich, um %s %s zu "
@@ -2522,6 +1923,7 @@ msgstr ""
 
 #. translators: URL to enter license key, URL to wp-staging.com account page.
 #: Pro/Activate/PluginActivationServiceProvider.php:211
+#, php-format
 msgid ""
 "To get started, please enter your license key <a href=\"%s\">here</a>. You "
 "can find your license key in your <a href=\"%s\" target=\"_blank\">account "
@@ -2532,6 +1934,7 @@ msgstr ""
 "\"_blank\">Kontoseite</a>."
 
 #: Pro/Activate/PluginActivationServiceProvider.php:252
+#, php-format
 msgid "Error: Failed to install the WP STAGING core plugin. Error message: %s"
 msgstr ""
 "Fehler: Die Installation des WP STAGING Core-Plugins ist fehlgeschlagen. "
@@ -2587,6 +1990,7 @@ msgstr "Startzeit:"
 
 #: Pro/Backup/Ajax/ManageSchedules.php:183
 #: views/backup/modal/backup-scheduling-options.php:62
+#, php-format
 msgid ""
 "Relative to current server time, which you can change in <a href=\"%s"
 "\">WordPress Settings</a>."
@@ -2596,16 +2000,19 @@ msgstr ""
 
 #: Pro/Backup/Ajax/ManageSchedules.php:188
 #: views/backup/modal/backup-scheduling-options.php:67
+#, php-format
 msgid "Current Server Time: %s"
 msgstr "Aktuelle Serverzeit: %s"
 
 #: Pro/Backup/Ajax/ManageSchedules.php:190
 #: views/backup/modal/backup-scheduling-options.php:69
+#, php-format
 msgid "Site Timezone: %s"
 msgstr "Zeitzone der Website: %s"
 
 #: Pro/Backup/Ajax/ManageSchedules.php:202
 #: views/backup/modal/backup-scheduling-options.php:89
+#, php-format
 msgid "Keep last %d backup%s"
 msgstr "Letzte %d-Sicherung%s beibehalten"
 
@@ -2622,14 +2029,17 @@ msgid "No available custom folders!"
 msgstr "Keine benutzerdefinierten Ordner verfügbar!"
 
 #: Pro/Backup/Storage/AbstractStorage.php:180
+#, php-format
 msgid "The %s storage is authenticated successfully!"
 msgstr "Der %s-Speicher wurde erfolgreich authentifiziert!"
 
 #: Pro/Backup/Storage/AbstractStorage.php:189
+#, php-format
 msgid "The %s storage authentication failed!"
 msgstr "Die %s-Speicherauthentifizierung ist fehlgeschlagen!"
 
 #: Pro/Backup/Storage/AbstractStorage.php:221
+#, php-format
 msgid "Name: %s. %s quota usage: %s used,  %s available."
 msgstr "Name: %s. %s Kontingentnutzung: %s verwendet, %s verfügbar."
 
@@ -2702,6 +2112,7 @@ msgid "You are not allowed to do this."
 msgstr "Sie dürfen das nicht tun."
 
 #: Pro/Backup/Storage/Storages/GoogleDrive/Auth.php:503
+#, php-format
 msgid ""
 "Can not list files from Google Drive. Please reconnect Google Drive via WP "
 "STAGING > Settings > Storage Providers. Error: %s"
@@ -2717,6 +2128,7 @@ msgstr ""
 "verfügbar."
 
 #: Pro/Backup/Storage/Storages/GoogleDrive/Uploader.php:428
+#, php-format
 msgid ""
 "Could not upload backup to Google Drive. Reason: Disk Quota Exceeded. "
 "Increase google drive space or delete old data! Backup Size: %s. Space "
@@ -2764,6 +2176,7 @@ msgstr ""
 "Anmeldedaten."
 
 #: Pro/Backup/Storage/Storages/SFTP/Clients/FtpCurlClient.php:347
+#, php-format
 msgid "Unable to connect FTP server. Error code: %s"
 msgstr "Verbindung zum FTP-Server nicht möglich. Fehlercode: %s"
 
@@ -2776,6 +2189,7 @@ msgid "FTP Curl Client - Internal Server Error"
 msgstr "FTP Curl Client - Interner Serverfehler"
 
 #: Pro/Backup/Storage/Storages/SFTP/Clients/FtpCurlClient.php:367
+#, php-format
 msgid "FTP Curl Client - Error code: %s"
 msgstr "FTP Curl Client - Fehlercode: %s"
 
@@ -2791,10 +2205,12 @@ msgid "Unable to fetch existing backups for verification"
 msgstr "Vorhandene Backups können nicht zur Überprüfung abgerufen werden"
 
 #: Pro/Backup/Task/Tasks/JobBackup/AbstractStorageTask.php:78
+#, php-format
 msgid "%s: Backup already uploaded."
 msgstr "%s: Sicherung wurde bereits hochgeladen."
 
 #: Pro/Backup/Task/Tasks/JobBackup/AbstractStorageTask.php:208
+#, php-format
 msgid "%s: Cleaned old backups if any."
 msgstr "%s: Alte Backups bereinigt, falls vorhanden."
 
@@ -2806,20 +2222,24 @@ msgstr ""
 
 #: Pro/Backup/Task/Tasks/JobBackup/ValidateBackupTask.php:62
 #: Pro/Backup/Task/Tasks/JobRestore/ExtractFilesTask.php:70
+#, php-format
 msgid "Backup part %s doesn't exist. Skipping from extraction"
 msgstr "Der Sicherungsteil %s existiert nicht. Überspringen der Extraktion"
 
 #: Pro/Backup/Task/Tasks/JobCloudDownload/CleanupDownloadTmpFilesTask.php:65
+#, php-format
 msgid "%s: Could not cleanup path \"%s\". May be a permission issue?"
 msgstr ""
 "%s: Pfad \"%s\" konnte nicht bereinigt werden. Vielleicht ein "
 "Berechtigungsproblem?"
 
 #: Pro/Backup/Task/Tasks/JobCloudDownload/CleanupDownloadTmpFilesTask.php:76
+#, php-format
 msgid "%s: Path \"%s\" successfully cleaned up."
 msgstr "%s: Pfad \"%s\" erfolgreich bereinigt."
 
 #: Pro/Backup/Task/Tasks/JobCloudDownload/CleanupDownloadTmpFilesTask.php:94
+#, php-format
 msgid ""
 "%s: Re-enqueing path %s for deletion, as it couldn't be deleted in a single "
 "request without\n"
@@ -2883,6 +2303,7 @@ msgid "Failed to update Domain and Path in site table"
 msgstr "Domain und Pfad in der Site-Tabelle konnten nicht aktualisiert werden"
 
 #: Pro/Backup/Task/Tasks/JobRestore/UpdateSubsitesDomainAndPathTask.php:84
+#, php-format
 msgid ""
 "Failed to update Domain and Path in blogs table for blog_id: %s and site_id: "
 "%s"
@@ -2910,6 +2331,7 @@ msgstr ""
 "abgeschlossen"
 
 #: Pro/Backup/Task/Tasks/JobRestore/UpdateSubsitesUrlsTask.php:57
+#, php-format
 msgid ""
 "Failed to update site URL in options table for blog_id: %s and site_id: %s"
 msgstr ""
@@ -2917,18 +2339,57 @@ msgstr ""
 "aktualisiert werden"
 
 #: Pro/Backup/Task/Tasks/JobRestore/UpdateSubsitesUrlsTask.php:61
+#, php-format
 msgid ""
 "Failed to update home URL in options table for blog_id: %s and site_id: %s"
 msgstr ""
 "Aktualisierung der Home-URL in der Optionstabelle für blog_id: %s und "
 "site_id: %s fehlgeschlagen"
 
+#. translators: the plugin name.
+#: Pro/License/EDD_SL_Plugin_Updater.php:265
+#, php-format
+msgid "There is a new version of %1$s available."
+msgstr "Es ist eine neue Version von %1$s verfügbar."
+
+#: Pro/License/EDD_SL_Plugin_Updater.php:271
+msgid "Contact your network administrator to install the update."
+msgstr ""
+"Wenden Sie sich an Ihren Netzwerkadministrator, um das Update zu "
+"installieren."
+
+#. translators: 1. opening anchor tag, do not translate 2. the new plugin version 3. closing anchor tag, do not translate.
+#: Pro/License/EDD_SL_Plugin_Updater.php:276
+#, php-format
+msgid "%1$sView version %2$s details%3$s."
+msgstr "%1$sVersionsdetails %2$s anzeigen%3$s."
+
+#: Pro/License/EDD_SL_Plugin_Updater.php:284
+#, php-format
+msgid "%1$sView version %2$s details%3$s or %4$supdate now%5$s."
+msgstr ""
+"%1$sVersionsdetails %2$s anzeigen%3$s oder %4$sJetzt aktualisieren%5$s."
+
+#: Pro/License/EDD_SL_Plugin_Updater.php:295
+msgid "Update now."
+msgstr "Jetzt aktualisieren."
+
+#: Pro/License/EDD_SL_Plugin_Updater.php:527
+msgid "You do not have permission to install plugin updates"
+msgstr "Sie haben nicht die Erlaubnis, Plugin-Updates zu installieren"
+
+#: Pro/License/EDD_SL_Plugin_Updater.php:527 views/logs/logs-template.php:18
+msgid "Error"
+msgstr "Fehler"
+
 #: Pro/License/Licensing.php:164
+#, php-format
 msgid "An error occurred, please try again. Response: %s"
 msgstr ""
 "Es ist ein Fehler aufgetreten, bitte versuchen Sie es erneut. Antwort: %s"
 
 #: Pro/License/Licensing.php:166
+#, php-format
 msgid ""
 "<br/>You may find a solution in <a href=\"%s\" target=\"_blank\">this "
 "article</a>."
@@ -2937,6 +2398,7 @@ msgstr ""
 "Artikel</a> eine Lösung."
 
 #: Pro/License/Licensing.php:174
+#, php-format
 msgid ""
 "Your license key expired on %s. Renew the license key on wp-staging.com or "
 "contact support@wp-staging to get help."
@@ -2998,6 +2460,7 @@ msgstr ""
 "an support@wp-staging.com, um Hilfe zu erhalten."
 
 #: Pro/License/Licensing.php:199
+#, php-format
 msgid ""
 "This appears to be an invalid license key for %s. Get a new license key from "
 "wp-staging.com or contact support@wp-staging.com for help."
@@ -3024,6 +2487,7 @@ msgstr ""
 "Ihren Lizenzschlüssel auf wp-staging.com für mehr aktive Websites."
 
 #: Pro/License/Licensing.php:210
+#, php-format
 msgid "This license key is not valid. You can buy one from %s or contact %s"
 msgstr ""
 "Dieser Lizenzschlüssel ist nicht gültig. Sie können einen von %s kaufen oder "
@@ -3038,6 +2502,7 @@ msgid "WP STAGING - Can not activate license key! "
 msgstr "WP STAGING - Lizenzschlüssel kann nicht aktiviert werden! "
 
 #: Pro/Notifications/Transporter/SlackNotification.php:101
+#, php-format
 msgid "This message was sent by the WP Staging plugin from the website *%s*."
 msgstr ""
 "Diese Nachricht wurde vom WP Staging Plugin von der Website *%s* gesendet."
@@ -3055,6 +2520,7 @@ msgid "Table prefix contains an invalid character."
 msgstr "Das Tabellenpräfix enthält ein ungültiges Zeichen."
 
 #: Pro/Staging/Ajax/ExternalDatabase.php:103
+#, php-format
 msgid ""
 "Tables with prefix '%s' already exist in database. Select another prefix."
 msgstr ""
@@ -3062,6 +2528,7 @@ msgstr ""
 "ein anderes Präfix."
 
 #: Pro/Staging/Ajax/ExternalDatabase.php:110
+#, php-format
 msgid ""
 "The prefix '%s' is not allowed as it begins with the production database "
 "prefix '%s'. Please choose a different prefix."
@@ -3070,6 +2537,7 @@ msgstr ""
 "Produktionsdatenbank \"%s\" beginnt. Bitte wählen Sie ein anderes Präfix."
 
 #: Pro/Staging/Ajax/ExternalDatabase.php:120
+#, php-format
 msgid ""
 "Tables with prefix '%s' do not exist in the database. Ensure that they do "
 "exist!"
@@ -3137,31 +2605,8 @@ msgstr "E-Mail-Versand deaktiviert!"
 msgid "Emails sending enabled!"
 msgstr "E-Mail-Versand aktiviert!"
 
-#: runtimeRequirements.php:366
-msgid "WP STAGING Already Active"
-msgstr "WP STAGING Bereits aktiv"
-
-#: runtimeRequirements.php:367
-msgid ""
-"Another WP STAGING is already activated, please leave only one instance of "
-"the WP STAGING plugin active at the same time."
-msgstr ""
-"Ein weiteres WP STAGING ist bereits aktiviert, bitte lassen Sie nur eine "
-"Instanz des WP STAGING Plugins gleichzeitig aktiv."
-
-#: runtimeRequirements.php:387 views/notices/analytics-consent-refused.php:2
-#: views/notices/pro-crons-notice.php:3
-msgid "WP STAGING"
-msgstr "WP STAGING"
-
-#: runtimeRequirements.php:388
-msgid ""
-"WP STAGING requires at least WordPress %s to run. You have WordPress %s."
-msgstr ""
-"WP STAGING benötigt mindestens WordPress %s zum Ausführen. Sie haben "
-"WordPress %s."
-
 #: Staging/Ajax/StagingSiteDataChecker.php:47
+#, php-format
 msgid ""
 "The directory is not writable due to open_basedir restriction. Follow our "
 "documentation %s to resolve this issue or %s"
@@ -3180,6 +2625,7 @@ msgid "open a ticket."
 msgstr "eröffne ein Ticket."
 
 #: Staging/Ajax/StagingSiteDataChecker.php:55
+#, php-format
 msgid ""
 "The directory is not writable due to restricted permissions. Follow our "
 "documentation %s to resolve this issue or %s"
@@ -3192,6 +2638,7 @@ msgid "how to fix folder permission error"
 msgstr "„Wie man den Fehler mit den Ordnerrechten behebt”"
 
 #: Staging/Ajax/StagingSiteDataChecker.php:73
+#, php-format
 msgid ""
 "Clone destination dir is not writable. Please make <code>%s</code> writable "
 "to proceed!"
@@ -3206,6 +2653,7 @@ msgstr ""
 "anderen Pfad."
 
 #: Staging/Ajax/StagingSiteDataChecker.php:89
+#, php-format
 msgid ""
 "Clone destination dir is not writable. Please make <code>%s</code> or <code>"
 "%s</code> writable to proceed!"
@@ -3214,6 +2662,7 @@ msgstr ""
 "%s</code> oder <code>%s</code> beschreibbar, um fortzufahren!"
 
 #: Staging/Sites.php:226
+#, php-format
 msgid ""
 "Warning: Use another site name! Clone destination directory %s already "
 "exists and is not empty. As default, WP STAGING uses the site name as "
@@ -3230,94 +2679,404 @@ msgstr ""
 "Der Name der Website ist bereits in Gebrauch, bitte wählen Sie einen anderen "
 "Namen für die Staging-Seite."
 
-#: views/ads/advert-pro-version.php:12
+#: opcacheBootstrap.php:96
+msgid "WP STAGING OPCache"
+msgstr "WP STAGING OPCache"
+
+#: opcacheBootstrap.php:99
+#, php-format
+msgid ""
+"WP STAGING detected that the OPCache was outdated and automatically cleared "
+"the OPCache for the <strong>%s</strong> folder to prevent issues. This "
+"operation took %s seconds."
+msgstr ""
+"WP STAGING hat festgestellt, dass der OPCache veraltet war und hat den "
+"OPCache für den Ordner <strong>%s</strong> automatisch gelöscht, um Probleme "
+"zu vermeiden. Dieser Vorgang dauerte %s Sekunden."
+
+#: runtimeRequirements.php:366
+msgid "WP STAGING Already Active"
+msgstr "WP STAGING Bereits aktiv"
+
+#: runtimeRequirements.php:367
+msgid ""
+"Another WP STAGING is already activated, please leave only one instance of "
+"the WP STAGING plugin active at the same time."
+msgstr ""
+"Ein weiteres WP STAGING ist bereits aktiviert, bitte lassen Sie nur eine "
+"Instanz des WP STAGING Plugins gleichzeitig aktiv."
+
+#: runtimeRequirements.php:387 views/notices/analytics-consent-refused.php:2
+#: views/notices/pro-crons-notice.php:3
+msgid "WP STAGING"
+msgstr "WP STAGING"
+
+#: runtimeRequirements.php:388
+#, php-format
+msgid ""
+"WP STAGING requires at least WordPress %s to run. You have WordPress %s."
+msgstr ""
+"WP STAGING benötigt mindestens WordPress %s zum Ausführen. Sie haben "
+"WordPress %s."
+
+#: views/_main/contact-us-basic.php:13 views/_main/general-error-modal.php:11
+#: views/pro/notices/backup-invalid-files-index.php:19
+msgid "Contact us"
+msgstr "Kontakt"
+
+#: views/_main/contact-us-basic.php:18 views/_main/general-error-modal.php:16
+msgid "Buy the Premium Plugin"
+msgstr "Premium-Plugin kaufen"
+
+#: views/_main/contact-us-basic.php:19 views/_main/general-error-modal.php:17
+msgid "Contact us directly and get priority email support to help you faster."
+msgstr ""
+"Kontaktiere uns direkt und erhalte vorrangigen E-Mail-Support, damit wir dir "
+"schneller helfen können."
+
+#: views/_main/contact-us-basic.php:22 views/_main/contact-us-basic.php:29
+#: views/_main/general-error-modal.php:20
+#: views/_main/general-error-modal.php:27
+msgid "Ask in the forum"
+msgstr "Jetzt im Forum nachfragen"
+
+#: views/_main/contact-us-basic.php:23 views/_main/general-error-modal.php:21
+msgid "Open a support thread and send us the debug information"
+msgstr "Eröffne einen Support-Thread und sende uns die Debug-Informationen"
+
+#: views/_main/contact-us-basic.php:32
+msgid "Send troubleshooting data"
+msgstr "Problembehandlungsdaten senden"
+
+#: views/_main/contact-us-basic.php:33
+msgid ""
+"Send us system information and debug logs before opening a ticket so we can "
+"help investigate."
+msgstr ""
+"Sende uns Systeminformationen und Debug-Protokolle, bevor du ein Ticket "
+"öffnest, damit wir dir bei der Prüfung helfen können."
+
+#: views/_main/contact-us-basic.php:37
+msgid "Force Send Debug Log"
+msgstr "Senden des Debug-Logs erzwingen"
+
+#: views/_main/contact-us-basic.php:41
+msgid ""
+"Use this option if you have already sent a debug log email and want to send "
+"it again within five minutes."
+msgstr ""
+"Verwenden Sie diese Option, wenn Sie bereits eine Debug-Protokoll-E-Mail "
+"gesendet haben und diese innerhalb von fünf Minuten erneut senden möchten."
+
+#: views/_main/contact-us-basic.php:48 views/_main/general-error-modal.php:35
+msgid "Share Debug Logs with WP STAGING & Open Support Forum"
+msgstr "Log-Dateien mit WP Staging Support Team teilen"
+
+#: views/_main/contact-us-basic.php:52 views/_main/general-error-modal.php:39
+msgid "Can not send email. Please contact us in the "
+msgstr "E-Mail kann nicht versendet werden. Bitte kontaktiere uns im "
+
+#: views/_main/contact-us-basic.php:53 views/_main/general-error-modal.php:40
+msgid "Support Forum"
+msgstr "Support-Forum"
+
+#: views/_main/contact-us-basic.php:56 views/_main/general-error-modal.php:43
+msgid "You'll share: Your email, URL,"
+msgstr "Du teilst mit: Deine E-Mail-Adresse, URL,"
+
+#: views/_main/contact-us-basic.php:56 views/_main/general-error-modal.php:43
+msgid " system information, and "
+msgstr " Systeminformationen, und "
+
+#: views/_main/contact-us-basic.php:57 views/_main/general-error-modal.php:44
+msgid "debug logs"
+msgstr "Fehlerprotokolle"
+
+#: views/_main/contact-us-basic.php:59 views/_main/general-error-modal.php:46
+msgid "Your email address will only be used to contact you about your issue."
+msgstr ""
+"Deine E-Mail-Adresse wird nur verwendet, um dich wegen deines Anliegens zu "
+"kontaktieren."
+
+#: views/_main/contact-us-basic.php:63 views/_main/general-error-modal.php:50
+msgid "Open forum"
+msgstr "Forum öffnen"
+
+#: views/_main/contact-us-basic.php:63 views/_main/general-error-modal.php:50
+msgid " without sending the information."
+msgstr " ohne die Informationen zu senden."
+
+#: views/_main/contact-us-pro.php:21
+#, php-format
+msgid "Allow submission of %s."
+msgstr "Übermittlung von %s zulassen."
+
+#: views/_main/contact-us-pro.php:22
+msgid "log files"
+msgstr "Protokolldateien"
+
+#: views/_main/contact-us-pro.php:29
+#, php-format
+msgid "I allow WP STAGING to use my email to reply to my request. %s"
+msgstr ""
+"Ich erlaube WP STAGING, meine E-Mail zur Beantwortung meiner Anfrage zu "
+"verwenden. %s"
+
+#: views/_main/contact-us-pro.php:29
+msgid "Privacy Policy"
+msgstr "Datenschutzerklärung"
+
+#: views/_main/contact-us-pro.php:36
+msgid "Submit"
+msgstr "Abschicken"
+
+#: views/_main/contact-us-pro.php:41 views/notices/backup-plugins-notice.php:26
+msgid "Close"
+msgstr "Schließen"
+
+#: views/_main/contact-us-success.php:8
+msgid "We received the debug info!"
+msgstr "Wir haben die Debug-Informationen erhalten!"
+
+#: views/_main/contact-us-success.php:10
+msgid "Your debug code:"
+msgstr "Dein Debug-Code:"
+
+#: views/_main/contact-us-success.php:14
+msgid "Copy"
+msgstr "Kopieren"
+
+#: views/_main/contact-us-success.php:18
+msgid "Now open a new thread in the"
+msgstr "Eröffne nun einen neuen Thread im"
+
+#: views/_main/contact-us-success.php:20
+msgid "support forum"
+msgstr "Support-Forum"
+
+#: views/_main/contact-us-success.php:21
+msgid ", and share there your debug code."
+msgstr "und teile dort deinen Debug-Code."
+
+#: views/_main/contact-us-success.php:22
+msgid ""
+"Please also provide error messages and details of the issue and don't post "
+"only the debug code."
+msgstr ""
+"Bitte gib auch Fehlermeldungen und Details zum Problem an und poste nicht "
+"nur den Debug-Code."
+
+#: views/_main/contact-us-success.php:23
+msgid "Otherwise forum moderators may remove the topic."
+msgstr "Andernfalls können Forenmoderatoren das Thema entfernen."
+
+#: views/_main/contact-us-success.php:26
+msgid "Open Support Forum"
+msgstr "Support-Forum öffnen"
+
+#: views/_main/contact-us-success.php:28
+msgid "Create an account"
+msgstr "Konto erstellen"
+
+#: views/_main/contact-us.php:15 views/_main/contact-us.php:17
+msgid "Contact Us"
+msgstr "Kontaktiere uns"
+
+#: views/_main/faq.php:7
+msgid "Knowledgebase"
+msgstr "Wissensdatenbank"
+
+#: views/_main/faq.php:9
+msgid "Migrate Website to Another Server or Domain"
+msgstr "Website auf einen anderen Server oder eine andere Domäne migrieren"
+
+#: views/_main/faq.php:10
+msgid "Can not login to staging site"
+msgstr "Fehler bei Anmeldung auf Staging-Seite"
+
+#: views/_main/faq.php:11
+msgid "Staging site redirects to production site"
+msgstr "Staging-Seite leitet zur Produktionssite um"
+
+#: views/_main/faq.php:12
+msgid "Staging site returns blank white page"
+msgstr "Staging-Seite gibt leere weiße Seite zurück"
+
+#: views/_main/faq.php:13
+msgid "CSS & layout looks different after push"
+msgstr "CSS & Layout schaut anders aus nach dem Push"
+
+#: views/_main/faq.php:15
+msgid "Skip WooCommerce Orders and Products"
+msgstr "WooCommerce-Bestellungen und -Produkte überspringen"
+
+#: views/_main/faq.php:16
+msgid "MySQL Query: Delete all WooCommerce Bookings"
+msgstr "MySQL-Abfrage: Alle WooCommerce Buchungen löschen"
+
+#: views/_main/faq.php:17
+msgid "MySQL Query: How to Delete all WooCommerce Orders"
+msgstr "MySQL-Abfrage: Wie man alle WooCommerce-Bestellungen löscht"
+
+#: views/_main/faq.php:18
+msgid "Where Are WooCommerce Products Stored In The WordPress Database?"
+msgstr ""
+"Wo werden die WooCommerce-Produkte in der WordPress-Datenbank gespeichert?"
+
+#: views/_main/faq.php:19
+msgid ""
+"How to Delete All WooCommerce Orders and Client Data on Staging Site | "
+"Delete WooCommerce Transactions"
+msgstr ""
+"Wie man alle WooCommerce-Bestellungen und Kundendaten auf Staging-Seite "
+"löschen | WooCommerce-Transaktionen löschen"
+
+#: views/_main/faq.php:20
+msgid ""
+"How to Disable WooCommerce Action Scheduler / Subscriptions on a Staging Site"
+msgstr ""
+"Wie WooCommerce Aktion Scheduler / Abonnements auf einer Staging-Website "
+"deaktivieren"
+
+#: views/_main/faq.php:22
+msgid "Can not update WP STAGING plugin"
+msgstr "WP-STAGING-Plugin kann nicht aktualisiert werden"
+
+#: views/_main/faq.php:23
+msgid "Page not found – Error 404 after Pushing"
+msgstr "Seite nicht gefunden - Fehler 404 nach Pushing"
+
+#: views/_main/faq.php:24
+msgid "Pagebuilder plugin does not open (Divi, Elementor)"
+msgstr "Pagebuilder-Plugin lässt sich nicht öffnen (Divi, Elementor)"
+
+#: views/_main/faq.php:25
+msgid "WPML, Weglot or Polyglot: Using Language Codes in URLs."
+msgstr "WPML, Weglot oder Polyglot: Verwendung von Sprachcodes in URLs."
+
+#: views/_main/faq.php:26
+msgid "All articles"
+msgstr "Alle Artikel"
+
+#: views/_main/faq.php:29
+msgid "Still questions?"
+msgstr "Noch Fragen?"
+
+#: views/_main/faq.php:30
+#, php-format
+msgid ""
+"Please <a href=\"%s\" target=\"_blank\" rel=\"external nofollow\" class="
+"\"wpstg--blue\">contact us.</a>"
+msgstr ""
+"Bitte <a href=\"%s\" target=\"_blank\" rel=\"external nofollow\" class="
+"\"wpstg--blue\">kontaktieren Sie uns.</a>"
+
+#: views/_main/faq.php:36
+msgid "Find us on:"
+msgstr "Finde uns auf:"
+
+#: views/_main/general-error-modal.php:30
+msgid "Nothing to worry but there is a glitch..."
+msgstr "Kein Grund zur Sorge, aber es gibt eine Panne ..."
+
+#: views/_main/general-error-modal.php:31
+msgid ""
+"This hiccup wasn't in the plan, but we are on it. We'll rectify the problem "
+"for you, for free!"
+msgstr ""
+"Dieses Problem war nicht geplant, aber wir kümmern uns darum. Wir werden es "
+"für dich beheben, kostenlos!"
+
+#: views/_main/general-error-modal.php:32
+msgid "Click the button below to help us fixing it for you!"
+msgstr ""
+"Klicke auf den Button unten, um uns zu helfen, es für dich zu reparieren!"
+
+#: views/_main/main-navigation.php:8 views/navigation/web-template.php:65
+#: views/pro/clone/ajax/push-button.php:34
+msgid "(Unregistered)"
+msgstr "(Unregistriert)"
+
+#: views/ads/advert-pro-version.php:4
 msgid "Backup and Migration - Become a Pro User!"
 msgstr "Backup und Migration - Werde ein Pro-Benutzer!"
 
-#: views/ads/advert-pro-version.php:14
-msgid "Push staging sites to production site."
-msgstr "Kopiere Staging Seiten zur Produktions-Seite."
-
-#: views/ads/advert-pro-version.php:15
+#: views/ads/advert-pro-version.php:6
 msgid ""
-"Disable WooCommerce Background Scheduler to prevent subscription handling on "
-"a staging site."
+"Support for wordpress.com hosted sites (Including backup and migration)."
 msgstr ""
-"Deaktiviere den WooCommerce Action Scheduler auf Staging-Seiten um "
-"Transaktionen nicht auszuführen."
+"Support für auf wordpress.com gehostete Websites (einschließlich Backup und "
+"Migration)."
 
-#: views/ads/advert-pro-version.php:16
-msgid "Create new admin accounts for staging sites."
-msgstr ""
-"Erstellen Sie ein neues Administratorkonto für diese Staging-Seite!Kopiere "
+#: views/ads/advert-pro-version.php:7
+msgid "Create separate admin accounts for cloned sites."
+msgstr "Erstelle separate Admin-Konten für geklonte Websites."
 
-#: views/ads/advert-pro-version.php:17
+#: views/ads/advert-pro-version.php:8
 msgid ""
-"Smart rules to exclude logs, cache files, revisions, unused plugins & themes."
+"Smart rules to exclude logs, cache files, revisions, unused plugins & themes "
+"and more."
 msgstr ""
 "Intelligente Regeln zum Ausschluss von Logs, Cache-Dateien, Revisionen, "
-"nicht verwendeten Plugins, Themes und mehr."
+"nicht verwendeten Plugins und Themes und mehr."
 
-#: views/ads/advert-pro-version.php:18
+#: views/ads/advert-pro-version.php:9
 msgid "Create magic login links to staging sites."
 msgstr "Erstellen Sie magische Login-Links zu Staging-Seiten."
 
-#: views/ads/advert-pro-version.php:19
+#: views/ads/advert-pro-version.php:10
 msgid "Synchronize admin user account between production and staging site."
 msgstr ""
 "Synchronisiere das Admin-Benutzerkonto zwischen der Produktions- und der "
 "Staging-Seite."
 
-#: views/ads/advert-pro-version.php:20
+#: views/ads/advert-pro-version.php:11
 msgid "Unlimited number of scheduled backup plans."
 msgstr "Unbegrenzte Anzahl von geplanten Sicherungsplänen."
 
-#: views/ads/advert-pro-version.php:21
+#: views/ads/advert-pro-version.php:12
 msgid "Restore backups on other websites."
 msgstr "Wiederherstellung von Backups auf anderen Websites."
 
-#: views/ads/advert-pro-version.php:22
+#: views/ads/advert-pro-version.php:13
 msgid "Migrate websites to other hosting providers."
 msgstr "Migrieren Sie Websites zu anderen Hosting-Anbietern."
 
-#: views/ads/advert-pro-version.php:23
+#: views/ads/advert-pro-version.php:14
 msgid "Move websites from one domain to another."
 msgstr "Verschiebe Websites von einer Domain zu einer anderen."
 
-#: views/ads/advert-pro-version.php:24
+#: views/ads/advert-pro-version.php:15
 msgid "Backup and clone entire WordPress Multisites."
 msgstr "Sichere und klone ganze WordPress-Multisites."
 
-#: views/ads/advert-pro-version.php:25
+#: views/ads/advert-pro-version.php:16
 msgid ""
-"Upload backups to cloud providers like Google Drive, Amazon S3, "
+"Automatic backup upload to cloud providers like Google Drive, Amazon S3, "
 "DigitalOcean, SFTP and more."
 msgstr ""
 "Automatischer Backup-Upload zu Cloud-Anbietern wie Google Drive, Amazon S3, "
 "DigitalOcean, SFTP und anderen."
 
-#: views/ads/advert-pro-version.php:26
-msgid "Backup & migration for wordpress.com hosted sites."
-msgstr "Sicherung und Migration für auf wordpress.com gehostete Websites."
+#: views/ads/advert-pro-version.php:17
+msgid "Rewritten for raw backup and cloning performance."
+msgstr "Umgeschrieben für eine höhere Leistung beim Sichern und Klonen."
 
-#: views/ads/advert-pro-version.php:27
-msgid "Outstanding backup and cloning performance."
-msgstr "Hervorragende Leistung beim Sichern und Klonen."
+#: views/ads/advert-pro-version.php:18
+#, no-php-format
+msgid "Fully unit tested (100% code coverage)."
+msgstr "Vollständig unitgetestet (100 % Codeabdeckung)."
 
-#: views/ads/advert-pro-version.php:28
-msgid "100% code coverage through extensive unit and end-to-end testing."
-msgstr "100% Code-Abdeckung durch umfangreiche Unit- und End-to-End-Tests."
+#: views/ads/advert-pro-version.php:19
+msgid "No advertisements."
+msgstr "Keine Werbung."
 
-#: views/ads/advert-pro-version.php:29
-msgid "No ads - Yes, you will not get this upgrade notice in the pro version."
-msgstr ""
-"Keine Werbung - In der Pro-Version gibt es diesen Upgrade-Hinweis nicht."
-
-#: views/ads/advert-pro-version.php:33
+#: views/ads/advert-pro-version.php:21
 msgid "See All Pro Features"
 msgstr "Alle Pro-Funktionen ansehen"
 
 #: views/backup/free-version.php:12
+#, php-format
 msgid ""
 "Get <a href=\"%s\" target=\"_blank\">WP Staging Pro</a> to upload and "
 "restore backups to another server to migrate this website. <a href=\"%s\" "
@@ -3342,7 +3101,7 @@ msgstr ""
 "Website"
 
 #: views/backup/free-version.php:20 views/backup/listing.php:101
-#: views/backup/modal/upload.php:28
+#: views/backup/modal/upload.php:33
 msgid "Upload Backup"
 msgstr "Backup hochladen"
 
@@ -3360,6 +3119,7 @@ msgid "No local Backups found. Create your first Backup above!"
 msgstr "Keine lokalen Backups gefunden. Erstelle dein erstes Backup oben!"
 
 #: views/backup/listing-backups-no-results.php:22
+#, php-format
 msgid ""
 "Please<a href=\"%s\">enter your license key</a> to create and restore your "
 "backup files."
@@ -3387,10 +3147,21 @@ msgstr ""
 "Wiederherstellen und Überschreiben der aktuellen Website entsprechend dem "
 "Inhalt dieser Sicherung."
 
+#: views/backup/listing-single-backup.php:80
+#: views/backup/listing-single-cloud-backup.php:39
+msgid "Restore"
+msgstr "Wiederherstellen"
+
 #: views/backup/listing-single-backup.php:86
 #: views/backup/listing-single-backup.php:92
 msgid "Download backup file to local system"
 msgstr "Sicherungsdatei auf das lokale System herunterladen"
+
+#: views/backup/listing-single-backup.php:87
+#: views/backup/listing-single-backup.php:93
+#: views/backup/listing-single-cloud-backup.php:43
+msgid "Download"
+msgstr "Herunterladen"
 
 #: views/backup/listing-single-backup.php:98
 msgid "Download backup log file"
@@ -3496,6 +3267,7 @@ msgid "This backup exceeds 2GB"
 msgstr "Diese Sicherung überschreitet 2 GB"
 
 #: views/backup/listing-single-backup.php:230
+#, php-format
 msgid ""
 "This server uses a 32-bit version of PHP, which cannot read files larger "
 "than 2GB. %s and therefore the backup file cannot be extracted. To restore "
@@ -3548,6 +3320,7 @@ msgid "Download Now"
 msgstr "Jetzt herunterladen"
 
 #: views/backup/listing.php:87
+#, php-format
 msgid "Get the new standalone tool %s <a href=\"%s\">%s</a>"
 msgstr "Holen Sie sich das neue Standalone-Tool %s <a href=\"%s\">%s</a>"
 
@@ -3703,6 +3476,7 @@ msgid "Backup Database"
 msgstr "Datenbank sichern"
 
 #: views/backup/modal/backup.php:117
+#, php-format
 msgid ""
 "This will backup all database tables starting with the prefix \"%s\". To "
 "backup a staging site, run the backup function again on the staging site"
@@ -3773,6 +3547,7 @@ msgid "One-Time Backup"
 msgstr "Einmalige Sicherung"
 
 #: views/backup/modal/backup.php:219
+#, php-format
 msgid ""
 "%sUpgrade to Pro%s to create unlimited backup plans, change the start time "
 "or upload backups to cloud storage."
@@ -3887,6 +3662,7 @@ msgstr ""
 "ausgeschlossen"
 
 #: views/backup/modal/confirm-restore.php:107
+#, php-format
 msgid ""
 "Note: If you want to keep specific files and don't want them to be replaced, "
 "you can use this <a href=\"%s\" target=\"_blank\">filter</a>"
@@ -3906,9 +3682,46 @@ msgstr ""
 "Laden Sie alle verfügbaren Sicherungskopien herunter oder nur die, die Sie "
 "wiederherstellen oder für später aufbewahren möchten."
 
+#: views/backup/modal/download.php:25
+msgid ""
+"Did you like how easy it was? Please rate us well so others can find and "
+"enjoy WP Staging, too. Thanks a lot!"
+msgstr ""
+"Hat es dir gefallen, wie einfach es war? Bitte bewerte uns gut, damit auch "
+"andere WP Staging finden und verwenden können. Herzlichen Dank!"
+
+#: views/backup/modal/download.php:26
+msgid ""
+"Btw. This asking for a rating is not part of WP Staging Pro to meet the "
+"demands of professional users and provide a cleaner user interface."
+msgstr ""
+"Übrigens: Das Abfragen einer Bewertung ist nicht Teil von WP Staging Pro, um "
+"den Anforderungen professioneller Benutzer gerecht zu werden und eine "
+"sauberere Benutzeroberfläche zu bieten."
+
+#: views/backup/modal/download.php:28
+msgid "Sure, let me rate it"
+msgstr "Ja, jetzt bewerten"
+
+#: views/backup/modal/download.php:30
+msgid "How to log in?"
+msgstr "Wie melde ich mich an?"
+
+#: views/backup/modal/download.php:34
+#, php-format
+msgid ""
+"You need a wordpress.org account for rating WP Staging. That is a different "
+"account than you have on this site. If you haven't made a wordpress.org "
+"account, just %s and then click %s. It's quick - just a minute. Thanks a lot!"
+msgstr ""
+"Sie benötigen ein wordpress.org-Konto, um WP Staging zu bewerten. Das ist "
+"ein anderes Konto als das, das Sie auf dieser Website haben. Wenn Sie noch "
+"kein wordpress.org-Konto haben, klicken Sie einfach auf %s und dann auf %s. "
+"Es geht ganz schnell - nur eine Minute. Herzlichen Dank!"
+
 #: views/backup/modal/edit-schedule-modal.php:11
 #: views/backup/modal/manage-schedules.php:11 views/backup/modal/restore.php:16
-#: views/backup/modal/upload.php:23
+#: views/backup/modal/upload.php:28
 msgid "CANCEL"
 msgstr "ABBRECHEN"
 
@@ -3943,47 +3756,6 @@ msgstr "Andere Dateien in wp-content"
 #: views/backup/modal/partials/backup-contains.php:92
 msgid "Other files in WP root folder"
 msgstr "Andere Dateien im WP-Stammverzeichnis"
-
-#: views/backup/modal/partials/backup-success.php:11
-msgid ""
-"Did you like how easy it was? Please rate us well so others can find and "
-"enjoy WP Staging, too. Thanks a lot!"
-msgstr ""
-"Hat es dir gefallen, wie einfach es war? Bitte bewerte uns gut, damit auch "
-"andere WP Staging finden und verwenden können. Herzlichen Dank!"
-
-#: views/backup/modal/partials/backup-success.php:12
-msgid ""
-"Btw. This asking for a rating is not part of WP Staging Pro to meet the "
-"demands of professional users and provide a cleaner user interface."
-msgstr ""
-"Übrigens: Das Abfragen einer Bewertung ist nicht Teil von WP Staging Pro, um "
-"den Anforderungen professioneller Benutzer gerecht zu werden und eine "
-"sauberere Benutzeroberfläche zu bieten."
-
-#: views/backup/modal/partials/backup-success.php:14
-#: views/backup/modal/partials/backup-success.php:22
-msgid "Sure, let me rate it"
-msgstr "Ja, jetzt bewerten"
-
-#: views/backup/modal/partials/backup-success.php:16
-msgid "How to log in?"
-msgstr "Wie melde ich mich an?"
-
-#: views/backup/modal/partials/backup-success.php:20
-msgid ""
-"You need a wordpress.org account for rating WP Staging. That is a different "
-"account than you have on this site. If you haven't made a wordpress.org "
-"account, just %s and then click %s. It's quick - just a minute. Thanks a lot!"
-msgstr ""
-"Sie benötigen ein wordpress.org-Konto, um WP Staging zu bewerten. Das ist "
-"ein anderes Konto als das, das Sie auf dieser Website haben. Wenn Sie noch "
-"kein wordpress.org-Konto haben, klicken Sie einfach auf %s und dann auf %s. "
-"Es geht ganz schnell - nur eine Minute. Herzlichen Dank!"
-
-#: views/backup/modal/partials/backup-success.php:21
-msgid "register first"
-msgstr "registriere Dich"
 
 #: views/backup/modal/partials/restore-database-search-replace.php:2
 msgid "Database Search and Replace"
@@ -4071,6 +3843,23 @@ msgstr ""
 "Ihre vorhandenen Dateien bei (außer Medien), sofern dieses Verhalten nicht "
 "durch einen Filter geändert wird."
 
+#: views/backup/modal/progress.php:7
+msgid "Cancel"
+msgstr "Abbruch"
+
+#: views/backup/modal/progress.php:10
+msgid "Processing..."
+msgstr "In Bearbeitung …"
+
+#: views/backup/modal/progress.php:13
+msgid "Progress"
+msgstr "Fortschritt"
+
+#: views/backup/modal/progress.php:18
+#, php-format
+msgid "(%s) Critical, (%s) Errors, (%s) Warnings. Show Logs"
+msgstr "(%s) Kritisch, (%s) Fehler, (%s) Warnungen. Protokolle anzeigen"
+
 #: views/backup/modal/remote-upload.php:18
 msgid "Start Upload"
 msgstr "Upload starten"
@@ -4091,7 +3880,7 @@ msgstr "WEITER"
 msgid "Restore Backup"
 msgstr "Backup wiederherstellen"
 
-#: views/backup/modal/upload.php:24
+#: views/backup/modal/upload.php:29
 msgid ""
 "The backup file has been successfully uploaded. You can restore your website "
 "with this backup."
@@ -4099,7 +3888,7 @@ msgstr ""
 "Die Sicherungsdatei wurde erfolgreich hochgeladen. Sie können Ihre Website "
 "mit dieser Sicherung wiederherstellen."
 
-#: views/backup/modal/upload.php:32
+#: views/backup/modal/upload.php:37
 msgid ""
 "Upload a WP STAGING backup file (*.wpstg) and use it to restore your website "
 "at any time. This backup may have been created from this website or from "
@@ -4110,56 +3899,59 @@ msgstr ""
 "Website oder von einer anderen Website erstellt worden sein. Sie können eine "
 "Website auf diese Weise verschieben."
 
-#: views/backup/modal/upload.php:34
+#: views/backup/modal/upload.php:39
 msgid "Videos:"
 msgstr "Videos:"
 
-#: views/backup/modal/upload.php:37
+#: views/backup/modal/upload.php:42
+#, php-format
 msgid "&#8226; <a href=\"%s\" target=\"_blank\">How to backup WordPress</a>"
 msgstr ""
 "&#8226; <a href=\"%s\" target=\"_blank\">Wie erstelle ich ein WordPress "
 "backup</a>"
 
-#: views/backup/modal/upload.php:42
+#: views/backup/modal/upload.php:47
+#, php-format
 msgid "&#8226; <a href=\"%s\" target=\"_blank\">How to migrate WordPress</a>"
 msgstr ""
 "&#8226; <a href=\"%s\" target=\"_blank\">Wie ziehe ich WordPress um</a>"
 
-#: views/backup/modal/upload.php:71
+#: views/backup/modal/upload.php:76
 msgid ""
 "Drop the backup file here to upload or <br><a>select from your computer</a>"
 msgstr ""
 "Legen Sie die Sicherungsdatei hier ab, um sie hochzuladen, <br>oder<a>wählen "
 "Sie von Ihrem Computer aus.</a>"
 
-#: views/backup/modal/upload.php:79
+#: views/backup/modal/upload.php:84
 msgid "Or upload a backup file from a URL:"
 msgstr "Oder lade eine Backup-Datei von einer URL hoch:"
 
-#: views/backup/modal/upload.php:81
+#: views/backup/modal/upload.php:86
 msgid "Get the link from Backup &#10132; Actions &#10132; Copy Backup Url."
 msgstr ""
 "Holen Sie sich den Link von Backup &#10132; Actions &#10132; Copy Backup Url."
 
-#: views/backup/modal/upload.php:84
+#: views/backup/modal/upload.php:89
 msgid "Or upload a backup file via FTP to:"
 msgstr "Oder laden Sie eine Sicherungsdatei per FTP hoch zu:"
 
-#: views/backup/modal/upload.php:89
+#: views/backup/modal/upload.php:94
+#, php-format
 msgid "%s this page after uploading via FTP!"
 msgstr "%s diese Seite nach dem Hochladen per FTP!"
 
-#: views/backup/modal/upload.php:90
+#: views/backup/modal/upload.php:95
 msgid "Reload"
 msgstr "Neu laden"
 
-#: views/backup/modal/upload.php:99
+#: views/backup/modal/upload.php:104
 msgid "Discovering optimal upload speed... This may take a while..."
 msgstr ""
 "Ermitteln der optimalen Upload-Geschwindigkeit... Das kann eine Weile "
 "dauern..."
 
-#: views/backup/modal/upload.php:102
+#: views/backup/modal/upload.php:107
 msgid "If you close this window the upload will be aborted."
 msgstr "Wenn Sie dieses Fenster schließen, wird das Hochladen abgebrochen."
 
@@ -4229,6 +4021,7 @@ msgstr ""
 "anderen Hostnamen verwenden."
 
 #: views/clone/ajax/custom-directory.php:69
+#, php-format
 msgid ""
 "<strong>Destination Path:</strong> An absolute path like <code>/www/"
 "public_html/dev</code>. File permissions should be 755 and it must be "
@@ -4272,6 +4065,7 @@ msgid "Symlink Uploads Folder"
 msgstr "Symlink Uploads-Ordner"
 
 #: views/clone/ajax/custom-directory.php:115
+#, php-format
 msgid ""
 "Activate to symlink the folder %s%s%s to the production site. %s All files "
 "including images on the production site's uploads folder will be linked to "
@@ -4301,30 +4095,36 @@ msgstr ""
 "Diese Funktion funktioniert nur, wenn sich die Staging-Seite in derselben "
 "Domäne befindet wie die Produktionssite."
 
-#: views/clone/ajax/delete-confirmation.php:20
+#: views/clone/ajax/delete-confirmation.php:21
 msgid "Database Name:"
 msgstr "Datenbankname:"
 
-#: views/clone/ajax/delete-confirmation.php:26
+#: views/clone/ajax/delete-confirmation.php:27
 msgid "Selected database tables will be deleted:"
 msgstr "Die ausgewählten Datenbanktabellen werden gelöscht:"
 
-#: views/clone/ajax/delete-confirmation.php:49
+#: views/clone/ajax/delete-confirmation.php:32 views/pro/scan.php:51
+#: views/pro/scan.php:77 views/selections/database-tables.php:25
+#: views/selections/database-tables.php:45 views/selections/files.php:22
+msgid "Unselect All"
+msgstr "Alle abwählen"
+
+#: views/clone/ajax/delete-confirmation.php:50
 #: views/clone/ajax/exclude-settings.php:30 views/clone/ajax/scan.php:65
 #: views/pro/clone/ajax/scan.php:80
 msgid "Files"
 msgstr "Dateien"
 
-#: views/clone/ajax/delete-confirmation.php:52
+#: views/clone/ajax/delete-confirmation.php:53
 msgid "Selected folder and the contained files are deleted:"
 msgstr ""
 "Der ausgewählte Ordner und die darin enthaltenen Dateien werden gelöscht:"
 
-#: views/clone/ajax/delete-confirmation.php:68
+#: views/clone/ajax/delete-confirmation.php:69
 msgid "Error: Can not connect to database! "
 msgstr "Fehler: Keine Verbindung zur Datenbank möglich! "
 
-#: views/clone/ajax/delete-confirmation.php:71
+#: views/clone/ajax/delete-confirmation.php:72
 msgid ""
 "This can happen if the password of the database changed or if the staging "
 "site database or tables were deleted"
@@ -4332,7 +4132,7 @@ msgstr ""
 "Dies kann passieren, wenn sich das Kennwort der Datenbank geändert hat oder "
 "wenn die Datenbank oder die Tabellen der Staging-Seite gelöscht wurden."
 
-#: views/clone/ajax/delete-confirmation.php:72
+#: views/clone/ajax/delete-confirmation.php:73
 msgid ""
 "You can still delete this staging site but deleting will not delete any "
 "database table. You will have to delete them manually if they exist."
@@ -4362,7 +4162,7 @@ msgstr ""
 "Sie können sie anpassen und überprüfen, bevor Sie die Rücksetzung starten."
 
 #: views/clone/ajax/exclude-settings.php:20 views/clone/ajax/scan.php:55
-#: views/pro/clone/ajax/scan.php:70 views/pro/scan.php:26
+#: views/pro/clone/ajax/scan.php:70 views/pro/scan.php:27
 msgid "Database Tables"
 msgstr "Datenbank Tabellen"
 
@@ -4426,7 +4226,7 @@ msgstr "Neues Admin-Konto"
 
 #: views/clone/ajax/login-data.php:34
 msgid "Create a new admin user account for this staging site!"
-msgstr "Erstelle automatisch neue Administrator-Konten für Staging-Seiten!"
+msgstr "Erstellen Sie ein neues Administratorkonto für diese Staging-Seite!"
 
 #: views/clone/ajax/login-data.php:36
 msgid "If the account already exists, the password will be updated."
@@ -4456,6 +4256,7 @@ msgid "Note"
 msgstr "Hinweis"
 
 #: views/clone/ajax/mail-setting.php:50
+#, php-format
 msgid ""
 "Even if email sending is disabled, some plugins might still be able to send "
 "out mails if they don't depend upon %s."
@@ -4465,7 +4266,7 @@ msgstr ""
 
 #: views/clone/ajax/process-lock.php:5 views/clone/ajax/scan.php:134
 #: views/pro/clone/ajax/scan.php:152 views/pro/edit-clone-data.php:127
-#: views/pro/generate-login-ui.php:130 views/pro/scan.php:179
+#: views/pro/generate-login-ui.php:130 views/pro/scan.php:180
 msgid "Back"
 msgstr "Zurück"
 
@@ -4484,7 +4285,7 @@ msgstr ""
 "unten eine gültige E-Mail-Adresse und ein Passwort ein, um ein neues Konto "
 "auf der Staging-Seite zu erstellen."
 
-#: views/clone/ajax/scan.php:40 views/pro/clone/ajax/scan.php:48
+#: views/clone/ajax/scan.php:41 views/pro/clone/ajax/scan.php:49
 msgid ""
 "<br>Probably not enough free disk space to create a staging site. <br> You "
 "can continue but its likely that the copying process will fail."
@@ -4548,27 +4349,27 @@ msgstr "Klon aktualisieren"
 msgid "Check required disk space"
 msgstr "Kontolliere den benötigten Speicherplatz"
 
-#: views/clone/ajax/single-overview.php:20
+#: views/clone/ajax/single-overview.php:21
 msgid "Create Staging Site"
 msgstr "Staging-Seite erstellen"
 
-#: views/clone/ajax/single-overview.php:28
+#: views/clone/ajax/single-overview.php:29
 msgid "Your Staging Sites:"
 msgstr "Deine Staging Seiten"
 
-#: views/clone/ajax/single-overview.php:39
+#: views/clone/ajax/single-overview.php:40
 msgid "Network Site"
 msgstr "Netzwerk-Site"
 
-#: views/clone/ajax/single-overview.php:52
+#: views/clone/ajax/single-overview.php:53
 msgid "Open the staging site in a new tab"
 msgstr "Staging-Website in einem neuen Tab öffnen"
 
-#: views/clone/ajax/single-overview.php:53
+#: views/clone/ajax/single-overview.php:54
 msgid "Open"
 msgstr "Öffnen"
 
-#: views/clone/ajax/single-overview.php:55
+#: views/clone/ajax/single-overview.php:56
 msgid ""
 "Update and overwrite the selected staging site with the production site. You "
 "can select files and database tables on the next page. This action will not "
@@ -4579,7 +4380,11 @@ msgstr ""
 "nächsten Seite auswählen. Diese Aktion wird die wp-config.php auf der "
 "Staging-Seite weder ersetzen noch verändern!"
 
-#: views/clone/ajax/single-overview.php:58
+#: views/clone/ajax/single-overview.php:57
+msgid "Update"
+msgstr "Aktualisieren"
+
+#: views/clone/ajax/single-overview.php:59
 msgid ""
 "Replace the selected staging site with the production site completely. This "
 "includes replacing the wp-config.php and all files and data. Confirm to "
@@ -4589,11 +4394,11 @@ msgstr ""
 "Seite. Dies beinhaltet das Ersetzen der wp-config.php und aller Dateien und "
 "Daten. Bestätigen Sie den Vorgang auf der nächsten Seite."
 
-#: views/clone/ajax/single-overview.php:59
+#: views/clone/ajax/single-overview.php:60
 msgid "Reset"
 msgstr "Zurücksetzen"
 
-#: views/clone/ajax/single-overview.php:61
+#: views/clone/ajax/single-overview.php:62
 msgid ""
 "Delete the selected staging site. Select specific folders and database "
 "tables in the next step."
@@ -4601,32 +4406,32 @@ msgstr ""
 "Löschen Sie die ausgewählte Staging-Seite. Wählen Sie im nächsten Schritt "
 "bestimmte Ordner und Datenbanktabellen aus."
 
-#: views/clone/ajax/single-overview.php:68
 #: views/clone/ajax/single-overview.php:69
+#: views/clone/ajax/single-overview.php:70
 #: views/pro/clone/ajax/edit-clone.php:12
 msgid "Edit Data"
 msgstr "Daten bearbeiten"
 
-#: views/clone/ajax/single-overview.php:72
 #: views/clone/ajax/single-overview.php:73
+#: views/clone/ajax/single-overview.php:74
 #: views/pro/clone/ajax/push-button.php:27
-#: views/pro/clone/ajax/push-button.php:33 views/welcome/welcome.php:19
+#: views/pro/clone/ajax/push-button.php:33
 msgid "Push Changes"
 msgstr "Seite Übertragen (Pushen)"
 
-#: views/clone/ajax/single-overview.php:76
 #: views/clone/ajax/single-overview.php:77
+#: views/clone/ajax/single-overview.php:78
 #: views/pro/clone/ajax/generate-login.php:12
 msgid "Share Login Link"
 msgstr "Anmelde-Link teilen"
 
-#: views/clone/ajax/single-overview.php:80
 #: views/clone/ajax/single-overview.php:81
+#: views/clone/ajax/single-overview.php:82
 #: views/pro/clone/ajax/sync-button.php:24
 msgid "Sync User Account"
 msgstr "Benutzerkonto synchronisieren"
 
-#: views/clone/ajax/single-overview.php:104
+#: views/clone/ajax/single-overview.php:105
 msgid ""
 "This clone is incomplete and does not work. Clone or update it again! \n"
 "\n"
@@ -4659,7 +4464,8 @@ msgstr ""
 "Staging-Seite nicht wieder zerstört, und Sie können den letzten Vorgang "
 "wiederholen und fortsetzen."
 
-#: views/clone/ajax/single-overview.php:113
+#: views/clone/ajax/single-overview.php:114
+#, php-format
 msgid ""
 "Status: <span class=\"wpstg-staging-status wpstg-bold\" title=\"%s\">%s</"
 "span>"
@@ -4667,52 +4473,63 @@ msgstr ""
 "Status: <span class=\"wpstg-staging-status wpstg-bold\" title=\"%s\">%s</"
 "span>"
 
-#: views/clone/ajax/single-overview.php:123
+#: views/clone/ajax/single-overview.php:124
+#, php-format
 msgid "Database: <span class=\"wpstg-bold\">%s</span>"
 msgstr "Datenbank: <span class=\"wpstg-bold\">%s</span>"
 
-#: views/clone/ajax/single-overview.php:128
+#: views/clone/ajax/single-overview.php:129
+#, php-format
 msgid "Database Prefix: <span class=\"wpstg-bold\">%s</span>"
 msgstr "Datenbank-Präfix: <span class=\"wpstg-bold\">%s</span>"
 
-#: views/clone/ajax/single-overview.php:133
+#: views/clone/ajax/single-overview.php:134
+#, php-format
 msgid "Directory: <span class=\"wpstg-bold\">%s</span>"
 msgstr "Verzeichnis: <span class=\"wpstg-bold\">%s</span>"
 
-#: views/clone/ajax/single-overview.php:138
+#: views/clone/ajax/single-overview.php:139
+#, php-format
 msgid "URL: <span class=\"wpstg-bold\">%s</span>"
 msgstr "URL: <span class=\"wpstg-bold\">%s</span>"
 
-#: views/clone/ajax/single-overview.php:143
+#: views/clone/ajax/single-overview.php:144
+#, php-format
 msgid "Created By: <span class=\"wpstg-bold\">%s</span>"
 msgstr "Erstellt von: <span class=\"wpstg-bold\">%s</span>"
 
-#: views/clone/ajax/single-overview.php:150
+#: views/clone/ajax/single-overview.php:151
+#, php-format
 msgid "Updated: <span>%s</span>"
 msgstr "Aktualisiert: <span>%s</span>"
 
-#: views/clone/ajax/single-overview.php:164
+#: views/clone/ajax/single-overview.php:165
 msgid "How to:"
 msgstr "So geht's:"
 
-#: views/clone/ajax/single-overview.php:164
+#: views/clone/ajax/single-overview.php:165
 msgid "Push staging site to production"
 msgstr "Staging-Seite in die Produktion überführen"
 
-#: views/clone/ajax/single-overview.php:173
+#: views/clone/ajax/single-overview.php:174
 msgid "No Staging Site found. Create your first Staging Site above!"
 msgstr ""
 "Keine Staging-Seite gefunden. Erstellen Sie oben Ihre erste Staging-Seite!"
 
-#: views/clone/ajax/start.php:17
+#: views/clone/ajax/start.php:18
 msgid "Resume"
 msgstr "Zusammenfassung"
 
-#: views/clone/ajax/start.php:21
+#: views/clone/ajax/start.php:22
 msgid "Display working log"
 msgstr "Öffne Log Fenster"
 
-#: views/clone/ajax/start.php:35
+#: views/clone/ajax/start.php:30
+msgid "Congratulations"
+msgstr "Glückwunsch"
+
+#: views/clone/ajax/start.php:36
+#, php-format
 msgid ""
 "Successfully created a staging site in a subdirectory of your main site! You "
 "can access it from there:<br><strong><a href=\"%1$s\" target=\"_blank\" id="
@@ -4722,30 +4539,31 @@ msgstr ""
 "<br><strong><a href=\"%1$s\" target=\"_blank\" id=\"wpstg-clone-url-1\">"
 "%1$s</a></strong>"
 
-#: views/clone/ajax/start.php:43
+#: views/clone/ajax/start.php:44
 msgid "BACK"
 msgstr "ZURÜCK"
 
-#: views/clone/ajax/start.php:46
+#: views/clone/ajax/start.php:47
 msgid "Open Staging Site"
 msgstr "Staging-Seite öffnen"
 
-#: views/clone/ajax/start.php:50
+#: views/clone/ajax/start.php:51
 msgid "Please Read This First:"
 msgstr "Bitte lies dies zuerst:"
 
-#: views/clone/ajax/start.php:54
+#: views/clone/ajax/start.php:55
+#, php-format
 msgid ""
 "1. Post name permalinks on the %s have been disabled for technical reasons. "
 msgstr ""
 "1. Die Permalinks auf den %s-Postnamen wurden aus technischen Gründen "
 "deaktiviert. "
 
-#: views/clone/ajax/start.php:54
+#: views/clone/ajax/start.php:55
 msgid "staging site"
 msgstr "Staging Seite"
 
-#: views/clone/ajax/start.php:56
+#: views/clone/ajax/start.php:57
 msgid ""
 "Usually this will not affect the staging website and you do not need to "
 "activate permalinks."
@@ -4753,7 +4571,7 @@ msgstr ""
 "Normalerweise wirkt sich dies nicht auf die Staging-Website aus, und Sie "
 "müssen keine Permalinks aktivieren."
 
-#: views/clone/ajax/start.php:59
+#: views/clone/ajax/start.php:60
 msgid ""
 "If you still want to activate them and the webserver is Apache there is a "
 "good chance that permalinks can be activated without further modifications. "
@@ -4763,7 +4581,7 @@ msgstr ""
 "Wahrscheinlichkeit groß, dass Permalinks ohne weitere Änderungen aktiviert "
 "werden können. Versuchen Sie, sie zu aktivieren auf"
 
-#: views/clone/ajax/start.php:63
+#: views/clone/ajax/start.php:64
 msgid ""
 "If this does not work or another web server like Nginx is used, a few simple "
 "changes in the .htaccess (Apache) or *.conf (Nginx) configuration files may "
@@ -4773,7 +4591,8 @@ msgstr ""
 "wird, sind möglicherweise ein paar einfache Änderungen in den "
 "Konfigurationsdateien .htaccess (Apache) oder *.conf (Nginx) erforderlich."
 
-#: views/clone/ajax/start.php:65
+#: views/clone/ajax/start.php:66
+#, php-format
 msgid ""
 "<a href=\"%s\" target=\"_blank\">Open this tutorial</a> to read more about "
 "this."
@@ -4781,7 +4600,7 @@ msgstr ""
 "<a href=\"%s\" target=\"_blank\">Öffnen Sie dieses Tutorial</a>, um mehr "
 "darüber zu erfahren."
 
-#: views/clone/ajax/start.php:71
+#: views/clone/ajax/start.php:72
 msgid ""
 "2. Always make sure that you are REALLY working on your staging site and NOT "
 "on your production site!"
@@ -4789,7 +4608,7 @@ msgstr ""
 "2. Vergewissern Sie sich immer, dass Sie WIRKLICH auf Ihrer Staging-Seite "
 "und NICHT auf Ihrer Produktions-Seite arbeiten!"
 
-#: views/clone/ajax/start.php:74
+#: views/clone/ajax/start.php:75
 msgid ""
 "For better distinction WP STAGING has changed the background color of the "
 "admin bar on the staging site:"
@@ -4797,15 +4616,17 @@ msgstr ""
 "Zur besseren Unterscheidung hat WP STAGING die Hintergrundfarbe der Admin-"
 "Leiste auf der Staging-Seite geändert:"
 
-#: views/clone/ajax/start.php:78
+#: views/clone/ajax/start.php:79
 msgid "On the front page the site name also changed to"
 msgstr "Auf der Titelseite wurde der Name der Website ebenfalls geändert in"
 
-#: views/clone/index.php:69
+#: views/clone/index.php:63
+#, php-format
 msgid "New: WP Staging Pro v. %s is available."
 msgstr "Neu: WP Staging Pro v. %s ist verfügbar."
 
-#: views/clone/index.php:70
+#: views/clone/index.php:64
+#, php-format
 msgid ""
 "Important: It's recommended to update the plugin before pushing a staging "
 "site to the live site. <a href=\"%s\" target=\"_blank\">What's New?</a>"
@@ -4814,7 +4635,8 @@ msgstr ""
 "Seite auf die Live-Seite übertragen wird. <a href=\"%s\" target=\"_blank"
 "\">Was ist neu?</a>"
 
-#: views/clone/index.php:109
+#: views/clone/index.php:103
+#, php-format
 msgid ""
 "Note: You can upload backup files to another site to transfer a website. <a "
 "href=\"%s\" target=\"_blank\">Read more</a>"
@@ -4823,6 +4645,7 @@ msgstr ""
 "eine Website zu übertragen. <a href=\"%s\" target=\"_blank\">Mehr lesen</a>"
 
 #: views/clone/multi-site/index.php:8
+#, php-format
 msgid ""
 "WordPress Multisite is not supported in the WP Staging free version! Please "
 "upgrade to <a href=\"%s\" target=\"_blank\">WP Staging Pro</a>"
@@ -4837,6 +4660,7 @@ msgstr ""
 "Wenn Sie diese Staging-Seite auf die Produktionssite übertragen möchten,"
 
 #: views/clone/staging-site/index.php:16
+#, php-format
 msgid ""
 "<a href='%s' target='_new'>Open WP STAGING on Live Site</a> and start the "
 "push process from there."
@@ -4853,6 +4677,7 @@ msgid "Enable cloning of this site"
 msgstr "Aktiviere das Klonen dieser Website"
 
 #: views/clone/staging-site/index.php:28
+#, php-format
 msgid ""
 "<a href='%s' target='_new'>Read this article</a> if you would like to know "
 "more about cloning a staging site."
@@ -4861,6 +4686,7 @@ msgstr ""
 "das Klonen einer Staging-Seite erfahren möchten."
 
 #: views/clone/wordpress-com/index.php:14
+#, php-format
 msgid ""
 "WP Staging can not create staging sites on WordPress.com hosted websites! "
 "Instead you can use %s to create a backup of this website. Then use %s to "
@@ -4881,7 +4707,13 @@ msgstr "Backup &amp; Migration"
 msgid "WP Staging Pro"
 msgstr "WP Staging Pro"
 
+#: views/clone/wordpress-com/index.php:17 views/notices/analytics-modal.php:28
+#: views/notices/free-backup-update-notice.php:15
+msgid "Read More"
+msgstr "Mehr erfahren"
+
 #: views/clone/wordpress-com/index.php:19
+#, php-format
 msgid ""
 "Optionally, you can use the built-in WordPress.com %s if you have a Creator "
 "or Entrepreneur plan."
@@ -4921,6 +4753,7 @@ msgid "CONTAINS"
 msgstr "ENTHÄLT"
 
 #: views/exclude-filters/dir-name-exclude-filter.php:28
+#, php-format
 msgid ""
 "Exclude folders by name. For example to exclude all folder with name "
 "node_modules, select %s and type %s in the input box."
@@ -4935,6 +4768,7 @@ msgid "File Extension"
 msgstr "Dateierweiterung"
 
 #: views/exclude-filters/file-ext-exclude-filter.php:21
+#, php-format
 msgid ""
 "Exclude files by extension. For example to exclude zip files, type %s to "
 "exclude all zip files."
@@ -4948,6 +4782,7 @@ msgid "File Name"
 msgstr "Dateiname"
 
 #: views/exclude-filters/file-name-exclude-filter.php:28
+#, php-format
 msgid ""
 "Exclude files by name. For example to exclude all files which have %s at the "
 "end of the name, select %s and type %s in the input box."
@@ -4955,6 +4790,11 @@ msgstr ""
 "Schließen Sie Dateien nach Namen aus. Um z. B. alle Dateien auszuschließen, "
 "die %s am Ende des Namens haben, wählen Sie %s und geben Sie %s in das "
 "Eingabefeld ein."
+
+#: views/exclude-filters/file-size-exclude-filter.php:15
+#: views/selections/files.php:52
+msgid "File Size"
+msgstr "Dateigröße"
 
 #: views/exclude-filters/file-size-exclude-filter.php:18
 msgid "LESS THAN"
@@ -4970,6 +4810,7 @@ msgid "EXACT"
 msgstr "EXAKT"
 
 #: views/exclude-filters/file-size-exclude-filter.php:33
+#, php-format
 msgid ""
 "Exclude files by size. For example to exclude files greater than 10 MB, "
 "select %s and type %s in next input box and select %s."
@@ -5030,6 +4871,7 @@ msgid "Skip & Deactivate"
 msgstr "Überspringen und deaktivieren"
 
 #: views/feedback/deactivate-feedback.php:106
+#, php-format
 msgid "Our %s"
 msgstr "Unsere %s"
 
@@ -5075,6 +4917,7 @@ msgstr ""
 "Passwort zurücksetzen, um ein neues zu erhalten!"
 
 #: views/frontend/loginAfterRestore.php:64
+#, php-format
 msgid "Read this %s to find out how to reset the password."
 msgstr ""
 "Lies diesen %s, um herauszufinden, wie du das Passwort zurücksetzen kannst."
@@ -5088,6 +4931,7 @@ msgid "Login"
 msgstr "Anmeldung"
 
 #: views/frontend/loginForm.php:45
+#, php-format
 msgid "If login is not possible, please use the %s."
 msgstr "Wenn eine Anmeldung nicht möglich ist, verwende bitte das %s."
 
@@ -5096,6 +4940,7 @@ msgid "default login form"
 msgstr "Standard-Anmeldeformular"
 
 #: views/frontend/loginForm.php:55
+#, php-format
 msgid ""
 "Login not possible! it might happen due to using a security plugin, having "
 "OTP or 2FA authentication active, Please use the %s instead."
@@ -5108,64 +4953,56 @@ msgstr ""
 msgid "Lost your password?"
 msgstr "Passwort vergessen?"
 
-#: views/job/modal/process.php:4
-msgid "Processing..."
-msgstr "In Bearbeitung …"
-
-#: views/job/modal/process.php:12
-msgid "(%s) Critical, (%s) Errors, (%s) Warnings. Show Logs"
-msgstr "(%s) Kritisch, (%s) Fehler, (%s) Warnungen. Protokolle anzeigen"
-
-#: views/logs/logs-template.php:15
+#: views/logs/logs-template.php:14
 msgid "All"
 msgstr "Alle"
 
-#: views/logs/logs-template.php:16
+#: views/logs/logs-template.php:15
 msgid "Info"
 msgstr "Info"
 
-#: views/logs/logs-template.php:17
+#: views/logs/logs-template.php:16
 msgid "Debug"
 msgstr "Debuggen"
 
-#: views/logs/logs-template.php:18
+#: views/logs/logs-template.php:17
 msgid "Warning"
 msgstr "Warnung"
 
-#: views/logs/logs-template.php:20
+#: views/logs/logs-template.php:19
 msgid "Critical"
 msgstr "Kritisch"
 
-#: views/logs/logs-template.php:25
+#: views/logs/logs-template.php:24
 msgid "Critical:"
 msgstr "Kritisch:"
 
-#: views/logs/logs-template.php:29
+#: views/logs/logs-template.php:28
 msgid "Error:"
 msgstr "Fehler:"
 
-#: views/logs/logs-template.php:33 views/notices/no-db-prefix-notice.php:3
+#: views/logs/logs-template.php:32 views/notices/no-db-prefix-notice.php:3
 #: views/notices/wpe-permalink-issue-notice.php:3
 msgid "Warning:"
 msgstr "Warnung:"
 
-#: views/logs/logs-template.php:37
+#: views/logs/logs-template.php:36
 msgid "Debug:"
 msgstr "Debug:"
 
-#: views/logs/logs-template.php:41
+#: views/logs/logs-template.php:40
 msgid "Info:"
 msgstr "Info:"
 
-#: views/logs/logs-template.php:51
+#: views/logs/logs-template.php:50
 msgid "Level"
 msgstr "Level"
 
-#: views/logs/logs-template.php:52
+#: views/logs/logs-template.php:51
 msgid "Time"
 msgstr "Zeit"
 
-#: views/logs/logs-template.php:53
+#: views/logs/logs-template.php:52
 msgid "Description"
 msgstr "Beschreibung"
 
@@ -5173,10 +5010,10 @@ msgstr "Beschreibung"
 msgid "Upgrade to Pro"
 msgstr "Upgrade auf Pro"
 
-#: views/navigation/web-template.php:65 views/pro/clone/ajax/push-button.php:34
-#: views/_main/main-navigation.php:8
-msgid "(Unregistered)"
-msgstr "(Unregistriert)"
+#: views/notices/_partial/notice_dismiss_action.php:11
+#: views/notices/_partial/notice_dismiss_action.php:13
+msgid "Close this message"
+msgstr "Diese Nachricht schließen"
 
 #: views/notices/aios-salt-postfix-enabled.php:10
 msgid "WP STAGING: All-In-One Security (AIOS) Salt Prefix Enabled"
@@ -5220,6 +5057,7 @@ msgstr ""
 
 #. translators: URL to edit WPSTAGING settings.
 #: views/notices/analytics-consent-refused.php:7
+#, php-format
 msgid ""
 "WP STAGING will not send diagnostic usage information. If you want an "
 "improved technical support experience, you can always re-enable this on the "
@@ -5243,6 +5081,7 @@ msgid "Want to Improve WP STAGING?"
 msgstr "Möchtest du WP STAGING verbessern?"
 
 #: views/notices/analytics-consent.php:9
+#, no-php-format
 msgid ""
 "Do you allow us sending some non-personal usage information to wp-staging."
 "com? All data will be sent 100% encrypted. You can always disable this in "
@@ -5273,6 +5112,7 @@ msgid "Ask me later"
 msgstr "Später nachfragen"
 
 #: views/notices/analytics-consent.php:17 views/settings/tabs/general.php:361
+#, php-format
 msgid "See the data we collect <a href=\"%s\" target=\"_blank\">here</a>"
 msgstr ""
 "Sehen Sie sich die von uns gesammelten Daten <a href=\"%s\" target=\"_blank"
@@ -5422,6 +5262,7 @@ msgstr "WP STAGING - Ordnerberechtigungs-Fehler."
 #: views/notices/cache-directory-permission-problem.php:10
 #: views/notices/logs-directory-permission-problem.php:10
 #: views/notices/vars-directory-permission-problem.php:10
+#, php-format
 msgid "The folder %s is not write and/or readable."
 msgstr "Der Ordner %s ist nicht beschreib- und/oder lesbar."
 
@@ -5453,6 +5294,7 @@ msgstr ""
 "der Verzeichnisse nicht verhindern konnten."
 
 #: views/notices/disabled-items-notice.php:18
+#, php-format
 msgid ""
 "Post name permalinks are disabled. <a href=\"%s\" target=\"_blank\">How to "
 "activate permalinks</a>"
@@ -5470,6 +5312,7 @@ msgstr ""
 "um die .htaccess zu erstellen, damit Permalinks funktionieren!"
 
 #: views/notices/disabled-items-notice.php:22
+#, php-format
 msgid ""
 "Permalinks are active but may not work. Please <a href=\"%s\" target=\"_blank"
 "\">read this article</a> to find out how to make them work."
@@ -5483,6 +5326,7 @@ msgid "WP STAGING - Notes:"
 msgstr "WP STAGING - Anmerkungen:"
 
 #: views/notices/disabled-items-notice.php:29
+#, php-format
 msgid ""
 "WP STAGING Disabled the cache by setting the constant <code>WP_CACHE</code> "
 "to <code>FALSE</code>in the file <code>wp-config.php</code>. <a href=\"%s\" "
@@ -5494,6 +5338,7 @@ msgstr ""
 "machen</a>"
 
 #: views/notices/disabled-items-notice.php:34
+#, php-format
 msgid ""
 "Disabled outgoing emails. <a href=\"%s\" target=\"_blank\">How to activate "
 "email sending</a>"
@@ -5535,6 +5380,7 @@ msgstr ""
 "ausgeschlossen und nicht auf die Staging-Seite kopiert:"
 
 #: views/notices/disabled-items-notice.php:67
+#, php-format
 msgid ""
 "You can use <a href=\"%s\" target=\"_blank\" rel=\"external nofollow\">this "
 "filter</a> to change this."
@@ -5606,6 +5452,7 @@ msgid "All this without any backup size limitation!"
 msgstr "Und das alles ohne Begrenzung der Backup-Größe!"
 
 #: views/notices/low-memory-limit.php:2
+#, php-format
 msgid ""
 "It's recommended to increase the memory limit to 256M or more! If cloning/"
 "pushing <strong>fails</strong> <a href=\"%s\" target=\"_blank\">increase the "
@@ -5616,6 +5463,7 @@ msgstr ""
 "Speicherlimit</a>."
 
 #: views/notices/mu-plugin-directory-permission-problem.php:14
+#, php-format
 msgid "The folder %s is not writable and/or readable."
 msgstr "Der Ordner %s ist nicht beschreibbar und/oder lesbar."
 
@@ -5636,6 +5484,7 @@ msgstr ""
 "Datenbanktabellen-Präfix hat. Zum Fortfahren bitte"
 
 #: views/notices/no-db-prefix-notice.php:5
+#, php-format
 msgid "<a href=\"%s\" target=\"_blank\">fix it first.</a>"
 msgstr "<a href=\"%s\" target=\"_blank\">dies erst beheben.</a>"
 
@@ -5670,6 +5519,7 @@ msgid "WP STAGING - Hooks Outdated."
 msgstr "WP STAGING - Hooks veraltet."
 
 #: views/notices/outdated-wp-staging-hooks.php:10
+#, php-format
 msgid ""
 "You are using an outdated version of the WP STAGING hooks plugin. The "
 "filters for <code>wpstg_clone_excl_folders</code> and "
@@ -5688,6 +5538,7 @@ msgid "WP STAGING - Version Outdated."
 msgstr "WP STAGING - Version veraltet."
 
 #: views/notices/outdated-wp-staging-version.php:15
+#, php-format
 msgid ""
 "WP STAGING v%s is outdated. Please <a href=\"%s\">update</a> to latest "
 "version %s to make sure the plugin works with your WordPress version."
@@ -5724,6 +5575,7 @@ msgid "CONFIRM"
 msgstr "BESTÄTIGEN"
 
 #: views/notices/rating.php:10
+#, php-format
 msgid ""
 "You are using %s for more than 1 week.\n"
 "                May we ask you to give it a %s rating on wordpress.org?"
@@ -5777,6 +5629,7 @@ msgid "Restore Settings"
 msgstr "Einstellungen wiederherstellen"
 
 #: views/notices/staging-directory-permission-problem.php:11
+#, php-format
 msgid ""
 "WP Staging - Folder Permissions:</strong>\n"
 "                <br>\n"
@@ -5818,6 +5671,7 @@ msgid "WP STAGING:"
 msgstr "WP STAGING:"
 
 #: views/notices/staging-symlink-enabled-notice.php:4
+#, php-format
 msgid ""
 "You have symlinked the folder <code>%s</code> on this staging site. If you "
 "update images on this site it will affect your live site. \n"
@@ -5838,6 +5692,7 @@ msgid "WP STAGING - Conflict with temporary prefix!"
 msgstr "WP STAGING - Konflikt mit temporärem Präfix!"
 
 #: views/notices/table-tmp-prefix-conflict-notice.php:13
+#, php-format
 msgid ""
 "This site uses the table prefix (<code>%s</code>). This is a temporary table "
 "prefix reserved by WP STAGING and you can not clone this website nor restore "
@@ -5876,6 +5731,7 @@ msgid "WP STAGING - Customized Uploads Folder."
 msgstr "WP STAGING - Benutzerdefinierter Uploads-Ordner."
 
 #: views/notices/uploads-outside-wp-root.php:10
+#, php-format
 msgid ""
 "The uploads folder is outside the WordPress root ABSPATH folder. This may "
 "lead to missing images when creating a staging site. <a href=\"%s\" target="
@@ -5908,6 +5764,7 @@ msgstr ""
 "Einstellungen auf der Live-Site von diesem Schritt nicht beeinflusst."
 
 #: views/notices/wordfence-userini-renamed.php:19
+#, php-format
 msgid ""
 "<a href=\"%s\" target=\"_blank\">Read this</a> why we had to disable the "
 "firewall and how you can activate it if you like to."
@@ -5916,6 +5773,7 @@ msgstr ""
 "deaktivieren mussten und wie Sie sie aktivieren können, wenn Sie das möchten."
 
 #: views/notices/wp-options-missing-pk.php:12
+#, php-format
 msgid ""
 "WP STAGING - The table %s has no primary key index or missing autoincrement "
 "flag."
@@ -5940,6 +5798,7 @@ msgstr ""
 "ist."
 
 #: views/notices/wp-options-missing-pk.php:16
+#, php-format
 msgid ""
 "WP STAGING - The primary key for table %s has been changed from option_id to "
 "option_name."
@@ -5959,7 +5818,8 @@ msgstr ""
 msgid "How to fix this."
 msgstr "Wie man das beheben kann."
 
-#: views/notices/wp-version-compatible-message.php:11
+#: views/notices/wp-version-compatible-message.php:12
+#, php-format
 msgid ""
 "<strong>This version of WP STAGING has not been tested with WordPress %2$s.</"
 "strong><br/><br/>WP STAGING has an enterprise-level quality control that "
@@ -5991,6 +5851,7 @@ msgstr ""
 "funktionieren. "
 
 #: views/notices/wpe-permalink-issue-notice.php:5
+#, php-format
 msgid ""
 "For more information, you can read the following article: <a href=\"%s\" "
 "target=\"_blank\">WP Engine Subdirectory Staging</a>"
@@ -6003,6 +5864,7 @@ msgid "WP STAGING - HTTP/HTTPS Scheme Error."
 msgstr "WP STAGING - HTTP/HTTPS-Schema-Fehler."
 
 #: views/notices/wrong-scheme.php:11
+#, php-format
 msgid ""
 "Go to <a href=\"%s\" target=\"_blank\">Settings > General</a> and make sure "
 "that WordPress Address (URL) and Site Address (URL) both start wth either "
@@ -6016,11 +5878,6 @@ msgstr ""
 msgid "Otherwise your staging site will not be reachable after creation."
 msgstr ""
 "Andernfalls ist deine Staging-Seite nach der Erstellung nicht erreichbar."
-
-#: views/notices/_partial/notice_dismiss_action.php:11
-#: views/notices/_partial/notice_dismiss_action.php:13
-msgid "Close this message"
-msgstr "Diese Nachricht schließen"
 
 #: views/pro/backup/directory-navigation.php:35
 msgid "Staging sites and wp core folders can not be selected."
@@ -6052,6 +5909,7 @@ msgid "Disable WooCommerce Action Scheduler."
 msgstr "Deaktivieren Sie WooCommerce Action Scheduler."
 
 #: views/pro/clone/ajax/disable-woo-scheduler.php:33
+#, php-format
 msgid ""
 "Disable WooCommerce Action Scheduler/Subscriptions on a staging site. %s."
 msgstr ""
@@ -6120,6 +5978,7 @@ msgid "Confirm User Synchronization!"
 msgstr "Bestätigen Sie die Benutzersynchronisation!"
 
 #: views/pro/clone/ajax/sync-button.php:20
+#, php-format
 msgid ""
 "This action synchronizes the current user's data with that of the staging "
 "site (%s). This will update the current user account password on the staging "
@@ -6132,7 +5991,12 @@ msgstr ""
 "Benutzernamen und Passwort angelegt, falls er noch nicht existiert. Möchten "
 "Sie fortfahren?"
 
+#: views/pro/clone/ajax/sync-button.php:21 views/pro/generate-login-ui.php:137
+msgid "Proceed"
+msgstr "Weiter"
+
 #: views/pro/clone/ajax/sync-button.php:22
+#, php-format
 msgid ""
 "Sync the current user account with this staging site (%s). This will either "
 "add the current logged in user account to the staging site or create the "
@@ -6148,6 +6012,7 @@ msgid "Edit Clone Data"
 msgstr "Staging-Daten bearbeiten"
 
 #: views/pro/edit-clone-data.php:25
+#, php-format
 msgid ""
 "Update the values below only if you moved your staging site to another "
 "server and WP STAGING lost connection to the clone site. Don't update these "
@@ -6233,6 +6098,7 @@ msgid "Generate Login Link"
 msgstr "Login-Link generieren"
 
 #: views/pro/generate-login-ui.php:30
+#, php-format
 msgid ""
 "This will generate a login link for the staging site \"%s\". You can use "
 "this link to login to the staging site without having to enter your username "
@@ -6300,7 +6166,6 @@ msgid "Copied!"
 msgstr "Kopiert!"
 
 #: views/pro/generate-login-ui.php:135
-#| msgid "Do you want to create a new login link?"
 msgid "Do you want to create a new login link?"
 msgstr "Möchten Sie einen neuen Login-Link erstellen?"
 
@@ -6359,7 +6224,7 @@ msgstr "Diese Lizenz ist aktiv bis "
 
 #: views/pro/licensing.php:62
 msgid " Registered to "
-msgstr " (Unregistriert)"
+msgstr "Registriert auf "
 
 #: views/pro/licensing.php:64
 msgid "Refresh License Status"
@@ -6387,21 +6252,18 @@ msgstr ""
 "falls Sie dies noch nicht getan haben."
 
 #: views/pro/notices/backup-invalid-files-index.php:19
+#, php-format
 msgid "Please send us the log files so that we can investigate this issue. %s"
 msgstr ""
 "Bitte senden Sie uns die Protokolldateien, damit wir dieses Problem "
 "untersuchen können. %s"
-
-#: views/pro/notices/backup-invalid-files-index.php:19
-#: views/_main/contact-us-basic.php:13 views/_main/general-error-modal.php:11
-msgid "Contact us"
-msgstr "Kontakt"
 
 #: views/pro/notices/backups-different-prefix.php:14
 msgid "WP STAGING - Please create a new backup."
 msgstr "WP STAGING - Bitte erstellen Sie ein neues Backup."
 
 #: views/pro/notices/backups-different-prefix.php:19
+#, php-format
 msgid ""
 "A multisite backup created with WP STAGING 4.3.0 or lower can lead to login "
 "issues if the backup is restored on a host with different WordPress prefix "
@@ -6418,6 +6280,7 @@ msgstr ""
 "Artikel</a>."
 
 #: views/pro/notices/backups-different-prefix.php:24
+#, php-format
 msgid ""
 "A backup created with previous version WP STAGING 4.0.2 can lead to login "
 "issues if the backup is restored on another host. If possible, create a new "
@@ -6448,6 +6311,7 @@ msgstr ""
 "hinzufügen."
 
 #: views/pro/notices/entire-clone-server-config.php:22
+#, php-format
 msgid ""
 "Your site runs on %s webserver. Please configure your server to make sure "
 "your staging network site URLs work properly."
@@ -6457,6 +6321,7 @@ msgstr ""
 "funktionieren."
 
 #: views/pro/notices/entire-clone-server-config.php:26
+#, php-format
 msgid ""
 " Read <a href=\"%s\" target=\"_blank\">this article</a> on how to do it."
 msgstr ""
@@ -6468,6 +6333,7 @@ msgid "WP STAGING - Please sign in to Google Drive again."
 msgstr "WP STAGING - Bitte melden Sie sich erneut bei Google Drive an."
 
 #: views/pro/notices/google-unauthenticated.php:13
+#, php-format
 msgid ""
 "Google Drive disconnected unexpectedly, please go to %s and sign in again."
 msgstr ""
@@ -6479,6 +6345,7 @@ msgid "settings page"
 msgstr "Einstellungen"
 
 #: views/pro/notices/license-key-expired.php:17
+#, php-format
 msgid ""
 "<strong>Your WP STAGING | PRO license key has been expired.</strong><br> You "
 "need a valid license key to use the backup & push feature and to get further "
@@ -6498,6 +6365,7 @@ msgstr ""
 "                </span>"
 
 #: views/pro/notices/license-key-invalid.php:15
+#, php-format
 msgid ""
 "<strong>Your license key of WP Staging Pro is invalid or deactivated.</"
 "strong><br>You need a valid license key to use the backup & push feature and "
@@ -6515,51 +6383,36 @@ msgstr ""
 "Lizenzschlüssel ein</strong></a>  |  <a href=\"%1$s\" target=\"_blank"
 "\"><strong>Kaufe Lizenzschlüssel</strong></a>."
 
-#: views/pro/notices/wpstg-restore-in-root-path.php:16
-msgid ""
-"<p><strong>WP STAGING | Restore.</strong></p><p>The file <strong>wpstg-"
-"restore.php</strong> was detected in the root directory <code>%s</code>. For "
-"security reasons, please remove it if it is no longer needed.</p>"
-msgstr ""
-"<p><strong>WP STAGING | Wiederherstellen.</strong></p><p>Die Datei "
-"<strong>wpstg-restore.php</strong> wurde im Stammverzeichnis gefunden <code>"
-"%s</code>. Bitte entfernen Sie sie aus Sicherheitsgründen, wenn sie nicht "
-"mehr benötigt wird.</p>"
-
-#: views/pro/notices/wpstg-restore-in-root-path.php:23
-msgid "Remove wpstg-restore.php"
-msgstr "Wpstg-restore.php entfernen"
-
-#: views/pro/scan.php:33
+#: views/pro/scan.php:34
 msgid "Select tables to push to production website"
 msgstr ""
 "Auswahl der Tabellen, die in die Produktionswebsite übertragen werden sollen"
 
-#: views/pro/scan.php:36 views/pro/scan.php:98
+#: views/pro/scan.php:37 views/pro/scan.php:99
 msgid "Note:"
 msgstr "Anmerkung:"
 
-#: views/pro/scan.php:37
+#: views/pro/scan.php:38
 msgid "This database table selection will be automatically saved"
 msgstr "Diese Auswahl der Datenbanktabelle wird automatisch gespeichert"
 
-#: views/pro/scan.php:39 views/pro/scan.php:101
+#: views/pro/scan.php:40 views/pro/scan.php:102
 msgid "and preselected the next time you push this staging site."
 msgstr "und vorgewählt, wenn Sie das nächste Mal diese Staging-Seite aufrufen."
 
-#: views/pro/scan.php:44
+#: views/pro/scan.php:45
 msgid "Database Name: "
 msgstr "Name der Datenbank: "
 
-#: views/pro/scan.php:46
+#: views/pro/scan.php:47
 msgid "Table Prefix: "
 msgstr "Tabelle Präfix: "
 
-#: views/pro/scan.php:53 views/pro/scan.php:79
+#: views/pro/scan.php:54 views/pro/scan.php:80
 msgid "Show All Tables"
 msgstr "Alle Tabellen anzeigen"
 
-#: views/pro/scan.php:55 views/pro/scan.php:81
+#: views/pro/scan.php:56 views/pro/scan.php:82
 msgid ""
 "Show all custom and extra tables existing in the staging sites database, "
 "even those belonging to other sites."
@@ -6568,7 +6421,7 @@ msgstr ""
 "Datenbank der Staging-Seiten vorhanden sind, auch solche, die zu anderen "
 "Seiten gehören."
 
-#: views/pro/scan.php:72
+#: views/pro/scan.php:73
 msgid ""
 "Note: The grayed out tables have been disabled by the "
 "\"wpstg_push_excluded_tables\" filter and are therefore inactive."
@@ -6576,25 +6429,26 @@ msgstr ""
 "Hinweis: Die ausgegrauten Tabellen wurden durch den Filter "
 "\"wpstg_push_excluded_tables\" deaktiviert und sind daher inaktiv."
 
-#: views/pro/scan.php:89
+#: views/pro/scan.php:90
 msgid "Select Files"
 msgstr "Dateien auswählen"
 
-#: views/pro/scan.php:95
+#: views/pro/scan.php:96
 msgid "Select plugins, themes & uploads folder to push to production website."
 msgstr ""
 "Wählen Sie Plugins, Themes und Uploads-Ordner, um sie auf die "
 "Produktionswebsite zu übertragen."
 
-#: views/pro/scan.php:99
+#: views/pro/scan.php:100
 msgid "This folder selection will be automatically saved"
-msgstr "Diese Auswahl der Ordner wird automatisch gespeichert"
+msgstr "Diese Ordnerauswahl wird automatisch gespeichert"
 
-#: views/pro/scan.php:106
+#: views/pro/scan.php:107
 msgid "Extra Directories to Copy"
 msgstr "Zusätzliche zu kopierende Verzeichnisse"
 
-#: views/pro/scan.php:113
+#: views/pro/scan.php:115
+#, php-format
 msgid ""
 "Enter one directory path per line. %sDirectory must start with absolute "
 "path: %s"
@@ -6602,19 +6456,19 @@ msgstr ""
 "Geben Sie einen Verzeichnispfad pro Zeile ein. %sVerzeichnis muss mit "
 "absolutem Pfad beginnen: %s"
 
-#: views/pro/scan.php:126
+#: views/pro/scan.php:127
 msgid "Plugins will be pushed to: "
 msgstr "Die Plugins werden auf die Website übertragen: "
 
-#: views/pro/scan.php:128
+#: views/pro/scan.php:129
 msgid "Themes will be pushed to: "
 msgstr "Die Themen werden nachgeschoben: "
 
-#: views/pro/scan.php:133
+#: views/pro/scan.php:134
 msgid "Medias will be pushed to: "
 msgstr "Die Medien werden nachgeschoben: "
 
-#: views/pro/scan.php:141
+#: views/pro/scan.php:142
 msgid ""
 "Uninstall all plugins/themes on production site that are not installed on "
 "staging site."
@@ -6622,13 +6476,13 @@ msgstr ""
 "Deinstallieren Sie alle Plugins/Themes auf der Produktionsseite, die nicht "
 "auf der Testseite installiert sind."
 
-#: views/pro/scan.php:143
+#: views/pro/scan.php:144
 msgid "Note: This option is disabled as uploads dir was symlinked"
 msgstr ""
 "Hinweis: Diese Option ist deaktiviert, da das Uploads-Verzeichnis mit einem "
 "Symlink versehen wurde."
 
-#: views/pro/scan.php:146
+#: views/pro/scan.php:147
 msgid ""
 "Delete wp-content/uploads folder on production site including all images "
 "before starting push process."
@@ -6636,7 +6490,7 @@ msgstr ""
 "Löschen Sie den Ordner wp-content/uploads auf der Produktionsseite "
 "einschließlich aller Bilder, bevor Sie den Push-Prozess starten."
 
-#: views/pro/scan.php:151
+#: views/pro/scan.php:152
 msgid ""
 "Create a backup of folder wp-content/uploads before deleting it. Helpful in "
 "case the push process fails. Make sure you have enough space for the uploads "
@@ -6654,30 +6508,30 @@ msgstr ""
 "durch das neue ersetzt. Diese Sicherung wird nach 7 Tagen automatisch "
 "gelöscht."
 
-#: views/pro/scan.php:161
+#: views/pro/scan.php:162
 msgid ""
 "Create database backup (Not supported in subsites for now, coming soon!)"
 msgstr ""
 "Erstellen einer Datenbanksicherung (derzeit noch nicht in Unterseiten "
 "unterstützt, in Kürze!)"
 
-#: views/pro/scan.php:164
+#: views/pro/scan.php:165
 msgid "Create database backup"
 msgstr "Datenbanksicherung erstellen"
 
-#: views/pro/scan.php:185
+#: views/pro/scan.php:186
 msgid "Confirm Push"
 msgstr "Bestätige Übertragung"
 
-#: views/pro/scan.php:189
+#: views/pro/scan.php:190
 msgid "and transfer "
 msgstr "und kopiere "
 
-#: views/pro/scan.php:192
+#: views/pro/scan.php:193
 msgid " to "
 msgstr " zu "
 
-#: views/pro/settings/general.php:29
+#: views/pro/settings/general.php:30
 msgid ""
 "Compresses the backup to reduce size. Especially useful with big databases."
 msgstr ""
@@ -6689,6 +6543,7 @@ msgid "What is WP Staging | Restore?"
 msgstr "Was ist WP Staging | Restore?"
 
 #: views/pro/wpstg-restorer-ui.php:21
+#, php-format
 msgid ""
 "%s is a standalone tool for WP Staging Pro license owners that runs without "
 "WordPress and can perform the following tasks:"
@@ -6723,6 +6578,7 @@ msgid "How to use WP Staging | Restore:"
 msgstr "So verwenden Sie WP Staging | Restore:"
 
 #: views/pro/wpstg-restorer-ui.php:31
+#, php-format
 msgid "Download below the file %s."
 msgstr "Laden Sie unten die Datei %s herunter."
 
@@ -6735,10 +6591,12 @@ msgstr ""
 "wiederherstellen möchten, oder extrahieren Sie die Sicherungsdatei."
 
 #: views/pro/wpstg-restorer-ui.php:33
+#, php-format
 msgid "Start the tool by opening in the browser the URL %s."
 msgstr "Starten Sie das Tool, indem Sie im Browser die URL %s öffnen."
 
 #: views/pro/wpstg-restorer-ui.php:34
+#, php-format
 msgid ""
 "Paste the full name of the uploaded backup file into the authentication "
 "form, e.g. %s"
@@ -6756,6 +6614,7 @@ msgid "Root directory of a WordPress site."
 msgstr "Wurzelverzeichnis einer WordPress-Website."
 
 #: views/pro/wpstg-restorer-ui.php:41
+#, php-format
 msgid "WP Staging backup directory (Default: %s)"
 msgstr "WP Staging-Sicherungsverzeichnis (Standard: %s)"
 
@@ -6764,10 +6623,12 @@ msgid "Download WP Staging | Restore"
 msgstr "WP Staging | Wiederherstellen herunterladen"
 
 #: views/pro/wpstg-restorer-ui.php:54
+#, php-format
 msgid "You need a valid license in order to download %s."
 msgstr "Sie benötigen eine gültige Lizenz, um %s herunterladen zu können."
 
 #: views/pro/wpstg-restorer-ui.php:60
+#, php-format
 msgid ""
 "Please <a href=\"%s\">activate</a> your license key or buy one from <a href="
 "\"%s\" rel=\"noopener\" target=\"new\">wp-staging.com</a>"
@@ -6781,6 +6642,7 @@ msgid "Select Tables to Copy"
 msgstr "Zu kopierende Tabellen auswählen"
 
 #: views/selections/database-tables.php:19
+#, php-format
 msgid "Tables with the live site prefix %s have been selected."
 msgstr "Es wurden Tabellen mit dem Live-Site-Präfix %s ausgewählt."
 
@@ -6846,6 +6708,7 @@ msgid "Extra directories to copy"
 msgstr "Extra Ordner zum Kopieren"
 
 #: views/selections/files.php:96
+#, php-format
 msgid ""
 "Enter one folder path per line.<br>Folders must be relative to the path: %s"
 msgstr ""
@@ -6856,7 +6719,7 @@ msgstr ""
 msgid "All files will be copied to: "
 msgstr "Alle Dateien werden kopiert nach: "
 
-#: views/settings/tabs/general.php:49
+#: views/settings/tabs/general.php:50
 msgid ""
 "Number of DB rows, that are queried within one request.\n"
 "                                        The higher the value the faster the "
@@ -6870,7 +6733,7 @@ msgstr ""
 "Anzahl der Datenbank Einträge, die zugleich kopiert werden. Je höher der "
 "Wert, desto schneller wird die Datenbank kopiert."
 
-#: views/settings/tabs/general.php:71
+#: views/settings/tabs/general.php:72
 msgid ""
 "Number of DB rows, that are processed within one request.\n"
 "                                        The higher the value the faster the "
@@ -6881,7 +6744,7 @@ msgstr ""
 "Anzahl der Datenbank Einträge welche zugleich verarbeitet werden. Je grösser "
 "der Wert desto schneller ist der Suchen & Ersetzen Prozess."
 
-#: views/settings/tabs/general.php:93
+#: views/settings/tabs/general.php:94
 msgid ""
 "Number of files to be copied within one request. The higher the value, the "
 "faster files are copied. To find out the highest possible values, try a high "
@@ -6899,7 +6762,7 @@ msgstr ""
 msgid "Important:"
 msgstr "Wichtig:"
 
-#: views/settings/tabs/general.php:101
+#: views/settings/tabs/general.php:102
 msgid ""
 "If CPU Load Priority is LOW, set the file copy limit to 50 to copy files as "
 "fast as possible."
@@ -6907,7 +6770,8 @@ msgstr ""
 "Wenn die CPU-Lastpriorität NIEDRIG ist, setzen Sie das Dateikopierlimit auf "
 "50, um Dateien so schnell wie möglich zu kopieren."
 
-#: views/settings/tabs/general.php:122
+#: views/settings/tabs/general.php:123
+#, no-php-format
 msgid ""
 "Maximum size of the files that may be copied. All files larger than this "
 "will be skipped. Note: Increase this option only if you have a good reason "
@@ -6921,7 +6785,7 @@ msgstr ""
 "Fälle um Protokoll- und Sicherungsdateien, die auf einer Staging-Seite nicht "
 "benötigt werden."
 
-#: views/settings/tabs/general.php:141
+#: views/settings/tabs/general.php:142
 msgid ""
 "Buffer size for the file copy process in megabyte.\n"
 "                                        The higher the value the faster "
@@ -6940,7 +6804,7 @@ msgstr ""
 "auch die maximale Speicherauslastung von PHP und sollte daher nicht zu gross "
 "gewählt werden."
 
-#: views/settings/tabs/general.php:166
+#: views/settings/tabs/general.php:167
 msgid ""
 "Using HIGH will result in fast as possible processing but the cpu load\n"
 "                                        increases. Using a lower value "
@@ -6953,7 +6817,8 @@ msgstr ""
 "niedrigeren Wertes führt zu einer geringeren CPU-Belastung Ihres Servers, "
 "aber auch zu einer langsameren Erstellung der Staging-Seite."
 
-#: views/settings/tabs/general.php:210
+#: views/settings/tabs/general.php:211
+#, php-format
 msgid ""
 "Use on the staging site the same permalink structure and do not set "
 "permalinks to plain structure. <br/>Read more: <a href=\"%1$s\" target="
@@ -6963,7 +6828,7 @@ msgstr ""
 "setzen Sie die Permalinks nicht auf eine einfache Struktur. <br/>Lesen Sie "
 "mehr: <a href=\"%1$s\" target=\"_blank\">Permalink-Einstellungen</a> "
 
-#: views/settings/tabs/general.php:232
+#: views/settings/tabs/general.php:233
 msgid ""
 "Enable a debug mode that creates log entries in wp-content/uploads/wp-"
 "staging/logs/logfile.log."
@@ -6977,7 +6842,7 @@ msgstr ""
 "Es wird nicht empfohlen, diese Funktion zu aktivieren, bis wir Sie dazu "
 "auffordern!"
 
-#: views/settings/tabs/general.php:253
+#: views/settings/tabs/general.php:254
 msgid ""
 "The Optimizer is a mu-plugin that disables all other plugins during staging "
 "and backup operations.\n"
@@ -6990,14 +6855,15 @@ msgstr ""
 "Speicherverbrauch gesenkt und die Verarbeitung beschleunigt. Er sollte immer "
 "aktiviert sein!"
 
-#: views/settings/tabs/general.php:271
+#: views/settings/tabs/general.php:272
 msgid ""
 "Activate this if you like to remove all data when the plugin is deleted.\n"
 "                                        This will not remove staging sites "
 "files or database tables."
 msgstr "Lösche alle Einstellungen beim Löschen des Plugins"
 
-#: views/settings/tabs/general.php:290
+#: views/settings/tabs/general.php:291
+#, php-format
 msgid ""
 "Activate this to check sizes of each directory on scanning process.\n"
 "                                        %s\n"
@@ -7008,7 +6874,7 @@ msgstr ""
 "Achtung, dies könnte bei großen Ordner / Datei Strukturen zu Timeout "
 "Problemen führen."
 
-#: views/settings/tabs/general.php:310
+#: views/settings/tabs/general.php:311
 msgid ""
 "Select the user role you want to give access to the staging site. You can "
 "select multiple roles by holding CTRL or ⌘ Cmd key while clicking. "
@@ -7021,7 +6887,7 @@ msgstr ""
 "Option auf der Staging-Seite, wenn Sie das Authentifizierungsverhalten dort "
 "ändern möchten.</strong>"
 
-#: views/settings/tabs/general.php:327
+#: views/settings/tabs/general.php:328
 msgid ""
 "Specify users who will have access to the staging site regardless of their "
 "role. You can enter multiple user names separated by a comma. <strong>Change "
@@ -7037,7 +6903,7 @@ msgstr ""
 msgid "Send Usage Information"
 msgstr "Nutzungsinformationen senden"
 
-#: views/settings/tabs/general.php:356
+#: views/settings/tabs/general.php:357
 msgid "Send usage information to wp-staging.com."
 msgstr "Senden Sie Nutzungsinformationen an wp-staging.com."
 
@@ -7061,6 +6927,7 @@ msgstr ""
 "Markieren Sie dieses Kästchen, um diese Staging-Seite klonbar zu machen."
 
 #: views/settings/tabs/general.php:389
+#, php-format
 msgid ""
 "If you would like to know more about cloning staging sites check out <a "
 "href='%s' target='_new'>this article</a>."
@@ -7125,6 +6992,7 @@ msgid "Allow Mails Sending:"
 msgstr "E-Mail-Versand erlauben:"
 
 #: views/settings/tabs/mail-settings.php:20
+#, php-format
 msgid ""
 "Some plugins might still be able to send out mails if they don't depend upon "
 "%s."
@@ -7146,12 +7014,14 @@ msgid "How to create Amazon API keys and a S3 bucket"
 msgstr "So erstellen Sie Amazon API-Schlüssel und einen S3-Bucket"
 
 #: views/settings/tabs/storages/base-s3-settings.php:40
+#, php-format
 msgid "Upload backup files to your  %s account."
 msgstr "Laden Sie Sicherungsdateien auf Ihr %s-Konto hoch."
 
 #: views/settings/tabs/storages/base-s3-settings.php:43
 #: views/settings/tabs/storages/generic-s3-settings.php:54
 #: views/settings/tabs/storages/googledrive-settings.php:40
+#, php-format
 msgid ""
 "None of your backup data is sent to any other party! <a href=\"%s\" target="
 "\"_blank\">Our privacy policy</a>."
@@ -7182,6 +7052,7 @@ msgstr "Region"
 
 #: views/settings/tabs/storages/base-s3-settings.php:92
 #: views/settings/tabs/storages/generic-s3-settings.php:129
+#, php-format
 msgid ""
 "To add a directory you can write <code>s3:[%s]/[directory-name]</code>."
 "<br>The directory will be created automatically during backup upload. "
@@ -7238,6 +7109,7 @@ msgid "Upload backup files to your Dropbox account."
 msgstr "Lade die Backup-Dateien in dein Dropbox-Konto hoch."
 
 #: views/settings/tabs/storages/dropbox-settings.php:28
+#, php-format
 msgid ""
 "Your backup data will not be sent to us! <a href=\"%s\" target=\"_blank"
 "\">Our privacy policy</a>."
@@ -7263,6 +7135,7 @@ msgid "Backup Location"
 msgstr "Sicherungsort"
 
 #: views/settings/tabs/storages/encrypted-notice.php:8
+#, php-format
 msgid "Please setup again the storage provider %s."
 msgstr "Bitte richten Sie den Speicheranbieter %s erneut ein."
 
@@ -7363,6 +7236,7 @@ msgid "Connect with API Credentials"
 msgstr "Mit API-Anmeldeinformationen verbinden"
 
 #: views/settings/tabs/storages/googledrive-settings.php:84
+#, php-format
 msgid ""
 "You can use your own Google API keys. This is optional. <a href=\"%s\" "
 "target=\"_blank\">How to create your own Google API keys</a>."
@@ -7497,15 +7371,8 @@ msgstr "WP STAGING | PRO"
 msgid " - Enterprise Level Backup, Cloning & Migration Tool"
 msgstr " - Enterprise Backup, Klonen & WordPress umziehen"
 
-#: views/welcome/welcome.php:12
-msgid "Is this the best backup & migration plugin?"
-msgstr "Ist dies das beste Plugin für Backup und Migration?"
-
-#: views/welcome/welcome.php:13
-msgid "Enterprise Reliability"
-msgstr "100% Zuverlässig"
-
 #: views/welcome/welcome.php:14
+#, php-format
 msgid ""
 "Your data is important so we run <a href=\"%s\" target=\"_blank\" style="
 "\"text-decoration: underline;\">thousands</a> of automated tests before "
@@ -7516,20 +7383,12 @@ msgstr ""
 "\">Tausende</a> von automatisierten Tests durch."
 
 #: views/welcome/welcome.php:17
-msgid "German Engineering"
-msgstr "Deutsche Technik"
-
-#: views/welcome/welcome.php:17
 msgid ""
 "Our headquarter is located in Germany with a small team of highly skilled "
 "developers."
 msgstr ""
 "Unser Hauptsitz befindet sich in Deutschland mit einem kleinen Team von "
 "hochqualifizierten Entwicklern."
-
-#: views/welcome/welcome.php:18
-msgid "Cloning"
-msgstr "Klonen starten"
 
 #: views/welcome/welcome.php:18
 msgid "Clone your entire website with one click."
@@ -7540,20 +7399,8 @@ msgid "Push a staging site to the production site. (Pro)"
 msgstr "Verschieben Sie eine Staging-Seite auf die Produktions-Seite. (Pro)"
 
 #: views/welcome/welcome.php:20
-msgid "Backup & Restore"
-msgstr "Sichern und Wiederherstellen"
-
-#: views/welcome/welcome.php:20
-msgid ""
-"Backup and Restore WordPress. Simple, fast, and secure. Even if your website "
-"is no longer accessible."
-msgstr ""
-"WordPress sichern und wiederherstellen. Einfach, schnell und sicher. Auch "
-"wenn Ihre Website nicht mehr erreichbar ist."
-
-#: views/welcome/welcome.php:21
-msgid "Move WordPress"
-msgstr "WordPress verschieben"
+msgid "Backup and Restore WordPress. Simple, fast, and secure."
+msgstr "WordPress sichern und wiederherstellen. Einfach, schnell und sicher."
 
 #: views/welcome/welcome.php:21
 msgid ""
@@ -7562,26 +7409,14 @@ msgid ""
 msgstr ""
 "Migrate & move your website from one domain to another, even to a separate "
 "server. (Pro)"
-
-#: views/welcome/welcome.php:22
-msgid "Support Multisites"
-msgstr "Unterstützung von Multisites"
 
 #: views/welcome/welcome.php:22
 msgid "Clone and push Multisites. (Pro)"
 msgstr "Klonen und Verschieben von Multisites. (Pro)"
 
 #: views/welcome/welcome.php:23
-msgid "Authentication"
-msgstr "Authentifizierung"
-
-#: views/welcome/welcome.php:23
 msgid "Cloned sites are available to authenticated users only."
 msgstr "Geklonte Websites sind nur für authentifizierte Benutzer verfügbar."
-
-#: views/welcome/welcome.php:24
-msgid "High Performance"
-msgstr "Hohe Leistung"
 
 #: views/welcome/welcome.php:24
 msgid ""
@@ -7592,20 +7427,8 @@ msgstr ""
 "Vergleiche selbst."
 
 #: views/welcome/welcome.php:25
-msgid "Secure"
-msgstr "Sichern"
-
-#: views/welcome/welcome.php:25
 msgid "WP STAGING is no cloud service. Your data belongs to you only."
 msgstr "WP STAGING ist kein Cloud-Service. Deine Daten gehören nur dir."
-
-#: views/welcome/welcome.php:26
-msgid "Buy WP Staging Pro"
-msgstr "WP Staging Pro kaufen"
-
-#: views/welcome/welcome.php:27
-msgid "Skip & Start WP Staging"
-msgstr "Überspringen & WP Staging starten"
 
 #: views/welcome/welcome.php:28
 msgid ""
@@ -7615,272 +7438,12 @@ msgstr ""
 "Inklusive einer 30 Tage-Geld-zurück-Garantie * Gib uns die Chance deine "
 "Probleme zuerst zu lösen."
 
-#: views/_main/contact-us-basic.php:18 views/_main/general-error-modal.php:16
-msgid "Buy the Premium Plugin"
-msgstr "Premium-Plugin kaufen"
-
-#: views/_main/contact-us-basic.php:19 views/_main/general-error-modal.php:17
-msgid "Contact us directly and get priority email support to help you faster."
-msgstr ""
-"Kontaktiere uns direkt und erhalte vorrangigen E-Mail-Support, damit wir dir "
-"schneller helfen können."
-
-#: views/_main/contact-us-basic.php:22 views/_main/contact-us-basic.php:29
-#: views/_main/general-error-modal.php:20
-#: views/_main/general-error-modal.php:27
-msgid "Ask in the forum"
-msgstr "Jetzt im Forum nachfragen"
-
-#: views/_main/contact-us-basic.php:23 views/_main/general-error-modal.php:21
-msgid "Open a support thread and send us the debug information"
-msgstr "Eröffne einen Support-Thread und sende uns die Debug-Informationen"
-
-#: views/_main/contact-us-basic.php:32
-msgid "Send troubleshooting data"
-msgstr "Problembehandlungsdaten senden"
-
-#: views/_main/contact-us-basic.php:33
-msgid ""
-"Send us system information and debug logs before opening a ticket so we can "
-"help investigate."
-msgstr ""
-"Sende uns Systeminformationen und Debug-Protokolle, bevor du ein Ticket "
-"öffnest, damit wir dir bei der Prüfung helfen können."
-
-#: views/_main/contact-us-basic.php:37
-msgid "Force Send Debug Log"
-msgstr "Senden des Debug-Logs erzwingen"
-
-#: views/_main/contact-us-basic.php:41
-msgid ""
-"Use this option if you have already sent a debug log email and want to send "
-"it again within five minutes."
-msgstr ""
-"Verwenden Sie diese Option, wenn Sie bereits eine Debug-Protokoll-E-Mail "
-"gesendet haben und diese innerhalb von fünf Minuten erneut senden möchten."
-
-#: views/_main/contact-us-basic.php:48 views/_main/general-error-modal.php:35
-msgid "Share Debug Logs with WP STAGING & Open Support Forum"
-msgstr "Log-Dateien mit WP Staging Support Team teilen"
-
-#: views/_main/contact-us-basic.php:52 views/_main/general-error-modal.php:39
-msgid "Can not send email. Please contact us in the "
-msgstr "E-Mail kann nicht versendet werden. Bitte kontaktiere uns im "
-
-#: views/_main/contact-us-basic.php:53 views/_main/general-error-modal.php:40
-msgid "Support Forum"
-msgstr "Support-Forum"
-
-#: views/_main/contact-us-basic.php:56 views/_main/general-error-modal.php:43
-msgid "You'll share: Your email, URL,"
-msgstr "Du teilst mit: Deine E-Mail-Adresse, URL,"
-
-#: views/_main/contact-us-basic.php:56 views/_main/general-error-modal.php:43
-msgid " system information, and "
-msgstr " Systeminformationen, und "
-
-#: views/_main/contact-us-basic.php:57 views/_main/general-error-modal.php:44
-msgid "debug logs"
-msgstr "Fehlerprotokolle"
-
-#: views/_main/contact-us-basic.php:59 views/_main/general-error-modal.php:46
-msgid "Your email address will only be used to contact you about your issue."
-msgstr ""
-"Deine E-Mail-Adresse wird nur verwendet, um dich wegen deines Anliegens zu "
-"kontaktieren."
-
-#: views/_main/contact-us-basic.php:63 views/_main/general-error-modal.php:50
-msgid "Open forum"
-msgstr "Forum öffnen"
-
-#: views/_main/contact-us-basic.php:63 views/_main/general-error-modal.php:50
-msgid " without sending the information."
-msgstr " ohne die Informationen zu senden."
-
-#: views/_main/contact-us-pro.php:21
-msgid "Allow submission of %s."
-msgstr "Übermittlung von %s zulassen."
-
-#: views/_main/contact-us-pro.php:22
-msgid "log files"
-msgstr "Protokolldateien"
-
-#: views/_main/contact-us-pro.php:29
-msgid "I allow WP STAGING to use my email to reply to my request. %s"
-msgstr ""
-"Ich erlaube WP STAGING, meine E-Mail zur Beantwortung meiner Anfrage zu "
-"verwenden. %s"
-
-#: views/_main/contact-us-pro.php:29
-msgid "Privacy Policy"
-msgstr "Datenschutzerklärung"
-
-#: views/_main/contact-us-pro.php:36
-msgid "Submit"
-msgstr "Abschicken"
-
-#: views/_main/contact-us-success.php:8
-msgid "We received the debug info!"
-msgstr "Wir haben die Debug-Informationen erhalten!"
-
-#: views/_main/contact-us-success.php:10
-msgid "Your debug code:"
-msgstr "Dein Debug-Code:"
-
-#: views/_main/contact-us-success.php:14
-msgid "Copy"
-msgstr "Kopieren"
-
-#: views/_main/contact-us-success.php:18
-msgid "Now open a new thread in the"
-msgstr "Eröffne nun einen neuen Thread im"
-
-#: views/_main/contact-us-success.php:20
-msgid "support forum"
-msgstr "Support-Forum"
-
-#: views/_main/contact-us-success.php:21
-msgid ", and share there your debug code."
-msgstr "und teile dort deinen Debug-Code."
-
-#: views/_main/contact-us-success.php:22
-msgid ""
-"Please also provide error messages and details of the issue and don't post "
-"only the debug code."
-msgstr ""
-"Bitte gib auch Fehlermeldungen und Details zum Problem an und poste nicht "
-"nur den Debug-Code."
-
-#: views/_main/contact-us-success.php:23
-msgid "Otherwise forum moderators may remove the topic."
-msgstr "Andernfalls können Forenmoderatoren das Thema entfernen."
-
-#: views/_main/contact-us-success.php:26
-msgid "Open Support Forum"
-msgstr "Support-Forum öffnen"
-
-#: views/_main/contact-us-success.php:28
-msgid "Create an account"
-msgstr "Konto erstellen"
-
-#: views/_main/contact-us.php:15 views/_main/contact-us.php:17
-msgid "Contact Us"
-msgstr "Kontaktiere uns"
-
-#: views/_main/faq.php:7
-msgid "Knowledgebase"
-msgstr "Wissensdatenbank"
-
-#: views/_main/faq.php:9
-msgid "Migrate Website to Another Server or Domain"
-msgstr "Website auf einen anderen Server oder eine andere Domäne migrieren"
-
-#: views/_main/faq.php:10
-msgid "Can not login to staging site"
-msgstr "Fehler bei Anmeldung auf Staging-Seite"
-
-#: views/_main/faq.php:11
-msgid "Staging site redirects to production site"
-msgstr "Staging-Seite leitet zur Produktionssite um"
-
-#: views/_main/faq.php:12
-msgid "Staging site returns blank white page"
-msgstr "Staging-Seite gibt leere weiße Seite zurück"
-
-#: views/_main/faq.php:13
-msgid "CSS & layout looks different after push"
-msgstr "CSS & Layout schaut anders aus nach dem Push"
-
-#: views/_main/faq.php:15
-msgid "Skip WooCommerce Orders and Products"
-msgstr "WooCommerce-Bestellungen und -Produkte überspringen"
-
-#: views/_main/faq.php:16
-msgid "MySQL Query: Delete all WooCommerce Bookings"
-msgstr "MySQL-Abfrage: Alle WooCommerce Buchungen löschen"
-
-#: views/_main/faq.php:17
-msgid "MySQL Query: How to Delete all WooCommerce Orders"
-msgstr "MySQL-Abfrage: Wie man alle WooCommerce-Bestellungen löscht"
-
-#: views/_main/faq.php:18
-msgid "Where Are WooCommerce Products Stored In The WordPress Database?"
-msgstr ""
-"Wo werden die WooCommerce-Produkte in der WordPress-Datenbank gespeichert?"
-
-#: views/_main/faq.php:19
-msgid ""
-"How to Delete All WooCommerce Orders and Client Data on Staging Site | "
-"Delete WooCommerce Transactions"
-msgstr ""
-"Wie man alle WooCommerce-Bestellungen und Kundendaten auf Staging-Seite "
-"löschen | WooCommerce-Transaktionen löschen"
-
-#: views/_main/faq.php:20
-msgid ""
-"How to Disable WooCommerce Action Scheduler / Subscriptions on a Staging Site"
-msgstr ""
-"Wie WooCommerce Aktion Scheduler / Abonnements auf einer Staging-Website "
-"deaktivieren"
-
-#: views/_main/faq.php:22
-msgid "Can not update WP STAGING plugin"
-msgstr "WP-STAGING-Plugin kann nicht aktualisiert werden"
-
-#: views/_main/faq.php:23
-msgid "Page not found – Error 404 after Pushing"
-msgstr "Seite nicht gefunden - Fehler 404 nach Pushing"
-
-#: views/_main/faq.php:24
-msgid "Pagebuilder plugin does not open (Divi, Elementor)"
-msgstr "Pagebuilder-Plugin lässt sich nicht öffnen (Divi, Elementor)"
-
-#: views/_main/faq.php:25
-msgid "WPML, Weglot or Polyglot: Using Language Codes in URLs."
-msgstr "WPML, Weglot oder Polyglot: Verwendung von Sprachcodes in URLs."
-
-#: views/_main/faq.php:26
-msgid "All articles"
-msgstr "Alle Artikel"
-
-#: views/_main/faq.php:29
-msgid "Still questions?"
-msgstr "Noch Fragen?"
-
-#: views/_main/faq.php:30
-msgid ""
-"Please <a href=\"%s\" target=\"_blank\" rel=\"external nofollow\" class="
-"\"wpstg--blue\">contact us.</a>"
-msgstr ""
-"Bitte <a href=\"%s\" target=\"_blank\" rel=\"external nofollow\" class="
-"\"wpstg--blue\">kontaktieren Sie uns.</a>"
-
-#: views/_main/faq.php:36
-msgid "Find us on:"
-msgstr "Finde uns auf:"
-
-#: views/_main/general-error-modal.php:30
-msgid "Nothing to worry but there is a glitch..."
-msgstr "Kein Grund zur Sorge, aber es gibt eine Panne ..."
-
-#: views/_main/general-error-modal.php:31
-msgid ""
-"This hiccup wasn't in the plan, but we are on it. We'll rectify the problem "
-"for you, for free!"
-msgstr ""
-"Dieses Problem war nicht geplant, aber wir kümmern uns darum. Wir werden es "
-"für dich beheben, kostenlos!"
-
-#: views/_main/general-error-modal.php:32
-msgid "Click the button below to help us fixing it for you!"
-msgstr ""
-"Klicke auf den Button unten, um uns zu helfen, es für dich zu reparieren!"
-
 #: wp-staging-pro.php:55
 msgid "PHP Version not supported"
 msgstr "PHP-Version wird nicht unterstützt"
 
 #: wp-staging-pro.php:56
+#, php-format
 msgid ""
 "WP STAGING requires PHP %s or higher. Your site is running an outdated "
 "version of PHP (%s), which requires an update. If you can not upgrade "
@@ -7893,71 +7456,30 @@ msgstr ""
 "5.6 unterstützt. Bitte kontaktieren Sie uns, um diese veraltete Version von "
 "WP Staging zu erhalten."
 
-#, fuzzy
-#~| msgid "Backup Restore Successful!"
-#~ msgid "Backup Restore"
-#~ msgstr "Wiederherstellung der Sicherung erfolgreich!"
+#. Plugin Name of the plugin/theme
+msgid "WP STAGING PRO - Backup Duplicator & Migration"
+msgstr "WP STAGING PRO"
 
-#, fuzzy
-#~| msgid "WP Staging - Backup Report"
-#~ msgid "WP-STAGING, WPStagingBackup"
-#~ msgstr "WP Staging - Sicherungsbericht"
+#. Plugin URI of the plugin/theme
+msgid "https://wp-staging.com"
+msgstr "https://wp-staging.com"
 
-#, fuzzy
-#~| msgid "https://wp-staging.com"
-#~ msgid "https://wp-staging.com/backup-wordpress"
-#~ msgstr "https://wp-staging.com"
+#. Description of the plugin/theme
+msgid ""
+"Backup & Duplicator Plugin - Clone, backup, move, duplicate & migrate "
+"websites to staging, backup, and development sites for authorized users only."
+msgstr ""
+"Backup & Duplicator Plugin - Klonen, Sichern, Verschieben, Duplizieren und "
+"Migrieren von Websites zu Staging-, Backup- und Entwicklungsseiten nur für "
+"autorisierte Benutzer."
 
-#~ msgid "No backup file found."
-#~ msgstr "Keine Backup-Datei gefunden."
+#. Author of the plugin/theme
+msgid "WP-STAGING"
+msgstr "WP-STAGING"
 
-#~ msgid "Select backup file to restore."
-#~ msgstr "Wählen Sie die Sicherungsdatei für die Wiederherstellung aus."
-
-#~ msgid "Reset Complete!"
-#~ msgstr "Zurücksetzung abgeschlossen!"
-
-#~ msgid "Update Complete!"
-#~ msgstr "Aktualisierung abgeschlossen!"
-
-#~ msgid "There is a new version of %1$s available."
-#~ msgstr "Es ist eine neue Version von %1$s verfügbar."
-
-#~ msgid "Contact your network administrator to install the update."
-#~ msgstr ""
-#~ "Wenden Sie sich an Ihren Netzwerkadministrator, um das Update zu "
-#~ "installieren."
-
-#~ msgid "%1$sView version %2$s details%3$s."
-#~ msgstr "%1$sVersionsdetails %2$s anzeigen%3$s."
-
-#~ msgid "%1$sView version %2$s details%3$s or %4$supdate now%5$s."
-#~ msgstr ""
-#~ "%1$sVersionsdetails %2$s anzeigen%3$s oder %4$sJetzt aktualisieren%5$s."
-
-#~ msgid "Update now."
-#~ msgstr "Jetzt aktualisieren."
-
-#~ msgid "You do not have permission to install plugin updates"
-#~ msgstr "Sie haben nicht die Erlaubnis, Plugin-Updates zu installieren"
-
-#~ msgid ""
-#~ "Support for wordpress.com hosted sites (Including backup and migration)."
-#~ msgstr ""
-#~ "Support für auf wordpress.com gehostete Websites (einschließlich Backup "
-#~ "und Migration)."
-
-#~ msgid "Create separate admin accounts for cloned sites."
-#~ msgstr "Erstelle separate Admin-Konten für geklonte Websites."
-
-#~ msgid "Fully unit tested (100% code coverage)."
-#~ msgstr "Vollständig unitgetestet (100 % Codeabdeckung)."
-
-#~ msgid "No advertisements."
-#~ msgstr "Keine Werbung."
-
-#~ msgid "Congratulations"
-#~ msgstr "Glückwunsch"
+#. Author URI of the plugin/theme
+msgid "https://wordpress.org/plugins/wp-staging"
+msgstr "https://wordpress.org/plugins/wp-staging"
 
 #~ msgid "(Disabled)"
 #~ msgstr "(Deaktiviert)"

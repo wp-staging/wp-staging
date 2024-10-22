@@ -10,6 +10,7 @@ use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Basic\BasicServiceProvider;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\WpAdapter;
 use WPStaging\Framework\AnalyticsServiceProvider;
 use WPStaging\Framework\AssetServiceProvider;
@@ -201,12 +202,9 @@ final class WPStaging
      */
     public static function getTablePrefix()
     {
-        $db = WPStaging::getInstance()->get("wpdb");
-        if (self::isWindowsOs()) {
-            return strtolower($db->prefix);
-        }
-
-        return $db->prefix;
+        /** @var Database $db */
+        $db = WPStaging::getInstance()->getVar("database");
+        return $db->getPrefix();
     }
 
     /**

@@ -72,7 +72,7 @@ try {
                             ?>
                         </div>
                         <div class="wpstg-dragover-text">
-                            <strong><?php echo esc_html('Drop here to start the upload!') ?></strong>
+                            <strong><?php echo esc_html__('Drop here to start the upload!', 'wp-staging') ?></strong>
                         </div>
                     </div>
                     <div class="wpstg-backup-url-container" >

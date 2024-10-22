@@ -72,7 +72,7 @@ class Database implements DatabaseInterface
      */
     public function getPrefix(): string
     {
-        if (WPStaging::isWindowsOs()) {
+        if (WPStaging::isWindowsOs() || $this->getLowerTablesNameSettings() === '1') {
             return strtolower($this->wpdb->prefix);
         }
 
@@ -225,5 +225,18 @@ class Database implements DatabaseInterface
         }
 
         return $this->getBasePrefix() . $subsiteId . '_';
+    }
+
+    /**
+     * @return string
+     */
+    public function getLowerTablesNameSettings(): string
+    {
+        $result = $this->getClient()->query("SHOW VARIABLES LIKE 'lower_case_table_names';");
+        if (!$result) {
+            return 'N/A';
+        }
+
+        return $this->getClient()->fetchAssoc($result)['Value'];
     }
 }
