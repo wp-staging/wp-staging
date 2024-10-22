@@ -14,7 +14,7 @@ abstract class FileHandler
     /** @var LoggerInterface */
     protected $logger;
 
-    /** @var resource */
+    /** @var resource|null */
     protected $handle;
 
     /** @var Filesystem */
@@ -51,6 +51,8 @@ abstract class FileHandler
                 $filePath
             ));
 
+            $this->handle = null;
+
             return false;
         }
 
@@ -62,6 +64,8 @@ abstract class FileHandler
                 call_user_func([$this->fileTask, 'getTaskTitle']),
                 $filePath
             ));
+
+            $this->handle = null;
 
             return false;
         }
@@ -75,6 +79,7 @@ abstract class FileHandler
             flock($this->handle, LOCK_UN);
             fclose($this->handle);
             unset($this->handle);
+            $this->handle = null;
         }
     }
 }

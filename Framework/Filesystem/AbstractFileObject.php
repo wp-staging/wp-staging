@@ -27,12 +27,6 @@ abstract class AbstractFileObject extends \SplFileObject
     /** @var bool */
     protected $fseekUsed = false;
 
-    /**
-     * Lock File Handle for Windows
-     * @var resource|null
-     */
-    protected $lockHandle = null;
-
     public function __construct(string $fullPath, string $openMode = self::MODE_READ)
     {
         try {
@@ -276,6 +270,8 @@ abstract class AbstractFileObject extends \SplFileObject
     }
 
     /**
+     * Manage file locking.
+     * On WinOS a file is always locked when using SplFileObject. So, do nothing here and just return true on WinOS.
      * @param int $operation
      * @param int|null $wouldBlock
      * @return bool
@@ -286,7 +282,7 @@ abstract class AbstractFileObject extends \SplFileObject
     public function flock($operation, &$wouldBlock = null): bool
     {
         if ($this->isWindowsOs()) {
-            return $this->customWindowsLock($operation, $wouldBlock);
+            return true;
         }
 
         $parentMethodFlock = 'parent::flock';
@@ -300,46 +296,6 @@ abstract class AbstractFileObject extends \SplFileObject
         }
 
         return parent::flock($operation, $wouldBlock);
-    }
-
-    /**
-     * Release Lock if Windows OS
-     * @return void
-     */
-    public function releaseLock()
-    {
-        if (!$this->isWindowsOs() || $this->lockHandle === null) {
-            return;
-        }
-
-        $lockFileName = $this->getPathname() . '.lock';
-        if (is_file($lockFileName)) {
-            unlink($lockFileName);
-        }
-
-        flock($this->lockHandle, LOCK_UN);
-        fclose($this->lockHandle);
-        $this->lockHandle = null;
-    }
-
-    /**
-     * Custom locking on Windows OS
-     *
-     * @param int $operation
-     * @param int|null $wouldBlock
-     * @return bool
-     */
-    protected function customWindowsLock(int $operation, &$wouldBlock = null): bool
-    {
-        // create a lock file for Windows
-        $lockFileName     = $this->getPathname() . '.lock';
-        $this->lockHandle = fopen($lockFileName, 'cb');
-
-        if (!is_resource($this->lockHandle)) {
-            throw new \RuntimeException("Could not open lock file {$this->getPathname()}");
-        }
-
-        return flock($this->lockHandle, $operation, $wouldBlock);
     }
 
     /**

@@ -15,7 +15,7 @@ use WPStaging\Backup\BackupScheduler;
         settings_fields("wpstg_settings");
 
         foreach ($tabs as $id => $name) :
-            if ($id === 'mail-settings' || $id === 'remote-storages') {
+            if ($id === 'mail-settings' || $id === 'remote-storages' || $id === 'temporary-login') {
                 continue;
             }
 

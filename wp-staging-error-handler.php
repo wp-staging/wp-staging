@@ -34,13 +34,9 @@ function debug_log($message, $logType = 'info', $logInDebugLog = true)
         // Open the file handler once per request, and keep it open, as we might need to write to it multiple times.
         $fileHandler = @fopen(WPSTG_DEBUG_LOG_FILE, 'a');
 
-        // On Windows OS we need to remove the lock handle first before locking it again.
-        if (stripos(PHP_OS, "WIN") === 0) {
-            flock($fileHandler, LOCK_UN);
-        }
-
+        // On Windows OS locking doesn't work as expected, so we don't lock the file on Windows OS.
         // Make sure the lock is shared, as we might need to open the handler again if a fatal error occurs.
-        if (is_resource($fileHandler)) {
+        if (stripos(PHP_OS, "WIN") !== 0 && is_resource($fileHandler)) {
             flock($fileHandler, LOCK_SH | LOCK_NB);
         }
     }
@@ -53,7 +49,12 @@ function debug_log($message, $logType = 'info', $logInDebugLog = true)
     );
 
     if (is_resource($fileHandler)) {
-        fwrite($fileHandler, $message, 5 * MB_IN_BYTES);
+        try {
+            fwrite($fileHandler, $message, 5 * MB_IN_BYTES);
+        } catch (\Throwable $ex) {
+            // If we can't write to the file, we should at least log the error to the PHP error log.
+            error_log('WP Staging - Error writing to the debug log file: ' . $ex->getMessage());
+        }
     }
 }
 

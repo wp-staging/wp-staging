@@ -4,8 +4,9 @@ namespace WPStaging\Frontend;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Rest\Rest;
+use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\SiteInfo;
-use WPStaging\Framework\Auth\LoginByLink;
+use WPStaging\Pro\Auth\LoginByLink;
 
 /**
  * Class Frontend
@@ -151,7 +152,7 @@ class Frontend
 
         $currentUser = wp_get_current_user();
 
-        if ($currentUser->has_cap(LoginByLink::WPSTG_VISITOR_ROLE)) {
+        if ($currentUser->has_cap(Capabilities::WPSTG_VISITOR_ROLE)) {
             return false;
         }
 

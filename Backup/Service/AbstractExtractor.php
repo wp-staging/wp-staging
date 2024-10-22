@@ -92,6 +92,9 @@ abstract class AbstractExtractor
     /** @var int */
     protected $defaultDirectoryOctal = 0755;
 
+    /** @var bool */
+    protected $throwExceptionOnValidationFailure = false;
+
     public function __construct(
         PathIdentifier $pathIdentifier,
         DirectoryInterface $directory,
@@ -166,6 +169,11 @@ abstract class AbstractExtractor
     public function setIsBackupFormatV1(bool $isBackupFormatV1)
     {
         $this->isBackupFormatV1 = $isBackupFormatV1;
+    }
+
+    public function setThrowExceptionOnValidationFailure(bool $throwExceptionOnValidationFailure)
+    {
+        $this->throwExceptionOnValidationFailure = $throwExceptionOnValidationFailure;
     }
 
     /**
@@ -322,12 +330,14 @@ abstract class AbstractExtractor
             $this->maybeRemoveLastAccidentalCharFromLastExtractedFile();
         }
 
+        $isValidated = true;
+        $exception = null;
         clearstatcache();
         try {
             $this->indexLineDto->validateFile($destinationFilePath, $pathForErrorLogging);
         } catch (FileValidationException $e) {
-            $this->deleteValidationFile($destinationFilePath);
-            throw $e;
+            $isValidated = false;
+            $exception = $e;
         }
 
         // Jump to the next file of the index
@@ -338,6 +348,10 @@ abstract class AbstractExtractor
         // Reset offset pointer
         $this->extractorDto->setExtractorFileWrittenBytes(0);
         $this->deleteValidationFile($destinationFilePath);
+
+        if (!$isValidated) {
+            throw $exception;
+        }
     }
 
     public function finishExtractingFile()

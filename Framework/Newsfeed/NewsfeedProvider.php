@@ -47,18 +47,21 @@ class NewsfeedProvider
 
     private function getNewsfeedUrls(): array
     {
+
+        $testFolder = $this->isDebug ? '/e2e-tests/' : '/';
+
         return [
             [
                 'id' => 'partner_newsfeed',
                 'show' => !WPStaging::isPro() && (defined('BORLABS_COOKIE_VERSION') && version_compare(BORLABS_COOKIE_VERSION, '3.2', '<')),
-                'de_url' => 'https://wp-staging.com/newsfeed/partner-newsfeed-de.txt',
-                'en_url' => 'https://wp-staging.com/newsfeed/partner-newsfeed-en.txt',
+                'de_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'partner-newsfeed-de.txt',
+                'en_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'partner-newsfeed-en.txt',
             ],
             [
                 'id' => 'newsfeed',
                 'show' => true,
-                'de_url' => 'https://wp-staging.com/newsfeed/newsfeed-de.txt',
-                'en_url' => 'https://wp-staging.com/newsfeed/newsfeed-en.txt',
+                'de_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-de.txt',
+                'en_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-en.txt',
             ]
         ];
     }

@@ -23,7 +23,8 @@ use WPStaging\Framework\Facades\Sanitize;
             ?>
         </div>
     </div>
+    <?php
+        require_once(WPSTG_VIEWS_DIR . '_main/footer.php');
+    ?>
 </div>
-<?php
-    require_once(WPSTG_VIEWS_DIR . '_main/footer.php');
-?>
+

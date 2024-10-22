@@ -25,6 +25,25 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
      */
     const FILTER_KEEP_EXISTING_OTHER_FILES = 'wpstg.backup.restore.keepExistingOtherFiles';
 
+    /**
+     * List of drop-in files that need to be restored with a rename if their checksums differ.
+     *
+     * These files are specific to third party plugins like W3 Total Cache plugin and similar plugins and must be renamed with a `wpstg_bak.` prefix
+     * if their checksums do not match the expected values. This ensures that any discrepancies or issues with
+     * these files are avoided by preserving the original files with a backup prefix.
+     * @var array
+     */
+    const DROP_IN_FILES = [
+        'object-cache.php',
+        'advanced-cache.php',
+        'db.php',
+        'db-error.php',
+        'install.php',
+        'maintenance.php',
+        'php-error.php',
+        'fatal-error-handler.php'
+    ];
+
     public static function getTaskName(): string
     {
         return 'backup_restore_wp_content';
@@ -94,8 +113,8 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
                     continue;
                 }
 
-                if ($fileName === 'object-cache.php') {
-                    $this->jobDataDto->addFileChecksum('object-cache.php', sha1_file($absoluteFilePath));
+                if (in_array($fileName, self::DROP_IN_FILES, true)) {
+                    $this->jobDataDto->addFileChecksum($fileName, sha1_file($absoluteFilePath));
                     continue;
                 }
 
@@ -146,12 +165,20 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
                 continue;
             }
 
-            if ($relativePath === 'object-cache.php' && sha1_file($absSourcePath) !== $this->jobDataDto->getFileChecksum('object-cache.php')) {
-                $this->logger->warning('object-cache.php checksum does not match. Restoring object-cache as wpstg_bak.object-cache.php to avoid issues.');
-                $this->jobDataDto->setObjectCacheSkipped(true);
+            /**
+             * Scenario: Rename drop-in files if their checksums differ between the existing files and the backup files
+             */
+            if (in_array($relativePath, self::DROP_IN_FILES, true) && sha1_file($absSourcePath) !== $this->jobDataDto->getFileChecksum($relativePath)) {
+                $this->logger->warning("$relativePath checksum does not match. Restoring $relativePath as wpstg_bak.$relativePath to avoid issues.");
+
+                if ($relativePath === 'object-cache.php') {
+                    $this->jobDataDto->setObjectCacheSkipped(true);
+                }
+
                 $this->enqueueMove($absSourcePath, $destinationDir . 'wpstg_bak.' . $relativePath);
                 continue;
             }
+
 
             /**
              * Scenario: Restoring a file that already exists

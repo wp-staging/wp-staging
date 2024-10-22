@@ -85,6 +85,9 @@ class Extractor extends AbstractExtractor
     public function setIsValidateOnly(bool $isValidateOnly)
     {
         $this->isValidateOnly = $isValidateOnly;
+        if ($isValidateOnly) {
+            $this->throwExceptionOnValidationFailure = true;
+        }
     }
 
     /**
@@ -125,7 +128,7 @@ class Extractor extends AbstractExtractor
             try {
                 $this->processCurrentFile();
             } catch (FileValidationException $e) {
-                if ($this->isValidateOnly) {
+                if ($this->isValidateOnly || $this->throwExceptionOnValidationFailure) {
                     throw $e;
                 }
 

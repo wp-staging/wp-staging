@@ -538,6 +538,7 @@ class SystemInfo
         $output .= $this->info("Webserver:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
         $output .= $this->info("OS architecture:", $this->siteInfo->getOSArchitecture());
         $output .= $this->info("PHP architecture:", $this->siteInfo->getPhpArchitecture());
+        $output .= $this->info("Lower Table Name Settings:", $this->database->getLowerTablesNameSettings());
         $output .= $this->info("MySQL Server Type:", $this->database->getServerType());
         $output .= $this->info("MySQL Version:", $this->database->getSqlVersion($compact = true));
         $output .= $this->info("MySQL Version Full Info:", $this->database->getSqlVersion());

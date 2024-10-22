@@ -8,12 +8,14 @@ use WPStaging\Core\DTO\Settings;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingReset;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingUpdate;
 use WPStaging\Framework\Assets\Assets;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
+use WPStaging\Framework\Traits\AdministratorTrait;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Notices\DismissNotice;
@@ -57,6 +59,11 @@ class Administrator
      * @var int Place WP Staging Menu below Plugins for multisite
      */
     const MENU_POSITION_ORDER_MULTISITE = 20;
+
+    /**
+     * @var string
+     */
+    const FILTER_MAIN_SETTING_TABS = 'wpstg.main_settings_tabs';
 
     /** @var string */
     private $viewsPath;
@@ -288,6 +295,16 @@ class Administrator
             [$this, $secondaryPageCallback]
         );
 
+        // Page: Temporary Logins
+        add_submenu_page(
+            $defaultPageSlug,
+            __("Temporary Logins", "wp-staging"),
+            __("Temporary Logins", "wp-staging"),
+            "manage_options",
+            "wpstg-settings&tab=temporary-login",
+            [$this, "getTempLoginsPage"]
+        );
+
         // Page: Settings
         add_submenu_page(
             $defaultPageSlug,
@@ -357,7 +374,7 @@ class Administrator
         $license = get_option('wpstg_license_status');
 
         // Tabs
-        $tabs = new Tabs(apply_filters('wpstg_main_settings_tabs', [
+        $tabs = new Tabs(Hooks::applyFilters(self::FILTER_MAIN_SETTING_TABS, [
             "general" => __("General", "wp-staging")
         ]));
 
@@ -1172,6 +1189,16 @@ class Administrator
         $license = get_option('wpstg_license_status');
 
         require_once "{$this->viewsPath}pro/licensing.php";
+    }
+
+    /**
+     * @return void
+     */
+    public function getTempLoginsPage()
+    {
+        Hooks::applyFilters(Administrator::FILTER_MAIN_SETTING_TABS, [
+            "temporary-logins" => __("Temporary Logins", "wp-staging")
+        ]);
     }
 
     /**

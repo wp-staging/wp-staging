@@ -33,6 +33,6 @@ class BackupMetadataEditor
             $prepandForSql = '-- ';
         }
 
-        $backupFile->fwrite($prepandForSql . json_encode($newMetadata) . PHP_EOL);
+        $backupFile->fwrite($prepandForSql . json_encode($newMetadata) . "\n");
     }
 }

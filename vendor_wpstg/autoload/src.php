@@ -975,7 +975,6 @@ return array(
     'WPStaging\\Framework\\AssetServiceProvider' => $baseDir . '/Framework/AssetServiceProvider.php',
     'WPStaging\\Framework\\Assets\\Assets' => $baseDir . '/Framework/Assets/Assets.php',
     'WPStaging\\Framework\\Assets\\I18n' => $baseDir . '/Framework/Assets/I18n.php',
-    'WPStaging\\Framework\\Auth\\LoginByLink' => $baseDir . '/Framework/Auth/LoginByLink.php',
     'WPStaging\\Framework\\BackgroundProcessing\\Action' => $baseDir . '/Framework/BackgroundProcessing/Action.php',
     'WPStaging\\Framework\\BackgroundProcessing\\BackgroundProcessingServiceProvider' => $baseDir . '/Framework/BackgroundProcessing/BackgroundProcessingServiceProvider.php',
     'WPStaging\\Framework\\BackgroundProcessing\\Demo' => $baseDir . '/Framework/BackgroundProcessing/Demo.php',

@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.6
-Stable tag: 3.8.7
+Stable tag: 3.9.0
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -287,6 +287,28 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 
 == Changelog ==
 
+= 3.9.0 =
+* New: Added magic login links for both production and staging sites with customizable expiration times and role-based access. Ideal for granting temporary access to external developers or clients who need quick, limited-time access to your WordPress site. Read more: https://wp-staging.com/create-magic-login-links (Pro) #3582
+* Enh: Improve error messages for expired login link and increase the expiration time. #3816
+* Enh: Add License key as authentication method for WP Staging Restore tool. #3505
+* Fix: Make some missing string translateable. #3764
+* Fix: Change twitter logo to X #3852
+* Fix: Unable to create and view backups when WordPress root directory is not readable. #3841
+* Fix: Knowledgebase and What's new blocks are not looking good under Settings, System Info and License page. #3831
+* Fix: Make sure that backup is restored properly when `W3 Total Cache` is installed on production site. #2451
+* Fix: Download Backup Modal has broken css. (Pro) #3843
+* Fix: "PHP Fatal error: Uncaught TypeError: property_exists()" with Google Drive auth. (Pro) #3862
+* Fix: A typo in I18n.php file #3766
+* Fix: Database cloning doesn't work if using mixed upper and lower cases in database prefix when MySQL uses the setting `lower_case_table_names`. #3817
+* Fix: Cannot restore database when the last CONSTRAINT is not correctly replaced in a CREATE TABLE query. #3794
+* Fix: Handle temporary login link creation properly after creating staging site. (Pro) #3767
+* Fix: Main menu navigation not working during development. #3835
+* Dev: Playwright tests failing because beforeEach was not working #3833
+* Dev: Add unit tests workflow for Windows on Github CI. #3486
+* Dev: DRY Github workflow files by adding input option to select PHP version. #3828
+* Dev: Move docker-compose*.yml files to ./docker/* to cleanup repo root. #3840
+* Dev: Fix playwright test failing due to wrong message detection on expired link. #3869
+
 = 3.8.7 =
 * New: Add newsfeed to the WP Staging user interface in DE and EN language #3772
 * Enh: Show warning when wpstg-restore file exists in root path. #3552
@@ -299,7 +321,7 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 * UX: Improve `Edit Backup Modal`. #3776
 * Dev: Change the order of bootstrapping Pro/Basic Service, so that these are registered early. #3761
 
-= 5.8.6 =
+= 3.8.6 =
 * Enh: Make all JavaScript included strings translatable and implement i18n to them. #3418
 * Fix: Fatal error due to calling php_uname if it is disabled by hosting providers. #3773
 * UX: Visually improve log modal. #3746

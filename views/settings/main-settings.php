@@ -1,7 +1,10 @@
 <?php
 
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
+use WPStaging\Framework\SiteInfo;
 
+$siteInfo = WPStaging::make(SiteInfo::class);
  settings_errors(); ?>
 <div class="wpstg_admin" id="wpstg-clonepage-wrapper">
     <?php
@@ -19,6 +22,10 @@ use WPStaging\Framework\Facades\Sanitize;
 
             <?php
             $tabs = \WPStaging\Core\WPStaging::getInstance()->get("tabs")->get();
+            if (empty($tabs['temporary-login'])) {
+                $tabs['temporary-login'] = esc_html__("Temporary Logins", "wp-staging");
+            }
+
             $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? Sanitize::sanitizeString($_GET["tab"]) : "general";
 
             # Loop through tabs
@@ -60,6 +67,8 @@ use WPStaging\Framework\Facades\Sanitize;
             ?>
         </div>
     </div>
+    <?php
+        require_once WPSTG_VIEWS_DIR . "_main/footer.php";
+    ?>
 </div>
-<?php
-require_once WPSTG_VIEWS_DIR . "_main/footer.php" ?>
+

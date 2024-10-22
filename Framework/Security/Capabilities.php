@@ -13,6 +13,11 @@ namespace WPStaging\Framework\Security;
 class Capabilities
 {
     /**
+     * @var string
+     */
+    const WPSTG_VISITOR_ROLE = 'wpstg_visitor';
+
+    /**
      * @return string The required capability to manage WPSTAGING.
      */
     public function manageWPSTG()

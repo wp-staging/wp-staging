@@ -12,7 +12,7 @@
 $wpstgAdminUrl          = get_admin_url() . 'admin.php?page=';
 $menu = [
     'tab-staging' => [
-        'tab'       => esc_html('Staging'),
+        'tab'       => esc_html__('Staging', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--staging',
         'targetId'  => '',
         'targetUrl' => $wpstgAdminUrl . 'wpstg_clone',
@@ -20,7 +20,7 @@ $menu = [
         'isActive'  => !empty($isStagingPage),
     ],
     'tab-backup' => [
-        'tab'       => esc_html('Backup & Migration'),
+        'tab'       => esc_html__('Backup & Migration', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--backup',
         'targetId'  => '',
         'targetUrl' => $wpstgAdminUrl . 'wpstg_backup',
@@ -28,7 +28,7 @@ $menu = [
         'isActive'  => !empty($isBackupPage),
     ],
     'tab-settings' => [
-        'tab'       => __('Settings', 'wp-staging'),
+        'tab'       => esc_html__('Settings', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--settigs',
         'targetId'  => '',
         'targetUrl' => esc_url($wpstgAdminUrl) . 'wpstg-settings',
@@ -36,7 +36,7 @@ $menu = [
         'isActive'  => !empty($isActiveSettingsPage),
     ],
     'tab-system-info' => [
-        'tab'       => esc_html('System Info'),
+        'tab'       => esc_html__('System Info', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--systeminfo',
         'targetId'  => '',
         'targetUrl' => esc_url($wpstgAdminUrl) . 'wpstg-tools',
@@ -44,7 +44,7 @@ $menu = [
         'isActive'  => !empty($isActiveSystemInfoPage),
     ],
     'tab-license' => [
-        'tab'       => __('Upgrade to Pro', 'wp-staging'),
+        'tab'       => esc_html__('Upgrade to Pro', 'wp-staging'),
         'id'        => 'wpstg--tab--toggle--license',
         'targetId'  => '',
         'targetUrl' => 'https://wp-staging.com',
@@ -74,7 +74,7 @@ if (defined('WPSTGPRO_VERSION')) {
         </li>
         <?php foreach ($menu as $tabKey => $tab) :?>
             <li>
-                <a href="<?php esc_attr_e($tab['targetUrl'], 'wp-staging') ?>" class="wpstg--tab--content <?php echo ($tab['isActive']) ? 'wpstg--tab--active' : '' ?> wpstg-button" data-target="<?php esc_attr_e($tab['targetId'], 'wp-staging') ?>" id="<?php esc_attr_e($tab['id'], 'wp-staging') ?>">
+                <a href="<?php echo esc_attr($tab['targetUrl']) ?>" class="wpstg--tab--content <?php echo ($tab['isActive']) ? 'wpstg--tab--active' : '' ?> wpstg-button" data-target="<?php echo esc_attr($tab['targetId']) ?>" id="<?php echo esc_attr($tab['id']) ?>">
                     <?php
                     if ($tabKey !== 'tab-license') {
                         echo esc_html($tab['tab']);

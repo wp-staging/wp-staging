@@ -280,4 +280,13 @@ class Times
         $timeFormatOption = get_option('time_format');
         return (new DateTime('now', $this->getSiteTimezoneObject()))->format($timeFormatOption);
     }
+
+    /**
+     * @return int
+     * @throws \Exception
+     */
+    public function getCurrentTimestamp(): int
+    {
+        return (new DateTime('now', $this->getSiteTimezoneObject()))->getTimestamp();
+    }
 }

@@ -21,7 +21,7 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     /** @var string The string identifier of this task */
     protected $taskName;
 
-    /** @var FileObject The file resource that persists this queue */
+    /** @var FileObject|null The file resource that persists this queue */
     protected $handle;
 
     /** @var \Generator */
@@ -270,8 +270,9 @@ class FileSeekableQueue implements SeekableQueueInterface, \SeekableIterator
     {
         if ($this->needsUnlock && $this->handle instanceof FileObject) {
             $this->unlockObject();
-            return;
         }
+
+        $this->handle = null;
     }
 
     /**
