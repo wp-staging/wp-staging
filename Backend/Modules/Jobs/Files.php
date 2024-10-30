@@ -454,6 +454,11 @@ class Files extends JobExecutable
             return false;
         }
 
+        if ($file === $destination) {
+            $this->log("Skipping file copying: Destination same as source: {$destination}", Logger::TYPE_INFO);
+            return false;
+        }
+
         // File is over batch size
         if ($fileSize >= $this->settings->batchSize) {
             return $this->copyBig($file, $destination, $this->settings->batchSize);
@@ -461,8 +466,9 @@ class Files extends JobExecutable
 
         // Attempt to copy
         if (!@copy($file, $destination)) {
-            $errors = error_get_last();
-            $this->log("Files: Failed to copy file to destination. Error: {$errors['message']} {$file} -> {$destination}", Logger::TYPE_ERROR);
+            $errorObject  = error_get_last();
+            $errorMessage = $errorObject['message'] ?? '';
+            $this->log("Files: Failed to copy file to destination. Error: {$errorMessage} {$file} -> {$destination}", Logger::TYPE_ERROR);
             return false;
         }
 
@@ -503,7 +509,7 @@ class Files extends JobExecutable
         $relativePath    = $this->strUtil->replaceStartWith($basePath, '', $file);
         $destinationPath = $this->destination . $relativePath;
 
-        if ($isContent && $this->isFlywheelHost()) {
+        if ($isContent && $this->shouldUseDefaultWpContentPath()) {
             $destinationPath = $this->destination . 'wp-content/' . $relativePath;
         } elseif ($isContent) {
             $absPath         = $this->filesystem->normalizePath(ABSPATH);
@@ -524,9 +530,10 @@ class Files extends JobExecutable
     /**
      * @return bool
      */
-    protected function isFlywheelHost(): bool
+    protected function shouldUseDefaultWpContentPath(): bool
     {
-        return $this->siteInfo->isFlyWheel();
+        // If Wp Content outside ABSPATH let use default path
+        return $this->siteInfo->isWpContentOutsideAbspath();
     }
 
     /**

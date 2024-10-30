@@ -65,9 +65,12 @@ class BackupMetadata extends AbstractBackupMetadata
         $this->setUploadsUrl(array_key_exists('baseurl', $uploadDir) ? $uploadDir['baseurl'] : '');
     }
 
-    public function getIsBackupFormatV1(): bool
+    public function getIsBackupFormatV1(bool $useFilter = true): bool
     {
         $result = version_compare($this->getBackupVersion(), BackupHeader::MIN_BACKUP_VERSION, '<');
+        if (!$useFilter) {
+            return $result;
+        }
 
         return Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, $result);
     }

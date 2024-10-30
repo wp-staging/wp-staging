@@ -6,7 +6,6 @@
  * @var \WPStaging\Backend\Modules\Jobs\Scan                  $scan
  * @var stdClass                                              $options
  * @var \WPStaging\Framework\Filesystem\Filters\ExcludeFilter $excludeUtils
- * @var bool                                                  $isSiteHostedOnWpCom
  * @var bool                                                  $isPro
  *
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
@@ -28,12 +27,6 @@ use WPStaging\Framework\Facades\UI\Checkbox;
             echo " disabled='disabled'";
         } ?> />
 </label>
-
-<?php if ($isSiteHostedOnWpCom) : ?>
-<div class="wpstg-alert wpstg-alert-warning wpstg-mt-10px">
-    <p><?php esc_html_e('This website is hosted on WordPress.com. Your WordPress.com credentials may not work on a staging site. Enter a valid email address and password below to create a new account on the staging site.', 'wp-staging'); ?></p>
-</div>
-<?php endif; ?>
 
 <span class="wpstg-error-msg" id="wpstg-clone-id-error" style="display:none;">
     <?php
@@ -82,10 +75,11 @@ use WPStaging\Framework\Facades\UI\Checkbox;
         <?php
         if ($options->mainJob !== Job::UPDATE) {
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'login-data.php');
+            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
+            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
+            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'symlink-uploads.php');
         }
 
-        require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
-        require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
         if ($options->mainJob === Job::STAGING) {
             require_once(__DIR__ . DIRECTORY_SEPARATOR . 'cron-setting.php');
         }

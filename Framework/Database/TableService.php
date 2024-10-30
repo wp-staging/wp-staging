@@ -244,7 +244,6 @@ class TableService
      */
     public function deleteTables($tables): bool
     {
-        $isForeignKeyCheckEnabled = false;
         $isForeignKeyCheckEnabled = $this->database->getClient()->query("SELECT @@FOREIGN_KEY_CHECKS AS fk_check;")->fetch_assoc()['fk_check'];
         if ($isForeignKeyCheckEnabled === "1") {
             $this->database->getClient()->query("SET FOREIGN_KEY_CHECKS = 0;");

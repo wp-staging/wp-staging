@@ -72,7 +72,7 @@ class UpdateWpConfigConstants extends FileCloningService
             $replaceOrSkip["MULTISITE"]          = 'false';
         }
 
-        /** @var $jetpackHelper */
+        /** @var Jetpack $jetpackHelper */
         $jetpackHelper = WPStaging::make(Jetpack::class);
         if ($jetpackHelper->isJetpackActive()) {
             $replaceOrAdd[Jetpack::STAGING_MODE_CONST] = 'true';
@@ -92,6 +92,11 @@ class UpdateWpConfigConstants extends FileCloningService
             $delete[] = "WP_PLUGIN_URL";
             $delete[] = "WPMU_PLUGIN_DIR";
             $delete[] = "WPMU_PLUGIN_URL";
+        }
+
+        if ($isWpContentOutsideAbspath && !$this->isFlywheelHosting()) {
+            $delete[] = "WP_CONTENT_DIR";
+            $delete[] = "WP_CONTENT_URL";
         }
 
         /**
@@ -127,6 +132,14 @@ class UpdateWpConfigConstants extends FileCloningService
         $siteInfo = WPStaging::make(SiteInfo::class);
 
         return $siteInfo->isWpContentOutsideAbspath();
+    }
+
+    protected function isFlywheelHosting(): bool
+    {
+        /** @var SiteInfo $siteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
+
+        return $siteInfo->isFlywheel();
     }
 
     /**

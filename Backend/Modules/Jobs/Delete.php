@@ -18,6 +18,7 @@ use WPStaging\Framework\Utils\Strings;
 
 /**
  * Class Delete
+ * @todo Remove when proper clone cancel job is added!
  * @package WPStaging\Backend\Modules\Jobs
  */
 class Delete extends Job
@@ -469,12 +470,12 @@ class Delete extends Job
 
     /**
      * @param string $deleteDir
-     * @return bool true if the directory is empty or deleted successfully otherwise false
+     * @return bool true if the directory is deleted successfully otherwise false
      * @throws FilesystemExceptions
      */
     protected function cleanStagingDirectory(string $deleteDir): bool
     {
-        if ($this->isEmptyDir($deleteDir)) {
+        if (!is_dir($deleteDir)) {
             return true;
         }
 

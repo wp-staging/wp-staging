@@ -56,6 +56,10 @@ class RestoreLanguageFilesTask extends FileRestoreTask
         }
 
         foreach ($languageFiles as $relativeLangPath => $absoluteLangPath) {
+            if ($this->isExcludedFile("$destinationDir$relativeLangPath")) {
+                continue;
+            }
+
             /**
              * Scenario: Restoring a language file that already exists
              * If subsite restore and no filter is used to override the behaviour then preserve existing language file

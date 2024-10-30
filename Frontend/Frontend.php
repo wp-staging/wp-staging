@@ -8,6 +8,8 @@ use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Pro\Auth\LoginByLink;
 
+use function WPStaging\functions\debug_log;
+
 /**
  * Class Frontend
  * @package WPStaging\Frontend
@@ -92,6 +94,7 @@ class Frontend
         }
 
         add_action("init", [$this, "checkPermissions"]);
+        add_action("init", [$this, "resavePermalinks"]);
         add_filter("wp_before_admin_bar_render", [$this, "changeSiteName"]);
 
         $isRegistered = true;
@@ -234,5 +237,25 @@ class Frontend
         flush_rewrite_rules();
 
         update_option("wpstg_rmpermalinks_executed", "true");
+    }
+
+    /**
+     * @return void
+     */
+    public function resavePermalinks()
+    {
+        if (!$this->isStagingSite() || get_option("wpstg_resave_permalinks_executed") === "true") {
+            return;
+        }
+
+        try {
+            include_once(ABSPATH . 'wp-admin/includes/misc.php'); // Include `misc.php` to ensure `save_mod_rewrite_rules` is available when `flush_rules` is executed.
+            global $wp_rewrite;
+            $wp_rewrite->init();
+            $wp_rewrite->flush_rules(true);
+            update_option("wpstg_resave_permalinks_executed", "true");
+        } catch (\Throwable $e) {
+            debug_log('File wp-admin/includes/misc.php does not exist. Error: ' . $e->getMessage());
+        }
     }
 }

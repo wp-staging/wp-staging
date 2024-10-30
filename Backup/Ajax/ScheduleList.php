@@ -159,7 +159,7 @@ class ScheduleList
                             $isExportingThemes              = $schedule['isExportingThemes'];
                             $isExportingUploads             = $schedule['isExportingUploads'];
                             $isExportingOtherWpContentFiles = $schedule['isExportingOtherWpContentFiles'];
-                            $isExportingOtherWpRootFiles    = $schedule['isExportingOtherWpRootFiles'];
+                            $isExportingOtherWpRootFiles    = $schedule['isExportingOtherWpRootFiles'] ?? false;
                             include(WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-contains.php');
                             ?>
                         </li>

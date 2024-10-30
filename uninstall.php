@@ -89,6 +89,7 @@ class uninstall
             delete_option('wpstg_backup_speed_modal_shown');
             delete_option('wpstg_backup_notice_is_closed');
             delete_option('wpstg_backup_notice_remind_me');
+            delete_option('wpstg_resave_permalinks_executed');
 
             // @see \WPStaging\Backup\BackupScheduler::OPTION_BACKUP_SCHEDULES
             delete_option('wpstg_backup_schedules');

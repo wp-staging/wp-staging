@@ -10,7 +10,7 @@ class ProcessLock
 {
     use ResourceTrait;
 
-    const LOCK_FILE_NAME = '.wpstg_backup_process_locked';
+    const LOCK_FILE_NAME = '.wpstg_process_locked';
 
     private $lockFile;
 
@@ -21,6 +21,7 @@ class ProcessLock
 
     /**
      * @throws ProcessLockedException When the process is locked.
+     * @return void
      */
     public function lockProcess()
     {
@@ -28,6 +29,9 @@ class ProcessLock
         file_put_contents($this->lockFile, time());
     }
 
+    /**
+     * @return void
+     */
     public function unlockProcess()
     {
         if (!file_exists($this->lockFile)) {
@@ -38,7 +42,8 @@ class ProcessLock
     }
 
     /**
-     * @param null $timeout The timeout, in seconds, to lock the process. Leave null to automatically set one.
+     * @param int|null $timeout The timeout, in seconds, to lock the process. Leave null to automatically set one.
+     * @return void
      *
      * @throws ProcessLockedException When the process is locked.
      */

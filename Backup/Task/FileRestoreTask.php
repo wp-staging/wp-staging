@@ -10,6 +10,7 @@ use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
+use WPStaging\Framework\Traits\RestoreFileExclusionTrait;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
@@ -32,6 +33,12 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
 {
     use EndOfLinePlaceholderTrait;
+    use RestoreFileExclusionTrait;
+
+    /**
+     * @var string
+     */
+    const FILTER_EXCLUDE_FILES_DURING_RESTORE = 'wpstg.backup.restore.exclude_paths';
 
     /**
      * @var Filesystem

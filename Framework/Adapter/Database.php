@@ -38,6 +38,15 @@ class Database implements DatabaseInterface
      */
     public function __construct($wpDatabase = null)
     {
+        $this->setWpDatabase($wpDatabase);
+    }
+
+    /**
+     * @param wpdb|null $wpDatabase
+     * @return void
+     */
+    public function setWpDatabase($wpDatabase = null)
+    {
         global $wpdb;
         $this->wpdb = $wpdb;
         if ($wpDatabase !== null && $wpDatabase !== $wpdb) {

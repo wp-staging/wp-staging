@@ -248,7 +248,6 @@ abstract class AbstractJob implements ShutdownableInterface
             }
 
             $this->removeMemoryExhaustErrorTmpFile();
-            $this->currentTask->getQueue()->shutdown();
 
             return $response;
         } catch (DiskNotWritableException $e) {
@@ -266,11 +265,6 @@ abstract class AbstractJob implements ShutdownableInterface
                 'date' => $this->getFormattedDate(),
                 'message' => $e->getMessage(),
             ]);
-
-            try {
-                $this->currentTask->getQueue()->shutdown();
-            } catch (\Throwable $ex) {
-            }
 
             return $response;
         }

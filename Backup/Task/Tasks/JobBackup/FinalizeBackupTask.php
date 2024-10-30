@@ -343,7 +343,7 @@ class FinalizeBackupTask extends BackupTask
             return;
         }
 
-        if ($this->currentFileInfo['category'] === PartIdentifier::DATABASE_PART_IDENTIFIER) {
+        if (($this->jobDataDto->getIsBackupFormatV1()) && $this->currentFileInfo['category'] === PartIdentifier::DATABASE_PART_IDENTIFIER) {
             $this->currentFileInfo['status'] = 'IndexAdded';
             $this->jobDataDto->updateMultipartFileInfo($this->currentFileInfo, $this->currentFileIndex);
             return;

@@ -7,6 +7,12 @@ use WPStaging\Framework\Adapter\DateTimeAdapter;
 
 class TemplateEngine implements TemplateEngineInterface
 {
+    /**
+     * Hook that is used to inject pro templates in UI. So they can be used by our JS
+     * @var string
+     */
+    const HOOK_RENDER_PRO_TEMPLATES = 'wpstg.template.render_pro_templates';
+
     /** @var string Absolute path to the views directory.  */
     protected $views;
 
