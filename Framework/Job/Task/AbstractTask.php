@@ -162,8 +162,6 @@ abstract class AbstractTask
 
         $response = apply_filters('wpstg.task.response', $response);
 
-        $this->taskQueue->shutdown();
-
         return $response;
     }
 

@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework\Newsfeed;
 
+use WPStaging\Framework\Newsfeed\NewsfeedValidator;
+
 use function WPStaging\functions\debug_log;
 
 /**
@@ -37,6 +39,9 @@ class NewsfeedRequester
      */
     private $isDebug = false;
 
+    /** @var NewsfeedValidator */
+    private $validator;
+
     public function __construct(string $transientIdentifier = '', string $url = '')
     {
         if (empty($transientIdentifier)) {
@@ -46,6 +51,8 @@ class NewsfeedRequester
         if (empty($url)) {
             throw new \InvalidArgumentException('URL cannot be empty.');
         }
+
+        $this->validator = new NewsfeedValidator();
 
         $this->url = $url;
 
@@ -64,7 +71,14 @@ class NewsfeedRequester
         }
 
         $data = $this->getRemoteData();
-        set_transient($this->transientIdentifier, wp_kses_post($data), self::TRANSIENT_EXPIRATION_TIME);
+        if (empty($data) || !$this->validator->validate($data)) {
+            return '';
+        }
+
+        if (!$this->isDebug) {
+            set_transient($this->transientIdentifier, wp_kses_post($data), self::TRANSIENT_EXPIRATION_TIME);
+        }
+
         return $data;
     }
 
@@ -101,6 +115,7 @@ class NewsfeedRequester
             return '';
         }
 
-        return wp_remote_retrieve_body($response);
+        $content = wp_remote_retrieve_body($response);
+        return trim($content);
     }
 }

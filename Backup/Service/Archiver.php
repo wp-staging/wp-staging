@@ -260,11 +260,10 @@ class Archiver
      *
      * @param int $backupSizeBeforeAddingIndex
      * @param string $finalFileNameOnRename
-     * @param bool $isBackupPart
      *
      * @return string
      */
-    public function generateBackupMetadata(int $backupSizeBeforeAddingIndex = 0, string $finalFileNameOnRename = '', bool $isBackupPart = false): string
+    public function generateBackupMetadata(int $backupSizeBeforeAddingIndex = 0, string $finalFileNameOnRename = ''): string
     {
         clearstatcache();
         $backupSizeAfterAddingIndex = filesize($this->tempBackup->getFilePath());
@@ -273,14 +272,10 @@ class Archiver
         $backupMetadata->setHeaderStart($backupSizeBeforeAddingIndex);
         $backupMetadata->setHeaderEnd($backupSizeAfterAddingIndex);
 
-        if ($isBackupPart) {
-            $this->updateMultipartData($backupMetadata);
-        }
-
         if ($this->jobDataDto instanceof JobBackupDataDto) {
             /** @var JobBackupDataDto */
             $jobDataDto = $this->jobDataDto;
-            $backupMetadata->setIndexPartSize($jobDataDto->getCategorySizes());
+            $this->setBackupMetadataCategoryInfo($backupMetadata, $jobDataDto);
         }
 
         $this->tempBackup->append(json_encode($backupMetadata));
@@ -442,20 +437,21 @@ class Archiver
 
     /**
      * @param BackupMetadata $backupMetadata
+     * @param JobBackupDataDto $jobBackupDataDto
      * @return void
      */
-    protected function updateMultipartData(BackupMetadata $backupMetadata)
+    protected function setBackupMetadataCategoryInfo(BackupMetadata $backupMetadata, JobBackupDataDto $jobBackupDataDto)
     {
-        // Used in Pro
+        $backupMetadata->setIndexPartSize($jobBackupDataDto->getCategorySizes());
     }
 
     /**
      * @param JobBackupDataDto $jobBackupDataDto
      * @return void
      */
-    protected function incrementFileCountForMultipart(JobBackupDataDto $jobBackupDataDto)
+    protected function incrementFilesCount(JobBackupDataDto $jobBackupDataDto)
     {
-        // Used in Pro
+        $jobBackupDataDto->setTotalFiles($jobBackupDataDto->getTotalFiles() + 1);
     }
 
     /**
@@ -552,13 +548,11 @@ class Archiver
 
         /** @var JobBackupDataDto $jobBackupDataDto */
         $jobBackupDataDto = $this->jobDataDto;
-        $jobBackupDataDto->setTotalFiles($jobBackupDataDto->getTotalFiles() + 1);
-
         if ($this->archiverDto->getFileSize() >= 2 * GB_IN_BYTES) {
             $jobBackupDataDto->setIsContaining2GBFile(true);
         }
 
-        $this->incrementFileCountForMultipart($jobBackupDataDto);
+        $this->incrementFilesCount($jobBackupDataDto);
 
         return $bytesWritten;
     }

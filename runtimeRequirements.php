@@ -39,6 +39,16 @@ if (!function_exists('wpstgIsProPluginActiveInNetwork')) {
     }
 }
 
+if (!function_exists('wpstgIsFreeVersionRequiredForPro')) {
+    /**
+     * @return bool
+     */
+    function wpstgIsFreeVersionRequiredForPro(): bool
+    {
+        return apply_filters('wpstg.free_required_by_pro', true);
+    }
+}
+
 if (!function_exists('wpstgIsProActiveInNetworkOrInCurrentSite')) {
     /**
      * @return bool
@@ -361,7 +371,7 @@ if (
     class_exists('\WPStaging\Core\WPStaging')
 ) {
     if (wpstgCanShowAnotherInstanceRunningNotice($pluginFilePath)) {
-        add_action(is_network_admin() ? 'wpstg.network_admin_notices' : 'wpstg.admin_notices', function () { // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
+        add_action(is_network_admin() ? 'network_admin_notices' : 'admin_notices', function () { // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
             echo '<div class="notice-warning notice is-dismissible another-wpstaging-active">';
             echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING Already Active', 'wp-staging') . '</p>';
             echo '<p>' . esc_html__('Another WP STAGING is already activated, please leave only one instance of the WP STAGING plugin active at the same time.', 'wp-staging') . '</p>';
@@ -382,7 +392,7 @@ if (
  */
 if (!version_compare($currentWordPressVersion = (string)get_bloginfo('version'), $minimumWordPressVersion = '4.4', '>=')) {
     if (current_user_can('activate_plugins')) {
-        add_action(is_network_admin() ? 'wpstg.network_admin_notices' : 'wpstg.admin_notices', function () use ($currentWordPressVersion, $minimumWordPressVersion) { // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
+        add_action(is_network_admin() ? 'network_admin_notices' : 'admin_notices', function () use ($currentWordPressVersion, $minimumWordPressVersion) { // phpcs:ignore WPStaging.Security.FirstArgNotAString, WPStaging.Security.AuthorizationChecked
             echo '<div class="notice-warning notice is-dismissible">';
             echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING', 'wp-staging') . '</p>';
             echo '<p>' . sprintf(esc_html__('WP STAGING requires at least WordPress %s to run. You have WordPress %s.', 'wp-staging'), esc_html($minimumWordPressVersion), esc_html($currentWordPressVersion)) . '</p>';

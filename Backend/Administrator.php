@@ -24,7 +24,6 @@ use WPStaging\Backend\Modules\Jobs\Cancel;
 use WPStaging\Backend\Modules\Jobs\CancelUpdate;
 use WPStaging\Backend\Modules\Jobs\Cloning;
 use WPStaging\Backend\Modules\Jobs\Updating;
-use WPStaging\Backend\Modules\Jobs\Delete;
 use WPStaging\Backend\Modules\Jobs\Scan;
 use WPStaging\Backend\Modules\Jobs\Logs;
 use WPStaging\Backend\Modules\Jobs\ProcessLock;
@@ -42,7 +41,6 @@ use WPStaging\Backend\Feedback\Feedback;
 use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;
-use WPStaging\Backend\Pro\WpstgRestoreDownloader;
 
 /**
  * Class Administrator
@@ -142,7 +140,6 @@ class Administrator
         }
 
         // Ajax Requests
-        add_action("wp_ajax_wpstg_overview", [$this, "ajaxOverview"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_scanning", [$this, "ajaxCloneScan"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_check_clone", [$this, "ajaxCheckCloneDirectoryName"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_restart", [$this, "ajaxRestart"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -154,8 +151,6 @@ class Administrator
         add_action("wp_ajax_wpstg_clone_files", [$this, "ajaxCopyFiles"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_clone_replace_data", [$this, "ajaxReplaceData"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_clone_finish", [$this, "ajaxFinish"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action("wp_ajax_wpstg_confirm_delete_clone", [$this, "ajaxDeleteConfirmation"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action("wp_ajax_wpstg_delete_clone", [$this, "ajaxDeleteClone"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_cancel_clone", [$this, "ajaxCancelClone"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_cancel_update", [$this, "ajaxCancelUpdate"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_hide_rating", [$this, "ajaxHideRating"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -175,8 +170,6 @@ class Administrator
 
         // Ajax hooks pro Version
         // TODO: move all below actions to pro service provider?
-        add_action("wp_ajax_wpstg_edit_clone_data", [$this, "ajaxEditCloneData"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action("wp_ajax_wpstg_save_clone_data", [$this, "ajaxSaveCloneData"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_scan", [$this, "ajaxPushScan"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_push_tables", [$this, "ajaxPushTables"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_push_processing", [$this, "ajaxPushProcessing"]); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -574,39 +567,6 @@ class Administrator
     }
 
     /**
-     * Ajax Overview
-     */
-    public function ajaxOverview()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-
-        /** @var SiteInfo */
-        $siteInfo = WPStaging::make(SiteInfo::class);
-        if ($siteInfo->isHostedOnWordPressCom()) {
-            require_once "{$this->viewsPath}clone/wordpress-com/index.php";
-            wp_die(); // Using wp_die instead of return here to make sure no 0 is appended to the response
-        }
-
-        // Existing clones
-        $sites           = WPStaging::make(Sites::class);
-        $availableClones = $sites->getSortedStagingSites();
-
-        // Get license data
-        $license = get_option('wpstg_license_status');
-
-        // Get db
-        $db = WPStaging::make('wpdb');
-
-        $iconPath = $this->assets->getAssetsUrl('svg/cloud.svg');
-
-        require_once "{$this->viewsPath}clone/ajax/single-overview.php";
-
-        wp_die();
-    }
-
-    /**
      * Ajax Scan
      * @action wp_ajax_wpstg_scanning 10 0
      * @see Administrator::defineHooks()
@@ -640,7 +600,6 @@ class Administrator
         $options              = $scan->getOptions();
         $excludeUtils         = WPStaging::make(ExcludeFilter::class);
         $wpDefaultDirectories = WPStaging::make(WpDefaultDirectories::class);
-        $isSiteHostedOnWpCom  = $siteInfo->isHostedOnWordPressCom();
         $isPro                = WPStaging::isPro();
 
         if ($isPro) {
@@ -853,42 +812,6 @@ class Administrator
     }
 
     /**
-     * Ajax Delete Confirmation
-     */
-    public function ajaxDeleteConfirmation()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-
-        $delete = WPStaging::make(Delete::class);
-
-        $isDatabaseConnected = $delete->setData();
-
-        $clone = $delete->getClone();
-
-        $dbname = $delete->getDbName();
-
-        require_once "{$this->viewsPath}clone/ajax/delete-confirmation.php";
-
-        wp_die();
-    }
-
-    /**
-     * Delete clone
-     */
-    public function ajaxDeleteClone()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-
-        $delete = WPStaging::make(Delete::class);
-
-        wp_send_json($delete->start());
-    }
-
-    /**
      * Cancel clone
      */
     public function ajaxCancelClone()
@@ -1013,79 +936,6 @@ class Administrator
         $scan->setIsUploadsSymlinked($isUploadsSymlinked);
 
         return $scan->hasFreeDiskSpace($excludedDirectories, $extraDirectories);
-    }
-
-    /**
-     * Allows the user to edit the clone's data
-     */
-    public function ajaxEditCloneData()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-
-        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
-        if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
-            $clone = $existingClones[$this->sanitize->sanitizeString($_POST["clone"])];
-            require_once "{$this->viewsPath}pro/edit-clone-data.php";
-        } else {
-            echo esc_html__("Unknown error. Please reload the page and try again", "wp-staging");
-        }
-
-        wp_die();
-    }
-
-    /**
-     * Allow the user to Save Clone Data
-     */
-    public function ajaxSaveCloneData()
-    {
-        if (!$this->isAuthenticated()) {
-            return;
-        }
-
-        $existingClones = get_option(Sites::STAGING_SITES_OPTION, []);
-        if (isset($_POST["clone"]) && array_key_exists($_POST["clone"], $existingClones)) {
-            if (empty($_POST['directoryName'])) {
-                echo esc_html__("Site name is required!", "wp-staging");
-                wp_die();
-            }
-
-            $cloneId            = $this->sanitize->sanitizeString($_POST["clone"]);
-            $cloneName          = isset($_POST["cloneName"]) ? $this->sanitize->sanitizeString($_POST["cloneName"]) : '';
-            $cloneDirectoryName = $this->sanitize->sanitizeString($_POST["directoryName"]);
-            $cloneDirectoryName = preg_replace("#\W+#", '-', strtolower($cloneDirectoryName));
-
-            $updateClones = [
-                "cloneName"        => $this->sanitize->sanitizeString($cloneName),
-                "directoryName"    => $this->sanitize->sanitizeString($cloneDirectoryName),
-                "path"             => isset($_POST["path"]) ? $this->sanitize->sanitizeString($_POST["path"]) : '',
-                "url"              => isset($_POST["url"]) ? $this->sanitize->sanitizeString($_POST["url"]) : '',
-                "prefix"           => isset($_POST["prefix"]) ? $this->sanitize->sanitizeString($_POST["prefix"]) : '',
-                "databaseUser"     => isset($_POST["externalDBUser"]) ? $this->sanitize->sanitizeString($_POST["externalDBUser"]) : '',
-                "databasePassword" => isset($_POST["externalDBPassword"]) ? $this->sanitize->sanitizePassword($_POST["externalDBPassword"]) : '',
-                "databaseDatabase" => isset($_POST["externalDBDatabase"]) ? $this->sanitize->sanitizeString($_POST["externalDBDatabase"]) : '',
-                "databaseServer"   => isset($_POST["externalDBHost"]) ? $this->sanitize->sanitizeString($_POST["externalDBHost"]) : 'localhost',
-                "databasePrefix"   => isset($_POST["externalDBPrefix"]) ? $this->sanitize->sanitizeString($_POST["externalDBPrefix"]) : 'wp_',
-                "databaseSsl"      => isset($_POST["externalDBSsl"]) && 'true' === $this->sanitize->sanitizeString($_POST["externalDBSsl"]) ? true : false,
-                "datetime"         => ! empty($existingClones["datetime"]) ? $existingClones["datetime"] : time(),
-                "ownerId"          => ! empty($existingClones['ownerId']) ? $existingClones['ownerId'] : get_current_user_id()
-            ];
-
-            $existingClones[$cloneId] = array_merge($existingClones[$cloneId], $updateClones);
-
-            if (update_option(Sites::STAGING_SITES_OPTION, $existingClones)) {
-                // Update datetime if data was updated
-                $existingClones[$cloneId]["datetime"] = time();
-                update_option(Sites::STAGING_SITES_OPTION, $existingClones);
-            }
-
-            echo esc_html__("Success", "wp-staging");
-        } else {
-            echo esc_html__("Unknown error. Please reload the page and try again", "wp-staging");
-        }
-
-        wp_die();
     }
 
     /**

@@ -59,6 +59,13 @@ class I18n
             'database_connection'   => [
                 'success' => esc_html__('Database connection successful', 'wp-staging'),
                 'failed' => esc_html__('Database connection failed', 'wp-staging'),
+                'nothing_to_test' => esc_html__('Nothing to test!', 'wp-staging'),
+            ],
+            'staging_site' => [
+                'delete' => [
+                    'confirmation' => esc_html__('Delete Staging Site "%s"', 'wp-staging'),
+                    'title' => esc_html__('Staging Site Deleted Successfully!', 'wp-staging'),
+                ],
             ],
             'cloning'         => [
                 'title' => esc_html__('Staging Site Created Successfully!', 'wp-staging'),
@@ -155,7 +162,7 @@ class I18n
                 'ajax_status_code_429' => sprintf(esc_html__('Error 429 - It looks like your server is rate limiting ajax requests. Please try to resume after a minute. If this still not works try the %s or submit an error report and contact us.', 'wp-staging'), '<a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a>'),
             ],
             'pro_admin_pro' => [
-                'start_process_modal_html' => sprintf(esc_html__('This will overwrite the production/live site and its plugins, themes and media assets with data from the staging site: %s. Database data will be overwritten for each selected table. Take care if you use a shop system like WooCommerce and read the %s. %s<b>Important:</b> Before you proceed make sure that you have a full site backup. If the pushing process is not successful contact us at %s or use the Contact Us button.', 'wp-staging'), '%cloneName', '<a href="https://wp-staging.com/docs/skip-woocommerce-orders-and-products/" target="_blank">FAQ</a>', '<br/><br/>', '<a href=\'mailto:support@wp-staging.com\'>support@wp-staging.com</a>'),
+                'start_process_modal_html' => sprintf(esc_html__('This will overwrite the production/live site and its plugins, themes and media assets with data from the staging site: %sDatabase data will be overwritten for each selected table. Take care if you use a shop system like WooCommerce and read the %s. %s %sImportant:%s Before you proceed make sure that you have a full site backup. If the pushing process is not successful contact us at %s or use the Contact Us button.', 'wp-staging'), '%cloneName', '<a href="https://wp-staging.com/docs/skip-woocommerce-orders-and-products/" target="_blank">FAQ</a>', '<br/><br/>', '<b>', '</b>', '<a href=\'mailto:support@wp-staging.com\'>support@wp-staging.com</a>'),
                 'connect_database_ajax_success_notify' => esc_html__('Database connection successful', 'wp-staging'),
             ],
             'module_process_modal' => [

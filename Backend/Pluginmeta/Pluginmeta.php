@@ -57,6 +57,14 @@ class Pluginmeta
             array_unshift($links, $settingsLink);
         }
 
+        if (stripos($file, 'wp-staging-pro.php')) {
+            $updateLink = '<a href="' . esc_url('https://wp-staging.com/quick-start-guide/') . '" target="_blank">' . esc_html__('Quick Guide', 'wp-staging') . '</a>';
+            array_push($links, $updateLink);
+
+            $updateLink = '<a href="' . esc_url('https://wp-staging.com/contact-us-presale-and-premium-support/') . '" target="_blank">' . esc_html__('Contact Support', 'wp-staging') . '</a>';
+            array_push($links, $updateLink);
+        }
+
         return $this->editFreeActionRow($links, $file);
     }
 
@@ -98,7 +106,7 @@ class Pluginmeta
             array_unshift($links, $freeRequireNotice);
         }
 
-        if (wpstgIsProActiveInNetworkOrInCurrentSite() && version_compare(wpstgGetFreeVersionNumberIfInstalled(), WPSTGPRO_MINIMUM_FREE_VERSION, '<')) {
+        if (wpstgIsFreeVersionRequiredForPro() && wpstgIsProActiveInNetworkOrInCurrentSite() && version_compare(wpstgGetFreeVersionNumberIfInstalled(), WPSTGPRO_MINIMUM_FREE_VERSION, '<')) {
             unset($links['activate']);
         }
 
@@ -110,6 +118,10 @@ class Pluginmeta
      */
     private function canShowFreeRequiredNotice(): bool
     {
+        if (!wpstgIsFreeVersionRequiredForPro()) {
+            return false;
+        }
+
         $pluginBasename = plugin_basename(WPSTG_PLUGIN_FILE);
         if (stripos($pluginBasename, 'wp-staging-pro.php') === false) {
             return false;

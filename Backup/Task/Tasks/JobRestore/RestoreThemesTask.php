@@ -68,6 +68,10 @@ class RestoreThemesTask extends FileRestoreTask
                 continue;
             }
 
+            if ($this->isExcludedFile("$destDir$themeName")) {
+                continue;
+            }
+
             /**
              * Scenario: Restoring a theme that already exists
              * If subsite restore and no filter is used to override the behaviour then preserve existing theme

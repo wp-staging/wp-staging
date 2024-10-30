@@ -46,6 +46,9 @@ class MultipartMetadata implements \JsonSerializable
     /** @var array List of database backup parts with their info */
     private $databaseParts = [];
 
+    /** @var array List of database files to their extracted path */
+    private $databaseFiles = [];
+
     #[\ReturnTypeWillChange]
     public function jsonSerialize()
     {
@@ -213,6 +216,22 @@ class MultipartMetadata implements \JsonSerializable
     }
 
     /**
+     * @return array
+     */
+    public function getDatabaseFiles()
+    {
+        return $this->databaseFiles;
+    }
+
+    /**
+     * @param array $files
+     */
+    public function setDatabaseFiles($files)
+    {
+        $this->databaseFiles = $files;
+    }
+
+    /**
      * @param string $part
      * @param array  $fileInfo
      */
@@ -220,6 +239,14 @@ class MultipartMetadata implements \JsonSerializable
     {
         $partName            = $part . 'Parts';
         $this->{$partName}[] = $fileInfo;
+    }
+
+    /**
+     * @param string $databaseFile
+     */
+    public function addDatabaseFile($databaseFile)
+    {
+        $this->databaseFiles[] = $databaseFile;
     }
 
     /**

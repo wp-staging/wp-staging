@@ -86,23 +86,19 @@ $isCalledFromIndex = true;
                 include(WPSTG_VIEWS_DIR . '_main/loading-placeholder.php');
             ?>
             <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">
-                <?php
-                if (!$this->siteInfo->isCloneable()) {
-                    // Staging site but not cloneable
-                    require_once($this->viewsPath . "clone/staging-site/index.php");
-                } elseif (!defined('WPSTGPRO_VERSION') && is_multisite()) {
-                    require_once($this->viewsPath . "clone/multi-site/index.php");
-                } else {
-                    require_once($this->viewsPath . "clone/single-site/index.php");
-                }
-                ?>
+            <?php
+            if ($this->siteInfo->isHostedOnWordPressCom()) {
+                require $this->viewsPath . 'staging/wordpress-com/index.php';
+            } elseif (!WPStaging::isPro() && is_multisite()) {
+                require $this->viewsPath . 'staging/free-version.php';
+            } elseif (!$this->siteInfo->isCloneable()) {
+                require $this->viewsPath . 'staging/staging-site/index.php';
+            } else {
+                require $this->viewsPath . 'staging/index.php';
+            }
+            ?>
             </div>
             <div id="wpstg--tab--backup" class="wpstg--tab--content <?php echo esc_attr($classBackupPageActive); ?>">
-                <?php
-                if (WPStaging::isPro()) {
-                    require_once($this->viewsPath . "backup/free-version.php");
-                }
-                ?>
             </div>
             <div class="wpstg-did-you-know-footer">
                 <?php echo sprintf(

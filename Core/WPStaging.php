@@ -5,6 +5,7 @@ namespace WPStaging\Core;
 use Exception;
 use RuntimeException;
 use WPStaging\Backend\Administrator;
+use WPStaging\Framework\Job\JobServiceProvider;
 use WPStaging\Pro\License\Licensing;
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Basic\BasicServiceProvider;
@@ -31,6 +32,7 @@ use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Frontend\Frontend;
 use WPStaging\Frontend\FrontendServiceProvider;
 use WPStaging\Pro\ProServiceProvider;
+use WPStaging\Staging\StagingServiceProvider;
 
 /**
  * Class WPStaging
@@ -132,6 +134,8 @@ final class WPStaging
 
         $this->container->register(AnalyticsServiceProvider::class);
 
+        $this->container->register(JobServiceProvider::class);
+        $this->container->register(StagingServiceProvider::class);
         $this->container->register(BackupServiceProvider::class);
 
         // Internal Use Only: Register Basic or Pro specific services.

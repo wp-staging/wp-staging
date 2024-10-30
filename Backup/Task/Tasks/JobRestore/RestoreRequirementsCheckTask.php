@@ -468,7 +468,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         }
 
         if (!$this->jobDataDto->getIsSameSiteBackupRestore()) {
-            throw new RuntimeException('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.');
+            throw new RuntimeException(sprintf('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. This backup has been created on %s and you are trying to restore the backup on %s. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.', esc_url($this->jobDataDto->getBackupMetadata()->getSiteUrl()), esc_url(site_url())));
         }
     }
 

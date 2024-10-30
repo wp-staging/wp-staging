@@ -68,6 +68,10 @@ class RestoreMuPluginsTask extends FileRestoreTask
             return;
         }
 
+        $defaultExcluded = [
+            $destDir . 'wp-staging-optimizer.php'
+        ];
+
         foreach ($muPluginsToRestore as $muPluginSlug => $muPluginPath) {
             /**
              * Scenario: Skip restoring a mu-plugin whose destination is symlink and the site is hosted on WordPress.com
@@ -76,9 +80,13 @@ class RestoreMuPluginsTask extends FileRestoreTask
                 continue;
             }
 
+            if ($this->isExcludedFile("$destDir$muPluginSlug", $defaultExcluded)) {
+                continue;
+            }
+
             /**
              * Scenario: Restoring a mu-plugin that already exists
-             * If subsite restore and no filter is used to override the behaviour then preserve existing mu-plugin
+             * If subsite restore and no filter is used to override the behavior then preserve existing mu-plugin
              * Otherwise:
              * 1. Backup old mu-plugin
              * 2. Restore new mu-plugin

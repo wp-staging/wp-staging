@@ -5,7 +5,6 @@
  *
  * @var \WPStaging\Backend\Modules\Jobs\Scan $scan
  * @var bool                                 $isPro
- * @var bool                                 $isSiteHostedOnWpCom
  *
  * @see \WPStaging\Backend\Modules\Jobs\Scan::start For details on $options.
  */
@@ -27,7 +26,7 @@ if (!$isPro) {
 
 <div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg-new-admin-user"><?php esc_html_e('New Admin Account', 'wp-staging'); ?></label>
-    <?php Checkbox::render('wpstg-new-admin-user', 'wpstg-new-admin-user', 'true', $checked = ($isPro && $isSiteHostedOnWpCom), ['classes' => 'wpstg-toggle-advance-settings-section', 'isDisabled' => !$isPro], ['id' => 'wpstg-new-admin-user-section']); ?>
+    <?php Checkbox::render('wpstg-new-admin-user', 'wpstg-new-admin-user', '', $checked = false, ['classes' => 'wpstg-toggle-advance-settings-section', 'isDisabled' => !$isPro], ['id' => 'wpstg-new-admin-user-section']); ?>
     <span class="wpstg--tooltip">
         <img class="wpstg--dashicons" src="<?php echo esc_attr($scan->getInfoIcon()); ?>" alt="info" />
         <span class="wpstg--tooltiptext">
@@ -37,11 +36,8 @@ if (!$isPro) {
             </div>
         </span>
     </span>
-    <?php if ($isSiteHostedOnWpCom) : ?>
-    <span class="wpstg-recommended-label">(<?php esc_html_e('Recommended', 'wp-staging'); ?>)</span>
-    <?php endif; ?>
 </div>
-<div id="wpstg-new-admin-user-section" <?php echo ($isPro && !$isSiteHostedOnWpCom) ? 'style="display: none;"' : '' ?>>
+<div id="wpstg-new-admin-user-section" <?php echo $isPro ? 'style="display: none;"' : '' ?>>
     <div class="wpstg-form-group wpstg-text-field">
         <label for="wpstg-new-admin-email"><?php esc_html_e('Email: ', 'wp-staging'); ?> </label>
         <input type="email" class="wpstg-textbox" name="wpstg-new-admin-email" id="wpstg-new-admin-email" autocapitalize="off" <?php echo $isDisabled ? 'disabled' : '' ?> />

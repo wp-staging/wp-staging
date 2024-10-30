@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.6
-Stable tag: 3.9.0
+Stable tag: 3.9.1
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -286,6 +286,24 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.9.1 =
+* New: Now supports cloning and pushing sites where the wp-content folder is located outside the main WordPress directory, as well as sites with a renamed wp-content folder. #1989
+* New: Add links to quick guide and support on WP Staging plugins listing page. #3808
+* Enh: Use our modern backup architecture for deleting and editing a staging site to provide a better and faster workflow experience. #3737
+* Enh: Merge all backup restore filters into a single new filter, deprecating the others. One filter to rule them all… and make devs' lives easier. #3717
+* Enh: Improve wordings for several notices. #3781
+* Fix: Deleting an unfinished staging site, does not delete its folder. #3785
+* Fix: Filesystem scanner keeps on running during backup creation. #3902
+* Fix: Autosave WordPress `Permalinks` after creating a staging site. #3618
+* Fix: Files index error due to invalid files count in multipart backups. backup is still restoreable as this is only a logging error! #3872
+* Fix: Remove wordpress.com related messages. #3641
+* Fix: Rare fatal error "Call to undefined function apache_get_modules" after the push process. (Pro) #3763
+* UX: Remove the advanced settings on the update staging site page. #3768
+* Dev: Add our own playwright image with bundled PHP for efficent e2e testing with Playwright. #3867
+* Dev: Move unit tests to a new location. #3881
+* Dev: Prepare multipart backup feature for v2 backups. Change file extension for database parts. #3876
+* Dev: Add newsfeed validator. #3803
 
 = 3.9.0 =
 * New: Added magic login links for both production and staging sites with customizable expiration times and role-based access. Ideal for granting temporary access to external developers or clients who need quick, limited-time access to your WordPress site. Read more: https://wp-staging.com/create-magic-login-links (Pro) #3582

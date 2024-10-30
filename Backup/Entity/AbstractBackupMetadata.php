@@ -64,7 +64,7 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
      * This need to be bump whenever we make changes in backup structure
      * @var string
      */
-    const BACKUP_VERSION = '1.0.3';
+    const BACKUP_VERSION = '1.0.4';
 
     /** @var string */
     private $id;

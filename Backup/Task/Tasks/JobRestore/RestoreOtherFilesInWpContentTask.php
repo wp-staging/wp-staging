@@ -154,14 +154,14 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
         foreach ($otherFilesToRestore as $relativePath => $absSourcePath) {
             $absDestPath = $destinationDir . $relativePath;
 
-            if ($this->isExcludedOtherFile($absDestPath)) {
-                continue;
-            }
-
             /**
              * Scenario: Skip restoring drop-ins whose destination is symlink and the site is hosted on WordPress.com
              */
             if ($this->isSiteHostedOnWordPressCom && is_link($absDestPath)) {
+                continue;
+            }
+
+            if ($this->isExcludedOtherFile($absDestPath) || $this->isExcludedFile($absDestPath)) {
                 continue;
             }
 
@@ -210,7 +210,13 @@ class RestoreOtherFilesInWpContentTask extends FileRestoreTask
      */
     protected function isExcludedOtherFile($excludedFilePath)
     {
-        $excludedFiles = Hooks::applyFilters(self::FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE, []);
+        $excludedFiles = apply_filters_deprecated(
+            self::FILTER_EXCLUDE_OTHER_FILES_DURING_RESTORE, // filter name
+            [[]], // old args that used to be passed to apply_filters().
+            '5.9.1', // version from which it is deprecated.
+            self::FILTER_EXCLUDE_FILES_DURING_RESTORE, // new filter to use
+            sprintf('This filter will be removed in the upcoming version, use %s filter instead.', self::FILTER_EXCLUDE_FILES_DURING_RESTORE)
+        );
 
         foreach ($excludedFiles as $excludedFile) {
             if (strpos(wp_normalize_path($excludedFilePath), wp_normalize_path($excludedFile)) > 0) {

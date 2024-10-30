@@ -15,6 +15,7 @@ use WPStaging\Framework\Filesystem\MissingFileException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Traits\ResourceTrait;
+use WPStaging\Framework\Traits\RestoreFileExclusionTrait;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Exceptions\EmptyChunkException;
@@ -27,6 +28,7 @@ use WPStaging\Framework\Filesystem\Permissions;
 class Extractor extends AbstractExtractor
 {
     use ResourceTrait;
+    use RestoreFileExclusionTrait;
 
     /** @var LoggerInterface */
     protected $logger;
@@ -208,6 +210,13 @@ class Extractor extends AbstractExtractor
      */
     private function processCurrentFile()
     {
+        $destinationFilePath = $this->extractingFile->getBackupPath();
+        if ($this->currentIdentifier === PathIdentifier::IDENTIFIER_UPLOADS && $this->isExcludedFile($destinationFilePath)) {
+            $this->extractorDto->incrementTotalFilesSkipped();
+            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            return;
+        }
+
         try {
             if ($this->isThreshold()) {
                 // Prevent considering a file as big just because we start extracting at the threshold

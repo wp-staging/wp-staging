@@ -42,7 +42,7 @@ trait WithBackupIdentifier
         $otherIdentifier       = PartIdentifier::OTHER_WP_CONTENT_PART_IDENTIFIER;
         $otherWpRootIdentifier = PartIdentifier::OTHER_WP_ROOT_PART_IDENTIFIER;
 
-        $identifiers = "({$pluginIdentifier}|{$mupluginIdentifier}|{$themeIdentifier}|{$uploadIdentifier}|{$otherIdentifier}|{$otherWpRootIdentifier})";
+        $identifiers = "({$dbIdentifier}|{$pluginIdentifier}|{$mupluginIdentifier}|{$themeIdentifier}|{$uploadIdentifier}|{$otherIdentifier}|{$otherWpRootIdentifier})";
 
         if ($this->checkPartByIdentifier($identifiers, $name)) {
             return true;

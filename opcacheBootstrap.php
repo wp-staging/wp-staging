@@ -48,7 +48,7 @@ if (!$canInvalidate) {
  *
  * We use the "Version" from the headers of the main file of the plugin to compare.
  */
-$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '3.9.0';
+$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '3.9.1';
 $lastCheckHappenedAfterInterval          = current_time('timestamp') > (int)get_site_transient('wpstg.bootstrap.opcache.lastCleared') + 5 * MINUTE_IN_SECONDS;
 
 $shouldClearOpCache = apply_filters('wpstg.bootstrap.opcache.shouldClear', $runtimeVersionDifferentFromBuildVersion && $lastCheckHappenedAfterInterval);
@@ -91,7 +91,7 @@ if ($shouldClearOpCache) {
         }
     }
 
-    add_action('wpstg.admin_notices', function () use ($pluginFilePath, $start) {
+    add_action('admin_notices', function () use ($pluginFilePath, $start) {
         echo '<div class="notice-warning notice is-dismissible">';
         echo '<p style="font-weight: bold;">' . esc_html__('WP STAGING OPCache', 'wp-staging') . '</p>';
         echo '<p>' . wp_kses_post(

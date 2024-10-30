@@ -126,7 +126,7 @@ class ExtractFilesTask extends RestoreTask
     {
         $this->metadata   = $this->jobDataDto->getBackupMetadata();
         $this->totalFiles = $this->metadata->getTotalFiles();
-        $this->extractorService->setIsBackupFormatV1($this->metadata->getIsBackupFormatV1());
+        $this->extractorService->setIsBackupFormatV1($this->metadata->getIsBackupFormatV1(false));
         $this->extractorService->setLogger($this->logger);
         $this->extractorService->setExcludedIdentifiers($this->getExcludedIdentifiers());
         $this->setupExtractor();
@@ -168,9 +168,10 @@ class ExtractFilesTask extends RestoreTask
         /** @var PathIdentifier */
         $pathIdentifier      = WPStaging::make(PathIdentifier::class);
         $excludedIdentifiers = [];
+        $isBackupFormatV1    = $this->jobDataDto->getBackupMetadata()->getIsBackupFormatV1(false);
         foreach ($excludedParts as $part) {
-            // we need to handle the database part separately, as it's not a part of the PathIdentifier
-            if ($part === PartIdentifier::DATABASE_PART_IDENTIFIER) {
+            // we need to handle the database part separately for v1 backups, as it's not a part of the PathIdentifier
+            if ($isBackupFormatV1 && $part === PartIdentifier::DATABASE_PART_IDENTIFIER) {
                 $excludedIdentifiers[] = PartIdentifier::DATABASE_PART_IDENTIFIER;
                 continue;
             }

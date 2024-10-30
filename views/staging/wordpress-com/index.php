@@ -1,6 +1,11 @@
 <?php
 
 /**
+ * This view shows why staging sites can not be created on WordPress.com hosted websites.
+ * @see src/views/clone/index.php
+ */
+
+/**
  * This view is only called on WordPress.com platform, as it is impossible to host a cloned staging site on WordPress.com on ABSPATH and wp-content/wp-staging-sites
  * due to nginx restriction by WordPress.com
  * We will support this feature in the future but for now we will show a notice to the user that he can use the backup & migration feature instead.

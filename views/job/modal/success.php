@@ -1,6 +1,6 @@
 <div id="wpstg--success-modal" class="wpstg--success-modal">
     <div id="wpstg--success-modal--inner">
-        <h2>{title}</h2>
+        <h2 class="wpstg--success-modal--title">{title}</h2>
         <div class="wpstg--success-modal--header">
             <p class="wpstg--success-modal--text">
                 {text}

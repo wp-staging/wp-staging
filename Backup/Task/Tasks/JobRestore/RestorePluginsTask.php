@@ -71,6 +71,10 @@ class RestorePluginsTask extends FileRestoreTask
             return;
         }
 
+        $defaultExcluded = [
+            $destDir . 'wp-staging' // Skip wp staging plugin, e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1.
+        ];
+
         foreach ($pluginsToRestore as $pluginSlug => $pluginPath) {
             /**
              * Scenario: Skip restoring a plugin whose destination is symlink and the site is hosted on WordPress.com
@@ -79,9 +83,13 @@ class RestorePluginsTask extends FileRestoreTask
                 continue;
             }
 
+            if ($this->isExcludedFile("$destDir$pluginSlug", $defaultExcluded)) {
+                continue;
+            }
+
             /**
              * Scenario: Restoring a plugin that already exists
-             * If subsite restore and no filter is used to override the behaviour then preserve existing plugin
+             * If subsite restore and no filter is used to override the behavior then preserve existing plugin
              * Otherwise:
              * 1. Backup old plugin
              * 2. Restore new plugin
@@ -180,6 +188,18 @@ class RestorePluginsTask extends FileRestoreTask
             if ($fileInfo->isLink()) {
                 continue;
             }
+
+            $pluginsToExclude = apply_filters_deprecated(
+                self::FILTER_BACKUP_RESTORE_EXCLUDE_PLUGINS, // filter name
+                [
+                    [
+                        WPSTG_PLUGIN_SLUG, // Skip the current active wp staging plugin slug e.g wp-staging-pro, wp-staging-dev, wp-staging-pro_1, etc.
+                    ],
+                ],  // old args that used to be passed to apply_filters().
+                '5.9.1', // version from which it is deprecated.
+                self::FILTER_EXCLUDE_FILES_DURING_RESTORE, // new filter to use
+                sprintf('This filter will be removed in the upcoming version, use %s filter instead.', self::FILTER_EXCLUDE_FILES_DURING_RESTORE)
+            );
 
             if ($fileInfo->isDir() && !in_array($fileInfo->getFilename(), $pluginsToExclude)) {
                 $plugins[$fileInfo->getBasename()] = $fileInfo->getPathname();

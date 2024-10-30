@@ -2,6 +2,9 @@
 
 namespace WPStaging\Staging;
 
+use Exception;
+use WPStaging\Staging\Dto\StagingSiteDto;
+
 /**
  * Class Sites
  *
@@ -243,5 +246,30 @@ class Sites
     {
         $stagingSites = $this->tryGettingStagingSites();
         return wp_list_pluck($stagingSites, 'path');
+    }
+
+    /**
+     * @param string $cloneId
+     * @return StagingSiteDto
+     *
+     * @throws Exception
+     */
+    public function getStagingSiteDtoByCloneId(string $cloneId): StagingSiteDto
+    {
+        $stagingSites = $this->tryGettingStagingSites();
+        if (empty($stagingSites)) {
+            throw new Exception('No staging sites found.');
+        }
+
+        if (!array_key_exists($cloneId, $stagingSites)) {
+            throw new Exception('Staging site not found.');
+        }
+
+        $stagingSiteArray = $stagingSites[$cloneId];
+        $stagingSiteDto   = new StagingSiteDto();
+        $stagingSiteDto->hydrate($stagingSiteArray);
+        $stagingSiteDto->setCloneId($cloneId);
+
+        return $stagingSiteDto;
     }
 }

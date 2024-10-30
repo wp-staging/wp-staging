@@ -92,6 +92,9 @@ abstract class AbstractExtractor
     /** @var int */
     protected $defaultDirectoryOctal = 0755;
 
+    /** @var string */
+    protected $currentIdentifier;
+
     /** @var bool */
     protected $throwExceptionOnValidationFailure = false;
 
@@ -255,9 +258,10 @@ abstract class AbstractExtractor
         }
 
         /** @var IndexLineInterface $backupFileIndex */
-        $backupFileIndex  = $this->indexLineDto->readIndexLine($rawIndexFile);
-        $identifiablePath = $backupFileIndex->getIdentifiablePath();
-        $identifier       = $this->pathIdentifier->getIdentifierFromPath($identifiablePath);
+        $backupFileIndex         = $this->indexLineDto->readIndexLine($rawIndexFile);
+        $identifiablePath        = $backupFileIndex->getIdentifiablePath();
+        $identifier              = $this->pathIdentifier->getIdentifierFromPath($identifiablePath);
+        $this->currentIdentifier = $identifier;
         if ($this->isFileSkipped($identifiablePath, $identifier)) {
             $this->extractorDto->incrementTotalFilesSkipped();
             $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);

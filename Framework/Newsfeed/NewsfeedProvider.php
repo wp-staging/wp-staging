@@ -10,13 +10,18 @@ class NewsfeedProvider
     /** @var Language */
     private $language;
 
+    /** @var bool */
     private $isDebug = false;
 
+    /** @param Language */
     public function __construct(Language $language)
     {
         $this->language = $language;
     }
 
+    /**
+     * @return string
+     */
     public function getNewsfeed(): string
     {
         $newsfeeds = [];
@@ -34,7 +39,8 @@ class NewsfeedProvider
             $newsfeeds[] = $newsfeed->returnData();
         }
 
-        return implode('<hr>', $newsfeeds);
+        $newsfeeds = array_filter($newsfeeds);
+        return empty($newsfeeds) ? '' : implode('<hr>', $newsfeeds);
     }
 
     /**
@@ -45,6 +51,9 @@ class NewsfeedProvider
         echo wp_kses_post($this->getNewsfeed());
     }
 
+    /**
+     * @return array
+     */
     private function getNewsfeedUrls(): array
     {
 
@@ -52,14 +61,14 @@ class NewsfeedProvider
 
         return [
             [
-                'id' => 'partner_newsfeed',
-                'show' => !WPStaging::isPro() && (defined('BORLABS_COOKIE_VERSION') && version_compare(BORLABS_COOKIE_VERSION, '3.2', '<')),
+                'id'     => 'partner_newsfeed',
+                'show'   => !WPStaging::isPro() && (defined('BORLABS_COOKIE_VERSION') && version_compare(BORLABS_COOKIE_VERSION, '3.2', '<')),
                 'de_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'partner-newsfeed-de.txt',
                 'en_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'partner-newsfeed-en.txt',
             ],
             [
-                'id' => 'newsfeed',
-                'show' => true,
+                'id'     => 'newsfeed',
+                'show'   => true,
                 'de_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-de.txt',
                 'en_url' => 'https://wp-staging.com/newsfeed' . $testFolder . 'newsfeed-en.txt',
             ]
