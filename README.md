@@ -1,5 +1,7 @@
 [![Fast tests: Lint JS, PHPCS/XSS, PHPStan, PHPUnit](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml/badge.svg?event=push](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml/badge.svg))](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml)
 
+[![Fast tests: Lint JS, PHPCS/XSS, PHPStan, PHPUnit](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml)
+
 ### Welcome to the WP Staging repository
 
 ## Note ##
