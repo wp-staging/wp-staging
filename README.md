@@ -2,7 +2,6 @@
 [![All Pro e2e](https://github.com/wp-staging/wp-staging-pro/actions/workflows/php_pro.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/php_pro.yml)
 [![Pro Playwright](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_playwright.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_playwright.yml)
 [![Basic Playwright](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_playwright.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_playwright.yml)
-[![Pro Flywheel/WordPressCom Single Site Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml)
 [![Pro Multisite Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_backup.yml)
 [![Pro Multisite Cloning](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_cloning.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_cloning.yml)
 [![Pro Flywheel/WordPressCom Single Site Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml)
