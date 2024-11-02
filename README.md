@@ -1,19 +1,14 @@
 [![Fast tests: Lint JS, PHPCS/XSS, PHPStan, PHPUnit](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/fast_tests.yml)
 [![All Pro e2e](https://github.com/wp-staging/wp-staging-pro/actions/workflows/php_pro.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/php_pro.yml)
 [![Pro Playwright](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_playwright.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_playwright.yml)
+[![Basic Playwright](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_playwright.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_playwright.yml)
 [![Pro Flywheel/WordPressCom Single Site Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml)
 [![Pro Multisite Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_multi_backup.yml)
 [![Pro Flywheel/WordPressCom Single Site Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_thirdparty_backup.yml)
 [![Pro Single Site Backup Compression Enabled](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_backup_compression.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_backup_compression.yml)
 [![Pro Single Site Cloud Storage](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_cloud_storage.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/pro_single_cloud_storage.yml)
 [![Basic Backup](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
-[![PHP 7.0](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
-[![PHP 7.4](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
-[![PHP 8.0](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
-[![PHP 8.1](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
-[![PHP 8.2](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
-[![PHP 8.3](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
-[![PHP 8.4](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/basic_backup.yml)
+[![Pro Integration](https://github.com/wp-staging/wp-staging-pro/actions/workflows/integration.yml/badge.svg)](https://github.com/wp-staging/wp-staging-pro/actions/workflows/integration.yml)
 
 ### Welcome to the WP Staging repository
 
