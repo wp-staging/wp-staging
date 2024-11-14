@@ -32,7 +32,7 @@
                     <a href="<?php echo esc_url($stagingSiteItem->url) ?>" class="wpstg-open-clone wpstg-clone-action" target="_blank" title="<?php echo esc_html__("Open the staging site in a new tab", "wp-staging") ?>">
                         <?php esc_html_e("Open", "wp-staging"); ?>
                     </a>
-                    <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId) ?>" title="<?php echo esc_html__("Update and overwrite the selected staging site with the production site. You can select files and database tables on the next page. This action will not replace nor modify the wp-config.php on the staging site!", "wp-staging") ?>">
+                    <a href="#" class="wpstg-execute-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId) ?>" data-url="<?php echo esc_url($stagingSiteItem->url) ?>" title="<?php echo esc_html__("Update and overwrite the selected staging site with the production site. You can select files and database tables on the next page. This action will not replace nor modify the wp-config.php on the staging site!", "wp-staging") ?>">
                         <?php esc_html_e("Update", "wp-staging"); ?>
                     </a>
                     <a href="#" class="wpstg-reset-clone wpstg-clone-action" data-clone="<?php echo esc_attr($stagingSiteItem->cloneId) ?>" data-network="<?php echo is_multisite() && !empty($stagingSiteitem->isNetworkClone)  ? 'yes' : 'no' ?>" title="<?php echo esc_attr__("Replace the selected staging site with the production site completely. This includes replacing the wp-config.php and all files and data. Confirm to proceed on the next page.", "wp-staging") ?>">

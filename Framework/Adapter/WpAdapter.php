@@ -96,6 +96,10 @@ class WpAdapter
 
         $currentSite = get_current_site();
 
+        if (!is_object($currentSite)) {
+            return 1;
+        }
+
         // For WP >= 3.7 and < 4.6
         if (property_exists($currentSite, 'id')) {
             $currentSite->id;

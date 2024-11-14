@@ -56,7 +56,7 @@ class RestoreFinishTask extends RestoreTask
 
             $this->logger->info("################## FINISH ##################");
 
-            $this->restoreProcessCompleted();
+            $this->logBackupRestoreCompleted($this->jobDataDto->getBackupMetadata());
             $this->clearCacheAndLogoutOnWpCom();
         } catch (RuntimeException $e) {
             $this->logger->critical($e->getMessage());

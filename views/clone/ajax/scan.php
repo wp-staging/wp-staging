@@ -129,16 +129,16 @@ if ($options->current !== null && $options->mainJob === Job::UPDATE) {
 </button>
 
 <?php
- $label  = esc_html__("Start Cloning", "wp-staging");
- $action = 'wpstg_cloning';
- $btnId  = 'wpstg-start-cloning';
+$label  = esc_html__("Start Cloning", "wp-staging");
+$action = 'wpstg_cloning';
+$btnId  = 'wpstg-start-cloning';
 if ($options->current !== null && $options->mainJob === Job::UPDATE) {
-    $label  = esc_html__("Update Clone", "wp-staging");
+    $label  = esc_html__("Update Staging Site", "wp-staging");
     $action = 'wpstg_update';
     $btnId  = 'wpstg-start-updating';
 }
 ?>
 
-<button type="button" id="<?php echo esc_attr($btnId); ?>" class="wpstg-next-step-link wpstg-button--primary wpstg-button--blue" data-action="<?php echo esc_attr($action); ?>"><?php echo esc_html($label); ?></button>
+<button type="button" id="<?php echo esc_attr($btnId); ?>" class="wpstg-next-step-link wpstg-button--primary wpstg-button--blue" data-action="<?php echo esc_attr($action); ?>" data-url="<?php echo esc_attr($options->currentClone['url']); ?>"><?php echo esc_html($label); ?></button>
 
 <a href="#" id="wpstg-check-space"><?php esc_html_e('Check required disk space', 'wp-staging'); ?></a>

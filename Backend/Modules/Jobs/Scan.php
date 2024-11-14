@@ -345,7 +345,7 @@ class Scan extends Job
         $output = '';
         foreach ($directories as $dirName => $directory) {
             // Not a directory, possibly a symlink, therefore we will skip it
-            if (!is_array($directory)) {
+            if (!is_array($directory) || basename($dirName) === "\\") {
                 continue;
             }
 

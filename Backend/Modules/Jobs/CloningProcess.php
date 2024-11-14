@@ -54,6 +54,11 @@ abstract class CloningProcess extends JobExecutable
 
         $this->stagingDb = new \wpdb($this->options->databaseUser, str_replace("\\\\", "\\", $this->options->databasePassword), $this->options->databaseDatabase, $this->options->databaseServer);
 
+        if (!is_object($this->stagingDb)) {
+            $this->returnException('Can not create database object.');
+            return false;
+        }
+
         // Check if there were any error when connecting
         if (
             property_exists($this->stagingDb, 'error') &&

@@ -107,6 +107,12 @@ class I18n
                 'check_clone_error' => esc_html__('Error: Please choose correct name for the staging site.', 'wp-staging'),
                 'clone_hostname_error' => esc_html__('Invalid host name. Please provide it in a format like http://example.com', 'wp-staging'),
             ],
+            'admin_clone_actions_update_modal' => [
+                'title' => esc_html__('Do you want to update the staging site?', 'wp-staging'),
+                'body' => esc_html__('This function overwrites the staging site at "{URL}" with data from the production site, making it identical to the live site and removing any changes made on the staging site. Use this only if you want to re-clone your live site. You can select specific tables and files in the next step.', 'wp-staging'),
+                'suggestion' => sprintf(esc_html__('%sPlease back up your staging site before proceeding!%s', 'wp-staging'), '<b>', '</b>'),
+                'confirm_button_text' => esc_html__('Update', 'wp-staging'),
+            ],
             'admin_clone_actions' => [
                 'cancel_cloning_confirm' => esc_html__('Are you sure you want to cancel cloning process?', 'wp-staging'),
                 'resume_cloning_status' => esc_html__('Try to resume cloning process...', 'wp-staging'),
@@ -115,13 +121,13 @@ class I18n
             ],
             'admin_ajax' => [
                 'error_msg_footer' => sprintf(esc_html__('Please use the %s and try again.', 'wp-staging'), '<a href="https://wp-staging.com/docs/wp-staging-settings-for-small-servers/" target="_blank">Small Server Settings</a>'),
-                'pushing_error_msg' => sprintf(esc_html__('If this issue persists, you can use the <strong>Backup & Migration</strong> feature to move your staging site to live. %s', 'wp-staging'), '<a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank">Read more.</a>'),
+                'pushing_error_msg' => sprintf(esc_html__('If this issue persists, you can use the %s feature to move your staging site to live. %s', 'wp-staging'), '<strong>Backup & Migration</strong>', '<a href="https://wp-staging.com/docs/how-to-migrate-your-wordpress-site-to-a-new-host/" target="_blank">' . esc_html__("Read more", "wp-staging") . '.</a>'),
                 'contact_us_text' => esc_html__('to analyze this issue further.', 'wp-staging'),
                 'help_content_pro' => esc_html__('Please contact WP Staging support if you need further assistance.', 'wp-staging'),
             ],
             'admin_step_buttons' => [
-                'popup_title' => esc_html__('Do you want to update the staging site?', 'wp-staging'),
-                'popup_html' => sprintf(esc_html__('This will overwrite the staging site with all the selected data from the live site.%sUse this only if you want to clone the live site again.%sUnselect all tables and folders that you do not want to overwrite.%sDo not cancel the update process! This could destroy the staging site.%sIf you are unsure, create a backup of the staging site before proceeding.%sThere is no automatic merging of database data!', 'wp-staging'), '<br>', '<br><br>', '<br>', '<br>', '<br>'),
+                'popup_title' => esc_html__('Do you want to proceed?', 'wp-staging'),
+                'popup_html' => sprintf(esc_html__('This will overwrite the staging site "{URL}" and will lead to loose of your staging sites modifications.%sThis is a final warning. Do not stop the update process once it starts, as that may break your staging site.%sClick on %scancel%s if you don\'t want to update the staging site.', 'wp-staging'), '<br><br><b>', '</b><br><br>', '<b>', '</b>'),
                 'confirm_button_text' => esc_html__('Update', 'wp-staging'),
             ],
             'admin_verify_external_database' => [

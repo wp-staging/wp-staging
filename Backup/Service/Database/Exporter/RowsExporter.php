@@ -247,7 +247,7 @@ class RowsExporter extends AbstractExporter
         if ($this->hasMoreThanOnePrimaryKey()) {
             throw new UnexpectedValueException();
         }
-        $query = "SELECT COLUMN_NAME 
+        $query = "SELECT COLUMN_NAME
                   FROM INFORMATION_SCHEMA.COLUMNS
                   WHERE TABLE_NAME = '$this->tableName'
                   AND TABLE_SCHEMA = '$this->databaseName'

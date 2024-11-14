@@ -191,6 +191,10 @@ abstract class Job implements ShutdownableInterface
             $options = $this->options;
         }
 
+        if (!is_object($options)) {
+            return false;
+        }
+
         $now                = new DateTime();
         $options->expiresAt = $now->add(new DateInterval('P1D'))->format('Y-m-d H:i:s');
 

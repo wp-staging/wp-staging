@@ -10,6 +10,7 @@ use WPStaging\Backend\Optimizer\Optimizer;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\Utils\Htaccess;
+use WPStaging\Core\WPStaging;
 
 if (!class_exists('WPStaging\Core\Cron\Cron')) {
     return;
@@ -61,4 +62,9 @@ add_option('wpstg_installDate', date('Y-m-d h:i:s'));
 /**
  * Register the Cron Events for Scheduled Backups
  */
-WPStaging\Core\WPStaging::make(\WPStaging\Backup\BackupScheduler::class)->reCreateCron();
+WPStaging::make(\WPStaging\Backup\BackupScheduler::class)->reCreateCron();
+
+/**
+ * Create backups dir on activation.
+ */
+WPStaging::make(\WPStaging\Backup\BackupServiceProvider::class)->createBackupsDirectory();

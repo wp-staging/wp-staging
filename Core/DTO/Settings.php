@@ -129,7 +129,7 @@ class Settings
         }
 
         foreach ($settings as $key => $value) {
-            if (property_exists($this, $key)) {
+            if (is_object($this) && is_string($key) && property_exists($this, $key)) {
                 $this->{$key} = $value;
             }
         }

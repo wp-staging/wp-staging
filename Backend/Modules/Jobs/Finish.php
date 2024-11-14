@@ -76,7 +76,7 @@ class Finish extends Job
         do_action('wpstg_cloning_complete', $this->options);
 
         $this->logger->info("################## FINISH ##################");
-        $this->cloneProcessCompleted();
+        $this->logCloneCompleted();
         return (object) $return;
     }
 
