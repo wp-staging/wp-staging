@@ -294,17 +294,14 @@ if (!function_exists('wpstgGetCloneSettings')) {
     {
         $settings = get_option('wpstg_clone_settings', null);
 
-        // Return settings if no options given
-        if ($option === null) {
+        if (!is_string($option)) {
             return $settings;
         }
 
-        // Early Bail: if settings is null or if settings isn't object
-        if ($settings === null || !is_object($settings)) {
+        if (!is_object($settings)) {
             return null;
         }
 
-        // Early bail if given option not exists
         if (!property_exists($settings, $option)) {
             return null;
         }

@@ -191,7 +191,7 @@ class Assets
             );
         }
 
-        // Load below assets only on wp staging admin pages
+        // Load below assets only on WP Staging admin pages
         if ($this->isNotWPStagingAdminPage($hook)) {
             return;
         }
@@ -323,12 +323,14 @@ class Assets
     }
 
     /**
-     * Load js vars globally but NOT on wp staging admin pages
+     * Load js vars globally but NOT on WP Staging admin pages or frontend
+     *
+     * @param string $pageSlug
      * @return void
      */
     private function loadGlobalAssets($pageSlug)
     {
-        if (!$this->isNotWPStagingAdminPage($pageSlug)) {
+        if (!$this->isNotWPStagingAdminPage($pageSlug) || !is_admin()) {
             return;
         }
 
@@ -366,16 +368,16 @@ class Assets
     }
 
     /**
-     * Load css and js files only on wp staging admin pages
+     * Check given slug is not WP Staging admin page
      *
-     * @param $page string slug of the current page
+     * @param string $slug slug of the current page
      *
      * @return bool
      */
-    private function isNotWPStagingAdminPage($page)
+    private function isNotWPStagingAdminPage($slug)
     {
         if (WPStaging::isPro()) {
-            $availablePages = [
+            $availableSlugs = [
                 "toplevel_page_wpstg_clone",
                 "toplevel_page_wpstg_backup",
                 "wp-staging-pro_page_wpstg_clone",
@@ -386,7 +388,7 @@ class Assets
                 "wp-staging-pro_page_wpstg-restorer",
             ];
         } else {
-            $availablePages = [
+            $availableSlugs = [
                 "toplevel_page_wpstg_clone",
                 "toplevel_page_wpstg_backup",
                 "wp-staging_page_wpstg_clone",
@@ -397,7 +399,7 @@ class Assets
             ];
         }
 
-        return !in_array($page, $availablePages) || !is_admin();
+        return !in_array($slug, $availableSlugs);
     }
 
     /**

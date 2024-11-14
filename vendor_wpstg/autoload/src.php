@@ -1134,7 +1134,6 @@ return array(
     'WPStaging\\Framework\\Security\\UniqueIdentifier' => $baseDir . '/Framework/Security/UniqueIdentifier.php',
     'WPStaging\\Framework\\SettingsServiceProvider' => $baseDir . '/Framework/SettingsServiceProvider.php',
     'WPStaging\\Framework\\Settings\\DarkMode' => $baseDir . '/Framework/Settings/DarkMode.php',
-    'WPStaging\\Framework\\Settings\\EventLogger' => $baseDir . '/Framework/Settings/EventLogger.php',
     'WPStaging\\Framework\\Settings\\Settings' => $baseDir . '/Framework/Settings/Settings.php',
     'WPStaging\\Framework\\SiteInfo' => $baseDir . '/Framework/SiteInfo.php',
     'WPStaging\\Framework\\TemplateEngine\\TemplateEngine' => $baseDir . '/Framework/TemplateEngine/TemplateEngine.php',

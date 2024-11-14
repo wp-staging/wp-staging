@@ -323,7 +323,7 @@ class SearchReplace extends CloningProcess
         if ($this->isSearchReplaceGeneratorDisabled()) {
             $data = $this->stagingDb->get_results("SELECT * FROM $table LIMIT $offset, $limit", ARRAY_A);
         } else {
-            $this->lastFetchedPrimaryKeyValue = property_exists($this->options->job, 'lastProcessedId') ? $this->options->job->lastProcessedId : false;
+            $this->lastFetchedPrimaryKeyValue = is_object($this->options->job) && property_exists($this->options->job, 'lastProcessedId') ? $this->options->job->lastProcessedId : false;
             $data = $this->rowsGenerator($table, $offset, $limit, $this->stagingDb);
         }
 

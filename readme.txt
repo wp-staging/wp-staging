@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
-Tested up to: 6.6
-Stable tag: 3.9.1
+Tested up to: 6.7
+Stable tag: 3.9.2
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -286,6 +286,24 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.9.2 =
+* New: Supports WordPress 6.7
+* New: Add a new confirmation modal before "update staging site" to prevent accidentally overwriting a staging site. #2465
+* New: Add filter `wpstg.backup.restore.use_current_scheme_on_same_site` to use current http(s) scheme instead of scheme in the backup when restoring on same site. #3911
+* Enh: Create backup storage folder on plugin activation. #3899
+* Enh: Improved logs in case of failure of WP Staging jobs. #3886
+* Enh: Beautify "Backup Completed" modal. #3780
+* Enh: Make the logs in the logs modal filterable by a log type button. #3784
+* Enh: Make more warning messages translatable (i18n). #3892
+* Fix: Remove wpstg-blank-loader.js from being loaded on frontend. #3440
+* Fix: Optimizer plugin is not updated when free and pro version is different. #3888
+* Fix: Exclude the root directory from scanning during the cloning process. #3897
+* Fix: Don't show cache related admin notice on staging site when `WP_CACHE` is set to true. #3860
+* Fix: German translation can break layout of some modals. #3908 #3923
+* Dev: Extend playwright e2e for testing WP Staging on Windows. #3874
+* Dev: Webdriver e2e "Pro Single Site Cloning" failing. #3912
+* Dev: Improve usage of property_exists() #3865
 
 = 3.9.1 =
 * New: Now supports cloning and pushing sites where the wp-content folder is located outside the main WordPress directory, as well as sites with a renamed wp-content folder. #1989

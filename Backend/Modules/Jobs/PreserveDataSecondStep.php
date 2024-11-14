@@ -219,6 +219,10 @@ class PreserveDataSecondStep extends JobExecutable
      */
     protected function propertyExists($property)
     {
+        if (!is_object($this->preservedData) && !is_string($property)) {
+            return false;
+        }
+
         if (!property_exists($this->preservedData, $property)) {
             return false;
         }

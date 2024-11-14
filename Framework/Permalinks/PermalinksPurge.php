@@ -16,7 +16,7 @@ class PermalinksPurge
     public function executeAfterPushing()
     {
         set_transient(self::TRANSIENT, "true");
-        $this->pushProcessCompleted();
+        $this->logPushCompleted();
         set_transient(LiteSpeedCache::TRANSIENT_PURGE_LITESPEED_CACHE, "true");
     }
 

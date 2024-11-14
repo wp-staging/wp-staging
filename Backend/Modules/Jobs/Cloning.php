@@ -438,6 +438,10 @@ class Cloning extends Job
      */
     public function start()
     {
+        if (!is_object($this->options)) {
+            return;
+        }
+
         if (!property_exists($this->options, 'currentJob') || $this->options->currentJob === null) {
             $this->log("Cloning job finished");
             return true;
