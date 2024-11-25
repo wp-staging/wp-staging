@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backup\Task\Tasks;
 
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 
 class CleanupBakTablesTask extends CleanupTmpTablesTask
 {
@@ -13,6 +13,6 @@ class CleanupBakTablesTask extends CleanupTmpTablesTask
      */
     public static function getTempTableType(): string
     {
-        return PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP;
+        return DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP;
     }
 }

@@ -1,32 +1,37 @@
 <?php
 namespace WPStaging\Backup\Service\Database\Importer\Insert;
+use WPStaging\Backup\Dto\Service\DatabaseImporterDto;
 use WPStaging\Framework\Adapter\Database;
-use WPStaging\Framework\Adapter\Database\WpDbAdapter;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
-use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 abstract class QueryInserter
 {
-    use ResourceTrait;
-    protected $wpdb;
     protected $client;
-    protected $logger;
-    protected $jobRestoreDataDto;
+    protected $databaseImporterDto;
     protected $limitedMaxAllowedPacket;
     protected $realMaxAllowedPacket;
     protected $maxInnoDbLogSize;
-    protected $database;
-    protected $error = false;
-    public function initialize(Database $database, JobRestoreDataDto $jobRestoreDataDto, LoggerInterface $logger)
+    protected $currentDbVersion;
+    protected $backupDbVersion;
+    protected $warnings = [];
+    public function setDbVersions(string $currentDbVersion, string $backupDbVersion)
     {
-        $this->database = $database;
-        $this->client = $database->getClient();
-        $this->wpdb = $database->getWpdba();
-        $this->jobRestoreDataDto = $jobRestoreDataDto;
-        $this->logger = $logger;
+        $this->currentDbVersion = $currentDbVersion;
+        $this->backupDbVersion  = $backupDbVersion;
+    }
+    protected $error = false;
+    public function initialize(InterfaceDatabaseClient $client, DatabaseImporterDto $databaseImporterDto)
+    {
+        $this->client              = $client;
+        $this->databaseImporterDto = $databaseImporterDto;
         $this->setMaxAllowedPackage();
         $this->setInnoDbLogFileSize();
+        $this->warnings = [];
+    }
+    public function getWarnings(): array
+    {
+        return $this->warnings;
     }
     abstract public function processQuery(&$insertQuery);
     abstract public function commit();
@@ -56,10 +61,10 @@ abstract class QueryInserter
     protected function setInnoDbLogFileSize()
     {
         try {
-            $innoDbLogFileSize = $this->wpdb->getClient()->get_row("SHOW VARIABLES LIKE 'innodb_log_file_size';", ARRAY_A);
-            $innoDbLogFileSize = $this->getNumberFromResult($innoDbLogFileSize);
-            $innoDbLogFileGroups = $this->wpdb->getClient()->get_row("SHOW VARIABLES LIKE 'innodb_log_files_in_group';", ARRAY_A);
-            $innoDbLogFileGroups = $this->getNumberFromResult($innoDbLogFileGroups);
+            $innoDbLogFileSize = $this->client->query("SHOW VARIABLES LIKE 'innodb_log_file_size';");
+            $innoDbLogFileSize = $this->client->fetchAssoc($innoDbLogFileSize);
+            $innoDbLogFileGroups = $this->client->query("SHOW VARIABLES LIKE 'innodb_log_files_in_group';");
+            $innoDbLogFileGroups = $this->client->fetchAssoc($innoDbLogFileGroups);
             $innoDbLogSize = $innoDbLogFileSize * $innoDbLogFileGroups;
             $innoDbLogSize = max(1 * MB_IN_BYTES, $innoDbLogSize * 0.9);
             $innoDbLogSize = min(64 * MB_IN_BYTES, $innoDbLogSize);
@@ -102,5 +107,9 @@ abstract class QueryInserter
             return true;
         }
         return false;
+    }
+    protected function addWarning(string $message)
+    {
+        $this->warnings[] = $message;
     }
 }

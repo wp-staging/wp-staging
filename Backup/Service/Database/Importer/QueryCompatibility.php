@@ -1,6 +1,6 @@
 <?php
 namespace WPStaging\Backup\Service\Database\Importer;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 class QueryCompatibility
 {
     public function removeDefiner(&$query)
@@ -61,7 +61,7 @@ class QueryCompatibility
             if (strlen($identifier) < 64) {
                 continue;
             }
-            $shortIdentifier                    = uniqid(PrepareRestore::TMP_DATABASE_PREFIX) . str_pad(rand(0, 999999), 6, '0');
+            $shortIdentifier                    = uniqid(DatabaseImporter::TMP_DATABASE_PREFIX) . str_pad(rand(0, 999999), 6, '0');
             $shortIdentifiers[$shortIdentifier] = $identifier;
         }
         $query = str_replace(array_values($shortIdentifiers), array_keys($shortIdentifiers), $query);

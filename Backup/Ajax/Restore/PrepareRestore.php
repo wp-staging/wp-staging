@@ -5,6 +5,7 @@ namespace WPStaging\Backup\Ajax\Restore;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Backup\Job\JobRestoreProvider;
 use WPStaging\Backup\Job\Jobs\JobRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Database\TableService;
@@ -28,17 +29,6 @@ class PrepareRestore extends PrepareJob
 
     /** @var string */
     const CUSTOM_TMP_PREFIX_FILTER = 'wpstg.restore.tmp_database_prefix';
-
-    /** @var string */
-    const TMP_DATABASE_PREFIX = 'wpstgtmp_';
-
-    /**
-     * The prefix used when dropping a table. Same length as TMP_DATABASE_PREFIX
-     * to avoid extrapolating the limit of 64 characters for a table name.
-     *
-     * @var string
-     */
-    const TMP_DATABASE_PREFIX_TO_DROP = 'wpstgbak_';
 
     public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock, TableService $tableService)
     {
@@ -132,16 +122,16 @@ class PrepareRestore extends PrepareJob
      */
     protected function getTmpDatabasePrefix()
     {
-        $tmpDatabasePrefix = apply_filters(self::CUSTOM_TMP_PREFIX_FILTER, self::TMP_DATABASE_PREFIX);
-        if ($tmpDatabasePrefix === self::TMP_DATABASE_PREFIX) {
-            return self::TMP_DATABASE_PREFIX;
+        $tmpDatabasePrefix = apply_filters(self::CUSTOM_TMP_PREFIX_FILTER, DatabaseImporter::TMP_DATABASE_PREFIX);
+        if ($tmpDatabasePrefix === DatabaseImporter::TMP_DATABASE_PREFIX) {
+            return DatabaseImporter::TMP_DATABASE_PREFIX;
         }
 
         if ($this->isTmpPrefixAvailable($tmpDatabasePrefix)) {
             return $tmpDatabasePrefix;
         }
 
-        return self::TMP_DATABASE_PREFIX;
+        return DatabaseImporter::TMP_DATABASE_PREFIX;
     }
 
     /**

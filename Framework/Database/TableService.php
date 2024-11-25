@@ -5,7 +5,7 @@
 
 namespace WPStaging\Framework\Database;
 
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Collection\Collection;
 use WPStaging\Framework\Utils\Strings;
@@ -431,8 +431,8 @@ class TableService
         }
 
         $tmpPrefixes = [
-            PrepareRestore::TMP_DATABASE_PREFIX,
-            PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP,
+            DatabaseImporter::TMP_DATABASE_PREFIX,
+            DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP,
         ];
 
         if (in_array($productionPrefix, $tmpPrefixes)) {

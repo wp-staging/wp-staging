@@ -2,14 +2,14 @@
 
 namespace WPStaging\Backup\Task\Tasks;
 
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Task\AbstractTask;
-use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class CleanupTmpTablesTask extends AbstractTask
 {
@@ -34,7 +34,7 @@ class CleanupTmpTablesTask extends AbstractTask
      */
     public static function getTempTableType(): string
     {
-        return PrepareRestore::TMP_DATABASE_PREFIX;
+        return DatabaseImporter::TMP_DATABASE_PREFIX;
     }
 
     public static function getTaskName(): string

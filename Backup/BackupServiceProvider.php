@@ -15,6 +15,7 @@ use WPStaging\Backup\Ajax\ScheduleList;
 use WPStaging\Backup\Ajax\Status;
 use WPStaging\Backup\Ajax\Upload;
 use WPStaging\Backup\Ajax\Backup\PrepareBackup;
+use WPStaging\Backup\Ajax\BackupDownloader;
 use WPStaging\Backup\Ajax\Restore\LoginUrl;
 use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\Ajax\Restore\ReadBackupMetadata;
@@ -30,9 +31,9 @@ use WPStaging\Framework\DI\FeatureServiceProvider;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Job\Task\AbstractTask;
-use WPStaging\Framework\Network\AjaxBackupDownloader;
 use WPStaging\Framework\Queue\FileSeekableQueue;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
+use WPStaging\Framework\Security\Otp\OtpSender;
 
 class BackupServiceProvider extends FeatureServiceProvider
 {
@@ -91,10 +92,16 @@ class BackupServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--backups--status', $this->container->callback(Status::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--restore--file-list', $this->container->callback(FileList::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--restore--file-info', $this->container->callback(FileInfo::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups--prepare-upload', $this->container->callback(Upload::class, 'ajaxPrepareUpload')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--restore--file-upload', $this->container->callback(Upload::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups--prepare-url-upload', $this->container->callback(BackupDownloader::class, 'ajaxPrepareUpload')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups--url-file-upload', $this->container->callback(BackupDownloader::class, 'ajaxDownloadBackupFromRemoteServer'), 10, 0); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--uploads-delete-unfinished', $this->container->callback(Upload::class, 'ajaxDeleteIncompleteUploads')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_raw_wpstg--backups--login-url', $this->container->callback(LoginUrl::class, 'getLoginUrl')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg_calculate_backup_speed_index', $this->container->callback(BackupSpeedIndex::class, 'ajaxMaybeShowModal')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+
+        // TODO: move this to JobServiceProvider once the Staging PR: https://github.com/wp-staging/wp-staging-pro/pull/3738 is merged
+        add_action('wp_ajax_wpstg--send--otp', $this->container->callback(OtpSender::class, 'ajaxSendOtp')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
 
         // Nopriv
         add_action('wp_ajax_nopriv_wpstg--backups--restore', $this->container->callback(Restore::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -109,7 +116,6 @@ class BackupServiceProvider extends FeatureServiceProvider
 
         // Event that we can run on daily basis to repair any corrupted backup create cron jobs
         add_action('wpstg_daily_event', $this->container->callback(BackupScheduler::class, 'reCreateCron'), 10, 0);
-        add_action('wp_ajax_wpstg-backups-download-url', $this->container->callback(AjaxBackupDownloader::class, 'ajaxDownloadBackupFromRemoteServer'), 10, 0); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     protected function hookDatabaseImporterQueryInserter()

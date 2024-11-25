@@ -177,4 +177,24 @@ class Strings
 
         return $haystack;
     }
+
+    /**
+     * @param string $email
+     * @return string
+     */
+    public function maskEmail(string $email): string
+    {
+        if (empty($email)) {
+            return '';
+        }
+
+        list($username, $domain) = explode('@', $email);
+        $firstChar = substr($username, 0, 1);
+        $lastChar = substr($username, -1);
+        $maskedUsername = $firstChar . str_repeat('*', strlen($username) - 2) . $lastChar;
+        list($domainName, $tld) = explode('.', $domain);
+        $maskedDomainName = substr($domainName, 0, 1) . str_repeat('*', strlen($domainName) - 1);
+        return $maskedUsername . '@' . $maskedDomainName . '.' . $tld;
+    }
+
 }

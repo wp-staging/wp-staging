@@ -10,6 +10,7 @@ use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\LogCleanup;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Performance\MemoryExhaust;
+use WPStaging\Framework\Security\Otp\Otp;
 use WPStaging\Framework\Settings\DarkMode;
 use WPStaging\Framework\Traits\EventLoggerTrait;
 use WPStaging\Framework\Utils\DBPermissions;
@@ -33,6 +34,7 @@ class CommonServiceProvider extends ServiceProvider
 
         add_action('wpstg_daily_event', [$this, 'cleanupLogs'], 25, 0);
         add_action('wpstg_daily_event', [$this, 'cleanupAnalytics'], 25, 0);
+        add_action('wpstg_daily_event', [$this, 'cleanupExpiredOtps'], 25, 0);
         add_action("wp_ajax_wpstg_is_writable_clone_destination_dir", $this->container->callback(StagingSiteDataChecker::class, "ajaxIsWritableCloneDestinationDir")); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_check_user_permissions", $this->container->callback(DBPermissions::class, 'ajaxCheckDBPermissions')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action("wp_ajax_wpstg_check_user_is_authenticated", [$this, "ajaxIsUserAuthenticated"]);// phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -63,6 +65,14 @@ class CommonServiceProvider extends ServiceProvider
     public function cleanupAnalytics()
     {
         $this->container->make(AnalyticsCleanup::class)->cleanupOldAnalytics();
+    }
+
+    /**
+     * @return void
+     */
+    public function cleanupExpiredOtps()
+    {
+        $this->container->make(Otp::class)->cleanupExpiredOtps();
     }
 
     /**

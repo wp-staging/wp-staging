@@ -22,7 +22,7 @@ use WPStaging\Framework\Traits\NoticesTrait;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\ServerVars;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\ThirdParty\Aios;
 
@@ -246,7 +246,7 @@ class Notices
      */
     private function noticeTableTmpPrefixConflictNotice()
     {
-        $disallowedPrefixes = [PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP, PrepareRestore::TMP_DATABASE_PREFIX];
+        $disallowedPrefixes = [DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP, DatabaseImporter::TMP_DATABASE_PREFIX];
         if (self::SHOW_ALL_NOTICES || in_array($this->db->prefix, $disallowedPrefixes, true)) {
             require $this->viewsNoticesPath . "table-tmp-prefix-conflict-notice.php";
         }

@@ -1,64 +1,56 @@
 <?php
 namespace WPStaging\Backup\Service\Database;
 use RuntimeException;
-use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
-use WPStaging\Backup\Service\Database\Exporter\RowsExporter;
+use WPStaging\Backup\Dto\Service\DatabaseImporterDto;
 use WPStaging\Backup\Service\Database\Importer\Insert\QueryInserter;
 use WPStaging\Backup\Service\Database\Importer\QueryCompatibility;
-use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Service\Database\Importer\SubsiteManagerInterface;
 use WPStaging\Framework\Adapter\DatabaseInterface;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Database\SearchReplace;
-use WPStaging\Framework\Exceptions\RetryException;
 use WPStaging\Framework\Filesystem\FileObject;
-use WPStaging\Framework\Job\Dto\JobDataDto;
-use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Exception\ThresholdException;
-use WPStaging\Framework\Queue\FinishedQueueException;
-use WPStaging\Framework\Traits\ResourceTrait;
-use WPStaging\Framework\Utils\Strings;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use function WPStaging\functions\debug_log;
 class DatabaseImporter
 {
-    use ResourceTrait;
+    const THRESHOLD_EXCEPTION_CODE = 2001;
+    const FINISHED_QUEUE_EXCEPTION_CODE = 2002;
+    const RETRY_EXCEPTION_CODE = 2003;
     const FILE_FORMAT = 'sql';
+    const TMP_DATABASE_PREFIX = 'wpstgtmp_';
+    const TMP_DATABASE_PREFIX_TO_DROP = 'wpstgbak_';
+    const NULL_FLAG = "{WPSTG_NULL}";
+    const BINARY_FLAG = "{WPSTG_BINARY}";
     private $file;
     private $totalLines;
     private $client;
+    private $databaseImporterDto;
     private $database;
     private $logger;
-    private $stepsDto;
     private $searchReplace;
     private $searchReplaceForPrefix;
     private $tmpDatabasePrefix;
-    private $jobRestoreDataDto;
     private $queryInserter;
     private $smallerSearchLength;
     private $binaryFlagLength;
     private $queryCompatibility;
-    private $restoreTask;
-    private $getIsSameSiteBackupRestore = false;
+    private $isSameSiteBackupRestore = false;
     private $tablesExcludedFromSearchReplace = [];
     private $subsiteManager;
-    protected $stringsUtil;
+    private $backupDbVersion;
     public function __construct(
         DatabaseInterface $database,
-        JobDataDto $jobRestoreDataDto,
         QueryInserter $queryInserter,
         QueryCompatibility $queryCompatibility,
-        SubsiteManagerInterface $subsiteManager,
-        Strings $stringsUtil
+        SubsiteManagerInterface $subsiteManager
     ) {
-        $this->client   = $database->getClient();
-        $this->database = $database;
-        $this->jobRestoreDataDto  = $jobRestoreDataDto;
+        $this->client             = $database->getClient();
+        $this->database           = $database;
         $this->queryInserter      = $queryInserter;
         $this->queryCompatibility = $queryCompatibility;
         $this->subsiteManager     = $subsiteManager;
-        $this->binaryFlagLength   = strlen(RowsExporter::BINARY_FLAG);
-        $this->stringsUtil        = $stringsUtil;
+        $this->binaryFlagLength   = strlen(self::BINARY_FLAG);
     }
     public function setFile($filePath)
     {
@@ -74,9 +66,10 @@ class DatabaseImporter
         $this->file->seek($line);
         return $this;
     }
-    public function restore($tmpDatabasePrefix)
+    public function init(string $tmpDatabasePrefix)
     {
         $this->tmpDatabasePrefix = $tmpDatabasePrefix;
+        $this->databaseImporterDto->setTmpPrefix($this->tmpDatabasePrefix);
         $this->setupSearchReplaceForPrefix();
         if (!$this->file) {
             throw new RuntimeException('Restore file is not set');
@@ -85,43 +78,79 @@ class DatabaseImporter
         if (apply_filters('wpstg.backup.restore.innodbStrictModeOff', false) === true) {
             $this->exec("SET SESSION innodb_strict_mode=OFF");
         }
-        try {
-            while (true) {
-                try {
-                    $this->execute();
-                } catch (\OutOfBoundsException $e) {
-                    $this->logger->debug($e->getMessage());
-                }
-            }
-        } catch (FinishedQueueException $e) {
-            $this->stepsDto->finish();
-        } catch (ThresholdException $e) {
-            } catch (RetryException $e) {
-            $this->stepsDto->setCurrent($this->file->key() - 1);
-            $this->queryInserter->commit();
-            return;
-        } catch (\Exception $e) {
-            $this->stepsDto->setCurrent($this->file->key());
-            $this->logger->critical(substr($e->getMessage(), 0, 1000));
-        }
+    }
+    public function retryQuery()
+    {
+        $this->databaseImporterDto->setCurrentIndex($this->file->key() - 1);
         $this->queryInserter->commit();
-        $this->stepsDto->setCurrent($this->file->key());
     }
-    protected function setupSearchReplaceForPrefix()
+    public function updateIndex()
     {
-        $this->searchReplaceForPrefix = new SearchReplace(['{WPSTG_TMP_PREFIX}', '{WPSTG_FINAL_PREFIX}'], [$this->tmpDatabasePrefix, $this->database->getPrefix()], true, []);
+        $this->databaseImporterDto->setCurrentIndex($this->file->key());
+        $this->queryInserter->commit();
     }
-    public function setup(LoggerInterface $logger, StepsDto $stepsDto, RestoreTask $task)
+    public function finish()
     {
-        $this->logger      = $logger;
-        $this->stepsDto    = $stepsDto;
-        $this->restoreTask = $task;
-        $this->getIsSameSiteBackupRestore = $this->jobRestoreDataDto->getIsSameSiteBackupRestore();
-        $this->queryInserter->initialize($this->database, $this->jobRestoreDataDto, $logger);
-        $this->restoreTask->setTmpPrefix($this->jobRestoreDataDto->getTmpDatabasePrefix());
-        $this->tablesExcludedFromSearchReplace = $this->jobRestoreDataDto->getBackupMetadata()->getNonWpTables();
-        $this->subsiteManager->initialize($this->jobRestoreDataDto);
-        return $this;
+        $this->databaseImporterDto->finish();
+        $this->queryInserter->commit();
+    }
+    public function getQueryCompatibility(): QueryCompatibility
+    {
+        return $this->queryCompatibility;
+    }
+    public function isSupportPageCompression(): bool
+    {
+        static $hasCompression;
+        if ($hasCompression !== null) {
+            return $hasCompression;
+        }
+        if (!$this->isMariaDB()) {
+            return false;
+        }
+        $query  = "SHOW GLOBAL STATUS WHERE Variable_name IN ('Innodb_have_lz4', 'Innodb_have_lzo', 'Innodb_have_lzma', 'Innodb_have_bzip2', 'Innodb_have_snappy');";
+        $result = $this->client->query($query);
+        if (! ($result instanceof \mysqli_result)) {
+            return false;
+        }
+        while ($row = $result->fetch_assoc()) {
+            if ($row['Value'] === 'ON') {
+                $hasCompression = true;
+                return true;
+            }
+        }
+        $hasCompression = false;
+        return false;
+    }
+    public function isMariaDB(): bool
+    {
+        return stripos($this->serverInfo(), 'MariaDB') !== false;
+    }
+    public function removePageCompression(&$query): bool
+    {
+        if (!strpos($query, 'PAGE_COMPRESSED') || !(stripos($query, "CREATE TABLE") == 0)) {
+            return false;
+        }
+        if ($this->isSupportPageCompression()) {
+            return false;
+        }
+        $query = preg_replace("@`?PAGE_COMPRESSED`?='?(ON|OFF|0|1)'?@", '', $query);
+        if (strpos($query, 'PAGE_COMPRESSION_LEVEL') !== false) {
+            $query = preg_replace("@`?PAGE_COMPRESSION_LEVEL`?='?\d+'?@", '', $query);
+        }
+        return true;
+    }
+    public function setup(DatabaseImporterDto $databaseImporterDto, bool $isSameSiteBackupRestore, string $backupDbVersion)
+    {
+        $this->databaseImporterDto     = $databaseImporterDto;
+        $this->isSameSiteBackupRestore = $isSameSiteBackupRestore;
+        $this->backupDbVersion         = $backupDbVersion;
+        $this->queryInserter->setDbVersions($this->serverVersion(), $this->backupDbVersion);
+        $this->queryInserter->initialize($this->client, $this->databaseImporterDto);
+        $this->subsiteManager->initialize($this->databaseImporterDto);
+    }
+    public function setupNonWpTables(array $nonWpTables)
+    {
+        $this->tablesExcludedFromSearchReplace = $nonWpTables;
     }
     public function setSearchReplace(SearchReplace $searchReplace)
     {
@@ -133,14 +162,15 @@ class DatabaseImporter
     {
         return $this->totalLines;
     }
-    private function execute()
+    public function setLogger(LoggerInterface $logger)
     {
-        if ($this->isDatabaseRestoreThreshold()) {
-            throw new ThresholdException();
-        }
+        $this->logger = $logger;
+    }
+    public function execute()
+    {
         $query = $this->findExecutableQuery();
         if (!$query) {
-            throw new FinishedQueueException();
+            throw new \Exception("", self::FINISHED_QUEUE_EXCEPTION_CODE);
         }
         $query = $this->searchReplaceForPrefix->replace($query);
         $query = $this->maybeShorterTableNameForDropTableQuery($query);
@@ -150,17 +180,17 @@ class DatabaseImporter
         if (strpos($query, 'INSERT INTO') === 0) {
             if ($this->isExcludedInsertQuery($query)) {
                 debug_log('processQuery - This query has been skipped from inserting by using a custom filter: ' . $query);
-                $this->logger->warning(sprintf('The query has been skipped from inserting by using a custom filter: %s.', esc_html($query)));
+                $this->logWarning(sprintf('The query has been skipped from inserting by using a custom filter: %s.', esc_html($query)));
                 return false;
             }
             if ($this->subsiteManager->isTableFromDifferentSubsite($query)) {
                 $this->subsiteManager->updateSubsiteId();
-                throw new RetryException();
+                throw new \Exception("", self::RETRY_EXCEPTION_CODE);
             }
             if (
-                !$this->getIsSameSiteBackupRestore
-                || (strpos($query, RowsExporter::BINARY_FLAG) !== false)
-                || (strpos($query, RowsExporter::NULL_FLAG) !== false)
+                !$this->isSameSiteBackupRestore
+                || (strpos($query, self::BINARY_FLAG) !== false)
+                || (strpos($query, self::NULL_FLAG) !== false)
             ) {
                 $this->searchReplaceInsertQuery($query);
             }
@@ -170,7 +200,7 @@ class DatabaseImporter
                 throw $e;
             }
             if ($result === null && $this->queryInserter->getLastError() !== false) {
-                $this->logger->warning($this->queryInserter->getLastError());
+                $this->logWarning($this->queryInserter->getLastError());
             }
         } else {
             $this->queryInserter->commit();
@@ -182,14 +212,14 @@ class DatabaseImporter
         $errorNo          = $this->client->errno();
         $errorMsg         = $this->client->error();
         $currentDbVersion = $this->database->getSqlVersion($compact = true);
-        $backupDbVersion  = $this->jobRestoreDataDto->getBackupMetadata()->getSqlServerVersion();
+        $backupDbVersion  = $this->backupDbVersion;
         if ($result === false) {
             switch ($this->client->errno()) {
                 case 1030:
                     $this->queryCompatibility->replaceTableEngineIfUnsupported($query);
                     $result = $this->exec($query);
                     if ($result) {
-                        $this->logger->warning('Engine changed to InnoDB, as it your MySQL server does not support MyISAM.');
+                        $this->logWarning('Engine changed to InnoDB, as it your MySQL server does not support MyISAM.');
                     }
                     break;
                 case 1071:
@@ -201,17 +231,17 @@ class DatabaseImporter
                     }
                     $result = $this->exec($query);
                     if ($result) {
-                        $this->logger->warning('Row format changed to DYNAMIC, as it would exceed the maximum length according to your MySQL settings. To not see this message anymore, please upgrade your MySQL version or increase the row format.');
+                        $this->logWarning('Row format changed to DYNAMIC, as it would exceed the maximum length according to your MySQL settings. To not see this message anymore, please upgrade your MySQL version or increase the row format.');
                     }
                     if ($replaceUtf8Mb4 && $result) {
-                        $this->logger->warning('Encoding changed to UTF8 from UTF8MB4, as your current MySQL version max key length support is 767 bytes');
+                        $this->logWarning('Encoding changed to UTF8 from UTF8MB4, as your current MySQL version max key length support is 767 bytes');
                     }
                     break;
                 case 1214:
                     $this->queryCompatibility->removeFullTextIndexes($query);
                     $result = $this->exec($query);
                     if ($result) {
-                        $this->logger->warning('FULLTEXT removed from query, as your current MySQL version does not support it. To not see this message anymore, please upgrade your MySQL version.');
+                        $this->logWarning('FULLTEXT removed from query, as your current MySQL version does not support it. To not see this message anymore, please upgrade your MySQL version.');
                     }
                     break;
                 case 1226:
@@ -227,13 +257,12 @@ class DatabaseImporter
                     break;
                 case 1118:
                     throw new RuntimeException('Your server has reached the maximum row size of the table. Please refer to the documentation on how to fix it. <a href="https://wp-staging.com/docs/mysql-database-error-codes" target="_blank">Technical details</a>');
-                    break;
                 case 1059:
                     $shortIdentifiers = $this->queryCompatibility->shortenKeyIdentifiers($query);
                     $result           = $this->exec($query);
                     if ($result) {
                         foreach ($shortIdentifiers as $shortIdentifier => $identifier) {
-                            $this->logger->warning(sprintf('Key identifier `%s` exceeds the characters limits, it is now shortened to `%s` to continue restoring.', $identifier, $shortIdentifier));
+                            $this->logWarning(sprintf('Key identifier `%s` exceeds the characters limits, it is now shortened to `%s` to continue restoring.', $identifier, $shortIdentifier));
                         }
                     }
                     break;
@@ -243,7 +272,7 @@ class DatabaseImporter
                         $result = $this->exec($query);
                     }
                     if (!empty($tableName) && $result) {
-                        $this->logger->warning(sprintf('PAGE_COMPRESSED removed from Table: %s, as it is not a supported syntax in MySQL.', $tableName));
+                        $this->logWarning(sprintf('PAGE_COMPRESSED removed from Table: %s, as it is not a supported syntax in MySQL.', $tableName));
                     }
                     break;
                 case 1813:
@@ -253,7 +282,7 @@ class DatabaseImporter
                 return true;
             }
             if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                $this->logger->warning(sprintf('Database Restorer - Failed Query: %s', substr($query, 0, 1000)));
+                $this->logWarning(sprintf('Database Restorer - Failed Query: %s', substr($query, 0, 1000)));
                 debug_log(sprintf('Database Restorer Failed Query: %s', substr($query, 0, 1000)));
             }
             $errorNo  = $this->client->errno();
@@ -274,7 +303,7 @@ class DatabaseImporter
         preg_match('#^DROP TABLE IF EXISTS `(.+?(?=`))`;$#', $query, $dropTableExploded);
         $tableName = $dropTableExploded[1];
         if (strlen($tableName) > 64) {
-            $tableName = $this->restoreTask->addShortNameTable($tableName, $this->tmpDatabasePrefix);
+            $tableName = $this->databaseImporterDto->addShortNameTable($tableName, $this->tmpDatabasePrefix);
         }
         return "DROP TABLE IF EXISTS `$tableName`;";
     }
@@ -286,7 +315,7 @@ class DatabaseImporter
         preg_match('#^CREATE TABLE `(.+?(?=`))`#', $query, $createTableExploded);
         $tableName = $createTableExploded[1];
         if (strlen($tableName) > 64) {
-            $shortName = $this->restoreTask->getShortNameTable($tableName, $this->tmpDatabasePrefix);
+            $shortName = $this->databaseImporterDto->getShortNameTable($tableName, $this->tmpDatabasePrefix);
             return str_replace($tableName, $shortName, $query);
         }
         return $query;
@@ -306,18 +335,18 @@ class DatabaseImporter
         $replace = ['', ')'];
         $query = preg_replace($patterns, $replace, $query);
         if ($this->isCorruptedCreateTableQuery($query)) {
-            $query = $this->stringsUtil->replaceLastMatch("`);", "`) );", $query);
+            $query = $this->replaceLastMatch("`);", "`) );", $query);
         }
         return $query;
     }
-    protected function searchReplaceInsertQuery(&$query)
+    public function searchReplaceInsertQuery(&$query)
     {
         if (!$this->searchReplace) {
             throw new RuntimeException('SearchReplace not set');
         }
         $querySize = strlen($query);
         if ($querySize > ini_get('pcre.backtrack_limit')) {
-            $this->logger->warning(
+            $this->logWarning(
                 sprintf(
                     'Skipped search & replace on query: "%s" Increasing pcre.backtrack_limit can fix it! Query Size: %s. pcre.backtrack_limit: %s',
                     substr($query, 0, 1000) . '...',
@@ -334,7 +363,7 @@ class DatabaseImporter
         }
         $tableName = $insertIntoExploded[1];
         if (strlen($tableName) > 64) {
-            $tableName = $this->restoreTask->getShortNameTable($tableName, $this->tmpDatabasePrefix);
+            $tableName = $this->databaseImporterDto->getShortNameTable($tableName, $this->tmpDatabasePrefix);
         }
         $values = $insertIntoExploded[2];
         preg_match_all("#'(?:[^'\\\]++|\\\.)*+'#s", $values, $valueMatches);
@@ -348,7 +377,7 @@ class DatabaseImporter
                 $query .= "'', ";
                 continue;
             }
-            if ($value === "'" . RowsExporter::NULL_FLAG . "'") {
+            if ($value === "'" . self::NULL_FLAG . "'") {
                 $query .= "NULL, ";
                 continue;
             }
@@ -357,11 +386,11 @@ class DatabaseImporter
                 continue;
             }
             $value = substr($value, 1, -1);
-            if (strpos($value, RowsExporter::BINARY_FLAG) === 0) {
-                $query .= "UNHEX('" . substr($value, strlen(RowsExporter::BINARY_FLAG)) . "'), ";
+            if (strpos($value, self::BINARY_FLAG) === 0) {
+                $query .= "UNHEX('" . substr($value, strlen(self::BINARY_FLAG)) . "'), ";
                 continue;
             }
-            if ($this->getIsSameSiteBackupRestore || !$this->shouldSearchReplace($query)) {
+            if ($this->isSameSiteBackupRestore || !$this->shouldSearchReplace($query)) {
                 $query .= "'{$value}', ";
                 continue;
             }
@@ -407,6 +436,10 @@ class DatabaseImporter
         ];
         return strtr($query, $replacementMap);
     }
+    protected function setupSearchReplaceForPrefix()
+    {
+        $this->searchReplaceForPrefix = new SearchReplace(['{WPSTG_TMP_PREFIX}', '{WPSTG_FINAL_PREFIX}'], [$this->tmpDatabasePrefix, $this->database->getPrefix()], true, []);
+    }
     protected function shouldSearchReplace($query)
     {
         if (empty($this->tablesExcludedFromSearchReplace)) {
@@ -433,7 +466,7 @@ class DatabaseImporter
         }
         return trim($this->file->readAndMoveNext());
     }
-    private function isExecutableQuery($query = null)
+    public function isExecutableQuery($query = null)
     {
         if (!$query) {
             return false;
@@ -452,7 +485,7 @@ class DatabaseImporter
             return false;
         }
         if (substr($query, -strlen(1)) !== ';') {
-            $this->logger->debug('Skipping query because it does not end with a semi-colon... The query was logged.');
+            $this->logWarning('Skipping query because it does not end with a semi-colon... The query was logged.');
             debug_log($query);
             return false;
         }
@@ -460,7 +493,7 @@ class DatabaseImporter
     }
     private function exec($query)
     {
-        $result = $this->client->query($query, true);
+        $result = $this->client->query($query);
         return $result !== false;
     }
     private function replaceTableCollations(string &$input)
@@ -499,6 +532,15 @@ class DatabaseImporter
         }
         return false;
     }
+    private function replaceLastMatch(string $needle, string $replace, string $haystack): string
+    {
+        $result = $haystack;
+        $pos = strrpos($haystack, $needle);
+        if ($pos !== false) {
+            $result = substr_replace($haystack, $replace, $pos, strlen($needle));
+        }
+        return $result;
+    }
     protected function isCorruptedCreateTableQuery(string $query): bool
     {
         if (strpos($query, "ENGINE") !== false) {
@@ -511,6 +553,10 @@ class DatabaseImporter
             return false;
         }
         return true;
+    }
+    protected function logWarning($message)
+    {
+        $this->logger->warning($message);
     }
     private function hasCapabilities(string $capabilities): bool
     {

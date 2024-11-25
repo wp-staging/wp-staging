@@ -5,19 +5,19 @@ namespace WPStaging\Backend\Modules\Jobs;
 use Countable;
 use Exception;
 use WPStaging\Backend\Modules\Jobs\Exceptions\JobNotFoundException;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
-use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
+use WPStaging\Staging\Sites;
 
 use function WPStaging\functions\debug_log;
 
@@ -463,8 +463,8 @@ class Cloning extends Job
         }
 
         $tmpPrefixes = [
-            PrepareRestore::TMP_DATABASE_PREFIX,
-            PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP,
+            DatabaseImporter::TMP_DATABASE_PREFIX,
+            DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP,
         ];
 
         if (in_array($this->options->databasePrefix, $tmpPrefixes)) {

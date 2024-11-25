@@ -12,11 +12,11 @@ use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Job\Exception\ThresholdException;
 use WPStaging\Backup\Task\RestoreTask;
@@ -190,7 +190,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $backupType = $this->jobDataDto->getBackupMetadata()->getBackupType();
 
         if ($backupType === BackupMetadata::BACKUP_TYPE_MULTISITE && !is_multisite()) {
-            throw new \RuntimeException('This is a full multisite backup, but this site is a single-site WordPress installation, so the recovery program cannot proceed.');
+            throw new RuntimeException('This is a full multisite backup, but this site is a single-site WordPress installation, so the recovery program cannot proceed.');
         }
     }
 
@@ -200,8 +200,8 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
         $basePrefix = $wpdb->base_prefix;
 
-        if (($basePrefix === PrepareRestore::TMP_DATABASE_PREFIX || $basePrefix === PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP)) {
-            throw new \RuntimeException("Can not proceed. The production site database table prefix uses \"$basePrefix\" which is used for temporary tables by WP STAGING. Please, feel free to reach out to WP STAGING support for assistance.");
+        if (($basePrefix === $this->jobDataDto->getTmpDatabasePrefix() || $basePrefix === DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP)) {
+            throw new RuntimeException("Can not proceed. The production site database table prefix uses \"$basePrefix\" which is used for temporary tables by WP STAGING. Please, feel free to reach out to WP STAGING support for assistance.");
         }
     }
 
@@ -218,6 +218,12 @@ class RestoreRequirementsCheckTask extends RestoreTask
             throw new RuntimeException("We could not find any tables with the prefix \"$prefix\". The backup restore cannot start. Please, feel free to reach out to WP STAGING support for assistance.");
         }
 
+        $maxLengthOfTableBeingRestored = $this->jobDataDto->getBackupMetadata()->getMaxTableLength();
+
+        if ($maxLengthOfTableBeingRestored + strlen($prefix) > 64) {
+            throw new RuntimeException("MySQL has a limit of 64 characters for table names. One of the tables in the backup, combined with the base prefix of your WordPress installation ('$prefix'), would exceed this limit, which is why the backup restore cannot start. Please contact WP STAGING support for assistance.");
+        }
+
         $this->jobDataDto->setShortNamesTablesToDrop();
         $this->jobDataDto->setShortNamesTablesToRestore();
 
@@ -230,26 +236,19 @@ class RestoreRequirementsCheckTask extends RestoreTask
 
             $unprefixedName = substr($table->getName(), strpos($table->getName(), $prefix));
 
-            if (strlen($unprefixedName) + strlen(PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP) > 64) {
+            if (strlen($unprefixedName) + strlen(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) > 64) {
                 $requireShortNamesForTablesToDrop = true;
-                $shortName                        = $this->addShortNameTable($table->getName(), PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP);
+                $shortName = uniqid(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP) . str_pad(rand(0, 999999), 6, '0');
+                $this->jobDataDto->addShortNameTableToDrop($table->getName(), $shortName);
                 $this->logger->warning("MySQL has a limit of 64 characters for table names. One of your tables, combined with the temporary prefix used by the backup restore, would exceed this limit, therefore the backup will be restored with a shorter name and change it back to original name if restoration fails otherwise drop it along with other backups table. The table with the extra-long name is: \"{$table->getName()}\". It will be backup with the name: \"{$shortName}\", So in case anything goes wrong you can restore it back.");
             }
         }
 
         $this->jobDataDto->setRequireShortNamesForTablesToDrop($requireShortNamesForTablesToDrop);
 
-        $maxLengthOfTableBeingRestored = $this->jobDataDto->getBackupMetadata()->getMaxTableLength();
-
-        if ($maxLengthOfTableBeingRestored + strlen($prefix) > 64) {
-            throw new RuntimeException("MySQL has a limit of 64 characters for table names. One of the tables in the backup, combined with the base prefix of your WordPress installation ('$prefix'), would exceed this limit, which is why the backup restore cannot start. Please contact WP STAGING support for assistance.");
-        }
-
-        if ($maxLengthOfTableBeingRestored + strlen(PrepareRestore::TMP_DATABASE_PREFIX) > 64) {
+        if ($maxLengthOfTableBeingRestored + strlen($this->jobDataDto->getTmpDatabasePrefix()) > 64) {
             $this->logger->warning("MySQL has a limit of 64 characters for table names. One of the tables in the backup would exceed this limit in combination with the temporary prefix used by the backup, so the table is restored with a shorter name and changed back to the original name after a successful restore.");
             $this->jobDataDto->setRequireShortNamesForTablesToRestore(true);
-        } else {
-            $this->jobDataDto->setRequireShortNamesForTablesToRestore();
         }
     }
 
@@ -438,7 +437,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         $prefix = $wpdb->base_prefix;
 
         // Should not happen but if it does, add a bail for such cases
-        if (PrepareRestore::TMP_DATABASE_PREFIX === $prefix || PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP === $prefix) {
+        if (DatabaseImporter::TMP_DATABASE_PREFIX === $prefix || DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP === $prefix) {
             throw new RuntimeException(sprintf('Restore stopped! Your current site prefix is %s. This is a temporary prefix used by WP Staging during restore. Please contact support to get help restoring the backup.', $prefix));
         }
     }

@@ -13,12 +13,22 @@ use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Security\Otp\Otp;
+use WPStaging\Framework\Security\Otp\OtpDisabledException;
+use WPStaging\Framework\Security\Otp\OtpException;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Framework\Utils\Sanitize;
+
+use function WPStaging\functions\debug_log;
 
 class Upload extends AbstractTemplateComponent
 {
     use WithBackupIdentifier;
+
+    /**
+     * @var string
+     */
+    const OPTION_UPLOAD_PREPARED = 'wpstg.backups.upload_prepared';
 
     /** @var BackupsFinder */
     private $backupsFinder;
@@ -34,13 +44,47 @@ class Upload extends AbstractTemplateComponent
      */
     private $filesystem;
 
-    public function __construct(BackupsFinder $backupsFinder, TemplateEngine $templateEngine, BackupRepairer $backupRepairer, Sanitize $sanitize)
+    /**
+     * @var Otp
+     */
+    private $otpService;
+
+    public function __construct(BackupsFinder $backupsFinder, TemplateEngine $templateEngine, BackupRepairer $backupRepairer, Sanitize $sanitize, Filesystem $filesystem, Otp $otpService)
     {
         parent::__construct($templateEngine);
         $this->backupsFinder  = $backupsFinder;
         $this->backupRepairer = $backupRepairer;
         $this->sanitize       = $sanitize;
-        $this->filesystem     = WPStaging::make(Filesystem::class);
+        $this->filesystem     = $filesystem;
+        $this->otpService     = $otpService;
+    }
+
+    public function ajaxPrepareUpload()
+    {
+        if (!$this->canRenderAjax()) {
+            wp_send_json_error([
+                'message' => esc_html__('Invalid Request!', 'wp-staging')
+            ], 401);
+        }
+
+        try {
+            $this->otpService->validateOtpRequest();
+        } catch (OtpDisabledException $ex) {
+            debug_log($ex->getMessage());
+        } catch (OtpException $ex) {
+            wp_send_json_error([
+                'message' => esc_html($ex->getMessage()),
+            ], $ex->getCode());
+        }
+
+        delete_option(self::OPTION_UPLOAD_PREPARED);
+        if (!update_option(self::OPTION_UPLOAD_PREPARED, 'true')) {
+            wp_send_json_error([
+                'message' => __('Could not prepare backup upload', 'wp-staging'),
+            ], 500);
+        }
+
+        wp_send_json_success();
     }
 
     public function render()
@@ -86,7 +130,14 @@ class Upload extends AbstractTemplateComponent
         }
 
         $fullPath = $this->backupsFinder->getBackupsDirectory() . $uniqueIdentifierSuffix . $resumableFilename . '.uploading';
+        // If neither uploading file or the upload prepared option that mean that the upload is not prepared and didn't pass through the OTP process!
+        if (!file_exists($fullPath) && get_option(self::OPTION_UPLOAD_PREPARED) !== 'true') {
+            wp_send_json_error([
+                'message' => __('Backup upload not prepared', 'wp-staging'),
+            ], 500);
+        }
 
+        delete_option(self::OPTION_UPLOAD_PREPARED);
         $resumableInternalIdentifier = md5($fullPath);
 
         // Check free disk space on the first request

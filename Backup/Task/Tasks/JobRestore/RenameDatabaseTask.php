@@ -8,18 +8,17 @@ use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Dto\Task\Restore\RenameDatabaseTaskDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Service\Database\Exporter\ViewDDLOrder;
 use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\Database\TablesRenamer;
-use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -123,7 +122,7 @@ class RenameDatabaseTask extends RestoreTask
     {
         $this->tablesRenamer->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
         $this->tablesRenamer->setProductionTablePrefix($this->tableService->getDatabase()->getPrefix());
-        $this->tablesRenamer->setDropPrefix(PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP);
+        $this->tablesRenamer->setDropPrefix(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP);
         $this->tablesRenamer->setShortNamedTablesToRename($this->jobDataDto->getShortNamesTablesToRestore());
         $this->tablesRenamer->setShortNamedTablesToDrop($this->jobDataDto->getShortNamesTablesToDrop());
         $this->tablesRenamer->setRenameViews(true);
@@ -259,7 +258,6 @@ class RenameDatabaseTask extends RestoreTask
     protected function preDatabaseRenameActions()
     {
         $tmpPrefix = $this->jobDataDto->getTmpDatabasePrefix();
-        $this->setTmpPrefix($tmpPrefix);
         $this->setupTableRenamer();
         $this->setCurrentTaskDto($this->tablesRenamer->setupRenamer());
 
@@ -309,7 +307,6 @@ class RenameDatabaseTask extends RestoreTask
      */
     protected function performDatabaseRename(): bool
     {
-        $this->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
         $this->setupTableRenamer();
         $this->tablesRenamer->setTaskDto($this->currentTaskDto);
 
@@ -369,8 +366,6 @@ class RenameDatabaseTask extends RestoreTask
          * @var \WP_Object_Cache $wp_object_cache
          */
         global $wpdb, $wp_object_cache;
-
-        $this->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
 
         $databaseData = $this->jobDataDto->getDatabaseDataToPreserve();
 

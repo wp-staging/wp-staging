@@ -337,7 +337,7 @@ class DataEncryption
 
     public function getPublicKey(): string
     {
-        $keyPath = WPSTG_PLUGIN_DIR . '/Framework/Security/wpstg-public-key.pem';
+        $keyPath = WPSTG_RESOURCES_DIR . '/wpstg-public-key.pem';
 
         if (!file_exists($keyPath)) {
             return '';
