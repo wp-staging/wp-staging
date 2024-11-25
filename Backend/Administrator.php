@@ -15,7 +15,6 @@ use WPStaging\Framework\Mails\Report\Report;
 use WPStaging\Framework\Filesystem\Filters\ExcludeFilter;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
-use WPStaging\Framework\Traits\AdministratorTrait;
 use WPStaging\Framework\Utils\Math;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Notices\DismissNotice;

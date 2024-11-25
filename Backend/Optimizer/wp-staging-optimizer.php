@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.5.8
+ * Version: 1.5.9
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.8');
+    define('WPSTG_OPTIMIZER_VERSION', '1.5.9');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {
@@ -203,6 +203,7 @@ if (!function_exists('wpstgIsOptimizerRequest')) {
             DOING_AJAX &&
             isset($_REQUEST['action']) &&
             strpos(sanitize_text_field($_REQUEST['action']), 'wpstg_send_report') === false &&
+            strpos(sanitize_text_field($_REQUEST['action']), 'wpstg--send--otp') === false &&
             strpos(sanitize_text_field($_REQUEST['action']), 'wpstg') === 0
         ) {
             return true;

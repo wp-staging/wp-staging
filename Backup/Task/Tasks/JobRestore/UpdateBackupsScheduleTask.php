@@ -3,7 +3,6 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
 use WPStaging\Backup\Task\RestoreTask;
 
 use function WPStaging\functions\debug_log;
@@ -38,13 +37,13 @@ class UpdateBackupsScheduleTask extends RestoreTask
             return $this->generateResponse();
         }
 
-        $tmpOptionsTable  = PrepareRestore::TMP_DATABASE_PREFIX . 'options';
+        $tmpOptionsTable  = $this->jobDataDto->getTmpDatabasePrefix() . 'options';
         if (!$this->wpdb->get_var("SHOW TABLES LIKE '{$tmpOptionsTable}'")) {
             $this->logger->warning('Skipped preserved backup schedules in the database. No option table in the backup!');
             return $this->generateResponse();
         }
 
-        $this->updateWpStagingCronJobs();
+        $this->updateWpStagingCronJobs($tmpOptionsTable);
 
         $this->logger->info('Preserved backup schedules in the database.');
 
@@ -54,10 +53,9 @@ class UpdateBackupsScheduleTask extends RestoreTask
     /**
      * @throws Exception
      */
-    protected function updateWpStagingCronJobs()
+    protected function updateWpStagingCronJobs(string $tmpOptionsTable)
     {
         $prodOptionsTable = $this->wpdb->prefix . 'options';
-        $tmpOptionsTable  = PrepareRestore::TMP_DATABASE_PREFIX . 'options';
 
         // Cron jobs contained in the production site
         $productionCronJobs = $this->wpdb->get_col("SELECT option_value FROM {$prodOptionsTable} WHERE option_name = 'cron';");

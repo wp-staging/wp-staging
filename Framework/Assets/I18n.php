@@ -253,7 +253,9 @@ class I18n
                 'invalid_expiry'    => esc_html__('Please select an expiry date to create a temporary login.', 'wp-staging'),
                 'delete_success'    => esc_html__('Login link removed successfully!', 'wp-staging'),
                 'confirm_delete'    => esc_html__('Do you really want to delete this temporary login link?', 'wp-staging'),
+                'confirm_delete_title' => esc_html__('Are you sure?', 'wp-staging'),
             ],
+            'cannot_generate_otp_error' => wp_kses(__('We couldn\'t create the verification code. This might be caused by a firewall blocking the request. The verification code is necessary for security before you can upload a backup to this site. To proceed, you can temporarily <a href="%s" target="_blank">disable the verification code generation</a> or contact WP Staging support for assistance.', 'wp-staging'), ["a" => ["href" => [], "target" => []]]),
         ];
     }
 }

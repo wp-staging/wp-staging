@@ -95,7 +95,7 @@ final class WPStaging
         WPStaging::$startTime = microtime(true);
 
         // Register Pro or Basic Provider, Always prefer registering Pro if both classes found unless if dev basic constant enabled. If both not present throw error
-        if (class_exists('\WPStaging\Pro\ProServiceProvider') && !$this->isWPStagingDevBasic()) {
+        if (class_exists('\WPStaging\Pro\ProServiceProvider') && !WPStaging::isDevBasic()) {
             $this->container->register(ProServiceProvider::class);
         } elseif (class_exists('\WPStaging\Basic\BasicServiceProvider')) {
             $this->container->register(BasicServiceProvider::class);
@@ -445,7 +445,7 @@ final class WPStaging
      */
     public static function getVersion()
     {
-        if (WPStaging::getInstance()->isWPStagingDevBasic()) {
+        if (WPStaging::isDevBasic()) {
             // @phpstan-ignore-next-line
             return WPSTG_DEV_BASIC; // This constant will only be returned if it's a string e.g. '1.0.0'
         }
@@ -532,7 +532,7 @@ final class WPStaging
      *
      * @return bool
      */
-    private function isWPStagingDevBasic()
+    public static function isDevBasic()
     {
         return defined('WPSTG_DEV_BASIC') && is_string(WPSTG_DEV_BASIC);
     }

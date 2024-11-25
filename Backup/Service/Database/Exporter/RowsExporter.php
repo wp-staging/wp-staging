@@ -7,6 +7,7 @@ use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\MySQLRowsGeneratorTrait;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use function WPStaging\functions\debug_log;
@@ -35,8 +36,6 @@ class RowsExporter extends AbstractExporter
     protected $lastNumericInsertId = -PHP_INT_MAX;
     protected $specialFields;
     protected $nonWpTables;
-    const NULL_FLAG = "{WPSTG_NULL}";
-    const BINARY_FLAG = "{WPSTG_BINARY}";
     public function __construct(Database $database, JobDataDto $jobDataDto)
     {
         parent::__construct($database);
@@ -292,7 +291,7 @@ class RowsExporter extends AbstractExporter
         try {
             foreach ($row as $column => &$value) {
                 if (is_null($value)) {
-                    $nullFlag = self::NULL_FLAG;
+                    $nullFlag = DatabaseImporter::NULL_FLAG;
                     $value    = "'$nullFlag'";
                     continue;
                 }
@@ -301,7 +300,7 @@ class RowsExporter extends AbstractExporter
                     strpos($tableColumns[strtolower($column)], 'blob') !== false
                 ) {
                     $value      = bin2hex($value);
-                    $binaryFlag = static::BINARY_FLAG;
+                    $binaryFlag = DatabaseImporter::BINARY_FLAG;
                     $value      = "'$binaryFlag$value'";
                     continue;
                 }

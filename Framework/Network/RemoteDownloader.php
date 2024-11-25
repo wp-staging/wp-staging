@@ -16,29 +16,29 @@ class RemoteDownloader
     /** @var int */
     const TIMEOUT = 60;
 
-    /** @var Sanitize */
-    private $sanitize;
-
     /** @var Auth */
-    public $auth;
+    protected $auth;
+
+    /** @var Sanitize */
+    protected $sanitize;
 
     /** @var string */
-    private $remoteFileUrl = '';
+    protected $remoteFileUrl = '';
 
     /** @var string */
-    private $localFilePath = '';
+    protected $localFilePath = '';
+
+    /** @var string */
+    protected $fileName = '';
+
+    /** @var int */
+    protected $fileSize = 0;
 
     /** @var int */
     private $startByte = 0;
 
     /** @var int */
     private $endByte = 0;
-
-    /** @var string */
-    private $fileName = '';
-
-    /** @var int */
-    private $fileSize = 0;
 
     /** @var bool */
     private $isSuccess = false;
@@ -213,6 +213,8 @@ class RemoteDownloader
                 $this->response = 'Failed to close the local file.';
                 return false;
             }
+
+            $localFile = null;
 
             return true;
         } catch (Exception $e) {

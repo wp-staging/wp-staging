@@ -376,7 +376,7 @@ class Assets
      */
     private function isNotWPStagingAdminPage($slug)
     {
-        if (WPStaging::isPro()) {
+        if (WPStaging::isPro() || WPStaging::isDevBasic()) {
             $availableSlugs = [
                 "toplevel_page_wpstg_clone",
                 "toplevel_page_wpstg_backup",

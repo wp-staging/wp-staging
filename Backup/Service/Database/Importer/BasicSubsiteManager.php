@@ -1,9 +1,9 @@
 <?php
 namespace WPStaging\Backup\Service\Database\Importer;
-use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
+use WPStaging\Backup\Dto\Service\DatabaseImporterDto;
 class BasicSubsiteManager implements SubsiteManagerInterface
 {
-    public function initialize(JobRestoreDataDto $jobRestoreDataDto)
+    public function initialize(DatabaseImporterDto $databaseImporterDto)
     {
         }
     public function updateSubsiteId()

@@ -2,7 +2,7 @@
 
 namespace WPStaging\Backup;
 
-use WPStaging\Backup\Ajax\Restore\PrepareRestore;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Security\AccessToken;
 use WPStaging\Framework\ThirdParty\NinjaForms;
@@ -51,7 +51,7 @@ class AfterRestore
         add_filter('automatic_updater_disabled', '__return_false');
 
         if (apply_filters('wpstg.backup.import.database.dropOldTablesAfterRestore', true)) {
-            $this->tableService->deleteTablesStartWith(PrepareRestore::TMP_DATABASE_PREFIX_TO_DROP, [], true);
+            $this->tableService->deleteTablesStartWith(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP, [], true);
         }
 
         $this->ninjaForms->mayBeDisableMaintenanceMode();

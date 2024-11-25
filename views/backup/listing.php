@@ -145,6 +145,7 @@ if ($cronMessage !== '') { ?>
 
 <?php include(WPSTG_VIEWS_DIR . 'job/modal/process.php'); ?>
 <?php include(WPSTG_VIEWS_DIR . 'job/modal/success.php'); ?>
+<?php include(WPSTG_VIEWS_DIR . 'otp/overlay.php'); ?>
 <?php include(WPSTG_VIEWS_DIR . 'backup/modal/partials/backup-success.php'); ?>
 
 <?php include(__DIR__ . '/modal/backup.php'); ?>

@@ -4,6 +4,8 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use Exception;
 use RuntimeException;
+use WPStaging\Backup\Dto\Service\DatabaseImporterDto;
+use WPStaging\Backup\Dto\Task\Restore\RestoreDatabaseTaskDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
@@ -39,13 +41,18 @@ class RestoreDatabaseTask extends RestoreTask
     /** @var DatabaseSearchReplacerInterface */
     protected $databaseSearchReplacer;
 
+    /** @var DatabaseImporterDto */
+    protected $databaseImporterDto;
+
+    /** @var RestoreDatabaseTaskDto */
+    protected $currentTaskDto;
+
     public function __construct(DatabaseImporter $databaseImporter, LoggerInterface $logger, Cache $cache, StepsDto $stepsDto, SeekableQueueInterface $taskQueue, PathIdentifier $pathIdentifier, DatabaseSearchReplacerInterface $databaseSearchReplacer)
     {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
-        $this->databaseImporter = $databaseImporter;
-        $this->databaseImporter->setup($this->logger, $stepsDto, $this);
-
+        $this->databaseImporter       = $databaseImporter;
+        $this->databaseImporterDto    = new DatabaseImporterDto();
         $this->pathIdentifier         = $pathIdentifier;
         $this->databaseSearchReplacer = $databaseSearchReplacer;
     }
@@ -91,32 +98,33 @@ class RestoreDatabaseTask extends RestoreTask
             return $this->generateResponse(false);
         }
 
-        $start            = microtime(true);
-        $getCurrentBefore = $this->stepsDto->getCurrent();
-        $getTotal         = $this->stepsDto->getTotal();
+        $start           = microtime(true);
+        $queriesExecuted = $this->stepsDto->getCurrent();
+        $totalQueries    = $this->stepsDto->getTotal();
 
-        if ($getTotal === 0) {
+        if ($totalQueries === 0) {
             $this->logger->critical('Total number of queries is 0. Stop restoring backup. Contact support@wp-staging.com.');
             throw new Exception('Total number of queries is 0. Stop restoring backup');
         }
 
         $this->setupExecutionTime();
-        $this->databaseImporter->restore($this->jobDataDto->getTmpDatabasePrefix());
+        $this->restoreDatabase();
+        $this->updateTaskDtos();
 
-        $getCurrent = $this->stepsDto->getCurrent();
+        $newQueriesExecuted = $this->stepsDto->getCurrent();
 
-        if ($getCurrent > $getTotal) {
-            $getCurrent = $getCurrent - ( $getCurrent - $getTotal );
+        if ($newQueriesExecuted > $totalQueries) {
+            $newQueriesExecuted = $totalQueries;
         }
 
-        $queriesPerSecond = ($getCurrent - $getCurrentBefore) / (microtime(true) - $start);
+        $queriesPerSecond = ($newQueriesExecuted - $queriesExecuted) / (microtime(true) - $start);
         $queriesPerSecond = (int)$queriesPerSecond;
 
         if ($queriesPerSecond > 0) {
             $queriesPerSecond = number_format_i18n($queriesPerSecond);
         }
 
-        $queriesLog = sprintf('Executed %s/%s queries (%s queries per second)', number_format_i18n($getCurrent), number_format_i18n($getTotal), $queriesPerSecond);
+        $queriesLog = sprintf('Executed %s/%s queries (%s queries per second)', number_format_i18n($newQueriesExecuted), number_format_i18n($totalQueries), $queriesPerSecond);
         $this->logger->info($queriesLog);
 
         if ($queriesPerSecond === 0) {
@@ -143,6 +151,12 @@ class RestoreDatabaseTask extends RestoreTask
     public function prepare()
     {
         $metadata = $this->jobDataDto->getBackupMetadata();
+
+        $this->databaseImporterDto->setTmpPrefix($this->jobDataDto->getTmpDatabasePrefix());
+        $this->databaseImporterDto->setShortTables($this->jobDataDto->getShortNamesTablesToRestore(), $this->jobDataDto->getTmpDatabasePrefix());
+        $this->databaseImporterDto->setShortTables($this->jobDataDto->getShortNamesTablesToDrop(), DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP);
+
+        $this->databaseImporter->setup($this->databaseImporterDto, $this->jobDataDto->getIsSameSiteBackupRestore(), $metadata->getSqlServerVersion());
         if ($metadata->getIsMultipartBackup()) {
             $this->setupMultipartDatabaseRestore();
             return;
@@ -159,6 +173,7 @@ class RestoreDatabaseTask extends RestoreTask
             throw new RuntimeException(sprintf('Can not find database file %s', $databaseFile));
         }
 
+        $this->databaseImporter->setLogger($this->logger);
         $this->databaseImporter->setFile($databaseFile);
         $this->databaseImporter->seekLine($this->stepsDto->getCurrent());
 
@@ -166,7 +181,14 @@ class RestoreDatabaseTask extends RestoreTask
             $this->stepsDto->setTotal($this->databaseImporter->getTotalLines());
         }
 
+        $this->databaseImporterDto->setTotalLines($this->databaseImporter->getTotalLines());
         $this->setupSearchReplace();
+    }
+
+    /** @return string */
+    protected function getCurrentTaskType(): string
+    {
+        return RestoreDatabaseTaskDto::class;
     }
 
     /**
@@ -174,8 +196,7 @@ class RestoreDatabaseTask extends RestoreTask
      */
     protected function setupExecutionTime()
     {
-        static::$backupRestoreMaxExecutionTimeInSeconds           = $this->jobDataDto->getCurrentExecutionTimeDatabaseRestore();
-        DatabaseImporter::$backupRestoreMaxExecutionTimeInSeconds = $this->jobDataDto->getCurrentExecutionTimeDatabaseRestore();
+        static::$backupRestoreMaxExecutionTimeInSeconds = $this->jobDataDto->getCurrentExecutionTimeDatabaseRestore();
     }
 
     /**
@@ -206,6 +227,54 @@ class RestoreDatabaseTask extends RestoreTask
         }
 
         $this->logger->warning(sprintf(esc_html__('Repeat database restore after increasing execution time to %s seconds', 'wp-staging'), $currentExecutionTimeDatabaseRestore));
+    }
+
+    /**
+     * @return void
+     */
+    protected function restoreDatabase()
+    {
+        $this->databaseImporter->init($this->jobDataDto->getTmpDatabasePrefix());
+
+        try {
+            while (!$this->isThreshold()) {
+                try {
+                    $this->databaseImporter->execute();
+                } catch (\OutOfBoundsException $e) {
+                    // Skipping INSERT query due to unexpected format...
+                    $this->logger->debug($e->getMessage());
+                }
+            }
+        } catch (Exception $e) {
+            if ($e->getCode() === DatabaseImporter::FINISHED_QUEUE_EXCEPTION_CODE) {
+                $this->databaseImporter->finish();
+            } elseif ($e->getCode() === DatabaseImporter::THRESHOLD_EXCEPTION_CODE) {
+                // no-op
+            } elseif ($e->getCode() === DatabaseImporter::RETRY_EXCEPTION_CODE) {
+                $this->databaseImporter->retryQuery();
+            } else {
+                $this->databaseImporter->updateIndex();
+                $this->logger->critical(substr($e->getMessage(), 0, 1000));
+            }
+
+            return;
+        }
+
+        $this->databaseImporter->updateIndex();
+    }
+
+    /**
+     * Responsible for updating steps dto and current task dto from database importer dto.
+     * @return void
+     */
+    protected function updateTaskDtos()
+    {
+        $this->stepsDto->setCurrent($this->databaseImporterDto->getCurrentIndex());
+
+        $this->currentTaskDto->fromDatabaseImporterDto($this->databaseImporterDto);
+
+        $this->jobDataDto->setShortNamesTablesToDrop($this->databaseImporterDto->getShortTables(DatabaseImporter::TMP_DATABASE_PREFIX_TO_DROP));
+        $this->jobDataDto->setShortNamesTablesToRestore($this->databaseImporterDto->getShortTables($this->jobDataDto->getTmpDatabasePrefix()));
     }
 
     /**
