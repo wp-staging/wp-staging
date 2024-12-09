@@ -2,7 +2,7 @@
 
 // WP STAGING version number
 if (!defined('WPSTG_VERSION')) {
-    define('WPSTG_VERSION', '3.9.3');
+    define('WPSTG_VERSION', '3.9.4');
 }
 
 // Compatible up to WordPress Version

@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Ajax\FileList;
 
 use SplFileInfo;
+use Throwable;
 use WPStaging\Backup\BackupValidator;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Entity\ListableBackup;
@@ -77,7 +78,7 @@ class ListableBackupsCollection
                 try {
                     $backupMetadata = new BackupMetadata();
                     $backupMetadata = $backupMetadata->hydrateByFilePath($file->getRealPath());
-                } catch (\Exception $e) {
+                } catch (Throwable $e) {
                     $listableBackup                        = new ListableBackup();
                     $listableBackup->dateCreatedTimestamp  = $file->getMTime();
                     $listableBackup->dateCreatedFormatted  = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getMTime()));
@@ -97,44 +98,7 @@ class ListableBackupsCollection
                     continue;
                 }
 
-                $fileObject                                       = new FileObject($file->getRealPath());
-                $listableBackup                                   = new ListableBackup();
-                $listableBackup->type                             = $backupMetadata->getBackupType();
-                $listableBackup->subsiteType                      = $listableBackup->type === 'single' ? '' : ($backupMetadata->getSubdomainInstall() ? 'Subdomains' : 'Subdirectories');
-                $listableBackup->automatedBackup                  = $backupMetadata->getIsAutomatedBackup();
-                $listableBackup->backupName                       = $backupMetadata->getName();
-                $listableBackup->dateCreatedTimestamp             = intval($backupMetadata->getDateCreated());
-                $listableBackup->dateCreatedFormatted             = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($backupMetadata->getDateCreated()));
-                $listableBackup->dateUploadedTimestamp            = $file->getCTime();
-                $listableBackup->dateUploadedFormatted            = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));
-                $listableBackup->downloadUrl                      = $downloadUrl;
-                $listableBackup->relativePath                     = $relativePath;
-                $listableBackup->id                               = $backupMetadata->getDateCreated();
-                $listableBackup->isExportingDatabase              = $backupMetadata->getIsExportingDatabase();
-                $listableBackup->isExportingMuPlugins             = $backupMetadata->getIsExportingMuPlugins();
-                $listableBackup->isExportingOtherWpContentFiles   = $backupMetadata->getIsExportingOtherWpContentFiles();
-                $listableBackup->isExportingOtherWpRootFiles      = $backupMetadata->getIsExportingOtherWpRootFiles();
-                $listableBackup->isExportingPlugins               = $backupMetadata->getIsExportingPlugins();
-                $listableBackup->isExportingThemes                = $backupMetadata->getIsExportingThemes();
-                $listableBackup->isExportingUploads               = $backupMetadata->getIsExportingUploads();
-                $listableBackup->isMultipartBackup                = $backupMetadata->getIsMultipartBackup();
-                $listableBackup->generatedOnWPStagingVersion      = $backupMetadata->getWpstgVersion();
-                $listableBackup->generatedOnBackupVersion         = $backupMetadata->getBackupVersion();
-                $listableBackup->createdOnPro                     = $backupMetadata->getCreatedOnPro();
-                $listableBackup->name                             = $file->getFilename();
-                $listableBackup->notes                            = $backupMetadata->getNote();
-                $listableBackup->size                             = size_format($backupMetadata->getBackupSize(), 2); // @phpstan-ignore-line
-                $listableBackup->md5BaseName                      = $md5Basename;
-                $listableBackup->isValidFileIndex                 = $this->backupValidator->validateFileIndex($fileObject, $backupMetadata);
-                $listableBackup->isValidMultipartBackup           = $this->backupValidator->checkIfSplitBackupIsValid($backupMetadata);
-                $listableBackup->isUnsupported                    = $this->backupValidator->isUnsupportedBackupVersion($backupMetadata);
-                $listableBackup->validationIssues['sizeIssues']   = $this->backupValidator->getPartSizeIssues();
-                $listableBackup->validationIssues['missingParts'] = $this->backupValidator->getMissingPartIssues();
-                $listableBackup->existingBackupParts              = $listableBackup->isMultipartBackup ? $backupMetadata->getMultipartMetadata()->getBackupParts() : [];
-                $listableBackup->errorMessage                     = $this->backupValidator->getErrorMessage();
-                $listableBackup->indexPartSize                    = $backupMetadata->getIndexPartSize();
-                $listableBackup->isZlibCompressed                 = $backupMetadata->getIsZlibCompressed();
-                $listableBackup->isContaining2GBFile              = $backupMetadata->getIsContaining2GBFile();
+                $listableBackup = $this->populateListableBackup($file, $backupMetadata, $downloadUrl, $relativePath, $md5Basename);
             } elseif ($file->getExtension() === 'sql') {
                 $listableBackup                      = new ListableBackup();
                 $listableBackup->isLegacy            = true;
@@ -152,5 +116,68 @@ class ListableBackupsCollection
         }
 
         return $backups;
+    }
+
+    protected function populateListableBackup(SplFileInfo $file, BackupMetadata $backupMetadata, string $downloadUrl, string $relativePath, string $md5Basename): ListableBackup
+    {
+        try {
+            $fileObject                                       = new FileObject($file->getRealPath());
+            $listableBackup                                   = new ListableBackup();
+            $listableBackup->type                             = $backupMetadata->getBackupType();
+            $listableBackup->subsiteType                      = $listableBackup->type === 'single' ? '' : ($backupMetadata->getSubdomainInstall() ? 'Subdomains' : 'Subdirectories');
+            $listableBackup->automatedBackup                  = $backupMetadata->getIsAutomatedBackup();
+            $listableBackup->backupName                       = $backupMetadata->getName();
+            $listableBackup->dateCreatedTimestamp             = intval($backupMetadata->getDateCreated());
+            $listableBackup->dateCreatedFormatted             = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($backupMetadata->getDateCreated()));
+            $listableBackup->dateUploadedTimestamp            = $file->getCTime();
+            $listableBackup->dateUploadedFormatted            = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));
+            $listableBackup->downloadUrl                      = $downloadUrl;
+            $listableBackup->relativePath                     = $relativePath;
+            $listableBackup->id                               = $backupMetadata->getDateCreated();
+            $listableBackup->isExportingDatabase              = $backupMetadata->getIsExportingDatabase();
+            $listableBackup->isExportingMuPlugins             = $backupMetadata->getIsExportingMuPlugins();
+            $listableBackup->isExportingOtherWpContentFiles   = $backupMetadata->getIsExportingOtherWpContentFiles();
+            $listableBackup->isExportingOtherWpRootFiles      = $backupMetadata->getIsExportingOtherWpRootFiles();
+            $listableBackup->isExportingPlugins               = $backupMetadata->getIsExportingPlugins();
+            $listableBackup->isExportingThemes                = $backupMetadata->getIsExportingThemes();
+            $listableBackup->isExportingUploads               = $backupMetadata->getIsExportingUploads();
+            $listableBackup->isMultipartBackup                = $backupMetadata->getIsMultipartBackup();
+            $listableBackup->generatedOnWPStagingVersion      = $backupMetadata->getWpstgVersion();
+            $listableBackup->generatedOnBackupVersion         = $backupMetadata->getBackupVersion();
+            $listableBackup->createdOnPro                     = $backupMetadata->getCreatedOnPro();
+            $listableBackup->name                             = $file->getFilename();
+            $listableBackup->notes                            = $backupMetadata->getNote();
+            $listableBackup->size                             = size_format($backupMetadata->getBackupSize(), 2); // @phpstan-ignore-line
+            $listableBackup->md5BaseName                      = $md5Basename;
+            $listableBackup->isValidFileIndex                 = $this->backupValidator->validateFileIndex($fileObject, $backupMetadata);
+            $listableBackup->isValidMultipartBackup           = $this->backupValidator->checkIfSplitBackupIsValid($backupMetadata);
+            $listableBackup->isUnsupported                    = $this->backupValidator->isUnsupportedBackupVersion($backupMetadata);
+            $listableBackup->validationIssues['sizeIssues']   = $this->backupValidator->getPartSizeIssues();
+            $listableBackup->validationIssues['missingParts'] = $this->backupValidator->getMissingPartIssues();
+            $listableBackup->existingBackupParts              = $listableBackup->isMultipartBackup ? $backupMetadata->getMultipartMetadata()->getBackupParts() : [];
+            $listableBackup->errorMessage                     = $this->backupValidator->getErrorMessage();
+            $listableBackup->indexPartSize                    = $backupMetadata->getIndexPartSize();
+            $listableBackup->isZlibCompressed                 = $backupMetadata->getIsZlibCompressed();
+            $listableBackup->isContaining2GBFile              = $backupMetadata->getIsContaining2GBFile();
+
+            return $listableBackup;
+        } catch (Throwable $exception) {
+            $listableBackup                        = new ListableBackup();
+            $listableBackup->dateCreatedTimestamp  = $file->getMTime();
+            $listableBackup->dateCreatedFormatted  = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getMTime()));
+            $listableBackup->dateUploadedTimestamp = $file->getCTime();
+            $listableBackup->dateUploadedFormatted = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));
+            $listableBackup->downloadUrl           = $downloadUrl;
+            $listableBackup->relativePath          = $relativePath;
+            $listableBackup->backupName            = $relativePath;
+            $listableBackup->name                  = $file->getFilename();
+            $listableBackup->size                  = size_format($file->getSize(), 2); // @phpstan-ignore-line
+            $listableBackup->id                    = $md5Basename;
+            $listableBackup->md5BaseName           = $md5Basename;
+            $listableBackup->isCorrupt             = true;
+            $listableBackup->isMultipartBackup     = false;
+
+            return $listableBackup;
+        }
     }
 }

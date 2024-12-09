@@ -29,6 +29,10 @@ class NoticesHandler
             remove_all_actions('all_admin_notices');
         }
 
+        if ($this->isWpstgInstallPage()) {
+            return;
+        }
+
         add_action('admin_notices', [$this, 'addWpstgAdminNotices']);
         add_action('network_admin_notices', [$this, 'addWpstgNetworkAdminNotices']);
         add_action('all_admin_notices', [$this, 'addWpstgAllAdminNotices']);// phpcs:ignore WPStaging.Security.AuthorizationChecked

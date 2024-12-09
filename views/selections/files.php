@@ -70,16 +70,16 @@ if ($options->current !== null && $options->mainJob === 'updating') {
 <!-- Templates for exclusion filters. These will never be rendered until added to exclusion rule table -->
 <?php unset($rule); ?>
 <template id="wpstg-file-ext-exclude-filter-template">
-    <?php require(WPSTG_VIEWS_DIR . 'exclude-filters/file-ext-exclude-filter.php') ?>
+    <?php require(WPSTG_VIEWS_DIR . 'exclude-filters/file-ext-exclude-filter.php'); ?>
 </template>
 <template id="wpstg-file-size-exclude-filter-template">
-    <?php require(WPSTG_VIEWS_DIR . 'exclude-filters/file-size-exclude-filter.php') ?>
+    <?php require(WPSTG_VIEWS_DIR . 'exclude-filters/file-size-exclude-filter.php'); ?>
 </template>
 <template id="wpstg-file-name-exclude-filter-template">
-    <?php require(WPSTG_VIEWS_DIR . 'exclude-filters/file-name-exclude-filter.php') ?>
+    <?php require(WPSTG_VIEWS_DIR . 'exclude-filters/file-name-exclude-filter.php'); ?>
 </template>
 <template id="wpstg-dir-name-exclude-filter-template">
-    <?php require(WPSTG_VIEWS_DIR . 'exclude-filters/dir-name-exclude-filter.php') ?>
+    <?php require(WPSTG_VIEWS_DIR . 'exclude-filters/dir-name-exclude-filter.php'); ?>
 </template>
 <!-- End - Templates for exclusion filters -->
 

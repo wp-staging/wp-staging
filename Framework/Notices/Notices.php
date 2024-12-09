@@ -7,7 +7,6 @@ use wpdb;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\CloningProcess\ExcludedPlugins;
 use WPStaging\Framework\Database\WpOptionsInfo;
@@ -545,28 +544,6 @@ class Notices
             // as this notice is tested multiple times.
             require $this->viewsNoticesPath . "disabled-items-notice.php";
         }
-    }
-
-    /**
-     * @return void
-     */
-    public function showAnalyticsModal()
-    {
-        if (get_option(AnalyticsConsent::OPTION_NAME_ANALYTICS_MODAL_DISMISSED)) {
-            return;
-        }
-
-        if (!$this->isWPStagingAdminPage()) {
-            return;
-        }
-
-        if (WPStaging::make(AnalyticsConsent::class)->hasUserConsent()) {
-            return;
-        }
-
-        Hooks::doAction(self::INJECT_ANALYTICS_CONSENT_ASSETS_ACTION);
-
-        require_once WPSTG_VIEWS_DIR . "notices/analytics-modal.php";
     }
 
     /**

@@ -122,7 +122,7 @@ class AnalyticsSender
         $url = $this->getApiUrl('events');
 
         // Early bail: Do not dispatch events when in dev mode, unless allowed.
-        if (defined('WPSTG_DEV') && WPSTG_DEV) {
+        if (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) {
             if (!defined('WPSTG_DEV_SEND_ANALYTICS') || defined('WPSTG_DEV_SEND_ANALYTICS') && !WPSTG_DEV_SEND_ANALYTICS) {
                 return;
             }

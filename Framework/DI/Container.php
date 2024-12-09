@@ -137,7 +137,7 @@ class Container extends BaseContainer
      */
     public function bind($classOrInterface, $implementation = null, array $afterBuildMethods = null)
     {
-        if (defined('WPSTG_DEV') && WPSTG_DEV) {
+        if ($this->isDevAutoloader()) {
             parent::bind(str_replace($this->prefix, '', $classOrInterface), $implementation, $afterBuildMethods);
         }
 
@@ -153,11 +153,20 @@ class Container extends BaseContainer
      */
     public function singleton($classOrInterface, $implementation = null, array $afterBuildMethods = null)
     {
-        if (defined('WPSTG_DEV') && WPSTG_DEV) {
+        if ($this->isDevAutoloader()) {
             parent::singleton(str_replace($this->prefix, '', $classOrInterface), $implementation, $afterBuildMethods);
         }
 
         parent::singleton($classOrInterface, $implementation, $afterBuildMethods);
+    }
+
+    private function isDevAutoloader()
+    {
+        if (defined('WPSTG_IS_DEV') && constant('WPSTG_IS_DEV')) {
+            return true;
+        }
+
+        return defined('WPSTG_IS_DEV_AUTOLOADER') && constant('WPSTG_IS_DEV_AUTOLOADER');
     }
 
     /**

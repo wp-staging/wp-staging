@@ -11,10 +11,10 @@ use WPStaging\Framework\Utils\Sanitize;
 class RemoteDownloader
 {
     /** @var int */
-    const CHUNK_SIZE = 5 * 1024 * 1024;
+    const TIMEOUT = 60;
 
     /** @var int */
-    const TIMEOUT = 60;
+    private $chunkSize = 5 * 1024 * 1024;
 
     /** @var Auth */
     protected $auth;
@@ -91,6 +91,18 @@ class RemoteDownloader
     }
 
     /**
+     * @param int $chunkSize
+     * @return void
+     */
+    public function setChunkSize(int $chunkSize)
+    {
+        $chunkSize = $this->sanitize->sanitizeInt($chunkSize, true);
+        if ($chunkSize >= MB_IN_BYTES) {
+            $this->chunkSize = $chunkSize;
+        }
+    }
+
+    /**
      * @param string $fileName
      * @return void
      */
@@ -153,8 +165,9 @@ class RemoteDownloader
      */
     protected function makeWpRemotePost(array $arguments)
     {
-        $response       = wp_remote_post($this->remoteFileUrl, $arguments);
-        $this->response = wp_remote_retrieve_response_message($response);
+        $arguments['user-agent'] = 'Mozilla/5.0 (compatible; wp-staging/' . WPStaging::getVersion() . '; +https://wp-staging.com)';
+        $response                = wp_remote_post($this->remoteFileUrl, $arguments);
+        $this->response          = wp_remote_retrieve_response_message($response);
         return $response;
     }
 
@@ -165,7 +178,7 @@ class RemoteDownloader
      */
     public function downloadFileChunk()
     {
-        $this->endByte = $this->startByte + self::CHUNK_SIZE - 1;
+        $this->endByte = $this->startByte + $this->chunkSize - 1;
 
         $arguments = [
             'method'    => 'GET',
@@ -178,7 +191,9 @@ class RemoteDownloader
 
         $response = $this->makeWpRemotePost($arguments);
         if (is_wp_error($response)) {
-            $this->response = $response->get_error_message();
+            $this->response           = $response->get_error_message();
+            $this->isSuccess          = false;
+            $this->isProcessCompleted = true;
             return;
         }
 
@@ -268,7 +283,7 @@ class RemoteDownloader
      */
     public function updateProcessStatus(int $contentLength)
     {
-        if ($contentLength >= self::CHUNK_SIZE) {
+        if ($contentLength >= $this->chunkSize) {
             return;
         }
 
@@ -283,6 +298,21 @@ class RemoteDownloader
         }
 
         rename($originalFilePath . '.uploading', $this->localFilePath);
+
+        if (file_exists($this->localFilePath) && filesize($this->localFilePath) < $this->fileSize) {
+            // Check if the remote file still exists
+            if (!$this->remoteFileExists()) {
+                return;
+            }
+
+            $this->response           = __('File upload incomplete', 'wp-staging');
+            $this->isSuccess          = false;
+            $this->isProcessCompleted = true;
+            $this->remoteFileExists();
+            return;
+        }
+
+
         $this->response           = __('File uploaded successfully', 'wp-staging');
         $this->isProcessCompleted = true;
     }
@@ -292,7 +322,7 @@ class RemoteDownloader
      */
     public function updateStartByte()
     {
-        $this->startByte += self::CHUNK_SIZE;
+        $this->startByte += $this->chunkSize;
     }
 
     /**

@@ -198,6 +198,10 @@ if (!function_exists('wpstgIsOptimizerRequest')) {
             return false;
         }
 
+        if (isset($_POST['wpstg_action']) && sanitize_text_field($_POST['wpstg_action']) === 'bypass_optimizer') {
+            return false;
+        }
+
         if (
             defined('DOING_AJAX') &&
             DOING_AJAX &&

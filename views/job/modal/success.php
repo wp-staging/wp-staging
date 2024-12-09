@@ -6,7 +6,7 @@
         </div>
         <div class="wpstg--success-modal--logs-wrapper">
             <div class="wpstg--success-modal--logs wpstg--logs--container">
-                <?php require(WPSTG_VIEWS_DIR . 'logs/logs-template.php') ?>
+                <?php require(WPSTG_VIEWS_DIR . 'logs/logs-template.php'); ?>
             </div>
         </div>
         <div class="wpstg--success-modal--additional-content"></div>

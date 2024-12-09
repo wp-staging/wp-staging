@@ -378,7 +378,7 @@ class Settings
             $settings->queryLimit = "10000";
             $settings->querySRLimit = "20000";
 
-            if (defined('WPSTG_DEV') && WPSTG_DEV) {
+            if (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) {
                 $settings->fileLimit = "500";
                 $settings->cpuLoad = 'high';
             } else {

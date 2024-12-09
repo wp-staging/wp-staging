@@ -42,6 +42,7 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
     }
 
     $locationName = empty($locationName) ? 'Bucket' : $locationName;
+    $assetsUrl    = trailingslashit(WPSTG_PLUGIN_URL);
 
     ?>
     <p>
@@ -74,21 +75,23 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                 </fieldset>
 
                 <div id="wpstg-s3-custom-provider-fields" class="hidden" <?php echo ($s3provider === '') ? 'style="display: block;"' : '' ; ?>>
-                    
+
                     <strong><?php esc_html_e('Custom Provider', 'wp-staging') ?></strong>
 
                     <fieldset class="wpstg-fieldset">
                         <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-name"><?php esc_html_e('Name', 'wp-staging') ?></label>
-                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-name" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="provider_name" value="<?php echo esc_attr($customProviderName); ?>" />
+                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-name" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="provider_name" value="<?php echo esc_attr($customProviderName); ?>" placeholder="Provider Name" />
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
                         <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-endpoint"><?php esc_html_e('Endpoint', 'wp-staging') ?></label>
-                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-endpoint" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="endpoint" value="<?php echo esc_attr($endpoint); ?>" />
+                        <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-endpoint" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="endpoint" value="<?php echo esc_attr($endpoint); ?>" placeholder="https://example.com:8888" />
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
-                        <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-version"><?php esc_html_e('Version', 'wp-staging') ?></label>
+                        <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-version">
+                            <?php esc_html_e('Version', 'wp-staging') ?>
+                        </label>
                         <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-version" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="version" value="<?php echo esc_attr($version); ?>" />
                         <p>
                             <?php echo Escape::escapeHtml(__("If your S3 provider does not specify a version in their guide, enter <code>latest</code> or <code>2006-03-01</code>.", 'wp-staging')); ?>
@@ -96,12 +99,28 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
-                        <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-ssl"><?php esc_html_e('SSL', 'wp-staging') ?></label>
+                        <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-ssl">
+                            <?php esc_html_e('SSL', 'wp-staging') ?>
+                            <span class='wpstg--tooltip wpstg--tooltip-sftp'>
+                                <img class='wpstg--dashicons wpstg--grey' src='<?php echo esc_html($assetsUrl); ?>assets/svg/info-outline.svg' alt='info'/>
+                                <span class='wpstg--tooltiptext'>
+                                    <?php esc_html_e('Enable SSL for secure encrypted connections to the S3 server.', 'wp-staging'); ?>
+                                </span>
+                            </span>
+                        </label>
                         <?php Checkbox::render("wpstg-storage-provider-{$providerId}-ssl", 'ssl', 'true', $ssl === true); ?>
                     </fieldset>
 
                     <fieldset class="wpstg-fieldset">
-                        <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-use-path-style-endpoint"><?php esc_html_e('Use path style endpoint', 'wp-staging') ?></label>
+                        <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-use-path-style-endpoint">
+                            <?php esc_html_e('Use path style endpoint', 'wp-staging') ?>
+                            <span class='wpstg--tooltip wpstg--tooltip-sftp'>
+                                <img class='wpstg--dashicons wpstg--grey' src='<?php echo esc_html($assetsUrl); ?>assets/svg/info-outline.svg' alt='info'/>
+                                <span class='wpstg--tooltiptext'>
+                                    <?php esc_html_e('Use path-style URLs for accessing buckets (e.g., s3.example.com/bucket).', 'wp-staging'); ?>
+                                </span>
+                            </span>
+                        </label>
                         <?php Checkbox::render("wpstg-storage-provider-{$providerId}-use-path-style-endpoint", 'use_path_style_endpoint', 'true', $usePathStyleEndpoint === true); ?>
                     </fieldset>
                 </div>
@@ -109,16 +128,25 @@ use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Providers;
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key"><?php esc_html_e('Access Key', 'wp-staging') ?></label>
                     <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-access-key" class="wpstg-form-control wpstg-storage-provider-input-field" type="password" name="access_key" value="<?php echo esc_attr($accessKey); ?>" autocomplete="off" />
+                    <p>
+                        <?php esc_html_e('Unique identifier for your account, provided by your S3 service.', 'wp-staging'); ?>
+                    </p>
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key"><?php esc_html_e('Secret Key', 'wp-staging') ?></label>
                     <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-secret-key" class="wpstg-form-control wpstg-storage-provider-input-field" type="password" name="secret_key" value="<?php echo esc_attr($secretKey); ?>"  autocomplete="off"/>
+                    <p>
+                        <?php esc_html_e('Private key for authentication. Keep this key secure.', 'wp-staging'); ?>
+                    </p>
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-region"><?php esc_html_e('Region', 'wp-staging') ?></label>
                     <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-region" class="wpstg-form-control wpstg-storage-provider-input-field" type="text" name="region" value="<?php echo esc_attr($region); ?>" autocomplete="off"/>
+                    <p>
+                        <?php esc_html_e('The geographic region of your S3 storage. Match your bucket\'s region.', 'wp-staging'); ?>
+                    </p>
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">

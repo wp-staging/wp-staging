@@ -277,6 +277,12 @@ abstract class AbstractExtractor
         $this->extractingFile = new FileBeingExtracted($backupFileIndex->getIdentifiablePath(), $extractFolder, $this->pathIdentifier, $backupFileIndex);
         $this->extractingFile->setWrittenBytes($this->extractorDto->getExtractorFileWrittenBytes());
 
+        if ($this->isFileExtracted($backupFileIndex, $this->extractingFile->getBackupPath())) {
+            $this->extractorDto->incrementTotalFilesSkipped();
+            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            throw new \Exception('File already extracted: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
+        }
+
         $this->cleanExistingFile($identifier);
 
         $this->wpstgFile->fseek($this->extractingFile->getCurrentOffset());
@@ -478,6 +484,15 @@ abstract class AbstractExtractor
         }
 
         return in_array($identifier, $this->excludedIdentifier);
+    }
+
+    protected function isFileExtracted(IndexLineInterface $backupFileIndex, string $extractPath): bool
+    {
+        if (!file_exists($extractPath)) {
+            return false;
+        }
+
+        return $backupFileIndex->getUncompressedSize() === filesize($extractPath);
     }
 
     /**

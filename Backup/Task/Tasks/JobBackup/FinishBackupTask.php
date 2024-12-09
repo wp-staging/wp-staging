@@ -67,9 +67,8 @@ class FinishBackupTask extends BackupTask
         // For example, in background (BG) backups, this task run twice, so we log it only once after the process completes.
         if (!$this->jobDataDto->getIsCreateBackupInBackground()) {
             $this->logBackupProcessCompleted($this->getBackupCreationPrepareData());
+            $this->saveCloudStorageOptions();
         }
-
-        $this->saveCloudStorageOptions();
 
         $this->maybeTriggerBackupCreationInBackground();
 

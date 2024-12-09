@@ -18,6 +18,6 @@
     </button>
     <div class="wpstg--process-modal--generic-problem"></div>
     <div class="wpstg--process-modal--logs wpstg--logs--container">
-        <?php require(WPSTG_VIEWS_DIR . 'logs/logs-template.php') ?>
+        <?php require(WPSTG_VIEWS_DIR . 'logs/logs-template.php'); ?>
     </div>
 </div>

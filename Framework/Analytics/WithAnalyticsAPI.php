@@ -6,7 +6,7 @@ trait WithAnalyticsAPI
 {
     protected function getApiUrl($endpoint)
     {
-        if (defined('WPSTG_DEV') && WPSTG_DEV) {
+        if (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) {
             $url = 'http://analytics.local:8080';
         } else {
             $url = 'https://analytics.wp-staging.com';

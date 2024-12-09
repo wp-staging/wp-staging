@@ -272,4 +272,14 @@ class Sites
 
         return $stagingSiteDto;
     }
+
+    /**
+     * @param string $clone
+     * @return bool
+     */
+    public function isExistingClone(string $clone): bool
+    {
+        $existingClones = get_option(self::STAGING_SITES_OPTION, []);
+        return isset($existingClones[$clone]);
+    }
 }

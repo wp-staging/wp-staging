@@ -2,7 +2,11 @@
 
 namespace WPStaging\Framework\Traits;
 
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Analytics\AnalyticsConsent;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
+use WPStaging\Framework\Notices\Notices;
 
 trait NoticesTrait
 {
@@ -40,5 +44,46 @@ trait NoticesTrait
     public function getNoticesViewPath()
     {
         return $this->noticesViewPath;
+    }
+
+    /**
+     * @return void
+     */
+    public function showAnalyticsModal()
+    {
+        if (get_option(AnalyticsConsent::OPTION_NAME_ANALYTICS_MODAL_DISMISSED)) {
+            return;
+        }
+
+        if (!$this->isWPStagingAdminPage()) {
+            return;
+        }
+
+        // don't show analytics modal on wpstg-install page
+        if ($this->isWpstgInstallPage()) {
+            return;
+        }
+
+        if (WPStaging::make(AnalyticsConsent::class)->hasUserConsent()) {
+            return;
+        }
+
+        Hooks::doAction(Notices::INJECT_ANALYTICS_CONSENT_ASSETS_ACTION);
+
+        require_once WPSTG_VIEWS_DIR . "notices/analytics-modal.php";
+    }
+
+    /**
+     * @return bool
+     */
+    public function isWpstgInstallPage(): bool
+    {
+        $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
+
+        if ($currentPage === 'wpstg-install') {
+            return true;
+        }
+
+        return false;
     }
 }

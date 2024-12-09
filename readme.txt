@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.7
-Stable tag: 3.9.3
+Stable tag: 3.9.4
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -286,6 +286,32 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.9.4 =
+* Enh: Improve backup transfer speed 500% when downloading backup file from remote server. #3385
+* Enh: Disable `MalCare` firewall on the staging site. #3939
+* Enh: Add WP Staging main menu on multisite main site. #3941
+* Enh: Add number of activations and some clarifications on the license activation page. #3805
+* Enh: Add tooltip explanations for backup remote storage settings fields. #3516
+* Enh: Disable backup upload 2FA option as default and create a constant to activate it #4011
+* Fix: Upgrade link position broken on basic version for wp root files selection before backup. #3996
+* Fix: Ensure proper backup retention for cloud storage backups running in the background. (Pro) #3957
+* Fix: Optimize lazy loading of placeholders when rendering DOM elements. #3938
+* Fix: Selection of Other WP root folders is not intuitive during backup creation. (Pro) #3850
+* Fix: Redirect User to Install page after activating `WP Staging Pro` if core version not installed. (Pro) #3748
+* Fix: Log the list of `Must-Use' plugins and `Drop-In' files in the system information. #3961
+* Fix: Bring back `Mails Settings` tab on staging site `Settings` page. (Pro) #3985
+* Fix: Add a rule to whitelist all plugins for internal use in optimizer. #3926
+* Fix: Prevent extraction of already extracted file which could happen if a file was scanned multiple times while backup creation. #3920
+* Fix: Handle backup listing when backup is missing data in backup metadata. #3895
+* Fix: Display a message when a higher license plan upgrade is required on the temporary login page. (Pro) #3942
+* Fix: Missing semicolon in require statement threw error in php 8.1. Added phpcs rule rule to check for missing semicolons after including files. #4009
+* UX: Improve `Generate Login Link` UI to make it look better. (Pro) #3904
+* UX: Improve the temporary login modal for different screen resolutions. #3944
+* UX: Disable backup upload button until upload form is used. #3947
+* Dev: Fix issue with deleting staging site when running e2e tests for basic version. #3999
+* Dev: Make dev plugin loadable on testing domains. #3977
+* Dev: Fix Playwright tests for temporary login link creation. #4003
 
 = 3.9.3 =
 * New: Supports WordPress 6.7.1

@@ -96,6 +96,8 @@ class SystemInfo
         $output .= $this->getMultisiteInfo();
         $output .= $this->wpstaging();
         $output .= $this->plugins();
+        $output .= $this->muPlugins();
+        $output .= $this->dropIns();
         $output .= $this->multiSitePlugins();
         $output .= $this->phpExtensions();
         $output .= $this->browser();
@@ -725,10 +727,6 @@ class SystemInfo
     }
 
     /**
-     * Check and return prefix of the staging site
-     */
-
-    /**
      * Try to get the staging prefix from wp-config.php of staging site
      * @param array $clone
      * @return string
@@ -952,6 +950,34 @@ class SystemInfo
             foreach ($settings as $key => $value) {
                 $output .= $this->info($key, empty($value) ? self::NOT_SET_LABEL : $this->removeCredentials($key, $value));
             }
+        }
+
+        return $output;
+    }
+
+    /**
+     * @return string
+     */
+    protected function muPlugins(): string
+    {
+        $output    = $this->header("Must-Use Plugins");
+        $muPlugins = get_mu_plugins();
+        foreach ($muPlugins as $pluginData) {
+            $output .= $this->info($pluginData["Name"] . ":", $pluginData["Version"]);
+        }
+
+        return $output;
+    }
+
+    /**
+     * @return string
+     */
+    protected function dropIns(): string
+    {
+        $output  = $this->header("Drop-Ins");
+        $dropIns = get_dropins();
+        foreach ($dropIns as $dropIn) {
+            $output .= $this->info($dropIn["Name"] . ":", $dropIn["Version"]);
         }
 
         return $output;

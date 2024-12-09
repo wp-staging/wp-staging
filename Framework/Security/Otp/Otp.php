@@ -89,9 +89,9 @@ class Otp
         $this->dataEncryption = $dataEncryption;
     }
 
-    public function isOtpFeatureDisabled(): bool
+    public function isOtpFeatureEnabled(): bool
     {
-        return defined('WPSTG_OTP_DISABLED') && constant('WPSTG_OTP_DISABLED');
+        return defined('WPSTG_OTP_ENABLED') && constant('WPSTG_OTP_ENABLED');
     }
 
     /**
@@ -162,8 +162,8 @@ class Otp
      */
     public function validateOtpRequest()
     {
-        // Early bail OTP feature disabled
-        if ($this->isOtpFeatureDisabled()) {
+        // Early bail if OTP feature is not enabled
+        if (!$this->isOtpFeatureEnabled()) {
             throw new OtpDisabledException();
         }
 
