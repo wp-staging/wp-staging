@@ -58,9 +58,9 @@ class OtpSender
             wp_send_json_error(esc_html__('Invalid Request! User is not authenticated', 'wp-staging'), 403);
         }
 
-        if ($this->otpService->isOtpFeatureDisabled()) {
+        if (!$this->otpService->isOtpFeatureEnabled()) {
             wp_send_json_success([
-                'message'   => esc_html__('OTP feature disabled by admin...', 'wp-staging'),
+                'message' => esc_html__('OTP feature is not enabled.', 'wp-staging'),
             ], 202);
         }
 

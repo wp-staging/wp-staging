@@ -96,7 +96,7 @@ class Settings
               ]
         );
 
-        $defaultFileLimit = defined('WPSTG_DEV') && WPSTG_DEV ? 500 : 50;
+        $defaultFileLimit = defined('WPSTG_IS_DEV') && WPSTG_IS_DEV ? 500 : 50;
 
         $this->form["general"]->add(
             $element->setLabel(__("File Copy Limit", "wp-staging"))->setDefault(isset($settings->fileLimit) ? $settings->fileLimit : $defaultFileLimit)
@@ -145,7 +145,7 @@ class Settings
               ]
         );
 
-        $defaultCpuPriority = defined('WPSTG_DEV') && WPSTG_DEV ? 'high' : 'low';
+        $defaultCpuPriority = defined('WPSTG_IS_DEV') && WPSTG_IS_DEV ? 'high' : 'low';
 
         $this->form["general"]->add(
             $element->setLabel(__("CPU Load Priority", "wp-staging"))

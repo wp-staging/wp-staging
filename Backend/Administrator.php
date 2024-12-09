@@ -125,6 +125,7 @@ class Administrator
 
         if ($this->pluginInfo->canShowAdminMenu()) {
             add_action("admin_menu", [$this, "addMenu"], 10);
+            add_action('network_admin_menu', [$this, "addMenu"]);
         }
 
         add_action("admin_init", [$this, "upgrade"]);

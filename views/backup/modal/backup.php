@@ -22,7 +22,7 @@ $time = WPStaging::make(Times::class);
 /** @var Providers */
 $storages = WPStaging::make(Providers::class);
 
-$recurInterval   = (defined('WPSTG_DEV') && WPSTG_DEV) ? 'PT1M' : 'PT15M';
+$recurInterval   = (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV) ? 'PT1M' : 'PT15M';
 $recurInterval   = apply_filters('wpstg.schedulesBackup.interval', $recurInterval);
 $recurrenceTimes = $time->range('midnight', 'tomorrow - 1 minutes', $recurInterval);
 
@@ -72,40 +72,43 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                     </span>
                 </div>
             </label>
-            <label>
-                <?php
-                    Checkbox::render(
-                        'wpstgIncludeOtherFilesInWpRoot',
-                        'includeOtherFilesInWpRoot',
-                        '',
-                        false,
-                        [
-                            'classes'    => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
-                            'isDisabled' => !$isProVersion
-                        ],
-                        [
-                            'id' => '#wpstg-wproot-scanning-files',
-                        ]
-                    );
-                    ?>
-                <span class="<?php echo esc_attr($disabledClass) ?>">
-                    <?php esc_html_e('Backup Other Files In WP Root', 'wp-staging'); ?>
-                </span>
-                <div class="wpstg--tooltip wpstg-wproot-tooltip">
-                    <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info"/>
-                    <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                            <?php esc_html_e('The WP core folders wp-admin and wp-includes are not backed up. This is not necessary! All folders containing WP Staging sites are also not backed up. If you want to back up a staging site, open WP Staging on the staging site and perform a backup from there.', 'wp-staging'); ?>
+            <div>
+                <label>
+                    <div class="wpstg--wproot-expand-folder">
+                        <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info"/>
+                    </div>
+                    <?php
+                        Checkbox::render(
+                            'wpstgIncludeOtherFilesInWpRoot',
+                            'includeOtherFilesInWpRoot',
+                            '',
+                            false,
+                            [
+                                'classes'    => $isProVersion ? 'wpstg-is-pro' : 'wpstg-is-basic',
+                                'isDisabled' => !$isProVersion
+                            ]
+                        );
+                        ?>
+                    <span class="<?php echo esc_attr($disabledClass) ?>" id="wpstg-wproot-other-files-span" data-id="#wpstg-wproot-scanning-files">
+                        <?php esc_html_e('Backup Other Files In WP Root', 'wp-staging'); ?>
                     </span>
-                </div>
+                    <div class="wpstg--tooltip wpstg-wproot-tooltip">
+                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info"/>
+                        <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
+                            <?php esc_html_e('The WP core folders wp-admin and wp-includes are not backed up. This is not necessary! All folders containing WP Staging sites are also not backed up. If you want to back up a staging site, open WP Staging on the staging site and perform a backup from there.', 'wp-staging'); ?>
+                        </span>
+                    </div>
 
-                <?php if (!$isProVersion) : ?>
-                    <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
-                <?php else : ?>
-                    <fieldset class="wpstg-wproot-files-selection-section wpstg-wproot-files-selection" id="wpstg-wproot-scanning-files">
-                        <?php require(WPSTG_VIEWS_DIR . 'pro/backup/backup-files.php'); ?>
-                    </fieldset>
-                <?php endif; ?>
-            </label>
+                    <?php if (!$isProVersion) : ?>
+                        <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
+                    <?php else : ?>
+                        <fieldset class="wpstg-wproot-files-selection-section wpstg-wproot-files-selection" id="wpstg-wproot-scanning-files">
+                            <?php require(WPSTG_VIEWS_DIR . 'pro/backup/backup-files.php'); ?>
+                        </fieldset>
+                    <?php endif; ?>
+                </label>
+            </div>
+
             <label>
                 <?php Checkbox::render('includeDatabaseInBackup', 'backup_database', 'true', true); ?>
                 <?php esc_html_e('Backup Database', 'wp-staging') ?>
@@ -153,12 +156,11 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                             <?php esc_html_e('Add Exclusions', 'wp-staging'); ?>
                         </span>
                         <?php if (!$isProVersion) : ?>
-                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Requires Pro Upgrade', 'wp-staging'); ?></span></a>
+                            <a href="https://wp-staging.com" target="_blank" class="wpstg-pro-feature-link"><span class="wpstg-pro-feature wpstg-ml-8"><?php esc_html_e('Upgrade', 'wp-staging'); ?></span></a>
                         <?php endif; ?>
                     </label>
 
                     <?php require_once WPSTG_VIEWS_DIR . 'backup/modal/advanced-exclude-options.php'; ?>
-
                 </div>
 
                 <div class="wpstg-container wpstg-mt-5px">
@@ -220,7 +222,6 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                     </span>
 
                     <?php require_once WPSTG_VIEWS_DIR . 'backup/modal/backup-scheduling-options.php'; ?>
-
                 </div>
             </div>
 

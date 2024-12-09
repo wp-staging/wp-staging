@@ -456,6 +456,6 @@ class Assets
      */
     private function isDebugOrDevMode()
     {
-        return ($this->settings->isDebugMode() || (defined('WPSTG_DEV') && WPSTG_DEV === true) || (defined('WPSTG_DEBUG') && WPSTG_DEBUG === true));
+        return ($this->settings->isDebugMode() || (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV === true) || (defined('WPSTG_DEBUG') && WPSTG_DEBUG === true));
     }
 }

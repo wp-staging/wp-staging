@@ -2,6 +2,8 @@
 
 use WPStaging\Framework\Facades\UI\Checkbox;
 
+$numberOfLoadingBars = 5;
+include(WPSTG_VIEWS_DIR . '_main/loading-placeholder.php');
 ?>
 <form class="wpstg-mail-settings-form" method="post">
     <?php $emailsAllowed = !((bool)(new \WPStaging\Staging\CloneOptions())->get((\WPStaging\Staging\FirstRun::MAILS_DISABLED_KEY))); ?>

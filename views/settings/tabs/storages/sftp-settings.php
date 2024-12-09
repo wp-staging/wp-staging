@@ -46,6 +46,7 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
     $maxBackupsToKeep = isset($options['maxBackupsToKeep']) ? $options['maxBackupsToKeep'] : 2;
     $maxBackupsToKeep = $maxBackupsToKeep > 0 ? $maxBackupsToKeep : 15;
     $location         = isset($options['location']) ? $options['location'] : '';
+    $assetsUrl        = trailingslashit(WPSTG_PLUGIN_URL);
 
     ?>
     <p>
@@ -69,12 +70,12 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-host"><?php esc_html_e('Host', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-host" class="wpstg-form-control" type="text" name="host" value="<?php echo esc_attr($host); ?>" />
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-host" class="wpstg-form-control" type="text" name="host" value="<?php echo esc_attr($host); ?>" placeholder="example.com" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
                     <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-port"><?php esc_html_e('Port', 'wp-staging') ?></label>
-                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-port" class="wpstg-form-control wpstg-sftp-port-input" type="number" name="port" value="<?php echo esc_attr($port); ?>" />
+                    <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-port" class="wpstg-form-control wpstg-sftp-port-input" type="number" name="port" value="<?php echo esc_attr($port); ?>" placeholder="21" />
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset">
@@ -87,19 +88,42 @@ use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth;
                     <input id="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-password" class="wpstg-form-control" type="password" name="password" autocomplete="new-password" value="<?php echo esc_attr($password); ?>" />
                     <p class="wpstg-only-sftp<?php echo $ftpType === Auth::CONNECTION_TYPE_SFTP ? '' : ' hidden' ?>"><?php esc_html_e("Your login may be either password or key-based - you only need to enter one, not both.", 'wp-staging') ?></p>
                 </fieldset>
-
                 <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === Auth::CONNECTION_TYPE_FTP ? '' : ' hidden' ?>">
-                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-ssl"><?php esc_html_e('SSL', 'wp-staging') ?></label>
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-ssl">
+                        <?php esc_html_e('SSL', 'wp-staging') ?>
+                        <span class='wpstg--tooltip wpstg--tooltip-sftp'>
+                            <img class='wpstg--dashicons wpstg--grey' src='<?php echo esc_html($assetsUrl); ?>assets/svg/info-outline.svg' alt='info'/>
+                            <span class='wpstg--tooltiptext'>
+                                <?php esc_html_e('Enable SSL for secure encrypted FTP connections.', 'wp-staging'); ?>
+                            </span>
+                        </span>
+                    </label>
                     <?php Checkbox::render("wpstg-storage-provider-{$providerId}-ssl", 'ssl', 'true', $ssl === true); ?>
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === Auth::CONNECTION_TYPE_FTP ? '' : ' hidden' ?>">
-                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-passive"><?php esc_html_e('Passive', 'wp-staging') ?></label>
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-passive">
+                        <?php esc_html_e('Passive', 'wp-staging') ?>
+                        <span class='wpstg--tooltip wpstg--tooltip-sftp'>
+                            <img class='wpstg--dashicons wpstg--grey' src='<?php echo esc_html($assetsUrl); ?>assets/svg/info-outline.svg' alt='info'/>
+                            <span class='wpstg--tooltiptext'>
+                                <?php esc_html_e('Use Passive Mode to improve FTP compatibility with firewalls.', 'wp-staging'); ?>
+                            </span>
+                        </span>
+                    </label>
                     <?php Checkbox::render("wpstg-storage-provider-{$providerId}-passive", 'passive', 'true', $passive === true); ?>
                 </fieldset>
 
                 <fieldset class="wpstg-fieldset wpstg-only-ftp<?php echo $ftpType === Auth::CONNECTION_TYPE_FTP ? '' : ' hidden' ?>">
-                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-use-ftp-extension"><?php esc_html_e('Activate ftp extension instead of curl', 'wp-staging') ?></label>
+                    <label for="wpstg-storage-provider-<?php echo esc_attr($providerId); ?>-use-ftp-extension">
+                        <?php esc_html_e('Activate ftp extension instead of curl', 'wp-staging') ?>
+                        <span class='wpstg--tooltip wpstg--tooltip-sftp'>
+                            <img class='wpstg--dashicons wpstg--grey' src='<?php echo esc_html($assetsUrl); ?>assets/svg/info-outline.svg' alt='info'/>
+                            <span class='wpstg--tooltiptext'>
+                                <?php esc_html_e('Switch to the FTP extension for handling file transfers instead of cURL.', 'wp-staging'); ?>
+                            </span>
+                        </span>
+                    </label>
                     <?php Checkbox::render("wpstg-storage-provider-{$providerId}-use-ftp-extension", 'use_ftp_extension', 'true', $useFtpExtension === true); ?>
                 </fieldset>
 

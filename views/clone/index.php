@@ -108,5 +108,5 @@ $isCalledFromIndex = true;
             </div>
         </div>
     </div>
-    <?php require_once($this->viewsPath . '_main/footer.php') ?>
+    <?php require_once($this->viewsPath . '_main/footer.php'); ?>
 </div>

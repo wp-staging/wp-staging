@@ -343,7 +343,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
         }
 
         if ($this->isDevVersion()) {
-            $this->logger->warning(sprintf("Backup generated on newer Backup version: %s. Allowed to continue due to WPSTG_DEV...", esc_html($backupVersion)));
+            $this->logger->warning(sprintf("Backup generated on newer Backup version: %s. Allowed to continue due to WPSTG_IS_DEV...", esc_html($backupVersion)));
             return;
         }
 
@@ -495,7 +495,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
      */
     protected function isDevVersion()
     {
-        return defined('WPSTG_DEV') && WPSTG_DEV;
+        return defined('WPSTG_IS_DEV') && WPSTG_IS_DEV;
     }
 
     /**

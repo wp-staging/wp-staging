@@ -458,7 +458,7 @@ class Cloning extends Job
             $this->returnException('Table prefix for staging site can not be identical to live database if staging site will be cloned into production database! Please start over and change the table prefix or destination database.');
         }
 
-        if (defined('WPSTG_DEV') && WPSTG_DEV === true) {
+        if (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV === true) {
             return $this->{$methodName}();
         }
 
