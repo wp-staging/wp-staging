@@ -5,58 +5,47 @@
 
 namespace WPStaging\Backup\Ajax;
 
-use WPStaging\Backup\BackupScheduler;
-use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\Component\AbstractTemplateComponent;
-use WPStaging\Framework\TemplateEngine\TemplateEngine;
-
-class Listing extends AbstractTemplateComponent
+class Listing extends BaseListing
 {
-    /** @var Directory */
-    private $directory;
-
-    /** @var BackupScheduler */
-    private $backupScheduler;
-
-    public function __construct(BackupScheduler $backupScheduler, Directory $directory, TemplateEngine $templateEngine)
-    {
-        parent::__construct($templateEngine);
-        $this->backupScheduler = $backupScheduler;
-        $this->directory       = $directory;
-    }
-
+    /**
+     * @return void
+     */
     public function render()
     {
         if (!$this->canRenderAjax()) {
             return;
         }
 
-        if (!WPStaging::isPro() && is_multisite()) {
+        if (is_multisite()) {
             $result = $this->templateEngine->render('backup/free-version.php');
         } else {
-            $directories = [
-                'uploads' => $this->directory->getUploadsDirectory(),
-                'themes'  => trailingslashit(get_theme_root()),
-                'plugins' => trailingslashit(WP_PLUGIN_DIR),
-                'muPlugins' => trailingslashit(WPMU_PLUGIN_DIR),
-                'wpContent' => trailingslashit(WP_CONTENT_DIR),
-                'wpStaging' => $this->directory->getPluginUploadsDirectory(),
-            ];
-
+            $directories = $this->getDirectories();
             $result = $this->templateEngine->render(
-                'backup/listing.php',
-                [
-                    'directory' => $this->directory,
-                    'urlAssets' => trailingslashit(WPSTG_PLUGIN_URL) . 'assets/',
-                    'directories' => $directories,
-                    'hasSchedule' => count($this->backupScheduler->getSchedules()) > 0,
-                    'isProVersion'   => WPStaging::isPro(),
-                    'isValidLicense' => WPStaging::isValidLicense(),
-                ]
+                $this->getTemplate(),
+                array_merge($this->getCommonRenderData(), ['directories' => $directories])
             );
         }
 
         wp_send_json($result);
+    }
+
+    /**
+     * @return string
+     */
+    protected function getTemplate(): string
+    {
+        return 'backup/listing.php';
+    }
+
+    /**
+     * @return array
+     */
+    protected function getCommonRenderData(): array
+    {
+        $data = parent::getCommonRenderData();
+        return array_merge($data, [
+            'isProVersion' => false,
+            'isValidLicense' => false,
+        ]);
     }
 }

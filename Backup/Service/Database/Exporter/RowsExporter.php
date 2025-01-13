@@ -36,6 +36,7 @@ class RowsExporter extends AbstractExporter
     protected $lastNumericInsertId = -PHP_INT_MAX;
     protected $specialFields;
     protected $nonWpTables;
+
     public function __construct(Database $database, JobDataDto $jobDataDto)
     {
         parent::__construct($database);
@@ -43,22 +44,27 @@ class RowsExporter extends AbstractExporter
         $this->specialFields = ['user_roles', 'capabilities', 'user_level', 'dashboard_quick_press_last_post_id', 'user-settings', 'user-settings-time'];
         $this->databaseName = $this->database->getWpdba()->getClient()->__get('dbname');
     }
+
     public function getTableRowsOffset(): int
     {
         return $this->tableRowsOffset;
     }
+
     public function setTableRowsOffset(int $tableRowsOffset)
     {
         $this->tableRowsOffset = $tableRowsOffset;
     }
+
     public function getTableIndex(): int
     {
         return $this->tableIndex;
     }
+
     public function isTableExcluded(): bool
     {
         return in_array($this->getTableBeingBackup(), $this->excludedTables);
     }
+
     public function setTableIndex(int $tableIndex)
     {
         $this->tableIndex = $tableIndex;
@@ -67,34 +73,42 @@ class RowsExporter extends AbstractExporter
         }
         $this->tableName = $this->tables[$this->tableIndex];
     }
+
     public function setTotalRowsExported(int $totalRowsExported)
     {
         $this->totalRowsExported = $totalRowsExported;
     }
+
     public function setTotalRowsInCurrentTable(int $totalRows)
     {
         $this->totalRowsInCurrentTable = $totalRows;
     }
+
     public function getTotalRowsExported(): int
     {
         return $this->totalRowsExported;
     }
+
     public function getTableBeingBackup(): string
     {
         return array_key_exists($this->tableIndex, $this->tables) ? $this->tables[$this->tableIndex] : '';
     }
+
     public function setIsBackupSplit(bool $isBackupSplit)
     {
         $this->isBackupSplit = $isBackupSplit;
     }
+
     public function setMaxSplitSize(int $maxSplitSize)
     {
         $this->maxSplitSize = $maxSplitSize;
     }
+
     public function doExceedSplitSize(): bool
     {
         return $this->exceedSplitSize;
     }
+
     public function countTotalRows(): int
     {
         if (!array_key_exists($this->tableIndex, $this->tables)) {
@@ -122,8 +136,13 @@ class RowsExporter extends AbstractExporter
                     $this->throwUnableToCountException();
             }
         }
-        return (int)$result->fetch_object()->totalRows;
+        $total = $this->client->fetchObject($result);
+        if (isset($total->totalRows)) {
+            return (int)$total->totalRows;
+        }
+        return 0;
     }
+
     public function setupPrefixedValuesForSubsites()
     {
         if (!is_multisite()) {
@@ -142,10 +161,12 @@ class RowsExporter extends AbstractExporter
             $this->prefixedValues = array_merge($this->prefixedValues, $prefixedValues);
         }
     }
+
     protected function setupBackupSearchReplace()
     {
         $this->searchReplaceForPrefix = new SearchReplace([$this->getPrefix()], ['{WPSTG_FINAL_PREFIX}'], true, []);
     }
+
     public function backup($jobId, LoggerInterface $logger)
     {
         $this->client->query("SET SESSION sql_mode = ''");
@@ -199,14 +220,14 @@ class RowsExporter extends AbstractExporter
                 }
                 if ($this->writeToFileCount >= 10) {
                     $this->file->fwrite($this->queriesToInsert);
-                    $this->queriesToInsert  = '';
+                    $this->queriesToInsert = '';
                     $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
                     $this->writeToFileCount = 0;
                 }
             }
             if (!empty($this->queriesToInsert) && $this->useMemoryExhaustFix) {
                 $this->file->fwrite($this->queriesToInsert);
-                $this->queriesToInsert  = '';
+                $this->queriesToInsert = '';
                 $this->updateOffset($numericPrimaryKey ?? '', $this->writeToFileCount);
                 $this->writeToFileCount = 0;
             }
@@ -219,6 +240,7 @@ class RowsExporter extends AbstractExporter
         }
         return $rowsLeftToProcess;
     }
+
     public function lockTable()
     {
         if (!$result = $this->client->query("LOCK TABLES `$this->tableName` WRITE;")) {
@@ -226,6 +248,7 @@ class RowsExporter extends AbstractExporter
         }
         return $result;
     }
+
     public function unLockTables()
     {
         if (!$result = $this->client->query("UNLOCK TABLES;")) {
@@ -233,14 +256,17 @@ class RowsExporter extends AbstractExporter
         }
         return $result;
     }
+
     public function setTables(array $tables = [])
     {
         $this->tables = $tables;
     }
+
     public function setNonWpTables(array $nonWpTables = [])
     {
         $this->nonWpTables = $nonWpTables;
     }
+
     public function getPrimaryKey(): string
     {
         if ($this->hasMoreThanOnePrimaryKey()) {
@@ -271,6 +297,7 @@ class RowsExporter extends AbstractExporter
         }
         return $primaryKey->COLUMN_NAME;
     }
+
     public function prefixSpecialFields()
     {
         $prefix = $this->getPrefix();
@@ -278,14 +305,17 @@ class RowsExporter extends AbstractExporter
             return $prefix . $unprefixedValue;
         }, $this->specialFields));
     }
+
     protected function getPrefix(): string
     {
         return $this->database->getBasePrefix();
     }
+
     protected function isOtherSitePrefixValue(string $value): bool
     {
         return false;
     }
+
     protected function writeQueryInsert(array $row, string $prefixedTableName, array $tableColumns)
     {
         try {
@@ -295,9 +325,11 @@ class RowsExporter extends AbstractExporter
                     $value    = "'$nullFlag'";
                     continue;
                 }
+                $columnLower = strtolower($column);
                 if (
-                    strpos($tableColumns[strtolower($column)], 'binary') !== false ||
-                    strpos($tableColumns[strtolower($column)], 'blob') !== false
+                    isset($tableColumns[$columnLower]) && (
+                    strpos($tableColumns[$columnLower], 'binary') !== false ||
+                    strpos($tableColumns[$columnLower], 'blob') !== false )
                 ) {
                     $value      = bin2hex($value);
                     $binaryFlag = DatabaseImporter::BINARY_FLAG;
@@ -350,6 +382,7 @@ class RowsExporter extends AbstractExporter
         } catch (Exception $e) {
             }
     }
+
     protected function throwUnableToCountException()
     {
         throw new \RuntimeException(sprintf(
@@ -359,6 +392,7 @@ class RowsExporter extends AbstractExporter
             $this->client->error()
         ));
     }
+
     protected function updateOffset(string $numericPrimaryKey, int $filesWritten)
     {
         if (!$this->useMemoryExhaustFix) {
@@ -376,6 +410,7 @@ class RowsExporter extends AbstractExporter
         $this->jobDataDto->setTableRowsOffset($this->jobDataDto->getTableRowsOffset() + $filesWritten);
         $this->jobDataDto->setLastInsertId($this->lastNumericInsertId);
     }
+
     private function getColumnTypes(string $tableName): array
     {
         $column_types = [];
@@ -388,6 +423,7 @@ class RowsExporter extends AbstractExporter
         $this->client->freeResult($result);
         return $column_types;
     }
+
     private function hasMoreThanOnePrimaryKey(): bool
     {
         $query = "SHOW KEYS FROM $this->tableName WHERE Key_name = 'PRIMARY'";
@@ -398,6 +434,7 @@ class RowsExporter extends AbstractExporter
         $primaryKeys = $this->client->fetchAll($result);
         return count($primaryKeys) > 1;
     }
+
     private function updateLastNumericInsertId(string $numericPrimaryKey, array $row): bool
     {
         if (!$this->useMemoryExhaustFix) {

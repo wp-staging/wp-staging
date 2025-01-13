@@ -340,6 +340,16 @@ class Notices
     }
 
     /**
+     * @return void
+     */
+    public function maybeShowElementorCloudNotice()
+    {
+        if (self::SHOW_ALL_NOTICES || ($this->isWPStagingClonePage() && $this->siteInfo->isHostedOnElementorCloud())) {
+            require_once "{$this->viewsNoticesPath}elementor-cloud-notice.php";
+        }
+    }
+
+    /**
      * @param $settings
      * @return bool
      */

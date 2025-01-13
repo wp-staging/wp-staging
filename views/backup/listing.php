@@ -17,12 +17,8 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
  * @var array                       $directories
  * @var string                      $urlAssets
  * @var Directory                   $directory
- * @var bool                        $isValidLicense
- * @var bool                        $isProVersion
  * @var bool                        $hasSchedule
  */
-
-$disabledProperty = !$isProVersion || $isValidLicense ? '' : 'disabled';
 
 $backupProcessLock = WPStaging::make(ProcessLock::class);
 WPStaging::make(BackupDownload::class)->deleteUnfinishedDownloads();
@@ -35,15 +31,6 @@ try {
     $disabledPropertyCreateBackup = 'disabled';
 }
 
-$storages              = WPStaging::make(\WPStaging\Backup\Storage\Providers::class);
-$isEnabledCloudStorage = false;
-foreach ($storages->getStorages(true) as $storage) {
-    $isActivated = $storages->isActivated($storage['authClass']);
-    if ($isActivated) {
-        $isEnabledCloudStorage = true;
-        break;
-    }
-}
 ?>
 
 <?php
@@ -77,11 +64,6 @@ if ($cronMessage !== '') { ?>
     $downloadText = __('Read More or Upgrade to Pro', 'wp-staging');
     $downloadLink = 'https://wp-staging.com/docs/wp-staging-restore/';
 
-    if (defined('WPSTGPRO_VERSION')) {
-        $downloadText = __('Download Now', 'wp-staging');
-        $downloadLink = get_admin_url() . 'admin.php?page=wpstg-restorer';
-    }
-
     printf(
         Escape::escapeHtml(
             __('Get the new standalone tool %s <a href="%s">%s</a>', 'wp-staging')
@@ -94,20 +76,15 @@ if ($cronMessage !== '') { ?>
 </div>
 
 <div id="wpstg-step-1">
-    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo esc_attr($disabledProperty); ?> <?php echo esc_attr($disabledPropertyCreateBackup) ?>>
+    <button id="wpstg-new-backup" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" <?php echo esc_attr($disabledPropertyCreateBackup) ?>>
         <?php esc_html_e('Create Backup', 'wp-staging') ?>
     </button>
-    <button type="button" id="wpstg-upload-backup" class="wpstg-button wpstg-border-thin-button" <?php echo esc_attr($disabledProperty) ?>>
+    <button type="button" id="wpstg-upload-backup" class="wpstg-button wpstg-border-thin-button">
         <?php esc_html_e('Upload Backup', 'wp-staging') ?>
     </button>
-    <button id="wpstg-manage-backup-schedules" class="wpstg-button wpstg-border-thin-button" <?php echo esc_attr($disabledProperty) ?>>
+    <button id="wpstg-manage-backup-schedules" class="wpstg-button wpstg-border-thin-button">
         <?php esc_html_e('Edit Backup Plans', 'wp-staging') ?>
     </button>
-    <?php if ($isEnabledCloudStorage && $isValidLicense) : ?>
-    <button id="wpstg-show-cloud-backup" class="wpstg-next-step-link wpstg-button wpstg-border-thin-button wpstg-ml-4" <?php echo esc_attr($disabledProperty); ?> <?php echo esc_attr($disabledPropertyCreateBackup) ?>>
-        <?php esc_html_e('Load Remote Backups', 'wp-staging') ?>
-    </button>
-    <?php endif; ?>
 </div>
 
 <div id="wpstg-backup-runs-info">
@@ -120,24 +97,6 @@ if ($cronMessage !== '') { ?>
             <span id="local-backup-title"><?php echo esc_html__('Local Backups:', 'wp-staging'); ?></span>
             <ul id="wpstg-backup-list-ul">
                 <li><?php esc_html_e('Searching for existing backups...', 'wp-staging') ?></li>
-            </ul>
-        </div>
-    </div>
-    <div id="wpstg-existing-cloud-backups">
-        <div class="wpstg-existing-cloud-backups-header">
-            <span id="remote-backup-title"><?php echo esc_html__('Remote Backups:', 'wp-staging'); ?></span>
-        </div>
-        <div class="wpstg-cloud-backup-list">
-            <ul id="wpstg-cloud-backup-list-ul">
-                <li><?php esc_html_e('Searching for remote backups...', 'wp-staging') ?></li>
-            </ul>
-            <ul class="wpstg-cloud-backup-empty-message">
-                <li id="wpstg-cloud-backup-no-results" class="wpstg-clone wpstg-backup-no-results-cloud-backup wpstg-backup-list-ul">
-                    <img class="wpstg--dashicons" src="<?php echo esc_url($urlAssets); ?>svg/cloud.svg" alt="cloud">
-                    <div class="no-backups-found-text">
-                        <?php esc_html_e('No remote Backups found. Create your first Backup above!', 'wp-staging'); ?>
-                    </div>
-                </li>
             </ul>
         </div>
     </div>

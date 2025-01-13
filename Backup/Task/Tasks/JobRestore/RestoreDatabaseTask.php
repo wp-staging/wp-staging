@@ -173,7 +173,7 @@ class RestoreDatabaseTask extends RestoreTask
             throw new RuntimeException(sprintf('Can not find database file %s', $databaseFile));
         }
 
-        $this->databaseImporter->setLogger($this->logger);
+        $this->databaseImporter->setWarningLogCallable([$this->logger, 'warning']);
         $this->databaseImporter->setFile($databaseFile);
         $this->databaseImporter->seekLine($this->stepsDto->getCurrent());
 

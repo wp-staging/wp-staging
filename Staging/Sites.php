@@ -3,6 +3,7 @@
 namespace WPStaging\Staging;
 
 use Exception;
+use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Staging\Dto\StagingSiteDto;
 
 /**
@@ -55,13 +56,19 @@ class Sites
     const STAGING_EXCLUDED_GD_FILES_OPTION = 'wpstg_clone_excluded_gd_files_list';
 
     /**
+     *  @var bool
+     */
+    const THROW_EXCEPTION = true;
+
+    /**
      * Return list of staging sites in descending order of their creation time.
      *
      * @return array
+     * @throws WPStagingException
      */
     public function getSortedStagingSites()
     {
-        $stagingSites = get_option(self::STAGING_SITES_OPTION, []);
+        $stagingSites = $this->tryGettingStagingSites(self::THROW_EXCEPTION);
 
         // No need to sort if no sites or only one site
         if (empty($stagingSites) || count($stagingSites) === 1) {
@@ -146,19 +153,26 @@ class Sites
     }
 
     /**
-     * Will try getting staging sites from new option
-     * If that is empty, will get staging sites from old option
+     * Will try getting staging sites
      *
      * @return array
      */
-    public function tryGettingStagingSites()
+    public function tryGettingStagingSites(bool $throwException = false): array
     {
         $stagingSites = get_option(self::STAGING_SITES_OPTION, []);
-        if (!empty($stagingSites)) {
+        if (empty($stagingSites)) {
+            return [];
+        }
+
+        if (is_array($stagingSites)) {
             return $stagingSites;
         }
 
-        return get_option(self::OLD_STAGING_SITES_OPTION, []);
+        if ($throwException) {
+            throw new WPStagingException('Staging sites option is not an array.');
+        }
+
+        return [];
     }
 
     /**

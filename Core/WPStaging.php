@@ -6,7 +6,6 @@ use Exception;
 use RuntimeException;
 use WPStaging\Backend\Administrator;
 use WPStaging\Framework\Job\JobServiceProvider;
-use WPStaging\Pro\License\Licensing;
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Basic\BasicServiceProvider;
 use WPStaging\Core\Cron\Cron;
@@ -290,16 +289,6 @@ final class WPStaging
     }
 
     /**
-     * Check License is Valid or not
-     *
-     * @return bool
-     */
-    public static function isValidLicense()
-    {
-        return self::isPro() && ((new SiteInfo())->isStagingSite() || (new Licensing())->isValidOrExpiredLicenseKey());
-    }
-
-    /**
      * Load Dependencies
      */
     private function loadDependencies()
@@ -323,6 +312,11 @@ final class WPStaging
         // Set Administrator
         if (is_admin()) {
             new Administrator();
+            return;
+        }
+
+        if (class_exists('\WPStaging\Pro\Frontend\Frontend')) {
+            new \WPStaging\Pro\Frontend\Frontend();
         } else {
             new Frontend();
         }
@@ -535,5 +529,21 @@ final class WPStaging
     public static function isDevBasic()
     {
         return defined('WPSTG_DEV_BASIC') && is_string(WPSTG_DEV_BASIC);
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isBasic()
+    {
+        return WPStaging::getInstance()->getVar('WPSTG_PRO', false) === false;
+    }
+
+    /**
+     * @return bool
+     */
+    public static function isOnWordPressPlayground(): bool
+    {
+        return ( ABSPATH === '/wordpress/' && defined('WP_HOME') && strpos(WP_HOME, '/scope:') && ! empty($_SERVER['SERVER_SOFTWARE']) && $_SERVER['SERVER_SOFTWARE'] === 'PHP.wasm' );
     }
 }

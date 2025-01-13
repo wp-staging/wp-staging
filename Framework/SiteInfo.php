@@ -2,6 +2,8 @@
 
 namespace WPStaging\Framework;
 
+use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Staging\CloneOptions;
 
 /**
@@ -49,6 +51,20 @@ class SiteInfo
 
     /** @var string */
     const OTHER_HOST = 'other';
+
+    /** @var string */
+    const FILTER_IS_WPSTG_TESTS = 'wpstg.tests.is_local_site';
+
+    /** @var string[] */
+    const LOCAL_HOSTNAMES = [
+        '.local',
+        '.test',
+        'localhost',
+        '.dev',
+        '10.0.0.',
+        '172.16.0.',
+        '192.168.0.'
+    ];
 
     /**
      * @var CloneOptions
@@ -302,5 +318,44 @@ class SiteInfo
         } catch (\Throwable $ex) {
             return 'N/A';
         }
+    }
+
+    /**
+     * @return bool
+     */
+    public function isHostedOnElementorCloud(): bool
+    {
+        $httpHost = !empty($_SERVER['HTTP_HOST']) ? Sanitize::sanitizeString($_SERVER['HTTP_HOST']) : '';
+        if (strpos($httpHost, 'elementor.cloud') !== false) {
+            return true;
+        }
+
+        $headers = headers_list();
+        foreach ($headers as $header) {
+            if (stripos($header, 'ec-source') !== false || stripos($header, 'ec-coldstart') !== false || stripos($header, 'EC-LB-OP-STATUS') !== false) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Check if the website is installed locally.
+     * @return bool
+     */
+    public function isLocal(): bool
+    {
+        $siteUrl = get_site_url();
+        $isLocal = false;
+
+        foreach (self::LOCAL_HOSTNAMES as $hostname) {
+            if (strpos($siteUrl, $hostname) !== false) {
+                $isLocal = true;
+                break;
+            }
+        }
+
+        return Hooks::applyFilters(self::FILTER_IS_WPSTG_TESTS, $isLocal);
     }
 }

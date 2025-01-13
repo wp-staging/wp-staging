@@ -4,17 +4,15 @@
 
 namespace WPStaging\Framework\Adapter\Database;
 
-use mysqli;
-
 class MysqliAdapter implements InterfaceDatabaseClient
 {
-    /** @var mysqli|null */
+    /** @var \mysqli|null */
     public $link;
 
     /**
      * MysqliAdapter constructor.
      *
-     * @param mysqli|null $link
+     * @param \mysqli|null $link
      */
     public function __construct($link = null)
     {
@@ -22,7 +20,8 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @param $query
+     * @return bool|\mysqli_result|resource
      */
     public function query($query)
     {
@@ -30,7 +29,9 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @param $query
+     * @param $isExecOnly
+     * @return bool|\mysqli_result|resource
      */
     public function realQuery($query, $isExecOnly = false)
     {
@@ -42,7 +43,6 @@ class MysqliAdapter implements InterfaceDatabaseClient
             return false;
         }
 
-        // Copy results from the internal mysqlnd buffer into the PHP variables fetched
         if (defined('MYSQLI_STORE_RESULT_COPY_DATA')) {
             return mysqli_store_result($this->link, MYSQLI_STORE_RESULT_COPY_DATA);
         }
@@ -51,7 +51,8 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @param $input
+     * @return string
      */
     public function escape($input)
     {
@@ -59,7 +60,7 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @return int
      */
     public function errno()
     {
@@ -67,7 +68,7 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @return string
      */
     public function error()
     {
@@ -75,7 +76,7 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @return string
      */
     public function version()
     {
@@ -97,7 +98,8 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @param $result
+     * @return array|false|null
      */
     public function fetchAssoc($result)
     {
@@ -105,7 +107,8 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @param $result
+     * @return array|false|null
      */
     public function fetchRow($result)
     {
@@ -113,7 +116,8 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @param $result
+     * @return \$1|array|false|object|\stdClass|null
      */
     public function fetchObject($result)
     {
@@ -121,7 +125,8 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @param $result
+     * @return int|string
      */
     public function numRows($result)
     {
@@ -129,7 +134,8 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * @inheritDoc
+     * @param $result
+     * @return null
      */
     public function freeResult($result)
     {
@@ -137,13 +143,13 @@ class MysqliAdapter implements InterfaceDatabaseClient
             return null;
         }
 
-        mysqli_free_result($result);
 
+        mysqli_free_result($result);
         return null;
     }
 
     /**
-     * {@inheritdoc}
+     * @return int|string
      */
     public function insertId()
     {
@@ -151,7 +157,7 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * {@inheritdoc}
+     * @return int|string
      */
     public function foundRows()
     {
@@ -159,7 +165,7 @@ class MysqliAdapter implements InterfaceDatabaseClient
     }
 
     /**
-     * {@inheritdoc}
+     * @return mixed|mysqli|null
      */
     public function getLink()
     {

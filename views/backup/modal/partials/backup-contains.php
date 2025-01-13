@@ -4,6 +4,8 @@
  * This function is to re-use the UI for "Backup Contains" without duplicating the code.
  */
 
+use WPStaging\Framework\Filesystem\PartIdentifier;
+
 $isExportingDatabase            = isset($isExportingDatabase) && $isExportingDatabase;
 $isExportingPlugins             = isset($isExportingPlugins) && $isExportingPlugins;
 $isExportingMuPlugins           = isset($isExportingMuPlugins) && $isExportingMuPlugins;
@@ -17,18 +19,23 @@ if (!isset($urlAssets)) {
 }
 
 $partSize = [
-    'sqlSize'       => null,
-    'wpcontentSize' => null,
-    'pluginsSize'   => null,
-    'mupluginsSize' => null,
-    'themesSize'    => null,
-    'uploadsSize'   => null,
-    'wpRootSize'    => null,
+    PartIdentifier::DATABASE_PART_SIZE_IDENTIFIER   => null,
+    PartIdentifier::WP_CONTENT_PART_SIZE_IDENTIFIER => null,
+    PartIdentifier::PLUGIN_PART_SIZE_IDENTIFIER     => null,
+    PartIdentifier::MU_PLUGIN_PART_SIZE_IDENTIFIER  => null,
+    PartIdentifier::THEME_PART_SIZE_IDENTIFIER      => null,
+    PartIdentifier::UPLOAD_PART_SIZE_IDENTIFIER     => null,
+    PartIdentifier::WP_ROOT_PART_SIZE_IDENTIFIER    => null,
 ];
 
 if (!empty($indexPartSize) && is_array($indexPartSize)) {
     foreach ($partSize as $part => $val) {
         $bytes = !empty($indexPartSize[$part]) ? $indexPartSize[$part] : 0;
+        if ($part === PartIdentifier::WP_CONTENT_PART_SIZE_IDENTIFIER) {
+            $langSize = !empty($indexPartSize[PartIdentifier::LANGUAGE_PART_IDENTIFIER]) ? $indexPartSize[PartIdentifier::LANGUAGE_PART_IDENTIFIER] : 0;
+            $bytes    = $bytes + $langSize;
+        }
+
         $partSize[$part] = size_format($bytes, 2);
     }
 }

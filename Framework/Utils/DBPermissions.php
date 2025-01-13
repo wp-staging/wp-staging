@@ -43,10 +43,15 @@ class DBPermissions
             wp_send_json_success();
         }
 
-        $message = __("The database user might not have sufficient permissions to use the restore action. Continue the process anyway by clicking the 'Proceed' button or change the user's DB permissions and resume the process.<br/><br/> Required permissions are: CREATE, UPDATE, INSERT, DROP.", 'wp-staging');
-        if ($type === 'push') {
-            $message = __("The database user might not have sufficient permissions to use the push action. Continue the process anyway by clicking the 'Proceed' button or alter the user's DB permissions and resume the process.<br/><br/> Required permissions are: CREATE, UPDATE, ALTER, INSERT, DROP.", 'wp-staging');
-        }
+        $action = !empty($type) ? $type : 'restore';
+        $permissions = $action === 'push' ? 'CREATE, UPDATE, ALTER, INSERT, DROP' : 'CREATE, UPDATE, INSERT, DROP';
+
+        $message = sprintf(
+            __("The database user might not have sufficient permissions to use the %s action. Continue the process anyway by clicking the 'Proceed' button or change the user's DB permissions and resume the process.<br/><br/> Required permissions are: %s.", 'wp-staging'),
+            $action,
+            $permissions
+        );
+
 
         $message = '<span id="wpstg-permission-info-output">' . $message . '</span>';
         $message .= '<span id="wpstg-permission-info-data">' . $this->getDebugInfo() . '</span>';
@@ -95,10 +100,14 @@ class DBPermissions
      */
     public function getDebugInfo()
     {
+        $dbUser = empty($_POST['databaseUser']) ? DB_USER : sanitize_text_field($_POST['databaseUser']);
+        $dbName = empty($_POST['databaseDatabase']) ? DB_NAME : sanitize_text_field($_POST['databaseDatabase']);
+        $dbHost = empty($_POST['databaseServer']) ? DB_HOST : sanitize_text_field($_POST['databaseServer']);
+
         $data = '<textarea class="wpstg-permission-info-output wpstg-textbox" readonly="readonly" name="wpstg-permission-info" title="' . __('Please copy and paste this message and report it to us!', 'wp-staging') . '">';
-        $data .= PHP_EOL . __('DB Name: ', 'wp-staging') . DB_NAME;
-        $data .= PHP_EOL . __('DB User: ', 'wp-staging') . DB_USER;
-        $data .= PHP_EOL . __('DB Host: ', 'wp-staging') . DB_HOST;
+        $data .= PHP_EOL . __('DB Name: ', 'wp-staging') . $dbName;
+        $data .= PHP_EOL . __('DB User: ', 'wp-staging') . $dbUser;
+        $data .= PHP_EOL . __('DB Host: ', 'wp-staging') . $dbHost;
 
         $grants = $this->wpdb->get_results("SHOW GRANTS;");
         if (empty($grants) || $this->wpdb->last_error) {

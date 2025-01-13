@@ -48,7 +48,7 @@ class DatabaseCloningService
 
         $rows = $offset + $limit;
 
-        $selectQuery = $this->selectQueryBuilder->prepareQueryWithFilter($srcTableName, $limit, $offset);
+        $selectQuery    = $this->selectQueryBuilder->prepareQueryWithFilter($srcTableName, $limit, $offset);
         $preparedValues = $this->selectQueryBuilder->getPreparedValues();
 
         if ($this->dto->isExternal()) {
@@ -132,7 +132,7 @@ class DatabaseCloningService
             $destTableName = $srcTableName;
         }
 
-        $stagingDb = $this->dto->getStagingDb();
+        $stagingDb     = $this->dto->getStagingDb();
         $existingTable = $stagingDb->get_var($stagingDb->prepare("SHOW TABLES LIKE %s", $destTableName));
 
         return ($destTableName === $existingTable);
@@ -220,7 +220,7 @@ class DatabaseCloningService
             $this->dropDestTable($srcTableName, $destTableName);
         }
 
-        $stagingDb = $this->dto->getStagingDb();
+        $stagingDb    = $this->dto->getStagingDb();
         $productionDb = $this->dto->getProductionDb();
         if ($this->dto->isExternal()) {
             $this->log("COPY table {$this->dto->getExternalDatabaseName()}.$srcTableName");
@@ -248,7 +248,10 @@ class DatabaseCloningService
             }
         }
 
-        $rowsInTable = (int)$productionDb->get_var("SELECT COUNT(1) FROM `$productionDb->dbname`.`$srcTableName`");
+        // Note: fix for SQLITE
+        $tableName = empty($productionDb->dbname) ? "`" . $srcTableName . "`" : "`" . $productionDb->dbname . "`.`" . $srcTableName . "`";
+
+        $rowsInTable = (int)$productionDb->get_var("SELECT COUNT(1) FROM " . $tableName);
         $this->log("Table $srcTableName contains $rowsInTable rows ");
         return $rowsInTable;
     }

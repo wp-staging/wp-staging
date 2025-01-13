@@ -250,11 +250,12 @@ class Scan extends Job
             $this->options->currentClone['adminEmail']         = $this->options->currentClone['adminEmail'] ?? '';
             $this->options->currentClone['adminPassword']      = $this->options->currentClone['adminPassword'] ?? '';
             // Make sure no warning is shown when updating/resetting an old clone without databaseSsl, uploadsSymlinked, emailsAllowed and networkClone options
-            $this->options->currentClone['emailsAllowed']        = $this->options->currentClone['emailsAllowed'] ?? true;
-            $this->options->currentClone['databaseSsl']          = $this->options->currentClone['databaseSsl'] ?? false;
-            $this->options->currentClone['uploadsSymlinked']     = $this->options->currentClone['uploadsSymlinked'] ?? false;
-            $this->options->currentClone['networkClone']         = $this->options->currentClone['networkClone'] ?? false;
-            $this->options->currentClone['wooSchedulerDisabled'] = $this->options->currentClone['wooSchedulerDisabled'] ?? false;
+            $this->options->currentClone['emailsAllowed']         = $this->options->currentClone['emailsAllowed'] ?? true;
+            $this->options->currentClone['databaseSsl']           = $this->options->currentClone['databaseSsl'] ?? false;
+            $this->options->currentClone['uploadsSymlinked']      = $this->options->currentClone['uploadsSymlinked'] ?? false;
+            $this->options->currentClone['networkClone']          = $this->options->currentClone['networkClone'] ?? false;
+            $this->options->currentClone['wooSchedulerDisabled']  = empty($this->options->currentClone['wooSchedulerDisabled']) ? false : true;
+            $this->options->currentClone['emailsReminderAllowed'] = empty($this->options->currentClone['emailsReminderAllowed']) ? false : true;
         }
 
         // Tables
@@ -501,11 +502,17 @@ class Scan extends Job
             }
 
             // Not a valid directory
-            if (($path = $this->getPath($directory)) === false) {
+            $path = $this->getPath($directory);
+            if (strpos($directory, 'wp-content') !== false && is_link($directory) && $path === false) {
                 continue;
             }
 
-            $fullPath = trailingslashit($this->getBasePath()) . ltrim($path, '/');
+            if (strpos($directory, 'wp-content') !== false && is_link($directory)) {
+                $fullPath = realpath($directory->getPathname());
+            } else {
+                $fullPath = trailingslashit($this->getBasePath()) . ltrim($path, '/');
+            }
+
             $size     = $this->getDirectorySize($fullPath);
 
             // If filename is int, then it is treated as a numeric index in key and start with 0
@@ -623,6 +630,15 @@ class Scan extends Job
             $shouldBeChecked = false;
         }
 
+        $isLink = false;
+        if (strpos(trailingslashit($basePath) . $dirName, 'wp-content') !== false && is_link(trailingslashit($basePath) . $dirName)) {
+            $isDisabled      = true;
+            $isNavigatable   = 'false';
+            $shouldBeChecked = true;
+            $isLink          = true;
+            $relPath         = 'wp-content';
+        }
+
         return $this->templateEngine->render('clone/ajax/directory-navigation.php', [
             'scan'              => $this,
             'prefix'            => $prefix,
@@ -643,6 +659,7 @@ class Scan extends Job
             'basePath'          => $basePath,
             'forceDefault'      => $forceDefault,
             'dirPath'           => $path,
+            'isLink'            => $isLink
         ]);
     }
 

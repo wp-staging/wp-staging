@@ -76,10 +76,10 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     private $headerEnd;
 
     /** @var string */
-    private $backupVersion;
+    private $backupVersion = '';
 
     /** @var string */
-    private $wpstgVersion;
+    private $wpstgVersion = '';
 
     /** @var int */
     private $totalFiles;
@@ -100,7 +100,7 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     private $prefix;
 
     /** @var string */
-    private $backupType;
+    private $backupType = '';
 
     /** @var string */
     private $name;

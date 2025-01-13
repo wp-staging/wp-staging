@@ -1,0 +1,31 @@
+{
+    "features": {
+        "networking": true
+    },
+    "steps": [
+        {
+            "step": "login"
+        },
+        {
+            "step": "installPlugin",
+            "pluginData": {
+                "resource": "url",
+                "url": "https:\/\/wp-staging.com/\/playground\/wpstg-sqlite-integration.zip?no-cors=yes"
+            },
+            "options": {
+                "activate": true
+            }
+        },
+        {
+            "step": "installPlugin",
+            "pluginData": {
+                "resource": "url",
+                "url": "https:\/\/downloads.wordpress.org\/plugin\/wp-staging.zip"
+            },
+            "options": {
+                "activate": true
+            }
+        }
+    ]
+}
+

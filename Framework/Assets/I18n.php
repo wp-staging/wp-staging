@@ -109,8 +109,8 @@ class I18n
             ],
             'admin_clone_actions_update_modal' => [
                 'title' => esc_html__('Do you want to update the staging site?', 'wp-staging'),
-                'body' => esc_html__('This function overwrites the staging site at "{URL}" with data from the production site, making it identical to the live site and removing any changes made on the staging site. Use this only if you want to re-clone your live site. You can select specific tables and files in the next step.', 'wp-staging'),
-                'suggestion' => sprintf(esc_html__('%sPlease back up your staging site before proceeding!%s', 'wp-staging'), '<b>', '</b>'),
+                'body' => sprintf(esc_html__('This function overwrites the staging site at "%s" with data from the production site, making it identical to the live site and removing any changes made on the staging site. Use this only if you want to re-clone your live site. You can select specific tables and files in the next step.', 'wp-staging'), '<b>{URL}</b>'),
+                'suggestion' => sprintf(esc_html__('%sPlease back up your staging site before proceeding!%s', 'wp-staging'), '<b class="wpstg-flex-text-center">', '</b>'),
                 'confirm_button_text' => esc_html__('Update', 'wp-staging'),
             ],
             'admin_clone_actions' => [
@@ -138,6 +138,7 @@ class I18n
                 'comparison_modal_confirm_button_text' => esc_html__('Proceed', 'wp-staging'),
                 'error_modal_title' => esc_html__('Different Database Properties', 'wp-staging'),
                 'error_modal_confirm_button_text' => esc_html__('Proceed', 'wp-staging'),
+                'insufficient_db_privilege_title' => esc_html__('Insufficient Database Privileges', 'wp-staging'),
             ],
             'admin_send_cloning_ajax' => [
                 'error_general' => sprintf(esc_html__('Something went wrong!%sGo to WP Staging > Settings and lower \'File Copy Limit\' and \'DB Query Limit\'. Also set \'CPU Load Priority to low \' and try again. If that does not help, %s', 'wp-staging'), '<br/><br/>', '<a href=\'https://wp-staging.com/support/\' target=\'_blank\'>open a support ticket</a>'),

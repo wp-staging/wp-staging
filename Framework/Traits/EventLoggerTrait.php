@@ -39,6 +39,7 @@ trait EventLoggerTrait
     private $process;
     private $processPrefixes;
     private $auth;
+
     public function ajaxLogEventSuccess()
     {
         $this->init();
@@ -57,6 +58,7 @@ trait EventLoggerTrait
         $this->writeEventStatus($this->process);
         wp_send_json_success();
     }
+
     public function ajaxLogEventFailure()
     {
         $this->init();
@@ -74,17 +76,20 @@ trait EventLoggerTrait
         }
         wp_send_json_error();
     }
+
     public function logBackupUploadCompleted(array $storages = [])
     {
         $storages      = array_fill_keys($storages, true);
         $processPrefix = $this->backupUploadPrefixIdentifier . '|' . $this->prepareJobSettings($this->backupStoragesIdentifiers, $storages);
         $this->writeEventStatus($processPrefix);
     }
+
     public function logBackupProcessCompleted(array $processSettings = [])
     {
         $processPrefix = $this->backupProcessPrefixIdentifier . '|' . $this->prepareJobSettings($this->backupSettingsIdentifiers, $processSettings);
         $this->writeEventStatus($processPrefix);
     }
+
     public function logBackupRestoreCompleted($jobBackupMetadata)
     {
         $processSettings = [
@@ -99,10 +104,12 @@ trait EventLoggerTrait
         $processPrefix = $this->restoreProcessPrefixIdentifier . '|' . $this->prepareJobSettings($this->backupSettingsIdentifiers, $processSettings);
         $this->writeEventStatus($processPrefix);
     }
+
     public function logCloneCompleted()
     {
         $this->writeEventStatus($this->cloneProcessPrefixIdentifier);
     }
+
     public function logPushCompleted(bool $afterReload = false)
     {
         $processPrefix = $this->pushProcessPrefixIdentifier;
@@ -111,10 +118,12 @@ trait EventLoggerTrait
         }
         $this->writeEventStatus($processPrefix);
     }
+
     public function logPushCancelled()
     {
         $this->writeEventStatus($this->pushProcessPrefixIdentifier, $this->processStatusFailed);
     }
+
     public function updateFailedProcess(string $processPrefix = ''): bool
     {
         if (empty($processPrefix)) {
@@ -122,11 +131,13 @@ trait EventLoggerTrait
         }
         return $this->writeEventStatus($processPrefix, $this->processStatusFailed);
     }
+
     private function initializeObjects()
     {
         $this->filePath   = WPStaging::make(Directory::class)->getPluginUploadsDirectory() . $this->wpstgMaintenanceFile;
         $this->filesystem = WPStaging::make(Filesystem::class);
     }
+
     private function writeEventStatus(string $process, bool $status = true): bool
     {
         $this->initializeObjects();
@@ -137,6 +148,7 @@ trait EventLoggerTrait
         }
         return $this->filesystem->create($this->filePath, $content, 'ab');
     }
+
     private function prepareJobSettings(array $process, array $processSettings = []): string
     {
         $backupProcessPrefix = '';
@@ -147,10 +159,12 @@ trait EventLoggerTrait
         }
         return $backupProcessPrefix;
     }
+
     protected function getProcessPrefix(string $processName): string
     {
         return empty($this->processPrefixes[$processName]) ? '' : $this->processPrefixes[$processName];
     }
+
     protected function init()
     {
         $this->sanitize        = WPStaging::make(Sanitize::class);

@@ -5,6 +5,7 @@ namespace WPStaging\Staging\Ajax;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
+use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Staging\Dto\StagingSiteDto;
@@ -43,8 +44,16 @@ class Listing extends AbstractTemplateComponent
             wp_send_json_error(esc_html__('This staging site is not cloneable!', 'wp-staging'));
         }
 
-        $sites             = WPStaging::make(Sites::class);
-        $stagingSitesArray = $sites->getSortedStagingSites();
+        $sites = WPStaging::make(Sites::class);
+        $error = false;
+
+        try {
+            $stagingSitesArray = $sites->getSortedStagingSites();
+        } catch (WPStagingException $e) {
+            $stagingSitesArray = [];
+            $error             = true;
+        }
+
         $stagingSites = [];
         foreach ($stagingSitesArray as $cloneID => $data) {
             $stagingSite = new StagingSiteDto();
@@ -59,6 +68,7 @@ class Listing extends AbstractTemplateComponent
                 'stagingSites' => $stagingSites,
                 'license'      => get_option('wpstg_license_status'),
                 'iconPath'     => $this->assets->getAssetsUrl('svg/cloud.svg'),
+                'error'       => $error,
                 // TODO: check if required?
                 'db'           => WPStaging::make('wpdb'),
             ]

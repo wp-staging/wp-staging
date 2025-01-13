@@ -18,25 +18,25 @@ use WPStaging\Framework\Adapter\DirectoryInterface;
 class PathIdentifier
 {
     /** @var string */
-    const IDENTIFIER_ABSPATH    = 'wpstg_a_';
+    const IDENTIFIER_ABSPATH = 'wpstg_a_';
 
     /** @var string */
     const IDENTIFIER_WP_CONTENT = 'wpstg_c_';
 
     /** @var string */
-    const IDENTIFIER_PLUGINS    = 'wpstg_p_';
+    const IDENTIFIER_PLUGINS = 'wpstg_p_';
 
     /** @var string */
-    const IDENTIFIER_THEMES     = 'wpstg_t_';
+    const IDENTIFIER_THEMES = 'wpstg_t_';
 
     /** @var string */
-    const IDENTIFIER_MUPLUGINS  = 'wpstg_m_';
+    const IDENTIFIER_MUPLUGINS = 'wpstg_m_';
 
     /** @var string */
-    const IDENTIFIER_UPLOADS    = 'wpstg_u_';
+    const IDENTIFIER_UPLOADS = 'wpstg_u_';
 
     /** @var string */
-    const IDENTIFIER_LANG       = 'wpstg_l_';
+    const IDENTIFIER_LANG = 'wpstg_l_';
 
     /**
      * @var string The identifier of the last match.
@@ -196,7 +196,7 @@ class PathIdentifier
     {
         static $cache = [];
 
-        if (!empty($cache) && !empty($identifier) && !empty($cache[$identifier])) {
+        if (!empty($cache) && !empty($identifier) && isset($cache[$identifier])) {
             return $cache[$identifier];
         }
 
@@ -210,12 +210,13 @@ class PathIdentifier
             self::IDENTIFIER_LANG       => 'wp-content/languages/',
         ];
 
-        if (!empty($identifier) && !empty($path[$identifier])) {
+        if (!empty($identifier) && isset($path[$identifier])) {
             $cache[$identifier] = $path[$identifier];
             return $cache[$identifier];
         }
 
-        trigger_error(sprintf('Could not find a path for the placeholder: %s', filter_var($identifier, FILTER_SANITIZE_SPECIAL_CHARS)));
+        // Add __METHOD__ for debugging in wpstg-restore
+        trigger_error(sprintf('[%s] Could not find a path for the placeholder: %s', __METHOD__, filter_var($identifier, FILTER_SANITIZE_SPECIAL_CHARS)));
         return $identifier;
     }
 
@@ -262,7 +263,7 @@ class PathIdentifier
     protected function getIdentifierPath($identifier)
     {
         // It is crucial that generic paths are placed last in this list. Eg: wp-content directory must be last.
-        switch ($identifier) :
+        switch ($identifier) {
             case self::IDENTIFIER_ABSPATH:
                 return $this->directory->getAbspath();
             case self::IDENTIFIER_UPLOADS:
@@ -278,7 +279,23 @@ class PathIdentifier
             case self::IDENTIFIER_WP_CONTENT:
                 return $this->directory->getWpContentDirectory();
             default:
-                throw new \UnexpectedValueException(sprintf("Could not find a path for the placeholder: %s", filter_var($identifier, FILTER_SANITIZE_SPECIAL_CHARS)));
-        endswitch;
+                throw new \UnexpectedValueException(sprintf("[%s] Could not find a path for the placeholder: %s", __METHOD__, filter_var($identifier, FILTER_SANITIZE_SPECIAL_CHARS)));
+        }
+    }
+
+    /**
+     * @param string $identifiablePath wpstg_p_db.php
+     *
+     * @return bool
+     */
+    public function hasDropinsFile(string $identifiablePath): bool
+    {
+        if (!(strpos($identifiablePath, self::IDENTIFIER_WP_CONTENT) === 0)) {
+            return false;
+        }
+
+        $dropinsFile = implode('|', PartIdentifier::DROP_IN_FILES);
+
+        return preg_match('@^' . self::IDENTIFIER_WP_CONTENT . '(' . $dropinsFile . ')@', $identifiablePath) ? true : false;
     }
 }

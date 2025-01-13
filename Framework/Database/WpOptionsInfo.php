@@ -22,6 +22,10 @@ class WpOptionsInfo
      */
     public function isOptionTablePrimaryKeyMissing(string $optionTable): bool
     {
+        if ($this->isSqliteTranslatorInstance()) {
+            return false;
+        }
+
         $fInfo = $this->getFieldInfo('option_id', $optionTable);
 
         // Check whether the flag have primary key and auto increment flag
@@ -42,6 +46,10 @@ class WpOptionsInfo
      */
     public function isPrimaryKeyIsOptionName(string $optionTable): bool
     {
+        if ($this->isSqliteTranslatorInstance()) {
+            return false;
+        }
+
         $fInfo = $this->getFieldInfo('option_name', $optionTable);
         // Abort if flag has no primary key
         if (!(isset($fInfo->flags) && $fInfo->flags & MYSQLI_PRI_KEY_FLAG)) {
@@ -83,5 +91,13 @@ class WpOptionsInfo
         $fieldInfo = $result->fetch_field();
         $result->free_result();
         return $fieldInfo;
+    }
+
+    /**
+     * @return bool
+     */
+    private function isSqliteTranslatorInstance(): bool
+    {
+        return !empty($this->wpdb->dbh) && ($this->wpdb->dbh instanceof \WP_SQLite_Translator); // @phpstan-ignore-line
     }
 }

@@ -74,9 +74,11 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
             </label>
             <div>
                 <label>
-                    <div class="wpstg--wproot-expand-folder">
-                        <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info"/>
-                    </div>
+                    <?php if ($isProVersion) : ?>
+                        <div class="wpstg--wproot-expand-folder">
+                            <img class="wpstg--dashicons wpstg-dashicons-14 wpstg--expand-folder-img" src="<?php echo esc_url($urlAssets); ?>svg/folder-expand-chevron.svg" alt="info"/>
+                        </div>
+                    <?php endif; ?>
                     <?php
                         Checkbox::render(
                             'wpstgIncludeOtherFilesInWpRoot',

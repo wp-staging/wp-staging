@@ -10,6 +10,7 @@ class QueryCompatibility
         }
         $query = preg_replace('# DEFINER\s?=\s?(.+?(?= )) #i', ' ', $query);
     }
+
     public function removeSqlSecurity(&$query)
     {
         if (!stripos($query, 'SQL SECURITY')) {
@@ -17,6 +18,7 @@ class QueryCompatibility
         }
         $query = preg_replace('# SQL SECURITY \w+ #i', ' ', $query);
     }
+
     public function removeAlgorithm(&$query)
     {
         if (!stripos($query, 'ALGORITHM')) {
@@ -24,6 +26,7 @@ class QueryCompatibility
         }
         $query = preg_replace('# ALGORITHM\s?=\s?`?\w+`? #i', ' ', $query);
     }
+
     public function replaceTableEngineIfUnsupported(&$query)
     {
         $query = str_ireplace([
@@ -34,6 +37,7 @@ class QueryCompatibility
             'ENGINE=InnoDB',
         ], $query);
     }
+
     public function replaceTableRowFormat(&$query)
     {
         $query = str_ireplace([
@@ -44,14 +48,17 @@ class QueryCompatibility
             'ENGINE=MyISAM ROW_FORMAT=DYNAMIC',
         ], $query);
     }
+
     public function removeFullTextIndexes(&$query)
     {
         $query = preg_replace('#,\s?FULLTEXT \w+\s?`?\w+`?\s?\([^)]+\)#i', '', $query);
     }
+
     public function convertUtf8Mb4toUtf8(&$query)
     {
         $query = str_ireplace('utf8mb4', 'utf8', $query);
     }
+
     public function shortenKeyIdentifiers(&$query)
     {
         $shortIdentifiers = [];
@@ -67,6 +74,7 @@ class QueryCompatibility
         $query = str_replace(array_values($shortIdentifiers), array_keys($shortIdentifiers), $query);
         return $shortIdentifiers;
     }
+
     public function pageCompressionMySQL(&$query, $errorMessage)
     {
         if (strpos($errorMessage, 'PAGE_COMPRESSED') === false) {

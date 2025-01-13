@@ -458,4 +458,35 @@ class Assets
     {
         return ($this->settings->isDebugMode() || (defined('WPSTG_IS_DEV') && WPSTG_IS_DEV === true) || (defined('WPSTG_DEBUG') && WPSTG_DEBUG === true));
     }
+
+    /**
+     * Change admin_bar site_name
+     *
+     * @return void
+     * @global object $wp_admin_bar
+     */
+    public function changeSiteName()
+    {
+        if (!(new SiteInfo())->isStagingSite()) {
+            return;
+        }
+
+        global $wp_admin_bar;
+        $blogName  = get_bloginfo('name');
+        if (empty($blogName)) {
+            $siteUrl   = get_site_url();
+            $parsedUrl = parse_url($siteUrl);
+            $blogName  = $parsedUrl['host'];
+        }
+
+        $siteTitle = apply_filters('wpstg_staging_site_title', 'STAGING');
+        $title     = (strlen($blogName) > 20) ? substr($blogName, 0, 20) . '...' : $blogName;
+        $wp_admin_bar->add_menu(
+            [
+                'id'    => 'site-name',
+                'title' => $siteTitle . ' - ' . $title,
+                'href'  => is_admin() ? home_url('/') : admin_url(),
+            ]
+        );
+    }
 }

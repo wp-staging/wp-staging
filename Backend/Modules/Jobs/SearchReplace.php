@@ -397,7 +397,7 @@ class SearchReplace extends CloningProcess
 
                 // Something was changed
                 if ($row[$column] !== $dataRow) {
-                    $updateSql[] = $column . ' = "' . WPStaging::make(Escape::class)->mysqlRealEscapeString($dataRow) . '"';
+                    $updateSql[] = $column . " = '" . WPStaging::make(Escape::class)->mysqlRealEscapeString($dataRow) . "'";
                     $doUpdate = true;
                 }
             }

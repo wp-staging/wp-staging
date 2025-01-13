@@ -12,23 +12,24 @@ if (!defined("WPINC")) {
 }
 
 use WPStaging\Core\WPStaging;
-
+use WPStaging\Framework\Traits\UrlTrait;
 
 class Meta
 {
+    use UrlTrait;
 
     public $get = '';
 
     public function __construct()
     {
-        $this->get = WPSTG_PLUGIN_DIR . wpstg_base('YXBwcy9CYWNrZW5kL1Byby9MaWNlbnNpbmcvTGljZW5zaW5nLnBocA==');
+        $this->get = WPSTG_PLUGIN_DIR . $this->base64Decode('YXBwcy9CYWNrZW5kL1Byby9MaWNlbnNpbmcvTGljZW5zaW5nLnBocA==');
         $this->save();
     }
 
     public function get()
     {
         $hash = new \WPStaging\Core\Utils\Hash($this->get, true);
-        $get = $hash->getHash();
+        $get  = $hash->getHash();
         return $get;
     }
 

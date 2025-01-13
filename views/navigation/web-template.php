@@ -60,11 +60,22 @@ if ($isCalledFromIndex) {
     $menu['tab-backup']['targetUrl']  = 'javascript:void(0)';
 }
 
-$licenseMessage    = '';
 if (defined('WPSTGPRO_VERSION')) {
-    $licenseMessage                   = isset($license->license) && $license->license === 'valid' ? '' : __('(Unregistered)', 'wp-staging');
     $menu['tab-license']['tab']       = __('License', 'wp-staging');
     $menu['tab-license']['targetUrl'] = esc_url($wpstgAdminUrl) . 'wpstg-license';
+}
+
+$licenseMessage = '';
+if (defined('WPSTGPRO_VERSION') && (empty($license->license) || $license->license === 'invalid')) {
+    $licenseMessage =  __('(Unregistered)', 'wp-staging');
+}
+
+if (defined('WPSTGPRO_VERSION') && (!empty($license->error) && $license->error === 'disabled')) {
+    $licenseMessage =  __('(Disabled)', 'wp-staging');
+}
+
+if (defined('WPSTGPRO_VERSION') && ((!empty($license->license) && $license->license === 'expired') || (!empty($license->error) && $license->error === 'expired'))) {
+    $licenseMessage =  __('(Expired)', 'wp-staging');
 }
 ?>
 <div class="wpstg--tab--header">

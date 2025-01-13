@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.7
-Stable tag: 3.9.4
+Stable tag: 3.10.0
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -286,6 +286,33 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 3.10.0 =
+* New: Send email reminders about existing staging and development sites to help prevent outdated sites from remaining active, enhancing security. (Pro) #3296
+* New: Make it compatible with WordPress Playground. #3544
+* Enh: Rename GET parameter 'sub' to 'sub-tab' #2449
+* Enh: Disable all Pro features if license key is disabled. (Pro) #3591
+* Fix: Unexpected end tag error in Newsfeed Validator. #4057
+* Fix: Replace breakdance page builder plugin data URLs when restoring a backup to a different domain. #3979
+* Fix: Bypass additional login on the staging site when accessing it using a magic login link.(Pro) #4047
+* Fix: Display a tooltip next to the `wp-content' folder if it is symlinked to another location. #1821
+* Fix: Show an admin message if the site is hosted in the elementor cloud. #3268
+* Fix: Handle type error listing staging sites due to corrupted staging site option. Also add actions to fix and report corrupted staging sites option. #3955
+* Fix: Url params do not update correctly when navigating through settings's pages #4040
+* Fix: Ensure the staging site title is truncated gracefully if it exceeds the maximum length. #4038
+* Fix: Verify user privileges for external database before creating staging site. (Pro) #3981
+* Fix: Disable symlink to the uploads folder when symlink is unavailable or restricted by the hosting provider to prevent potential fatal errors during staging site creation.(Pro) #4013
+* Fix: Restorer tool fails to restore large database files. #4021
+* Fix: Redirection to 127.0.0.1 or a custom domain after backup restore. #3277
+* Fix: Beautify Update Modal using CSS #4019
+* Fix: Root folders selection link does not work in free version (console error). #3998
+* Fix: Show the license notice exclusively on the license page of the staging site. #4056
+* Fix: Replace the base64_decode function in the restorer tool to avoid being flagged as malware. #4015
+* UX: Improve backup tab loading skeleton while deleting backup. #3638
+* UX: Beautify `Test Connection` loader for remote storages. (Pro) #4027
+* Dev: DRY database restore code between plugin and standalone restorer. #3994
+* Dev: Add multisite and other envs support for playwright. #4005
+* Dev: DRY `general error` and `contact us` modal. #3991
 
 = 3.9.4 =
 * Enh: Improve backup transfer speed 500% when downloading backup file from remote server. #3385

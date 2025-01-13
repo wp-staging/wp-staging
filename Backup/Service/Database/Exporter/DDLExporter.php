@@ -12,12 +12,14 @@ class DDLExporter extends AbstractExporter
     protected $views = [];
     protected $excludedTables = [];
     protected $nonWpTables = [];
+
     public function __construct(Database $database, TableService $tableService, ViewDDLOrder $viewDDLOrder)
     {
         parent::__construct($database);
         $this->tableService = $tableService;
         $this->viewDDLOrder = $viewDDLOrder;
     }
+
     public function backupDDLTablesAndViews()
     {
         $this->file->fwrite($this->getHeader());
@@ -43,20 +45,25 @@ class DDLExporter extends AbstractExporter
             $this->writeQueryCreateViews($viewName, $query, $isMultisiteBackup);
         }
     }
+
     public function getTables()
     {
         return $this->tables;
     }
+
     public function getNonWPTables()
     {
         return $this->nonWpTables;
     }
+
     protected function addUsersTablesForSubsite()
     {
         }
+
     protected function filterOtherSubsitesTables()
     {
         }
+
     protected function writeQueryNonWpTables()
     {
         $nonPrefixedTables = $this->getNonPrefixedTablesFromFilter();
@@ -70,11 +77,13 @@ class DDLExporter extends AbstractExporter
             $this->addNonWpTable($table);
         }
     }
+
     protected function getNonPrefixedTablesFromFilter()
     {
         $nonPrefixedTables = apply_filters('wpstg.backup.tables.non-prefixed', []);
         return is_array($nonPrefixedTables) ? $nonPrefixedTables : [];
     }
+
     protected function addNonWpTable($table)
     {
         $isTableAdded = $this->writeQueryCreateTable($table, false);
@@ -82,6 +91,7 @@ class DDLExporter extends AbstractExporter
             $this->nonWpTables[] = $table;
         }
     }
+
     protected function writeQueryCreateTable(string $tableName, bool $isWpTable = true, bool $isBaseTable = false)
     {
         $newTableName = $tableName;
@@ -101,10 +111,12 @@ class DDLExporter extends AbstractExporter
         }
         $createTableQuery = $this->replaceTableConstraints($createTableQuery);
         $createTableQuery = $this->replaceTableOptions($createTableQuery);
+        $createTableQuery = rtrim($createTableQuery, ';');
         $this->file->fwrite(preg_replace('#\s+#', ' ', $createTableQuery));
         $this->file->fwrite(";\n");
         return $newTableName;
     }
+
     protected function replaceTableConstraints($input)
     {
         $pattern = [
@@ -116,6 +128,7 @@ class DDLExporter extends AbstractExporter
         $replace = ['', ')', '', ''];
         return preg_replace($pattern, $replace, $input);
     }
+
     private function replaceTableOptions($input)
     {
         $search = [
@@ -148,10 +161,12 @@ class DDLExporter extends AbstractExporter
         ];
         return str_ireplace($search, $replace, $input);
     }
+
     private function isView($tableName, array $views)
     {
         return in_array($tableName, $views, true);
     }
+
     protected function writeQueryCreateViews(string $tableName, string $createViewQuery, bool $isBaseView)
     {
         $prefixedTableName = $this->getPrefixedTableName($tableName);
@@ -166,10 +181,12 @@ class DDLExporter extends AbstractExporter
         $this->file->fwrite($createViewQuery);
         $this->file->fwrite(";\n");
     }
+
     protected function getPrefix(): string
     {
         return $this->database->getPrefix();
     }
+
     protected function replaceViewIdentifiers($sql)
     {
         foreach (array_merge($this->tables, $this->views) as $tableName) {
@@ -178,10 +195,12 @@ class DDLExporter extends AbstractExporter
         }
         return $sql;
     }
+
     private function replaceViewOptions($input)
     {
         return preg_replace('/CREATE(.+?)VIEW/i', 'CREATE VIEW', $input);
     }
+
     protected function getHeader()
     {
         return sprintf(

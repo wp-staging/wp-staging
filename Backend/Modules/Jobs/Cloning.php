@@ -261,9 +261,10 @@ class Cloning extends Job
         $this->options->cloneHostname = '';
 
         // Default options for FREE version
-        $this->options->emailsAllowed        = true;
-        $this->options->cronDisabled         = false;
-        $this->options->wooSchedulerDisabled = false;
+        $this->options->emailsAllowed         = true;
+        $this->options->cronDisabled          = false;
+        $this->options->wooSchedulerDisabled  = false;
+        $this->options->emailsReminderAllowed = false;
 
         $this->setAdvancedCloningOptions();
 
@@ -297,35 +298,36 @@ class Cloning extends Job
         $this->debugLog("Cloning: {$this->options->clone}'s clone job's data is not in database, generating data");
 
         $this->options->existingClones[$this->options->clone] = [
-            "cloneName"            => $this->options->cloneName,
-            "directoryName"        => $this->options->cloneDirectoryName,
-            "path"                 => trailingslashit($this->options->destinationDir),
-            "url"                  => $this->getDestinationUrl(),
-            "number"               => $this->options->cloneNumber,
-            "version"              => WPStaging::getVersion(),
-            "status"               => "unfinished or broken (?)",
-            "prefix"               => $this->options->prefix,
-            "datetime"             => time(),
-            "databaseUser"         => $this->options->databaseUser,
-            "databasePassword"     => $this->options->databasePassword,
-            "databaseDatabase"     => $this->options->databaseDatabase,
-            "databaseServer"       => $this->options->databaseServer,
-            "databasePrefix"       => $this->options->databasePrefix,
-            "databaseSsl"          => (bool)$this->options->databaseSsl,
-            "cronDisabled"         => (bool)$this->options->cronDisabled,
-            "emailsAllowed"        => (bool)$this->options->emailsAllowed,
-            "uploadsSymlinked"     => (bool)$this->options->uploadsSymlinked,
-            "ownerId"              => $this->options->ownerId,
-            "includedTables"       => $this->options->tables,
-            "excludeSizeRules"     => $this->options->excludeSizeRules,
-            "excludeGlobRules"     => $this->options->excludeGlobRules,
-            "excludedDirectories"  => $this->options->excludedDirectories,
-            "extraDirectories"     => $this->options->extraDirectories,
-            "networkClone"         => $this->isNetworkClone(),
-            'useNewAdminAccount'   => $this->options->useNewAdminAccount,
-            'adminEmail'           => $this->options->adminEmail,
-            'adminPassword'        => $this->options->adminPassword,
-            'wooSchedulerDisabled' => (bool)$this->options->wooSchedulerDisabled,
+            "cloneName"             => $this->options->cloneName,
+            "directoryName"         => $this->options->cloneDirectoryName,
+            "path"                  => trailingslashit($this->options->destinationDir),
+            "url"                   => $this->getDestinationUrl(),
+            "number"                => $this->options->cloneNumber,
+            "version"               => WPStaging::getVersion(),
+            "status"                => "unfinished or broken (?)",
+            "prefix"                => $this->options->prefix,
+            "datetime"              => time(),
+            "databaseUser"          => $this->options->databaseUser,
+            "databasePassword"      => $this->options->databasePassword,
+            "databaseDatabase"      => $this->options->databaseDatabase,
+            "databaseServer"        => $this->options->databaseServer,
+            "databasePrefix"        => $this->options->databasePrefix,
+            "databaseSsl"           => (bool)$this->options->databaseSsl,
+            "cronDisabled"          => (bool)$this->options->cronDisabled,
+            "emailsAllowed"         => (bool)$this->options->emailsAllowed,
+            "uploadsSymlinked"      => (bool)$this->options->uploadsSymlinked,
+            "ownerId"               => $this->options->ownerId,
+            "includedTables"        => $this->options->tables,
+            "excludeSizeRules"      => $this->options->excludeSizeRules,
+            "excludeGlobRules"      => $this->options->excludeGlobRules,
+            "excludedDirectories"   => $this->options->excludedDirectories,
+            "extraDirectories"      => $this->options->extraDirectories,
+            "networkClone"          => $this->isNetworkClone(),
+            'useNewAdminAccount'    => $this->options->useNewAdminAccount,
+            'adminEmail'            => $this->options->adminEmail,
+            'adminPassword'         => $this->options->adminPassword,
+            'wooSchedulerDisabled'  => (bool)$this->options->wooSchedulerDisabled,
+            "emailsReminderAllowed" => (bool)$this->options->emailsReminderAllowed,
         ];
 
         if ($this->sitesHelper->updateStagingSites($this->options->existingClones) === false) {

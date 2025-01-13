@@ -3,7 +3,7 @@
 namespace WPStaging\Backend\Modules\Jobs\Cleaners;
 
 use WPStaging\Backend\Modules\Jobs\Files;
-use WPStaging\Backup\Task\Tasks\JobRestore\RestoreOtherFilesInWpContentTask;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Utils\WpDefaultDirectories;
 use WPStaging\Framework\Utils\SlashMode;
 use WPStaging\Framework\Filesystem\Filesystem;
@@ -64,8 +64,8 @@ class WpContentCleaner
         }
 
         $wpDirectories = new WpDefaultDirectories();
-        $directory = trailingslashit($directory);
-        $paths = [];
+        $directory     = trailingslashit($directory);
+        $paths         = [];
         if ($options->deleteUploadsFolder && !$options->backupUploadsFolder && $options->statusContentCleaner = 'pending') {
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativeUploadPath());
         }
@@ -73,7 +73,7 @@ class WpContentCleaner
         if ($options->deletePluginsAndThemes) {
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativeThemePath());
             $paths[] = trailingslashit($directory . $wpDirectories->getRelativePluginPath());
-            foreach (RestoreOtherFilesInWpContentTask::DROP_IN_FILES as $file) {
+            foreach (PartIdentifier::DROP_IN_FILES as $file) {
                 if (file_exists($directory . $file)) {
                     $paths[] = $directory . $file;
                 }
@@ -88,7 +88,7 @@ class WpContentCleaner
 
         if ($options->statusContentCleaner === 'pending') {
             $this->logs[] = [
-                "msg" => __("Files: Cleaning up directories: Plugins, Themes, Uploads!", "wp-staging"),
+                "msg"  => __("Files: Cleaning up directories: Plugins, Themes, Uploads!", "wp-staging"),
                 "type" => Logger::TYPE_INFO
             ];
 
@@ -111,7 +111,7 @@ class WpContentCleaner
             }
         } catch (\RuntimeException $ex) {
             $this->logs[] = [
-                "msg" => sprintf(__("Files: Error - %s. Content cleaning.", "wp-staging"), $ex->getMessage()),
+                "msg"  => sprintf(__("Files: Error - %s. Content cleaning.", "wp-staging"), $ex->getMessage()),
                 "type" => Logger::TYPE_ERROR
             ];
             return false;
@@ -121,13 +121,13 @@ class WpContentCleaner
         $this->job->saveOptions($options);
         if (!$options->deletePluginsAndThemes) {
             $this->logs[] = [
-                "msg" => __("Files: Skipped cleaning Plugins and Themes directories!", "wp-staging"),
+                "msg"  => __("Files: Skipped cleaning Plugins and Themes directories!", "wp-staging"),
                 "type" => Logger::TYPE_INFO
             ];
         }
 
         $this->logs[] = [
-            "msg" => __("Files: Finished cleaning!", "wp-staging"),
+            "msg"  => __("Files: Finished cleaning!", "wp-staging"),
             "type" => Logger::TYPE_INFO
         ];
 

@@ -64,7 +64,7 @@ class RestorePluginsTask extends FileRestoreTask
         $destDir = $this->directory->getPluginsDirectory();
 
         try {
-            $existingPlugins  = $this->getExistingPlugins();
+            $existingPlugins = $this->getExistingPlugins();
         } catch (\Exception $e) {
             $this->logger->critical(sprintf('Destination plugins folder could not be found not created at "%s"', (string)apply_filters('wpstg.import.plugins.destDir', $destDir)));
 
@@ -222,7 +222,7 @@ class RestorePluginsTask extends FileRestoreTask
      * @param array $dropInFiles
      * @return void
      */
-    private function mayBeDeleteDropInFiles(array $dropInFiles = RestoreOtherFilesInWpContentTask::DROP_IN_FILES)
+    private function mayBeDeleteDropInFiles(array $dropInFiles = PartIdentifier::DROP_IN_FILES)
     {
         $destinationDir = $this->directory->getWpContentDirectory();
 

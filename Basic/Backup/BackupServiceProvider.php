@@ -28,6 +28,8 @@ use WPStaging\Backup\Service\ServiceInterface;
 use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Backup\Task\Tasks\JobRestore\RestoreDatabaseTask;
 use WPStaging\Framework\DI\ServiceProvider;
+use WPStaging\Backup\Ajax\FileList;
+use WPStaging\Backup\Ajax\Listing;
 
 /**
  * Class BackupServiceProvider
@@ -89,5 +91,11 @@ class BackupServiceProvider extends ServiceProvider
         $this->container->when(DatabaseImporter::class)
                 ->needs(SubsiteManagerInterface::class)
                 ->give(BasicSubsiteManager::class);
+    }
+
+    protected function addHooks()
+    {
+        add_action('wp_ajax_wpstg--backups--listing', $this->container->callback(Listing::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        add_action('wp_ajax_wpstg--backups--restore--file-list', $this->container->callback(FileList::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 }

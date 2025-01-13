@@ -3,7 +3,7 @@
  * This file is hooked as the \register_activation_hook of the plugin,
  * therefore it runs as a standalone script that needs to be bootstrapped.
  *
- * @var string $pluginFilePath The absolute path to the main file of this plugin.
+ * @var string $pluginFilePath The absolute path to the main file of WP Staging.
  */
 
 use WPStaging\Backend\Optimizer\Optimizer;

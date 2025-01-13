@@ -3,7 +3,9 @@
 namespace WPStaging\Backup\Service;
 
 use WPStaging\Backup\Service\Compression\CompressionInterface;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\SiteInfo;
 
 class ZlibCompressor
 {
@@ -12,9 +14,13 @@ class ZlibCompressor
     /** @var CompressionInterface */
     protected $service;
 
+    /** @var SiteInfo */
+    private $siteInfo;
+
     public function __construct(CompressionInterface $service)
     {
-        $this->service = $service;
+        $this->service  = $service;
+        $this->siteInfo = WPStaging::make(SiteInfo::class);
     }
 
     /**
@@ -42,7 +48,7 @@ class ZlibCompressor
 
         $hasActiveLicense = is_object($license) && property_exists($license, 'license') && $license->license === 'valid';
 
-        $canUseCompression = $this->supportsCompression() && $isPro && ($hasActiveLicense || wpstg_is_local());
+        $canUseCompression = $this->supportsCompression() && $isPro && ($hasActiveLicense || $this->siteInfo->isLocal());
 
         return $canUseCompression;
     }

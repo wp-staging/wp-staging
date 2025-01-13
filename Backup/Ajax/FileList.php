@@ -5,99 +5,40 @@
 
 namespace WPStaging\Backup\Ajax;
 
-use WPStaging\Backup\Ajax\FileList\ListableBackupsCollection;
-use WPStaging\Backup\Entity\ListableBackup;
 use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Component\AbstractTemplateComponent;
-use WPStaging\Framework\TemplateEngine\TemplateEngine;
-use WPStaging\Framework\Utils\Sanitize;
 
-class FileList extends AbstractTemplateComponent
+class FileList extends BaseFileList
 {
-    /** @var ListableBackupsCollection */
-    private $listableBackupsCollection;
-
-    /** @var Sanitize */
-    private $sanitize;
-
-    public function __construct(ListableBackupsCollection $listableBackupsCollection, TemplateEngine $templateEngine, Sanitize $sanitize)
-    {
-        parent::__construct($templateEngine);
-        $this->listableBackupsCollection = $listableBackupsCollection;
-        $this->sanitize = $sanitize;
-    }
-
+    /*
+     * @return void
+     */
     public function render()
     {
         if (!$this->canRenderAjax()) {
             return;
         }
 
-        // Discover the .wpstg backups in the filesystem
-        try {
-            $listableBackups = $this->listableBackupsCollection->getListableBackups();
-        } catch (\Throwable $e) {
-            ob_end_clean();
-            if (wp_doing_ajax()) {
-                wp_send_json_error(
-                    __(
-                        "Failed to get the list of backups!",
-                        'wp-staging'
-                    )
-                );
-            }
-        }
-
-        /**
-         * Javascript expects an array with keys in natural order
-         *
-         * @var ListableBackup[] $listableBackups
-         */
-        $listableBackups = array_values($listableBackups);
-
-        // Sort backups by the highest created/upload date, newest first.
-        usort($listableBackups, function ($item, $nextItem) {
-            /**
-             * @var ListableBackup $item
-             * @var ListableBackup $nextItem
-             */
-            return (max($nextItem->dateUploadedTimestamp, $nextItem->dateCreatedTimestamp)) - (max($item->dateUploadedTimestamp, $item->dateCreatedTimestamp));
-        });
-
-        // Returns a HTML template
-        if (isset($_GET['withTemplate']) && $this->sanitize->sanitizeBool($_GET['withTemplate'])) {
-            $output = '';
-
-            $urlAssets         = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
-            $isProVersion      = WPStaging::isPro();
-            $isValidLicenseKey = WPStaging::isValidLicense();
-
-            if (empty($listableBackups) || ($isProVersion && !$isValidLicenseKey)) {
-                $output .= $this->renderTemplate('backup/listing-backups-no-results.php', [
-                    'urlAssets'         => $urlAssets,
-                    'isProVersion'      => $isProVersion,
-                    'isValidLicenseKey' => $isValidLicenseKey,
-                ]);
-            } else {
-
-                /** @var ListableBackup $listable */
-                foreach ($listableBackups as $listable) {
-                    $viewData = [
-                        'backup'    => $listable,
-                        'urlAssets' => $urlAssets,
-                    ];
-
-                    $output .= $this->renderTemplate(
-                        'backup/listing-single-backup.php',
-                        $viewData
-                    );
-                }
-            }
-
-            wp_send_json($output);
-        }
+        $listableBackups = $this->getBackups();
+        $listableBackups = $this->sortBackups($listableBackups);
+        $withTemplate    = !empty($_GET['withTemplate']) && $this->sanitize->sanitizeBool($_GET['withTemplate']); //phpcs:ignore
 
         // Returns a JSON response
-        wp_send_json($listableBackups);
+        if (!$withTemplate) {
+            wp_send_json($listableBackups);
+        }
+
+        // Returns an HTML template
+        $output = '';
+        if (empty($listableBackups)) {
+            $output .= $this->renderTemplate('backup/listing-backups-no-results.php', [
+                'urlAssets'         => $this->urlAssets,
+                'isProVersion'      => false,
+                'isValidLicenseKey' => false,
+            ]);
+        } else {
+            $output .= $this->renderBackups($listableBackups);
+        }
+
+        wp_send_json($output);
     }
 }

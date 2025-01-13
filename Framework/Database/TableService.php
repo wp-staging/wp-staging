@@ -27,6 +27,8 @@ class TableService
     /** @var Strings */
     private $strHelper;
 
+    private $isSqlLite = false;
+
     /**
      * @param Database|null $database
      */
@@ -35,6 +37,8 @@ class TableService
         $this->database  = $database ?: new Database();
         $this->client    = $this->database->getClient();
         $this->strHelper = new Strings();
+
+        $this->isSqlLite = property_exists($this->client, 'isSQLite');
     }
 
     /**
@@ -160,7 +164,7 @@ class TableService
     public function getCreateViewQuery(string $viewName): string
     {
         $result = $this->client->query("SHOW CREATE VIEW `{$viewName}`");
-        $row = $this->client->fetchAssoc($result);
+        $row    = $this->client->fetchAssoc($result);
 
         $this->client->freeResult($result);
 
@@ -244,9 +248,15 @@ class TableService
      */
     public function deleteTables($tables): bool
     {
-        $isForeignKeyCheckEnabled = $this->database->getClient()->query("SELECT @@FOREIGN_KEY_CHECKS AS fk_check;")->fetch_assoc()['fk_check'];
+        $isForeignKeyCheckEnabled = "0";
+
+        $result = $this->client->fetchAssoc($this->client->query("SELECT @@FOREIGN_KEY_CHECKS AS fk_check"));
+        if (!empty($result)) {
+            $isForeignKeyCheckEnabled = empty($result['fk_check']) ? "0" : $result['fk_check'];
+        }
+
         if ($isForeignKeyCheckEnabled === "1") {
-            $this->database->getClient()->query("SET FOREIGN_KEY_CHECKS = 0;");
+            $this->client->query("SET FOREIGN_KEY_CHECKS = 0");
         }
 
         foreach ($tables as $table) {
@@ -257,11 +267,11 @@ class TableService
                 return false;
             }
 
-            $this->database->getClient()->query("DROP TABLE `{$table}`;");
+            $this->client->query("DROP TABLE `{$table}`;");
         }
 
         if ($isForeignKeyCheckEnabled === "1") {
-            $this->database->getClient()->query("SET FOREIGN_KEY_CHECKS = 1;");
+            $this->client->query("SET FOREIGN_KEY_CHECKS = 1");
         }
 
         return true;
@@ -303,7 +313,7 @@ class TableService
      */
     public function dropTablesLike(string $likeCondition): bool
     {
-        $wpdb = $this->database->getWpdb();
+        $wpdb   = $this->database->getWpdb();
         $tables = $wpdb->get_results(
             $wpdb->prepare('SHOW TABLES LIKE %s;', $wpdb->esc_like($likeCondition) . '%')
         );
@@ -326,7 +336,7 @@ class TableService
      */
     public function dropTable(string $tableName): bool
     {
-        $wpdb = $this->database->getWpdb();
+        $wpdb   = $this->database->getWpdb();
         $tables = $wpdb->get_results(
             $wpdb->prepare('SHOW TABLES LIKE %s;', $wpdb->esc_like($tableName)),
             ARRAY_A
@@ -352,7 +362,7 @@ class TableService
     public function renameTable(string $sourceTable, string $destinationTable): bool
     {
         // Rename table return int on success and false on failure, so we alter the condition to check for false
-        $result = $this->database->getClient()->query(sprintf(
+        $result = $this->client->query(sprintf(
             "RENAME TABLE `%s` TO `%s`;",
             $sourceTable,
             $destinationTable
@@ -368,7 +378,7 @@ class TableService
      */
     public function cloneTableWithoutData(string $sourceTable, string $destinationTable): bool
     {
-        return $this->database->getClient()->query("CREATE TABLE $destinationTable LIKE $sourceTable");
+        return $this->client->query("CREATE TABLE $destinationTable LIKE $sourceTable");
     }
 
     /**
@@ -388,7 +398,7 @@ class TableService
             $offset
         );
 
-        return $this->database->getClient()->query($query);
+        return $this->client->query($query);
     }
 
     /**
@@ -455,10 +465,21 @@ class TableService
      */
     private function getTablesFindQueryByTableType(string $tableType, string $prefix = ''): string
     {
-        $dbname = $this->database->getWpdba()->getClient()->dbname;
-        $query  = "SHOW FULL TABLES FROM `{$dbname}` WHERE `Table_type` = '{$tableType}'";
-        if (!empty($prefix)) {
-            $query .= " AND `Tables_in_{$dbname}` LIKE '{$this->database->escapeSqlPrefixForLIKE($prefix)}%'";
+
+        if ($this->isSqlLite) {
+            // SQLite query
+            $tableType = $tableType === 'VIEW' ? 'view' : 'table';
+            $query     = "SELECT name FROM sqlite_master WHERE type = '{$tableType}'";
+            if (!empty($prefix)) {
+                $query .= " AND name LIKE '{$this->database->escapeSqlPrefixForLIKE($prefix)}%'";
+            }
+        } else {
+            // MySQL-compatible query
+            $dbname = $this->database->getWpdba()->getClient()->dbname;
+            $query  = "SHOW FULL TABLES FROM `{$dbname}` WHERE `Table_type` = '{$tableType}'";
+            if (!empty($prefix)) {
+                $query .= " AND `Tables_in_{$dbname}` LIKE '{$this->database->escapeSqlPrefixForLIKE($prefix)}%'";
+            }
         }
 
         return $query;

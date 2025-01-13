@@ -1,7 +1,7 @@
-<div class="wpstg-contact-us-modal">
+<div class="wpstg-contact-us-modal wpstg-contact-us-success-modal">
     <div class="wpstg-modal-content wpstg-success-modal">
         <div class="wpstg-modal-header">
-            <span id="wpstg-<?php echo esc_attr($modalClassID); ?>-success-modal-close" class="wpstg-contact-us-close-btn"></span>
+            <span class="wpstg-contact-us-close-btn wpstg-contact-us-success-modal-close"></span>
             <span class="wpstg-contact-us-modal-header-title">&nbsp;</span>
         </div>
         <div class="wpstg-modal-body">
@@ -9,8 +9,8 @@
             <div>
                 <?php esc_html_e("Your debug code:", "wp-staging") ?>
                 <div class="wpstg-contact-us-addon">
-                    <input class="wpstg-contact-us-addon-field" id="wpstg-<?php echo esc_attr($modalClassID); ?>-debug-code">
-                    <label for="wpstg-contact-us-debug-code" class="wpstg-contact-us-addon-item wpstg-contact-us-modal-align" id="wpstg-<?php echo esc_attr($modalClassID); ?>-debug-code-copy">
+                    <input class="wpstg-contact-us-addon-field wpstg-contact-us-debug-code">
+                    <label for="wpstg-contact-us-debug-code" class="wpstg-contact-us-addon-item wpstg-contact-us-modal-align wpstg-contact-us-debug-code-copy">
                         <?php esc_html_e("Copy", "wp-staging") ?>
                     </label>
                 </div>

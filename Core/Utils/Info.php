@@ -51,7 +51,7 @@ class Info
         }
 
         // Check if it is disabled from INI
-        $disabledFunctions = explode(',', ini_get("disable_functions"));
+        $disabledFunctions = array_map('trim', explode(',', ini_get("disable_functions")));
 
         return self::$canUse[$functionName] = (!in_array($functionName, $disabledFunctions));
     }

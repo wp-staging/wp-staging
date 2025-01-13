@@ -12,13 +12,15 @@ use RuntimeException;
 use wpdb;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Database\MysqliAdapter;
+use WPStaging\Framework\Adapter\Database\SqliteAdapter;
 use WPStaging\Framework\Adapter\Database\WpDbAdapter;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use SplObjectStorage;
+use WP_SQLite_Translator;
 
 class Database implements DatabaseInterface
 {
-    /** @var MysqliAdapter */
+    /** @var MysqliAdapter|SqliteAdapter */
     private $client;
 
     /** @var WpDbAdapter */
@@ -199,13 +201,18 @@ class Database implements DatabaseInterface
     }
 
     /**
-     * @return MysqliAdapter
+     * @return MysqliAdapter|SqliteAdapter
      */
     private function findClient()
     {
         $link = $this->wpdb->dbh;
         if (!$link) {
             throw new RuntimeException('Database handler / link is not set');
+        }
+
+        // @phpstan-ignore-next-line
+        if ($link instanceof WP_SQLite_Translator) {
+            return new SqliteAdapter($link);
         }
 
         if (isset($this->wpdb->use_mysqli) && (bool)$this->wpdb->use_mysqli !== true) {
@@ -241,11 +248,19 @@ class Database implements DatabaseInterface
      */
     public function getLowerTablesNameSettings(): string
     {
-        $result = $this->getClient()->query("SHOW VARIABLES LIKE 'lower_case_table_names';");
+        $result = $this->getClient()->query("SHOW VARIABLES LIKE 'lower_case_table_names'");
         if (!$result) {
             return 'N/A';
         }
 
-        return $this->getClient()->fetchAssoc($result)['Value'];
+        $resultRow = $this->getClient()->fetchAssoc($result);
+        // Note: Use "empty" to check it is an array and not an empty array, false or null.
+        //       Use "isset" to check for the existence of a "Value" key regardless of its data.
+        if (!empty($resultRow) && isset($resultRow['Value'])) {
+            // Should return either 0, 1, 2
+            return $resultRow['Value'];
+        }
+
+        return 'N/A';
     }
 }
