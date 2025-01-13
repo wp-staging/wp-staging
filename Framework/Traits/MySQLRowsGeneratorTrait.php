@@ -12,6 +12,7 @@ namespace WPStaging\Framework\Traits;
 use Generator;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Adapter\Database\MysqliAdapter;
+use Adapter\Database\SqliteAdapter;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 
 /**
@@ -55,10 +56,11 @@ trait MySQLRowsGeneratorTrait
      *                                                         processed will depend on the server available memory and max request execution time.
      * @param string $requestId A unique identifier for the job/task this generator is running on, as to make sure
      *                                                         that if we need to retry a query, we retry for this request.
-     * @param InterfaceDatabaseClient|MysqliAdapter $db A reference to the database instance to fetch rows from.
+     * @param InterfaceDatabaseClient|MysqliAdapter|SqliteAdapter $db A reference to the database instance to fetch rows from.
      * @param JobDataDto $jobDataDto
      *
      * @return Generator  A generator yielding rows one by one; refetching them if and when required.
+     * @phpstan-ignore-next-line
      */
     protected function rowsGenerator(string $databaseName, string $table, $numericPrimaryKey, int $offset, string $requestId, InterfaceDatabaseClient $db, JobDataDto $jobDataDto): Generator
     {
@@ -85,7 +87,11 @@ trait MySQLRowsGeneratorTrait
 
         // Fetch the average row length of the current table, if need be. This is to get the maximum possible batch size
         if (empty($jobDataDto->getTableAverageRowLength())) {
-            $averageRowLength = $db->query("SELECT AVG_ROW_LENGTH FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table' AND TABLE_SCHEMA = '$databaseName';")->fetch_assoc();
+            if (isset($db->isSQLite) && $db->isSQLite) {
+                $averageRowLength = $db->getAverageRowLengthSQLite($table); // @phpstan-ignore-line
+            } else {
+                $averageRowLength = $db->query("SELECT AVG_ROW_LENGTH FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table' AND TABLE_SCHEMA = '$databaseName';")->fetch_assoc();
+            }
             if (!empty($averageRowLength) && is_array($averageRowLength) && array_key_exists('AVG_ROW_LENGTH', $averageRowLength)) {
                 $jobDataDto->setTableAverageRowLength(max(absint($averageRowLength['AVG_ROW_LENGTH']), 1));
 
@@ -147,7 +153,7 @@ trait MySQLRowsGeneratorTrait
                 }
 
                 if ($this->columnToExclude && $this->valuesToExclude) {
-                    $query = $this->getQueryForExclusion($numericPrimaryKey, $table, $offset, $batchSize);
+                    $query                 = $this->getQueryForExclusion($numericPrimaryKey, $table, $offset, $batchSize);
                     $this->columnToExclude = '';
                     $this->valuesToExclude = '';
                 } else {
@@ -172,7 +178,8 @@ trait MySQLRowsGeneratorTrait
                 }
 
                 $rows = [];
-                while ($row = $result->fetch_assoc()) {
+                //while ($row = $result->fetch_assoc()) {
+                while ($row = $db->fetchAssoc($result)) {
                     $rows[] = $row;
                 }
 
@@ -289,13 +296,13 @@ SQL;
     private function initDbExclusionValues()
     {
         if ($this->jobDataDto->getIsExcludingSpamComments() && strpos($this->tableName, $this->database->getPrefix() . 'comment') !== false) {
-            $this->columnToExclude  = 'comment_id';
-            $rowsToExclude          = $this->getSpamComments();
-            $this->valuesToExclude  = implode(',', $rowsToExclude);
+            $this->columnToExclude = 'comment_id';
+            $rowsToExclude         = $this->getSpamComments();
+            $this->valuesToExclude = implode(',', $rowsToExclude);
         } elseif ($this->jobDataDto->getIsExcludingPostRevision() && strpos($this->tableName, $this->database->getPrefix() . 'posts') !== false) {
-            $this->columnToExclude  = 'id';
-            $rowsToExclude          = $this->getPostsRevision();
-            $this->valuesToExclude  = implode(',', $rowsToExclude);
+            $this->columnToExclude = 'id';
+            $rowsToExclude         = $this->getPostsRevision();
+            $this->valuesToExclude = implode(',', $rowsToExclude);
         }
     }
 
@@ -305,8 +312,8 @@ SQL;
     private function getSpamComments(): array
     {
         $args = [
-            'status'  => 'spam',
-            'fields'  => 'ids',
+            'status' => 'spam',
+            'fields' => 'ids',
         ];
 
         return get_comments($args);

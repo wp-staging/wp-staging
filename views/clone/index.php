@@ -14,6 +14,7 @@ use WPStaging\Framework\Notices\OutdatedWpStagingNotice;
 use WPStaging\Framework\Facades\Escape;
 
 $backupNotice = WPStaging::make(BackupPluginsNotice::class);
+$notice       = WPStaging::make(Notices::class);
 
 $isCalledFromIndex = true;
 ?>
@@ -87,12 +88,15 @@ $isCalledFromIndex = true;
             ?>
             <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">
             <?php
+            $notice->maybeShowElementorCloudNotice();
             if ($this->siteInfo->isHostedOnWordPressCom()) {
                 require $this->viewsPath . 'staging/wordpress-com/index.php';
-            } elseif (!WPStaging::isPro() && is_multisite()) {
+            } elseif (!defined('WPSTGPRO_VERSION') && is_multisite()) {
                 require $this->viewsPath . 'staging/free-version.php';
             } elseif (!$this->siteInfo->isCloneable()) {
                 require $this->viewsPath . 'staging/staging-site/index.php';
+            } elseif (defined('WPSTGPRO_VERSION') && is_multisite()) {
+                do_action('wpstg.views.ajax_clone.multi_site_clone_option');
             } else {
                 require $this->viewsPath . 'staging/index.php';
             }

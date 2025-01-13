@@ -109,7 +109,7 @@ abstract class AbstractExtractor
         $this->backupHeader   = $backupHeader;
 
         $this->defaultDirectoryOctal = $permissions->getDirectoryOctal();
-        $this->excludedIdentifier = [];
+        $this->excludedIdentifier    = [];
     }
 
     /**
@@ -143,6 +143,11 @@ abstract class AbstractExtractor
 
         foreach ($parts as $part) {
             if ($part === $partToExtract) {
+                continue;
+            }
+
+            if ($part === PartIdentifier::DROPIN_PART_IDENTIFIER) {
+                $this->excludedIdentifier[] = PartIdentifier::DROPIN_PART_IDENTIFIER;
                 continue;
             }
 
@@ -341,13 +346,13 @@ abstract class AbstractExtractor
         }
 
         $isValidated = true;
-        $exception = null;
+        $exception   = null;
         clearstatcache();
         try {
             $this->indexLineDto->validateFile($destinationFilePath, $pathForErrorLogging);
         } catch (FileValidationException $e) {
             $isValidated = false;
-            $exception = $e;
+            $exception   = $e;
         }
 
         // Jump to the next file of the index
@@ -476,11 +481,11 @@ abstract class AbstractExtractor
     protected function isFileSkipped(string $identifiablePath, string $identifier): bool
     {
         if ($identifiablePath === $this->databaseBackupFile) {
-            if (in_array(PartIdentifier::DATABASE_PART_IDENTIFIER, $this->excludedIdentifier)) {
-                return true;
-            }
+            return in_array(PartIdentifier::DATABASE_PART_IDENTIFIER, $this->excludedIdentifier);
+        }
 
-            return false;
+        if ($identifier === PathIdentifier::IDENTIFIER_WP_CONTENT && $this->pathIdentifier->hasDropinsFile($identifiablePath)) {
+            return in_array(PartIdentifier::DROPIN_PART_IDENTIFIER, $this->excludedIdentifier);
         }
 
         return in_array($identifier, $this->excludedIdentifier);

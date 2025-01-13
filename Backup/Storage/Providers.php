@@ -205,6 +205,6 @@ class Providers
 
     private function getStorageAdminPage($storageTab)
     {
-        return admin_url('admin.php?page=wpstg-settings&tab=remote-storages&sub=' . $storageTab);
+        return admin_url('admin.php?page=wpstg-settings&tab=remote-storages&sub-tab=' . $storageTab);
     }
 }

@@ -6,10 +6,12 @@ use WPStaging\Framework\DependencyResolver\Exceptions\MissingReferenceException;
 class ViewDDLOrder
 {
     protected $viewsToBeWritten = [];
+
     public function enqueueViewToBeWritten($viewName, $query)
     {
         $this->viewsToBeWritten[$viewName] = $query;
     }
+
     public function tryGetOrderedViews()
     {
         if (empty($this->viewsToBeWritten)) {

@@ -46,6 +46,10 @@ class NewsfeedValidator
                 // Return true if html5 tags, false otherwise
                 if (preg_match('@Tag\s(.*?)\sinvalid@i', $errObject->message, $matches)) {
                     return $this->isHtml5Tags($matches[1]);
+
+                // Return true if tag in exclude list
+                } elseif (preg_match('@Unexpected end tag :\s([a-z]+)@i', $errObject->message, $matches)) {
+                    return $this->isAllowInvalidEndTag($matches[1]);
                 } else {
                     debug_log(sprintf('%s: %s', __METHOD__, $errObject->message));
                     return false;
@@ -123,6 +127,19 @@ class NewsfeedValidator
             'time',
             'video',
             'wbr',
+        ];
+
+        return in_array($tag, $tags);
+    }
+
+    /**
+     * @param string
+     * @return bool
+     */
+    private function isAllowInvalidEndTag(string $tag): bool
+    {
+        $tags = [
+            'br', /* Invalid end tag '</br>', no effect on html content -> <br>content</br> */
         ];
 
         return in_array($tag, $tags);

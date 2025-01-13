@@ -2,12 +2,16 @@
 
 namespace WPStaging\Framework\Utils;
 
+use WPStaging\Framework\Traits\UrlTrait;
+
 /**
  * Class Strings
  * @package WPStaging\Service\Strings
  */
 class Strings
 {
+    use UrlTrait;
+
     /**
      * Replace first occurrence of certain string
      * @param string $search
@@ -59,16 +63,6 @@ class Strings
     {
         $pos = strrpos($haystack, $needle);
         return $pos === false ? $haystack : substr($haystack, $pos + 1);
-    }
-
-    /**
-     * Return url without scheme
-     * @param string $str
-     * @return string
-     */
-    public function getUrlWithoutScheme($str)
-    {
-        return preg_replace('#^https?://#', '', rtrim($str, '/'));
     }
 
     /**

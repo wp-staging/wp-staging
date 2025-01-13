@@ -4,10 +4,6 @@
 
 namespace WPStaging\Framework\Traits;
 
-use DateTime;
-use ReflectionClass;
-use ReflectionProperty;
-
 trait ArrayableTrait
 {
     /**
@@ -17,13 +13,13 @@ trait ArrayableTrait
     public function toArray()
     {
         /** @noinspection PhpUnhandledExceptionInspection */
-        $reflection = new ReflectionClass($this);
+        $reflection = new \ReflectionClass($this);
         $props = $reflection->getProperties(
-            ReflectionProperty::IS_PUBLIC | ReflectionProperty::IS_PROTECTED | ReflectionProperty::IS_PRIVATE
+            \ReflectionProperty::IS_PUBLIC | \ReflectionProperty::IS_PROTECTED | \ReflectionProperty::IS_PRIVATE
         );
 
         $data = [];
-        /** @var ReflectionProperty $prop */
+        /** @var \ReflectionProperty $prop */
         foreach ($props as $prop) {
             $propName = $prop->getName();
             if ($propName === 'excludeHydrate') {
@@ -33,7 +29,7 @@ trait ArrayableTrait
             $prop->setAccessible(true);
             $value = $prop->getValue($this);
 
-            if ($value instanceof DateTime) {
+            if ($value instanceof \DateTime) {
                 $value = $value->format('U');
             }
 

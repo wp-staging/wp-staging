@@ -7,12 +7,14 @@ class TableViewsRenamer
     protected $database;
     protected $tableService;
     protected $client;
+
     public function __construct(Database $database, TableService $tableService)
     {
         $this->database = $database;
         $this->tableService = $tableService;
         $this->client = $database->getClient();
     }
+
     public function renameViewReferences($query)
     {
         try {
@@ -30,6 +32,7 @@ class TableViewsRenamer
             \WPStaging\functions\debug_log($e->getMessage());
         }
     }
+
     private function replaceViewOptions(&$input)
     {
         $input = preg_replace('/CREATE(.+?)VIEW/i', 'CREATE OR REPLACE VIEW', $input);

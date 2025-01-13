@@ -17,6 +17,7 @@ use WPStaging\Framework\Facades\UI\Checkbox;
 $settingsEnabled = true;
 // New staging site. Mails Sending is checked by default.
 $emailsAllowed   = true;
+$emailsReminderAllowed = false;
 // If plugin is not pro disable this Option
 if (!$isPro) {
     $settingsEnabled = false;
@@ -37,7 +38,8 @@ if ($isPro && !empty($options->current)) {
         $defaultEmailsSending = !((bool)$options->existingClones[$options->current]['emailsDisabled']);
     }
 
-    $emailsAllowed = isset($options->existingClones[$options->current]['emailsAllowed']) ? (bool) $options->existingClones[$options->current]['emailsAllowed'] : $defaultEmailsSending;
+    $emailsAllowed         = empty($options->existingClones[$options->current]['emailsAllowed']) ? false : true;
+    $emailsReminderAllowed = empty($options->existingClones[$options->current]['emailsReminderAllowed']) ? false : true;
 } ?>
 <div class="wpstg--advanced-settings--checkbox">
     <label for="wpstg_allow_emails"><?php esc_html_e('Allow Emails Sending', 'wp-staging'); ?></label>
@@ -48,6 +50,16 @@ if ($isPro && !empty($options->current)) {
             <?php esc_html_e('Allow emails sending for this staging site.', 'wp-staging'); ?>
             <br /> <br />
             <b><?php esc_html_e('Note', 'wp-staging') ?>: </b> <?php echo sprintf(esc_html__('Even if email sending is disabled, some plugins might still be able to send out mails if they don\'t depend upon %s.', 'wp-staging'), '<code>wp_mail()</code>'); ?>
+        </span>
+    </span>
+</div>
+<div class="wpstg--advanced-settings--checkbox">
+    <label for="wpstg_reminder_emails"><?php esc_html_e('Get Reminder Email', 'wp-staging'); ?></label>
+    <?php Checkbox::render('wpstg_reminder_emails', 'wpstg_reminder_emails', 'false', $emailsReminderAllowed, ['isDisabled' => !$settingsEnabled]); ?>
+    <span class="wpstg--tooltip">
+        <img class="wpstg--dashicons" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
+        <span class="wpstg--tooltiptext">
+            <?php esc_html_e('You will receive an email reminder every two weeks about your active staging site. This helps you manage and delete unused staging sites, ensuring safety and preventing multiple unnecessary test environments.', 'wp-staging'); ?>
         </span>
     </span>
 </div>

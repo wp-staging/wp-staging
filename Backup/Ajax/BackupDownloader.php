@@ -22,6 +22,7 @@ class BackupDownloader extends RemoteDownloader
     private $filesystem;
     private $backupHeader;
     private $otpService;
+
     public function __construct(BackupsFinder $backupsFinder, Filesystem $filesystem, BackupHeader $backupHeader, Otp $otpService)
     {
         parent::__construct();
@@ -30,6 +31,7 @@ class BackupDownloader extends RemoteDownloader
         $this->backupHeader  = $backupHeader;
         $this->otpService    = $otpService;
     }
+
     public function ajaxPrepareUpload()
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -60,6 +62,7 @@ class BackupDownloader extends RemoteDownloader
             'message' => esc_html__('Unable to prepare backup upload from url', 'wp-staging'),
         ], 500);
     }
+
     public function ajaxDownloadBackupFromRemoteServer()
     {
         if (!$this->auth->isAuthenticatedRequest()) {
@@ -89,6 +92,7 @@ class BackupDownloader extends RemoteDownloader
         }
         $this->initDownload();
     }
+
     protected function prepareUploadFromUrl(string $remoteFileUrl): bool
     {
         $startByte = 0;
@@ -106,6 +110,7 @@ class BackupDownloader extends RemoteDownloader
         }
         return @touch($uploadPath);
     }
+
     private function validateIsUploadPrepared()
     {
         $uploadPath = $this->localFilePath . '.uploading';
@@ -117,6 +122,7 @@ class BackupDownloader extends RemoteDownloader
             throw new \Exception('Remote file size does not match the prepared file size');
         }
     }
+
     protected function setDownloadParameters(string $remoteFileUrl, int $startByte, int $fileSize)
     {
         $this->setRemoteFileUrl($remoteFileUrl);
@@ -131,6 +137,7 @@ class BackupDownloader extends RemoteDownloader
         $this->setLocalFilePath($localFilePath);
         $this->setDownloadChunkSize($fileSize);
     }
+
     private function setDownloadChunkSize(int $fileSize)
     {
         if ($fileSize === 0) {
@@ -156,6 +163,7 @@ class BackupDownloader extends RemoteDownloader
         }
         $this->setChunkSize($newChunkSizeInBytes);
     }
+
     private function hasValidBackupContentFromRemoteServer(): bool
     {
         if (!$this->isQuickValidateRemoteBackupHeader()) {
@@ -164,10 +172,12 @@ class BackupDownloader extends RemoteDownloader
         }
         return true;
     }
+
     private function isDownloadHasStarted(): bool
     {
         return empty($_POST['startByte']) || empty($_POST['fileSize']) ? false : true;
     }
+
     private function isQuickValidateRemoteBackupHeader(): bool
     {
         if ($this->isDownloadHasStarted()) {
@@ -192,6 +202,7 @@ class BackupDownloader extends RemoteDownloader
         }
         return false;
     }
+
     private function initDownload()
     {
         if (!$this->isDownloadHasStarted() && !$this->remoteFileExists()) {
@@ -211,6 +222,7 @@ class BackupDownloader extends RemoteDownloader
         }
         $this->handleResponse();
     }
+
     private function setFailResponse(string $message)
     {
         $this->setResponse($message);

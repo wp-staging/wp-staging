@@ -28,6 +28,7 @@ $siteInfo = WPStaging::make(SiteInfo::class);
 
             $activeTab = (isset($_GET["tab"]) && array_key_exists($_GET["tab"], $tabs)) ? Sanitize::sanitizeString($_GET["tab"]) : "general";
 
+            $currentUrl = remove_query_arg('sub-tab');
             # Loop through tabs
             foreach ($tabs as $id => $name) :
                 $url = esc_url(
@@ -35,7 +36,8 @@ $siteInfo = WPStaging::make(SiteInfo::class);
                         [
                             "settings-updated" => false,
                             "tab" => $id
-                        ]
+                        ],
+                        $currentUrl
                     )
                 );
 
@@ -63,7 +65,11 @@ $siteInfo = WPStaging::make(SiteInfo::class);
                 include(WPSTG_VIEWS_DIR . '_main/loading-placeholder.php');
             }
 
-            require_once WPSTG_VIEWS_DIR . "settings/tabs/" . $activeTab . ".php";
+            if (file_exists(WPSTG_VIEWS_DIR . "pro/settings/tabs/" . $activeTab . ".php")) {
+                require_once WPSTG_VIEWS_DIR . "pro/settings/tabs/" . $activeTab . ".php";
+            } else {
+                require_once WPSTG_VIEWS_DIR . "settings/tabs/" . $activeTab . ".php";
+            }
             ?>
         </div>
     </div>

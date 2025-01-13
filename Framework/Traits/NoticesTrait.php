@@ -86,4 +86,23 @@ trait NoticesTrait
 
         return false;
     }
+
+    /**
+     * Check whether the page is WP Staging clone page
+     * @return bool
+     */
+    public function isWPStagingClonePage(): bool
+    {
+        // Early bail if it is not an WPStaging admin page
+        if (!$this->isWPStagingAdminPage()) {
+            return false;
+        }
+
+        $currentPage = isset($_GET["page"]) ? Sanitize::sanitizeString($_GET["page"]) : null;
+        if ($currentPage !== 'wpstg_clone') {
+            return false;
+        }
+
+        return $currentPage === 'wpstg_clone';
+    }
 }

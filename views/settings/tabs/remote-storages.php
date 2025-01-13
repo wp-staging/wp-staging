@@ -11,11 +11,11 @@ if (!current_user_can(WPStaging::make(Capabilities::class)->manageWPSTG())) {
 $storages = WPStaging::make(\WPStaging\Backup\Storage\Providers::class);
 $provider = 'googledrive';
 $providerId = '';
-if (isset($_REQUEST['sub'])) {
-    $provider = strtolower(sanitize_file_name($_REQUEST['sub']));
+if (isset($_REQUEST['sub-tab'])) {
+    $provider = strtolower(sanitize_file_name($_REQUEST['sub-tab']));
 }
 
-$loadingBarsOption = ['googledrive' => 12, 'amazons3' => 17, 'dropbox' => 12, 'sftp' => 22, 'digitalocean-spaces' => 17, 'wasabi-s3' => 17, 'generic-s3' => 25];
+$loadingBarsOption = ['googledrive' => 12, 'amazons3' => 19, 'dropbox' => 12, 'sftp' => 22, 'digitalocean-spaces' => 19, 'wasabi-s3' => 19, 'generic-s3' => 27];
 ?>
 <div class="wpstg-storages-postbox">
     <?php foreach ($storages->getStorages(true) as $storage) : ?>
@@ -43,7 +43,7 @@ if (strpos($providerPath, wp_normalize_path(WPSTG_VIEWS_DIR) . "settings/tabs/st
 }
 
 if (file_exists($providerPath)) {
-    ?> 
+    ?>
     <div class="wpstg-storage-postbox">
     <?php
     $numberOfLoadingBars = $loadingBarsOption[$provider] ?? 15;

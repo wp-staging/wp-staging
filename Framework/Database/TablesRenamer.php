@@ -746,7 +746,7 @@ class TablesRenamer
         }
 
         $activePlugins = maybe_unserialize($activePlugins);
-        $activePlugins = array_filter($activePlugins, function ($pluginSlug) {
+        $activePlugins = array_filter((array)$activePlugins, function ($pluginSlug) {
 
             // Disable all wp staging plugins, we will reactive current active wp staging plugin later
             if (strpos($pluginSlug, self::PLUGIN_BASE_SLUG) !== false) {

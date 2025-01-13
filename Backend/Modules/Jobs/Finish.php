@@ -110,18 +110,19 @@ class Finish extends Job
                 $this->options->existingClones[$this->options->clone]['url'] = $this->getDestinationUrl();
             }
 
-            $this->options->existingClones[$this->options->clone]['datetime']             = time();
-            $this->options->existingClones[$this->options->clone]['status']               = 'finished';
-            $this->options->existingClones[$this->options->clone]['prefix']               = $this->options->prefix;
-            $this->options->existingClones[$this->options->clone]['cronDisabled']         = isset($this->options->cronDisabled) ? (bool) $this->options->cronDisabled : false;
-            $this->options->existingClones[$this->options->clone]['emailsAllowed']        = (bool) $this->options->emailsAllowed;
-            $this->options->existingClones[$this->options->clone]['uploadsSymlinked']     = (bool) $this->options->uploadsSymlinked;
-            $this->options->existingClones[$this->options->clone]['includedTables']       = $this->options->tables;
-            $this->options->existingClones[$this->options->clone]['excludeSizeRules']     = $this->options->excludeSizeRules;
-            $this->options->existingClones[$this->options->clone]['excludeGlobRules']     = $this->options->excludeGlobRules;
-            $this->options->existingClones[$this->options->clone]['excludedDirectories']  = $this->options->excludedDirectories;
-            $this->options->existingClones[$this->options->clone]['extraDirectories']     = $this->options->extraDirectories;
-            $this->options->existingClones[$this->options->clone]['wooSchedulerDisabled'] = (bool) $this->options->wooSchedulerDisabled;
+            $this->options->existingClones[$this->options->clone]['datetime']              = time();
+            $this->options->existingClones[$this->options->clone]['status']                = 'finished';
+            $this->options->existingClones[$this->options->clone]['prefix']                = $this->options->prefix;
+            $this->options->existingClones[$this->options->clone]['cronDisabled']          = isset($this->options->cronDisabled) ? (bool) $this->options->cronDisabled : false;
+            $this->options->existingClones[$this->options->clone]['emailsAllowed']         = (bool) $this->options->emailsAllowed;
+            $this->options->existingClones[$this->options->clone]['uploadsSymlinked']      = (bool) $this->options->uploadsSymlinked;
+            $this->options->existingClones[$this->options->clone]['includedTables']        = $this->options->tables;
+            $this->options->existingClones[$this->options->clone]['excludeSizeRules']      = $this->options->excludeSizeRules;
+            $this->options->existingClones[$this->options->clone]['excludeGlobRules']      = $this->options->excludeGlobRules;
+            $this->options->existingClones[$this->options->clone]['excludedDirectories']   = $this->options->excludedDirectories;
+            $this->options->existingClones[$this->options->clone]['extraDirectories']      = $this->options->extraDirectories;
+            $this->options->existingClones[$this->options->clone]['wooSchedulerDisabled']  = (bool) $this->options->wooSchedulerDisabled;
+            $this->options->existingClones[$this->options->clone]['emailsReminderAllowed'] = empty($this->options->emailsReminderAllowed) ? false : true;
             update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones);
             $this->log("Finish: The job finished!");
             return true;

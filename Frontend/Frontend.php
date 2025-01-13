@@ -4,9 +4,7 @@ namespace WPStaging\Frontend;
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Rest\Rest;
-use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\SiteInfo;
-use WPStaging\Pro\Auth\LoginByLink;
 
 use function WPStaging\functions\debug_log;
 
@@ -19,15 +17,17 @@ class Frontend
     /**
      * @var object
      */
-    private $settings;
+    protected $settings;
 
     /**
      * @var bool
      */
-    private $accessDenied = false;
+    protected $accessDenied = false;
 
-    /** @var LoginForm  */
-    private $loginForm;
+    /**
+     * @var LoginForm
+     */
+    protected $loginForm;
 
     public function __construct()
     {
@@ -36,28 +36,6 @@ class Frontend
         $this->settings = json_decode(json_encode(get_option("wpstg_settings", [])));
 
         $this->loginForm = WPStaging::make(LoginForm::class);
-    }
-
-    /**
-     * Change admin_bar site_name
-     *
-     * @return void
-     * @global object $wp_admin_bar
-     */
-    public function changeSiteName()
-    {
-        global $wp_admin_bar;
-        $siteTitle = apply_filters('wpstg_staging_site_title', 'STAGING');
-        if ($this->isStagingSite()) {
-            // Main Title
-            $wp_admin_bar->add_menu(
-                [
-                    'id'    => 'site-name',
-                    'title' => is_admin() ? ($siteTitle . ' - ' . get_bloginfo('name')) : ($siteTitle . ' - ' . get_bloginfo('name') . ' Dashboard'),
-                    'href'  => is_admin() ? home_url('/') : admin_url(),
-                ]
-            );
-        }
     }
 
     /**
@@ -95,7 +73,6 @@ class Frontend
 
         add_action("init", [$this, "checkPermissions"]);
         add_action("init", [$this, "resavePermalinks"]);
-        add_filter("wp_before_admin_bar_render", [$this, "changeSiteName"]);
 
         $isRegistered = true;
     }
@@ -104,7 +81,7 @@ class Frontend
      * Show a login form if user is not authorized
      * @return bool
      */
-    private function showLoginForm(): bool
+    protected function showLoginForm(): bool
     {
         $this->accessDenied = false;
 
@@ -139,67 +116,14 @@ class Frontend
             return false;
         }
 
-        // Simple check (free version only)
-        if (!defined('WPSTGPRO_VERSION')) {
-            return (!isset($this->settings->disableAdminLogin) || $this->settings->disableAdminLogin !== '1');
-        }
-
-        // Allow access for wp staging user role "all"
-        if (!empty($this->settings->userRoles) && in_array('all', $this->settings->userRoles)) {
-            return false;
-        }
-
-        if (!is_user_logged_in()) {
-            return true;
-        }
-
-        $currentUser = wp_get_current_user();
-
-        if ($currentUser->has_cap(Capabilities::WPSTG_VISITOR_ROLE)) {
-            return false;
-        }
-
-        // Allow access for administrators if no user roles are defined
-        if (!isset($this->settings->userRoles) || !is_array($this->settings->userRoles)) {
-            $this->accessDenied = true;
-            return true;
-        }
-
-        if (defined('WPSTGPRO_VERSION') && !empty($this->settings->usersWithStagingAccess)) {
-            $usersWithStagingAccess = explode(',', $this->settings->usersWithStagingAccess);
-
-            // check against usernames
-            if (in_array($currentUser->user_login, $usersWithStagingAccess, true)) {
-                return false;
-            }
-
-            // check against emails
-            if (in_array($currentUser->user_email, $usersWithStagingAccess, true)) {
-                return false;
-            }
-        }
-
-        // Require login form if user is not in specific user role
-        $activeUserRoles = $currentUser->roles;
-
-        $result = isset($this->settings->userRoles) && is_array($this->settings->userRoles) ?
-            array_intersect($activeUserRoles, $this->settings->userRoles) :
-            [];
-
-        if (empty($result) && !$this->isLoginPage() && !is_admin()) {
-            $this->accessDenied = true;
-            return true;
-        }
-
-        // Don't show login form if no other rule apply
-        return false;
+        return (!isset($this->settings->disableAdminLogin) || $this->settings->disableAdminLogin !== '1');
     }
 
     /**
      * Check if it is a staging site
      * @return bool
      */
-    private function isStagingSite(): bool
+    protected function isStagingSite(): bool
     {
         return (new SiteInfo())->isStagingSite();
     }
@@ -208,7 +132,7 @@ class Frontend
      * Check if it is the login page
      * @return bool
      */
-    private function isLoginPage(): bool
+    protected function isLoginPage(): bool
     {
         return ($GLOBALS["pagenow"] === "wp-login.php");
     }
@@ -216,15 +140,9 @@ class Frontend
     /**
      * Reset permalink structure of the clone to default; index.php?p=123
      */
-    private function resetPermaLinks()
+    protected function resetPermaLinks()
     {
-        // Do nothing
         if (!$this->isStagingSite() || get_option("wpstg_rmpermalinks_executed") === "true") {
-            return;
-        }
-
-        // Do nothing
-        if (defined('WPSTGPRO_VERSION') && isset($this->settings->keepPermalinks) && $this->settings->keepPermalinks === "1") {
             return;
         }
 

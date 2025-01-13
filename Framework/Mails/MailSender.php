@@ -26,11 +26,56 @@ class MailSender
     protected $notifications;
 
     /**
+     * @var array
+     */
+    protected $attachments;
+
+    /**
+     * @var string
+     */
+    protected $recipient;
+
+    /**
+     * @var bool
+     */
+    protected $addFooter;
+
+    /**
      * @param Notifications $notifications
      */
     public function __construct(Notifications $notifications)
     {
         $this->notifications = $notifications;
+        $this->attachments   = [];
+        $this->recipient     = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        $this->addFooter     = false;
+    }
+
+    /**
+     * @param array $attachments
+     * @return void
+     */
+    public function setAttachments(array $attachments)
+    {
+        $this->attachments = $attachments;
+    }
+
+    /**
+     * @param string $recipient
+     * @return void
+     */
+    public function setRecipient(string $recipient)
+    {
+        $this->recipient = $recipient;
+    }
+
+    /**
+     * @param bool $addFooter
+     * @return void
+     */
+    public function setAddFooter(bool $addFooter)
+    {
+        $this->addFooter = $addFooter;
     }
 
     /**
@@ -50,6 +95,8 @@ class MailSender
         $accessToken = wp_generate_password(64, false);
         set_transient(self::TRANSIENT_EMAIL_NOTIFICATION_ACCESS_TOKEN, $accessToken, 10);
 
+        $attachments = $this->prepareAttachments();
+
         $response = wp_remote_post(
             admin_url('admin-ajax.php'),
             [
@@ -61,6 +108,9 @@ class MailSender
                     'access_token' => $accessToken,
                     'subject'      => $subject,
                     'body'         => $body,
+                    'recipient'    => $this->recipient,
+                    'attachments'  => implode(',', $attachments),
+                    'footer'       => $this->addFooter,
                 ],
             ]
         );
@@ -106,19 +156,24 @@ class MailSender
 
         $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
         $body    = isset($_POST['body']) ? wp_kses_post($_POST['body']) : '';
+        $footer  = isset($_POST['footer']) ? (bool)$_POST['footer'] : true;
         if (empty($subject) || empty($body)) {
             debug_log('Email subject or body is empty', 'error');
             wp_send_json_error();
         }
 
-        $reportEmail = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
-        if (empty($reportEmail) || !filter_var($reportEmail, FILTER_VALIDATE_EMAIL)) {
+        if (empty($_POST['recipient']) || !filter_var($_POST['recipient'], FILTER_VALIDATE_EMAIL)) {
             debug_log('Report email is not set or invalid', 'error');
             wp_send_json_error();
         }
 
+        $attachments = $this->getPreparedAttachments();
+
         try {
-            $result = $this->notifications->sendEmail($reportEmail, $subject, $body);
+            $result = $this->notifications->sendEmail(sanitize_email($_POST['recipient']), $subject, $body, '', $attachments, $footer);
+
+            $this->cleanupAttachments($attachments);
+
             if (!$result) {
                 wp_send_json_error();
             }
@@ -128,5 +183,52 @@ class MailSender
         }
 
         wp_send_json_success();
+    }
+
+    private function prepareAttachments(): array
+    {
+        $attachments = [];
+        foreach ($this->attachments as $attachment) {
+            if (!file_exists($attachment)) {
+                continue;
+            }
+
+            $attachments[] = $attachment;
+        }
+
+        return $attachments;
+    }
+
+    private function getPreparedAttachments(): array
+    {
+        $attachments = isset($_POST['attachments']) ? sanitize_text_field($_POST['attachments']) : '';
+        if (empty($attachments)) {
+            return [];
+        }
+
+        $this->attachments = explode(',', $attachments);
+        $attachments = [];
+        foreach ($this->attachments as $attachment) {
+            if (!file_exists($attachment)) {
+                continue;
+            }
+
+            $attachments[] = $attachment;
+        }
+
+        return $attachments;
+    }
+
+    /**
+     * @param array $attachments
+     * @return void
+     */
+    private function cleanupAttachments(array $attachments)
+    {
+        foreach ($attachments as $attachment) {
+            if (file_exists($attachment)) {
+                unlink($attachment);
+            }
+        }
     }
 }

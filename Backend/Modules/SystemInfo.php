@@ -7,6 +7,7 @@ use WPStaging\Backup\Ajax\FileList\ListableBackupsCollection;
 use WPStaging\Core\Utils\Browser;
 use WPStaging\Core\WPStaging;
 use WPStaging\Core\Utils\Multisite;
+use WPStaging\Framework\Facades\Info;
 use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\BackgroundProcessing\Queue;
@@ -163,6 +164,7 @@ class SystemInfo
         $output .= $this->constantInfo('WP_CONTENT_DIR');
 
         $output .= $this->info("Is wp-content link:", is_link(WP_CONTENT_DIR) ? 'Yes' : 'No');
+        $output .= $this->info("Is symlink disabled:", Info::canUse('symlink') === false ? 'Yes' : 'No');
         if (is_link(WP_CONTENT_DIR)) {
             $output .= $this->info("wp-content link target:", readlink(WP_CONTENT_DIR));
             $output .= $this->info("wp-content realpath:", realpath(WP_CONTENT_DIR));
@@ -406,9 +408,17 @@ class SystemInfo
         // Make sure wp_remote_post() is working
         $wpRemotePost = "does not work";
 
+        // Check if has valid IP address
+        // to avoid error on php-wasm
+        $hostName = 'www.paypal.com';
+        $hostIp   = gethostbyname($hostName);
+        if (preg_match('@\.0$@', $hostIp)) {
+            return $this->info("wp_remote_post():", $wpRemotePost);
+        }
+
         // Send request
         $response = wp_remote_post(
-            "https://www.paypal.com/cgi-bin/webscr",
+            "https://" . $hostName . "/cgi-bin/webscr",
             [
                 "sslverify"  => false,
                 "timeout"    => 60,
@@ -540,7 +550,21 @@ class SystemInfo
         $output .= $this->info("Webserver:", isset($_SERVER["SERVER_SOFTWARE"]) ? Sanitize::sanitizeString($_SERVER["SERVER_SOFTWARE"]) : '');
         $output .= $this->info("OS architecture:", $this->siteInfo->getOSArchitecture());
         $output .= $this->info("PHP architecture:", $this->siteInfo->getPhpArchitecture());
-        $output .= $this->info("Lower Table Name Settings:", $this->database->getLowerTablesNameSettings());
+
+        // Reference: https://dev.mysql.com/doc/refman/9.1/en/identifier-case-sensitivity.html
+        switch ($this->database->getLowerTablesNameSettings()) {
+            case '0':
+                $lowerTablesNameSettings = 'case-sensitive';
+                break;
+            case '1':
+            case '2':
+                $lowerTablesNameSettings = 'case-insensitive';
+                break;
+            default:
+                $lowerTablesNameSettings = 'N/A';
+        }
+        $output .= $this->info("Lower Table Name Settings:", $lowerTablesNameSettings);
+
         $output .= $this->info("MySQL Server Type:", $this->database->getServerType());
         $output .= $this->info("MySQL Version:", $this->database->getSqlVersion($compact = true));
         $output .= $this->info("MySQL Version Full Info:", $this->database->getSqlVersion());
@@ -624,11 +648,11 @@ class SystemInfo
             return isset($user['name']) ? $user['name'] : 'can not detect PHP user name';
         }
 
-        if (function_exists('exec') && @exec('echo EXEC') == 'EXEC') {
-            return exec('whoami');
+        if (function_exists('exec') && in_array('exec', explode(',', ini_get('disable_functions')))) {
+            $user = exec('whoami');
         }
 
-        return $user;
+        return empty($user) ? 'can not detect PHP user name' : $user;
     }
 
     /**

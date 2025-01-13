@@ -133,7 +133,7 @@ class BackupContent
         // We will read the file from the beginning
         $wpstgFile->fseek($this->headerOffset);
 
-        $count = 0;
+        $count            = 0;
         $this->filesFound = 0;
         while ($wpstgFile->valid()) {
             $this->currentOffset = $wpstgFile->ftell();
@@ -166,11 +166,11 @@ class BackupContent
     public function getPagingData(): array
     {
         return [
-            'totalIndex'    => $this->filesFound,
-            'totalPage'     => ceil($this->filesFound / $this->perPage),
-            'indexPage'     => $this->indexPage,
-            'indexFilter'   => $this->filters['filename'],
-            'indexSortby'   => $this->filters['sortby'],
+            'totalIndex'  => $this->filesFound,
+            'totalPage'   => ceil($this->filesFound / $this->perPage),
+            'indexPage'   => $this->indexPage,
+            'indexFilter' => $this->filters['filename'],
+            'indexSortby' => $this->filters['sortby'],
         ];
     }
 
@@ -206,8 +206,12 @@ class BackupContent
             return true;
         }
 
+        if ($this->filters['sortby'] === PartIdentifier::DROPIN_PART_IDENTIFIER) {
+            return !$this->pathIdentifier->hasDropinsFile($backupFile->getIdentifiablePath());
+        }
+
         $identifier = $this->pathIdentifier->getIdentifierByPartName($this->filters['sortby']);
 
-        return $this->pathIdentifier->getIdentifierFromPath($backupFile->getIdentifiablePath()) !== $identifier;
+        return $identifier !== $this->pathIdentifier->getIdentifierFromPath($backupFile->getIdentifiablePath());
     }
 }

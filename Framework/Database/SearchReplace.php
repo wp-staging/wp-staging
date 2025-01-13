@@ -2,12 +2,16 @@
 
 namespace WPStaging\Framework\Database;
 
-use RuntimeException;
-
-use function WPStaging\functions\debug_log;
+use WPStaging\Framework\Traits\DebugLogTrait;
+use WPStaging\Framework\Traits\SerializeTrait;
+use WPStaging\Framework\Traits\UrlTrait;
 
 class SearchReplace
 {
+    use DebugLogTrait;
+    use SerializeTrait;
+    use UrlTrait;
+
     /** @var array */
     private $search;
 
@@ -64,7 +68,7 @@ class SearchReplace
      */
     public function replace($data)
     {
-        if (defined('DISABLE_WPSTG_SEARCH_REPLACE') && DISABLE_WPSTG_SEARCH_REPLACE) {
+        if (defined('DISABLE_WPSTG_SEARCH_REPLACE') && (bool)DISABLE_WPSTG_SEARCH_REPLACE) {
             return $data;
         }
 
@@ -75,7 +79,7 @@ class SearchReplace
         $totalSearch  = count($this->search);
         $totalReplace = count($this->replace);
         if ($totalSearch !== $totalReplace) {
-            throw new RuntimeException(
+            throw new \RuntimeException(
                 sprintf(
                     'Can not search and replace. There are %d items to search and %d items to replace',
                     $totalSearch,
@@ -105,7 +109,7 @@ class SearchReplace
 
     public function replaceWpBakeryValues($matched)
     {
-        $data = base64_decode($matched[1]);
+        $data = $this->base64Decode($matched[1]);
         $data = $this->replace($data);
         return '[vc_raw_html]' . base64_encode($data) . '[/vc_raw_html]';
     }
@@ -169,7 +173,7 @@ class SearchReplace
      */
     private function replaceString($data)
     {
-        if (!is_serialized($data)) {
+        if (!$this->isSerialized($data)) {
             return $this->strReplace($data);
         }
 
@@ -198,15 +202,11 @@ class SearchReplace
             unset($match);
         }
 
-        // Some unserialized data cannot be re-serialized eg. SimpleXMLElements
+        $unserialized = false;
         try {
             $unserialized = @unserialize($data);
-        } catch (\Exception $e) {
-            debug_log('replaceString. Can not unserialize data. Error: ' . $e->getMessage() . ' Data: ' . $data);
-            $unserialized = false;
-        } catch (\TypeError $err) {
-            debug_log('replaceString. Can not unserialize data. Error: ' . $err->getMessage() . ' Data: ' . $data);
-            $unserialized = false;
+        } catch (\Throwable $e) {
+            $this->debugLog('replaceString. Can not unserialize data. Error: ' . $e->getMessage() . ' Data: ' . $data);
         }
 
         if ($unserialized !== false) {

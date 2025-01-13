@@ -283,6 +283,11 @@ EOT;
             return true;
         }
 
+        // Staging on playground/wpnow
+        if ($constant === 'WP_SITEURL' || $constant === 'WP_HOME') {
+            return true;
+        }
+
         return false;
     }
 

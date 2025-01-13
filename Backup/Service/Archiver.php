@@ -25,6 +25,7 @@ use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 use WPStaging\Vendor\lucatume\DI52\NotFoundException;
+use WPStaging\Framework\Filesystem\PartIdentifier;
 
 use function WPStaging\functions\debug_log;
 
@@ -210,9 +211,9 @@ class Archiver
             $this->archiverDto->setFileHeaderBytes($fileHeaderBytes);
         }
 
-        $writtenBytesBefore = $this->archiverDto->getWrittenBytesTotal();
-        $writtenBytesTotal  = $this->appendToArchiveFile($resource, $fullFilePath);
-        $newBytesWritten    = $writtenBytesTotal + $fileHeaderBytes - $writtenBytesBefore;
+        $writtenBytesBefore              = $this->archiverDto->getWrittenBytesTotal();
+        $writtenBytesTotal               = $this->appendToArchiveFile($resource, $fullFilePath);
+        $newBytesWritten                 = $writtenBytesTotal + $fileHeaderBytes - $writtenBytesBefore;
         $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->archiverDto->getFileHeaderBytes();
 
         $retries = 0;
@@ -597,36 +598,50 @@ class Archiver
 
         $collectPartsize = $jobDataDto->getCategorySizes();
 
-        $partName = 'unknownSize';
+        $partName = '';
         switch ($identifiablePath) {
             case ($this->pathIdentifier::IDENTIFIER_WP_CONTENT === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_WP_CONTENT))):
-                $partName = 'wpcontentSize';
+                $partName = PartIdentifier::WP_CONTENT_PART_SIZE_IDENTIFIER;
+
+                if ($this->pathIdentifier->hasDropinsFile($identifiablePath)) {
+                    $dropinsPartName = PartIdentifier::DROPIN_PART_SIZE_IDENTIFIER;
+                    if (!isset($collectPartsize[$dropinsPartName])) {
+                        $collectPartsize[$dropinsPartName] = 0;
+                    }
+
+                    $collectPartsize[$dropinsPartName] += $newBytesWritten;
+                }
+
                 break;
             case ($this->pathIdentifier::IDENTIFIER_PLUGINS === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_PLUGINS))):
-                $partName = 'pluginsSize';
+                $partName = PartIdentifier::PLUGIN_PART_SIZE_IDENTIFIER;
                 break;
             case ($this->pathIdentifier::IDENTIFIER_THEMES === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_THEMES))):
-                $partName = 'themesSize';
+                $partName = PartIdentifier::THEME_PART_SIZE_IDENTIFIER;
                 break;
             case ($this->pathIdentifier::IDENTIFIER_MUPLUGINS === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_MUPLUGINS))):
-                $partName = 'mupluginsSize';
+                $partName = PartIdentifier::MU_PLUGIN_PART_SIZE_IDENTIFIER;
                 break;
             case ($this->pathIdentifier::IDENTIFIER_UPLOADS === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_UPLOADS))):
-                $partName = 'uploadsSize';
+                $partName = PartIdentifier::UPLOAD_PART_SIZE_IDENTIFIER;
                 if (substr($identifiablePath, -4) === '.sql') {
-                    $partName = 'sqlSize';
+                    $partName = PartIdentifier::DATABASE_PART_SIZE_IDENTIFIER;
                 }
 
                 break;
             case ($this->pathIdentifier::IDENTIFIER_LANG === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_LANG))):
-                $partName = 'langSize';
+                $partName = PartIdentifier::LANGUAGE_PART_SIZE_IDENTIFIER;
                 break;
             case ($this->pathIdentifier::IDENTIFIER_ABSPATH === substr($identifiablePath, 0, strlen($this->pathIdentifier::IDENTIFIER_ABSPATH))):
-                $partName = 'wpRootSize';
+                $partName = PartIdentifier::WP_ROOT_PART_SIZE_IDENTIFIER;
                 break;
         }
 
-        // TODO: This should never happen. Log this when we have our own Logger, see https://github.com/wp-staging/wp-staging-pro/pull/2440#discussion_r1247951548
+        if (empty($partName)) {
+            return;
+        }
+
+        // If identifier not in array yet
         if (!isset($collectPartsize[$partName])) {
             $collectPartsize[$partName] = 0;
         }

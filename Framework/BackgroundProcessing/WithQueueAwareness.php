@@ -138,7 +138,7 @@ trait WithQueueAwareness
      * Normalizes the data to be sent along the non-blocking AJAX request
      * that will trigger the Queue processing of an Action.
      *
-     * @param mixed|null $bodyData The data to normlize to a format suitable for
+     * @param mixed|null $bodyData The data to normalize to a format suitable for
      *                             the remote request.
      *
      * @return array The normalized body data to be sent along the non-blocking

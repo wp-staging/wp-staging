@@ -18,6 +18,7 @@ use WPStaging\Framework\Job\Interfaces\FileTaskInterface;
 use WPStaging\Framework\Job\Task\FileHandler\FileProcessor;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
+use WPStaging\Framework\Facades\Hooks;
 
 /**
  * Class FileRestoreTask
@@ -39,6 +40,12 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
      * @var string
      */
     const FILTER_EXCLUDE_FILES_DURING_RESTORE = 'wpstg.backup.restore.exclude_paths';
+
+    /**
+     * Note: internal use
+     * @var string
+     */
+    const FILTER_EXCLUDE_ENQUEUE_DELETE = 'wpstg.backup.restore.exclude_enqueue_delete';
 
     /**
      * @var Filesystem
@@ -254,8 +261,8 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
     public function enqueueMove(string $source, string $destination)
     {
         $this->enqueue([
-            'action' => 'move',
-            'source' => wp_normalize_path($source),
+            'action'      => 'move',
+            'source'      => wp_normalize_path($source),
             'destination' => wp_normalize_path($destination),
         ]);
     }
@@ -266,9 +273,13 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
      */
     public function enqueueDelete(string $path)
     {
+        if ($this->isExcludeEnqueueDelete($path)) {
+            return;
+        }
+
         $this->enqueue([
-            'action' => 'delete',
-            'source' => '',
+            'action'      => 'delete',
+            'source'      => '',
             'destination' => wp_normalize_path($path),
         ]);
     }
@@ -302,5 +313,24 @@ abstract class FileRestoreTask extends RestoreTask implements FileTaskInterface
     private function enqueue(array $action)
     {
         $this->taskQueue->enqueue(json_encode($action));
+    }
+
+    private function isExcludeEnqueueDelete($filePath)
+    {
+        $normalizedFilePath = rtrim(wp_normalize_path($filePath), '/');
+        $excludedFiles      = Hooks::applyFilters(self::FILTER_EXCLUDE_ENQUEUE_DELETE, []);
+
+        if (empty($excludedFiles)) {
+            return false;
+        }
+
+        foreach ($excludedFiles as $excludedFile) {
+            $normalizedExcludedFile = rtrim(wp_normalize_path($excludedFile), '/');
+            if (strpos($normalizedFilePath, $normalizedExcludedFile) === 0) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }
