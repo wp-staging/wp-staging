@@ -163,7 +163,7 @@ trait RemoteUploadTrait
      */
     public function setStorages($storages = [])
     {
-        if (!is_array($storages)) {
+        if (!is_array($storages) && !empty($storages)) {
             $storages = json_decode($storages, true);
         }
 
@@ -233,6 +233,12 @@ trait RemoteUploadTrait
     public function isUploadToDropbox(): bool
     {
         return in_array('dropbox', $this->getStorages());
+    }
+
+    /** @return bool */
+    public function isUploadToOneDrive(): bool
+    {
+        return in_array('one-drive', $this->getStorages());
     }
 
     /**

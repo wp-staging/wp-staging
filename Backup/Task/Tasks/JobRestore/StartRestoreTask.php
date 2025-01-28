@@ -71,6 +71,7 @@ class StartRestoreTask extends RestoreTask
             $this->logger->info('#################### Start Restore Job ####################');
             $this->logger->writeLogHeader();
             $this->logger->writeInstalledPluginsAndThemes();
+            $this->logger->add(sprintf('Backup Format: %s', $this->jobDataDto->getBackupMetadata()->getIsBackupFormatV1() ? 'v1' : 'v2'), Logger::TYPE_INFO);
             $this->logger->info('Is Same Site Restore: ' . ($this->jobDataDto->getIsSameSiteBackupRestore() ? 'Yes' : 'No'));
             $this->writeRestoreFiltersUsed();
         } catch (RuntimeException $e) {

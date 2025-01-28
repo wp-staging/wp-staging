@@ -801,7 +801,7 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
      */
     public function getIsBackupFormatV1(): bool
     {
-        return Hooks::applyFilters(BackupMetadata::FILTER_BACKUP_FORMAT_V1, true);
+        return Hooks::applyFilters(BackupMetadata::FILTER_BACKUP_FORMAT_V1, false);
     }
 
     /**

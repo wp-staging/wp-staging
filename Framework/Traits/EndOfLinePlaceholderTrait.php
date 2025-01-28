@@ -8,6 +8,8 @@ namespace WPStaging\Framework\Traits;
  */
 trait EndOfLinePlaceholderTrait
 {
+    use WindowsOsTrait;
+
     /**
      * @param  array|string $subject
      *
@@ -17,8 +19,12 @@ trait EndOfLinePlaceholderTrait
      */
     public function replaceEOLsWithPlaceholders($subject)
     {
+        if ($subject === null) {
+            return $subject;
+        }
+
         //Early bail: newline (\n) in file name will not happen on windows.
-        if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
+        if ($this->isWindowsOs()) {
             return $subject;
         }
 
@@ -34,9 +40,17 @@ trait EndOfLinePlaceholderTrait
      */
     public function replacePlaceholdersWithEOLs($subject)
     {
-        if (strncasecmp(PHP_OS, 'WIN', 3) === 0) {
-            if (!empty($this->logger) && strpos($subject, '{WPSTG_EOL}') !== false) {
-                $this->logger->warning(sprintf('Filename %s contains EOL character, plugin using that file might not work.', $subject));
+        if ($subject === null) {
+            return $subject;
+        }
+
+        if (strpos($subject, '{WPSTG_EOL}') === false) {
+            return $subject;
+        }
+
+        if ($this->isWindowsOs()) {
+            if (!empty($this->logger)) {
+                $this->logger->warning(sprintf('Filename %s contains EOL character, but Windows doesn\'t support EOL in file name, plugin/theme using that file might not work.', $subject));
             }
 
             return $subject;

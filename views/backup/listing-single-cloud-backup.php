@@ -42,7 +42,7 @@ $storageProviderName = $backup->storageProviderName;
                     <a href="#" class="wpstg--cloud--backup--download wpstg-merge-clone wpstg-clone-action" data-id="<?php echo esc_attr($backup->id) ?>" data-name="<?php echo esc_attr($name) ?>" data-storageProviderName="<?php echo esc_attr($storageProviderName) ?>" data-size="<?php echo esc_attr($size) ?>" title="<?php esc_attr_e('Download backup file to server or local computer', 'wp-staging') ?>">
                         <?php esc_html_e('Download', 'wp-staging') ?>
                     </a>
-                    <a href="#" data-id="<?php echo esc_attr($storageProviderName . "-" . $id) ?>" data-file="<?php echo esc_attr($id); ?>" data-storageProviderName="<?php echo esc_attr($storageProviderName) ?>" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-cloud-backup" title="<?php esc_attr_e('Delete this backup. This action can not be undone!', 'wp-staging') ?>">
+                    <a href="#" data-id="<?php echo esc_attr($storageProviderName . "-" . $id) ?>" data-file="<?php echo esc_attr($id); ?>" data-storageProviderName="<?php echo esc_attr($storageProviderName) ?>" data-name="<?php echo esc_attr($name) ?>" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-cloud-backup" title="<?php esc_attr_e('Delete this backup. This action can not be undone!', 'wp-staging') ?>">
                         <?php esc_html_e('Delete', 'wp-staging') ?>
                     </a>
                     <?php

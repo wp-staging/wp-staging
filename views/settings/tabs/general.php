@@ -276,7 +276,7 @@ use WPStaging\Backup\BackupScheduler;
                     </tr>
                     <?php if (defined('WPSTGPRO_VERSION')) : ?>
                         <?php
-                        Hooks::doAction(Settings::ACTION_WPSTG_PRO_SETTINGS, $form);
+                        Hooks::callInternalHook(Settings::ACTION_WPSTG_PRO_SETTINGS, [$form]);
                         // show this option only on the staging site
                         if ($this->siteInfo->isStagingSite()) :
                             ?>

@@ -156,6 +156,12 @@ class PreserveDataSecondStep extends JobExecutable
             $this->deleteStagingSiteOption('wpstg_dropbox');
         }
 
+        if ($this->propertyExists('oneDrive')) {
+            $this->preserveStagingOption('wpstg_one-drive', $this->preservedData->oneDrive, 'Microsoft OneDrive settings');
+        } else {
+            $this->deleteStagingSiteOption('wpstg_one-drive');
+        }
+
         return true;
     }
 

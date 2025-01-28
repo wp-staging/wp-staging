@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.7
-Stable tag: 3.10.0
+Stable tag: 4.0.0
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -286,6 +286,15 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.0.0 =
+* New: Introduced the v2 backup format with enhanced error handling capabilities and a highly efficient compression algorithm. This new format outperforms traditional compression methods, such as zip, in both speed and reliability. Additionally, it incorporates advanced error correction algorithms for improved data integrity. #3804
+* New: Implement Microsoft OneDrive backup remote cloud storage. (Pro) #1748
+* New: Add link to WP Staging knowledge-base in UI footer. #4089
+* Fix: Bypass optimizer while email sending debug logs in basic version. #4080
+* Fix: Tooltip is not vertically aligned with the label text. #4074
+* Fix: Google Drive Scheduled Backup Fails Due refresh token mechanism not functioning properly. (Pro) #4058
+* Fix: Expanding Other Root Files selection is jumping. (Pro) #4073
 
 = 3.10.0 =
 * New: Send email reminders about existing staging and development sites to help prevent outdated sites from remaining active, enhancing security. (Pro) #3296

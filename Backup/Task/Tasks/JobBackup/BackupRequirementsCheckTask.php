@@ -232,6 +232,7 @@ class BackupRequirementsCheckTask extends BackupTask
         $this->logInformation($this->getBackupScheduleOptions());
         $this->logger->add('- Is Multipart Backup: ' . ($this->jobDataDto->getIsMultipartBackup() ? 'Yes' : 'No'), Logger::TYPE_INFO_SUB);
         $this->logger->add('- Storages : ' . implode(', ', $this->jobDataDto->getStorages()), Logger::TYPE_INFO_SUB);
+        $this->logger->add(sprintf('- Backup Format: %s', $this->jobDataDto->getIsBackupFormatV1() ? 'v1' : 'v2'), Logger::TYPE_INFO_SUB);
         $this->writeCloudServiceSettingsToLogs();
     }
 
