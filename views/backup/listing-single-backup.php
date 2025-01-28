@@ -32,6 +32,7 @@ $isUnsupported          = $backup->isUnsupported;
 $isProVersion           = WPStaging::isPro();
 $requires64Bit          = empty($size) && (PHP_INT_SIZE !== 8);
 $isContaining2GbFile    = $backup->isContaining2GBFile;
+$backupVersion          = $backup->generatedOnBackupVersion;
 
 // Default error message
 if (empty($indexFileError)) {
@@ -63,6 +64,12 @@ $logUrl = add_query_arg([
             <div class="wpstg-clone-labels">
                 <span class="wpstg-clone-label"><?php echo esc_html($backup->getBackupType()) ?></span>
                 <?php echo $backup->isMultipartBackup ? '<span class="wpstg-clone-label">' . esc_html__('Multipart Backup', 'wp-staging') . '</span>' : '' ?>
+                <?php if (version_compare($backupVersion, '2.0.0', '<')) : ?>
+                    <span class="wpstg-clone-label wpstg-clone-label--warning wpstg--tooltip">
+                        <?php esc_html_e('V1', 'wp-staging') ?>
+                        <div class="wpstg--tooltiptext"><?php esc_html_e('This backup is generated on an old version of the plugin', 'wp-staging') ?></div>
+                    </span>
+                <?php endif ?>
             </div>
         <?php endif ?>
         <div class="wpstg-clone-actions">

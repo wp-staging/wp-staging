@@ -540,7 +540,7 @@ class Files extends JobExecutable
      * Copy bigger files than $this->settings->batchSize
      * @param string $src
      * @param string $dst
-     * @param int $buffersize
+     * @param int $bufferSize
      * @return bool
      */
     private function copyBig($src, $dst, $bufferSize)

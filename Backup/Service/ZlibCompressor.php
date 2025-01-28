@@ -9,7 +9,11 @@ use WPStaging\Framework\SiteInfo;
 
 class ZlibCompressor
 {
+    /** @var string */
     const FILTER_ZLIB_COMPRESSION_ENABLED = 'wpstg.backup.compression.zlib.enabled';
+
+    /** @var string */
+    const HOOK_CAN_USE_COMPRESSION = 'wpstg.can_use_compression';
 
     /** @var CompressionInterface */
     protected $service;
@@ -43,12 +47,12 @@ class ZlibCompressor
             return $canUseCompression;
         }
 
-        $isPro   = defined('WPSTGPRO_VERSION');
-        $license = get_option('wpstg_license_status');
+        // Early bail if it is a basic version.
+        if (WPStaging::isBasic()) {
+            return false;
+        }
 
-        $hasActiveLicense = is_object($license) && property_exists($license, 'license') && $license->license === 'valid';
-
-        $canUseCompression = $this->supportsCompression() && $isPro && ($hasActiveLicense || $this->siteInfo->isLocal());
+        $canUseCompression = $this->supportsCompression() && Hooks::callInternalHook(self::HOOK_CAN_USE_COMPRESSION, [], false);
 
         return $canUseCompression;
     }
@@ -59,11 +63,6 @@ class ZlibCompressor
     public function isCompressionEnabled(): bool
     {
         static $isEnabled = null;
-
-        // Early bail: if compression feature not enabled.
-        if (!$this->isCompressionFeatureEnabled()) {
-            return false;
-        }
 
         if (is_null($isEnabled)) {
             $settings = (object)get_option('wpstg_settings', []);
@@ -78,12 +77,5 @@ class ZlibCompressor
     public function getService(): CompressionInterface
     {
         return $this->service;
-    }
-
-    /** @return bool */
-    protected function isCompressionFeatureEnabled(): bool
-    {
-        $enabled = (bool)Hooks::applyFilters('wpstg.tests.backup.enable_compression', defined('WPSTG_ENABLE_COMPRESSION') && WPSTG_ENABLE_COMPRESSION);
-        return $enabled;
     }
 }

@@ -10,6 +10,7 @@ use WPStaging\Core\WPStaging;
         <li><a href="https://wp-staging.com/docs/staging-site-redirects-live-site/" target="_blank" rel="external"><?php esc_html_e("Can not login to staging site", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/staging-site-redirects-live-site/" target="_blank" rel="external"><?php esc_html_e("Staging site redirects to production site", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/fix-white-or-blank-page-after-pushing-fatal-error-500/" target="_blank" rel="external"><?php esc_html_e("Staging site returns blank white page", "wp-staging") ?></a></li>
+        <li><a href="https://wp-staging.com/docs/set-up-a-staging-site-on-an-external-server-with-wp-staging/" target="_blank" rel="external"><?php esc_html_e("Set Up a Staging Site on an External Server With WP Staging", "wp-staging") ?></a></li>
         <li><a href="https://wp-staging.com/docs/css-layout-broken-after-push/" target="_blank" rel="external"><?php esc_html_e("CSS & layout looks different after push", "wp-staging") ?></a></li>
         <?php if (is_plugin_active('woocommerce/woocommerce.php')) : ?>
             <li><a href="https://wp-staging.com/docs/skip-woocommerce-orders-and-products/" target="_blank" rel="external"><?php esc_html_e("Skip WooCommerce Orders and Products", "wp-staging") ?></a></li>

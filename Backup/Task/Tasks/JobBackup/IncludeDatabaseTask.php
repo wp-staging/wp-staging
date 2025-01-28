@@ -54,7 +54,7 @@ class IncludeDatabaseTask extends BackupTask
             $this->archiver->appendFileToBackup($this->jobDataDto->getDatabaseFile());
         } catch (Exception $e) {
             $this->logger->critical(sprintf(
-                'Failed to include database backup to backup: %s (%s)',
+                'Failed to include database in the backup: %s (%s)',
                 $this->archiver->getDto()->getFilePath(),
                 $e->getMessage()
             ));
@@ -82,7 +82,12 @@ class IncludeDatabaseTask extends BackupTask
             $this->stepsDto->finish();
         }
 
-        $this->archiver->setupTmpBackupFile();
+        if ($this->jobDataDto->getDatabaseOnlyBackup()) {
+            $this->archiver->createArchiveFile(true);
+        } else {
+            $this->archiver->setupTmpBackupFile();
+        }
+
         if ($this->stepsDto->getTotal() > 0) {
             return;
         }

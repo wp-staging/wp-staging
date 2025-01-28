@@ -17,6 +17,8 @@ use WPStaging\Framework\Traits\HydrateTrait;
  * stored in a .wpstg backup file, such as date of creation,
  * whether it was created on single/multi sites, etc.
  *
+ * @note Bump BackupHeader::BACKUP_VERSION whenever we make changes in backup structure
+ *
  * @package WPStaging\Backup\Entity
  */
 abstract class AbstractBackupMetadata implements \JsonSerializable
@@ -58,13 +60,6 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
      * @var string
      */
     const BACKUP_TYPE_MAIN_SITE = 'main-network-site';
-
-    /**
-     * Version of Backup Metadata
-     * This need to be bump whenever we make changes in backup structure
-     * @var string
-     */
-    const BACKUP_VERSION = '1.0.4';
 
     /** @var string */
     private $id;

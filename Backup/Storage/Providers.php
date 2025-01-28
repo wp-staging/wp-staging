@@ -8,6 +8,7 @@ use WPStaging\Pro\Backup\Storage\Storages\DigitalOceanSpaces\Auth as DSOAuth;
 use WPStaging\Pro\Backup\Storage\Storages\GenericS3\Auth as GenericS3Auth;
 use WPStaging\Pro\Backup\Storage\Storages\GoogleDrive\Auth as GoogleDriveAuth;
 use WPStaging\Pro\Backup\Storage\Storages\Dropbox\Auth as DropboxAuth;
+use WPStaging\Pro\Backup\Storage\Storages\OneDrive\Auth as OneDriveAuth;
 use WPStaging\Pro\Backup\Storage\Storages\SFTP\Auth as SftpAuth;
 use WPStaging\Pro\Backup\Storage\Storages\Wasabi\Auth as WasabiAuth;
 
@@ -25,6 +26,7 @@ class Providers
         'googledrive'         => 'googleDrive',
         'amazons3'            => 'amazonS3',
         'dropbox'             => 'dropbox',
+        'one-drive'           => 'one-drive',
         'sftp'                => 'sftp',
         'digitalocean-spaces' => 'digitalocean-spaces',
         'wasabi'              => 'wasabi-s3',
@@ -61,12 +63,12 @@ class Providers
                 'settingsPath' => $this->getStorageAdminPage('dropbox'),
             ],
             [
-                'id'   => 'oneDrive',
-                'cli'  => 'one-drive',
-                'name' => esc_html__('One Drive', 'wp-staging'),
-                'enabled'   => false,
-                'authClass' => '',
-                'settingsPath' => $this->getStorageAdminPage('onedrive'),
+                'id'           => 'one-drive',
+                'cli'          => 'one-drive',
+                'name'         => esc_html__('Microsoft OneDrive', 'wp-staging'),
+                'enabled'      => true,
+                'authClass'    => $this->filterAuthClassForPro(OneDriveAuth::class),
+                'settingsPath' => $this->getStorageAdminPage('one-drive'),
             ],
             [
                 'id'   => 'sftp',
@@ -176,7 +178,7 @@ class Providers
     }
 
     /**
-     * @param  string $identifier
+     * @param string $identifier
      *
      * @return string|false
      */

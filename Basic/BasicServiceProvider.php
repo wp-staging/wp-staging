@@ -43,6 +43,6 @@ class BasicServiceProvider extends ServiceProvider
     protected function registerClasses()
     {
         // This is to tell the container to use the BASIC feature
-        $this->container->setVar('WPSTG_PRO', false);
+        $this->container->setVar('WPSTG_BASIC', true);
     }
 }

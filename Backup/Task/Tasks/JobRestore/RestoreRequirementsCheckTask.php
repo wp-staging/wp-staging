@@ -3,6 +3,7 @@
 namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use RuntimeException;
+use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\Service\ZlibCompressor;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
 use WPStaging\Framework\Database\TableDto;
@@ -503,7 +504,7 @@ class RestoreRequirementsCheckTask extends RestoreTask
      */
     protected function getCurrentBackupVersion()
     {
-        return BackupMetadata::BACKUP_VERSION;
+        return BackupHeader::BACKUP_VERSION;
     }
 
     /**

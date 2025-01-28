@@ -461,10 +461,11 @@ final class WPStaging
 
     /**
      * @return bool
+     * @deprecated Use isBasic instead.
      */
     public static function isPro()
     {
-        return WPStaging::getInstance()->getVar('WPSTG_PRO', false);
+        return !self::isBasic();
     }
 
     /**
@@ -536,7 +537,7 @@ final class WPStaging
      */
     public static function isBasic()
     {
-        return WPStaging::getInstance()->getVar('WPSTG_PRO', false) === false;
+        return WPStaging::getInstance()->getVar('WPSTG_BASIC', true) === true;
     }
 
     /**

@@ -201,6 +201,12 @@ class PreserveDataFirstStep extends JobExecutable
          */
         $dropbox = $this->getStagingSiteOption('wpstg_dropbox');
 
+        /**
+         * Microsoft OneDrive Options.
+         * @see WPStaging\Pro\Backup\Storage\Storages\OneDrive\Auth::getOptionName for option name
+         */
+        $oneDrive = $this->getStagingSiteOption('wpstg_one-drive');
+
         if ($googleDrive === false) {
             $this->log("Preserve Data: Failed to get Google Drive Settings");
         } else {
@@ -241,6 +247,12 @@ class PreserveDataFirstStep extends JobExecutable
             $this->log("Preserve Data: Failed to get Dropbox Settings");
         } else {
             $storages['dropbox'] = $dropbox;
+        }
+
+        if ($oneDrive === false) {
+            $this->log("Preserve Data: Failed to get Microsoft OneDrive Settings");
+        } else {
+            $storages['oneDrive'] = $oneDrive;
         }
 
         return $storages;

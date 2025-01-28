@@ -20,6 +20,13 @@ use WPStaging\Framework\Facades\Hooks;
 class BackupMetadata extends AbstractBackupMetadata
 {
     /**
+     * 1.0.4 was the last backup version in v1 format
+     * Lets bump it and use that for creating backup when filter is used for v1 format!
+     * @var string
+     */
+    const LAST_BACKUP_VERSION_V1 = '1.0.5';
+
+    /**
      * BackupMetadata constructor.
      *
      * Sets reasonable defaults.
@@ -76,14 +83,12 @@ class BackupMetadata extends AbstractBackupMetadata
     }
 
     /**
-     * @todo Remove once v2 format is set as default
-     *
      * @return string
      */
     private function getDefaultVersion(): string
     {
-        $isBackupFormatV1 = Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, true);
+        $isBackupFormatV1 = Hooks::applyFilters(self::FILTER_BACKUP_FORMAT_V1, false);
 
-        return $isBackupFormatV1 ? self::BACKUP_VERSION : BackupHeader::MIN_BACKUP_VERSION;
+        return $isBackupFormatV1 ? self::LAST_BACKUP_VERSION_V1 : BackupHeader::BACKUP_VERSION;
     }
 }

@@ -62,6 +62,10 @@ class BackupRetentionHandler
         $this->backupsRetention = $this->getBackupsRetention();
 
         if (!isset($this->backupsRetention[$backupId])) {
+            $backupId = $this->getBackupId($backupId);
+        }
+
+        if (!isset($this->backupsRetention[$backupId])) {
             return false;
         }
 
@@ -87,5 +91,17 @@ class BackupRetentionHandler
         $this->updateBackupsRetentionOptions($this->backupsRetention);
 
         return true;
+    }
+
+    private function getBackupId(string $backupName): string
+    {
+        $backupsRetention = $this->getBackupsRetention();
+        foreach ($backupsRetention as $retainedBackupId => $retainedBackup) {
+            if (strpos($backupName, $retainedBackupId) !== false) {
+                return $retainedBackupId;
+            }
+        }
+
+        return '';
     }
 }

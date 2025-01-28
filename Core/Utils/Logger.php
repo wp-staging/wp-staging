@@ -127,15 +127,15 @@ class Logger implements LoggerInterface, ShutdownableInterface
         }
 
         $this->info('System Info');
-        $this->add(sprintf('- WP Staging Version: %s', $systemInfo->getWpStagingVersion()), self::TYPE_INFO_SUB );
-        $this->add(sprintf('- PHP Version: %s', $systemInfo->getPhpVersion()), self::TYPE_INFO_SUB );
-        $this->add(sprintf('- Server: %s', $systemInfo->getWebServerInfo()), self::TYPE_INFO_SUB );
-        $this->add(sprintf('- MySQL: %s', $systemInfo->getMySqlVersionCompact()),  self::TYPE_INFO_SUB );
-        $this->add(sprintf('- WP Version: %s', get_bloginfo("version")), self::TYPE_INFO_SUB );
-        $this->add(sprintf('- Host: %s', esc_html($host)), self::TYPE_INFO_SUB );
-        $this->add(sprintf('- PHP Memory Limit: %s', wp_convert_hr_to_bytes(ini_get("memory_limit"))), self::TYPE_INFO_SUB );
-        $this->add(sprintf('- WP Memory Limit: %s', (defined('WP_MEMORY_LIMIT') ? wp_convert_hr_to_bytes(WP_MEMORY_LIMIT) : '')), self::TYPE_INFO_SUB );
-        $this->add(sprintf('- PHP Max Execution Time: %s', ini_get("max_execution_time")), self::TYPE_INFO_SUB );
+        $this->add(sprintf('- WP Staging Version: %s', $systemInfo->getWpStagingVersion()), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- PHP Version: %s', $systemInfo->getPhpVersion()), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- Server: %s', $systemInfo->getWebServerInfo()), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- MySQL: %s', $systemInfo->getMySqlVersionCompact()), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- WP Version: %s', get_bloginfo("version")), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- Host: %s', esc_html($host)), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- PHP Memory Limit: %s', wp_convert_hr_to_bytes(ini_get("memory_limit"))), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- WP Memory Limit: %s', (defined('WP_MEMORY_LIMIT') ? wp_convert_hr_to_bytes(WP_MEMORY_LIMIT) : '')), self::TYPE_INFO_SUB);
+        $this->add(sprintf('- PHP Max Execution Time: %s', ini_get("max_execution_time")), self::TYPE_INFO_SUB);
     }
 
     /**
