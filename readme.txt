@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.7
-Stable tag: 4.1.0
+Stable tag: 4.1.1
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -287,7 +287,8 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 
 == Changelog ==
 
-= 4.1.0 =
+= 4.1.1 =
+* New: Compatible to WordPress 6.7.2.
 * New: Introducing our new Auto Update Plugins optional feature in Advanced Settings! Now, whenever you set up a staging site, outdated plugins can be automatically refreshed in the background, ensuring you can immediately preview and test your updated website with ease. Enjoy a smoother, more efficient update process and a hassle free testing experience. (Pro) #3719
 * Enh: Add preview setting for "backup compression" in free version. #4102
 * Enh: Write site URL into header of wp-config.php for new staging sites. #2320
@@ -306,10 +307,14 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 * Fix: PHP "Uncaught TypeError" and remove useless logs for backup to Microsoft OneDrive. (Pro) #4104
 * Fix: Undefined property: stdClass::$error - File: wp-staging-pro/Pro/License/Licensing.php Line: 193. (Pro) #4135
 * Fix: Prevent duplicate file headers for database when including large database in multiple requests in the backup. #4150
+* Fix: Remove wpstg-restore.php from free version.
 * UX: Enhance the appearance of the basic installation notice and ensure the user is redirected to the install page if the basic version is not installed or is incompatible. (Pro) #4101
 * Fix: Improve design of some modal. #4029
 * Dev: Prepare pre-staging `Setup` ajax request as a first step to refactor the cloning feature to be more robust. #4033
 * Dev: Move db backup related logic from playwright test to roadrunner. #4043
+
+= 4.1.0 =
+* Skipped
 
 = 4.0.0 =
 * New: Introduced the v2 backup format with enhanced error handling capabilities and a highly efficient compression algorithm. This new format outperforms traditional compression methods, such as zip, in both speed and reliability. Additionally, it incorporates advanced error correction algorithms for improved data integrity. #3804
@@ -1003,4 +1008,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-Compatible up to WordPress 6.6.0. Multiple enhancements in UI and performance. Updating is recommended!
+Compatible up to WordPress 6.7.2. New plugin auto update feature for staging sites (Pro).
