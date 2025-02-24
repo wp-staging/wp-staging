@@ -7,6 +7,7 @@ namespace WPStaging\Framework\Database;
 
 use DateTime;
 use WPStaging\Framework\Interfaces\HydrateableInterface;
+use WPStaging\Core\WPStaging;
 
 class TableDto implements HydrateableInterface
 {
@@ -28,6 +29,9 @@ class TableDto implements HydrateableInterface
     /** @var DateTime */
     private $updatedAt;
 
+    /** @var bool */
+    private $isView = false;
+
     public function hydrate(array $data = [])
     {
         $this->setName($data['Name']);
@@ -44,6 +48,10 @@ class TableDto implements HydrateableInterface
         if (isset($data['Data_length'], $data['Index_length'])) {
             $size = (int) $data['Data_length'] + (int) $data['Index_length'];
             $this->setSize($size);
+        }
+
+        if (isset($data['Comment']) && $data['Comment'] === 'VIEW') {
+            $this->setIsView(true);
         }
 
         return $this;
@@ -146,10 +154,34 @@ class TableDto implements HydrateableInterface
     }
 
     /**
+     * @return bool
+     */
+    public function getIsView(): bool
+    {
+        return $this->isView;
+    }
+
+    /**
+     * @param bool $isView
+     * @return void
+     */
+    public function setIsView(bool $isView)
+    {
+        $this->isView = $isView;
+    }
+
+    /**
      * @return string
      */
     public function getHumanReadableSize()
     {
+        // Note: We skip displaying the table size here if it is on WordPress Playground.
+        // To get the size of a sqlite table the php sqlite extension must be compiled
+        // with SQLITE_ENABLE_DBSTAT_VTAB which is not compiled by default.
+        if (WPStaging::isOnWordPressPlayground()) {
+            return '';
+        }
+
         return size_format($this->size);
     }
 }

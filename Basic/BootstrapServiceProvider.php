@@ -5,6 +5,7 @@ namespace WPStaging\Basic;
 use WPStaging\Basic\Ajax\ProCronsCleaner;
 use WPStaging\Basic\Backup\BackupServiceProvider;
 use WPStaging\Basic\Notices\BasicNotices;
+use WPStaging\Basic\Staging\StagingServiceProvider;
 use WPStaging\Framework\DI\ServiceProvider;
 use WPStaging\Framework\Notices\Notices;
 
@@ -31,5 +32,6 @@ class BootstrapServiceProvider extends ServiceProvider
     protected function registerClasses()
     {
         $this->container->register(BackupServiceProvider::class);
+        $this->container->register(StagingServiceProvider::class);
     }
 }

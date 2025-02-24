@@ -206,7 +206,7 @@ class Archiver
         $isInitiated = $this->initiateDtoByFilePath($fullFilePath, $fileStats);
         $this->archiverDto->setIndexPath($indexPath);
         $fileHeaderBytes = 0;
-        if ($isInitiated && !$this->isBackupFormatV1()) {
+        if ($isInitiated && !$this->isBackupFormatV1() && !$this->archiverDto->isIndexPositionCreated()) {
             $fileHeaderBytes = $this->writeFileHeader($fullFilePath, $indexPath);
             $this->archiverDto->setFileHeaderBytes($fileHeaderBytes);
         }

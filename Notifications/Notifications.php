@@ -8,6 +8,11 @@ use WPStaging\Notifications\NotificationsProvider;
 class Notifications
 {
     /**
+     * @var string
+     */
+    const OPTION_BACKUP_SCHEDULE_REPORT_EMAIL = 'wpstg_backup_schedules_report_email';
+
+    /**
      * @var bool
      */
     const DISABLE_FOOTER_MESSAGE = false;

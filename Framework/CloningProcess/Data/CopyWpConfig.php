@@ -4,9 +4,25 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Framework\Filesystem\Filesystem;
 
 class CopyWpConfig extends FileCloningService
 {
+    /**
+     * @var Filesystem
+     */
+    protected $filesystem;
+
+    /**
+     * Constructor
+     *
+     * @param Filesystem $filesystem
+     */
+    public function __construct(Filesystem $filesystem)
+    {
+        $this->filesystem = $filesystem;
+    }
+
     /**
      * Copy wp-config.php from the staging site if it is located outside of root one level up or
      * copy default wp-config.php if production site uses bedrock or any other boilerplate solution that stores wp default config data elsewhere.
@@ -56,7 +72,6 @@ class CopyWpConfig extends FileCloningService
             throw new FatalException("Could not copy wp-config.php to " . $destination);
         }
 
-        //$this->log("Done");
         return true;
     }
 
@@ -117,8 +132,9 @@ define( 'DB_COLLATE', '" . DB_COLLATE . "' );\r\n";
 
         $content = str_replace($search, $replace, $content);
 
-        if (@wpstg_put_contents($source, $content) === false) {
+        if ($this->filesystem->create($source, $content) === false) {
             $this->log("Can't save wp-config.php", Logger::TYPE_ERROR);
+
             return false;
         }
 

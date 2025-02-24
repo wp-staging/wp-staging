@@ -148,7 +148,7 @@ class PrepareDelete extends PrepareJob
      *
      * @return StagingSiteDelete|null The current reference to the Backup Job, if any.
      */
-    public function getStagingSiteDelete()
+    public function getJob()
     {
         return $this->jobDelete;
     }

@@ -74,17 +74,18 @@ use WPStaging\Framework\Facades\UI\Checkbox;
     <div class="wpstg-tab-section" id="wpstg-advanced-settings">
         <?php
         if ($options->mainJob !== Job::UPDATE) {
-            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'login-data.php');
-            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'external-database.php');
-            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'custom-directory.php');
-            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'symlink-uploads.php');
+            require_once(__DIR__  . '/login-data.php');
+            require_once(__DIR__  . '/external-database.php');
+            require_once(__DIR__  . '/custom-directory.php');
+            require_once(__DIR__  . '/symlink-uploads.php');
         }
 
         if ($options->mainJob === Job::STAGING) {
-            require_once(__DIR__ . DIRECTORY_SEPARATOR . 'cron-setting.php');
+            require_once(__DIR__ . '/cron-setting.php');
         }
 
-        require_once(__DIR__ . DIRECTORY_SEPARATOR . 'mail-setting.php');
+        require_once(__DIR__ . '/mail-setting.php');
+        require_once(__DIR__ . '/plugins-update.php');
         ?>
     </div>
 </div>

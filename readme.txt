@@ -9,7 +9,7 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.7
-Stable tag: 4.0.0
+Stable tag: 4.1.0
 Requires PHP: 7.0
 
 Backup Restore Migrate Staging Duplicator - 100% unit tested.
@@ -287,6 +287,30 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 
 == Changelog ==
 
+= 4.1.0 =
+* New: Introducing our new Auto Update Plugins optional feature in Advanced Settings! Now, whenever you set up a staging site, outdated plugins can be automatically refreshed in the background, ensuring you can immediately preview and test your updated website with ease. Enjoy a smoother, more efficient update process and a hassle free testing experience. (Pro) #3719
+* Enh: Add preview setting for "backup compression" in free version. #4102
+* Enh: Write site URL into header of wp-config.php for new staging sites. #2320
+* Enh: Link each pro feature in the FAQ footer to the docs. #3579
+* Enh: Clarify what is backed up with "Backup Other Files In WP Root" option. (Pro) #4050
+* Enh: Refactor backup background processor to be DRY and less complex. #4034
+* Fix: Automatically activate free version after its installation when pro version is already active. (Pro) #3971
+* Fix: Better handling the backup process elapsed time when the browser tab is inactive in background. #4064
+* Fix: Update backups retention number after deleting remote backup. (Pro) #4083
+* Fix: Backup file can't be downloaded in WordPress Playground. #4082
+* Fix: Remove warnings in backup debug logs. #4086
+* Fix: Display the ongoing progress percentage while downloading the backup from remote storage. (Pro) #4110
+* Fix: Properly handle HTML entities and preserve line breaks while sending backup email notifications. #3431
+* Fix: Show accurate tables count during staging site creation. #4113
+* Fix: Missing initial backup index to restore database with the WP Staging Restore tool. #4120
+* Fix: PHP "Uncaught TypeError" and remove useless logs for backup to Microsoft OneDrive. (Pro) #4104
+* Fix: Undefined property: stdClass::$error - File: wp-staging-pro/Pro/License/Licensing.php Line: 193. (Pro) #4135
+* Fix: Prevent duplicate file headers for database when including large database in multiple requests in the backup. #4150
+* UX: Enhance the appearance of the basic installation notice and ensure the user is redirected to the install page if the basic version is not installed or is incompatible. (Pro) #4101
+* Fix: Improve design of some modal. #4029
+* Dev: Prepare pre-staging `Setup` ajax request as a first step to refactor the cloning feature to be more robust. #4033
+* Dev: Move db backup related logic from playwright test to roadrunner. #4043
+
 = 4.0.0 =
 * New: Introduced the v2 backup format with enhanced error handling capabilities and a highly efficient compression algorithm. This new format outperforms traditional compression methods, such as zip, in both speed and reliability. Additionally, it incorporates advanced error correction algorithms for improved data integrity. #3804
 * New: Implement Microsoft OneDrive backup remote cloud storage. (Pro) #1748
@@ -386,11 +410,11 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 * Fix: Deleting an unfinished staging site, does not delete its folder. #3785
 * Fix: Filesystem scanner keeps on running during backup creation. #3902
 * Fix: Autosave WordPress `Permalinks` after creating a staging site. #3618
-* Fix: Files index error due to invalid files count in multipart backups. backup is still restoreable as this is only a logging error! #3872
+* Fix: Files index error due to invalid files count in multipart backups. backup is still restorable as this is only a logging error! #3872
 * Fix: Remove wordpress.com related messages. #3641
 * Fix: Rare fatal error "Call to undefined function apache_get_modules" after the push process. (Pro) #3763
 * UX: Remove the advanced settings on the update staging site page. #3768
-* Dev: Add our own playwright image with bundled PHP for efficent e2e testing with Playwright. #3867
+* Dev: Add our own playwright image with bundled PHP for efficient e2e testing with Playwright. #3867
 * Dev: Move unit tests to a new location. #3881
 * Dev: Prepare multipart backup feature for v2 backups. Change file extension for database parts. #3876
 * Dev: Add newsfeed validator. #3803
@@ -399,7 +423,7 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 * New: Added magic login links for both production and staging sites with customizable expiration times and role-based access. Ideal for granting temporary access to external developers or clients who need quick, limited-time access to your WordPress site. Read more: https://wp-staging.com/create-magic-login-links (Pro) #3582
 * Enh: Improve error messages for expired login link and increase the expiration time. #3816
 * Enh: Add License key as authentication method for WP Staging Restore tool. #3505
-* Fix: Make some missing string translateable. #3764
+* Fix: Make some missing string translatable. #3764
 * Fix: Change twitter logo to X #3852
 * Fix: Unable to create and view backups when WordPress root directory is not readable. #3841
 * Fix: Knowledgebase and What's new blocks are not looking good under Settings, System Info and License page. #3831
@@ -505,7 +529,7 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 * UX: Refresh error message when clicking the backup menu tab. #3587
 * Fix: Disable email notifications when a backup successfully runs. #3517
 * Fix: Properly catch fatal errors when merging logs into single file when sending backup error report. #3573
-* Fix: Make the backup restoreable even when it has not correctly replaced table constraint(s). #3595
+* Fix: Make the backup restorable even when it has not correctly replaced table constraint(s). #3595
 * Fix: Update new admin login password if user account already exists while creating staging site. (Pro) #3598
 * Dev: Refactor backup remote storage downloading code. (Pro) #2751
 

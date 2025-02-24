@@ -51,7 +51,12 @@ class Permissions
 
     private function isValidPermission(int $permission): bool
     {
-        if (decoct(octdec($permission)) !== $permission) {
+        // check if it is octal?
+        if (!preg_match('/^[0-7]+$/', ((string)$permission))) {
+            return false;
+        }
+
+        if (decoct(octdec((string)$permission)) !== (string)$permission) {
             return false;
         }
 

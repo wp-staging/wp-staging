@@ -26,6 +26,12 @@ abstract class PrepareJob
 
     abstract public function ajaxPrepare($data);
 
+    abstract public function persist(): bool;
+
+    abstract public function getJob();
+
+    abstract public function validateAndSanitizeData($data): array;
+
     protected function clearCacheFolder()
     {
         $this->filesystem->setExcludePaths(['*.*', '!*.cache.php', '!*.cache', '!*.wpstg']);

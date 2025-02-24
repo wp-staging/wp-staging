@@ -68,6 +68,26 @@ class TableService
     }
 
     /**
+     * Get all tables information in the current datababase as collection
+     *
+     * @return Collection|null
+     */
+    public function findAllTableStatus()
+    {
+        $tables = $this->database->find("SHOW TABLE STATUS");
+        if (!$tables) {
+            return null;
+        }
+
+        $collection = new Collection(TableDto::class);
+        foreach ($tables as $table) {
+            $collection->attach((new TableDto())->hydrate((array) $table));
+        }
+
+        return $collection;
+    }
+
+    /**
      * Get all tables information starting with a specific prefix as collection
      * @param string|null $prefix
      *

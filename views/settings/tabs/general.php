@@ -5,6 +5,7 @@ use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Settings\Settings;
 use WPStaging\Framework\Facades\UI\Checkbox;
 use WPStaging\Backup\BackupScheduler;
+use WPStaging\Notifications\Notifications;
 
 ?>
 
@@ -296,8 +297,28 @@ use WPStaging\Backup\BackupScheduler;
                             <?php
                         endif;
                     endif;
-                    ?>
 
+                    if (!defined('WPSTGPRO_VERSION')) :
+                        ?>
+                        <tr class="wpstg-settings-row">
+                            <td class="wpstg-settings-row th">
+                                <div class="col-title">
+                                    <label for="wpstg-compress-backups"><?php esc_html_e('Compress Backups', 'wp-staging') ?></label>
+                                    <span class="description">
+                                        <?php echo esc_html__('This reduces backup size by up to 60%, making it especially useful for large databases.', 'wp-staging'); ?>
+                                    </span>
+                                </div>
+                            </td>
+                            <td>
+                                <?php
+                                Checkbox::render('wpstg-compress-backups', 'wpstg_settings[enableCompression]', 'false', false, ['classes' => 'wpstg-settings-field', 'isDisabled' => true]);
+                                ?>
+                                <a href="https://wp-staging.com" target="_blank" rel="noopener" class="wpstg-pro-feature-link wpstg-ml-8px">
+                                    <span class="wpstg-pro-feature"><?php esc_html_e('Pro Feature', 'wp-staging');?></span>
+                                </a>
+                            </td>
+                        </tr>
+                    <?php endif; ?>
                         <tr class="wpstg-settings-row">
                             <td class="wpstg-settings-row th">
                                 <b class="wpstg-settings-title"><?php esc_html_e('Email Notifications', 'wp-staging') ?></b>
@@ -320,7 +341,7 @@ use WPStaging\Backup\BackupScheduler;
                                 </p>
                             </td>
                             <td>
-                                <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL)) ?>"/>
+                                <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL)) ?>"/>
                             </td>
                         </tr>
 

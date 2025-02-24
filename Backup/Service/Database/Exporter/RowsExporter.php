@@ -47,7 +47,7 @@ class RowsExporter extends AbstractExporter
 
     public function getTableRowsOffset(): int
     {
-        return $this->tableRowsOffset;
+        return (int)$this->tableRowsOffset;
     }
 
     public function setTableRowsOffset(int $tableRowsOffset)

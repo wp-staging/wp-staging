@@ -3,6 +3,8 @@
 namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\SiteInfo;
 
 //TODO: Class may not be needed in the future due to DTO introduction. Remove if unnecessary
@@ -27,7 +29,8 @@ abstract class FileCloningService extends CloningService
     protected function writeFile($file, $content)
     {
         $path = $this->dto->getDestinationDir() . $file;
-        if (@wpstg_put_contents($path, $content) === false) {
+        $filesystem = WPStaging::make(Filesystem::class);
+        if ($filesystem->create($path, $content) === false) {
             throw new FatalException("Error - can't write to " . $file);
         }
     }

@@ -16,10 +16,10 @@ $urlToWpComStagingArticle = 'https://wp-staging.com/wordpress-com-how-to-create-
 ?>
 <div class="wpstg-notice-alert">
     <p class="wpstg-m-0">
-        <?php echo sprintf(esc_html__("WP Staging can not create staging sites on WordPress.com hosted websites! Instead you can use %s to create a backup of this website. Then use %s to upload and restore the backup on the other website. The other site can be located on all hosts including WordPress.com.", 'wp-staging'), '<a href="#" data-target="#wpstg--tab--backup" class="wpstg-navigate-button">' . esc_html__('Backup &amp; Migration', 'wp-staging') . '</a>', '<a href="https://wp-staging.com" target="_blank">' . esc_html__('WP Staging Pro', 'wp-staging') . '</a>'); ?>
+        <?php echo sprintf(esc_html__("WP Staging cannot create a staging site on environments based on the WordPress.com (Automattic) infrastructure due to technical limitations. Instead you can use %s to create a backup of your website and then use %s to upload and restore that backup on any hosting environment—even WordPress.com.", 'wp-staging'), '<a href="' . esc_url(get_admin_url() . 'admin.php?page=wpstg_backup') . '" data-target="#wpstg--tab--backup" class="wpstg-navigate-button" rel="noopener">' . esc_html__('Backup &amp; Migration', 'wp-staging') . '</a>', '<a href="https://wp-staging.com" target="_blank">' . esc_html__('WP Staging Pro', 'wp-staging') . '</a>'); ?>
         <br>
         <br>
-        <a href="<?php echo esc_attr($urlToMigrationArticle); ?>" target="_blank"><?php esc_html_e('Read More', 'wp-staging'); ?></a> <br/>
+        <a href="<?php echo esc_url($urlToMigrationArticle); ?>" target="_blank"><?php esc_html_e('Read More', 'wp-staging'); ?></a> <br/>
         <br>
         <?php echo sprintf(esc_html__('Optionally, you can use the built-in WordPress.com %s if you have a Creator or Entrepreneur plan.', 'wp-staging'), '<a href="' . esc_url($urlToWpComStagingArticle) . '" target="_blank">' . esc_html__('staging function', 'wp-staging') . '</a>') ?>
     </p>

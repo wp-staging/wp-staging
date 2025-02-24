@@ -12,6 +12,7 @@ use WPStaging\Staging\Ajax\Delete;
 use WPStaging\Staging\Ajax\Listing;
 use WPStaging\Staging\Ajax\Delete\DeleteConfirm;
 use WPStaging\Staging\Ajax\Repair;
+use WPStaging\Staging\Ajax\Setup;
 use WPStaging\Staging\Dto\Job\StagingSiteDeleteDataDto;
 use WPStaging\Staging\Jobs\StagingSiteDelete;
 use WPStaging\Staging\Tasks\CleanupStagingTablesTask;
@@ -43,5 +44,15 @@ class StagingServiceProvider extends FeatureServiceProvider
         add_action('wp_ajax_wpstg--staging-site--fix-option', $this->container->callback(Repair::class, 'ajaxFixOption')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--staging-site--report-option', $this->container->callback(Repair::class, 'ajaxReportOption')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wpstg_cloning_complete', $this->container->callback(MalCare::class, 'maybeDisableMalCare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
+        $this->enqueueStagingAjaxListeners();
+    }
+
+    protected function enqueueStagingAjaxListeners()
+    {
+        if (!defined('WPSTG_NEW_STAGING')) {
+            return;
+        }
+
+        add_action('wp_ajax_wpstg--staging-site--setup', $this->container->callback(Setup::class, 'ajaxSetup')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 }

@@ -27,7 +27,7 @@ class LogFiles
     public function __construct(Directory $directory)
     {
         $this->logsDirectory         = $directory->getLogDirectory();
-        $this->availableLogFileTypes = ['push', 'backup_restore', 'cloning', 'backup_job'];
+        $this->availableLogFileTypes = ['push', 'backup_restore', 'cloning', 'backup_job', 'staging_plugins_updater'];
         $this->latestLogFiles        = [];
     }
 

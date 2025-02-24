@@ -10,9 +10,9 @@ use WPStaging\Framework\CloningProcess\Data\ResetIndexPhp;
 use WPStaging\Framework\CloningProcess\Data\UpdateSiteUrlAndHome;
 use WPStaging\Framework\CloningProcess\Data\UpdateTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpConfigConstants;
-use WPStaging\Framework\CloningProcess\Data\UpdateWpConfigTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateWpOptionsTablePrefix;
 use WPStaging\Framework\CloningProcess\Data\UpdateStagingOptionsTable;
+use WPStaging\Framework\CloningProcess\Data\UpdateWpConfig;
 use WPStaging\Framework\Utils\Strings;
 
 /**
@@ -37,7 +37,7 @@ class Data extends DataJob
             UpdateSiteUrlAndHome::class,
             UpdateStagingOptionsTable::class,
             UpdateTablePrefix::class,
-            UpdateWpConfigTablePrefix::class,
+            UpdateWpConfig::class,
             ResetIndexPhp::class, // This is needed if live site is located in subfolder. @see: https://codex.wordpress.org/Giving_WordPress_Its_Own_Directory
             UpdateWpOptionsTablePrefix::class, // This is important when custom folders are used
             UpdateWpConfigConstants::class,

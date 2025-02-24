@@ -198,6 +198,22 @@ class EmailNotification implements NotificationsInterface
         });
 
         $message = $this->addFooterMessage($message);
+        if (!$this->isUseHtml) {
+            $message = $this->cleanHtmlEntitiesAndTags($message);
+        }
+
         return wp_mail($this->recipient, $this->subject, $message, $headers, $this->attachments);
+    }
+
+    /**
+     * Clean HTML entities and tags from message while preserving line breaks
+     * @param string $message
+     * @return string
+     */
+    private function cleanHtmlEntitiesAndTags(string $message): string
+    {
+        $message = html_entity_decode($message, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+        $message = wp_kses($message, []);
+        return str_replace(['&gt;', '&amp;'], ['>', '&'], $message);
     }
 }

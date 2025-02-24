@@ -2,7 +2,6 @@
 
 namespace WPStaging\Framework\Mails;
 
-use WPStaging\Backup\BackupScheduler;
 use WPStaging\Notifications\Notifications;
 
 use function WPStaging\functions\debug_log;
@@ -47,7 +46,7 @@ class MailSender
     {
         $this->notifications = $notifications;
         $this->attachments   = [];
-        $this->recipient     = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        $this->recipient     = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         $this->addFooter     = false;
     }
 

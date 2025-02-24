@@ -12,6 +12,7 @@ use WPStaging\Framework\Utils\Urls;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Facades\Sanitize;
+use WPStaging\Notifications\Notifications;
 use WPStaging\Staging\Sites;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Database\WpOptionsInfo;
@@ -188,6 +189,8 @@ class SystemInfo
         $output .= $this->info("WP_DEBUG:", (defined("WP_DEBUG")) ? (WP_DEBUG ? "Enabled" : "Disabled") : self::NOT_SET_LABEL);
         $output .= $this->constantInfo('WP_MEMORY_LIMIT');
         $output .= $this->constantInfo('WP_MAX_MEMORY_LIMIT');
+        $output .= $this->constantInfo('FS_CHMOD_DIR');
+        $output .= $this->constantInfo('FS_CHMOD_FILE');
         $output .= $this->info("Active Theme:", $this->theme());
         $output .= $this->info("Permalink Structure:", get_option("permalink_structure") ?: "Default");
         $output .= $this->wpRemotePost();
@@ -264,7 +267,7 @@ class SystemInfo
     {
         $settings                               = (object)get_option('wpstg_settings', []);
         $optionBackupScheduleErrorReport        = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT);
-        $optionBackupScheduleReportEmail        = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        $optionBackupScheduleReportEmail        = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         $optionBackupScheduleSlackErrorReport   = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT);
         $optionBackupScheduleReportSlackWebhook = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK);
         $wpStagingFreeVersion                   = wpstgGetPluginData('wp-staging.php');

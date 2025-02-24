@@ -256,6 +256,7 @@ class Scan extends Job
             $this->options->currentClone['networkClone']          = $this->options->currentClone['networkClone'] ?? false;
             $this->options->currentClone['wooSchedulerDisabled']  = empty($this->options->currentClone['wooSchedulerDisabled']) ? false : true;
             $this->options->currentClone['emailsReminderAllowed'] = empty($this->options->currentClone['emailsReminderAllowed']) ? false : true;
+            $this->options->currentClone['isAutoUpdatePlugins']   = empty($this->options->currentClone['isAutoUpdatePlugins']) ? false : true;
         }
 
         // Tables

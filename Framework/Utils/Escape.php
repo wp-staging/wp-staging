@@ -47,6 +47,7 @@ class Escape
             ],
             'p'      => [],
             'br'     => [],
+            'b'      => [],
             'code'   => [],
             'em'     => [],
             'strong' => [

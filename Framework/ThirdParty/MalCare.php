@@ -7,6 +7,7 @@ namespace WPStaging\Framework\ThirdParty;
 use wpdb;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Adapter\WpAdapter;
+use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Staging\Sites;
 
 class MalCare
@@ -32,13 +33,19 @@ class MalCare
     protected $sites;
 
     /**
+     * @var Filesystem
+     */
+    protected $filesystem;
+
+    /**
      * @param WpAdapter $wpAdapter
      * @param Sites $sites
      */
-    public function __construct(WpAdapter $wpAdapter, Sites $sites)
+    public function __construct(WpAdapter $wpAdapter, Sites $sites, Filesystem $filesystem)
     {
-        $this->wpAdapter = $wpAdapter;
-        $this->sites     = $sites;
+        $this->wpAdapter    = $wpAdapter;
+        $this->sites        = $sites;
+        $this->filesystem   = $filesystem;
     }
 
     /**
@@ -142,7 +149,7 @@ class MalCare
         $pattern = '/^\s*(require_once|require|include|@include)\s*\(?\s*[\'"][^\'"]*malcare-waf\.php[\'"]\s*\)?\s*;\s*$/m';
         $content = preg_replace($pattern, '', $content);
 
-        if (@wpstg_put_contents($filePath, $content) === false) {
+        if ($this->filesystem->create($filePath, $content) === false) {
             return false;
         }
 

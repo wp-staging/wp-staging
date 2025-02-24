@@ -20,9 +20,15 @@ include WPSTG_VIEWS_DIR . 'job/modal/process.php';
 
 ?>
 <div id="wpstg-step-1">
-    <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning" <?php echo $error ? 'disabled' : '' ?>>
-        <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
-    </button>
+    <?php if (defined('WPSTG_NEW_STAGING')) : ?>
+        <button id="wpstg-new-staging" class="wpstg-blue-primary wpstg-button" <?php echo $error ? 'disabled' : '' ?>>
+            <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
+        </button>
+    <?php else : ?>
+        <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning" <?php echo $error ? 'disabled' : '' ?>>
+            <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
+        </button>
+    <?php endif; ?>
 </div>
 
 <?php if (WPStaging::isOnWordPressPlayground()) : ?>

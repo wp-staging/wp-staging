@@ -23,9 +23,6 @@ class BackupScheduler
     const OPTION_BACKUP_SCHEDULE_ERROR_REPORT = 'wpstg_backup_schedules_send_error_report';
 
     /** @var string */
-    const OPTION_BACKUP_SCHEDULE_REPORT_EMAIL = 'wpstg_backup_schedules_report_email';
-
-    /** @var string */
     const TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT = 'wpstg.backup.schedules.report_sent';
 
     /** @var string */
@@ -699,7 +696,7 @@ class BackupScheduler
             return false;
         }
 
-        $reportEmail = get_option(self::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        $reportEmail = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         if (!filter_var($reportEmail, FILTER_VALIDATE_EMAIL)) {
             return false;
         }
