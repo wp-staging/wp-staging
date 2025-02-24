@@ -4,8 +4,10 @@ namespace WPStaging\Framework\CloningProcess\Data;
 
 use WPStaging\Backend\Modules\Jobs\Exceptions\FatalException;
 use WPStaging\Core\Utils\Logger;
+use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Filesystem\Filesystem;
 
-class UpdateWpConfigTablePrefix extends FileCloningService
+class UpdateWpConfig extends FileCloningService
 {
     /**
      * @inheritDoc
@@ -39,7 +41,52 @@ class UpdateWpConfigTablePrefix extends FileCloningService
         $content = str_replace($oldUrl, $this->dto->getStagingSiteUrl(), $content);
 
         $this->writeWpConfig($content);
+
+        $this->writeFileHeader($path);
+
         //$this->log('Done');
+        return true;
+    }
+
+    /**
+     * Modify wp-config.php to add staging site information
+     *
+     * @param string $filePath
+     * @return boolean
+     */
+    protected function writeFileHeader($filePath)
+    {
+        if (($content = file_get_contents($filePath)) === false) {
+            $this->log("Can't read wp-config.php", Logger::TYPE_ERROR);
+
+            return false;
+        }
+
+        $search  = "<?php";
+        $marker  = "@wp-staging";
+        $replace = "<?php\r\n
+/**
+ * " . $marker . "
+ * Site         : " . $this->dto->getStagingSiteUrl() . "
+ * Parent       : " . $this->dto->getBaseUrl() . "
+ * Created at   : " . current_time('d.m.Y H:i:s') . "
+ * Updated at   : " . current_time('d.m.Y H:i:s') . "
+ * Read more    : https://wp-staging.com/docs/create-a-staging-site-clone-wordpress/
+ */\r\n";
+
+        $filesystem = WPStaging::make(Filesystem::class);
+
+        // Check if the text already exists
+        if (strpos($content, $marker) === false) {
+            $content = str_replace($search, $replace, $content);
+
+            if ($filesystem->create($filePath, $content) === false) {
+                $this->log("Can't save wp-config.php", Logger::TYPE_ERROR);
+
+                return false;
+            }
+        }
+
         return true;
     }
 }

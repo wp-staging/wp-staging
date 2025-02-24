@@ -18,7 +18,7 @@ class StagingSiteDto implements \JsonSerializable
     use ArrayableTrait;
 
     /** @var string */
-    protected $cloneId;
+    protected $cloneId = '';
 
     /** @var string */
     protected $cloneName = '';
@@ -95,6 +95,9 @@ class StagingSiteDto implements \JsonSerializable
     /** @var bool */
     protected $wooSchedulerDisabled = false;
 
+    /** @var bool */
+    protected $emailsReminderAllowed = false;
+
     /** @var int */
     protected $ownerId = 0;
 
@@ -112,6 +115,9 @@ class StagingSiteDto implements \JsonSerializable
 
     /** @var array */
     protected $tablePushSelection = [];
+
+    /** @var bool */
+    protected $isAutoUpdatePlugins = false;
 
     public function jsonSerialize(): mixed
     {
@@ -505,6 +511,20 @@ class StagingSiteDto implements \JsonSerializable
         $this->wooSchedulerDisabled = $wooSchedulerDisabled;
     }
 
+    public function getEmailsReminderAllowed(): bool
+    {
+        return $this->emailsReminderAllowed;
+    }
+
+    /**
+     * @param bool $emailsReminderAllowed
+     * @return void
+     */
+    public function setEmailsReminderAllowed(bool $emailsReminderAllowed)
+    {
+        $this->emailsReminderAllowed = $emailsReminderAllowed;
+    }
+
     public function getOwnerId(): int
     {
         return $this->ownerId;
@@ -640,5 +660,22 @@ class StagingSiteDto implements \JsonSerializable
     public function getUsedPrefix(): string
     {
         return $this->getIsExternalDatabase() ? $this->getDatabasePrefix() : $this->getPrefix();
+    }
+
+    /**
+     * @param bool $isAutoUpdatePlugins
+     * @return void
+     */
+    public function setIsAutoUpdatePlugins(bool $isAutoUpdatePlugins)
+    {
+        $this->isAutoUpdatePlugins = $isAutoUpdatePlugins;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsAutoUpdatePlugins(): bool
+    {
+        return $this->isAutoUpdatePlugins;
     }
 }

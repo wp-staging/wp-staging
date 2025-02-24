@@ -34,7 +34,7 @@ if (!defined('WPSTG_PLUGIN_URL')) {
 
 // Expected version number of the must-use plugin 'optimizer'. Used for automatic updates of the mu-plugin
 if (!defined('WPSTG_OPTIMIZER_MUVERSION')) {
-    define('WPSTG_OPTIMIZER_MUVERSION', '1.5.9');
+    define('WPSTG_OPTIMIZER_MUVERSION', '1.6.0');
 }
 
 // /var/www/single/wp-content/plugins/wp-staging-pro/wp-staging-pro.php => wp-staging-pro

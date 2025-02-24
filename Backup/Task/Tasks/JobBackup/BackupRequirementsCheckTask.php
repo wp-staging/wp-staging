@@ -247,7 +247,7 @@ class BackupRequirementsCheckTask extends BackupTask
             'Backup Must-Use Plugins'          => $this->jobDataDto->getIsExportingMuPlugins(),
             'Backup Plugins'                   => $this->jobDataDto->getIsExportingPlugins(),
             'Backup Other Files In wp-content' => $this->jobDataDto->getIsExportingOtherWpContentFiles(),
-            'Backup Other Files In wp root'    => $this->jobDataDto->getIsExportingOtherWpRootFiles(),
+            'Backup Other wp root folders'     => $this->jobDataDto->getIsExportingOtherWpRootFiles(),
             'Backup Database'                  => $this->jobDataDto->getIsExportingDatabase(),
         ];
     }

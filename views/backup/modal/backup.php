@@ -92,12 +92,12 @@ $cronMessage = $haveProCrons ? __('There are backup plans created with WP Stagin
                         );
                         ?>
                     <span class="<?php echo esc_attr($disabledClass) ?>" id="wpstg-wproot-other-files-span" data-id="#wpstg-wproot-scanning-files">
-                        <?php esc_html_e('Backup Other Files In WP Root', 'wp-staging'); ?>
+                        <?php esc_html_e('Backup Other WP Root Folders', 'wp-staging'); ?>
                     </span>
                     <div class="wpstg--tooltip wpstg-wproot-tooltip">
                         <img class="wpstg--dashicons wpstg-dashicons-19 wpstg--grey" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info"/>
                         <span class="wpstg--tooltiptext wpstg--tooltiptext-backups">
-                            <?php esc_html_e('The WP core folders wp-admin and wp-includes are not backed up. This is not necessary! All folders containing WP Staging sites are also not backed up. If you want to back up a staging site, open WP Staging on the staging site and perform a backup from there.', 'wp-staging'); ?>
+                            <?php echo sprintf(esc_html__('Only folders are backed up; files like %s are excluded and must be saved manually if needed. The following folders are also not included in the backup: %s, %s, and those containing WP Staging sites. To back up a staging site, open WP Staging on that site and create a backup directly from there.', 'wp-staging'), '<code>wp-config.php</code>', '<code>wp-admin</code>', '<code>wp-includes</code>'); ?>
                         </span>
                     </div>
 

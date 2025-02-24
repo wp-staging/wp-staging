@@ -69,7 +69,7 @@ class Logs
         $metaData = (new BackupMetadata())->hydrateByFile($file);
         $id = $metaData->getId();
         if (empty($id)) {
-            $id = $this->extractIdfromBackup($backup->getBasename('.wpstg'));
+            $id = $this->extractIdFromBackup($backup->getBasename('.wpstg'));
         }
 
         /**

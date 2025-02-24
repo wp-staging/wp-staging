@@ -100,6 +100,44 @@ class PrepareRestore extends PrepareJob
         return $sanitizedData;
     }
 
+    /**
+     * @return array
+     */
+    public function validateAndSanitizeData($data): array
+    {
+        $expectedKeys = [
+            'file',
+        ];
+
+        // Make sure data has no keys other than the expected ones.
+        $data = array_intersect_key($data, array_flip($expectedKeys));
+
+        // Make sure data has all expected keys.
+        foreach ($expectedKeys as $expectedKey) {
+            if (!array_key_exists($expectedKey, $data)) {
+                throw new \UnexpectedValueException("Invalid request. Missing '$expectedKey'.");
+            }
+        }
+
+        return $data;
+    }
+
+    public function getJob()
+    {
+        return $this->jobRestore;
+    }
+
+    public function persist(): bool
+    {
+        if (!$this->jobRestore instanceof JobRestore) {
+            return false;
+        }
+
+        $this->jobRestore->persist();
+
+        return true;
+    }
+
     private function setupInitialData($sanitizedData)
     {
         $sanitizedData = $this->validateAndSanitizeData($sanitizedData);
@@ -149,27 +187,5 @@ class PrepareRestore extends PrepareJob
         }
 
         return true;
-    }
-
-    /**
-     * @return array
-     */
-    private function validateAndSanitizeData($data)
-    {
-        $expectedKeys = [
-            'file',
-        ];
-
-        // Make sure data has no keys other than the expected ones.
-        $data = array_intersect_key($data, array_flip($expectedKeys));
-
-        // Make sure data has all expected keys.
-        foreach ($expectedKeys as $expectedKey) {
-            if (!array_key_exists($expectedKey, $data)) {
-                throw new \UnexpectedValueException("Invalid request. Missing '$expectedKey'.");
-            }
-        }
-
-        return $data;
     }
 }

@@ -265,7 +265,7 @@ class Cloning extends Job
         $this->options->cronDisabled          = false;
         $this->options->wooSchedulerDisabled  = false;
         $this->options->emailsReminderAllowed = false;
-
+        $this->options->isAutoUpdatePlugins   = false;
         $this->setAdvancedCloningOptions();
 
         $this->options->destinationDir      = $this->getDestinationDir();
@@ -278,7 +278,6 @@ class Cloning extends Job
 
         // id of the user creating the clone
         $this->options->ownerId = get_current_user_id();
-
         // Save Clone data
         $this->saveClone();
 
@@ -328,6 +327,7 @@ class Cloning extends Job
             'adminPassword'         => $this->options->adminPassword,
             'wooSchedulerDisabled'  => (bool)$this->options->wooSchedulerDisabled,
             "emailsReminderAllowed" => (bool)$this->options->emailsReminderAllowed,
+            'isAutoUpdatePlugins'   => (bool)$this->options->isAutoUpdatePlugins,
         ];
 
         if ($this->sitesHelper->updateStagingSites($this->options->existingClones) === false) {

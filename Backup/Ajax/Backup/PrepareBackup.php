@@ -349,7 +349,7 @@ class PrepareBackup extends PrepareJob
      *
      * @return JobBackup|null The current reference to the Backup Job, if any.
      */
-    public function getJobBackup()
+    public function getJob()
     {
         return $this->jobBackup;
     }

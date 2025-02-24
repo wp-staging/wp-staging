@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Adapter;
 
+use Exception;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Utils\Strings;
 use WPStaging\Backup\Job\Jobs\JobRestore;
@@ -105,6 +106,11 @@ class Directory implements DirectoryInterface
     private $urls;
 
     /**
+     * @var array
+     */
+    private $errors = [];
+
+    /**
      * @param Filesystem $filesystem
      * @param Strings $strings
      * @param Urls $urls
@@ -114,6 +120,22 @@ class Directory implements DirectoryInterface
         $this->filesystem = $filesystem;
         $this->strUtils   = $strings;
         $this->urls       = $urls;
+    }
+
+    /**
+     * @return void
+     */
+    public function clearErrors()
+    {
+        $this->errors = [];
+    }
+
+    /**
+     * @return string[]
+     */
+    public function getErrors(): array
+    {
+        return $this->errors;
     }
 
     /**
@@ -563,6 +585,49 @@ class Directory implements DirectoryInterface
         return $excludedDirectories;
     }
 
+    /**
+     * Get size of path
+     * @param string $path
+     * @return int
+     * @throws Exception
+     */
+    public function getSize(string $path): int
+    {
+        $path = realpath($path);
+
+        if ($path === false) {
+            return 0;
+        }
+
+        if (is_file($path)) {
+            return filesize($path);
+        }
+
+        if (!is_dir($path)) {
+            return 0;
+        }
+
+        $totalBytes = 0;
+        try {
+            // Iterator
+            $iterator = new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator($path, \FilesystemIterator::SKIP_DOTS)
+            );
+
+            // Loop & add file size
+            foreach ($iterator as $file) {
+                try {
+                    $totalBytes += $file->getSize();
+                } catch (Exception $e) { // Some invalid symbolic links can cause issues in *nix systems
+                    $this->errors[] = "{$file} is a symbolic link or for some reason its size is invalid";
+                }
+            }
+        } catch (Exception $e) {
+            throw new Exception($e->getMessage());
+        }
+
+        return $totalBytes;
+    }
 
     /**
      * Different slash mode for path

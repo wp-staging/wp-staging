@@ -12,6 +12,7 @@ use WPStaging\Core\Utils\IISWebConfig;
 use WPStaging\Core\Utils\Htaccess;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\BackgroundProcessing\Queue;
+use WPStaging\Notifications\Notifications;
 use WPStaging\Staging\Sites;
 use WPStaging\Backup\BackupScheduler;
 
@@ -101,7 +102,7 @@ class Upgrade
             return;
         }
 
-        $optionBackupScheduleReportEmail = get_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
+        $optionBackupScheduleReportEmail = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         if (empty($optionBackupScheduleReportEmail) || !filter_var($optionBackupScheduleReportEmail, FILTER_VALIDATE_EMAIL)) {
             $wpstgSettings = (array)get_option('wpstg_settings');
 
@@ -114,7 +115,7 @@ class Upgrade
                 }
             }
 
-            update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);
+            update_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);
         }
 
         // boolean false: Default value if the option does not exist/created yet

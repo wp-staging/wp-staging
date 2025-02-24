@@ -176,42 +176,6 @@ function wpstg_get_upload_dir()
 }
 
 /**
- * Write data to file
- * An alternative function for file_put_contents which is disabled on some hosts
- *
- * @param string $file
- * @param string $contents
- * @param int | false $mode
- * @return boolean
- */
-function wpstg_put_contents($file, $contents, $mode = false)
-{
-    $fp = @fopen($file, 'wb');
-
-    if (!$fp) {
-        return false;
-    }
-
-    mbstring_binary_safe_encoding();
-
-    $data_length = strlen($contents);
-
-    $bytes_written = fwrite($fp, $contents);
-
-    reset_mbstring_encoding();
-
-    fclose($fp);
-
-    if ($data_length !== $bytes_written) {
-        return false;
-    }
-
-    wpstg_chmod($file, $mode);
-
-    return true;
-}
-
-/**
  * Change chmod of file or folder
  * @param string $file path to file
  * @param mixed $mode false or specific octal value like 0755

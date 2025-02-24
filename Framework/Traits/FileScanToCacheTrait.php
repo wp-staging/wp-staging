@@ -4,6 +4,7 @@ namespace WPStaging\Framework\Traits;
 
 use Exception;
 use RuntimeException;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
 use WPStaging\Framework\Utils\Strings;
@@ -49,7 +50,7 @@ trait FileScanToCacheTrait
      */
     public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $excludeSizeRules = [], $wpRootPath = ABSPATH)
     {
-        $filesystem = new Filesystem();
+        $filesystem = WPStaging::make(Filesystem::class);
         $normalizedWpRoot = $filesystem->normalizePath($wpRootPath);
         if (is_file($path)) {
             $file = str_replace($normalizedWpRoot, '', $filesystem->normalizePath($path, true));

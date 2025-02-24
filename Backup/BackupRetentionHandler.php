@@ -24,7 +24,7 @@ class BackupRetentionHandler
     }
 
     /**
-     * @param string|bool $storage
+     * @param string|bool $storage if it is empty string('') all backups retention will be returned!
      *
      * @return array
      *

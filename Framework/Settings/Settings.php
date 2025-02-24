@@ -8,6 +8,7 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backup\BackupScheduler;
 use WPStaging\Framework\Security\Auth;
+use WPStaging\Notifications\Notifications;
 
 class Settings
 {
@@ -222,7 +223,7 @@ class Settings
         }
 
         update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_ERROR_REPORT, $optionBackupScheduleErrorReport);
-        update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);
+        update_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);
         update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT, $optionBackupScheduleSlackErrorReport);
         update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK, $optionBackupScheduleReportSlackWebhook);
     }

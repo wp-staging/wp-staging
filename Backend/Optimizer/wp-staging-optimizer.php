@@ -13,7 +13,7 @@
  * See https://github.com/wp-staging/wp-staging-pro/issues/2830
  *
  * Author: WP STAGING
- * Version: 1.5.9
+ * Version: 1.6.0
  * Author URI: https://wp-staging.com
  * Text Domain: wp-staging
  */
@@ -22,7 +22,7 @@
 // Important: Update WPSTG_OPTIMIZER_MUVERSION in /bootstrap.php to the same version!
 
 if (!defined('WPSTG_OPTIMIZER_VERSION')) {
-    define('WPSTG_OPTIMIZER_VERSION', '1.5.9');
+    define('WPSTG_OPTIMIZER_VERSION', '1.6.0');
 }
 
 if (!function_exists('wpstgGetPluginsDir')) {

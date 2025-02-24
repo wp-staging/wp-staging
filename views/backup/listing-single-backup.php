@@ -54,6 +54,11 @@ $logUrl = add_query_arg([
     'md5'    => $backup->md5BaseName,
 ], admin_url('admin-post.php'));
 
+$downloadAttribute = 'download';
+if (WPStaging::isOnWordPressPlayground()) {
+    $downloadAttribute = 'target=_blank';
+}
+
 ?>
 <li id="<?php echo esc_attr($id) ?>" class="wpstg-clone wpstg-backup" data-md5="<?php echo esc_attr($backup->md5BaseName); ?>" data-name="<?php echo esc_attr($backup->backupName); ?>">
     <div class="wpstg-clone-header">
@@ -94,14 +99,12 @@ $logUrl = add_query_arg([
                             <?php esc_html_e('Download', 'wp-staging') ?>
                         </a>
                     <?php else : ?>
-                        <a download
-                           href="<?php echo esc_url($downloadUrl ?: '') ?>" class="wpstg--backup--download wpstg-merge-clone wpstg-clone-action"
+                        <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($downloadUrl ?: '') ?>" class="wpstg--backup--download wpstg-merge-clone wpstg-clone-action"
                            title="<?php esc_attr_e('Download backup file to local system', 'wp-staging') ?>">
                             <?php esc_html_e('Download', 'wp-staging') ?>
                         </a>
                     <?php endif ?>
-                    <a download
-                       href="<?php echo esc_url($logUrl ?: '') ?>" class="wpstg-merge-clone wpstg-clone-action"
+                    <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($logUrl ?: '') ?>" class="wpstg-merge-clone wpstg-clone-action"
                        title="<?php esc_attr_e('Download backup log file', 'wp-staging') ?>">
                         <?php esc_html_e('Log File', 'wp-staging') ?>
                     </a>
