@@ -27,9 +27,9 @@ class Delete extends AbstractTemplateComponent
 
         $tmpFileToDelete = $this->getMemoryExhaustErrorTmpFile(self::WPSTG_REQUEST);
 
-        $jobBackup = WPStaging::make(StagingSiteDelete::class); // @phpstan-ignore-line
-        $jobBackup->setMemoryExhaustErrorTmpFile($tmpFileToDelete); // @phpstan-ignore-line
+        $jobDelete = WPStaging::make(StagingSiteDelete::class); // @phpstan-ignore-line
+        $jobDelete->setMemoryExhaustErrorTmpFile($tmpFileToDelete); // @phpstan-ignore-line
 
-        wp_send_json($jobBackup->prepareAndExecute());
+        wp_send_json($jobDelete->prepareAndExecute());
     }
 }

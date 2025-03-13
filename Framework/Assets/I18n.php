@@ -139,6 +139,8 @@ class I18n
                 'error_modal_title' => esc_html__('Different Database Properties', 'wp-staging'),
                 'error_modal_confirm_button_text' => esc_html__('Proceed', 'wp-staging'),
                 'insufficient_db_privilege_title' => esc_html__('Insufficient Database Privileges', 'wp-staging'),
+                'show_full_message' => esc_html__('Show Full Message', 'wp-staging'),
+                'hide_full_message' => esc_html__('Hide Full Message', 'wp-staging'),
             ],
             'admin_send_cloning_ajax' => [
                 'error_general' => sprintf(esc_html__('Something went wrong!%sGo to WP Staging > Settings and lower \'File Copy Limit\' and \'DB Query Limit\'. Also set \'CPU Load Priority to low \' and try again. If that does not help, %s', 'wp-staging'), '<br/><br/>', '<a href=\'https://wp-staging.com/support/\' target=\'_blank\'>open a support ticket</a>'),

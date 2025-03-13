@@ -42,6 +42,9 @@ class Extractor extends AbstractExtractor
     /** @var ZlibCompressor */
     protected $zlibCompressor;
 
+    /** @var bool */
+    protected $isRepairMultipleHeadersIssue = false;
+
     public function __construct(
         PathIdentifier $pathIdentifier,
         Directory $directory,
@@ -69,6 +72,15 @@ class Extractor extends AbstractExtractor
         } else {
             $this->indexLineDto = WPStaging::make(FileHeader::class);
         }
+    }
+
+    /**
+     * @param bool $isRepairMultipleHeadersIssue
+     * @return void
+     */
+    public function setIsRepairMultipleHeadersIssue(bool $isRepairMultipleHeadersIssue)
+    {
+        $this->isRepairMultipleHeadersIssue = $isRepairMultipleHeadersIssue;
     }
 
     /**
@@ -281,7 +293,7 @@ class Extractor extends AbstractExtractor
 
         if (!$destinationFileResource) {
             $this->diskWriteCheck->testDiskIsWriteable();
-            throw new \Exception("Can not extract file $destinationFilePath");
+            throw new Exception("Can not extract file $destinationFilePath");
         }
 
         while (!$this->extractingFile->isFinished() && !$this->isThreshold()) {
@@ -295,6 +307,10 @@ class Extractor extends AbstractExtractor
             } catch (EmptyChunkException $ex) {
                 // If empty chunk, it is an empty file, so we can skip it
                 continue;
+            }
+
+            if ($this->isRepairMultipleHeadersIssue) {
+                $chunk = $this->maybeRepairMultipleHeadersIssue($chunk);
             }
 
             $writtenBytes = fwrite($destinationFileResource, $chunk, (int)$this->getScriptMemoryLimit());

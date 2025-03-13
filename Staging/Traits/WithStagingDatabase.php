@@ -12,18 +12,21 @@ use WPStaging\Staging\Dto\StagingSiteDto;
 trait WithStagingDatabase
 {
     /** @var Database */
-    private $stagingDb;
+    private $stagingDb = null;
 
     /** @var TableService */
     private $tableService = null;
 
     public function initStagingDatabase(StagingSiteDto $stagingSiteDto)
     {
-        if ($this->stagingDb === null) {
-            $this->stagingDb = new Database();
+        if (!empty($this->stagingDb)) {
+            return;
         }
 
         if (!$stagingSiteDto->getIsExternalDatabase()) {
+            $stagingWpdb = new wpdb(DB_USER, DB_PASSWORD, DB_NAME, DB_HOST);
+            $stagingWpdb->set_prefix($this->jobDataDto->getDatabasePrefix());
+            $this->stagingDb = new Database($stagingWpdb);
             return;
         }
 
@@ -36,7 +39,7 @@ trait WithStagingDatabase
 
         $wpdb->prefix = $stagingSiteDto->getDatabasePrefix();
 
-        $this->stagingDb->setWpDatabase($wpdb);
+        $this->stagingDb = new Database($wpdb);
     }
 
     /**

@@ -17,6 +17,13 @@ class StagingSiteDto implements \JsonSerializable
     use HydrateTrait;
     use ArrayableTrait;
 
+    /**
+     * @var string
+     */
+    const STATUS_FINISHED = 'finished';
+
+    const STATUS_UNFINISHED_BROKEN = 'unfinished or broken (?)';
+
     /** @var string */
     protected $cloneId = '';
 

@@ -4,14 +4,14 @@ namespace WPStaging\Staging\Dto\Job;
 
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Staging\Interfaces\StagingDatabaseDtoInterface;
-use WPStaging\Staging\Interfaces\StagingDataDtoInterface;
+use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
 use WPStaging\Staging\Traits\StagingDatabaseDtoTrait;
-use WPStaging\Staging\Traits\StagingDataDtoTrait;
+use WPStaging\Staging\Traits\WithStagingSiteDto;
 
-class StagingSiteDeleteDataDto extends JobDataDto implements StagingDatabaseDtoInterface, StagingDataDtoInterface
+class StagingSiteDeleteDataDto extends JobDataDto implements StagingDatabaseDtoInterface, StagingSiteDtoInterface
 {
     use StagingDatabaseDtoTrait;
-    use StagingDataDtoTrait;
+    use WithStagingSiteDto;
 
     /** @var bool */
     private $isDeletingFiles = false;

@@ -83,9 +83,6 @@ class ProcessLock
             return;
         }
 
-        // Process is locked.
-        $timeLeft = absint($timeout - (time() - $processLocked));
-
-        throw ProcessLockedException::processAlreadyLocked($timeLeft);
+        throw ProcessLockedException::processAlreadyLocked();
     }
 }

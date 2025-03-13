@@ -521,7 +521,11 @@ abstract class Job implements ShutdownableInterface
         $this->logger->add(sprintf('- Clone Directory : %s', (!empty($this->options->cloneDir) ? $this->options->cloneDir : 'Not Set')), Logger::TYPE_INFO_SUB);
         $this->logger->add(sprintf('- Clone Host : %s', (!empty($this->options->cloneHostname) ? $this->options->cloneHostname : 'Not Set')), Logger::TYPE_INFO_SUB);
         $this->logger->add(sprintf('- Symlink Uploads Folder : %s', ($this->options->uploadsSymlinked ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
-        $this->logger->add(sprintf('- Auto Update Plugins : %s', ($this->options->isAutoUpdatePlugins ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+
+        if (isset($this->options->isAutoUpdatePlugins)) {
+            $this->logger->add(sprintf('- Auto Update Plugins : %s', ($this->options->isAutoUpdatePlugins ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
+        }
+
         if (isset($this->options->cronDisabled)) {
             $this->logger->add(sprintf('- Disable WP_CRON : %s', ($this->options->cronDisabled ? 'True' : 'False')), Logger::TYPE_INFO_SUB);
         }

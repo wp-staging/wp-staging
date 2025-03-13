@@ -127,6 +127,8 @@ class Updating extends Job
         // Job
         $this->options->job = new stdClass();
 
+        // Make sure it is always enabled for free version
+        $this->options->emailsAllowed = true;
         // Check if clone data already exists and use that one
         if (isset($this->options->existingClones[$this->options->clone])) {
             $currentStagingSite                   = $this->options->existingClones[$this->options->clone];
@@ -150,6 +152,7 @@ class Updating extends Job
             $this->options->adminPassword         = $this->getValueFromArray('adminPassword', $currentStagingSite);
             $this->options->wooSchedulerDisabled  = $this->getValueFromArray('wooSchedulerDisabled', $currentStagingSite);
             $this->options->emailsReminderAllowed = $this->getValueFromArray('emailsReminderAllowed', $currentStagingSite);
+            $this->options->isAutoUpdatePlugins   = $this->getValueFromArray('isAutoUpdatePlugins', $currentStagingSite);
         } else {
             $job = 'update';
             if ($this->mainJob === Job::RESET) {
@@ -179,12 +182,11 @@ class Updating extends Job
         $this->setTablesForUpdateJob();
         $this->setDirectoriesForUpdateJob();
 
-        // Make sure it is always enabled for free version
-        $this->options->emailsAllowed = true;
-        if (defined('WPSTGPRO_VERSION')) {
+        if (defined('WPSTGPRO_VERSION') && $this->mainJob !== Job::RESET) {
             $this->options->emailsAllowed         = isset($_POST['emailsAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsAllowed']);
             $this->options->wooSchedulerDisabled  = isset($_POST['wooSchedulerDisabled']) && $this->sanitize->sanitizeBool($_POST['wooSchedulerDisabled']);
             $this->options->emailsReminderAllowed = isset($_POST['emailsReminderAllowed']) && $this->sanitize->sanitizeBool($_POST['emailsReminderAllowed']);
+            $this->options->isAutoUpdatePlugins   = isset($_POST['isAutoUpdatePlugins']) && $this->sanitize->sanitizeBool($_POST['isAutoUpdatePlugins']);
         }
 
         $this->options->cloneDir       = $this->options->existingClones[$this->options->clone]['path'];

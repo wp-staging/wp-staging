@@ -153,8 +153,7 @@ class DatabaseBackupTask extends BackupTask
                 $rowsExporter->getPrimaryKey();
                 $hasNumericIncrementalPk = true;
             } catch (Exception $e) {
-                $tableLockResult = $rowsExporter->lockTable();
-                $tableLocked = !empty($tableLockResult);
+                $tableLocked = $rowsExporter->lockTable();
             }
 
             // Count rows once per table

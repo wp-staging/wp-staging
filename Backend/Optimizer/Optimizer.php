@@ -42,6 +42,11 @@ class Optimizer
         $this->dest   = trailingslashit($this->mudir) . 'wp-staging-optimizer.php';
     }
 
+    /**
+     * Install Optimizer
+     *
+     * @return bool
+     */
     public function installOptimizer(): bool
     {
         if (file_exists($this->dest) && $this->mustUpdateOptimizer() === false) {
@@ -55,10 +60,11 @@ class Optimizer
         return false;
     }
 
-   /**
-    * Check if the Optimizer must use plugin must be updated
-    * @return bool
-    */
+    /**
+     * Check if the Optimizer must use plugin must be updated
+     *
+     * @return bool
+     */
     private function mustUpdateOptimizer(): bool
     {
         $isVersionNumber = defined('WPSTG_OPTIMIZER_VERSION') ? WPSTG_OPTIMIZER_VERSION : false;

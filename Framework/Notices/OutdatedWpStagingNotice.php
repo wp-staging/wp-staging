@@ -58,28 +58,6 @@ class OutdatedWpStagingNotice
     }
 
     /**
-     * @return boolean
-     */
-    public function isOutdatedWpStagingProVersion()
-    {
-        // If latest pro version is not available there is no need to update
-        if ($this->getLatestWpstgProVersion() === null) {
-            return false;
-        }
-
-        return version_compare($this->getLatestWpstgProVersion(), $this->getCurrentWpstgVersion(), '>') ? true : false;
-    }
-
-    /**
-     * Get the latest available WP STAGING PRO version
-     * @return string
-     */
-    public function getLatestWpstgProVersion()
-    {
-        return $this->getNewestVersionToUpdateBySlug('wp-staging-pro');
-    }
-
-    /**
      * @param string $slug
      * @return null|string
      */

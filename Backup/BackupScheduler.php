@@ -716,6 +716,10 @@ class BackupScheduler
 
         // Set the transient to prevent sending the error report mail again for 5 minutes
         set_transient(self::TRANSIENT_BACKUP_SCHEDULE_REPORT_SENT, true, 5 * 60);
+        if (get_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, false) === 'true') {
+            return $this->notifications->sendEmailAsHTML($reportEmail, $title, $message);
+        }
+
         return $this->notifications->sendEmail($reportEmail, $title, $message);
     }
 

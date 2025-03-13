@@ -36,7 +36,7 @@ use WPStaging\Backend\Pluginmeta\Pluginmeta;
 use WPStaging\Framework\Database\SelectedTables;
 use WPStaging\Framework\Utils\Sanitize;
 use WPStaging\Backend\Pro\Modules\Jobs\Scan as ScanProModule;
-use WPStaging\Backend\Feedback\Feedback;
+use WPStaging\Basic\Feedback\Feedback;
 use WPStaging\Core\CloningJobProvider;
 use WPStaging\Framework\Utils\PluginInfo;
 use WPStaging\Framework\Security\Nonce;

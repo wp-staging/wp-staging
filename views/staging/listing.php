@@ -12,13 +12,30 @@
 
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Hooks;
+use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $isPro = WPStaging::isPro();
 include WPSTG_VIEWS_DIR . 'job/modal/success.php';
 include WPSTG_VIEWS_DIR . 'job/modal/process.php';
 
+$processLock = WPStaging::make(ProcessLock::class);
+try {
+    $processLock->checkProcessLocked();
+    $isLocked = false;
+} catch (ProcessLockedException $e) {
+    $isLocked = true;
+}
 ?>
+
+<?php if ($isLocked) : ?>
+    <div id="wpstg-backup-locked">
+        <div class="wpstg-locked-backup-loader"></div>
+        <div class="text"><?php esc_html_e('There is backup work in progress...', 'wp-staging'); ?></div>
+    </div>
+<?php endif; ?>
+
 <div id="wpstg-step-1">
     <?php if (defined('WPSTG_NEW_STAGING')) : ?>
         <button id="wpstg-new-staging" class="wpstg-blue-primary wpstg-button" <?php echo $error ? 'disabled' : '' ?>>

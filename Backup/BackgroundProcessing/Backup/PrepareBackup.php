@@ -92,4 +92,9 @@ class PrepareBackup extends PrepareJob
     {
         return true;
     }
+
+    protected function getJobDefaultName(): string
+    {
+        return 'Backup Creation';
+    }
 }

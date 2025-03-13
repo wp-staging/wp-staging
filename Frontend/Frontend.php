@@ -85,6 +85,11 @@ class Frontend
     {
         $this->accessDenied = false;
 
+        // Don't show login form if it is a cron job
+        if (defined('DOING_CRON') && DOING_CRON) {
+            return false;
+        }
+
         // Don't show login form if from wp-cli
         if ('cli' === PHP_SAPI && defined('WP_CLI')) {
             return false;

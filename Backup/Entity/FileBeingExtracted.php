@@ -41,6 +41,9 @@ class FileBeingExtracted
     /** @var int 1 if yes, 0 if no. */
     protected $isCompressed;
 
+    /** @var int */
+    protected $headerBytesRemoved = 0;
+
     public function __construct(string $identifiablePath, string $extractFolder, PathIdentifier $pathIdentifier, IndexLineInterface $backupFileIndex)
     {
         $this->identifiablePath = $identifiablePath;
@@ -121,7 +124,11 @@ class FileBeingExtracted
 
     public function isFinished()
     {
-        return $this->writtenBytes >= $this->totalBytes;
+        if (!$this->areHeaderBytesRemoved()) {
+            return $this->writtenBytes >= $this->totalBytes;
+        }
+
+        return $this->writtenBytes >= ($this->totalBytes - $this->headerBytesRemoved);
     }
 
     /**
@@ -135,5 +142,33 @@ class FileBeingExtracted
     public function getCurrentOffset(): int
     {
         return $this->start + $this->writtenBytes;
+    }
+
+    /**
+     * @param int $headerBytesRemoved
+     * @return void
+     */
+    public function addHeaderBytesRemoved(int $headerBytesRemoved)
+    {
+        $this->headerBytesRemoved += $headerBytesRemoved;
+    }
+
+    public function getHeaderBytesRemoved(): int
+    {
+        return $this->headerBytesRemoved;
+    }
+
+    /**
+     * @param int $headerBytesRemoved
+     * @return void
+     */
+    public function setHeaderBytesRemoved(int $headerBytesRemoved)
+    {
+        $this->headerBytesRemoved = $headerBytesRemoved;
+    }
+
+    public function areHeaderBytesRemoved(): bool
+    {
+        return $this->headerBytesRemoved > 0;
     }
 }

@@ -9,15 +9,15 @@ License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
 Tested up to: 6.7
-Stable tag: 4.1.1
+Stable tag: 4.1.2
 Requires PHP: 7.0
 
-Backup Restore Migrate Staging Duplicator - 100% unit tested.
+Backup & Backup Restore. Migration & Staging – 1-Click Enterprise Backup Plugin, 100% Unit Tested. Keep Your Backups Safe and Secure.
 
 == Description ==
 
 <h3>Backup, Staging, Cloning & Migration of WordPress Sites</h3>
-WP STAGING is a professional all in one <strong>backup, staging, and duplicator plugin</strong>. Unit and e2e tested on an enterprise level for all version of php 7.0 - 8.3.
+WP STAGING is a professional all in one <strong>backup, staging, and duplicator plugin</strong>. Unit and e2e tested on an enterprise level for all version of php 7.0 - 8.4.
 
 Instantly* create an exact backup and clone of your website, perfect for staging, development, or simply keeping your data safe. *Cloning and backup time depends on the size of your website.
 Perfect for staging, backup, or development purposes.
@@ -286,6 +286,25 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.1.2 =
+* New: Add support for multipart emails (HTML and plain text) in email notifications. #3856
+* Fix: Prevent logging out Google Drive from all sites if connection of one site is removed. Don't revoke google drive token, only remove data from db. (Pro) #4181
+* Fix: Handle toggling of DB Privileges popup message while creating staging site. (Pro) #4141
+* Fix: Remove unnecessary styles and scripts on WP Staging admin pages. #4108
+* Fix: Automatically update outdated plugins on the staging site while creating, updating and resetting a staging site. #4123
+* Fix: Remove the ETA from the backup process locking modal. #4133
+* Fix: Ensure that Pro features are available for the `Legacy Developer Unlimited License` plan. (Pro) #4149
+* Fix: WP cron does not work on staging site - Scheduled posts aren't working on staging sites. #4131
+* Fix: Remove duplicate file headers in V2 backup files (Repair function) and allow backup restore even if there are duplicate file headers. #4152
+* Fix: Choose a unique staging site name that is not already in use. #4129
+* UX: Remove fixed width from backup restore button. #4178
+* Dev: Automatic login to the wp staging dev stack. #2321
+* Dev: Update Ubuntu OS version to 24.04 for Github Workflows. #4136
+* Dev: Basic cloning and backup e2e tests are failing. #4169
+* Dev: Refactor datatabase cloning logic to backup logic. #4067
+* Dev: Add wp core independent update check. Don't use wp core update API anymore. #3653
+* Dev: Refactor and DRY FilesystemScanner Code to be used in both Backup and Cloning logic. #4126
 
 = 4.1.1 =
 * New: Compatible to WordPress 6.7.2.
@@ -1008,4 +1027,4 @@ WP STAGING Backup & Cloning | Full changelog:
 [https://wp-staging.com/wp-staging-changelog](https://wp-staging.com/wp-staging-changelog)
 
 == Upgrade Notice ==
-Compatible up to WordPress 6.7.2. New plugin auto update feature for staging sites (Pro).
+Many improvements for reliability and bug fixes. Please update to the latest version!

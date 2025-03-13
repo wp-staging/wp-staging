@@ -5,6 +5,8 @@
 
 namespace WPStaging\Framework\Database;
 
+use RuntimeException;
+use UnexpectedValueException;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Collection\Collection;
@@ -65,6 +67,25 @@ class TableService
     {
         $this->shouldStop = $shouldStop;
         return $this;
+    }
+
+    /**
+     * @param string $tableName
+     * @return bool
+     */
+    public function tableExists(string $tableName): bool
+    {
+        $wpdb   = $this->database->getWpdb();
+        $tables = $wpdb->get_results(
+            $wpdb->prepare('SHOW TABLES LIKE %s;', $wpdb->esc_like($tableName)),
+            ARRAY_A
+        );
+
+        if (!$tables) {
+            return false;
+        }
+
+        return true;
     }
 
     /**
@@ -425,9 +446,11 @@ class TableService
      * @param string $tableName
      * @return int
      */
-    public function getRowsCount(string $tableName): int
+    public function getRowsCount(string $tableName, bool $encapsulateTableName = true): int
     {
-        return (int)$this->database->getWpdb()->get_var("SELECT COUNT(1) FROM `$tableName`");
+        $tableName = $encapsulateTableName ? "`$tableName`" : $tableName;
+
+        return (int)$this->database->getWpdb()->get_var("SELECT COUNT(1) FROM $tableName");
     }
 
     /**
@@ -439,6 +462,173 @@ class TableService
         $wpdb = $this->database->getWpdba()->getClient();
 
         return $wpdb->last_error;
+    }
+
+
+    /**
+     * @return string The primary key of the current table, if any.
+     */
+    public function getNumericPrimaryKey(string $database, string $table): string
+    {
+        if ($this->hasMoreThanOnePrimaryKey($database, $table)) {
+            throw new UnexpectedValueException();
+        }
+
+        $query = "SELECT COLUMN_NAME
+                  FROM INFORMATION_SCHEMA.COLUMNS
+                  WHERE TABLE_NAME = '$table'
+                  AND TABLE_SCHEMA = '$database'
+                  AND IS_NULLABLE = 'NO'
+                  AND DATA_TYPE IN ('int', 'bigint', 'smallint', 'mediumint')
+                  AND COLUMN_KEY = 'PRI'
+                  AND EXTRA like '%auto_increment%';";
+
+        $result = $this->client->query($query);
+
+        if (!$result) {
+            throw new UnexpectedValueException();
+        }
+
+        $primaryKey = $this->client->fetchObject($result);
+
+        $this->client->freeResult($result);
+
+        if (!is_object($primaryKey)) {
+            throw new UnexpectedValueException();
+        }
+
+        if (!property_exists($primaryKey, 'COLUMN_NAME')) {
+            throw new UnexpectedValueException();
+        }
+
+        if (empty($primaryKey->COLUMN_NAME)) {
+            throw new UnexpectedValueException();
+        }
+
+        return $primaryKey->COLUMN_NAME;
+    }
+
+    /**
+     * Replace Constraints with empty string to remove them
+     *
+     * @param string $input SQL statement
+     *
+     * @return string
+     */
+    public function replaceTableConstraints(string $input): string
+    {
+        $pattern = [
+            /**
+             * This regex pattern makes it possible to match Table Constraints in SQL with close brackets ")" as the end marker.
+             * If it matches, the string will be replaced with close brackets ")" to close "CREATE TABLE" open brackets "(" to avoid syntax errors.
+             *
+             * Example:
+             *  KEY `key1` (`field1`,`field2`), CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+             *
+             * Pattern match:
+             *  , CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION )
+             *
+             * String before:
+             *  KEY `key1` (`field1`,`field2`), CONSTRAINT `key_constraint` FOREIGN KEY (`field1`, `field2`) REFERENCES `another_table` (`field1`, `field2`) ON DELETE CASCADE ON UPDATE NO ACTION ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+             *
+             * String after:
+             * KEY `key1` (`field1`,`field2`) ) ENGINE=InnoDB DEFAULT CHARSET=utf8 COLLATE=utf8_general_ci;
+             *
+             * @see https://github.com/wp-staging/wp-staging-pro/issues/3259
+             * @see https://github.com/wp-staging/wp-staging-pro/pull/3265
+             * @see https://github.com/wp-staging/wp-staging-pro/issues/3303
+             * @see https://github.com/wp-staging/wp-staging-pro/pull/3304
+             */
+            '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?(CASCADE|RESTRICT|NO\sACTION|SET\sNULL|SET\sDEFAULT)(,)/i',
+            '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?\)/i',
+            '/\s+CONSTRAINT(.+)REFERENCES(.+),/i',
+            '/,\s+CONSTRAINT(.+)REFERENCES(.+)/i',
+        ];
+
+        $replace = ['', ')', '', ''];
+        return (string)preg_replace($pattern, $replace, $input);
+    }
+
+    /**
+     * @param string $input SQL statement
+     *
+     * @return string
+     */
+    public function replaceTableOptions(string $input): string
+    {
+        $search = [
+            'TYPE=InnoDB',
+            'TYPE=MyISAM',
+            'ENGINE=Aria',
+            'TRANSACTIONAL=0',
+            'TRANSACTIONAL=1',
+            'PAGE_CHECKSUM=0',
+            'PAGE_CHECKSUM=1',
+            'TABLE_CHECKSUM=0',
+            'TABLE_CHECKSUM=1',
+            'ROW_FORMAT=PAGE',
+            'ROW_FORMAT=FIXED',
+            'ROW_FORMAT=DYNAMIC',
+        ];
+        $replace = [
+            'ENGINE=InnoDB',
+            'ENGINE=MyISAM',
+            'ENGINE=MyISAM',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+        ];
+
+        return str_ireplace($search, $replace, $input);
+    }
+
+    /**
+     * @return void
+     * @throws RuntimeException
+     */
+    public function lockTable(string $tableName)
+    {
+        if (!$this->client->query("LOCK TABLES `$tableName` WRITE;")) {
+            throw new RuntimeException("WP STAGING: Could not lock table $tableName");
+        }
+    }
+
+    /**
+     * @return void
+     * @throws RuntimeException
+     */
+    public function unlockTables()
+    {
+        if (!$this->client->query("UNLOCK TABLES;")) {
+            throw new RuntimeException("WP STAGING: Could not unlock tables");
+        }
+    }
+
+    /**
+     * @param string $tableName
+     *
+     * @return array
+     */
+    public function getColumnTypes(string $tableName): array
+    {
+        $column_types = [];
+
+        $result = $this->client->query("SHOW COLUMNS FROM `{$tableName}`");
+        while ($row = $this->client->fetchAssoc($result)) {
+            if (isset($row['Field'])) {
+                $column_types[strtolower($row['Field'])] = strtolower($row['Type']);
+            }
+        }
+
+        $this->client->freeResult($result);
+
+        return $column_types;
     }
 
     /**
@@ -503,5 +693,25 @@ class TableService
         }
 
         return $query;
+    }
+
+    /**
+     * @return bool
+     *
+     * @throws UnexpectedValueException
+     */
+    private function hasMoreThanOnePrimaryKey(string $database, string $table): bool
+    {
+        $query = "SHOW KEYS FROM $table WHERE Key_name = 'PRIMARY'";
+
+        $result = $this->client->query($query);
+
+        if (!$result) {
+            throw new UnexpectedValueException();
+        }
+
+        $primaryKeys = $this->client->fetchAll($result);
+
+        return count($primaryKeys) > 1;
     }
 }

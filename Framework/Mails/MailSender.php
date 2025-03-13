@@ -3,6 +3,7 @@
 namespace WPStaging\Framework\Mails;
 
 use WPStaging\Notifications\Notifications;
+use WPStaging\Framework\Facades\Sanitize;
 
 use function WPStaging\functions\debug_log;
 
@@ -40,14 +41,21 @@ class MailSender
     protected $addFooter;
 
     /**
-     * @param Notifications $notifications
+     * @var Sanitize
      */
-    public function __construct(Notifications $notifications)
+    protected $sanitize;
+
+    /**
+     * @param Notifications $notifications
+     * @param Sanitize $sanitize
+     */
+    public function __construct(Notifications $notifications, Sanitize $sanitize)
     {
         $this->notifications = $notifications;
         $this->attachments   = [];
         $this->recipient     = get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL);
         $this->addFooter     = false;
+        $this->sanitize      = $sanitize;
     }
 
     /**
@@ -82,9 +90,10 @@ class MailSender
      * The wpstg_action parameter is set to bypass_optimizer to bypass the optimizer and allow the email to be sent.
      * @param string $subject
      * @param string $body
+     * @param array $details
      * @return bool
      */
-    public function sendRequestForEmailNotification(string $subject, string $body): bool
+    public function sendRequestForEmailNotification(string $subject, string $body, array $details = []): bool
     {
         if (empty($subject) || empty($body)) {
             debug_log('Email subject or body is empty', 'error');
@@ -110,6 +119,7 @@ class MailSender
                     'recipient'    => $this->recipient,
                     'attachments'  => implode(',', $attachments),
                     'footer'       => $this->addFooter,
+                    'details'      => $details,
                 ],
             ]
         );
@@ -156,6 +166,7 @@ class MailSender
         $subject = isset($_POST['subject']) ? sanitize_text_field($_POST['subject']) : '';
         $body    = isset($_POST['body']) ? wp_kses_post($_POST['body']) : '';
         $footer  = isset($_POST['footer']) ? (bool)$_POST['footer'] : true;
+        $details = isset($_POST['details']) ? $this->sanitize->sanitizeArray($_POST['details']) : [];
         if (empty($subject) || empty($body)) {
             debug_log('Email subject or body is empty', 'error');
             wp_send_json_error();
@@ -167,9 +178,13 @@ class MailSender
         }
 
         $attachments = $this->getPreparedAttachments();
-
+        $result      = false;
         try {
-            $result = $this->notifications->sendEmail(sanitize_email($_POST['recipient']), $subject, $body, '', $attachments, $footer);
+            if (get_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, false) === 'true') {
+                $result = $this->notifications->sendEmailAsHTML(sanitize_email($_POST['recipient']), $subject, $body, '', $details, $attachments);
+            } else {
+                $result = $this->notifications->sendEmail(sanitize_email($_POST['recipient']), $subject, $body, '', $attachments, $footer);
+            }
 
             $this->cleanupAttachments($attachments);
 

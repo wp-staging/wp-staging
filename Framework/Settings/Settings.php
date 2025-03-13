@@ -100,6 +100,7 @@ class Settings
 
             $optionBackupScheduleSlackErrorReport   = isset($data['schedulesSlackErrorReport']) ? 'true' : '';
             $optionBackupScheduleReportSlackWebhook = !empty($data['schedulesReportSlackWebhook']) ? $this->sanitize->sanitizeUrl($data['schedulesReportSlackWebhook']) : '';
+            $optionSendEmailAsHTML                  = isset($data['emailAsHTML']) ? 'true' : '';
 
             if (empty($optionBackupScheduleReportSlackWebhook)) {
                 $optionBackupScheduleSlackErrorReport = '';
@@ -107,7 +108,7 @@ class Settings
 
             unset($data['schedulesErrorSlackReport'], $data['schedulesReportSlackWebhook']);
 
-            $this->setErrorReportOptions($optionBackupScheduleErrorReport, $optionBackupScheduleReportEmail, $optionBackupScheduleSlackErrorReport, $optionBackupScheduleReportSlackWebhook);
+            $this->setErrorReportOptions($optionBackupScheduleErrorReport, $optionBackupScheduleReportEmail, $optionBackupScheduleSlackErrorReport, $optionBackupScheduleReportSlackWebhook, $optionSendEmailAsHTML);
         }
 
         $sanitized = $this->sanitizeData($data);
@@ -210,13 +211,15 @@ class Settings
      * @param string $optionBackupScheduleReportEmail
      * @param string $optionBackupScheduleSlackErrorReport 'true' if active
      * @param string $optionBackupScheduleReportSlackWebhook
+     * @param string $optionSendEmailAsHTML 'true' if active
      * @return void
      */
     protected function setErrorReportOptions(
         string $optionBackupScheduleErrorReport,
         string $optionBackupScheduleReportEmail,
         string $optionBackupScheduleSlackErrorReport,
-        string $optionBackupScheduleReportSlackWebhook
+        string $optionBackupScheduleReportSlackWebhook,
+        string $optionSendEmailAsHTML
     ) {
         if (!class_exists('WPStaging\Backup\BackupScheduler')) {
             return;
@@ -226,5 +229,6 @@ class Settings
         update_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL, $optionBackupScheduleReportEmail);
         update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_SLACK_ERROR_REPORT, $optionBackupScheduleSlackErrorReport);
         update_option(BackupScheduler::OPTION_BACKUP_SCHEDULE_REPORT_SLACK_WEBHOOK, $optionBackupScheduleReportSlackWebhook);
+        update_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, $optionSendEmailAsHTML);
     }
 }

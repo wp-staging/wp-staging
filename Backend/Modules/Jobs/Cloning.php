@@ -9,6 +9,7 @@ use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Analytics\Actions\AnalyticsStagingCreate;
 use WPStaging\Framework\Database\SelectedTables;
+use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 use WPStaging\Framework\Security\AccessToken;
@@ -649,6 +650,7 @@ class Cloning extends Job
 
     /**
      * @return string The generated friendly name or clone Id by default
+     * @throws WPStagingException
      */
     private function maybeGenerateFriendlyName(): string
     {
@@ -682,18 +684,41 @@ class Cloning extends Job
         // Randomly shuffle the list of names
         shuffle($nameList);
 
+        // Get the list of staging sites
+        $stagingSites = $this->sitesHelper->tryGettingStagingSites();
         foreach ($nameList as $name) {
             // Sanitize the name to ensure it is safe for use
             $name    = sanitize_text_field($name);
             $dirPath = ABSPATH . $name;
+            // Check if the directory exists
+            if (file_exists($dirPath)) {
+                continue;
+            }
 
-            // If it doesn't exist, return this name as the friendly name
-            if (!file_exists($dirPath)) {
+            // If the directory is free, then check the database
+            if (!$this->isStagingSiteNameExists($name, $stagingSites)) {
                 return $name;
             }
         }
 
         // If all predefined names are taken, return a clone Id
         return (string)$this->options->clone;
+    }
+
+    /**
+     * Check if the name already exists in the staging sites $stagingSites
+     * @param string $name
+     * @param array $stagingSites
+     * @return bool
+     */
+    private function isStagingSiteNameExists(string $name, array $stagingSites): bool
+    {
+        foreach ($stagingSites as $site) {
+            if ($site['directoryName'] === $name) {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

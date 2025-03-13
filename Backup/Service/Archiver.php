@@ -203,18 +203,18 @@ class Archiver
 
         $indexPath   = $this->replaceEOLsWithPlaceholders($indexPath);
         $fileStats   = fstat($resource);
-        $isInitiated = $this->initiateDtoByFilePath($fullFilePath, $fileStats);
+        $this->initiateDtoByFilePath($fullFilePath, $fileStats);
         $this->archiverDto->setIndexPath($indexPath);
-        $fileHeaderBytes = 0;
-        if ($isInitiated && !$this->isBackupFormatV1() && !$this->archiverDto->isIndexPositionCreated()) {
-            $fileHeaderBytes = $this->writeFileHeader($fullFilePath, $indexPath);
-            $this->archiverDto->setFileHeaderBytes($fileHeaderBytes);
+        $fileHeaderSizeInBytes = 0;
+        if (!$this->isBackupFormatV1() && !$this->archiverDto->isFileHeaderWritten()) {
+            $fileHeaderSizeInBytes = $this->writeFileHeader($fullFilePath, $indexPath);
+            $this->archiverDto->setFileHeaderSizeInBytes($fileHeaderSizeInBytes);
         }
 
         $writtenBytesBefore              = $this->archiverDto->getWrittenBytesTotal();
         $writtenBytesTotal               = $this->appendToArchiveFile($resource, $fullFilePath);
-        $newBytesWritten                 = $writtenBytesTotal + $fileHeaderBytes - $writtenBytesBefore;
-        $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->archiverDto->getFileHeaderBytes();
+        $newBytesWritten                 = $writtenBytesTotal + $fileHeaderSizeInBytes - $writtenBytesBefore;
+        $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->archiverDto->getFileHeaderSizeInBytes();
 
         $retries = 0;
 
