@@ -1,44 +1,28 @@
 <?php
 
-// TODO PHP7.x; declare(strict_type=1);
-// TODO PHP7.x; type hints & return types
 // TODO PHP7.1; constant visibility
 
 namespace WPStaging\Backup\Task\Tasks\JobBackup;
 
-use DirectoryIterator;
-use Exception;
-use SplFileInfo;
-use WPStaging\Framework\Job\Dto\TaskResponseDto;
-use WPStaging\Core\WPStaging;
-use WPStaging\Framework\Adapter\Directory;
-use WPStaging\Framework\Filesystem\DiskWriteCheck;
-use WPStaging\Framework\Filesystem\Filesystem;
-use WPStaging\Framework\Filesystem\FilesystemExceptions;
-use WPStaging\Framework\Filesystem\FilterableDirectoryIterator;
-use WPStaging\Framework\Filesystem\PathIdentifier;
-use WPStaging\Framework\Queue\SeekableQueueInterface;
-use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
-use WPStaging\Framework\Job\Dto\StepsDto;
-use WPStaging\Framework\Job\Exception\DiskNotWritableException;
-use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Backup\Task\BackupTask;
-use WPStaging\Vendor\Psr\Log\LoggerInterface;
-use WPStaging\Framework\Queue\FinishedQueueException;
-use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Task\FileBackupTask;
+use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\FilesystemScanner;
+use WPStaging\Framework\Filesystem\FilesystemScannerDto;
+use WPStaging\Framework\Filesystem\PartIdentifier;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Dto\TaskResponseDto;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Queue\FinishedQueueException;
+use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
+use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Utils\PluginInfo;
+use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class FilesystemScannerTask extends BackupTask
 {
-    use EndOfLinePlaceholderTrait;
-
-    /**
-     * @var string
-     */
-    const PATH_SEPARATOR = '::';
-
     /** @var int */
     const STEP_BACKUP_OTHER_WP_CONTENT_FILES = 0;
 
@@ -69,67 +53,53 @@ class FilesystemScannerTask extends BackupTask
     /** @var Filesystem */
     protected $filesystem;
 
-    /** @var SeekableQueueInterface */
-    protected $fileBackupQueue;
-
-    /** @var PathIdentifier */
-    protected $pathIdentifier;
-
     /** @var PluginInfo */
     private $pluginInfo;
 
-    protected $ignoreFileExtensions;
-    protected $ignoreFileBiggerThan;
-    protected $ignoreFileExtensionFilesBiggerThan;
+    /** @var FilesystemScanner */
+    protected $filesystemScanner;
 
-    /**
-     * Store information of file discovered in each parent path
-     * @var array
-     */
-    protected $files;
+    /** @var array */
+    protected $ignoreFileExtensions = [];
 
-    /**
-     * The parent path which is currently being scanned
-     * Can be either plugins, mu_plugins, themes, uploads or other
-     * Where other means base wp-content directory but skipping plugins, mu_plugins, themes and uploads as they are handle separately
-     * @var string
-     */
-    protected $currentPathScanning;
+    /** @var int */
+    protected $ignoreFileBiggerThan = 0;
+
+    /** @var array */
+    protected $ignoreFileExtensionFilesBiggerThan = [];
 
     /** @var bool */
     protected $isSiteHostedOnWordPressCom = false;
 
     /**
-     * @param Directory $directory
-     * @param PathIdentifier $pathIdentifier
      * @param LoggerInterface $logger
      * @param Cache $cache
      * @param StepsDto $stepsDto
      * @param SeekableQueueInterface $taskQueue
-     * @param SeekableQueueInterface $fileBackupQueue
+     * @param Directory $directory
      * @param Filesystem $filesystem
+     * @param PluginInfo $pluginInfo
      * @param SiteInfo $siteInfo
+     * @param FilesystemScanner $filesystemScanner
      */
     public function __construct(
-        Directory $directory,
-        PathIdentifier $pathIdentifier,
         LoggerInterface $logger,
         Cache $cache,
         StepsDto $stepsDto,
         SeekableQueueInterface $taskQueue,
-        SeekableQueueInterface $fileBackupQueue,
+        Directory $directory,
         Filesystem $filesystem,
+        PluginInfo $pluginInfo,
         SiteInfo $siteInfo,
-        PluginInfo $pluginInfo
+        FilesystemScanner $filesystemScanner
     ) {
         parent::__construct($logger, $cache, $stepsDto, $taskQueue);
 
         $this->directory                  = $directory;
         $this->filesystem                 = $filesystem;
-        $this->pathIdentifier             = $pathIdentifier;
-        $this->fileBackupQueue            = $fileBackupQueue;
         $this->isSiteHostedOnWordPressCom = $siteInfo->isHostedOnWordPressCom();
         $this->pluginInfo                 = $pluginInfo;
+        $this->filesystemScanner          = $filesystemScanner;
     }
 
     /**
@@ -160,43 +130,23 @@ class FilesystemScannerTask extends BackupTask
         $this->setupFilesystemScanner();
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_OTHER_WP_CONTENT_FILES) {
-            $this->currentPathScanning = PartIdentifier::OTHER_WP_CONTENT_PART_IDENTIFIER;
-            $this->setupFileBackupQueue();
-            $this->scanWpContentDirectory();
-            $this->unlockQueue();
-            return $this->generateResponse();
+            return $this->scanWpContentDirectory();
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_PLUGINS_FILES) {
-            $this->currentPathScanning = PartIdentifier::PLUGIN_PART_IDENTIFIER;
-            $this->setupFileBackupQueue();
-            $this->scanPluginsDirectories();
-            $this->unlockQueue();
-            return $this->generateResponse();
+            return $this->scanPluginsDirectories();
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_MU_PLUGINS_FILES) {
-            $this->currentPathScanning = PartIdentifier::MU_PLUGIN_PART_IDENTIFIER;
-            $this->setupFileBackupQueue();
-            $this->scanMuPluginsDirectory();
-            $this->unlockQueue();
-            return $this->generateResponse();
+            return $this->scanMuPluginsDirectory();
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_THEMES_FILES) {
-            $this->currentPathScanning = PartIdentifier::THEME_PART_IDENTIFIER;
-            $this->setupFileBackupQueue();
-            $this->scanThemesDirectory();
-            $this->unlockQueue();
-            return $this->generateResponse();
+            return $this->scanThemesDirectory();
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_UPLOADS_FILES) {
-            $this->currentPathScanning = PartIdentifier::UPLOAD_PART_IDENTIFIER;
-            $this->setupFileBackupQueue();
-            $this->scanUploadsDirectory();
-            $this->unlockQueue();
-            return $this->generateResponse();
+            return $this->scanUploadsDirectory();
         }
 
         if ($this->stepsDto->getCurrent() === self::STEP_BACKUP_OTHER_WP_ROOT_FILES) {
@@ -204,7 +154,13 @@ class FilesystemScannerTask extends BackupTask
         }
 
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
-            $this->scan();
+            try {
+                $this->filesystemScanner->processQueue();
+            } catch (FinishedQueueException $e) {
+                $this->stepsDto->finish();
+            }
+
+            $this->updateJobDataDto();
         }
 
         if ($this->stepsDto->isFinished()) {
@@ -231,15 +187,6 @@ class FilesystemScannerTask extends BackupTask
         }
 
         return $this->generateResponse(false);
-    }
-
-    /**
-     * @return void
-     */
-    protected function setupFileBackupQueue()
-    {
-        $fileBackupTaskName = FileBackupTask::getTaskName() . '_' . $this->currentPathScanning;
-        $this->fileBackupQueue->setup($fileBackupTaskName, SeekableQueueInterface::MODE_WRITE);
     }
 
     /**
@@ -273,614 +220,145 @@ class FilesystemScannerTask extends BackupTask
 
     /**
      * @return void
-     * @throws DiskNotWritableException
-     */
-    protected function scan()
-    {
-        try {
-            $path = $this->taskQueue->dequeue();
-            $path = $this->replacePlaceholdersWithEOLs($path);
-
-            if (is_null($path)) {
-                throw new FinishedQueueException('Directory Scanner Queue is Finished');
-            }
-
-            if (empty($path)) {
-                return;
-            }
-
-            list($path, $linkPath) = $this->resolvePath($path);
-
-            $path = untrailingslashit($this->filesystem->normalizePath($path, true));
-
-            if (!file_exists($path)) {
-                throw new Exception("$path is not a directory. Skipping...");
-            }
-
-            $this->setupFileBackupQueue();
-            $this->recursivePathScanning($path, $linkPath);
-        } catch (FinishedQueueException $e) {
-            try {
-                WPStaging::make(DiskWriteCheck::class)->checkPathCanStoreEnoughBytes($this->directory->getPluginUploadsDirectory(), $this->jobDataDto->getFilesystemSize());
-            } catch (DiskNotWritableException $e) {
-                throw $e;
-            } catch (\RuntimeException $e) {
-                // soft error, no action needed, but log
-                $this->logger->debug($e->getMessage());
-            }
-
-            $this->stepsDto->finish();
-
-            return;
-        } catch (\OutOfBoundsException $e) {
-            $this->logger->debug($e->getMessage());
-        } catch (Exception $e) {
-            $this->logger->warning($e->getMessage());
-        }
-    }
-
-    /**
-     * Resolve path on non-wp.com sites (sites with no symlinks structure) to [base_directory, path, '']
-     * Resolve path on wp.com sites (sites with symlinks structure) to [base_directory, path, link]
-     * Where base_directory can be either plugins, mu_plugins, themes, uploads or other etc
-     * Where path is the path to scan
-     * Where link is the link to path (empty in case of non-wp.com sites)
-     * @param string $pathToResolve - Path to resolve in format base_directory::path::link or base_directory::path
-     * @return array [string pathToScan, string linkToPath]
-     */
-    protected function resolvePath(string $pathToResolve): array
-    {
-        $linkPath  = '';
-        $pathInfos = explode(self::PATH_SEPARATOR, $pathToResolve);
-        // On non-wp.com sites, we don't have link, we only have base directory and path to scan
-        // On wp.com sites, we have base directory, path to scan and link to path, so path info contains 3 elements
-        if (count($pathInfos) > 2) {
-            // link to path
-            $linkPath = $pathInfos[2];
-        }
-
-        // base directory
-        $this->currentPathScanning = $pathInfos[0];
-
-        // path to scan
-        $path = $pathInfos[1];
-
-        return [$path, $linkPath];
-    }
-
-    /**
-     * @return void
      */
     protected function setupFilesystemScanner()
     {
-        if ($this->stepsDto->getTotal() > 0) {
-            return;
+        if (empty($this->stepsDto->getTotal())) {
+            $excludedDirs = array_map(function ($path) {
+                return $this->filesystem->normalizePath($path, true);
+            }, $this->getExcludedDirectories());
+
+            $this->jobDataDto->setExcludedDirectories($excludedDirs);
+
+            $this->stepsDto->setTotal(self::TOTAL_STEPS);
+            $this->taskQueue->seek(0);
         }
 
-        $excludedDirs = array_map(function ($path) {
-            return $this->filesystem->normalizePath($path, true);
-        }, $this->getExcludedDirectories());
-
-        $this->jobDataDto->setExcludedDirectories($excludedDirs);
-
-        $this->stepsDto->setTotal(self::TOTAL_STEPS);
-        $this->taskQueue->seek(0);
+        $this->filesystemScanner->setFilters($this->ignoreFileBiggerThan, $this->ignoreFileExtensions, $this->ignoreFileExtensionFilesBiggerThan);
+        $this->filesystemScanner->setLogTitle(static::getTaskTitle());
+        $this->filesystemScanner->setQueueCacheName(FileBackupTask::getTaskName());
+        $this->filesystemScanner->inject($this->logger, $this->taskQueue, $this->getScannerDto());
     }
 
     /**
      * Scan wp-content directory(wp-content/) but doesn't scan sub folders.
-     *
-     * @return void
      */
-    protected function scanWpContentDirectory()
+    protected function scanWpContentDirectory(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingOtherWpContentFiles()) {
-            return;
+            return $this->generateResponse();
         }
 
-        // wp-content root
-        $wpContentIt = new DirectoryIterator($this->directory->getWpContentDirectory());
-        $dirToSkip   = $this->directory->getDefaultWordPressFolders();
+        $dirToScan    = $this->directory->getWpContentDirectory();
+        $excludeRules = array_map(function ($path) {
+            return rtrim($path, '/');
+        }, $this->directory->getDefaultWordPressFolders());
 
-        foreach ($wpContentIt as $otherFiles) {
-            // Early bail: We don't dots
-            if ($this->isDot($otherFiles)) {
-                continue;
-            }
+        $this->preScanPath($dirToScan, PartIdentifier::OTHER_WP_CONTENT_PART_IDENTIFIER, $excludeRules);
 
-            if ($otherFiles->isLink()) {
-                // We will only scan file symlinks in wp content dir
-                $this->processLink($otherFiles, $scanDirectory = false);
-                continue;
-            }
-
-            // Handle files at root level of wp-content
-            if ($otherFiles->isFile()) {
-                $this->enqueueFileInBackup($otherFiles);
-                continue;
-            }
-
-            if ($otherFiles->isDir()) {
-                if (!in_array($this->filesystem->normalizePath($otherFiles->getPathname(), true), $dirToSkip)) {
-                    $this->enqueueDirToBeScanned($otherFiles);
-                }
-            }
-        }
-    }
-
-    /**
-     * Scan WP root directory(ABSPATH) but doesn't scan sub folders. (Used in pro)
-     *
-     * @return TaskResponseDto
-     */
-    protected function scanWpRootDirectory(): TaskResponseDto
-    {
         return $this->generateResponse();
     }
 
     /**
      * Scan plugins directory(wp-content/plugins) but doesn't scan sub folders.
-     *
-     * @return void
      */
-    protected function scanPluginsDirectories()
+    protected function scanPluginsDirectories(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingPlugins()) {
-            return;
+            return $this->generateResponse();
         }
 
-        $pluginsIt = new DirectoryIterator($this->directory->getPluginsDirectory());
+        $dirToScan    = $this->directory->getPluginsDirectory();
+        $excludeRules = $this->getPluginsExcludeRules();
 
-        foreach ($pluginsIt as $plugin) {
-            if ($this->isDot($plugin)) {
-                continue;
-            }
+        $this->preScanPath($dirToScan, PartIdentifier::PLUGIN_PART_IDENTIFIER, $excludeRules, $this->isSiteHostedOnWordPressCom);
 
-            if ($plugin->isLink()) {
-                $this->processLink($plugin);
-                continue;
-            }
-
-            if ($plugin->isFile()) {
-                $this->enqueueFileInBackup($plugin);
-                continue;
-            }
-
-            if ($this->canEnqueuePluginDir($plugin)) {
-                $this->enqueueDirToBeScanned($plugin);
-            }
-        }
+        return $this->generateResponse();
     }
 
     /**
      * Scan mu-plugins directory(wp-content/mu-plugins) but doesn't scan sub folders.
-     *
-     * @return void
      */
-    protected function scanMuPluginsDirectory()
+    protected function scanMuPluginsDirectory(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingMuPlugins()) {
-            return;
+            return $this->generateResponse();
         }
 
         // Early bail: mu-plugins directory doesn't exist
         if (!is_dir($this->directory->getMuPluginsDirectory())) {
-            return;
+            return $this->generateResponse();
         }
 
-        $muPluginsIt = new DirectoryIterator($this->directory->getMuPluginsDirectory());
+        $dirToScan    = $this->directory->getMuPluginsDirectory();
+        $excludeRules = [
+            trailingslashit($this->directory->getMuPluginsDirectory()) . 'wp-staging-optimizer.php'
+        ];
 
-        /** @var SplFileInfo $muPlugin */
-        foreach ($muPluginsIt as $muPlugin) {
-            if ($this->isDot($muPlugin)) {
-                continue;
-            }
+        $this->preScanPath($dirToScan, PartIdentifier::MU_PLUGIN_PART_IDENTIFIER, $excludeRules);
 
-            // We do not scan mu plugins links in wordpress.com
-            if ($muPlugin->isLink()) {
-                continue;
-            }
-
-            if ($muPlugin->isFile()) {
-                if ($muPlugin->getBasename() === 'wp-staging-optimizer.php') {
-                    continue;
-                }
-
-                $this->enqueueFileInBackup($muPlugin);
-            }
-
-            if ($muPlugin->isDir()) {
-                $this->enqueueDirToBeScanned($muPlugin);
-            }
-        }
+        return $this->generateResponse();
     }
 
     /**
      * Scan themes directory(wp-content/themes) but doesn't scan sub folders.
-     *
-     * @return void
      */
-    protected function scanThemesDirectory()
+    protected function scanThemesDirectory(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingThemes()) {
-            return;
+            return $this->generateResponse();
         }
 
+        $excludeRules = $this->getThemesExcludeRules();
+        $this->filesystemScanner->setCurrentPathScanning(PartIdentifier::THEME_PART_IDENTIFIER);
+        $this->filesystemScanner->setupFilesystemQueue();
+        $this->filesystemScanner->setRootPath($this->getRootPath());
+        $this->filesystemScanner->setExcludeRules($excludeRules);
         foreach ($this->directory->getAllThemesDirectories() as $themesDirectory) {
-            $themesIt = new DirectoryIterator($themesDirectory);
-
-            foreach ($themesIt as $theme) {
-                if ($this->isDot($theme)) {
-                    continue;
-                }
-
-                if ($theme->isLink()) {
-                    $this->processLink($theme);
-                    continue;
-                }
-
-                if ($theme->isFile()) {
-                    $this->enqueueFileInBackup($theme);
-                    continue;
-                }
-
-                if ($this->canEnqueueThemeDir($theme)) {
-                    $this->enqueueDirToBeScanned($theme);
-                }
-            }
+            // Only process links if site hosted on wp.com
+            $this->filesystemScanner->preScanPath($themesDirectory, $this->isSiteHostedOnWordPressCom);
         }
+
+        $this->filesystemScanner->unlockQueue();
+        $this->updateJobDataDto();
+
+        return $this->generateResponse();
     }
 
-    /**
-     * @return void
-     */
-    protected function scanUploadsDirectory()
+    protected function scanUploadsDirectory(): TaskResponseDto
     {
         if (!$this->jobDataDto->getIsExportingUploads()) {
-            return;
+            return $this->generateResponse();
         }
 
         // Early bail: Uploads directory doesn't exist
         if (!is_dir($this->getUploadsDirectory())) {
-            return;
+            return $this->generateResponse();
         }
 
-        $uploadsIt = new DirectoryIterator($this->getUploadsDirectory());
+        $dirToScan    = $this->getUploadsDirectory();
+        $excludeRules = [];
 
-        foreach ($uploadsIt as $uploadItem) {
-            // Early bail: We don't touch links
-            if ($uploadItem->isLink() || $this->isDot($uploadItem)) {
-                continue;
-            }
+        $this->preScanPath($dirToScan, PartIdentifier::UPLOAD_PART_IDENTIFIER, $excludeRules);
 
-            if ($uploadItem->isFile()) {
-                $this->enqueueFileInBackup($uploadItem);
-            } elseif ($uploadItem->isDir()) {
-                /*
-                 * This is a default WordPress year-month uploads folder.
-                 *
-                 * Here we break down the uploads folder by months, considering it's often the largest folder in a website,
-                 * and we need to be able to scan each folder in one request.
-                 */
-                if (is_numeric($uploadItem->getBasename()) && $uploadItem->getBasename() > 1970 && $uploadItem->getBasename() < 2100) {
-                    /** @var SplFileInfo $uploadMonth */
-                    foreach (new DirectoryIterator($uploadItem->getPathname()) as $uploadMonth) {
-                        // Early bail: We don't touch links
-                        if ($uploadMonth->isLink() || $this->isDot($uploadMonth)) {
-                            continue;
-                        }
+        return $this->generateResponse();
+    }
 
-                        if ($uploadMonth->isFile()) {
-                            $this->enqueueFileInBackup($uploadMonth);
-                        }
-
-                        if ($uploadMonth->isDir()) {
-                            $this->enqueueDirToBeScanned($uploadMonth);
-                        }
-                    }
-                } else {
-                    if ($uploadItem->isFile()) {
-                        $this->enqueueFileInBackup($uploadItem);
-                    }
-
-                    if ($uploadItem->isDir()) {
-                        $this->enqueueDirToBeScanned($uploadItem);
-                    }
-                }
-            }
+    protected function getRootPath(): string
+    {
+        if ($this->isSiteHostedOnWordPressCom) {
+            return $this->directory->getWpContentDirectory();
         }
+
+        return $this->directory->getAbsPath();
     }
 
     /**
-     * @param SplFileInfo $file
-     * @param string $linkSourcePath - Default empty string, used when the file to be enqueue is a link, this is the source path of the link
-     * @return void
+     * Scan WP root directory(ABSPATH) but doesn't scan sub folders. (Used in pro)
      */
-    protected function enqueueFileInBackup(SplFileInfo $file, string $linkSourcePath = '')
+    protected function scanWpRootDirectory(): TaskResponseDto
     {
-        $normalizedPath = $this->filesystem->normalizePath($file->getPathname(), true);
-        $fileSize       = $file->getSize();
-
-        $fileExtension  = $file->getExtension();
-
-        // Lazy-built relative path
-        $relativePath = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $normalizedPath);
-
-        if ($this->canExcludeLogFile($fileExtension) || $this->canExcludeCacheFile($fileExtension) || isset($this->ignoreFileExtensions[$fileExtension])) {
-            // Early bail: File has an ignored extension
-            $this->logger->info(sprintf(
-                '%s: Skipped file "%s." Extension "%s" is excluded by rule.',
-                static::getTaskTitle(),
-                esc_html($relativePath),
-                esc_html($fileExtension)
-            ));
-
-            return;
-        }
-
-        if (isset($this->ignoreFileExtensionFilesBiggerThan[$fileExtension])) {
-            if ($fileSize > $this->ignoreFileExtensionFilesBiggerThan[$fileExtension]) {
-                // Early bail: File bigger than expected for given extension
-                $this->logger->info(sprintf(
-                    '%s: Skipped file "%s" (%s). It exceeds the maximum allowed file size for files with the extension "%s" (%s).',
-                    static::getTaskTitle(),
-                    esc_html($relativePath),
-                    size_format($fileSize),
-                    esc_html($fileExtension),
-                    size_format($this->ignoreFileExtensionFilesBiggerThan[$fileExtension])
-                ));
-
-                return;
-            }
-        } elseif ($fileSize > $this->ignoreFileBiggerThan) {
-            // Early bail: File is larger than max allowed size.
-            $this->logger->info(sprintf(
-                '%s: Skipped file "%s" (%s). It exceeds the maximum file size for backup (%s).',
-                static::getTaskTitle(),
-                esc_html($relativePath),
-                size_format($fileSize),
-                size_format($this->ignoreFileBiggerThan)
-            ));
-
-            return;
-        }
-
-        $this->jobDataDto->setDiscoveredFiles($this->jobDataDto->getDiscoveredFiles() + 1);
-        $filesDiscoveredForCurrentPath = $this->jobDataDto->getDiscoveredFilesByCategory($this->currentPathScanning) + 1;
-        $this->jobDataDto->setDiscoveredFilesByCategory($this->currentPathScanning, $filesDiscoveredForCurrentPath);
-        $this->jobDataDto->setFilesystemSize($this->jobDataDto->getFilesystemSize() + $fileSize);
-
-        // $this->logger->debug('Enqueueing file: ' . rtrim($normalizedPath, '/'));
-
-        if (!empty($linkSourcePath)) {
-            $linkSourcePath = $this->filesystem->normalizePath($linkSourcePath, true);
-            $relativePath   = $this->replaceEOLsWithPlaceholders($relativePath);
-            $path = rtrim($relativePath, '/') . self::PATH_SEPARATOR . rtrim($linkSourcePath, '/');
-            $this->fileBackupQueue->enqueue($path);
-            return;
-        }
-
-        $relativePath = $this->replaceEOLsWithPlaceholders($relativePath);
-        $this->fileBackupQueue->enqueue(rtrim($relativePath, '/'));
-    }
-
-    /**
-     * @param  string $fileExtension
-     * @return bool
-     */
-    private function canExcludeLogFile(string $fileExtension): bool
-    {
-        if ($fileExtension !== 'log') {
-            return false;
-        }
-
-        if (!$this->jobDataDto->getIsExcludingLogs()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @param  string $fileExtension
-     * @return bool
-     */
-    private function canExcludeCacheFile(string $fileExtension): bool
-    {
-        if ($fileExtension !== 'cache') {
-            return false;
-        }
-
-        if (!$this->jobDataDto->getIsExcludingCaches()) {
-            return false;
-        }
-
-        return true;
-    }
-
-    /**
-     * @param SplFileInfo $dir
-     * @return bool
-     */
-    private function canExcludeCacheDir(SplFileInfo $dir): bool
-    {
-        if (!$dir->isDir()) {
-            return false;
-        }
-
-        if (!$this->jobDataDto->getIsExcludingCaches()) {
-            return false;
-        }
-
-        if (!$this->isPathContainsCache($dir->getRealPath())) {
-            return false;
-        }
-
-        $this->logger->info(sprintf(
-            '%s: Skipped directory "%s". Excluded by smart exclusion rule: Excluding cache folder.',
-            static::getTaskTitle(),
-            $dir->getRealPath()
-        ));
-
-        return true;
-    }
-
-    /**
-     * Check if "cache" is one of the directory names.
-     *
-     * @param string $path
-     * @return bool
-     */
-    private function isPathContainsCache(string $path): bool
-    {
-        $pathParts = explode(DIRECTORY_SEPARATOR, $path);
-
-        return in_array('cache', $pathParts);
-    }
-
-    /**
-     * @param SplFileInfo $dir
-     * @param SplFileInfo $link
-     * @return void
-     */
-    protected function enqueueDirToBeScanned(SplFileInfo $dir, SplFileInfo $link = null)
-    {
-        $normalizedPath = $this->filesystem->normalizePath($dir->getPathname(), true);
-
-        if ($this->isExcludedDirectory($dir->getPathname()) || $this->canExcludeCacheDir($dir)) {
-            return;
-        }
-
-        if ($link !== null && $this->isExcludedDirectory($link->getPathname())) {
-            return;
-        }
-
-        $this->jobDataDto->setTotalDirectories($this->jobDataDto->getTotalDirectories() + 1);
-
-        // $this->logger->debug("Enqueueing directory: $normalizedPath");
-
-        if ($link !== null) {
-            $linkPath = $this->filesystem->normalizePath($link->getPathname(), true);
-            $this->taskQueue->enqueue($this->currentPathScanning . self::PATH_SEPARATOR . $normalizedPath . self::PATH_SEPARATOR . $linkPath);
-            return;
-        }
-
-        // we need to know
-        $this->taskQueue->enqueue($this->currentPathScanning . self::PATH_SEPARATOR . $normalizedPath);
-    }
-
-    /**
-     * @param SplFileInfo $fileInfo
-     * @return bool
-     */
-    protected function isDot(SplFileInfo $fileInfo): bool
-    {
-        return $fileInfo->getBasename() === '.' || $fileInfo->getBasename() === '..';
-    }
-
-    /**
-     * @param SplFileInfo $linkInfo
-     * @param bool $scanDirectory
-     * @return void
-     */
-    protected function processLink(SplFileInfo $linkInfo, bool $scanDirectory = true)
-    {
-        // Bail if no link
-        if (!$linkInfo->isLink()) {
-            return;
-        }
-
-        // Early bail: We don't touch links if it is not wordpress.com
-        if (!$this->isSiteHostedOnWordPressCom) {
-            return;
-        }
-
-        $linkTarget = $linkInfo->getRealPath();
-        $fileInfo   = new SplFileInfo($linkTarget);
-        if ($fileInfo->isLink()) {
-            return;
-        }
-
-        if ($fileInfo->isFile()) {
-            $this->enqueueFileInBackup($fileInfo, $linkInfo->getPathname());
-            return;
-        }
-
-        if ($fileInfo->isDir() && $scanDirectory) {
-            $this->enqueueDirToBeScanned($fileInfo, $linkInfo);
-            return;
-        }
-    }
-
-    /**
-     * @param string $path - Path to scan
-     * @param string $link - If original $path is resolved from link, then this is the link
-     *                       We need it to keep original path after restore
-     *                       e.g. $link = /var/www/html/wp-content/themes/twentytwenty is a link to /var/www/libs/themes/twentytwenty (a $path)
-     * @return void
-     * @throws FilesystemExceptions
-     */
-    protected function recursivePathScanning(string $path, string $link = '')
-    {
-        $iterator = (new FilterableDirectoryIterator())
-            ->setDirectory(trailingslashit($path))
-            ->setRecursive(false)
-            ->setDotSkip()
-            ->setWpRootPath(ABSPATH)
-            ->get();
-
-        /** @var SplFileInfo $item */
-        foreach ($iterator as $item) {
-            // Always check link first otherwise it may be treated as directory
-            if ($item->isLink()) {
-                continue;
-            }
-
-            $linkPath = '';
-            if (!empty($link)) {
-                $linkPath = trailingslashit($link) . $item->getFilename();
-            }
-
-            if ($item->isDir() && !$this->isExcludedDirectory($item->getPathname())) {
-                $this->recursivePathScanning($item->getPathname(), $linkPath);
-                continue;
-            }
-
-            if ($item->isFile()) {
-                $this->enqueueFileInBackup($item, $linkPath);
-            }
-        }
-    }
-
-    /**
-     * @return void
-     */
-    protected function unlockQueue()
-    {
-        $this->fileBackupQueue->shutdown();
-    }
-
-    /**
-     * @param string $path
-     * @return bool
-     */
-    protected function isExcludedDirectory(string $path): bool
-    {
-        $normalizedPath = $this->filesystem->normalizePath($path, true);
-
-        if (in_array($normalizedPath, $this->jobDataDto->getExcludedDirectories())) {
-            $relativePathForLogging = str_replace($this->filesystem->normalizePath(WP_CONTENT_DIR, true), '', $normalizedPath);
-
-            $this->logger->info(sprintf(
-                '%s: Skipped directory "%s". Excluded by rule',
-                static::getTaskTitle(),
-                esc_html($relativePathForLogging)
-            ));
-
-            return true;
-        }
-
-        return false;
+        return $this->generateResponse();
     }
 
     /**
@@ -945,25 +423,71 @@ class FilesystemScannerTask extends BackupTask
         return $this->directory->getUploadsDirectory();
     }
 
-    /**
-     * @param DirectoryIterator $theme
-     * @return bool
-     */
-    private function canEnqueueThemeDir(DirectoryIterator $theme): bool
+    protected function getScannerDto(): FilesystemScannerDto
     {
-        if (!$theme->isDir()) {
-            return false;
-        }
+        $scannerDto = new FilesystemScannerDto();
 
+        $scannerDto->setIsExcludingCaches($this->jobDataDto->getIsExcludingCaches() ?? false);
+        $scannerDto->setIsExcludingLogs($this->jobDataDto->getIsExcludingLogs() ?? false);
+        $scannerDto->setExcludedDirectories($this->jobDataDto->getExcludedDirectories() ?? []);
+        $scannerDto->setDiscoveredFiles($this->jobDataDto->getDiscoveredFiles() ?? 0);
+        $scannerDto->setDiscoveredFilesArray($this->jobDataDto->getDiscoveredFilesArray() ?? []);
+        $scannerDto->setFilesystemSize($this->jobDataDto->getFilesystemSize() ?? 0);
+        $scannerDto->setTotalDirectories($this->jobDataDto->getTotalDirectories() ?? 0);
+
+        return $scannerDto;
+    }
+
+    /**
+     * @return void
+     */
+    protected function updateJobDataDto()
+    {
+        $scannerDto = $this->filesystemScanner->getFilesystemScannerDto();
+
+        $this->jobDataDto->setDiscoveredFiles($scannerDto->getDiscoveredFiles());
+        $this->jobDataDto->setDiscoveredFilesArray($scannerDto->getDiscoveredFilesArray());
+        $this->jobDataDto->setFilesystemSize($scannerDto->getFilesystemSize());
+        $this->jobDataDto->setTotalDirectories($scannerDto->getTotalDirectories());
+    }
+
+    /**
+     * Pre scan path
+     * This is common method for pre scanning path, but cannot be used for scanning themes folders i.e. because there can be multiple themes folders
+     * @param string $dirToScan
+     * @param string $partIdentifier
+     * @param array $excludeRules
+     * @param bool $processLinks
+     * @return void
+     */
+    protected function preScanPath(string $dirToScan, string $partIdentifier, array $excludeRules = [], bool $processLinks = false)
+    {
+        $this->filesystemScanner->setCurrentPathScanning($partIdentifier);
+        $this->filesystemScanner->setupFilesystemQueue();
+        $this->filesystemScanner->setRootPath($this->getRootPath());
+        $this->filesystemScanner->setExcludeRules($excludeRules);
+        $this->filesystemScanner->preScanPath($dirToScan, $processLinks);
+        $this->filesystemScanner->unlockQueue();
+        $this->updateJobDataDto();
+    }
+
+    private function getThemesExcludeRules(): array
+    {
         if (!$this->jobDataDto->getIsExcludingUnusedThemes()) {
-            return true;
+            return [];
         }
 
-        if (in_array($theme->getRealPath(), $this->getActiveThemes())) {
-            return true;
+        $activeThemes = $this->getActiveThemes();
+        $allThemesDirectories = $this->directory->getAllThemesDirectories();
+        foreach ($allThemesDirectories as $themeDir) {
+            $excludeRules[] = rtrim($themeDir, "/");
         }
 
-        return false;
+        foreach ($activeThemes as $theme) {
+            $excludeRules[] = "!" . $theme;
+        }
+
+        return $excludeRules;
     }
 
     /**
@@ -984,29 +508,31 @@ class FilesystemScannerTask extends BackupTask
         return $this->pluginInfo->getAllActiveThemesInSubsites();
     }
 
-    /**
-     * @param DirectoryIterator $plugin
-     * @return bool
-     */
-    private function canEnqueuePluginDir(DirectoryIterator $plugin): bool
+    private function getPluginsExcludeRules(): array
     {
-        if (!$plugin->isDir()) {
-            return false;
+        if (!$this->jobDataDto->getIsExcludingDeactivatedPlugins()) {
+            return [];
         }
 
-        if (!$this->jobDataDto->getIsExcludingDeactivatedPlugins()) {
-            return true;
-        }
+        $pluginsDir = rtrim($this->directory->getPluginsDirectory(), "/");
 
         $activePlugins = array_unique($this->getActivePlugins());
+        $excludeRules  = [
+            $pluginsDir,
+        ];
 
-        foreach ($activePlugins as $activePlugin) {
-            if (strpos($activePlugin, $plugin->getRealPath()) !== false) {
-                return true;
+        foreach ($activePlugins as $plugin) {
+            $pluginDir = dirname($plugin);
+            // Single file plugin
+            if ($pluginDir === $pluginsDir) {
+                $excludeRules[] = "!" . $plugin;
+                continue;
             }
+
+            $excludeRules[] = "!" . $pluginDir;
         }
 
-        return false;
+        return $excludeRules;
     }
 
     /**

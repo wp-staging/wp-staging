@@ -6,6 +6,7 @@ use WPStaging\Backup\BackupHeader;
 use WPStaging\Backup\Dto\File\ExtractorDto;
 use WPStaging\Backup\Entity\BackupMetadata;
 use WPStaging\Backup\Entity\FileBeingExtracted;
+use WPStaging\Backup\FileHeader;
 use WPStaging\Backup\Interfaces\IndexLineInterface;
 use WPStaging\Framework\Adapter\DirectoryInterface;
 use WPStaging\Framework\Job\Exception\FileValidationException;
@@ -13,6 +14,7 @@ use WPStaging\Framework\Filesystem\FileObject;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Framework\Filesystem\Permissions;
+use WPStaging\Framework\Traits\DebugLogTrait;
 use WPStaging\Framework\Traits\FormatTrait;
 
 /**
@@ -22,6 +24,7 @@ use WPStaging\Framework\Traits\FormatTrait;
 abstract class AbstractExtractor
 {
     use FormatTrait;
+    use DebugLogTrait;
 
     /** @var string */
     const VALIDATE_DIRECTORY = 'validate';
@@ -97,6 +100,9 @@ abstract class AbstractExtractor
 
     /** @var bool */
     protected $throwExceptionOnValidationFailure = false;
+
+    /** @var string */
+    protected $lastIdentifiablePath;
 
     public function __construct(
         PathIdentifier $pathIdentifier,
@@ -265,11 +271,26 @@ abstract class AbstractExtractor
         /** @var IndexLineInterface $backupFileIndex */
         $backupFileIndex         = $this->indexLineDto->readIndexLine($rawIndexFile);
         $identifiablePath        = $backupFileIndex->getIdentifiablePath();
+        if (empty($identifiablePath)) {
+            $this->extractorDto->incrementTotalFilesSkipped();
+            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->debugLog('Identifier not found during extraction. Raw Index is logged: ' . rtrim($rawIndexFile, "\n"));
+            throw new \Exception('Skipping file: Identifier not found. Raw Index is logged', self::ITEM_SKIP_EXCEPTION_CODE);
+        }
+
+        if ($identifiablePath === $this->lastIdentifiablePath) {
+            $this->extractorDto->incrementTotalFilesSkipped();
+            $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->debugLog('File already extracted: ' . rtrim($identifiablePath, "\n"));
+            throw new \Exception('Skipping file: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
+        }
+
         $identifier              = $this->pathIdentifier->getIdentifierFromPath($identifiablePath);
         $this->currentIdentifier = $identifier;
         if ($this->isFileSkipped($identifiablePath, $identifier)) {
             $this->extractorDto->incrementTotalFilesSkipped();
             $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
+            $this->debugLog('Skipping File By Rule: ' . rtrim($identifiablePath, "\n"));
             throw new \Exception('Skipping file: ' . $identifiablePath, self::ITEM_SKIP_EXCEPTION_CODE);
         }
 
@@ -281,6 +302,7 @@ abstract class AbstractExtractor
 
         $this->extractingFile = new FileBeingExtracted($backupFileIndex->getIdentifiablePath(), $extractFolder, $this->pathIdentifier, $backupFileIndex);
         $this->extractingFile->setWrittenBytes($this->extractorDto->getExtractorFileWrittenBytes());
+        $this->extractingFile->setHeaderBytesRemoved($this->extractorDto->getHeaderBytesRemoved());
 
         if ($this->isFileExtracted($backupFileIndex, $this->extractingFile->getBackupPath())) {
             $this->extractorDto->incrementTotalFilesSkipped();
@@ -348,19 +370,27 @@ abstract class AbstractExtractor
         $isValidated = true;
         $exception   = null;
         clearstatcache();
-        try {
-            $this->indexLineDto->validateFile($destinationFilePath, $pathForErrorLogging);
-        } catch (FileValidationException $e) {
-            $isValidated = false;
-            $exception   = $e;
+
+        // Lets only validate if the file headers are not removed
+        if ($this->extractingFile->areHeaderBytesRemoved()) {
+            $this->debugLog('Skipping validation for file because duplicate file headers were removed: ' . $pathForErrorLogging);
+        } else {
+            try {
+                $this->indexLineDto->validateFile($destinationFilePath, $pathForErrorLogging);
+            } catch (FileValidationException $e) {
+                $isValidated = false;
+                $exception   = $e;
+            }
         }
 
+        $this->lastIdentifiablePath = $this->indexLineDto->getIdentifiablePath();
         // Jump to the next file of the index
         $this->extractorDto->setCurrentIndexOffset($this->wpstgIndexOffsetForNextFile);
 
         $this->extractorDto->incrementTotalFilesExtracted();
 
         // Reset offset pointer
+        $this->extractorDto->setHeaderBytesRemoved(0);
         $this->extractorDto->setExtractorFileWrittenBytes(0);
         $this->deleteValidationFile($destinationFilePath);
 
@@ -498,6 +528,29 @@ abstract class AbstractExtractor
         }
 
         return $backupFileIndex->getUncompressedSize() === filesize($extractPath);
+    }
+
+    /**
+     * @see https://github.com/wp-staging/wp-staging-pro/issues/4150
+     * @see https://github.com/wp-staging/wp-staging-pro/issues/4152
+     * @param string $dataToFix
+     * @return string
+     */
+    protected function maybeRepairMultipleHeadersIssue(string $dataToFix): string
+    {
+        /**
+         * @var FileHeader $fileHeader
+         */
+        $fileHeader = $this->indexLineDto;
+        // If the file header is found in the data, remove it
+        if (strpos($dataToFix, $fileHeader->getFileHeader()) !== false) {
+            $count = substr_count($dataToFix, $fileHeader->getFileHeader());
+            $this->extractingFile->addHeaderBytesRemoved($count * ($fileHeader->getDynamicHeaderLength() + 1));
+
+            return str_replace($fileHeader->getFileHeader() . "\n", '', $dataToFix);
+        }
+
+        return $dataToFix;
     }
 
     /**

@@ -99,7 +99,7 @@ abstract class PrepareJob
         try {
             $data     = (array)wp_parse_args((array)$data, $this->getDefaultDataConfiguration());
             $prepared = $this->ajaxPrepareJob->validateAndSanitizeData($data);
-            $name     = empty($prepared['name']) ? 'Background Processing Delete' : $prepared['name'];
+            $name     = empty($prepared['name']) ? $this->getJobDefaultName() : $prepared['name'];
             $jobId    = uniqid($name . '_', true);
 
             $data['jobId'] = $jobId;
@@ -281,6 +281,11 @@ abstract class PrepareJob
     protected function getIsBackupJob(): bool
     {
         return false;
+    }
+
+    protected function getJobDefaultName(): string
+    {
+        return 'BackgroundJob';
     }
 
     /**

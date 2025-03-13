@@ -18,7 +18,12 @@ class PathExcludeFilter extends FilterIterator
      */
     protected $includeFilter;
 
-    public function __construct(Iterator $iterator, $exclude = [], $wpRootPath = ABSPATH)
+    /**
+     * @var bool
+     */
+    protected $skipDirectoriesWithIncludeRules = false;
+
+    public function __construct(Iterator $iterator, $exclude = [], $wpRootPath = ABSPATH, $skipDirectoriesWithIncludeRules = false)
     {
         parent::__construct($iterator);
         $this->excludeFilter = new PathFilterHelper();
@@ -27,6 +32,8 @@ class PathExcludeFilter extends FilterIterator
         $this->includeFilter = new PathFilterHelper($isInclude = true);
         $this->includeFilter->setWpRootPath($wpRootPath);
         $this->includeFilter->categorizeRules($exclude);
+
+        $this->skipDirectoriesWithIncludeRules = $skipDirectoriesWithIncludeRules;
     }
 
     /**
@@ -57,7 +64,7 @@ class PathExcludeFilter extends FilterIterator
             return true;
         }
 
-        if ($fileInfo->isDir() && $this->includeFilter->hasRules()) {
+        if ($fileInfo->isDir() && !$this->skipDirectoriesWithIncludeRules && $this->includeFilter->hasRules()) {
             return true;
         }
 

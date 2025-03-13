@@ -13,7 +13,7 @@ class ArchiverDto
     private $indexPath;
 
     /** @var int */
-    private $fileHeaderBytes = 0;
+    private $fileHeaderSizeInBytes = 0;
 
     /** @var int */
     private $writtenBytesTotal = 0;
@@ -63,6 +63,7 @@ class ArchiverDto
         $this->setFilePath('');
         $this->setWrittenBytesTotal(0);
         $this->setIndexPositionCreated(false);
+        $this->setFileHeaderSizeInBytes(0);
     }
 
     /**
@@ -137,18 +138,18 @@ class ArchiverDto
     /**
      * @return int
      */
-    public function getFileHeaderBytes(): int
+    public function getFileHeaderSizeInBytes(): int
     {
-        return $this->fileHeaderBytes;
+        return $this->fileHeaderSizeInBytes;
     }
 
     /**
-     * @param int $fileHeaderBytes
+     * @param int $fileHeaderSizeInBytes
      * @return void
      */
-    public function setFileHeaderBytes(int $fileHeaderBytes)
+    public function setFileHeaderSizeInBytes(int $fileHeaderSizeInBytes)
     {
-        $this->fileHeaderBytes = $fileHeaderBytes;
+        $this->fileHeaderSizeInBytes = $fileHeaderSizeInBytes;
     }
 
     /**
@@ -163,6 +164,11 @@ class ArchiverDto
         }
 
         return (bool)$this->indexPositionCreated[$category][$categoryIndex];
+    }
+
+    public function isFileHeaderWritten(): bool
+    {
+        return $this->fileHeaderSizeInBytes > 0;
     }
 
     /**

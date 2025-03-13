@@ -57,8 +57,9 @@ class ExtractFilesTask extends RestoreTask
             $this->prepareTask();
         } catch (MissingFileException $ex) {
             $this->jobDataDto->setFilePartIndex($this->jobDataDto->getFilePartIndex() + 1);
-            $this->currentTaskDto->totalFilesExtracted = 0;
-            $this->currentTaskDto->currentIndexOffset  = 0;
+            $this->currentTaskDto->totalFilesExtracted       = 0;
+            $this->currentTaskDto->currentIndexOffset        = 0;
+            $this->currentTaskDto->currentHeaderBytesRemoved = 0;
             return $this->generateResponse(false);
         }
 
@@ -129,6 +130,7 @@ class ExtractFilesTask extends RestoreTask
         $this->extractorService->setIsBackupFormatV1($this->metadata->getIsBackupFormatV1(false));
         $this->extractorService->setLogger($this->logger);
         $this->extractorService->setExcludedIdentifiers($this->getExcludedIdentifiers());
+        $this->extractorService->setIsRepairMultipleHeadersIssue($this->canHaveMultipleHeadersIssue());
         $this->setupExtractor();
     }
 
@@ -156,6 +158,30 @@ class ExtractFilesTask extends RestoreTask
     }
 
     /**
+     * We have a bug in v6.0.0 - v6.1.2 and v4.0.0 - v4.1.2 where the backup can have multiple file headers for big files.
+     * @return bool
+     */
+    protected function canHaveMultipleHeadersIssue(): bool
+    {
+        // Early bail: v1 backup doesn't have this issue
+        if ($this->metadata->getIsBackupFormatV1()) {
+            return false;
+        }
+
+        $wpstgVersion = $this->metadata->getWpstgVersion();
+        $createdOnPro = $this->metadata->getCreatedOnPro();
+        if ($createdOnPro && version_compare($wpstgVersion, '6.0.0', '>=') && version_compare($wpstgVersion, '6.1.2', '<=')) {
+            return true;
+        }
+
+        if (!$createdOnPro && version_compare($wpstgVersion, '4.0.0', '>=') && version_compare($wpstgVersion, '4.1.2', '<=')) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
      * @return string[]
      */
     private function getExcludedIdentifiers(): array
@@ -168,10 +194,9 @@ class ExtractFilesTask extends RestoreTask
         /** @var PathIdentifier */
         $pathIdentifier      = WPStaging::make(PathIdentifier::class);
         $excludedIdentifiers = [];
-        $isBackupFormatV1    = $this->jobDataDto->getBackupMetadata()->getIsBackupFormatV1(false);
         foreach ($excludedParts as $part) {
-            // we need to handle the database part separately for v1 backups, as it's not a part of the PathIdentifier
-            if ($isBackupFormatV1 && $part === PartIdentifier::DATABASE_PART_IDENTIFIER) {
+            // we need to handle the database part separately, as it's not a part of the PathIdentifier
+            if ($part === PartIdentifier::DATABASE_PART_IDENTIFIER) {
                 $excludedIdentifiers[] = PartIdentifier::DATABASE_PART_IDENTIFIER;
                 continue;
             }

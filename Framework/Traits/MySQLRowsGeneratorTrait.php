@@ -12,7 +12,7 @@ namespace WPStaging\Framework\Traits;
 use Generator;
 use WPStaging\Framework\Adapter\Database\InterfaceDatabaseClient;
 use WPStaging\Framework\Adapter\Database\MysqliAdapter;
-use Adapter\Database\SqliteAdapter;
+use WPStaging\Framework\Adapter\Database\SqliteAdapter;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 
 /**
@@ -23,6 +23,7 @@ use WPStaging\Framework\Job\Dto\JobDataDto;
 trait MySQLRowsGeneratorTrait
 {
     use ResourceTrait;
+    use BatchSizeCalculateTrait;
 
     /** @var bool */
     protected $useMemoryExhaustFix = false;
@@ -64,87 +65,25 @@ trait MySQLRowsGeneratorTrait
      */
     protected function rowsGenerator(string $databaseName, string $table, $numericPrimaryKey, int $offset, string $requestId, InterfaceDatabaseClient $db, JobDataDto $jobDataDto): Generator
     {
-        /*        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
-                    \WPStaging\functions\debug_log(
-                        sprintf(
-                            'MySQLRowsGeneratorTrait: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
-                            size_format($this->getMaxMemoryLimit()),
-                            size_format($this->getScriptMemoryLimit()),
-                            size_format($this->getMemoryUsage()),
-                            $this->findExecutionTimeLimit(),
-                            $this->getRunningTime(),
-                            ($this->isThreshold() ? 'yes' : 'no')
-                        )
-                    );
-                }*/
+        /* Kept for debugging purpose
+        if (defined('WPSTG_DEBUG') && WPSTG_DEBUG) {
+            \WPStaging\functions\debug_log(
+                sprintf(
+                    'MySQLRowsGeneratorTrait: max-memory-limit=%s; script-memory-limit=%s; memory-usage=%s; execution-time-limit=%s; running-time=%s; is-threshold=%s',
+                    size_format($this->getMaxMemoryLimit()),
+                    size_format($this->getScriptMemoryLimit()),
+                    size_format($this->getMemoryUsage()),
+                    $this->findExecutionTimeLimit(),
+                    $this->getRunningTime(),
+                    ($this->isThreshold() ? 'yes' : 'no')
+                )
+            );
+        }
+        */
 
         $rows      = [];
         $lastFetch = false;
-
-        $batchSize = null;
-
-        $freeMemory = $this->getScriptMemoryLimit() - $this->getMemoryUsage();
-
-        // Fetch the average row length of the current table, if need be. This is to get the maximum possible batch size
-        if (empty($jobDataDto->getTableAverageRowLength())) {
-            if (isset($db->isSQLite) && $db->isSQLite) {
-                $averageRowLength = $db->getAverageRowLengthSQLite($table); // @phpstan-ignore-line
-            } else {
-                $averageRowLength = $db->query("SELECT AVG_ROW_LENGTH FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = '$table' AND TABLE_SCHEMA = '$databaseName';")->fetch_assoc();
-            }
-            if (!empty($averageRowLength) && is_array($averageRowLength) && array_key_exists('AVG_ROW_LENGTH', $averageRowLength)) {
-                $jobDataDto->setTableAverageRowLength(max(absint($averageRowLength['AVG_ROW_LENGTH']), 1));
-
-                // @phpstan-ignore-next-line
-                $batchSize = ($freeMemory / $jobDataDto->getTableAverageRowLength()) / 4;
-            }
-        } else {
-            $batchSize = ($freeMemory / $jobDataDto->getTableAverageRowLength()) / 4;
-        }
-
-        // This can happen if we can't fetch the AVG_ROW_LENGTH from the table
-        if ($batchSize === null) {
-            $batchSize = 5000;
-        }
-
-        // Lower the fetch limits if we couldn't store them in memory last time
-        if (!empty($jobDataDto->getLastQueryInfoJSON())) {
-            $lastQueryInfo = json_decode($jobDataDto->getLastQueryInfoJSON(), true);
-            if (count($lastQueryInfo) === 4) {
-                $previousRequestId = $lastQueryInfo[0];
-                if ($previousRequestId === $requestId) {
-                    list($requestId, $table, $oldOffset, $batchSize) = array_replace([$requestId, $table, $offset, $batchSize], $lastQueryInfo);
-
-                    if ($batchSize <= 1000) {
-                        $batchSize = $batchSize / 2;
-                    } else {
-                        $batchSize = $batchSize / 3;
-                    }
-
-                    if ((!$this->useMemoryExhaustFix) || ($offset > $oldOffset)) {
-                        $offset = $oldOffset;
-                    }
-
-                    /*                    if ($batchSize < 1) {
-                                          throw new \RuntimeException(sprintf(
-                                          'There is one row in the database that is bigger than the memory available to PHP, which makes it impossible to extract using PHP. More info: Maximum PHP Memory: %s | Row is in table: %s | Offset: %s',
-                                          size_format($this->getScriptMemoryLimit()),
-                                          $table,
-                                          $offset
-                                         ));
-                                        }*/
-                }
-            }
-        }
-
-        // At least 1, max 5k, integer
-        $maxBatchSize = $jobDataDto->getIsSlowMySqlServer() ? 100 : 5000;
-        $minBatchSize = 1;
-        $batchSize    = max($minBatchSize, $batchSize);
-        $batchSize    = min($maxBatchSize, $batchSize);
-        $batchSize    = ceil($batchSize);
-
-        $jobDataDto->setBatchSize($batchSize);
+        $batchSize = $this->calculateBatchSize($databaseName, $table, $offset, $requestId, $jobDataDto, $db);
 
         do {
             if (empty($rows)) {
@@ -288,48 +227,5 @@ WHERE `{$numericPrimaryKey}` > {$offset}
 ORDER BY `{$numericPrimaryKey}` ASC
 LIMIT 0, {$batchSize}
 SQL;
-    }
-
-    /**
-     * @return void
-     */
-    private function initDbExclusionValues()
-    {
-        if ($this->jobDataDto->getIsExcludingSpamComments() && strpos($this->tableName, $this->database->getPrefix() . 'comment') !== false) {
-            $this->columnToExclude = 'comment_id';
-            $rowsToExclude         = $this->getSpamComments();
-            $this->valuesToExclude = implode(',', $rowsToExclude);
-        } elseif ($this->jobDataDto->getIsExcludingPostRevision() && strpos($this->tableName, $this->database->getPrefix() . 'posts') !== false) {
-            $this->columnToExclude = 'id';
-            $rowsToExclude         = $this->getPostsRevision();
-            $this->valuesToExclude = implode(',', $rowsToExclude);
-        }
-    }
-
-    /**
-     * @return array
-     */
-    private function getSpamComments(): array
-    {
-        $args = [
-            'status' => 'spam',
-            'fields' => 'ids',
-        ];
-
-        return get_comments($args);
-    }
-
-    /**
-     * @return array
-     */
-    private function getPostsRevision(): array
-    {
-        $args = [
-            'post_type'   => 'revision',
-            'post_status' => 'any',
-            'fields'      => 'ids',
-        ];
-
-        return get_posts($args);
     }
 }

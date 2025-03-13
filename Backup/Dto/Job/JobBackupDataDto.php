@@ -49,6 +49,11 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
      */
     private $fileBeingBackupWrittenBytes;
 
+    /**
+     * @var int If header of a file was written but it couldn't be processed in single requests,
+     */
+    private $currentWrittenFileHeaderBytes = 0;
+
     /** @var int */
     private $totalRowsBackup;
 
@@ -827,5 +832,22 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setIsContaining2GBFile(bool $isContaining2GBFile)
     {
         $this->isContaining2GBFile = $isContaining2GBFile;
+    }
+
+    /**
+     * @return int
+     */
+    public function getCurrentWrittenFileHeaderBytes(): int
+    {
+        return (int)$this->currentWrittenFileHeaderBytes;
+    }
+
+    /**
+     * @param int $currentWrittenFileHeaderBytes
+     * @return void
+     */
+    public function setCurrentWrittenFileHeaderBytes(int $currentWrittenFileHeaderBytes)
+    {
+        $this->currentWrittenFileHeaderBytes = (int)$currentWrittenFileHeaderBytes;
     }
 }

@@ -7,8 +7,8 @@ use WPStaging\Backup\Dto\Service\ArchiverDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Backup\Exceptions\BackupSkipItemException;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
-use WPStaging\Backup\Task\Tasks\JobBackup\FilesystemScannerTask;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Filesystem\FilesystemScanner;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
@@ -131,6 +131,7 @@ class FileBackupService implements ServiceInterface
     {
         $archiverDto = $this->archiver->getDto();
         $archiverDto->setWrittenBytesTotal($this->jobDataDto->getFileBeingBackupWrittenBytes());
+        $archiverDto->setFileHeaderSizeInBytes($this->jobDataDto->getCurrentWrittenFileHeaderBytes());
 
         if ($archiverDto->getWrittenBytesTotal() !== 0) {
             $archiverDto->setIndexPositionCreated(true);
@@ -149,8 +150,8 @@ class FileBackupService implements ServiceInterface
         }
 
         $indexPath = '';
-        if (strpos($path, FilesystemScannerTask::PATH_SEPARATOR) !== false) {
-            list($path, $indexPath) = explode(FilesystemScannerTask::PATH_SEPARATOR, $path);
+        if (strpos($path, FilesystemScanner::PATH_SEPARATOR) !== false) {
+            list($path, $indexPath) = explode(FilesystemScanner::PATH_SEPARATOR, $path);
         }
 
         if ($this->shouldPrependAbsPath()) {
@@ -169,6 +170,7 @@ class FileBackupService implements ServiceInterface
             throw $th;
         }
 
+        $this->jobDataDto->setCurrentWrittenFileHeaderBytes(0);
         // Done processing this file
         if ($isFileWrittenCompletely === true) {
             $this->jobDataDto->setFileBeingBackupWrittenBytes(0);
@@ -185,8 +187,13 @@ class FileBackupService implements ServiceInterface
             return;
         } elseif ($isFileWrittenCompletely === false) {
             // Processing a file that could not be finished in this request
+            $archiverDto = $this->archiver->getDto();
             $this->jobDataDto->setFileBeingBackupWrittenBytes($archiverDto->getWrittenBytesTotal());
             $this->taskQueue->retry(false);
+
+            if ($archiverDto->getFileHeaderSizeInBytes() > 0) {
+                $this->jobDataDto->setCurrentWrittenFileHeaderBytes($archiverDto->getFileHeaderSizeInBytes());
+            }
 
             if ($archiverDto->getWrittenBytesTotal() < $archiverDto->getFileSize() && $archiverDto->getFileSize() > 10 * MB_IN_BYTES) {
                 $this->bigFileBeingProcessed = $archiverDto;

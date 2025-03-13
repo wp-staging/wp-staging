@@ -10,7 +10,6 @@
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Notices\BackupPluginsNotice;
 use WPStaging\Framework\Notices\Notices;
-use WPStaging\Framework\Notices\OutdatedWpStagingNotice;
 use WPStaging\Framework\Facades\Escape;
 
 $backupNotice = WPStaging::make(BackupPluginsNotice::class);
@@ -47,32 +46,15 @@ $isCalledFromIndex = true;
             require $this->viewsPath . 'ads/advert-pro-version.php';
         }
         ?>
+
         <div class="wpstg-header">
-            <?php if (isset($_GET['page']) && $_GET['page'] === 'wpstg_clone' || $_GET['page'] === 'wpstg_backup') { ?>
-                <?php
-                $latestReleasedVersion = get_option('wpstg_version_latest');
-                $display               = 'none;';
-
-                if (defined('WPSTGPRO_VERSION')) {
-                    $outdatedVersionCheck  = new OutdatedWpStagingNotice();
-                    $latestReleasedVersion = $outdatedVersionCheck->getLatestWpstgProVersion();
-                    if ($outdatedVersionCheck->isOutdatedWpStagingProVersion()) {
-                        $display = 'block;';
-                    }
-                }
-
-                if (Notices::SHOW_ALL_NOTICES) {
-                    $display = 'block;';
-                }
-                ?>
-
-                <div id="wpstg-update-notify" style="display:<?php echo esc_attr($display); ?>">
-                    <strong><?php echo sprintf(__("New: WP Staging Pro v. %s is available.", 'wp-staging'), esc_html($latestReleasedVersion)); ?></strong><br/>
-                    <?php echo sprintf(__('Important: It\'s recommended to update the plugin before pushing a staging site to the live site. <a href="%s" target="_blank">What\'s New?</a>', 'wp-staging'), 'https://wp-staging.com/wp-staging-pro-changelog'); ?>
-                </div>
-
-            <?php } ?>
+            <?php
+            if (!WPStaging::isBasic()) {
+                require_once($this->viewsPath . 'pro/notices/update-notification.php');
+            }
+            ?>
         </div>
+
         <div class="wpstg-loading-bar-container">
             <div class="wpstg-loading-bar"></div>
         </div>

@@ -8,14 +8,14 @@ use WPStaging\Framework\Filesystem\Scanning\ScanConst;
 
 class SelectedTables
 {
-    /** @var array|string */
-    private $includedTables = '';
+    /** @var array */
+    private $includedTables = [];
 
-    /** @var array|string */
-    private $excludedTables = '';
+    /** @var array */
+    private $excludedTables = [];
 
-    /** @var array|string */
-    private $selectedTablesWithoutPrefix = '';
+    /** @var array */
+    private $selectedTablesWithoutPrefix = [];
 
     /** @var bool */
     private $allTablesExcluded = false;
@@ -38,14 +38,62 @@ class SelectedTables
         $this->prefix                      = null;
     }
 
-    /** @param bool $areAllTablesExcluded  */
-    public function setAllTablesExcluded($areAllTablesExcluded)
+    /**
+     * @param array|string $tables
+     * @return void
+     */
+    public function setIncludedTables($tables)
+    {
+        if (is_array($tables)) {
+            $this->includedTables = $tables;
+            return;
+        }
+
+        $this->includedTables = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
+    }
+
+    /**
+     * @param array|string $tables
+     * @return void
+     */
+    public function setExcludedTables($tables)
+    {
+        if (is_array($tables)) {
+            $this->excludedTables = $tables;
+            return;
+        }
+
+        $this->excludedTables = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
+    }
+
+    /**
+     * @param array|string $tables
+     * @return void
+     */
+    public function setSelectedTablesWithoutPrefix($tables)
+    {
+        if (is_array($tables)) {
+            $this->selectedTablesWithoutPrefix = $tables;
+            return;
+        }
+
+        $this->selectedTablesWithoutPrefix = $tables === '' ? [] : explode(ScanConst::DIRECTORIES_SEPARATOR, $tables);
+    }
+
+    /**
+     * @param bool $areAllTablesExcluded
+     * @return void
+     */
+    public function setAllTablesExcluded(bool $areAllTablesExcluded = false)
     {
         $this->allTablesExcluded = $areAllTablesExcluded;
     }
 
-    /** @param bool $includeAllTables  */
-    public function shouldIncludeAllTables($includeAllTables)
+    /**
+     * @param bool $includeAllTables
+     * @return void
+     */
+    public function shouldIncludeAllTables(bool $includeAllTables = false)
     {
         $this->includeAllTables = $includeAllTables;
     }
@@ -54,7 +102,7 @@ class SelectedTables
      * @param bool $isNetworkClone
      * @return array
      */
-    public function getSelectedTables($isNetworkClone)
+    public function getSelectedTables(bool $isNetworkClone = false)
     {
         if (!empty($this->includedTables)) {
             return array_merge($this->includedTables, $this->selectedTablesWithoutPrefix);

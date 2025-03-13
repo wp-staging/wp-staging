@@ -4,7 +4,7 @@ namespace WPStaging\Staging\Interfaces;
 
 use WPStaging\Staging\Dto\StagingSiteDto;
 
-interface StagingDataDtoInterface
+interface StagingSiteDtoInterface
 {
     public function setCloneId(string $cloneId);
 

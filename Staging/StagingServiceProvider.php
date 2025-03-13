@@ -13,9 +13,11 @@ use WPStaging\Staging\Ajax\Listing;
 use WPStaging\Staging\Ajax\Delete\DeleteConfirm;
 use WPStaging\Staging\Ajax\Repair;
 use WPStaging\Staging\Ajax\Setup;
+use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
 use WPStaging\Staging\Dto\Job\StagingSiteDeleteDataDto;
+use WPStaging\Staging\Jobs\StagingSiteCreate;
 use WPStaging\Staging\Jobs\StagingSiteDelete;
-use WPStaging\Staging\Tasks\CleanupStagingTablesTask;
+use WPStaging\Staging\Tasks\StagingSite\CleanupStagingTablesTask;
 
 class StagingServiceProvider extends FeatureServiceProvider
 {
@@ -24,6 +26,10 @@ class StagingServiceProvider extends FeatureServiceProvider
         $this->container->when(StagingSiteDelete::class)
                 ->needs(JobDataDto::class)
                 ->give(StagingSiteDeleteDataDto::class);
+
+        $this->container->when(StagingSiteCreate::class)
+                ->needs(JobDataDto::class)
+                ->give(StagingSiteCreateDataDto::class);
 
         $this->container->when(CleanupStagingTablesTask::class)
                 ->needs(DatabaseInterface::class)

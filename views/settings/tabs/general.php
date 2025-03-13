@@ -323,7 +323,7 @@ use WPStaging\Notifications\Notifications;
                             <td class="wpstg-settings-row th">
                                 <b class="wpstg-settings-title"><?php esc_html_e('Email Notifications', 'wp-staging') ?></b>
                                 <p class="wpstg-settings-message">
-                                    <?php esc_html_e('If a backup fails, send an email notification.', 'wp-staging') ?>
+                                    <?php esc_html_e('Send email notifications for backup failures, staging site reminders and other alerts!', 'wp-staging') ?>
                                 </p>
                             </td>
                             <td>
@@ -344,6 +344,21 @@ use WPStaging\Notifications\Notifications;
                                 <input type="text" id="wpstg-send-schedules-report-email" name="wpstg_settings[schedulesReportEmail]" class="wpstg-settings-field" value="<?php echo esc_attr(get_option(Notifications::OPTION_BACKUP_SCHEDULE_REPORT_EMAIL)) ?>"/>
                             </td>
                         </tr>
+
+                    <tr class="wpstg-settings-row">
+                        <td>
+                            <b class="wpstg-settings-title"><?php esc_html_e('Email as HTML', 'wp-staging') ?></b>
+                            <p class="wpstg-settings-message">
+                                <?php esc_html_e('Send emails as HTML', 'wp-staging') ?>
+                            </p>
+                        </td>
+                        <td>
+                            <?php
+                            $isCheckboxChecked = get_option(\WPStaging\Notifications\Notifications::OPTION_SEND_EMAIL_AS_HTML) === 'true';
+                            Checkbox::render('wpstg-send-email-as-html', 'wpstg_settings[emailAsHTML]', 'true', $isCheckboxChecked, ['classes' => 'wpstg-settings-field']);
+                            ?>
+                        </td>
+                    </tr>
 
                         <?php
                             $attrDisabled = defined('WPSTGPRO_VERSION') ? '' : ' disabled';

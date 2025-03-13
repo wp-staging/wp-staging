@@ -109,57 +109,12 @@ class DDLExporter extends AbstractExporter
         if ($isWpTable) {
             $createTableQuery = str_replace($tableName, $newTableName, $createTableQuery);
         }
-        $createTableQuery = $this->replaceTableConstraints($createTableQuery);
-        $createTableQuery = $this->replaceTableOptions($createTableQuery);
+        $createTableQuery = $this->tableService->replaceTableConstraints($createTableQuery);
+        $createTableQuery = $this->tableService->replaceTableOptions($createTableQuery);
         $createTableQuery = rtrim($createTableQuery, ';');
         $this->file->fwrite(preg_replace('#\s+#', ' ', $createTableQuery));
         $this->file->fwrite(";\n");
         return $newTableName;
-    }
-
-    protected function replaceTableConstraints($input)
-    {
-        $pattern = [
-            '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?(CASCADE|RESTRICT|NO\sACTION|SET\sNULL|SET\sDEFAULT)(,)/i',
-            '/(,)?(\s+)?CONSTRAINT\s(.*)\sREFERENCES\s(.*)(,)?(\s+)?ON\s+(DELETE|UPDATE)\s(.*)\s?\)/i',
-            '/\s+CONSTRAINT(.+)REFERENCES(.+),/i',
-            '/,\s+CONSTRAINT(.+)REFERENCES(.+)/i',
-        ];
-        $replace = ['', ')', '', ''];
-        return preg_replace($pattern, $replace, $input);
-    }
-
-    private function replaceTableOptions($input)
-    {
-        $search = [
-            'TYPE=InnoDB',
-            'TYPE=MyISAM',
-            'ENGINE=Aria',
-            'TRANSACTIONAL=0',
-            'TRANSACTIONAL=1',
-            'PAGE_CHECKSUM=0',
-            'PAGE_CHECKSUM=1',
-            'TABLE_CHECKSUM=0',
-            'TABLE_CHECKSUM=1',
-            'ROW_FORMAT=PAGE',
-            'ROW_FORMAT=FIXED',
-            'ROW_FORMAT=DYNAMIC',
-        ];
-        $replace = [
-            'ENGINE=InnoDB',
-            'ENGINE=MyISAM',
-            'ENGINE=MyISAM',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-        ];
-        return str_ireplace($search, $replace, $input);
     }
 
     private function isView($tableName, array $views)

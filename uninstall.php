@@ -3,6 +3,7 @@
 namespace WPStaging\Backend;
 
 use WPStaging\Backup\BackupScheduler;
+use WPStaging\Pro\License\Version;
 
 /**
  * Uninstall WP-Staging
@@ -70,6 +71,7 @@ class uninstall
             delete_option("wpstg_structure_updated"); // @deprecated
             // Store the latest WP STAGING PRO version
             delete_option("wpstg_version_latest");
+            delete_option(Version::OPTION_PRO_LATEST_VERSION);
             // Option that hold the old snapshots
             delete_option("wpstg_snapshots"); // @deprecated
             delete_option("wpstg_access_token");

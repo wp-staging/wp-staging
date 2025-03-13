@@ -489,4 +489,29 @@ class Assets
             ]
         );
     }
+
+    /**
+     * @param string $hook
+     * @return void
+     */
+    public function dequeueNonWpstgElements($hook)
+    {
+        if ($this->isNotWPStagingAdminPage($hook)) {
+            return;
+        }
+
+        $stylesToRemove  = ['wp-reset-sweetalert2'];
+        $scriptsToRemove = [
+            'wp-reset-sweetalert2',
+            'wp-reset'
+        ];
+
+        foreach ($stylesToRemove as $style) {
+            wp_dequeue_style($style);
+        }
+
+        foreach ($scriptsToRemove as $script) {
+            wp_dequeue_script($script);
+        }
+    }
 }

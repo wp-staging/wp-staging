@@ -3,7 +3,7 @@
 /**
  * @var string $email
  *
- * @see /Backend/Feedback/Feedback.php
+ * @see /Basic/Feedback/Feedback.php
  * @see loadFeedbackForm()
  */
 

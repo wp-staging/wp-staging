@@ -4,7 +4,7 @@ namespace WPStaging\Staging\Traits;
 
 use WPStaging\Staging\Dto\StagingSiteDto;
 
-trait StagingDataDtoTrait
+trait WithStagingSiteDto
 {
     /** @var string */
     private $cloneId = '';
@@ -30,7 +30,7 @@ trait StagingDataDtoTrait
     }
 
     /**
-     * @param StagingSiteDto|null $stagingSite
+     * @param StagingSiteDto|array|null $stagingSite
      * @return void
      */
     public function setStagingSite($stagingSite)

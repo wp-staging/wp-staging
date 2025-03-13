@@ -48,7 +48,7 @@ if (!$canInvalidate) {
  *
  * We use the "Version" from the headers of the main file of the plugin to compare.
  */
-$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '4.1.1';
+$runtimeVersionDifferentFromBuildVersion = get_file_data($pluginFilePath, ['Version' => 'Version'])['Version'] !== '4.1.2';
 $lastCheckHappenedAfterInterval          = current_time('timestamp') > (int)get_site_transient('wpstg.bootstrap.opcache.lastCleared') + 5 * MINUTE_IN_SECONDS;
 
 $shouldClearOpCache = apply_filters('wpstg.bootstrap.opcache.shouldClear', $runtimeVersionDifferentFromBuildVersion && $lastCheckHappenedAfterInterval);

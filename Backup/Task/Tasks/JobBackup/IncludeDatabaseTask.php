@@ -89,6 +89,7 @@ class IncludeDatabaseTask extends BackupTask
         }
 
         if ($this->stepsDto->getTotal() > 0) {
+            $this->archiver->getDto()->setFileHeaderSizeInBytes($this->jobDataDto->getCurrentWrittenFileHeaderBytes());
             return;
         }
 

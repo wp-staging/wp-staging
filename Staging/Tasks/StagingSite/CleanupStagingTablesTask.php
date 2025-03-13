@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Staging\Tasks;
+namespace WPStaging\Staging\Tasks\StagingSite;
 
 use Exception;
 use WPStaging\Framework\Adapter\DatabaseInterface;
@@ -9,7 +9,8 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Staging\Interfaces\StagingDataDtoInterface;
+use WPStaging\Staging\Interfaces\StagingSiteDtoInterface;
+use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Staging\Traits\WithStagingDatabase;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
@@ -123,11 +124,11 @@ class CleanupStagingTablesTask extends StagingTask
      */
     public function prepareCleanupTask(): string
     {
-        if (!$this->jobDataDto instanceof StagingDataDtoInterface) {
+        if (!$this->jobDataDto instanceof StagingSiteDtoInterface) {
             throw new Exception('Clone ID not found in job data.');
         }
 
-        /** @var StagingDataDtoInterface */
+        /** @var StagingSiteDtoInterface */
         $jobDataDto  = $this->jobDataDto;
 
         $this->initStagingDatabase($this->getStagingSiteDto($this->jobDataDto->getCloneId()));

@@ -53,6 +53,12 @@ class FilterableDirectoryIterator
     private $isDotSkip = true;
 
     /**
+     * Skip directories with include rules
+     * @var bool
+     */
+    private $skipDirectoriesWithIncludeRules = false;
+
+    /**
      * Possible iterator parameters are
      * RecursiveIteratorIterator::LEAVES_ONLY - The default. Will only fetch items which are files or empty dirs, meaning items which have no child
      * RecursiveIteratorIterator::SELF_FIRST - Lists leaves and parents in iteration with parents coming first. List directory and then the files in there
@@ -120,6 +126,24 @@ class FilterableDirectoryIterator
     public function setRecursive(bool $isRecursive = true)
     {
         $this->isRecursive = $isRecursive;
+        return $this;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isSkipDirectoriesWithIncludeRules(): bool
+    {
+        return $this->skipDirectoriesWithIncludeRules;
+    }
+
+    /**
+     * @param bool $skipDirectoriesWithIncludeRules
+     * @return static
+     */
+    public function setSkipDirectoriesWithIncludeRules(bool $skipDirectoriesWithIncludeRules = true)
+    {
+        $this->skipDirectoriesWithIncludeRules = $skipDirectoriesWithIncludeRules;
         return $this;
     }
 
@@ -278,7 +302,7 @@ class FilterableDirectoryIterator
         }
 
         if (count($this->excludePaths) !== 0) {
-            $iterator = new PathExcludeFilter($iterator, $this->excludePaths, $this->wpRootPath);
+            $iterator = new PathExcludeFilter($iterator, $this->excludePaths, $this->wpRootPath, $this->skipDirectoriesWithIncludeRules);
         }
 
         $iterator = new IteratorIterator($iterator);

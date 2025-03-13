@@ -8,6 +8,7 @@ use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\MySQLRowsGeneratorTrait;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
+use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use function WPStaging\functions\debug_log;
@@ -23,6 +24,7 @@ class RowsExporter extends AbstractExporter
     protected $prefixedValues = [];
     protected $queriesToInsert = '';
     protected $jobDataDto;
+    protected $tableService;
     protected $logger;
     protected $writeToFileCount = 0;
     protected $searchReplaceForPrefix;
@@ -37,9 +39,10 @@ class RowsExporter extends AbstractExporter
     protected $specialFields;
     protected $nonWpTables;
 
-    public function __construct(Database $database, JobDataDto $jobDataDto)
+    public function __construct(Database $database, TableService $tableService, JobDataDto $jobDataDto)
     {
         parent::__construct($database);
+        $this->tableService = $tableService;
         $this->jobDataDto = $jobDataDto;
         $this->specialFields = ['user_roles', 'capabilities', 'user_level', 'dashboard_quick_press_last_post_id', 'user-settings', 'user-settings-time'];
         $this->databaseName = $this->database->getWpdba()->getClient()->__get('dbname');
@@ -176,7 +179,7 @@ class RowsExporter extends AbstractExporter
         if (!in_array($this->tableName, $this->nonWpTables)) {
             $prefixedTableName = $isMultisiteBackup ? $this->getPrefixedBaseTableName($this->tableName) : $this->getPrefixedTableName($this->tableName);
         }
-        $tableColumns = $this->getColumnTypes($this->tableName);
+        $tableColumns = $this->tableService->getColumnTypes($this->tableName);
         try {
             $numericPrimaryKey = $this->getPrimaryKey();
         } catch (Exception $e) {
@@ -243,18 +246,24 @@ class RowsExporter extends AbstractExporter
 
     public function lockTable()
     {
-        if (!$result = $this->client->query("LOCK TABLES `$this->tableName` WRITE;")) {
-            debug_log("Backup: Could not lock table $this->tableName");
+        try {
+            $this->tableService->lockTable($this->tableName);
+        } catch (Exception $ex) {
+            debug_log("WP STAGING Backup: Could not lock table $this->tableName");
+            return false;
         }
-        return $result;
+        return true;
     }
 
     public function unLockTables()
     {
-        if (!$result = $this->client->query("UNLOCK TABLES;")) {
-            debug_log("WP STAGING: Could not unlock tables after locking tables $this->tableName");
+        try {
+            $this->tableService->unlockTables();
+        } catch (Exception $ex) {
+            debug_log("WP STAGING Backup: Could not unlock tables after locking tables $this->tableName");
+            return false;
         }
-        return $result;
+        return true;
     }
 
     public function setTables(array $tables = [])
@@ -269,33 +278,7 @@ class RowsExporter extends AbstractExporter
 
     public function getPrimaryKey(): string
     {
-        if ($this->hasMoreThanOnePrimaryKey()) {
-            throw new UnexpectedValueException();
-        }
-        $query = "SELECT COLUMN_NAME
-                  FROM INFORMATION_SCHEMA.COLUMNS
-                  WHERE TABLE_NAME = '$this->tableName'
-                  AND TABLE_SCHEMA = '$this->databaseName'
-                  AND IS_NULLABLE = 'NO'
-                  AND DATA_TYPE IN ('int', 'bigint', 'smallint', 'mediumint')
-                  AND COLUMN_KEY = 'PRI'
-                  AND EXTRA like '%auto_increment%';";
-        $result = $this->client->query($query);
-        if (!$result) {
-            throw new UnexpectedValueException();
-        }
-        $primaryKey = $this->client->fetchObject($result);
-        $this->client->freeResult($result);
-        if (!is_object($primaryKey)) {
-            throw new UnexpectedValueException();
-        }
-        if (!property_exists($primaryKey, 'COLUMN_NAME')) {
-            throw new UnexpectedValueException();
-        }
-        if (empty($primaryKey->COLUMN_NAME)) {
-            throw new UnexpectedValueException();
-        }
-        return $primaryKey->COLUMN_NAME;
+        return $this->tableService->getNumericPrimaryKey($this->databaseName, $this->tableName);
     }
 
     public function prefixSpecialFields()
@@ -411,30 +394,6 @@ class RowsExporter extends AbstractExporter
         $this->jobDataDto->setLastInsertId($this->lastNumericInsertId);
     }
 
-    private function getColumnTypes(string $tableName): array
-    {
-        $column_types = [];
-        $result = $this->client->query("SHOW COLUMNS FROM `{$tableName}`");
-        while ($row = $this->client->fetchAssoc($result)) {
-            if (isset($row['Field'])) {
-                $column_types[strtolower($row['Field'])] = strtolower($row['Type']);
-            }
-        }
-        $this->client->freeResult($result);
-        return $column_types;
-    }
-
-    private function hasMoreThanOnePrimaryKey(): bool
-    {
-        $query = "SHOW KEYS FROM $this->tableName WHERE Key_name = 'PRIMARY'";
-        $result = $this->client->query($query);
-        if (!$result) {
-            throw new UnexpectedValueException();
-        }
-        $primaryKeys = $this->client->fetchAll($result);
-        return count($primaryKeys) > 1;
-    }
-
     private function updateLastNumericInsertId(string $numericPrimaryKey, array $row): bool
     {
         if (!$this->useMemoryExhaustFix) {
@@ -448,5 +407,37 @@ class RowsExporter extends AbstractExporter
             $this->lastNumericInsertId = $lastInsertId;
         }
         return false;
+    }
+
+    private function initDbExclusionValues()
+    {
+        if ($this->jobDataDto->getIsExcludingSpamComments() && strpos($this->tableName, $this->database->getPrefix() . 'comment') !== false) {
+            $this->columnToExclude = 'comment_id';
+            $rowsToExclude         = $this->getSpamComments();
+            $this->valuesToExclude = implode(',', $rowsToExclude);
+        } elseif ($this->jobDataDto->getIsExcludingPostRevision() && strpos($this->tableName, $this->database->getPrefix() . 'posts') !== false) {
+            $this->columnToExclude = 'id';
+            $rowsToExclude         = $this->getPostsRevision();
+            $this->valuesToExclude = implode(',', $rowsToExclude);
+        }
+    }
+
+    private function getSpamComments(): array
+    {
+        $args = [
+            'status' => 'spam',
+            'fields' => 'ids',
+        ];
+        return get_comments($args);
+    }
+
+    private function getPostsRevision(): array
+    {
+        $args = [
+            'post_type'   => 'revision',
+            'post_status' => 'any',
+            'fields'      => 'ids',
+        ];
+        return get_posts($args);
     }
 }

@@ -3,7 +3,9 @@
 namespace WPStaging\Notifications;
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\TemplateEngine\TemplateEngine;
 use WPStaging\Notifications\NotificationsProvider;
+use WPStaging\Notifications\Transporter\EmailTemplateBuilder;
 
 class Notifications
 {
@@ -21,6 +23,11 @@ class Notifications
      * @var bool
      */
     const ENABLE_FOOTER_MESSAGE = true;
+
+    /**
+     * @var string
+     */
+    const OPTION_SEND_EMAIL_AS_HTML = 'wpstg_send_email_as_html';
 
     /**
      * @var object
@@ -97,5 +104,32 @@ class Notifications
             ->setIsAddFooterMessage($isAddFooterMessage);
 
         return $this->transporter->slackNotification->send($message);
+    }
+
+    /**
+     * @param string $to Recipient
+     * @param string $subject Subject
+     * @param string $message Content
+     * @param string $from (Optional) Sender
+     * @param array $details (Optional) Details
+     * @param array $attachments (Optional) Attachments
+     * @return bool
+     */
+    public function sendEmailAsHTML(string $to, string $subject, string $message = '', string $from = '', array $details = [], array $attachments = []): bool
+    {
+        if (empty($this->transporter->emailNotification) || !is_object($this->transporter->emailNotification)) {
+            return false;
+        }
+
+        $this->transporter->emailNotification->setUseHtml(true);
+        $templateEngine = WPStaging::make(TemplateEngine::class);
+        $emailTemplate  = EmailTemplateBuilder::create($templateEngine)
+            ->setTitle($subject)
+            ->setRecipient($to)
+            ->setMessage($message)
+            ->setDetails($details)
+            ->generate();
+
+        return $this->sendEmail($to, $subject, $emailTemplate, $from, $attachments, false);
     }
 }

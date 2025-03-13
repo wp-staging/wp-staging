@@ -366,8 +366,12 @@ class BufferedCache extends AbstractCache
      * 1GB file can be read as low as .5s/ 500ms or less.
      * @return int
      */
-    public function countLines()
+    public function countLines(): int
     {
+        if (!file_exists($this->filePath)) {
+            return 0;
+        }
+
         $handle = fopen($this->filePath, 'rb+');
         $total  = 0;
 

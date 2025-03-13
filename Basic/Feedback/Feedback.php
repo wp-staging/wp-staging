@@ -1,16 +1,17 @@
 <?php
 
-namespace WPStaging\Backend\Feedback;
+namespace WPStaging\Basic\Feedback;
 
 use WP_User;
 use WPStaging\Core\WPStaging;
 use WPStaging\Notifications\Notifications;
 
-/**
- * @todo Move to src/Basic/Feedback/Feedback.php
- */
 class Feedback
 {
+    /**
+     * @var string
+     */
+    const WPSTG_FEEDBACK_EMAIL = "feedback@wp-staging.com";
 
     /**
      * Current page is plugins.php
@@ -73,7 +74,7 @@ class Feedback
         $message = empty($body) ? 'No reason given' : $body;
         $from    = isset($form['wpstg_disable_from']) ? sanitize_email($form['wpstg_disable_from']) : '';
         $subject = empty($subject) ? '(no reason given)' : (count($subject) > 1 ? '(multiple reasons given)' : $subject[0]);
-        $success = WPStaging::make(Notifications::class)->sendEmail('feedback@wp-staging.com', $subject, $message, $from, [], false);
+        $success = WPStaging::make(Notifications::class)->sendEmail(self::WPSTG_FEEDBACK_EMAIL, $subject, $message, $from, [], false);
 
         if ($success) {
             wp_die(1);

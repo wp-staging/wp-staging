@@ -104,7 +104,13 @@ class OtpSender
         $message .= "\n\n" . esc_html__("Please do not forward this email.  If you didn`t request this code, you can ignore this message.", "wp-staging");
         $message .= "\n\n" . esc_html__('The verification code above is unique and will expire in 5 minutes.', 'wp-staging');
 
-        $sent = $this->notifications->sendEmail($userEmail, $subject, $message, '', [], Notifications::DISABLE_FOOTER_MESSAGE);
+        $sent = false;
+        if (get_option(Notifications::OPTION_SEND_EMAIL_AS_HTML, false) === 'true') {
+            $sent = $this->notifications->sendEmailAsHTML($userEmail, $subject, $message);
+        } else {
+            $sent = $this->notifications->sendEmail($userEmail, $subject, $message, '', [], Notifications::DISABLE_FOOTER_MESSAGE);
+        }
+
         if (!$sent) {
             debug_log('Failed to send OTP to user email: ' . $userEmail);
             wp_send_json_error(esc_html__('Failed to send OTP', 'wp-staging'), 401);

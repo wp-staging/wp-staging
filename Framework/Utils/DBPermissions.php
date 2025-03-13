@@ -55,7 +55,7 @@ class DBPermissions
 
         $message = '<span id="wpstg-permission-info-output">' . $message . '</span>';
         $message .= '<span id="wpstg-permission-info-data">' . $this->getDebugInfo() . '</span>';
-        $message .= '<br/><br/><button type="button" id="wpstg-db-permission-show-full-message" class="wpstg-link-btn wpstg-blue-primary">' . __("Show Full Message", "wp-staging") . '</button>';
+        $message .= '<br/><button type="button" id="wpstg-db-permission-show-full-message" class="wpstg-link-btn wpstg-blue-primary">' . __("Show Full Message", "wp-staging") . '</button>';
 
         wp_send_json_error([
             'message' => wp_kses_post($message),
