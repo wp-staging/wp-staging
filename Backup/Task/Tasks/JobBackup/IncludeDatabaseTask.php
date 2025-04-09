@@ -14,6 +14,7 @@ use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Backup\Service\Archiver;
 use WPStaging\Framework\Filesystem\Filesystem;
+use WPStaging\Framework\Job\Exception\ThresholdException;
 
 class IncludeDatabaseTask extends BackupTask
 {
@@ -51,7 +52,13 @@ class IncludeDatabaseTask extends BackupTask
         }
 
         try {
+            $this->archiver->setFileAppendTimeLimit($this->jobDataDto->getFileAppendTimeLimit());
             $this->archiver->appendFileToBackup($this->jobDataDto->getDatabaseFile());
+        } catch (ThresholdException $e) {
+            $this->logger->warning(sprintf(
+                'PHP time limit reached while adding database to the backup. Will try again with increasing the time limit. New time limit %s',
+                $this->jobDataDto->getFileAppendTimeLimit()
+            ));
         } catch (Exception $e) {
             $this->logger->critical(sprintf(
                 'Failed to include database in the backup: %s (%s)',

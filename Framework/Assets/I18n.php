@@ -26,6 +26,9 @@ class I18n
             'read_more'             => esc_html__('Read More', 'wp-staging'),
             'ok'                    => esc_html__('OK', 'wp-staging'),
             'cancel'                => esc_html__('Cancel', 'wp-staging'),
+            'next'                  => esc_html__('Next', 'wp-staging'),
+            'yes'                   => esc_html__('Yes', 'wp-staging'),
+            'no'                    => esc_html__('No', 'wp-staging'),
             'success'               => esc_html__('Success', 'wp-staging'),
             'failed'                => esc_html__('Failed', 'wp-staging'),
             'error'                 => esc_html__('Error', 'wp-staging'),
@@ -56,6 +59,7 @@ class I18n
             'small_server_settings_text' => sprintf(esc_html__('Please try the %s or submit an error report and contact us.', 'wp-staging'), '<a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a>'),
             'report_this_warning' => sprintf(esc_html__('Please report this warning %s and keep using WP Staging!', 'wp-staging'), '<a href="https://wp-staging.com/support/" target="_blank">to our support</a>'),
             'please_wait' => esc_html__('Please wait...this can take up a while.', 'wp-staging'),
+            'contact_us' => esc_html__('CONTACT US', 'wp-staging'),
             'database_connection'   => [
                 'success' => esc_html__('Database connection successful', 'wp-staging'),
                 'failed' => esc_html__('Database connection failed', 'wp-staging'),
@@ -186,6 +190,7 @@ class I18n
                 'set_title_process_finished' => esc_html__('Process Finished', 'wp-staging'),
                 'set_title_renaming_database' => esc_html__('Renaming Database', 'wp-staging'),
                 'set_title_updating_database_data' => esc_html__('Updating Database Data', 'wp-staging'),
+                'set_title_search_replace' => esc_html__('Search Replace', 'wp-staging'),
             ],
             'system_info' => [
                 'confirm_and_proceed_purge_html' => esc_html__('This cleans up the database table %s. Only use this function for debugging purposes, or if the scheduled backups do not work as expected.', 'wp-staging'),

@@ -137,6 +137,7 @@ abstract class AbstractExtractor
         }
 
         $parts = [
+            PartIdentifier::DROPIN_PART_IDENTIFIER,
             PartIdentifier::DATABASE_PART_IDENTIFIER,
             PartIdentifier::MU_PLUGIN_PART_IDENTIFIER,
             PartIdentifier::PLUGIN_PART_IDENTIFIER,
@@ -514,8 +515,8 @@ abstract class AbstractExtractor
             return in_array(PartIdentifier::DATABASE_PART_IDENTIFIER, $this->excludedIdentifier);
         }
 
-        if ($identifier === PathIdentifier::IDENTIFIER_WP_CONTENT && $this->pathIdentifier->hasDropinsFile($identifiablePath)) {
-            return in_array(PartIdentifier::DROPIN_PART_IDENTIFIER, $this->excludedIdentifier);
+        if ($identifier === PathIdentifier::IDENTIFIER_WP_CONTENT && !in_array(PartIdentifier::DROPIN_PART_IDENTIFIER, $this->excludedIdentifier) && $this->pathIdentifier->hasDropinsFile($identifiablePath)) {
+            return false;
         }
 
         return in_array($identifier, $this->excludedIdentifier);
@@ -536,18 +537,34 @@ abstract class AbstractExtractor
      * @param string $dataToFix
      * @return string
      */
-    protected function maybeRepairMultipleHeadersIssue(string $dataToFix): string
+    public function maybeRepairMultipleHeadersIssue(string $dataToFix): string
     {
         /**
          * @var FileHeader $fileHeader
          */
         $fileHeader = $this->indexLineDto;
-        // If the file header is found in the data, remove it
+        // If the file header is found in the data, remove it (this will only remove header from uncompressed file)
         if (strpos($dataToFix, $fileHeader->getFileHeader()) !== false) {
             $count = substr_count($dataToFix, $fileHeader->getFileHeader());
             $this->extractingFile->addHeaderBytesRemoved($count * ($fileHeader->getDynamicHeaderLength() + 1));
 
             return str_replace($fileHeader->getFileHeader() . "\n", '', $dataToFix);
+        }
+
+        // Return early if the file is not compressed because the fix for uncompressed file is already applied above
+        if (!$fileHeader->getIsCompressed()) {
+            return $dataToFix;
+        }
+
+        /**
+         * If the uncompressed file header is found in the data of compressed file, remove it
+         * Required for : https://github.com/wp-staging/wp-staging-pro/issues/4241
+         */
+        if (strpos($dataToFix, $fileHeader->getUncompressedFileHeader()) !== false) {
+            $count = substr_count($dataToFix, $fileHeader->getUncompressedFileHeader());
+            $this->extractingFile->addHeaderBytesRemoved($count * ($fileHeader->getDynamicHeaderLength() + 1));
+
+            return str_replace($fileHeader->getUncompressedFileHeader() . "\n", '', $dataToFix);
         }
 
         return $dataToFix;

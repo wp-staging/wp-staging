@@ -8,8 +8,8 @@ License: GPLv2 or later
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 Tags: backup, backups, migrate, migration, wordpress backup
 Requires at least: 3.6+
-Tested up to: 6.7
-Stable tag: 4.1.2
+Tested up to: 6.8
+Stable tag: 4.1.3
 Requires PHP: 7.0
 
 Backup & Backup Restore. Migration & Staging – 1-Click Enterprise Backup Plugin, 100% Unit Tested. Keep Your Backups Safe and Secure.
@@ -286,6 +286,34 @@ That is where WP STAGING shows its strengths... Site cloning, backup, and stagin
 9. Staging demo site
 
 == Changelog ==
+
+= 4.1.3 =
+* New: Tested for up to WordPress v. 6.8.
+* Security: Prevent authorized users from deleting admin user on the live and staging sites. (Pro) #4247
+* Performance: Disable autoload option for wpstg_staging_sites field. #4098
+* Enh: Remove the notice header from general backup notice. #4237
+* Enh: Simplify the restore tool login process. (Pro) #4117
+* Enh: Remove google libraries and create a new library for uploading backup to google drive remote storage. (Pro) #3729
+* Enh: Release the restore tool as a non-PHP file to prevent false malware detection. (Pro) #4183
+* Enh: If no primary key exists in a table, flag log entry as warning and not info. #4194
+* Enh: Improve error message for backup upload preparation failure. #4045
+* Fix: Some buttons were not translated. #4180
+* Fix: We've improved how WP Staging handles large files during backups. If a backup step takes too long, WP Staging will automatically allow extra time for it to finish. If it still can't complete successfully, the backup will safely stop instead of running forever. #4193
+* Fix: If a database collation is missing during table restore, use the `general` variant for that table restore. Also add a filter `wpstg.database.importer.replace_collation` to restore with a specific variant if the collation is missing during restore. #4199
+* Fix: No directories listed during staging process if wp-content folder is symlinked on Flywheel hosting. Enhanced symbolic link handling. #4173
+* Fix: Prevent unauthorized access to REST APIs on the staging site to avoid potential exploits during plugin updates. (Pro) #4256
+* Fix: Incorrect backup download URL when downloading backups on WP.com and Flywheel hosted sites. #4161
+* Fix: Automatically disable DEBUG constants on staging sites to prevent unwanted debug warnings. #4175
+* Fix: Add an alternative way to copy files during cloning and push when php native `copy` method fails on some system. #4144
+* Fix: Some older compressed backups couldn’t be restored due to a file header error. This update fixes the issue so those backups can now be restored properly. #4241
+* Fix: Backup older than version Pro 5.0.4 or Free 3.0.4 is considered v2 backup, thus can not be restored. #4243
+* Fix: Enhance error handling and response messaging for failed license activation attempts. #3954
+* UX: Fix the dark mode issue on the `Restore Tool` page. #4215
+* UX: Visual improvement of the restore script download page. #4218
+* Dev: Increase github actions 'timeout-minutes' for playwright tests. #4222
+* Dev: Skip staging site tests on playwright for WordPress.com like environment. Also skip email related tests on Windows as email catcher is not yet implemented on Windows. #4220
+* Dev: Improve v2 backup specification docs. #4245
+* Dev: Playwright pro test are failing because of MS oneDrive. (Pro) #4163
 
 = 4.1.2 =
 * New: Add support for multipart emails (HTML and plain text) in email notifications. #3856

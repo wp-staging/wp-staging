@@ -145,7 +145,7 @@ class Sites
             $allStagingSites[$oldSiteSlug] = $oldSite;
         }
 
-        if (update_option(self::STAGING_SITES_OPTION, $allStagingSites)) {
+        if ($this->updateStagingSites($allStagingSites)) {
             // Keep a backup just in case
             update_option(self::BACKUP_STAGING_SITES_OPTION, $oldSitesOption, false);
             delete_option(self::OLD_STAGING_SITES_OPTION);
@@ -185,7 +185,7 @@ class Sites
      */
     public function updateStagingSites($stagingSites)
     {
-        return update_option(self::STAGING_SITES_OPTION, $stagingSites);
+        return update_option(self::STAGING_SITES_OPTION, $stagingSites, false);
     }
 
     /**

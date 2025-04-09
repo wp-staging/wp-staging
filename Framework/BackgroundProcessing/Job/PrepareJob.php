@@ -70,7 +70,7 @@ abstract class PrepareJob
 
     /**
      * @param AjaxPrepareJob $ajaxPrepareJob A reference to the object currently handling
-     *                                             AJAX Delete preparation requests.
+     *                                             AJAX job preparation requests.
      * @param Queue             $queue             A reference to the instance of the Queue manager the class
      *                                             should use for processing.
      * @param ProcessLock       $processLock       A reference to the Process Lock manager the class should use
@@ -86,10 +86,10 @@ abstract class PrepareJob
     }
 
     /**
-     * @param array<string,mixed>|null $data Either a map of the data to prepare the Delete with, or
-     *                                       `null` to use the default Delete settings.
+     * @param array<string,mixed>|null $data Either a map of the data to prepare this job with, or
+     *                                       `null` to use the default job settings.
      *
-     * @return string|WP_Error Either the Background Processing Job identifier for this Delete task, or
+     * @return string|WP_Error Either the Background Processing Job identifier for this job task, or
      *                         an error instance detailing the cause of the failure.
      */
     public function prepare($data = null)
@@ -117,9 +117,9 @@ abstract class PrepareJob
     }
 
     /**
-     * Queues the Background Processing Action required to move the Delete job forward.
+     * Queues the Background Processing Action required to move this job forward.
      *
-     * @param array $jobId The identifier of all the Actions part of this Delete processing.
+     * @param array $jobId The identifier of all the Actions part of this job processing.
      *
      * @throws QueueException If there is an issue enqueueing the background processing action required by the
      *                        job prepare.
@@ -135,21 +135,21 @@ abstract class PrepareJob
         $actionId = $this->queue->enqueueAction(static::class . '::' . 'act', $args, $args['jobId'], $priority);
 
         if ($actionId === false || !$this->queue->getAction($actionId) instanceof Action) {
-            throw new QueueException('Delete background processing action could not be queued.');
+            throw new QueueException('Background processing action could not be queued.');
         }
 
         $this->lastQueuedActionId = $actionId;
     }
 
     /**
-     * This method is the one the Queue will invoke to move the Delete processing forward.
+     * This method is the one the Queue will invoke to move this job processing forward.
      *
-     * This method will either end the Delete background processing (on completion or failure), or
-     * enqueue a new Action in the background processing system to keep running the Delete.
+     * This method will either end the background processing (on completion or failure), or
+     * enqueue a new Action in the background processing system to keep running this job.
      *
-     * @param string $jobId The identifier of all the Actions part of this Delete processing.
+     * @param string $jobId The identifier of all the Actions part of this job processing.
      *
-     * @return WP_Error|TaskResponseDto Either a reference to the updated Delete task status, or a reference
+     * @return WP_Error|TaskResponseDto Either a reference to the updated job task status, or a reference
      *                                  to the Error instance detailing the reasons of the failure.
      * @throws QueueException
      */
@@ -165,8 +165,7 @@ abstract class PrepareJob
 
         $this->maybeInitJob($args);
 
-        $args['isInit'] = false;
-
+        $args['isInit']  = false;
         $taskResponseDto = null;
 
         debug_log('[Schedule Job Data DTO]: ' . json_encode($this->job->getJobDataDto()), 'info', false);
@@ -186,7 +185,7 @@ abstract class PrepareJob
                 return new WP_Error(400, $e->getMessage());
             }
 
-            $errorMessage    = $this->getLastErrorMessage();
+            $errorMessage = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
                 $this->processLock->unlockProcess();
                 $body = '';
@@ -244,9 +243,9 @@ abstract class PrepareJob
     }
 
     /**
-     * Commits the current Delete Job status to the database.
+     * Commits the current Job status to the database.
      *
-     * This method is a proxy to the Ajax Delete Prepare handler own `commit` method.
+     * This method is a proxy to the Ajax Prepare handler own `commit` method.
      *
      * @return bool Whether the commit was successful, in terms of intended state, or not.
      */

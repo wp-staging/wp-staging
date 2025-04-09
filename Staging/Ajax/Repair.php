@@ -41,12 +41,16 @@ class Repair extends AbstractTemplateComponent
     /** @var Directory */
     private $directory;
 
-    public function __construct(TemplateEngine $templateEngine, MailSender $mailSender, Report $report, Directory $directory)
+    /** @var Sites */
+    private $sites;
+
+    public function __construct(TemplateEngine $templateEngine, MailSender $mailSender, Report $report, Directory $directory, Sites $sites)
     {
         parent::__construct($templateEngine);
         $this->mailSender = $mailSender;
         $this->report     = $report;
         $this->directory  = $directory;
+        $this->sites      = $sites;
     }
 
     /**
@@ -60,7 +64,7 @@ class Repair extends AbstractTemplateComponent
 
         $corruptedOption = get_option(Sites::STAGING_SITES_OPTION, null);
         $fixed           = $this->backupOldOption($corruptedOption);
-        update_option(Sites::STAGING_SITES_OPTION, []);
+        $this->sites->updateStagingSites([]);
 
         $mailSent = $this->initiateEmailNotification($corruptedOption, $fixed);
 

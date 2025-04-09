@@ -9,6 +9,7 @@ use WPStaging\Backup\Exceptions\BackupSkipItemException;
 use WPStaging\Framework\Job\Exception\DiskNotWritableException;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\FilesystemScanner;
+use WPStaging\Framework\Job\Exception\ThresholdException;
 use WPStaging\Framework\Queue\FinishedQueueException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
@@ -92,11 +93,14 @@ class FileBackupService implements ServiceInterface
      */
     public function execute()
     {
+        $this->archiver->setFileAppendTimeLimit($this->jobDataDto->getFileAppendTimeLimit());
         $this->start = microtime(true);
 
         while (!$this->isThreshold() && !$this->stepsDto->isFinished()) {
             try {
                 $this->backup();
+            } catch (ThresholdException $exception) {
+                break;
             } catch (FinishedQueueException $exception) {
                 $this->stepsDto->finish();
                 $this->logger->info(sprintf('Added %d/%d %s files to backup (%s)', $this->stepsDto->getCurrent(), $this->stepsDto->getTotal(), $this->fileIdentifier, $this->getBackupSpeed()));
@@ -162,10 +166,14 @@ class FileBackupService implements ServiceInterface
             $this->maybeIncrementPartNo($path);
             $isFileWrittenCompletely = $this->archiver->appendFileToBackup($path, $indexPath);
         } catch (BackupSkipItemException $e) {
+            $isFileWrittenCompletely = true;
+        } catch (ThresholdException $e) {
             $isFileWrittenCompletely = null;
         } catch (\RuntimeException $e) {
+            $isFileWrittenCompletely = true;
+            // Invalid file
+            $this->logger->warning("Invalid file. Could not add file to backup: $path");
             debug_log("Backup error: cannot append file to backup: $path");
-            $isFileWrittenCompletely = null;
         } catch (\Throwable $th) {
             throw $th;
         }
@@ -177,27 +185,23 @@ class FileBackupService implements ServiceInterface
             $this->stepsDto->incrementCurrentStep();
 
             return;
-        } elseif ($isFileWrittenCompletely === null) {
-            // Invalid file
-            $this->logger->warning("Invalid file. Could not add file to backup: $path");
-            $this->jobDataDto->setFileBeingBackupWrittenBytes(0);
-            $this->stepsDto->incrementCurrentStep();
-            debug_log("Backup error: cannot append file to backup: $path");
+        }
 
-            return;
-        } elseif ($isFileWrittenCompletely === false) {
-            // Processing a file that could not be finished in this request
-            $archiverDto = $this->archiver->getDto();
-            $this->jobDataDto->setFileBeingBackupWrittenBytes($archiverDto->getWrittenBytesTotal());
-            $this->taskQueue->retry(false);
+        // Processing a file that could not be finished in this request
+        $archiverDto = $this->archiver->getDto();
+        $this->jobDataDto->setFileBeingBackupWrittenBytes($archiverDto->getWrittenBytesTotal());
+        $this->taskQueue->retry(false);
 
-            if ($archiverDto->getFileHeaderSizeInBytes() > 0) {
-                $this->jobDataDto->setCurrentWrittenFileHeaderBytes($archiverDto->getFileHeaderSizeInBytes());
-            }
+        if ($archiverDto->getFileHeaderSizeInBytes() > 0) {
+            $this->jobDataDto->setCurrentWrittenFileHeaderBytes($archiverDto->getFileHeaderSizeInBytes());
+        }
 
-            if ($archiverDto->getWrittenBytesTotal() < $archiverDto->getFileSize() && $archiverDto->getFileSize() > 10 * MB_IN_BYTES) {
-                $this->bigFileBeingProcessed = $archiverDto;
-            }
+        if ($archiverDto->getWrittenBytesTotal() < $archiverDto->getFileSize() && $archiverDto->getFileSize() > 10 * MB_IN_BYTES) {
+            $this->bigFileBeingProcessed = $archiverDto;
+        }
+
+        if ($isFileWrittenCompletely === null) {
+            throw new ThresholdException();
         }
     }
 

@@ -226,12 +226,21 @@ class BufferedCache extends AbstractCache
      * @return int Bytes written
      * @throws \RuntimeException
      * @throws DiskNotWritableException
+     * @throws ThresholdException
      */
     public function appendFile($source, $offset = 0)
     {
         $target = fopen($this->filePath, 'ab');
 
-        $bytesWritten = $this->stoppableAppendFile($source, $target, $offset);
+        try {
+            $bytesWritten = $this->stoppableAppendFile($source, $target, $offset);
+        } catch (ThresholdException $e) {
+            // Let rethrow the exception after closing the file resource
+            fclose($target);
+            $target = null;
+            throw $e;
+        }
+
         fclose($target);
         $target = null;
 
@@ -424,6 +433,15 @@ class BufferedCache extends AbstractCache
     }
 
     /**
+     * @param int $timeLimt
+     * @return void
+     */
+    public function setFileAppendTimeLimit(int $timeLimt)
+    {
+        self::$fileAppendMaxExecutionTimeInSeconds = $timeLimt;
+    }
+
+    /**
      * @param int $lines
      * @return array|null
      * @throws IOException
@@ -459,6 +477,7 @@ class BufferedCache extends AbstractCache
      * @return int Bytes written
      * @throws DiskNotWritableException
      * @throws \RuntimeException If you can't read chunk from file
+     * @throws ThresholdException
      */
     private function stoppableAppendFile($source, $target, $offset)
     {
@@ -466,7 +485,12 @@ class BufferedCache extends AbstractCache
         $bytesWrittenTotal = $offset;
         fseek($source, $offset);
 
-        while (!$this->isThreshold() && !feof($source)) {
+        // Check if we hit the threshold so we can try incrementing php time limit
+        if ($this->isFileAppendThreshold()) {
+            throw ThresholdException::thresholdHit();
+        }
+
+        while (!$this->isFileAppendThreshold() && !feof($source)) {
             $chunk = fread($source, $this->chunkReadingSizeForAppendingFile);
 
             if ($chunk === false) {

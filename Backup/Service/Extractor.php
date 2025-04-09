@@ -296,13 +296,14 @@ class Extractor extends AbstractExtractor
             throw new Exception("Can not extract file $destinationFilePath");
         }
 
+        $lastDebugMessage = '';
         while (!$this->extractingFile->isFinished() && !$this->isThreshold()) {
             $readBytesBefore = $this->wpstgFile->ftell();
 
             $chunk = null;
             try {
-                $chunk = $this->zlibCompressor->getService()->readChunk($this->wpstgFile, $this->extractingFile, function ($currentChunkNumber) {
-                    $this->logger->debug(sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->extractorDto->getTotalChunks()));
+                $chunk = $this->zlibCompressor->getService()->readChunk($this->wpstgFile, $this->extractingFile, function ($currentChunkNumber) use (&$lastDebugMessage) {
+                    $lastDebugMessage = sprintf('DEBUG: Extracting chunk %d/%d', $currentChunkNumber, $this->extractorDto->getTotalChunks());
                 });
             } catch (EmptyChunkException $ex) {
                 // If empty chunk, it is an empty file, so we can skip it
@@ -324,6 +325,10 @@ class Extractor extends AbstractExtractor
             $readBytesAfter = $this->wpstgFile->ftell() - $readBytesBefore;
 
             $this->extractingFile->addWrittenBytes($readBytesAfter);
+        }
+
+        if (!empty($lastDebugMessage)) {
+            $this->logger->debug($lastDebugMessage);
         }
 
         fclose($destinationFileResource);

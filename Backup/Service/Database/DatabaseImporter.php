@@ -301,6 +301,13 @@ class DatabaseImporter
                     break;
                 case 1813:
                     throw new \RuntimeException('Could not restore the database. MySQL returned the error code 1813, which is related to a tablespace error that WP STAGING can\'t handle. Please contact your hosting company.');
+                case 1273:
+                    $tableCollation = $this->queryCompatibility->replaceCollation($query, $errorMsg);
+                    $result = $this->exec($query);
+                    if ($result) {
+                        $this->logWarning(sprintf('"The collation of the table `%s` has been changed from `%s` to `%s`, as the collation `%s` is missing from current MySQL version. To prevent this warning in the future, please restore the backup on a database using the same MySQL version as the one used during the backup.', $tableCollation['tableName'], $tableCollation['collationBefore'], $tableCollation['collationAfter'], $tableCollation['collationBefore']));
+                    }
+                    break;
             }
             if ($result) {
                 return true;
@@ -522,8 +529,15 @@ class DatabaseImporter
         if (stripos($query, 'commit;') === 0) {
             return false;
         }
-        if (substr($query, -strlen(1)) !== ';') {
-            $this->logWarning('Skipping query because it does not end with a semi-colon... The query was logged.');
+        if (substr($query, -1) !== ';') {
+            $this->logWarning(
+                'Skipping query because it does not end with a semi-colon.',
+                [
+                    'method'     => __METHOD__,
+                    'DbFileLine' => is_object($this->file) ? $this->file->key() : 0,
+                    'DbQuery'    => $query,
+                ]
+            );
             $this->debugLog($query);
             return false;
         }
@@ -598,9 +612,17 @@ class DatabaseImporter
         return true;
     }
 
-    protected function logWarning(string $message)
+    protected function logWarning(string $message, array $data = [])
     {
         $callable = $this->warningLogCallable;
+        if (__NAMESPACE__ === 'WpstgRestorer') {
+            if (empty($data) || !is_callable($callable)) {
+                return;
+            }
+            $message = array_merge([
+                'method'  => '', 'message' => $message
+            ], $data);
+        }
         $callable($message);
     }
 

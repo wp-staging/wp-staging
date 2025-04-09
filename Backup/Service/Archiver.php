@@ -20,12 +20,14 @@ use WPStaging\Backup\FileHeader;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Adapter\PhpAdapter;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Filesystem\PathIdentifier;
 use WPStaging\Framework\Utils\Cache\BufferedCache;
 use WPStaging\Framework\Traits\EndOfLinePlaceholderTrait;
 use WPStaging\Vendor\lucatume\DI52\NotFoundException;
 use WPStaging\Framework\Filesystem\PartIdentifier;
+use WPStaging\Framework\Job\Exception\ThresholdException;
 
 use function WPStaging\functions\debug_log;
 
@@ -35,6 +37,30 @@ use function WPStaging\functions\debug_log;
 class Archiver
 {
     use EndOfLinePlaceholderTrait;
+
+    /**
+     * After this number of failed requests, we will increase the execution by 5s for file append.
+     * @var int
+     */
+    const MAX_RETRIES = 1;
+
+    /**
+     * This is max time limit we can allow even when php time limit is set higher.
+     * @var int
+     */
+    const MAX_ALLOWED_PHP_TIME_LIMIT = 60;
+
+    /**
+     * In some cases when, server may have defined max_execution_time as 0 or -1, so we forcefully set it to 10s in those cases.
+     * @var int
+     */
+    const MIN_ALLOWED_PHP_TIME_LIMIT = 10;
+
+    /**
+     * This is the fraction of php time limit, so we still have some room left to finish the execution when threshold reaches
+     * @var float
+     */
+    const PHP_TIME_LIMIT_IN_FRACTION = 0.8;
 
     /** @var string */
     const BACKUP_DIR_NAME = 'backups';
@@ -103,6 +129,16 @@ class Archiver
         $this->fileHeader      = $fileHeader;
         $this->backupHeader    = $backupHeader;
         $this->filesystem      = $filesystem;
+    }
+
+    /**
+     * @param int $fileAppendTimeLimit
+     * @return void
+     */
+    public function setFileAppendTimeLimit(int $fileAppendTimeLimit)
+    {
+        $this->tempBackup->setFileAppendTimeLimit($fileAppendTimeLimit);
+        $this->tempBackupIndex->setFileAppendTimeLimit($fileAppendTimeLimit);
     }
 
     /**
@@ -183,6 +219,7 @@ class Archiver
      * @throws DiskNotWritableException
      * @throws RuntimeException
      * @throws BackupSkipItemException Skip this file don't do anything
+     * @throws ThresholdException
      *
      * @return bool
      */
@@ -201,8 +238,8 @@ class Archiver
             $indexPath = $fullFilePath;
         }
 
-        $indexPath   = $this->replaceEOLsWithPlaceholders($indexPath);
-        $fileStats   = fstat($resource);
+        $indexPath = $this->replaceEOLsWithPlaceholders($indexPath);
+        $fileStats = fstat($resource);
         $this->initiateDtoByFilePath($fullFilePath, $fileStats);
         $this->archiverDto->setIndexPath($indexPath);
         $fileHeaderSizeInBytes = 0;
@@ -211,8 +248,18 @@ class Archiver
             $this->archiverDto->setFileHeaderSizeInBytes($fileHeaderSizeInBytes);
         }
 
-        $writtenBytesBefore              = $this->archiverDto->getWrittenBytesTotal();
-        $writtenBytesTotal               = $this->appendToArchiveFile($resource, $fullFilePath);
+        $writtenBytesBefore = $this->archiverDto->getWrittenBytesTotal();
+        try {
+            $writtenBytesTotal = $this->appendToArchiveFile($resource, $fullFilePath);
+        } catch (ThresholdException $ex) {
+            // Let close the file resource before re-throwing the exception
+            fclose($resource);
+            $resource = null;
+            $this->maybeIncrementFileAppendTimeLimit();
+
+            throw $ex;
+        }
+
         $newBytesWritten                 = $writtenBytesTotal + $fileHeaderSizeInBytes - $writtenBytesBefore;
         $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->archiverDto->getFileHeaderSizeInBytes();
 
@@ -232,6 +279,9 @@ class Archiver
         $this->bytesWrittenInThisRequest += $newBytesWritten;
 
         $isFinished = $this->archiverDto->isFinished();
+        if ($isFinished) {
+            $this->resetFileAppendTimeLimitAndRetries();
+        }
 
         $this->archiverDto->resetIfFinished();
 
@@ -472,6 +522,52 @@ class Archiver
     }
 
     /**
+     * @return void
+     * @throws RuntimeException
+     */
+    protected function maybeIncrementFileAppendTimeLimit()
+    {
+        $this->jobDataDto->incrementNumberOfRetries();
+        if ($this->jobDataDto->getNumberOfRetries() > self::MAX_RETRIES) {
+            return;
+        }
+
+        /** @var JobBackupDataDto */
+        $jobDataDto = $this->jobDataDto;
+        $jobDataDto->incrementFileAppendTimeLimit();
+        if ($jobDataDto->getFileAppendTimeLimit() > $this->getMaxPhpTimeLimitAllowed()) {
+            throw new RuntimeException('Maximum file append time limit exceeded. Please increase your PHP max execution time to proceed.');
+        }
+    }
+
+    protected function getMaxPhpTimeLimitAllowed(): int
+    {
+        $maxAllowedPhpTimeLimit = (int)ini_get('max_execution_time');
+        if ($maxAllowedPhpTimeLimit === 0 || $maxAllowedPhpTimeLimit === -1) {
+            $maxAllowedPhpTimeLimit = self::MAX_ALLOWED_PHP_TIME_LIMIT * self::PHP_TIME_LIMIT_IN_FRACTION;
+            return (int)Hooks::applyFilters('wpstg.resources.executionTimeLimit', $maxAllowedPhpTimeLimit);
+        }
+
+        $maxAllowedPhpTimeLimit = max(self::MIN_ALLOWED_PHP_TIME_LIMIT, $maxAllowedPhpTimeLimit);
+        $maxAllowedPhpTimeLimit = min(self::MAX_ALLOWED_PHP_TIME_LIMIT, $maxAllowedPhpTimeLimit);
+        $maxAllowedPhpTimeLimit = $maxAllowedPhpTimeLimit * self::PHP_TIME_LIMIT_IN_FRACTION;
+
+        return (int)Hooks::applyFilters('wpstg.resources.executionTimeLimit', $maxAllowedPhpTimeLimit);
+    }
+
+    /**
+     * @return void
+     */
+    protected function resetFileAppendTimeLimitAndRetries()
+    {
+        /** @var JobBackupDataDto */
+        $jobDataDto = $this->jobDataDto;
+
+        $jobDataDto->resetFileAppendTimeLimit();
+        $jobDataDto->resetNumberOfRetries();
+    }
+
+    /**
      * @throws RuntimeException
      *
      * @param string $renameFileTo
@@ -565,6 +661,7 @@ class Archiver
      * @return int Bytes written
      * @throws DiskNotWritableException
      * @throws RuntimeException
+     * @throws ThresholdException
      */
     private function appendToArchiveFile($resource, string $filePath): int
     {

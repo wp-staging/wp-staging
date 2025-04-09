@@ -1,8 +1,11 @@
 <?php
 namespace WPStaging\Backup\Service\Database\Importer;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
+use WPStaging\Framework\Traits\ApplyFiltersTrait;
 class QueryCompatibility
 {
+    use ApplyFiltersTrait;
+
     public function removeDefiner(&$query)
     {
         if (!stripos($query, 'DEFINER')) {
@@ -88,5 +91,36 @@ class QueryCompatibility
         ], ['', '', '', ''], $query);
         preg_match('/create\s+table\s+\`?(\w+)`/i', $query, $matches);
         return $matches[1];
+    }
+
+    public function replaceCollation(&$query, string $errorMessage): array
+    {
+        preg_match('/create\s+table\s+\`?(\w+)`/i', $query, $matches);
+        $tableName = $matches[1];
+        preg_match('/Unknown collation: \'(.*?)\'/i', $errorMessage, $matches);
+        $unknownCollation = $matches[1];
+        $collationBefore = '';
+        $collationAfter  = '';
+        $collationReplaceRules = $this->applyFilters('wpstg.database.importer.replace_collation', []);
+        if (array_key_exists($unknownCollation, $collationReplaceRules)) {
+            $collationBefore = $unknownCollation;
+            $collationAfter  = $collationReplaceRules[$unknownCollation];
+        } else {
+            $collationBefore = $unknownCollation;
+            $collationAfter  = $this->findCollationGeneralVariant($unknownCollation);
+        }
+        $query = str_replace($collationBefore, $collationAfter, $query);
+        return [
+            'tableName'       => $tableName,
+            'collationBefore' => $collationBefore,
+            'collationAfter'  => $collationAfter,
+        ];
+    }
+
+    private function findCollationGeneralVariant(string $collation): string
+    {
+        $collation         = strtolower($collation);
+        $collationSegments = explode('_', $collation);
+        return $collationSegments[0] . '_general_ci';
     }
 }

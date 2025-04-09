@@ -13,6 +13,12 @@ use WPStaging\Framework\Adapter\PhpAdapter;
 
 use function WPStaging\functions\debug_log;
 
+/**
+ * Class Filesystem
+ * @package WPStaging\Framework\Filesystem
+ *
+ * @todo check how can we reduce this class, maybe into multiple classes or use traits?
+ */
 class Filesystem extends FilterableDirectoryIterator
 {
     /** @var array */
@@ -44,6 +50,12 @@ class Filesystem extends FilterableDirectoryIterator
 
     /** @var int */
     private $processed;
+
+    /**
+     * By default we will use the copy function for copying files
+     * @var bool
+     */
+    private $useCopyFunction = true;
 
     /**
      * @todo Inject PhpAdapter and make changes to all instance of Filesystem accordingly :)
@@ -1104,5 +1116,41 @@ class Filesystem extends FilterableDirectoryIterator
         }
 
         return false;
+    }
+
+    /**
+     * A wrapper for copy function for the fix #4144
+     * @see https://github.com/wp-staging/wp-staging-pro/issues/4144
+     * @param string $source
+     * @param string $destination
+     * @throws RuntimeException
+     * @return true
+     */
+    public function copyFile(string $source, string $destination): bool
+    {
+        if ($this->useCopyFunction && @copy($source, $destination)) {
+            return true;
+        }
+
+        // Copy function fails, lets try with file_get_contents and file_put_contents
+        // But first lets get the original error during copying function
+        if ($this->useCopyFunction) {
+            $errorObject  = error_get_last();
+            $errorMessage = $errorObject['message'] ?? '';
+        }
+
+        $result = file_put_contents($destination, file_get_contents($source));
+        // If file_put_contents and file_get_contents fails,
+        if ($result === false) {
+            throw new RuntimeException("Failed to copy file to destination: {$source} -> {$destination}. Error: {$errorMessage}");
+        }
+
+        // If file_put_contents and file_get_contents works, let use for the rest of request
+        if ($this->useCopyFunction) {
+            $this->useCopyFunction = false;
+            debug_log("Copy function failed with error: {$errorMessage}. Using file_get_contents and file_put_contents instead.");
+        }
+
+        return true;
     }
 }

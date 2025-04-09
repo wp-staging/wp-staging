@@ -130,7 +130,7 @@ class RestoreDatabaseTask extends RestoreTask
         if ($queriesPerSecond === 0) {
             $this->maybeUpdateExecutionTime();
         } else {
-            $this->jobDataDto->resetNumberOfQueryAttemptsWithZeroResult();
+            $this->jobDataDto->resetNumberOfRetries();
         }
 
         if ($this->stepsDto->isFinished() && $this->jobDataDto->getBackupMetadata()->getIsMultipartBackup()) {
@@ -213,13 +213,13 @@ class RestoreDatabaseTask extends RestoreTask
      */
     protected function maybeUpdateExecutionTime()
     {
-        $this->jobDataDto->incrementNumberOfQueryAttemptsWithZeroResult();
-        if ($this->jobDataDto->getNumberOfQueryAttemptsWithZeroResult() < self::MAX_RETRIES) {
+        $this->jobDataDto->incrementNumberOfRetries();
+        if ($this->jobDataDto->getNumberOfRetries() < self::MAX_RETRIES) {
             return;
         }
 
         $this->jobDataDto->incrementCurrentExecutionTimeDatabaseRestore();
-        $this->jobDataDto->resetNumberOfQueryAttemptsWithZeroResult();
+        $this->jobDataDto->resetNumberOfRetries();
 
         $currentExecutionTimeDatabaseRestore = $this->jobDataDto->getCurrentExecutionTimeDatabaseRestore();
         if ($currentExecutionTimeDatabaseRestore > self::MAX_EXECUTION_TIME_ALLOWED) {

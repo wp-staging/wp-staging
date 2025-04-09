@@ -502,27 +502,20 @@ class Scan extends Job
                 continue;
             }
 
-            // Not a valid directory
-            $path = $this->getPath($directory);
-            if (strpos($directory, 'wp-content') !== false && is_link($directory) && $path === false) {
+            $fullPath = $this->resolveDirectoryPath($directory);
+            if (empty($fullPath) || !is_dir($fullPath)) {
                 continue;
             }
 
-            if (strpos($directory, 'wp-content') !== false && is_link($directory)) {
-                $fullPath = realpath($directory->getPathname());
-            } else {
-                $fullPath = trailingslashit($this->getBasePath()) . ltrim($path, '/');
-            }
-
-            $size     = $this->getDirectorySize($fullPath);
-
+            $size = $this->getDirectorySize($fullPath);
             // If filename is int, then it is treated as a numeric index in key and start with 0
             $result[$directory->getFilename()]['metaData'] = [
                 'dirName'  => $directory->getFilename(),
                 "size"     => $size,
                 "path"     => $fullPath,
                 "basePath" => $this->getBasePath(),
-                "prefix"   => $this->getPathIdentifier()
+                "prefix"   => $this->getPathIdentifier(),
+                "isLink"   => is_link($directory->getPathname())
             ];
         }
 
@@ -793,6 +786,34 @@ class Scan extends Job
         }
 
         return true;
+    }
+
+    /**
+     * Resolve the full path for a directory, handling symlinks if present
+     * @param DirectoryIterator $directory
+     * @return string
+     */
+    private function resolveDirectoryPath(DirectoryIterator $directory): string
+    {
+        if (!is_link($directory->getPathname())) {
+            $path = $this->getPath($directory);
+            if ($path === false) {
+                return '';
+            }
+
+            return trailingslashit($this->getBasePath()) . ltrim($path, '/');
+        }
+
+        $targetPath = readlink($directory->getPathname());
+        if ($targetPath === false) {
+            return '';
+        }
+
+        if (!path_is_absolute($targetPath)) {
+            $targetPath = dirname($directory->getPathname()) . '/' . $targetPath;
+        }
+
+        return wp_normalize_path(realpath($targetPath));
     }
 
     /**

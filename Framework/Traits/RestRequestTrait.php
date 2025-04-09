@@ -10,13 +10,21 @@ trait RestRequestTrait
      * @param string $url
      * @param string $endpoint
      * @param array $body
+     * @param string $accessToken
      * @return array|\WP_Error
      */
-    protected function sendRestRequest(string $url, string $endpoint, array $body = [])
+    protected function sendRestRequest(string $url, string $endpoint, array $body = [], string $accessToken = '')
     {
+        $headers = [
+            'Content-Type' => 'application/json',
+        ];
+        if (!empty($accessToken)) {
+            $headers['Authorization'] = 'Bearer ' . $accessToken;
+        }
+
         $args = [
             'method'    => 'POST',
-            'headers'   => ['Content-Type' => 'application/json'],
+            'headers'   => $headers,
             'timeout'   => Rest::REQUEST_TIMEOUT,
             'sslverify' => false,
         ];
