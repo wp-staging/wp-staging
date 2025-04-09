@@ -72,6 +72,10 @@ class UpdateWpConfigConstants extends FileCloningService
             $replaceOrSkip["MULTISITE"]          = 'false';
         }
 
+        // turn off debug constants on staging site
+        $replaceOrAdd['WP_DEBUG']         = 'false';
+        $replaceOrAdd['WP_DEBUG_LOG']     = 'false';
+        $replaceOrAdd['WP_DEBUG_DISPLAY'] = 'false';
         /** @var Jetpack $jetpackHelper */
         $jetpackHelper = WPStaging::make(Jetpack::class);
         if ($jetpackHelper->isJetpackActive()) {

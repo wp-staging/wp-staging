@@ -21,6 +21,12 @@ trait ResourceTrait
     // Set lower maximum execution time for backup restore to avoid 504 errors in large database
     public static $backupRestoreMaxExecutionTimeInSeconds = 10;
 
+    /**
+     * Let start with a lower value we can try increasing it later when neeeded
+     * @var int
+     */
+    public static $fileAppendMaxExecutionTimeInSeconds = 10;
+
     /** @var bool Whether this request is taking place in the context of a unit test. */
     protected $isUnitTest;
 
@@ -54,6 +60,18 @@ trait ResourceTrait
         }
 
         return false;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFileAppendThreshold()
+    {
+        if ($this->isUnitTest() && !Hooks::applyFilters('wpstg.tests.resources.allow_check', $this->allowResourceCheckOnUnitTests)) {
+            return false;
+        }
+
+        return $this->isMemoryLimit() || $this->isFileAppendTimeLimit();
     }
 
     /**
@@ -124,6 +142,15 @@ trait ResourceTrait
     public function isDatabaseRestoreTimeLimit()
     {
         $timeLimit = (int)Hooks::applyFilters('wpstg.resourceTrait.backupRestoreMaxExecutionTimeInSeconds', static::$backupRestoreMaxExecutionTimeInSeconds);
+        return $this->getRunningTime() > $timeLimit;
+    }
+
+    /**
+     * @return bool
+     */
+    public function isFileAppendTimeLimit(): bool
+    {
+        $timeLimit = (int)Hooks::applyFilters('wpstg.resource.file_append_time_limit', static::$fileAppendMaxExecutionTimeInSeconds);
         return $this->getRunningTime() > $timeLimit;
     }
 

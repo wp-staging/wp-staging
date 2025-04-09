@@ -146,6 +146,9 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     /** @var bool */
     private $isContaining2GBFile = false;
 
+    /** @var int */
+    private $fileAppendTimeLimit = 10;
+
     /**
      * @return string|null
      */
@@ -849,5 +852,38 @@ class JobBackupDataDto extends JobDataDto implements RemoteUploadDtoInterface
     public function setCurrentWrittenFileHeaderBytes(int $currentWrittenFileHeaderBytes)
     {
         $this->currentWrittenFileHeaderBytes = (int)$currentWrittenFileHeaderBytes;
+    }
+
+    /**
+     * @param int $timeLimit
+     * @return void
+     */
+    public function setFileAppendTimeLimit(int $timeLimit)
+    {
+        $this->fileAppendTimeLimit = $timeLimit;
+    }
+
+    /**
+     * @return int
+     */
+    public function getFileAppendTimeLimit(): int
+    {
+        return $this->fileAppendTimeLimit;
+    }
+
+    /**
+     * @return void
+     */
+    public function incrementFileAppendTimeLimit()
+    {
+        $this->fileAppendTimeLimit += 5;
+    }
+
+    /**
+     * @return void
+     */
+    public function resetFileAppendTimeLimit()
+    {
+        $this->fileAppendTimeLimit = 10;
     }
 }

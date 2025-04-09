@@ -100,6 +100,12 @@ class JobDataDto extends AbstractDto
     protected $isWpCliRequest = false;
 
     /**
+     * Number of retries for the current task
+     * @var int
+     */
+    private $numberOfRetries = 0;
+
+    /**
      * @return string|int|null
      */
     public function getId()
@@ -549,5 +555,38 @@ class JobDataDto extends AbstractDto
     public function setIsWpCliRequest(bool $isWpCliRequest)
     {
         $this->isWpCliRequest = $isWpCliRequest;
+    }
+
+    /**
+     * @return int
+     */
+    public function getNumberOfRetries(): int
+    {
+        return $this->numberOfRetries;
+    }
+
+    /**
+     * @param int $numberOfRetries
+     * @return void
+     */
+    public function setNumberOfRetries(int $numberOfRetries = 0)
+    {
+        $this->numberOfRetries = $numberOfRetries;
+    }
+
+    /**
+     * @return void
+     */
+    public function incrementNumberOfRetries()
+    {
+        $this->numberOfRetries++;
+    }
+
+    /**
+     * @return void
+     */
+    public function resetNumberOfRetries()
+    {
+        $this->numberOfRetries = 0;
     }
 }

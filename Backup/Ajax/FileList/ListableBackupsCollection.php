@@ -133,7 +133,7 @@ class ListableBackupsCollection
             $listableBackup->dateUploadedFormatted            = $this->dateTimeAdapter->transformToWpFormat((new \DateTime())->setTimestamp($file->getCTime()));
             $listableBackup->downloadUrl                      = $downloadUrl;
             $listableBackup->relativePath                     = $relativePath;
-            $listableBackup->id                               = $backupMetadata->getDateCreated();
+            $listableBackup->id                               = $backupMetadata->getId();
             $listableBackup->isExportingDatabase              = $backupMetadata->getIsExportingDatabase();
             $listableBackup->isExportingMuPlugins             = $backupMetadata->getIsExportingMuPlugins();
             $listableBackup->isExportingOtherWpContentFiles   = $backupMetadata->getIsExportingOtherWpContentFiles();

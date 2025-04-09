@@ -257,6 +257,12 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
             }
         }
 
+        /**
+         * before hydrate set the backup version to empty,
+         * to avoid populating it with latest backup version where backupVersion field was not available
+         */
+        $this->setBackupVersion('');
+
         $this->traitHydrate($data);
 
         return $this; // @phpstan-ignore-line

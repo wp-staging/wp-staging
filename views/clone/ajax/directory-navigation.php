@@ -28,6 +28,7 @@ use WPStaging\Framework\Facades\UI\Checkbox;
  * @var bool $isLink
  */
 
+$urlAssets = trailingslashit(WPSTG_PLUGIN_URL) . 'assets/';
 ?>
 
 <div class="wpstg-dir">
@@ -48,7 +49,7 @@ use WPStaging\Framework\Facades\UI\Checkbox;
     <a href="#" class='wpstg-expand-dirs <?php echo ($isDisabled) ? 'wpstg-storage-settings-disabled' : ''; ?> <?php echo esc_attr($directoryDisabled); ?>'><?php echo esc_html($dirName); ?></a>
     <?php if ($isLink) : ?>
         <span class="wpstg--tooltip">
-            <img class="wpstg--dashicons wpstg-mb--4" src="<?php echo esc_url($scan->getInfoIcon()); ?>" alt="info" />
+            <img class="wpstg--dashicons wpstg-mb--4" src="<?php echo esc_url($urlAssets); ?>svg/info-outline.svg" alt="info" />
             <span class="wpstg--tooltiptext">
                 <?php echo sprintf(
                     esc_html__('The folder %s is a symlink. All the data in this folder will be selected by default.', 'wp-staging'),

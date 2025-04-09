@@ -2,6 +2,7 @@
 
 namespace WPStaging\Framework\Utils;
 
+use WPStaging\Backup\Exceptions\BackupRuntimeException;
 use WPStaging\Core\WPStaging;
 use WPStaging\Backup\Service\Archiver;
 use WPStaging\Backup\Service\BackupsFinder;
@@ -9,21 +10,22 @@ use WPStaging\Framework\Adapter\Directory;
 
 class Urls
 {
-
     /**
      * Retrieves the URL for a given site where the front end is accessible.
      *
      * Returns the 'home' option with the appropriate protocol. The protocol will be 'https'
      * if is_ssl() evaluates to true; otherwise, it will be the same as the 'home' option.
      * If `$scheme` is 'http' or 'https', is_ssl() is overridden.
+     * @param int|null $blogId
+     * @param string|null $scheme
+     * @return string
      */
-    public function getHomeUrl($blog_id = null, $scheme = null)
+    public function getHomeUrl($blogId = null, $scheme = null): string
     {
-
-        if (empty($blog_id) || !is_multisite()) {
+        if (empty($blogId) || !is_multisite()) {
             $url = get_option('home');
         } else {
-            switch_to_blog($blog_id);
+            switch_to_blog($blogId);
             $url = get_option('home');
             restore_current_blog();
         }
@@ -36,16 +38,14 @@ class Urls
             }
         }
 
-        $url = set_url_scheme($url, $scheme);
-
-        return $url;
+        return set_url_scheme($url, $scheme);
     }
 
     /**
      * Return WordPress home url without scheme e.h. host.com or www.host.com
      * @return string
      */
-    public function getHomeUrlWithoutScheme()
+    public function getHomeUrlWithoutScheme(): string
     {
         return preg_replace('#^https?://#', '', rtrim($this->getHomeUrl(), '/'));
     }
@@ -56,14 +56,16 @@ class Urls
      * Returns the 'home' option with the appropriate protocol. The protocol will be 'https'
      * if is_ssl() evaluates to true; otherwise, it will be the same as the 'home' option.
      * If `$scheme` is 'http' or 'https', is_ssl() is overridden.
+     * @param int|null $blogId
+     * @param string|null $scheme
+     * @return string
      */
-    public function getSiteUrl($blog_id = null, $scheme = null)
+    public function getSiteUrl($blogId = null, $scheme = null): string
     {
-
-        if (empty($blog_id) || !is_multisite()) {
+        if (empty($blogId) || !is_multisite()) {
             $url = get_option('siteurl');
         } else {
-            switch_to_blog($blog_id);
+            switch_to_blog($blogId);
             $url = get_option('siteurl');
             restore_current_blog();
         }
@@ -83,7 +85,7 @@ class Urls
      * Get raw base URL e.g. https://blog.domain.com or https://domain.com without any subfolder
      * @return string
      */
-    public function getBaseUrl()
+    public function getBaseUrl(): string
     {
         $result = parse_url($this->getHomeUrl());
         return $result['scheme'] . "://" . $result['host'];
@@ -93,7 +95,7 @@ class Urls
      * Return base URL (domain) without scheme e.g. blog.domain.com or domain.com
      * @return string
      */
-    public function getBaseUrlWithoutScheme()
+    public function getBaseUrlWithoutScheme(): string
     {
         return preg_replace('#^https?://#', '', rtrim($this->getBaseUrl(), '/'));
     }
@@ -102,11 +104,9 @@ class Urls
      * Get hostname of production site including scheme
      * @return string
      */
-    public function getProductionHostname()
+    public function getProductionHostname(): string
     {
-
         $connection = get_option('wpstg_connection');
-
         // Get the stored hostname
         if (!empty($connection['prodHostname'])) {
             return $connection['prodHostname'];
@@ -122,7 +122,7 @@ class Urls
      * Get url of the uploads directory, e.g. http://example.com/wp-content/uploads
      * @return string
      */
-    public function getUploadsUrl()
+    public function getUploadsUrl(): string
     {
         $upload_dir = wp_upload_dir(null, false, false);
         return trailingslashit($upload_dir['baseurl']);
@@ -131,21 +131,30 @@ class Urls
     /**
      * Get url of the backup directory, e.g. http://example.com/*
      * @return string
+     * @throws BackupRuntimeException
      */
-    public function getBackupUrl()
+    public function getBackupUrl(): string
     {
         if (!WPStaging::make(Directory::class)->isBackupPathOutsideAbspath()) {
             return $this->getUploadsUrl() . WPSTG_PLUGIN_DOMAIN . '/' . Archiver::BACKUP_DIR_NAME . '/';
         }
 
-        $backupDirAbsPath        = WPStaging::make(BackupsFinder::class)->getBackupsDirectory();
-        $relativePathToBackupDir = str_replace(wp_normalize_path(ABSPATH), "", $backupDirAbsPath);
+        $backupDirAbsPath     = WPStaging::make(BackupsFinder::class)->getBackupsDirectory();
+        $normalizedBackupPath = wp_normalize_path($backupDirAbsPath);
+        $normalizedAbspath    = wp_normalize_path(ABSPATH);
+        $uploads              = wp_upload_dir(null, false);
+        if (strpos($normalizedBackupPath, wp_normalize_path($uploads['basedir'])) === 0) {
+            $relativePath = str_replace(wp_normalize_path($uploads['basedir']), "", $normalizedBackupPath);
+            return trailingslashit($uploads['baseurl']) . ltrim($relativePath, '/');
+        }
+
+        $relativePathToBackupDir = str_replace($normalizedAbspath, "", $normalizedBackupPath);
         $siteurl                 = $this->maybeUseProtocolRelative(get_option('siteurl'));
-        return trailingslashit($siteurl) . $relativePathToBackupDir;
+        return trailingslashit($siteurl) . ltrim($relativePathToBackupDir, '/');
     }
 
     /** @return bool */
-    public function sslAvailable()
+    public function sslAvailable(): bool
     {
         // Cloudflare
         if (!empty($_SERVER['HTTP_CF_VISITOR'])) {
@@ -168,7 +177,7 @@ class Urls
      * @param string $url
      * @return string
      */
-    public function maybeUseProtocolRelative($url)
+    public function maybeUseProtocolRelative(string $url): string
     {
         if ($this->sslAvailable() && substr($url, 0, 7) === 'http://') {
             $url = preg_replace('@^http://@', '//', $url);

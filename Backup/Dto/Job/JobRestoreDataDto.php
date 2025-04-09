@@ -64,13 +64,6 @@ class JobRestoreDataDto extends JobDataDto
     private $currentFileHeaderStart = 0;
 
     /**
-     * If a SQL query returns 0 due to mysql timeout count the failed attempts
-     * in this property to increase the execution time
-     * @var int
-     */
-    private $numberOfQueryAttemptsWithZeroResult = 0;
-
-    /**
      * Current execution time in sec for database restore
      * @var int
      */
@@ -467,39 +460,6 @@ class JobRestoreDataDto extends JobDataDto
     public function setCurrentFileHeaderStart($headerStart = 0)
     {
         $this->currentFileHeaderStart = $headerStart;
-    }
-
-    /**
-     * @return int
-     */
-    public function getNumberOfQueryAttemptsWithZeroResult(): int
-    {
-        return $this->numberOfQueryAttemptsWithZeroResult;
-    }
-
-    /**
-     * @return void
-     */
-    public function incrementNumberOfQueryAttemptsWithZeroResult()
-    {
-        $this->numberOfQueryAttemptsWithZeroResult++;
-    }
-
-    /**
-     * @return void
-     */
-    public function resetNumberOfQueryAttemptsWithZeroResult()
-    {
-        $this->numberOfQueryAttemptsWithZeroResult = 0;
-    }
-
-    /**
-     * @param int $numberOfQueryAttemptsWithZeroResult
-     * @return void
-     */
-    public function setNumberOfQueryAttemptsWithZeroResult(int $numberOfQueryAttemptsWithZeroResult = 0)
-    {
-        $this->numberOfQueryAttemptsWithZeroResult = $numberOfQueryAttemptsWithZeroResult;
     }
 
     /**

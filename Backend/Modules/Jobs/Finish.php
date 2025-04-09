@@ -124,7 +124,7 @@ class Finish extends Job
             $this->options->existingClones[$this->options->clone]['wooSchedulerDisabled']  = (bool) $this->options->wooSchedulerDisabled;
             $this->options->existingClones[$this->options->clone]['emailsReminderAllowed'] = empty($this->options->emailsReminderAllowed) ? false : true;
             $this->options->existingClones[$this->options->clone]['isAutoUpdatePlugins']   = empty($this->options->isAutoUpdatePlugins) ? false : true;
-            update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones);
+            update_option(Sites::STAGING_SITES_OPTION, $this->options->existingClones, false);
             $this->log("Finish: The job finished!");
             return true;
         }

@@ -40,7 +40,6 @@ $cronStatus      = $backupScheduler->checkCronStatus();
 $cronMessage     = $backupScheduler->getCronMessage();
 if ($cronMessage !== '') { ?>
     <div class="notice <?php echo $cronStatus === true ? 'notice-warning' : 'notice-error'; ?>" style="margin-bottom: 10px;">
-        <p><strong><?php esc_html_e('WP STAGING Notice:', 'wp-staging') ?></strong></p>
         <p><?php echo Escape::escapeHtml($cronMessage); ?></p>
     </div>
 <?php } ?>
@@ -60,17 +59,10 @@ if ($cronMessage !== '') { ?>
     ?>
     </br>
     <?php
-
-    $downloadText = __('Read More or Upgrade to Pro', 'wp-staging');
-    $downloadLink = 'https://wp-staging.com/docs/wp-staging-restore/';
-
     printf(
-        Escape::escapeHtml(
-            __('Get the new standalone tool %s <a href="%s">%s</a>', 'wp-staging')
-        ),
-        '<span style="font-weight: bold">WP Staging | Restore:</span>',
-        esc_url($downloadLink),
-        esc_html($downloadText)
+        '%s %s',
+        '<span style="font-weight: bold">' . esc_html_e('Download WP Staging Restore and Extraction Tool:', 'wp-staging') . '</span>',
+        '<a href="https://wp-staging.com/docs/wp-staging-restore/">' . esc_html__('Read More or Upgrade to Pro', 'wp-staging') . '</a>'
     );
     ?>
 </div>

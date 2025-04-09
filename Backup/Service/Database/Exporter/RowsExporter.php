@@ -185,7 +185,7 @@ class RowsExporter extends AbstractExporter
         } catch (Exception $e) {
             $numericPrimaryKey = null;
             if ($this->jobDataDto->getTableRowsOffset() === 0 && $this->jobDataDto->getTotalRowsOfTableBeingBackup() > 300000) {
-                $logger->info("The table $this->tableName does not have a compatible primary key, so it will get slower the more rows it backup...");
+                $logger->warning("The table $this->tableName does not have a compatible primary key, so it will get slower the more rows it backup...");
             }
         }
         $this->setupBackupSearchReplace();

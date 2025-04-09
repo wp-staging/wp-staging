@@ -227,6 +227,36 @@ class FileHeader implements IndexLineInterface
         return $fileHeader;
     }
 
+    /**
+     * Used for repairing the file content in compressed file i.e. removing header inside the content. Issue: https://github.com/wp-staging/wp-staging-pro/issues/4241
+     * @return string
+     */
+    public function getUncompressedFileHeader(): string
+    {
+        // Force current attribute to be without compression, preserving them first to restore them later
+        $oldAttributes = $this->attributes;
+        $this->setIsCompressed(false);
+
+        $fixedHeader = $this->encoder->intArrayToHex(self::FILE_HEADER_FORMAT, [
+            $this->modifiedTime,
+            $this->crc32,
+            // Usually, it refers to the compressed size, but we need to set it to the uncompressed size because we initially add the file without compression and perform compression later.
+            // This is done to remove this file header within file content through search replace
+            $this->uncompressedSize,
+            $this->uncompressedSize,
+            $this->attributes,
+            $this->filePathLength,
+            $this->fileNameLength,
+            $this->extraFieldLength
+        ]);
+        $fileHeader = self::START_SIGNATURE . $fixedHeader . $this->filePath . $this->fileName . $this->extraField;
+        $fileHeader = $this->replaceEOLsWithPlaceholders($fileHeader);
+
+        $this->setAttributes($oldAttributes);
+
+        return $fileHeader;
+    }
+
     public function getIndexHeader(): string
     {
         $fixedHeader = $this->encoder->intArrayToHex(self::INDEX_HEADER_FORMAT, [

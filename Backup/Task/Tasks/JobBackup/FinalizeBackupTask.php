@@ -28,6 +28,7 @@ use WPStaging\Vendor\lucatume\DI52\NotFoundException;
 use WPStaging\Backup\Dto\Service\ArchiverDto;
 use WPStaging\Framework\Job\Exception\NotFinishedException;
 use WPStaging\Framework\Filesystem\PartIdentifier;
+use WPStaging\Framework\Job\Exception\ThresholdException;
 use WPStaging\Framework\SiteInfo;
 
 class FinalizeBackupTask extends BackupTask
@@ -355,6 +356,8 @@ class FinalizeBackupTask extends BackupTask
             $backupSizeBeforeAddingIndex = null;
         } catch (NotFoundException $ex) {
             throw new NotFoundException($ex->getMessage());
+        } catch (ThresholdException $e) {
+            $backupSizeBeforeAddingIndex = null;
         }
 
         $archiverDto = $this->archiver->getDto();

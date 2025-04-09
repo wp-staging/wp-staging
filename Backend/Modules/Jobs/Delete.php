@@ -542,7 +542,7 @@ class Delete extends Job
             }
         }
 
-        if (update_option(Sites::STAGING_SITES_OPTION, $existingClones) === false) {
+        if (update_option(Sites::STAGING_SITES_OPTION, $existingClones, false) === false) {
             $this->log("Delete: Nothing to save.'");
         }
 

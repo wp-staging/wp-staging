@@ -140,9 +140,9 @@ class RowsCopier
             $numericPrimaryKey = $this->tableService->getNumericPrimaryKey($this->databaseName, $srcTableName);
         } catch (Exception $e) {
             if ($rowsCount > 300000) {
-                $this->logger->info("The table {$srcTableName} does not have a compatible primary key, so it will get slower the more rows from it be copied and will be locked...");
+                $this->logger->warning("The table {$srcTableName} does not have a compatible primary key, so it will get slower the more rows from it be copied and will be locked...");
             } else {
-                $this->logger->info("The table {$srcTableName} does not have a compatible primary key, so it will be locked...");
+                $this->logger->warning("The table {$srcTableName} does not have a compatible primary key, so it will be locked...");
             }
 
             $this->tableService->lockTable($srcTableName);

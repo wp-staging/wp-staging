@@ -133,7 +133,7 @@ class Upload extends AbstractTemplateComponent
         // If neither uploading file or the upload prepared option that mean that the upload is not prepared and didn't pass through the OTP process!
         if (!file_exists($fullPath) && get_option(self::OPTION_UPLOAD_PREPARED) !== 'true') {
             wp_send_json_error([
-                'message' => __('Backup upload not prepared', 'wp-staging'),
+                'message' => __('The backup file is missing or the upload process is not ready. Try again to upload the backup file or open a support request.', 'wp-staging'),
             ], 500);
         }
 

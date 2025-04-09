@@ -465,10 +465,10 @@ class Files extends JobExecutable
         }
 
         // Attempt to copy
-        if (!@copy($file, $destination)) {
-            $errorObject  = error_get_last();
-            $errorMessage = $errorObject['message'] ?? '';
-            $this->log("Files: Failed to copy file to destination. Error: {$errorMessage} {$file} -> {$destination}", Logger::TYPE_ERROR);
+        try {
+            $this->filesystem->copyFile($file, $destination);
+        } catch (RuntimeException $ex) {
+            $this->log('Files: ' . $ex->getMessage(), Logger::TYPE_ERROR);
             return false;
         }
 
