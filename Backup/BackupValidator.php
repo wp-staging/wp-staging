@@ -13,6 +13,15 @@ use function WPStaging\functions\debug_log;
 
 class BackupValidator
 {
+    /** @var string[] */
+    const LINE_BREAKS = [
+        "\r",
+        "\n",
+        "\r\n",
+        "\n\r",
+        PHP_EOL
+    ];
+
     /** @var BackupsFinder */
     private $backupsFinder;
 
@@ -31,9 +40,6 @@ class BackupValidator
     /** @var string */
     protected $error = '';
 
-    /** @var string[] */
-    private $lineBreaks;
-
     /** @var Strings */
     private $strings;
 
@@ -44,14 +50,6 @@ class BackupValidator
         $this->backupsFinder = $backupsFinder;
         $this->backupDir = '';
         $this->strings = $strings;
-
-        $this->lineBreaks = [
-            "\r",
-            "\n",
-            "\r\n",
-            "\n\r",
-            PHP_EOL
-        ];
     }
 
     /** @return array */
@@ -102,7 +100,7 @@ class BackupValidator
         $count = 0;
         while ($file->valid() && $file->ftell() < $end) {
             $line = $file->readAndMoveNext();
-            if (empty($line) || in_array($line, $this->lineBreaks)) {
+            if (empty($line) || in_array($line, self::LINE_BREAKS)) {
                 continue;
             }
 
@@ -154,7 +152,7 @@ class BackupValidator
         }
 
         $line = $file->readAndMoveNext();
-        if (in_array($line, $this->lineBreaks)) {
+        if (in_array($line, self::LINE_BREAKS)) {
             $line = $file->readAndMoveNext(); // first line is break line, that's fine, move to next then!
         }
 

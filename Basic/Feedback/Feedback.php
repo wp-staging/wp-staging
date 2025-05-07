@@ -30,7 +30,6 @@ class Feedback
      */
     public function loadForm()
     {
-
         $screen = get_current_screen();
         if (!is_admin() && !$this->isPluginsPage()) {
             return;
@@ -43,7 +42,10 @@ class Feedback
             $email = trim($current_user->user_email);
         }
 
-        include WPSTG_VIEWS_DIR . 'feedback/deactivate-feedback.php';
+        $feedbackViewPath = WPSTG_VIEWS_DIR . 'feedback/deactivate-feedback.php';
+        if (file_exists($feedbackViewPath)) {
+            include $feedbackViewPath;
+        }
     }
 
     /**
@@ -51,7 +53,6 @@ class Feedback
      */
     public function sendDeactivateFeedback()
     {
-
         if (!empty($_POST['data'])) {
             // phpcs:ignore
             parse_str($_POST['data'], $form);  // This is a js serialised string. It needs to be parsed first. It will be sanitised on the next lines after parsing it.

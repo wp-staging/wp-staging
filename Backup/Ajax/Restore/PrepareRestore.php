@@ -13,6 +13,7 @@ use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Auth;
 
@@ -151,6 +152,10 @@ class PrepareRestore extends PrepareJob
         $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
 
         $this->jobRestore->setJobDataDto($this->jobDataDto);
+
+        if (!$this->jobDataDto->getIsSyncRequest()) {
+            $this->jobRestore->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Restore in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_RESTORE, $this->queueId);
+        }
 
         return $sanitizedData;
     }

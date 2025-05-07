@@ -116,7 +116,7 @@ class FileBackupService implements ServiceInterface
         }
 
         if ($this->bigFileBeingProcessed instanceof ArchiverDto) {
-            $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($this->bigFileBeingProcessed->getFilePath(), true));
+            $relativePathForLogging = str_replace($this->filesystem->normalizePath(ABSPATH, true), '', $this->filesystem->normalizePath($this->bigFileBeingProcessed->getFilePath()));
             $percentProcessed       = ceil(($this->bigFileBeingProcessed->getWrittenBytesTotal() / $this->bigFileBeingProcessed->getFileSize()) * 100);
             $this->logger->info(sprintf('Adding big %s file: %s - %s/%s (%s%%) (%s)', $this->fileIdentifier, $relativePathForLogging, size_format($this->bigFileBeingProcessed->getWrittenBytesTotal(), 2), size_format($this->bigFileBeingProcessed->getFileSize(), 2), $percentProcessed, $this->getBackupSpeed()));
         } else {
@@ -183,6 +183,10 @@ class FileBackupService implements ServiceInterface
         if ($isFileWrittenCompletely === true) {
             $this->jobDataDto->setFileBeingBackupWrittenBytes(0);
             $this->stepsDto->incrementCurrentStep();
+
+            if (!$this->jobDataDto->getIsMultipartBackup()) {
+                $this->jobDataDto->incrementFilesInPart($this->fileIdentifier);
+            }
 
             return;
         }

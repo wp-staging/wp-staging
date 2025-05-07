@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Backup\Task\Tasks;
+namespace WPStaging\Framework\Job\Task\Tasks;
 
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
@@ -40,12 +40,12 @@ class CleanupTmpTablesTask extends AbstractTask
     public static function getTaskName(): string
     {
         $cleaningType = static::getTempTableType();
-        return "backup_restore_cleanup_{$cleaningType}tables";
+        return "cancel_cleanup_{$cleaningType}tables";
     }
 
     public static function getTaskTitle(): string
     {
-        return 'Cleaning Up Restore Tables';
+        return 'Cleaning Up Tmp Tables';
     }
 
     /**

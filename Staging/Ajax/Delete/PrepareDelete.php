@@ -6,6 +6,7 @@ use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Staging\Dto\Job\StagingSiteDeleteDataDto;
 use WPStaging\Staging\Jobs\StagingSiteDelete;
 
@@ -88,6 +89,8 @@ class PrepareDelete extends PrepareJob
         $this->jobDataDto->setStartTime(time());
 
         $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+
+        $this->jobDelete->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Staging Site Delete in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_STAGING_DELETE, $this->queueId);
 
         $this->jobDelete->setJobDataDto($this->jobDataDto);
 

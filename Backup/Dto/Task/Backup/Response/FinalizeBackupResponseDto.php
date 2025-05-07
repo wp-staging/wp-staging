@@ -21,10 +21,16 @@ class FinalizeBackupResponseDto extends TaskResponseDto
     private $backupSize;
 
     /** @var bool */
-    private $isLocalBackup;
+    private $isLocalBackup = true;
 
     /** @var bool */
-    private $isMultipartBackup;
+    private $isMultipartBackup = false;
+
+    /** @var bool */
+    private $isGlitchInBackup = false;
+
+    /** @var string */
+    private $glitchReason = '';
 
     /**
      * @param array|string|null $backupMd5
@@ -82,5 +88,33 @@ class FinalizeBackupResponseDto extends TaskResponseDto
     public function getIsMultipartBackup()
     {
         return $this->isMultipartBackup;
+    }
+
+    /**
+     * @param bool $isGlitchInBackup
+     * @return void
+     */
+    public function setIsGlitchInBackup(bool $isGlitchInBackup)
+    {
+        $this->isGlitchInBackup = $isGlitchInBackup;
+    }
+
+    public function getIsGlitchInBackup(): bool
+    {
+        return $this->isGlitchInBackup;
+    }
+
+    /**
+     * @param string $glitchReason
+     * @return void
+     */
+    public function setGlitchReason(string $glitchReason)
+    {
+        $this->glitchReason = $glitchReason;
+    }
+
+    public function getGlitchReason(): string
+    {
+        return $this->glitchReason;
     }
 }

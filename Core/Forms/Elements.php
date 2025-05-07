@@ -17,6 +17,11 @@ abstract class Elements implements InterfaceElement
     protected $name;
 
     /**
+     * @var null|string
+     */
+    protected $id;
+
+    /**
      * @var array
      */
     protected $attributes = [];
@@ -47,7 +52,7 @@ abstract class Elements implements InterfaceElement
     protected $renderFile;
 
     /**
-     * Text constructor.
+     * Elements constructor.
      * @param string $name
      * @param array $attributes
      */
@@ -102,6 +107,14 @@ abstract class Elements implements InterfaceElement
     }
 
     /**
+     * @return array
+     */
+    public function getAttributes()
+    {
+        return $this->attributes;
+    }
+
+    /**
      * @return string
      */
     public function prepareAttributes()
@@ -111,15 +124,29 @@ abstract class Elements implements InterfaceElement
             $attributes .= "{$name}='{$value}' ";
         }
 
+        if ($this->id) {
+            $attributes .= "id='{$this->id}' ";
+        }
+
         return rtrim($attributes, ' ');
     }
 
     /**
-     * @return array
+     * @return $this
      */
-    public function getAttributes()
+    public function setId(string $id)
     {
-        return $this->attributes;
+        $this->id = $id;
+
+        return $this;
+    }
+
+    /**
+     * @return string
+     */
+    public function getId()
+    {
+        return $this->id ?? '';
     }
 
     /**
@@ -237,23 +264,6 @@ abstract class Elements implements InterfaceElement
     public function __toString()
     {
         return $this->render();
-    }
-
-    /**
-     * @param null|string $name
-     * @return string
-     */
-    public function getId($name = null)
-    {
-        if ($name === null) {
-            $name = $this->name;
-        }
-
-        if (!$name) {
-            return '';
-        }
-
-        return str_replace(' ', '_', $name);
     }
 
     /**

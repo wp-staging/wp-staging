@@ -14,7 +14,7 @@ use WPStaging\Framework\Utils\Sanitize;
 class Rest
 {
     /** @var string */
-    const WPSTG_ROUTE_NAMESPACE_V1 = 'wpstg-routes/v1';
+    const WPSTG_ROUTE_NAMESPACE_V1 = 'wpstg/v1';
 
     /** @var int */
     const REQUEST_TIMEOUT = 30;

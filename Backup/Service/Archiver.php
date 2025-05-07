@@ -39,6 +39,17 @@ class Archiver
     use EndOfLinePlaceholderTrait;
 
     /**
+     * @var string
+     */
+    const BACKUP_EXTENSION = 'wpstg';
+
+    /**
+     * Used during push and pull jobs
+     * @var string
+     */
+    const TMP_BACKUP_EXTENSION = 'wpstgtmp';
+
+    /**
      * After this number of failed requests, we will increase the execution by 5s for file append.
      * @var int
      */
@@ -107,6 +118,9 @@ class Archiver
     /** @var Filesystem */
     protected $filesystem;
 
+    /** @var bool */
+    protected $isTempBackup = false;
+
     public function __construct(
         BufferedCache $cacheIndex,
         BufferedCache $tempBackup,
@@ -139,6 +153,15 @@ class Archiver
     {
         $this->tempBackup->setFileAppendTimeLimit($fileAppendTimeLimit);
         $this->tempBackupIndex->setFileAppendTimeLimit($fileAppendTimeLimit);
+    }
+
+    /**
+     * @param bool $isTempBackup
+     * @return void
+     */
+    public function setIsTempBackup(bool $isTempBackup)
+    {
+        $this->isTempBackup = $isTempBackup;
     }
 
     /**
@@ -264,6 +287,11 @@ class Archiver
         $writtenBytesIncludingFileHeader = $writtenBytesTotal + $this->archiverDto->getFileHeaderSizeInBytes();
 
         $retries = 0;
+
+        if (!$this->isBackupFormatV1() && empty($this->fileHeader->getFilePath())) {
+            $identifiablePath = $this->pathIdentifier->transformPathToIdentifiable($this->filesystem->maybeNormalizePath($indexPath));
+            $this->fileHeader->readFile($fullFilePath, $identifiablePath);
+        }
 
         do {
             if ($retries > 0) {
@@ -422,14 +450,12 @@ class Archiver
      */
     public function getDestinationPath(): string
     {
-        $extension = "wpstg";
-
         return sprintf(
             '%s_%s_%s.%s',
             parse_url(get_home_url())['host'],
             current_time('Ymd-His'),
             $this->jobDataDto->getId(),
-            $extension
+            self::BACKUP_EXTENSION
         );
     }
 

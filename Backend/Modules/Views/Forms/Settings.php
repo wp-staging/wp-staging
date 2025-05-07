@@ -19,20 +19,20 @@ use WPStaging\Framework\Assets\Assets;
 class Settings
 {
 
-   /**
-    * @var array
-    */
+    /**
+     * @var array
+     */
     private $form = [];
 
-   /**
-    * @var Tabs
-    */
+    /**
+     * @var Tabs
+     */
     private $tabs;
 
-   /**
-    * Settings constructor.
-    * @param Tabs $tabs
-    */
+    /**
+     * Settings constructor.
+     * @param Tabs $tabs
+     */
     public function __construct($tabs)
     {
         $this->tabs = $tabs;
@@ -60,12 +60,13 @@ class Settings
             "step" => 1,
             "max" => 999999,
             "min" => 0
-              ]
+            ]
         );
 
         $this->form["general"]->add(
             $element->setLabel(__("DB Copy Query Limit", "wp-staging"))
-                      ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 10000)
+            ->setDefault(isset($settings->queryLimit) ? $settings->queryLimit : 10000),
+            'wpstg-settings-query-limit'
         );
        // DB Search & Replace Query Limit
         $element = new Numerical(
@@ -75,12 +76,13 @@ class Settings
             "step" => 1,
             "max" => 999999,
             "min" => 0
-              ]
+            ]
         );
 
         $this->form["general"]->add(
             $element->setLabel(__("DB Search & Replace Limit", "wp-staging"))
-                      ->setDefault(isset($settings->querySRLimit) ? $settings->querySRLimit : 5000)
+            ->setDefault(isset($settings->querySRLimit) ? $settings->querySRLimit : 5000),
+            'wpstg-settings-query-sr-limit'
         );
 
         $options = ['1' => '1', '10' => '10', '50' => '50', '250' => '250', '500' => '500', '1000' => '1000'];
@@ -93,13 +95,15 @@ class Settings
             "step" => 1,
             "max" => 999999,
             "min" => 0
-              ]
+            ]
         );
 
         $defaultFileLimit = defined('WPSTG_IS_DEV') && WPSTG_IS_DEV ? 500 : 50;
 
         $this->form["general"]->add(
-            $element->setLabel(__("File Copy Limit", "wp-staging"))->setDefault(isset($settings->fileLimit) ? $settings->fileLimit : $defaultFileLimit)
+            $element->setLabel(__("File Copy Limit", "wp-staging"))
+            ->setDefault(isset($settings->fileLimit) ? $settings->fileLimit : $defaultFileLimit),
+            'wpstg-settings-file-limit'
         );
 
 
@@ -111,12 +115,13 @@ class Settings
             "step" => 1,
             "max" => 999999,
             "min" => 0
-              ]
+            ]
         );
 
         $this->form["general"]->add(
             $element->setLabel(__("Maximum File Size (MB)", "wp-staging"))
-                      ->setDefault(isset($settings->maxFileSize) ? $settings->maxFileSize : 8)
+            ->setDefault(isset($settings->maxFileSize) ? $settings->maxFileSize : 8),
+            'wpstg-settings-max-file-size'
         );
 
        // File Copy Batch Size
@@ -127,12 +132,13 @@ class Settings
             "step" => 1,
             "max" => 999999,
             "min" => 0
-              ]
+            ]
         );
 
         $this->form["general"]->add(
             $element->setLabel(__("File Copy Batch Size", "wp-staging"))
-                      ->setDefault(isset($settings->batchSize) ? $settings->batchSize : 2)
+            ->setDefault(isset($settings->batchSize) ? $settings->batchSize : 2),
+            'wpstg-settings-batch-size'
         );
 
        // CPU load priority
@@ -142,14 +148,15 @@ class Settings
             "high" => __("High (fast)", "wp-staging"),
             "medium" => __("Medium (average)", "wp-staging"),
             "low" => __("Low (slow)", "wp-staging")
-              ]
+            ]
         );
 
         $defaultCpuPriority = defined('WPSTG_IS_DEV') && WPSTG_IS_DEV ? 'high' : 'low';
 
         $this->form["general"]->add(
             $element->setLabel(__("CPU Load Priority", "wp-staging"))
-                      ->setDefault(isset($settings->cpuLoad) ? $settings->cpuLoad : $defaultCpuPriority)
+            ->setDefault(isset($settings->cpuLoad) ? $settings->cpuLoad : $defaultCpuPriority),
+            'wpstg-settings-cpu-load'
         );
 
        // Delay Between Requests
@@ -160,12 +167,13 @@ class Settings
             "step" => 1,
             "max" => 5,
             "min" => 0
-              ]
+            ]
         );
 
         $this->form["general"]->add(
             $element->setLabel(__("Delay Between Requests", "wp-staging"))
-                      ->setDefault((isset($settings->delayRequests)) ? $settings->delayRequests : 0)
+            ->setDefault((isset($settings->delayRequests)) ? $settings->delayRequests : 0),
+            'wpstg-settings-delay-requests'
         );
 
 
@@ -177,7 +185,8 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel(__("Optimizer", "wp-staging"))
-                      ->setDefault((isset($settings->optimizer)) ? $settings->optimizer : null)
+            ->setDefault((isset($settings->optimizer)) ? $settings->optimizer : null),
+            'wpstg-settings-optimizer'
         );
 
 
@@ -190,7 +199,8 @@ class Settings
 
             $this->form["general"]->add(
                 $element->setLabel(__("Disable admin authorization", "wp-staging"))
-                   ->setDefault((isset($settings->disableAdminLogin)) ? $settings->disableAdminLogin : null)
+                ->setDefault((isset($settings->disableAdminLogin)) ? $settings->disableAdminLogin : null),
+                'wpstg-settings-disable-admin-login'
             );
         }
 
@@ -203,7 +213,8 @@ class Settings
 
             $this->form["general"]->add(
                 $element->setLabel(__("Keep Permalinks", "wp-staging"))
-                   ->setDefault((isset($settings->keepPermalinks)) ? $settings->keepPermalinks : null)
+                ->setDefault((isset($settings->keepPermalinks)) ? $settings->keepPermalinks : null),
+                'wpstg-settings-keep-permalinks'
             );
         }
 
@@ -215,7 +226,8 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel(__("Debug Mode", "wp-staging"))
-                      ->setDefault((isset($settings->debugMode)) ? $settings->debugMode : null)
+            ->setDefault((isset($settings->debugMode)) ? $settings->debugMode : null),
+            'wpstg-settings-debug-mode'
         );
 
        // Remove Data on Uninstall?
@@ -226,7 +238,8 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel(__("Remove Data on Uninstall?", "wp-staging"))
-                      ->setDefault((isset($settings->unInstallOnDelete)) ? $settings->unInstallOnDelete : null)
+            ->setDefault((isset($settings->unInstallOnDelete)) ? $settings->unInstallOnDelete : null),
+            'wpstg-settings-uninstall-on-delete'
         );
 
        // Check Directory Sizes
@@ -237,7 +250,8 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel(__("Check Directory Size", "wp-staging"))
-                      ->setDefault((isset($settings->checkDirectorySize)) ? $settings->checkDirectorySize : null)
+            ->setDefault((isset($settings->checkDirectorySize)) ? $settings->checkDirectorySize : null),
+            'wpstg-settings-check-directory-size'
         );
 
         // Get user roles
@@ -245,13 +259,15 @@ class Settings
             $element = new SelectMultiple('wpstg_settings[userRoles][]', $this->getUserRoles());
             $this->form["general"]->add(
                 $element->setLabel(__("Access Permissions", "wp-staging"))
-                   ->setDefault((isset($settings->userRoles)) ? $settings->userRoles : 'administrator')
+                ->setDefault((isset($settings->userRoles)) ? $settings->userRoles : 'administrator'),
+                'wpstg-settings-access-permissions'
             );
 
             $usersWithStagingAccess = new Text('wpstg_settings[usersWithStagingAccess]', []);
             $this->form["general"]->add(
                 $usersWithStagingAccess->setLabel(__("Users With Staging Access", "wp-staging"))
-                   ->setDefault(isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : '')
+                ->setDefault(isset($settings->usersWithStagingAccess) ? $settings->usersWithStagingAccess : ''),
+                'wpstg-settings-users-with-staging-access'
             );
         }
 
@@ -262,7 +278,8 @@ class Settings
 
         $this->form["general"]->add(
             $element->setLabel(__("Admin Bar Background Color", "wp-staging"))
-                      ->setDefault((isset($settings->adminBarColor)) ? $settings->adminBarColor : Assets::DEFAULT_ADMIN_BAR_BG)
+            ->setDefault((isset($settings->adminBarColor)) ? $settings->adminBarColor : Assets::DEFAULT_ADMIN_BAR_BG),
+            'wpstg-settings-admin-bar-color'
         );
 
         // Compress Backups
@@ -277,22 +294,24 @@ class Settings
             if (!$isMultiPartEnabled) {
                 $this->form["general"]->add(
                     $element->setLabel(__("Compress Backups", "wp-staging"))
-                        ->setDefault((isset($settings->enableCompression)) ? $settings->enableCompression : null)
+                    ->setDefault((isset($settings->enableCompression)) ? $settings->enableCompression : null),
+                    'wpstg-settings-enable-compression'
                 );
             } else {
                 $this->form["general"]->add(
                     $element->setLabel(__("Compress Backups (Incompatible with Multipart Backups)", "wp-staging"))
-                        ->setAttribute('disabled', 'disabled')
-                        ->setDefault(false)
+                    ->setAttribute('disabled', 'disabled')
+                    ->setDefault(false),
+                    'wpstg-settings-enable-compression'
                 );
             }
         }
     }
 
-   /**
-    * Get available user Roles
-    * @return array
-    */
+    /**
+     * Get available user Roles
+     * @return array
+     */
     private function getUserRoles()
     {
         $userRoles = [];
@@ -303,10 +322,10 @@ class Settings
         return array_merge(['all' => __('Allow access from all visitors', 'wp-staging')], $userRoles);
     }
 
-   /**
-    * @param string $name
-    * @return array|Form
-    */
+    /**
+     * @param string $name
+     * @return array|Form
+     */
     public function get($name = null)
     {
         return ($name === null) ? $this->form : $this->form[$name];

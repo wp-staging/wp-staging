@@ -11,6 +11,7 @@ use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Framework\Job\Dto\StepsDto;
 use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\Traits\ResourceTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
@@ -140,6 +141,8 @@ abstract class AbstractTask
         $response->setStatusTitle(static::getTaskTitle());
         $response->setJobId($this->jobDataDto->getId());
 
+        $this->updateTaskProgress($response);
+
         $this->addLogMessageToResponse($response);
 
         $this->logger->setFileName(sprintf(
@@ -224,6 +227,13 @@ abstract class AbstractTask
         return $this->logger;
     }
 
+    public function setupLogger()
+    {
+        if ($this->logger instanceof Logger) {
+            $this->logger->setupSseLogger($this->jobId);
+        }
+    }
+
     /**
      * @return SeekableQueueInterface
      */
@@ -242,12 +252,34 @@ abstract class AbstractTask
         $this->jobDataDto->setCurrentTaskData($taskDto->toArray());
     }
 
+    public function commitLogs()
+    {
+        if ($this->logger instanceof Logger) {
+            $this->logger->commit();
+        }
+    }
+
+    public function getJobTransientCache(): JobTransientCache
+    {
+        return $this->job->getTransientCache();
+    }
+
     /**
      * @return TaskResponseDto
      */
     protected function getResponseDto()
     {
         return new TaskResponseDto();
+    }
+
+    protected function updateTaskProgress(TaskResponseDto $response)
+    {
+        if ($this->logger instanceof Logger) {
+            $this->logger->pushSseEvent('task', [
+                'title'      => $response->getStatusTitle(),
+                'percentage' => $response->getPercentage()
+            ]);
+        }
     }
 
     /** @return string */
@@ -282,5 +314,14 @@ abstract class AbstractTask
     protected function addLogMessageToResponse(TaskResponseDto $response)
     {
         $response->addMessage($this->logger->getLastLogMsg());
+    }
+
+    /**
+     * @return void
+     */
+    protected function updateJob()
+    {
+        $this->job->setJobDataDto($this->jobDataDto);
+        $this->job->updateTasks();
     }
 }

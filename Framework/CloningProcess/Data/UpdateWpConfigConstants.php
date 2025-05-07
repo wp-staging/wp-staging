@@ -28,6 +28,7 @@ class UpdateWpConfigConstants extends FileCloningService
         }
 
         $isWpContentOutsideAbspath = $this->isWpContentOutsideAbspath();
+        $isUploadsOutsideAbspath   = $this->isUploadsOutsideAbspath();
 
         $replaceOrAdd = [
             "WP_LANG_DIR"         => $this->getStagingLangPath(),
@@ -90,6 +91,12 @@ class UpdateWpConfigConstants extends FileCloningService
             $delete[] = "WP_CONTENT_URL";
         }
 
+        if ($isUploadsOutsideAbspath) {
+            $delete[] = "UPLOADS";
+            $delete[] = "WP_CONTENT_DIR";
+            $delete[] = "WP_CONTENT_URL";
+        }
+
         if ($isWpContentOutsideAbspath) {
             $delete[] = "UPLOADS";
             $delete[] = "WP_PLUGIN_DIR";
@@ -139,6 +146,17 @@ class UpdateWpConfigConstants extends FileCloningService
         $siteInfo = WPStaging::make(SiteInfo::class);
 
         return $siteInfo->isWpContentOutsideAbspath();
+    }
+
+    /**
+     * @return bool
+     */
+    protected function isUploadsOutsideAbspath(): bool
+    {
+        /** @var SiteInfo $siteInfo */
+        $siteInfo = WPStaging::make(SiteInfo::class);
+
+        return $siteInfo->isUploadsOutsideAbspath();
     }
 
     /**

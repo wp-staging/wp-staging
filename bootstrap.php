@@ -1,11 +1,11 @@
 <?php
 
+use WPStaging\Core\WPStaging;
+
 /**
  * @var string $pluginFilePath The absolute path to the main file of this plugin.
  */
-
-use WPStaging\Core\WPStaging;
-
+$pluginFilePath = $pluginFilePath ?? '';
 if (file_exists(__DIR__ . '/autoloader_dev.php')) {
     include_once __DIR__ . '/autoloader_dev.php';
 } elseif (wpstgDoLoadPluginAutoLoad($pluginFilePath)) {

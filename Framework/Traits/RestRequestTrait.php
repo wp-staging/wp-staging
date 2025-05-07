@@ -6,6 +6,10 @@ use WPStaging\Framework\Rest\Rest;
 
 trait RestRequestTrait
 {
+    private $headers = [];
+
+    private $verifySsl = false;
+
     /**
      * @param string $url
      * @param string $endpoint
@@ -15,9 +19,8 @@ trait RestRequestTrait
      */
     protected function sendRestRequest(string $url, string $endpoint, array $body = [], string $accessToken = '')
     {
-        $headers = [
-            'Content-Type' => 'application/json',
-        ];
+        $headers = $this->headers;
+        $headers['Content-Type'] = 'application/json';
         if (!empty($accessToken)) {
             $headers['Authorization'] = 'Bearer ' . $accessToken;
         }
@@ -26,8 +29,9 @@ trait RestRequestTrait
             'method'    => 'POST',
             'headers'   => $headers,
             'timeout'   => Rest::REQUEST_TIMEOUT,
-            'sslverify' => false,
+            'sslverify' => $this->verifySsl,
         ];
+
         if (!empty($body)) {
             $args['body'] = json_encode($body);
         }
@@ -48,5 +52,13 @@ trait RestRequestTrait
     protected function buildRequestUrl(string $url, string $endpoint): string
     {
         return trailingslashit($url) . '?rest_route=/' . Rest::WPSTG_ROUTE_NAMESPACE_V1 . '/' . ltrim($endpoint, '/');
+    }
+
+    /**
+     * @return void
+     */
+    protected function resetHeaders()
+    {
+        $this->headers = [];
     }
 }

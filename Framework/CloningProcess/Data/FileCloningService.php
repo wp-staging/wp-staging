@@ -28,7 +28,7 @@ abstract class FileCloningService extends CloningService
      */
     protected function writeFile($file, $content)
     {
-        $path = $this->dto->getDestinationDir() . $file;
+        $path       = $this->dto->getDestinationDir() . $file;
         $filesystem = WPStaging::make(Filesystem::class);
         if ($filesystem->create($path, $content) === false) {
             throw new FatalException("Error - can't write to " . $file);
@@ -40,7 +40,8 @@ abstract class FileCloningService extends CloningService
      */
     protected function readWpConfig()
     {
-        return $this->readFile('wp-config.php');
+        $fileContent = $this->readFile('wp-config.php');
+        return $this->normalizeFileContent($fileContent);
     }
 
     /**
@@ -66,5 +67,23 @@ abstract class FileCloningService extends CloningService
     protected function isExcludedWpConfig()
     {
         return $this->dto->getJob()->excludeWpConfigDuringUpdate();
+    }
+
+    /**
+     * Handle carriage-return byte character
+     * @param string $fileContent
+     */
+    protected function normalizeFileContent(string $fileContent): string
+    {
+        if ($fileContent === '' || strpos($fileContent, "\r") === false) {
+            // No carriage returns found, nothing to normalize
+            return $fileContent;
+        }
+
+        return str_replace(
+            ["\r\r\n", "\r\n", "\r\r", "\r"],
+            ["\r\n", "\r\n", "\r\n", "\n"],
+            $fileContent
+        );
     }
 }

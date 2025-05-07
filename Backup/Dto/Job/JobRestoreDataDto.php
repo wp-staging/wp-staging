@@ -10,6 +10,12 @@ class JobRestoreDataDto extends JobDataDto
     /** @var string */
     private $file;
 
+    /** @var string */
+    private $dataUrl = '';
+
+    /** @var bool */
+    private $isDataDownloaded = false;
+
     /** @var BackupMetadata|null */
     private $backupMetadata;
 
@@ -108,6 +114,40 @@ class JobRestoreDataDto extends JobDataDto
     public function setFile(string $file)
     {
         $this->file = untrailingslashit(wp_normalize_path($file));
+    }
+
+    /**
+     * @return string
+     */
+    public function getDataUrl(): string
+    {
+        return $this->dataUrl;
+    }
+
+    /**
+     * @param string $dataUrl
+     * @return void
+     */
+    public function setDataUrl(string $dataUrl)
+    {
+        $this->dataUrl = $dataUrl;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsDataDownloaded(): bool
+    {
+        return $this->isDataDownloaded;
+    }
+
+    /**
+     * @param bool $isDataDownloaded
+     * @return void
+     */
+    public function setIsDataDownloaded(bool $isDataDownloaded)
+    {
+        $this->isDataDownloaded = $isDataDownloaded;
     }
 
     /**

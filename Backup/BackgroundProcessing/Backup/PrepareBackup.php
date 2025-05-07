@@ -79,8 +79,9 @@ class PrepareBackup extends PrepareJob
     protected function maybeInitJob(array $args)
     {
         if ($args['isInit']) {
-            debug_log('[Schedule] Configuring JOB DATA DTO', 'info', false);
+            debug_log('[Background Job] Initiating Backup Job', 'info', false);
             $prepareBackup = WPStaging::make(AjaxPrepareBackup::class);
+            $prepareBackup->setQueueId(empty($args['jobId']) ? '' : $args['jobId']);
             $prepareBackup->prepare($args);
             $this->job = $prepareBackup->getJob();
         } else {
@@ -95,6 +96,6 @@ class PrepareBackup extends PrepareJob
 
     protected function getJobDefaultName(): string
     {
-        return 'Backup Creation';
+        return 'Backup';
     }
 }

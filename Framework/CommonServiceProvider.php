@@ -2,7 +2,6 @@
 
 namespace WPStaging\Framework;
 
-use WPStaging\Core\Utils\EventLogger;
 use WPStaging\Framework\Analytics\AnalyticsCleanup;
 use WPStaging\Framework\DI\ServiceProvider;
 use WPStaging\Framework\Filesystem\DebugLogReader;

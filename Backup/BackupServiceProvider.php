@@ -8,6 +8,7 @@ use WPStaging\Backup\Ajax\Delete;
 use WPStaging\Backup\Ajax\Edit;
 use WPStaging\Backup\Ajax\FileInfo;
 use WPStaging\Backup\Ajax\Parts;
+use WPStaging\Backup\Ajax\BackupSizeCalculator;
 use WPStaging\Backup\Ajax\Restore;
 use WPStaging\Backup\Ajax\ScheduleList;
 use WPStaging\Backup\Ajax\Status;
@@ -87,7 +88,6 @@ class BackupServiceProvider extends FeatureServiceProvider
 
         add_action('wp_ajax_wpstg--backups--read-backup-metadata', $this->container->callback(ReadBackupMetadata::class, 'ajaxPrepare')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--delete', $this->container->callback(Delete::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
-        add_action('wp_ajax_wpstg--backups--cancel', $this->container->callback(Cancel::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--edit', $this->container->callback(Edit::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--parts', $this->container->callback(Parts::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
         add_action('wp_ajax_wpstg--backups--status', $this->container->callback(Status::class, 'render')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
@@ -116,6 +116,7 @@ class BackupServiceProvider extends FeatureServiceProvider
 
         // Event that we can run on daily basis to repair any corrupted backup create cron jobs
         add_action('wpstg_daily_event', $this->container->callback(BackupScheduler::class, 'reCreateCron'), 10, 0);
+        add_action('wp_ajax_wpstg--backups--calculate-backup-size', $this->container->callback(BackupSizeCalculator::class, 'ajaxCalculateBackupPartsSize')); // phpcs:ignore WPStaging.Security.AuthorizationChecked
     }
 
     protected function hookDatabaseImporterQueryInserter()

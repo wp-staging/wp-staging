@@ -16,7 +16,7 @@ use WPStaging\Notifications\Notifications;
         settings_fields("wpstg_settings");
 
         foreach ($tabs as $id => $name) :
-            if ($id === 'mail-settings' || $id === 'remote-storages' || $id === 'temporary-login') {
+            if ($id === 'mail-settings' || $id === 'remote-storages' || $id === 'temporary-login' || $id === 'remote-sync-settings') {
                 continue;
             }
 
@@ -140,7 +140,7 @@ use WPStaging\Notifications\Notifications;
                                 <span class="description">
                                         <?php
                                         esc_html_e(
-                                            "Buffer size for the file copy process in megabyte.
+                                            "Buffer size for the file copy process in megabytes.
                                         The higher the value the faster large files are copied.
                                         To find out the highest possible values try a high one and lower it until
                                         you get no more errors during file copy process. Usually this value correlates directly
@@ -245,7 +245,7 @@ use WPStaging\Notifications\Notifications;
                                         <?php
                                         esc_html_e(
                                             "Activate this if you like to remove all data when the plugin is deleted.
-                                        This will not remove staging sites files or database tables.",
+                                        This will not remove staging site\'s files or database tables.",
                                             "wp-staging"
                                         ); ?>
                                     </span>
@@ -265,7 +265,7 @@ use WPStaging\Notifications\Notifications;
                                         echo sprintf(esc_html__(
                                             "Activate this to check sizes of each directory on scanning process.
                                         %s
-                                        Warning this may cause timeout problems in big directory / file structures.",
+                                        Warning this may cause timeout problems in large directory / file structures.",
                                             "wp-staging"
                                         ), "<br>"); ?>
                                     </span>

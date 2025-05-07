@@ -21,7 +21,7 @@ class Check extends ElementsWithOptions
 
         foreach ($this->options as $id => $value) {
             $attributeId = $this->getId();
-            $output .= Checkbox::render($attributeId, $this->getId(), $id, $this->isChecked($id), [], [], true);
+            $output .= Checkbox::render($attributeId, $this->name, $id, $this->isChecked($id), [], [], true);
 
             if ($value) {
                 $output .= "<label for='{$attributeId}'>{$value}</label>";

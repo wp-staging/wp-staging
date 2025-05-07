@@ -1235,4 +1235,12 @@ abstract class AbstractBackupMetadata implements \JsonSerializable
     {
         return $this->backupType !== self::BACKUP_TYPE_SINGLE;
     }
+
+    /**
+     * @return void
+     */
+    public function revertBackupSizeToDefault()
+    {
+        $this->backupSize = '';
+    }
 }

@@ -158,7 +158,7 @@ class ExtractFilesTask extends RestoreTask
     }
 
     /**
-     * We have a bug in v6.0.0 - v6.1.2 and v4.0.0 - v4.1.2 where the backup can have multiple file headers for big files.
+     * We have a bug in v6.0.0 - v6.1.3 and v4.0.0 - v4.1.3 where the backup can have multiple file headers for big files.
      * @return bool
      */
     protected function canHaveMultipleHeadersIssue(): bool
@@ -170,11 +170,11 @@ class ExtractFilesTask extends RestoreTask
 
         $wpstgVersion = $this->metadata->getWpstgVersion();
         $createdOnPro = $this->metadata->getCreatedOnPro();
-        if ($createdOnPro && version_compare($wpstgVersion, '6.0.0', '>=') && version_compare($wpstgVersion, '6.1.2', '<=')) {
+        if ($createdOnPro && version_compare($wpstgVersion, '6.0.0', '>=') && version_compare($wpstgVersion, '6.1.4', '<')) {
             return true;
         }
 
-        if (!$createdOnPro && version_compare($wpstgVersion, '4.0.0', '>=') && version_compare($wpstgVersion, '4.1.2', '<=')) {
+        if (!$createdOnPro && version_compare($wpstgVersion, '4.0.0', '>=') && version_compare($wpstgVersion, '4.1.4', '<')) {
             return true;
         }
 

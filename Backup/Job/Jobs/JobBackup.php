@@ -111,9 +111,7 @@ class JobBackup extends AbstractJob
          * But it cannot be done during backup listing otherwise it will consume a lot of memory and may result in timeout.
          * So validation should be done before signing of backup. So we can stop the process and keep backup invalid state in case if validation fails.
          */
-        if ($this->jobDataDto->getIsValidateBackupFiles()) {
-            $this->addValidationTasks();
-        }
+        $this->addValidationTasks();
 
         $this->tasks[] = SignBackupTask::class;
 

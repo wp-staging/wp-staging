@@ -99,6 +99,12 @@ class JobDataDto extends AbstractDto
     /** @var bool */
     protected $isWpCliRequest = false;
 
+    /** @var bool */
+    protected $isRestRequest = false;
+
+    /** @var bool */
+    protected $isSyncRequest = false;
+
     /**
      * Number of retries for the current task
      * @var int
@@ -555,6 +561,40 @@ class JobDataDto extends AbstractDto
     public function setIsWpCliRequest(bool $isWpCliRequest)
     {
         $this->isWpCliRequest = $isWpCliRequest;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsRestRequest(): bool
+    {
+        return $this->isRestRequest;
+    }
+
+    /**
+     * @param bool $isRestRequest
+     * @return void
+     */
+    public function setIsRestRequest(bool $isRestRequest)
+    {
+        $this->isRestRequest = $isRestRequest;
+    }
+
+    /**
+     * @return bool
+     */
+    public function getIsSyncRequest(): bool
+    {
+        return $this->isSyncRequest;
+    }
+
+    /**
+     * @param bool $isSyncRequest
+     * @return void
+     */
+    public function setIsSyncRequest(bool $isSyncRequest)
+    {
+        $this->isSyncRequest = $isSyncRequest;
     }
 
     /**

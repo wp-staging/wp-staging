@@ -1,8 +1,3 @@
-<?php
-
-use WPStaging\Core\WPStaging;
-
-?>
 <div id="wpstg-footer-container">
     <?php
         require_once(WPSTG_VIEWS_DIR . '_main/faq.php');
@@ -16,7 +11,4 @@ use WPStaging\Core\WPStaging;
     <div>Partnered with <a href="https://wp-staging.com/borlabs-cookie/" target="_blank">Borlabs Cookie</a></div>
 </div>
 <?php
-if (!WPStaging::isPro()) {
-    require_once(WPSTG_VIEWS_DIR . '_main/general-error-modal.php');
-}
-?>
+require_once(WPSTG_VIEWS_DIR . '_main/general-error-modal.php');

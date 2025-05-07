@@ -92,6 +92,18 @@ class BackupsFinder extends AbstractBackupsFinder
     }
 
     /**
+     * @param string $jobId
+     * @return void
+     */
+    public function deleteTempBackupByJobId(string $jobId)
+    {
+        $tempBackupPath = $this->getBackupsDirectory() . $jobId . '.' . Archiver::TMP_BACKUP_EXTENSION;
+        if (file_exists($tempBackupPath)) {
+            $this->filesystem->delete($tempBackupPath);
+        }
+    }
+
+    /**
      * @param string $scheduleId
      *
      * @return SplFileInfo[]

@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Backup\Task\Tasks;
+namespace WPStaging\Framework\Job\Task\Tasks;
 
 use Throwable;
 use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
@@ -45,21 +45,19 @@ class CleanupTmpFilesTask extends AbstractTask
     }
 
     /**
-     * @example 'backup_site_restore_themes'
      * @return string
      */
     public static function getTaskName(): string
     {
-        return 'backup_restore_cleanup_files';
+        return 'cancel_cleanup_files';
     }
 
     /**
-     * @example 'Restoring Themes From Backup'
      * @return string
      */
     public static function getTaskTitle(): string
     {
-        return 'Cleaning Up Restore Files';
+        return 'Cleaning Up Tmp Files';
     }
 
     /**

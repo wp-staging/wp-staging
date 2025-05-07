@@ -4,6 +4,7 @@ namespace WPStaging\Framework\Assets;
 
 use WPStaging\Backup\BackupServiceProvider;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
+use WPStaging\Framework\Facades\Escape;
 use WPStaging\Framework\Job\AbstractJob;
 use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Core\DTO\Settings;
@@ -16,6 +17,7 @@ use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Analytics\AnalyticsConsent;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Notices\Notices;
+use WPStaging\Framework\Rest\Rest;
 
 class Assets
 {
@@ -29,6 +31,9 @@ class Assets
 
     /** @var string */
     const FILTER_BACKUP_STATUS_REQUEST_INTERVAL = 'wpstg.backup.interval.status_request';
+
+    /** @var string */
+    const TRANSIENT_REST_URL = 'wpstg_rest_url';
 
     private $accessToken;
 
@@ -289,6 +294,7 @@ class Assets
             'nonce'                  => wp_create_nonce(Nonce::WPSTG_NONCE),
             'assetsUrl'              => $this->getAssetsUrl(),
             'ajaxUrl'                => admin_url('admin-ajax.php'),
+            'restUrl'                => $this->getRestUrl(),
             'wpstgIcon'              => $this->getAssetsUrl('img/wpstg-loader.gif'),
             'maxUploadChunkSize'     => $this->getMaxUploadChunkSize(),
             'backupDBExtension'      => PartIdentifier::DATABASE_PART_IDENTIFIER . '.' . DatabaseImporter::FILE_FORMAT,
@@ -297,6 +303,7 @@ class Assets
             'isPro'                  => WPStaging::isPro(),
             'maxFailedRetries'       => Hooks::applyFilters(AbstractJob::TEST_FILTER_MAXIMUM_RETRIES, 10),
             'i18n'                   => $this->i18n->getTranslations(),
+            'isCloneable'            => (new SiteInfo())->isCloneable()
         ];
 
         // We need some wpstgConfig vars in the wpstg.js file (loaded with wpstg-common scripts) as well
@@ -513,5 +520,63 @@ class Assets
         foreach ($scriptsToRemove as $script) {
             wp_dequeue_script($script);
         }
+    }
+
+    /**
+     * @param string $iconName
+     * @param string $class
+     * @return void
+     */
+    public function renderSvg(string $iconName, string $class = '')
+    {
+        $fullPath = WPSTG_PLUGIN_DIR . '/assets/svg/' . $iconName . '.svg';
+        if (!file_exists($fullPath)) {
+            return;
+        }
+
+        $svgCode = file_get_contents($fullPath);
+        $svgCode = preg_replace('/<svg(.*?)>/', '<svg$1 class="' . $class . '">', $svgCode);
+        echo Escape::escapeHtml($svgCode);
+    }
+
+    private function getRestUrl(): string
+    {
+        $restUrl = get_transient(self::TRANSIENT_REST_URL);
+        if ($restUrl) {
+            return $restUrl;
+        }
+
+        $restUrl = get_rest_url(null, Rest::WPSTG_ROUTE_NAMESPACE_V1);
+        if (!$this->isWorkingTestUrl($restUrl)) {
+            $restUrl = site_url('/?rest_route=/' . Rest::WPSTG_ROUTE_NAMESPACE_V1);
+        }
+
+        set_transient(self::TRANSIENT_REST_URL, $restUrl, 24 * HOUR_IN_SECONDS);
+
+        return $restUrl;
+    }
+
+    private function isWorkingTestUrl($url)
+    {
+        $url     .= '/ping&accessToken=' . $this->accessToken->getToken();
+        $response = wp_remote_request($url, [
+            'method'    => 'GET',
+            'timeout'   => 5,
+            'sslverify' => false,
+            'headers'   => [
+                'Accept' => 'application/json',
+            ],
+        ]);
+
+        if (is_wp_error($response)) {
+            return false;
+        }
+
+        $code = wp_remote_retrieve_response_code($response);
+        if ($code !== 200) {
+            return false;
+        }
+
+        return true;
     }
 }

@@ -25,6 +25,7 @@ class I18n
             'read_less'             => esc_html__('Read Less', 'wp-staging'),
             'read_more'             => esc_html__('Read More', 'wp-staging'),
             'ok'                    => esc_html__('OK', 'wp-staging'),
+            'warning'               => esc_html__('Warning', 'wp-staging'),
             'cancel'                => esc_html__('Cancel', 'wp-staging'),
             'next'                  => esc_html__('Next', 'wp-staging'),
             'yes'                   => esc_html__('Yes', 'wp-staging'),
@@ -34,6 +35,7 @@ class I18n
             'error'                 => esc_html__('Error', 'wp-staging'),
             'save'                  => esc_html__('Save', 'wp-staging'),
             'close'                 => esc_html__('Close', 'wp-staging'),
+            'confirm'               => esc_html__('Confirm', 'wp-staging'),
             'delete'                => esc_html__('Delete', 'wp-staging'),
             'restore'               => esc_html__('Restore', 'wp-staging'),
             'upload'                => esc_html__('Upload', 'wp-staging'),
@@ -57,7 +59,7 @@ class I18n
             'ajax_status_code_404' => sprintf(esc_html__('Something went wrong; can\'t find ajax request URL! Please try the %s. If that does not help, %s', 'wp-staging'), '<a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a>', '<a href=\'https://wp-staging.com/support/\' target=\'_blank\'>open a support ticket</a>'),
             'status_code_500' => sprintf(esc_html__('Something went wrong; internal server error while processing the request! Please try the %s. If that does not help, %s', 'wp-staging'), '<a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a>', '<a href=\'https://wp-staging.com/support/\' target=\'_blank\'>open a support ticket</a>'),
             'small_server_settings_text' => sprintf(esc_html__('Please try the %s or submit an error report and contact us.', 'wp-staging'), '<a href=\'https://wp-staging.com/docs/wp-staging-settings-for-small-servers/\' target=\'_blank\'>WP Staging Small Server Settings</a>'),
-            'report_this_warning' => sprintf(esc_html__('Please report this warning %s and keep using WP Staging!', 'wp-staging'), '<a href="https://wp-staging.com/support/" target="_blank">to our support</a>'),
+            'report_this_warning' => sprintf(wp_kses(__('Please report this warning <a href="%s" target="_blank">to our support</a> and keep using WP Staging!', 'wp-staging'), [ "a" => [ "href" => "%s", "target" => "_blank" ] ]), 'https://wp-staging.com/support/'),
             'please_wait' => esc_html__('Please wait...this can take up a while.', 'wp-staging'),
             'contact_us' => esc_html__('CONTACT US', 'wp-staging'),
             'database_connection'   => [
@@ -264,6 +266,17 @@ class I18n
                 'confirm_delete_title' => esc_html__('Are you sure?', 'wp-staging'),
             ],
             'cannot_generate_otp_error' => wp_kses(__('We couldn\'t create the verification code. This might be caused by a firewall blocking the request. The verification code is necessary for security before you can upload a backup to this site. To proceed, you can temporarily <a href="%s" target="_blank">disable the verification code generation</a> or contact WP Staging support for assistance.', 'wp-staging'), ["a" => ["href" => [], "target" => []]]),
+            'memory_exhaust_error' => wp_kses(__('Read <a target="_blank" href="%s">this article</a> for solving this issue. Please contact WP Staging support if you need further assistance.', 'wp-staging'), ["a" => ["href" => [], "target" => []]]),
+            'contact_us_for_help'  => esc_html__('[button]CONTACT US[/button] for help in solving this issue.', 'wp-staging'),
+            'connection_string_copied_to_clipboard' => esc_html__('Connection string copied to clipboard', 'wp-staging'),
+            'remote_storage' => [
+                'access_key_required' => esc_html__('Access key field is required.', 'wp-staging'),
+                'secret_key_required' => esc_html__('Secret key field is required.', 'wp-staging'),
+                'location_required' => esc_html__('Bucket field is required.', 'wp-staging'),
+                'save_settings_abort_error' => esc_html__('Could not save settings. Ensure SFTP credentials are correct! (Hostname, port...) Please try again!', 'wp-staging'),
+                'test_connection_abort_error' => esc_html__('No response from server! Ensure credentials are correct. Please try again.', 'wp-staging'),
+                'delete_storage_provider_settings_confirm' => esc_html__('Are you sure you want to delete %s settings?', 'wp-staging'),
+            ]
         ];
     }
 }

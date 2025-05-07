@@ -1,10 +1,10 @@
 <?php
 
-namespace WPStaging\Backup\Job\Jobs;
+namespace WPStaging\Framework\Job\Jobs;
 
-use WPStaging\Backup\Task\Tasks\CleanupTmpFilesTask;
-use WPStaging\Backup\Task\Tasks\CleanupTmpTablesTask;
 use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Job\Task\Tasks\CleanupTmpFilesTask;
+use WPStaging\Framework\Job\Task\Tasks\CleanupTmpTablesTask;
 
 class JobCancel extends AbstractJob
 {
@@ -13,7 +13,7 @@ class JobCancel extends AbstractJob
 
     public static function getJobName()
     {
-        return 'backup_cancel';
+        return 'cancel';
     }
 
     protected function getJobTasks()
@@ -23,16 +23,12 @@ class JobCancel extends AbstractJob
 
     protected function execute()
     {
-        //$this->startBenchmark();
-
         try {
             $response = $this->getResponse($this->currentTask->execute());
         } catch (\Exception $e) {
             $this->currentTask->getLogger()->critical($e->getMessage());
             $response = $this->getResponse($this->currentTask->generateResponse(false));
         }
-
-        //$this->finishBenchmark(get_class($this->currentTask));
 
         return $response;
     }

@@ -13,6 +13,7 @@ use WPStaging\Core\DTO\Settings;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Interfaces\ShutdownableInterface;
+use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 use WPStaging\Vendor\Psr\Log\LogLevel;
@@ -70,6 +71,11 @@ class Logger implements LoggerInterface, ShutdownableInterface
     private $settingsDto;
 
     /**
+     * @var SseEventCache|null
+     */
+    private $sseEventCache = null;
+
+    /**
      * Logger constructor.
      *
      * @param null|string $logDir
@@ -107,6 +113,16 @@ class Logger implements LoggerInterface, ShutdownableInterface
     public function onWpShutdown()
     {
         $this->commit();
+    }
+
+    public function setupSseLogger(string $jobId)
+    {
+        if ($this->sseEventCache === null) {
+            $this->sseEventCache = WPStaging::make(SseEventCache::class);
+        }
+
+        $this->sseEventCache->setJobId($jobId);
+        $this->sseEventCache->load();
     }
 
     /**
@@ -156,11 +172,32 @@ class Logger implements LoggerInterface, ShutdownableInterface
      */
     public function add($message, $type = self::TYPE_ERROR)
     {
-        $this->messages[] = [
+        $log = [
             "type"      => $type,
             "date"      => current_time(self::LOG_DATETIME_FORMAT),
             "message"   => wp_kses($message, [])
         ];
+
+        $this->messages[] = $log;
+
+        if ($this->sseEventCache !== null) {
+            $this->sseEventCache->push($log);
+        }
+    }
+
+    /**
+     * @param string $type
+     * @param array $data
+     * @return void
+     */
+    public function pushSseEvent(string $type, array $data)
+    {
+        if ($this->sseEventCache !== null) {
+            $this->sseEventCache->push([
+                "type" => $type,
+                "data" => $data,
+            ]);
+        }
     }
 
     /**
