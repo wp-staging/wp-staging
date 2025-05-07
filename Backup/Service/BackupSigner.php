@@ -138,11 +138,11 @@ class BackupSigner
     }
 
     /**
-     * Subtract four doublequotes from the backup Size and add the byte length of $backupSize
+     * Subtract 2 bytes from the backup Size and add the byte length of $backupSize
      *
      * Example:
      *
-     * Before: "backupSize": ""
+     * Before: "backupSize": ''
      * After:  "backupSize": 123456
      *
      * @param int $backupSize

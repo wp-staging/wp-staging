@@ -19,11 +19,17 @@ use WPStaging\Backup\Service\Database\Importer\TableViewsRenamer;
 use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Framework\Database\TablesRenamer;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class RenameDatabaseTask extends RestoreTask
 {
+    /**
+     * @var string
+     */
+    const HOOK_KEEP_OPTIONS = 'wpstg.backup.restore.keep_options';
+
     /** @var TableService */
     private $tableService;
 
@@ -132,9 +138,16 @@ class RenameDatabaseTask extends RestoreTask
             'wpstg_queue'
         ]);
 
+        $tablesToPreserve = [];
+        if ($this->jobDataDto->getIsSyncRequest()) {
+            $tablesToPreserve = [
+                'wpstg_queue',
+            ];
+        }
+
         if ($this->isSubsiteRestore()) {
             $this->tablesRenamer->setProductionTableBasePrefix($this->tableService->getDatabase()->getBasePrefix());
-            $this->tablesRenamer->setTablesToPreserve([
+            $tablesToPreserve = array_merge($tablesToPreserve, [
                 'blogs',
                 'blogmeta',
                 'blog_versions', // old multisite table
@@ -144,6 +157,8 @@ class RenameDatabaseTask extends RestoreTask
                 'sitemeta',
             ]);
         }
+
+        $this->tablesRenamer->setTablesToPreserve($tablesToPreserve);
     }
 
     /**
@@ -225,6 +240,8 @@ class RenameDatabaseTask extends RestoreTask
             'value' => get_option(FinishBackupTask::OPTION_LAST_BACKUP),
             'autoload' => in_array(FinishBackupTask::OPTION_LAST_BACKUP, $allOptions),
         ];
+
+        $this->optionsToKeep = Hooks::callInternalHook(self::HOOK_KEEP_OPTIONS, [$this->optionsToKeep], $this->optionsToKeep);
 
         global $wpdb;
 
@@ -410,6 +427,16 @@ class RenameDatabaseTask extends RestoreTask
         } elseif (is_multisite() && !$this->isSubsiteRestore()) {
             // Don't activate any wp staging plugin if it is not network activated on current site
             $this->tablesRenamer->restorePreservedActiveSitewidePlugins($databaseData['activeSitewidePlugins'], $wpstgPluginToActivate = '');
+        }
+
+        /**
+         * Let flush the object cache again after updating the active plugins!
+         * Otherwise some object-cache plugins will only keep wp-staging(s) plugins active
+         * Issue: https://github.com/wp-staging/wp-staging-pro/issues/4283
+         * Skip on wp.com: Otherwise wp.com might throw a private site error, stopping restore to continue further.
+         */
+        if (!$this->siteInfo->isHostedOnWordPressCom()) {
+            $wp_object_cache->flush();
         }
 
         // Upgrade database if need be

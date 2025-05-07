@@ -11,7 +11,7 @@ interface InterfaceElement
 
     /**
      * @param string $name
-     * return $this
+     * @return $this
      */
     public function setName($name);
 
@@ -23,20 +23,15 @@ interface InterfaceElement
     /**
      * @param string $name
      * @param string $value
-     * return $this
+     * @return $this
      */
     public function setAttribute($name, $value);
 
     /**
      * @param array $attributes
-     * return $this
+     * @return $this
      */
     public function setAttributes($attributes);
-
-    /**
-     * @return string
-     */
-    public function prepareAttributes();
 
     /**
      * @return array
@@ -44,8 +39,23 @@ interface InterfaceElement
     public function getAttributes();
 
     /**
+     * @return string
+     */
+    public function prepareAttributes();
+
+    /**
+     * @return $this
+     */
+    public function setId(string $id);
+
+    /**
+     * @return string
+     */
+    public function getId();
+
+    /**
      * @param string $label
-     * return $this
+     * @return $this
      */
     public function setLabel($label);
 
@@ -61,7 +71,7 @@ interface InterfaceElement
 
     /**
      * @param array|string $filters
-     * return $this
+     * @return $this
      */
     public function setFilters($filters);
 
@@ -72,7 +82,7 @@ interface InterfaceElement
 
     /**
      * @param string $value
-     * return $this
+     * @return $this
      */
     public function setDefault($value);
 
@@ -83,7 +93,7 @@ interface InterfaceElement
 
     /**
      * @param object $validation
-     * return $this
+     * @return $this
      */
     public function addValidation($validation);
 
@@ -94,7 +104,7 @@ interface InterfaceElement
 
     /**
      * @param string $file
-     * return $this
+     * @return $this
      */
     public function setRenderFile($file);
 
@@ -102,12 +112,6 @@ interface InterfaceElement
      * @return string
      */
     public function getRenderFile();
-
-    /**
-     * @param null|string $name
-     * @return string
-     */
-    public function getId($name = null);
 
     /**
      * @return string

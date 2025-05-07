@@ -65,6 +65,14 @@ class RemoteDownloader
     }
 
     /**
+     * @return int
+     */
+    public function getStartByte(): int
+    {
+        return $this->startByte;
+    }
+
+    /**
      * @param int $startByte
      * @return void
      */

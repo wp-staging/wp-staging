@@ -3,7 +3,9 @@
 namespace WPStaging\Framework\TemplateEngine;
 
 use DateTime;
+use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\DateTimeAdapter;
+use WPStaging\Framework\Assets\Assets;
 
 class TemplateEngine implements TemplateEngineInterface
 {
@@ -15,6 +17,14 @@ class TemplateEngine implements TemplateEngineInterface
 
     /** @var string Absolute path to the views directory.  */
     protected $views;
+
+    /** @var Assets */
+    private $assets;
+
+    public function __construct()
+    {
+        $this->assets = WPStaging::make(Assets::class);
+    }
 
     /**
      * @param string $path
@@ -41,6 +51,14 @@ class TemplateEngine implements TemplateEngineInterface
         $result = ob_get_clean();
 
         return (string)$result;
+    }
+
+    /**
+     * @return Assets
+     */
+    public function getAssets()
+    {
+        return $this->assets;
     }
 
     /**

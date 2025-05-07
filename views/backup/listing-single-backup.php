@@ -77,7 +77,7 @@ $wpstgRestorePageUrl = add_query_arg([
                 <?php echo $backup->isMultipartBackup ? '<span class="wpstg-clone-label">' . esc_html__('Multipart Backup', 'wp-staging') . '</span>' : ''; ?>
                 <?php if (version_compare($backupVersion, '2.0.0', '<')) : ?>
                     <span class="wpstg-clone-label wpstg-clone-label--warning wpstg--tooltip">
-                        <?php esc_html_e('V1', 'wp-staging') ?>
+                        <?php esc_html_e('V1', 'wp-staging'); ?>
                         <div class="wpstg--tooltiptext"><?php esc_html_e('This backup is generated on an old version of the plugin', 'wp-staging'); ?></div>
                     </span>
                 <?php endif; ?>
@@ -95,34 +95,63 @@ $wpstgRestorePageUrl = add_query_arg([
                            data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
                            data-title="<?php esc_attr_e('Restore and overwrite current website according to the contents of this backup.', 'wp-staging'); ?>"
                            title="<?php esc_attr_e('Restore and overwrite current website according to the contents of this backup.', 'wp-staging'); ?>">
+                            <div class="wpstg-dropdown-item-icon">
+                                <?php $this->getAssets()->renderSvg('restore'); ?>
+                            </div>
                             <?php esc_html_e('Restore', 'wp-staging'); ?>
                         </a>
                     <?php endif; ?>
+                    <?php if (!$isProVersion) :?>
+                        <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Upload Backup to Cloud", "wp-staging"); ?>">
+                            <div class="wpstg-dropdown-item-icon">
+                                <?php $this->getAssets()->renderSvg('upload-cloud'); ?>
+                            </div>
+                            <?php esc_html_e("Upload Backup to Cloud", "wp-staging"); ?>
+                            <span>(Pro)</span>
+                        </a>
+                    <?php endif;?>
+                    <?php if (!$isLegacy && !$isCorrupt && $isProVersion) : ?>
+                        <a href="javascript:void(0)" class="wpstg--backup--remote-upload wpstg-clone-action"
+                           data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
+                           title="<?php esc_attr_e('Upload to remote storage', 'wp-staging'); ?>">
+                            <div class="wpstg-dropdown-item-icon">
+                                <?php $this->getAssets()->renderSvg('upload-cloud'); ?>
+                            </div>
+                            <?php esc_html_e('Upload Backup to Cloud', 'wp-staging'); ?>
+                        </a>
+                    <?php endif; ?>
+
                     <?php if ($isMultipartBackup) : ?>
                         <a href="javascript:void(0)" class="wpstg--backup--download wpstg--backup--download-modal wpstg-merge-clone wpstg-clone-action"
                            data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
                            title="<?php esc_attr_e('Download backup file to local system', 'wp-staging'); ?>">
-                            <?php esc_html_e('Download Backup', 'wp-staging'); ?>
+                            <div class="wpstg-dropdown-item-icon">
+                                <?php $this->getAssets()->renderSvg('download'); ?>
+                            </div>
+                            <?php esc_html_e('Download Backup File', 'wp-staging'); ?>
                         </a>
                     <?php else : ?>
                         <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($downloadUrl ?: ''); ?>" class="wpstg--backup--download wpstg-clone-action"
                            title="<?php esc_attr_e('Download backup file to local system', 'wp-staging'); ?>">
-                            <?php esc_html_e('Download Backup', 'wp-staging'); ?>
+                            <div class="wpstg-dropdown-item-icon">
+                                <?php $this->getAssets()->renderSvg('download'); ?>
+                            </div>
+                            <?php esc_html_e('Download Backup File', 'wp-staging'); ?>
                         </a>
-                        <?php if ($isProVersion) :?>
-                            <a href="<?php echo esc_url($wpstgRestorePageUrl); ?>" class="wpstg-clone-action"
-                            title="<?php esc_attr_e('Download restore tool', 'wp-staging') ?>">
-                                <?php esc_html_e('Download Restore Tool', 'wp-staging'); ?>
-                            </a>
-                        <?php else : ?>
-                            <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action"
-                            title="<?php esc_attr_e('Download restore tool', 'wp-staging') ?>">
-                                <?php esc_html_e('Download Restore Tool (Pro)', 'wp-staging'); ?>
-                            </a>
-                        <?php endif; ?>
                     <?php endif; ?>
+                    <a href="javascript:void(0)" id="wpstg-copy-backup-url" class="wpstg-clone-action"
+                       data-copy-content="<?php echo esc_attr($downloadFileUrl); ?>"
+                       title="<?php esc_attr_e('Copy url to backup file to restore it quickly on another website.', 'wp-staging'); ?>">
+                        <div class="wpstg-dropdown-item-icon">
+                            <?php $this->getAssets()->renderSvg('copy-link'); ?>
+                        </div>
+                        <?php esc_html_e('Copy Download Link', 'wp-staging'); ?>
+                    </a>
                     <a <?php echo esc_attr($downloadAttribute);?> href="<?php echo esc_url($logUrl ?: ''); ?>" class="wpstg-clone-action"
-                       title="<?php esc_attr_e('Download backup log file', 'wp-staging'); ?>">
+                                                                  title="<?php esc_attr_e('Download Log File', 'wp-staging'); ?>">
+                        <div class="wpstg-dropdown-item-icon">
+                            <?php $this->getAssets()->renderSvg('file'); ?>
+                        </div>
                         <?php esc_html_e('Download Log File', 'wp-staging'); ?>
                     </a>
                     <?php if (!$isLegacy && !$isCorrupt && !$requires64Bit) : ?>
@@ -131,32 +160,40 @@ $wpstgRestorePageUrl = add_query_arg([
                            data-name="<?php echo esc_attr($backupName); ?>"
                            data-notes="<?php echo esc_attr($notes); ?>"
                            title="<?php esc_attr_e('Edit backup name and / or notes', 'wp-staging'); ?>">
+                            <div class="wpstg-dropdown-item-icon">
+                                <?php $this->getAssets()->renderSvg('edit'); ?>
+                            </div>
                             <?php esc_html_e('Edit', 'wp-staging'); ?>
                         </a>
                     <?php endif; ?>
+                    <?php if (!$isMultipartBackup) : ?>
+                        <?php if ($isProVersion) :?>
+                            <a href="<?php echo esc_url($wpstgRestorePageUrl); ?>" class="wpstg-clone-action"
+                               title="<?php esc_attr_e('Download restore tool', 'wp-staging'); ?>">
+                                <div class="wpstg-dropdown-item-icon">
+                                    <?php $this->getAssets()->renderSvg('restore-tool'); ?>
+                                </div>
+                                <?php esc_html_e('Get Restore Tool', 'wp-staging'); ?>
+                            </a>
+                        <?php else : ?>
+                            <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action"
+                               title="<?php esc_attr_e('Download restore tool', 'wp-staging'); ?>">
+                                <div class="wpstg-dropdown-item-icon">
+                                    <?php $this->getAssets()->renderSvg('restore-tool'); ?>
+                                </div>
+                                <?php esc_html_e('Get Restore Tool', 'wp-staging'); ?>
+                                <span>(Pro)</span>
+                            </a>
+                        <?php endif; ?>
+                    <?php endif;?>
                     <a href="javascript:void(0)" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-backup"
                        data-name="<?php echo esc_attr($backupName); ?>"
                        data-md5="<?php echo esc_attr($backup->md5BaseName); ?>"
                        title="<?php esc_attr_e('Delete this backup. This action can not be undone!', 'wp-staging'); ?>">
+                        <div class="wpstg-dropdown-item-icon">
+                            <?php $this->getAssets()->renderSvg('trash'); ?>
+                        </div>
                         <?php esc_html_e('Delete', 'wp-staging'); ?>
-                    </a>
-                    <?php if (!$isProVersion) :?>
-                    <a href="javascript:void(0)" class="wpstg-pro-clone-feature wpstg-clone-action"  title="<?php echo esc_html__("Upload to Cloud", "wp-staging"); ?>">
-                        <?php esc_html_e("Upload to Cloud", "wp-staging"); ?>
-                        <span>(Pro)</span>
-                    </a>
-                    <?php endif;?>
-                    <?php if (!$isLegacy && !$isCorrupt && $isProVersion) : ?>
-                        <a href="javascript:void(0)" class="wpstg--backup--remote-upload wpstg-clone-action"
-                           data-filePath="<?php echo esc_attr($backup->relativePath); ?>"
-                           title="<?php esc_attr_e('Upload to remote storage', 'wp-staging'); ?>">
-                            <?php esc_html_e('Upload to Cloud', 'wp-staging'); ?>
-                        </a>
-                    <?php endif; ?>
-                    <a href="javascript:void(0)" id="wpstg-copy-backup-url" class="wpstg-clone-action"
-                       data-copy-content="<?php echo esc_attr($downloadFileUrl); ?>"
-                       title="<?php esc_attr_e('Copy url to backup file to restore it quickly on another website.', 'wp-staging'); ?>">
-                        <?php esc_html_e('Copy Backup URL', 'wp-staging'); ?>
                     </a>
                     <?php
                     do_action('wpstg.views.backup.listing.single.after_actions', $backup);
@@ -171,18 +208,18 @@ $wpstgRestorePageUrl = add_query_arg([
             <?php if ($isCorrupt) : ?>
                 <li class="wpstg-corrupted-backup wpstg--red">
                     <div class="wpstg-exclamation">!</div>
-                    <strong><?php esc_html_e('This backup file is corrupt. Please create a new backup!', 'wp-staging') ?></strong><br/>
+                    <strong><?php esc_html_e('This backup file is corrupt. Please create a new backup!', 'wp-staging'); ?></strong><br/>
                 </li>
             <?php endif; ?>
             <?php if ($isUnsupported && !$isCorrupt) : ?>
                 <li class="wpstg-unsupported-backup wpstg--red">
                     <div class="wpstg-exclamation">!</div>
-                    <strong><?php esc_html_e('This backup was generated on a beta version of WP STAGING and cannot be restored with the current version.', 'wp-staging') ?></strong><br/>
+                    <strong><?php esc_html_e('This backup was generated on a beta version of WP STAGING and cannot be restored with the current version.', 'wp-staging'); ?></strong><br/>
                 </li>
             <?php endif; ?>
             <?php if ($createdAt) : ?>
                 <li>
-                    <strong><?php $isCorrupt ? esc_html_e('Last modified:', 'wp-staging') : esc_html_e('Created on:', 'wp-staging') ?></strong>
+                    <strong><?php $isCorrupt ? esc_html_e('Last modified:', 'wp-staging') : esc_html_e('Created on:', 'wp-staging'); ?></strong>
                     <?php
                     $date = new DateTime();
                     $date->setTimestamp($createdAt);
@@ -192,7 +229,7 @@ $wpstgRestorePageUrl = add_query_arg([
             <?php endif; ?>
             <?php if ($notes) : ?>
                 <li>
-                    <strong><?php esc_html_e('Notes:', 'wp-staging') ?></strong><br/>
+                    <strong><?php esc_html_e('Notes:', 'wp-staging'); ?></strong><br/>
                     <div class="backup-notes">
                         <?php
                             $notes = str_replace(['\\"', "\\'"], ['"', "'"], $notes);
@@ -202,7 +239,7 @@ $wpstgRestorePageUrl = add_query_arg([
                 </li>
             <?php endif; ?>
             <li>
-                <strong><?php esc_html_e('Size: ', 'wp-staging') ?></strong>
+                <strong><?php esc_html_e('Size: ', 'wp-staging'); ?></strong>
                 <?php echo $requires64Bit ? '<b class="wpstg--red"> 2GB+ </b>' : esc_html($size); ?>
             </li>
             <?php if ($backup->isZlibCompressed) : ?>
@@ -221,7 +258,7 @@ $wpstgRestorePageUrl = add_query_arg([
             <?php endif; ?>
             <?php if (!$isCorrupt) : ?>
                 <li class="single-backup-includes">
-                    <strong><?php esc_html_e('Contains: ', 'wp-staging') ?></strong>
+                    <strong><?php esc_html_e('Contains: ', 'wp-staging'); ?></strong>
                     <?php
                     $isExportingDatabase            = $backup->isExportingDatabase;
                     $isExportingPlugins             = $backup->isExportingPlugins;
@@ -236,12 +273,12 @@ $wpstgRestorePageUrl = add_query_arg([
                 </li>
                 <?php if ($automatedBackup) : ?>
                     <li class="wpstg-automated-backup">
-                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo esc_url($urlAssets); ?>svg/update.svg"/> <?php esc_html_e('Backup created automatically.', 'wp-staging') ?>
+                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey wpstg--backup-automated" src="<?php echo esc_url($urlAssets); ?>svg/update.svg"/> <?php esc_html_e('Backup created automatically.', 'wp-staging'); ?>
                     </li>
                 <?php endif; ?>
                 <?php if ($isLegacy) : ?>
                     <li class="wpstg-legacy-backup">
-                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo esc_url($urlAssets); ?>svg/cloud-saved.svg"/> <?php esc_html_e('This database backup was generated from an existing legacy WP STAGING Database backup in the .SQL format.', 'wp-staging') ?>
+                        <img class="wpstg--dashicons wpstg-dashicons-19 wpstg-dashicons-grey" src="<?php echo esc_url($urlAssets); ?>svg/cloud-saved.svg"/> <?php esc_html_e('This database backup was generated from an existing legacy WP STAGING Database backup in the .SQL format.', 'wp-staging'); ?>
                     </li>
                 <?php endif; ?>
             <?php endif; ?>
@@ -253,8 +290,8 @@ $wpstgRestorePageUrl = add_query_arg([
             <?php if ($requires64Bit) : ?>
                 <li class="wpstg-corrupted-backup wpstg--red">
                     <div class="wpstg-corrupted-backup-icon"></div>
-                    <?php $extraMessage = $isContaining2GbFile ? esc_html__('This backup contains a file that exceeds 2GB', 'wp-staging') : esc_html__('This backup exceeds 2GB', 'wp-staging') ?>
-                    <strong><?php echo sprintf(esc_html__('This server uses a 32-bit version of PHP, which cannot read files larger than 2GB. %s and therefore the backup file cannot be extracted. To restore this backup, use a 64-bit version of PHP. Contact WP Staging support for assistance in extracting this backup on this server.', 'wp-staging'), esc_html($extraMessage)) ?></strong><br/>
+                    <?php $extraMessage = $isContaining2GbFile ? esc_html__('This backup contains a file that exceeds 2GB', 'wp-staging') : esc_html__('This backup exceeds 2GB', 'wp-staging'); ?>
+                    <strong><?php echo sprintf(esc_html__('This server uses a 32-bit version of PHP, which cannot read files larger than 2GB. %s and therefore the backup file cannot be extracted. To restore this backup, use a 64-bit version of PHP. Contact WP Staging support for assistance in extracting this backup on this server.', 'wp-staging'), esc_html($extraMessage)); ?></strong><br/>
                 </li>
             <?php endif; ?>
             <?php if (!$isMultipartBackup && !$isValidFileIndex && !$requires64Bit) : ?>

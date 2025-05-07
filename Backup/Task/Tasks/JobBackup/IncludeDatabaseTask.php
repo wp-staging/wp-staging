@@ -45,7 +45,9 @@ class IncludeDatabaseTask extends BackupTask
             return $this->generateResponse();
         }
 
-        $this->archiver->getDto()->setWrittenBytesTotal($this->stepsDto->getCurrent());
+        $archiverDto = $this->archiver->getDto();
+        $archiverDto->setWrittenBytesTotal($this->stepsDto->getCurrent());
+        $archiverDto->setFileHeaderSizeInBytes($this->jobDataDto->getCurrentWrittenFileHeaderBytes());
 
         if ($this->archiver->getDto()->getWrittenBytesTotal() !== 0) {
             $this->archiver->getDto()->setIndexPositionCreated(true);
@@ -67,14 +69,19 @@ class IncludeDatabaseTask extends BackupTask
             ));
         }
 
-        $this->stepsDto->setCurrent($this->archiver->getDto()->getWrittenBytesTotal());
-
+        $archiverDto = $this->archiver->getDto();
+        $this->stepsDto->setCurrent($archiverDto->getWrittenBytesTotal());
+        $this->jobDataDto->setCurrentWrittenFileHeaderBytes(0);
         if ($this->archiver->getDto()->isFinished()) {
             clearstatcache();
             $this->jobDataDto->setDatabaseFileSize(filesize($this->jobDataDto->getDatabaseFile()));
-
+            $this->jobDataDto->setMaxDbPartIndex(1);
             $this->stepsDto->finish();
             (new Filesystem())->delete($this->jobDataDto->getDatabaseFile());
+        }
+
+        if ($archiverDto->getFileHeaderSizeInBytes() > 0) {
+            $this->jobDataDto->setCurrentWrittenFileHeaderBytes($archiverDto->getFileHeaderSizeInBytes());
         }
 
         $this->logger->info(sprintf('Included %s/%s of Database Backup.', size_format($this->stepsDto->getCurrent()), size_format($this->stepsDto->getTotal())));

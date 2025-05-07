@@ -9,6 +9,7 @@ use RuntimeException;
 use WPStaging\Core\Utils\Logger;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
+use WPStaging\Framework\BackgroundProcessing\Queue;
 use WPStaging\Framework\Exceptions\WPStagingException;
 use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Facades\Sanitize;
@@ -23,6 +24,7 @@ use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\Job\Exception\TaskHealthException;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Job\Task\AbstractTask;
+use WPStaging\Framework\Logger\SseEventCache;
 use WPStaging\Framework\Traits\BenchmarkTrait;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Framework\Queue\FinishedQueueException;
@@ -63,6 +65,9 @@ abstract class AbstractJob implements ShutdownableInterface
     /** @var DiskWriteCheck */
     protected $diskFullCheck;
 
+    /** @var JobTransientCache */
+    protected $jobTransientCache;
+
     /** @var string|false */
     protected $memoryExhaustErrorTmpFile = false;
 
@@ -74,7 +79,8 @@ abstract class AbstractJob implements ShutdownableInterface
         Filesystem $filesystem,
         Directory $directory,
         ProcessLock $processLock,
-        DiskWriteCheck $diskFullCheck
+        DiskWriteCheck $diskFullCheck,
+        JobTransientCache $jobTransientCache
     ) {
         $this->jobDataDto   = $jobDataDto;
         $this->jobDataCache = $jobDataCache;
@@ -87,6 +93,8 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->processLock   = $processLock;
         $this->diskFullCheck = $diskFullCheck;
         $this->maxRetries    = Hooks::applyFilters(self::TEST_FILTER_MAXIMUM_RETRIES, $this->maxRetries);
+
+        $this->jobTransientCache = $jobTransientCache;
     }
 
     /**
@@ -112,6 +120,10 @@ abstract class AbstractJob implements ShutdownableInterface
 
         if ($this->jobDataDto->isFinished() && !$this->jobDataDto->isCleaned()) {
             $this->cleanup();
+            $args = [];
+            $args['jobId'] = $this->jobDataDto->getId();
+            $queue = WPStaging::make(Queue::class);
+            $queue->enqueueAction(SseEventCache::ACTION_SSE_CACHE_CLEANUP, $args, 'sse_cleanup_' . time());
             $this->jobDataDto->setCleaned();
             return;
         }
@@ -271,6 +283,23 @@ abstract class AbstractJob implements ShutdownableInterface
     }
 
     /**
+     * @return void
+     */
+    public function updateTasks()
+    {
+        $this->init();
+        $this->addTasks($this->getJobTasks());
+    }
+
+    /**
+     * @return JobTransientCache
+     */
+    public function getTransientCache(): JobTransientCache
+    {
+        return $this->jobTransientCache;
+    }
+
+    /**
      * @return JobDataDto
      */
     public function getJobDataDto()
@@ -376,10 +405,18 @@ abstract class AbstractJob implements ShutdownableInterface
         $this->currentTask->setJobId($this->jobDataDto->getId());
         $this->currentTask->setJobName($this::getJobName());
         $this->currentTask->setDebug(defined('WPSTG_DEBUG') && WPSTG_DEBUG);
+        $this->currentTask->setupLogger();
 
         // Initialize Task Health Status
         $this->jobDataDto->setTaskHealthName($this->currentTaskName);
         $this->jobDataDto->setTaskHealthResponded(false);
+    }
+
+    public function commitLogs()
+    {
+        if ($this->currentTask instanceof AbstractTask) {
+            $this->currentTask->commitLogs();
+        }
     }
 
     /** @return AbstractTask */

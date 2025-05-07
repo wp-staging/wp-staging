@@ -8,6 +8,7 @@ use WPStaging\Backup\Storage\Providers;
 use WPStaging\Backup\Task\Tasks\JobBackup\FinishBackupTask;
 use WPStaging\Core\Cron\Cron;
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Security\Capabilities;
 use WPStaging\Framework\Utils\Times;
 
@@ -26,12 +27,20 @@ class ScheduleList
     /** @var Providers */
     protected $providers;
 
-    public function __construct(BackupScheduler $backupScheduler)
+    /** @var Assets */
+    protected $assets;
+
+    /**
+     * @param BackupScheduler $backupScheduler
+     * @param Assets $assets
+     */
+    public function __construct(BackupScheduler $backupScheduler, Assets $assets)
     {
         $this->backupScheduler = $backupScheduler;
-        $this->providers = WPStaging::make(Providers::class);
-        $this->times = new Times();
-        $this->isPro = WPStaging::isPro();
+        $this->assets          = $assets;
+        $this->providers       = WPStaging::make(Providers::class);
+        $this->times           = new Times();
+        $this->isPro           = WPStaging::isPro();
     }
 
     /**
@@ -78,11 +87,17 @@ class ScheduleList
                                 <a href="#" class="wpstg-clone-action  <?php echo $this->isPro ? "wpstg--edit-schedule" : "wpstg--edit-schedule-basic" ?>"
                                    data-schedule-id="<?php echo $this->isPro ? esc_attr($schedule['scheduleId']) : "" ?>"
                                    title="<?php echo esc_attr($editMessage) ?>">
+                                    <div class="wpstg-dropdown-item-icon">
+                                        <?php $this->assets->renderSvg('edit'); ?>
+                                    </div>
                                     <?php esc_html_e('Edit', 'wp-staging') ?>
                                 </a>
                                 <a href="#" class="wpstg-clone-action wpstg--dismiss-schedule"
                                    data-schedule-id="<?php echo esc_attr($schedule['scheduleId']); ?>"
                                    title="<?php esc_attr_e('Delete this schedule and stop creating new backups. This does not delete any backup files.', 'wp-staging'); ?>">
+                                    <div class="wpstg-dropdown-item-icon">
+                                        <?php $this->assets->renderSvg('trash'); ?>
+                                    </div>
                                     <?php esc_html_e('Delete', 'wp-staging') ?>
                                 </a>
                             </div>

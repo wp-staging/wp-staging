@@ -182,7 +182,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
      */
     protected function processFile(SplFileInfo $file, string $linkPath = '')
     {
-        $normalizedPath = $this->filesystem->normalizePath($file->getPathname(), true);
+        $normalizedPath = $this->filesystem->normalizePath($file->getPathname(), !$file->isFile());
         $fileSize       = $file->getSize();
 
         $fileExtension  = $file->getExtension();
@@ -193,7 +193,7 @@ class FilesystemScanner extends AbstractFilesystemScanner
         if ($this->canExcludeLogFile($fileExtension) || $this->canExcludeCacheFile($fileExtension) || isset($this->ignoreFileExtensions[$fileExtension])) {
             // Early bail: File has an ignored extension
             $this->logger->info(sprintf(
-                '%s: Skipped file "%s." Extension "%s" is excluded by rule.',
+                '%s: Skipped file: "%s". Extension: "%s" is excluded by rule.',
                 esc_html($this->logTitle),
                 esc_html($relativePath),
                 esc_html($fileExtension)

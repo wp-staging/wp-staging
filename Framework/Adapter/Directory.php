@@ -95,6 +95,9 @@ class Directory implements DirectoryInterface
     /** @var string The directory that points to the temp directory for downloads */
     protected $downloadsDirectory;
 
+    /** @var string The directory that stores the sse events cache used for background logging */
+    protected $sseCacheDirectory = '';
+
     /**
      * @var string
      */
@@ -225,6 +228,20 @@ class Directory implements DirectoryInterface
         $this->logDirectory = trailingslashit(wp_normalize_path($this->getPluginUploadsDirectory() . 'logs'));
 
         return $this->logDirectory;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSseCacheDirectory(): string
+    {
+        if (!empty($this->sseCacheDirectory)) {
+            return $this->sseCacheDirectory;
+        }
+
+        $this->sseCacheDirectory = trailingslashit(wp_normalize_path($this->getPluginWpContentDirectory() . 'sse'));
+
+        return $this->sseCacheDirectory;
     }
 
     /**

@@ -5,15 +5,11 @@ namespace WPStaging\Framework\Job\Ajax;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 use WPStaging\Framework\Job\AbstractJob;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Staging\Jobs\StagingJobsProvider;
 
 class Status extends AbstractTemplateComponent
 {
-    /**
-     * @var string
-     */
-    const JOB_TYPE_STAGING = 'staging';
-
     public function ajaxProcess()
     {
         if (!$this->canRenderAjax()) {
@@ -32,7 +28,7 @@ class Status extends AbstractTemplateComponent
     private function getJobInstance(): AbstractJob
     {
         $jobType = $this->getJobType();
-        if ($jobType === self::JOB_TYPE_STAGING) {
+        if ($jobType === JobTransientCache::JOB_TYPE_STAGING) {
             return WPStaging::make(StagingJobsProvider::class)->getJob($this->getJobName());
         }
 

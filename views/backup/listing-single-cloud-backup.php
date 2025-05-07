@@ -36,13 +36,22 @@ $storageProviderName = $backup->storageProviderName;
                 <div class="wpstg-dropdown-menu">
                     <?php if (!$legacy && !$corrupt) : ?>
                         <a href="#" class="wpstg-clone-action wpstg--cloud--backup--restore" data-id="<?php echo esc_attr($backup->id) ?>" data-name="<?php echo esc_attr($name) ?>" data-storageProviderName="<?php echo esc_attr($storageProviderName) ?>" data-size="<?php echo esc_attr($size) ?>" data-title="<?php esc_attr_e('Restore and overwrite the current site with the contents of this backup.', 'wp-staging') ?>" title="<?php esc_attr_e('Restore and overwrite current website according to the contents of this backup.', 'wp-staging') ?>">
+                            <div class="wpstg-dropdown-item-icon">
+                                <?php $this->getAssets()->renderSvg('restore'); ?>
+                            </div>
                             <?php esc_html_e('Restore', 'wp-staging') ?>
                         </a>
                     <?php endif ?>
                     <a href="#" class="wpstg--cloud--backup--download wpstg-merge-clone wpstg-clone-action" data-id="<?php echo esc_attr($backup->id) ?>" data-name="<?php echo esc_attr($name) ?>" data-storageProviderName="<?php echo esc_attr($storageProviderName) ?>" data-size="<?php echo esc_attr($size) ?>" title="<?php esc_attr_e('Download backup file to server or local computer', 'wp-staging') ?>">
+                        <div class="wpstg-dropdown-item-icon">
+                            <?php $this->getAssets()->renderSvg('download'); ?>
+                        </div>
                         <?php esc_html_e('Download', 'wp-staging') ?>
                     </a>
                     <a href="#" data-id="<?php echo esc_attr($storageProviderName . "-" . $id) ?>" data-file="<?php echo esc_attr($id); ?>" data-storageProviderName="<?php echo esc_attr($storageProviderName) ?>" data-name="<?php echo esc_attr($name) ?>" class="wpstg-remove-clone wpstg-clone-action wpstg-delete-cloud-backup" title="<?php esc_attr_e('Delete this backup. This action can not be undone!', 'wp-staging') ?>">
+                        <div class="wpstg-dropdown-item-icon">
+                            <?php $this->getAssets()->renderSvg('trash'); ?>
+                        </div>
                         <?php esc_html_e('Delete', 'wp-staging') ?>
                     </a>
                     <?php
@@ -72,7 +81,7 @@ $storageProviderName = $backup->storageProviderName;
                 <li>
                     <strong><?php esc_html_e('Notes:', 'wp-staging') ?></strong><br />
                     <div class="backup-notes">
-                    <?php echo Escape::escapeHtml(nl2br($notes, 'wp-staging'), 'wp-staging'); ?>
+                    <?php echo Escape::escapeHtml(nl2br($notes)); ?>
                     </div>
                 </li>
             <?php endif ?>

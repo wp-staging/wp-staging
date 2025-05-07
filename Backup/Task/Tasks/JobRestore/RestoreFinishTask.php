@@ -54,6 +54,7 @@ class RestoreFinishTask extends RestoreTask
                 $this->objectCacheNotice->enable();
             }
 
+            $this->performRestoreFinishAction();
             $this->logger->info("################## FINISH ##################");
 
             $this->logBackupRestoreCompleted($this->jobDataDto->getBackupMetadata());
@@ -105,5 +106,13 @@ class RestoreFinishTask extends RestoreTask
     protected function getResponseDto(): RestoreFinishResponseDto
     {
         return new RestoreFinishResponseDto();
+    }
+
+    /**
+     * @return void
+     */
+    protected function performRestoreFinishAction()
+    {
+        // no-op, Used in pro
     }
 }

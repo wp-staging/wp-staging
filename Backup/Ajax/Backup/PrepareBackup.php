@@ -14,6 +14,7 @@ use WPStaging\Framework\Facades\Sanitize;
 use WPStaging\Framework\Filesystem\Filesystem;
 use WPStaging\Framework\Job\Ajax\PrepareJob;
 use WPStaging\Framework\Job\Exception\ProcessLockedException;
+use WPStaging\Framework\Job\JobTransientCache;
 use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\Security\Auth;
 use WPStaging\Framework\Utils\SlashMode;
@@ -146,7 +147,15 @@ class PrepareBackup extends PrepareJob
         $this->jobDataDto->setStartTime(time());
         $this->jobDataDto->setIsOnlyUpload(false);
 
-        $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        try {
+            $this->jobDataDto->getId();
+        } catch (\Exception $e) {
+            $this->jobDataDto->setId(substr(md5(mt_rand() . time()), 0, 12));
+        }
+
+        if (!$this->jobDataDto->getIsSyncRequest()) {
+            $this->jobBackup->getTransientCache()->startJob($this->jobDataDto->getId(), esc_html__('Backup in Progress', 'wp-staging'), JobTransientCache::JOB_TYPE_BACKUP, $this->queueId);
+        }
 
         $this->jobBackup->setJobDataDto($this->jobDataDto);
 
@@ -181,6 +190,7 @@ class PrepareBackup extends PrepareJob
         }
 
         $defaults = [
+            'id'                             => null,
             'name'                           => $this->urls->getBaseUrlWithoutScheme(),
             'isExportingPlugins'             => false,
             'isExportingMuPlugins'           => false,
@@ -211,6 +221,8 @@ class PrepareBackup extends PrepareJob
             'isExcludingCaches'              => false,
             'isValidateBackupFiles'          => false,
             'isWpCliRequest'                 => false,
+            'isRestRequest'                  => false,
+            'isSyncRequest'                  => false,
             'backupExcludedDirectories'      => '',
         ];
 

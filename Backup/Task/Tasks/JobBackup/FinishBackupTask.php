@@ -84,8 +84,19 @@ class FinishBackupTask extends BackupTask
 
         // Delete the transient cache for the backup file index to make sure it is checked again now
         $this->transientCache->delete(TransientCache::KEY_INVALID_BACKUP_FILE_INDEX);
+        $this->getJobTransientCache()->completeJob();
+
+        $this->performFinishBackupAction();
 
         return $this->overrideGenerateResponse($this->makeListableBackup($backupFilePath));
+    }
+
+    /**
+     * @return void
+     */
+    protected function performFinishBackupAction()
+    {
+        // This is used in PRO version
     }
 
     /**
@@ -107,6 +118,8 @@ class FinishBackupTask extends BackupTask
                 $response->setBackupSize($backup ? size_format($backup->size) : null);
                 $response->setIsLocalBackup($this->jobDataDto->isLocalBackup());
                 $response->setIsMultipartBackup($this->jobDataDto->getIsMultipartBackup());
+                $response->setIsGlitchInBackup($this->jobDataDto->getIsGlitchInBackup());
+                $response->setGlitchReason($this->jobDataDto->getGlitchReason());
             } else {
                 debug_log('Fail to finalize response for backup process! Response content: ' . print_r($response, true));
             }

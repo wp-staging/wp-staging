@@ -9,16 +9,26 @@ use WPStaging\Framework\Security\Auth;
 
 abstract class PrepareJob
 {
+    /** @var Auth */
     protected $auth;
+
+    /** @var Filesystem */
     protected $filesystem;
+
+    /** @var Directory */
     protected $directory;
+
+    /** @var ProcessLock */
     protected $processLock;
+
+    /** @var string */
+    protected $queueId = '';
 
     public function __construct(Filesystem $filesystem, Directory $directory, Auth $auth, ProcessLock $processLock)
     {
-        $this->directory = $directory;
-        $this->filesystem = $filesystem;
-        $this->auth = $auth;
+        $this->directory   = $directory;
+        $this->filesystem  = $filesystem;
+        $this->auth        = $auth;
         $this->processLock = $processLock;
     }
 
@@ -38,6 +48,11 @@ abstract class PrepareJob
         $this->filesystem->delete($this->directory->getCacheDirectory(), $deleteSelf = false);
         $this->filesystem->setExcludePaths([]);
         $this->filesystem->mkdir($this->directory->getCacheDirectory(), true);
+    }
+
+    public function setQueueId(string $queueId)
+    {
+        $this->queueId = $queueId;
     }
 
     /**

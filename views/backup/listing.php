@@ -6,8 +6,6 @@ use WPStaging\Backup\BackupScheduler;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Adapter\Directory;
 use WPStaging\Framework\Facades\Escape;
-use WPStaging\Framework\Job\ProcessLock;
-use WPStaging\Framework\Job\Exception\ProcessLockedException;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 /**
@@ -20,20 +18,8 @@ use WPStaging\Framework\TemplateEngine\TemplateEngine;
  * @var bool                        $hasSchedule
  */
 
-$backupProcessLock = WPStaging::make(ProcessLock::class);
 WPStaging::make(BackupDownload::class)->deleteUnfinishedDownloads();
-try {
-    $backupProcessLock->checkProcessLocked();
-    $isLocked                     = false;
-    $disabledPropertyCreateBackup = '';
-} catch (ProcessLockedException $e) {
-    $isLocked                     = true;
-    $disabledPropertyCreateBackup = 'disabled';
-}
 
-?>
-
-<?php
 /** @var BackupScheduler */
 $backupScheduler = WPStaging::make(BackupScheduler::class);
 $cronStatus      = $backupScheduler->checkCronStatus();
@@ -42,14 +28,14 @@ if ($cronMessage !== '') { ?>
     <div class="notice <?php echo $cronStatus === true ? 'notice-warning' : 'notice-error'; ?>" style="margin-bottom: 10px;">
         <p><?php echo Escape::escapeHtml($cronMessage); ?></p>
     </div>
-<?php } ?>
+<?php }
 
-<?php if ($isLocked) : ?>
-    <div id="wpstg-backup-locked">
-        <div class="wpstg-locked-backup-loader"></div>
-        <div class="text"><?php esc_html_e('There is a backup work in progress...', 'wp-staging'); ?></div>
-    </div>
-<?php endif; ?>
+// Will show a locked message if the process is locked
+require WPSTG_VIEWS_DIR . 'job/locked.php';
+
+$disabledPropertyCreateBackup = $isLocked ? 'disabled' : '';
+
+?>
 
 <div class="wpstg-did-you-know">
     <?php

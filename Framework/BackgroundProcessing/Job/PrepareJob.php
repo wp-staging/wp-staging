@@ -70,12 +70,12 @@ abstract class PrepareJob
 
     /**
      * @param AjaxPrepareJob $ajaxPrepareJob A reference to the object currently handling
-     *                                             AJAX job preparation requests.
-     * @param Queue             $queue             A reference to the instance of the Queue manager the class
-     *                                             should use for processing.
-     * @param ProcessLock       $processLock       A reference to the Process Lock manager the class should use
-     *                                             to prevent concurrent processing of the job requests.
-     * @param Times             $times             A reference to the Times utility class.
+     *                                          AJAX job preparation requests.
+     * @param Queue          $queue          A reference to the instance of the Queue manager the class
+     *                                          should use for processing.
+     * @param ProcessLock    $processLock    A reference to the Process Lock manager the class should use
+     *                                          to prevent concurrent processing of the job requests.
+     * @param Times          $times          A reference to the Times utility class.
      */
     public function __construct(AjaxPrepareJob $ajaxPrepareJob, Queue $queue, ProcessLock $processLock, Times $times)
     {
@@ -100,7 +100,7 @@ abstract class PrepareJob
             $data     = (array)wp_parse_args((array)$data, $this->getDefaultDataConfiguration());
             $prepared = $this->ajaxPrepareJob->validateAndSanitizeData($data);
             $name     = empty($prepared['name']) ? $this->getJobDefaultName() : $prepared['name'];
-            $jobId    = uniqid($name . '_', true);
+            $jobId    = empty($data['id']) ? uniqid($name . '_', true) : $data['id'];
 
             $data['jobId'] = $jobId;
             $data['name']  = $name;
@@ -181,6 +181,7 @@ abstract class PrepareJob
                 debug_log('Action for ' . $args['jobId'] . ' failed: ' . $e->getMessage());
                 $this->persistDtoToAction($this->getCurrentAction(), $taskResponseDto);
                 $this->processLock->unlockProcess();
+                $this->job->getTransientCache()->failJob();
 
                 return new WP_Error(400, $e->getMessage());
             }
@@ -212,6 +213,8 @@ abstract class PrepareJob
                     $backupScheduler->sendErrorReport($body);
                 }
 
+                $this->job->getTransientCache()->failJob();
+
                 return new WP_Error(400, $errorMessage);
             }
 
@@ -224,10 +227,14 @@ abstract class PrepareJob
                 // We're finished, get out and bail.
                 return $taskResponseDto;
             }
+
+            $this->job->commitLogs();
         } while (!$this->isThreshold());
 
-        // We're not done, queue a new Action to keep processing this job.
-        $this->queueAction($args);
+        // We're not done, queue a new Action to keep processing this job if it is not cancelled.
+        if (!$this->isJobCancelled($args)) {
+            $this->queueAction($args);
+        }
 
         return $taskResponseDto;
     }
@@ -304,8 +311,7 @@ abstract class PrepareJob
                 return;
             }
 
-            $logFile = $this->job->getCurrentTask()->getLogger()->getFileName();
-            $this->queue->updateActionFields($action->id, ['custom' => $logFile, 'response' => serialize($dto)], true);
+            $this->queue->updateActionFields($action->id, ['custom' => $this->getLogFile(), 'response' => serialize($dto)], true);
 
             $errorMessage = $this->getLastErrorMessage();
             if ($errorMessage !== false) {
@@ -337,5 +343,23 @@ abstract class PrepareJob
 
         debug_log('[Schedule Last Error Message]: ' . $error);
         return $error;
+    }
+
+    private function getLogFile(): string
+    {
+        if ($this->job === null || $this->job->getCurrentTask() === null) {
+            return '';
+        }
+
+        if ($this->job->getCurrentTask()->getLogger() === null) {
+            return '';
+        }
+
+        return $this->job->getCurrentTask()->getLogger()->getFileName();
+    }
+
+    private function isJobCancelled(array $args): bool
+    {
+        return $this->queue->count(Queue::STATUS_CANCELED, $args['jobId']) > 0;
     }
 }

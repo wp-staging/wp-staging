@@ -11,40 +11,32 @@
  */
 
 use WPStaging\Core\WPStaging;
+use WPStaging\Framework\Assets\Assets;
 use WPStaging\Framework\Facades\Hooks;
-use WPStaging\Framework\Job\Exception\ProcessLockedException;
-use WPStaging\Framework\Job\ProcessLock;
 use WPStaging\Framework\TemplateEngine\TemplateEngine;
 
 $isPro = WPStaging::isPro();
 include WPSTG_VIEWS_DIR . 'job/modal/success.php';
 include WPSTG_VIEWS_DIR . 'job/modal/process.php';
 
-$processLock = WPStaging::make(ProcessLock::class);
-try {
-    $processLock->checkProcessLocked();
-    $isLocked = false;
-} catch (ProcessLockedException $e) {
-    $isLocked = true;
-}
+// Will show a locked message if the process is locked
+require WPSTG_VIEWS_DIR . 'job/locked.php';
+$assets = WPStaging::make(Assets::class);
 ?>
-
-<?php if ($isLocked) : ?>
-    <div id="wpstg-backup-locked">
-        <div class="wpstg-locked-backup-loader"></div>
-        <div class="text"><?php esc_html_e('There is backup work in progress...', 'wp-staging'); ?></div>
-    </div>
-<?php endif; ?>
-
 <div id="wpstg-step-1">
     <?php if (defined('WPSTG_NEW_STAGING')) : ?>
-        <button id="wpstg-new-staging" class="wpstg-blue-primary wpstg-button" <?php echo $error ? 'disabled' : '' ?>>
+        <button id="wpstg-new-staging" class="wpstg-blue-primary wpstg-button wpstg-mr-10px" <?php echo $error ? 'disabled' : '' ?>>
             <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
         </button>
     <?php else : ?>
-        <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button" data-action="wpstg_scanning" <?php echo $error ? 'disabled' : '' ?>>
+        <button id="wpstg-new-clone" class="wpstg-next-step-link wpstg-blue-primary wpstg-button wpstg-mr-10px" data-action="wpstg_scanning" <?php echo $error ? 'disabled' : '' ?>>
             <?php echo esc_html__("Create Staging Site", "wp-staging") ?>
         </button>
+    <?php endif; ?>
+    <?php if (defined('WPSTG_REMOTE_SYNC_ENABLED') && WPSTG_REMOTE_SYNC_ENABLED) : ?>
+    <button id="wpstg-remote-sync" class="wpstg-blue-primary wpstg-button" <?php echo !$isPro ? 'disabled' : '' ?>>
+        <?php echo esc_html__("Sync With Remote Site (NEW)", "wp-staging") ?>
+    </button>
     <?php endif; ?>
 </div>
 

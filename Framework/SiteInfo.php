@@ -251,6 +251,17 @@ class SiteInfo
     /**
      * @return bool
      */
+    public function isUploadsOutsideAbspath(): bool
+    {
+        $uploadDir = wp_normalize_path(wp_upload_dir()['basedir']);
+        $abspath   = wp_normalize_path(ABSPATH);
+
+        return strpos($uploadDir, $abspath) !== 0;
+    }
+
+    /**
+     * @return bool
+     */
     public function isFlywheel(): bool
     {
         if (!$this->isWpContentOutsideAbspath()) {

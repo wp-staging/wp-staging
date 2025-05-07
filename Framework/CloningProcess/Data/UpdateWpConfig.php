@@ -14,7 +14,7 @@ class UpdateWpConfig extends FileCloningService
      */
     protected function internalExecute()
     {
-        $path = $this->dto->getDestinationDir() . "wp-config.php";
+        $path   = $this->dto->getDestinationDir() . "wp-config.php";
         $prefix = $this->dto->getPrefix();
         $this->log("Updating table_prefix in {$path} to " . $prefix);
 
@@ -24,8 +24,7 @@ class UpdateWpConfig extends FileCloningService
         }
 
         $content = $this->readWpConfig();
-
-        $oldUrl = (!$this->dto->isMultisite()) ? $this->dto->getHomeUrl() : $this->dto->getBaseUrl();
+        $oldUrl  = (!$this->dto->isMultisite()) ? $this->dto->getHomeUrl() : $this->dto->getBaseUrl();
 
         // Don't update the table prefix if the line starts with //, /* or * (ignoring space before them),
         // Otherwise replace table prefix
@@ -41,16 +40,12 @@ class UpdateWpConfig extends FileCloningService
         $content = str_replace($oldUrl, $this->dto->getStagingSiteUrl(), $content);
 
         $this->writeWpConfig($content);
-
         $this->writeFileHeader($path);
-
-        //$this->log('Done');
         return true;
     }
 
     /**
      * Modify wp-config.php to add staging site information
-     *
      * @param string $filePath
      * @return boolean
      */
@@ -58,10 +53,10 @@ class UpdateWpConfig extends FileCloningService
     {
         if (($content = file_get_contents($filePath)) === false) {
             $this->log("Can't read wp-config.php", Logger::TYPE_ERROR);
-
             return false;
         }
 
+        $content = $this->normalizeFileContent($content);
         $search  = "<?php";
         $marker  = "@wp-staging";
         $replace = "<?php\r\n
@@ -74,19 +69,13 @@ class UpdateWpConfig extends FileCloningService
  * Read more    : https://wp-staging.com/docs/create-a-staging-site-clone-wordpress/
  */\r\n";
 
-        $filesystem = WPStaging::make(Filesystem::class);
-
         // Check if the text already exists
-        if (strpos($content, $marker) === false) {
-            $content = str_replace($search, $replace, $content);
-
-            if ($filesystem->create($filePath, $content) === false) {
-                $this->log("Can't save wp-config.php", Logger::TYPE_ERROR);
-
-                return false;
-            }
+        if (strpos($content, $marker) !== false) {
+            return true;
         }
 
+        $content = str_replace($search, $replace, $content);
+        $this->writeWpConfig($content);
         return true;
     }
 }

@@ -1,9 +1,10 @@
 <?php
 
+/**
+ * This namespace is wrong! Is namespacing here even required?
+ * Test carefully if consider removing it. Our code should generally always be namespaced to prevent name conflicts.
+ */
 namespace WPStaging\Backend;
-
-use WPStaging\Backup\BackupScheduler;
-use WPStaging\Pro\License\Version;
 
 /**
  * Uninstall WP-Staging
@@ -19,6 +20,9 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
     exit;
 }
 
+/**
+ * Avoid using const here, we don't want to load the whole plugin
+ */
 class uninstall
 {
     public function __construct()
@@ -69,9 +73,11 @@ class uninstall
             delete_option("wpstg_disabled_mail_notice"); // @deprecated
             // Option related to staging sites shifting from one db option to another
             delete_option("wpstg_structure_updated"); // @deprecated
-            // Store the latest WP STAGING PRO version
-            delete_option("wpstg_version_latest");
-            delete_option(Version::OPTION_PRO_LATEST_VERSION);
+            /**
+             * Option releted to the latest WP STAGING PRO version
+             * @see WPStaging\Pro\License::OPTION_PRO_LATEST_VERSION
+             */
+            delete_option("wpstg_pro_latest_version");
             // Option that hold the old snapshots
             delete_option("wpstg_snapshots"); // @deprecated
             delete_option("wpstg_access_token");
@@ -138,6 +144,9 @@ class uninstall
 
             // Transients
             delete_transient("wpstg_issue_report_submitted");
+
+            /** @see \WPStaging\Framework\Assets::TRANSIENT_REST_URL */
+            delete_transient('wpstg_rest_url');
         }
     }
 }

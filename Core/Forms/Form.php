@@ -18,15 +18,30 @@ class Form
     {
     }
 
-    public function add($element)
+    /**
+     * Add an element to the form.
+     *
+     * @param InterfaceElement|InterfaceElementWithOptions $element
+     * @param string $id
+     */
+    public function add($element, $id)
     {
         if (!($element instanceof InterfaceElement) && !($element instanceof InterfaceElementWithOptions)) {
             return;
         }
 
+        $element->setId($id);
+
         $this->elements[$element->getName()] = $element;
     }
 
+    /**
+     * Render an element by name.
+     *
+     * @param string $name
+     *
+     * @return string|false
+     */
     public function render($name)
     {
         if (!isset($this->elements[$name])) {
@@ -36,6 +51,13 @@ class Form
         return $this->elements[$name]->render();
     }
 
+    /**
+     * Prepare the label for an element by name.
+     *
+     * @param string $name
+     *
+     * @return string|false
+     */
     public function label($name)
     {
         if (!isset($this->elements[$name])) {
@@ -45,13 +67,21 @@ class Form
         return $this->elements[$name]->prepareLabel();
     }
 
-    /** @param string $name */
+    /**
+     * Render the label for an element by name.
+     *
+     * @param string $name
+     */
     public function renderLabel($name)
     {
         echo wp_kses($this->label($name), ['label' => ['for' => []]]);
     }
 
-    /** @param string $name */
+    /**
+     * Render the input for an element by name.
+     *
+     * @param string $name
+     */
     public function renderInput($name)
     {
         echo $this->render($name);

@@ -1,6 +1,6 @@
 <?php
 
-namespace WPStaging\Backup\Task\Tasks;
+namespace WPStaging\Framework\Job\Task\Tasks;
 
 use WPStaging\Backup\Service\Database\DatabaseImporter;
 

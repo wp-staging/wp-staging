@@ -182,7 +182,7 @@ class PathIdentifier
     {
         $key  = substr($string, 0, 8);
         $path = $this->getRelativePath($key);
-        if (!empty($path) && is_string($path)) {
+        if ($path !== $key && is_string($path)) {
             return substr_replace($string, $path, 0, 8);
         }
 

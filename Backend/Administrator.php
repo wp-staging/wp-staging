@@ -260,7 +260,7 @@ class Administrator
         // Main WP Staging Menu
         add_menu_page(
             "WP STAGING",
-            __("WP Staging " . $proSlug, "wp-staging"),
+            esc_html__("WP Staging " . $proSlug, "wp-staging"),
             "manage_options",
             $defaultPageSlug,
             [$this, $defaultPageCallback],
@@ -271,7 +271,7 @@ class Administrator
         // Clone page normally but backup page on WordPress.com
         add_submenu_page(
             $defaultPageSlug,
-            __("WP Staging Jobs", "wp-staging"),
+            esc_html__("WP Staging - Staging", "wp-staging"),
             $defaultPageTitle,
             "manage_options",
             $defaultPageSlug,
@@ -281,7 +281,7 @@ class Administrator
         // Backup page normally but clone page on WordPress.com
         add_submenu_page(
             $defaultPageSlug,
-            __("WP Staging Jobs", "wp-staging"),
+            esc_html__("WP Staging - Backup & Migration", "wp-staging"),
             $secondaryPageTitle,
             "manage_options",
             $secondaryPageSlug,
@@ -291,8 +291,8 @@ class Administrator
         // Page: Temporary Logins
         add_submenu_page(
             $defaultPageSlug,
-            __("Temporary Logins", "wp-staging"),
-            __("Temporary Logins", "wp-staging"),
+            esc_html__("WP Staging - Temporary Logins", "wp-staging"),
+            esc_html__("Temporary Logins", "wp-staging"),
             "manage_options",
             "wpstg-settings&tab=temporary-login",
             [$this, "getTempLoginsPage"]
@@ -301,8 +301,8 @@ class Administrator
         // Page: Settings
         add_submenu_page(
             $defaultPageSlug,
-            __("WP Staging Settings", "wp-staging"),
-            __("Settings", "wp-staging"),
+            esc_html__("WP Staging - Settings", "wp-staging"),
+            esc_html__("Settings", "wp-staging"),
             "manage_options",
             "wpstg-settings",
             [$this, "getSettingsPage"]
@@ -311,8 +311,8 @@ class Administrator
         // Page: Tools
         add_submenu_page(
             $defaultPageSlug,
-            __("WP Staging Tools", "wp-staging"),
-            __("System Info", "wp-staging"),
+            esc_html__("WP Staging - System Info", "wp-staging"),
+            esc_html__("System Info", "wp-staging"),
             "manage_options",
             "wpstg-tools",
             [$this, "getToolsPage"]
@@ -322,8 +322,8 @@ class Administrator
             // Page: Tools
             add_submenu_page(
                 $defaultPageSlug,
-                __("WP Staging Welcome", "wp-staging"),
-                __("Get WP Staging Pro", "wp-staging"),
+                esc_html__("WP Staging - Welcome", "wp-staging"),
+                esc_html__("Get WP Staging Pro", "wp-staging"),
                 "manage_options",
                 "wpstg-welcome",
                 [$this, "getWelcomePage"]
@@ -334,7 +334,7 @@ class Administrator
                 // Page: wpstg-restorer
                 add_submenu_page(
                     $defaultPageSlug,
-                    __("WP Staging | Restore", "wp-staging"),
+                    esc_html__("WP Staging - Restore", "wp-staging"),
                     '',
                     "manage_options",
                     "wpstg-restorer",
@@ -349,8 +349,8 @@ class Administrator
             // Page: License
             add_submenu_page(
                 $defaultPageSlug,
-                __("WP Staging License", "wp-staging"),
-                __("License", "wp-staging"),
+                esc_html__("WP Staging - Licence", "wp-staging"),
+                esc_html__("License", "wp-staging"),
                 "manage_options",
                 "wpstg-license",
                 [$this, "getLicensePage"]
