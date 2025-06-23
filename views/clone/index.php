@@ -16,6 +16,9 @@ $backupNotice = WPStaging::make(BackupPluginsNotice::class);
 $notice       = WPStaging::make(Notices::class);
 
 $isCalledFromIndex = true;
+
+const STAGING_LOADING_BAR_COUNT = 4;
+const OTHER_LOADING_BAR_COUNT   = 10;
 ?>
 
 <div id="wpstg-clonepage-wrapper">
@@ -63,9 +66,9 @@ $isCalledFromIndex = true;
             <div id="wpstg-error-details"></div>
         </div>
 
-        <div class="wpstg--tab--contents">
+        <div class="wpstg--tab--contents <?php echo $isStagingPage ? 'min-h-152' : 'min-h-375'; ?>">
             <?php
-                $numberOfLoadingBars = 9;
+                $numberOfLoadingBars = $isStagingPage ? STAGING_LOADING_BAR_COUNT : OTHER_LOADING_BAR_COUNT;
                 include(WPSTG_VIEWS_DIR . '_main/loading-placeholder.php');
             ?>
             <div id="wpstg--tab--staging" class="wpstg--tab--content <?php echo esc_attr($classStagingPageActive); ?>">

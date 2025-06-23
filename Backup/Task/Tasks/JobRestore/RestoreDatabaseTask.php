@@ -196,7 +196,7 @@ class RestoreDatabaseTask extends RestoreTask
      */
     protected function setupExecutionTime()
     {
-        static::$backupRestoreMaxExecutionTimeInSeconds = $this->jobDataDto->getCurrentExecutionTimeDatabaseRestore();
+        static::$backupRestoreMaxExecutionTimeInSeconds = $this->jobDataDto->getCurrentExecutionTimeDatabaseImport();
     }
 
     /**
@@ -218,15 +218,15 @@ class RestoreDatabaseTask extends RestoreTask
             return;
         }
 
-        $this->jobDataDto->incrementCurrentExecutionTimeDatabaseRestore();
+        $this->jobDataDto->incrementCurrentExecutionTimeDatabaseImport();
         $this->jobDataDto->resetNumberOfRetries();
 
-        $currentExecutionTimeDatabaseRestore = $this->jobDataDto->getCurrentExecutionTimeDatabaseRestore();
-        if ($currentExecutionTimeDatabaseRestore > self::MAX_EXECUTION_TIME_ALLOWED) {
+        $currentExecutionTimeDatabaseImport = $this->jobDataDto->getCurrentExecutionTimeDatabaseImport();
+        if ($currentExecutionTimeDatabaseImport > self::MAX_EXECUTION_TIME_ALLOWED) {
             throw new RuntimeException(sprintf(esc_html__('Cannot increase execution time. Max allowed execution time of %s seconds exceeded.', 'wp-staging'), self::MAX_EXECUTION_TIME_ALLOWED));
         }
 
-        $this->logger->warning(sprintf(esc_html__('Repeat database restore after increasing execution time to %s seconds', 'wp-staging'), $currentExecutionTimeDatabaseRestore));
+        $this->logger->warning(sprintf(esc_html__('Repeat database restore after increasing execution time to %s seconds', 'wp-staging'), $currentExecutionTimeDatabaseImport));
     }
 
     /**

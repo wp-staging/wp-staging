@@ -96,7 +96,7 @@ class PHP64 extends \WPStaging\Vendor\phpseclib3\Math\BigInteger\Engines\PHP
      */
     public static function isValidEngine()
     {
-        return \PHP_INT_SIZE >= 8;
+        return \PHP_INT_SIZE >= 8 && !self::testJITOnWindows();
     }
     /**
      * Adds two BigIntegers.

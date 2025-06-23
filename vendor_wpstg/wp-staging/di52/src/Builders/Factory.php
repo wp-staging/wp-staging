@@ -53,7 +53,7 @@ class Factory
      *
      * @throws NotFoundException If a builder cannot find its implementation target.
      */
-    public function getBuilder($id, $implementation = null, array $afterBuildMethods = null, ...$buildArgs)
+    public function getBuilder($id, $implementation = null, $afterBuildMethods = null, ...$buildArgs)
     {
         if ($implementation === null) {
             $implementation = $id;
@@ -74,5 +74,31 @@ class Factory
             return new \WPStaging\Vendor\lucatume\DI52\Builders\CallableBuilder($this->container, $implementation);
         }
         return new \WPStaging\Vendor\lucatume\DI52\Builders\ValueBuilder($implementation);
+    }
+    /**
+     * Sets the container the builder should use.
+     *
+     * @since TBD
+     *
+     * @param Container $container The container to bind.
+     *
+     * @return void
+     */
+    public function setContainer(\WPStaging\Vendor\lucatume\DI52\Container $container)
+    {
+        $this->container = $container;
+    }
+    /**
+     * Sets the resolver the container should use.
+     *
+     * @since TBD
+     *
+     * @param Resolver $resolver The resolver the container should use.
+     *
+     * @return void
+     */
+    public function setResolver(\WPStaging\Vendor\lucatume\DI52\Builders\Resolver $resolver)
+    {
+        $this->resolver = $resolver;
     }
 }

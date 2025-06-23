@@ -429,7 +429,7 @@ abstract class Strings
     public static function base64url_encode($data)
     {
         // return str_replace(['+', '/'], ['-', '_'], self::base64_encode($data));
-        return \function_exists('sodium_bin2base64') ? \sodium_bin2base64($data, \SODIUM_BASE64_VARIANT_URLSAFE) : \WPStaging\Vendor\ParagonIE\ConstantTime\Base64UrlSafe::encode($data);
+        return \function_exists('sodium_bin2base64') ? \sodium_bin2base64($data, \SODIUM_BASE64_VARIANT_URLSAFE_NO_PADDING) : \WPStaging\Vendor\ParagonIE\ConstantTime\Base64UrlSafe::encode($data);
     }
     /**
      * Constant Time Hex Decoder

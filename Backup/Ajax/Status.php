@@ -9,6 +9,9 @@ use WPStaging\Backup\Job\Jobs\JobRestore;
 use WPStaging\Core\WPStaging;
 use WPStaging\Framework\Component\AbstractTemplateComponent;
 
+/**
+ * @todo Replace with WPStaging\Framework\Job\Ajax\Status instead
+ */
 class Status extends AbstractTemplateComponent
 {
     const TYPE_STATUS = 'restore';

@@ -191,40 +191,7 @@ class JobRestore extends AbstractJob
 
         $this->jobDataDto->setBackupMetadata($this->backupMetadata);
         $this->jobDataDto->setTmpDirectory($this->getJobTmpDirectory());
-        $this->jobDataDto->setIsSameSiteBackupRestore($this->isSameSiteBackupRestore());
-    }
-
-    /**
-     * @return bool
-     */
-    protected function isSameSiteBackupRestore(): bool
-    {
-        $this->jobDataDto->setIsUrlSchemeMatched(true);
-
-        // Exclusive check for multisite subdomain installs
-        if (is_multisite() && is_subdomain_install() !== $this->backupMetadata->getSubdomainInstall()) {
-            return false;
-        }
-
-        // If ABSPATH is different
-        if (ABSPATH !== $this->backupMetadata->getAbsPath()) {
-            return false;
-        }
-
-        $currentSiteURL = site_url();
-        $backupSiteURL  = $this->backupMetadata->getSiteUrl();
-        if ($currentSiteURL === $backupSiteURL) {
-            return true;
-        }
-
-        $currentSiteURLWithoutScheme = preg_replace('#^https?://#', '', rtrim($currentSiteURL, '/'));
-        $backupSiteURLWithoutScheme  = preg_replace('#^https?://#', '', rtrim($backupSiteURL, '/'));
-        if ($currentSiteURLWithoutScheme === $backupSiteURLWithoutScheme) {
-            $this->jobDataDto->setIsUrlSchemeMatched(false);
-            return false;
-        }
-
-        return false;
+        $this->jobDataDto->determineIsSameSiteRestore();
     }
 
     /**

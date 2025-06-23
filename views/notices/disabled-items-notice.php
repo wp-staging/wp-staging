@@ -60,7 +60,7 @@ if (empty(get_option('permalink_structure'))) {
             );
             ?>
         </li>
-        <?php endif;?>
+        <?php endif; ?>
         <?php if (isset($permalinksMessage)) : ?>
         <li> <?php echo wp_kses_post($permalinksMessage); ?></li>
         <?php endif; ?>

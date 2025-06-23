@@ -89,7 +89,9 @@ class Deactivate
     {
         $hooks = [
             'wpstg_q_ajax_support_feature_detection',
+            // @see BackgroundProcessingServiceProvider::ACTION_QUEUE_MAINTAIN
             'wpstg_queue_maintain',
+            // @see QueueProcessor::QUEUE_PROCESS_ACTION
             'wpstg_queue_process',
             'wpstg_weekly_event',
             'wpstg_daily_event'

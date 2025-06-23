@@ -47,7 +47,7 @@ class CallableBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\Builde
      * @param array<string>|null $afterBuildMethods A set of methods to call on the built instance.
      * @param mixed              ...$buildArgs      A set of optional arguments for the callable method.
      */
-    public function __construct(\WPStaging\Vendor\lucatume\DI52\Container $container, callable $callable, array $afterBuildMethods = null, ...$buildArgs)
+    public function __construct(\WPStaging\Vendor\lucatume\DI52\Container $container, callable $callable, $afterBuildMethods = null, ...$buildArgs)
     {
         $this->container = $container;
         $this->callable = $callable;
@@ -75,7 +75,7 @@ class CallableBuilder implements \WPStaging\Vendor\lucatume\DI52\Builders\Builde
      *
      * @return void This method does not return any value.
      */
-    public function reinit(array $afterBuildMethods = null, ...$buildArgs)
+    public function reinit($afterBuildMethods = null, ...$buildArgs)
     {
         $this->afterBuildMethods = $afterBuildMethods ?: [];
         $this->buildArgs = $buildArgs;

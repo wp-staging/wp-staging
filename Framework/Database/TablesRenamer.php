@@ -723,7 +723,7 @@ class TablesRenamer
         $currentActivePlugins = maybe_unserialize($currentActivePlugins);
         $currentActivePlugins = array_filter($currentActivePlugins, function ($pluginSlug) {
             return strpos($pluginSlug, self::PLUGIN_BASE_SLUG) === 0;
-        });
+        }, ARRAY_FILTER_USE_KEY); // network active plugins are set in key value pair i.e. ['plugin-slug' => time()], so we need to filter the keys instead
 
         $currentActivePlugins = serialize($currentActivePlugins);
         $this->updateNetworkOptionValue($tmpSiteMetaTable, self::OPTION_ACTIVE_SITEWIDE_PLUGINS, $currentActivePlugins);

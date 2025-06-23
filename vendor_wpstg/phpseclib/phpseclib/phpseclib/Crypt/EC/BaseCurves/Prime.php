@@ -422,7 +422,7 @@ class Prime extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base
     /**
      * Returns the modulo
      *
-     * @return \phpseclib3\Math\BigInteger
+     * @return BigInteger
      */
     public function getModulo()
     {
@@ -431,7 +431,7 @@ class Prime extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base
     /**
      * Returns the a coefficient
      *
-     * @return \phpseclib3\Math\PrimeField\Integer
+     * @return PrimeInteger
      */
     public function getA()
     {
@@ -440,7 +440,7 @@ class Prime extends \WPStaging\Vendor\phpseclib3\Crypt\EC\BaseCurves\Base
     /**
      * Returns the a coefficient
      *
-     * @return \phpseclib3\Math\PrimeField\Integer
+     * @return PrimeInteger
      */
     public function getB()
     {

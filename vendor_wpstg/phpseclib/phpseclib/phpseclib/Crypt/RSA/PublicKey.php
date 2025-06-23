@@ -32,8 +32,8 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
     /**
      * Exponentiate
      *
-     * @param \phpseclib3\Math\BigInteger $x
-     * @return \phpseclib3\Math\BigInteger
+     * @param BigInteger $x
+     * @return BigInteger
      */
     private function exponentiate(\WPStaging\Vendor\phpseclib3\Math\BigInteger $x)
     {
@@ -44,8 +44,8 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
      *
      * See {@link http://tools.ietf.org/html/rfc3447#section-5.2.2 RFC3447#section-5.2.2}.
      *
-     * @param \phpseclib3\Math\BigInteger $s
-     * @return bool|\phpseclib3\Math\BigInteger
+     * @param BigInteger $s
+     * @return bool|BigInteger
      */
     private function rsavp1($s)
     {
@@ -347,8 +347,8 @@ final class PublicKey extends \WPStaging\Vendor\phpseclib3\Crypt\RSA implements 
      *
      * See {@link http://tools.ietf.org/html/rfc3447#section-5.1.1 RFC3447#section-5.1.1}.
      *
-     * @param \phpseclib3\Math\BigInteger $m
-     * @return bool|\phpseclib3\Math\BigInteger
+     * @param BigInteger $m
+     * @return bool|BigInteger
      */
     private function rsaep($m)
     {

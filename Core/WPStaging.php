@@ -24,7 +24,6 @@ use WPStaging\Framework\Language\Language;
 use WPStaging\Framework\NoticeServiceProvider;
 use WPStaging\Framework\Permalinks\PermalinksPurge;
 use WPStaging\Framework\SettingsServiceProvider;
-use WPStaging\Framework\SiteInfo;
 use WPStaging\Staging\FirstRun;
 use WPStaging\Framework\Url;
 use WPStaging\Framework\Utils\Cache\Cache;
@@ -316,9 +315,9 @@ final class WPStaging
         }
 
         if (class_exists('\WPStaging\Pro\Frontend\Frontend')) {
-            new \WPStaging\Pro\Frontend\Frontend();
+            $this->container->get(\WPStaging\Pro\Frontend\Frontend::class);
         } else {
-            new Frontend();
+            $this->container->get(Frontend::class);
         }
     }
 

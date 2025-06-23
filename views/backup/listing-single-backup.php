@@ -42,6 +42,7 @@ if (empty($indexFileError)) {
 // Download URL of backup file
 $downloadUrl = $backup->downloadUrl;
 
+/** @var ZlibCompressor $compressor */
 $compressor = WPStaging::make(ZlibCompressor::class);
 
 // Fix mixed http/https
@@ -79,6 +80,11 @@ $wpstgRestorePageUrl = add_query_arg([
                     <span class="wpstg-clone-label wpstg-clone-label--warning wpstg--tooltip">
                         <?php esc_html_e('V1', 'wp-staging'); ?>
                         <div class="wpstg--tooltiptext"><?php esc_html_e('This backup is generated on an old version of the plugin', 'wp-staging'); ?></div>
+                    </span>
+                <?php endif; ?>
+                <?php if ($backup->isZlibCompressed) : ?>
+                    <span class="wpstg-clone-label wpstg-clone-label--primary-btn-lighter">
+                        <?php esc_html_e('Compressed', 'wp-staging'); ?>
                     </span>
                 <?php endif; ?>
             </div>

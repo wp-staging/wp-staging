@@ -241,6 +241,12 @@ trait RemoteUploadTrait
         return in_array('one-drive', $this->getStorages());
     }
 
+    /** @return bool */
+    public function isUploadToPCloud(): bool
+    {
+        return in_array('pcloud', $this->getStorages());
+    }
+
     /**
      * @param bool $isMultipartBackup
      */

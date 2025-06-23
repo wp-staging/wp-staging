@@ -54,6 +54,11 @@ class Queue
     const STATUS_CANCELED   = 'canceled';
 
     /**
+     * @var string
+     */
+    const QUEUE_TABLE_NAME = 'wpstg_queue';
+
+    /**
      * Option name where we store queue table version
      * @var string
      * @deprecated use QUEUE_TABLE_STRUCTURE_VERSION_KEY instead
@@ -357,7 +362,7 @@ class Queue
     {
         global $wpdb;
 
-        return $wpdb->prefix . 'wpstg_queue';
+        return $wpdb->prefix . self::QUEUE_TABLE_NAME;
     }
 
     /**

@@ -28,7 +28,7 @@ use WPStaging\Staging\Service\StagingSetup;
 </p>
 <div class="wpstg-my-10px">
     <a href="#" class="wpstg-button-unselect button"><?php esc_html_e('Unselect All', 'wp-staging'); ?></a>
-    <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix) ?> </a>
+    <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix); ?> </a>
     <a href="#" class="wpstg-button-unselect-wpstg button"> <?php esc_html_e('Unselect wpstg', 'wp-staging'); ?> </a>
 </div>
 <select multiple="multiple" id="wpstg_select_tables_cloning">
@@ -40,16 +40,11 @@ use WPStaging\Staging\Service\StagingSetup;
         }
 
         ?>
-        <option class="wpstg-db-table" value="<?php echo esc_attr($table->getName()) ?>" name="<?php echo esc_attr($table->getName()) ?>" <?php echo esc_html($attributes) ?>>
-            <?php echo esc_html($table->getName()) ?> - <?php echo esc_html(size_format($table->getSize(), 2)) ?>
+        <option class="wpstg-db-table" value="<?php echo esc_attr($table->getName()); ?>" name="<?php echo esc_attr($table->getName()); ?>" <?php echo esc_html($attributes); ?>>
+            <?php echo esc_html($table->getName()); ?> - <?php echo esc_html(size_format($table->getSize(), 2)); ?>
         </option>
     <?php endforeach ?>
 </select>
-<div class="wpstg-mt-10px">
-    <a href="#" class="wpstg-button-unselect button"> <?php esc_html_e('Unselect All', 'wp-staging'); ?> </a>
-    <a href="#" class="wpstg-button-select button"> <?php echo esc_html($dbPrefix); ?> </a>
-    <a href="#" class="wpstg-button-unselect-wpstg button"> <?php esc_html_e('Unselect wpstg', 'wp-staging'); ?> </a>
-</div>
 <p>
     <?php esc_html_e("You can select multiple tables. Press left mouse button & move or press STRG+Left mouse button. (Apple: ⌘+Left Mouse Button)", "wp-staging"); ?>
 </p>

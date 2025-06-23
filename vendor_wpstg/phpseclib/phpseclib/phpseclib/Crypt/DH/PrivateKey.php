@@ -35,7 +35,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\DH
     /**
      * Returns the public key
      *
-     * @return DH\PublicKey
+     * @return PublicKey
      */
     public function getPublicKey()
     {

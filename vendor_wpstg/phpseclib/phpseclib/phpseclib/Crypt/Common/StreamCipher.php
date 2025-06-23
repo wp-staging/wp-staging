@@ -33,7 +33,7 @@ abstract class StreamCipher extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Sy
      * Default Constructor.
      *
      * @see \phpseclib3\Crypt\Common\SymmetricKey::__construct()
-     * @return \phpseclib3\Crypt\Common\StreamCipher
+     * @return StreamCipher
      */
     public function __construct()
     {

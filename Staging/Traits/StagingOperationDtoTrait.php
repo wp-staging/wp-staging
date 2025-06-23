@@ -55,6 +55,12 @@ trait StagingOperationDtoTrait
     /** @var array */
     private $excludeGlobRules = [];
 
+    /** @var string */
+    private $stagingSiteUrl = '';
+
+    /** @var string */
+    private $stagingSitePath = '';
+
     /**
      * @param string $jobType
      * @return void

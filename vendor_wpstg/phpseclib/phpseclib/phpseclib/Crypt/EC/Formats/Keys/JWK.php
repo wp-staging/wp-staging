@@ -110,7 +110,7 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
     /**
      * Return the array superstructure for an EC public key
      *
-     * @param \phpseclib3\Crypt\EC\BaseCurves\Base $curve
+     * @param BaseCurve $curve
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @return array
      */
@@ -124,7 +124,7 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
     /**
      * Convert an EC public key to the appropriate format
      *
-     * @param \phpseclib3\Crypt\EC\BaseCurves\Base $curve
+     * @param BaseCurve $curve
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @param array $options optional
      * @return string
@@ -137,8 +137,8 @@ abstract class JWK extends \WPStaging\Vendor\phpseclib3\Crypt\Common\Formats\Key
     /**
      * Convert a private key to the appropriate format.
      *
-     * @param \phpseclib3\Math\BigInteger $privateKey
-     * @param \phpseclib3\Crypt\EC\Curves\Ed25519 $curve
+     * @param BigInteger $privateKey
+     * @param Ed25519 $curve
      * @param \phpseclib3\Math\Common\FiniteField\Integer[] $publicKey
      * @param string $secret optional
      * @param string $password optional

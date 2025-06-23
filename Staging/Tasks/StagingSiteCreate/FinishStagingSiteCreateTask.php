@@ -9,9 +9,12 @@ use WPStaging\Framework\Job\Dto\TaskResponseDto;
 use WPStaging\Framework\Utils\Cache\Cache;
 use WPStaging\Staging\Dto\Job\StagingSiteCreateDataDto;
 use WPStaging\Staging\Dto\StagingSiteDto;
+use WPStaging\Staging\Dto\Task\Response\FinishStagingSiteResponseDto;
 use WPStaging\Staging\Sites;
 use WPStaging\Staging\Tasks\StagingTask;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
+
+use function WPStaging\functions\debug_log;
 
 class FinishStagingSiteCreateTask extends StagingTask
 {
@@ -64,7 +67,7 @@ class FinishStagingSiteCreateTask extends StagingTask
             $stagingSite->getSiteName()
         ));
 
-        return $this->generateResponse();
+        return $this->overrideGenerateResponse();
     }
 
     protected function buildStagingSite(): StagingSiteDto
@@ -81,5 +84,29 @@ class FinishStagingSiteCreateTask extends StagingTask
         $stagingSite->setOwnerId(get_current_user_id());
 
         return $stagingSite;
+    }
+
+    protected function getResponseDto()
+    {
+        return new FinishStagingSiteResponseDto();
+    }
+
+    /**
+     * @return FinishStagingSiteResponseDto|TaskResponseDto
+     */
+    private function overrideGenerateResponse()
+    {
+        add_filter('wpstg.task.response', function ($response) {
+            if ($response instanceof FinishStagingSiteResponseDto) {
+                $response->setCloneId($this->jobDataDto->getCloneId());
+                $response->setStagingSiteUrl($this->jobDataDto->getStagingSiteUrl());
+            } else {
+                debug_log('Fail to finalize response for staging site creation process! Response content: ' . print_r($response, true));
+            }
+
+            return $response;
+        });
+
+        return $this->generateResponse();
     }
 }

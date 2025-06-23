@@ -69,12 +69,6 @@ class JobRestoreDataDto extends JobDataDto
     /** @var int */
     private $currentFileHeaderStart = 0;
 
-    /**
-     * Current execution time in sec for database restore
-     * @var int
-     */
-    private $currentExecutionTimeDatabaseRestore = 10;
-
     /** @var array */
     private $databaseDataToPreserve = [];
 
@@ -503,36 +497,6 @@ class JobRestoreDataDto extends JobDataDto
     }
 
     /**
-     * @return int
-     */
-    public function getCurrentExecutionTimeDatabaseRestore(): int
-    {
-        $time = $this->currentExecutionTimeDatabaseRestore;
-        if ($time < 10) {
-            return 10;
-        }
-
-        return $time;
-    }
-
-    /**
-     * @return void
-     */
-    public function incrementCurrentExecutionTimeDatabaseRestore()
-    {
-        $this->currentExecutionTimeDatabaseRestore += 5;
-    }
-
-    /**
-     * @param int $currentExecutionTimeDatabaseRestore
-     * @return void
-     */
-    public function setCurrentExecutionTimeDatabaseRestore($currentExecutionTimeDatabaseRestore = 0)
-    {
-        $this->currentExecutionTimeDatabaseRestore = $currentExecutionTimeDatabaseRestore;
-    }
-
-    /**
      * @return array
      */
     public function getDatabaseDataToPreserve(): array
@@ -653,5 +617,42 @@ class JobRestoreDataDto extends JobDataDto
     public function setIsDatabaseRestoreSkipped(bool $isDatabaseRestoreSkipped)
     {
         $this->isDatabaseRestoreSkipped = $isDatabaseRestoreSkipped;
+    }
+
+    /**
+     * Check if the backup is from the same site and set it
+     * Also set URL scheme accordingly
+     * @return void
+     */
+    public function determineIsSameSiteRestore()
+    {
+        $this->setIsUrlSchemeMatched(true);
+
+        // Exclusive check for multisite subdomain installs
+        if (is_multisite() && is_subdomain_install() !== $this->backupMetadata->getSubdomainInstall()) {
+            $this->setIsSameSiteBackupRestore(false);
+            return;
+        }
+
+        // If ABSPATH is different
+        if (ABSPATH !== $this->backupMetadata->getAbsPath()) {
+            $this->setIsSameSiteBackupRestore(false);
+            return;
+        }
+
+        $currentSiteURL = site_url();
+        $backupSiteURL  = $this->backupMetadata->getSiteUrl();
+        if ($currentSiteURL === $backupSiteURL) {
+            $this->setIsSameSiteBackupRestore(true);
+            return;
+        }
+
+        $currentSiteURLWithoutScheme = preg_replace('#^https?://#', '', rtrim($currentSiteURL, '/'));
+        $backupSiteURLWithoutScheme  = preg_replace('#^https?://#', '', rtrim($backupSiteURL, '/'));
+        if ($currentSiteURLWithoutScheme === $backupSiteURLWithoutScheme) {
+            $this->setIsUrlSchemeMatched(false);
+        }
+
+        $this->setIsSameSiteBackupRestore(false);
     }
 }

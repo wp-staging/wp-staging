@@ -24,6 +24,11 @@ use function WPStaging\functions\debug_log;
 class BackgroundProcessingServiceProvider extends FeatureServiceProvider
 {
     /**
+     * @var string
+     */
+    const ACTION_QUEUE_MAINTAIN = 'wpstg_queue_maintain';
+
+    /**
      * {@inheritdoc}
      */
     public static function getFeatureTrigger()
@@ -93,12 +98,12 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
     private function scheduleQueueMaintenance()
     {
         // Once a day fire an action to run the Queue maintenance routines.
-        if (!wp_next_scheduled('wpstg_queue_maintain')) {
-            wp_schedule_event(time(), Cron::DAILY, 'wpstg_queue_maintain');
+        if (!wp_next_scheduled(self::ACTION_QUEUE_MAINTAIN)) {
+            wp_schedule_event(time(), Cron::DAILY, self::ACTION_QUEUE_MAINTAIN);
         }
 
         // When the action fires, run the maintenance routines.
-        add_action('wpstg_queue_maintain', [$this, 'runQueueMaintenance']);
+        add_action(self::ACTION_QUEUE_MAINTAIN, [$this, 'runQueueMaintenance']); // phpcs:ignore WPStaging.Security.FirstArgNotAString
     }
 
     /**
@@ -139,7 +144,7 @@ class BackgroundProcessingServiceProvider extends FeatureServiceProvider
          * on Cron calls.
          * Once every hour (kinda, it's Cron), fire the `wpstg_queue_process` action.
          */
-        if (!wp_next_scheduled('wpstg_queue_process')) {
+        if (!wp_next_scheduled(QueueProcessor::QUEUE_PROCESS_ACTION)) {
             wp_schedule_event(time(), Cron::HOURLY, QueueProcessor::QUEUE_PROCESS_ACTION);
         }
 

@@ -1,13 +1,13 @@
 <?php
 namespace WPStaging\Backup\Service\Database\Exporter;
 use Exception;
-use UnexpectedValueException;
 use WPStaging\Framework\Adapter\Database;
 use WPStaging\Framework\Database\SearchReplace;
 use WPStaging\Framework\Traits\DatabaseSearchReplaceTrait;
 use WPStaging\Framework\Traits\MySQLRowsGeneratorTrait;
 use WPStaging\Backup\Dto\Job\JobBackupDataDto;
 use WPStaging\Backup\Service\Database\DatabaseImporter;
+use WPStaging\Framework\Database\Exporter\AbstractExporter;
 use WPStaging\Framework\Database\TableService;
 use WPStaging\Framework\Job\Dto\JobDataDto;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
@@ -125,18 +125,23 @@ class RowsExporter extends AbstractExporter
         $result = $this->client->query($query);
         if (!$result) {
             if ($this->isRetryingAfterRepair) {
-                $this->throwUnableToCountException();
+                $this->throwStorageEngineRepairNotSupportedException();
             }
             switch ($this->client->errno()) {
                 case 144: case 145: if ($this->client->query("REPAIR TABLE `$this->tableName`;")) {
-                        $this->logger->warning(sprintf("Table %s is marked as crashed, we automatically repaired it.", $this->tableName));
+                        $this->logger->warning(sprintf("Table %s was marked as crashed, we automatically repaired it.", $this->tableName));
                     } else {
                         $this->logger->warning(sprintf("Table %s is marked as crashed, we automatically repaired it but failed.", $this->tableName));
                     }
                     $this->isRetryingAfterRepair = true;
                     return $this->countTotalRows();
                 default:
-                    $this->throwUnableToCountException();
+                    $errorMessage = $this->client->error();
+                    if (stripos($errorMessage, 'corrupt') !== false || stripos($errorMessage, 'repair') !== false) {
+                        $this->throwStorageEngineRepairNotSupportedException();
+                    } else {
+                        $this->throwUnableToCountException();
+                    }
             }
         }
         $total = $this->client->fetchObject($result);
@@ -392,6 +397,14 @@ class RowsExporter extends AbstractExporter
         $this->tableRowsOffset = $this->jobDataDto->getTableRowsOffset() + $filesWritten;
         $this->jobDataDto->setTableRowsOffset($this->jobDataDto->getTableRowsOffset() + $filesWritten);
         $this->jobDataDto->setLastInsertId($this->lastNumericInsertId);
+    }
+
+    protected function throwStorageEngineRepairNotSupportedException()
+    {
+        throw new \RuntimeException(sprintf(
+            'Storage engine for the table "%s" does not support SQL command REPAIR TABLE. Please read this https://wp-staging.com/phpmyadmin-repair-and-optimize-database-tables-tutorial/ to learn how to repair the table manually first.',
+            esc_html($this->tableName)
+        ));
     }
 
     private function updateLastNumericInsertId(string $numericPrimaryKey, array $row): bool

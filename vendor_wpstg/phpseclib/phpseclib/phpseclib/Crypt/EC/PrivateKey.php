@@ -135,13 +135,13 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
             // we use specified curves to avoid issues with OpenSSL possibly not supporting a given named curve;
             // doing this may mean some curve-specific optimizations can't be used but idk if OpenSSL even
             // has curve-specific optimizations
-            $result = \openssl_sign($message, $signature, $this->toString('PKCS8', ['namedCurve' => \false]), $this->hash->getHash());
+            $result = \openssl_sign($message, $signature, $this->withPassword()->toString('PKCS8', ['namedCurve' => \false]), $this->hash->getHash());
             if ($result) {
                 if ($shortFormat == 'ASN1') {
                     return $signature;
                 }
                 \extract(\WPStaging\Vendor\phpseclib3\Crypt\EC\Formats\Signature\ASN1::load($signature));
-                return $shortFormat == 'SSH2' ? $format::save($r, $s, $this->getCurve()) : $format::save($r, $s);
+                return $this->formatSignature($r, $s);
             }
         }
         $e = $this->hash->hash($message);
@@ -185,7 +185,7 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
         $temp = $kinv->multiply($temp);
         list(, $s) = $temp->divide($this->q);
         */
-        return $shortFormat == 'SSH2' ? $format::save($r, $s, $this->getCurve()) : $format::save($r, $s);
+        return $this->formatSignature($r, $s);
     }
     /**
      * Returns the private key
@@ -222,5 +222,28 @@ final class PrivateKey extends \WPStaging\Vendor\phpseclib3\Crypt\EC implements 
             $key = $key->withContext($this->context);
         }
         return $key;
+    }
+    /**
+     * Returns a signature in the appropriate format
+     *
+     * @return string
+     */
+    private function formatSignature(\WPStaging\Vendor\phpseclib3\Math\BigInteger $r, \WPStaging\Vendor\phpseclib3\Math\BigInteger $s)
+    {
+        $format = $this->sigFormat;
+        $temp = new \ReflectionMethod($format, 'save');
+        $paramCount = $temp->getNumberOfRequiredParameters();
+        // @codingStandardsIgnoreStart
+        switch ($paramCount) {
+            case 2:
+                return $format::save($r, $s);
+            case 3:
+                return $format::save($r, $s, $this->getCurve());
+            case 4:
+                return $format::save($r, $s, $this->getCurve(), $this->getLength());
+        }
+        // @codingStandardsIgnoreEnd
+        // presumably the only way you could get to this is if you were using a custom plugin
+        throw new \WPStaging\Vendor\phpseclib3\Exception\UnsupportedOperationException("{$format}::save() has {$paramCount} parameters - the only valid parameter counts are 2 or 3");
     }
 }

@@ -4,25 +4,25 @@ namespace WPStaging\Backup\Task\Tasks\JobRestore;
 
 use RuntimeException;
 use WPStaging\Backup\BackupHeader;
+use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
+use WPStaging\Backup\Entity\BackupMetadata;
+use WPStaging\Backup\Service\Database\DatabaseImporter;
 use WPStaging\Backup\Service\ZlibCompressor;
+use WPStaging\Backup\Task\RestoreTask;
 use WPStaging\Framework\Analytics\Actions\AnalyticsBackupRestore;
 use WPStaging\Framework\Database\TableDto;
 use WPStaging\Framework\Database\TableService;
+use WPStaging\Framework\Facades\Hooks;
 use WPStaging\Framework\Filesystem\DiskWriteCheck;
 use WPStaging\Framework\Filesystem\FileObject;
+use WPStaging\Framework\Filesystem\PartIdentifier;
+use WPStaging\Framework\Job\Dto\JobDataDto;
+use WPStaging\Framework\Job\Dto\StepsDto;
+use WPStaging\Framework\Job\Exception\DiskNotWritableException;
+use WPStaging\Framework\Job\Exception\ThresholdException;
 use WPStaging\Framework\Queue\SeekableQueueInterface;
 use WPStaging\Framework\SiteInfo;
 use WPStaging\Framework\Utils\Cache\Cache;
-use WPStaging\Backup\Dto\Job\JobRestoreDataDto;
-use WPStaging\Framework\Job\Dto\JobDataDto;
-use WPStaging\Framework\Job\Dto\StepsDto;
-use WPStaging\Backup\Entity\BackupMetadata;
-use WPStaging\Backup\Service\Database\DatabaseImporter;
-use WPStaging\Framework\Job\Exception\DiskNotWritableException;
-use WPStaging\Framework\Job\Exception\ThresholdException;
-use WPStaging\Backup\Task\RestoreTask;
-use WPStaging\Framework\Facades\Hooks;
-use WPStaging\Framework\Filesystem\PartIdentifier;
 use WPStaging\Vendor\Psr\Log\LoggerInterface;
 
 class RestoreRequirementsCheckTask extends RestoreTask
@@ -467,8 +467,17 @@ class RestoreRequirementsCheckTask extends RestoreTask
             throw new RuntimeException(sprintf("Cannot Restore this backup! This backup has different URL scheme (%s) than your current site scheme (%s). <a href='https://wp-staging.com' target='_blank'>Get WP Staging Pro</a> to restore this backup on this website.", esc_html($this->getUrlScheme($this->jobDataDto->getBackupMetadata()->getSiteUrl())), esc_html($this->getUrlScheme(site_url()))));
         }
 
-        if (!$this->jobDataDto->getIsSameSiteBackupRestore()) {
+        // Early bail if same site backup restore
+        if ($this->jobDataDto->getIsSameSiteBackupRestore()) {
+            return;
+        }
+
+        if ($this->jobDataDto->getBackupMetadata()->getSiteUrl() !== site_url()) {
             throw new RuntimeException(sprintf('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. This backup has been created on %s and you are trying to restore the backup on %s. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.', esc_url($this->jobDataDto->getBackupMetadata()->getSiteUrl()), esc_url(site_url())));
+        }
+
+        if ($this->jobDataDto->getBackupMetadata()->getAbsPath() !== ABSPATH) {
+            throw new RuntimeException(sprintf('Cannot restore this backup! Free Version doesn\'t support site migration and can only restore backups created on the same domain, host and server. This backup has been created on %s and you are trying to restore the backup on %s. <a href="https://wp-staging.com" target="_blank">Get WP Staging Pro</a> to restore this backup on this website.', esc_url($this->jobDataDto->getBackupMetadata()->getAbsPath()), esc_url(ABSPATH)));
         }
     }
 

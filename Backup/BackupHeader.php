@@ -62,7 +62,7 @@ class BackupHeader
 
     /**
      * Original string should not exceed 64 characters for consistency
-     * Generated from running bin2hex(str_pad("orignalString", 64 "\0", STR_PAD_RIGHT)) to 128 characters hex string
+     * Generated from running bin2hex(str_pad("originalString", 64, "\0", STR_PAD_RIGHT)) to 128 characters hex string
      * To retrieve original string run hex2bin(this.constant)
      * @var string
      */

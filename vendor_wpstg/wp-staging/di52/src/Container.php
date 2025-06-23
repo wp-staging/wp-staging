@@ -142,7 +142,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      * @return void This method does not return any value.
      * @throws ContainerException If there's any issue reflecting on the class, interface or the implementation.
      */
-    public function singleton($id, $implementation = null, array $afterBuildMethods = null)
+    public function singleton($id, $implementation = null, $afterBuildMethods = null)
     {
         if ($implementation === null) {
             $implementation = $id;
@@ -427,6 +427,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
             $provider->register();
         } else {
             $provided = $provider->provides();
+            // @phpstan-ignore-next-line
             if (!\is_array($provided) || \count($provided) === 0) {
                 throw new \WPStaging\Vendor\lucatume\DI52\ContainerException("Service provider '{$serviceProviderClass}' is marked as deferred" . " but is not providing any implementation.");
             }
@@ -483,7 +484,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      *
      * @throws ContainerException      If there's an issue while trying to bind the implementation.
      */
-    public function bind($id, $implementation = null, array $afterBuildMethods = null)
+    public function bind($id, $implementation = null, $afterBuildMethods = null)
     {
         if ($implementation === null) {
             $implementation = $id;
@@ -523,13 +524,15 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      * @param  string[]|null                  $afterBuildMethods  An array of methods that should be called on the
      *                                                            instance after it has been built; the methods should
      *                                                            not require any argument.
+     * @param bool $afterBuildAll                                 Whether to call the after build methods on only the
+     *                                                            base instance or all instances of the decorator chain.
      *
      * @return void This method does not return any value.
      * @throws ContainerException
      */
-    public function singletonDecorators($id, $decorators, array $afterBuildMethods = null)
+    public function singletonDecorators($id, $decorators, $afterBuildMethods = null, $afterBuildAll = \false)
     {
-        $this->resolver->singleton($id, $this->getDecoratorBuilder($decorators, $id, $afterBuildMethods));
+        $this->resolver->singleton($id, $this->getDecoratorBuilder($decorators, $id, $afterBuildMethods, $afterBuildAll));
     }
     /**
      * Builds and returns a closure that will start building the chain of decorators.
@@ -538,11 +541,15 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      * @param string                        $id                The id to bind the decorator tail to.
      * @param array<string>|null            $afterBuildMethods A set of method to run on the built decorated instance
      *                                                         after it's built.
+     * @param bool $afterBuildAll                              Whether to run the after build methods only on the base
+     *                                                         instance (default, false) or on all instances of the
+     *                                                         decorator chain.
+     *
      * @return BuilderInterface The callable or Closure that will start building the decorator chain.
      *
      * @throws ContainerException If there's any issue while trying to register any decorator step.
      */
-    private function getDecoratorBuilder(array $decorators, $id, array $afterBuildMethods = null)
+    private function getDecoratorBuilder(array $decorators, $id, $afterBuildMethods = null, $afterBuildAll = \false)
     {
         $decorator = \array_pop($decorators);
         if ($decorator === null) {
@@ -552,7 +559,9 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
             $previous = isset($builder) ? $builder : null;
             $builder = $this->builders->getBuilder($id, $decorator, $afterBuildMethods, $previous);
             $decorator = \array_pop($decorators);
-            $afterBuildMethods = [];
+            if (!$afterBuildAll) {
+                $afterBuildMethods = [];
+            }
         } while ($decorator !== null);
         return $builder;
     }
@@ -566,15 +575,17 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      *                                                            should be bound to.
      * @param  array<string|object|callable>  $decorators         An array of implementations that decorate an object.
      * @param  string[]|null                  $afterBuildMethods  An array of methods that should be called on the
-     *                                                            instance after it has been built; the methods should
-     *                                                            not require any argument.
+     *                                                            base instance after it has been built; the methods
+     *                                                            should not require any argument.
+     * @param bool $afterBuildAll                                 Whether to call the after build methods on only the
+     *                                                            base instance or all instances of the decorator chain.
      *
      * @return void This method does not return any value.
      * @throws ContainerException If there's any issue binding the decorators.
      */
-    public function bindDecorators($id, array $decorators, array $afterBuildMethods = null)
+    public function bindDecorators($id, array $decorators, $afterBuildMethods = null, $afterBuildAll = \false)
     {
-        $this->resolver->bind($id, $this->getDecoratorBuilder($decorators, $id, $afterBuildMethods));
+        $this->resolver->bind($id, $this->getDecoratorBuilder($decorators, $id, $afterBuildMethods, $afterBuildAll));
     }
     /**
      * Unsets a binding or tag in the container.
@@ -656,7 +667,9 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
         $id = "{$this->whenClass}::{$this->needsClass}";
         $builder = $this->builders->getBuilder($id, $implementation);
         $this->resolver->setWhenNeedsGive($this->whenClass, $this->needsClass, $builder);
+        // @phpstan-ignore unset.possiblyHookedProperty
         unset($this->whenClass, $this->needsClass);
+        // @phpstan-ignore unset.possiblyHookedProperty
     }
     /**
      * Returns a lambda function suitable to use as a callback; when called the function will build the implementation
@@ -673,10 +686,12 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
     public function callback($id, $method)
     {
         $callbackIdPrefix = \is_object($id) ? \spl_object_hash($id) : $id;
+        // @phpstan-ignore-next-line
         if (!\is_string($callbackIdPrefix)) {
             $typeOfId = \gettype($id);
             throw new \WPStaging\Vendor\lucatume\DI52\ContainerException("Callbacks can only be built on ids, class names or objects; '{$typeOfId}' is neither.");
         }
+        // @phpstan-ignore-next-line
         if (!\is_string($method)) {
             throw new \WPStaging\Vendor\lucatume\DI52\ContainerException("Callbacks second argument must be a string method name.");
         }
@@ -729,7 +744,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      * @return callable|Closure  A callable function that will return an instance of the specified class when
      *                   called.
      */
-    public function instance($id, array $buildArgs = [], array $afterBuildMethods = null)
+    public function instance($id, array $buildArgs = [], $afterBuildMethods = null)
     {
         return function () use($id, $afterBuildMethods, $buildArgs) {
             if (\is_string($id)) {
@@ -782,6 +797,7 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
      */
     public function isBound($id)
     {
+        // @phpstan-ignore-next-line
         return \is_string($id) && $this->resolver->isBound($id);
     }
     /**
@@ -817,6 +833,8 @@ class Container implements \ArrayAccess, \WPStaging\Vendor\Psr\Container\Contain
     {
         $this->resolver = clone $this->resolver;
         $this->builders = clone $this->builders;
+        $this->builders->setContainer($this);
+        $this->builders->setResolver($this->resolver);
         $this->bindThis();
     }
 }

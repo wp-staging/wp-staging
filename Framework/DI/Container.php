@@ -132,10 +132,10 @@ class Container extends BaseContainer
      * Overloads bind definition binding the prefix as well so that the DI container works locally.
      *
      * @param string     $classOrInterface
-     * @param null       $implementation
+     * @param mixed      $implementation
      * @param array|null $afterBuildMethods
      */
-    public function bind($classOrInterface, $implementation = null, array $afterBuildMethods = null)
+    public function bind($classOrInterface, $implementation = null, $afterBuildMethods = null)
     {
         if ($this->isDevAutoloader()) {
             parent::bind(str_replace($this->prefix, '', $classOrInterface), $implementation, $afterBuildMethods);
@@ -148,10 +148,10 @@ class Container extends BaseContainer
      * Overloads singleton definition binding the prefix as well so that the DI container works locally.
      *
      * @param string     $classOrInterface
-     * @param null       $implementation
+     * @param mixed      $implementation
      * @param array|null $afterBuildMethods
      */
-    public function singleton($classOrInterface, $implementation = null, array $afterBuildMethods = null)
+    public function singleton($classOrInterface, $implementation = null, $afterBuildMethods = null)
     {
         if ($this->isDevAutoloader()) {
             parent::singleton(str_replace($this->prefix, '', $classOrInterface), $implementation, $afterBuildMethods);

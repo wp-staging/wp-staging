@@ -44,11 +44,12 @@ trait FileScanToCacheTrait
      * @param array $excludePaths absolute path of dir/files to exclude
      * @param array $excludeSizeRules exclude files by different size comparing rules
      * @param string $wpRootPath
+     * @param bool $shouldScanEmptyDirs
      *
      * @return int count of files path written to cache file
      * @throws Exception
      */
-    public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $excludeSizeRules = [], $wpRootPath = ABSPATH)
+    public function scanToCacheFile($filesHandle, $path, $isRecursive = false, $excludePaths = [], $excludeSizeRules = [], $wpRootPath = ABSPATH, bool $shouldScanEmptyDirs = true)
     {
         $filesystem = WPStaging::make(Filesystem::class);
         $normalizedWpRoot = $filesystem->normalizePath($wpRootPath);
@@ -84,14 +85,14 @@ trait FileScanToCacheTrait
                 if ($item->isLink()) {
                     // Allow copying of link if the link's source is a directory
                     if (is_dir($item->getRealPath()) && $isRecursive) {
-                        $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
+                        $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath, $shouldScanEmptyDirs);
                     }
 
                     continue;
                 }
 
                 if ($isRecursive && $item->isDir()) {
-                    $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath);
+                    $filesWrittenToCache += $this->scanToCacheFile($filesHandle, $itemPath, $isRecursive, $excludePaths, $excludeSizeRules, $wpRootPath, $shouldScanEmptyDirs);
                     continue;
                 }
 
@@ -114,6 +115,12 @@ trait FileScanToCacheTrait
             }
         } catch (Exception $e) {
             throw new RuntimeException($e->getMessage());
+        }
+
+        if ($shouldScanEmptyDirs && $filesWrittenToCache === 0 && is_dir($path)) {
+            $pathPart = $this->strUtils->replaceStartWith($normalizedWpRoot, '', $path) . PHP_EOL;
+            $this->write($filesHandle, $this->pathIdentifier . ltrim($pathPart, '/'));
+            $filesWrittenToCache++;
         }
 
         return $filesWrittenToCache;
